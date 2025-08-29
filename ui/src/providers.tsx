@@ -3,12 +3,12 @@
 
 import { ReactNode } from 'react';
 
+import { Toast } from '@geti/ui';
 import { ThemeProvider } from '@geti/ui/theme';
 import { MutationCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouterProps, RouterProvider } from 'react-router';
 import { MemoryRouter as Router } from 'react-router-dom';
 
-import { WebRTCConnectionProvider } from './components/stream/web-rtc-connection-provider';
 import { router } from './router';
 
 const queryClient = new QueryClient({
@@ -29,9 +29,8 @@ export const Providers = () => {
     return (
         <QueryClientProvider client={queryClient}>
             <ThemeProvider router={router}>
-                <WebRTCConnectionProvider>
-                    <RouterProvider router={router} />
-                </WebRTCConnectionProvider>
+                <RouterProvider router={router} />
+                <Toast />
             </ThemeProvider>
         </QueryClientProvider>
     );
@@ -41,9 +40,7 @@ export const TestProviders = ({ children, routerProps }: { children: ReactNode; 
     return (
         <QueryClientProvider client={queryClient}>
             <ThemeProvider>
-                <Router {...routerProps}>
-                    <WebRTCConnectionProvider>{children}</WebRTCConnectionProvider>
-                </Router>
+                <Router {...routerProps}>{children}</Router>
             </ThemeProvider>
         </QueryClientProvider>
     );

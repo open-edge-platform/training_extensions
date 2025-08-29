@@ -6,68 +6,100 @@ from uuid import uuid4
 import pytest
 
 from app.db.schema import SinkDB
-from app.schemas.sink import FolderSinkConfig, MqttSinkConfig, OutputFormat, SinkType
+from app.schemas.sink import FolderSinkConfig, MqttSinkConfig, OutputFormat, SinkType, WebhookSinkConfig
 from app.services.mappers.sink_mapper import SinkMapper
+
+SUPPORTED_SINKS_MAPPING = [
+    (
+        FolderSinkConfig(
+            sink_type=SinkType.FOLDER,
+            name="Test Folder Sink",
+            rate_limit=0.2,
+            output_formats=[
+                OutputFormat.IMAGE_ORIGINAL,
+                OutputFormat.IMAGE_WITH_PREDICTIONS,
+                OutputFormat.PREDICTIONS,
+            ],
+            folder_path="/test/path",
+        ),
+        SinkDB(
+            sink_type=SinkType.FOLDER,
+            name="Test Folder Sink",
+            rate_limit=0.2,
+            output_formats=[
+                OutputFormat.IMAGE_ORIGINAL,
+                OutputFormat.IMAGE_WITH_PREDICTIONS,
+                OutputFormat.PREDICTIONS,
+            ],
+            config_data={"folder_path": "/test/path"},
+        ),
+    ),
+    (
+        MqttSinkConfig(
+            sink_type=SinkType.MQTT,
+            name="Test Mqtt Sink",
+            rate_limit=0.2,
+            output_formats=[
+                OutputFormat.IMAGE_ORIGINAL,
+                OutputFormat.IMAGE_WITH_PREDICTIONS,
+                OutputFormat.PREDICTIONS,
+            ],
+            broker_host="localhost",
+            broker_port=1883,
+            topic="topic",
+            auth_required=False,
+        ),
+        SinkDB(
+            sink_type=SinkType.MQTT,
+            name="Test Mqtt Sink",
+            rate_limit=0.2,
+            output_formats=[
+                OutputFormat.IMAGE_ORIGINAL,
+                OutputFormat.IMAGE_WITH_PREDICTIONS,
+                OutputFormat.PREDICTIONS,
+            ],
+            config_data={"broker_host": "localhost", "broker_port": 1883, "topic": "topic", "auth_required": False},
+        ),
+    ),
+    (
+        WebhookSinkConfig(
+            sink_type=SinkType.WEBHOOK,
+            name="Test Webhook Sink",
+            rate_limit=0.2,
+            output_formats=[
+                OutputFormat.IMAGE_ORIGINAL,
+                OutputFormat.IMAGE_WITH_PREDICTIONS,
+                OutputFormat.PREDICTIONS,
+            ],
+            webhook_url="https://example.com/webhook",
+            http_method="PATCH",
+            headers={"Authorization": "Bearer token"},
+            timeout=5,
+        ),
+        SinkDB(
+            sink_type=SinkType.WEBHOOK,
+            name="Test Webhook Sink",
+            rate_limit=0.2,
+            output_formats=[
+                OutputFormat.IMAGE_ORIGINAL,
+                OutputFormat.IMAGE_WITH_PREDICTIONS,
+                OutputFormat.PREDICTIONS,
+            ],
+            config_data={
+                "webhook_url": "https://example.com/webhook",
+                "http_method": "PATCH",
+                "headers": {"Authorization": "Bearer token"},
+                "timeout": 5,
+            },
+        ),
+    ),
+]
 
 
 class TestSinkMapper:
     """Test suite for SinkMapper methods."""
 
-    @pytest.mark.parametrize(
-        "schema_instance,expected_model",
-        [
-            (
-                FolderSinkConfig(
-                    sink_type=SinkType.FOLDER,
-                    name="Test Folder Sink",
-                    rate_limit=0.2,
-                    output_formats=[
-                        OutputFormat.IMAGE_ORIGINAL,
-                        OutputFormat.IMAGE_WITH_PREDICTIONS,
-                        OutputFormat.PREDICTIONS,
-                    ],
-                    folder_path="/test/path",
-                ),
-                SinkDB(
-                    sink_type=SinkType.FOLDER.value,
-                    name="Test Folder Sink",
-                    rate_limit=0.2,
-                    output_formats=[
-                        OutputFormat.IMAGE_ORIGINAL,
-                        OutputFormat.IMAGE_WITH_PREDICTIONS,
-                        OutputFormat.PREDICTIONS,
-                    ],
-                    config_data={"folder_path": "/test/path"},
-                ),
-            ),
-            (
-                MqttSinkConfig(
-                    sink_type=SinkType.MQTT,
-                    name="Test Mqtt Sink",
-                    rate_limit=0.2,
-                    output_formats=[
-                        OutputFormat.IMAGE_ORIGINAL,
-                        OutputFormat.IMAGE_WITH_PREDICTIONS,
-                        OutputFormat.PREDICTIONS,
-                    ],
-                    broker_host="localhost",
-                    broker_port=1883,
-                    topic="topic",
-                ),
-                SinkDB(
-                    sink_type=SinkType.MQTT.value,
-                    name="Test Mqtt Sink",
-                    rate_limit=0.2,
-                    output_formats=[
-                        OutputFormat.IMAGE_ORIGINAL,
-                        OutputFormat.IMAGE_WITH_PREDICTIONS,
-                        OutputFormat.PREDICTIONS,
-                    ],
-                    config_data={"broker_host": "localhost", "broker_port": 1883, "topic": "topic"},
-                ),
-            ),
-        ],
-    )
+    @pytest.mark.parametrize("schema_instance,expected_model", SUPPORTED_SINKS_MAPPING)
     def test_from_schema_valid_sink_types(self, schema_instance, expected_model):
         """Test from_schema with valid sink types."""
         sink_id = uuid4()
@@ -87,61 +119,7 @@ class TestSinkMapper:
         with pytest.raises(ValueError, match="Sink config cannot be None"):
             SinkMapper.from_schema(None)
 
-    @pytest.mark.parametrize(
-        "db_instance,expected_schema",
-        [
-            (
-                SinkDB(
-                    sink_type=SinkType.FOLDER.value,
-                    name="Test Folder Sink",
-                    rate_limit=0.2,
-                    output_formats=[
-                        OutputFormat.IMAGE_ORIGINAL,
-                        OutputFormat.IMAGE_WITH_PREDICTIONS,
-                        OutputFormat.PREDICTIONS,
-                    ],
-                    config_data={"folder_path": "/test/path"},
-                ),
-                FolderSinkConfig(
-                    sink_type=SinkType.FOLDER,
-                    name="Test Folder Sink",
-                    rate_limit=0.2,
-                    output_formats=[
-                        OutputFormat.IMAGE_ORIGINAL,
-                        OutputFormat.IMAGE_WITH_PREDICTIONS,
-                        OutputFormat.PREDICTIONS,
-                    ],
-                    folder_path="/test/path",
-                ),
-            ),
-            (
-                SinkDB(
-                    sink_type=SinkType.MQTT.value,
-                    name="Test Mqtt Sink",
-                    rate_limit=0.2,
-                    output_formats=[
-                        OutputFormat.IMAGE_ORIGINAL,
-                        OutputFormat.IMAGE_WITH_PREDICTIONS,
-                        OutputFormat.PREDICTIONS,
-                    ],
-                    config_data={"broker_host": "localhost", "broker_port": 1883, "topic": "topic"},
-                ),
-                MqttSinkConfig(
-                    sink_type=SinkType.MQTT,
-                    name="Test Mqtt Sink",
-                    rate_limit=0.2,
-                    output_formats=[
-                        OutputFormat.IMAGE_ORIGINAL,
-                        OutputFormat.IMAGE_WITH_PREDICTIONS,
-                        OutputFormat.PREDICTIONS,
-                    ],
-                    broker_host="localhost",
-                    broker_port=1883,
-                    topic="topic",
-                ),
-            ),
-        ],
-    )
+    @pytest.mark.parametrize("db_instance,expected_schema", [(v, k) for (k, v) in SUPPORTED_SINKS_MAPPING])
     def test_to_schema_valid_sink_types(self, db_instance, expected_schema):
         """Test to_schema with valid sink types."""
         sink_id = uuid4()
@@ -162,3 +140,9 @@ class TestSinkMapper:
                 assert result.broker_host == expected_schema.broker_host
                 assert result.broker_port == expected_schema.broker_port
                 assert result.topic == expected_schema.topic
+            case SinkType.WEBHOOK:
+                assert isinstance(result, WebhookSinkConfig)
+                assert result.webhook_url == expected_schema.webhook_url
+                assert result.http_method == expected_schema.http_method
+                assert result.headers == expected_schema.headers
+                assert result.timeout == expected_schema.timeout

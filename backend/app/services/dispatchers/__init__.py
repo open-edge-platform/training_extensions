@@ -3,7 +3,8 @@
 
 from .filesystem import FolderDispatcher
 from .mqtt import MqttDispatcher
+from .webhook import WebhookDispatcher
 
-Dispatcher = FolderDispatcher | MqttDispatcher
+Dispatcher = FolderDispatcher | MqttDispatcher | WebhookDispatcher
 
-__all__ = ["Dispatcher", "FolderDispatcher", "MqttDispatcher"]
+__all__ = ["Dispatcher", "FolderDispatcher", "MqttDispatcher", "WebhookDispatcher"]

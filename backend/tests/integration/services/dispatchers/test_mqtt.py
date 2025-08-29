@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import json
+import os
 import re
 import time
 from datetime import datetime
@@ -13,7 +14,8 @@ import paho.mqtt.client as mqtt
 import pytest
 from testcontainers.compose import DockerCompose
 
-from app.schemas.sink import MqttSinkConfig, OutputFormat, SinkType
+from app.schemas.sink import MQTT_PASSWORD, MQTT_USERNAME, MqttSinkConfig, OutputFormat, SinkType
+from app.services.dispatchers.base import numpy_to_base64
 from app.services.dispatchers.mqtt import MqttDispatcher
 
 
@@ -53,8 +55,6 @@ def mqtt_config(mqtt_broker) -> MqttSinkConfig:
         broker_host=host,
         broker_port=port,
         topic="topic",
-        username=None,
-        password=None,
         output_formats=[OutputFormat.IMAGE_ORIGINAL, OutputFormat.PREDICTIONS],
     )
 
@@ -68,8 +68,7 @@ def mqtt_config_with_auth(mqtt_broker) -> MqttSinkConfig:
         broker_host=host,
         broker_port=port,
         topic="topic",
-        username="testuser",
-        password="testpass",
+        auth_required=True,
         output_formats=[OutputFormat.IMAGE_ORIGINAL, OutputFormat.PREDICTIONS],
     )
 
@@ -143,6 +142,7 @@ class TestMqttDispatcher:
 
         dispatcher.close()
 
+    @patch.dict(os.environ, {MQTT_USERNAME: "testuser", MQTT_PASSWORD: "testpass"})
     def test_init_with_authentication(self, mqtt_config_with_auth):
         """Test initialization with username/password."""
         dispatcher = MqttDispatcher(mqtt_config_with_auth, track_messages=True)
@@ -173,43 +173,36 @@ class TestMqttDispatcher:
         with pytest.raises(ConnectionError, match="Failed to connect to MQTT broker"):
             MqttDispatcher(config)
 
-    def test_dispatch_image_original(self, mqtt_config, sample_image, mqtt_test_subscriber):
+    @pytest.mark.parametrize(
+        "output_format", [OutputFormat.IMAGE_ORIGINAL, OutputFormat.IMAGE_WITH_PREDICTIONS, OutputFormat.PREDICTIONS]
+    )
+    def test_dispatch_single_format(
+        self, output_format, mqtt_config, sample_image, sample_predictions, mqtt_test_subscriber
+    ):
         """Test dispatching original image."""
-        mqtt_test_subscriber.connect_and_subscribe("topic")
+        mqtt_config.output_formats = [output_format]
+        mqtt_test_subscriber.connect_and_subscribe(mqtt_config.topic)
 
         dispatcher = MqttDispatcher(mqtt_config, track_messages=True)
-        dispatcher._dispatch_image(sample_image, data_type=OutputFormat.IMAGE_ORIGINAL)
+        dispatcher.dispatch(sample_image, sample_image, sample_predictions)
 
         assert len(dispatcher.get_published_messages()) == 1
         assert mqtt_test_subscriber.wait_for_messages(1)
 
         message = mqtt_test_subscriber.received_messages[0]
-        assert message["topic"] == "topic"
-        assert message["payload"]["type"] == OutputFormat.IMAGE_ORIGINAL
-        assert "image" in message["payload"]
-        assert message["payload"]["format"] == "jpeg"
+        assert message["topic"] == mqtt_config.topic
         assert "timestamp" in message["payload"]
+        result = message["payload"]["result"]
+        assert len(result.items()) == 1
+        if output_format == OutputFormat.PREDICTIONS:
+            assert result[OutputFormat.PREDICTIONS] == "test predictions"
+        else:
+            assert result[output_format]["data"] == numpy_to_base64(sample_image)
+            assert result[output_format]["format"] == "jpeg"
 
         dispatcher.close()
 
-    def test_dispatch_predictions(self, mqtt_config, sample_predictions, mqtt_test_subscriber):
-        """Test dispatching predictions."""
-        mqtt_test_subscriber.connect_and_subscribe("topic")
-
-        dispatcher = MqttDispatcher(mqtt_config, track_messages=True)
-        dispatcher._dispatch_predictions(sample_predictions)
-
-        assert len(dispatcher.get_published_messages()) == 1
-        assert mqtt_test_subscriber.wait_for_messages(1)
-
-        message = mqtt_test_subscriber.received_messages[0]
-        assert message["topic"] == "topic"
-        assert message["payload"]["type"] == OutputFormat.PREDICTIONS
-        assert message["payload"]["predictions"] == "test predictions"
-
-        dispatcher.close()
-
-    def test_full_dispatch_workflow(self, mqtt_config, sample_image, sample_predictions, mqtt_test_subscriber):
+    def test_dispatch_multiple_formats(self, mqtt_config, sample_image, sample_predictions, mqtt_test_subscriber):
         """Test complete dispatch workflow."""
         # Update config to include all formats
         mqtt_config.output_formats = [
@@ -225,19 +218,23 @@ class TestMqttDispatcher:
         viz_image = sample_image.copy()
         cv2.rectangle(viz_image, (10, 10), (50, 50), (0, 255, 0), 2)
 
-        dispatcher._dispatch(sample_image, viz_image, sample_predictions)
+        dispatcher.dispatch(sample_image, viz_image, sample_predictions)
 
-        assert len(dispatcher.get_published_messages()) == 3
-        assert mqtt_test_subscriber.wait_for_messages(3, timeout=10)
+        assert len(dispatcher.get_published_messages()) == 1
+        assert mqtt_test_subscriber.wait_for_messages(1, timeout=1)
 
-        message_types = [msg["payload"]["type"] for msg in mqtt_test_subscriber.received_messages]
-        assert OutputFormat.IMAGE_ORIGINAL in message_types
-        assert OutputFormat.IMAGE_WITH_PREDICTIONS in message_types
-        assert OutputFormat.PREDICTIONS in message_types
+        msg = mqtt_test_subscriber.received_messages[0]
+        assert msg["topic"] == mqtt_config.topic
+        assert "timestamp" in msg["payload"]
+        result = msg["payload"]["result"]
+        assert len(result.items()) == 3
+        assert result[OutputFormat.IMAGE_ORIGINAL]["data"] == numpy_to_base64(sample_image)
+        assert result[OutputFormat.IMAGE_WITH_PREDICTIONS]["data"] == numpy_to_base64(viz_image)
+        assert result[OutputFormat.PREDICTIONS] == "test predictions"
 
         dispatcher.close()
 
-    def test_reconnection_on_disconnect(self, mqtt_config, sample_image):
+    def test_reconnection_on_disconnect(self, mqtt_config, sample_image, sample_predictions):
         """Test reconnection behavior when disconnected."""
         dispatcher = MqttDispatcher(mqtt_config, track_messages=True)
 
@@ -246,7 +243,7 @@ class TestMqttDispatcher:
         time.sleep(1)
 
         # Try to dispatch - should trigger reconnection
-        dispatcher._dispatch_image(sample_image, OutputFormat.IMAGE_ORIGINAL)
+        dispatcher.dispatch(sample_image, sample_image, sample_predictions)
 
         # Should reconnect and be connected again
         time.sleep(2)
@@ -254,9 +251,11 @@ class TestMqttDispatcher:
 
         dispatcher.close()
 
-    def test_publish_failure_handling(self, mqtt_config):
+    def test_publish_failure_handling(self, mqtt_config, sample_image, sample_predictions, mqtt_test_subscriber):
         """Test handling of publish failures."""
         dispatcher = MqttDispatcher(mqtt_config, track_messages=True)
+
+        mqtt_test_subscriber.connect_and_subscribe(mqtt_config.topic)
 
         # Mock client to simulate publish failure
         with patch.object(dispatcher.client, "publish") as mock_publish:
@@ -264,8 +263,9 @@ class TestMqttDispatcher:
             mock_result.rc = mqtt.MQTT_ERR_NO_CONN
             mock_publish.return_value = mock_result
 
-            result = dispatcher._publish_message("test/topic", {"test": "data"})
-            assert result is False
+            dispatcher.dispatch(sample_image, sample_image, sample_predictions)
+            assert not dispatcher.get_published_messages()
+            assert mqtt_test_subscriber.wait_for_messages(0, timeout=1)
 
         dispatcher.close()
 

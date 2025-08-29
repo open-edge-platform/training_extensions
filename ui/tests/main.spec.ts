@@ -3,9 +3,9 @@
 
 import { expect, test } from './fixtures';
 
-test.describe('livefeed', () => {
+test.describe('Inference', () => {
     test('starts stream', async ({ page }) => {
-        await page.goto('/live-feed');
+        await page.goto('/inference');
 
         await expect(page.getByLabel('Idle')).toBeVisible();
 
