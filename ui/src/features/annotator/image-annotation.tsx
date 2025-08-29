@@ -1,19 +1,40 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { Grid, View } from '@geti/ui';
+import { isEmpty } from 'lodash-es';
+
 import thumbnailUrl from '../../assets/mocked-project-thumbnail.png';
+import { ZoomProvider } from '../../components/zoom/zoom';
+import { ZoomTransform } from '../../components/zoom/zoom-transform';
 import { response } from '../dataset/mock-response';
+import { Annotations } from './annotations-canvas';
 
 type Item = (typeof response.items)[number];
 
-export const ImageAnnotations = ({ mediaItem }: { mediaItem: Item }) => {
+export const ImageAnnotations = ({ mediaItem, isFocussed }: { mediaItem: Item; isFocussed: boolean }) => {
+    const size = { width: mediaItem.width, height: mediaItem.height };
+
     return (
-        <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-            <img
-                src={thumbnailUrl}
-                alt={mediaItem.original_name}
-                style={{ objectFit: 'cover', width: '100%', height: '100%' }}
-            />
-        </div>
+        <ZoomProvider>
+            <ZoomTransform target={size}>
+                <Grid areas={['innercanvas']} width={'100%'} height='100%'>
+                    <View gridArea={'innercanvas'}>
+                        <img src={thumbnailUrl} alt='Collected data' />
+                    </View>
+
+                    {!isEmpty(mediaItem.annotations) && (
+                        <View gridArea={'innercanvas'}>
+                            <Annotations
+                                annotations={mediaItem.annotations}
+                                width={size.width}
+                                height={size.height}
+                                isFocussed={isFocussed}
+                            />
+                        </View>
+                    )}
+                </Grid>
+            </ZoomTransform>
+        </ZoomProvider>
     );
 };
