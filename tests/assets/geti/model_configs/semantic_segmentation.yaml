@@ -51,7 +51,7 @@ hyperparameters:
           - 0.5
           - 1.5
         hue_delta: 18
-        p: 0.5
+        probability: 0.5
       gaussian_blur:
         enable: false
         kernel_size: 5
@@ -60,10 +60,10 @@ hyperparameters:
           - 2.0
       random_horizontal_flip:
         enable: true
-        prob: 0.5
+        probability: 0.5
       random_vertical_flip:
         enable: false
-        p: 0.5
+        probability: 0.5
       gaussian_noise:
         enable: false
         mean: 0.0

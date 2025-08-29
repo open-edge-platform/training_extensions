@@ -109,7 +109,7 @@ overrides:
         - class_path: otx.data.transform_libs.torchvision.YOLOXHSVRandomAug
         - class_path: otx.data.transform_libs.torchvision.RandomFlip
           init_args:
-            prob: 0.5
+            probability: 0.5
         - class_path: torchvision.transforms.v2.RandomVerticalFlip
           enable: false
           init_args:
@@ -121,7 +121,7 @@ overrides:
             sigma:
               - 0.1
               - 2.0
-            prob: 0.5
+            probability: 0.5
         - class_path: otx.data.transform_libs.torchvision.Pad
           init_args:
             size: $(input_size)
@@ -134,7 +134,7 @@ overrides:
               - 1.0
             max_cached_images: 10
             random_pop: false
-            prob: 0.5
+            probability: 0.5
         - class_path: torchvision.transforms.v2.ToDtype
           init_args:
             dtype: ${as_torch_dtype:torch.float32}
@@ -143,7 +143,7 @@ overrides:
           init_args:
             mean: 0.0
             sigma: 0.1
-            prob: 0.5
+            probability: 0.5
         - class_path: torchvision.transforms.v2.Normalize
           init_args:
             mean: [103.53, 116.28, 123.675]

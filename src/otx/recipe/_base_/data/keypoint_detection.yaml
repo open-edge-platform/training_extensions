@@ -30,7 +30,7 @@ train_subset:
     - class_path: otx.data.transform_libs.torchvision.TopdownAffine
       init_args:
         input_size: $(input_size)
-        affine_transforms_prob: 1.0
+        probability: 1.0
     - class_path: otx.data.transform_libs.torchvision.RandomGaussianBlur
       enable: false
       init_args:
@@ -38,7 +38,7 @@ train_subset:
         sigma:
           - 0.1
           - 2.0
-        prob: 0.5
+        probability: 0.5
     - class_path: torchvision.transforms.v2.ToDtype
       init_args:
         dtype: ${as_torch_dtype:torch.float32}
@@ -47,7 +47,7 @@ train_subset:
       init_args:
         mean: 0.0
         sigma: 0.1
-        prob: 0.5
+        probability: 0.5
     - class_path: torchvision.transforms.v2.Normalize
       init_args:
         mean: [123.675, 116.28, 103.53]

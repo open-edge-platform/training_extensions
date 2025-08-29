@@ -373,12 +373,12 @@ def update_augmentations(augmentation_params: dict, config: dict) -> None:
                     aug_config["class_path"] = "otx.data.transform_libs.torchvision.Resize"
                     break
                 if "TopdownAffine" in aug_config["class_path"]:
-                    affine_transforms_prob = aug_value.pop("affine_transforms_prob", 1.0)
+                    affine_transforms_prob = aug_value.pop("probability", 1.0)
                     if affine_transforms_prob is not None:
-                        aug_config["init_args"]["affine_transforms_prob"] = (
+                        aug_config["init_args"]["probability"] = (
                             affine_transforms_prob if aug_value["enable"] else 0.0
                         )
-                        if aug_config["init_args"]["affine_transforms_prob"] < 0.7:
+                        if aug_config["init_args"]["probability"] < 0.7:
                             for val_aug_cfg in config["data"]["val_subset"]["transforms"]:
                                 if "Pad" in val_aug_cfg["class_path"]:
                                     val_aug_cfg["enable"] = False
@@ -389,6 +389,8 @@ def update_augmentations(augmentation_params: dict, config: dict) -> None:
                 for parameter in aug_value:
                     value = aug_value[parameter]
                     if value is not None:
+                        if parameter == "probability" and "torchvision.transforms.v2" in aug_config["class_path"]:
+                            parameter = "p" # Geti consistency fix
                         aug_config["init_args"][parameter] = value
                 break
 
