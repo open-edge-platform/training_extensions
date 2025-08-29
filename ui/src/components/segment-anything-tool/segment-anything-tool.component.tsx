@@ -5,8 +5,9 @@ import { PointerEvent, useEffect, useRef, useState } from 'react';
 
 import { clampPointBetweenImage, isPointInShape, pointInRectangle } from '@geti/smart-tools/utils';
 
-import { Point, RegionOfInterest, Shape } from '../shapes/interfaces';
-import { removeOffLimitPoints } from '../shapes/utils';
+import { isRightButton } from '../annotation/utils';
+import { Annotation, Point, RegionOfInterest, Shape } from '../shapes/interfaces';
+import { getRelativePoint, removeOffLimitPoints } from '../shapes/utils';
 import { useZoom } from '../zoom/zoom';
 import { InteractiveSegmentationPoint } from './interactive-segmentation-point.component';
 import { useSegmentAnything } from './segment-anything-state-provider.component';
@@ -43,10 +44,13 @@ const roi: RegionOfInterest = {
     height: 100,
 };
 
+const toolSettings = {
+    interactiveMode: false,
+    rightClickMode: false,
+};
+
 export const SegmentAnythingTool = () => {
-    const {
-        zoomState: { zoom },
-    } = useZoom();
+    const zoom = useZoom();
 
     const clampPoint = clampPointBetweenImage(selectedMediaItem.image);
 
@@ -79,10 +83,8 @@ export const SegmentAnythingTool = () => {
                 // start to compute the next decoding
                 return [];
             });
-    }, [mousePosition, roi, throttledDecodingQueryFn, throttleSetMousePosition]);
+    }, [mousePosition, throttledDecodingQueryFn, throttleSetMousePosition]);
 
-    const { getToolSettings } = useAnnotationToolContext();
-    const toolSettings = getToolSettings(ToolType.SegmentAnythingTool);
     const { interactiveMode, rightClickMode } = toolSettings;
 
     const handleMouseMove = (event: PointerEvent<SVGSVGElement>) => {
@@ -90,7 +92,7 @@ export const SegmentAnythingTool = () => {
             return;
         }
 
-        const point = clampPoint(getRelativePoint(ref.current, { x: event.clientX, y: event.clientY }, zoom));
+        const point = clampPoint(getRelativePoint(ref.current, { x: event.clientX, y: event.clientY }, zoom.scale));
 
         // In task chain don't allow the user to place a point outside the ROI
         if (!pointInRectangle(roi, point)) {
@@ -111,7 +113,7 @@ export const SegmentAnythingTool = () => {
             return;
         }
 
-        if (event.pointerType === PointerType.Touch) {
+        if (event.pointerType === 'touch') {
             return;
         }
 

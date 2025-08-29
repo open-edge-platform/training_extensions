@@ -1,10 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ElementType } from 'react';
-
-import Clipper from '@doodle3d/clipper-js';
 import type ClipperShape from '@doodle3d/clipper-js';
+import Clipper from '@doodle3d/clipper-js';
 import { Shape as SmartToolsShape, Polygon as ToolPolygon, Rect as ToolRect } from '@geti/smart-tools/types';
 import { BoundingBox } from '@geti/smart-tools/utils';
 import { isEmpty } from 'lodash-es';
@@ -174,6 +172,7 @@ export const removeOffLimitPoints = (shape: Shape, roi: RegionOfInterest): Shape
     return shape.shapeType === 'rect' ? removeOffPointsRect(shape, roi) : removeOffLimitPointsPolygon(shape, roi);
 };
 
+type ElementType = SVGElement | HTMLDivElement;
 export const getRelativePoint = (element: ElementType, point: Point, zoom: number): Point => {
     const rect = element.getBoundingClientRect();
 

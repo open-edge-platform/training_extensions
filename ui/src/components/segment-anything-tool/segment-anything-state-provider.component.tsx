@@ -8,16 +8,7 @@ import { toast } from '@geti/ui';
 import { useQueryClient, UseQueryResult } from '@tanstack/react-query';
 import { isEmpty } from 'lodash-es';
 
-import { Shape } from '../../../../core/annotations/shapes.interface';
-import { MissingProviderError } from '../../../../shared/missing-provider-error';
-import { ToolType } from '../../core/annotation-tool-context.interface';
-import { useAddUnfinishedShape } from '../../hooks/use-add-unfinished-shape.hook';
-import { useAnnotationScene } from '../../providers/annotation-scene-provider/annotation-scene-provider.component';
-import { useAnnotationToolContext } from '../../providers/annotation-tool-provider/annotation-tool-provider.component';
-import { StateProviderProps } from '../tools.interface';
-import UndoRedoProvider from '../undo-redo/undo-redo-provider.component';
-import useUndoRedoState from '../undo-redo/use-undo-redo-state';
-import { useApplyLabelToPendingAnnotations } from '../useApplyLabelToPendingAnnotations';
+import { Shape } from '../shapes/interfaces';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';
 import { useDecodingMutation, useDecodingQuery, useDecodingQueryOptions } from './use-decoding-query.hook';
 import { useSegmentAnythingModel } from './use-segment-anything-model.hook';
@@ -160,7 +151,7 @@ export const useSegmentAnything = (): SegmentAnythingStateContextProps => {
     const context = useContext(SegmentAnythingStateContext);
 
     if (context === undefined) {
-        throw new MissingProviderError('useSegmentAnythingState', 'SegmentAnythingStateProvider');
+        throw new Error('useSegmentAnythingState must be used within a SegmentAnythingStateProvider');
     }
 
     return context;
