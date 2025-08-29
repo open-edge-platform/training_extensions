@@ -31,9 +31,11 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install tox
+        working-directory: lib
         run: |
           pip install '.[dev]'
       - name: Code quality checks
+        working-directory: lib
         run: tox r -vv -e pre-commit
   Unit-Test:
     runs-on: ubuntu-24.04
@@ -56,11 +58,14 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install tox
+        working-directory: lib
         run: |
           pip install '.[dev]'
       - name: Run unit test
+        working-directory: lib
         run: tox r -vv -e unit-test-${{ matrix.tox-env }}
       - name: Upload coverage reports to Codecov
+        working-directory: lib
         run: |
           # If the workflow is triggered from PR then it gets the commit id from the PR.
           # else it uses the commit id of the latest commit. This is because the commit
@@ -105,7 +110,9 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install tox
+        working-directory: lib
         run: |
           pip install '.[dev]'
       - name: Run Integration Test
+        working-directory: lib
         run: tox r -vv -e integration-test-${{ matrix.task }} -- --task ${{ matrix.task }} --run-category-only
