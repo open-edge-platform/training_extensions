@@ -268,7 +268,7 @@ class TestResize:
 class TestRandomFlip:
     @pytest.fixture()
     def random_flip(self) -> RandomFlip:
-        return RandomFlip(prob=1.0, is_numpy_to_tvtensor=False)
+        return RandomFlip(probability=1.0, is_numpy_to_tvtensor=False)
 
     def test_forward(
         self,
@@ -686,7 +686,7 @@ class TestCachedMosaic:
 
     def test_init_invalid_probability(self) -> None:
         with pytest.raises(AssertionError):
-            CachedMosaic(prob=1.5, is_numpy_to_tvtensor=False)
+            CachedMosaic(probability=1.5, is_numpy_to_tvtensor=False)
 
     def test_forward_pop_small_cache(
         self,
@@ -731,7 +731,7 @@ class TestCachedMixUp:
     @pytest.fixture()
     def cached_mixup(self) -> CachedMixUp:
         return CachedMixUp(
-            ratio_range=(1.0, 1.0), prob=1.0, random_pop=False, max_cached_images=10, is_numpy_to_tvtensor=False
+            ratio_range=(1.0, 1.0), probability=1.0, random_pop=False, max_cached_images=10, is_numpy_to_tvtensor=False
         )
 
     def test_init_invalid_img_scale(self) -> None:
@@ -740,7 +740,7 @@ class TestCachedMixUp:
 
     def test_init_invalid_probability(self) -> None:
         with pytest.raises(AssertionError):
-            CachedMosaic(prob=1.5)
+            CachedMosaic(probability=1.5)
 
     def test_forward_pop_small_cache(
         self,
