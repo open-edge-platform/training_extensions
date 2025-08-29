@@ -1,0 +1,389 @@
+<!--Copyright (C) 2025 Intel Corporation-->
+<!--SPDX-License-Identifier: Apache-2.0-->
+
+<!-- This is a temporary example and can be removed once WebRTC is integrated into the UI. -->
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebRTC Video Inference Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+
+      .container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        color: #333;
+        text-align: center;
+      }
+
+      .controls {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      button {
+        padding: 10px 20px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background 0.3s;
+      }
+
+      button:hover {
+        background: #0056b3;
+      }
+
+      button:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+      }
+
+      .stop-btn {
+        background: #dc3545;
+      }
+
+      .stop-btn:hover {
+        background: #c82333;
+      }
+
+      input[type="range"] {
+        width: 200px;
+      }
+
+      .video-container {
+        position: relative;
+        margin-bottom: 20px;
+      }
+
+      video {
+        width: 100%;
+        max-width: 800px;
+        height: auto;
+        border: 2px solid #ddd;
+        border-radius: 4px;
+        background: #000;
+      }
+
+      .status {
+        padding: 10px;
+        background: #e9ecef;
+        border-radius: 4px;
+        margin-bottom: 15px;
+        font-family: monospace;
+      }
+
+      .connection-status {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-weight: bold;
+      }
+
+      .connected {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .disconnected {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      .connecting {
+        background: #fff3cd;
+        color: #856404;
+      }
+
+      .logs {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 15px;
+        height: 150px;
+        overflow-y: auto;
+        font-family: monospace;
+        font-size: 12px;
+      }
+
+      .log-entry {
+        margin-bottom: 5px;
+        padding: 2px 5px;
+        border-left: 3px solid transparent;
+      }
+
+      .log-info {
+        border-left-color: #17a2b8;
+      }
+
+      .log-success {
+        border-left-color: #28a745;
+      }
+
+      .log-error {
+        border-left-color: #dc3545;
+      }
+
+      .log-warning {
+        border-left-color: #ffc107;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Local WebRTC Video Inference Test</h1>
+      <p><strong>Note:</strong> Running locally without ICE servers</p>
+
+      <div class="controls">
+        <button id="startBtn" onclick="startStream()">Start Stream</button>
+        <button id="stopBtn" class="stop-btn" onclick="stopStream()" disabled>
+          Stop Stream
+        </button>
+
+        <div>
+          <label for="confThreshold">Confidence Threshold: </label>
+          <input
+            type="range"
+            id="confThreshold"
+            min="0"
+            max="1"
+            step="0.01"
+            value="0.5"
+            oninput="updateConfidence(this.value)"
+          />
+          <span id="confValue">0.5</span>
+        </div>
+      </div>
+
+      <div class="status">
+        Status:
+        <span id="connectionStatus" class="connection-status disconnected"
+          >Disconnected</span
+        >
+        | Signaling State: <span id="signalingState">-</span>
+      </div>
+
+      <div class="video-container">
+        <video id="videoElement" autoplay playsinline muted></video>
+      </div>
+
+      <div>
+        <h3>Connection Logs</h3>
+        <div id="logs" class="logs"></div>
+      </div>
+    </div>
+
+    <script>
+      async function makeRequest(url, data) {
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        });
+        return await response.json();
+      }
+
+      class WebRTCClient {
+        constructor() {
+          this.pc = null;
+          this.webrtcId = this.generateId();
+          this.isConnected = false;
+        }
+
+        generateId() {
+          return "webrtc-" + Math.random().toString(36).substr(2, 9);
+        }
+
+        async startStream() {
+          try {
+            this.log("Creating new WebRTC connection...", "info");
+            this.updateStatus("connecting");
+
+            // Create new peer connection WITHOUT ice servers
+            this.pc = new RTCPeerConnection();
+
+            // Set up event listeners
+            this.setupEventListeners();
+
+            // Create offer
+            this.log("Creating offer...", "info");
+            const offer = await this.pc.createOffer({
+              offerToReceiveAudio: false,
+              offerToReceiveVideo: true,
+            });
+            await this.pc.setLocalDescription(offer);
+
+            await new Promise((resolve) => {
+              if (this.pc.iceGatheringState === "complete") return resolve();
+              const onState = () => {
+                if (this.pc.iceGatheringState === "complete") {
+                  this.pc.removeEventListener(
+                    "icegatheringstatechange",
+                    onState,
+                  );
+                  resolve();
+                }
+              };
+              this.pc.addEventListener("icegatheringstatechange", onState);
+            });
+            const answer = await makeRequest("/api/webrtc/offer", {
+              webrtc_id: this.webrtcId,
+              sdp: this.pc.localDescription.sdp,
+              type: this.pc.localDescription.type,
+            });
+
+            this.log("Setting remote description...", "info");
+            await this.pc.setRemoteDescription(
+              new RTCSessionDescription(answer),
+            );
+
+            this.log("WebRTC connection established successfully!", "success");
+            this.isConnected = true;
+            this.updateStatus("connected");
+          } catch (error) {
+            this.log(`Error starting stream: ${error.message}`, "error");
+            this.updateStatus("disconnected");
+            this.cleanup();
+          }
+        }
+
+        setupEventListeners() {
+          // Handle incoming video stream
+          this.pc.ontrack = (event) => {
+            this.log("Received video track", "success");
+            const videoElement = document.getElementById("videoElement");
+            videoElement.srcObject = event.streams[0];
+
+            // Optional: log video track info
+            event.streams[0].getTracks().forEach((track) => {
+              this.log(
+                `Video track: ${track.kind}, ${track.readyState}`,
+                "info",
+              );
+            });
+          };
+
+          // Signaling state change
+          this.pc.onsignalingstatechange = () => {
+            const state = this.pc.signalingState;
+            document.getElementById("signalingState").textContent = state;
+            this.log(`Signaling state: ${state}`, "info");
+          };
+        }
+
+        async updateInput(confThreshold) {
+          if (!this.isConnected) {
+            this.log("Cannot update input - not connected", "warning");
+            return;
+          }
+
+          try {
+            await makeRequest("/api/webrtc/input_hook", {
+              webrtc_id: this.webrtcId,
+              conf_threshold: confThreshold,
+            });
+            this.log(
+              `Confidence threshold updated to: ${confThreshold}`,
+              "success",
+            );
+          } catch (error) {
+            this.log("Failed to update confidence threshold", "error");
+          }
+        }
+
+        stopStream() {
+          this.log("Stopping stream...", "info");
+          this.isConnected = false;
+          this.updateStatus("disconnected");
+          this.cleanup();
+
+          // Clear video element
+          const videoElement = document.getElementById("videoElement");
+          if (videoElement.srcObject) {
+            videoElement.srcObject.getTracks().forEach((track) => track.stop());
+            videoElement.srcObject = null;
+          }
+
+          this.log("Stream stopped", "info");
+        }
+
+        cleanup() {
+          if (this.pc) {
+            this.pc.close();
+            this.pc = null;
+          }
+        }
+
+        log(message, type = "info") {
+          const logsDiv = document.getElementById("logs");
+          const logEntry = document.createElement("div");
+          logEntry.className = `log-entry log-${type}`;
+          logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+          logsDiv.appendChild(logEntry);
+          logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+
+        updateStatus(status) {
+          const statusElement = document.getElementById("connectionStatus");
+          statusElement.className = `connection-status ${status}`;
+          statusElement.textContent =
+            status.charAt(0).toUpperCase() + status.slice(1);
+
+          // Update button states
+          document.getElementById("startBtn").disabled =
+            status === "connected" || status === "connecting";
+          document.getElementById("stopBtn").disabled = status !== "connected";
+        }
+      }
+
+      // Global client instance
+      const client = new WebRTCClient();
+
+      function startStream() {
+        client.startStream();
+      }
+
+      function stopStream() {
+        client.stopStream();
+      }
+
+      function updateConfidence(value) {
+        document.getElementById("confValue").textContent = value;
+        client.updateInput(parseFloat(value));
+      }
+
+      // Initial setup
+      document
+        .getElementById("confThreshold")
+        .addEventListener("input", (e) => {
+          document.getElementById("confValue").textContent = e.target.value;
+        });
+
+      // Add some initial logs
+      client.log("Page loaded. Ready to connect.", "info");
+      client.log('Click "Start Stream" to begin streaming video.', "info");
+      client.log("Running in local mode without external ICE servers.", "info");
+    </script>
+  </body>
+</html>

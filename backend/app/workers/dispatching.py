@@ -8,8 +8,6 @@ import queue
 import time
 from multiprocessing.synchronize import Event as EventClass
 
-from fastrtc import AdditionalOutputs
-
 from app.entities.stream_data import StreamData
 from app.schemas import Sink, SinkType
 from app.services import DispatchService
@@ -72,9 +70,8 @@ def dispatching_routine(
                 )
 
             # Dispatch to WebRTC stream
-            additional_outputs = AdditionalOutputs(str(prediction))
             try:
-                rtc_stream_queue.put((image_with_visualization, additional_outputs), block=False)
+                rtc_stream_queue.put(image_with_visualization, block=False)
             except queue.Full:
                 logger.debug("Visualization queue is full; skipping")
     finally:
