@@ -72,13 +72,30 @@ SEM_SEG_RECIPES = [recipe for recipe in pytest.RECIPE_LIST if "/semantic_segment
 KP_DET_RECIPES = [recipe for recipe in pytest.RECIPE_LIST if "/keypoint_detection/" in recipe]
 
 
-@pytest.mark.parametrize("recipe", CLS_RECIPES + DET_RECIPES + INST_SEG_RECIPES + SEM_SEG_RECIPES)
+@pytest.mark.parametrize("recipe", CLS_RECIPES + DET_RECIPES + INST_SEG_RECIPES)
 def test_augmentation(
     recipe: str,
     fxt_target_dataset_per_task: dict,
 ):
     configurable_augs = [
         "RandomPhotometricDistort",
+        "RandomAffine",
+        "RandomVerticalFlip",
+        "RandomGaussianBlur",
+        "RandomFlip",
+        "RandomGaussianNoise",
+    ]
+    _test_augmentation(recipe, fxt_target_dataset_per_task, configurable_augs)
+
+
+@pytest.mark.parametrize("recipe", SEM_SEG_RECIPES)
+def test_augmentation_seg(
+    recipe: str,
+    fxt_target_dataset_per_task: dict,
+):
+    configurable_augs = [
+        "RandomResizedCrop",
+        "PhotoMetricDistortion",
         "RandomAffine",
         "RandomVerticalFlip",
         "RandomGaussianBlur",
