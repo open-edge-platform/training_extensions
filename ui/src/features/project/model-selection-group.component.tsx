@@ -60,7 +60,7 @@ const ModelOption = ({ model, onPress }: ModelOptionProps) => {
                     <Heading level={2} UNSAFE_className={classes.title}>
                         {model.title}
                     </Heading>
-                    <Radio aria-label={model.value} value={model.value} onFocus={onPress} />
+                    <Radio aria-label={model.value} value={model.value} />
                 </Flex>
 
                 <Text UNSAFE_className={classes.description}>{model.description}</Text>
