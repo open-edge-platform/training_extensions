@@ -1,0 +1,38 @@
+@startuml "Complete-Storage-schema"
+!define table(x) class x << (T,#FFAAAA) >>
+!define pk(x) <u>x</u>
+!define fk(x) <i>x</i>
+
+title
+<size:16><b>Geti Tune - Labels</b></size>
+<size:12>DB Tables</size>
+end title
+
+'Tables
+
+table(projects) {
+  pk(id) : UUID
+  name : TEXT NOT NULL
+  ...
+  --
+  'Task-related details
+  task_type : TEXT NOT NULL
+  exclusive_labels : BOOLEAN NOT NULL
+}
+
+table(labels) {
+  pk(id) : UUID
+  name : TEXT NOT NULL
+  fk(project_id) : UUID NOT NULL
+  created_at : TIMESTAMP NOT NULL
+  updated_at : TIMESTAMP NOT NULL
+  ---
+  'UI/UX properties
+  color : TEXT
+  hotkey : TEXT
+}
+
+' Relationships
+projects ||---|{ labels
+
+@enduml
