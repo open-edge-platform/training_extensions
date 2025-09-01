@@ -70,9 +70,11 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install tox
+        working-directory: lib
         run: |
           pip install '.[dev]'
       - name: Run Performance Test
+        working-directory: lib
         env:
           BENCHMARK_RESULTS_CLEAR: ${{ vars.BENCHMARK_RESULTS_CLEAR }}
           GH_CTX_REF_NAME: ${{ github.ref_name }}
@@ -90,6 +92,7 @@ jobs:
           tox -vv -e perf-benchmark-v2
 
       - name: Upload test results
+        working-directory: lib
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: benchmark-results-${{ matrix.task }}

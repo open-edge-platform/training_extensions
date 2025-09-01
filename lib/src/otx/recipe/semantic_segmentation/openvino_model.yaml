@@ -1,0 +1,25 @@
+callback_monitor: val/Dice
+
+data: ../_base_/data/semantic_segmentation.yaml
+overrides:
+  reset:
+    - data.train_subset.transforms
+    - data.val_subset.transforms
+    - data.test_subset.transforms
+
+  data:
+    train_subset:
+      batch_size: 1
+      num_workers: 2
+      transforms:
+        - class_path: torchvision.transforms.v2.ToImage
+    val_subset:
+      batch_size: 1
+      num_workers: 2
+      transforms:
+        - class_path: torchvision.transforms.v2.ToImage
+    test_subset:
+      batch_size: 64
+      num_workers: 2
+      transforms:
+        - class_path: torchvision.transforms.v2.ToImage

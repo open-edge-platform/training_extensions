@@ -139,7 +139,7 @@ export class WebRTCConnection {
 
         const { data } = await fetchClient.POST('/api/webrtc/offer', {
             body: {
-                sdp: this.peerConnection.localDescription?.sdp,
+                sdp: this.peerConnection.localDescription?.sdp ?? '',
                 type: this.peerConnection.localDescription?.type ?? '',
                 webrtc_id: this.webrtcId,
             },
@@ -258,7 +258,7 @@ export class WebRTCConnection {
     }
 
     private updateConfThreshold(value: number) {
-        return fetchClient.POST('/api/input_hook', {
+        return fetchClient.POST('/api/webrtc/input_hook', {
             body: {
                 conf_threshold: value,
                 webrtc_id: this.webrtcId,

@@ -47,7 +47,9 @@ def main(path: str) -> None:
 
 
 if __name__ == "__main__":
-    print("Auto sphinx builder is ON. It automatically builds the source when the change is detected.")
+    print(
+        "Auto sphinx builder is ON. It automatically builds the source when the change is detected."
+    )
     script_location = Path(__file__).resolve().parent
     parent_dir = script_location.parent
     source_folder = parent_dir / "source"
