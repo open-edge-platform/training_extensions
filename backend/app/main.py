@@ -12,13 +12,14 @@ import os
 from pathlib import Path
 
 import uvicorn
-from app.api.endpoints import models, pipelines, sinks, sources, system, webrtc
-from app.core import lifespan
-from app.settings import get_settings
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+
+from app.api.endpoints import models, pipelines, sinks, sources, system, webrtc
+from app.core import lifespan
+from app.settings import get_settings
 
 settings = get_settings()
 
