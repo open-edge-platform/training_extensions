@@ -6,3 +6,5 @@
 !MANIFEST.in
 !docker/download_pretrained_weights.py
 !.ci
+!backend
+!ui

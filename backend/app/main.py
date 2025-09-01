@@ -6,19 +6,19 @@
 #  - uv run app/main.py
 # or use docker and access UI and backend at geti-tune.localhost
 #  - docker compose up
-#  - docker compose -f docker-compose.dev.yaml up
 
 import logging
+import os
 from pathlib import Path
 
 import uvicorn
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
-
 from app.api.endpoints import models, pipelines, sinks, sources, system, webrtc
 from app.core import lifespan
 from app.settings import get_settings
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 settings = get_settings()
 
@@ -79,6 +79,12 @@ async def health_check() -> dict[str, str]:
 def main() -> None:
     """Main application entry point"""
     logger.info(f"Starting {settings.app_name} in {settings.environment} mode")
+
+    ui_static_content = os.getenv("UI_STATIC_CONTENT", "")
+    if len(ui_static_content) > 0:
+        logger.info(f"Serving static UI content from: {ui_static_content}")
+        app.mount("/", StaticFiles(directory=ui_static_content, html=True), name="ui")
+
     uvicorn.run(
         app,
         host=settings.host,
