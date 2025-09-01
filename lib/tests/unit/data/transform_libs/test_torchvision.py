@@ -169,7 +169,7 @@ def det_data_entity_empty_polygons() -> OTXDataItem:
 class TestMinIoURandomCrop:
     @pytest.fixture()
     def min_iou_random_crop(self) -> MinIoURandomCrop:
-        return MinIoURandomCrop()
+        return MinIoURandomCrop(is_numpy_to_tvtensor=False)
 
     def test_forward(self, min_iou_random_crop: MinIoURandomCrop, det_data_entity: OTXDataItem) -> None:
         """Test forward."""
@@ -188,7 +188,7 @@ class TestMinIoURandomCrop:
 class TestResize:
     @pytest.fixture()
     def resize(self) -> Resize:
-        return Resize(scale=(128, 96))  # (64, 64) -> (128, 96)
+        return Resize(scale=(128, 96), is_numpy_to_tvtensor=False)  # (64, 64) -> (128, 96)
 
     @pytest.mark.parametrize(
         ("keep_ratio", "expected_shape", "expected_scale_factor"),
@@ -268,7 +268,7 @@ class TestResize:
 class TestRandomFlip:
     @pytest.fixture()
     def random_flip(self) -> RandomFlip:
-        return RandomFlip(prob=1.0)
+        return RandomFlip(probability=1.0, is_numpy_to_tvtensor=False)
 
     def test_forward(
         self,
@@ -307,7 +307,7 @@ class TestRandomFlip:
 class TestPhotoMetricDistortion:
     @pytest.fixture()
     def photo_metric_distortion(self) -> PhotoMetricDistortion:
-        return PhotoMetricDistortion()
+        return PhotoMetricDistortion(is_numpy_to_tvtensor=False)
 
     def test_forward(self, photo_metric_distortion: PhotoMetricDistortion, det_data_entity: OTXDataItem) -> None:
         """Test forward."""
@@ -319,23 +319,23 @@ class TestPhotoMetricDistortion:
 class TestRandomAffine:
     @pytest.fixture()
     def random_affine(self) -> RandomAffine:
-        return RandomAffine()
+        return RandomAffine(is_numpy_to_tvtensor=False)
 
     @pytest.fixture()
     def random_affine_with_mask_transform(self) -> RandomAffine:
-        return RandomAffine(transform_mask=True, mask_fill_value=0)
+        return RandomAffine(transform_mask=True, mask_fill_value=0, is_numpy_to_tvtensor=False)
 
     @pytest.fixture()
     def random_affine_without_mask_transform(self) -> RandomAffine:
-        return RandomAffine(transform_mask=False)
+        return RandomAffine(transform_mask=False, is_numpy_to_tvtensor=False)
 
     @pytest.fixture()
     def random_affine_with_polygon_transform(self) -> RandomAffine:
-        return RandomAffine(transform_polygon=True)
+        return RandomAffine(transform_polygon=True, is_numpy_to_tvtensor=False)
 
     @pytest.fixture()
     def random_affine_with_mask_and_polygon_transform(self) -> RandomAffine:
-        return RandomAffine(transform_mask=True, transform_polygon=True, mask_fill_value=0)
+        return RandomAffine(transform_mask=True, transform_polygon=True, mask_fill_value=0, is_numpy_to_tvtensor=False)
 
     def test_init_invalid_translate_ratio(self) -> None:
         with pytest.raises(ValueError):  # noqa: PT011
@@ -633,6 +633,7 @@ class TestRandomAffine:
             max_translate_ratio=0.1,  # Small translation
             scaling_ratio_range=(1.0, 1.0),  # No scaling
             max_shear_degree=0,  # No shear
+            is_numpy_to_tvtensor=False,
         )
 
         original_entity = deepcopy(det_data_entity_with_masks)
@@ -677,15 +678,15 @@ class TestRandomAffine:
 class TestCachedMosaic:
     @pytest.fixture()
     def cached_mosaic(self) -> CachedMosaic:
-        return CachedMosaic(img_scale=(128, 128), random_pop=False, max_cached_images=20)
+        return CachedMosaic(img_scale=(128, 128), random_pop=False, max_cached_images=20, is_numpy_to_tvtensor=False)
 
     def test_init_invalid_img_scale(self) -> None:
         with pytest.raises(AssertionError):
-            CachedMosaic(img_scale=640)
+            CachedMosaic(img_scale=640, is_numpy_to_tvtensor=False)
 
     def test_init_invalid_probability(self) -> None:
         with pytest.raises(AssertionError):
-            CachedMosaic(prob=1.5)
+            CachedMosaic(probability=1.5, is_numpy_to_tvtensor=False)
 
     def test_forward_pop_small_cache(
         self,
@@ -729,7 +730,9 @@ class TestCachedMosaic:
 class TestCachedMixUp:
     @pytest.fixture()
     def cached_mixup(self) -> CachedMixUp:
-        return CachedMixUp(ratio_range=(1.0, 1.0), prob=1.0, random_pop=False, max_cached_images=10)
+        return CachedMixUp(
+            ratio_range=(1.0, 1.0), probability=1.0, random_pop=False, max_cached_images=10, is_numpy_to_tvtensor=False
+        )
 
     def test_init_invalid_img_scale(self) -> None:
         with pytest.raises(AssertionError):
@@ -737,7 +740,7 @@ class TestCachedMixUp:
 
     def test_init_invalid_probability(self) -> None:
         with pytest.raises(AssertionError):
-            CachedMosaic(prob=1.5)
+            CachedMosaic(probability=1.5)
 
     def test_forward_pop_small_cache(
         self,
@@ -782,7 +785,7 @@ class TestCachedMixUp:
 class TestYOLOXHSVRandomAug:
     @pytest.fixture()
     def yolox_hsv_random_aug(self) -> YOLOXHSVRandomAug:
-        return YOLOXHSVRandomAug()
+        return YOLOXHSVRandomAug(is_numpy_to_tvtensor=False)
 
     def test_forward(self, yolox_hsv_random_aug: YOLOXHSVRandomAug, det_data_entity: OTXDataItem) -> None:
         """Test forward."""
@@ -802,7 +805,7 @@ class TestPad:
         entity = deepcopy(fxt_inst_seg_data_entity[0])
 
         # test pad img/masks with size
-        transform = Pad(size=(96, 128), transform_mask=True)
+        transform = Pad(size=(96, 128), transform_mask=True, is_numpy_to_tvtensor=False)
 
         results = transform(deepcopy(entity))
 
@@ -810,7 +813,7 @@ class TestPad:
         assert results.masks.shape[1:] == (96, 128)
 
         # test pad img/masks with size_divisor
-        transform = Pad(size_divisor=11, transform_mask=True)
+        transform = Pad(size_divisor=11, transform_mask=True, is_numpy_to_tvtensor=False)
 
         results = transform(deepcopy(entity))
 
@@ -819,9 +822,9 @@ class TestPad:
         assert results.masks.shape[1:] == (66, 66)
 
         # test pad img/masks with pad_to_square
-        _transform = Pad(size=(96, 128), transform_mask=True)
+        _transform = Pad(size=(96, 128), transform_mask=True, is_numpy_to_tvtensor=False)
         entity = _transform(deepcopy(entity))
-        transform = Pad(pad_to_square=True, transform_mask=True)
+        transform = Pad(pad_to_square=True, transform_mask=True, is_numpy_to_tvtensor=False)
 
         results = transform(deepcopy(entity))
 
@@ -829,9 +832,9 @@ class TestPad:
         assert results.masks.shape[1:] == (128, 128)
 
         # test pad img/masks with pad_to_square and size_divisor
-        _transform = Pad(size=(96, 128), transform_mask=True)
+        _transform = Pad(size=(96, 128), transform_mask=True, is_numpy_to_tvtensor=False)
         entity = _transform(deepcopy(entity))
-        transform = Pad(pad_to_square=True, size_divisor=11, transform_mask=True)
+        transform = Pad(pad_to_square=True, size_divisor=11, transform_mask=True, is_numpy_to_tvtensor=False)
 
         results = transform(deepcopy(entity))
 
@@ -841,11 +844,11 @@ class TestPad:
 
 class TestRandomResize:
     def test_init(self):
-        transform = RandomResize((224, 224), (1.0, 2.0))
+        transform = RandomResize((224, 224), (1.0, 2.0), is_numpy_to_tvtensor=False)
         assert transform.scale == (224, 224)
 
     def test_repr(self):
-        transform = RandomResize((224, 224), (1.0, 2.0))
+        transform = RandomResize((224, 224), (1.0, 2.0), is_numpy_to_tvtensor=False)
         transform_str = str(transform)
         assert isinstance(transform_str, str)
 
@@ -853,7 +856,7 @@ class TestRandomResize:
         entity = deepcopy(fxt_inst_seg_data_entity[0])
 
         # choose target scale from init when override is True
-        transform = RandomResize((224, 224), (1.0, 2.0))
+        transform = RandomResize((224, 224), (1.0, 2.0), is_numpy_to_tvtensor=False)
 
         results = transform(deepcopy(entity))
 
@@ -863,10 +866,16 @@ class TestRandomResize:
         assert results.img_info.img_shape[1] <= 448
 
         # keep ratio is True
-        transform = RandomResize((224, 224), (1.0, 2.0), keep_ratio=True, transform_bbox=True, transform_mask=True)
+        transform = RandomResize(
+            (224, 224),
+            (1.0, 2.0),
+            is_numpy_to_tvtensor=False,
+            keep_ratio=True,
+            transform_bbox=True,
+            transform_mask=True,
+        )
 
         results = transform(deepcopy(entity))
-
         assert results.image.shape[0] >= 224
         assert results.image.shape[0] <= 448
         assert results.image.shape[1] >= 224
@@ -884,12 +893,25 @@ class TestRandomResize:
         assert results.masks.shape[2] <= 448
 
         # keep ratio is False
-        transform = RandomResize((224, 224), (1.0, 2.0), keep_ratio=False, transform_bbox=True, transform_mask=True)
+        transform = RandomResize(
+            (224, 224),
+            (1.0, 2.0),
+            keep_ratio=False,
+            transform_bbox=True,
+            transform_mask=True,
+            is_numpy_to_tvtensor=False,
+        )
 
         results = transform(deepcopy(entity))
 
         # choose target scale from init when override is False and scale is a list of tuples
-        transform = RandomResize([(448, 224), (224, 112)], keep_ratio=False, transform_bbox=True, transform_mask=True)
+        transform = RandomResize(
+            [(448, 224), (224, 112)],
+            keep_ratio=False,
+            transform_bbox=True,
+            transform_mask=True,
+            is_numpy_to_tvtensor=False,
+        )
 
         results = transform(deepcopy(entity))
 
@@ -942,38 +964,38 @@ class TestRandomCrop:
     def test_init_invalid_crop_type(self) -> None:
         # test invalid crop_type
         with pytest.raises(ValueError, match="Invalid crop_type"):
-            RandomCrop(crop_size=(10, 10), crop_type="unknown")
+            RandomCrop(crop_size=(10, 10), crop_type="unknown", is_numpy_to_tvtensor=False)
 
     @pytest.mark.parametrize("crop_type", ["absolute", "absolute_range"])
     @pytest.mark.parametrize("crop_size", [(0, 0), (0, 1), (1, 0)])
     def test_init_invalid_value(self, crop_type: str, crop_size: tuple[int, int]) -> None:
         # test h > 0 and w > 0
         with pytest.raises(AssertionError):
-            RandomCrop(crop_size=crop_size, crop_type=crop_type)
+            RandomCrop(crop_size=crop_size, crop_type=crop_type, is_numpy_to_tvtensor=False)
 
     @pytest.mark.parametrize("crop_type", ["absolute", "absolute_range"])
     @pytest.mark.parametrize("crop_size", [(1.0, 1), (1, 1.0), (1.0, 1.0)])
     def test_init_invalid_type(self, crop_type: str, crop_size: tuple[int, int]) -> None:
         # test type(h) = int and type(w) = int
         with pytest.raises(AssertionError):
-            RandomCrop(crop_size=crop_size, crop_type=crop_type)
+            RandomCrop(crop_size=crop_size, crop_type=crop_type, is_numpy_to_tvtensor=False)
 
     def test_init_invalid_size(self) -> None:
         # test crop_size[0] <= crop_size[1]
         with pytest.raises(AssertionError):
-            RandomCrop(crop_size=(10, 5), crop_type="absolute_range")
+            RandomCrop(crop_size=(10, 5), crop_type="absolute_range", is_numpy_to_tvtensor=False)
 
     @pytest.mark.parametrize("crop_type", ["relative_range", "relative"])
     @pytest.mark.parametrize("crop_size", [(0, 1), (1, 0), (1.1, 0.5), (0.5, 1.1)])
     def test_init_invalid_range(self, crop_type: str, crop_size: tuple[int | float]) -> None:
         # test h in (0, 1] and w in (0, 1]
         with pytest.raises(AssertionError):
-            RandomCrop(crop_size=crop_size, crop_type=crop_type)
+            RandomCrop(crop_size=crop_size, crop_type=crop_type, is_numpy_to_tvtensor=False)
 
     @pytest.mark.parametrize(("crop_type", "crop_size"), [("relative", (0.5, 0.5)), ("absolute", (12, 16))])
     def test_forward_relative_absolute(self, entity, crop_type: str, crop_size: tuple[float | int]) -> None:
         # test relative and absolute crop
-        transform = RandomCrop(crop_size=crop_size, crop_type=crop_type)
+        transform = RandomCrop(crop_size=crop_size, crop_type=crop_type, is_numpy_to_tvtensor=False)
         target_shape = (12, 16)
 
         results = transform(deepcopy(entity))
@@ -982,7 +1004,7 @@ class TestRandomCrop:
 
     def test_forward_absolute_range(self, entity) -> None:
         # test absolute_range crop
-        transform = RandomCrop(crop_size=(10, 20), crop_type="absolute_range")
+        transform = RandomCrop(crop_size=(10, 20), crop_type="absolute_range", is_numpy_to_tvtensor=False)
 
         results = transform(deepcopy(entity))
 
@@ -993,7 +1015,7 @@ class TestRandomCrop:
 
     def test_forward_relative_range(self, entity) -> None:
         # test relative_range crop
-        transform = RandomCrop(crop_size=(0.9, 0.8), crop_type="relative_range")
+        transform = RandomCrop(crop_size=(0.9, 0.8), crop_type="relative_range", is_numpy_to_tvtensor=False)
 
         results = transform(deepcopy(entity))
 
@@ -1004,7 +1026,13 @@ class TestRandomCrop:
 
     def test_forward_bboxes_labels_masks_polygons(self, iseg_entity) -> None:
         # test with bboxes, labels, masks, and polygons
-        transform = RandomCrop(crop_size=(7, 5), allow_negative_crop=False, recompute_bbox=False, bbox_clip_border=True)
+        transform = RandomCrop(
+            crop_size=(7, 5),
+            allow_negative_crop=False,
+            recompute_bbox=False,
+            bbox_clip_border=True,
+            is_numpy_to_tvtensor=False,
+        )
 
         results = transform(deepcopy(iseg_entity))
 
@@ -1026,6 +1054,7 @@ class TestRandomCrop:
             allow_negative_crop=False,
             recompute_bbox=True,
             bbox_clip_border=True,
+            is_numpy_to_tvtensor=False,
         )
         results = transform(deepcopy(iseg_entity))
 
@@ -1042,6 +1071,7 @@ class TestRandomCrop:
             allow_negative_crop=False,
             recompute_bbox=True,
             bbox_clip_border=True,
+            is_numpy_to_tvtensor=False,
         )
         results = transform(deepcopy(iseg_entity))
 
@@ -1056,6 +1086,7 @@ class TestRandomCrop:
             allow_negative_crop=False,
             recompute_bbox=True,
             bbox_clip_border=False,
+            is_numpy_to_tvtensor=False,
         )
 
         results = transform(deepcopy(det_entity))
@@ -1068,7 +1099,7 @@ class TestRandomCrop:
         det_entity.image = np.random.randint(0, 255, size=(10, 10), dtype=np.uint8)
         det_entity.bboxes = tv_tensors.wrap(torch.zeros((0, 4)), like=det_entity.bboxes)
         det_entity.label = torch.LongTensor()
-        transform = RandomCrop(crop_size=(5, 3), allow_negative_crop=allow_negative_crop)
+        transform = RandomCrop(crop_size=(5, 3), allow_negative_crop=allow_negative_crop, is_numpy_to_tvtensor=False)
 
         results = transform(deepcopy(det_entity))
 
@@ -1090,6 +1121,7 @@ class TestRandomCrop:
             allow_negative_crop=allow_negative_crop,
             recompute_bbox=recompute_bbox,
             bbox_clip_border=bbox_clip_border,
+            is_numpy_to_tvtensor=False,
         )
         assert (
             repr(transform) == f"RandomCrop(crop_size={crop_size}, crop_type={crop_type}, "

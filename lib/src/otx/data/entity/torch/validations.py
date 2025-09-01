@@ -60,7 +60,7 @@ class ValidateItemMixin:
             msg = "Label must be a torch tensor"
             raise TypeError(msg)
         if label.dtype != torch.long:
-            msg = "Label must have dtype torch.long"
+            msg = f"Label must have dtype torch.long, but got {label.dtype}"
             raise ValueError(msg)
         # detection tasks allow multiple labels so the shape is [B, N]
         if label.ndim > 2:

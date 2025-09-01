@@ -252,6 +252,155 @@ TEMPLATE_ID_MAPPING = {
 }
 
 
+def update_learning_rate(param_value: float | None, config: dict) -> None:
+    """Update learning rate in the config."""
+    if param_value is None:
+        logging.info("Learning rate is not provided, skipping update.")
+        return
+    optimizer = config["model"]["init_args"]["optimizer"]
+    if isinstance(optimizer, dict) and "init_args" in optimizer:
+        optimizer["init_args"]["lr"] = param_value
+    else:
+        warn("Warning: learning_rate is not updated", stacklevel=1)
+
+
+def update_num_iters(param_value: int | None, config: dict) -> None:
+    """Update max_epochs in the config."""
+    if param_value is None:
+        logging.info("Max epochs is not provided, skipping update.")
+        return
+    config["max_epochs"] = param_value
+
+
+def update_early_stopping(early_stopping_cfg: dict | None, config: dict) -> None:
+    """Update early stopping parameters in the config."""
+    if early_stopping_cfg is None:
+        logging.info("Early stopping parameters are not provided, skipping update.")
+        return
+
+    enable = early_stopping_cfg["enable"]
+    patience = early_stopping_cfg["patience"]
+
+    idx = GetiConfigConverter.get_callback_idx(
+        config["callbacks"],
+        "otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup",
+    )
+    if not enable and idx > -1:
+        config["callbacks"].pop(idx)
+        return
+
+    config["callbacks"][idx]["init_args"]["patience"] = patience
+
+
+def update_tiling(tiling_dict: dict | None, config: dict) -> None:
+    """Update tiling parameters in the config."""
+    if tiling_dict is None:
+        logging.info("Tiling parameters are not provided, skipping update.")
+        return
+
+    config["data"]["tile_config"]["enable_tiler"] = tiling_dict["enable"]
+    if tiling_dict["enable"]:
+        config["data"]["tile_config"]["enable_adaptive_tiling"] = tiling_dict["adaptive_tiling"]
+        config["data"]["tile_config"]["tile_size"] = (
+            tiling_dict["tile_size"],
+            tiling_dict["tile_size"],
+        )
+        config["data"]["tile_config"]["overlap"] = tiling_dict["tile_overlap"]
+
+
+def update_input_size(height: int | None, width: int | None, config: dict) -> None:
+    """Update input size in the config."""
+    if height is None or width is None:
+        logging.info("Input size is not provided, skipping update.")
+        return
+    config["data"]["input_size"] = (height, width)
+
+
+def update_augmentations(augmentation_params: dict, config: dict) -> None:
+    """Update augmentations in the config.
+
+    Example:
+        augmentation_params = {
+            random_affine = {
+                "enable": True,
+                "scaling_ratio_range": [0.1, 2.0]
+            },
+            gaussian_blur = {
+                "enable": True,
+                "kernel_size": 5
+            }
+            ...
+        }
+    """
+    if not augmentation_params:
+        return
+
+    tiling = config["data"]["tile_config"]["enable_tiler"]
+    # this list maps Geti user frendly naming to OTX aug classes
+    augs_mapping_list = {
+        "random_resize_crop": [
+            "otx.data.transform_libs.torchvision.EfficientNetRandomCrop",
+            "otx.data.transform_libs.torchvision.RandomResizedCrop",
+        ],
+        "random_affine": ["otx.data.transform_libs.torchvision.RandomAffine"],
+        "topdown_affine": ["otx.data.transform_libs.torchvision.TopdownAffine"],
+        "random_horizontal_flip": ["otx.data.transform_libs.torchvision.RandomFlip"],
+        "random_vertical_flip": ["torchvision.transforms.v2.RandomVerticalFlip"],
+        "gaussian_blur": ["otx.data.transform_libs.torchvision.RandomGaussianBlur"],
+        "gaussian_noise": ["otx.data.transform_libs.torchvision.RandomGaussianNoise"],
+        "color_jitter": ["torchvision.transforms.v2.RandomPhotometricDistort"],
+        "photometric_distort": ["otx.data.transform_libs.torchvision.PhotoMetricDistortion"],
+        "iou_random_crop": [
+            "otx.data.transform_libs.torchvision.MinIoURandomCrop",
+            "otx.data.transform_libs.torchvision.RandomIoUCrop",
+        ],
+        "random_zoom_out": ["torchvision.transforms.v2.RandomZoomOut"],
+        "hsv_random_aug": ["otx.data.transform_libs.torchvision.YOLOXHSVRandomAug"],
+        "mixup": ["otx.data.transform_libs.torchvision.CachedMixUp"],
+        "mosaic": ["otx.data.transform_libs.torchvision.CachedMosaic"],
+    }
+
+    for aug_name, aug_value in augmentation_params.items():
+        aug_classes = augs_mapping_list[aug_name]
+        found = False
+        for aug_config in config["data"]["train_subset"]["transforms"]:
+            if aug_config["class_path"] in aug_classes:
+                found = True
+                if "init_args" not in aug_config:
+                    aug_config["init_args"] = {}
+                if aug_name == "random_resize_crop" and not aug_value["enable"]:
+                    # if random crop is disabled -> change this augmentation to simple Resize
+                    aug_config["class_path"] = "otx.data.transform_libs.torchvision.Resize"
+                    break
+                if "TopdownAffine" in aug_config["class_path"]:
+                    affine_transforms_prob = aug_value.pop("probability", 1.0)
+                    if affine_transforms_prob is not None:
+                        aug_config["init_args"]["probability"] = affine_transforms_prob if aug_value["enable"] else 0.0
+                        if aug_config["init_args"]["probability"] < 0.7:
+                            for val_aug_cfg in config["data"]["val_subset"]["transforms"]:
+                                if "Pad" in val_aug_cfg["class_path"]:
+                                    val_aug_cfg["enable"] = False
+
+                    break
+
+                aug_config["enable"] = aug_value.pop("enable")
+                for parameter in aug_value:
+                    value = aug_value[parameter]
+                    if value is not None:
+                        override_parameter = (
+                            "p"
+                            if parameter == "probability" and "torchvision.transforms.v2" in aug_config["class_path"]
+                            else parameter
+                        )  # Geti consistency fix
+                        aug_config["init_args"][override_parameter] = value
+                break
+
+        if not found and not tiling:
+            msg = f"Augmentation {aug_name} is not found for this model."
+            raise ValueError(msg)
+        logging.info("This augmentation is not applicable in Tiling pipeline")
+
+
 class GetiConfigConverter:
     """Convert Geti model manifest to OTXv2 recipe dictionary.
 
@@ -327,108 +476,23 @@ class GetiConfigConverter:
     @staticmethod
     def _update_params(config: dict, param_dict: dict) -> None:
         """Update params of OTX recipe from Geit configurable params."""
-
-        def update_learning_rate(param_value: float | None) -> None:
-            """Update learning rate in the config."""
-            if param_value is None:
-                logging.info("Learning rate is not provided, skipping update.")
-                return
-            optimizer = config["model"]["init_args"]["optimizer"]
-            if isinstance(optimizer, dict) and "init_args" in optimizer:
-                optimizer["init_args"]["lr"] = param_value
-            else:
-                warn("Warning: learning_rate is not updated", stacklevel=1)
-
-        def update_num_iters(param_value: int | None) -> None:
-            """Update max_epochs in the config."""
-            if param_value is None:
-                logging.info("Max epochs is not provided, skipping update.")
-                return
-            config["max_epochs"] = param_value
-
-        def update_early_stopping(early_stopping_cfg: dict | None) -> None:
-            """Update early stopping parameters in the config."""
-            if early_stopping_cfg is None:
-                logging.info("Early stopping parameters are not provided, skipping update.")
-                return
-
-            enable = early_stopping_cfg["enable"]
-            patience = early_stopping_cfg["patience"]
-
-            idx = GetiConfigConverter._get_callback_idx(
-                config["callbacks"],
-                "otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup",
-            )
-            if not enable and idx > -1:
-                config["callbacks"].pop(idx)
-                return
-
-            config["callbacks"][idx]["init_args"]["patience"] = patience
-
-        def update_tiling(tiling_dict: dict | None) -> None:
-            """Update tiling parameters in the config."""
-            if tiling_dict is None:
-                logging.info("Tiling parameters are not provided, skipping update.")
-                return
-
-            config["data"]["tile_config"]["enable_tiler"] = tiling_dict["enable"]
-            if tiling_dict["enable"]:
-                config["data"]["tile_config"]["enable_adaptive_tiling"] = tiling_dict["adaptive_tiling"]
-                config["data"]["tile_config"]["tile_size"] = (
-                    tiling_dict["tile_size"],
-                    tiling_dict["tile_size"],
-                )
-                config["data"]["tile_config"]["overlap"] = tiling_dict["tile_overlap"]
-
-        def update_input_size(height: int | None, width: int | None) -> None:
-            """Update input size in the config."""
-            if height is None or width is None:
-                logging.info("Input size is not provided, skipping update.")
-                return
-            config["data"]["input_size"] = (height, width)
-
-        def update_augmentations(augmentation_params: dict) -> None:
-            """Update augmentations in the config."""
-            if not augmentation_params:
-                return
-
-            augs_mapping_list = {
-                "random_affine": "otx.data.transform_libs.torchvision.RandomAffine",
-                "random_horizontal_flip": "otx.data.transform_libs.torchvision.RandomFlip",
-                "random_vertical_flip": "torchvision.transforms.v2.RandomVerticalFlip",
-                "gaussian_blur": "otx.data.transform_libs.torchvision.RandomGaussianBlur",
-                "gaussian_noise": "otx.data.transform_libs.torchvision.RandomGaussianNoise",
-                "color_jitter": "otx.data.transform_libs.torchvision.PhotoMetricDistortion",
-            }
-
-            for aug_name, aug_value in augmentation_params.items():
-                aug_class = augs_mapping_list[aug_name]
-                found = False
-                for aug_config in config["data"]["train_subset"]["transforms"]:
-                    if aug_class == aug_config["class_path"]:
-                        found = True
-                        aug_config["enable"] = aug_value["enable"]
-                        break
-                if not found:
-                    msg = f"augmentation {aug_class} is not found for this model"
-                    raise ValueError(msg)
-
         augmentation_params = param_dict.get("dataset_preparation", {}).get("augmentation", {})
         tiling = augmentation_params.pop("tiling", None)
         training_parameters = param_dict.get("training", {})
 
-        update_augmentations(augmentation_params)
-        update_tiling(tiling)
-        update_learning_rate(training_parameters.get("learning_rate", None))
-        update_num_iters(training_parameters.get("max_epochs", None))
-        update_early_stopping(training_parameters.get("early_stopping", None))
+        update_tiling(tiling, config)
+        update_augmentations(augmentation_params, config)
+        update_learning_rate(training_parameters.get("learning_rate", None), config)
+        update_num_iters(training_parameters.get("max_epochs", None), config)
+        update_early_stopping(training_parameters.get("early_stopping", None), config)
         update_input_size(
             training_parameters.get("input_size_height", None),
             training_parameters.get("input_size_width", None),
+            config,
         )
 
     @staticmethod
-    def _get_callback_idx(callbacks: list, name: str) -> int:
+    def get_callback_idx(callbacks: list, name: str) -> int:
         """Return required callbacks index from callback list."""
         for idx, callback in enumerate(callbacks):
             if callback["class_path"] == name:
