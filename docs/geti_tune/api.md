@@ -44,12 +44,12 @@
 
 ### Pipelines
 
-| Method  | Path                                     | Payload                    | Return        | Description                         |
-|---------|------------------------------------------|----------------------------|---------------|-------------------------------------|
-| `GET`   | `/api/projects/<id>/pipeline`            | -                          | pipeline info | Get info about a project's pipeline |
-| `PATCH` | `/api/projects/<id>/pipeline`            | ids of source, sink, model | pipeline info | Reconfigure the project's pipeline  |
-| `POST`  | `/api/projects/<id>/pipeline:activate`   | -                          | pipeline info | Activate a project's pipeline       |
-| `POST`  | `/api/projects/<id>/pipeline:deactivate` | -                          | pipeline info | Deactivate a project's pipeline     |
+| Method  | Path                                  | Payload                    | Return        | Description                         |
+|---------|---------------------------------------|----------------------------|---------------|-------------------------------------|
+| `GET`   | `/api/projects/<id>/pipeline`         | -                          | pipeline info | Get info about a project's pipeline |
+| `PATCH` | `/api/projects/<id>/pipeline`         | ids of source, sink, model | pipeline info | Reconfigure the project's pipeline  |
+| `POST`  | `/api/projects/<id>/pipeline:enable`  | -                          | pipeline info | Activate a project's pipeline       |
+| `POST`  | `/api/projects/<id>/pipeline:disable` | -                          | pipeline info | Deactivate a project's pipeline     |
 
 #### Inference metrics
 
