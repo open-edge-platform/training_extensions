@@ -77,7 +77,11 @@ export const ModelSelectionGroup = () => {
             <RadioGroup
                 aria-label='Model selection'
                 value={selectedOption.value}
-                onChange={() => setSelectedOption(selectedOption)}
+                onChange={(value: string) => {
+                    const selectedModel = MODELS.find((model) => model.value === value);
+
+                    if (selectedModel) setSelectedOption(selectedModel);
+                }}
             >
                 <Flex justifyContent={'center'} gap={'size-300'}>
                     {MODELS.map((model) => (
