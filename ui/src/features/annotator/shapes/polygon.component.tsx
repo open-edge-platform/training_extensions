@@ -9,7 +9,7 @@ const getFormattedPoints = (points: Point[]): string => points.map(({ x, y }) =>
 
 interface PolygonProps {
     polygon: PolygonInterface;
-    styles: React.SVGProps<SVGPolygonElement>;
+    styles?: React.SVGProps<SVGPolygonElement>;
     ariaLabel: string;
 }
 

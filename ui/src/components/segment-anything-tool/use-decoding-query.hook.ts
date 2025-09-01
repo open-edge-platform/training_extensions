@@ -64,6 +64,8 @@ export const useDecodingMutation = (queryFn: (points: InteractiveAnnotationPoint
                 positive: point.positive,
             }));
 
+            // TODO: Add callback to add shapes
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const shapes = (await queryFn(roundedPoints)).map((shape) => {
                 return removeOffLimitPoints(shape, roi);
             });

@@ -5,7 +5,7 @@ import { Rect as RectInterface } from '../types';
 
 interface RectangleProps {
     rect: RectInterface;
-    styles: React.SVGProps<SVGRectElement>;
+    styles?: React.SVGProps<SVGRectElement>;
     ariaLabel: string;
 }
 export const Rectangle = ({ rect, styles, ariaLabel }: RectangleProps) => {

@@ -5,13 +5,16 @@ import { PointerEvent, useEffect, useRef, useState } from 'react';
 
 import { clampPointBetweenImage, isPointInShape, pointInRectangle } from '@geti/smart-tools/utils';
 
+import { ShapeFactory } from '../annotation/shape-factory.component';
 import { isRightButton } from '../annotation/utils';
 import { Annotation, Point, RegionOfInterest, Shape } from '../shapes/interfaces';
 import { getRelativePoint, removeOffLimitPoints } from '../shapes/utils';
 import { useZoom } from '../zoom/zoom';
+import { AnnotationsMask } from './annotations-mask.component';
 import { InteractiveSegmentationPoint } from './interactive-segmentation-point.component';
 import { useSegmentAnything } from './segment-anything-state-provider.component';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';
+import { SvgToolCanvas } from './svg-tool-canvas.component';
 import { useSingleStackFn } from './use-single-stack-fn.hook';
 import { useThrottledCallback } from './use-throttled-callback.hook';
 
@@ -47,6 +50,13 @@ const roi: RegionOfInterest = {
 const toolSettings = {
     interactiveMode: false,
     rightClickMode: false,
+};
+
+const SELECT_ANNOTATION_STYLES = {
+    fillOpacity: 0.3,
+    fill: 'var(--energy-blue-shade)',
+    stroke: 'var(--energy-blue-shade)',
+    strokeWidth: 'calc(2px / var(--zoom-level))',
 };
 
 export const SegmentAnythingTool = () => {
@@ -126,7 +136,7 @@ export const SegmentAnythingTool = () => {
             return;
         }
 
-        const point = clampPoint(getRelativePoint(ref.current, { x: event.clientX, y: event.clientY }, zoom));
+        const point = clampPoint(getRelativePoint(ref.current, { x: event.clientX, y: event.clientY }, zoom.scale));
 
         // In task chain don't allow the user to place a point outside the ROI
         if (!pointInRectangle(roi, point)) {
@@ -144,18 +154,14 @@ export const SegmentAnythingTool = () => {
     const annotations = (showPreviewShapes ? previewShapes : result.shapes).map((shape, idx): Annotation => {
         return {
             shape,
-            labels: [],
+            color: '',
             id: `${idx}`,
-            isHidden: false,
-            isLocked: false,
-            isSelected: false,
-            zIndex: idx,
         };
     });
 
     return (
         <SvgToolCanvas
-            image={image}
+            image={selectedMediaItem.image}
             canvasRef={ref}
             onPointerMove={handleMouseMove}
             onPointerUp={onPointerUp}
@@ -171,10 +177,9 @@ export const SegmentAnythingTool = () => {
             }}
         >
             <AnnotationsMask
-                fillOpacity={toolSettings.maskOpacity}
                 annotations={annotations}
-                width={image.width}
-                height={image.height}
+                width={selectedMediaItem.image.width}
+                height={selectedMediaItem.image.height}
             />
 
             {showPreviewShapes &&
@@ -187,7 +192,7 @@ export const SegmentAnythingTool = () => {
                         fillOpacity={0.0}
                         className={interactiveMode ? classes.stroke : classes.animateStroke}
                     >
-                        <ShapeFactory annotation={{ shape, id: '', isSelected: false }} />
+                        <ShapeFactory shape={shape} ariaLabel={'Preview shape'} />
                     </g>
                 ))}
 
@@ -203,7 +208,7 @@ export const SegmentAnythingTool = () => {
                     fillOpacity={0.0}
                     className={classes.stroke}
                 >
-                    <ShapeFactory annotation={{ shape, id: '', isSelected: false }} />
+                    <ShapeFactory shape={shape} ariaLabel={'Result shape'} />
                 </g>
             ))}
 

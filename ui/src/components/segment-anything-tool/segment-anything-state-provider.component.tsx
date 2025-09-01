@@ -81,7 +81,8 @@ export const SegmentAnythingStateProvider = ({ children }: { children: ReactNode
         }
 
         if (hasResults) {
-            addShapes(outputShapes);
+            // TODO: Add callback to add the shapes to the canvas
+            // addShapes(outputShapes);
         }
 
         reset();
