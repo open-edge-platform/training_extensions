@@ -17,6 +17,7 @@ export const useLoadAIWebworker = <T extends AlgorithmType>(algorithmType: T) =>
             const baseWorker = getWorker();
             const worker = wrap(baseWorker);
 
+            // @ts-expect-error build exists on every worker
             return worker.build();
         },
         staleTime: Infinity,

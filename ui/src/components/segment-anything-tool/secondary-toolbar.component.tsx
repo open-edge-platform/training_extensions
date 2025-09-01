@@ -1,10 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Divider, Flex, Loading, Switch, Text, Tooltip, TooltipTrigger, useMediaQuery, View } from '@geti/ui';
+import { Button, Divider, Flex, Loading, Switch, Text, Tooltip, TooltipTrigger, useMediaQuery, View } from '@geti/ui';
 import { RightClick } from '@geti/ui/icons';
 import { isLargeSizeQuery } from '@geti/ui/theme';
-import { isEmpty } from 'lodash-es';
 
 import { useSegmentAnything } from './segment-anything-state-provider.component';
 
@@ -13,20 +12,27 @@ const INTERACTIVE_MODE_TOOLTIP = 'With this mode ON, edit preview by placing new
 const RIGHT_CLICK_MODE_TOOLTIP =
     'With this mode ON, press left-click to place positive points and right-click to place negative points.';
 
+// TODO: replace by actual tool settings
+const toolSettings = {
+    interactiveMode: false,
+    rightClickMode: false,
+    maskOpacity: 0.5,
+};
+
 export const SecondaryToolbar = () => {
     const isLargeSize = useMediaQuery(isLargeSizeQuery);
 
-    const { handleCancelAnnotation, handleConfirmAnnotation, result, points, isProcessing, isLoading, encodingQuery } =
-        useSegmentAnything();
+    const { points, isLoading, encodingQuery } = useSegmentAnything();
 
-    const hasResults = !isEmpty(result.shapes) && !isEmpty(points);
-
-    const handleOnChange = (value: number) => {
-        updateToolSettings(ToolType.SegmentAnythingTool, { ...toolSettings, maskOpacity: value });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const handleOnChange = (_value: number) => {
+        // TODO: Update tool settings
+        // updateToolSettings(ToolType.SegmentAnythingTool, { ...toolSettings, maskOpacity: value });
     };
 
-    const setToolSetting = (data: Partial<ToolSettings[ToolType.SegmentAnythingTool]>) => {
-        updateToolSettings(ToolType.SegmentAnythingTool, { ...toolSettings, ...data });
+    const setToolSetting = (_data: unknown) => {
+        // TODO: Update tool settings
+        // updateToolSettings(ToolType.SegmentAnythingTool, { ...toolSettings, ...data });
     };
 
     if (isLoading || encodingQuery.data === undefined) {
@@ -101,7 +107,7 @@ export const SecondaryToolbar = () => {
 
             <Divider orientation='vertical' size='S' />
 
-            <TooltipTrigger placement={'bottom'}>
+            {/* <TooltipTrigger placement={'bottom'}>
                 <NumberSliderWithLocalHandler
                     id='mask-opacity'
                     displayText={(value) => `${Math.round(100 * value)}%`}
@@ -114,21 +120,15 @@ export const SecondaryToolbar = () => {
                     value={toolSettings.maskOpacity}
                 />
                 <Tooltip>Adjust the opacity</Tooltip>
-            </TooltipTrigger>
+            </TooltipTrigger> */}
 
             {points.length > 0 && (
                 <>
                     <Divider orientation='vertical' size='S' />
 
-                    <AcceptRejectButtonGroup
-                        id={'segment-anything'}
-                        isAcceptButtonDisabled={isProcessing || !hasResults}
-                        shouldShowButtons={points.length > 0}
-                        handleAcceptAnnotation={handleConfirmAnnotation}
-                        handleRejectAnnotation={handleCancelAnnotation}
-                        acceptDeps={[handleConfirmAnnotation]}
-                        rejectDeps={[isProcessing]}
-                    />
+                    <Button>Accept</Button>
+
+                    <Button>Reject</Button>
                 </>
             )}
         </Flex>
