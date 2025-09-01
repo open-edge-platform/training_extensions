@@ -325,10 +325,10 @@ def get_adaptive_num_workers(num_dataloader: int = 1) -> int | None:
 def get_idx_list_per_classes(dm_dataset: DmDataset, use_string_label: bool = False) -> dict[int | str, list[int]]:
     """Compute class statistics."""
     stats: dict[int | str, list[int]] = defaultdict(list)
-    labels = dm_dataset.categories().get(AnnotationType.label, LabelCategories())
     for item_idx, item in enumerate(dm_dataset):
         for ann in item.annotations:
             if use_string_label:
+                labels = dm_dataset.categories().get(AnnotationType.label, LabelCategories())
                 stats[labels.items[ann.label].name].append(item_idx)
             else:
                 stats[ann.label].append(item_idx)

@@ -13,23 +13,25 @@ import torch
 from datumaro import Mask
 from datumaro.components.media import Image
 from datumaro.experimental.dataset import Sample
-from datumaro.experimental.fields import ImageInfo, label_field, image_field
+from datumaro.experimental.fields import image_field, label_field
 from torchvision import tv_tensors
 
+from otx.data.entity.base import ImageInfo
+
 if TYPE_CHECKING:
-    from datumaro import Polygon, DatasetItem
+    from datumaro import DatasetItem, Polygon
     from torchvision.tv_tensors import BoundingBoxes, Mask
 
 
 class ClassificationSample(Sample):
     """OTXDataItemSample is a base class for OTX data items."""
+
     label: torch.Tensor = label_field(pl.Int32())
-    image: torch.Tensor | np.ndarray | tv_tensors.Image = image_field(dtype=pl.UInt8)
+    image: np.ndarray | torch.Tensor | tv_tensors.Image = image_field(dtype=pl.UInt8)
 
     @classmethod
-    def from_dm_item(cls, item: DatasetItem) -> "ClassificationSample":
-        """
-        Create a ClassificationSample from a Datumaro DatasetItem.
+    def from_dm_item(cls, item: DatasetItem) -> ClassificationSample:
+        """Create a ClassificationSample from a Datumaro DatasetItem.
 
         Args:
             item: Datumaro DatasetItem containing image and label
@@ -39,14 +41,24 @@ class ClassificationSample(Sample):
         """
         image = item.media_as(Image).data
         label = item.annotations[0].label if item.annotations else None
-        return cls(image=image, label=torch.as_tensor(label, dtype=torch.long))
+
+        img_shape = image.shape[:2]
+        img_info = ImageInfo(
+            img_idx=0,
+            img_shape=img_shape,
+            ori_shape=img_shape,
+        )
+
+        sample = cls(image=image, label=torch.as_tensor(label, dtype=torch.long))
+        sample._img_info = img_info
+        return sample
 
     def as_tv_image(self) -> None:
         """Convert image to torchvision tv_tensors Image format."""
-        if isinstance(self.image, np.ndarray):
+        if isinstance(self.image, tv_tensors.Image):
+            return
+        if isinstance(self.image, (np.ndarray, torch.Tensor)):
             self.image = tv_tensors.Image(self.image)
-        elif isinstance(self.image, torch.Tensor):
-            self.image = tv_tensors.Image(self.image.numpy())
 
     @property
     def masks(self) -> Mask | None:
@@ -66,4 +78,19 @@ class ClassificationSample(Sample):
 
     @property
     def img_info(self) -> ImageInfo | None:
-        return None
+        if getattr(self, "_img_info", None) is None:
+            image = getattr(self, "image", None)
+            if image is not None and hasattr(image, "shape") and len(image.shape) == 3:
+                img_shape = image.shape[:2]
+            else:
+                return None
+            self._img_info = ImageInfo(
+                img_idx=0,
+                img_shape=img_shape,
+                ori_shape=img_shape,
+            )
+        return self._img_info
+
+    @img_info.setter
+    def img_info(self, value: ImageInfo | None) -> None:
+        self._img_info = value

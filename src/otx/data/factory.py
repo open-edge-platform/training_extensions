@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 from datumaro.components.annotation import AnnotationType
 from datumaro.components.dataset import Dataset as DmDataset
 from datumaro.experimental import Dataset as DatasetNew
-from datumaro.experimental.categories import LabelGroup
+from datumaro.experimental.categories import LabelCategories
 
 from otx import LabelInfo, NullLabelInfo
 from otx.types.image import ImageColorChannel
@@ -80,9 +80,10 @@ class OTXDatasetFactory:
 
             if isinstance(dm_subset, DmDataset):
                 categories = cls._get_label_categories(dm_subset, data_format)
-                dataset = DatasetNew(ClassificationSample, label_group=categories)
+                dataset = DatasetNew(ClassificationSample, categories={"label": categories})
                 for item in dm_subset:
-                    dataset.append(ClassificationSample.from_dm_item(item))
+                    if len(item.media.data.shape) == 3:  # TODO: Account for grayscale images
+                        dataset.append(ClassificationSample.from_dm_item(item))
                 common_kwargs["dm_subset"] = dataset
             return OTXMulticlassClsDataset(**common_kwargs)
 
@@ -119,11 +120,11 @@ class OTXDatasetFactory:
         raise NotImplementedError(task)
 
     @staticmethod
-    def _get_label_categories(dm_subset: DmDataset, data_format: str) -> LabelGroup:
+    def _get_label_categories(dm_subset: DmDataset, data_format: str) -> LabelCategories:
         if dm_subset.categories() and data_format == "arrow":
             label_info = LabelInfo.from_dm_label_groups_arrow(dm_subset.categories()[AnnotationType.label])
         elif dm_subset.categories():
             label_info = LabelInfo.from_dm_label_groups(dm_subset.categories()[AnnotationType.label])
         else:
             label_info = NullLabelInfo()
-        return LabelGroup(labels=label_info.label_names)
+        return LabelCategories(labels=label_info.label_names)

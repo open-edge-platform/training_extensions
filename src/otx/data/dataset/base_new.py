@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import abc
 from typing import Callable, Iterable, List, Union
 
 import numpy as np
@@ -18,6 +19,45 @@ from otx.data.transform_libs.torchvision import Compose
 from otx.types.image import ImageColorChannel
 
 Transforms = Union[Compose, Callable, List[Callable], dict[str, Compose | Callable | List[Callable]]]
+
+
+def _default_collate_fn(items: list[ClassificationSample]) -> OTXDataBatch:
+    """Collate ClassificationSample items into an OTXDataBatch.
+
+    Args:
+        items: List of ClassificationSample items to batch
+    Returns:
+        Batched ClassificationSample items with stacked tensors
+    """
+    # Convert images to float32 tensors before stacking
+    image_tensors = []
+    for item in items:
+        img = item.image
+        if isinstance(img, torch.Tensor):
+            # Convert to float32 if not already
+            if img.dtype != torch.float32:
+                img = img.float()
+        else:
+            # Convert numpy array to float32 tensor
+            img = torch.from_numpy(img).float()
+        image_tensors.append(img)
+
+    # Try to stack images if they have the same shape
+    if len(image_tensors) > 0 and all(t.shape == image_tensors[0].shape for t in image_tensors):
+        images = torch.stack(image_tensors)
+    else:
+        images = image_tensors
+
+    return OTXDataBatch(
+        batch_size=len(items),
+        images=images,
+        labels=[item.label for item in items] if items[0].label is not None else None,
+        masks=[item.masks for item in items] if any(item.masks is not None for item in items) else None,
+        bboxes=[item.bboxes for item in items] if any(item.bboxes is not None for item in items) else None,
+        keypoints=[item.keypoints for item in items] if any(item.keypoints is not None for item in items) else None,
+        polygons=[item.polygons for item in items] if any(item.polygons is not None for item in items) else None,
+        imgs_info=[item.img_info for item in items] if any(item.img_info is not None for item in items) else None,
+    )
 
 
 class OTXDataset(TorchDataset):
@@ -50,14 +90,18 @@ class OTXDataset(TorchDataset):
         self.sample_type = sample_type
         self.max_refetch = max_refetch
         self.data_format = data_format
-
-        # TODO: Properly reinit label_info
-        self.label_info = dm_subset.label_group
-
-        self.dataset = dm_subset
+        if (
+            hasattr(dm_subset, "schema")
+            and hasattr(dm_subset.schema, "attributes")
+            and "label" in dm_subset.schema.attributes
+        ):
+            self.label_info = dm_subset.schema.attributes["label"].categories
+        else:
+            self.label_info = None
+        self.dm_subset = dm_subset
 
     def __len__(self) -> int:
-        return len(self.dataset)
+        return len(self.dm_subset)
 
     def _sample_another_idx(self) -> int:
         return np.random.randint(0, len(self))
@@ -99,44 +143,20 @@ class OTXDataset(TorchDataset):
         raise RuntimeError(msg)
 
     def _get_item_impl(self, index: int) -> ClassificationSample | None:
-        dm_item = self.dataset[index]
-        sample = self.sample_type.from_dm_item(dm_item)
+        dm_item = self.dm_subset[index]
+        # Check if dm_item is already a sample of the expected type
+        if isinstance(dm_item, self.sample_type):
+            sample = dm_item
+        else:
+            # dm_item is a DatasetItem, convert it using from_dm_item
+            sample = self.sample_type.from_dm_item(dm_item)
         return self._apply_transforms(sample)
 
     @property
     def collate_fn(self) -> Callable:
         """Collection function to collect samples into a batch in data loader."""
+        return _default_collate_fn
 
-        def _collate_fn(items: list[ClassificationSample]) -> OTXDataBatch:
-            """Collate ClassificationSample items into an OTXDataBatch.
-
-            Args:
-                items: List of ClassificationSample items to batch
-            Returns:
-                Batched ClassificationSample items with stacked tensors
-            """
-            # Check if all images have the same size for stacking
-            if all(item.image.shape == items[0].image.shape for item in items):
-                images = torch.stack([item.image for item in items])
-            else:
-                # Keep as list if shapes differ (e.g., for OV inference)
-                images = [item.image for item in items]
-
-            return OTXDataBatch(
-                batch_size=len(items),
-                images=images,
-                labels=[item.label for item in items] if items[0].label is not None else None,
-                masks=[item.masks for item in items] if any(item.masks is not None for item in items) else None,
-                bboxes=[item.bboxes for item in items] if any(item.bboxes is not None for item in items) else None,
-                keypoints=[item.keypoints for item in items]
-                if any(item.keypoints is not None for item in items)
-                else None,
-                polygons=[item.polygons for item in items]
-                if any(item.polygons is not None for item in items)
-                else None,
-                imgs_info=[item.img_info for item in items]
-                if any(item.img_info is not None for item in items)
-                else None,
-            )
-
-        return _collate_fn
+    @abc.abstractmethod
+    def get_idx_list_per_classes(self) -> dict[int, list[int]]:
+        """Get a dictionary with class labels as keys and lists of corresponding sample indices as values."""
