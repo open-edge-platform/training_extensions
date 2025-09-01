@@ -102,7 +102,7 @@ class PipelineService:
         if pipeline.status != PipelineStatus.RUNNING:
             raise ValueError("Cannot get metrics for a pipeline that is not running.")
         if pipeline.model_id is None:
-            raise ValueError("Cannot get metrics for a pipeline with not model, please check a model is assigned.")
+            raise ValueError("Cannot get metrics for a pipeline with no model, please check a model is assigned.")
 
         # Calculate time window
         end_time = datetime.now(UTC)

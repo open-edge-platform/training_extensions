@@ -82,7 +82,7 @@ class TestPipelineServiceUnit:
         with (
             patch("app.services.pipeline_service.PipelineService.get_pipeline_by_id") as mock_get_pipeline_by_id,
             pytest.raises(
-                ValueError, match="Cannot get metrics for a pipeline with not model, please check a model is assigned."
+                ValueError, match="Cannot get metrics for a pipeline with no model, please check a model is assigned."
             ),
         ):
             mock_get_pipeline_by_id.return_value = fxt_pipeline.model_copy(update={"model_id": None})
