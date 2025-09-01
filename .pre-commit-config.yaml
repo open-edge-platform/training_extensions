@@ -15,7 +15,7 @@ repos:
     rev: "v1.6.1"
     hooks:
       - id: mypy
-        files: '^(src/otx)/.*\.py'
+        files: '^lib/(src/otx)/.*\.py'
         additional_dependencies:
           [
             types-PyYAML,
@@ -29,7 +29,7 @@ repos:
             types-python-dateutil,
             tokenize-rt==3.2.0,
           ]
-        args: [--disallow-untyped-calls]
+        args: [--disallow-untyped-calls, --config-file, lib/pyproject.toml]
 
   - repo: https://github.com/AleksaC/hadolint-py
     rev: v2.12.0.3

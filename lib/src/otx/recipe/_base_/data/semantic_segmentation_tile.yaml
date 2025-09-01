@@ -1,0 +1,129 @@
+task: SEMANTIC_SEGMENTATION
+input_size:
+  - 512
+  - 512
+image_color_channel: RGB
+data_format: common_semantic_segmentation_with_subset_dirs
+include_polygons: true
+unannotated_items_ratio: 0.0
+ignore_index: 255
+tile_config:
+  enable_tiler: true
+  enable_adaptive_tiling: true
+train_subset:
+  subset_name: train
+  batch_size: 8
+  num_workers: 4
+  transform_lib_type: TORCHVISION
+  to_tv_image: true
+  transforms:
+    - class_path: otx.data.transform_libs.torchvision.Resize
+      init_args:
+        keep_ratio: true
+        transform_mask: true
+        scale: $(input_size)
+    - class_path: otx.data.transform_libs.torchvision.PhotoMetricDistortion
+      enable: true
+      init_args:
+        brightness_delta: 32
+        contrast:
+          - 0.5
+          - 1.5
+        saturation:
+          - 0.5
+          - 1.5
+        hue_delta: 18
+        probability: 0.5
+    - class_path: otx.data.transform_libs.torchvision.RandomAffine
+      enable: false
+      init_args:
+        max_rotate_degree: 10.0
+        max_translate_ratio: 0.1
+        scaling_ratio_range:
+          - 0.5
+          - 1.5
+        max_shear_degree: 2.0
+    - class_path: otx.data.transform_libs.torchvision.RandomFlip
+      enable: true
+      init_args:
+        probability: 0.5
+    - class_path: torchvision.transforms.v2.RandomVerticalFlip
+      enable: false
+      init_args:
+        p: 0.5
+    - class_path: otx.data.transform_libs.torchvision.RandomGaussianBlur
+      enable: false
+      init_args:
+        kernel_size: 5
+        sigma:
+          - 0.1
+          - 2.0
+        probability: 0.5
+    - class_path: torchvision.transforms.v2.ToDtype
+      init_args:
+        dtype: ${as_torch_dtype:torch.float32}
+        scale: false
+    - class_path: otx.data.transform_libs.torchvision.RandomGaussianNoise
+      enable: false
+      init_args:
+        mean: 0.0
+        sigma: 0.1
+        probability: 0.5
+    - class_path: torchvision.transforms.v2.Normalize
+      init_args:
+        mean: [123.675, 116.28, 103.53]
+        std: [58.395, 57.12, 57.375]
+  sampler:
+    class_path: torch.utils.data.RandomSampler
+
+val_subset:
+  subset_name: val
+  batch_size: 8
+  num_workers: 4
+  transform_lib_type: TORCHVISION
+  to_tv_image: true
+  transforms:
+    - class_path: otx.data.transform_libs.torchvision.Resize
+      init_args:
+        scale: $(input_size)
+        keep_ratio: true
+        is_numpy_to_tvtensor: false
+    - class_path: otx.data.transform_libs.torchvision.Pad
+      init_args:
+        size: $(input_size)
+        pad_val: 255
+    - class_path: torchvision.transforms.v2.ToDtype
+      init_args:
+        dtype: ${as_torch_dtype:torch.float32}
+    - class_path: torchvision.transforms.v2.Normalize
+      init_args:
+        mean: [123.675, 116.28, 103.53]
+        std: [58.395, 57.12, 57.375]
+  sampler:
+    class_path: torch.utils.data.RandomSampler
+
+test_subset:
+  subset_name: test
+  num_workers: 4
+  batch_size: 8
+  transform_lib_type: TORCHVISION
+  to_tv_image: true
+  transforms:
+    - class_path: otx.data.transform_libs.torchvision.Resize
+      init_args:
+        scale: $(input_size)
+        keep_ratio: true
+        is_numpy_to_tvtensor: false
+    - class_path: otx.data.transform_libs.torchvision.Pad
+      init_args:
+        size: $(input_size)
+        pad_val: 255
+    - class_path: torchvision.transforms.v2.ToDtype
+      init_args:
+        dtype: ${as_torch_dtype:torch.float32}
+    - class_path: torchvision.transforms.v2.Normalize
+      init_args:
+        mean: [123.675, 116.28, 103.53]
+        std: [58.395, 57.12, 57.375]
+  sampler:
+    class_path: torch.utils.data.RandomSampler

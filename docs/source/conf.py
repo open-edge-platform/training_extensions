@@ -92,7 +92,11 @@ html_copy_source = True
 
 html_theme_options = {
     "navbar_center": [],
-    "navbar_end": ["search-field.html", "theme-switcher.html", "navbar-icon-links.html"],
+    "navbar_end": [
+        "search-field.html",
+        "theme-switcher.html",
+        "navbar-icon-links.html",
+    ],
     "search_bar_text": "Search",
     "logo": {
         "image_light": "logos/otx-logo.png",

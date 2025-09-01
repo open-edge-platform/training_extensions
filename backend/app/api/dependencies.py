@@ -5,10 +5,11 @@ from functools import lru_cache
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 
 from app.core import Scheduler
 from app.services import ActivePipelineService, ConfigurationService, ModelService, PipelineService, SystemService
+from app.webrtc.manager import WebRTCManager
 
 
 def is_valid_uuid(identifier: str) -> bool:
@@ -59,9 +60,9 @@ def get_active_pipeline_service() -> ActivePipelineService:
     return ActivePipelineService()
 
 
-def get_scheduler() -> Scheduler:
+def get_scheduler(request: Request) -> Scheduler:
     """Provides the global Scheduler instance."""
-    return Scheduler()
+    return request.app.state.scheduler
 
 
 @lru_cache
@@ -102,3 +103,8 @@ def get_model_service(
     return ModelService(
         mp_model_reload_event=scheduler.mp_model_reload_event,
     )
+
+
+def get_webrtc_manager(request: Request) -> WebRTCManager:
+    """Provides the global WebRTCManager instance from FastAPI application's state."""
+    return request.app.state.webrtc_manager

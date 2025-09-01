@@ -1,6 +1,7 @@
 .floatingContainer {
     opacity: 0;
     position: absolute;
+    line-height: 0px;
     padding: var(--spectrum-global-dimension-size-125);
     background: var(--spectrum-global-color-gray-50);
     border-radius: var(--spectrum-global-dimension-size-50);

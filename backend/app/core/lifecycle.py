@@ -12,12 +12,13 @@ from fastapi import FastAPI
 from app.core.scheduler import Scheduler
 from app.db import migration_manager
 from app.settings import get_settings
+from app.webrtc.manager import WebRTCManager
 
 logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
-async def lifespan(_: FastAPI) -> AsyncGenerator[None]:
+async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     """FastAPI lifespan context manager"""
     # Startup
     settings = get_settings()
@@ -30,15 +31,17 @@ async def lifespan(_: FastAPI) -> AsyncGenerator[None]:
 
     # Initialize Scheduler
     app_scheduler = Scheduler()
-
-    # Start worker processes
     app_scheduler.start_workers()
+    app.state.scheduler = app_scheduler
 
+    webrtc_manager = WebRTCManager(app_scheduler.rtc_stream_queue)
+    app.state.webrtc_manager = webrtc_manager
     logger.info("Application startup completed")
 
     yield
 
     # Shutdown
     logger.info("Shutting down %s application...", settings.app_name)
+    await webrtc_manager.cleanup()
     app_scheduler.shutdown()
     logger.info("Application shutdown completed")
