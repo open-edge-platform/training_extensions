@@ -51,6 +51,12 @@
 | `POST`  | `/api/projects/<id>/pipeline:activate`   | -                          | pipeline info | Activate a project's pipeline       |
 | `POST`  | `/api/projects/<id>/pipeline:deactivate` | -                          | pipeline info | Deactivate a project's pipeline     |
 
+#### Inference metrics
+
+| Method | Path                                           | Payload | Return          | Description                                      |
+|--------|------------------------------------------------|---------|-----------------|--------------------------------------------------|
+| `GET`  | `/api/projects/<id>/pipeline/metrics`          | -       | metrics info    | Get inference metrics (latency, throughput, ...) |
+
 ## Datasets
 
 | Method   | Path                                              | Payload | Return                | Description                                        |
@@ -80,15 +86,15 @@
 
 ### Views
 
-| Method   | Path                                          | Payload   | Return        | Description                      |
-|----------|-----------------------------------------------|-----------|---------------|----------------------------------|
-| `POST`   | `/api/projects/<id>/dataset/views`            | name      | view info     | Create a new dataset view        |
-| `GET`    | `/api/projects/<id>/dataset/views`            | -         | list of views | List the dataset views           |
-| `GET`    | `/api/projects/<id>/dataset/views/<id>`       | -         | view info     | Get info about a dataset view    |
-| `GET`    | `/api/projects/<id>/dataset/views/<id>/items` | -         | list of items | List the items in a dataset view |
-| `POST`   | `/api/projects/<id>/dataset/views/<id>/items` | items ids | -             | Add items to a dataset view      |
-| `DELETE` | `/api/projects/<id>/dataset/views/<id>/items` | items ids | -             | Remove items from a dataset view |
-| `DELETE` | `/api/projects/<id>/dataset/views/<id>`       | -         | -             | Delete a dataset view            |
+| Method   | Path                                          | Payload             | Return        | Description                      |
+|----------|-----------------------------------------------|---------------------|---------------|----------------------------------|
+| `POST`   | `/api/projects/<id>/dataset/views`            | name                | view info     | Create a new dataset view        |
+| `GET`    | `/api/projects/<id>/dataset/views`            | -                   | list of views | List the dataset views           |
+| `GET`    | `/api/projects/<id>/dataset/views/<id>`       | -                   | view info     | Get info about a dataset view    |
+| `GET`    | `/api/projects/<id>/dataset/views/<id>/items` | -                   | list of items | List the items in a dataset view |
+| `POST`   | `/api/projects/<id>/dataset/views/<id>/items` | items ids or filter | -             | Add items to a dataset view      |
+| `DELETE` | `/api/projects/<id>/dataset/views/<id>/items` | items ids or filter | -             | Remove items from a dataset view |
+| `DELETE` | `/api/projects/<id>/dataset/views/<id>`       | -                   | -             | Delete a dataset view            |
 
 ## Models
 
@@ -117,7 +123,3 @@
 | `GET`    | `/api/projects/<id>/jobs`        | -       | list of jobs | List the jobs in a project (scheduled or running) |
 | `GET`    | `/api/projects/<id>/jobs/<id>`   | -       | job info     | Get info about a specific job                     |
 | `DELETE` | `/api/projects/<id>/jobs/<id>`   | -       | -            | Cancel a job                                      |
-
-TODO populate dataset view by filter
-
-TODO project/pipeline export?
