@@ -42,10 +42,10 @@ class MetricsCollector(metaclass=Singleton):
         self._lock = Lock()
         try:
             self._shm = shared_memory.SharedMemory(name=self.SHM_NAME)
-            self._array = np.ndarray((self.MAX_MEASUREMENTS,), dtype=self.DTYPE, buffer=self._shm.buf)
+            self._array: np.ndarray = np.ndarray((self.MAX_MEASUREMENTS,), dtype=self.DTYPE, buffer=self._shm.buf)
         except FileNotFoundError:
             self._shm = shared_memory.SharedMemory(name=self.SHM_NAME, create=True, size=self.SIZE)
-            self._array = np.ndarray((self.MAX_MEASUREMENTS,), dtype=self.DTYPE, buffer=self._shm.buf)
+            self._array: np.ndarray = np.ndarray((self.MAX_MEASUREMENTS,), dtype=self.DTYPE, buffer=self._shm.buf)
             self._array[:] = "00000000-0000-0000-0000-000000000000", 0.0, 0.0  # initialize
         self._head = 0  # index for next write
 
