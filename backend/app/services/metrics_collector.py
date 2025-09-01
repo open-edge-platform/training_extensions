@@ -3,11 +3,12 @@
 
 import logging
 import time
-from collections import deque
 from datetime import UTC, datetime
-from threading import Lock
+from multiprocessing import Lock, shared_memory
 from typing import NamedTuple
 from uuid import UUID
+
+import numpy as np
 
 from app.utils import Singleton
 
@@ -17,63 +18,78 @@ logger = logging.getLogger(__name__)
 class LatencyMeasurement(NamedTuple):
     """Individual latency measurement"""
 
-    model_id: UUID
+    model_id: str  # UUID as 36 character string "00000000-0000-0000-0000-000000000000"
     latency_ms: float
-    timestamp: datetime
+    timestamp: float
 
 
 class MetricsCollector(metaclass=Singleton):
-    """Thread-safe in-memory metrics collector for model latency data"""
+    """Process-safe metrics collector using shared memory for model latency data"""
+
+    SHM_NAME = "latency_metrics_shm"
+    MAX_MEASUREMENTS = 1024  # max number of measurements to keep
+    DTYPE = np.dtype(
+        [
+            ("model_id", "U36"),  # 36 * 4 = 144 bytes for UUID string
+            ("latency_ms", np.dtype(float)),  # 8 bytes for latency in milliseconds
+            ("timestamp", np.dtype(float)),  # 8 bytes for timestamp (epoch time in seconds)
+        ]
+    )  # 144 + 8 + 8 = 160 bytes per latency measurement
+    SIZE = DTYPE.itemsize * MAX_MEASUREMENTS  # 160 * 1024 = 163840 bytes (160KB) allocated
 
     def __init__(self, max_age_seconds: int = 60):
         self._max_age_seconds = max_age_seconds
-        self._measurements: deque[LatencyMeasurement] = deque()
         self._lock = Lock()
+        try:
+            self._shm = shared_memory.SharedMemory(name=self.SHM_NAME)
+            self._array = np.ndarray((self.MAX_MEASUREMENTS,), dtype=self.DTYPE, buffer=self._shm.buf)
+        except FileNotFoundError:
+            self._shm = shared_memory.SharedMemory(name=self.SHM_NAME, create=True, size=self.SIZE)
+            self._array = np.ndarray((self.MAX_MEASUREMENTS,), dtype=self.DTYPE, buffer=self._shm.buf)
+            self._array[:] = "00000000-0000-0000-0000-000000000000", 0.0, 0.0  # initialize
+        self._head = 0  # index for next write
 
     def update_max_age(self, max_age_seconds: int) -> None:
-        """Update the maximum age for stored measurements"""
         with self._lock:
             self._max_age_seconds = max_age_seconds
-            self._cleanup_old_measurements()
 
     @staticmethod
     def record_inference_start() -> float:
-        """Record the start of an inference operation and return the start timestamp"""
         return time.perf_counter()
 
     def record_inference_end(self, model_id: UUID, start_time: float) -> None:
-        """Record the end of an inference operation and store the latency measurement"""
         end_time = time.perf_counter()
-        latency_ms = (end_time - start_time) * 1000.0  # Convert to milliseconds
+        latency_ms = (end_time - start_time) * 1000.0
+        timestamp = datetime.now(UTC).timestamp()
 
-        measurement = LatencyMeasurement(model_id=model_id, latency_ms=latency_ms, timestamp=datetime.now(UTC))
-
+        measurement = LatencyMeasurement(str(model_id), latency_ms, timestamp)
         with self._lock:
+            idx = self._head % self.MAX_MEASUREMENTS
+            self._array[idx] = (measurement.model_id, measurement.latency_ms, measurement.timestamp)
+            self._head += 1
             logger.debug(f"Latency measurement recorded for model {model_id}: {latency_ms:.2f} ms")
-            self._measurements.append(measurement)
-            self._cleanup_old_measurements()
 
     def get_latency_measurements(self, model_id: UUID, time_window: int = 60) -> list[float]:
-        """Get latency measurements for a specific model within the time window"""
         cutoff_time = datetime.now(UTC).timestamp() - time_window
-
         with self._lock:
-            self._cleanup_old_measurements()
-            return [
-                m.latency_ms
-                for m in self._measurements
-                if m.model_id == model_id and m.timestamp.timestamp() >= cutoff_time
-            ]
-
-    def _cleanup_old_measurements(self) -> None:
-        """Remove measurements older than max_age_seconds (called with lock held)"""
-        cutoff_time = datetime.now(UTC).timestamp() - self._max_age_seconds
-
-        while self._measurements and self._measurements[0].timestamp.timestamp() < cutoff_time:
-            self._measurements.popleft()
+            arr = self._array.copy()
+            result = []
+            for entry in arr:
+                if entry["timestamp"] < cutoff_time or entry["timestamp"] == 0.0:
+                    continue
+                if entry["model_id"] == str(model_id):
+                    result.append(entry["latency_ms"])
+            return result
 
     def reset(self) -> None:
-        """Reset the metrics collector"""
         with self._lock:
             self._max_age_seconds = 60
-            self._measurements.clear()
+            self._array[:] = "00000000-0000-0000-0000-000000000000", 0.0, 0.0
+            self._head = 0
+
+    def __del__(self):
+        try:
+            self._shm.close()
+            self._shm.unlink()
+        except Exception as e:
+            logger.exception("Error cleaning up shared memory in MetricsCollector __del__: %s", e)

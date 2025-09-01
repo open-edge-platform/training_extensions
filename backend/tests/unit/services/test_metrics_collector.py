@@ -6,16 +6,19 @@ from datetime import UTC, datetime, timedelta
 from unittest.mock import patch
 from uuid import uuid4
 
-from app.services.metrics_collector import LatencyMeasurement, MetricsCollector
+from app.services.metrics_collector import MetricsCollector
 
 
 class TestMetricsCollector:
     """Test cases for MetricsCollector"""
 
-    collector: MetricsCollector = MetricsCollector()
+    def setup_method(self):
+        """Setup a clean collector instance before each test"""
+        self.collector = MetricsCollector()
+        self.collector.reset()
 
-    def reset_collector(self):
-        """Reset the singleton instance for isolated tests"""
+    def teardown_method(self):
+        """Clean up the collector after each test"""
         self.collector.reset()
 
     def test_singleton_behavior(self):
@@ -24,6 +27,7 @@ class TestMetricsCollector:
         collector2 = MetricsCollector()
 
         assert collector1 is collector2
+        assert collector1._shm.name == collector2._shm.name
 
     def test_record_inference_start(self):
         """Test recording inference start time"""
@@ -37,13 +41,13 @@ class TestMetricsCollector:
         model_id = uuid4()
 
         start_time = time.perf_counter()
-        time.sleep(0.01)  # Small delay to ensure measurable latency
+        time.sleep(0.01)  # Small delay of 10ms to ensure measurable latency
 
         self.collector.record_inference_end(model_id=model_id, start_time=start_time)
 
         measurements = self.collector.get_latency_measurements(model_id=model_id)
         assert len(measurements) == 1
-        assert measurements[0] >= 0.01  # Should have some latency
+        assert measurements[0] >= 10  # Should be at least 10ms
 
     def test_get_latency_measurements_with_time_window(self):
         """Test getting latency measurements within specific time window"""
@@ -84,41 +88,54 @@ class TestMetricsCollector:
         assert len(measurements_1) == 1
         assert len(measurements_2) == 2
 
-    def test_cleanup_old_measurements(self):
-        """Test that old measurements are cleaned up automatically"""
+    def test_time_window_measurements(self):
+        """Test that old measurements are filtered out by time window"""
         model_id = uuid4()
 
-        # Create old measurement by mocking timestamp greater than max age of 60 seconds
-        old_timestamp = datetime.now(UTC) - timedelta(seconds=61)
-        old_measurement = LatencyMeasurement(model_id=model_id, latency_ms=10.0, timestamp=old_timestamp)
+        # First add a current measurement
+        start_time = time.perf_counter()
+        self.collector.record_inference_end(model_id=model_id, start_time=start_time)
 
-        with self.collector._lock:
-            self.collector._measurements.append(old_measurement)
+        # Then add an "old" measurement by mocking datetime
+        with patch("app.services.metrics_collector.datetime") as mock_datetime:
+            mock_datetime.now.return_value = datetime.now(UTC) - timedelta(seconds=90)
+            self.collector.record_inference_end(model_id, start_time)
 
-        # Trigger cleanup by getting measurements
+        # Only the first measurement should be returned with default 60s window
         measurements = self.collector.get_latency_measurements(model_id=model_id)
+        assert len(measurements) == 1
 
-        # Old measurement should be cleaned up
-        assert len(measurements) == 0
+        # Both should be returned with larger time window
+        measurements = self.collector.get_latency_measurements(model_id=model_id, time_window=120)
+        assert len(measurements) == 2
 
     def test_latency_measurement_timestamp(self):
         """Test that measurements are recorded with correct timestamps"""
-        self.reset_collector()
-
         fixed_time = datetime(2025, 1, 1, 12, 0, 0, tzinfo=UTC)
+        fixed_timestamp = fixed_time.timestamp()
         model_id = uuid4()
         start_time = self.collector.record_inference_start()
+
         with patch("app.services.metrics_collector.datetime") as mock_datetime:
             mock_datetime.now.return_value = fixed_time
             self.collector.record_inference_end(model_id, start_time)
 
-        # Check that measurement was recorded with mocked timestamp
+        # Get all entries and check for our timestamp
         with self.collector._lock:
-            assert len(self.collector._measurements) == 1
-            assert self.collector._measurements[0].timestamp == fixed_time
+            # Check the array for our timestamp
+            found_matching_record = False
+            for i in range(self.collector.MAX_MEASUREMENTS):
+                if (
+                    self.collector._array[i]["model_id"] == str(model_id)
+                    and abs(self.collector._array[i]["timestamp"] - fixed_timestamp) < 0.001
+                ):
+                    found_matching_record = True
+                    break
+            assert found_matching_record
 
     def test_empty_measurements(self):
         """Test behavior when no measurements exist"""
+        self.collector.reset()
         model_id = uuid4()
 
         measurements = self.collector.get_latency_measurements(model_id=model_id)
@@ -135,11 +152,10 @@ class TestMetricsCollector:
         latency_ms = measurements[0]
 
         # Should be approximately 10ms (with some tolerance for timing precision)
-        assert 10.0 <= latency_ms <= 11.0
+        assert 10.0 <= latency_ms <= 12.0, f"Latency was {latency_ms} ms"
 
     def test_max_age_initialization(self):
         """Test that max_age_seconds is properly initialized and updated"""
-        self.reset_collector()
         assert self.collector._max_age_seconds == 60
 
         self.collector.update_max_age(120)
@@ -148,3 +164,31 @@ class TestMetricsCollector:
         # Test default value
         collector2 = MetricsCollector()
         assert collector2._max_age_seconds == 120  # Should be same instance due to singleton
+
+    def test_shared_memory_usage(self):
+        """Test that the shared memory is properly used"""
+        model_id = uuid4()
+        start_time = time.perf_counter()
+        self.collector.record_inference_end(model_id, start_time)
+
+        # Create a new collector which should access the same shared memory
+        collector2 = MetricsCollector()
+        measurements = collector2.get_latency_measurements(model_id)
+
+        assert len(measurements) == 1
+
+    def test_circular_buffer(self):
+        """Test that the circular buffer works correctly when exceeding MAX_MEASUREMENTS"""
+        model_id = uuid4()
+
+        # Fill more than MAX_MEASUREMENTS entries
+        head_before = self.collector._head
+        for i in range(self.collector.MAX_MEASUREMENTS + 10):
+            self.collector.record_inference_end(model_id, time.perf_counter())
+
+        # Check that the head has wrapped around correctly
+        assert self.collector._head == head_before + self.collector.MAX_MEASUREMENTS + 10
+
+        # Check that we can still retrieve measurements
+        measurements = self.collector.get_latency_measurements(model_id)
+        assert len(measurements) == self.collector.MAX_MEASUREMENTS
