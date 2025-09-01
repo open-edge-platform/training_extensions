@@ -308,7 +308,6 @@
             <span class="p">),</span>
             <span class="n">label</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">([</span><span class="n">ann</span><span class="o">.</span><span class="n">label</span> <span class="k">for</span> <span class="n">ann</span> <span class="ow">in</span> <span class="n">bbox_anns</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">),</span>
         <span class="p">)</span>
-
         <span class="c1"># Apply augmentation switch if available</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_dynamic_augmentation</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_apply_augmentation_switch</span><span class="p">()</span>

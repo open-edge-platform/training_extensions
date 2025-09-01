@@ -510,6 +510,173 @@
 <span class="p">}</span>
 
 
+<div class="viewcode-block" id="update_learning_rate">
+<a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.tools.converter.html#otx.tools.converter.update_learning_rate">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">update_learning_rate</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Update learning rate in the config.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">param_value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Learning rate is not provided, skipping update.&quot;</span><span class="p">)</span>
+        <span class="k">return</span>
+    <span class="n">optimizer</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">][</span><span class="s2">&quot;init_args&quot;</span><span class="p">][</span><span class="s2">&quot;optimizer&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">optimizer</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;init_args&quot;</span> <span class="ow">in</span> <span class="n">optimizer</span><span class="p">:</span>
+        <span class="n">optimizer</span><span class="p">[</span><span class="s2">&quot;init_args&quot;</span><span class="p">][</span><span class="s2">&quot;lr&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_value</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Warning: learning_rate is not updated&quot;</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="update_num_iters">
+<a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.tools.converter.html#otx.tools.converter.update_num_iters">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">update_num_iters</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Update max_epochs in the config.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">param_value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Max epochs is not provided, skipping update.&quot;</span><span class="p">)</span>
+        <span class="k">return</span>
+    <span class="n">config</span><span class="p">[</span><span class="s2">&quot;max_epochs&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_value</span></div>
+
+
+
+<div class="viewcode-block" id="update_early_stopping">
+<a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.tools.converter.html#otx.tools.converter.update_early_stopping">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">update_early_stopping</span><span class="p">(</span><span class="n">early_stopping_cfg</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Update early stopping parameters in the config.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">early_stopping_cfg</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Early stopping parameters are not provided, skipping update.&quot;</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="n">enable</span> <span class="o">=</span> <span class="n">early_stopping_cfg</span><span class="p">[</span><span class="s2">&quot;enable&quot;</span><span class="p">]</span>
+    <span class="n">patience</span> <span class="o">=</span> <span class="n">early_stopping_cfg</span><span class="p">[</span><span class="s2">&quot;patience&quot;</span><span class="p">]</span>
+
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">GetiConfigConverter</span><span class="o">.</span><span class="n">get_callback_idx</span><span class="p">(</span>
+        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;callbacks&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">enable</span> <span class="ow">and</span> <span class="n">idx</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;callbacks&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="n">config</span><span class="p">[</span><span class="s2">&quot;callbacks&quot;</span><span class="p">][</span><span class="n">idx</span><span class="p">][</span><span class="s2">&quot;init_args&quot;</span><span class="p">][</span><span class="s2">&quot;patience&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">patience</span></div>
+
+
+
+<div class="viewcode-block" id="update_tiling">
+<a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.tools.converter.html#otx.tools.converter.update_tiling">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">update_tiling</span><span class="p">(</span><span class="n">tiling_dict</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Update tiling parameters in the config.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">tiling_dict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Tiling parameters are not provided, skipping update.&quot;</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;tile_config&quot;</span><span class="p">][</span><span class="s2">&quot;enable_tiler&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tiling_dict</span><span class="p">[</span><span class="s2">&quot;enable&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">tiling_dict</span><span class="p">[</span><span class="s2">&quot;enable&quot;</span><span class="p">]:</span>
+        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;tile_config&quot;</span><span class="p">][</span><span class="s2">&quot;enable_adaptive_tiling&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tiling_dict</span><span class="p">[</span><span class="s2">&quot;adaptive_tiling&quot;</span><span class="p">]</span>
+        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;tile_config&quot;</span><span class="p">][</span><span class="s2">&quot;tile_size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">tiling_dict</span><span class="p">[</span><span class="s2">&quot;tile_size&quot;</span><span class="p">],</span>
+            <span class="n">tiling_dict</span><span class="p">[</span><span class="s2">&quot;tile_size&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;tile_config&quot;</span><span class="p">][</span><span class="s2">&quot;overlap&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tiling_dict</span><span class="p">[</span><span class="s2">&quot;tile_overlap&quot;</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="update_input_size">
+<a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.tools.converter.html#otx.tools.converter.update_input_size">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">update_input_size</span><span class="p">(</span><span class="n">height</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Update input size in the config.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">height</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">width</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Input size is not provided, skipping update.&quot;</span><span class="p">)</span>
+        <span class="k">return</span>
+    <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;input_size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="update_augmentations">
+<a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.tools.converter.html#otx.tools.converter.update_augmentations">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">update_augmentations</span><span class="p">(</span><span class="n">augmentation_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Update augmentations in the config.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        augmentation_params = {</span>
+<span class="sd">            random_affine = {</span>
+<span class="sd">                &quot;enable&quot;: True,</span>
+<span class="sd">                &quot;scaling_ratio_range&quot;: [0.1, 2.0]</span>
+<span class="sd">            },</span>
+<span class="sd">            gaussian_blur = {</span>
+<span class="sd">                &quot;enable&quot;: True,</span>
+<span class="sd">                &quot;kernel_size&quot;: 5</span>
+<span class="sd">            }</span>
+<span class="sd">            ...</span>
+<span class="sd">        }</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">augmentation_params</span><span class="p">:</span>
+        <span class="k">return</span>
+
+    <span class="n">tiling</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;tile_config&quot;</span><span class="p">][</span><span class="s2">&quot;enable_tiler&quot;</span><span class="p">]</span>
+    <span class="c1"># this list maps Geti user frendly naming to OTX aug classes</span>
+    <span class="n">augs_mapping_list</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;random_resize_crop&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">&quot;otx.data.transform_libs.torchvision.EfficientNetRandomCrop&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;otx.data.transform_libs.torchvision.RandomResizedCrop&quot;</span><span class="p">,</span>
+        <span class="p">],</span>
+        <span class="s2">&quot;random_affine&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;otx.data.transform_libs.torchvision.RandomAffine&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;topdown_affine&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;otx.data.transform_libs.torchvision.TopdownAffine&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;random_horizontal_flip&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;otx.data.transform_libs.torchvision.RandomFlip&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;random_vertical_flip&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;torchvision.transforms.v2.RandomVerticalFlip&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;gaussian_blur&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;otx.data.transform_libs.torchvision.RandomGaussianBlur&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;gaussian_noise&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;otx.data.transform_libs.torchvision.RandomGaussianNoise&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;color_jitter&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;torchvision.transforms.v2.RandomPhotometricDistort&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;photometric_distort&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;otx.data.transform_libs.torchvision.PhotoMetricDistortion&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;iou_random_crop&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">&quot;otx.data.transform_libs.torchvision.MinIoURandomCrop&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;otx.data.transform_libs.torchvision.RandomIoUCrop&quot;</span><span class="p">,</span>
+        <span class="p">],</span>
+        <span class="s2">&quot;random_zoom_out&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;torchvision.transforms.v2.RandomZoomOut&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;hsv_random_aug&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;otx.data.transform_libs.torchvision.YOLOXHSVRandomAug&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;mixup&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;otx.data.transform_libs.torchvision.CachedMixUp&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;mosaic&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;otx.data.transform_libs.torchvision.CachedMosaic&quot;</span><span class="p">],</span>
+    <span class="p">}</span>
+
+    <span class="k">for</span> <span class="n">aug_name</span><span class="p">,</span> <span class="n">aug_value</span> <span class="ow">in</span> <span class="n">augmentation_params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">aug_classes</span> <span class="o">=</span> <span class="n">augs_mapping_list</span><span class="p">[</span><span class="n">aug_name</span><span class="p">]</span>
+        <span class="n">found</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">aug_config</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;train_subset&quot;</span><span class="p">][</span><span class="s2">&quot;transforms&quot;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">aug_config</span><span class="p">[</span><span class="s2">&quot;class_path&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">aug_classes</span><span class="p">:</span>
+                <span class="n">found</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">if</span> <span class="s2">&quot;init_args&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">aug_config</span><span class="p">:</span>
+                    <span class="n">aug_config</span><span class="p">[</span><span class="s2">&quot;init_args&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="k">if</span> <span class="n">aug_name</span> <span class="o">==</span> <span class="s2">&quot;random_resize_crop&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">aug_value</span><span class="p">[</span><span class="s2">&quot;enable&quot;</span><span class="p">]:</span>
+                    <span class="c1"># if random crop is disabled -&gt; change this augmentation to simple Resize</span>
+                    <span class="n">aug_config</span><span class="p">[</span><span class="s2">&quot;class_path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;otx.data.transform_libs.torchvision.Resize&quot;</span>
+                    <span class="k">break</span>
+                <span class="k">if</span> <span class="s2">&quot;TopdownAffine&quot;</span> <span class="ow">in</span> <span class="n">aug_config</span><span class="p">[</span><span class="s2">&quot;class_path&quot;</span><span class="p">]:</span>
+                    <span class="n">affine_transforms_prob</span> <span class="o">=</span> <span class="n">aug_value</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;probability&quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">affine_transforms_prob</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">aug_config</span><span class="p">[</span><span class="s2">&quot;init_args&quot;</span><span class="p">][</span><span class="s2">&quot;probability&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">affine_transforms_prob</span> <span class="k">if</span> <span class="n">aug_value</span><span class="p">[</span><span class="s2">&quot;enable&quot;</span><span class="p">]</span> <span class="k">else</span> <span class="mf">0.0</span>
+                        <span class="k">if</span> <span class="n">aug_config</span><span class="p">[</span><span class="s2">&quot;init_args&quot;</span><span class="p">][</span><span class="s2">&quot;probability&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">0.7</span><span class="p">:</span>
+                            <span class="k">for</span> <span class="n">val_aug_cfg</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;val_subset&quot;</span><span class="p">][</span><span class="s2">&quot;transforms&quot;</span><span class="p">]:</span>
+                                <span class="k">if</span> <span class="s2">&quot;Pad&quot;</span> <span class="ow">in</span> <span class="n">val_aug_cfg</span><span class="p">[</span><span class="s2">&quot;class_path&quot;</span><span class="p">]:</span>
+                                    <span class="n">val_aug_cfg</span><span class="p">[</span><span class="s2">&quot;enable&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+                    <span class="k">break</span>
+
+                <span class="n">aug_config</span><span class="p">[</span><span class="s2">&quot;enable&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">aug_value</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;enable&quot;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">parameter</span> <span class="ow">in</span> <span class="n">aug_value</span><span class="p">:</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="n">aug_value</span><span class="p">[</span><span class="n">parameter</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">override_parameter</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="s2">&quot;p&quot;</span>
+                            <span class="k">if</span> <span class="n">parameter</span> <span class="o">==</span> <span class="s2">&quot;probability&quot;</span> <span class="ow">and</span> <span class="s2">&quot;torchvision.transforms.v2&quot;</span> <span class="ow">in</span> <span class="n">aug_config</span><span class="p">[</span><span class="s2">&quot;class_path&quot;</span><span class="p">]</span>
+                            <span class="k">else</span> <span class="n">parameter</span>
+                        <span class="p">)</span>  <span class="c1"># Geti consistency fix</span>
+                        <span class="n">aug_config</span><span class="p">[</span><span class="s2">&quot;init_args&quot;</span><span class="p">][</span><span class="n">override_parameter</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+                <span class="k">break</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">found</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">tiling</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Augmentation </span><span class="si">{</span><span class="n">aug_name</span><span class="si">}</span><span class="s2"> is not found for this model.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;This augmentation is not applicable in Tiling pipeline&quot;</span><span class="p">)</span></div>
+
+
+
 <div class="viewcode-block" id="GetiConfigConverter">
 <a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.tools.converter.html#otx.tools.converter.GetiConfigConverter">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">GetiConfigConverter</span><span class="p">:</span>
@@ -590,113 +757,31 @@
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_update_params</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">param_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Update params of OTX recipe from Geit configurable params.&quot;&quot;&quot;</span>
-
-        <span class="k">def</span><span class="w"> </span><span class="nf">update_learning_rate</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">            </span><span class="sd">&quot;&quot;&quot;Update learning rate in the config.&quot;&quot;&quot;</span>
-            <span class="k">if</span> <span class="n">param_value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Learning rate is not provided, skipping update.&quot;</span><span class="p">)</span>
-                <span class="k">return</span>
-            <span class="n">optimizer</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">][</span><span class="s2">&quot;init_args&quot;</span><span class="p">][</span><span class="s2">&quot;optimizer&quot;</span><span class="p">]</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">optimizer</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;init_args&quot;</span> <span class="ow">in</span> <span class="n">optimizer</span><span class="p">:</span>
-                <span class="n">optimizer</span><span class="p">[</span><span class="s2">&quot;init_args&quot;</span><span class="p">][</span><span class="s2">&quot;lr&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_value</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Warning: learning_rate is not updated&quot;</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-
-        <span class="k">def</span><span class="w"> </span><span class="nf">update_num_iters</span><span class="p">(</span><span class="n">param_value</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">            </span><span class="sd">&quot;&quot;&quot;Update max_epochs in the config.&quot;&quot;&quot;</span>
-            <span class="k">if</span> <span class="n">param_value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Max epochs is not provided, skipping update.&quot;</span><span class="p">)</span>
-                <span class="k">return</span>
-            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;max_epochs&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_value</span>
-
-        <span class="k">def</span><span class="w"> </span><span class="nf">update_early_stopping</span><span class="p">(</span><span class="n">early_stopping_cfg</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">            </span><span class="sd">&quot;&quot;&quot;Update early stopping parameters in the config.&quot;&quot;&quot;</span>
-            <span class="k">if</span> <span class="n">early_stopping_cfg</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Early stopping parameters are not provided, skipping update.&quot;</span><span class="p">)</span>
-                <span class="k">return</span>
-
-            <span class="n">enable</span> <span class="o">=</span> <span class="n">early_stopping_cfg</span><span class="p">[</span><span class="s2">&quot;enable&quot;</span><span class="p">]</span>
-            <span class="n">patience</span> <span class="o">=</span> <span class="n">early_stopping_cfg</span><span class="p">[</span><span class="s2">&quot;patience&quot;</span><span class="p">]</span>
-
-            <span class="n">idx</span> <span class="o">=</span> <span class="n">GetiConfigConverter</span><span class="o">.</span><span class="n">_get_callback_idx</span><span class="p">(</span>
-                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;callbacks&quot;</span><span class="p">],</span>
-                <span class="s2">&quot;otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">enable</span> <span class="ow">and</span> <span class="n">idx</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
-                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;callbacks&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
-                <span class="k">return</span>
-
-            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;callbacks&quot;</span><span class="p">][</span><span class="n">idx</span><span class="p">][</span><span class="s2">&quot;init_args&quot;</span><span class="p">][</span><span class="s2">&quot;patience&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">patience</span>
-
-        <span class="k">def</span><span class="w"> </span><span class="nf">update_tiling</span><span class="p">(</span><span class="n">tiling_dict</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">            </span><span class="sd">&quot;&quot;&quot;Update tiling parameters in the config.&quot;&quot;&quot;</span>
-            <span class="k">if</span> <span class="n">tiling_dict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Tiling parameters are not provided, skipping update.&quot;</span><span class="p">)</span>
-                <span class="k">return</span>
-
-            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;tile_config&quot;</span><span class="p">][</span><span class="s2">&quot;enable_tiler&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tiling_dict</span><span class="p">[</span><span class="s2">&quot;enable&quot;</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">tiling_dict</span><span class="p">[</span><span class="s2">&quot;enable&quot;</span><span class="p">]:</span>
-                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;tile_config&quot;</span><span class="p">][</span><span class="s2">&quot;enable_adaptive_tiling&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tiling_dict</span><span class="p">[</span><span class="s2">&quot;adaptive_tiling&quot;</span><span class="p">]</span>
-                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;tile_config&quot;</span><span class="p">][</span><span class="s2">&quot;tile_size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="n">tiling_dict</span><span class="p">[</span><span class="s2">&quot;tile_size&quot;</span><span class="p">],</span>
-                    <span class="n">tiling_dict</span><span class="p">[</span><span class="s2">&quot;tile_size&quot;</span><span class="p">],</span>
-                <span class="p">)</span>
-                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;tile_config&quot;</span><span class="p">][</span><span class="s2">&quot;overlap&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tiling_dict</span><span class="p">[</span><span class="s2">&quot;tile_overlap&quot;</span><span class="p">]</span>
-
-        <span class="k">def</span><span class="w"> </span><span class="nf">update_input_size</span><span class="p">(</span><span class="n">height</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">            </span><span class="sd">&quot;&quot;&quot;Update input size in the config.&quot;&quot;&quot;</span>
-            <span class="k">if</span> <span class="n">height</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">width</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Input size is not provided, skipping update.&quot;</span><span class="p">)</span>
-                <span class="k">return</span>
-            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;input_size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span>
-
-        <span class="k">def</span><span class="w"> </span><span class="nf">update_augmentations</span><span class="p">(</span><span class="n">augmentation_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">            </span><span class="sd">&quot;&quot;&quot;Update augmentations in the config.&quot;&quot;&quot;</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">augmentation_params</span><span class="p">:</span>
-                <span class="k">return</span>
-
-            <span class="n">augs_mapping_list</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;random_affine&quot;</span><span class="p">:</span> <span class="s2">&quot;otx.data.transform_libs.torchvision.RandomAffine&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;random_horizontal_flip&quot;</span><span class="p">:</span> <span class="s2">&quot;otx.data.transform_libs.torchvision.RandomFlip&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;random_vertical_flip&quot;</span><span class="p">:</span> <span class="s2">&quot;torchvision.transforms.v2.RandomVerticalFlip&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;gaussian_blur&quot;</span><span class="p">:</span> <span class="s2">&quot;otx.data.transform_libs.torchvision.RandomGaussianBlur&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;gaussian_noise&quot;</span><span class="p">:</span> <span class="s2">&quot;otx.data.transform_libs.torchvision.RandomGaussianNoise&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;color_jitter&quot;</span><span class="p">:</span> <span class="s2">&quot;otx.data.transform_libs.torchvision.PhotoMetricDistortion&quot;</span><span class="p">,</span>
-            <span class="p">}</span>
-
-            <span class="k">for</span> <span class="n">aug_name</span><span class="p">,</span> <span class="n">aug_value</span> <span class="ow">in</span> <span class="n">augmentation_params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="n">aug_class</span> <span class="o">=</span> <span class="n">augs_mapping_list</span><span class="p">[</span><span class="n">aug_name</span><span class="p">]</span>
-                <span class="n">found</span> <span class="o">=</span> <span class="kc">False</span>
-                <span class="k">for</span> <span class="n">aug_config</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">][</span><span class="s2">&quot;train_subset&quot;</span><span class="p">][</span><span class="s2">&quot;transforms&quot;</span><span class="p">]:</span>
-                    <span class="k">if</span> <span class="n">aug_class</span> <span class="o">==</span> <span class="n">aug_config</span><span class="p">[</span><span class="s2">&quot;class_path&quot;</span><span class="p">]:</span>
-                        <span class="n">found</span> <span class="o">=</span> <span class="kc">True</span>
-                        <span class="n">aug_config</span><span class="p">[</span><span class="s2">&quot;enable&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">aug_value</span><span class="p">[</span><span class="s2">&quot;enable&quot;</span><span class="p">]</span>
-                        <span class="k">break</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">found</span><span class="p">:</span>
-                    <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;augmentation </span><span class="si">{</span><span class="n">aug_class</span><span class="si">}</span><span class="s2"> is not found for this model&quot;</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
         <span class="n">augmentation_params</span> <span class="o">=</span> <span class="n">param_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;dataset_preparation&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;augmentation&quot;</span><span class="p">,</span> <span class="p">{})</span>
         <span class="n">tiling</span> <span class="o">=</span> <span class="n">augmentation_params</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;tiling&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">training_parameters</span> <span class="o">=</span> <span class="n">param_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;training&quot;</span><span class="p">,</span> <span class="p">{})</span>
 
-        <span class="n">update_augmentations</span><span class="p">(</span><span class="n">augmentation_params</span><span class="p">)</span>
-        <span class="n">update_tiling</span><span class="p">(</span><span class="n">tiling</span><span class="p">)</span>
-        <span class="n">update_learning_rate</span><span class="p">(</span><span class="n">training_parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;learning_rate&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
-        <span class="n">update_num_iters</span><span class="p">(</span><span class="n">training_parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;max_epochs&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
-        <span class="n">update_early_stopping</span><span class="p">(</span><span class="n">training_parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;early_stopping&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+        <span class="n">update_tiling</span><span class="p">(</span><span class="n">tiling</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+        <span class="n">update_augmentations</span><span class="p">(</span><span class="n">augmentation_params</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+        <span class="n">update_learning_rate</span><span class="p">(</span><span class="n">training_parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;learning_rate&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="n">config</span><span class="p">)</span>
+        <span class="n">update_num_iters</span><span class="p">(</span><span class="n">training_parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;max_epochs&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="n">config</span><span class="p">)</span>
+        <span class="n">update_early_stopping</span><span class="p">(</span><span class="n">training_parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;early_stopping&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="n">config</span><span class="p">)</span>
         <span class="n">update_input_size</span><span class="p">(</span>
             <span class="n">training_parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;input_size_height&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
             <span class="n">training_parameters</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;input_size_width&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+            <span class="n">config</span><span class="p">,</span>
         <span class="p">)</span>
 
+<div class="viewcode-block" id="GetiConfigConverter.get_callback_idx">
+<a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.tools.converter.html#otx.tools.converter.GetiConfigConverter.get_callback_idx">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_callback_idx</span><span class="p">(</span><span class="n">callbacks</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_callback_idx</span><span class="p">(</span><span class="n">callbacks</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return required callbacks index from callback list.&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">callback</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">callbacks</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">callback</span><span class="p">[</span><span class="s2">&quot;class_path&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">name</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">idx</span>
-        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span></div>
+
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_remove_unused_key</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
