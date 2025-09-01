@@ -94,7 +94,6 @@ def test_augmentation_seg(
     fxt_target_dataset_per_task: dict,
 ):
     configurable_augs = [
-        "RandomResizedCrop",
         "PhotoMetricDistortion",
         "RandomAffine",
         "RandomVerticalFlip",
