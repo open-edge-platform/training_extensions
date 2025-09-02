@@ -1,22 +1,20 @@
+#####
+# This workflow is triggered by pull_request_target event.
+# Never checkout the PR and run ANY local code on it.
+#####
+
 name: "Pull Request Labeler"
 on:
-  - pull_request_target
+  # The labeler doesn't checkout/execute any contributed code, so it should be safe.
+  - pull_request_target # zizmor: ignore[dangerous-triggers]
 
-# Declare default permissions as read only.
-permissions: read-all
+permissions: {} # No permissions by default on workflow level
 
 jobs:
-  labeler:
+  label:
     permissions:
       contents: read
       pull-requests: write
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.1.1 # Uploads repository content to the runner
-        name: Checkout repository
-        with:
-          sparse-checkout: |
-            .github
-      - uses: actions/labeler@ac9175f8a1f3625fd0d4fb234536d26811351594 # v4.3.0
-        with:
-          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+      - uses: actions/labeler@8558fd74291d67161a8a78ce36a881fa63b766a9 # v5.0.0
