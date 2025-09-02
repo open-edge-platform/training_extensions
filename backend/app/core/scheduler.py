@@ -40,7 +40,6 @@ class Scheduler(metaclass=Singleton):
 
         # Shared memory for metrics collector
         self.shm_metrics_collector: SharedMemory = SharedMemory(name=SHM_NAME, create=True, size=SIZE)
-        print(self.shm_metrics_collector.name, SIZE)
 
         self.processes: list[mp.Process] = []
         self.threads: list[threading.Thread] = []
