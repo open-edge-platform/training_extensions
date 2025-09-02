@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useZoom } from '../../../../components/zoom/zoom';
-import { Circle } from '../../shapes/circle.component';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';
 
 interface InteractiveSegmentationPointProps extends InteractiveAnnotationPoint {
@@ -17,10 +16,12 @@ export const InteractiveSegmentationPoint = ({ x, y, positive, isLoading }: Inte
 
     return (
         <>
-            <Circle
-                ariaLabel={`${positive ? 'Positive' : 'Negative'} interactive segmentation point`}
-                circle={{ shapeType: 'circle', x, y, r: 5 / zoom.scale }}
-                styles={{
+            <circle
+                cx={x}
+                cy={y}
+                r={5 / zoom.scale}
+                aria-label={`${positive ? 'Positive' : 'Negative'} interactive segmentation point`}
+                style={{
                     fill,
                     opacity: 'var(--markers-opacity)',
                     strokeWidth: 'calc(1.5px / var(--zoom-level))',
