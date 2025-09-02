@@ -27,7 +27,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
-    "datumaro @ git+https://github.com/open-edge-platform/datumaro.git@albert/datumaro-otx-integration",
+    "datumaro @ git+https://github.com/open-edge-platform/datumaro.git@develop",
     "omegaconf==2.3.0",
     "rich==14.0.0",
     "jsonargparse==4.35.0",
