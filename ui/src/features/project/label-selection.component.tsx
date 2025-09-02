@@ -111,12 +111,6 @@ export const LabelSelection = () => {
             gap={'size-300'}
             UNSAFE_style={{ overflow: 'auto' }}
         >
-            <Flex>
-                <Text UNSAFE_style={{ color: 'var(--spectrum-global-color-gray-700)' }}>
-                    What objects should the model learn to detect?
-                </Text>
-            </Flex>
-
             <Flex direction={'column'} alignItems={'center'} gap={'size-100'} width={'100%'}>
                 {items.map((item) => {
                     return <LabelItem key={item.id} onDelete={handleDeleteItem} {...item} />;

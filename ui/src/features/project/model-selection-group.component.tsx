@@ -5,77 +5,102 @@ import { useState } from 'react';
 
 import { Flex, Heading, Image, Radio, RadioGroup, Text, View } from '@geti/ui';
 
+import thumbnailUrl from '../../assets/mocked-project-thumbnail.png';
+
 import classes from './model-selection.module.scss';
 
-const Models = [
+type Model = {
+    id: string;
+    imageSrc: string;
+    title: string;
+    description: string;
+    verb: string;
+    value: string;
+};
+const MODELS: Model[] = [
     {
         id: 'detection_model',
-        imageSrc: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6',
+        imageSrc: thumbnailUrl,
         title: 'Object Detection',
         description: 'Identify and locate objects in your images',
+        verb: 'detect',
         value: 'detection',
     },
     {
         id: 'segmentation_model',
-        imageSrc: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6',
+        imageSrc: thumbnailUrl,
         title: 'Image Segmentation',
         description: 'Detect and outline specific regions or shapes',
+        verb: 'segment',
         value: 'segmentation',
     },
     {
         id: 'classification_model',
-        imageSrc: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6',
+        imageSrc: thumbnailUrl,
         title: 'Image Classification',
         description: 'Categorize entire images based on their content',
+        verb: 'classify',
         value: 'classification',
     },
 ];
 
 type ModelOptionProps = {
-    imageSrc: string;
-    title: string;
-    description: string;
-    value: string;
+    model: Model;
     onPress: () => void;
 };
-const ModelOption = ({ imageSrc, title, description, value, onPress }: ModelOptionProps) => {
+const ModelOption = ({ model, onPress }: ModelOptionProps) => {
     return (
-        <div onClick={onPress} className={classes.option} aria-label={`Model option: ${title}`}>
+        <div onClick={onPress} className={classes.option} aria-label={`Model option: ${model.title}`}>
             <View maxWidth={'344px'}>
-                <Image height={'size-3000'} src={imageSrc} alt={title} />
+                <Image height={'size-3000'} width={'size-3600'} src={model.imageSrc} alt={model.title} />
             </View>
 
             <View padding={'size-300'} backgroundColor={'gray-100'}>
                 <Flex justifyContent={'space-between'} alignItems={'center'}>
                     <Heading level={2} UNSAFE_className={classes.title}>
-                        {title}
+                        {model.title}
                     </Heading>
-                    <Radio aria-label={value} value={value} onFocus={onPress} />
+                    <Radio aria-label={model.value} value={model.value} />
                 </Flex>
 
-                <Text UNSAFE_className={classes.description}>{description}</Text>
+                <Text UNSAFE_className={classes.description}>{model.description}</Text>
             </View>
         </div>
     );
 };
 
 export const ModelSelectionGroup = () => {
-    const [selectedOption, setSelectedOption] = useState(Models[0].value);
+    const [selectedOption, setSelectedOption] = useState(MODELS[0]);
 
     return (
-        <RadioGroup aria-label='Model selection' value={selectedOption} onChange={setSelectedOption}>
-            <Flex justifyContent={'center'} gap={'size-300'}>
-                {Models.map((model) => (
-                    <ModelOption
-                        key={model.value}
-                        imageSrc={model.imageSrc}
-                        title={model.title}
-                        description={model.description}
-                        value={model.value}
-                        onPress={() => setSelectedOption(model.value)}
-                    />
-                ))}
+        <Flex direction={'column'} gap={'size-300'} alignItems={'center'}>
+            <RadioGroup
+                aria-label='Model selection'
+                value={selectedOption.value}
+                onChange={(value: string) => {
+                    const selectedModel = MODELS.find((model) => model.value === value);
+
+                    if (selectedModel) setSelectedOption(selectedModel);
+                }}
+            >
+                <Flex justifyContent={'center'} gap={'size-300'}>
+                    {MODELS.map((model) => (
+                        <ModelOption
+                            key={model.value}
+                            model={model}
+                            onPress={() => {
+                                setSelectedOption(model);
+                            }}
+                        />
+                    ))}
+                </Flex>
+            </RadioGroup>
+
+            <Flex>
+                <Text UNSAFE_style={{ color: 'var(--spectrum-global-color-gray-700)' }}>
+                    {`What objects should the model learn to ${selectedOption.verb}?`}
+                </Text>
             </Flex>
-        </RadioGroup>
+        </Flex>
     );
 };
