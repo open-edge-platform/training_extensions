@@ -3,10 +3,13 @@
 
 import time
 from datetime import UTC, datetime, timedelta
+from multiprocessing.shared_memory import SharedMemory
 from unittest.mock import patch
 from uuid import uuid4
 
-from app.services.metrics_collector import MetricsCollector
+from app.services.metrics_collector import MAX_MEASUREMENTS, SHM_NAME, SIZE, MetricsCollector
+
+SHM = SharedMemory(name=SHM_NAME, create=True, size=SIZE)
 
 
 class TestMetricsCollector:
@@ -112,7 +115,7 @@ class TestMetricsCollector:
         with collector._lock:
             # Check the array for our timestamp
             found_matching_record = False
-            for i in range(collector.MAX_MEASUREMENTS):
+            for i in range(MAX_MEASUREMENTS):
                 if (
                     collector._array[i]["model_id"] == str(model_id)
                     and abs(collector._array[i]["timestamp"] - fixed_timestamp) < 0.001
@@ -172,12 +175,12 @@ class TestMetricsCollector:
 
         # Fill more than MAX_MEASUREMENTS entries
         head_before = collector._head
-        for i in range(collector.MAX_MEASUREMENTS + 10):
+        for i in range(MAX_MEASUREMENTS + 10):
             collector.record_inference_end(model_id, time.perf_counter())
 
         # Check that the head has wrapped around correctly
-        assert collector._head == head_before + collector.MAX_MEASUREMENTS + 10
+        assert collector._head == head_before + MAX_MEASUREMENTS + 10
 
         # Check that we can still retrieve measurements
         measurements = collector.get_latency_measurements(model_id)
-        assert len(measurements) == collector.MAX_MEASUREMENTS
+        assert len(measurements) == MAX_MEASUREMENTS

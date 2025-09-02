@@ -4,13 +4,25 @@
 import logging
 import time
 from datetime import UTC, datetime
-from multiprocessing import Lock, shared_memory
+from multiprocessing import Lock
+from multiprocessing.shared_memory import SharedMemory
 from typing import NamedTuple
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import numpy as np
 
 logger = logging.getLogger(__name__)
+
+SHM_NAME = f"latency_metrics_shm_{uuid4()}"
+MAX_MEASUREMENTS = 1024  # max number of measurements to keep
+DTYPE = np.dtype(
+    [
+        ("model_id", "U36"),  # 36 * 4 = 144 bytes for UUID string
+        ("latency_ms", np.dtype(float)),  # 8 bytes for latency in milliseconds
+        ("timestamp", np.dtype(float)),  # 8 bytes for timestamp (epoch time in seconds)
+    ]
+)  # 144 + 8 + 8 = 160 bytes per latency measurement
+SIZE = DTYPE.itemsize * MAX_MEASUREMENTS  # 160 * 1024 = 163840 bytes (160KB) allocated
 
 
 class LatencyMeasurement(NamedTuple):
@@ -24,26 +36,11 @@ class LatencyMeasurement(NamedTuple):
 class MetricsCollector:
     """Process-safe metrics collector using shared memory for model latency data"""
 
-    SHM_NAME = "latency_metrics_shm"
-    MAX_MEASUREMENTS = 1024  # max number of measurements to keep
-    DTYPE = np.dtype(
-        [
-            ("model_id", "U36"),  # 36 * 4 = 144 bytes for UUID string
-            ("latency_ms", np.dtype(float)),  # 8 bytes for latency in milliseconds
-            ("timestamp", np.dtype(float)),  # 8 bytes for timestamp (epoch time in seconds)
-        ]
-    )  # 144 + 8 + 8 = 160 bytes per latency measurement
-    SIZE = DTYPE.itemsize * MAX_MEASUREMENTS  # 160 * 1024 = 163840 bytes (160KB) allocated
-
     def __init__(self, max_age_seconds: int = 60):
         self._max_age_seconds = max_age_seconds
         self._lock = Lock()
-        try:
-            self._shm = shared_memory.SharedMemory(name=self.SHM_NAME)
-        except FileNotFoundError:
-            self._shm = shared_memory.SharedMemory(name=self.SHM_NAME, create=True, size=self.SIZE)
-
-        self._array: np.ndarray = np.ndarray((self.MAX_MEASUREMENTS,), dtype=self.DTYPE, buffer=self._shm.buf)
+        self._shm = SharedMemory(name=SHM_NAME)
+        self._array: np.ndarray = np.ndarray((MAX_MEASUREMENTS,), dtype=DTYPE, buffer=self._shm.buf)
         self._head = 0  # index for next write
 
     def update_max_age(self, max_age_seconds: int) -> None:
@@ -68,7 +65,7 @@ class MetricsCollector:
 
         measurement = LatencyMeasurement(str(model_id), latency_ms, timestamp)
         with self._lock:
-            idx = self._head % self.MAX_MEASUREMENTS
+            idx = self._head % MAX_MEASUREMENTS
             self._array[idx] = (measurement.model_id, measurement.latency_ms, measurement.timestamp)
             self._head += 1
             logger.debug(f"Latency measurement recorded for model {model_id}: {latency_ms:.2f} ms")
@@ -103,6 +100,5 @@ class MetricsCollector:
     def __del__(self):
         try:
             self._shm.close()
-            self._shm.unlink()
         except Exception as e:
             logger.exception("Error cleaning up shared memory in MetricsCollector __del__: %s", e)
