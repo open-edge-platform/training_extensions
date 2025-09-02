@@ -9,8 +9,8 @@ import { useZoom } from '../../../../components/zoom/zoom';
 import { AnnotationShape } from '../../annotation-shape';
 import { isRightButton } from '../../annotation/utils';
 import { Annotation, Point, RegionOfInterest, Shape } from '../../interfaces';
+import { MaskAnnotations } from '../../mask-annotations';
 import { getRelativePoint, removeOffLimitPoints } from '../../shapes/utils';
-import { AnnotationsMask } from './annotations-mask.component';
 import { InteractiveSegmentationPoint } from './interactive-segmentation-point.component';
 import { useSegmentAnything } from './segment-anything-state-provider.component';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';
@@ -176,39 +176,40 @@ export const SegmentAnythingTool = () => {
                     : `url("/icons/selection.svg") 8 8, auto`,
             }}
         >
-            <AnnotationsMask
+            <MaskAnnotations
+                isEnabled
                 annotations={annotations}
                 width={selectedMediaItem.image.width}
                 height={selectedMediaItem.image.height}
-            />
-
-            {annotations.map((annotation, idx) => {
-                return (
-                    <g
-                        key={idx}
-                        aria-label={showPreviewShapes ? 'Segment anything preview' : 'Segment anything result'}
-                        {...SELECT_ANNOTATION_STYLES}
-                        strokeWidth={'calc(3px / var(--zoom-level))'}
-                        cursor={
-                            !showPreviewShapes
-                                ? `url(/icons/cursor/pencil-${
-                                      interactiveMode === true && rightClickMode === false ? 'minus' : 'plus'
-                                  }.svg) 16 16, auto`
-                                : undefined
-                        }
-                        fillOpacity={0.0}
-                        className={
-                            showPreviewShapes
-                                ? interactiveMode
-                                    ? classes.stroke
-                                    : classes.animateStroke
-                                : classes.stroke
-                        }
-                    >
-                        <AnnotationShape annotation={annotation} />
-                    </g>
-                );
-            })}
+            >
+                {annotations.map((annotation, idx) => {
+                    return (
+                        <g
+                            key={idx}
+                            aria-label={showPreviewShapes ? 'Segment anything preview' : 'Segment anything result'}
+                            {...SELECT_ANNOTATION_STYLES}
+                            strokeWidth={'calc(3px / var(--zoom-level))'}
+                            cursor={
+                                !showPreviewShapes
+                                    ? `url(/icons/cursor/pencil-${
+                                          interactiveMode === true && rightClickMode === false ? 'minus' : 'plus'
+                                      }.svg) 16 16, auto`
+                                    : undefined
+                            }
+                            fillOpacity={0.0}
+                            className={
+                                showPreviewShapes
+                                    ? interactiveMode
+                                        ? classes.stroke
+                                        : classes.animateStroke
+                                    : classes.stroke
+                            }
+                        >
+                            <AnnotationShape annotation={annotation} />
+                        </g>
+                    );
+                })}
+            </MaskAnnotations>
 
             {points.map((point, index) => (
                 <InteractiveSegmentationPoint
