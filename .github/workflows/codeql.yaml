@@ -1,95 +1,46 @@
-# For most projects, this workflow file will not need changing; you simply need
-# to commit it to your repository.
-#
-# You may wish to alter this file to override the set of languages analyzed,
-# or to provide custom queries or build logic.
-#
-# ******** NOTE ********
-# We have attempted to detect the languages in your repository. Please check
-# the `language` matrix defined below to confirm you have the correct set of
-# supported CodeQL languages.
-#
 name: "CodeQL scan"
 
 on:
-  workflow_dispatch:
   schedule:
     - cron: "0 0 * * *"
   push:
-    branches:
-      - "develop"
-      - "releases/*"
+    branches: ["develop", "releases/**"]
   pull_request:
-    branches:
-      - "develop"
-      - "releases/*"
+    branches: ["develop", "releases/**"]
+
+permissions: {}
 
 jobs:
   analyze:
-    name: Analyze
-    # Runner size impacts CodeQL analysis time. To learn more, please see:
-    #   - https://gh.io/recommended-hardware-resources-for-running-codeql
-    #   - https://gh.io/supported-runners-and-hardware-resources
-    #   - https://gh.io/using-larger-runners
-    # Consider using larger runners for possible analysis time improvements.
-    runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
     permissions:
-      # required for all workflows
-      security-events: write
+      security-events: write # required to publish sarif
 
     strategy:
       fail-fast: false
       matrix:
         include:
+          - language: actions
+            build-mode: none
           - language: python
             build-mode: none
-          - language: actions # to scan workflows
-            build-mode: none
-        # CodeQL supports [ 'c-cpp', 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'swift' ]
-        # Use only 'java-kotlin' to analyze code written in Java, Kotlin or both
-        # Use only 'javascript-typescript' to analyze code written in JavaScript, TypeScript or both
-        # Learn more about CodeQL language support at https://aka.ms/codeql-docs/language-support
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@51f77329afa6477de8c49fc9c7046c15b9a4e79d # v3.29.5
+        uses: github/codeql-action/init@96f518a34f7a870018057716cc4d7a5c014bd61c # v3.29.10
         with:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
-          # If you wish to specify custom queries, you can do so here or in a config file.
-          # By default, queries listed here will override any specified in a config file.
-          # Prefix the list here with "+" to use these queries and those in the config file.
-
-          # For more details on CodeQL's query packs, refer to: https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#using-queries-in-ql-packs
-          # queries: security-extended,security-and-quality
+          queries: security-extended
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@51f77329afa6477de8c49fc9c7046c15b9a4e79d # v3.29.5
+        uses: github/codeql-action/analyze@96f518a34f7a870018057716cc4d7a5c014bd61c # v3.29.10
         with:
           category: "/language:${{matrix.language}}"
-
-      - name: Generate Security Report
-        uses: rsdmike/github-security-report-action@a149b24539044c92786ec39af8ba38c93496495d # v3.0.4
-        with:
-          template: report
-          token: ${{ secrets.GITHUB_TOKEN }}
-          outputDir: codeql-${{ matrix.language }}
-
-      - name: Rename Report
-        shell: bash
-        continue-on-error: true
-        run: |
-          cd codeql-${{ matrix.language }}
-          mv "report.pdf" "codeql-${{ matrix.language }}.pdf"
-
-      - name: GitHub Upload Release Artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: codeql-${{ matrix.language }}-results
-          path: codeql-${{ matrix.language }}/*.pdf
-          retention-days: 7
