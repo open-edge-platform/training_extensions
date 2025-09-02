@@ -34,7 +34,7 @@ export const Anchor = ({
     onStart,
     moveAnchorTo,
     onComplete,
-}: AnchorProps): JSX.Element => {
+}: AnchorProps) => {
     const [dragFrom, setDragFrom] = useState<Point | null>(null);
 
     const onPointerDown = (event: PointerEvent) => {
