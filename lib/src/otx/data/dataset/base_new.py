@@ -13,7 +13,7 @@ import torch
 from datumaro.experimental import Dataset
 from torch.utils.data import Dataset as TorchDataset
 
-from otx.data.entity.sample import ClassificationSample
+from otx.data.entity.sample import OTXSample
 from otx.data.entity.torch.torch import OTXDataBatch
 from otx.data.transform_libs.torchvision import Compose
 from otx.types.image import ImageColorChannel
@@ -21,13 +21,13 @@ from otx.types.image import ImageColorChannel
 Transforms = Union[Compose, Callable, List[Callable], dict[str, Compose | Callable | List[Callable]]]
 
 
-def _default_collate_fn(items: list[ClassificationSample]) -> OTXDataBatch:
-    """Collate ClassificationSample items into an OTXDataBatch.
+def _default_collate_fn(items: list[OTXSample]) -> OTXDataBatch:
+    """Collate OTXSample items into an OTXDataBatch.
 
     Args:
-        items: List of ClassificationSample items to batch
+        items: List of OTXSample items to batch
     Returns:
-        Batched ClassificationSample items with stacked tensors
+        Batched OTXSample items with stacked tensors
     """
     # Convert images to float32 tensors before stacking
     image_tensors = []
@@ -81,7 +81,7 @@ class OTXDataset(TorchDataset):
         stack_images: bool = True,
         to_tv_image: bool = True,
         data_format: str = "",
-        sample_type: type[ClassificationSample] = ClassificationSample,
+        sample_type: type[OTXSample] = OTXSample,
     ) -> None:
         self.transforms = transforms
         self.image_color_channel = image_color_channel
@@ -106,7 +106,7 @@ class OTXDataset(TorchDataset):
     def _sample_another_idx(self) -> int:
         return np.random.randint(0, len(self))
 
-    def _apply_transforms(self, entity: ClassificationSample) -> ClassificationSample | None:
+    def _apply_transforms(self, entity: OTXSample) -> OTXSample | None:
         if isinstance(self.transforms, Compose):
             if self.to_tv_image:
                 entity.as_tv_image()
@@ -116,7 +116,7 @@ class OTXDataset(TorchDataset):
         if callable(self.transforms):
             return self.transforms(entity)
 
-    def _iterable_transforms(self, item: ClassificationSample) -> ClassificationSample | None:
+    def _iterable_transforms(self, item: OTXSample) -> OTXSample | None:
         if not isinstance(self.transforms, list):
             raise TypeError(item)
 
@@ -130,7 +130,7 @@ class OTXDataset(TorchDataset):
 
         return results
 
-    def __getitem__(self, index: int) -> ClassificationSample:
+    def __getitem__(self, index: int) -> OTXSample:
         for _ in range(self.max_refetch):
             results = self._get_item_impl(index)
 
@@ -142,15 +142,9 @@ class OTXDataset(TorchDataset):
         msg = f"Reach the maximum refetch number ({self.max_refetch})"
         raise RuntimeError(msg)
 
-    def _get_item_impl(self, index: int) -> ClassificationSample | None:
+    def _get_item_impl(self, index: int) -> OTXSample | None:
         dm_item = self.dm_subset[index]
-        # Check if dm_item is already a sample of the expected type
-        if isinstance(dm_item, self.sample_type):
-            sample = dm_item
-        else:
-            # dm_item is a DatasetItem, convert it using from_dm_item
-            sample = self.sample_type.from_dm_item(dm_item)
-        return self._apply_transforms(sample)
+        return self._apply_transforms(dm_item)
 
     @property
     def collate_fn(self) -> Callable:

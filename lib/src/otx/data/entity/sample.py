@@ -23,11 +23,63 @@ if TYPE_CHECKING:
     from torchvision.tv_tensors import BoundingBoxes, Mask
 
 
-class ClassificationSample(Sample):
+class OTXSample(Sample):
+    """Base class for OTX data samples."""
+
+    def as_tv_image(self) -> None:
+        """Convert image to torchvision tv_tensors Image format."""
+        if isinstance(self.image, tv_tensors.Image):
+            return
+        if isinstance(self.image, (np.ndarray, torch.Tensor)):
+            self.image = tv_tensors.Image(self.image)
+        raise ValueError("OTXSample must have an image")
+
+    @property
+    def masks(self) -> Mask | None:
+        return None
+
+    @property
+    def bboxes(self) -> BoundingBoxes | None:
+        return None
+
+    @property
+    def keypoints(self) -> torch.Tensor | None:
+        return None
+
+    @property
+    def polygons(self) -> list[Polygon] | None:
+        return None
+
+    @property
+    def label(self) -> torch.Tensor | None:
+        """Optional label property that returns None by default."""
+        return None
+
+    @property
+    def img_info(self) -> ImageInfo | None:
+        if getattr(self, "_img_info", None) is None:
+            image = getattr(self, "image", None)
+            if image is not None and hasattr(image, "shape") and len(image.shape) == 3:
+                img_shape = image.shape[:2]
+            else:
+                return None
+            self._img_info = ImageInfo(
+                img_idx=0,
+                img_shape=img_shape,
+                ori_shape=img_shape,
+            )
+        return self._img_info
+
+    @img_info.setter
+    def img_info(self, value: ImageInfo | None) -> None:
+        self._img_info = value
+
+
+class ClassificationSample(OTXSample):
     """OTXDataItemSample is a base class for OTX data items."""
 
+    image: np.ndarray | tv_tensors.Image = image_field(dtype=pl.UInt8)
     label: torch.Tensor = label_field(pl.Int32())
-    image: np.ndarray | torch.Tensor | tv_tensors.Image = image_field(dtype=pl.UInt8)
 
     @classmethod
     def from_dm_item(cls, item: DatasetItem) -> ClassificationSample:
@@ -52,45 +104,3 @@ class ClassificationSample(Sample):
         sample = cls(image=image, label=torch.as_tensor(label, dtype=torch.long))
         sample._img_info = img_info
         return sample
-
-    def as_tv_image(self) -> None:
-        """Convert image to torchvision tv_tensors Image format."""
-        if isinstance(self.image, tv_tensors.Image):
-            return
-        if isinstance(self.image, (np.ndarray, torch.Tensor)):
-            self.image = tv_tensors.Image(self.image)
-
-    @property
-    def masks(self) -> Mask | None:
-        return None
-
-    @property
-    def bboxes(self) -> BoundingBoxes | None:
-        return None
-
-    @property
-    def keypoints(self) -> torch.Tensor | None:
-        return None
-
-    @property
-    def polygons(self) -> list[Polygon] | None:
-        return None
-
-    @property
-    def img_info(self) -> ImageInfo | None:
-        if getattr(self, "_img_info", None) is None:
-            image = getattr(self, "image", None)
-            if image is not None and hasattr(image, "shape") and len(image.shape) == 3:
-                img_shape = image.shape[:2]
-            else:
-                return None
-            self._img_info = ImageInfo(
-                img_idx=0,
-                img_shape=img_shape,
-                ori_shape=img_shape,
-            )
-        return self._img_info
-
-    @img_info.setter
-    def img_info(self, value: ImageInfo | None) -> None:
-        self._img_info = value
