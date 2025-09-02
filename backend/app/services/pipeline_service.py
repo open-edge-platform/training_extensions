@@ -108,7 +108,7 @@ class PipelineService:
 
         # Get actual latency measurements from the metrics collector
         metrics_collector = MetricsCollector()
-        latency_samples = metrics_collector.get_latency_measurements(pipeline.model_id, time_window)
+        latency_samples = metrics_collector.get_latency_measurements(pipeline.model_id, time_window)  # type: ignore[arg-type]
 
         # Calculate latency metrics
         if latency_samples:
