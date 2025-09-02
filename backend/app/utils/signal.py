@@ -7,7 +7,7 @@ import signal
 
 def suppress_child_shutdown_signals() -> None:
     """
-    Ignore shutdown signals (SIGINT, SIGTERM) in child processes.
+    Ignore shutdown signals (SIGINT) in child processes.
 
     This function prevents child processes from handling shutdown signals directly,
     ensuring that cleanup is coordinated through the parent process via the stop_event
@@ -38,4 +38,3 @@ def suppress_child_shutdown_signals() -> None:
     """
     if mp.get_start_method(allow_none=True) == "spawn" and mp.parent_process() is not None:
         signal.signal(signal.SIGINT, signal.SIG_IGN)
-        signal.signal(signal.SIGTERM, signal.SIG_IGN)
