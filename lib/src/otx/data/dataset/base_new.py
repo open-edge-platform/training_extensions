@@ -6,12 +6,14 @@
 from __future__ import annotations
 
 import abc
-from typing import Callable, Iterable, List, Union
+from typing import TYPE_CHECKING, Callable, Iterable, List, Union
 
 import numpy as np
 import torch
-from datumaro.experimental import Dataset
 from torch.utils.data import Dataset as TorchDataset
+
+if TYPE_CHECKING:
+    from datumaro.experimental import Dataset
 
 from otx.data.entity.sample import OTXSample
 from otx.data.entity.torch.torch import OTXDataBatch
@@ -55,7 +57,9 @@ def _default_collate_fn(items: list[OTXSample]) -> OTXDataBatch:
         masks=[item.masks for item in items] if any(item.masks is not None for item in items) else None,
         bboxes=[item.bboxes for item in items] if any(item.bboxes is not None for item in items) else None,
         keypoints=[item.keypoints for item in items] if any(item.keypoints is not None for item in items) else None,
-        polygons=[item.polygons for item in items] if any(item.polygons is not None for item in items) else None,
+        polygons=[item.polygons for item in items if item.polygons is not None]
+        if any(item.polygons is not None for item in items)
+        else None,
         imgs_info=[item.img_info for item in items] if any(item.img_info is not None for item in items) else None,
     )
 
@@ -115,6 +119,7 @@ class OTXDataset(TorchDataset):
             return self._iterable_transforms(entity)
         if callable(self.transforms):
             return self.transforms(entity)
+        return None
 
     def _iterable_transforms(self, item: OTXSample) -> OTXSample | None:
         if not isinstance(self.transforms, list):

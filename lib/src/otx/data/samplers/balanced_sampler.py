@@ -64,10 +64,11 @@ class BalancedSampler(Sampler):
         super().__init__(dataset)
 
         # img_indices: dict[label: list[idx]]
+        ann_stats: dict[int | str, list[int]]
         if isinstance(dataset.dm_subset, DatasetSubset):
             ann_stats = get_idx_list_per_classes(dataset.dm_subset)
         elif isinstance(dataset.dm_subset, NewDataset):
-            ann_stats = dataset.get_idx_list_per_classes()
+            ann_stats = dataset.get_idx_list_per_classes()  # type: ignore[attr-defined]
 
         self.img_indices = {k: torch.tensor(v, dtype=torch.int64) for k, v in ann_stats.items() if len(v) > 0}
         self.num_cls = len(self.img_indices.keys())

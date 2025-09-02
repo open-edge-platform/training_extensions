@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import polars as pl
@@ -26,28 +26,36 @@ if TYPE_CHECKING:
 class OTXSample(Sample):
     """Base class for OTX data samples."""
 
+    image: np.ndarray | torch.Tensor | tv_tensors.Image | Any
+
     def as_tv_image(self) -> None:
         """Convert image to torchvision tv_tensors Image format."""
         if isinstance(self.image, tv_tensors.Image):
             return
         if isinstance(self.image, (np.ndarray, torch.Tensor)):
             self.image = tv_tensors.Image(self.image)
-        raise ValueError("OTXSample must have an image")
+            return
+        msg = "OTXSample must have an image"
+        raise ValueError(msg)
 
     @property
     def masks(self) -> Mask | None:
+        """Get masks for the sample."""
         return None
 
     @property
     def bboxes(self) -> BoundingBoxes | None:
+        """Get bounding boxes for the sample."""
         return None
 
     @property
     def keypoints(self) -> torch.Tensor | None:
+        """Get keypoints for the sample."""
         return None
 
     @property
     def polygons(self) -> list[Polygon] | None:
+        """Get polygons for the sample."""
         return None
 
     @property
@@ -57,6 +65,7 @@ class OTXSample(Sample):
 
     @property
     def img_info(self) -> ImageInfo | None:
+        """Get image information for the sample."""
         if getattr(self, "_img_info", None) is None:
             image = getattr(self, "image", None)
             if image is not None and hasattr(image, "shape") and len(image.shape) == 3:
@@ -71,7 +80,7 @@ class OTXSample(Sample):
         return self._img_info
 
     @img_info.setter
-    def img_info(self, value: ImageInfo | None) -> None:
+    def img_info(self, value: ImageInfo) -> None:
         self._img_info = value
 
 
@@ -101,6 +110,9 @@ class ClassificationSample(OTXSample):
             ori_shape=img_shape,
         )
 
-        sample = cls(image=image, label=torch.as_tensor(label, dtype=torch.long))
-        sample._img_info = img_info
+        sample = cls(
+            image=image,
+            label=torch.as_tensor(label, dtype=torch.long) if label is not None else torch.tensor(-1, dtype=torch.long),
+        )
+        sample.img_info = img_info
         return sample

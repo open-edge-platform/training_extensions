@@ -5,8 +5,8 @@
 
 from __future__ import annotations
 
-from ..entity.sample import ClassificationSample
-from .base_new import OTXDataset
+from otx.data.dataset.base_new import OTXDataset
+from otx.data.entity.sample import ClassificationSample
 
 
 class OTXMulticlassClsDataset(OTXDataset):
@@ -23,7 +23,7 @@ class OTXMulticlassClsDataset(OTXDataset):
 
     def get_idx_list_per_classes(self) -> dict[int, list[int]]:
         """Get index list per class."""
-        idx_list_per_classes = {}
+        idx_list_per_classes: dict[int, list[int]] = {}
         for idx in range(len(self)):
             item = self.dm_subset[idx]
             label_id = item.label.item()

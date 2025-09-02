@@ -160,9 +160,8 @@ class TestClassificationSample:
 
         assert isinstance(sample, ClassificationSample)
         assert np.array_equal(sample.image, mock_media.data)
-        assert sample.label is None or torch.equal(
-            sample.label, torch.tensor(None, dtype=torch.long)
-        )
+        # When no annotation, from_dm_item should return tensor(-1) as default
+        assert torch.equal(sample.label, torch.tensor(-1, dtype=torch.long))
 
     def test_label_property_override(self):
         """Test that ClassificationSample has actual label property (not None)."""

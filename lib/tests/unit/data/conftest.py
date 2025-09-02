@@ -41,7 +41,7 @@ _LABEL_NAMES = ["Non-Rigid", "Rigid", "Rectangle", "Triangle", "Circle", "Lion",
 
 
 @pytest.fixture(params=["bytes", "file"])
-def fxt_dm_item(request, tmpdir) -> DatasetItem:
+def fxt_dm_item(requeset, tmpdir) -> DatasetItem:
     np_img = np.zeros(shape=(10, 10, 3), dtype=np.uint8)
     np_img[:, :, 0] = 0  # Set 0 for B channel
     np_img[:, :, 1] = 1  # Set 1 for G channel
@@ -115,7 +115,6 @@ def fxt_mock_dm_subset(mocker: MockerFixture, fxt_dm_item: DatasetItem) -> Magic
         AnnotationType.mask,
         AnnotationType.polygon,
     ]
-    mock_dm_subset.label_group = mocker.MagicMock()
     return mock_dm_subset
 
 
@@ -126,7 +125,6 @@ def fxt_mock_det_dm_subset(mocker: MockerFixture, fxt_dm_item_bbox_only: Dataset
     mock_dm_subset.__len__.return_value = 1
     mock_dm_subset.categories().__getitem__.return_value = LabelCategories.from_iterable(_LABEL_NAMES)
     mock_dm_subset.ann_types.return_value = [AnnotationType.bbox]
-    mock_dm_subset.label_group = mocker.MagicMock()
     return mock_dm_subset
 
 
