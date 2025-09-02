@@ -29,9 +29,5 @@ export const AnnotationShape = ({ annotation }: AnnotationShapeProps) => {
         );
     }
 
-    if (shape.type === 'polygon') {
-        return <polygon aria-label='annotation polygon' points={getFormattedPoints(shape.points)} fill={color} />;
-    }
-
-    return <circle aria-label='annotation circle' cx={shape.cx} cy={shape.cy} r={shape.r} fill={color} />;
+    return <polygon aria-label='annotation polygon' points={getFormattedPoints(shape.points)} fill={color} />;
 };

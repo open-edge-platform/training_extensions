@@ -9,15 +9,13 @@ export type BoundingBox = {
     height: number;
 };
 
-export type Circle = { type: 'circle'; cx: number; cy: number; r: number };
-
 export type Point = { x: number; y: number };
 export type Polygon = {
     type: 'polygon';
     points: Array<Point>;
 };
 
-export type Shape = BoundingBox | Polygon | Circle;
+export type Shape = BoundingBox | Polygon;
 
 export type Label = { id: string; name: string; color: string; isPrediction: boolean; score?: number };
 

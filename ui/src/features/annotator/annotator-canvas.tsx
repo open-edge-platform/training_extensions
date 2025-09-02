@@ -8,11 +8,11 @@ import thumbnailUrl from '../../assets/mocked-project-thumbnail.png';
 import { ZoomProvider } from '../../components/zoom/zoom';
 import { ZoomTransform } from '../../components/zoom/zoom-transform';
 import { response } from '../dataset/mock-response';
-import { Annotations } from './annotations-canvas';
+import { Annotations } from './annotations';
 
 type Item = (typeof response.items)[number];
 
-export const ImageAnnotations = ({ mediaItem, isFocussed }: { mediaItem: Item; isFocussed: boolean }) => {
+export const AnnotatorCanvas = ({ mediaItem, isFocussed }: { mediaItem: Item; isFocussed: boolean }) => {
     const size = { width: mediaItem.width, height: mediaItem.height };
 
     return (

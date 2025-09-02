@@ -44,24 +44,6 @@ const boundingBoxAnnotation: Annotation = {
     ],
 };
 
-const circleAnnotation: Annotation = {
-    id: 'mocked-prediction-2',
-    shape: {
-        type: 'circle',
-        cx: 120,
-        cy: 100,
-        r: 24,
-    },
-    labels: [
-        {
-            id: 'label-2',
-            name: 'Mock Circle',
-            color: '#00FF00',
-            isPrediction: true,
-        },
-    ],
-};
-
 export const response = {
     page: 1,
     page_size: 1500,
@@ -88,7 +70,7 @@ export const response = {
             size: 1024,
             thumbhash: '',
             created_at: '2023-07-08T15:21:04.749Z',
-            annotations: [circleAnnotation],
+            annotations: [boundingBoxAnnotation],
         },
         {
             id: '20250708_152102_738',
@@ -110,7 +92,7 @@ export const response = {
             size: 1024,
             thumbhash: '',
             created_at: '2023-07-08T15:21:04.749Z',
-            annotations: [polygonAnnotation, circleAnnotation],
+            annotations: [polygonAnnotation, boundingBoxAnnotation],
         },
         {
             id: '20250708_152100_652',

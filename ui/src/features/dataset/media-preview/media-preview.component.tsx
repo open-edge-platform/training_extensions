@@ -5,16 +5,16 @@ import { useState } from 'react';
 
 import { Button, ButtonGroup, Content, Dialog, Divider, Flex, Grid, Heading, ToggleButton, View } from '@geti/ui';
 
-import { ImageAnnotations } from '../../annotator/image-annotation';
+import { AnnotatorCanvas } from '../../annotator/annotator-canvas';
 import { response } from '../mock-response';
 
 type Item = (typeof response.items)[number];
 
-export const InspectDialog = ({ mediaItem, close }: { mediaItem: Item; close: () => void }) => {
+export const MediaPreview = ({ mediaItem, close }: { mediaItem: Item; close: () => void }) => {
     const [isFocussed, setIsFocussed] = useState(false);
 
     return (
-        <Dialog size='L' UNSAFE_style={{ width: '95vw', height: '95vh' }}>
+        <Dialog UNSAFE_style={{ width: '95vw', height: '95vh' }}>
             <Heading>Preview</Heading>
             <Divider />
             <Content>
@@ -23,12 +23,11 @@ export const InspectDialog = ({ mediaItem, close }: { mediaItem: Item; close: ()
                         areas={['toolbar aside', 'canvas aside', 'footer aside']}
                         width={'100%'}
                         height='100%'
+                        columns={'1fr auto'}
+                        rows={'auto 1fr auto'}
                         UNSAFE_style={{
                             border: 'thin solid var(--spectrum-global-color-gray-50)',
-                            boxSizing: 'border-box',
                             backgroundColor: 'var(--spectrum-global-color-gray-50)',
-                            gridTemplateRows: 'auto 1fr auto',
-                            gridTemplateColumns: '1fr auto',
                         }}
                     >
                         <View gridArea={'toolbar'} backgroundColor={'gray-100'} padding={'size-100'}>
@@ -42,7 +41,7 @@ export const InspectDialog = ({ mediaItem, close }: { mediaItem: Item; close: ()
                         </View>
 
                         <View gridArea={'canvas'} backgroundColor={'gray-50'}>
-                            <ImageAnnotations mediaItem={mediaItem} isFocussed={isFocussed} />
+                            <AnnotatorCanvas mediaItem={mediaItem} isFocussed={isFocussed} />
                         </View>
 
                         <View

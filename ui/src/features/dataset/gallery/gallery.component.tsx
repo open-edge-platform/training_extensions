@@ -8,7 +8,7 @@ import { AriaComponentsListBox, DialogContainer, GridLayout, ListBoxItem, Size, 
 import thumbnailUrl from '../../../assets/mocked-project-thumbnail.png';
 import { useSelectedData } from '../../../routes/dataset/provider';
 import { CheckboxInput } from '../checkbox-input';
-import { InspectDialog } from '../inspect-dialog/inspect-dialog.component';
+import { MediaPreview } from '../media-preview/media-preview.component';
 import { response } from '../mock-response';
 import { AnnotationStateIcon } from './annotation-state-icon.component';
 import { MediaItem } from './media-item.component';
@@ -22,6 +22,19 @@ const layoutOptions = {
 };
 
 type Item = (typeof response.items)[number];
+
+type MediaThumbnailProps = {
+    onDoubleClick: () => void;
+    url: string;
+    alt: string;
+};
+const MediaThumbnail = ({ onDoubleClick, url, alt }: MediaThumbnailProps) => {
+    return (
+        <div onDoubleClick={onDoubleClick}>
+            <img src={url} alt={alt} style={{ objectFit: 'cover', width: '100%', height: '100%' }} />
+        </div>
+    );
+};
 
 export const Gallery = () => {
     const [selectedMediaItem, setSelectedMediaItem] = useState<null | Item>(null);
@@ -50,13 +63,11 @@ export const Gallery = () => {
                         >
                             <MediaItem
                                 contentElement={() => (
-                                    <div onDoubleClick={() => setSelectedMediaItem(item)}>
-                                        <img
-                                            src={thumbnailUrl}
-                                            alt={item.original_name}
-                                            style={{ objectFit: 'cover', width: '100%', height: '100%' }}
-                                        />
-                                    </div>
+                                    <MediaThumbnail
+                                        onDoubleClick={() => setSelectedMediaItem(item)}
+                                        url={thumbnailUrl}
+                                        alt={item.original_name}
+                                    />
                                 )}
                                 topRightElement={() => <AnnotationStateIcon state={mediaState.get(item.id)} />}
                                 topLeftElement={() => (
@@ -74,7 +85,7 @@ export const Gallery = () => {
 
             <DialogContainer onDismiss={() => setSelectedMediaItem(null)}>
                 {selectedMediaItem !== null && (
-                    <InspectDialog mediaItem={selectedMediaItem} close={() => setSelectedMediaItem(null)} />
+                    <MediaPreview mediaItem={selectedMediaItem} close={() => setSelectedMediaItem(null)} />
                 )}
             </DialogContainer>
         </View>
