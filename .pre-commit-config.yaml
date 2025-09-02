@@ -30,8 +30,18 @@ repos:
             tokenize-rt==3.2.0,
           ]
         args: [--disallow-untyped-calls, --config-file, lib/pyproject.toml]
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: "v1.12.0"
+    hooks:
       - id: mypy
         files: '^backend/.*\.py'
+        additional_dependencies:
+          [
+            types-PyYAML,
+            types-aiofiles,
+            types-requests,
+          ]
         args: [--disallow-untyped-calls, --config-file, backend/pyproject.toml]
 
   - repo: https://github.com/AleksaC/hadolint-py
