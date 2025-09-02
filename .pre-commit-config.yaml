@@ -30,6 +30,9 @@ repos:
             tokenize-rt==3.2.0,
           ]
         args: [--disallow-untyped-calls, --config-file, lib/pyproject.toml]
+      - id: mypy
+        files: '^backend/.*\.py'
+        args: [--disallow-untyped-calls, --config-file, backend/pyproject.toml]
 
   - repo: https://github.com/AleksaC/hadolint-py
     rev: v2.12.0.3
