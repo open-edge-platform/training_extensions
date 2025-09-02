@@ -10,7 +10,7 @@ permissions: {}
 jobs:
   zizmor:
     name: zizmor latest via PyPI
-    runs-on: innersource.prod.amr.dind
+    runs-on: ubuntu-latest
     permissions:
       security-events: write # needed for SARIF uploads
       contents: read # only needed for private repos
