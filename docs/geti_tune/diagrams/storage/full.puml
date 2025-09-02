@@ -10,6 +10,20 @@ end title
 
 'Tables
 
+table(sources) {
+  pk(id) : UUID
+  name : TEXT NOT NULL
+  type : TEXT NOT NULL
+  config : JSON NOT NULL
+}
+
+table(sinks) {
+  pk(id) : UUID
+  name : TEXT NOT NULL
+  type : TEXT NOT NULL
+  config : JSON NOT NULL
+}
+
 table(projects) {
   pk(id) : UUID
   name : TEXT NOT NULL
@@ -19,14 +33,19 @@ table(projects) {
   'Task-related details
   task_type : TEXT NOT NULL
   exclusive_labels : BOOLEAN NOT NULL
-  --
-  'Pipeline-related details
-  running : BOOLEAN NOT NULL
+}
+
+table(pipelines) {
+  fk(project_id) : UUID
   fk(source_id) : UUID
+  fk(model_id) : UUID
   fk(sink_id) : UUID
   --
-  'Data-collection policies'
+  ' Data collection policies
   data_collection_policies: JSON
+  --
+  ' Status
+  running : BOOLEAN NOT NULL
 }
 
 table(labels) {
@@ -148,7 +167,12 @@ projects ||---|{ labels
 projects ||---o{ dataset_items
 projects ||---o{ dataset_views
 projects ||---o{ dataset_revisions
+projects ||---|| pipelines
 projects ||---o{ model_revisions
+
+pipelines }o---|| sources
+pipelines }o---|| sinks
+pipelines |o---|| model_revisions
 
 dataset_items ||---o{ dataset_items_tags
 dataset_views ||---o{ dataset_views_items
