@@ -4,8 +4,8 @@
 import { CSSProperties } from 'react';
 
 import { AnnotationShape } from './annotation-shape';
+import { Annotation } from './interfaces';
 import { MaskAnnotations } from './mask-annotations';
-import { Annotation } from './shapes/interfaces';
 
 type AnnotationsProps = {
     annotations: Array<Annotation>;

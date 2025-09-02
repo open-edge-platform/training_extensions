@@ -6,9 +6,9 @@ import { PointerEvent, useEffect, useRef, useState } from 'react';
 import { clampPointBetweenImage, isPointInShape, pointInRectangle } from '@geti/smart-tools/utils';
 
 import { useZoom } from '../../../../components/zoom/zoom';
-import { ShapeFactory } from '../../annotation/shape-factory.component';
+import { AnnotationShape } from '../../annotation-shape';
 import { isRightButton } from '../../annotation/utils';
-import { Annotation, Point, RegionOfInterest, Shape } from '../../shapes/interfaces';
+import { Annotation, Point, RegionOfInterest, Shape } from '../../interfaces';
 import { getRelativePoint, removeOffLimitPoints } from '../../shapes/utils';
 import { AnnotationsMask } from './annotations-mask.component';
 import { InteractiveSegmentationPoint } from './interactive-segmentation-point.component';
@@ -154,7 +154,7 @@ export const SegmentAnythingTool = () => {
     const annotations = (showPreviewShapes ? previewShapes : result.shapes).map((shape, idx): Annotation => {
         return {
             shape,
-            labels: [],
+            labels: [{ id: `sam-${idx}`, name: 'SAM', color: 'var(--energy-blue-shade)', isPrediction: true }],
             id: `${idx}`,
         };
     });
@@ -182,35 +182,33 @@ export const SegmentAnythingTool = () => {
                 height={selectedMediaItem.image.height}
             />
 
-            {showPreviewShapes &&
-                previewShapes.map((shape, idx) => (
+            {annotations.map((annotation, idx) => {
+                return (
                     <g
                         key={idx}
-                        aria-label='Segment anything preview'
+                        aria-label={showPreviewShapes ? 'Segment anything preview' : 'Segment anything result'}
                         {...SELECT_ANNOTATION_STYLES}
                         strokeWidth={'calc(3px / var(--zoom-level))'}
+                        cursor={
+                            !showPreviewShapes
+                                ? `url(/icons/cursor/pencil-${
+                                      interactiveMode === true && rightClickMode === false ? 'minus' : 'plus'
+                                  }.svg) 16 16, auto`
+                                : undefined
+                        }
                         fillOpacity={0.0}
-                        className={interactiveMode ? classes.stroke : classes.animateStroke}
+                        className={
+                            showPreviewShapes
+                                ? interactiveMode
+                                    ? classes.stroke
+                                    : classes.animateStroke
+                                : classes.stroke
+                        }
                     >
-                        <ShapeFactory shape={shape} ariaLabel={'Preview shape'} />
+                        <AnnotationShape annotation={annotation} />
                     </g>
-                ))}
-
-            {result.shapes.map((shape, idx) => (
-                <g
-                    key={idx}
-                    aria-label='Segment anything result'
-                    {...SELECT_ANNOTATION_STYLES}
-                    strokeWidth={'calc(3px / var(--zoom-level))'}
-                    cursor={`url(/icons/cursor/pencil-${
-                        interactiveMode === true && rightClickMode === false ? 'minus' : 'plus'
-                    }.svg) 16 16, auto`}
-                    fillOpacity={0.0}
-                    className={classes.stroke}
-                >
-                    <ShapeFactory shape={shape} ariaLabel={'Result shape'} />
-                </g>
-            ))}
+                );
+            })}
 
             {points.map((point, index) => (
                 <InteractiveSegmentationPoint

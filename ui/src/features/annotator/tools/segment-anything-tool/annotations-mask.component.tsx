@@ -3,8 +3,8 @@
 
 import { useId } from 'react-aria';
 
-import { ShapeFactory } from '../../annotation/shape-factory.component';
-import { Annotation as AnnotationInterface } from '../../shapes/interfaces';
+import { AnnotationShape } from '../../annotation-shape';
+import { Annotation as AnnotationInterface } from '../../interfaces';
 
 import classes from './segment-anything.module.scss';
 
@@ -33,7 +33,7 @@ export const AnnotationsMask = ({ annotations, width, height, fillOpacity = MASK
                 {annotations.map((annotation) => (
                     <g key={annotation.id} fill='black'>
                         {/* Use an empty set of labels so that the shape won't receive a background */}
-                        <ShapeFactory shape={annotation.shape} ariaLabel={'Mask'} />
+                        <AnnotationShape annotation={annotation} />
                     </g>
                 ))}
             </mask>

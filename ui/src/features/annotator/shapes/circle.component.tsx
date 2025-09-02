@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Circle as CircleInterface } from './interfaces';
+import { Circle as CircleInterface } from '../interfaces';
 
 interface CircleProps {
     circle: CircleInterface;

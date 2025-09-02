@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Shape } from '../shapes/interfaces';
+import { Shape } from '../interfaces';
 import { Polygon } from '../shapes/polygon.component';
 import { Rectangle } from '../shapes/rectangle.component';
 
