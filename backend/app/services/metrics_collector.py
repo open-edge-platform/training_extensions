@@ -10,8 +10,6 @@ from uuid import UUID
 
 import numpy as np
 
-from app.utils import Singleton
-
 logger = logging.getLogger(__name__)
 
 
@@ -23,7 +21,7 @@ class LatencyMeasurement(NamedTuple):
     timestamp: float
 
 
-class MetricsCollector(metaclass=Singleton):
+class MetricsCollector:
     """Process-safe metrics collector using shared memory for model latency data"""
 
     SHM_NAME = "latency_metrics_shm"
@@ -57,6 +55,13 @@ class MetricsCollector(metaclass=Singleton):
         return time.perf_counter()
 
     def record_inference_end(self, model_id: UUID, start_time: float) -> None:
+        """
+        Record the end of an inference and store the latency measurement.
+
+        Args:
+            model_id: UUID of the model to record measurement for
+            start_time: Start time from record_inference_start()
+        """
         end_time = time.perf_counter()
         latency_ms = (end_time - start_time) * 1000.0
         timestamp = datetime.now(UTC).timestamp()
@@ -69,6 +74,15 @@ class MetricsCollector(metaclass=Singleton):
             logger.debug(f"Latency measurement recorded for model {model_id}: {latency_ms:.2f} ms")
 
     def get_latency_measurements(self, model_id: UUID, time_window: int = 60) -> list[float]:
+        """
+        Retrieve latency measurements for a specific model within the given time window.
+
+        Args:
+            model_id: UUID of the model to filter measurements
+            time_window: Time window in seconds to look back for measurements (default 60s)
+
+        Returns: List of latency measurements in milliseconds
+        """
         cutoff_time = datetime.now(UTC).timestamp() - time_window
         with self._lock:
             arr = self._array.copy()
