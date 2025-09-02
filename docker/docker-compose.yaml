@@ -20,3 +20,32 @@ services:
       - ../backend/data/:/app/data/
     ports:
       - "80:80"
+
+  mosquitto:
+    profiles:
+      - mqtt
+    image: eclipse-mosquitto:2.0
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ../backend/data/mosquitto/config:/mosquitto/config
+      - ../backend/data/mosquitto/data:/mosquitto/data
+      - ../backend/data/mosquitto/log:/mosquitto/log
+    environment:
+      - MOSQUITTO_USERNAME=testuser
+      - MOSQUITTO_PASSWORD=testpass
+
+  mqtt-web-ui:
+    profiles:
+      - mqtt
+    image: emqx/mqttx-web
+    restart: unless-stopped
+    environment:
+      - MQTT_BROKER_HOST=mosquitto
+      - MQTT_BROKER_PORT=9001
+    depends_on:
+      - mosquitto
+    ports:
+      - "8081:80"

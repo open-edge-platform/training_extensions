@@ -11,7 +11,7 @@ WORKDIR /app
 
 ENV PYTHONPATH=/app
 
-## Install system dependencies required for OpenCV
+# Install system dependencies required for OpenCV
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1-mesa-glx=22.3.6-1+deb12u1 \
     libglib2.0-0=2.74.6-2+deb12u6 \
@@ -22,12 +22,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=backend/uv.lock,target=uv.lock \
     --mount=type=bind,source=backend/pyproject.toml,target=pyproject.toml \
-    uv sync --frozen --no-dev --no-install-project
-
-# Copy project files
-COPY backend/pyproject.toml backend/uv.lock ./
-
-RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-editable
 
 COPY backend/app ./app
