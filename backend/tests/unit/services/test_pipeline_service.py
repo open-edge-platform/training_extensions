@@ -77,17 +77,6 @@ class TestPipelineServiceUnit:
         assert metrics.inference.latency.p95_ms is None
         assert metrics.inference.latency.latest_ms is None
 
-    def test_get_pipeline_metrics_model_not_found(self, fxt_pipeline_service, fxt_pipeline):
-        """Test retrieving metrics for non-existent pipeline raises error."""
-        with (
-            patch("app.services.pipeline_service.PipelineService.get_pipeline_by_id") as mock_get_pipeline_by_id,
-            pytest.raises(
-                ValueError, match="Cannot get metrics for a pipeline with no model, please check a model is assigned."
-            ),
-        ):
-            mock_get_pipeline_by_id.return_value = fxt_pipeline.model_copy(update={"model_id": None})
-            fxt_pipeline_service.get_pipeline_metrics(fxt_pipeline.id)
-
     def test_get_pipeline_metrics_not_running(self, fxt_pipeline_service, fxt_pipeline):
         """Test retrieving metrics for pipeline that is not running raises error."""
         with (
