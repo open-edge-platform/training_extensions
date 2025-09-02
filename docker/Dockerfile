@@ -14,9 +14,7 @@ ENV PYTHONPATH=/app
 # Install system dependencies required for OpenCV
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1-mesa-glx=22.3.6-1+deb12u1 \
-    libglib2.0-0=2.74.6-2+deb12u6 \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
+    libglib2.0-0=2.74.6-2+deb12u6
 
 # Install dependencies
 RUN --mount=type=cache,target=/root/.cache/uv \
@@ -79,13 +77,12 @@ RUN npm run build
 #############
 FROM backend-base AS geti-tune
 
-# Expose port
-ENV PORT=80
+# Install nginx
+RUN apt-get install -y nginx=1.22.1-9+deb12u2
+
+COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=web_ui /home/app/web_ui/dist/ /usr/share/nginx/html
+
 EXPOSE 80
 
-# Copy static UI content
-COPY --from=web_ui /home/app/web_ui/dist/ /ui
-ENV UI_STATIC_CONTENT=/ui
-
-# Set the entry point
-CMD ["uv", "run", "./app/main.py"]
+CMD ["sh", "-c", "nginx; uv run ./app/main.py;"]

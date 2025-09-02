@@ -8,7 +8,7 @@ x-proxies: &proxies
     - no_proxy=${no_proxy}
 
 services:
-  server:
+  geti-tune:
     image: geti-tune:${TAG:-latest}
     restart: unless-stopped
     build:

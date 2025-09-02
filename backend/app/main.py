@@ -8,14 +8,12 @@
 #  - docker compose up
 
 import logging
-import os
 from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
 
 from app.api.endpoints import models, pipelines, sinks, sources, system, webrtc
 from app.core import lifespan
@@ -80,12 +78,6 @@ async def health_check() -> dict[str, str]:
 def main() -> None:
     """Main application entry point"""
     logger.info(f"Starting {settings.app_name} in {settings.environment} mode")
-
-    ui_static_content = os.getenv("UI_STATIC_CONTENT", "")
-    if len(ui_static_content) > 0:
-        logger.info(f"Serving static UI content from: {ui_static_content}")
-        app.mount("/", StaticFiles(directory=ui_static_content, html=True), name="ui")
-
     uvicorn.run(
         app,
         host=settings.host,
