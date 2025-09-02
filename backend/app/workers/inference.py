@@ -15,7 +15,7 @@ from app.entities.stream_data import InferenceData, StreamData
 from app.services import ModelService
 from app.services.metrics_collector import MetricsCollector
 from app.services.model_service import LoadedModel
-from app.utils import Visualizer, flush_queue, log_threads
+from app.utils import Visualizer, flush_queue, log_threads, suppress_child_shutdown_signals
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +24,7 @@ def inference_routine(  # noqa: C901, PLR0915
     frame_queue: mp.Queue, pred_queue: mp.Queue, stop_event: EventClass, model_reload_event: EventClass
 ) -> None:
     """Load frames from the frame queue, run inference then inject the result into the predictions queue"""
+    suppress_child_shutdown_signals()
 
     metrics_collector = MetricsCollector()
 
