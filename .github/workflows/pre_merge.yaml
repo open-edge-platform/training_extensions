@@ -127,7 +127,7 @@ jobs:
         with:
           scan-scope: "changed"
           severity-level: "HIGH"
-          confidence-level: "HIGH"
+          confidence-level: "LOW"
           fail-on-findings: true
 
   Bandit-Scan-PR:
