@@ -5,7 +5,7 @@ import { FC, PropsWithChildren, RefObject, SVGProps } from 'react';
 
 import { roiFromImage } from '@geti/smart-tools/utils';
 
-import { allowPanning } from '../annotation/utils';
+import { allowPanning } from '../../annotation/utils';
 
 type CanvasProps = SVGProps<SVGSVGElement> & { image: ImageData } & { canvasRef?: RefObject<SVGRectElement> };
 // This svg component is used to by tools that need to add local listeners that work in

@@ -7,9 +7,9 @@ import { EncodingOutput, SegmentAnythingModel } from '@geti/smart-tools/segment-
 import { useQuery } from '@tanstack/react-query';
 import { Remote } from 'comlink';
 
-import { AlgorithmType } from '../../webworkers/algorithm.interface';
-import { useLoadAIWebworker } from '../../webworkers/use-load-ai-webworker.hook';
-import { convertToolShapeToGetiShape } from '../shapes/utils';
+import { AlgorithmType } from '../../../../webworkers/algorithm.interface';
+import { useLoadAIWebworker } from '../../../../webworkers/use-load-ai-webworker.hook';
+import { convertToolShapeToGetiShape } from '../../shapes/utils';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';
 
 const selectedMediaItem = {

@@ -3,8 +3,8 @@
 
 import { useId } from 'react-aria';
 
-import { ShapeFactory } from '../annotation/shape-factory.component';
-import { Annotation as AnnotationInterface } from '../shapes/interfaces';
+import { ShapeFactory } from '../../annotation/shape-factory.component';
+import { Annotation as AnnotationInterface } from '../../shapes/interfaces';
 
 import classes from './segment-anything.module.scss';
 

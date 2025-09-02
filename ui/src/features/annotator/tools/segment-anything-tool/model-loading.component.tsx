@@ -3,7 +3,7 @@
 
 import { Flex, Heading, View } from '@geti/ui';
 
-import IntelBrandedLoadingGif from '../../assets/intel-loading.webp';
+import IntelBrandedLoadingGif from '../../../../assets/intel-loading.webp';
 
 export const ModelLoading = ({ isLoadingModel }: { isLoadingModel: boolean }) => {
     return (

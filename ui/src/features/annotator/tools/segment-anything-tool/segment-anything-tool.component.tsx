@@ -5,11 +5,11 @@ import { PointerEvent, useEffect, useRef, useState } from 'react';
 
 import { clampPointBetweenImage, isPointInShape, pointInRectangle } from '@geti/smart-tools/utils';
 
-import { ShapeFactory } from '../annotation/shape-factory.component';
-import { isRightButton } from '../annotation/utils';
-import { Annotation, Point, RegionOfInterest, Shape } from '../shapes/interfaces';
-import { getRelativePoint, removeOffLimitPoints } from '../shapes/utils';
-import { useZoom } from '../zoom/zoom';
+import { useZoom } from '../../../../components/zoom/zoom';
+import { ShapeFactory } from '../../annotation/shape-factory.component';
+import { isRightButton } from '../../annotation/utils';
+import { Annotation, Point, RegionOfInterest, Shape } from '../../shapes/interfaces';
+import { getRelativePoint, removeOffLimitPoints } from '../../shapes/utils';
 import { AnnotationsMask } from './annotations-mask.component';
 import { InteractiveSegmentationPoint } from './interactive-segmentation-point.component';
 import { useSegmentAnything } from './segment-anything-state-provider.component';
@@ -154,7 +154,7 @@ export const SegmentAnythingTool = () => {
     const annotations = (showPreviewShapes ? previewShapes : result.shapes).map((shape, idx): Annotation => {
         return {
             shape,
-            color: '',
+            labels: [],
             id: `${idx}`,
         };
     });

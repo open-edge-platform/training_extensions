@@ -1,8 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Circle } from '../shapes/circle.component';
-import { useZoom } from '../zoom/zoom';
+import { useZoom } from '../../../../components/zoom/zoom';
+import { Circle } from '../../shapes/circle.component';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';
 
 interface InteractiveSegmentationPointProps extends InteractiveAnnotationPoint {

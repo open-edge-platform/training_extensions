@@ -1,11 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-export interface Annotation {
-    readonly id: string;
-    readonly shape: Shape;
-    color: string;
-}
+import { Label } from '../../../components/interfaces';
 
 export interface RegionOfInterest {
     x: number;
@@ -44,5 +40,18 @@ export interface ClipperPoint {
     X: number;
     Y: number;
 }
+
+export type Annotation = {
+    id: string;
+    shape: Shape;
+    labels: Array<Label>;
+};
+
+export type AnnotationState = {
+    isHovered: boolean;
+    isSelected: boolean;
+    isHidden: boolean;
+    isLocked: boolean;
+};
 
 export type Shape = Rect | Polygon;
