@@ -83,7 +83,7 @@ jobs:
           INPUTS.NUM-REPEAT: ${{ inputs.num-repeat }}
           INPUTS.NUM-EPOCH: ${{ inputs.num-epoch }}
           INPUTS.EVAL-UPTO: ${{ inputs.eval-upto }}
-          TRIGGERING_ACTOR: ${{ github.triggering_actor }
+          TRIGGERING_ACTOR: ${{ github.triggering_actor }}
         run: |
           rm -rf .tox
           export TASK="${{ matrix.task }}"
