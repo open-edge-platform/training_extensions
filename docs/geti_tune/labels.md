@@ -23,7 +23,30 @@ attributes (color, hotkey, etc.) that can be modified by the user.
 
 ### DB schema
 
-![Diagram of the task schema](media/storage/labels.svg)
+```
+,-----------------------------------.
+|projects                           |
+|-----------------------------------|
+|id : UUID                          |
+|...                                |
+|task_type : TEXT NOT NULL          |
+|exclusive_labels : BOOLEAN NOT NULL|
+`-----------------------------------'
+                  | 1
+                  |
+                  | 1..*
+ ,---------------------------------.
+ |labels                           |
+ |---------------------------------|
+ |id : UUID                        |
+ |name : TEXT NOT NULL             |
+ |project_id : UUID NOT NULL       |
+ |created_at : TIMESTAMP NOT NULL  |
+ |updated_at : TIMESTAMP NOT NULL  |
+ |color : TEXT                     |
+ |hotkey : TEXT                    |
+ `---------------------------------'
+```
 
 In the database, the information about the task is stored in two tables: `projects` and `labels`:
 

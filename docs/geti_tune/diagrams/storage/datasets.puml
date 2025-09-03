@@ -44,15 +44,21 @@ class dataset_revisions << (T,#FFAAAA) >> {
 }
 
 object MediaBinary {
-  format : jpg / png
+  <i>format</i> : jpg / png
+  <i>prefix</i> : projects/{project_id}/dataset/
+  <i>filename</i> : {dataset_item_id}.{format}
 }
 
 object MediaThumbnail {
-  format : jpg
+  <i>format</i> : jpg
+  <i>prefix</i> : projects/{project_id}/dataset/
+  <i>filename</i> : {dataset_item_id}-thumb.jpg
 }
 
 object DatasetRevision {
-  format : datumaro
+  <i>format</i> : arrow
+  <i>prefix</i> : projects/{project_id}/dataset_revisions/{revision_id}/
+  <i>filename</i> : <shard_idx>.arrow
 }
 
 dataset_items ||---|| MediaBinary
