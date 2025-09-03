@@ -3,7 +3,7 @@
 
 import { PointerEvent, SVGProps } from 'react';
 
-import { Point, RegionOfInterest } from '../shapes/interfaces';
+import { Point, RegionOfInterest } from '../../types';
 
 export const getBoundingBoxInRoi = (boundingBox: RegionOfInterest, roi: RegionOfInterest) => {
     const x = Math.max(0, boundingBox.x);

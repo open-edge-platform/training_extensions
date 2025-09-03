@@ -6,17 +6,17 @@ import { describe, expect, it } from 'vitest';
 
 import { getMockedAnnotation } from '../../../tests/test-utils/mocked-annotation';
 import { AnnotationShape } from './annotation-shape';
-import { Annotation, BoundingBox, Polygon } from './types';
+import { Annotation, Polygon, Rect } from './types';
 
-type AnnotationBoundingBox = Annotation & { shape: BoundingBox };
+type AnnotationRect = Annotation & { shape: Rect };
 type AnnotationPolygon = Annotation & { shape: Polygon };
 
 describe('AnnotationShape', () => {
     it('bounding box as a rect', () => {
-        const annotation = getMockedAnnotation() as AnnotationBoundingBox;
+        const annotation = getMockedAnnotation() as AnnotationRect;
         render(<AnnotationShape annotation={annotation} />);
 
-        const rect = screen.getByLabelText('annotation bounding-box');
+        const rect = screen.getByLabelText('annotation rect');
 
         expect(rect).toHaveAttribute('x', annotation.shape.x.toString());
         expect(rect).toHaveAttribute('y', annotation.shape.y.toString());
@@ -31,7 +31,7 @@ describe('AnnotationShape', () => {
             { x: 3, y: 4 },
             { x: 5, y: 6 },
         ];
-        const annotation = getMockedAnnotation({ shape: { type: 'polygon', points } }) as AnnotationPolygon;
+        const annotation = getMockedAnnotation({ shape: { shapeType: 'polygon', points } }) as AnnotationPolygon;
 
         render(<AnnotationShape annotation={annotation} />);
         const polygon = screen.getByLabelText('annotation polygon');

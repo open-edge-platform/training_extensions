@@ -1,9 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Shape } from '../../features/annotator/shapes/interfaces';
 import { Polygon } from '../../features/annotator/shapes/polygon.component';
 import { Rectangle } from '../../features/annotator/shapes/rectangle.component';
+import { Shape } from '../../features/annotator/types';
 
 interface ShapeFactoryProps {
     shape: Shape;
