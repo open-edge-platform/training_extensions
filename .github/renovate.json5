@@ -56,20 +56,11 @@
       schedule: ["* * * * 0"], // weekly
     },
 
-        // Disable non-security upgrades for go and npm.
-    // We will enable it in the next phase
-    {
-      enabled: false,
-      matchManagers: ["gomod", "npm"],
-    },
-
-
-
-    // Disable non-security upgrades, except lock file update
+    // Disable non-security upgrades for go and npm.
     // We will enable it in the next phase
 //    {
 //      enabled: false,
- //     matchManagers: ["npm", "poetry", "cargo", "nvm"],
+//      matchManagers: ["gomod", "npm"],
 //    },
 
     // Disable non-security upgrades for pypi and crate, except lock file update
