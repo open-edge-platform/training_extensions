@@ -85,6 +85,9 @@ class OTXDatasetFactory:
                     if len(item.media.data.shape) == 3:  # TODO(albert): Account for grayscale images
                         dataset.append(ClassificationSample.from_dm_item(item))
                 common_kwargs["dm_subset"] = dataset
+            else:
+                msg = "Dataset must be of type DmDataset."
+                raise RuntimeError(msg)
             return OTXMulticlassClsDataset(**common_kwargs)
 
         if task == OTXTaskType.MULTI_LABEL_CLS:
