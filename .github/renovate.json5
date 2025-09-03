@@ -31,8 +31,8 @@
   // `matchBaseBranches` in specific rule
   baseBranches: ["develop"],
 
-  // explicitly disable some managers that we
-  // do not need to support
+  // explicitly disable some managers that we do not need to support
+  // https://docs.renovatebot.com/modules/manager/#disabling-managers
   pip_requirements: {
     enabled: false,
   },
@@ -62,10 +62,10 @@
       matchManagers: ["npm", "poetry", "cargo", "nvm", "pypi"],
     },
 
-//    {
-//      enabled: false,
-//      matchDatasources: ["pypi"],
-//    },
+    {
+      enabled: false,
+      matchDatasources: ["pypi"],
+    },
 
     // Python version in TOML is updated manually
     {
