@@ -110,7 +110,7 @@ class KeypointVisualizerCreator(VisualizerCreator):
 class VisualizationDispatcher(metaclass=Singleton):
     """Dispatcher for creating visualizations."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._creator_map = {
             DetectionResult: DetectionVisualizerCreator(),
             ClassificationResult: ClassificationVisualizerCreator(),

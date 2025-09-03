@@ -24,7 +24,7 @@ class RevisionNotFoundError(Exception):
 class MigrationManager:
     """Manages database connections and migrations"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.settings = get_settings()
         self.__ensure_data_directory()
 
