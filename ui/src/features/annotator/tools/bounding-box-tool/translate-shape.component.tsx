@@ -3,7 +3,7 @@
 
 import { PointerEvent, useState } from 'react';
 
-import { Annotation } from '../../../../components/annotation/annotation.component';
+import { Annotation } from '../../annotation.component';
 import { Annotation as AnnotationInterface, Point } from '../../types';
 import { allowPanning, isLeftButton } from '../../utils';
 
