@@ -51,8 +51,8 @@
       enabled: true,
       matchDatasources: ["docker"],
       pinDigests: true,
-      groupName: "Pin dependencies",
-      groupSlug: "pin-deps",
+      groupName: "Pin images",
+      groupSlug: "pin-images",
       schedule: ["* * * * 0"], // weekly
     },
 
