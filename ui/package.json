@@ -4,8 +4,8 @@
     "private": true,
     "type": "module",
     "engines": {
-        "node": "v24.2.0",
-        "npm": "11.3.0"
+        "node": ">=v24.2.0",
+        "npm": ">=11.3.0"
     },
     "scripts": {
         "build": "rsbuild build",
