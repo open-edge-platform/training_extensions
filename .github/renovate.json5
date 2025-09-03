@@ -31,9 +31,9 @@
   // `matchBaseBranches` in specific rule
   baseBranches: ["develop"],
 
-  "pip_requirements": {
-    "enabled": false
-    }
+  pip_requirements: {
+    enabled: false,
+  },
 
   // enabledManagers: ["dockerfile", "github-actions", "pep621", "npm"], //TODO enable
 
