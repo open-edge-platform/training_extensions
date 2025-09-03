@@ -31,6 +31,8 @@
   // `matchBaseBranches` in specific rule
   baseBranches: ["develop"],
 
+  // explicitly disable some managers that we
+  // do not need to support
   pip_requirements: {
     enabled: false,
   },
@@ -57,13 +59,13 @@
     // We will enable it in the next phase
     {
       enabled: false,
-      matchManagers: ["npm", "poetry", "cargo", "nvm"],
+      matchManagers: ["npm", "poetry", "cargo", "nvm", "pypi"],
     },
 
-    {
-      enabled: false,
-      matchDatasources: ["pypi"],
-    },
+//    {
+//      enabled: false,
+//      matchDatasources: ["pypi"],
+//    },
 
     // Python version in TOML is updated manually
     {
