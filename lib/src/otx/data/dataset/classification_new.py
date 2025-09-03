@@ -21,12 +21,14 @@ class OTXMulticlassClsDataset(OTXDataset):
         kwargs["sample_type"] = ClassificationSample
         super().__init__(**kwargs)
 
-    def get_idx_list_per_classes(self) -> dict[int, list[int]]:
+    def get_idx_list_per_classes(self, use_string_label: bool = False) -> dict[int, list[int]]:
         """Get index list per class."""
         idx_list_per_classes: dict[int, list[int]] = {}
         for idx in range(len(self)):
             item = self.dm_subset[idx]
             label_id = item.label.item()
+            if use_string_label:
+                label_id = self.label_info.labels[label_id]
             if label_id not in idx_list_per_classes:
                 idx_list_per_classes[label_id] = []
             idx_list_per_classes[label_id].append(idx)

@@ -157,5 +157,5 @@ class OTXDataset(TorchDataset):
         return _default_collate_fn
 
     @abc.abstractmethod
-    def get_idx_list_per_classes(self) -> dict[int, list[int]]:
+    def get_idx_list_per_classes(self, use_string_label: bool = False) -> dict[int, list[int]]:
         """Get a dictionary with class labels as keys and lists of corresponding sample indices as values."""

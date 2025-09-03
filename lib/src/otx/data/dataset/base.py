@@ -6,13 +6,14 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from collections import defaultdict
 from collections.abc import Iterable
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Callable, Iterator, List, Union
 
 import cv2
 import numpy as np
-from datumaro.components.annotation import AnnotationType
+from datumaro.components.annotation import AnnotationType, LabelCategories
 from datumaro.util.image import IMAGE_BACKEND, IMAGE_COLOR_CHANNEL, ImageBackend
 from datumaro.util.image import ImageColorChannel as DatumaroImageColorChannel
 from torch.utils.data import Dataset
@@ -196,3 +197,18 @@ class OTXDataset(Dataset):
     def collate_fn(self) -> Callable:
         """Collection function to collect KeypointDetDataEntity into KeypointDetBatchDataEntity in data loader."""
         return OTXDataItem.collate_fn
+
+    def get_idx_list_per_classes(self, use_string_label: bool = False) -> dict[int | str, list[int]]:
+        """Compute class statistics."""
+        stats: dict[int | str, list[int]] = defaultdict(list)
+        for item_idx, item in enumerate(self.dm_subset):
+            for ann in item.annotations:
+                if use_string_label:
+                    labels = self.dm_subset.categories().get(AnnotationType.label, LabelCategories())
+                    stats[labels.items[ann.label].name].append(item_idx)
+                else:
+                    stats[ann.label].append(item_idx)
+        # Remove duplicates in label stats idx: O(n)
+        for k in stats:
+            stats[k] = list(dict.fromkeys(stats[k]))
+        return stats

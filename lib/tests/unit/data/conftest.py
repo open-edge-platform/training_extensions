@@ -41,7 +41,7 @@ _LABEL_NAMES = ["Non-Rigid", "Rigid", "Rectangle", "Triangle", "Circle", "Lion",
 
 
 @pytest.fixture(params=["bytes", "file"])
-def fxt_dm_item(requeset, tmpdir) -> DatasetItem:
+def fxt_dm_item(request, tmpdir) -> DatasetItem:
     np_img = np.zeros(shape=(10, 10, 3), dtype=np.uint8)
     np_img[:, :, 0] = 0  # Set 0 for B channel
     np_img[:, :, 1] = 1  # Set 1 for G channel

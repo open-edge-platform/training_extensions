@@ -10,7 +10,6 @@ from datumaro.components.dataset_base import DatasetItem
 
 from otx.data.dataset.base import OTXDataset
 from otx.data.samplers.class_incremental_sampler import ClassIncrementalSampler
-from otx.data.utils import get_idx_list_per_classes
 
 
 @pytest.fixture()
@@ -107,7 +106,7 @@ class TestBalancedSampler:
             new_classes=["2"],
         )
 
-        stats = get_idx_list_per_classes(fxt_old_new_dataset.dm_subset, True)
+        stats = fxt_old_new_dataset.get_idx_list_per_classes(True)
         old_idx = stats["0"] + stats["1"]
         new_idx = stats["2"]
         list_iter = list(iter(sampler))

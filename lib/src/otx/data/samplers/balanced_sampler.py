@@ -9,11 +9,7 @@ import math
 from typing import TYPE_CHECKING
 
 import torch
-from datumaro import DatasetSubset
-from datumaro.experimental import Dataset as NewDataset
 from torch.utils.data import Sampler
-
-from otx.data.utils import get_idx_list_per_classes
 
 if TYPE_CHECKING:
     from otx.data.dataset.base import OTXDataset
@@ -64,11 +60,7 @@ class BalancedSampler(Sampler):
         super().__init__(dataset)
 
         # img_indices: dict[label: list[idx]]
-        ann_stats: dict[int | str, list[int]]
-        if isinstance(dataset.dm_subset, DatasetSubset):
-            ann_stats = get_idx_list_per_classes(dataset.dm_subset)
-        elif isinstance(dataset.dm_subset, NewDataset):
-            ann_stats = dataset.get_idx_list_per_classes()  # type: ignore[attr-defined]
+        ann_stats = dataset.get_idx_list_per_classes()
 
         self.img_indices = {k: torch.tensor(v, dtype=torch.int64) for k, v in ann_stats.items() if len(v) > 0}
         self.num_cls = len(self.img_indices.keys())

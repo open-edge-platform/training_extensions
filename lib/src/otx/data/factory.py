@@ -82,13 +82,13 @@ class OTXDatasetFactory:
                 categories = cls._get_label_categories(dm_subset, data_format)
                 dataset = DatasetNew(ClassificationSample, categories={"label": categories})
                 for item in dm_subset:
-                    if len(item.media.data.shape) == 3:  # TODO: Account for grayscale images
+                    if len(item.media.data.shape) == 3:  # TODO(albert): Account for grayscale images
                         dataset.append(ClassificationSample.from_dm_item(item))
                 common_kwargs["dm_subset"] = dataset
             return OTXMulticlassClsDataset(**common_kwargs)
 
         if task == OTXTaskType.MULTI_LABEL_CLS:
-            from otx.data.dataset.classification import OTXMultilabelClsDataset
+            from .dataset.classification import OTXMultilabelClsDataset
 
             return OTXMultilabelClsDataset(**common_kwargs)
 
