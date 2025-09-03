@@ -6,7 +6,7 @@ import { CSSProperties, PointerEvent, ReactNode, useState } from 'react';
 import { isFunction } from 'lodash-es';
 
 import { Point } from '../../types';
-import { isLeftButton } from './utils';
+import { isLeftButton } from '../../utils';
 
 interface AnchorProps {
     children: ReactNode;
