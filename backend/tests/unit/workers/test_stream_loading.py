@@ -3,6 +3,7 @@
 
 import multiprocessing as mp
 import queue
+import sys
 import time
 from unittest.mock import Mock, patch
 
@@ -93,8 +94,16 @@ def mock_services(mock_config, mock_video_stream):
         }
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="Multiprocessing 'fork' start method not available on Windows")
 class TestFrameAcquisition:
     """Unit tests for the frame acquisition routine"""
+
+    @pytest.fixture(scope="session", autouse=True)
+    def set_multiprocessing_start_method(self):
+        # Set multiprocessing start method to 'fork' to ensure mocked objects and patches
+        # from the parent process are inherited by child processes. The default 'spawn'
+        # method creates isolated child processes that don't inherit mocked state.
+        mp.set_start_method("fork", force=True)
 
     def test_queue_full(self, frame_queue, mock_stream_data, stop_event, config_changed_condition, mock_services):
         """Test that stream frames are not acquired when queue is full"""

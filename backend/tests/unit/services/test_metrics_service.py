@@ -95,7 +95,7 @@ class TestMetricsCollector:
         collector.record_inference_end(model_id=model_id, start_time=start_time)
 
         # Then add an "old" measurement by mocking datetime
-        with patch("app.services.metrics_collector.datetime") as mock_datetime:
+        with patch("app.services.metrics_service.datetime") as mock_datetime:
             mock_datetime.now.return_value = datetime.now(UTC) - timedelta(seconds=90)
             collector.record_inference_end(model_id, start_time)
 
@@ -115,7 +115,7 @@ class TestMetricsCollector:
         model_id = uuid4()
         start_time = collector.record_inference_start()
 
-        with patch("app.services.metrics_collector.datetime") as mock_datetime:
+        with patch("app.services.metrics_service.datetime") as mock_datetime:
             mock_datetime.now.return_value = fixed_time
             collector.record_inference_end(model_id, start_time)
 
