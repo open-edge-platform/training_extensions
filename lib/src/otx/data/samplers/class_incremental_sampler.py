@@ -64,7 +64,7 @@ class ClassIncrementalSampler(Sampler):
         super().__init__(dataset)
 
         # Need to split new classes dataset indices & old classses dataset indices
-        ann_stats = dataset.get_idx_list_per_classes(True)
+        ann_stats = dataset.get_idx_list_per_classes(use_string_label=True)
         new_indices, old_indices = [], []
         for cls in new_classes:
             new_indices.extend(ann_stats[cls])
