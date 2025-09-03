@@ -65,6 +65,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
       - name: Install Python
         uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
         with:
@@ -79,22 +81,26 @@ jobs:
           BENCHMARK_RESULTS_CLEAR: ${{ vars.BENCHMARK_RESULTS_CLEAR }}
           GH_CTX_REF_NAME: ${{ github.ref_name }}
           GH_CTX_SHA: ${{ github.sha }}
+          INPUTS.DATA-ROOT: ${{ inputs.data-root }}
+          INPUTS.NUM-REPEAT: ${{ inputs.num-repeat }}
+          INPUTS.NUM-EPOCH: ${{ inputs.num-epoch }}
+          INPUTS.EVAL-UPTO: ${{ inputs.eval-upto }}
+          TRIGGERING_ACTOR: ${{ github.triggering_actor }}
         run: |
           rm -rf .tox
           export TASK="${{ matrix.task }}"
-          export DATA_ROOT="${{ inputs.data-root }}"
-          export NUM_REPEAT="${{ inputs.num-repeat }}"
-          export NUM_EPOCH="${{ inputs.num-epoch }}"
-          export EVAL_UPTO="${{ inputs.eval-upto }}"
-          export GITHUB_ACTOR="${{ github.triggering_actor }}"
+          export DATA_ROOT="$INPUTS.DATA-ROOT"
+          export NUM_REPEAT="$INPUTS.NUM-REPEAT"
+          export NUM_EPOCH="$INPUTS.NUM-EPOCH"
+          export EVAL_UPTO="$INPUTS.EVAL-UPTO"
+          export GITHUB_ACTOR="$TRIGGERING_ACTOR"
           export DEVICE="gpu"
           export SUMMARY_FILE_ROOT=".tox"
           tox -vv -e perf-benchmark-v2
 
       - name: Upload test results
-        working-directory: lib
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: benchmark-results-${{ matrix.task }}
           include-hidden-files: true
-          path: ${{ github.workspace }}/.tox/${{ matrix.task }}-*.xlsx
+          path: ${{ github.workspace }}/lib/.tox/${{ matrix.task }}-*.xlsx

@@ -13,8 +13,7 @@ on:
       - releases/**
   workflow_dispatch: # run on request (no need for PR)
 
-# Declare default permissions as read only.
-permissions: read-all
+permissions: {} # No permissions by default
 
 concurrency:
   group: ${{ github.workflow }}-PreMerge-${{ github.event.pull_request.number || github.ref }}
@@ -23,9 +22,13 @@ concurrency:
 jobs:
   Code-Quality-Checks:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
       - name: Set up Python
         uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
@@ -39,6 +42,8 @@ jobs:
         run: tox r -vv -e pre-commit
   Unit-Test:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     needs: Code-Quality-Checks
     timeout-minutes: 120
     strategy:
@@ -53,6 +58,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
       - name: Install Python
         uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
         with:
@@ -88,6 +95,8 @@ jobs:
       github.event.pull_request.draft == false &&
       !(startsWith(github.event.pull_request.title, '[WIP]'))
     runs-on: [self-hosted, linux, x64, dev, dmount]
+    permissions:
+      contents: read
     needs: Unit-Test
     strategy:
       fail-fast: false
@@ -105,6 +114,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
       - name: Install Python
         uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
         with:
@@ -116,3 +127,30 @@ jobs:
       - name: Run Integration Test
         working-directory: lib
         run: tox r -vv -e integration-test-${{ matrix.task }} -- --task ${{ matrix.task }} --run-category-only
+
+  Zizmor-Scan-PR:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Run Zizmor scan
+        uses: open-edge-platform/geti-ci/actions/zizmor@db5335076dfe564b039b5a7480b8f6b6ae38370a
+        with:
+          scan-scope: "changed"
+          severity-level: "MEDIUM"
+          confidence-level: "LOW"
+          fail-on-findings: true
+
+  Bandit-Scan-PR:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Run Bandit scan
+        uses: open-edge-platform/geti-ci/actions/bandit@db5335076dfe564b039b5a7480b8f6b6ae38370a
+        with:
+          scan-scope: "changed"
+          severity-level: "LOW"
+          confidence-level: "LOW"
+          config_file: ".ci/ipas_default.config"
+          fail-on-findings: true
