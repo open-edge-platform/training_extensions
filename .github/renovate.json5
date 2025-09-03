@@ -31,6 +31,10 @@
   // `matchBaseBranches` in specific rule
   baseBranches: ["develop"],
 
+  "pip_requirements": {
+    "enabled": false
+    }
+
   // enabledManagers: ["dockerfile", "github-actions", "pep621", "npm"], //TODO enable
 
   // Set limit to 5
