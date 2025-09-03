@@ -13,7 +13,7 @@ from model_api.models import DetectionResult
 
 from app.entities.stream_data import InferenceData, StreamData
 from app.services import ModelService
-from app.services.metrics_collector import MetricsCollector
+from app.services.metrics_service import MetricsService
 from app.services.model_service import LoadedModel
 from app.utils import Visualizer, flush_queue, log_threads, suppress_child_shutdown_signals
 
@@ -26,7 +26,7 @@ def inference_routine(  # noqa: C901, PLR0915
     """Load frames from the frame queue, run inference then inject the result into the predictions queue"""
     suppress_child_shutdown_signals()
 
-    metrics_collector = MetricsCollector()
+    metrics_collector = MetricsService()
 
     def on_inference_completed(inf_result: DetectionResult, userdata: dict[str, Any]) -> None:
         start_time = float(userdata["inference_start_time"])

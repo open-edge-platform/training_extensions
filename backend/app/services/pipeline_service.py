@@ -21,19 +21,25 @@ from app.services.base import (
     ServiceConfig,
 )
 from app.services.mappers import PipelineMapper
-from app.services.metrics_collector import MetricsCollector
+from app.services.metrics_service import MetricsService
 from app.services.parent_process_guard import parent_process_only
 
 MSG_ERR_DELETE_RUNNING_PIPELINE = "Cannot delete a running pipeline."
 
 
 class PipelineService:
-    def __init__(self, active_pipeline_service: ActivePipelineService, config_changed_condition: Condition) -> None:
+    def __init__(
+        self,
+        active_pipeline_service: ActivePipelineService,
+        metrics_service: MetricsService,
+        config_changed_condition: Condition,
+    ) -> None:
         self._persistence: GenericPersistenceService[Pipeline, PipelineRepository] = GenericPersistenceService(
             ServiceConfig(PipelineRepository, PipelineMapper, ResourceType.PIPELINE)
         )
         self._active_pipeline_service: ActivePipelineService = active_pipeline_service
         self._config_changed_condition: Condition = config_changed_condition
+        self._metrics_service: MetricsService = metrics_service
 
     def _notify_source_changed(self) -> None:
         with self._config_changed_condition:
@@ -106,9 +112,11 @@ class PipelineService:
         end_time = datetime.now(UTC)
         start_time = end_time - timedelta(seconds=time_window)
 
-        # Get actual latency measurements from the metrics collector
-        metrics_collector = MetricsCollector()
-        latency_samples = metrics_collector.get_latency_measurements(pipeline.model_id, time_window)  # type: ignore[arg-type]
+        # Get actual latency measurements from the metrics service
+        latency_samples = self._metrics_service.get_latency_measurements(
+            model_id=pipeline.model_id,  # type: ignore[arg-type]
+            time_window=time_window,
+        )
 
         # Calculate latency metrics
         if latency_samples:

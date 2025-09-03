@@ -33,8 +33,8 @@ class LatencyMeasurement(NamedTuple):
     timestamp: float
 
 
-class MetricsCollector:
-    """Process-safe metrics collector using shared memory for model latency data"""
+class MetricsService:
+    """Process-safe metrics service using shared memory for model metric data"""
 
     def __init__(self, max_age_seconds: int = 60):
         self._max_age_seconds = max_age_seconds
@@ -101,4 +101,4 @@ class MetricsCollector:
         try:
             self._shm.close()
         except Exception as e:
-            logger.exception("Error cleaning up shared memory in MetricsCollector __del__: %s", e)
+            logger.exception("Error cleaning up shared memory in MetricsService __del__: %s", e)

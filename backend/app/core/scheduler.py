@@ -10,7 +10,7 @@ from multiprocessing.shared_memory import SharedMemory
 
 import psutil
 
-from app.services.metrics_collector import SHM_NAME, SIZE
+from app.services.metrics_service import SHM_NAME, SIZE
 from app.utils.singleton import Singleton
 from app.workers import dispatching_routine, frame_acquisition_routine, inference_routine
 

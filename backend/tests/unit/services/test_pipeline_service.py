@@ -1,13 +1,23 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from unittest.mock import patch
+from multiprocessing.shared_memory import SharedMemory
+from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
 import pytest
 
 from app.schemas import Model, Pipeline, PipelineStatus
-from app.services import PipelineService
+from app.services import MetricsService, PipelineService
+from app.services.metrics_service import SHM_NAME, SIZE
+
+
+@pytest.fixture(scope="module", autouse=True)
+def fxt_metrics_mem():
+    shm = SharedMemory(name=SHM_NAME, create=True, size=SIZE)
+    yield
+    shm.close()
+    shm.unlink()
 
 
 @pytest.fixture
@@ -33,25 +43,29 @@ def fxt_pipeline(fxt_model) -> Pipeline:
 
 
 @pytest.fixture
-def fxt_pipeline_service(fxt_active_pipeline_service, fxt_condition) -> PipelineService:
+def fxt_pipeline_service(fxt_active_pipeline_service, fxt_metrics_service, fxt_condition) -> PipelineService:
     """Fixture to create a PipelineService instance with mocked dependencies."""
-    return PipelineService(fxt_active_pipeline_service, fxt_condition)
+    return PipelineService(fxt_active_pipeline_service, fxt_metrics_service, fxt_condition)
+
+
+@pytest.fixture
+def fxt_metrics_service() -> MagicMock:
+    return MagicMock(spec=MetricsService)
 
 
 class TestPipelineServiceUnit:
     """Unit tests for PipelineService."""
 
-    def test_get_pipeline_metrics_success(self, fxt_pipeline_service, fxt_pipeline, fxt_model):
+    def test_get_pipeline_metrics_success(self, fxt_pipeline_service, fxt_metrics_service, fxt_pipeline, fxt_model):
         """Test successfully retrieving pipeline metrics."""
+        fxt_metrics_service.get_latency_measurements.return_value = [10.0, 15.0, 20.0, 25.0, 30.0]
         with (
             patch("app.services.pipeline_service.PipelineService.get_pipeline_by_id") as mock_get_pipeline_by_id,
-            patch("app.services.metrics_collector.MetricsCollector.get_latency_measurements") as mock_metrics_collector,
         ):
             mock_get_pipeline_by_id.return_value = fxt_pipeline
-            mock_metrics_collector.return_value = [10.0, 15.0, 20.0, 25.0, 30.0]
             metrics = fxt_pipeline_service.get_pipeline_metrics(fxt_pipeline.id, time_window=60)
 
-        mock_metrics_collector.assert_called_once_with(fxt_model.id, 60)
+        fxt_metrics_service.get_latency_measurements.assert_called_once_with(model_id=fxt_model.id, time_window=60)
         assert metrics.time_window.time_window == 60
         assert metrics.inference.latency.avg_ms == 20.0
         assert metrics.inference.latency.min_ms == 10.0
@@ -59,17 +73,16 @@ class TestPipelineServiceUnit:
         assert metrics.inference.latency.p95_ms == 29.0
         assert metrics.inference.latency.latest_ms == 30.0
 
-    def test_get_pipeline_metrics_no_data(self, fxt_pipeline_service, fxt_pipeline, fxt_model):
+    def test_get_pipeline_metrics_no_data(self, fxt_pipeline_service, fxt_metrics_service, fxt_pipeline, fxt_model):
         """Test retrieving pipeline metrics when no latency data is available."""
+        fxt_metrics_service.get_latency_measurements.return_value = []
         with (
             patch("app.services.pipeline_service.PipelineService.get_pipeline_by_id") as mock_get_pipeline_by_id,
-            patch("app.services.metrics_collector.MetricsCollector.get_latency_measurements") as mock_metrics_collector,
         ):
             mock_get_pipeline_by_id.return_value = fxt_pipeline
-            mock_metrics_collector.return_value = []
             metrics = fxt_pipeline_service.get_pipeline_metrics(fxt_pipeline.id, time_window=60)
 
-        mock_metrics_collector.assert_called_once_with(fxt_model.id, 60)
+        fxt_metrics_service.get_latency_measurements.assert_called_once_with(model_id=fxt_model.id, time_window=60)
         assert metrics.time_window.time_window == 60
         assert metrics.inference.latency.avg_ms is None
         assert metrics.inference.latency.min_ms is None

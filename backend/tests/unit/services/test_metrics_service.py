@@ -7,24 +7,32 @@ from multiprocessing.shared_memory import SharedMemory
 from unittest.mock import patch
 from uuid import uuid4
 
-from app.services.metrics_collector import MAX_MEASUREMENTS, SHM_NAME, SIZE, MetricsCollector
+import pytest
 
-SHM = SharedMemory(name=SHM_NAME, create=True, size=SIZE)
+from app.services.metrics_service import MAX_MEASUREMENTS, SHM_NAME, SIZE, MetricsService
+
+
+@pytest.fixture(scope="module", autouse=True)
+def fxt_metrics_mem():
+    shm = SharedMemory(name=SHM_NAME, create=True, size=SIZE)
+    yield
+    shm.close()
+    shm.unlink()
 
 
 class TestMetricsCollector:
-    """Test cases for MetricsCollector"""
+    """Test cases for MetricsService"""
 
     def test_record_inference_start(self):
         """Test recording inference start time"""
-        start_time = MetricsCollector.record_inference_start()
+        start_time = MetricsService.record_inference_start()
 
         assert isinstance(start_time, float)
         assert start_time > 0
 
     def test_record_inference_end(self):
         """Test recording inference end and latency calculation"""
-        collector = MetricsCollector()
+        collector = MetricsService()
         model_id = uuid4()
 
         start_time = time.perf_counter()
@@ -38,7 +46,7 @@ class TestMetricsCollector:
 
     def test_get_latency_measurements_with_time_window(self):
         """Test getting latency measurements within specific time window"""
-        collector = MetricsCollector()
+        collector = MetricsService()
         model_id = uuid4()
 
         # Record multiple measurements
@@ -57,7 +65,7 @@ class TestMetricsCollector:
 
     def test_get_latency_measurements_different_models(self):
         """Test that measurements are isolated by model ID"""
-        collector = MetricsCollector()
+        collector = MetricsService()
         model_id_1 = uuid4()
         model_id_2 = uuid4()
 
@@ -79,7 +87,7 @@ class TestMetricsCollector:
 
     def test_time_window_measurements(self):
         """Test that old measurements are filtered out by time window"""
-        collector = MetricsCollector()
+        collector = MetricsService()
         model_id = uuid4()
 
         # First add a current measurement
@@ -101,7 +109,7 @@ class TestMetricsCollector:
 
     def test_latency_measurement_timestamp(self):
         """Test that measurements are recorded with correct timestamps"""
-        collector = MetricsCollector()
+        collector = MetricsService()
         fixed_time = datetime(2025, 1, 1, 12, 0, 0, tzinfo=UTC)
         fixed_timestamp = fixed_time.timestamp()
         model_id = uuid4()
@@ -126,7 +134,7 @@ class TestMetricsCollector:
 
     def test_empty_measurements(self):
         """Test behavior when no measurements exist"""
-        collector = MetricsCollector()
+        collector = MetricsService()
         collector.reset()
         model_id = uuid4()
 
@@ -135,7 +143,7 @@ class TestMetricsCollector:
 
     def test_latency_calculation_accuracy(self):
         """Test that latency calculation is reasonably accurate"""
-        collector = MetricsCollector()
+        collector = MetricsService()
         model_id = uuid4()
 
         start_time = time.perf_counter()
@@ -149,7 +157,7 @@ class TestMetricsCollector:
 
     def test_max_age_initialization_and_update(self):
         """Test that max_age_seconds is properly initialized and updated"""
-        collector = MetricsCollector()
+        collector = MetricsService()
         assert collector._max_age_seconds == 60
 
         collector.update_max_age(120)
@@ -157,20 +165,20 @@ class TestMetricsCollector:
 
     def test_shared_memory_usage(self):
         """Test that the shared memory is properly used"""
-        collector = MetricsCollector()
+        collector = MetricsService()
         model_id = uuid4()
         start_time = time.perf_counter()
         collector.record_inference_end(model_id, start_time)
 
         # Create a new collector which should access the same shared memory
-        collector2 = MetricsCollector()
+        collector2 = MetricsService()
         measurements = collector2.get_latency_measurements(model_id)
 
         assert len(measurements) == 1
 
     def test_circular_buffer(self):
         """Test that the circular buffer works correctly when exceeding MAX_MEASUREMENTS"""
-        collector = MetricsCollector()
+        collector = MetricsService()
         model_id = uuid4()
 
         # Fill more than MAX_MEASUREMENTS entries
