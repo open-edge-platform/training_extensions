@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Annotation as AnnotationInterface } from '../shapes/interfaces';
+import { Annotation as AnnotationInterface } from '../../features/annotator/shapes/interfaces';
 import { ShapeFactory } from './shape-factory.component';
 
 interface AnnotationProps {
