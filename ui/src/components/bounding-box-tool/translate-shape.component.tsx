@@ -16,7 +16,7 @@ interface TranslateShapeProps {
     onComplete: () => void;
 }
 
-export const TranslateShape = ({ zoom, annotation, onComplete, translateShape }: TranslateShapeProps): JSX.Element => {
+export const TranslateShape = ({ zoom, annotation, onComplete, translateShape }: TranslateShapeProps) => {
     const [dragFromPoint, setDragFromPoint] = useState<null | Point>(null);
 
     const onPointerDown = (event: PointerEvent<SVGSVGElement>): void => {

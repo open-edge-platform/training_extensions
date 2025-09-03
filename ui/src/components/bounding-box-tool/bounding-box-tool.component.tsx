@@ -20,13 +20,7 @@ interface EditBoundingBoxProps {
 
 const ANCHOR_SIZE = 8;
 
-export const EditBoundingBox = ({
-    annotation,
-    roi,
-    image,
-    zoom,
-    updateAnnotation,
-}: EditBoundingBoxProps): JSX.Element => {
+export const EditBoundingBox = ({ annotation, roi, image, zoom, updateAnnotation }: EditBoundingBoxProps) => {
     const [shape, setShape] = useState(annotation.shape);
 
     useEffect(() => setShape(annotation.shape), [annotation.shape]);

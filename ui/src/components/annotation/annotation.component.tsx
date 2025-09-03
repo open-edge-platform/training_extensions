@@ -9,7 +9,7 @@ interface AnnotationProps {
     maskId?: string;
 }
 
-export const Annotation = ({ maskId, annotation }: AnnotationProps): JSX.Element => {
+export const Annotation = ({ maskId, annotation }: AnnotationProps) => {
     const { id, color, shape } = annotation;
 
     return (
