@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { Annotation, Point, RegionOfInterest } from '../shapes/interfaces';
 import { ResizeAnchor } from './resize-anchor.component';
@@ -22,8 +22,6 @@ const ANCHOR_SIZE = 8;
 
 export const EditBoundingBox = ({ annotation, roi, image, zoom, updateAnnotation }: EditBoundingBoxProps) => {
     const [shape, setShape] = useState(annotation.shape);
-
-    useEffect(() => setShape(annotation.shape), [annotation.shape]);
 
     const onComplete = () => {
         updateAnnotation({ ...annotation, shape });
