@@ -1,0 +1,61 @@
+name: "Security scan"
+
+on:
+  schedule:
+    # Run security checks every day at 2 AM UTC
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+  push:
+    branches:
+      - develop
+      - "releases/**"
+
+permissions: {} # No permissions by default
+
+jobs:
+  zizmor-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # Needed to upload the results to code-scanning dashboard
+    steps:
+      - name: Run Zizmor scan
+        uses: open-edge-platform/geti-ci/actions/zizmor@db5335076dfe564b039b5a7480b8f6b6ae38370a
+        with:
+          scan-scope: "all"
+          severity-level: "LOW"
+          confidence-level: "LOW"
+          fail-on-findings: false # reports only
+
+  bandit-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # Needed to upload the results to code-scanning dashboard
+    steps:
+      - name: Run Bandit scan
+        uses: open-edge-platform/geti-ci/actions/bandit@db5335076dfe564b039b5a7480b8f6b6ae38370a
+        with:
+          scan-scope: "all"
+          severity-level: "LOW"
+          confidence-level: "LOW"
+          config_file: ".ci/ipas_default.config"
+          fail-on-findings: false # reports only
+
+  trivy-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # Needed to upload the results to code-scanning dashboard
+    steps:
+      - name: Run Trivy scan
+        id: trivy
+        uses: open-edge-platform/geti-ci/actions/trivy@db5335076dfe564b039b5a7480b8f6b6ae38370a
+        with:
+          scan_type: "fs"
+          scan-scope: all
+          severity: LOW
+          scanners: "vuln,secret,config"
+          format: "sarif"
+          timeout: "15m"
+          ignore_unfixed: "false"

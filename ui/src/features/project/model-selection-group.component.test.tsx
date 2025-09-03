@@ -21,7 +21,7 @@ describe('ModelSelectionGroup', () => {
         expect(radio).toBeChecked();
     });
 
-    it('selects a model when clicked', () => {
+    it('selects a model when the whole element is clicked', () => {
         render(<ModelSelectionGroup />);
 
         const segOption = screen.getByLabelText('Model option: Image Segmentation');
@@ -31,7 +31,7 @@ describe('ModelSelectionGroup', () => {
         expect(segRadio).toBeChecked();
     });
 
-    it('selects a model when radio is clicked', () => {
+    it('selects a model when the radio element is clicked', () => {
         render(<ModelSelectionGroup />);
 
         const classRadio = screen.getByLabelText('classification');
