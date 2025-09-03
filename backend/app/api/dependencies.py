@@ -9,6 +9,7 @@ from fastapi import Depends, HTTPException, Request, status
 
 from app.core import Scheduler
 from app.services import ActivePipelineService, ConfigurationService, ModelService, PipelineService, SystemService
+from app.services.metrics_service import MetricsService
 from app.webrtc.manager import WebRTCManager
 
 
@@ -60,6 +61,12 @@ def get_active_pipeline_service() -> ActivePipelineService:
     return ActivePipelineService()
 
 
+@lru_cache
+def get_metrics_service() -> MetricsService:
+    """Provides a MetricsService instance for collecting and retrieving metrics."""
+    return MetricsService()
+
+
 def get_scheduler(request: Request) -> Scheduler:
     """Provides the global Scheduler instance."""
     return request.app.state.scheduler
@@ -80,11 +87,13 @@ def get_configuration_service(
 @lru_cache
 def get_pipeline_service(
     active_pipeline_service: Annotated[ActivePipelineService, Depends(get_active_pipeline_service)],
+    metrics_service: Annotated[MetricsService, Depends(get_metrics_service)],
     scheduler: Annotated[Scheduler, Depends(get_scheduler)],
 ) -> PipelineService:
     """Provides a PipelineService instance with the active pipeline service and config changed condition."""
     return PipelineService(
         active_pipeline_service=active_pipeline_service,
+        metrics_service=metrics_service,
         config_changed_condition=scheduler.mp_config_changed_condition,
     )
 

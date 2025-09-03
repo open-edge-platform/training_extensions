@@ -1,6 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+from datetime import UTC, datetime
 from unittest.mock import MagicMock
 from uuid import uuid4
 
@@ -11,6 +12,7 @@ from pydantic import ValidationError
 from app.api.dependencies import get_pipeline_service
 from app.main import app
 from app.schemas import Pipeline, PipelineStatus
+from app.schemas.metrics import InferenceMetrics, LatencyMetrics, PipelineMetrics, TimeWindow
 from app.services import (
     PipelineService,
     ResourceAlreadyExistsError,
@@ -199,3 +201,98 @@ class TestPipelineEndpoints:
 
         assert response.status_code == status.HTTP_409_CONFLICT
         assert str(err) == response.json()["detail"]
+
+    def test_get_pipeline_metrics_success(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
+        """Test successful retrieval of pipeline metrics with default time window."""
+        mock_metrics = PipelineMetrics(
+            time_window=TimeWindow(start=datetime.now(UTC), end=datetime.now(UTC), time_window=60),
+            inference=InferenceMetrics(
+                latency=LatencyMetrics(avg_ms=100.5, min_ms=50.0, max_ms=200.0, p95_ms=180.0, latest_ms=120.0)
+            ),
+        )
+        fxt_pipeline_service.get_pipeline_metrics.return_value = mock_metrics
+
+        response = fxt_client.get(f"/api/pipelines/{str(fxt_pipeline.id)}/metrics")
+
+        assert response.status_code == status.HTTP_200_OK
+        fxt_pipeline_service.get_pipeline_metrics.assert_called_once_with(fxt_pipeline.id, 60)
+
+    def test_get_pipeline_metrics_invalid_pipeline_id(self, fxt_pipeline_service, fxt_client):
+        """Test metrics endpoint with invalid pipeline ID format."""
+        response = fxt_client.get("/api/pipelines/invalid-id/metrics")
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        fxt_pipeline_service.get_pipeline_metrics.assert_not_called()
+
+    def test_get_pipeline_metrics_pipeline_not_found(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
+        """Test metrics endpoint when pipeline doesn't exist."""
+        fxt_pipeline_service.get_pipeline_metrics.side_effect = ResourceNotFoundError(
+            ResourceType.PIPELINE, str(fxt_pipeline.id)
+        )
+
+        response = fxt_client.get(f"/api/pipelines/{str(fxt_pipeline.id)}/metrics")
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        fxt_pipeline_service.get_pipeline_metrics.assert_called_once_with(fxt_pipeline.id, 60)
+
+    def test_get_pipeline_metrics_pipeline_not_running(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
+        """Test metrics endpoint when pipeline is not in running state."""
+        fxt_pipeline_service.get_pipeline_metrics.side_effect = ValueError(
+            "Cannot get metrics for a pipeline that is not running."
+        )
+
+        response = fxt_client.get(f"/api/pipelines/{str(fxt_pipeline.id)}/metrics")
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "Cannot get metrics for a pipeline that is not running" in response.json()["detail"]
+        fxt_pipeline_service.get_pipeline_metrics.assert_called_once_with(fxt_pipeline.id, 60)
+
+    @pytest.mark.parametrize("invalid_time_window", [0, -1, 3601, 7200])
+    def test_get_pipeline_metrics_invalid_time_window(
+        self, invalid_time_window, fxt_pipeline, fxt_pipeline_service, fxt_client
+    ):
+        """Test metrics endpoint with invalid time window values."""
+        response = fxt_client.get(f"/api/pipelines/{str(fxt_pipeline.id)}/metrics?time_window={invalid_time_window}")
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "Duration must be between 1 and 3600 seconds" in response.json()["detail"]
+        fxt_pipeline_service.get_pipeline_metrics.assert_not_called()
+
+    @pytest.mark.parametrize("valid_time_window", [1, 30, 300, 1800, 3600])
+    def test_get_pipeline_metrics_valid_time_windows(
+        self, valid_time_window, fxt_pipeline, fxt_pipeline_service, fxt_client
+    ):
+        """Test metrics endpoint with various valid time window values."""
+        mock_metrics = PipelineMetrics(
+            time_window=TimeWindow(start=datetime.now(UTC), end=datetime.now(UTC), time_window=valid_time_window),
+            inference=InferenceMetrics(
+                latency=LatencyMetrics(avg_ms=100.0, min_ms=50.0, max_ms=200.0, p95_ms=180.0, latest_ms=120.0)
+            ),
+        )
+        fxt_pipeline_service.get_pipeline_metrics.return_value = mock_metrics
+
+        response = fxt_client.get(f"/api/pipelines/{str(fxt_pipeline.id)}/metrics?time_window={valid_time_window}")
+
+        assert response.status_code == status.HTTP_200_OK
+        fxt_pipeline_service.get_pipeline_metrics.assert_called_once_with(fxt_pipeline.id, valid_time_window)
+
+    def test_get_pipeline_metrics_no_data_available(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
+        """Test metrics endpoint when no latency data is available."""
+        mock_metrics = PipelineMetrics(
+            time_window=TimeWindow(start=datetime.now(UTC), end=datetime.now(UTC), time_window=60),
+            inference=InferenceMetrics(
+                latency=LatencyMetrics(avg_ms=None, min_ms=None, max_ms=None, p95_ms=None, latest_ms=None)
+            ),
+        )
+        fxt_pipeline_service.get_pipeline_metrics.return_value = mock_metrics
+
+        response = fxt_client.get(f"/api/pipelines/{str(fxt_pipeline.id)}/metrics")
+
+        assert response.status_code == status.HTTP_200_OK
+        response_data = response.json()
+        assert response_data["inference"]["latency"]["avg_ms"] is None
+        assert response_data["inference"]["latency"]["min_ms"] is None
+        assert response_data["inference"]["latency"]["max_ms"] is None
+        assert response_data["inference"]["latency"]["p95_ms"] is None
+        assert response_data["inference"]["latency"]["latest_ms"] is None
+        fxt_pipeline_service.get_pipeline_metrics.assert_called_once_with(fxt_pipeline.id, 60)
