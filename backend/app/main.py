@@ -6,7 +6,6 @@
 #  - uv run app/main.py
 # or use docker and access UI and backend at geti-tune.localhost
 #  - docker compose up
-#  - docker compose -f docker-compose.dev.yaml up
 
 import logging
 from pathlib import Path
