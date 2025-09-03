@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useMemo } from 'react';
+import { useState } from 'react';
 
 import { Annotation, Point, RegionOfInterest } from '../shapes/interfaces';
 import { ResizeAnchor } from './resize-anchor.component';
@@ -21,7 +21,7 @@ interface EditBoundingBoxProps {
 const ANCHOR_SIZE = 8;
 
 export const EditBoundingBox = ({ annotation, roi, image, zoom, updateAnnotation }: EditBoundingBoxProps) => {
-    const shape = useMemo(() => annotation.shape, [annotation.shape]);
+    const [shape, setShape] = useState(annotation.shape);
 
     const onComplete = () => {
         updateAnnotation({ ...annotation, shape });
@@ -30,14 +30,14 @@ export const EditBoundingBox = ({ annotation, roi, image, zoom, updateAnnotation
     const translate = (point: Point) => {
         const newBoundingBox = getClampedBoundingBox(point, shape, roi);
 
-        updateAnnotation({ ...annotation, shape: { ...shape, ...newBoundingBox } });
+        setShape({ ...shape, ...newBoundingBox });
     };
 
     const anchorPoints = getBoundingBoxResizePoints({
         gap: (2 * ANCHOR_SIZE) / zoom,
         boundingBox: shape,
         onResized: (boundingBox) => {
-            updateAnnotation({ ...annotation, shape: { ...shape, ...getBoundingBoxInRoi(boundingBox, roi) } });
+            setShape({ ...shape, ...getBoundingBoxInRoi(boundingBox, roi) });
         },
     });
 
