@@ -57,7 +57,12 @@
     // We will enable it in the next phase
     {
       enabled: false,
-      matchManagers: ["pypi", "npm", "poetry", "cargo", "nvm"],
+      matchManagers: ["npm", "poetry", "cargo", "nvm"],
+    },
+
+    {
+      enabled: false,
+      matchDatasources: ["pypi"],
     },
 
     // Python version in TOML is updated manually
