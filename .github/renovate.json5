@@ -56,6 +56,62 @@
       schedule: ["* * * * 0"], // weekly
     },
 
+    // Disable python base image upgrades, except patch and digital pinning
+    {
+      enabled: false,
+      matchDatasources: ["docker"],
+      matchPackageNames: ["python"],
+      matchUpdateTypes: ["major", "minor"],
+    },
+
+    // Disable node image upgrades, except patch and digital pinning
+    {
+      enabled: false,
+      matchDatasources: ["docker"],
+      matchPackageNames: ["node"],
+      matchUpdateTypes: ["major", "minor"],
+    },
+
+    // Disable eclipse-mosquitto image upgrades, except patch and digital pinning
+    {
+      enabled: false,
+      matchDatasources: ["docker"],
+      matchPackageNames: ["eclipse-mosquitto"],
+      matchUpdateTypes: ["major", "minor"],
+    },
+
+    // Disable eclipse-mosquitto image upgrades, except patch and digital pinning
+    {
+      enabled: false,
+      matchDatasources: ["docker"],
+      matchPackageNames: ["eclipse-mosquitto"],
+      matchUpdateTypes: ["major", "minor"],
+    },
+
+    // Disable emqx/mqttx-web image upgrades, except patch and digital pinning
+    {
+      enabled: false,
+      matchDatasources: ["docker"],
+      matchPackageNames: ["emqx/mqttx-web"],
+      matchUpdateTypes: ["major", "minor"],
+    },
+
+    // Disable nvidia/cuda image upgrades, except patch and digital pinning
+    {
+      enabled: false,
+      matchDatasources: ["docker"],
+      matchPackageNames: ["nvidia/cuda"],
+      matchUpdateTypes: ["major", "minor"],
+    },
+
+    // Disable pytorch/pytorch image upgrades, except patch and digital pinning
+    {
+      enabled: false,
+      matchDatasources: ["docker"],
+      matchPackageNames: ["pytorch/pytorch"],
+      matchUpdateTypes: ["major", "minor"],
+    },
+
     // Disable non-security upgrades for pypi, npm and crate, except lock file update
     // node is upgraded manually
     {
@@ -71,6 +127,13 @@
       matchDepNames: ["python"],
     },
 
+    // Disable upgrades for Dockerfile syntax (docker/dockerfile)
+    {
+      enabled: false,
+      matchDatasources: ["docker"],
+      matchDepNames: ["docker/dockerfile"],
+    },
+
     // Group GitHub Actions updates
     {
       enabled: true,
@@ -79,6 +142,31 @@
       matchManagers: ["github-actions"],
       matchPackagePatterns: ["*"],
       schedule: ["* * 1,15 * *"], // twice a month
+    },
+
+    // uv version used in GitHub Actions is updated manually
+    {
+      enabled: false,
+      matchDatasources: ["github-releases"],
+      matchDepNames: ["astral-sh/uv"],
+      matchDepTypes: ["uses-with"],
+    },
+
+    // python version used in GitHub Actions is updated manually
+    {
+      enabled: false,
+      matchDatasources: ["github-releases"],
+      matchDepNames: ["python"],
+      matchDepTypes: ["uses-with"],
+    },
+
+    // Disable mcr.microsoft.com/playwright image upgrades, except digital pinning,
+    {
+      enabled: false,
+      matchManagers: ["github-actions"],
+      matchDepTypes: ["container"],
+      matchDepNames: ["mcr.microsoft.com/playwright"],
+      matchUpdateTypes: ["major", "minor", "patch"],
     },
   ],
 
