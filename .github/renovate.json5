@@ -33,7 +33,6 @@
 
   // enabledManagers: ["dockerfile", "github-actions", "pep621", "npm"], //TODO enable
 
-
   // Set limit to 5
   ignorePresets: [":prHourlyLimit2"],
   prHourlyLimit: 5,
@@ -48,6 +47,13 @@
       groupName: "Pin dependencies",
       groupSlug: "pin-deps",
       schedule: ["* * * * 0"], // weekly
+    },
+
+    // Disable non-security upgrades, except lock file update
+    // We will enable it in the next phase
+    {
+      enabled: false,
+      matchManagers: ["pypi", "npm", "poetry", "cargo", "nvm"],
     },
 
     // Python version in TOML is updated manually
