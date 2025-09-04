@@ -18,7 +18,11 @@ export const MediaPreview = ({ mediaItem, close }: { mediaItem: Item; close: () 
         <Dialog UNSAFE_style={{ width: '95vw', height: '95vh' }}>
             <Heading>Preview</Heading>
             <Divider />
-            <Content>
+            <Content
+                UNSAFE_style={{
+                    backgroundColor: 'var(--spectrum-global-color-gray-50)',
+                }}
+            >
                 <View height='100%'>
                     <Grid
                         areas={['toolbar canvas aside', 'toolbar canvas aside', 'toolbar footer aside']}
@@ -26,31 +30,27 @@ export const MediaPreview = ({ mediaItem, close }: { mediaItem: Item; close: () 
                         height='100%'
                         columns={'auto 1fr auto'}
                         rows={'auto 1fr auto'}
-                        UNSAFE_style={{
-                            border: 'thin solid var(--spectrum-global-color-gray-50)',
-                            backgroundColor: 'var(--spectrum-global-color-gray-50)',
-                        }}
                     >
-                        <View gridArea={'toolbar'} backgroundColor={'gray-100'} padding={'size-100'}>
+                        <View gridArea={'toolbar'} margin={'size-350'}>
                             <ToolSelectionBar />
                         </View>
 
-                        <View gridArea={'canvas'} backgroundColor={'gray-50'}>
+                        <View gridArea={'canvas'}>
                             <AnnotatorCanvas mediaItem={mediaItem} isFocussed={isFocussed} />
                         </View>
 
-                        <View gridArea={'aside'} backgroundColor={'gray-50'}>
+                        <View gridArea={'aside'}>
                             <div>Aside</div>
                         </View>
 
-                        <View
-                            gridArea={'footer'}
-                            padding={'size-100'}
-                            backgroundColor={'gray-100'}
-                            UNSAFE_style={{ textAlign: 'right' }}
-                        >
+                        <View gridArea={'footer'} padding={'size-100'} UNSAFE_style={{ textAlign: 'right' }}>
                             <ButtonGroup>
-                                <ToggleButton isEmphasized isSelected={isFocussed} onChange={setIsFocussed}>
+                                <ToggleButton
+                                    marginEnd={'size-100'}
+                                    isEmphasized
+                                    isSelected={isFocussed}
+                                    onChange={setIsFocussed}
+                                >
                                     Focus
                                 </ToggleButton>
                                 <Button variant='secondary' onPress={close}>
