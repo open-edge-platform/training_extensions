@@ -3,21 +3,10 @@
 
 import time
 from datetime import UTC, datetime, timedelta
-from multiprocessing.shared_memory import SharedMemory
 from unittest.mock import patch
 from uuid import uuid4
 
-import pytest
-
-from app.services.metrics_service import MAX_MEASUREMENTS, SHM_NAME, SIZE, MetricsService
-
-
-@pytest.fixture(scope="module", autouse=True)
-def fxt_metrics_mem():
-    shm = SharedMemory(name=SHM_NAME, create=True, size=SIZE)
-    yield
-    shm.close()
-    shm.unlink()
+from app.services.metrics_service import MAX_MEASUREMENTS, MetricsService
 
 
 class TestMetricsCollector:

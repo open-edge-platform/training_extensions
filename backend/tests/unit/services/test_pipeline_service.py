@@ -1,7 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from multiprocessing.shared_memory import SharedMemory
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
@@ -9,15 +8,6 @@ import pytest
 
 from app.schemas import Model, Pipeline, PipelineStatus
 from app.services import MetricsService, PipelineService
-from app.services.metrics_service import SHM_NAME, SIZE
-
-
-@pytest.fixture(scope="module", autouse=True)
-def fxt_metrics_mem():
-    shm = SharedMemory(name=SHM_NAME, create=True, size=SIZE)
-    yield
-    shm.close()
-    shm.unlink()
 
 
 @pytest.fixture

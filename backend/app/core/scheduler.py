@@ -6,11 +6,10 @@ import multiprocessing as mp
 import os
 import queue
 import threading
-from multiprocessing.shared_memory import SharedMemory
 
 import psutil
 
-from app.services.metrics_service import SHM_NAME, SIZE
+from app.services.metrics_service import MetricsService
 from app.utils.singleton import Singleton
 from app.workers import dispatching_routine, frame_acquisition_routine, inference_routine
 
@@ -38,8 +37,8 @@ class Scheduler(metaclass=Singleton):
         # Condition variable to notify processes about configuration updates
         self.mp_config_changed_condition = mp.Condition()
 
-        # Shared memory for metrics collector
-        self.shm_metrics_collector: SharedMemory = SharedMemory(name=SHM_NAME, create=True, size=SIZE)
+        # Initialize metrics service to create shared memory with auto-generated name
+        self.metrics_service = MetricsService()
 
         self.processes: list[mp.Process] = []
         self.threads: list[threading.Thread] = []
@@ -116,9 +115,6 @@ class Scheduler(metaclass=Singleton):
         # Clear references
         self.processes.clear()
         self.threads.clear()
-        self.shm_metrics_collector.close()
-        self.shm_metrics_collector.unlink()
-
         self._cleanup_queues()
 
     def _cleanup_queues(self) -> None:
