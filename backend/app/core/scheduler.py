@@ -11,13 +11,12 @@ from multiprocessing.shared_memory import SharedMemory
 import psutil
 
 from app.services.metrics_service import SHM_NAME, SIZE
-from app.utils.singleton import Singleton
 from app.workers import dispatching_routine, frame_acquisition_routine, inference_routine
 
 logger = logging.getLogger(__name__)
 
 
-class Scheduler(metaclass=Singleton):
+class Scheduler:
     """Manages application processes and threads"""
 
     FRAME_QUEUE_SIZE = 5

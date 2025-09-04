@@ -2,19 +2,13 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from unittest.mock import patch
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 
-from app.db.schema import PipelineDB
-from app.schemas import Pipeline, PipelineStatus
-from app.services import (
-    PipelineService,
-    ResourceAlreadyExistsError,
-    ResourceInUseError,
-    ResourceNotFoundError,
-    ResourceType,
-)
+from app.db.schema import PipelineDB, ProjectDB
+from app.schemas import PipelineStatus
+from app.services import PipelineService, ResourceNotFoundError, ResourceType
 from app.services.configuration_service import PipelineField
 
 
@@ -41,45 +35,31 @@ def fxt_pipeline_service(fxt_active_pipeline_service, fxt_metrics_service, fxt_c
 class TestPipelineServiceIntegration:
     """Integration tests for PipelineService."""
 
-    def test_list_pipelines(self, fxt_pipeline_service, db_session):
-        """Test retrieving all pipelines."""
-        db_pipeline1 = PipelineDB(
-            id=str(uuid4()),
-            name="Test Pipeline 1",
-            is_running=False,
-        )
-        db_pipeline2 = PipelineDB(
-            id=str(uuid4()),
-            name="Test Pipeline 2",
-            is_running=False,
-        )
-        db_session.add(db_pipeline1)
-        db_session.add(db_pipeline2)
-        db_session.flush()
-
-        pipelines = fxt_pipeline_service.list_pipelines()
-
-        assert len(pipelines) == 2
-        for i, db_pipeline in enumerate([db_pipeline1, db_pipeline2]):
-            assert str(pipelines[i].id) == db_pipeline.id
-
-    def test_get_pipeline(self, fxt_pipeline_service, db_session):
+    def test_get_pipeline(self, fxt_pipeline_service, fxt_db_sinks, fxt_db_sources, fxt_db_models, db_session):
         """Test retrieving a pipeline by ID."""
-        pipeline_id = uuid4()
-        pipeline_db = PipelineDB(
-            id=str(pipeline_id),
-            name="Test Pipeline",
-            is_running=False,
+        project_id = uuid4()
+        project_db = ProjectDB(
+            id=str(project_id),
+            name="Test Project",
+            task_type="detection",
+            labels=["cat", "dog"],
         )
-        db_session.add(pipeline_db)
+        pipeline_db = PipelineDB(project_id=str(project_id))
+        pipeline_db.sink = fxt_db_sinks[0]
+        pipeline_db.source = fxt_db_sources[0]
+        pipeline_db.model = fxt_db_models[0]
+        project_db.pipeline = pipeline_db
+        db_session.add(project_db)
         db_session.flush()
 
-        pipeline = fxt_pipeline_service.get_pipeline_by_id(pipeline_id)
+        pipeline = fxt_pipeline_service.get_pipeline_by_id(project_id)
 
         assert pipeline is not None
-        assert pipeline.id == pipeline_id
-        assert pipeline.name == pipeline_db.name
-        assert pipeline.status == PipelineStatus.from_bool(pipeline_db.is_running)
+        assert pipeline.project_id == project_id
+        assert pipeline.status == PipelineStatus.IDLE
+        assert pipeline.sink.name == fxt_db_sinks[0].name
+        assert pipeline.source.name == fxt_db_sources[0].name
+        assert pipeline.model.name == fxt_db_models[0].name
 
     def test_get_non_existent_pipeline(self, fxt_pipeline_service):
         """Test retrieving a non-existent pipeline raises error."""
@@ -90,79 +70,11 @@ class TestPipelineServiceIntegration:
         assert excinfo.value.resource_type == ResourceType.PIPELINE
         assert excinfo.value.resource_id == str(pipeline_id)
 
-    def test_create_pipeline(self, fxt_pipeline_service, db_session):
-        """Test creating a new pipeline."""
-        pipeline = Pipeline(
-            name="Test Pipeline",
-            status=PipelineStatus.IDLE,
-        )
-        created = fxt_pipeline_service.create_pipeline(pipeline)
-
-        db_created = db_session.get(PipelineDB, str(created.id))
-        assert db_created.name == "Test Pipeline"
-        assert not db_created.is_running
-
-    def test_create_pipeline_non_unique(
-        self,
-        fxt_pipeline_service,
-        db_session,
-    ):
-        """Test creating a new pipeline with the name that already exists."""
-        pipeline_id = uuid4()
-        pipeline_db = PipelineDB(
-            id=str(pipeline_id),
-            name="Test Pipeline",
-            is_running=False,
-        )
-        db_session.add(pipeline_db)
-        db_session.flush()
-
-        with pytest.raises(ResourceAlreadyExistsError) as excinfo:
-            fxt_pipeline_service.create_pipeline(Pipeline(name="Test Pipeline"))
-
-        assert excinfo.value.resource_type == ResourceType.PIPELINE
-        assert excinfo.value.resource_id == "Test Pipeline"
-
-    def test_create_active_pipeline(
-        self,
-        fxt_db_sinks,
-        fxt_db_sources,
-        fxt_db_models,
-        fxt_pipeline_service,
-        fxt_active_pipeline_service,
-        fxt_condition,
-        db_session,
-    ):
-        """Test creating a new active pipeline."""
-        db_session.add(fxt_db_sinks[0])
-        db_session.add(fxt_db_sources[0])
-        db_session.add(fxt_db_models[0])
-        db_session.flush()
-
-        pipeline = Pipeline(
-            name="Test Pipeline",
-            status=PipelineStatus.RUNNING,
-            source_id=UUID(fxt_db_sources[0].id),
-            sink_id=UUID(fxt_db_sinks[0].id),
-            model_id=UUID(fxt_db_models[0].id),
-        )
-        created = fxt_pipeline_service.create_pipeline(pipeline)
-
-        db_created = db_session.get(PipelineDB, str(created.id))
-        fxt_active_pipeline_service.reload.assert_called_once()
-        fxt_condition.notify_all.assert_called_once()
-        assert db_created.name == "Test Pipeline"
-        assert db_created.sink_id
-        assert db_created.source_id
-        assert db_created.model_id
-        assert db_created.is_running
-
     def test_update_pipeline(self, fxt_pipeline_service, db_session):
         """Test updating a pipeline by ID."""
         pipeline_id = uuid4()
         pipeline_db = PipelineDB(
-            id=str(pipeline_id),
-            name="Test Pipeline",
+            project_id=str(pipeline_id),
             is_running=False,
         )
         db_session.add(pipeline_db)
@@ -200,8 +112,7 @@ class TestPipelineServiceIntegration:
         else:
             item_id = fxt_db_sources[1].id
         pipeline_db = PipelineDB(
-            id=str(pipeline_id),
-            name="Test Pipeline",
+            project_id=str(pipeline_id),
             is_running=True,
             source_id=fxt_db_sources[0].id,
             sink_id=fxt_db_sinks[0].id,
@@ -242,8 +153,7 @@ class TestPipelineServiceIntegration:
         db_session.add(fxt_db_models[0])
         db_session.flush()
         pipeline_db = PipelineDB(
-            id=str(pipeline_id),
-            name="Test Pipeline",
+            project_id=str(pipeline_id),
             is_running=pipeline_status != PipelineStatus.RUNNING,
             source_id=fxt_db_sources[0].id,
             sink_id=fxt_db_sinks[0].id,
@@ -270,52 +180,3 @@ class TestPipelineServiceIntegration:
 
         assert exc_info.value.resource_type == ResourceType.PIPELINE
         assert exc_info.value.resource_id == str(pipeline_id)
-
-    def test_delete_pipeline(self, fxt_pipeline_service, db_session):
-        """Test deleting a pipeline by ID."""
-        pipeline_id = uuid4()
-        pipeline_db = PipelineDB(
-            id=str(pipeline_id),
-            name="Test Pipeline",
-            is_running=False,
-        )
-        db_session.add(pipeline_db)
-        db_session.flush()
-
-        fxt_pipeline_service.delete_pipeline_by_id(pipeline_id)
-
-        assert db_session.query(PipelineDB).count() == 0
-
-    def test_delete_non_existent_pipeline(self, fxt_pipeline_service):
-        """Test deleting a non-existent pipeline raises error."""
-        pipeline_id = uuid4()
-        with pytest.raises(ResourceNotFoundError) as excinfo:
-            fxt_pipeline_service.delete_pipeline_by_id(pipeline_id)
-
-        assert excinfo.value.resource_type == ResourceType.PIPELINE
-        assert excinfo.value.resource_id == str(pipeline_id)
-
-    def test_delete_active_pipeline(
-        self, fxt_db_sinks, fxt_db_sources, fxt_db_models, fxt_pipeline_service, db_session
-    ):
-        """Test deleting an active pipeline raises error."""
-        pipeline_id = uuid4()
-        db_session.add(fxt_db_sinks[0])
-        db_session.add(fxt_db_sources[0])
-        db_session.add(fxt_db_models[0])
-        db_session.flush()
-        pipeline_db = PipelineDB(
-            id=str(pipeline_id),
-            name="Test Pipeline",
-            is_running=True,
-            source_id=fxt_db_sources[0].id,
-            sink_id=fxt_db_sinks[0].id,
-            model_id=fxt_db_models[0].id,
-        )
-        db_session.add(pipeline_db)
-        db_session.flush()
-        with pytest.raises(ResourceInUseError) as excinfo:
-            fxt_pipeline_service.delete_pipeline_by_id(pipeline_id)
-
-        assert excinfo.value.resource_type == ResourceType.PIPELINE
-        assert excinfo.value.resource_id == str(pipeline_id)

@@ -24,6 +24,7 @@ class ResourceType(StrEnum):
     SINK = "Sink"
     MODEL = "Model"
     PIPELINE = "Pipeline"
+    PROJECT = "Project"
     DATASET_ITEM = "DatasetItem"
 
 

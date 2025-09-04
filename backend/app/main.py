@@ -7,7 +7,9 @@
 # or use docker and access UI and backend at geti-tune.localhost
 #  - docker compose up
 
+import importlib
 import logging
+import pkgutil
 from pathlib import Path
 
 import uvicorn
@@ -15,7 +17,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
-from app.api.endpoints import datasets, models, pipelines, sinks, sources, system, webrtc
+from app.api import endpoints
 from app.core import lifespan
 from app.settings import get_settings
 
@@ -47,13 +49,12 @@ app.add_middleware(  # TODO restrict settings in production
     allow_headers=["*"],
 )
 
-app.include_router(sources.router)
-app.include_router(sinks.router)
-app.include_router(pipelines.router)
-app.include_router(datasets.router)
-app.include_router(models.router)
-app.include_router(system.router)
-app.include_router(webrtc.router)
+# Include all API routers from the endpoints package
+for module_info in pkgutil.iter_modules(endpoints.__path__):
+    module_name = module_info.name
+    module = importlib.import_module(f"app.api.endpoints.{module_name}")
+    if hasattr(module, "router"):
+        app.include_router(module.router)
 
 cur_dir = Path(__file__).parent
 

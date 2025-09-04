@@ -12,8 +12,6 @@ from sqlalchemy.pool import StaticPool
 
 from app.db.schema import Base, ModelDB, PipelineDB, SinkDB, SourceDB
 from app.schemas import ModelFormat, OutputFormat, SinkType, SourceType
-from app.schemas.sink import MqttSinkConfig
-from app.schemas.source import WebcamSourceConfig
 from app.services import ActivePipelineService, MetricsService
 
 
@@ -45,29 +43,9 @@ def db_session(db_engine):
 @pytest.fixture
 def fxt_default_pipeline(db_session) -> Generator[PipelineDB]:
     """Seed the database with default pipeline."""
-    pipeline = PipelineDB(name="Default Pipeline", is_running=True)
+    pipeline = PipelineDB(is_running=True)
     db_session.add(pipeline)
     yield pipeline
-
-
-@pytest.fixture
-def fxt_source_config() -> WebcamSourceConfig:
-    """Sample source configuration data."""
-    return WebcamSourceConfig(source_type=SourceType.WEBCAM, name="Test Source", device_id=1)
-
-
-@pytest.fixture
-def fxt_sink_config() -> MqttSinkConfig:
-    """Sample sink configuration data."""
-    return MqttSinkConfig(
-        sink_type=SinkType.MQTT,
-        name="Test Sink",
-        rate_limit=0.1,
-        output_formats=[OutputFormat.IMAGE_WITH_PREDICTIONS],
-        broker_host="localhost",
-        broker_port=1883,
-        topic="topic",
-    )
 
 
 @pytest.fixture

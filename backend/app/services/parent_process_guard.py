@@ -6,6 +6,8 @@ from collections.abc import Callable
 from functools import wraps
 from typing import Concatenate, ParamSpec, TypeVar
 
+from app.settings import get_settings
+
 
 class ResourceUpdateFromChildProcessError(Exception):
     """Exception raised when a child process tries to update the configuration of the parent process."""
@@ -26,7 +28,11 @@ def parent_process_only[T, **P, R](func: Callable[Concatenate[T, P], R]) -> Call
 
     @wraps(func)
     def wrapper(self: T, *args: P.args, **kwargs: P.kwargs) -> R:
-        if mp.parent_process() is not None:
+        settings = get_settings()
+        # Check conditions for the watcher process. In this case, the web server will be not in the main process.
+        # We can ignore the guard in this setup.
+        is_watcher_running = settings.debug and settings.environment == "dev"
+        if not is_watcher_running and mp.parent_process() is not None:
             raise ResourceUpdateFromChildProcessError
         return func(self, *args, **kwargs)
 
