@@ -25,6 +25,8 @@ class TestOTXMulticlassClsDataset:
         mock_schema = Mock()
         mock_attributes = {"label": Mock()}
         mock_attributes["label"].categories = Mock()
+        # Configure labels to be a list with proper length support
+        mock_attributes["label"].categories.labels = ["class_0", "class_1", "class_2"]
         mock_schema.attributes = mock_attributes
         self.mock_dm_subset.schema = mock_schema
 
