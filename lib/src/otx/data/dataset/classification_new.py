@@ -22,7 +22,12 @@ class OTXMulticlassClsDataset(OTXDataset):
         super().__init__(**kwargs)
 
     def get_idx_list_per_classes(self, use_string_label: bool = False) -> dict[int, list[int]]:
-        """Get index list per class."""
+        """Get a dictionary mapping class labels (string or int) to lists of samples.
+
+        Args:
+            use_string_label (bool): If True, use string class labels as keys.
+                If False, use integer indices as keys.
+        """
         idx_list_per_classes: dict[int, list[int]] = {}
         for idx in range(len(self)):
             item = self.dm_subset[idx]

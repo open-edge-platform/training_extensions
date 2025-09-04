@@ -199,7 +199,12 @@ class OTXDataset(Dataset):
         return OTXDataItem.collate_fn
 
     def get_idx_list_per_classes(self, use_string_label: bool = False) -> dict[int | str, list[int]]:
-        """Get a dictionary with class labels (string/int) as keys and lists of sample indices as values."""
+        """Get a dictionary mapping class labels (string or int) to lists of samples.
+
+        Args:
+            use_string_label (bool): If True, use string class labels as keys.
+                If False, use integer indices as keys.
+        """
         stats: dict[int | str, list[int]] = defaultdict(list)
         for item_idx, item in enumerate(self.dm_subset):
             for ann in item.annotations:
