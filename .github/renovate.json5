@@ -80,14 +80,6 @@
       matchUpdateTypes: ["major", "minor"],
     },
 
-    // Disable eclipse-mosquitto image upgrades, except patch and digital pinning
-    {
-      enabled: false,
-      matchDatasources: ["docker"],
-      matchPackageNames: ["eclipse-mosquitto"],
-      matchUpdateTypes: ["major", "minor"],
-    },
-
     // Disable emqx/mqttx-web image upgrades, except patch and digital pinning
     {
       enabled: false,
