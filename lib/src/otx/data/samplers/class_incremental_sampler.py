@@ -12,7 +12,6 @@ import torch
 from torch.utils.data import Sampler
 
 from otx.data.dataset.base import OTXDataset
-from otx.data.utils import get_idx_list_per_classes
 
 
 class ClassIncrementalSampler(Sampler):
@@ -65,7 +64,7 @@ class ClassIncrementalSampler(Sampler):
         super().__init__(dataset)
 
         # Need to split new classes dataset indices & old classses dataset indices
-        ann_stats = get_idx_list_per_classes(dataset.dm_subset, True)
+        ann_stats = dataset.get_idx_list_per_classes(use_string_label=True)
         new_indices, old_indices = [], []
         for cls in new_classes:
             new_indices.extend(ann_stats[cls])

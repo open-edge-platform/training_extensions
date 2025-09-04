@@ -129,6 +129,7 @@ def to_np_image(img: np.ndarray | Tensor | list) -> np.ndarray | list[np.ndarray
         return img
     if isinstance(img, list):
         return [to_np_image(im) for im in img]
+
     return np.ascontiguousarray(img.numpy().transpose(1, 2, 0))
 
 

@@ -10,9 +10,9 @@ from otx.data.dataset.anomaly import OTXAnomalyDataset
 from otx.data.dataset.classification import (
     HLabelInfo,
     OTXHlabelClsDataset,
-    OTXMulticlassClsDataset,
     OTXMultilabelClsDataset,
 )
+from otx.data.dataset.classification_new import OTXMulticlassClsDataset
 from otx.data.dataset.detection import OTXDetectionDataset
 from otx.data.dataset.instance_segmentation import OTXInstanceSegDataset
 from otx.data.dataset.segmentation import OTXSegmentationDataset

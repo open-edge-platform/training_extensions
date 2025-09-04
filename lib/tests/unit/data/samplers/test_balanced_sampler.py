@@ -12,7 +12,6 @@ from datumaro.components.dataset_base import DatasetItem
 
 from otx.data.dataset.base import OTXDataset
 from otx.data.samplers.balanced_sampler import BalancedSampler
-from otx.data.utils import get_idx_list_per_classes
 
 
 @pytest.fixture()
@@ -81,7 +80,7 @@ class TestBalancedSampler:
 
     def test_compute_class_statistics(self, fxt_imbalanced_dataset):
         # Compute class statistics
-        stats = get_idx_list_per_classes(fxt_imbalanced_dataset.dm_subset)
+        stats = fxt_imbalanced_dataset.get_idx_list_per_classes()
 
         # Check the expected results
         assert stats == {0: list(range(100)), 1: list(range(100, 108))}
@@ -90,7 +89,7 @@ class TestBalancedSampler:
         batch_size = 4
         sampler = BalancedSampler(fxt_imbalanced_dataset)
 
-        stats = get_idx_list_per_classes(fxt_imbalanced_dataset.dm_subset)
+        stats = fxt_imbalanced_dataset.get_idx_list_per_classes()
         class_0_idx = stats[0]
         class_1_idx = stats[1]
         list_iter = list(iter(sampler))

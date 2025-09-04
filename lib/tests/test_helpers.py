@@ -17,9 +17,6 @@ from datumaro.components.dataset import DatasetItem
 from datumaro.components.errors import MediaTypeError
 from datumaro.components.exporter import Exporter
 from datumaro.components.media import Image
-from datumaro.plugins.data_formats.common_semantic_segmentation import (
-    CommonSemanticSegmentationPath,
-)
 from datumaro.util.definitions import DEFAULT_SUBSET_NAME
 from datumaro.util.image import save_image
 from datumaro.util.meta_file_util import save_meta_file
@@ -122,8 +119,8 @@ class CommonSemanticSegmentationExporter(Exporter):
             subset_dir = Path(save_dir, _subset_name)
             subset_dir.mkdir(parents=True, exist_ok=True)
 
-            mask_dir = subset_dir / CommonSemanticSegmentationPath.MASKS_DIR
-            img_dir = subset_dir / CommonSemanticSegmentationPath.IMAGES_DIR
+            mask_dir = subset_dir / "masks"
+            img_dir = subset_dir / "images"
             for item in subset:
                 self._export_item_annotation(item, mask_dir)
                 if self._save_media:
