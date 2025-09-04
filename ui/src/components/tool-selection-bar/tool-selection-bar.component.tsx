@@ -18,6 +18,8 @@ import {
     Visible,
 } from '@geti/ui/icons';
 
+import classes from './tool-selection-bar.module.scss';
+
 const ICON_DIMENSIONS = {
     width: 16,
     height: 16,
@@ -26,19 +28,76 @@ const ICON_DIMENSIONS = {
 const IconWrapper = ({ children, isSelected }: { children: ReactNode; isSelected?: boolean }) => {
     return (
         <Flex
-            width={'size-400'}
-            height={'size-400'}
-            alignItems={'center'}
-            justifyContent={'center'}
+            UNSAFE_className={classes.iconWrapper}
             UNSAFE_style={{
                 backgroundColor: isSelected ? 'var(--energy-blue)' : 'transparent',
                 fill: isSelected ? 'var(--spectrum-global-color-gray-50)' : 'white',
-                borderRadius: 'var(--spectrum-global-dimension-size-50)',
-                cursor: 'pointer',
             }}
         >
             {children}
         </Flex>
+    );
+};
+
+const Tools = () => {
+    return (
+        <>
+            <IconWrapper>
+                <Selector {...ICON_DIMENSIONS} />
+            </IconWrapper>
+
+            <Divider size='S' />
+
+            <IconWrapper isSelected>
+                <Polygon {...ICON_DIMENSIONS} />
+            </IconWrapper>
+
+            <IconWrapper>
+                <SegmentAnythingIcon {...ICON_DIMENSIONS} />
+            </IconWrapper>
+
+            <Divider size='S' />
+
+            <IconWrapper>
+                <Undo {...ICON_DIMENSIONS} />
+            </IconWrapper>
+
+            <IconWrapper>
+                <Redo {...ICON_DIMENSIONS} />
+            </IconWrapper>
+        </>
+    );
+};
+
+const Settings = () => {
+    return (
+        <>
+            <IconWrapper>
+                <Visible {...ICON_DIMENSIONS} />
+            </IconWrapper>
+
+            <IconWrapper>
+                <Adjustments {...ICON_DIMENSIONS} />
+            </IconWrapper>
+
+            <Divider size='S' />
+
+            <IconWrapper>
+                <Add {...ICON_DIMENSIONS} />
+            </IconWrapper>
+
+            <Flex>110%</Flex>
+
+            <IconWrapper>
+                <Remove {...ICON_DIMENSIONS} />
+            </IconWrapper>
+
+            <Divider size='S' />
+
+            <IconWrapper>
+                <FitScreen {...ICON_DIMENSIONS} />
+            </IconWrapper>
+        </>
     );
 };
 
@@ -56,88 +115,15 @@ export const ToolSelectionBar = () => {
                     padding: 'var(--spectrum-global-dimension-size-50)',
                 }}
             >
-                <Flex
-                    gap={'size-50'}
-                    direction={'column'}
-                    alignItems={'center'}
-                    UNSAFE_style={{
-                        backgroundColor: 'var(--spectrum-global-color-gray-50)',
-                        padding: 'var(--spectrum-global-dimension-size-100)',
-                        borderRadius: 'var(--spectrum-global-dimension-size-50)',
-                    }}
-                >
-                    <IconWrapper>
-                        <Selector {...ICON_DIMENSIONS} />
-                    </IconWrapper>
-
-                    <Divider size='S' />
-
-                    <IconWrapper isSelected>
-                        <Polygon {...ICON_DIMENSIONS} />
-                    </IconWrapper>
-
-                    <IconWrapper>
-                        <SegmentAnythingIcon {...ICON_DIMENSIONS} />
-                    </IconWrapper>
-
-                    <Divider size='S' />
-
-                    <IconWrapper>
-                        <Undo {...ICON_DIMENSIONS} />
-                    </IconWrapper>
-
-                    <IconWrapper>
-                        <Redo {...ICON_DIMENSIONS} />
-                    </IconWrapper>
+                <Flex UNSAFE_className={classes.section}>
+                    <Tools />
                 </Flex>
 
-                <Flex
-                    gap={'size-50'}
-                    direction={'column'}
-                    alignItems={'center'}
-                    UNSAFE_style={{
-                        backgroundColor: 'var(--spectrum-global-color-gray-50)',
-                        padding: 'var(--spectrum-global-dimension-size-100)',
-                        borderRadius: 'var(--spectrum-global-dimension-size-50)',
-                    }}
-                >
-                    <IconWrapper>
-                        <Visible {...ICON_DIMENSIONS} />
-                    </IconWrapper>
-
-                    <IconWrapper>
-                        <Adjustments {...ICON_DIMENSIONS} />
-                    </IconWrapper>
-
-                    <Divider size='S' />
-
-                    <IconWrapper>
-                        <Add {...ICON_DIMENSIONS} />
-                    </IconWrapper>
-
-                    <Flex>110%</Flex>
-
-                    <IconWrapper>
-                        <Remove {...ICON_DIMENSIONS} />
-                    </IconWrapper>
-
-                    <Divider size='S' />
-
-                    <IconWrapper>
-                        <FitScreen {...ICON_DIMENSIONS} />
-                    </IconWrapper>
+                <Flex UNSAFE_className={classes.section}>
+                    <Settings />
                 </Flex>
 
-                <Flex
-                    gap={'size-50'}
-                    direction={'column'}
-                    alignItems={'center'}
-                    UNSAFE_style={{
-                        backgroundColor: 'var(--spectrum-global-color-gray-50)',
-                        padding: 'var(--spectrum-global-dimension-size-100)',
-                        borderRadius: 'var(--spectrum-global-dimension-size-50)',
-                    }}
-                >
+                <Flex UNSAFE_className={classes.section}>
                     <IconWrapper>
                         <Hotkeys {...ICON_DIMENSIONS} />
                     </IconWrapper>
