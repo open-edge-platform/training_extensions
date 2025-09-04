@@ -57,7 +57,6 @@ def _test_augmentation(
             cfg_subset=SubsetConfig(sampler=SamplerConfig(**train_config.pop("sampler", {})), **train_config),
             data_format=data_format,
         )
-
         # Check if all aug combinations are size-compatible
         data = dataset[0]
         if not img_shape:
@@ -69,6 +68,8 @@ def _test_augmentation(
 CLS_RECIPES = [recipe for recipe in pytest.RECIPE_LIST if "_cls" in recipe and "tv_" not in recipe]
 DET_RECIPES = [recipe for recipe in pytest.RECIPE_LIST if "/detection/" in recipe and "deim" not in recipe]
 INST_SEG_RECIPES = [recipe for recipe in pytest.RECIPE_LIST if "/instance_segmentation/" in recipe]
+SEM_SEG_RECIPES = [recipe for recipe in pytest.RECIPE_LIST if "/semantic_segmentation/" in recipe]
+KP_DET_RECIPES = [recipe for recipe in pytest.RECIPE_LIST if "/keypoint_detection/" in recipe]
 
 
 @pytest.mark.parametrize("recipe", CLS_RECIPES + DET_RECIPES + INST_SEG_RECIPES)
@@ -77,10 +78,42 @@ def test_augmentation(
     fxt_target_dataset_per_task: dict,
 ):
     configurable_augs = [
+        "RandomPhotometricDistort",
+        "RandomAffine",
+        "RandomVerticalFlip",
+        "RandomGaussianBlur",
+        "RandomFlip",
+        "RandomGaussianNoise",
+    ]
+    _test_augmentation(recipe, fxt_target_dataset_per_task, configurable_augs)
+
+
+@pytest.mark.parametrize("recipe", SEM_SEG_RECIPES)
+def test_augmentation_seg(
+    recipe: str,
+    fxt_target_dataset_per_task: dict,
+):
+    configurable_augs = [
         "PhotoMetricDistortion",
         "RandomAffine",
         "RandomVerticalFlip",
-        "GaussianBlur",
-        "GaussianNoise",
+        "RandomGaussianBlur",
+        "RandomFlip",
+        "RandomGaussianNoise",
     ]
+    _test_augmentation(recipe, fxt_target_dataset_per_task, configurable_augs)
+
+
+@pytest.mark.parametrize("recipe", KP_DET_RECIPES)
+def test_augmentation_kp_det(
+    recipe: str,
+    fxt_target_dataset_per_task: dict,
+):
+    configurable_augs = [
+        "TopdownAffine",
+        "RandomPhotometricDistort",
+        "RandomGaussianBlur",
+        "RandomGaussianNoise",
+    ]
+    _test_augmentation(recipe, fxt_target_dataset_per_task, configurable_augs)
     _test_augmentation(recipe, fxt_target_dataset_per_task, configurable_augs)

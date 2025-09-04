@@ -89,7 +89,9 @@ export const router = createBrowserRouter([
                 path: paths.inference.index.pattern,
                 element: (
                     <WebRTCConnectionProvider>
-                        <Inference />
+                        <ZoomProvider>
+                            <Inference />
+                        </ZoomProvider>
                     </WebRTCConnectionProvider>
                 ),
             },

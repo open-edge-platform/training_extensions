@@ -54,13 +54,11 @@ overrides:
         - class_path: otx.data.transform_libs.torchvision.Resize
           init_args:
             scale: $(input_size)
-
     val_subset:
       transforms:
         - class_path: otx.data.transform_libs.torchvision.Resize
           init_args:
             scale: $(input_size)
-
     test_subset:
       transforms:
         - class_path: otx.data.transform_libs.torchvision.Resize

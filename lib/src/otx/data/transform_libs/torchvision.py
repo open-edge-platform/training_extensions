@@ -130,7 +130,7 @@ class MinIoURandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
         min_crop_size (float): minimum crop's size (i.e. h,w := a*h, a*w, where a >= min_crop_size).
         bbox_clip_border (bool, optional): Whether clip the objects outside the border of the image. Defaults to True.
         is_numpy_to_tvtensor (bool): Whether convert outputs to tensor. Defaults to False.
-        prob (float): probability of applying this transformation. Defaults to 1.
+        probability (float): probability of applying this transformation. Defaults to 1.
     """
 
     def __init__(
@@ -138,8 +138,8 @@ class MinIoURandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
         min_ious: Sequence[float] = (0.1, 0.3, 0.5, 0.7, 0.9),
         min_crop_size: float = 0.3,
         bbox_clip_border: bool = True,
-        is_numpy_to_tvtensor: bool = False,
-        prob: float = 1.0,
+        is_numpy_to_tvtensor: bool = True,
+        probability: float = 1.0,
     ) -> None:
         super().__init__()
         self.min_ious = min_ious
@@ -147,7 +147,7 @@ class MinIoURandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
         self.min_crop_size = min_crop_size
         self.bbox_clip_border = bbox_clip_border
         self.is_numpy_to_tvtensor = is_numpy_to_tvtensor
-        self.prob = prob
+        self.prob = probability
 
     @cache_randomness
     def _random_mode(self) -> int | float:
@@ -274,7 +274,8 @@ class Resize(tvt_v2.Transform, NumpytoTVTensorMixin):
         transform_bbox: bool = False,
         transform_keypoints: bool = False,
         transform_mask: bool = False,
-        is_numpy_to_tvtensor: bool = False,
+        is_numpy_to_tvtensor: bool = True,
+        **kwargs,
     ) -> None:
         super().__init__()
 
@@ -433,7 +434,7 @@ class RandomResizedCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
         max_attempts: int = 10,
         interpolation: str = "bilinear",
         transform_mask: bool = False,
-        is_numpy_to_tvtensor: bool = False,
+        is_numpy_to_tvtensor: bool = True,
     ) -> None:
         super().__init__()
         if isinstance(scale, Sequence):
@@ -802,7 +803,7 @@ class RandomFlip(tvt_v2.Transform, NumpytoTVTensorMixin):
         probability of 0.3, vertically with probability of 0.5.
 
     Args:
-        prob (float | list[float], optional): The flipping probability.
+        probability (float | list[float], optional): The flipping probability.
             Defaults to None.
         direction(str | list[str]): The flipping direction. Options
             If input is a list, the length must equal ``prob``. Each
@@ -813,21 +814,21 @@ class RandomFlip(tvt_v2.Transform, NumpytoTVTensorMixin):
 
     def __init__(
         self,
-        prob: float | Iterable[float] | None = None,
+        probability: float | Iterable[float] | None = None,
         direction: str | Sequence[str | None] = "horizontal",
-        is_numpy_to_tvtensor: bool = False,
+        is_numpy_to_tvtensor: bool = True,
     ) -> None:
         super().__init__()
 
-        if isinstance(prob, list):
-            assert all(isinstance(p, float) for p in prob)  # noqa: S101
-            assert 0 <= sum(prob) <= 1  # noqa: S101
-        elif isinstance(prob, float):
-            assert 0 <= prob <= 1  # noqa: S101
+        if isinstance(probability, list):
+            assert all(isinstance(p, float) for p in probability)  # noqa: S101
+            assert 0 <= sum(probability) <= 1  # noqa: S101
+        elif isinstance(probability, float):
+            assert 0 <= probability <= 1  # noqa: S101
         else:
-            msg = f"probs must be float or list of float, but got `{type(prob)}`."
+            msg = f"probability must be float or list of float, but got `{type(probability)}`."
             raise TypeError(msg)
-        self.prob = prob
+        self.prob = probability
 
         valid_directions = ["horizontal", "vertical", "diagonal"]
         if isinstance(direction, str):
@@ -840,8 +841,8 @@ class RandomFlip(tvt_v2.Transform, NumpytoTVTensorMixin):
             raise TypeError(msg)
         self.direction = direction
 
-        if isinstance(prob, list):
-            assert len(prob) == len(self.direction)  # noqa: S101
+        if isinstance(probability, list):
+            assert len(probability) == len(self.direction)  # noqa: S101
 
         self.is_numpy_to_tvtensor = is_numpy_to_tvtensor
 
@@ -912,10 +913,10 @@ class RandomGaussianBlur(GaussianBlur):
         self,
         kernel_size: int | Sequence[int],
         sigma: int | tuple[float, float] = (0.1, 2.0),
-        prob: float = 0.5,
+        probability: float = 0.5,
     ) -> None:
         super().__init__(kernel_size=kernel_size, sigma=sigma)
-        self.prob = prob
+        self.prob = probability
 
     def transform(self, inpt: torch.Tensor, params: dict[str, Any]) -> torch.Tensor:
         """Main transform function."""
@@ -931,9 +932,9 @@ class RandomGaussianNoise(GaussianNoise):
     Only float32 images are supported for this augmentation.
     """
 
-    def __init__(self, mean: float = 0.0, sigma: float = 0.1, clip: bool = True, prob: float = 0.5) -> None:
+    def __init__(self, mean: float = 0.0, sigma: float = 0.1, clip: bool = True, probability: float = 0.5) -> None:
         super().__init__(mean=mean, sigma=sigma, clip=clip)
-        self.prob = prob
+        self.prob = probability
 
     def _is_scaled(self, tensor: torch.Tensor) -> bool:
         return torch.max(tensor) <= 1 + 1e-5
@@ -982,33 +983,36 @@ class PhotoMetricDistortion(tvt_v2.Transform, NumpytoTVTensorMixin):
         contrast_range (sequence): range of contrast.
         saturation_range (sequence): range of saturation.
         hue_delta (int): delta of hue.
+        probability (float): the probability of applying each transformation.
         is_numpy_to_tvtensor (bool): Whether convert outputs to tensor. Defaults to False.
     """
 
     def __init__(
         self,
         brightness_delta: int = 32,
-        contrast_range: Sequence[int | float] = (0.5, 1.5),
-        saturation_range: Sequence[int | float] = (0.5, 1.5),
+        contrast: Sequence[int | float] = (0.5, 1.5),
+        saturation: Sequence[int | float] = (0.5, 1.5),
         hue_delta: int = 18,
-        is_numpy_to_tvtensor: bool = False,
+        probability: float = 0.5,
+        is_numpy_to_tvtensor: bool = True,
     ) -> None:
         super().__init__()
 
         self.brightness_delta = brightness_delta
-        self.contrast_lower, self.contrast_upper = contrast_range
-        self.saturation_lower, self.saturation_upper = saturation_range
+        self.contrast_lower, self.contrast_upper = contrast
+        self.saturation_lower, self.saturation_upper = saturation
         self.hue_delta = hue_delta
+        self.prob = probability
         self.is_numpy_to_tvtensor = is_numpy_to_tvtensor
 
     @cache_randomness
     def _random_flags(self) -> Sequence[int | float]:
-        mode = random.randint(2)
-        brightness_flag = random.randint(2)
-        contrast_flag = random.randint(2)
-        saturation_flag = random.randint(2)
-        hue_flag = random.randint(2)
-        swap_flag = random.randint(2)
+        mode = random.rand() > self.prob
+        brightness_flag = random.rand() > self.prob
+        contrast_flag = random.rand() > self.prob
+        saturation_flag = random.rand() > self.prob
+        hue_flag = random.rand() > self.prob
+        swap_flag = random.rand() > self.prob
         delta_value = random.uniform(-self.brightness_delta, self.brightness_delta)
         alpha_value = random.uniform(self.contrast_lower, self.contrast_upper)
         saturation_value = random.uniform(self.saturation_lower, self.saturation_upper)
@@ -1151,7 +1155,7 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
         transform_polygon: bool = True,
         recompute_bbox: bool = True,
         mask_fill_value: int = 0,
-        is_numpy_to_tvtensor: bool = False,
+        is_numpy_to_tvtensor: bool = True,
     ) -> None:
         super().__init__()
         self._validate_parameters(max_translate_ratio, scaling_ratio_range)
@@ -1571,7 +1575,7 @@ class CachedMosaic(tvt_v2.Transform, NumpytoTVTensorMixin):
             are allowed to cross the border of images. Therefore, we don't
             need to clip the gt bboxes in these cases. Defaults to True.
         pad_val (float): Pad value. Defaults to 114.0.
-        prob (float): Probability of applying this transformation.
+        probability (float): Probability of applying this transformation.
             Defaults to 1.0.
         max_cached_images (int): The maximum length of the cache. The larger
             the cache, the stronger the randomness of this transform. As a
@@ -1589,21 +1593,21 @@ class CachedMosaic(tvt_v2.Transform, NumpytoTVTensorMixin):
         center_ratio_range: tuple[float, float] = (0.5, 1.5),
         bbox_clip_border: bool = True,
         pad_val: float = 114.0,
-        prob: float = 1.0,
+        probability: float = 1.0,
         max_cached_images: int = 40,
         random_pop: bool = True,
-        is_numpy_to_tvtensor: bool = False,
+        is_numpy_to_tvtensor: bool = True,
     ) -> None:
         super().__init__()
 
         assert isinstance(img_scale, (tuple, list))  # noqa: S101
-        assert 0 <= prob <= 1.0, f"The probability should be in range [0,1]. got {prob}."  # noqa: S101
+        assert 0 <= probability <= 1.0, f"The probability should be in range [0,1]. got {probability}."  # noqa: S101
 
         self.img_scale = img_scale  # (H, W)
         self.center_ratio_range = center_ratio_range
         self.bbox_clip_border = bbox_clip_border
         self.pad_val = pad_val
-        self.prob = prob
+        self.prob = probability
 
         self.results_cache: list[OTXDataItem] = []  # type: ignore[valid-type]
         self.random_pop = random_pop
@@ -1884,7 +1888,7 @@ class CachedMixUp(tvt_v2.Transform, NumpytoTVTensorMixin):
         random_pop (bool): Whether to randomly pop a result from the cache
             when the cache is full. If set to False, use FIFO popping method.
             Defaults to True.
-        prob (float): Probability of applying this transformation.
+        probability (float): Probability of applying this transformation.
             Defaults to 1.0.
         is_numpy_to_tvtensor (bool): Whether convert outputs to tensor. Defaults to False.
     """
@@ -1899,14 +1903,14 @@ class CachedMixUp(tvt_v2.Transform, NumpytoTVTensorMixin):
         bbox_clip_border: bool = True,
         max_cached_images: int = 20,
         random_pop: bool = True,
-        prob: float = 1.0,
-        is_numpy_to_tvtensor: bool = False,
+        probability: float = 1.0,
+        is_numpy_to_tvtensor: bool = True,
     ) -> None:
         super().__init__()
 
         assert isinstance(img_scale, (tuple, list))  # noqa: S101
         assert max_cached_images >= 2, f"The length of cache must >= 2, but got {max_cached_images}."  # noqa: S101
-        assert 0 <= prob <= 1.0, f"The probability should be in range [0,1]. got {prob}."  # noqa: S101
+        assert 0 <= probability <= 1.0, f"The probability should be in range [0,1]. got {probability}."  # noqa: S101
         self.dynamic_scale = img_scale  # (H, W)
         self.ratio_range = ratio_range
         self.flip_ratio = flip_ratio
@@ -1917,7 +1921,7 @@ class CachedMixUp(tvt_v2.Transform, NumpytoTVTensorMixin):
 
         self.max_cached_images = max_cached_images
         self.random_pop = random_pop
-        self.prob = prob
+        self.prob = probability
         self.is_numpy_to_tvtensor = is_numpy_to_tvtensor
 
     @cache_randomness
@@ -2149,7 +2153,7 @@ class YOLOXHSVRandomAug(tvt_v2.Transform, NumpytoTVTensorMixin):
         hue_delta: int = 5,
         saturation_delta: int = 30,
         value_delta: int = 30,
-        is_numpy_to_tvtensor: bool = False,
+        is_numpy_to_tvtensor: bool = True,
     ) -> None:
         super().__init__()
 
@@ -2253,7 +2257,7 @@ class Pad(tvt_v2.Transform, NumpytoTVTensorMixin):
         padding_mode: str = "constant",
         transform_point: bool = False,
         transform_mask: bool = False,
-        is_numpy_to_tvtensor: bool = False,
+        is_numpy_to_tvtensor: bool = True,
     ) -> None:
         super().__init__()
 
@@ -2383,7 +2387,7 @@ class RandomResize(tvt_v2.Transform, NumpytoTVTensorMixin):
         self,
         scale: Sequence[int | tuple[int, int]],  # (H, W)
         ratio_range: tuple[float, float] | None = None,
-        is_numpy_to_tvtensor: bool = False,
+        is_numpy_to_tvtensor: bool = True,
         **resize_kwargs,
     ) -> None:
         super().__init__()
@@ -2393,7 +2397,7 @@ class RandomResize(tvt_v2.Transform, NumpytoTVTensorMixin):
         self.ratio_range = ratio_range
         self.resize_kwargs = resize_kwargs
         self.is_numpy_to_tvtensor = is_numpy_to_tvtensor
-        self.resize = Resize(scale=0, **resize_kwargs)
+        self.resize = Resize(scale=0, **resize_kwargs, is_numpy_to_tvtensor=is_numpy_to_tvtensor)
 
     @staticmethod
     def _random_sample(scales: Sequence[tuple[int, int]]) -> tuple:
@@ -2514,7 +2518,7 @@ class RandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
         recompute_bbox: bool = False,
         bbox_clip_border: bool = True,
         ignore_index: int = 255,
-        is_numpy_to_tvtensor: bool = False,
+        is_numpy_to_tvtensor: bool = True,
     ) -> None:
         super().__init__()
         if crop_type not in ["relative_range", "relative", "absolute", "absolute_range"]:
@@ -2734,7 +2738,7 @@ class TopdownAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
 
     Args:
         input_size (tuple[int, int]): The size of the model input.
-        affine_transforms_prob (float): The probability of applying affine
+        probability (float): The probability of applying affine
             transforms. Defaults to 0.5.
         is_numpy_to_tvtensor (bool): Whether convert outputs to tensor. Defaults to False.
         shift_factor (float): The factor of shift. Defaults to 0.16.
@@ -2749,8 +2753,8 @@ class TopdownAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
     def __init__(
         self,
         input_size: tuple[int, int],
-        affine_transforms_prob: float = 1.0,
-        is_numpy_to_tvtensor: bool = False,
+        probability: float = 1.0,
+        is_numpy_to_tvtensor: bool = True,
         shift_factor: float = 0.16,
         shift_prob: float = 0.3,
         scale_factor: tuple[float, float] = (0.5, 1.5),
@@ -2763,7 +2767,7 @@ class TopdownAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
 
         self.input_size = input_size
         self.is_numpy_to_tvtensor = is_numpy_to_tvtensor
-        self.affine_transforms_prob = affine_transforms_prob
+        self.affine_transforms_prob = probability
         self.shift_factor = shift_factor
         self.shift_prob = shift_prob
         self.scale_factor = scale_factor
@@ -3129,7 +3133,7 @@ class RandomIoUCrop(tvt_v2.RandomIoUCrop):
         max_aspect_ratio (float, optional): the same as RandomIoUCrop. Defaults to 2.
         sampler_options (list[float] | None, optional): the same as RandomIoUCrop. Defaults to None.
         trials (int, optional): the same as RandomIoUCrop. Defaults to 40.
-        p (float, optional): probability. Defaults to 1.0.
+        probability (float, optional): probability. Defaults to 1.0.
     """
 
     def __init__(
@@ -3140,7 +3144,7 @@ class RandomIoUCrop(tvt_v2.RandomIoUCrop):
         max_aspect_ratio: float = 2,
         sampler_options: list[float] | None = None,
         trials: int = 40,
-        p: float = 1.0,
+        probability: float = 1.0,
     ):
         super().__init__(
             min_scale,
@@ -3150,7 +3154,7 @@ class RandomIoUCrop(tvt_v2.RandomIoUCrop):
             sampler_options,
             trials,
         )
-        self.p = p
+        self.p = probability
 
     def __call__(self, *inputs: Any) -> Any:  # noqa: ANN401
         """Apply the transform to the given inputs."""

@@ -76,7 +76,6 @@ overrides:
         - class_path: torchvision.transforms.v2.Normalize
           init_args:
             std: [1.0, 1.0, 1.0]
-
     test_subset:
       num_workers: 4
       transforms:

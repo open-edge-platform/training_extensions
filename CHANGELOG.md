@@ -2,12 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
-## \[2.5.0\]
+## \[Unreleased\]
 
 ### New features
 
 - Add DoRA support for ViT classification model (DINOv2 and DeIT)
-  (https://github.com/open-edge-platform/training_extensions/pull/4466)
+  (<https://github.com/open-edge-platform/training_extensions/pull/4466>)
+- Add configurable augmentations for Geti
+  (<https://github.com/open-edge-platform/training_extensions/pull/4577>)
+- Add DEIM-DFine model for Object Detection
+  (<https://github.com/open-edge-platform/training_extensions/pull/4446>)
+
+## \[2.5.0\]
 
 ### Enhancements
 

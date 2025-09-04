@@ -1,12 +1,12 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, ButtonGroup, Divider, Flex, Grid, Heading, Text } from '@geti/ui';
-import { Edit } from '@geti/ui/icons';
+import { Button, ButtonGroup, Divider, Flex, Grid, Text } from '@geti/ui';
 import { useNavigate } from 'react-router';
 
 import { LabelSelection } from '../../features/project/label-selection.component';
 import { ModelSelectionGroup } from '../../features/project/model-selection-group.component';
+import { ProjectName } from '../../features/project/project-name';
 import { paths } from '../../router';
 import Background from './../../assets/background.png';
 
@@ -16,8 +16,6 @@ export const CreateProject = () => {
     const navigate = useNavigate();
 
     const handleCreateProject = () => {
-        console.info('POST to /models and onSuccess -> Navigate');
-
         navigate(paths.inference.index({}));
     };
 
@@ -38,12 +36,7 @@ export const CreateProject = () => {
                 marginTop={'size-1000'}
                 marginBottom={'size-400'}
             >
-                <Heading level={4}>
-                    <Flex alignItems={'center'} gap='size-200'>
-                        <Text>Project #1</Text>
-                        <Edit fill={'white'} />{' '}
-                    </Flex>
-                </Heading>
+                <ProjectName />
 
                 <Text
                     UNSAFE_style={{

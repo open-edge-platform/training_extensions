@@ -12,7 +12,7 @@ from model_api.models import DetectionResult, Model
 
 from app.entities.stream_data import InferenceData, StreamData
 from app.services import ModelService
-from app.utils import Visualizer, flush_queue, log_threads
+from app.utils import Visualizer, flush_queue, log_threads, suppress_child_shutdown_signals
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +21,7 @@ def inference_routine(  # noqa: C901
     frame_queue: mp.Queue, pred_queue: mp.Queue, stop_event: EventClass, model_reload_event: EventClass
 ) -> None:
     """Load frames from the frame queue, run inference then inject the result into the predictions queue"""
+    suppress_child_shutdown_signals()
 
     def on_inference_completed(inf_result: DetectionResult, userdata: dict[str, Any]) -> None:
         stream_data: StreamData = userdata["stream_data"]

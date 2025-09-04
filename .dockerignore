@@ -5,4 +5,7 @@
 !LICENSE
 !MANIFEST.in
 !docker/download_pretrained_weights.py
+!docker/nginx.conf
 !.ci
+!backend
+!ui

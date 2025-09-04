@@ -51,7 +51,6 @@ class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):  # type: ignore[misc]
             ),
             label=torch.as_tensor([ann.label for ann in bbox_anns], dtype=torch.long),
         )
-
         # Apply augmentation switch if available
         if self.has_dynamic_augmentation:
             self._apply_augmentation_switch()
