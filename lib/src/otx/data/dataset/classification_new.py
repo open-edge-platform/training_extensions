@@ -28,7 +28,7 @@ class OTXMulticlassClsDataset(OTXDataset):
             item = self.dm_subset[idx]
             label_id = item.label.item()
             if use_string_label:
-                label_id = self.label_info.labels[label_id]
+                label_id = self.label_info.label_names[label_id]
             if label_id not in idx_list_per_classes:
                 idx_list_per_classes[label_id] = []
             idx_list_per_classes[label_id].append(idx)

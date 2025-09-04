@@ -12,6 +12,8 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset as TorchDataset
 
+from otx import LabelInfo, NullLabelInfo
+
 if TYPE_CHECKING:
     from datumaro.experimental import Dataset
 
@@ -99,9 +101,14 @@ class OTXDataset(TorchDataset):
             and hasattr(dm_subset.schema, "attributes")
             and "label" in dm_subset.schema.attributes
         ):
-            self.label_info = dm_subset.schema.attributes["label"].categories
+            labels = dm_subset.schema.attributes["label"].categories.labels
+            self.label_info = LabelInfo(
+                label_names=labels,
+                label_groups=[labels],
+                label_ids=[str(i) for i in range(len(labels))],
+            )
         else:
-            self.label_info = None
+            self.label_info = NullLabelInfo()
         self.dm_subset = dm_subset
 
     def __len__(self) -> int:
