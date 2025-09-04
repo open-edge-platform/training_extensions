@@ -20,11 +20,6 @@ import {
 
 import classes from './tool-selection-bar.module.scss';
 
-const ICON_DIMENSIONS = {
-    width: 16,
-    height: 16,
-};
-
 const IconWrapper = ({ children, isSelected }: { children: ReactNode; isSelected?: boolean }) => {
     return (
         <Flex
@@ -43,27 +38,27 @@ const Tools = () => {
     return (
         <>
             <IconWrapper>
-                <Selector {...ICON_DIMENSIONS} />
+                <Selector />
             </IconWrapper>
 
             <Divider size='S' />
 
             <IconWrapper isSelected>
-                <Polygon {...ICON_DIMENSIONS} />
+                <Polygon />
             </IconWrapper>
 
             <IconWrapper>
-                <SegmentAnythingIcon {...ICON_DIMENSIONS} />
+                <SegmentAnythingIcon />
             </IconWrapper>
 
             <Divider size='S' />
 
             <IconWrapper>
-                <Undo {...ICON_DIMENSIONS} />
+                <Undo />
             </IconWrapper>
 
             <IconWrapper>
-                <Redo {...ICON_DIMENSIONS} />
+                <Redo />
             </IconWrapper>
         </>
     );
@@ -73,29 +68,29 @@ const Settings = () => {
     return (
         <>
             <IconWrapper>
-                <Visible {...ICON_DIMENSIONS} />
+                <Visible />
             </IconWrapper>
 
             <IconWrapper>
-                <Adjustments {...ICON_DIMENSIONS} />
+                <Adjustments />
             </IconWrapper>
 
             <Divider size='S' />
 
             <IconWrapper>
-                <Add {...ICON_DIMENSIONS} />
+                <Add />
             </IconWrapper>
 
             <Flex>110%</Flex>
 
             <IconWrapper>
-                <Remove {...ICON_DIMENSIONS} />
+                <Remove />
             </IconWrapper>
 
             <Divider size='S' />
 
             <IconWrapper>
-                <FitScreen {...ICON_DIMENSIONS} />
+                <FitScreen />
             </IconWrapper>
         </>
     );
@@ -115,7 +110,7 @@ export const ToolSelectionBar = () => {
 
                 <Flex UNSAFE_className={classes.section}>
                     <IconWrapper>
-                        <Hotkeys {...ICON_DIMENSIONS} />
+                        <Hotkeys />
                     </IconWrapper>
                 </Flex>
             </Grid>
