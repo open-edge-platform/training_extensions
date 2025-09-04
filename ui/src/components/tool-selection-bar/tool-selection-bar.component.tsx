@@ -72,11 +72,11 @@ export const ToolSelectionBar = () => {
 
                     <Divider size='S' />
 
-                    <IconWrapper>
+                    <IconWrapper isSelected>
                         <Polygon {...ICON_DIMENSIONS} />
                     </IconWrapper>
 
-                    <IconWrapper isSelected>
+                    <IconWrapper>
                         <SegmentAnythingIcon {...ICON_DIMENSIONS} />
                     </IconWrapper>
 
