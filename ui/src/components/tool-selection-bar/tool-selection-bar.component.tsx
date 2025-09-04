@@ -104,17 +104,7 @@ const Settings = () => {
 export const ToolSelectionBar = () => {
     return (
         <Flex height={'100%'} alignItems={'center'} justifyContent={'center'}>
-            <Grid
-                rows={'auto auto auto'}
-                width={'size-600'}
-                gap={'size-50'}
-                alignItems={'center'}
-                UNSAFE_style={{
-                    backgroundColor: 'var(--spectrum-global-color-gray-200)',
-                    borderRadius: 'var(--spectrum-global-dimension-size-100)',
-                    padding: 'var(--spectrum-global-dimension-size-50)',
-                }}
-            >
+            <Grid UNSAFE_className={classes.grid}>
                 <Flex UNSAFE_className={classes.section}>
                     <Tools />
                 </Flex>

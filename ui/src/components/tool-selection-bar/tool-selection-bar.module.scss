@@ -15,3 +15,11 @@
     border-radius: var(--spectrum-global-dimension-size-50);
     cursor: pointer;
 }
+
+.grid {
+    grid-template-rows: 'auto auto auto';
+    gap: var(--spectrum-global-dimension-size-50);
+    background-color: var(--spectrum-global-color-gray-200);
+    border-radius: var(--spectrum-global-dimension-size-100);
+    padding: var(--spectrum-global-dimension-size-50);
+}
