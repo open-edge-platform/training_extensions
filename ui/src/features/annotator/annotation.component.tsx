@@ -1,8 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Annotation as AnnotationInterface } from '../shapes/interfaces';
-import { ShapeFactory } from './shape-factory.component';
+import { ShapeFactory } from '../../components/annotation/shape-factory.component';
+import { Annotation as AnnotationInterface } from './types';
 
 interface AnnotationProps {
     annotation: AnnotationInterface;
@@ -10,7 +10,7 @@ interface AnnotationProps {
 }
 
 export const Annotation = ({ maskId, annotation }: AnnotationProps) => {
-    const { id, color, shape } = annotation;
+    const { id, labels, shape } = annotation;
 
     return (
         <>
@@ -18,10 +18,10 @@ export const Annotation = ({ maskId, annotation }: AnnotationProps) => {
                 mask={maskId}
                 id={`canvas-annotation-${id}`}
                 strokeLinecap={'round'}
-                {...(color !== undefined
+                {...(labels.length > 0
                     ? {
-                          fill: color,
-                          stroke: color,
+                          fill: labels[0].color,
+                          stroke: labels[0].color,
                           strokeOpacity: 'var(--annotation-border-opacity)',
                       }
                     : {})}
