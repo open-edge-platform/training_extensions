@@ -12,7 +12,7 @@ from pydantic import ValidationError
 from app.api.dependencies import get_pipeline_service
 from app.main import app
 from app.schemas import Pipeline, PipelineStatus
-from app.schemas.metrics import InferenceMetrics, LatencyMetrics, PipelineMetrics, TimeWindow
+from app.schemas.metrics import InferenceMetrics, LatencyMetrics, PipelineMetrics, ThroughputMetrics, TimeWindow
 from app.services import (
     PipelineService,
     ResourceAlreadyExistsError,
@@ -207,7 +207,10 @@ class TestPipelineEndpoints:
         mock_metrics = PipelineMetrics(
             time_window=TimeWindow(start=datetime.now(UTC), end=datetime.now(UTC), time_window=60),
             inference=InferenceMetrics(
-                latency=LatencyMetrics(avg_ms=100.5, min_ms=50.0, max_ms=200.0, p95_ms=180.0, latest_ms=120.0)
+                latency=LatencyMetrics(avg_ms=100.5, min_ms=50.0, max_ms=200.0, p95_ms=180.0, latest_ms=120.0),
+                throughput=ThroughputMetrics(
+                    avg_inferences_per_second=5, total_inferences=100, peak_inferences_per_second=8
+                ),
             ),
         )
         fxt_pipeline_service.get_pipeline_metrics.return_value = mock_metrics
@@ -266,7 +269,10 @@ class TestPipelineEndpoints:
         mock_metrics = PipelineMetrics(
             time_window=TimeWindow(start=datetime.now(UTC), end=datetime.now(UTC), time_window=valid_time_window),
             inference=InferenceMetrics(
-                latency=LatencyMetrics(avg_ms=100.0, min_ms=50.0, max_ms=200.0, p95_ms=180.0, latest_ms=120.0)
+                latency=LatencyMetrics(avg_ms=100.0, min_ms=50.0, max_ms=200.0, p95_ms=180.0, latest_ms=120.0),
+                throughput=ThroughputMetrics(
+                    avg_inferences_per_second=5, total_inferences=100, peak_inferences_per_second=8
+                ),
             ),
         )
         fxt_pipeline_service.get_pipeline_metrics.return_value = mock_metrics
@@ -281,7 +287,10 @@ class TestPipelineEndpoints:
         mock_metrics = PipelineMetrics(
             time_window=TimeWindow(start=datetime.now(UTC), end=datetime.now(UTC), time_window=60),
             inference=InferenceMetrics(
-                latency=LatencyMetrics(avg_ms=None, min_ms=None, max_ms=None, p95_ms=None, latest_ms=None)
+                latency=LatencyMetrics(avg_ms=None, min_ms=None, max_ms=None, p95_ms=None, latest_ms=None),
+                throughput=ThroughputMetrics(
+                    avg_inferences_per_second=None, total_inferences=None, peak_inferences_per_second=None
+                ),
             ),
         )
         fxt_pipeline_service.get_pipeline_metrics.return_value = mock_metrics
@@ -290,9 +299,45 @@ class TestPipelineEndpoints:
 
         assert response.status_code == status.HTTP_200_OK
         response_data = response.json()
+
         assert response_data["inference"]["latency"]["avg_ms"] is None
         assert response_data["inference"]["latency"]["min_ms"] is None
         assert response_data["inference"]["latency"]["max_ms"] is None
         assert response_data["inference"]["latency"]["p95_ms"] is None
         assert response_data["inference"]["latency"]["latest_ms"] is None
+
+        assert response_data["inference"]["throughput"]["avg_inferences_per_second"] is None
+        assert response_data["inference"]["throughput"]["total_inferences"] is None
+        assert response_data["inference"]["throughput"]["peak_inferences_per_second"] is None
+
+        fxt_pipeline_service.get_pipeline_metrics.assert_called_once_with(fxt_pipeline.id, 60)
+
+    def test_get_pipeline_metrics_success_with_data(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
+        """Test successful retrieval of pipeline metrics including throughput data."""
+        mock_metrics = PipelineMetrics(
+            time_window=TimeWindow(start=datetime.now(UTC), end=datetime.now(UTC), time_window=60),
+            inference=InferenceMetrics(
+                latency=LatencyMetrics(avg_ms=100.5, min_ms=50.0, max_ms=200.0, p95_ms=180.0, latest_ms=120.0),
+                throughput=ThroughputMetrics(
+                    avg_inferences_per_second=66.7, total_inferences=4000, peak_inferences_per_second=85.2
+                ),
+            ),
+        )
+        fxt_pipeline_service.get_pipeline_metrics.return_value = mock_metrics
+
+        response = fxt_client.get(f"/api/pipelines/{str(fxt_pipeline.id)}/metrics")
+
+        assert response.status_code == status.HTTP_200_OK
+        response_data = response.json()
+
+        assert response_data["inference"]["latency"]["avg_ms"] == 100.5
+        assert response_data["inference"]["latency"]["min_ms"] == 50.0
+        assert response_data["inference"]["latency"]["max_ms"] == 200.0
+        assert response_data["inference"]["latency"]["p95_ms"] == 180.0
+        assert response_data["inference"]["latency"]["latest_ms"] == 120.0
+
+        assert response_data["inference"]["throughput"]["avg_inferences_per_second"] == 66.7
+        assert response_data["inference"]["throughput"]["total_inferences"] == 4000
+        assert response_data["inference"]["throughput"]["peak_inferences_per_second"] == 85.2
+
         fxt_pipeline_service.get_pipeline_metrics.assert_called_once_with(fxt_pipeline.id, 60)

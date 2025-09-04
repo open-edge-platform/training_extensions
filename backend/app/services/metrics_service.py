@@ -3,6 +3,7 @@
 
 import logging
 import time
+from collections import defaultdict
 from datetime import UTC, datetime
 from multiprocessing import Lock
 from multiprocessing.shared_memory import SharedMemory
@@ -90,6 +91,39 @@ class MetricsService:
                 if entry["model_id"] == str(model_id):
                     result.append(entry["latency_ms"])
             return result
+
+    def get_throughput_measurements(self, model_id: UUID, time_window: int = 60) -> tuple[int, list[tuple[float, int]]]:
+        """
+        Retrieve throughput measurements for a specific model within the given time window.
+
+        Args:
+            model_id: UUID of the model to filter measurements
+            time_window: Time window in seconds to look back for measurements (default 60s)
+
+        Returns: Tuple of (total_inferences, list of (timestamp, inference_count) per second)
+        """
+        cutoff_time = datetime.now(UTC).timestamp() - time_window
+        with self._lock:
+            arr = self._array.copy()
+
+            # Count inferences per second
+            inferences_per_second: dict[int, int] = defaultdict(int)
+            total_inferences = 0
+
+            for entry in arr:
+                if entry["timestamp"] < cutoff_time or entry["timestamp"] == 0.0:
+                    continue
+                if entry["model_id"] == str(model_id):
+                    # Round timestamp to the nearest second
+                    second_timestamp = int(entry["timestamp"])
+                    inferences_per_second[second_timestamp] += 1
+                    total_inferences += 1
+
+            # Convert to list of (timestamp, count) tuples
+            throughput_data = [(float(ts), count) for ts, count in inferences_per_second.items()]
+            throughput_data.sort()  # Sort by timestamp
+
+            return total_inferences, throughput_data
 
     def reset(self) -> None:
         with self._lock:
