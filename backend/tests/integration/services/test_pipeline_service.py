@@ -70,58 +70,37 @@ class TestPipelineServiceIntegration:
         assert excinfo.value.resource_type == ResourceType.PIPELINE
         assert excinfo.value.resource_id == str(pipeline_id)
 
-    def test_update_pipeline(self, fxt_pipeline_service, db_session):
-        """Test updating a pipeline by ID."""
-        pipeline_id = uuid4()
-        pipeline_db = PipelineDB(
-            project_id=str(pipeline_id),
-            is_running=False,
-        )
-        db_session.add(pipeline_db)
-        db_session.flush()
-
-        updated = fxt_pipeline_service.update_pipeline(pipeline_id, {"name": "New Name"})
-
-        db_updated = db_session.get(PipelineDB, pipeline_db.id)
-        assert str(updated.id) == db_updated.id
-        assert updated.name == "New Name"
-        assert updated.name == db_updated.name
-
     @pytest.mark.parametrize("pipeline_attr", [PipelineField.SINK_ID, PipelineField.SOURCE_ID])
-    def test_update_active_pipeline(
+    def test_reconfigure_running_pipeline(
         self,
         pipeline_attr,
         fxt_db_sinks,
         fxt_db_sources,
         fxt_db_models,
+        fxt_db_projects,
         fxt_pipeline_service,
         fxt_active_pipeline_service,
         fxt_condition,
         db_session,
     ):
         """Test updating a pipeline by ID."""
-        pipeline_id = uuid4()
-        db_session.add(fxt_db_sinks[0])
-        db_session.add(fxt_db_sinks[1])
-        db_session.add(fxt_db_sources[0])
+        db_project = fxt_db_projects[0]
+        db_pipeline = db_project.pipeline
+        db_pipeline.is_running = True
+        db_pipeline.source = fxt_db_sources[0]
+        db_pipeline.sink = fxt_db_sinks[0]
+        db_pipeline.model = fxt_db_models[0]
+        db_session.add(db_project)
         db_session.add(fxt_db_sources[1])
-        db_session.add(fxt_db_models[0])
+        db_session.add(fxt_db_sinks[1])
         db_session.flush()
+
         if pipeline_attr == PipelineField.SINK_ID:
             item_id = fxt_db_sinks[1].id
         else:
             item_id = fxt_db_sources[1].id
-        pipeline_db = PipelineDB(
-            project_id=str(pipeline_id),
-            is_running=True,
-            source_id=fxt_db_sources[0].id,
-            sink_id=fxt_db_sinks[0].id,
-            model_id=fxt_db_models[0].id,
-        )
-        db_session.add(pipeline_db)
-        db_session.flush()
 
-        updated = fxt_pipeline_service.update_pipeline(pipeline_id, {pipeline_attr: item_id})
+        updated = fxt_pipeline_service.update_pipeline(db_pipeline.project_id, {str(pipeline_attr): item_id})
 
         if pipeline_attr == PipelineField.SINK_ID:
             fxt_active_pipeline_service.reload.assert_called_once()
@@ -129,54 +108,48 @@ class TestPipelineServiceIntegration:
         else:
             fxt_active_pipeline_service.reload.assert_not_called()
             fxt_condition.notify_all.assert_called_once()
-        db_updated = db_session.get(PipelineDB, pipeline_db.id)
-        assert str(updated.id) == db_updated.id
+        db_updated = db_session.get(PipelineDB, db_pipeline.project_id)
         assert str(getattr(updated, pipeline_attr)) == item_id
         assert str(getattr(updated, pipeline_attr)) == getattr(db_updated, pipeline_attr)
 
     @pytest.mark.parametrize("pipeline_status", [PipelineStatus.IDLE, PipelineStatus.RUNNING])
-    def test_activate_pipeline(
+    def test_enable_disable_pipeline(
         self,
         pipeline_status,
         fxt_db_sinks,
         fxt_db_sources,
         fxt_db_models,
+        fxt_db_projects,
         fxt_pipeline_service,
         fxt_active_pipeline_service,
         fxt_condition,
         db_session,
     ):
         """Test activating and deactivating an existing pipeline by ID."""
-        pipeline_id = uuid4()
-        db_session.add(fxt_db_sinks[0])
-        db_session.add(fxt_db_sources[0])
-        db_session.add(fxt_db_models[0])
-        db_session.flush()
-        pipeline_db = PipelineDB(
-            project_id=str(pipeline_id),
-            is_running=pipeline_status != PipelineStatus.RUNNING,
-            source_id=fxt_db_sources[0].id,
-            sink_id=fxt_db_sinks[0].id,
-            model_id=fxt_db_models[0].id,
-        )
-        db_session.add(pipeline_db)
+        db_project = fxt_db_projects[0]
+        db_pipeline = db_project.pipeline
+        db_pipeline.is_running = not pipeline_status.as_bool
+        db_pipeline.source = fxt_db_sources[0]
+        db_pipeline.sink = fxt_db_sinks[0]
+        db_pipeline.model = fxt_db_models[0]
+        db_session.add(db_project)
         db_session.flush()
 
-        fxt_pipeline_service.update_pipeline(pipeline_id, {"status": pipeline_status})
+        fxt_pipeline_service.update_pipeline(db_pipeline.project_id, {"status": pipeline_status})
 
         fxt_active_pipeline_service.reload.assert_called_once()
         fxt_condition.notify_all.assert_called_once()
-        db_updated = db_session.get(PipelineDB, pipeline_db.id)
+        db_updated = db_session.get(PipelineDB, db_pipeline.project_id)
         if pipeline_status == PipelineStatus.RUNNING:
             assert db_updated.is_running
         else:
             assert not db_updated.is_running
 
-    def test_update_non_existent_pipeline(self, fxt_pipeline_service):
+    def test_reconfigure_non_existent_pipeline(self, fxt_pipeline_service):
         """Test updating a non-existent pipeline raises error."""
-        pipeline_id = uuid4()
+        project_id = uuid4()
         with pytest.raises(ResourceNotFoundError) as exc_info:
-            fxt_pipeline_service.update_pipeline(pipeline_id, {"name": "New Name"})
+            fxt_pipeline_service.update_pipeline(project_id, {"sink_id": uuid4()})
 
         assert exc_info.value.resource_type == ResourceType.PIPELINE
-        assert exc_info.value.resource_id == str(pipeline_id)
+        assert exc_info.value.resource_id == str(project_id)

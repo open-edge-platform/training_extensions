@@ -53,8 +53,8 @@ def fxt_running_pipeline(fxt_webcam_source, fxt_mqtt_sink, fxt_model) -> Pipelin
     """Sample default pipeline data."""
     return Pipeline(
         project_id=uuid4(),
-        source=fxt_webcam_source,
-        sink=fxt_mqtt_sink,
-        model=fxt_model,
+        source_id=fxt_webcam_source.id,
+        sink_id=fxt_mqtt_sink.id,
+        model_id=fxt_model.id,
         status=PipelineStatus.RUNNING,
     )

@@ -32,9 +32,10 @@ class BaseRepository[ModelType]:
 
     def update(self, item: ModelType) -> ModelType:
         item.updated_at = datetime.now()  # type: ignore[attr-defined]
-        self.db.merge(item)
+        updated = self.db.merge(item)
         self.db.flush()
-        return item
+        self.db.refresh(updated)
+        return updated
 
     def delete(self, obj_id: str) -> None:
         self.db.query(self.model).filter(self.model.id == obj_id).delete()  # type: ignore[attr-defined]

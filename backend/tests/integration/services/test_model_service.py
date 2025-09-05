@@ -41,14 +41,20 @@ def fxt_upload_file():
 
 
 @pytest.fixture
-def fxt_model_service(fxt_default_pipeline):
+def fxt_model_service(fxt_db_projects, db_session):
+    """Fixture to create a ModelService instance with a temporary models directory."""
+    db_project = fxt_db_projects[0]
+    db_pipeline = db_project.pipeline
+    db_pipeline.is_running = True
+    db_session.add(db_project)
+    db_session.flush()
     with TemporaryDirectory(suffix="models") as tmpdir:
         service = ModelService()
         service.models_dir = Path(tmpdir)
         service._model_activation_state = ModelActivationState(
             active_model=None, active_model_id=None, available_models=[]
         )
-        yield service
+        return service
 
 
 def create_model_db(db_session, models: list[ModelDB]) -> None:

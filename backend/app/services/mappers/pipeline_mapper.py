@@ -17,9 +17,12 @@ class PipelineMapper:
 
         return Pipeline(
             project_id=UUID(pipeline_db.project_id),
-            source=SourceMapper.to_schema(pipeline_db.source),
-            sink=SinkMapper.to_schema(pipeline_db.sink),
-            model=ModelMapper.to_schema(pipeline_db.model),
+            source=SourceMapper.to_schema(pipeline_db.source) if pipeline_db.source else None,
+            sink=SinkMapper.to_schema(pipeline_db.sink) if pipeline_db.sink else None,
+            model=ModelMapper.to_schema(pipeline_db.model) if pipeline_db.model else None,
+            sink_id=UUID(pipeline_db.sink_id) if pipeline_db.sink_id else None,
+            model_id=UUID(pipeline_db.model_id) if pipeline_db.model_id else None,
+            source_id=UUID(pipeline_db.source_id) if pipeline_db.source_id else None,
             status=PipelineStatus.from_bool(pipeline_db.is_running),
         )
 
@@ -29,8 +32,8 @@ class PipelineMapper:
 
         return PipelineDB(
             project_id=str(pipeline.project_id),
-            source_id=str(pipeline.source.id) if pipeline.source else None,
-            model_id=str(pipeline.model.id) if pipeline.model else None,
-            sink_id=str(pipeline.sink.id) if pipeline.sink else None,
+            source_id=str(pipeline.source_id) if pipeline.source_id else None,
+            model_id=str(pipeline.model_id) if pipeline.model_id else None,
+            sink_id=str(pipeline.sink_id) if pipeline.sink_id else None,
             is_running=pipeline.status.as_bool,
         )

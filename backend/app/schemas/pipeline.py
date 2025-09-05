@@ -5,7 +5,7 @@ from enum import StrEnum
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from app.schemas.model import Model
 from app.schemas.sink import Sink
@@ -30,6 +30,15 @@ class Pipeline(BaseModel):
     source: Source | None = None  # None if disconnected
     sink: Sink | None = None  # None if disconnected
     model: Model | None = None  # None if no model is selected
+    source_id: UUID | None = Field(
+        default=None, exclude=True
+    )  # ID of the source, used for DB mapping, not exposed in API
+    sink_id: UUID | None = Field(
+        default=None, exclude=True
+    )  # ID of the source, used for DB mapping, not exposed in API
+    model_id: UUID | None = Field(
+        default=None, exclude=True
+    )  # ID of the source, used for DB mapping, not exposed in API
     status: PipelineStatus = PipelineStatus.IDLE  # Current status of the pipeline
 
     model_config = {
@@ -71,6 +80,8 @@ class Pipeline(BaseModel):
 
     @model_validator(mode="after")
     def validate_running_status(self) -> "Pipeline":
-        if self.status == PipelineStatus.RUNNING and any(x is None for x in (self.source, self.sink, self.model)):
+        if self.status == PipelineStatus.RUNNING and any(
+            x is None for x in (self.source_id, self.sink_id, self.model_id)
+        ):
             raise ValueError("Pipeline cannot be in 'running' status when source, sink, or model is not configured.")
         return self

@@ -1,7 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from collections.abc import Generator
 from multiprocessing.synchronize import Condition
 from unittest.mock import MagicMock
 
@@ -10,7 +9,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.db.schema import Base, ModelDB, PipelineDB, SinkDB, SourceDB
+from app.db.schema import Base, ModelDB, PipelineDB, ProjectDB, SinkDB, SourceDB
 from app.schemas import ModelFormat, OutputFormat, SinkType, SourceType
 from app.services import ActivePipelineService, MetricsService
 
@@ -38,14 +37,6 @@ def db_session(db_engine):
     session.close()
     transaction.rollback()
     connection.close()
-
-
-@pytest.fixture
-def fxt_default_pipeline(db_session) -> Generator[PipelineDB]:
-    """Seed the database with default pipeline."""
-    pipeline = PipelineDB(is_running=True)
-    db_session.add(pipeline)
-    yield pipeline
 
 
 @pytest.fixture
@@ -117,6 +108,39 @@ def fxt_db_sinks() -> list[SinkDB]:
             config_data={"broker_host": "localhost", "broker_port": 1883, "topic": "topic"},
         ),
     ]
+
+
+@pytest.fixture
+def fxt_db_projects() -> list[ProjectDB]:
+    """Fixture to create multiple projects in the database."""
+    configs = [
+        {
+            "name": "Test Detection Project",
+            "task_type": "detection",
+            "exclusive_labels": False,
+            "labels": ["cat", "dog"],
+        },
+        {
+            "name": "Test Classification Project",
+            "task_type": "classification",
+            "exclusive_labels": True,
+            "labels": ["car", "truck", "bus"],
+        },
+        {
+            "name": "Test Segmentation Project",
+            "task_type": "segmentation",
+            "exclusive_labels": False,
+            "labels": ["person", "bicycle"],
+        },
+    ]
+    db_projects = []
+    for config in configs:
+        project = ProjectDB(**config)
+        project.pipeline = PipelineDB(
+            project_id=project.id,
+        )
+        db_projects.append(project)
+    return db_projects
 
 
 @pytest.fixture
