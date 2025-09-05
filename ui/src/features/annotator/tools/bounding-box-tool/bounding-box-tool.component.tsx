@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 
-import { Annotation, Point, RegionOfInterest } from '../shapes/interfaces';
+import { Annotation, Point, RegionOfInterest } from '../../types';
 import { ResizeAnchor } from './resize-anchor.component';
 import { TranslateShape } from './translate-shape.component';
 import { getBoundingBoxInRoi, getBoundingBoxResizePoints, getClampedBoundingBox } from './utils';

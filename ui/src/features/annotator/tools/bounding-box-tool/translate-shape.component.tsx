@@ -3,9 +3,9 @@
 
 import { PointerEvent, useState } from 'react';
 
-import { Annotation } from '../annotation/annotation.component';
-import { Annotation as AnnotationInterface, Point } from '../shapes/interfaces';
-import { allowPanning, isLeftButton } from './utils';
+import { Annotation } from '../../annotation.component';
+import { Annotation as AnnotationInterface, Point } from '../../types';
+import { allowPanning, isLeftButton } from '../../utils';
 
 const STROKE_WIDTH = 2;
 
