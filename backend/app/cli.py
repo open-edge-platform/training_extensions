@@ -119,7 +119,7 @@ def seed(with_model: bool, model_name: str) -> None:
 def clean_db() -> None:
     """Remove all data from the database (clean but don't drop tables)."""
     with get_db_session() as db:
-        db.query(PipelineDB).delete()
+        db.query(ProjectDB).delete()
         db.query(ModelDB).delete()
         db.query(SinkDB).delete()
         db.query(SourceDB).delete()
