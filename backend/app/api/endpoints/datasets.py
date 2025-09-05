@@ -46,8 +46,11 @@ def list_dataset_items(
     start_date: Annotated[datetime | None, Query()] = None,
     end_date: Annotated[datetime | None, Query()] = None,
 ) -> DatasetItemsWithPagination:
-    # TODO: validate dates & add test
     """List the available dataset items and their metadata. This endpoint supports pagination."""
+    if start_date is not None and end_date is not None and start_date > end_date:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Start date must be before end date."
+        )
     dataset_items = dataset_service.list_dataset_items(
         project_id=project_id, limit=limit, offset=offset, start_date=start_date, end_date=end_date
     )

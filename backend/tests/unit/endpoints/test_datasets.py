@@ -99,6 +99,15 @@ class TestDatasetItemEndpoints:
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
         fxt_dataset_service.list_dataset_items.assert_not_called()
 
+    @pytest.mark.parametrize("offset", [-20])
+    def test_list_dataset_items_wrong_dates(self, fxt_dataset_service, fxt_client, offset):
+        response = fxt_client.get(
+            f"/api/projects/{str(uuid4())}/dataset/items?start_date=2025-12-31T23:59:59Z&end_date=2025-01-09T00:00:00Z"
+        )
+
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        fxt_dataset_service.list_dataset_items.assert_not_called()
+
     @pytest.mark.parametrize(
         "http_method, http_path, service_method",
         [
