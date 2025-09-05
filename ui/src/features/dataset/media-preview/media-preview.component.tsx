@@ -3,8 +3,9 @@
 
 import { useState } from 'react';
 
-import { Button, ButtonGroup, Content, Dialog, Divider, Flex, Grid, Heading, ToggleButton, View } from '@geti/ui';
+import { Button, ButtonGroup, Content, Dialog, Divider, Grid, Heading, ToggleButton, View } from '@geti/ui';
 
+import { ToolSelectionBar } from '../../../components/tool-selection-bar/tool-selection-bar.component';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas';
 import { response } from '../mock-response';
 
@@ -17,40 +18,41 @@ export const MediaPreview = ({ mediaItem, close }: { mediaItem: Item; close: () 
         <Dialog UNSAFE_style={{ width: '95vw', height: '95vh' }}>
             <Heading>Preview</Heading>
             <Divider />
-            <Content>
+            <Content
+                UNSAFE_style={{
+                    backgroundColor: 'var(--spectrum-global-color-gray-50)',
+                }}
+            >
                 <View height='100%'>
                     <Grid
-                        areas={['toolbar aside', 'canvas aside', 'footer aside']}
+                        areas={['toolbar canvas aside', 'toolbar canvas aside', 'toolbar footer aside']}
                         width={'100%'}
                         height='100%'
-                        columns={'1fr auto'}
+                        columns={'auto 1fr auto'}
                         rows={'auto 1fr auto'}
-                        UNSAFE_style={{
-                            border: 'thin solid var(--spectrum-global-color-gray-50)',
-                            backgroundColor: 'var(--spectrum-global-color-gray-50)',
-                        }}
                     >
-                        <View gridArea={'toolbar'} backgroundColor={'gray-100'} padding={'size-100'}>
-                            <Flex justifyContent={'end'}>
-                                <ButtonGroup>
-                                    <ToggleButton isEmphasized isSelected={isFocussed} onChange={setIsFocussed}>
-                                        Focus
-                                    </ToggleButton>
-                                </ButtonGroup>
-                            </Flex>
+                        <View gridArea={'toolbar'} margin={'size-350'}>
+                            <ToolSelectionBar />
                         </View>
 
-                        <View gridArea={'canvas'} backgroundColor={'gray-50'}>
+                        <View gridArea={'canvas'}>
                             <AnnotatorCanvas mediaItem={mediaItem} isFocussed={isFocussed} />
                         </View>
 
-                        <View
-                            gridArea={'footer'}
-                            padding={'size-100'}
-                            backgroundColor={'gray-100'}
-                            UNSAFE_style={{ textAlign: 'right' }}
-                        >
+                        <View gridArea={'aside'}>
+                            <div>Aside</div>
+                        </View>
+
+                        <View gridArea={'footer'} padding={'size-100'} UNSAFE_style={{ textAlign: 'right' }}>
                             <ButtonGroup>
+                                <ToggleButton
+                                    marginEnd={'size-100'}
+                                    isEmphasized
+                                    isSelected={isFocussed}
+                                    onChange={setIsFocussed}
+                                >
+                                    Focus
+                                </ToggleButton>
                                 <Button variant='secondary' onPress={close}>
                                     Close
                                 </Button>
