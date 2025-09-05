@@ -29,7 +29,7 @@ class ProjectDB(Base):
 
     id: Mapped[str] = mapped_column(Text, primary_key=True, default=lambda: str(uuid4()))
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    task_type: Mapped[str] = mapped_column(String(20), nullable=False)
+    task_type: Mapped[str] = mapped_column(String(50), nullable=False)
     exclusive_labels: Mapped[bool] = mapped_column(Boolean, default=False)
     labels: Mapped[list[str]] = mapped_column(JSON, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())

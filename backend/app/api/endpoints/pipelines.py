@@ -49,7 +49,7 @@ UPDATE_PIPELINE_BODY_EXAMPLES = {
     response_model=Pipeline,
     responses={
         status.HTTP_200_OK: {"description": "Pipeline found"},
-        status.HTTP_400_BAD_REQUEST: {"description": "Invalid pipeline ID"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID"},
         status.HTTP_404_NOT_FOUND: {"description": "Pipeline not found"},
     },
 )
@@ -69,7 +69,7 @@ def get_pipeline(
     response_model=Pipeline,
     responses={
         status.HTTP_200_OK: {"description": "Pipeline successfully reconfigured"},
-        status.HTTP_400_BAD_REQUEST: {"description": "Invalid pipeline ID or request body"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID or request body"},
         status.HTTP_404_NOT_FOUND: {"description": "Pipeline not found"},
         status.HTTP_409_CONFLICT: {"description": "Pipeline cannot be reconfigured"},
     },
@@ -101,7 +101,7 @@ def update_pipeline(
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
         status.HTTP_204_NO_CONTENT: {"description": "Pipeline successfully enabled"},
-        status.HTTP_400_BAD_REQUEST: {"description": "Invalid pipeline ID"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID"},
         status.HTTP_404_NOT_FOUND: {"description": "Pipeline not found"},
         status.HTTP_409_CONFLICT: {"description": "Pipeline cannot be enabled"},
     },
@@ -127,7 +127,7 @@ def enable_pipeline(
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
         status.HTTP_204_NO_CONTENT: {"description": "Pipeline successfully disabled"},
-        status.HTTP_400_BAD_REQUEST: {"description": "Invalid pipeline ID"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID"},
         status.HTTP_404_NOT_FOUND: {"description": "Pipeline not found"},
     },
 )
@@ -147,7 +147,7 @@ def disable_pipeline(
     response_model=PipelineMetrics,
     responses={
         status.HTTP_200_OK: {"description": "Pipeline metrics successfully calculated"},
-        status.HTTP_400_BAD_REQUEST: {"description": "Invalid pipeline ID or duration parameter"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID or duration parameter"},
         status.HTTP_404_NOT_FOUND: {"description": "Pipeline not found"},
     },
 )
