@@ -33,12 +33,10 @@ class Pipeline(BaseModel):
     source_id: UUID | None = Field(
         default=None, exclude=True
     )  # ID of the source, used for DB mapping, not exposed in API
-    sink_id: UUID | None = Field(
-        default=None, exclude=True
-    )  # ID of the source, used for DB mapping, not exposed in API
+    sink_id: UUID | None = Field(default=None, exclude=True)  # ID of the sink, used for DB mapping, not exposed in API
     model_id: UUID | None = Field(
         default=None, exclude=True
-    )  # ID of the source, used for DB mapping, not exposed in API
+    )  # ID of the model, used for DB mapping, not exposed in API
     status: PipelineStatus = PipelineStatus.IDLE  # Current status of the pipeline
 
     model_config = {

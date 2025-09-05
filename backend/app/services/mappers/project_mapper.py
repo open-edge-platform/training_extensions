@@ -22,4 +22,10 @@ class ProjectMapper:
     def from_schema(project: Project) -> ProjectDB:
         """Convert Project schema to db model."""
 
-        return ProjectDB(**project.model_dump(mode="json", exclude={"task"}), **project.task.model_dump(mode="json"))
+        return ProjectDB(
+            id=str(project.id),
+            name=project.name,
+            task_type=project.task.task_type,
+            exclusive_labels=project.task.exclusive_labels,
+            labels=[label.name for label in project.task.labels],
+        )
