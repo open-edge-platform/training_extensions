@@ -10,7 +10,7 @@ The `LabelSchema` entity encapsulates the information about the task type, the l
 An example of a task is "object detection" with labels "car", "person" and "bicycle".
 
 Each project has an `InferencePipeline`, that is a sequence of processing steps that acquires a stream of
-data from a _source_ (`Source`), runs inference using a _model_ (`ModelRevision`) like YOLO, processes the results 
+data from a _source_ (`Source`), runs inference using a _model_ (`ModelRevision`) like YOLO, processes the results
 and eventually sends them to a _sink_ (`Sink`). Examples of sources are video files or IP cameras, while examples of
 sinks are folders on the local filesystem or messaging frameworks like MQTT or ROS2.
 After inference, the frames and their predictions are analyzed to identify potential anomalies or out-of-distribution

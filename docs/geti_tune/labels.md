@@ -52,7 +52,7 @@ In the database, the information about the task is stored in two tables: `projec
 
 - `projects` contains details about the project including the task type and whether the labels are mutually exclusive.
 - `labels` contains the individual labels, each associated with a task. Each label has its own id, name
-and other attributes for UX purposes (color, hotkey, etc.).
+  and other attributes for UX purposes (color, hotkey, etc.).
 
 #### Example
 
@@ -63,19 +63,19 @@ an item that is both a "Pawn" and a "Knight".
 _'projects' table_
 
 | id                                   | task_type      | exclusive_labels |
-|--------------------------------------|----------------|------------------|
+| ------------------------------------ | -------------- | ---------------- |
 | 550e8400-e29b-41d4-a716-446655440000 | classification | true             |
 
 _'labels' table_
 
-| id                                   | project_id                           | name    | color    | hotkey |
-|--------------------------------------|--------------------------------------|---------|----------|--------|
-| 550e8400-e29b-41d4-a716-446655440002 | 550e8400-e29b-41d4-a716-446655440000 | Pawn    | #A0A0A0  | p      |
-| 550e8400-e29b-41d4-a716-446655440003 | 550e8400-e29b-41d4-a716-446655440000 | Knight  | #8090C0  | n      |
-| 550e8400-e29b-41d4-a716-446655440004 | 550e8400-e29b-41d4-a716-446655440000 | Bishop  | #A070C0  | b      |
-| 550e8400-e29b-41d4-a716-446655440005 | 550e8400-e29b-41d4-a716-446655440000 | Rook    | #C07070  | r      |
-| 550e8400-e29b-41d4-a716-446655440006 | 550e8400-e29b-41d4-a716-446655440000 | Queen   | #D090D0  | q      |
-| 550e8400-e29b-41d4-a716-446655440007 | 550e8400-e29b-41d4-a716-446655440000 | King    | #E0C070  | k      |
+| id                                   | project_id                           | name   | color   | hotkey |
+| ------------------------------------ | ------------------------------------ | ------ | ------- | ------ |
+| 550e8400-e29b-41d4-a716-446655440002 | 550e8400-e29b-41d4-a716-446655440000 | Pawn   | #A0A0A0 | p      |
+| 550e8400-e29b-41d4-a716-446655440003 | 550e8400-e29b-41d4-a716-446655440000 | Knight | #8090C0 | n      |
+| 550e8400-e29b-41d4-a716-446655440004 | 550e8400-e29b-41d4-a716-446655440000 | Bishop | #A070C0 | b      |
+| 550e8400-e29b-41d4-a716-446655440005 | 550e8400-e29b-41d4-a716-446655440000 | Rook   | #C07070 | r      |
+| 550e8400-e29b-41d4-a716-446655440006 | 550e8400-e29b-41d4-a716-446655440000 | Queen  | #D090D0 | q      |
+| 550e8400-e29b-41d4-a716-446655440007 | 550e8400-e29b-41d4-a716-446655440000 | King   | #E0C070 | k      |
 
 _Note: the columns `created_at` and `updated_at` are omitted for simplicity._
 
@@ -105,7 +105,7 @@ annotations and model input/outputs.
 ### Task - labels association
 
 The task defines one or more labels - the minimum number actually depends on the task type.
-Labels strictly belong to the task (project): they can't be reparented to a different project, but they can be modified 
+Labels strictly belong to the task (project): they can't be reparented to a different project, but they can be modified
 or deleted. Labels can't exist independently of the project because the type of task affects certain semantic
 propositions about the labels themselves.
 For example, an empty label cannot exist in a multiclass classification task, while it can in detection or
