@@ -5,14 +5,14 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
-from starlette.responses import StreamingResponse
+from starlette.responses import FileResponse
 
-from app.api.dependencies import get_dataset_item_id, get_dataset_item_service
+from app.api.dependencies import get_dataset_item_id, get_dataset_service, get_project_id
 from app.schemas import DatasetItem, DatasetItemsWithPagination
 from app.schemas.base import Pagination
-from app.services import DatasetItemService, ResourceNotFoundError
+from app.services import DatasetService, ResourceNotFoundError
 
-router = APIRouter(prefix="/api/dataset/items", tags=["Dataset items"])
+router = APIRouter(prefix="/api/projects/{project_id}/dataset/items", tags=["Datasets"])
 
 DEFAULT_DATASET_ITEMS_NUMBER_RETURNED = 10
 MAX_DATASET_ITEMS_NUMBER_RETURNED = 100
@@ -23,12 +23,13 @@ MAX_DATASET_ITEMS_NUMBER_RETURNED = 100
     status_code=status.HTTP_201_CREATED,
     responses={status.HTTP_201_CREATED: {"description": "Dataset item created", "model": DatasetItem}},
 )
-async def create_dataset_item(
-    dataset_item_service: Annotated[DatasetItemService, Depends(get_dataset_item_service)],
+def add_dataset_item(
+    project_id: Annotated[UUID, Depends(get_project_id)],
+    dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
     file: Annotated[UploadFile, File()],
 ) -> DatasetItem:
-    """Create a new dataset item"""
-    return dataset_item_service.create_dataset_item(file.file)
+    """Add a new item to the dataset by uploading an image"""
+    return dataset_service.create_dataset_item(project_id=project_id, file=file.file)
 
 
 @router.get(
@@ -37,16 +38,18 @@ async def create_dataset_item(
         status.HTTP_200_OK: {"description": "List of available dataset items", "model": DatasetItemsWithPagination},
     },
 )
-async def list_dataset_items(
-    dataset_item_service: Annotated[DatasetItemService, Depends(get_dataset_item_service)],
+def list_dataset_items(
+    project_id: Annotated[UUID, Depends(get_project_id)],
+    dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
     limit: Annotated[int, Query(ge=1, le=MAX_DATASET_ITEMS_NUMBER_RETURNED)] = DEFAULT_DATASET_ITEMS_NUMBER_RETURNED,
     offset: Annotated[int, Query(ge=0)] = 0,
     start_date: Annotated[datetime | None, Query()] = None,
     end_date: Annotated[datetime | None, Query()] = None,
 ) -> DatasetItemsWithPagination:
-    """Get information about available dataset items"""
-    dataset_items = dataset_item_service.list_dataset_items(
-        limit=limit, offset=offset, start_date=start_date, end_date=end_date
+    # TODO: validate dates & add test
+    """List the available dataset items and their metadata. This endpoint supports pagination."""
+    dataset_items = dataset_service.list_dataset_items(
+        project_id=project_id, limit=limit, offset=offset, start_date=start_date, end_date=end_date
     )
     return DatasetItemsWithPagination(  # TODO: implement
         items=dataset_items,
@@ -67,13 +70,14 @@ async def list_dataset_items(
         status.HTTP_404_NOT_FOUND: {"description": "Dataset item not found"},
     },
 )
-async def get_dataset_item(
+def get_dataset_item(
+    project_id: Annotated[UUID, Depends(get_project_id)],
     dataset_item_id: Annotated[UUID, Depends(get_dataset_item_id)],
-    dataset_item_service: Annotated[DatasetItemService, Depends(get_dataset_item_service)],
+    dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
 ) -> DatasetItem:
     """Get information about a specific dataset item"""
     try:
-        return dataset_item_service.get_dataset_item_by_id(dataset_item_id)
+        return dataset_service.get_dataset_item_by_id(project_id=project_id, dataset_item_id=dataset_item_id)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -86,14 +90,17 @@ async def get_dataset_item(
         status.HTTP_404_NOT_FOUND: {"description": "Dataset item binary not found"},
     },
 )
-async def get_dataset_item_binary(
+def get_dataset_item_binary(
+    project_id: Annotated[UUID, Depends(get_project_id)],
     dataset_item_id: Annotated[UUID, Depends(get_dataset_item_id)],
-    dataset_item_service: Annotated[DatasetItemService, Depends(get_dataset_item_service)],
-) -> StreamingResponse:
+    dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
+) -> FileResponse:
     """Get dataset item binary content"""
     try:
-        dataset_item_binary = dataset_item_service.get_dataset_item_binary_by_id(dataset_item_id)
-        return StreamingResponse(content=dataset_item_binary)
+        binary_path = dataset_service.get_dataset_item_binary_path_by_id(
+            project_id=project_id, dataset_item_id=dataset_item_id
+        )
+        return FileResponse(path=binary_path)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -106,32 +113,37 @@ async def get_dataset_item_binary(
         status.HTTP_404_NOT_FOUND: {"description": "Dataset item thumbnail not found"},
     },
 )
-async def get_dataset_item_thumbnail(
+def get_dataset_item_thumbnail(
+    project_id: Annotated[UUID, Depends(get_project_id)],
     dataset_item_id: Annotated[UUID, Depends(get_dataset_item_id)],
-    dataset_item_service: Annotated[DatasetItemService, Depends(get_dataset_item_service)],
-) -> StreamingResponse:
+    dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
+) -> FileResponse:
     """Get dataset item thumbnail binary content"""
     try:
-        dataset_item_thumbnail = dataset_item_service.get_dataset_item_thumbnail_by_id(dataset_item_id)
-        return StreamingResponse(content=dataset_item_thumbnail)
+        thumbnail_path = dataset_service.get_dataset_item_thumbnail_path_by_id(
+            project_id=project_id, dataset_item_id=dataset_item_id
+        )
+        return FileResponse(path=thumbnail_path)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.delete(
     "/{dataset_item_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
     responses={
-        status.HTTP_200_OK: {"description": "Dataset item deleted"},
+        status.HTTP_204_NO_CONTENT: {"description": "Dataset item deleted"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid dataset item ID"},
         status.HTTP_404_NOT_FOUND: {"description": "Dataset item not found"},
     },
 )
-async def delete_dataset_item(
+def delete_dataset_item(
+    project_id: Annotated[UUID, Depends(get_project_id)],
     dataset_item_id: Annotated[UUID, Depends(get_dataset_item_id)],
-    dataset_item_service: Annotated[DatasetItemService, Depends(get_dataset_item_service)],
+    dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
 ) -> None:
-    """Delete dataset item content"""
+    """Delete an item from the dataset"""
     try:
-        dataset_item_service.delete_dataset_item(dataset_item_id)
+        dataset_service.delete_dataset_item(project_id=project_id, dataset_item_id=dataset_item_id)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

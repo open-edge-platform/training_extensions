@@ -11,7 +11,7 @@ from app.core import Scheduler
 from app.services import (
     ActivePipelineService,
     ConfigurationService,
-    DatasetItemService,
+    DatasetService,
     ModelService,
     PipelineService,
     SystemService,
@@ -39,6 +39,13 @@ def get_source_id(source_id: str) -> UUID:
     if not is_valid_uuid(source_id):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid source ID")
     return UUID(source_id)
+
+
+def get_project_id(project_id: str) -> UUID:
+    """Initializes and validates a project ID"""
+    if not is_valid_uuid(project_id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid project ID")
+    return UUID(project_id)
 
 
 def get_sink_id(sink_id: str) -> UUID:
@@ -129,9 +136,9 @@ def get_model_service(
 
 
 @lru_cache
-def get_dataset_item_service() -> DatasetItemService:
-    """Provides a DatasetItemService instance."""
-    return DatasetItemService()
+def get_dataset_service() -> DatasetService:
+    """Provides a DatasetService instance."""
+    return DatasetService()
 
 
 def get_webrtc_manager(request: Request) -> WebRTCManager:

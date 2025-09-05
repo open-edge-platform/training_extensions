@@ -16,6 +16,9 @@ class DatasetItemFormat(StrEnum):
 
 class DatasetItemSubset(StrEnum):
     UNASSIGNED = "unassigned"
+    TRAINING = "training"
+    VALIDATION = "validation"
+    TESTING = "testing"
 
 
 class DatasetItem(BaseIDNameModel):
@@ -27,7 +30,7 @@ class DatasetItem(BaseIDNameModel):
     width: int
     height: int
     size: int
-    source_id: UUID
+    source_id: UUID | None
     subset: DatasetItemSubset
 
     model_config = {
