@@ -1,11 +1,8 @@
-# Copyright (C) 2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
-
 """schema
 
-Revision ID: cb68fa7db781
+Revision ID: 46255844c3dc
 Revises:
-Create Date: 2025-08-05 17:27:20.819901
+Create Date: 2025-09-05 13:57:29.035453
 
 """
 
@@ -15,7 +12,7 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "cb68fa7db781"
+revision: str = "46255844c3dc"
 down_revision: str | Sequence[str] | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -29,6 +26,17 @@ def upgrade() -> None:
         sa.Column("id", sa.Text(), nullable=False),
         sa.Column("name", sa.String(length=255), nullable=False),
         sa.Column("format", sa.String(length=50), nullable=False),
+        sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
+        sa.Column("updated_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_table(
+        "projects",
+        sa.Column("id", sa.Text(), nullable=False),
+        sa.Column("name", sa.String(length=255), nullable=False),
+        sa.Column("task_type", sa.String(length=20), nullable=False),
+        sa.Column("exclusive_labels", sa.Boolean(), nullable=False),
+        sa.Column("labels", sa.JSON(), nullable=False),
         sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.Column("updated_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.PrimaryKeyConstraint("id"),
@@ -59,20 +67,19 @@ def upgrade() -> None:
     )
     op.create_table(
         "pipelines",
-        sa.Column("id", sa.Text(), nullable=False),
+        sa.Column("project_id", sa.Text(), nullable=False),
         sa.Column("source_id", sa.Text(), nullable=True),
         sa.Column("sink_id", sa.Text(), nullable=True),
         sa.Column("model_id", sa.Text(), nullable=True),
-        sa.Column("name", sa.String(length=255), nullable=False),
-        sa.Column("description", sa.Text(), nullable=True),
         sa.Column("is_running", sa.Boolean(), nullable=False),
+        sa.Column("data_collection_policies", sa.JSON(), nullable=False),
         sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.Column("updated_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.ForeignKeyConstraint(["model_id"], ["models.id"], ondelete="RESTRICT"),
+        sa.ForeignKeyConstraint(["project_id"], ["projects.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["sink_id"], ["sinks.id"], ondelete="RESTRICT"),
         sa.ForeignKeyConstraint(["source_id"], ["sources.id"], ondelete="RESTRICT"),
-        sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("name"),
+        sa.PrimaryKeyConstraint("project_id"),
     )
     # ### end Alembic commands ###
 
@@ -83,5 +90,6 @@ def downgrade() -> None:
     op.drop_table("pipelines")
     op.drop_table("sources")
     op.drop_table("sinks")
+    op.drop_table("projects")
     op.drop_table("models")
     # ### end Alembic commands ###

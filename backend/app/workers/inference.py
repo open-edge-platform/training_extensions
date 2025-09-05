@@ -6,6 +6,7 @@ import multiprocessing as mp
 import queue
 import time
 from multiprocessing.synchronize import Event as EventClass
+from multiprocessing.synchronize import Lock
 from typing import Any
 from uuid import UUID
 
@@ -21,12 +22,17 @@ logger = logging.getLogger(__name__)
 
 
 def inference_routine(  # noqa: C901, PLR0915
-    frame_queue: mp.Queue, pred_queue: mp.Queue, stop_event: EventClass, model_reload_event: EventClass
+    frame_queue: mp.Queue,
+    pred_queue: mp.Queue,
+    stop_event: EventClass,
+    model_reload_event: EventClass,
+    shm_name: str,
+    shm_lock: Lock,
 ) -> None:
     """Load frames from the frame queue, run inference then inject the result into the predictions queue"""
     suppress_child_shutdown_signals()
 
-    metrics_collector = MetricsService()
+    metrics_collector = MetricsService(shm_name, shm_lock)
 
     def on_inference_completed(inf_result: DetectionResult, userdata: dict[str, Any]) -> None:
         start_time = float(userdata["inference_start_time"])

@@ -76,15 +76,15 @@ def get_active_pipeline_service() -> ActivePipelineService:
     return ActivePipelineService()
 
 
-@lru_cache
-def get_metrics_service() -> MetricsService:
-    """Provides a MetricsService instance for collecting and retrieving metrics."""
-    return MetricsService()
-
-
 def get_scheduler(request: Request) -> Scheduler:
     """Provides the global Scheduler instance."""
     return request.app.state.scheduler
+
+
+@lru_cache
+def get_metrics_service(scheduler: Annotated[Scheduler, Depends(get_scheduler)]) -> MetricsService:
+    """Provides a MetricsService instance for collecting and retrieving metrics."""
+    return MetricsService(scheduler.shm_metrics.name, scheduler.shm_metrics_lock)
 
 
 @lru_cache
