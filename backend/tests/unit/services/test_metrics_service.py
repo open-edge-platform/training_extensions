@@ -187,9 +187,9 @@ class TestMetricsCollector:
         collector = MetricsService()
         model_id = uuid4()
 
-        total_inferences, throughput_data = collector.get_throughput_measurements(model_id=model_id, time_window=60)
+        total_requests, throughput_data = collector.get_throughput_measurements(model_id=model_id, time_window=60)
 
-        assert total_inferences == 0
+        assert total_requests == 0
         assert throughput_data == []
 
     def test_get_throughput_measurements_single_inference(self):
@@ -201,9 +201,9 @@ class TestMetricsCollector:
         start_time = time.perf_counter()
         collector.record_inference_end(model_id=model_id, start_time=start_time)
 
-        total_inferences, throughput_data = collector.get_throughput_measurements(model_id=model_id, time_window=60)
+        total_requests, throughput_data = collector.get_throughput_measurements(model_id=model_id, time_window=60)
 
-        assert total_inferences == 1
+        assert total_requests == 1
         assert len(throughput_data) == 1
         assert throughput_data[0][1] == 1  # One inference in that second
 
@@ -217,9 +217,9 @@ class TestMetricsCollector:
         for _ in range(5):
             collector.record_inference_end(model_id=model_id, start_time=start_time)
 
-        total_inferences, throughput_data = collector.get_throughput_measurements(model_id=model_id, time_window=60)
+        total_requests, throughput_data = collector.get_throughput_measurements(model_id=model_id, time_window=60)
 
-        assert total_inferences == 5
+        assert total_requests == 5
         assert len(throughput_data) == 1  # All in same second
         assert throughput_data[0][1] == 5  # Five inferences in that second
 
@@ -250,9 +250,9 @@ class TestMetricsCollector:
             # Reset mock to current time for the measurement call
             mock_datetime.now.return_value = current_time
 
-        total_inferences, throughput_data = collector.get_throughput_measurements(model_id=model_id, time_window=60)
+        total_requests, throughput_data = collector.get_throughput_measurements(model_id=model_id, time_window=60)
 
-        assert total_inferences == 6
+        assert total_requests == 6
         assert len(throughput_data) == 3  # Three different seconds
 
         # Sort to ensure consistent ordering
@@ -283,15 +283,15 @@ class TestMetricsCollector:
             mock_datetime.now.return_value = current_time
 
         # Get measurements for last 60 seconds
-        total_inferences, throughput_data = collector.get_throughput_measurements(model_id=model_id, time_window=60)
+        total_requests, throughput_data = collector.get_throughput_measurements(model_id=model_id, time_window=60)
 
-        assert total_inferences == 1  # Only the recent inference
+        assert total_requests == 1  # Only the recent inference
         assert len(throughput_data) == 1
 
         # Get measurements for last 120 seconds (should include both)
-        total_inferences, throughput_data = collector.get_throughput_measurements(model_id=model_id, time_window=120)
+        total_requests, throughput_data = collector.get_throughput_measurements(model_id=model_id, time_window=120)
 
-        assert total_inferences == 2  # Both inferences
+        assert total_requests == 2  # Both inferences
         assert len(throughput_data) == 2
 
     def test_get_throughput_measurements_different_models(self):
@@ -307,18 +307,14 @@ class TestMetricsCollector:
         collector.record_inference_end(model_id_2, start_time)
 
         # Check model 1 throughput
-        total_inferences_1, throughput_data_1 = collector.get_throughput_measurements(
-            model_id=model_id_1, time_window=60
-        )
-        assert total_inferences_1 == 2
+        total_requests_1, throughput_data_1 = collector.get_throughput_measurements(model_id=model_id_1, time_window=60)
+        assert total_requests_1 == 2
         assert len(throughput_data_1) == 1
         assert throughput_data_1[0][1] == 2
 
         # Check model 2 throughput
-        total_inferences_2, throughput_data_2 = collector.get_throughput_measurements(
-            model_id=model_id_2, time_window=60
-        )
-        assert total_inferences_2 == 1
+        total_requests_2, throughput_data_2 = collector.get_throughput_measurements(model_id=model_id_2, time_window=60)
+        assert total_requests_2 == 1
         assert len(throughput_data_2) == 1
         assert throughput_data_2[0][1] == 1
 
@@ -343,9 +339,9 @@ class TestMetricsCollector:
             # Reset to current time for measurement call
             mock_datetime.now.return_value = current_time
 
-        total_inferences, throughput_data = collector.get_throughput_measurements(model_id=model_id, time_window=60)
+        total_requests, throughput_data = collector.get_throughput_measurements(model_id=model_id, time_window=60)
 
-        assert total_inferences == 3
+        assert total_requests == 3
         assert len(throughput_data) == 3
 
         # Verify timestamps are sorted in ascending order
@@ -365,14 +361,14 @@ class TestMetricsCollector:
         # Verify data exists
         latency_measurements = collector.get_latency_measurements(model_id=model_id, time_window=60)
         assert len(latency_measurements) == 2
-        total_inferences, throughput_data = collector.get_throughput_measurements(model_id=model_id, time_window=60)
-        assert total_inferences == 2
+        total_requests, throughput_data = collector.get_throughput_measurements(model_id=model_id, time_window=60)
+        assert total_requests == 2
         assert len(throughput_data) == 1
 
         # Reset and verify data is cleared
         collector.reset()
         latency_measurements = collector.get_latency_measurements(model_id=model_id, time_window=60)
         assert len(latency_measurements) == 0
-        total_inferences, throughput_data = collector.get_throughput_measurements(model_id=model_id, time_window=60)
-        assert total_inferences == 0
+        total_requests, throughput_data = collector.get_throughput_measurements(model_id=model_id, time_window=60)
+        assert total_requests == 0
         assert len(throughput_data) == 0

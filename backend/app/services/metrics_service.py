@@ -127,7 +127,7 @@ class MetricsService:
             model_id: UUID of the model to filter measurements
             time_window: Time window in seconds to look back for measurements (default 60s)
 
-        Returns: Tuple of (total_inferences, list of (timestamp, inference_count) per second)
+        Returns: Tuple of (total_requests, list of (timestamp, inference_count) per second)
         """
         cutoff_time = datetime.now(UTC).timestamp() - time_window
         with self._lock:
@@ -135,7 +135,7 @@ class MetricsService:
 
             # Count inferences per second
             inferences_per_second: dict[int, int] = defaultdict(int)
-            total_inferences = 0
+            total_requests = 0
 
             for entry in arr:
                 if entry["timestamp"] < cutoff_time or entry["timestamp"] == 0.0:
@@ -144,13 +144,13 @@ class MetricsService:
                     # Round timestamp to the nearest second
                     second_timestamp = int(entry["timestamp"])
                     inferences_per_second[second_timestamp] += 1
-                    total_inferences += 1
+                    total_requests += 1
 
             # Convert to list of (timestamp, count) tuples
             throughput_data = [(float(ts), count) for ts, count in inferences_per_second.items()]
             throughput_data.sort()  # Sort by timestamp
 
-            return total_inferences, throughput_data
+            return total_requests, throughput_data
 
     def reset(self) -> None:
         with self._lock:

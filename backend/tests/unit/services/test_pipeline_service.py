@@ -68,9 +68,9 @@ class TestPipelineServiceUnit:
         assert metrics.inference.latency.latest_ms == 30.0
 
         fxt_metrics_service.get_throughput_measurements.assert_called_once_with(model_id=fxt_model.id, time_window=60)
-        assert metrics.inference.throughput.total_inferences == 100
-        assert metrics.inference.throughput.avg_inferences_per_second == 100 / 60  # total / time_window
-        assert metrics.inference.throughput.peak_inferences_per_second == 25  # max from throughput data
+        assert metrics.inference.throughput.total_requests == 100
+        assert metrics.inference.throughput.avg_requests_per_second == 100 / 60  # total / time_window
+        assert metrics.inference.throughput.max_requests_per_second == 25  # max from throughput data
 
     def test_get_pipeline_metrics_no_data(self, fxt_pipeline_service, fxt_metrics_service, fxt_pipeline, fxt_model):
         """Test retrieving pipeline metrics when no latency data is available."""
@@ -91,9 +91,9 @@ class TestPipelineServiceUnit:
         assert metrics.inference.latency.latest_ms is None
 
         fxt_metrics_service.get_throughput_measurements.assert_called_once_with(model_id=fxt_model.id, time_window=60)
-        assert metrics.inference.throughput.total_inferences is None
-        assert metrics.inference.throughput.avg_inferences_per_second is None
-        assert metrics.inference.throughput.peak_inferences_per_second is None
+        assert metrics.inference.throughput.total_requests is None
+        assert metrics.inference.throughput.avg_requests_per_second is None
+        assert metrics.inference.throughput.max_requests_per_second is None
 
     def test_get_pipeline_metrics_not_running(self, fxt_pipeline_service, fxt_pipeline):
         """Test retrieving metrics for pipeline that is not running raises error."""
@@ -125,9 +125,9 @@ class TestPipelineServiceUnit:
         assert metrics.inference.latency.latest_ms == 15.0
 
         fxt_metrics_service.get_throughput_measurements.assert_called_once_with(model_id=fxt_model.id, time_window=60)
-        assert metrics.inference.throughput.total_inferences == 1
-        assert metrics.inference.throughput.avg_inferences_per_second == 1 / 60  # 1 inference over 60 seconds
-        assert metrics.inference.throughput.peak_inferences_per_second == 1
+        assert metrics.inference.throughput.total_requests == 1
+        assert metrics.inference.throughput.avg_requests_per_second == 1 / 60  # 1 inference over 60 seconds
+        assert metrics.inference.throughput.max_requests_per_second == 1
 
     def test_get_pipeline_metrics_high_throughput_data(
         self, fxt_pipeline_service, fxt_metrics_service, fxt_pipeline, fxt_model
@@ -158,6 +158,6 @@ class TestPipelineServiceUnit:
         assert metrics.inference.latency.latest_ms == 9.0
 
         fxt_metrics_service.get_throughput_measurements.assert_called_once_with(model_id=fxt_model.id, time_window=60)
-        assert metrics.inference.throughput.total_inferences == 1000
-        assert metrics.inference.throughput.avg_inferences_per_second == 1000 / 60  # ~16.67
-        assert metrics.inference.throughput.peak_inferences_per_second == 100  # highest count from data
+        assert metrics.inference.throughput.total_requests == 1000
+        assert metrics.inference.throughput.avg_requests_per_second == 1000 / 60  # ~16.67
+        assert metrics.inference.throughput.max_requests_per_second == 100  # highest count from data

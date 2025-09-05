@@ -19,9 +19,9 @@ class LatencyMetrics(BaseModel):
 class ThroughputMetrics(BaseModel):
     """Throughput metrics for inference operations"""
 
-    avg_inferences_per_second: float | None = Field(..., description="Average inferences per second")
-    total_inferences: int | None = Field(..., description="Total number of inferences in the time window")
-    peak_inferences_per_second: float | None = Field(..., description="Peak inferences per second")
+    avg_requests_per_second: float | None = Field(..., description="Average requests per second")
+    total_requests: int | None = Field(..., description="Total number of requests in the time window")
+    max_requests_per_second: float | None = Field(..., description="Max requests per second")
 
 
 class InferenceMetrics(BaseModel):
@@ -52,9 +52,9 @@ class PipelineMetrics(BaseModel):
                 "inference": {
                     "latency": {"avg_ms": 15.1, "min_ms": 12.3, "max_ms": 30.4, "p95_ms": 25.4, "latest_ms": 15.6},
                     "throughput": {
-                        "avg_inferences_per_second": 66.7,
-                        "total_inferences": 4000,
-                        "peak_inferences_per_second": 85.2,
+                        "avg_requests_per_second": 66.7,
+                        "total_requests": 4000,
+                        "max_requests_per_second": 85.2,
                     },
                 },
             }

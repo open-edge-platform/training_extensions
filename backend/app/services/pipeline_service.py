@@ -132,20 +132,20 @@ class PipelineService:
             latency_metrics = LatencyMetrics(avg_ms=None, min_ms=None, max_ms=None, p95_ms=None, latest_ms=None)
 
         # Get throughput measurements from the metrics service
-        total_inferences, throughput_data = self._metrics_service.get_throughput_measurements(
+        total_requests, throughput_data = self._metrics_service.get_throughput_measurements(
             model_id=pipeline.model_id,  # type: ignore[arg-type]
             time_window=time_window,
         )
-        if total_inferences:
+        if total_requests:
             throughput_metrics = ThroughputMetrics(
-                avg_inferences_per_second=total_inferences / time_window if time_window > 0 else 0.0,
-                total_inferences=total_inferences,
-                peak_inferences_per_second=max((count for _, count in throughput_data), default=0),
+                avg_requests_per_second=total_requests / time_window if time_window > 0 else 0.0,
+                total_requests=total_requests,
+                max_requests_per_second=max((count for _, count in throughput_data), default=0),
             )
         else:
             # No data available
             throughput_metrics = ThroughputMetrics(
-                avg_inferences_per_second=None, total_inferences=None, peak_inferences_per_second=None
+                avg_requests_per_second=None, total_requests=None, max_requests_per_second=None
             )
 
         window = TimeWindow(start=start_time, end=end_time, time_window=time_window)
