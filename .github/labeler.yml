@@ -3,19 +3,19 @@
 Geti Tune Backend:
 - changed-files:
   - any-glob-to-any-file: 
-    - 'backend/**/*'
+    - "backend/**/*"
 
 Geti Tune UI:
 - changed-files:
   - any-glob-to-any-file: 
-    - 'ui/**/*'
+    - "ui/**/*"
 
 TEST:
 - changed-files:
   - any-glob-to-any-file: 
-    - 'lib/tests/**/*'
-    - 'backend/tests/**/*'
-    - 'ui/tests/**/*'
+    - "lib/tests/**/*"
+    - "backend/tests/**/*"
+    - "ui/tests/**/*"
 
 DOC:
 - changed-files:
