@@ -6,7 +6,7 @@ import { Annotation } from '../annotator/types';
 const polygonAnnotation: Annotation = {
     id: 'mocked-prediction-3',
     shape: {
-        type: 'polygon',
+        shapeType: 'polygon',
         points: [
             { x: 30, y: 30 },
             { x: 60, y: 30 },
@@ -28,7 +28,7 @@ const polygonAnnotation: Annotation = {
 const boundingBoxAnnotation: Annotation = {
     id: 'mocked-prediction-1',
     shape: {
-        type: 'bounding-box',
+        shapeType: 'rect',
         x: 21,
         y: 21,
         width: 108,
