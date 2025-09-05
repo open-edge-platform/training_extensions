@@ -9,7 +9,7 @@ import { ZoomProvider } from '../../components/zoom/zoom';
 import { ZoomTransform } from '../../components/zoom/zoom-transform';
 import { response } from '../dataset/mock-response';
 import { Annotations } from './annotations';
-import { ToolManager } from './tool-manager.component';
+import { ToolManager } from './tools/tool-manager.component';
 
 type Item = (typeof response.items)[number];
 

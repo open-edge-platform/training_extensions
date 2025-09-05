@@ -1,11 +1,11 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useZoom } from '../../components/zoom/zoom';
-import { useAnnotator } from './annotator-provider.component';
-import { EditBoundingBox } from './tools/bounding-box-tool/bounding-box-tool.component';
-import { SelectionTool } from './tools/selection-tool/selection-tool.component';
-import { Annotation, Rect } from './types';
+import { useZoom } from '../../../components/zoom/zoom';
+import { useAnnotator } from '../annotator-provider.component';
+import { Annotation, Rect } from '../types';
+import { EditBoundingBox } from './bounding-box-tool/bounding-box-tool.component';
+import { SelectionTool } from './selection-tool/selection-tool.component';
 
 type ToolManager = {
     width: number;

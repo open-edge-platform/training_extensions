@@ -25,12 +25,15 @@ const DEFAULT_ANNOTATION_STYLES = {
 } satisfies CSSProperties;
 
 export const Annotations = ({ width, height, isFocussed }: AnnotationsProps) => {
-    const { annotations } = useAnnotator();
+    const { annotations, selectedAnnotation } = useAnnotator();
+
+    // Hide the ones being edited (resized or translated)
+    const staticAnnotations = annotations.filter((a) => a.id !== selectedAnnotation?.id);
 
     return (
         <svg width={width} height={height} style={DEFAULT_ANNOTATION_STYLES}>
             <MaskAnnotations width={width} height={height} isEnabled={isFocussed}>
-                {annotations.map((annotation) => (
+                {staticAnnotations.map((annotation) => (
                     <AnnotationShape key={annotation.id} annotation={annotation} />
                 ))}
             </MaskAnnotations>
