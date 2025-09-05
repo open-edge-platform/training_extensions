@@ -68,10 +68,10 @@ def get_pipeline(
     "",
     response_model=Pipeline,
     responses={
-        status.HTTP_200_OK: {"description": "Pipeline successfully updated"},
+        status.HTTP_200_OK: {"description": "Pipeline successfully reconfigured"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid pipeline ID or request body"},
         status.HTTP_404_NOT_FOUND: {"description": "Pipeline not found"},
-        status.HTTP_409_CONFLICT: {"description": "Pipeline cannot be updated"},
+        status.HTTP_409_CONFLICT: {"description": "Pipeline cannot be reconfigured"},
     },
 )
 def update_pipeline(
