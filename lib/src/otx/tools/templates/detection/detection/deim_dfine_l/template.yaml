@@ -1,10 +1,10 @@
 # Description.
-model_template_id: Object_Detection_Deim_DFine_X
-name: Deim-DFine-X
+model_template_id: Object_Detection_Deim_DFine_L
+name: Deim-DFine-L
 task_type: DETECTION
 task_family: VISION
 instantiation: "CLASS"
-summary: Class-Incremental Object Detection for Deim-DFine-X
+summary: Class-Incremental Object Detection for Deim-DFine-L
 application: ~
 
 # Algo backend.
