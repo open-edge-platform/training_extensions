@@ -8,3 +8,11 @@
 declare module '*.svg' {
     export const ReactComponent: React.FunctionComponent<React.SVGProps<SVGSVGElement>>;
 }
+
+declare module 'polylabel' {
+    type Polygon = number[][][];
+
+    function polylabel(polygon: Polygon, precision?: number): [number, number];
+
+    export default polylabel;
+}

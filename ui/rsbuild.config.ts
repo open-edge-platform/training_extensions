@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { defineConfig, loadEnv } from '@rsbuild/core';
+import { pluginBabel } from '@rsbuild/plugin-babel';
 import { pluginReact } from '@rsbuild/plugin-react';
 import { pluginSass } from '@rsbuild/plugin-sass';
 import { pluginSvgr } from '@rsbuild/plugin-svgr';
@@ -11,6 +12,14 @@ const { publicVars } = loadEnv({ prefixes: ['PUBLIC_'] });
 export default defineConfig({
     plugins: [
         pluginReact(),
+
+        // React Compiler
+        pluginBabel({
+            include: /\.(?:tsx)$/,
+            babelLoaderOptions(opts) {
+                opts.plugins?.unshift('babel-plugin-react-compiler');
+            },
+        }),
 
         pluginSass(),
 

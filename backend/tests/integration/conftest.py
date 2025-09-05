@@ -14,7 +14,7 @@ from app.db.schema import Base, ModelDB, PipelineDB, SinkDB, SourceDB
 from app.schemas import ModelFormat, OutputFormat, SinkType, SourceType
 from app.schemas.sink import MqttSinkConfig
 from app.schemas.source import WebcamSourceConfig
-from app.services import ActivePipelineService
+from app.services import ActivePipelineService, MetricsService
 
 
 @pytest.fixture(scope="session")
@@ -144,6 +144,11 @@ def fxt_db_sinks() -> list[SinkDB]:
 @pytest.fixture
 def fxt_active_pipeline_service() -> MagicMock:
     return MagicMock(spec=ActivePipelineService)
+
+
+@pytest.fixture
+def fxt_metrics_service() -> MagicMock:
+    return MagicMock(spec=MetricsService)
 
 
 @pytest.fixture

@@ -3,9 +3,9 @@
 
 import { PointerEvent, useState } from 'react';
 
-import { Annotation } from '../annotation/annotation.component';
-import { Annotation as AnnotationInterface, Point } from '../shapes/interfaces';
-import { allowPanning, isLeftButton } from './utils';
+import { Annotation } from '../../annotation.component';
+import { Annotation as AnnotationInterface, Point } from '../../types';
+import { allowPanning, isLeftButton } from '../../utils';
 
 const STROKE_WIDTH = 2;
 
@@ -16,7 +16,7 @@ interface TranslateShapeProps {
     onComplete: () => void;
 }
 
-export const TranslateShape = ({ zoom, annotation, onComplete, translateShape }: TranslateShapeProps): JSX.Element => {
+export const TranslateShape = ({ zoom, annotation, onComplete, translateShape }: TranslateShapeProps) => {
     const [dragFromPoint, setDragFromPoint] = useState<null | Point>(null);
 
     const onPointerDown = (event: PointerEvent<SVGSVGElement>): void => {

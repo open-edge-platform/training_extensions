@@ -5,8 +5,8 @@ import { CSSProperties, PointerEvent, ReactNode, useState } from 'react';
 
 import { isFunction } from 'lodash-es';
 
-import { Point } from '../shapes/interfaces';
-import { isLeftButton } from './utils';
+import { Point } from '../../types';
+import { isLeftButton } from '../../utils';
 
 interface AnchorProps {
     children: ReactNode;
@@ -34,7 +34,7 @@ export const Anchor = ({
     onStart,
     moveAnchorTo,
     onComplete,
-}: AnchorProps): JSX.Element => {
+}: AnchorProps) => {
     const [dragFrom, setDragFrom] = useState<Point | null>(null);
 
     const onPointerDown = (event: PointerEvent) => {

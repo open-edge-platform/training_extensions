@@ -33,9 +33,9 @@ def mock_get_db_session(db_session):
 
 
 @pytest.fixture
-def fxt_pipeline_service(fxt_active_pipeline_service, fxt_condition) -> PipelineService:
+def fxt_pipeline_service(fxt_active_pipeline_service, fxt_metrics_service, fxt_condition) -> PipelineService:
     """Fixture to create a PipelineService instance with mocked dependencies."""
-    return PipelineService(fxt_active_pipeline_service, fxt_condition)
+    return PipelineService(fxt_active_pipeline_service, fxt_metrics_service, fxt_condition)
 
 
 class TestPipelineServiceIntegration:

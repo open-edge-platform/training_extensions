@@ -56,7 +56,7 @@ export const ResizeAnchor = ({
     stroke = 'var(--energy-blue)',
     strokeWidth = 1,
     Anchor = <DefaultCircle x={x} y={y} zoom={zoom} fill={fill} stroke={stroke} strokeWidth={strokeWidth} />,
-}: ResizeAnchorProps): JSX.Element => {
+}: ResizeAnchorProps) => {
     const size = ANCHOR_SIZE / zoom;
 
     // We render both a visual anchor and an invisible anchor that has a larger
