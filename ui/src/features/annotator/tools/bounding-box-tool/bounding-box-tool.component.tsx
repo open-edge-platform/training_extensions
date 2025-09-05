@@ -13,14 +13,13 @@ import classes from './bounding-box-tool.module.scss';
 interface EditBoundingBoxProps {
     annotation: Annotation & { shape: { shapeType: 'rect' } };
     roi: RegionOfInterest;
-    image: ImageData;
     zoom: number;
     updateAnnotation: (annotation: Annotation) => void;
 }
 
 const ANCHOR_SIZE = 8;
 
-export const EditBoundingBox = ({ annotation, roi, image, zoom, updateAnnotation }: EditBoundingBoxProps) => {
+export const EditBoundingBox = ({ annotation, roi, zoom, updateAnnotation }: EditBoundingBoxProps) => {
     const [shape, setShape] = useState(annotation.shape);
 
     const onComplete = () => {
@@ -44,8 +43,8 @@ export const EditBoundingBox = ({ annotation, roi, image, zoom, updateAnnotation
     return (
         <>
             <svg
-                width={image.width}
-                height={image.height}
+                width={roi.width}
+                height={roi.height}
                 className={classes.disabledLayer}
                 id={`translate-bounding-box-${annotation.id}`}
             >
@@ -58,8 +57,8 @@ export const EditBoundingBox = ({ annotation, roi, image, zoom, updateAnnotation
             </svg>
 
             <svg
-                width={image.width}
-                height={image.height}
+                width={roi.width}
+                height={roi.height}
                 className={classes.disabledLayer}
                 aria-label={`Edit bounding box points ${annotation.id}`}
                 id={`edit-bounding-box-points-${annotation.id}`}
