@@ -24,6 +24,7 @@ class ResourceType(StrEnum):
     SINK = "Sink"
     MODEL = "Model"
     PIPELINE = "Pipeline"
+    DATASET_ITEM = "DatasetItem"
 
 
 class ResourceError(Exception):

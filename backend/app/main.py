@@ -15,7 +15,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
-from app.api.endpoints import models, pipelines, sinks, sources, system, webrtc
+from app.api.endpoints import datasets, models, pipelines, sinks, sources, system, webrtc
 from app.core import lifespan
 from app.settings import get_settings
 
@@ -50,6 +50,7 @@ app.add_middleware(  # TODO restrict settings in production
 app.include_router(sources.router)
 app.include_router(sinks.router)
 app.include_router(pipelines.router)
+app.include_router(datasets.router)
 app.include_router(models.router)
 app.include_router(system.router)
 app.include_router(webrtc.router)

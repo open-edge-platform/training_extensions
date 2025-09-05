@@ -8,7 +8,14 @@ from uuid import UUID
 from fastapi import Depends, HTTPException, Request, status
 
 from app.core import Scheduler
-from app.services import ActivePipelineService, ConfigurationService, ModelService, PipelineService, SystemService
+from app.services import (
+    ActivePipelineService,
+    ConfigurationService,
+    DatasetService,
+    ModelService,
+    PipelineService,
+    SystemService,
+)
 from app.services.metrics_service import MetricsService
 from app.webrtc.manager import WebRTCManager
 
@@ -34,6 +41,13 @@ def get_source_id(source_id: str) -> UUID:
     return UUID(source_id)
 
 
+def get_project_id(project_id: str) -> UUID:
+    """Initializes and validates a project ID"""
+    if not is_valid_uuid(project_id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid project ID")
+    return UUID(project_id)
+
+
 def get_sink_id(sink_id: str) -> UUID:
     """Initializes and validates a sink ID"""
     if not is_valid_uuid(sink_id):
@@ -46,6 +60,13 @@ def get_model_id(model_id: str) -> UUID:
     if not is_valid_uuid(model_id):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid model ID")
     return UUID(model_id)
+
+
+def get_dataset_item_id(dataset_item_id: str) -> UUID:
+    """Initializes and validates a dataset item ID"""
+    if not is_valid_uuid(dataset_item_id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid dataset item ID")
+    return UUID(dataset_item_id)
 
 
 def get_pipeline_id(pipeline_id: str) -> UUID:
@@ -112,6 +133,12 @@ def get_model_service(
     return ModelService(
         mp_model_reload_event=scheduler.mp_model_reload_event,
     )
+
+
+@lru_cache
+def get_dataset_service() -> DatasetService:
+    """Provides a DatasetService instance."""
+    return DatasetService()
 
 
 def get_webrtc_manager(request: Request) -> WebRTCManager:

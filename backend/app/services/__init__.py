@@ -4,6 +4,7 @@
 from .active_pipeline_service import ActivePipelineService
 from .base import ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError, ResourceType
 from .configuration_service import ConfigurationService
+from .dataset_service import DatasetService
 from .dispatch_service import DispatchService
 from .metrics_service import MetricsService
 from .model_service import ModelAlreadyExistsError, ModelService
@@ -14,6 +15,7 @@ from .video_stream_service import VideoStreamService
 __all__ = [
     "ActivePipelineService",
     "ConfigurationService",
+    "DatasetService",
     "DispatchService",
     "MetricsService",
     "ModelAlreadyExistsError",
