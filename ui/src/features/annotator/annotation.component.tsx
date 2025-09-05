@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ShapeFactory } from '../../components/annotation/shape-factory.component';
+import { AnnotationShape } from './annotation-shape';
 import { Annotation as AnnotationInterface } from './types';
 
 interface AnnotationProps {
@@ -10,7 +10,7 @@ interface AnnotationProps {
 }
 
 export const Annotation = ({ maskId, annotation }: AnnotationProps) => {
-    const { id, labels, shape } = annotation;
+    const { id, labels } = annotation;
 
     return (
         <>
@@ -26,7 +26,7 @@ export const Annotation = ({ maskId, annotation }: AnnotationProps) => {
                       }
                     : {})}
             >
-                <ShapeFactory shape={shape} styles={{}} ariaLabel={''} />
+                <AnnotationShape annotation={annotation} />
             </g>
         </>
     );
