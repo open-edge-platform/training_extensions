@@ -6,7 +6,7 @@
 name: "Pull Request Labeler"
 on:
   # The labeler doesn't checkout/execute any contributed code, so it should be safe.
-  - pull_request_target # zizmor: ignore[dangerous-triggers]
+  - pull_request # zizmor: ignore[dangerous-triggers]
 
 permissions: {} # No permissions by default on workflow level
 
