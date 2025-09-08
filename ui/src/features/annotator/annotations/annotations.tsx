@@ -3,8 +3,8 @@
 
 import { CSSProperties } from 'react';
 
+import { useAnnotator } from '../annotator-provider.component';
 import { AnnotationShape } from './annotation-shape';
-import { useAnnotator } from './annotator-provider.component';
 import { MaskAnnotations } from './mask-annotations';
 
 type AnnotationsProps = {

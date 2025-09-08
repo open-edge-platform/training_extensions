@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Annotation } from '../../annotation.component';
+import { Annotation } from '../../annotations/annotation.component';
 import { useTranslate } from '../../hooks/use-translate.hook';
 import { Annotation as AnnotationInterface } from '../../types';
 import { allowPanning } from '../../utils';

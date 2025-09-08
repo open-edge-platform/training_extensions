@@ -4,10 +4,10 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { getMockedAnnotation } from '../../../tests/test-utils/mocked-annotation';
+import { getMockedAnnotation } from '../../../../tests/test-utils/mocked-annotation';
+import { AnnotatorProvider } from '../annotator-provider.component';
+import { Annotation, Polygon, Rect } from '../types';
 import { AnnotationShape } from './annotation-shape';
-import { AnnotatorProvider } from './annotator-provider.component';
-import { Annotation, Polygon, Rect } from './types';
 
 type AnnotationRect = Annotation & { shape: Rect };
 type AnnotationPolygon = Annotation & { shape: Polygon };
