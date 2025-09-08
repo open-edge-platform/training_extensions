@@ -16,7 +16,7 @@ sinks are folders on the local filesystem or messaging frameworks like MQTT or R
 After inference, the frames and their predictions are analyzed to identify potential anomalies or out-of-distribution
 samples (_model monitoring_), and these may be collected based on one or more policies (`DataCollectionPolicy`).
 
-The collected frames are stored in a _dataset_ (`Dataset`), These frames are saved in a dataset, so that the user can
+The collected frames are stored in a _dataset_ (`Dataset`), so that the user can
 examine them and eventually use them, for example, to make the model more robust via fine-tuning.
 It is also possible for the user to manually upload images to a dataset, and annotate them using the built-in
 annotation tool. A dataset is therefore a collection of image-like items (`DatasetItem`), each of which may have
