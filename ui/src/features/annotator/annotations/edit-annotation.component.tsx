@@ -3,7 +3,7 @@
 
 import { ReactNode } from 'react';
 
-import { useAnnotator } from '../annotator-provider.component';
+import { useSelectedAnnotation } from '../select-annotation-provider.component';
 import { useAnnotation } from './annotation.component';
 
 type EditAnnotationProps = {
@@ -11,10 +11,12 @@ type EditAnnotationProps = {
 };
 
 export const EditAnnotation = ({ children }: EditAnnotationProps) => {
-    const { selectedAnnotation } = useAnnotator();
+    const selectedAnnotations = useSelectedAnnotation();
     const annotation = useAnnotation();
 
-    if (selectedAnnotation?.id === annotation.id) return null;
+    if (selectedAnnotations.has(annotation)) {
+        return null;
+    }
 
     return <>{children}</>;
 };

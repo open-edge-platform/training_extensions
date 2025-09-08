@@ -3,9 +3,9 @@
 
 import { useZoom } from '../../../components/zoom/zoom';
 import { useAnnotator } from '../annotator-provider.component';
+import { useSelectedAnnotation } from '../select-annotation-provider.component';
 import { Annotation, Rect } from '../types';
 import { EditBoundingBox } from './bounding-box-tool/bounding-box-tool.component';
-import { SelectionTool } from './selection-tool/selection-tool.component';
 
 type ToolManager = {
     width: number;
@@ -13,25 +13,24 @@ type ToolManager = {
 };
 export const ToolManager = ({ width, height }: ToolManager) => {
     const zoom = useZoom();
-    const { selectedAnnotation, updateAnnotation, activeTool } = useAnnotator();
+    const { updateAnnotation, activeTool } = useAnnotator();
+    const selectedAnnotations = useSelectedAnnotation();
 
-    if (!selectedAnnotation) {
+    const currentlySelectedAnnotation = Array.from(selectedAnnotations)[0];
+
+    if (!currentlySelectedAnnotation) {
         return null;
     }
 
-    if (activeTool === 'bounding-box') {
+    if (activeTool === 'selection') {
         return (
             <EditBoundingBox
-                annotation={selectedAnnotation as Annotation & { shape: Rect }}
+                annotation={currentlySelectedAnnotation as Annotation & { shape: Rect }}
                 roi={{ x: 0, y: 0, width, height }}
                 zoom={zoom.scale}
                 updateAnnotation={updateAnnotation}
             />
         );
-    }
-
-    if (activeTool === 'selection') {
-        return <SelectionTool annotation={selectedAnnotation} updateAnnotation={updateAnnotation} />;
     }
 
     return null;

@@ -44,6 +44,25 @@ const boundingBoxAnnotation: Annotation = {
     ],
 };
 
+const boundingBoxAnnotationTwo: Annotation = {
+    id: 'mocked-prediction-2',
+    shape: {
+        shapeType: 'rect',
+        x: 50,
+        y: 50,
+        width: 30,
+        height: 60,
+    },
+    labels: [
+        {
+            id: 'label-2',
+            name: 'Mock Label 2',
+            color: '#e96115',
+            isPrediction: true,
+        },
+    ],
+};
+
 export const response = {
     page: 1,
     page_size: 1500,
@@ -59,7 +78,7 @@ export const response = {
             size: 1024,
             thumbhash: '',
             created_at: '2023-07-08T15:21:04.749Z',
-            annotations: [boundingBoxAnnotation],
+            annotations: [boundingBoxAnnotation, boundingBoxAnnotationTwo],
         },
         {
             id: '20250708_152103_749',

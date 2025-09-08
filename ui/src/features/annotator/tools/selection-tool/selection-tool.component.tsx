@@ -1,31 +1,22 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { noop } from 'lodash-es';
-
-import { useZoom } from '../../../../components/zoom/zoom';
+import { AnnotationShape } from '../../annotations/annotation-shape';
 import { Annotation } from '../../types';
-import { TranslateShape } from '../bounding-box-tool/translate-shape.component';
 
 type SelectionToolProps = {
-    annotation: Annotation;
-    updateAnnotation: (annotation: Annotation) => void;
+    annotation: Annotation & { shape: { shapeType: 'rect' } };
 };
 
-export const SelectionTool = ({ annotation, updateAnnotation }: SelectionToolProps) => {
-    const { scale } = useZoom();
-
-    const translate = ({ x, y }: { x: number; y: number }) => {
-        const shape = annotation.shape;
-
-        if (shape.shapeType === 'rect') {
-            const newShape = { ...shape, x: shape.x + x, y: shape.y + y };
-
-            updateAnnotation({ ...annotation, shape: newShape });
-
-            return;
-        }
-    };
-
-    return <TranslateShape zoom={scale} annotation={annotation} translateShape={translate} onComplete={noop} />;
+export const SelectionTool = ({ annotation }: SelectionToolProps) => {
+    return (
+        <svg
+            width={annotation.shape.width}
+            height={annotation.shape.height}
+            style={{ inset: 0, position: 'absolute' }}
+            id={`select-shape-${annotation.id}`}
+        >
+            <AnnotationShape annotation={annotation} />
+        </svg>
+    );
 };

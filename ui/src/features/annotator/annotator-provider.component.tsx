@@ -11,9 +11,6 @@ type AnnotatorContext = {
     activeTool: ToolType | null;
     selectTool: (tool: ToolType) => void;
 
-    selectedAnnotation: Annotation | null;
-    setSelectedAnnotation: (annotation: Annotation) => void;
-
     updateAnnotation: (updatedAnnotation: Annotation) => void;
 
     annotations: Annotation[];
@@ -29,19 +26,10 @@ export const AnnotatorProvider = ({
     children: ReactNode;
 }) => {
     const { activeTool, selectTool } = useActiveTool();
-    const [selectedAnnotation, setSelectedAnnotation] = useState<Annotation | null>(null);
     const [annotations, setAnnotations] = useState<Annotation[]>(initialAnnotations);
 
     const handleSelectTool = (tool: ToolType) => {
         selectTool(tool);
-    };
-
-    const handleSelectAnnotation = (newAnnotation: Annotation) => {
-        const { id } = newAnnotation;
-
-        const ann = annotations.find((annotation) => annotation.id === id) || null;
-
-        setSelectedAnnotation(ann);
     };
 
     const handleUpdateAnnotation = (updatedAnnotation: Annotation) => {
@@ -58,9 +46,6 @@ export const AnnotatorProvider = ({
             value={{
                 activeTool,
                 selectTool: handleSelectTool,
-
-                selectedAnnotation,
-                setSelectedAnnotation: handleSelectAnnotation,
 
                 updateAnnotation: handleUpdateAnnotation,
 

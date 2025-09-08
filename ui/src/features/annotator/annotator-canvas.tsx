@@ -9,6 +9,7 @@ import { ZoomProvider } from '../../components/zoom/zoom';
 import { ZoomTransform } from '../../components/zoom/zoom-transform';
 import { response } from '../dataset/mock-response';
 import { Annotations } from './annotations/annotations';
+import { SelectAnnotationProvider } from './select-annotation-provider.component';
 import { ToolManager } from './tools/tool-manager.component';
 
 type Item = (typeof response.items)[number];
@@ -26,9 +27,11 @@ export const AnnotatorCanvas = ({ mediaItem, isFocussed }: { mediaItem: Item; is
 
                     {!isEmpty(mediaItem.annotations) && (
                         <View gridArea={'innercanvas'}>
-                            <Annotations width={size.width} height={size.height} isFocussed={isFocussed} />
+                            <SelectAnnotationProvider>
+                                <Annotations width={size.width} height={size.height} isFocussed={isFocussed} />
 
-                            <ToolManager width={size.width} height={size.height} />
+                                <ToolManager width={size.width} height={size.height} />
+                            </SelectAnnotationProvider>
                         </View>
                     )}
                 </Grid>
