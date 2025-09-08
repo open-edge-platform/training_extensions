@@ -1,6 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { noop } from 'lodash-es';
+
 import { useZoom } from '../../../../components/zoom/zoom';
 import { Annotation } from '../../types';
 import { TranslateShape } from '../bounding-box-tool/translate-shape.component';
@@ -25,12 +27,5 @@ export const SelectionTool = ({ annotation, updateAnnotation }: SelectionToolPro
         }
     };
 
-    return (
-        <TranslateShape
-            zoom={scale}
-            annotation={annotation}
-            translateShape={translate}
-            onComplete={() => console.log('complete')}
-        />
-    );
+    return <TranslateShape zoom={scale} annotation={annotation} translateShape={translate} onComplete={noop} />;
 };
