@@ -4,7 +4,7 @@
 import { CSSProperties } from 'react';
 
 import { useAnnotator } from '../annotator-provider.component';
-import { AnnotationShape } from './annotation-shape';
+import { Annotation } from './annotation.component';
 import { MaskAnnotations } from './mask-annotations';
 
 type AnnotationsProps = {
@@ -25,16 +25,13 @@ const DEFAULT_ANNOTATION_STYLES = {
 } satisfies CSSProperties;
 
 export const Annotations = ({ width, height, isFocussed }: AnnotationsProps) => {
-    const { annotations, selectedAnnotation } = useAnnotator();
-
-    // Hide the ones being edited (resized or translated)
-    const staticAnnotations = annotations.filter((a) => a.id !== selectedAnnotation?.id);
+    const { annotations } = useAnnotator();
 
     return (
         <svg width={width} height={height} style={DEFAULT_ANNOTATION_STYLES}>
-            <MaskAnnotations width={width} height={height} isEnabled={isFocussed}>
-                {staticAnnotations.map((annotation) => (
-                    <AnnotationShape key={annotation.id} annotation={annotation} />
+            <MaskAnnotations annotations={annotations} width={width} height={height} isEnabled={isFocussed}>
+                {annotations.map((annotation) => (
+                    <Annotation annotation={annotation} key={annotation.id} />
                 ))}
             </MaskAnnotations>
         </svg>

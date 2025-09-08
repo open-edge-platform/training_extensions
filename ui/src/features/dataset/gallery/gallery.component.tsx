@@ -7,7 +7,6 @@ import { AriaComponentsListBox, DialogContainer, GridLayout, ListBoxItem, Size, 
 
 import thumbnailUrl from '../../../assets/mocked-project-thumbnail.png';
 import { useSelectedData } from '../../../routes/dataset/provider';
-import { AnnotatorProvider } from '../../annotator/annotator-provider.component';
 import { CheckboxInput } from '../checkbox-input';
 import { MediaPreview } from '../media-preview/media-preview.component';
 import { response } from '../mock-response';
@@ -86,9 +85,7 @@ export const Gallery = () => {
 
             <DialogContainer onDismiss={() => setSelectedMediaItem(null)}>
                 {selectedMediaItem !== null && (
-                    <AnnotatorProvider initialAnnotations={selectedMediaItem.annotations}>
-                        <MediaPreview mediaItem={selectedMediaItem} close={() => setSelectedMediaItem(null)} />
-                    </AnnotatorProvider>
+                    <MediaPreview mediaItem={selectedMediaItem} close={() => setSelectedMediaItem(null)} />
                 )}
             </DialogContainer>
         </View>

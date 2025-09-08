@@ -1,33 +1,32 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { createContext, useContext } from 'react';
+
 import { Annotation as AnnotationInterface } from '../types';
 import { AnnotationShape } from './annotation-shape';
+import { EditAnnotation } from './edit-annotation.component';
+import { SelectableAnnotation } from './selectable-annotation.component';
+
+const AnnotationContext = createContext<AnnotationInterface | null>(null);
+
+export const useAnnotation = () => {
+    const ctx = useContext(AnnotationContext);
+
+    return ctx!;
+};
 
 interface AnnotationProps {
     annotation: AnnotationInterface;
-    maskId?: string;
 }
-
-export const Annotation = ({ maskId, annotation }: AnnotationProps) => {
-    const { id, labels } = annotation;
-
+export const Annotation = ({ annotation }: AnnotationProps) => {
     return (
-        <>
-            <g
-                mask={maskId}
-                id={`canvas-annotation-${id}`}
-                strokeLinecap={'round'}
-                {...(labels.length > 0
-                    ? {
-                          fill: labels[0].color,
-                          stroke: labels[0].color,
-                          strokeOpacity: 'var(--annotation-border-opacity)',
-                      }
-                    : {})}
-            >
-                <AnnotationShape annotation={annotation} />
-            </g>
-        </>
+        <AnnotationContext.Provider value={annotation}>
+            <EditAnnotation>
+                <SelectableAnnotation>
+                    <AnnotationShape annotation={annotation} />
+                </SelectableAnnotation>
+            </EditAnnotation>
+        </AnnotationContext.Provider>
     );
 };
