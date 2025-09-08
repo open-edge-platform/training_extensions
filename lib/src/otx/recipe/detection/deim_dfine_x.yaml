@@ -215,7 +215,22 @@ overrides:
     train_subset:
       batch_size: 8
       num_workers: 4
-      transforms: []
+      transforms:
+        - class_path: otx.data.transform_libs.torchvision.Resize
+          init_args:
+            scale: $(input_size)
+            keep_ratio: false
+        - class_path: otx.data.transform_libs.torchvision.RandomFlip
+          init_args:
+            probability: 0.5
+        - class_path: torchvision.transforms.v2.ToDtype
+          init_args:
+            dtype: ${as_torch_dtype:torch.float32}
+            scale: false
+        - class_path: torchvision.transforms.v2.Normalize
+          init_args:
+            mean: [0.0, 0.0, 0.0]
+            std: [255.0, 255.0, 255.0]
       sampler:
         class_path: otx.data.samplers.balanced_sampler.BalancedSampler
 
