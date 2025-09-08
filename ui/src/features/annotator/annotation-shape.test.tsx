@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 
 import { getMockedAnnotation } from '../../../tests/test-utils/mocked-annotation';
 import { AnnotationShape } from './annotation-shape';
+import { AnnotatorProvider } from './annotator-provider.component';
 import { Annotation, Polygon, Rect } from './types';
 
 type AnnotationRect = Annotation & { shape: Rect };
@@ -14,7 +15,11 @@ type AnnotationPolygon = Annotation & { shape: Polygon };
 describe('AnnotationShape', () => {
     it('bounding box as a rect', () => {
         const annotation = getMockedAnnotation() as AnnotationRect;
-        render(<AnnotationShape annotation={annotation} />);
+        render(
+            <AnnotatorProvider initialAnnotations={[annotation]}>
+                <AnnotationShape annotation={annotation} />
+            </AnnotatorProvider>
+        );
 
         const rect = screen.getByLabelText('annotation rect');
 
@@ -33,7 +38,11 @@ describe('AnnotationShape', () => {
         ];
         const annotation = getMockedAnnotation({ shape: { shapeType: 'polygon', points } }) as AnnotationPolygon;
 
-        render(<AnnotationShape annotation={annotation} />);
+        render(
+            <AnnotatorProvider initialAnnotations={[annotation]}>
+                <AnnotationShape annotation={annotation} />
+            </AnnotatorProvider>
+        );
         const polygon = screen.getByLabelText('annotation polygon');
 
         expect(polygon).toHaveAttribute('points', '1,2 3,4 5,6');
