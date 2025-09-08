@@ -984,9 +984,8 @@ class DFINETransformer:
     }
 
     def __new__(
-        cls, model_name: str, num_classes: int, eval_spatial_size: tuple[int, int] | None = None
+        cls, model_name: str, num_classes: int, eval_spatial_size: tuple[int, int] = (640, 640)
     ) -> DFINETransformerModule:
         """Constructor for DFINETransformerModule."""
         cfg = cls.decoder_cfg[model_name]
-        eval_spatial_size = eval_spatial_size if eval_spatial_size is not None else (640, 640)
         return DFINETransformerModule(num_classes=num_classes, eval_spatial_size=eval_spatial_size, **cfg)
