@@ -14,10 +14,10 @@ export const SelectionTool = ({ annotation, updateAnnotation }: SelectionToolPro
     const { scale } = useZoom();
 
     const translate = ({ x, y }: { x: number; y: number }) => {
-        const s = annotation.shape;
+        const shape = annotation.shape;
 
-        if (s.shapeType === 'rect') {
-            const newShape = { ...s, x: s.x + x, y: s.y + y };
+        if (shape.shapeType === 'rect') {
+            const newShape = { ...shape, x: shape.x + x, y: shape.y + y };
 
             updateAnnotation({ ...annotation, shape: newShape });
 
