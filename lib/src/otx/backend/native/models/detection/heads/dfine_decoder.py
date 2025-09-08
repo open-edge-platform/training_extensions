@@ -431,7 +431,7 @@ class DFINETransformerModule(nn.Module):
         num_denoising: int = 100,
         label_noise_ratio: float = 0.5,
         box_noise_scale: float = 1.0,
-        eval_spatial_size: list[int] = [640, 640],  # noqa: B006
+        eval_spatial_size: tuple[int, int] = (640, 640),
         eval_idx: int = -1,
         reg_scale: float = 4.0,
         reg_max: int = 32,
@@ -693,7 +693,6 @@ class DFINETransformerModule(nn.Module):
 
         if memory.shape[0] > 1:
             anchors = anchors.repeat(memory.shape[0], 1, 1)
-
         memory = valid_mask.to(memory.dtype) * memory
 
         output_memory = self.enc_output(memory)
@@ -933,26 +932,22 @@ class DFINETransformer:
             "num_decoder_layers": 3,
             "eval_idx": -1,
             "num_points_list": [6, 6],
-            "eval_spatial_size": [640, 640],
         },
         "dfine_hgnetv2_s": {
             "feat_channels": [256, 256, 256],
             "num_decoder_layers": 3,
             "eval_idx": -1,
-            "eval_spatial_size": [640, 640],
             "num_points_list": [3, 6, 3],
         },
         "dfine_hgnetv2_m": {
             "num_decoder_layers": 4,
             "eval_idx": -1,
-            "eval_spatial_size": [640, 640],
         },
         "dfine_hgnetv2_l": {},
         "dfine_hgnetv2_x": {
             "feat_channels": [384, 384, 384],
             "reg_scale": 8.0,
             "eval_idx": -1,
-            "eval_spatial_size": [640, 640],
         },
         "deim_dfine_hgnetv2_n": {
             "feat_channels": [128, 128],
@@ -963,21 +958,18 @@ class DFINETransformer:
             "num_decoder_layers": 3,
             "eval_idx": -1,
             "num_points_list": [6, 6],
-            "eval_spatial_size": [640, 640],
             "activation": nn.SiLU,
         },
         "deim_dfine_hgnetv2_s": {
             "feat_channels": [256, 256, 256],
             "num_decoder_layers": 3,
             "eval_idx": -1,
-            "eval_spatial_size": [640, 640],
             "num_points_list": [3, 6, 3],
             "activation": nn.SiLU,
         },
         "deim_dfine_hgnetv2_m": {
             "num_decoder_layers": 4,
             "eval_idx": -1,
-            "eval_spatial_size": [640, 640],
             "activation": nn.SiLU,
         },
         "deim_dfine_hgnetv2_l": {
@@ -987,12 +979,14 @@ class DFINETransformer:
             "feat_channels": [384, 384, 384],
             "reg_scale": 8.0,
             "eval_idx": -1,
-            "eval_spatial_size": [640, 640],
             "activation": nn.SiLU,
         },
     }
 
-    def __new__(cls, model_name: str, num_classes: int) -> DFINETransformerModule:
+    def __new__(
+        cls, model_name: str, num_classes: int, eval_spatial_size: tuple[int, int] | None = None
+    ) -> DFINETransformerModule:
         """Constructor for DFINETransformerModule."""
         cfg = cls.decoder_cfg[model_name]
-        return DFINETransformerModule(num_classes=num_classes, **cfg)
+        eval_spatial_size = eval_spatial_size if eval_spatial_size is not None else (640, 640)
+        return DFINETransformerModule(num_classes=num_classes, eval_spatial_size=eval_spatial_size, **cfg)
