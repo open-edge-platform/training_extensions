@@ -1,7 +1,6 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useZoom } from '../../components/zoom/zoom';
 import { useAnnotator } from './annotator-provider.component';
 import { Annotation, Point } from './types';
 
@@ -17,12 +16,11 @@ export const AnnotationShape = ({ annotation }: AnnotationShapeProps) => {
     const shape = annotation.shape;
     const color = annotation.labels[0].color;
     const { setSelectedAnnotation, selectedAnnotation } = useAnnotator();
-    const { scale } = useZoom();
 
     const isSelected = selectedAnnotation?.id === annotation.id;
 
     const selectedStyles = {
-        strokeWidth: 2 / scale,
+        strokeWidth: `calc(2 / var(--zoom-scale))`,
         cursor: 'move',
         stroke: 'var(--energy-blue)',
     };
