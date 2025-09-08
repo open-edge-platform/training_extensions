@@ -83,7 +83,7 @@ class DatasetItemDB(Base):
     __tablename__ = "dataset_items"
 
     id: Mapped[str] = mapped_column(Text, primary_key=True, default=lambda: str(uuid4()))
-    project_id: Mapped[str] = mapped_column(Text, ForeignKey("projects.id", ondelete="RESTRICT"), nullable=False)
+    project_id: Mapped[str] = mapped_column(Text, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     format: Mapped[str] = mapped_column(String(50), nullable=False)
     width: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -92,9 +92,9 @@ class DatasetItemDB(Base):
     annotation_data: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     user_reviewed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     prediction_model_id: Mapped[str | None] = mapped_column(
-        Text, ForeignKey("models.id", ondelete="RESTRICT"), nullable=True
+        Text, ForeignKey("models.id", ondelete="SET NULL"), nullable=True
     )
-    source_id: Mapped[str | None] = mapped_column(Text, ForeignKey("sources.id", ondelete="RESTRICT"), nullable=True)
+    source_id: Mapped[str | None] = mapped_column(Text, ForeignKey("sources.id", ondelete="SET NULL"), nullable=True)
     subset: Mapped[str | None] = mapped_column(String(20), nullable=False)
     subset_assigned_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())

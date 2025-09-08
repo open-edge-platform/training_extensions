@@ -98,9 +98,9 @@ def upgrade() -> None:
         sa.Column("subset_assigned_at", sa.DateTime(), nullable=True),
         sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.Column("updated_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
-        sa.ForeignKeyConstraint(["prediction_model_id"], ["models.id"], ondelete="RESTRICT"),
-        sa.ForeignKeyConstraint(["project_id"], ["projects.id"], ondelete="RESTRICT"),
-        sa.ForeignKeyConstraint(["source_id"], ["sources.id"], ondelete="RESTRICT"),
+        sa.ForeignKeyConstraint(['prediction_model_id'], ['models.id'], ondelete='SET NULL'),
+        sa.ForeignKeyConstraint(['project_id'], ['projects.id'], ondelete='CASCADE'),
+        sa.ForeignKeyConstraint(['source_id'], ['sources.id'], ondelete='SET NULL'),
         sa.PrimaryKeyConstraint("id"),
     )
     # ### end Alembic commands ###
