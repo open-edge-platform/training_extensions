@@ -9,6 +9,7 @@ from .dispatch_service import DispatchService
 from .metrics_service import MetricsService
 from .model_service import ModelAlreadyExistsError, ModelService
 from .pipeline_service import PipelineService
+from .project_service import ProjectService
 from .system_service import SystemService
 from .video_stream_service import VideoStreamService
 
@@ -21,6 +22,7 @@ __all__ = [
     "ModelAlreadyExistsError",
     "ModelService",
     "PipelineService",
+    "ProjectService",
     "ResourceAlreadyExistsError",
     "ResourceInUseError",
     "ResourceNotFoundError",

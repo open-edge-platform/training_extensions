@@ -5,7 +5,7 @@ from datetime import datetime
 from uuid import uuid4
 
 from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, String, Text
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
 
@@ -24,18 +24,36 @@ class SourceDB(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
 
 
+class ProjectDB(Base):
+    __tablename__ = "projects"
+
+    id: Mapped[str] = mapped_column(Text, primary_key=True, default=lambda: str(uuid4()))
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    task_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    exclusive_labels: Mapped[bool] = mapped_column(Boolean, default=False)
+    labels: Mapped[list[str]] = mapped_column(JSON, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
+    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
+
+    pipeline = relationship("PipelineDB", back_populates="project", uselist=False)
+
+
 class PipelineDB(Base):
     __tablename__ = "pipelines"
 
-    id: Mapped[str] = mapped_column(Text, primary_key=True, default=lambda: str(uuid4()))
+    project_id: Mapped[str] = mapped_column(Text, ForeignKey("projects.id", ondelete="CASCADE"), primary_key=True)
     source_id: Mapped[str | None] = mapped_column(Text, ForeignKey("sources.id", ondelete="RESTRICT"))
     sink_id: Mapped[str | None] = mapped_column(Text, ForeignKey("sinks.id", ondelete="RESTRICT"))
     model_id: Mapped[str | None] = mapped_column(Text, ForeignKey("models.id", ondelete="RESTRICT"))
-    name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
-    description: Mapped[str | None] = mapped_column(Text)
     is_running: Mapped[bool] = mapped_column(Boolean, default=False)
+    data_collection_policies: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
+
+    project = relationship("ProjectDB", back_populates="pipeline")
+    sink = relationship("SinkDB", uselist=False)
+    source = relationship("SourceDB", uselist=False)
+    model = relationship("ModelDB", uselist=False)
 
 
 class SinkDB(Base):

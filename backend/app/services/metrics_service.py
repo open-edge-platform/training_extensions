@@ -4,16 +4,15 @@
 import logging
 import time
 from datetime import UTC, datetime
-from multiprocessing import Lock
 from multiprocessing.shared_memory import SharedMemory
+from multiprocessing.synchronize import Lock
 from typing import NamedTuple
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import numpy as np
 
 logger = logging.getLogger(__name__)
 
-SHM_NAME = f"latency_metrics_shm_{uuid4()}"
 MAX_MEASUREMENTS = 1024  # max number of measurements to keep
 DTYPE = np.dtype(
     [
@@ -36,10 +35,10 @@ class LatencyMeasurement(NamedTuple):
 class MetricsService:
     """Process-safe metrics service using shared memory for model metric data"""
 
-    def __init__(self, max_age_seconds: int = 60):
+    def __init__(self, shm_name: str, lock: Lock, max_age_seconds: int = 60):
         self._max_age_seconds = max_age_seconds
-        self._lock = Lock()
-        self._shm = SharedMemory(name=SHM_NAME)
+        self._lock = lock
+        self._shm = SharedMemory(name=shm_name)
         self._array: np.ndarray = np.ndarray((MAX_MEASUREMENTS,), dtype=DTYPE, buffer=self._shm.buf)
         self._head = 0  # index for next write
 
@@ -98,7 +97,4 @@ class MetricsService:
             self._head = 0
 
     def __del__(self):
-        try:
-            self._shm.close()
-        except Exception as e:
-            logger.exception("Error cleaning up shared memory in MetricsService __del__: %s", e)
+        self._shm.close()

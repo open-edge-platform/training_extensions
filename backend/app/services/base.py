@@ -24,6 +24,7 @@ class ResourceType(StrEnum):
     SINK = "Sink"
     MODEL = "Model"
     PIPELINE = "Pipeline"
+    PROJECT = "Project"
     DATASET_ITEM = "DatasetItem"
 
 
@@ -121,10 +122,9 @@ class GenericPersistenceService(Generic[S, R]):
 
     def update(self, item: S, partial_config: dict, db: Session | None = None) -> S:
         with self._get_repo(db) as repo:
-            update = item.model_copy(update=partial_config)
-            item_db = self.config.mapper_class.from_schema(update)
-            repo.update(item_db)
-            return self.config.mapper_class.to_schema(item_db)
+            to_update = item.model_copy(update=partial_config)
+            updated = repo.update(self.config.mapper_class.from_schema(to_update))
+            return self.config.mapper_class.to_schema(updated)
 
     def delete_by_id(self, item_id: UUID, db: Session | None = None) -> None:
         try:

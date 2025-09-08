@@ -9,7 +9,7 @@ import sys
 import click
 
 from app.db import get_db_session, migration_manager
-from app.db.schema import ModelDB, PipelineDB, SinkDB, SourceDB
+from app.db.schema import ModelDB, PipelineDB, ProjectDB, SinkDB, SourceDB
 from app.schemas import ModelFormat, OutputFormat, SinkType, SourceType
 
 logging.basicConfig(level=logging.INFO)
@@ -80,14 +80,22 @@ def seed(with_model: bool, model_name: str) -> None:
     # Fixed IDs are used to ensure consistency in tests
     click.echo("Seeding database with test data...")
     with get_db_session() as db:
-        source = SourceDB(
+        project = ProjectDB(
+            id="9d6af8e8-6017-4ebe-9126-33aae739c5fa",
+            name="Test Project",
+            task_type="detection",
+            exclusive_labels=True,
+            labels=["card", "person"],
+        )
+        pipeline = PipelineDB()
+        project.pipeline = pipeline
+        pipeline.source = SourceDB(
             id="f6b1ac22-e36c-4b36-9a23-62b0881e4223",
             name="Video Source",
             source_type=SourceType.VIDEO_FILE,
             config_data={"video_path": "data/media/video.mp4"},
         )
-        db.add(source)
-        sink = SinkDB(
+        pipeline.sink = SinkDB(
             id="6ee0c080-c7d9-4438-a7d2-067fd395eecf",
             name="Folder Sink",
             sink_type=SinkType.FOLDER,
@@ -95,26 +103,14 @@ def seed(with_model: bool, model_name: str) -> None:
             output_formats=[OutputFormat.IMAGE_ORIGINAL, OutputFormat.IMAGE_WITH_PREDICTIONS, OutputFormat.PREDICTIONS],
             config_data={"folder_path": "data/output"},
         )
-        db.add(sink)
-        model = None
         if with_model:
-            model = ModelDB(
+            pipeline.model = ModelDB(
                 id="977eeb18-eaac-449d-bc80-e340fbe052ad",
                 name=model_name,
                 format=ModelFormat.OPENVINO,
             )
-            db.add(model)
-        db.flush()
-        pipeline = PipelineDB(
-            id="ace3f1da-fdd9-4048-a95e-a647ed969442",
-            source_id=source.id,
-            sink_id=sink.id,
-            model_id=model.id if model else None,
-            name="Video Processing Pipeline",
-            description="Pipeline for processing video files",
-            is_running=True,
-        )
-        db.add(pipeline)
+            pipeline.is_running = True
+        db.add(project)
         db.commit()
     click.echo("✓ Seeding successful!")
 
@@ -123,7 +119,7 @@ def seed(with_model: bool, model_name: str) -> None:
 def clean_db() -> None:
     """Remove all data from the database (clean but don't drop tables)."""
     with get_db_session() as db:
-        db.query(PipelineDB).delete()
+        db.query(ProjectDB).delete()
         db.query(ModelDB).delete()
         db.query(SinkDB).delete()
         db.query(SourceDB).delete()
