@@ -24,7 +24,7 @@ export const TranslateShape = ({ zoom, onComplete, translateShape, annotation }:
 
     return (
         <g
-            id={`translate-annotation-${annotation}`}
+            id={`translate-annotation-${annotation.id}`}
             stroke='var(--energy-blue)'
             strokeWidth={STROKE_WIDTH / zoom}
             aria-label='Drag to move shape'
