@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { ToolType } from '../../../components/tool-selection-bar/tools/interface';
 
 export const useActiveTool = () => {
-    const [activeTool, setActiveTool] = useState<ToolType>('bounding-box');
+    const [activeTool, setActiveTool] = useState<ToolType>('selection');
 
     const handleSelectTool = (tool: ToolType) => {
         setActiveTool(tool);

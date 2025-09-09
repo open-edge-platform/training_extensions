@@ -6,12 +6,12 @@ import { MouseEvent, ReactNode } from 'react';
 import { noop } from 'lodash-es';
 
 import { useAnnotator } from '../annotator-provider.component';
-import { useSelectedAnnotation, useSetSelectedAnnotations } from '../select-annotation-provider.component';
+import { useSelectedAnnotations, useSetSelectedAnnotations } from '../select-annotation-provider.component';
 import { useAnnotation } from './annotation.component';
 
 export const SelectableAnnotation = ({ children }: { children: ReactNode }) => {
     const annotation = useAnnotation();
-    const isSelected = useSelectedAnnotation().has(annotation);
+    const isSelected = useSelectedAnnotations().has(annotation.id);
     const setSelectedAnnotations = useSetSelectedAnnotations();
     const { activeTool } = useAnnotator();
 
@@ -22,15 +22,15 @@ export const SelectableAnnotation = ({ children }: { children: ReactNode }) => {
 
         setSelectedAnnotations((selected) => {
             if (!hasShiftPressed) {
-                return new Set([annotation]);
+                return new Set([annotation.id]);
             }
 
             const newSelected = new Set(selected);
 
-            if (newSelected.has(annotation)) {
-                newSelected.delete(annotation);
+            if (newSelected.has(annotation.id)) {
+                newSelected.delete(annotation.id);
             } else {
-                newSelected.add(annotation);
+                newSelected.add(annotation.id);
             }
 
             return newSelected;

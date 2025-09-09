@@ -5,9 +5,7 @@ import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useStat
 
 import { noop } from 'lodash-es';
 
-import { Annotation } from './types';
-
-type SelectedAnnotations = Set<Annotation>;
+type SelectedAnnotations = Set<string>;
 
 const SelectedAnnotation = createContext<SelectedAnnotations | null>(null);
 const SetSelectedAnnotation = createContext<Dispatch<SetStateAction<SelectedAnnotations | null>>>(noop);
@@ -16,7 +14,7 @@ export const useSetSelectedAnnotations = () => {
     return useContext(SetSelectedAnnotation);
 };
 
-export const useSelectedAnnotation = () => {
+export const useSelectedAnnotations = () => {
     const ctx = useContext(SelectedAnnotation);
 
     if (ctx === null) {
