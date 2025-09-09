@@ -135,7 +135,8 @@ jobs:
     name: Unit tests
     runs-on: ubuntu-latest
     permissions:
-      contents: read # to checkout code
+      contents: read
+      pull-requests: write
     needs: generate-openapi-spec
     steps:
       - name: Checkout code
