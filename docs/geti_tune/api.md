@@ -28,19 +28,13 @@
 
 ## Projects
 
-| Method   | Path                 | Payload            | Return           | Description                 |
-| -------- | -------------------- | ------------------ | ---------------- | --------------------------- |
-| `POST`   | `/api/projects`      | name, task, labels | project info     | Create a new project        |
-| `GET`    | `/api/projects`      | -                  | list of projects | List the available projects |
-| `GET`    | `/api/projects/<id>` | -                  | project info     | Get info about a project    |
-| `DELETE` | `/api/projects/<id>` | -                  | -                | Delete a project            |
-
-### Labels
-
-| Method  | Path                        | Payload          | Return          | Description                          |
-| ------- | --------------------------- | ---------------- | --------------- | ------------------------------------ |
-| `GET`   | `/api/projects/<id>/labels` | -                | task and labels | Get the task and labels of a project |
-| `PATCH` | `/api/projects/<id>/labels` | labels to change | task and labels | Add, remove or edit labels           |
+| Method   | Path                        | Payload            | Return           | Description                 |
+| -------- | --------------------------- | ------------------ | ---------------- | --------------------------- |
+| `POST`   | `/api/projects`             | name, task, labels | project info     | Create a new project        |
+| `GET`    | `/api/projects`             | -                  | list of projects | List the available projects |
+| `GET`    | `/api/projects/<id>`        | -                  | project info     | Get info about a project    |
+| `DELETE` | `/api/projects/<id>`        | -                  | -                | Delete a project            |
+| `PATCH`  | `/api/projects/<id>/labels` | labels to change   | task and labels  | Add, remove or edit labels  |
 
 ### Pipelines
 
