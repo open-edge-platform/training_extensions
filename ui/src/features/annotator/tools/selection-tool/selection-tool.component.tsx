@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { AnnotationShape } from '../../annotations/annotation-shape';
+import { AnnotationShape } from '../../annotations/annotation-shape.component';
 import { Annotation } from '../../types';
 
 type SelectionToolProps = {

@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 import { getMockedAnnotation } from '../../../../tests/test-utils/mocked-annotation';
 import { AnnotatorProvider } from '../annotator-provider.component';
 import { Annotation, Polygon, Rect } from '../types';
-import { AnnotationShape } from './annotation-shape';
+import { AnnotationShape } from './annotation-shape.component';
 
 type AnnotationRect = Annotation & { shape: Rect };
 type AnnotationPolygon = Annotation & { shape: Polygon };

@@ -5,7 +5,7 @@ import { CSSProperties } from 'react';
 
 import { useAnnotator } from '../annotator-provider.component';
 import { Annotation } from './annotation.component';
-import { MaskAnnotations } from './mask-annotations';
+import { MaskAnnotations } from './mask-annotations.component';
 
 type AnnotationsProps = {
     width: number;

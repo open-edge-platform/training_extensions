@@ -4,7 +4,7 @@
 import { ReactNode, useId } from 'react';
 
 import { Annotation } from '../types';
-import { AnnotationShape } from './annotation-shape';
+import { AnnotationShape } from './annotation-shape.component';
 
 type MaskAnnotationsProps = {
     annotations: Annotation[];
