@@ -37,7 +37,7 @@ exact data used to train a specific model, even if an image has been deleted or 
 A _model revision_ (`ModelRevision`) is a model instance obtained by fine-tuning the weights of another model revision,
 or a set of publicly available pre-trained weights. For each model, it is important to store not only the training
 dataset revision, but also the exact label schema used to train it (`LabelSchemaRevision`). This is because the user
-may later choose to add, remove or rename labels, while the stricture of the model output is fixed at training time.
+may later choose to add, remove or rename labels, while the structure of the model output is fixed at training time.
 
 As regards the evaluation of the performance of a model, the `EvaluationResult` keeps track of the results obtained
 by a model revision when evaluated on a specific dataset revision, or a subset of it. The evaluation may consider

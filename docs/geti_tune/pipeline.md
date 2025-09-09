@@ -82,7 +82,7 @@ Each sink is identified by a unique id, and optionally a friendly name chosen by
 
 ### Models
 
-A pipeline performs inference using models OpenVINO IR format (.xml + .bin), converted after fine-tuning.
+A pipeline performs inference using models in OpenVINO IR format (.xml + .bin), converted after fine-tuning.
 The supported task types include image classification, object detection and instance segmentation.
 
 A model is identified by a unique id.
