@@ -59,17 +59,22 @@ class TestDatasetItemEndpoints:
 
     def test_list_dataset_items(self, fxt_dataset_item, fxt_dataset_service, fxt_client):
         project_id = uuid4()
+        fxt_dataset_service.count_dataset_items.return_value = 1
         fxt_dataset_service.list_dataset_items.return_value = [fxt_dataset_item]
 
         response = fxt_client.get(f"/api/projects/{str(project_id)}/dataset/items")
 
         assert response.status_code == status.HTTP_200_OK
+        fxt_dataset_service.count_dataset_items.assert_called_once_with(
+            project_id=project_id, start_date=None, end_date=None
+        )
         fxt_dataset_service.list_dataset_items.assert_called_once_with(
             project_id=project_id, limit=10, offset=0, start_date=None, end_date=None
         )
 
     def test_list_dataset_items_filtering_and_pagination(self, fxt_dataset_item, fxt_dataset_service, fxt_client):
         project_id = uuid4()
+        fxt_dataset_service.count_dataset_items.return_value = 1
         fxt_dataset_service.list_dataset_items.return_value = [fxt_dataset_item]
 
         response = fxt_client.get(
@@ -77,6 +82,11 @@ class TestDatasetItemEndpoints:
         )
 
         assert response.status_code == status.HTTP_200_OK
+        fxt_dataset_service.count_dataset_items.assert_called_once_with(
+            project_id=project_id,
+            start_date=datetime(2025, 1, 9, 0, 0, 0, tzinfo=ZoneInfo("UTC")),
+            end_date=datetime(2025, 12, 31, 23, 59, 59, tzinfo=ZoneInfo("UTC")),
+        )
         fxt_dataset_service.list_dataset_items.assert_called_once_with(
             project_id=project_id,
             limit=50,
@@ -217,9 +227,7 @@ class TestDatasetItemEndpoints:
     def test_delete_dataset_item_not_found(self, fxt_dataset_service, fxt_client):
         project_id = uuid4()
         dataset_item_id = uuid4()
-        fxt_dataset_service.delete_dataset_item.side_effect = ResourceNotFoundError(
-            ResourceType.DATASET_ITEM, str(dataset_item_id)
-        )
+        fxt_dataset_service.delete_dataset_item.return_value = False
 
         response = fxt_client.delete(f"/api/projects/{str(project_id)}/dataset/items/{str(dataset_item_id)}")
 

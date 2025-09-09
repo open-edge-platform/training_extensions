@@ -14,7 +14,7 @@ ModelType = TypeVar("ModelType", bound=Base)
 class BaseRepository[ModelType]:
     """Base repository class for database operations."""
 
-    def __init__(self, db: Session, model: type[ModelType]):
+    def __init__(self, db: Session, model: type[ModelType]) -> None:
         self.db = db
         self.model = model
 
@@ -37,8 +37,8 @@ class BaseRepository[ModelType]:
         self.db.refresh(updated)
         return updated
 
-    def delete(self, obj_id: str) -> None:
-        self.db.query(self.model).filter(self.model.id == obj_id).delete()  # type: ignore[attr-defined]
+    def delete(self, obj_id: str) -> bool:
+        return self.db.query(self.model).filter(self.model.id == obj_id).delete() > 0  # type: ignore[attr-defined]
 
     def save_batch(self, items: list[ModelType]) -> list[ModelType]:
         for item in items:

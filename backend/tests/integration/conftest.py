@@ -9,7 +9,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.db.schema import Base, LabelDB, ModelDB, PipelineDB, ProjectDB, SinkDB, SourceDB
+from app.db.schema import Base, DatasetItemDB, LabelDB, ModelDB, PipelineDB, ProjectDB, SinkDB, SourceDB
 from app.schemas import ModelFormat, OutputFormat, SinkType, SourceType
 from app.services import ActivePipelineService, MetricsService
 
@@ -142,6 +142,22 @@ def fxt_db_projects() -> list[ProjectDB]:
         ]
         db_projects.append(project)
     return db_projects
+
+
+@pytest.fixture
+def fxt_db_dataset_items() -> list[DatasetItemDB]:
+    """Fixture to create multiple dataset items in the database."""
+    configs = [
+        {"name": "test1", "format": "jpg", "size": 1024, "width": 1024, "height": 768, "subset": "unassigned"},
+        {"name": "test2", "format": "jpg", "size": 1024, "width": 1024, "height": 768, "subset": "unassigned"},
+        {"name": "test3", "format": "jpg", "size": 1024, "width": 1024, "height": 768, "subset": "unassigned"},
+    ]
+
+    db_dataset_items = []
+    for config in configs:
+        dataset_item = DatasetItemDB(**config)
+        db_dataset_items.append(dataset_item)
+    return db_dataset_items
 
 
 @pytest.fixture
