@@ -6,15 +6,15 @@ import { MouseEvent, ReactNode } from 'react';
 import { noop } from 'lodash-es';
 
 import { useAnnotator } from '../annotator-provider.component';
-import { useSelectedAnnotations, useSetSelectedAnnotations } from '../select-annotation-provider.component';
+import { useSelectedAnnotations } from '../select-annotation-provider.component';
 import { useAnnotation } from './annotation.component';
 
 export const SelectableAnnotation = ({ children }: { children: ReactNode }) => {
     const annotation = useAnnotation();
-    const isSelected = useSelectedAnnotations().has(annotation.id);
-    const setSelectedAnnotations = useSetSelectedAnnotations();
+    const { setSelectedAnnotations, selectedAnnotations } = useSelectedAnnotations();
     const { activeTool } = useAnnotator();
 
+    const isSelected = selectedAnnotations?.has(annotation.id);
     const hasSelectionToolActive = activeTool === 'selection';
 
     const handleSelectAnnotation = (e: MouseEvent<SVGElement>) => {

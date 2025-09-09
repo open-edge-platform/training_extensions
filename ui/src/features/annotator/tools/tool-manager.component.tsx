@@ -14,9 +14,9 @@ type ToolManager = {
 export const ToolManager = ({ width, height }: ToolManager) => {
     const zoom = useZoom();
     const { updateAnnotation, activeTool, annotations } = useAnnotator();
-    const selectedAnnotations = useSelectedAnnotations();
+    const { selectedAnnotations } = useSelectedAnnotations();
 
-    const currentlySelectedAnnotations = annotations.filter((annotation) => selectedAnnotations.has(annotation.id));
+    const currentlySelectedAnnotations = annotations.filter((annotation) => selectedAnnotations?.has(annotation.id));
 
     // We only want to allow edition if there is exactly one selected annotation selected
     if (currentlySelectedAnnotations.length === 0 || currentlySelectedAnnotations.length > 1) {

@@ -3,19 +3,15 @@
 
 import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useState } from 'react';
 
-import { noop } from 'lodash-es';
-
-type SelectedAnnotations = Set<string>;
-
-const SelectedAnnotation = createContext<SelectedAnnotations | null>(null);
-const SetSelectedAnnotation = createContext<Dispatch<SetStateAction<SelectedAnnotations | null>>>(noop);
-
-export const useSetSelectedAnnotations = () => {
-    return useContext(SetSelectedAnnotation);
+type SelectedAnnotationContextProps = {
+    selectedAnnotations: Set<string> | null;
+    setSelectedAnnotations: Dispatch<SetStateAction<Set<string> | null>>;
 };
 
+const SelectedAnnotationContext = createContext<SelectedAnnotationContextProps | null>(null);
+
 export const useSelectedAnnotations = () => {
-    const ctx = useContext(SelectedAnnotation);
+    const ctx = useContext(SelectedAnnotationContext);
 
     if (ctx === null) {
         throw new Error('No context');
@@ -25,11 +21,11 @@ export const useSelectedAnnotations = () => {
 };
 
 export const SelectAnnotationProvider = ({ children }: { children: ReactNode }) => {
-    const [selectedAnnotations, setSelectedAnnotations] = useState<SelectedAnnotations | null>(new Set());
+    const [selectedAnnotations, setSelectedAnnotations] = useState<Set<string> | null>(new Set());
 
     return (
-        <SelectedAnnotation.Provider value={selectedAnnotations}>
-            <SetSelectedAnnotation.Provider value={setSelectedAnnotations}>{children}</SetSelectedAnnotation.Provider>
-        </SelectedAnnotation.Provider>
+        <SelectedAnnotationContext.Provider value={{ selectedAnnotations, setSelectedAnnotations }}>
+            {children}
+        </SelectedAnnotationContext.Provider>
     );
 };
