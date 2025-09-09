@@ -25,6 +25,7 @@
         "preview": "rsbuild preview",
         "test:unit": "vitest --config vitest.config.ts",
         "test:unit:watch": "vitest --config vitest.config.ts --reporter=verbose --watch",
+        "test:unit:coverage": "vitest --coverage",
         "test:component": "npx playwright test --config=playwright.config.ts",
         "type-check": "tsc --noEmit",
         "tauri": "tauri"
