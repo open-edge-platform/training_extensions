@@ -104,6 +104,8 @@ class Scheduler:
             if thread.is_alive():
                 logger.debug(f"Joining thread: {thread.name}")
                 thread.join(timeout=10)
+                if thread.is_alive():
+                    logger.warning(f"Thread {thread.name} did not terminate within timeout")
 
         # Join processes in reverse order so that consumers are terminated before producers.
         for process in self.processes[::-1]:
