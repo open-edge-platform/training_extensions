@@ -4,12 +4,18 @@
 import { useState } from 'react';
 
 import {
+    ActionButton,
+    Button,
+    ColorEditor,
     ColorSwatch,
     ColorSwatchPicker,
+    Flex,
+    Grid,
     ColorPicker as SpectrumColorPicker,
     SpectrumColorPickerProps,
-} from '@adobe/react-spectrum';
-import { ActionButton, Button, ColorEditor, Flex, Grid, Text, toast } from '@geti/ui';
+    Text,
+    toast,
+} from '@geti/ui';
 import { Add, Delete } from '@geti/ui/icons';
 import { v4 as uuid } from 'uuid';
 

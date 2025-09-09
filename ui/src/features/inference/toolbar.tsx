@@ -3,8 +3,7 @@
 
 import { Suspense } from 'react';
 
-import { StatusLight } from '@adobe/react-spectrum';
-import { Button, Divider, Flex, Text, View } from '@geti/ui';
+import { Button, Divider, Flex, StatusLight, Text, View } from '@geti/ui';
 
 import { $api } from '../../api/client';
 import { SourceModal } from './source/source-modal';
