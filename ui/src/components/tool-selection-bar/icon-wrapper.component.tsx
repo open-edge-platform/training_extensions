@@ -3,7 +3,7 @@
 
 import { ReactNode } from 'react';
 
-import cls from 'clsx';
+import { clsx } from 'clsx';
 
 import classes from './tool-selection-bar.module.scss';
 
@@ -17,7 +17,7 @@ export const IconWrapper = ({
     isSelected?: boolean;
 }) => {
     return (
-        <div className={cls(classes.iconWrapper, { [classes.selected]: isSelected })} onClick={onPress}>
+        <div className={clsx(classes.iconWrapper, { [classes.selected]: isSelected })} onClick={onPress}>
             {children}
         </div>
     );

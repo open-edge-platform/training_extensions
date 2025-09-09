@@ -18,14 +18,19 @@ export const ToolManager = ({ width, height }: ToolManager) => {
 
     const currentlySelectedAnnotations = annotations.filter((annotation) => selectedAnnotations.has(annotation.id));
 
-    if (currentlySelectedAnnotations.length === 0) {
+    // We only want to allow edition if there is exactly one selected annotation selected
+    if (currentlySelectedAnnotations.length === 0 || currentlySelectedAnnotations.length > 1) {
         return null;
     }
+
+    const annotation = currentlySelectedAnnotations[0] as Annotation & { shape: Rect };
+    const { shape } = annotation;
 
     if (activeTool === 'selection') {
         return (
             <EditBoundingBox
-                annotation={currentlySelectedAnnotations[0] as Annotation & { shape: Rect }}
+                key={`bbox-${shape.x}-${shape.y}-${shape.width}-${shape.height}`}
+                annotation={annotation}
                 roi={{ x: 0, y: 0, width, height }}
                 zoom={zoom.scale}
                 updateAnnotation={updateAnnotation}
