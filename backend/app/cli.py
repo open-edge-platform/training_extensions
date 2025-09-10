@@ -9,7 +9,7 @@ import sys
 import click
 
 from app.db import get_db_session, migration_manager
-from app.db.schema import ModelDB, PipelineDB, ProjectDB, SinkDB, SourceDB
+from app.db.schema import DatasetItemDB, ModelDB, PipelineDB, ProjectDB, SinkDB, SourceDB
 from app.schemas import ModelFormat, OutputFormat, SinkType, SourceType
 
 logging.basicConfig(level=logging.INFO)
@@ -119,6 +119,7 @@ def seed(with_model: bool, model_name: str) -> None:
 def clean_db() -> None:
     """Remove all data from the database (clean but don't drop tables)."""
     with get_db_session() as db:
+        db.query(DatasetItemDB).delete()
         db.query(ProjectDB).delete()
         db.query(ModelDB).delete()
         db.query(SinkDB).delete()
