@@ -5,7 +5,7 @@ import { createContext, ReactNode, useContext, useState } from 'react';
 
 import { ToolType } from '../../components/tool-selection-bar/tools/interface';
 import { useActiveTool } from './hooks/use-active-tool.hook';
-import { Annotation } from './types';
+import { Annotation, MediaItem, RegionOfInterest } from './types';
 
 type AnnotatorContext = {
     activeTool: ToolType | null;
@@ -13,20 +13,16 @@ type AnnotatorContext = {
 
     updateAnnotation: (updatedAnnotation: Annotation) => void;
 
+    roi: RegionOfInterest;
     annotations: Annotation[];
 };
 
 export const AnnotatorProviderContext = createContext<AnnotatorContext | null>(null);
 
-export const AnnotatorProvider = ({
-    initialAnnotations,
-    children,
-}: {
-    initialAnnotations: Annotation[];
-    children: ReactNode;
-}) => {
+export const AnnotatorProvider = ({ mediaItem, children }: { mediaItem: MediaItem; children: ReactNode }) => {
     const { activeTool, selectTool } = useActiveTool();
-    const [annotations, setAnnotations] = useState<Annotation[]>(initialAnnotations);
+    const [annotations, setAnnotations] = useState<Annotation[]>(mediaItem.annotations);
+    const roi = { x: 0, y: 0, width: mediaItem.width, height: mediaItem.height };
 
     const handleSelectTool = (tool: ToolType) => {
         selectTool(tool);
@@ -35,10 +31,9 @@ export const AnnotatorProvider = ({
     const handleUpdateAnnotation = (updatedAnnotation: Annotation) => {
         const { id } = updatedAnnotation;
 
-        setAnnotations((prevAnnotations) => [
-            ...prevAnnotations.filter((annotation) => annotation.id !== id),
-            updatedAnnotation,
-        ]);
+        setAnnotations((prevAnnotations) =>
+            prevAnnotations.map((annotation) => (annotation.id === id ? updatedAnnotation : annotation))
+        );
     };
 
     return (
@@ -50,6 +45,8 @@ export const AnnotatorProvider = ({
                 updateAnnotation: handleUpdateAnnotation,
 
                 annotations,
+
+                roi,
             }}
         >
             {children}

@@ -1,9 +1,10 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState } from 'react';
+import { ReactNode, useState } from 'react';
 
-import { Annotation, Point, RegionOfInterest } from '../../types';
+import { useAnnotator } from '../../annotator-provider.component';
+import { Annotation, Point } from '../../types';
 import { ResizeAnchor } from './resize-anchor.component';
 import { TranslateShape } from './translate-shape.component';
 import { getBoundingBoxInRoi, getBoundingBoxResizePoints, getClampedBoundingBox } from './utils';
@@ -12,15 +13,16 @@ import classes from './bounding-box-tool.module.scss';
 
 interface EditBoundingBoxProps {
     annotation: Annotation & { shape: { shapeType: 'rect' } };
-    roi: RegionOfInterest;
     zoom: number;
     updateAnnotation: (annotation: Annotation) => void;
+    children: ReactNode;
 }
 
 const ANCHOR_SIZE = 8;
 
-export const EditBoundingBox = ({ annotation, roi, zoom, updateAnnotation }: EditBoundingBoxProps) => {
+export const EditBoundingBox = ({ annotation, zoom, updateAnnotation, children }: EditBoundingBoxProps) => {
     const [shape, setShape] = useState(annotation.shape);
+    const { roi } = useAnnotator();
 
     const onComplete = () => {
         updateAnnotation({ ...annotation, shape });
@@ -42,19 +44,14 @@ export const EditBoundingBox = ({ annotation, roi, zoom, updateAnnotation }: Edi
 
     return (
         <>
-            <svg
-                width={roi.width}
-                height={roi.height}
-                className={classes.disabledLayer}
-                id={`translate-bounding-box-${annotation.id}`}
+            <TranslateShape
+                zoom={zoom}
+                annotation={{ ...annotation, shape }}
+                translateShape={translate}
+                onComplete={onComplete}
             >
-                <TranslateShape
-                    zoom={zoom}
-                    annotation={{ ...annotation, shape }}
-                    translateShape={translate}
-                    onComplete={onComplete}
-                />
-            </svg>
+                {children}
+            </TranslateShape>
 
             <svg
                 width={roi.width}

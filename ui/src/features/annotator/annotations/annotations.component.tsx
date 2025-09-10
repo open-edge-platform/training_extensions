@@ -1,9 +1,10 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { CSSProperties } from 'react';
+import { CSSProperties, MouseEvent } from 'react';
 
 import { useAnnotator } from '../annotator-provider.component';
+import { useSelectedAnnotations } from '../select-annotation-provider.component';
 import { Annotation } from './annotation.component';
 import { MaskAnnotations } from './mask-annotations.component';
 
@@ -26,11 +27,24 @@ const DEFAULT_ANNOTATION_STYLES = {
 
 export const Annotations = ({ width, height, isFocussed }: AnnotationsProps) => {
     const { annotations } = useAnnotator();
+    const { setSelectedAnnotations, selectedAnnotations } = useSelectedAnnotations();
+
+    // Order annotations by selection. Selected annotation should always be on top.
+    const orderedAnnotations = [
+        ...annotations.filter((a) => !selectedAnnotations.has(a.id)),
+        ...annotations.filter((a) => selectedAnnotations.has(a.id)),
+    ];
+
+    const handleClickOutside = (e: MouseEvent<SVGSVGElement>): void => {
+        if (e.target === e.currentTarget) {
+            setSelectedAnnotations(new Set());
+        }
+    };
 
     return (
-        <svg width={width} height={height} style={DEFAULT_ANNOTATION_STYLES}>
-            <MaskAnnotations annotations={annotations} width={width} height={height} isEnabled={isFocussed}>
-                {annotations.map((annotation) => (
+        <svg width={width} height={height} style={DEFAULT_ANNOTATION_STYLES} onClick={handleClickOutside}>
+            <MaskAnnotations annotations={orderedAnnotations} width={width} height={height} isEnabled={isFocussed}>
+                {orderedAnnotations.map((annotation) => (
                     <Annotation annotation={annotation} key={annotation.id} />
                 ))}
             </MaskAnnotations>

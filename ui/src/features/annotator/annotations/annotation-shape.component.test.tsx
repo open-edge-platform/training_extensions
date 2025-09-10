@@ -5,6 +5,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import { getMockedAnnotation } from '../../../../tests/test-utils/mocked-annotation';
+import { response } from '../../dataset/mock-response';
 import { AnnotatorProvider } from '../annotator-provider.component';
 import { Annotation, Polygon, Rect } from '../types';
 import { AnnotationShape } from './annotation-shape.component';
@@ -12,11 +13,13 @@ import { AnnotationShape } from './annotation-shape.component';
 type AnnotationRect = Annotation & { shape: Rect };
 type AnnotationPolygon = Annotation & { shape: Polygon };
 
+const mockMediaItem = response.items[0];
+
 describe('AnnotationShape', () => {
     it('bounding box as a rect', () => {
         const annotation = getMockedAnnotation() as AnnotationRect;
         render(
-            <AnnotatorProvider initialAnnotations={[annotation]}>
+            <AnnotatorProvider mediaItem={mockMediaItem}>
                 <AnnotationShape annotation={annotation} />
             </AnnotatorProvider>
         );
@@ -39,7 +42,7 @@ describe('AnnotationShape', () => {
         const annotation = getMockedAnnotation({ shape: { shapeType: 'polygon', points } }) as AnnotationPolygon;
 
         render(
-            <AnnotatorProvider initialAnnotations={[annotation]}>
+            <AnnotatorProvider mediaItem={mockMediaItem}>
                 <AnnotationShape annotation={annotation} />
             </AnnotatorProvider>
         );

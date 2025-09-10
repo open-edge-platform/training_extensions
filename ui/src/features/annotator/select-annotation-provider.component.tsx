@@ -4,8 +4,8 @@
 import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useState } from 'react';
 
 type SelectedAnnotationContextProps = {
-    selectedAnnotations: Set<string> | null;
-    setSelectedAnnotations: Dispatch<SetStateAction<Set<string> | null>>;
+    selectedAnnotations: Set<string>;
+    setSelectedAnnotations: Dispatch<SetStateAction<Set<string>>>;
 };
 
 const SelectedAnnotationContext = createContext<SelectedAnnotationContextProps | null>(null);
@@ -21,7 +21,7 @@ export const useSelectedAnnotations = () => {
 };
 
 export const SelectAnnotationProvider = ({ children }: { children: ReactNode }) => {
-    const [selectedAnnotations, setSelectedAnnotations] = useState<Set<string> | null>(new Set());
+    const [selectedAnnotations, setSelectedAnnotations] = useState<Set<string>>(new Set());
 
     return (
         <SelectedAnnotationContext.Provider value={{ selectedAnnotations, setSelectedAnnotations }}>

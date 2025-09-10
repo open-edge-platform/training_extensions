@@ -58,9 +58,15 @@ export const ResizeAnchor = ({
             onComplete={onComplete}
             moveAnchorTo={moveAnchorTo}
         >
-            <g fillOpacity={1.0} transform-origin={`${x}px ${y}px`}>
-                <rect x={x - size / 2} y={y - size / 2} width={size} height={size} {...visualAnchorProps} />
-            </g>
+            <rect
+                fillOpacity={1.0}
+                transform-origin={`${x}px ${y}px`}
+                x={x - size / 2}
+                y={y - size / 2}
+                width={size}
+                height={size}
+                {...visualAnchorProps}
+            />
         </InternalAnchor>
     );
 };

@@ -1,7 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { AnnotationShape } from '../../annotations/annotation-shape.component';
+import { ReactNode } from 'react';
+
 import { useTranslate } from '../../hooks/use-translate.hook';
 import { Annotation as AnnotationInterface } from '../../types';
 import { allowPanning } from '../../utils';
@@ -13,9 +14,10 @@ interface TranslateShapeProps {
     annotation: AnnotationInterface;
     translateShape: ({ x, y }: { x: number; y: number }) => void;
     onComplete: () => void;
+    children: ReactNode;
 }
 
-export const TranslateShape = ({ zoom, onComplete, translateShape, annotation }: TranslateShapeProps) => {
+export const TranslateShape = ({ zoom, onComplete, translateShape, annotation, children }: TranslateShapeProps) => {
     const { onPointerDown, onPointerMove, onPointerUp } = useTranslate({
         zoom,
         onTranslate: translateShape,
@@ -28,13 +30,13 @@ export const TranslateShape = ({ zoom, onComplete, translateShape, annotation }:
             stroke='var(--energy-blue)'
             strokeWidth={STROKE_WIDTH / zoom}
             aria-label='Drag to move shape'
-            style={{ pointerEvents: 'auto', cursor: 'move' }}
             onPointerDown={allowPanning(onPointerDown)}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
             onPointerLeave={onPointerUp}
+            style={{ cursor: 'move' }}
         >
-            <AnnotationShape annotation={annotation} />
+            {children}
         </g>
     );
 };

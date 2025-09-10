@@ -3,19 +3,14 @@
 
 import { MouseEvent, ReactNode } from 'react';
 
-import { noop } from 'lodash-es';
-
-import { useAnnotator } from '../annotator-provider.component';
 import { useSelectedAnnotations } from '../select-annotation-provider.component';
 import { useAnnotation } from './annotation.component';
 
 export const SelectableAnnotation = ({ children }: { children: ReactNode }) => {
     const annotation = useAnnotation();
     const { setSelectedAnnotations, selectedAnnotations } = useSelectedAnnotations();
-    const { activeTool } = useAnnotator();
 
     const isSelected = selectedAnnotations?.has(annotation.id);
-    const hasSelectionToolActive = activeTool === 'selection';
 
     const handleSelectAnnotation = (e: MouseEvent<SVGElement>) => {
         const hasShiftPressed = e.shiftKey;
@@ -39,7 +34,7 @@ export const SelectableAnnotation = ({ children }: { children: ReactNode }) => {
 
     return (
         <g
-            onClick={hasSelectionToolActive ? handleSelectAnnotation : noop}
+            onClick={handleSelectAnnotation}
             style={{
                 ...(isSelected
                     ? {
@@ -53,6 +48,9 @@ export const SelectableAnnotation = ({ children }: { children: ReactNode }) => {
                 transitionTimingFunction: 'ease-in-out',
                 transitionDuration: '0.1s',
                 transitionDelay: isSelected ? '0s' : '0.25s',
+                position: 'relative',
+                zIndex: 999,
+                pointerEvents: 'auto',
             }}
         >
             {children}

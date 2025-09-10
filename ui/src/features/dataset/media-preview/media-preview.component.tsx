@@ -32,7 +32,7 @@ export const MediaPreview = ({ mediaItem, close }: { mediaItem: Item; close: () 
                         columns={'auto 1fr auto'}
                         rows={'auto 1fr auto'}
                     >
-                        <AnnotatorProvider initialAnnotations={mediaItem.annotations}>
+                        <AnnotatorProvider mediaItem={mediaItem}>
                             <View gridArea={'toolbar'} margin={'size-350'}>
                                 <ToolSelectionBar />
                             </View>

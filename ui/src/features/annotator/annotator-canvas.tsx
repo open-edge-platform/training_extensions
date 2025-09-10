@@ -30,7 +30,7 @@ export const AnnotatorCanvas = ({ mediaItem, isFocussed }: { mediaItem: Item; is
                             <SelectAnnotationProvider>
                                 <Annotations width={size.width} height={size.height} isFocussed={isFocussed} />
 
-                                <ToolManager width={size.width} height={size.height} />
+                                <ToolManager />
                             </SelectAnnotationProvider>
                         </View>
                     )}
