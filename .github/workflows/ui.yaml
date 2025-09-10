@@ -202,7 +202,7 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            
+
             let coverageComment = '';
             try {
               coverageComment = fs.readFileSync('ui/coverage.md', 'utf8');
