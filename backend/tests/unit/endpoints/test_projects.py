@@ -203,7 +203,7 @@ class TestProjectEndpoints:
             f"/api/projects/{str(fxt_project.id)}/labels", json=patch_labels.model_dump(mode="json")
         )
 
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.status_code == status.HTTP_404_NOT_FOUND
         assert "do not exist" in response.json()["detail"]
         fxt_label_service.update_labels_in_project.assert_not_called()
 

@@ -147,7 +147,7 @@ def delete_project(
     responses={
         status.HTTP_200_OK: {"description": "Labels updated successfully"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID or request body"},
-        status.HTTP_404_NOT_FOUND: {"description": "Project not found"},
+        status.HTTP_404_NOT_FOUND: {"description": "Project or label not found"},
         status.HTTP_409_CONFLICT: {"description": "Label(s) already exists"},
     },
 )
@@ -173,14 +173,14 @@ def update_labels(
             label_ids_to_remove = [label.id for label in labels.labels_to_remove]
             if not all(label_id in label_ids for label_id in label_ids_to_remove):
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
+                    status_code=status.HTTP_404_NOT_FOUND,
                     detail="One or more labels to remove do not exist in the project",
                 )
         if labels.labels_to_edit:
             ids_to_edit = [label.id for label in labels.labels_to_edit]
             if not all(label_id in label_ids for label_id in ids_to_edit):
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
+                    status_code=status.HTTP_404_NOT_FOUND,
                     detail="One or more labels to edit do not exist in the project",
                 )
             labels_to_edit = [label_to_edit.to_label() for label_to_edit in labels.labels_to_edit]
