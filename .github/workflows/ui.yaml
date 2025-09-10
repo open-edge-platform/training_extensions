@@ -135,7 +135,8 @@ jobs:
     name: Unit tests
     runs-on: ubuntu-latest
     permissions:
-      contents: read # to checkout code
+      contents: read
+      pull-requests: write
     needs: generate-openapi-spec
     steps:
       - name: Checkout code
@@ -164,7 +165,74 @@ jobs:
 
       - name: UI Unit tests
         working-directory: "ui"
-        run: npm run test:unit
+        run: npm run test:unit:coverage
+
+      - name: Generate coverage report
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        working-directory: "ui"
+        run: |
+          echo "## 📊 Test coverage report" > coverage.md
+          if [ -f "coverage/coverage-summary.json" ]; then
+            node -e "
+              const fs = require('fs');
+              try {
+                  const coverage = JSON.parse(fs.readFileSync('./coverage/coverage-summary.json', 'utf8'));
+                  const lines = \`\${coverage.total.lines.pct.toFixed(1)}%\`;
+                  const functions = \`\${coverage.total.functions.pct.toFixed(1)}%\`;
+                  const branches = \`\${coverage.total.branches.pct.toFixed(1)}%\`;
+                  const statements = \`\${coverage.total.statements.pct.toFixed(1)}%\`;
+                  
+                  console.log(\`| Metric | Coverage |\`);
+                  console.log(\`| --- | --- |\`);
+                  console.log(\`| Lines | \${lines} |\`);
+                  console.log(\`| Functions | \${functions} |\`);
+                  console.log(\`| Branches | \${branches} |\`);
+                  console.log(\`| Statements | \${statements} |\`);
+              } catch {
+                console.error('Failed to parse coverage summary');
+              }
+            " >> coverage.md
+          else
+            echo "No coverage summary found" >> coverage.md
+          fi
+
+      - name: Comment PR with coverage report
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const fs = require('fs');
+
+            let coverageComment = '';
+            try {
+              coverageComment = fs.readFileSync('ui/coverage.md', 'utf8');
+            } catch (error) {
+              coverageComment = '## 📊 Test Coverage Report\n\nCoverage report generation failed.';
+            }
+
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+
+            const existingComment = comments.data.find((comment) => comment.body.includes("Test coverage report"));
+
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body: coverageComment
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: coverageComment
+              });
+            }
 
   playwright-tests:
     name: Playwright Tests
