@@ -96,19 +96,7 @@ class OTXDataset(TorchDataset):
         self.sample_type = sample_type
         self.max_refetch = max_refetch
         self.data_format = data_format
-        if (
-            hasattr(dm_subset, "schema")
-            and hasattr(dm_subset.schema, "attributes")
-            and "label" in dm_subset.schema.attributes
-        ):
-            labels = dm_subset.schema.attributes["label"].categories.labels
-            self.label_info = LabelInfo(
-                label_names=labels,
-                label_groups=[labels],
-                label_ids=[str(i) for i in range(len(labels))],
-            )
-        else:
-            self.label_info = NullLabelInfo()
+        self.label_info: LabelInfo = NullLabelInfo()
         self.dm_subset = dm_subset
 
     def __len__(self) -> int:

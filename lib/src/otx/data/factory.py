@@ -11,6 +11,7 @@ from datumaro.components.annotation import AnnotationType
 from datumaro.components.dataset import Dataset as DmDataset
 from datumaro.experimental import Dataset as DatasetNew
 from datumaro.experimental.categories import LabelCategories
+from datumaro.experimental.legacy import convert_from_legacy
 
 from otx import LabelInfo, NullLabelInfo
 from otx.types.image import ImageColorChannel
@@ -53,7 +54,8 @@ class OTXDatasetFactory:
         data_format: str,
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
         include_polygons: bool = False,
-        ignore_index: int = 255,
+        # TODO(gdlg): Add support for ignore_index again
+        ignore_index: int = 255,  # noqa: ARG003
     ) -> OTXDataset | OTXDatasetNew:
         """Create OTXDataset."""
         transforms = TransformLibFactory.generate(cfg_subset)
@@ -111,9 +113,12 @@ class OTXDatasetFactory:
             return OTXInstanceSegDataset(include_polygons=include_polygons, **common_kwargs)
 
         if task == OTXTaskType.SEMANTIC_SEGMENTATION:
-            from .dataset.segmentation import OTXSegmentationDataset
+            from .dataset.segmentation_new import OTXSegmentationDataset
 
-            return OTXSegmentationDataset(ignore_index=ignore_index, **common_kwargs)
+            dataset = convert_from_legacy(dm_subset)
+            common_kwargs["dm_subset"] = dataset
+
+            return OTXSegmentationDataset(**common_kwargs)
 
         if task == OTXTaskType.KEYPOINT_DETECTION:
             from .dataset.keypoint_detection import OTXKeypointDetectionDataset
