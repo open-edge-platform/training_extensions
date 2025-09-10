@@ -196,7 +196,7 @@ class TestProjectEndpoints:
     def test_update_labels_remove_edit_nonexistent(
         self, patch_labels, fxt_project, fxt_project_service, fxt_label_service, fxt_client
     ):
-        """Test editing or removing labels that don't exist returns 400."""
+        """Test editing or removing labels that don't exist returns 404."""
         fxt_project_service.get_project_by_id.return_value = fxt_project
 
         response = fxt_client.patch(

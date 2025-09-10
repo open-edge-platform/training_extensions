@@ -34,8 +34,8 @@ class LabelService:
         Add, update, and remove labels in a project transactionally.
 
         This method performs label operations in a specific, deterministic order:
-        1. First removes labels (by their IDs)
-        2. Then updates existing labels
+        1. First updates existing labels
+        2. Then removes labels (by their IDs)
         3. Finally adds new labels
 
         This order ensures data integrity and prevents conflicts when operations
@@ -79,15 +79,15 @@ class LabelService:
         """
         try:
             with get_db_session() as db:
-                label_repo = LabelRepository(db)
-                if label_ids_to_remove:
-                    label_repo.delete_batch_in_project([str(lid) for lid in label_ids_to_remove], str(project_id))
+                label_repo = LabelRepository(db, str(project_id))
                 if labels_to_update:
                     label_repo.update_batch(_convert_labels_to_db(labels_to_update, project_id))
+                if label_ids_to_remove:
+                    label_repo.delete_batch([str(lid) for lid in label_ids_to_remove])
                 if labels_to_add:
                     label_repo.save_batch(_convert_labels_to_db(labels_to_add, project_id))
                 db.commit()
-                label_dbs = label_repo.list_by_project_id(str(project_id))
+                label_dbs = label_repo.list_all()
                 return [LabelMapper.to_schema(label_db) for label_db in label_dbs]
         except IntegrityError as e:
             if "unique constraint failed" in str(e).lower():

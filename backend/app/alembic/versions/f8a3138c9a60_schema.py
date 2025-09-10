@@ -97,7 +97,6 @@ def upgrade() -> None:
         sa.Column("hotkey", sa.String(length=10), nullable=True),
         sa.ForeignKeyConstraint(["project_id"], ["projects.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("project_id", "color", name="uq_project_label_color"),
         sa.UniqueConstraint("project_id", "hotkey", name="uq_project_label_hotkey"),
         sa.UniqueConstraint("project_id", "name", name="uq_project_label_name"),
     )

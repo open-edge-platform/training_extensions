@@ -35,7 +35,7 @@ class TestLabelServiceIntegration:
     - Successful operations with various combinations of add/update/remove
     - Uniqueness constraint violations (name, hotkey, color)
     - Transactional integrity (all-or-nothing behavior)
-    - Execution order compliance (remove → update → add)
+    - Execution order compliance (update → remove → add)
     """
 
     def test_add_labels_to_project(self, fxt_db_projects: list[ProjectDB], db_session: Session):
@@ -59,7 +59,7 @@ class TestLabelServiceIntegration:
         assert new_labels[0] in labels
         assert new_labels[1] in labels
 
-    @pytest.mark.parametrize("new_label_attrs", [{"name": "cat"}, {"color": "#00FF00"}, {"hotkey": "c"}])
+    @pytest.mark.parametrize("new_label_attrs", [{"name": "cat"}, {"hotkey": "c"}])
     def test_add_existing_label_to_project(
         self, new_label_attrs, fxt_db_projects: list[ProjectDB], db_session: Session
     ):
@@ -68,7 +68,6 @@ class TestLabelServiceIntegration:
 
         Parametrized to test all uniqueness constraints:
         - Duplicate name
-        - Duplicate color
         - Duplicate hotkey
 
         Verifies proper error message and exception type.
@@ -152,7 +151,7 @@ class TestLabelServiceIntegration:
         """
         Test complex operation combining removal, update, and addition.
 
-        Verifies the execution order (remove → update → add) works correctly
+        Verifies the execution order (update → remove → add) works correctly
         and all operations are applied transactionally.
         """
         db_project = fxt_db_projects[0]
@@ -171,6 +170,28 @@ class TestLabelServiceIntegration:
         assert len(labels) == 2
         assert any(label.name == "updated_name" for label in labels)
         assert any(label.name == "new_label" for label in labels)
+        assert not any(label.id == label_to_remove_id for label in labels)
+
+    def test_remove_update_same_label_operation(self, fxt_db_projects: list[ProjectDB], db_session: Session):
+        """
+        Test that updating and removing conflicting labels in same operation works.
+
+        Verifies the execution order (update → remove) works correctly.
+        """
+        db_project = fxt_db_projects[0]
+        db_session.add(db_project)
+        db_session.flush()
+
+        # Update the label and then remove it
+        label_to_update = Label(id=db_project.labels[0].id, name="updated_name")  # type: ignore[call-arg]
+        label_to_remove_id = db_project.labels[0].id
+
+        labels = LabelService.update_labels_in_project(
+            UUID(db_project.id), None, [label_to_update], [label_to_remove_id]
+        )
+
+        assert len(labels) == 1
+        assert labels[0].name != "updated_name"
         assert not any(label.id == label_to_remove_id for label in labels)
 
     def test_empty_operations(self, fxt_db_projects: list[ProjectDB], db_session: Session):

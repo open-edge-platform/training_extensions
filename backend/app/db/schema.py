@@ -105,7 +105,6 @@ class LabelDB(Base):
     __tablename__ = "labels"
     __table_args__ = (
         UniqueConstraint("project_id", "name", name="uq_project_label_name"),
-        UniqueConstraint("project_id", "color", name="uq_project_label_color"),
         UniqueConstraint("project_id", "hotkey", name="uq_project_label_hotkey"),
     )
 
