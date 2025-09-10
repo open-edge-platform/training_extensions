@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Dispatch, FormEvent, SetStateAction, useState } from 'react';
+import { Dispatch, FormEvent, ReactNode, SetStateAction, useState } from 'react';
 
 import {
     Button,
@@ -236,7 +236,7 @@ const SINK_ITEMS = [
     { sink_type: 'mqtt', name: 'MQTT message bus', icon: <IconMQTT /> },
     { sink_type: 'ros', name: 'ROS2 message bus', icon: <IconRos /> },
     { sink_type: 'webhook', name: 'Webhook URL', icon: <IconWebhook /> },
-] satisfies Array<{ sink_type: SinkType; name: string; icon: JSX.Element }>;
+] satisfies Array<{ sink_type: SinkType; name: string; icon: ReactNode }>;
 
 export const Sink = () => {
     const navigate = useNavigate();

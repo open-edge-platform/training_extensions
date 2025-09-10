@@ -1,0 +1,138 @@
+@startuml "Complete-ER"
+!define entity(x) class x << (E,#FFAAAA) >>
+!define pk(x) <u>x</u>
+
+title
+<size:16><b>Geti Tune - Complete Entity-Relationship Diagram</b></size>
+<size:12>System Entities and Relationships</size>
+end title
+
+
+entity(Project) {
+  pk(id) : UUID
+  name : TEXT UNIQUE
+}
+
+' Task related entities entities
+entity(LabelSchema) {
+  task_type : TEXT
+  exclusive_labels : BOOLEAN
+}
+
+entity(LabelSchemaRevision) {
+  ...
+}
+
+entity(Label) {
+  pk(id) : UUID
+  name : TEXT
+  color : TEXT
+  hotkey : TEXT
+}
+
+' InferencePipeline related entities
+entity(InferencePipeline) {
+  is_running : BOOLEAN
+}
+
+entity(Source) {
+  pk(id) : UUID
+  name : TEXT UNIQUE
+  source_type : TEXT
+  config_data : JSON
+}
+
+entity(Sink) {
+  pk(id) : UUID
+  name : TEXT UNIQUE
+  sink_type : TEXT
+  config_data : JSON
+}
+
+entity(DataCollectionPolicy) {
+  pk(id) : UUID
+  name : TEXT
+  policy_type : TEXT
+  config_data : JSON
+  enabled : BOOLEAN
+}
+
+' Dataset and Media entities
+entity(Dataset) {}
+
+entity(DatasetView) {
+  pk(id) : UUID
+}
+
+entity(DatasetRevision) {
+  ...
+}
+
+entity(DatasetItem) {
+  pk(id) : UUID
+  name : TEXT
+  format : TEXT
+  width : INTEGER
+  height : INTEGER
+  size : INTEGER
+  subset : TEXT
+  tags : LIST[TEXT]
+}
+
+entity(Annotation) {
+  pk(id) : UUID
+  data : JSON
+  user_reviewed : BOOLEAN
+}
+
+' Model related entities
+entity(ModelRevision) {
+  pk(id) : UUID
+  architecture : TEXT
+  status : TEXT
+  training_metrics : JSON
+}
+
+entity(EvaluationResult) {
+  pk(id) : UUID
+}
+
+entity(MetricScore) {
+  metric: TEXT
+  score: FLOAT
+}
+
+' Relationships
+Project ||--|| LabelSchema : "A project solves exactly one task"
+Project ||--|| InferencePipeline : "Each project defines its own pipeline \nto configure the data flow"
+Project ||--|| Dataset : "Dataset items are bound\n to the project to ensure they\n have consistent labels"
+Project ||--o{ ModelRevision : "Users can train multiple \n models within one project"
+
+LabelSchema ||--|{ Label : "A task defines\n one or more labels"
+LabelSchema ||--o{ ModelRevision : "A task may have \n multiple models"
+
+InferencePipeline ||--|| Source : "A pipeline has one source"
+InferencePipeline }o--|| Sink : "A pipeline has one sink"
+InferencePipeline ||--o{ DataCollectionPolicy : "A pipeline may collect data\n based on multiple criteria"
+InferencePipeline ||--|| ModelRevision : "A pipeline uses\n one model\n for inference"
+
+Dataset ||---o{ DatasetItem: "The dataset is \n the set of all \n media of the project"
+Dataset ||---o{ DatasetView
+DatasetItem ||--o| Annotation : "Every media has an annotation,\n or a model-generated prediction,\n or it is unannotated"
+DatasetItem }o---o| "Source " : "Each media is acquired\n from a source, or\n uploaded by the user"
+DatasetView ||---o{ DatasetItem: "A view is a set of media\n filtered by some criteria"
+
+ModelRevision ||---o{ ModelRevision : "New revisions are created\n after fine-tuning the weights \n of the parent revision"
+ModelRevision |o---o{ Annotation : "Models generate predictions"
+ModelRevision ||---|| LabelSchemaRevision
+ModelRevision ||---|| DatasetRevision
+ModelRevision ||---|| EvaluationResult : "A model is evaluated \n with one or more metrics \n on a specific revision of the \n dataset and labels"
+EvaluationResult ||---|| LabelSchemaRevision
+EvaluationResult ||---|| DatasetRevision
+EvaluationResult ||---|{ MetricScore
+
+' this dummy note only exist for pretty formatting
+note left of InferencePipeline
+end note
+
+@enduml

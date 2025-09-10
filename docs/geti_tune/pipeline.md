@@ -1,26 +1,38 @@
 # Pipeline management
 
-A pipeline consists of a series of stages that process a stream of data.
+In Geti Tune, the _inference pipeline_ (or _pipeline_ for short) is the central concept that represents the entire
+processing and inference flow of a video stream from input sources to output sinks.
+Each project has its own pipeline, which can be thought of as an "engine" that manages and executes a sequence
+of processing steps, ensuring data flows through them properly.
 
 ![Diagram showing the sequence of processing stages](media/pipeline-stages.jpg)
 
-Within a pipeline we can identify three main elements:
+The simplest, most minimal pipeline consists of three elements:
 
 - A _source_, namely the origin of the stream. This could be, for example, a camera or a video file.
 - A _model_, which elaborates the input data to generate predictions.
 - A _sink_, that is where the results should be dispatched. This could be, for example, a folder or a message queue.
 
-The _stream loading_, _inference_ and _output dispatching_ stages are indeed the core of the Geti Tune pipeline.  
-There are also other stages too, such as model monitoring and data collection, which are not currently configurable.
+In practice, there are usually other stages in between that analyze or transform the data stream:
 
-Each stage outputs in a standard format, so it is possible to use any source in combination with any model and sink.
-A user can reconfigure a pipeline, for example switching to another camera for frame acquisition, or selecting a
-different model to generate predictions. To make these operations easier, it is convenient to configure each
-source and sink independently, then choose which ones to enable in a pipeline.
+- Monitoring of the input data, to detect potential issues with the source (e.g. lens blockage, lighting changes, ...)
+- Monitoring of the model predictions, to detect potential issues with the model (e.g. concept drift, out-of-distribution samples, ...)
+- Data collection, to save interesting frames for later inspection or to improve the model via fine-tuning.
 
-Furthermore, the ability to define multiple pipelines can be useful in various cases, for example to distinguish between
-a production pipeline and an experimental one. In practice, a pipeline can be seen as a combination of source,
-sink and model, to be configured and activated as desired.
+In Geti Tune, the configuration of sources and sinks is decoupled from the configuration of the pipeline.
+In other words, sources and sinks are configured independently, then the pipeline connects to the selected ones.
+This abstraction not only makes it easy to switch from one source to another (e.g. two or more cameras),
+but also allows the reuse of these pre-configured components in other projects and pipelines.
+
+Pipeline stages operate at the frame level. To facilitate the integration of the processing stages and the transfer
+of data from one to another, all stages adhere to a unified format for input and output data (`StreamData` entity).
+This also allows for easy extension of the pipeline with new intermediate processing steps, without affecting the
+existing stages.
+
+A pipeline can be in one of two states: _running_ or _idle_. A running pipeline constantly tries to load frames,
+process them and output to the sink; conversely, an idle pipeline does not perform any work until activated.
+Only one pipeline can be active at a given time: this limitation is due to the hardware resources required to run
+the model inference, which are usually not sufficient to run multiple pipelines simultaneously at full speed.
 
 ![Diagram showing pipeline components](media/pipeline-components.jpg)
 
@@ -30,8 +42,8 @@ sink and model, to be configured and activated as desired.
 
 Supported sources include:
 
-- cameras (webcams, industrial cameras, IP cameras, ...)
-- files (videos, images)
+- Cameras (webcams, industrial cameras, IP cameras, ...)
+- Files (videos, images)
 
 The configuration of a source consists of a _type_ and a set of source-specific attributes. For example:
 
@@ -53,7 +65,8 @@ Each source is identified by a unique id, and optionally a friendly name chosen 
 
 Supported sinks include:
 
-- local filesystem (folder)
+- Local filesystem (folder)
+- Webhooks
 - Messaging frameworks (MQTT, ROS2, ...)
 
 The configuration of a sink consists of a _type_ and a set of sink-specific attributes. For example:
@@ -69,10 +82,10 @@ Each sink is identified by a unique id, and optionally a friendly name chosen by
 
 ### Models
 
-Geti Tune supports models exported from Geti in OpenVINO IR format (.xml + .bin). All tasks are supported, including
-classification, detection, segmentation, anomaly and keypoint detection.
+A pipeline performs inference using models in OpenVINO IR format (.xml + .bin), converted after fine-tuning.
+The supported task types include image classification, object detection and instance segmentation.
 
-A model is identified by a unique id, and optionally a friendly name chosen by the user (e.g. "YOLO-X car detector").
+A model is identified by a unique id.
 
 ### Pipelines
 
@@ -100,50 +113,4 @@ a physical camera requires exclusive access, whereas an IP camera or a topic doe
 
 ## REST API
 
-### Source configuration
-
-| Method   | Path                       | Payload       | Return          | Description                       |
-| -------- | -------------------------- | ------------- | --------------- | --------------------------------- |
-| `POST`   | `/api/sources`             | source config | source id       | Create and configure a new source |
-| `GET`    | `/api/sources`             | -             | list of sources | List the available sources        |
-| `GET`    | `/api/sources/<id>`        | -             | source info     | Get info about a source           |
-| `PATCH`  | `/api/sources/<id>`        | source config | -               | Reconfigure an existing source    |
-| `POST`   | `/api/sources/<id>:export` | -             | yaml file       | Export a source to file           |
-| `POST`   | `/api/sources:import`      | yaml file     | source id       | Import a source from file         |
-| `DELETE` | `/api/sources/<id>`        | -             | -               | Remove a source                   |
-
-### Sink configuration
-
-| Method   | Path                     | Payload     | Return        | Description                     |
-| -------- | ------------------------ | ----------- | ------------- | ------------------------------- |
-| `POST`   | `/api/sinks`             | sink config | sink id       | Create and configure a new sink |
-| `GET`    | `/api/sinks`             | -           | list of sinks | List the available sinks        |
-| `GET`    | `/api/sinks/<id>`        | -           | sink info     | Get info about a sink           |
-| `PATCH`  | `/api/sinks/<id>`        | sink config | -             | Reconfigure an existing sink    |
-| `POST`   | `/api/sinks/<id>:export` | -           | yaml file     | Export a sink to file           |
-| `POST`   | `/api/sinks:import`      | yaml file   | sink id       | Import a sink from file         |
-| `DELETE` | `/api/sinks/<id>`        | -           | -             | Remove a sink                   |
-
-### Model management
-
-| Method   | Path               | Payload              | Return         | Description                          |
-| -------- | ------------------ | -------------------- | -------------- | ------------------------------------ |
-| `POST`   | `/api/models`      | .xml, .bin, metadata | model id       | Upload a new model                   |
-| `GET`    | `/api/models`      | -                    | list of models | List the available models            |
-| `GET`    | `/api/models/<id>` | -                    | model info     | Get info about a model               |
-| `PATCH`  | `/api/models/<id>` | metadata             | -              | Update metadata of an existing model |
-| `DELETE` | `/api/models/<id>` | -                    | -              | Remove a model                       |
-
-### Pipeline management
-
-| Method   | Path                          | Payload                    | Return            | Description                         |
-| -------- | ----------------------------- | -------------------------- | ----------------- | ----------------------------------- |
-| `POST`   | `/api/pipelines`              | ids of source, sink, model | pipeline id       | Create and configure a new pipeline |
-| `GET`    | `/api/pipelines`              | -                          | list of pipelines | List the available pipelines        |
-| `GET`    | `/api/pipelines/<id>`         | -                          | pipeline info     | Get info about a given pipeline     |
-| `PATCH`  | `/api/pipelines/<id>`         | ids of source, sink, model | -                 | Reconfigure an existing pipeline    |
-| `POST`   | `/api/pipelines/<id>:enable`  | -                          | -                 | Activate a pipeline                 |
-| `POST`   | `/api/pipelines/<id>:disable` | -                          | -                 | Stop a pipeline                     |
-| `POST`   | `/api/pipelines/<id>:export`  | -                          | zip               | Export a pipeline to file           |
-| `POST`   | `/api/pipelines:import`       | zip                        | -                 | Import a pipeline from file         |
-| `DELETE` | `/api/pipelines/<id>`         | -                          | -                 | Delete a pipeline                   |
+See the [API reference](api.md).

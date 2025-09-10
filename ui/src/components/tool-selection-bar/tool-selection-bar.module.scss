@@ -1,0 +1,30 @@
+.section {
+    background-color: var(--spectrum-global-color-gray-50);
+    padding: var(--spectrum-global-dimension-size-100);
+    border-radius: var(--spectrum-global-dimension-size-50);
+    gap: var(--spectrum-global-dimension-size-50);
+    flex-direction: column;
+    align-items: center;
+}
+
+.iconWrapper {
+    width: var(--spectrum-global-dimension-size-400);
+    height: var(--spectrum-global-dimension-size-400);
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--spectrum-global-dimension-size-50);
+    cursor: pointer;
+
+    svg {
+        width: var(--spectrum-global-dimension-size-200);
+        height: var(--spectrum-global-dimension-size-200);
+    }
+}
+
+.grid {
+    grid-template-rows: 'auto auto auto';
+    gap: var(--spectrum-global-dimension-size-50);
+    background-color: var(--spectrum-global-color-gray-200);
+    border-radius: var(--spectrum-global-dimension-size-100);
+    padding: var(--spectrum-global-dimension-size-50);
+}

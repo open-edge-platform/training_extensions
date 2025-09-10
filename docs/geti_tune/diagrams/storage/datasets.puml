@@ -1,0 +1,93 @@
+@startuml
+
+' Dataset-related tables
+class dataset_items << (T,#FFAAAA) >> {
+  id : UUID
+  project_id : UUID
+  name : TEXT
+  format : TEXT
+  width : INTEGER
+  height : INTEGER
+  size : INTEGER
+  annotation_data : JSON
+  user_reviewed : BOOLEAN
+  prediction_model_id : UUID
+  source_id : UUID
+  subset : TEXT
+  subset_assigned_at : TIMESTAMP
+}
+
+class dataset_items_tags << (T,#FFAAAA) >> {
+  dataset_item_id : UUID
+  tag : TEXT
+}
+
+dataset_items ||---o{ dataset_items_tags
+
+class dataset_views << (T,#FFAAAA) >> {
+  id : UUID
+  name : TEXT
+}
+
+class dataset_views_items << (T,#FFAAAA) >> {
+  dataset_view_id : UUID
+  dataset_item_id : UUID
+}
+
+dataset_views ||---o{ dataset_views_items
+
+dataset_views_items }o---|| dataset_items
+
+class dataset_revisions << (T,#FFAAAA) >> {
+  project_id : UUID
+  files_deleted : BOOLEAN
+}
+
+object MediaBinary {
+  <i>format</i> : jpg / png
+  <i>prefix</i> : projects/{project_id}/dataset/
+  <i>filename</i> : {dataset_item_id}.{format}
+}
+
+object MediaThumbnail {
+  <i>format</i> : jpg
+  <i>prefix</i> : projects/{project_id}/dataset/
+  <i>filename</i> : {dataset_item_id}-thumb.jpg
+}
+
+object DatasetRevision {
+  <i>format</i> : arrow
+  <i>prefix</i> : projects/{project_id}/dataset_revisions/{revision_id}/
+  <i>filename</i> : <shard_idx>.arrow
+}
+
+dataset_items ||---|| MediaBinary
+
+dataset_items ||---|| MediaThumbnail
+
+dataset_revisions ||---|| DatasetRevision
+
+' Related non-dataset tables (only foreign keys)
+class projects << (T,#CCCCCC) >> {
+  id : UUID
+}
+
+projects ||---o{ dataset_items
+projects ||---o{ dataset_views
+projects ||---o{ dataset_revisions
+
+class model_revisions << (T,#CCCCCC) >> {
+  id : UUID
+  training_dataset_id : UUID
+}
+
+model_revisions |o---|| dataset_revisions
+
+class evaluations << (T,#CCCCCC) >> {
+  id : UUID
+  dataset_revision_id : UUID
+}
+
+evaluations |o---|| dataset_revisions
+
+@enduml

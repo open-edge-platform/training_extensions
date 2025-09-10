@@ -1,22 +1,43 @@
 # See help here: https://github.com/marketplace/actions/labeler
 
+Geti Tune Backend:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "backend/**/*"
+
+Geti Tune UI:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "ui/**/*"
+
 TEST:
-  - "tests/**/*"
+  - changed-files:
+      - any-glob-to-any-file:
+          - "lib/tests/**/*"
+          - "backend/tests/**/*"
+          - "ui/tests/**/*"
+
 DOC:
-  - "docs/**/*"
-  - "**/*.md"
-  - "LICENSE"
-  - "third-party-programs.txt"
-  - "NOTICE"
-  - "for_developers/**/*"
+  - changed-files:
+      - any-glob-to-any-file:
+          - "docs/**/*"
+          - "**/*.md"
+          - "LICENSE"
+          - "third-party-programs.txt"
+          - "NOTICE"
+
 BUILD:
-  - ".ci/**/*"
-  - ".github/**/*"
-  - ".pre-commit-config.yaml"
-  - "markdownlint.rb"
-  - "pyproject.toml"
-  - "tox.ini"
-  - "MANIFEST.in"
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".ci/**/*"
+          - ".github/**/*"
+          - ".pre-commit-config.yaml"
+          - "markdownlint.rb"
+          - "**/pyproject.toml"
+          - "**/tox.ini"
+          - "MANIFEST.in"
+
 DEPENDENCY:
-  - "requirements/*"
-  - "pyproject.toml"
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/pyproject.toml"

@@ -1,11 +1,13 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
 
 
 class ModelActivationState(BaseModel):
     active_model: str | None = Field(..., description="Name of the model that is currently used for inference")
+    active_model_id: UUID | None = Field(..., description="ID of the model that is currently used for inference")
     available_models: list[str] = Field(..., description="List of all available model names that can be activated")
 
     @field_validator("active_model")

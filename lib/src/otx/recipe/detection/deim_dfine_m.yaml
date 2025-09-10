@@ -88,7 +88,7 @@ callbacks:
                     p: 0.5
                 - class_path: otx.data.transform_libs.torchvision.RandomIoUCrop
                   init_args:
-                    p: 0.8
+                    probability: 0.8
                 - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
                   init_args:
                     min_area: 1
@@ -161,7 +161,7 @@ callbacks:
                     p: 0.5
                 - class_path: otx.data.transform_libs.torchvision.RandomIoUCrop # Can't be used when using CachedMosaic
                   init_args:
-                    p: 0.8
+                    probability: 0.8
                 - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
                   init_args:
                     min_area: 1

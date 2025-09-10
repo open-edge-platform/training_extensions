@@ -5,6 +5,8 @@ import react from '@vitejs/plugin-react';
 import svgr from 'vite-plugin-svgr';
 import { defineConfig } from 'vitest/config';
 
+const CI = !!process.env.CI;
+
 export default defineConfig({
     plugins: [
         react(),
@@ -18,6 +20,14 @@ export default defineConfig({
     ],
     test: {
         environment: 'jsdom',
+
+        coverage: {
+            provider: 'v8',
+            reporter: [CI ? 'json-summary' : 'text'],
+            reportOnFailure: true,
+            include: ['src/**/*.{ts,tsx}'],
+        },
+
         // This is needed to use globals like describe or expect
         globals: true,
         include: ['./src/**/*.test.{ts,tsx}'],

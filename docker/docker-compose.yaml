@@ -8,55 +8,44 @@ x-proxies: &proxies
     - no_proxy=${no_proxy}
 
 services:
-  server:
-    image: geti-tune-backend:${TAG:-latest}
+  geti-tune:
+    image: geti-tune:${TAG:-latest}
     restart: unless-stopped
     build:
-      context: ../backend
-      dockerfile: ../docker/Dockerfile.backend
+      context: ..
+      dockerfile: docker/Dockerfile
       <<: *proxies
-    depends_on:
-      - reverse-proxy
     working_dir: /app
     volumes:
       - ../backend/data/:/app/data/
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.geti-tune-server.rule=Host(`${GETI_TUNE_DOMAIN:-geti-tune.localhost}`) && (PathPrefix(`/api`))"
-      - "traefik.http.routers.geti-tune-server.entrypoints=web"
-      - "traefik.http.services.geti-tune-server.loadbalancer.server.port=7860"
-
-  client:
-    image: geti-tune-ui:${TAG:-latest}
-    restart: unless-stopped
-    build:
-      dockerfile: ../docker/Dockerfile.ui
-      context: ../ui
-      <<: *proxies
-    depends_on:
-      - reverse-proxy
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.geti-tune-client.rule=Host(`${GETI_TUNE_DOMAIN:-geti-tune.localhost}`)"
-      - "traefik.http.routers.geti-tune-client.entrypoints=web"
-      - "traefik.http.services.geti-tune-client.loadbalancer.server.port=80"
-
-  reverse-proxy:
-    image: traefik:v3.4.1@sha256:cd40ab7bc1f047731d5b22595203812343efcb6538014c4e93221cfc3a77217a
-    restart: unless-stopped
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    command:
-      - "--api.insecure=true"
-      - "--api.dashboard=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entryPoints.web.address=:80"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.geti-tune-proxy.rule=Host(`proxy.localhost`)"
-      - "traefik.http.routers.geti-tune-proxy.entrypoints=web"
-      - "traefik.http.services.geti-tune-proxy.loadbalancer.server.port=8080"
     ports:
       - "80:80"
-      - "443:443"
+
+  mosquitto:
+    profiles:
+      - mqtt
+    image: eclipse-mosquitto:2.0
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ../backend/data/mosquitto/config:/mosquitto/config
+      - ../backend/data/mosquitto/data:/mosquitto/data
+      - ../backend/data/mosquitto/log:/mosquitto/log
+    environment:
+      - MOSQUITTO_USERNAME=testuser
+      - MOSQUITTO_PASSWORD=testpass
+
+  mqtt-web-ui:
+    profiles:
+      - mqtt
+    image: emqx/mqttx-web
+    restart: unless-stopped
+    environment:
+      - MQTT_BROKER_HOST=mosquitto
+      - MQTT_BROKER_PORT=9001
+    depends_on:
+      - mosquitto
+    ports:
+      - "8081:80"

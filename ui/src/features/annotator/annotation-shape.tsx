@@ -1,8 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Point } from '../../components/shapes/interfaces';
-import { Annotation } from './types';
+import { Annotation, Point } from './types';
 
 type AnnotationShapeProps = {
     annotation: Annotation;
@@ -16,10 +15,10 @@ export const AnnotationShape = ({ annotation }: AnnotationShapeProps) => {
     const shape = annotation.shape;
     const color = annotation.labels[0].color;
 
-    if (shape.type === 'bounding-box') {
+    if (shape.shapeType === 'rect') {
         return (
             <rect
-                aria-label='annotation bounding-box'
+                aria-label='annotation rect'
                 x={shape.x}
                 y={shape.y}
                 width={shape.width}
