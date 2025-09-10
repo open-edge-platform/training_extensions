@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Annotation } from '../../annotations/annotation.component';
+import { AnnotationShape } from '../../annotations/annotation-shape.component';
 import { useTranslate } from '../../hooks/use-translate.hook';
 import { Annotation as AnnotationInterface } from '../../types';
 import { allowPanning } from '../../utils';
@@ -34,7 +34,7 @@ export const TranslateShape = ({ zoom, onComplete, translateShape, annotation }:
             onPointerUp={onPointerUp}
             onPointerLeave={onPointerUp}
         >
-            <Annotation annotation={annotation} />
+            <AnnotationShape annotation={annotation} />
         </g>
     );
 };

@@ -5,6 +5,7 @@ import { createContext, useContext } from 'react';
 
 import { Annotation as AnnotationInterface } from '../types';
 import { AnnotationShape } from './annotation-shape.component';
+import { EditAnnotation } from './edit-annotation.component';
 import { SelectableAnnotation } from './selectable-annotation.component';
 
 const AnnotationContext = createContext<AnnotationInterface | null>(null);
@@ -21,9 +22,11 @@ interface AnnotationProps {
 export const Annotation = ({ annotation }: AnnotationProps) => {
     return (
         <AnnotationContext.Provider value={annotation}>
-            <SelectableAnnotation>
-                <AnnotationShape annotation={annotation} />
-            </SelectableAnnotation>
+            <EditAnnotation>
+                <SelectableAnnotation>
+                    <AnnotationShape annotation={annotation} />
+                </SelectableAnnotation>
+            </EditAnnotation>
         </AnnotationContext.Provider>
     );
 };
