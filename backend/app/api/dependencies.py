@@ -18,6 +18,7 @@ from app.services import (
     ProjectService,
     SystemService,
 )
+from app.services.label_service import LabelService
 from app.webrtc.manager import WebRTCManager
 
 
@@ -144,3 +145,8 @@ def get_webrtc_manager(request: Request) -> WebRTCManager:
 def get_project_service() -> ProjectService:
     """Provides a ProjectService instance for managing projects."""
     return ProjectService()
+
+
+def get_label_service() -> type[LabelService]:
+    """Provides a LabelService instance for managing labels."""
+    return LabelService

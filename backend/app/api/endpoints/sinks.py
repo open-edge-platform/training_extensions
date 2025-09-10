@@ -146,13 +146,7 @@ async def update_sink(
     sink_config: Annotated[
         dict,
         Body(
-            description=(
-                "Partial sink configuration update. "
-                "May contain any subset of fields from the respective sink type "
-                "(e.g., 'broker_host' and 'broker_port' for MQTT; 'output_path' for folder sinks). "
-                "Fields not included in the request will remain unchanged. "
-                "The 'sink_type' field cannot be changed."
-            ),
+            description=UPDATE_SINK_BODY_DESCRIPTION,
             openapi_examples=UPDATE_SINK_BODY_EXAMPLES,
         ),
     ],

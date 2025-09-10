@@ -9,7 +9,7 @@ import sys
 import click
 
 from app.db import get_db_session, migration_manager
-from app.db.schema import DatasetItemDB, ModelDB, PipelineDB, ProjectDB, SinkDB, SourceDB
+from app.db.schema import DatasetItemDB, LabelDB, ModelDB, PipelineDB, ProjectDB, SinkDB, SourceDB
 from app.schemas import ModelFormat, OutputFormat, SinkType, SourceType
 
 logging.basicConfig(level=logging.INFO)
@@ -85,7 +85,6 @@ def seed(with_model: bool, model_name: str) -> None:
             name="Test Project",
             task_type="detection",
             exclusive_labels=True,
-            labels=["card", "person"],
         )
         pipeline = PipelineDB()
         project.pipeline = pipeline
@@ -110,6 +109,10 @@ def seed(with_model: bool, model_name: str) -> None:
                 format=ModelFormat.OPENVINO,
             )
             pipeline.is_running = True
+        project.labels = [
+            LabelDB(name="card", color="#FF0000", hotkey="c"),
+            LabelDB(name="person", color="#00FF00", hotkey="p"),
+        ]
         db.add(project)
         db.commit()
     click.echo("✓ Seeding successful!")

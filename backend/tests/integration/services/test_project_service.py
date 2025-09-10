@@ -1,10 +1,13 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 from unittest.mock import patch
 from uuid import UUID, uuid4
 
 import pytest
 from sqlalchemy.orm import Session
 
-from app.db.schema import PipelineDB, ProjectDB
+from app.db.schema import LabelDB, PipelineDB, ProjectDB
 from app.schemas.project import Label, Project, Task
 from app.services.base import ResourceInUseError, ResourceNotFoundError, ResourceType
 from app.services.project_service import ProjectService
@@ -35,12 +38,16 @@ class TestProjectServiceIntegration:
 
     def test_create_project(self, fxt_project_service: ProjectService, db_session: Session):
         """Test creating a project."""
+        labels = [
+            Label(name="cat", color="#00FF00", hotkey="c"),
+            Label(name="dog", color="#FF0000", hotkey="d"),
+        ]
         new_project = Project(
             name="Test Project",
             task=Task(
                 task_type="classification",
                 exclusive_labels=True,
-                labels=[Label(name="cat"), Label(name="dog")],
+                labels=labels,
             ),
         )
         created_project = fxt_project_service.create_project(new_project)
@@ -52,6 +59,10 @@ class TestProjectServiceIntegration:
         db_pipeline = db_session.get(PipelineDB, str(created_project.id))
         assert db_pipeline is not None
         assert not db_pipeline.is_running
+        # Ensure labels are created
+        db_labels = db_session.query(LabelDB).filter(LabelDB.project_id == str(created_project.id)).all()
+        assert len(db_labels) == 2
+        assert {label.name for label in db_labels} == {"cat", "dog"}
 
     def test_list_projects(
         self, fxt_project_service: ProjectService, fxt_db_projects: list[ProjectDB], db_session: Session
@@ -67,7 +78,9 @@ class TestProjectServiceIntegration:
         for i in range(3):
             assert projects[i].name == fxt_db_projects[i].name
             assert projects[i].task.task_type == fxt_db_projects[i].task_type
-            assert [label.name for label in projects[i].task.labels] == fxt_db_projects[i].labels
+            assert {label.name for label in projects[i].task.labels} == {
+                label.name for label in fxt_db_projects[i].labels
+            }
 
     def test_get_project_by_id(
         self, fxt_project_service: ProjectService, fxt_db_projects: list[ProjectDB], db_session: Session
