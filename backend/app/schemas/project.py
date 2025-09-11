@@ -1,31 +1,18 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Any, Literal
+from typing import Literal
 
-from pydantic import BaseModel, field_serializer, field_validator
+from pydantic import BaseModel
 
 from app.schemas.base import BaseIDNameModel
-
-
-class Label(BaseModel):
-    name: str
+from app.schemas.label import Label
 
 
 class Task(BaseModel):
     task_type: Literal["classification", "detection", "segmentation"]
     exclusive_labels: bool = False
     labels: list[Label] = []
-
-    @field_serializer("labels", when_used="json")
-    def serialize_labels(self, labels: list[Label]) -> list[str]:
-        return [label.name for label in labels]
-
-    @field_validator("labels", mode="before")
-    def parse_labels(cls, v: list[Any]) -> list[Label]:
-        if v and all(isinstance(v, str) for v in v):
-            return [Label(name=item) for item in v]
-        return v
 
 
 class Project(BaseIDNameModel):
@@ -39,7 +26,20 @@ class Project(BaseIDNameModel):
                 "task": {
                     "task_type": "classification",
                     "exclusive_labels": True,
-                    "labels": [{"name": "cat"}, {"name": "dog"}],
+                    "labels": [
+                        {
+                            "id": "a22d82ba-afa9-4d6e-bbc1-8c8e4002ec29",
+                            "name": "cat",
+                            "color": "#FF5733",
+                            "hotkey": "S",
+                        },
+                        {
+                            "id": "8aa85368-11ba-4507-88f2-6a6704d78ef5",
+                            "name": "dog",
+                            "color": "#33FF57",
+                            "hotkey": "D",
+                        },
+                    ],
                 },
             }
         }

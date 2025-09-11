@@ -80,7 +80,7 @@ SUPPORTED_SOURCES_MAPPING = [
 class TestSourceMapper:
     """Test cases for SourceMapper."""
 
-    @pytest.mark.parametrize("schema_instance, expected_model", SUPPORTED_SOURCES_MAPPING)
+    @pytest.mark.parametrize("schema_instance, expected_model", SUPPORTED_SOURCES_MAPPING.copy())
     def test_from_schema_valid_source_types(self, schema_instance, expected_model):
         """Test from_schema with valid source types."""
         source_id = uuid4()
@@ -98,7 +98,7 @@ class TestSourceMapper:
         with pytest.raises(ValueError, match="Source config cannot be None"):
             SourceMapper.from_schema(None)
 
-    @pytest.mark.parametrize("db_instance,expected_schema", [(v, k) for (k, v) in SUPPORTED_SOURCES_MAPPING])
+    @pytest.mark.parametrize("db_instance,expected_schema", [(v, k) for (k, v) in SUPPORTED_SOURCES_MAPPING.copy()])
     def test_to_schema_valid_source_types(self, db_instance, expected_schema):
         """Test to_schema with valid source types."""
         source_id = uuid4()

@@ -99,7 +99,7 @@ SUPPORTED_SINKS_MAPPING = [
 class TestSinkMapper:
     """Test suite for SinkMapper methods."""
 
-    @pytest.mark.parametrize("schema_instance,expected_model", SUPPORTED_SINKS_MAPPING)
+    @pytest.mark.parametrize("schema_instance,expected_model", SUPPORTED_SINKS_MAPPING.copy())
     def test_from_schema_valid_sink_types(self, schema_instance, expected_model):
         """Test from_schema with valid sink types."""
         sink_id = uuid4()
@@ -119,7 +119,7 @@ class TestSinkMapper:
         with pytest.raises(ValueError, match="Sink config cannot be None"):
             SinkMapper.from_schema(None)
 
-    @pytest.mark.parametrize("db_instance,expected_schema", [(v, k) for (k, v) in SUPPORTED_SINKS_MAPPING])
+    @pytest.mark.parametrize("db_instance,expected_schema", [(v, k) for (k, v) in SUPPORTED_SINKS_MAPPING.copy()])
     def test_to_schema_valid_sink_types(self, db_instance, expected_schema):
         """Test to_schema with valid sink types."""
         sink_id = uuid4()
