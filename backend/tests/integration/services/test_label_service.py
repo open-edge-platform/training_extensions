@@ -33,7 +33,7 @@ class TestLabelServiceIntegration:
 
     The tests focus on:
     - Successful operations with various combinations of add/update/remove
-    - Uniqueness constraint violations (name, hotkey, color)
+    - Uniqueness constraint violations (name, hotkey)
     - Transactional integrity (all-or-nothing behavior)
     - Execution order compliance (update → remove → add)
     """
@@ -80,7 +80,7 @@ class TestLabelServiceIntegration:
         with pytest.raises(ResourceAlreadyExistsError) as exc_info:
             LabelService.update_labels_in_project(UUID(fxt_db_projects[0].id), [new_label], None, None)
 
-        assert str(exc_info.value) == "Label with the same name or hotkey or color already exists in this project."
+        assert str(exc_info.value) == "Label with the same name or hotkey already exists in this project."
 
     def test_remove_labels_from_project(self, fxt_db_projects: list[ProjectDB], db_session: Session):
         """
@@ -145,7 +145,7 @@ class TestLabelServiceIntegration:
                 None,
             )
 
-        assert str(exc_info.value) == "Label with the same name or hotkey or color already exists in this project."
+        assert str(exc_info.value) == "Label with the same name or hotkey already exists in this project."
 
     def test_remove_update_add_combined_operation(self, fxt_db_projects: list[ProjectDB], db_session: Session):
         """
