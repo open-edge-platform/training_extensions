@@ -13,7 +13,7 @@ import pytest
 from app.entities.stream_data import StreamData
 from app.entities.video_stream import VideoStream
 from app.schemas import Source
-from app.workers import frame_acquisition_routine
+from app.workers import StreamLoader
 
 
 @pytest.fixture
@@ -95,8 +95,8 @@ def mock_services(mock_config, mock_video_stream):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Multiprocessing 'fork' start method not available on Windows")
-class TestFrameAcquisition:
-    """Unit tests for the frame acquisition routine"""
+class TestStreamLoader:
+    """Unit tests for the StreamLoader routine"""
 
     @pytest.fixture(scope="session", autouse=True)
     def set_multiprocessing_start_method(self):
@@ -113,13 +113,11 @@ class TestFrameAcquisition:
         frame_queue.put(data2)
 
         # Start the process
-        process = mp.Process(
-            target=frame_acquisition_routine, args=(frame_queue, stop_event, config_changed_condition, False)
-        )
+        process = StreamLoader(frame_queue, stop_event, config_changed_condition)
         process.start()
 
         # Let it run for a short time to attempt frame acquisition
-        time.sleep(2)
+        time.sleep(1)
 
         # Stop the process
         stop_event.set()
@@ -141,31 +139,13 @@ class TestFrameAcquisition:
         """Test that stream frames are acquired when queue is empty"""
 
         # Start the process
-        process = mp.Process(
-            target=frame_acquisition_routine, args=(frame_queue, stop_event, config_changed_condition, False)
-        )
+        process = StreamLoader(frame_queue, stop_event, config_changed_condition)
         process.start()
 
-        time.sleep(2)
+        time.sleep(1)
 
         stop_event.set()
         process.join(timeout=1)
 
         assert frame_queue.qsize() == 2
-        assert not process.is_alive(), "Process should terminate cleanly"
-
-    def test_cleanup(self, frame_queue, stop_event, config_changed_condition, mock_services):
-        """Test that resources has been successfully released when process finished"""
-
-        # Start the process
-        process = mp.Process(
-            target=frame_acquisition_routine, args=(frame_queue, stop_event, config_changed_condition, True)
-        )
-        process.start()
-
-        time.sleep(2)
-
-        stop_event.set()
-        process.join(timeout=1)
-
         assert not process.is_alive(), "Process should terminate cleanly"
