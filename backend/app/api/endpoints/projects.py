@@ -34,7 +34,11 @@ CREATE_PROJECT_BODY_EXAMPLES = {
         description="Configuration for a classification project that have 2 labels: cat and dog",
         value={
             "name": "animals",
-            "task": {"type": "classification", "exclusive_labels": True, "labels": [{"name": "cat"}, {"name": "dog"}]},
+            "task": {
+                "task_type": "classification",
+                "exclusive_labels": True,
+                "labels": [{"name": "cat"}, {"name": "dog"}],
+            },
         },
     ),
     "detection": Example(
@@ -44,7 +48,7 @@ CREATE_PROJECT_BODY_EXAMPLES = {
         value={
             "name": "grapes",
             "task": {
-                "type": "detection",
+                "task_type": "detection",
                 "exclusive_labels": True,
                 "labels": [{"name": "Chardonnay"}, {"name": "Sauvignon Blanc"}, {"name": "Cabernet Franc"}],
             },
@@ -55,7 +59,11 @@ CREATE_PROJECT_BODY_EXAMPLES = {
         description="Configuration for a segmentation project that have 2 labels: car and person",
         value={
             "name": "traffic",
-            "task": {"type": "segmentation", "exclusive_labels": True, "labels": [{"name": "car"}, {"name": "person"}]},
+            "task": {
+                "task_type": "segmentation",
+                "exclusive_labels": True,
+                "labels": [{"name": "car"}, {"name": "person"}],
+            },
         },
     ),
 }
