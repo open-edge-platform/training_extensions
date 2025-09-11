@@ -6,6 +6,7 @@ from .base import ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFou
 from .configuration_service import ConfigurationService
 from .dataset_service import DatasetService
 from .dispatch_service import DispatchService
+from .label_service import LabelService
 from .metrics_service import MetricsService
 from .model_service import ModelAlreadyExistsError, ModelService
 from .pipeline_service import PipelineService
@@ -18,6 +19,7 @@ __all__ = [
     "ConfigurationService",
     "DatasetService",
     "DispatchService",
+    "LabelService",
     "MetricsService",
     "ModelAlreadyExistsError",
     "ModelService",

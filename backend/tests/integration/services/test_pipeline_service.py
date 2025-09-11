@@ -42,7 +42,6 @@ class TestPipelineServiceIntegration:
             id=str(project_id),
             name="Test Project",
             task_type="detection",
-            labels=["cat", "dog"],
         )
         pipeline_db = PipelineDB(project_id=str(project_id))
         pipeline_db.sink = fxt_db_sinks[0]

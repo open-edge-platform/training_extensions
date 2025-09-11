@@ -42,7 +42,7 @@ SUPPORTED_PIPELINE_MAPPING = [
 class TestPipelineMapper:
     """Test suite for PipelineMapper methods."""
 
-    @pytest.mark.parametrize("schema_instance,expected_db", SUPPORTED_PIPELINE_MAPPING)
+    @pytest.mark.parametrize("schema_instance,expected_db", SUPPORTED_PIPELINE_MAPPING.copy())
     def test_from_schema(self, schema_instance, expected_db):
         actual_db = PipelineMapper.from_schema(schema_instance)
         assert actual_db.project_id == expected_db.project_id
@@ -51,7 +51,7 @@ class TestPipelineMapper:
         assert actual_db.sink_id == expected_db.sink_id
         assert actual_db.model_id == expected_db.model_id
 
-    @pytest.mark.parametrize("db_instance,expected_schema", [(v, k) for (k, v) in SUPPORTED_PIPELINE_MAPPING])
+    @pytest.mark.parametrize("db_instance,expected_schema", [(v, k) for (k, v) in SUPPORTED_PIPELINE_MAPPING.copy()])
     def test_to_schema(self, db_instance, expected_schema):
         actual_schema = PipelineMapper.to_schema(db_instance)
         assert actual_schema == expected_schema

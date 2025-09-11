@@ -9,7 +9,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.db.schema import Base, ModelDB, PipelineDB, ProjectDB, SinkDB, SourceDB
+from app.db.schema import Base, LabelDB, ModelDB, PipelineDB, ProjectDB, SinkDB, SourceDB
 from app.schemas import ModelFormat, OutputFormat, SinkType, SourceType
 from app.services import ActivePipelineService, MetricsService
 
@@ -118,19 +118,16 @@ def fxt_db_projects() -> list[ProjectDB]:
             "name": "Test Detection Project",
             "task_type": "detection",
             "exclusive_labels": False,
-            "labels": ["cat", "dog"],
         },
         {
             "name": "Test Classification Project",
             "task_type": "classification",
             "exclusive_labels": True,
-            "labels": ["car", "truck", "bus"],
         },
         {
             "name": "Test Segmentation Project",
             "task_type": "segmentation",
-            "exclusive_labels": False,
-            "labels": ["person", "bicycle"],
+            "exclusive_labels": True,
         },
     ]
     db_projects = []
@@ -139,6 +136,10 @@ def fxt_db_projects() -> list[ProjectDB]:
         project.pipeline = PipelineDB(
             project_id=project.id,
         )
+        project.labels = [
+            LabelDB(name="cat", color="#00FF00", hotkey="c"),
+            LabelDB(name="dog", color="#FF0000", hotkey="d"),
+        ]
         db_projects.append(project)
     return db_projects
 

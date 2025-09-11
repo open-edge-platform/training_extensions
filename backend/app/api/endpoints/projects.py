@@ -11,10 +11,15 @@ from fastapi import APIRouter, Body, Depends, status
 from fastapi.exceptions import HTTPException
 from fastapi.openapi.models import Example
 
-from app.api.dependencies import get_project_id, get_project_service
-from app.schemas.project import Project
-from app.services import ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError
-from app.services.project_service import ProjectService
+from app.api.dependencies import get_label_service, get_project_id, get_project_service
+from app.schemas import Label, PatchLabels, Project
+from app.services import (
+    LabelService,
+    ProjectService,
+    ResourceAlreadyExistsError,
+    ResourceInUseError,
+    ResourceNotFoundError,
+)
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/projects", tags=["Projects"])
@@ -133,4 +138,54 @@ def delete_project(
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ResourceInUseError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+
+
+@router.patch(
+    "/{project_id}/labels",
+    response_model=list[Label],
+    responses={
+        status.HTTP_200_OK: {"description": "Labels updated successfully"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID or request body"},
+        status.HTTP_404_NOT_FOUND: {"description": "Project or label not found"},
+        status.HTTP_409_CONFLICT: {"description": "Label(s) already exists"},
+    },
+)
+def update_labels(
+    project_id: Annotated[UUID, Depends(get_project_id)],
+    labels: Annotated[
+        PatchLabels,
+        Body(
+            description="Labels to add, remove or edit",
+        ),
+    ],
+    project_service: Annotated[ProjectService, Depends(get_project_service)],
+    label_service: Annotated[LabelService, Depends(get_label_service)],
+) -> list[Label]:
+    """Update labels for a given project"""
+    try:
+        project = project_service.get_project_by_id(project_id)
+        label_ids = {label.id for label in project.task.labels}
+        labels_to_add = [label_to_add.to_label() for label_to_add in labels.labels_to_add]
+        labels_to_edit = []
+        label_ids_to_remove = []
+        if labels.labels_to_remove:
+            label_ids_to_remove = [label.id for label in labels.labels_to_remove]
+            if not all(label_id in label_ids for label_id in label_ids_to_remove):
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="One or more labels to remove do not exist in the project",
+                )
+        if labels.labels_to_edit:
+            ids_to_edit = [label.id for label in labels.labels_to_edit]
+            if not all(label_id in label_ids for label_id in ids_to_edit):
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="One or more labels to edit do not exist in the project",
+                )
+            labels_to_edit = [label_to_edit.to_label() for label_to_edit in labels.labels_to_edit]
+        return label_service.update_labels_in_project(project_id, labels_to_add, labels_to_edit, label_ids_to_remove)
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except ResourceAlreadyExistsError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))

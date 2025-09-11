@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from app.schemas.dataset_item import DatasetItem, DatasetItemsWithPagination
+from app.schemas.label import Label, PatchLabels
 from app.schemas.metrics import InferenceMetrics, LatencyMetrics, PipelineMetrics, TimeWindow
 from app.schemas.model import Model, ModelFormat
 from app.schemas.pipeline import Pipeline, PipelineStatus
@@ -15,10 +16,12 @@ __all__ = [
     "DisconnectedSinkConfig",
     "DisconnectedSourceConfig",
     "InferenceMetrics",
+    "Label",
     "LatencyMetrics",
     "Model",
     "ModelFormat",
     "OutputFormat",
+    "PatchLabels",
     "Pipeline",
     "PipelineMetrics",
     "PipelineStatus",
