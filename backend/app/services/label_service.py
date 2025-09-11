@@ -58,8 +58,7 @@ class LabelService:
         Raises:
             ResourceAlreadyExistsError: If any label to be added or updated would
                                        violate uniqueness constraints (same name,
-                                       hotkey, or color as an existing label in
-                                       the project).
+                                       or hotkey as an existing label in the project).
             IntegrityError: For other database integrity violations.
             DatabaseError: For general database operation failures.
 
@@ -74,8 +73,7 @@ class LabelService:
 
         Note:
             The operation is atomic - either all changes succeed or none are applied.
-            Uniqueness constraints are enforced at the database level for name,
-            hotkey, and color within each project.
+            Uniqueness constraints are enforced at the database level for name and hotkey within each project.
         """
         try:
             with get_db_session() as db:
@@ -94,6 +92,6 @@ class LabelService:
                 raise ResourceAlreadyExistsError(
                     ResourceType.LABEL,
                     "",
-                    message="Label with the same name or hotkey or color already exists in this project.",
+                    message="Label with the same name or hotkey already exists in this project.",
                 )
             raise
