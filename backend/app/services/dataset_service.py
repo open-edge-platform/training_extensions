@@ -121,8 +121,10 @@ class DatasetService:
                 raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
         return Path(f"data/projects/{str(project_id)}/dataset/{str(dataset_item.id)}-thumb.jpg")
 
-    def delete_dataset_item(self, project_id: UUID, dataset_item_id: UUID) -> bool:
+    def delete_dataset_item(self, project_id: UUID, dataset_item_id: UUID) -> None:
         """Delete a dataset item by its ID"""
         with get_db_session() as db:
             repo = DatasetItemRepository(project_id=str(project_id), db=db)
-            return repo.delete(obj_id=str(dataset_item_id))
+            deleted = repo.delete(obj_id=str(dataset_item_id))
+            if not deleted:
+                raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))

@@ -191,7 +191,7 @@ class TestModelServiceIntegration:
         assert_model(updated, db_updated)
 
     def test_update_non_existent_model(self, fxt_model_service):
-        """Test deleting a non-existent model raises error."""
+        """Test updating a non-existent model raises error."""
         model_id = uuid4()
         with pytest.raises(ResourceNotFoundError) as excinfo:
             fxt_model_service.update_model(model_id, {"name": "Updated Model Name"})

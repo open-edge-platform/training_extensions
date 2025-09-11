@@ -135,9 +135,11 @@ class GenericPersistenceService(Generic[S, R]):
             updated = repo.update(self.config.mapper_class.from_schema(to_update))
             return self.config.mapper_class.to_schema(updated)
 
-    def delete_by_id(self, item_id: UUID, db: Session | None = None) -> bool:
+    def delete_by_id(self, item_id: UUID, db: Session | None = None) -> None:
         try:
             with self._get_repo(db) as repo:
-                return repo.delete(str(item_id))
+                deleted = repo.delete(str(item_id))
+            if not deleted:
+                raise ResourceNotFoundError(self.config.resource_type, str(item_id))
         except IntegrityError:
             raise ResourceInUseError(self.config.resource_type, str(item_id))

@@ -20,14 +20,9 @@ logger = logging.getLogger(__name__)
 @pytest.fixture(autouse=True)
 def mock_get_db_session(db_session):
     """Mock the get_db_session to use test database."""
-    with (
-        patch("app.services.dataset_service.get_db_session") as mock,
-        patch("app.services.base.get_db_session") as mock_base,
-    ):
+    with patch("app.services.dataset_service.get_db_session") as mock:
         mock.return_value.__enter__.return_value = db_session
         mock.return_value.__exit__.return_value = None
-        mock_base.return_value.__enter__.return_value = db_session
-        mock_base.return_value.__exit__.return_value = None
         yield
 
 
@@ -308,7 +303,7 @@ class TestDatasetServiceIntegration:
         assert excinfo.value.resource_type == ResourceType.DATASET_ITEM
         assert excinfo.value.resource_id == db_dataset_item.id
 
-    def test_get_dataset_item_thumbnail_path_by_id_by_id(
+    def test_get_dataset_item_thumbnail_path_by_id(
         self,
         fxt_dataset_service: DatasetService,
         fxt_stored_projects: list[ProjectDB],
@@ -328,7 +323,7 @@ class TestDatasetServiceIntegration:
             f"data/projects/{str(fxt_stored_projects[0].id)}/dataset/{db_dataset_item.id}-thumb.jpg"
         )
 
-    def test_get_dataset_item_thumbnail_path_by_id_by_id_not_found(
+    def test_get_dataset_item_thumbnail_path_by_id_not_found(
         self, fxt_dataset_service: DatasetService, fxt_stored_projects: list[ProjectDB]
     ):
         """Test retrieving a non-existent dataset item thumbnail path raises error."""
@@ -341,7 +336,7 @@ class TestDatasetServiceIntegration:
         assert excinfo.value.resource_type == ResourceType.DATASET_ITEM
         assert excinfo.value.resource_id == str(non_existent_id)
 
-    def test_get_dataset_item_thumbnail_path_by_id_by_id_wrong_project_id(
+    def test_get_dataset_item_thumbnail_path_by_id_wrong_project_id(
         self,
         fxt_dataset_service: DatasetService,
         fxt_stored_projects: list[ProjectDB],
@@ -375,12 +370,11 @@ class TestDatasetServiceIntegration:
         db_session.add(db_dataset_item)
         db_session.flush()
 
-        deleted = fxt_dataset_service.delete_dataset_item(
+        fxt_dataset_service.delete_dataset_item(
             project_id=UUID(fxt_stored_projects[0].id), dataset_item_id=UUID(db_dataset_item.id)
         )
 
         assert db_session.get(DatasetItemDB, db_dataset_item.id) is None
-        assert deleted
 
     def test_delete_dataset_item_wrong_project_id(
         self,
@@ -395,9 +389,10 @@ class TestDatasetServiceIntegration:
         db_session.add(db_dataset_item)
         db_session.flush()
 
-        deleted = fxt_dataset_service.delete_dataset_item(
-            project_id=UUID(fxt_stored_projects[1].id), dataset_item_id=UUID(db_dataset_item.id)
-        )
+        with pytest.raises(ResourceNotFoundError) as excinfo:
+            fxt_dataset_service.delete_dataset_item(
+                project_id=UUID(fxt_stored_projects[1].id), dataset_item_id=UUID(db_dataset_item.id)
+            )
 
-        assert db_session.get(DatasetItemDB, db_dataset_item.id) is not None
-        assert not deleted
+        assert excinfo.value.resource_type == ResourceType.DATASET_ITEM
+        assert excinfo.value.resource_id == db_dataset_item.id

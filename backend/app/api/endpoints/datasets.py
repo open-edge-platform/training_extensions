@@ -162,6 +162,7 @@ def delete_dataset_item(
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
 ) -> None:
     """Delete an item from the dataset"""
-    deleted = dataset_service.delete_dataset_item(project_id=project_id, dataset_item_id=dataset_item_id)
-    if not deleted:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    try:
+        dataset_service.delete_dataset_item(project_id=project_id, dataset_item_id=dataset_item_id)
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

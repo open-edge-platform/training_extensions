@@ -227,7 +227,9 @@ class TestDatasetItemEndpoints:
     def test_delete_dataset_item_not_found(self, fxt_dataset_service, fxt_client):
         project_id = uuid4()
         dataset_item_id = uuid4()
-        fxt_dataset_service.delete_dataset_item.return_value = False
+        fxt_dataset_service.delete_dataset_item.side_effect = ResourceNotFoundError(
+            ResourceType.DATASET_ITEM, str(dataset_item_id)
+        )
 
         response = fxt_client.delete(f"/api/projects/{str(project_id)}/dataset/items/{str(dataset_item_id)}")
 
