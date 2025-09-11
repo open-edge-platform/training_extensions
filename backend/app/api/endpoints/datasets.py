@@ -1,6 +1,5 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-import os
 from datetime import datetime
 from typing import Annotated
 from uuid import UUID
@@ -8,7 +7,13 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from starlette.responses import FileResponse
 
-from app.api.dependencies import get_dataset_item_id, get_dataset_service, get_project_id
+from app.api.dependencies import (
+    get_dataset_item_id,
+    get_dataset_service,
+    get_file_name_and_extension,
+    get_file_size,
+    get_project_id,
+)
 from app.schemas import DatasetItem, DatasetItemsWithPagination
 from app.schemas.base import Pagination
 from app.services import DatasetService, ResourceNotFoundError
@@ -20,26 +25,6 @@ DEFAULT_DATASET_ITEMS_NUMBER_RETURNED = 10
 MAX_DATASET_ITEMS_NUMBER_RETURNED = 100
 
 
-def _get_file_name_and_extension(full_name: str | None) -> tuple[str, str]:
-    if not full_name:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File name cannot be empty.")
-    full_name = full_name.strip()
-    if not full_name:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File name cannot be empty.")
-    file_name, file_ext = os.path.splitext(full_name)
-    file_name = file_name.strip()  # remove whitespace characters between the basename and the extension
-    file_ext = file_ext[1:]
-    if not file_ext:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File extension cannot be empty.")
-    return file_name, file_ext
-
-
-def _get_file_size(size: int | None) -> int:
-    if not size:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File size should be defined.")
-    return size
-
-
 @router.post(
     "",
     status_code=status.HTTP_201_CREATED,
@@ -48,11 +33,12 @@ def _get_file_size(size: int | None) -> int:
 def add_dataset_item(
     project_id: Annotated[UUID, Depends(get_project_id)],
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
+    file_name_and_extension: Annotated[tuple[str, str], Depends(get_file_name_and_extension)],
+    size: Annotated[int, Depends(get_file_size)],
     file: Annotated[UploadFile, File()],
 ) -> DatasetItem:
     """Add a new item to the dataset by uploading an image"""
-    name, format = _get_file_name_and_extension(file.filename)
-    size = _get_file_size(file.size)
+    name, format = file_name_and_extension
     try:
         return dataset_service.create_dataset_item(
             project_id=project_id, file=file.file, name=name, format=format, size=size
@@ -84,14 +70,13 @@ def list_dataset_items(
     dataset_items = dataset_service.list_dataset_items(
         project_id=project_id, limit=limit, offset=offset, start_date=start_date, end_date=end_date
     )
-    count = len(dataset_items)
     return DatasetItemsWithPagination(
         items=dataset_items,
         pagination=Pagination(
             limit=limit,
-            offset=offset + count,
+            offset=offset,
             total=total,
-            count=count,
+            count=len(dataset_items),
         ),
     )
 

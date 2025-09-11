@@ -51,12 +51,15 @@ class DatasetService:
             os.makedirs(dataset_dir)
         image.save(dataset_dir / f"{str(dataset_item_id)}.{format}")
 
-        thumbnail_image = crop_to_thumbnail(
-            image=image, target_width=DEFAULT_THUMBNAIL_SIZE, target_height=DEFAULT_THUMBNAIL_SIZE
-        )
-        if thumbnail_image.mode in ("RGBA", "P"):
-            thumbnail_image = thumbnail_image.convert("RGB")
-        thumbnail_image.save(dataset_dir / f"{str(dataset_item_id)}-thumb.jpg")
+        try:
+            thumbnail_image = crop_to_thumbnail(
+                image=image, target_width=DEFAULT_THUMBNAIL_SIZE, target_height=DEFAULT_THUMBNAIL_SIZE
+            )
+            if thumbnail_image.mode in ("RGBA", "P"):
+                thumbnail_image = thumbnail_image.convert("RGB")
+            thumbnail_image.save(dataset_dir / f"{str(dataset_item_id)}-thumb.jpg")
+        except Exception as e:
+            logger.exception("Failed to generate thumbnail image %s", e)
 
         with get_db_session() as db:
             repo = DatasetItemRepository(project_id=str(project_id), db=db)
