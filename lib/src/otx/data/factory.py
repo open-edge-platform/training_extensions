@@ -53,7 +53,8 @@ class OTXDatasetFactory:
         cfg_subset: SubsetConfig,
         data_format: str,
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
-        include_polygons: bool = False,
+        # TODO(gdlg): Consider removing include_polygons
+        include_polygons: bool = False,  # noqa: ARG003
         # TODO(gdlg): Add support for ignore_index again
         ignore_index: int = 255,  # noqa: ARG003
     ) -> OTXDataset | OTXDatasetNew:
@@ -118,9 +119,12 @@ class OTXDatasetFactory:
             return OTXDetectionDataset(**common_kwargs)
 
         if task in [OTXTaskType.ROTATED_DETECTION, OTXTaskType.INSTANCE_SEGMENTATION]:
-            from .dataset.instance_segmentation import OTXInstanceSegDataset
+            from .dataset.instance_segmentation_new import OTXInstanceSegDataset
 
-            return OTXInstanceSegDataset(include_polygons=include_polygons, **common_kwargs)
+            dataset = convert_from_legacy(dm_subset)
+            common_kwargs["dm_subset"] = dataset
+
+            return OTXInstanceSegDataset(**common_kwargs)
 
         if task == OTXTaskType.SEMANTIC_SEGMENTATION:
             from .dataset.segmentation_new import OTXSegmentationDataset

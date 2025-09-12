@@ -15,13 +15,13 @@ from torchvision.models.detection.roi_heads import RoIHeads, fastrcnn_loss, mask
 from otx.data.utils.structures.mask import mask_target
 
 if TYPE_CHECKING:
-    from datumaro import Polygon
+    import numpy as np
 
 
 def maskrcnn_loss(
     mask_logits: Tensor,
     proposals: list[Tensor],
-    gt_masks: list[list[Tensor]] | list[list[Polygon]],
+    gt_masks: list[list[Tensor]] | list[np.ndarray],
     gt_labels: list[Tensor],
     mask_matched_idxs: list[Tensor],
     image_shapes: list[tuple[int, int]],
@@ -31,7 +31,7 @@ def maskrcnn_loss(
     Args:
         mask_logits (Tensor): the mask predictions.
         proposals (list[Tensor]): the region proposals.
-        gt_masks (list[list[Tensor]] | list[list[Polygon]]): the ground truth masks.
+        gt_masks (list[list[Tensor]] | list[np.ndarray]): the ground truth masks as ragged arrays.
         gt_labels (list[Tensor]): the ground truth labels.
         mask_matched_idxs (list[Tensor]): the matched indices.
         image_shapes (list[tuple[int, int]]): the image shapes.

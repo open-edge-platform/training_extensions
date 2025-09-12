@@ -14,13 +14,21 @@ from datumaro import Mask
 from datumaro.components.media import Image
 from datumaro.experimental.dataset import Sample
 from datumaro.experimental.fields import ImageInfo as DmImageInfo
-from datumaro.experimental.fields import bbox_field, image_field, image_info_field, label_field, mask_field
+from datumaro.experimental.fields import (
+    bbox_field,
+    image_field,
+    image_info_field,
+    instance_mask_field,
+    label_field,
+    mask_field,
+    polygon_field,
+)
 from torchvision import tv_tensors
 
 from otx.data.entity.base import ImageInfo
 
 if TYPE_CHECKING:
-    from datumaro import DatasetItem, Polygon
+    from datumaro import DatasetItem
     from torchvision.tv_tensors import BoundingBoxes, Mask
 
 
@@ -55,7 +63,7 @@ class OTXSample(Sample):
         return None
 
     @property
-    def polygons(self) -> list[Polygon] | None:
+    def polygons(self) -> np.ndarray | None:
         """Get polygons for the sample."""
         return None
 
@@ -169,6 +177,49 @@ class SegmentationSample(OTXSample):
         shape = (self.dm_image_info.height, self.dm_image_info.width)
         self.image = tv_tensors.Image(self.image.transpose(2, 0, 1))
         self.masks = tv_tensors.Mask(self.masks[np.newaxis, ...])
+        self.img_info = ImageInfo(
+            img_idx=0,
+            img_shape=shape,
+            ori_shape=shape,
+        )
+
+
+class InstanceSegmentationSample(OTXSample):
+    """OTXSample for instance segmentation tasks."""
+
+    image: np.ndarray | tv_tensors.Image = image_field(dtype=pl.UInt8)
+    bboxes: np.ndarray | tv_tensors.BoundingBoxes = bbox_field(dtype=pl.Float32)
+    masks: np.ndarray | tv_tensors.Mask = instance_mask_field(dtype=pl.UInt8)
+    label: np.ndarray | torch.Tensor = label_field(is_list=True)
+    polygons: np.ndarray = polygon_field(dtype=pl.Float32)  # Ragged array of (Npoly, 2) arrays
+    dm_image_info: DmImageInfo = image_info_field()
+
+    def __post_init__(self) -> None:
+        shape = (self.dm_image_info.height, self.dm_image_info.width)
+
+        # Convert image to tv_tensors format
+        if isinstance(self.image, np.ndarray):
+            self.image = tv_tensors.Image(self.image.transpose(2, 0, 1))
+
+        # Convert bboxes to tv_tensors format
+        if isinstance(self.bboxes, np.ndarray):
+            self.bboxes = tv_tensors.BoundingBoxes(
+                self.bboxes,
+                format=tv_tensors.BoundingBoxFormat.XYXY,
+                canvas_size=shape,
+                dtype=torch.float32,
+            )
+
+        # Convert masks to tv_tensors format
+        if isinstance(self.masks, np.ndarray):
+            self.masks = tv_tensors.Mask(self.masks, dtype=torch.uint8)
+
+        # Convert labels to tensor
+        if isinstance(self.label, np.ndarray):
+            self.label = torch.as_tensor(self.label, dtype=torch.long)
+
+        # polygons is already a ragged array of np.ndarray objects, no conversion needed
+
         self.img_info = ImageInfo(
             img_idx=0,
             img_shape=shape,
