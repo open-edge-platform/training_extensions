@@ -30,7 +30,7 @@ class DatasetItem(BaseIDNameModel):
     width: int
     height: int
     size: int
-    source_id: UUID | None
+    source_id: UUID | None = None
     subset: DatasetItemSubset
 
     model_config = {

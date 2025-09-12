@@ -136,3 +136,15 @@ class TestProjectServiceIntegration:
         assert excinfo.value.resource_type == ResourceType.PROJECT
         assert excinfo.value.resource_id == db_project.id
         assert "Cannot delete a project with a running pipeline." in str(excinfo.value)
+
+    def test_delete_project_not_found(
+        self, fxt_project_service: ProjectService, fxt_db_projects: list[ProjectDB], db_session: Session
+    ):
+        """Test deleting a non-existing project."""
+        non_existent_id = uuid4()
+
+        with pytest.raises(ResourceNotFoundError) as excinfo:
+            fxt_project_service.delete_project_by_id(non_existent_id)
+
+        assert excinfo.value.resource_type == ResourceType.PROJECT
+        assert excinfo.value.resource_id == str(non_existent_id)
