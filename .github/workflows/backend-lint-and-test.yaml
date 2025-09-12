@@ -1,14 +1,38 @@
 name: Geti Tune server checks
 on:
   push:
-    branches: ["develop"]
+    branches:
+      - develop
+    tags:
+      - "v*"
   pull_request:
+  merge_group:
+    branches:
+      - develop
+      - releases/**
 
 permissions: {} # No permissions by default on workflow level
 
 jobs:
+  check_paths:
+    name: Check if workflow should run
+    runs-on: ubuntu-latest
+    outputs:
+      test_any_changed: ${{ steps.changed-files-yaml.outputs.test_any_changed }}
+    steps:
+      - name: Get all paths that should trigger the workflow
+        id: changed-files-yaml
+        uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c # v46.0.5
+        with:
+          files_yaml: |
+            test:
+              - backend/**
+              - .github/**
+
   python-checks:
     runs-on: ubuntu-latest
+    needs: check_paths
+    if: needs.check_paths.outputs.test_any_changed == 'true'
     permissions:
       contents: read # to checkout code
     steps:
@@ -23,9 +47,10 @@ jobs:
           python-version: "3.13"
 
       - name: Install uv
-        uses: astral-sh/setup-uv@a02a550bdd3185dba2ebb6aa98d77047ce54ad21 # v6.2.1
+        uses: astral-sh/setup-uv@557e51de59eb14aaaba2ed9621916900a91d50c6 # v6.6.1
         with:
           version: "0.8.8"
+          enable-cache: false
 
       - name: Install OpenCV dependencies
         run: |
@@ -60,3 +85,23 @@ jobs:
         working-directory: backend
         run: |
           uv run pytest tests/integration
+
+  required_check:
+    name: Required Check backend-lint-and-test
+    needs:
+      - check_paths
+      - python-checks
+    runs-on: ubuntu-latest
+    env:
+      CHECKS: ${{ join(needs.*.result, ' ') }}
+    if: always() && !cancelled()
+    steps:
+      - name: Check jobs results
+        run: |
+          for check in ${CHECKS}; do
+            echo "::notice::check=${check}"
+            if [[ "$check" != "success" && "$check" != "skipped" ]]; then
+              echo "::error ::Required status checks failed. They must succeed before this pull request can be merged."
+              exit 1
+            fi
+          done
