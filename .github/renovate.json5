@@ -40,9 +40,6 @@
     ],
   },
 
-  // ignore Geti components to avoid Renovate Artifact update problem
-  ignoreDeps: ["@geti/config", "@geti/smart-tools", "@geti/ui"],
-
   // Set limit to 5
   ignorePresets: [":prHourlyLimit2"],
   prHourlyLimit: 5,
@@ -115,11 +112,18 @@
       matchUpdateTypes: ["major", "minor", "patch"],
     },
 
-    // Disable non-security upgrades for pypi, npm and crate, except lock file update
+    // Disable non-security upgrades for pypi and crate, except lock file update
     // node is upgraded manually
     {
       enabled: false,
-      matchDatasources: ["pypi", "node-version", "crate", "npm"],
+      matchDatasources: ["pypi", "node-version", "crate"],
+    },
+
+    // Disable non-security upgrades for npm
+    // Lock fie will be updated manually
+    {
+      enabled: false,
+      matchManagers: ["npm"],
     },
 
     // Python version in TOML is updated manually
