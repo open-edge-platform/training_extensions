@@ -5,22 +5,35 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from otx.data.entity.sample import DetectionSample
+from otx.types.label import LabelInfo
 
 from .base_new import OTXDataset
+
+if TYPE_CHECKING:
+    from datumaro.experimental import Dataset
 
 
 class OTXDetectionDataset(OTXDataset):
     """OTXDataset class for detection task using new Datumaro experimental Dataset."""
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, dm_subset: Dataset, **kwargs) -> None:
         """Initialize _OTXDetectionDataset.
 
         Args:
             **kwargs: Keyword arguments to pass to OTXDataset
         """
         kwargs["sample_type"] = DetectionSample
-        super().__init__(**kwargs)
+        super().__init__(dm_subset, **kwargs)
+
+        labels = dm_subset.schema.attributes["label"].categories.labels
+        self.label_info = LabelInfo(
+            label_names=labels,
+            label_groups=[labels],
+            label_ids=[str(i) for i in range(len(labels))],
+        )
 
     def get_idx_list_per_classes(self, use_string_label: bool = False) -> dict[int, list[int]]:
         """Get a dictionary mapping class labels (string or int) to lists of samples.

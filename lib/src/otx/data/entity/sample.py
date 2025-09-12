@@ -13,7 +13,8 @@ import torch
 from datumaro import Mask
 from datumaro.components.media import Image
 from datumaro.experimental.dataset import Sample
-from datumaro.experimental.fields import bbox_field, image_field, label_field
+from datumaro.experimental.fields import ImageInfo as DmImageInfo
+from datumaro.experimental.fields import bbox_field, image_field, image_info_field, label_field, mask_field
 from torchvision import tv_tensors
 
 from otx.data.entity.base import ImageInfo
@@ -155,3 +156,21 @@ class DetectionSample(OTXSample):
         )
         sample.img_info = img_info
         return sample
+
+
+class SegmentationSample(OTXSample):
+    """OTXDataItemSample is a base class for OTX data items."""
+
+    image: np.ndarray | tv_tensors.Image = image_field(dtype=pl.UInt8)
+    masks: np.ndarray | tv_tensors.Mask = mask_field(dtype=pl.UInt8)
+    dm_image_info: DmImageInfo = image_info_field()
+
+    def __post_init__(self) -> None:
+        shape = (self.dm_image_info.height, self.dm_image_info.width)
+        self.image = tv_tensors.Image(self.image.transpose(2, 0, 1))
+        self.masks = tv_tensors.Mask(self.masks[np.newaxis, ...])
+        self.img_info = ImageInfo(
+            img_idx=0,
+            img_shape=shape,
+            ori_shape=shape,
+        )
