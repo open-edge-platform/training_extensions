@@ -1,0 +1,171 @@
+// Dependency Update Configuration
+//
+// See https://docs.renovatebot.com/configuration-options/
+// See https://json5.org/ for JSON5 syntax
+
+// [!] While updating the Renovate config, test changes on your own fork.
+//  1. Modify the Renovate configuration, which is located in .github/renovate.json5 and push your changes to the default branch of your fork.
+//  2. Enable the Renovate GitHub app in your GitHub account.
+//     Verify that Renovate is activated in the repository settings within the Renovate Dashboard.
+//     To enable the dashboard set `dependencyDashboard` to true
+//  3. Trigger the Renovate app from the dashboard, or push a new commit to your fork’s default branch to re-trigger Renovate.
+//  4. Use the dashboard to initiate Renovate and create a PR on your fork, then check that the proposed PRs are modifying the correct parts.
+//  5. Once you’ve validated that the Renovate configuration works on your fork, submit a PR,
+//     and include links in the description to share details about the testing you've conducted.
+
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+
+  // regenerate lock weekly https://docs.renovatebot.com/configuration-options/#lockfilemaintenance
+  lockFileMaintenance: {
+    enabled: true,
+    schedule: ["* * * * 0"], // weekly
+  },
+
+  extends: ["config:base", ":gitSignOff", "helpers:pinGitHubActionDigests"],
+  // https://docs.renovatebot.com/presets-default/#gitsignoff
+  // https://docs.renovatebot.com/presets-helpers/#helperspingithubactiondigests
+
+  // if necessary, add supported releases branches here
+  // it is possible to enable/disable specific upgrades per branch with
+  // `matchBaseBranches` in specific rule
+  baseBranches: ["develop"],
+
+  // https://docs.renovatebot.com/modules/manager/#disabling-managers
+  pip_requirements: {
+    // Prevent renovate from trying to update demo code
+    enabled: false,
+    managerFilePatterns: [
+      "lib/src/otx/backend/native/exporter/exportable_code/demo/requirements.txt",
+    ],
+  },
+
+  // Set limit to 5
+  ignorePresets: [":prHourlyLimit2"],
+  prHourlyLimit: 5,
+
+  packageRules: [
+    // Enable pinning for container images
+    // https://docs.renovatebot.com/presets-docker/#dockerpindigests
+    {
+      enabled: true,
+      matchDatasources: ["docker"],
+      pinDigests: true,
+      groupName: "Pin images",
+      groupSlug: "pin-images",
+      schedule: ["* * * * 0"], // weekly
+    },
+
+    // Disable python base image upgrades, except patch and digital pinning
+    {
+      enabled: false,
+      matchDatasources: ["docker"],
+      matchPackageNames: ["python"],
+      matchUpdateTypes: ["major", "minor"],
+    },
+
+    // Disable node image upgrades, except patch and digital pinning
+    {
+      enabled: false,
+      matchDatasources: ["docker"],
+      matchPackageNames: ["node"],
+      matchUpdateTypes: ["major", "minor"],
+    },
+
+    // Disable eclipse-mosquitto image upgrades, except patch and digital pinning
+    {
+      enabled: false,
+      matchDatasources: ["docker"],
+      matchPackageNames: ["eclipse-mosquitto"],
+      matchUpdateTypes: ["major", "minor"],
+    },
+
+    // Disable emqx/mqttx-web image upgrades, except patch and digital pinning
+    {
+      enabled: false,
+      matchDatasources: ["docker"],
+      matchPackageNames: ["emqx/mqttx-web"],
+      matchUpdateTypes: ["major", "minor"],
+    },
+
+    // Disable nvidia/cuda image upgrades, except patch and digital pinning
+    {
+      enabled: false,
+      matchDatasources: ["docker"],
+      matchPackageNames: ["nvidia/cuda"],
+      matchUpdateTypes: ["major", "minor"],
+    },
+
+    // Disable pytorch/pytorch image upgrades, except patch and digital pinning
+    {
+      enabled: false,
+      matchDatasources: ["docker"],
+      matchPackageNames: ["pytorch/pytorch"],
+      matchUpdateTypes: ["major", "minor"],
+    },
+
+    // Disable non-security upgrades for pypi, npm and crate, except lock file update
+    // node is upgraded manually
+    {
+      enabled: false,
+      matchDatasources: ["pypi", "node-version", "crate", "npm"],
+    },
+
+    // Python version in TOML is updated manually
+    {
+      enabled: false,
+      matchDatasources: ["python-version"],
+      matchDepTypes: ["requires-python"],
+      matchDepNames: ["python"],
+    },
+
+    // Disable upgrades for Dockerfile syntax (docker/dockerfile)
+    {
+      enabled: false,
+      matchDatasources: ["docker"],
+      matchDepNames: ["docker/dockerfile"],
+    },
+
+    // Group GitHub Actions updates
+    {
+      enabled: true,
+      separateMajorMinor: false,
+      groupName: "GitHub Actions",
+      matchManagers: ["github-actions"],
+      matchPackagePatterns: ["*"],
+      schedule: ["* * 1,15 * *"], // twice a month
+    },
+
+    // uv version used in GitHub Actions is updated manually
+    {
+      enabled: false,
+      matchDatasources: ["github-releases"],
+      matchDepNames: ["astral-sh/uv"],
+      matchDepTypes: ["uses-with"],
+    },
+
+    // python version used in GitHub Actions is updated manually
+    {
+      enabled: false,
+      matchDatasources: ["github-releases"],
+      matchDepNames: ["python"],
+      matchDepTypes: ["uses-with"],
+    },
+
+    // Disable mcr.microsoft.com/playwright image upgrades, except digital pinning,
+    {
+      enabled: false,
+      matchManagers: ["github-actions"],
+      matchDepTypes: ["container"],
+      matchDepNames: ["mcr.microsoft.com/playwright"],
+      matchUpdateTypes: ["major", "minor", "patch"],
+    },
+  ],
+
+  // Enable security upgrades
+  vulnerabilityAlerts: {
+    enabled: true,
+  },
+  osvVulnerabilityAlerts: true,
+  dependencyDashboard: true,
+}

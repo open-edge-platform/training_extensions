@@ -9,7 +9,7 @@ type WebRTCConnectionState = null | {
     status: WebRTCConnectionStatus;
     start: () => Promise<void>;
     stop: () => Promise<void>;
-    webRTCConnectionRef: RefObject<WebRTCConnection>;
+    webRTCConnectionRef: RefObject<WebRTCConnection | null>;
 };
 
 export const WebRTCConnectionContext = createContext<WebRTCConnectionState>(null);

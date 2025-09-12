@@ -26,6 +26,12 @@ export default [
             'no-restricted-imports': [
                 'error',
                 {
+                    paths: [
+                        {
+                            name: '@adobe/react-spectrum',
+                            message: 'Use component from the @geti/ui folder instead.',
+                        },
+                    ],
                     patterns: [
                         {
                             group: ['@react-spectrum'],

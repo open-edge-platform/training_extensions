@@ -14,7 +14,7 @@ from datumaro import Mask
 from datumaro.components.media import Image
 from datumaro.experimental.dataset import Sample
 from datumaro.experimental.fields import ImageInfo as DmImageInfo
-from datumaro.experimental.fields import image_field, image_info_field, label_field, mask_field
+from datumaro.experimental.fields import bbox_field, image_field, image_info_field, label_field, mask_field
 from torchvision import tv_tensors
 
 from otx.data.entity.base import ImageInfo
@@ -86,7 +86,7 @@ class OTXSample(Sample):
 
 
 class ClassificationSample(OTXSample):
-    """OTXDataItemSample is a base class for OTX data items."""
+    """ClassificationSample is a base class for OTX classification items."""
 
     image: np.ndarray | tv_tensors.Image = image_field(dtype=pl.UInt8)
     label: torch.Tensor = label_field(pl.Int32())
@@ -114,6 +114,45 @@ class ClassificationSample(OTXSample):
         sample = cls(
             image=image,
             label=torch.as_tensor(label, dtype=torch.long) if label is not None else torch.tensor(-1, dtype=torch.long),
+        )
+        sample.img_info = img_info
+        return sample
+
+
+class DetectionSample(OTXSample):
+    """DetectionSample is a base class for OTX detection items."""
+
+    image: np.ndarray | tv_tensors.Image = image_field(dtype=pl.UInt8)
+    label: torch.Tensor = label_field(pl.Int32(), is_list=True)
+    bboxes: torch.Tensor = bbox_field(dtype=pl.Float32)
+
+    @classmethod
+    def from_dm_item(cls, item: DatasetItem) -> DetectionSample:
+        """Create a DetectionSample from a Datumaro DatasetItem.
+
+        Args:
+            item: Datumaro DatasetItem containing image and label
+
+        Returns:
+            DetectionSample: Instance with image and label set
+        """
+        image = item.media_as(Image).data
+        img_shape = image.shape[:2]
+        img_info = ImageInfo(
+            img_idx=0,
+            img_shape=img_shape,
+            ori_shape=img_shape,
+        )
+        bboxes = [bbox.points for bbox in item.annotations] if item.annotations else None
+        labels = [bbox.label for bbox in item.annotations] if item.annotations else None
+        sample = cls(
+            image=image,
+            label=torch.as_tensor(labels, dtype=torch.long)
+            if labels is not None
+            else torch.tensor([], dtype=torch.long),
+            bboxes=torch.as_tensor(bboxes, dtype=torch.float32)
+            if bboxes is not None
+            else torch.tensor([], dtype=torch.float32),
         )
         sample.img_info = img_info
         return sample

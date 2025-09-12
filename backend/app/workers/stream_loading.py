@@ -13,7 +13,7 @@ from app.entities.stream_data import StreamData
 from app.entities.video_stream import VideoStream
 from app.schemas import Source, SourceType
 from app.services import ActivePipelineService, VideoStreamService
-from app.utils import flush_queue, log_threads, suppress_child_shutdown_signals
+from app.utils import log_threads, suppress_child_shutdown_signals
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +63,6 @@ def frame_acquisition_routine(
     finally:
         if cleanup:
             _cleanup_resources(frame_queue, video_stream)
-            del frame_queue
         logger.info("Stopped stream acquisition")
 
 
@@ -88,9 +87,13 @@ def _cleanup_resources(frame_queue: mp.Queue, video_stream: VideoStream | None) 
         logger.debug("Releasing video stream...")
         video_stream.release()
 
-    # Empty the frame queue to ensure the termination of QueueFeederThread (internal thread of 'mp.Queue')
+    # https://docs.python.org/3/library/multiprocessing.html#all-start-methods
+    # section: Joining processes that use queues
+    # Call cancel_join_thread() to prevent the parent process from blocking
+    # indefinitely when joining child processes that used this queue. This avoids potential
+    # deadlocks if the queue's background thread adds more items during the flush.
     if frame_queue is not None:
-        logger.debug("Flushing the frame queue from leftover frames")
-        flush_queue(frame_queue)
+        logger.debug("Cancelling the frame_queue join thread to allow inference process to exit")
+        frame_queue.cancel_join_thread()
 
     log_threads(log_level=logging.DEBUG)

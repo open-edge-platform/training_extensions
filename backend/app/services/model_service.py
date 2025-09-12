@@ -38,6 +38,7 @@ class ModelAlreadyExistsError(Exception):
 @dataclass
 class LoadedModel:
     name: str
+    id: UUID
     model: Model
 
 
@@ -65,6 +66,7 @@ class ModelService:
             available_models = repo.list_all()
             return ModelActivationState(
                 active_model=active_model.name if active_model is not None else None,
+                active_model_id=UUID(active_model.id) if active_model is not None else None,
                 available_models=[m.name for m in available_models],
             )
 
@@ -197,7 +199,7 @@ class ModelService:
             if self._mp_model_reload_event:
                 self._mp_model_reload_event.set()
 
-    def get_inference_model(self, force_reload: bool = False) -> Model | None:
+    def get_loaded_inference_model(self, force_reload: bool = False) -> LoadedModel | None:
         """
         Get the currently active model for inference.
 
@@ -215,18 +217,22 @@ class ModelService:
         if self._model_activation_state.active_model is None:
             return None
 
+        if self._model_activation_state.active_model_id is None:
+            return None
+
         if self._loaded_model is None or self._loaded_model.name != self._model_activation_state.active_model:
             logger.info(f"Loading model '{self._model_activation_state.active_model}'")
             model_path = self._get_model_xml_path(self._model_activation_state.active_model)
             self._loaded_model = LoadedModel(
                 name=self._model_activation_state.active_model,
+                id=self._model_activation_state.active_model_id,
                 model=Model.create_model(
                     model=str(model_path),
                     device=MODELAPI_DEVICE,
                     nstreams=MODELAPI_NSTREAMS,
                 ),
             )
-        return self._loaded_model.model
+        return self._loaded_model
 
     def get_model_by_id(self, model_id: UUID, db: Session | None = None) -> ModelSchema:
         """Get a model by its ID"""

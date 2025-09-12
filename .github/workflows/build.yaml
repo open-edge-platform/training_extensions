@@ -44,8 +44,7 @@ jobs:
           for TAG in $TAGS ; do
               TAG=${TAG} docker compose build
 
-              docker save -o geti-tune-backend-${TAG}.tar geti-tune-backend:${TAG}
-              docker save -o geti-tune-ui-${TAG}.tar geti-tune-ui:${TAG}
+              docker save -o geti-tune-${TAG}.tar geti-tune:${TAG}
           done
         env:
           TAGS: ${{ steps.meta.outputs.tags }}
