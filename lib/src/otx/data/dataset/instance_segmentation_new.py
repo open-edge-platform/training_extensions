@@ -31,26 +31,20 @@ class OTXInstanceSegDataset(OTXDataset):
         )
 
     def get_idx_list_per_classes(self, use_string_label: bool = False) -> dict[int, list[int]]:
-        """Get a dictionary with class labels as keys and lists of corresponding sample indices as values."""
+        """Get a dictionary mapping class labels (string or int) to lists of samples.
+
+        Args:
+            use_string_label (bool): If True, use string class labels as keys.
+                If False, use integer indices as keys.
+        """
         idx_list_per_classes: dict[int, list[int]] = {}
-
-        for idx in range(len(self.dm_subset)):
-            sample = self.dm_subset[idx]
-            labels = sample.labels
-
-            # Handle multiple labels per image (instance segmentation can have multiple instances)
-            if hasattr(labels, "__iter__") and not isinstance(labels, str):
-                unique_labels = set(labels)
-                for label in unique_labels:
-                    label_key = label if use_string_label else int(label)
-                    if label_key not in idx_list_per_classes:
-                        idx_list_per_classes[label_key] = []
-                    idx_list_per_classes[label_key].append(idx)
-            else:
-                # Single label case
-                label_key = labels if use_string_label else int(labels)
-                if label_key not in idx_list_per_classes:
-                    idx_list_per_classes[label_key] = []
-                idx_list_per_classes[label_key].append(idx)
-
+        for idx in range(len(self)):
+            item = self.dm_subset[idx]
+            labels = item.label.tolist()
+            if use_string_label:
+                labels = [self.label_info.label_names[label] for label in labels]
+            for label in labels:
+                if label not in idx_list_per_classes:
+                    idx_list_per_classes[label] = []
+                idx_list_per_classes[label].append(idx)
         return idx_list_per_classes
