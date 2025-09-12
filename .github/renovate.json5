@@ -119,8 +119,8 @@
       matchDatasources: ["pypi", "node-version", "crate"],
     },
 
-    // Disable non-security upgrades for npm
-    // Lock fie will be updated manually
+    // Disable non-security and lock file upgrades for npm
+    // Lock is updated manually
     {
       enabled: false,
       matchManagers: ["npm"],
