@@ -8,17 +8,17 @@ import { useAnnotator } from '../../../features/annotator/annotator-provider.com
 import { IconWrapper } from '../icon-wrapper.component';
 
 export const Tools = () => {
-    const { activeTool, selectTool } = useAnnotator();
+    const { activeTool, setActiveTool } = useAnnotator();
 
     return (
         <>
-            <IconWrapper onPress={() => selectTool('selection')} isSelected={activeTool === 'selection'}>
+            <IconWrapper onPress={() => setActiveTool('selection')} isSelected={activeTool === 'selection'}>
                 <Selector data-tool='selection' />
             </IconWrapper>
 
             <Divider size='S' />
 
-            <IconWrapper onPress={() => selectTool('bounding-box')} isSelected={activeTool === 'bounding-box'}>
+            <IconWrapper onPress={() => setActiveTool('bounding-box')} isSelected={activeTool === 'bounding-box'}>
                 <BoundingBox />
             </IconWrapper>
         </>

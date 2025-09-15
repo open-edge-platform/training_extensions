@@ -5,24 +5,16 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import { getMockedAnnotation } from '../../../../tests/test-utils/mocked-annotation';
-import { response } from '../../dataset/mock-response';
-import { AnnotatorProvider } from '../annotator-provider.component';
 import { Annotation, Polygon, Rect } from '../types';
 import { AnnotationShape } from './annotation-shape.component';
 
 type AnnotationRect = Annotation & { shape: Rect };
 type AnnotationPolygon = Annotation & { shape: Polygon };
 
-const mockMediaItem = response.items[0];
-
 describe('AnnotationShape', () => {
     it('bounding box as a rect', () => {
         const annotation = getMockedAnnotation() as AnnotationRect;
-        render(
-            <AnnotatorProvider mediaItem={mockMediaItem}>
-                <AnnotationShape annotation={annotation} />
-            </AnnotatorProvider>
-        );
+        render(<AnnotationShape annotation={annotation} />);
 
         const rect = screen.getByLabelText('annotation rect');
 
@@ -41,11 +33,7 @@ describe('AnnotationShape', () => {
         ];
         const annotation = getMockedAnnotation({ shape: { shapeType: 'polygon', points } }) as AnnotationPolygon;
 
-        render(
-            <AnnotatorProvider mediaItem={mockMediaItem}>
-                <AnnotationShape annotation={annotation} />
-            </AnnotatorProvider>
-        );
+        render(<AnnotationShape annotation={annotation} />);
         const polygon = screen.getByLabelText('annotation polygon');
 
         expect(polygon).toHaveAttribute('points', '1,2 3,4 5,6');

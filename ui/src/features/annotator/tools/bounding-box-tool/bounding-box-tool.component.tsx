@@ -10,8 +10,6 @@ import { ResizeAnchor } from './resize-anchor.component';
 import { TranslateShape } from './translate-shape.component';
 import { getBoundingBoxInRoi, getBoundingBoxResizePoints, getClampedBoundingBox } from './utils';
 
-import classes from './bounding-box-tool.module.scss';
-
 interface EditBoundingBoxProps {
     annotation: Annotation & { shape: { shapeType: 'rect' } };
     zoom: number;
@@ -21,7 +19,9 @@ const ANCHOR_SIZE = 8;
 
 export const EditBoundingBox = ({ annotation, zoom }: EditBoundingBoxProps) => {
     const [shape, setShape] = useState(annotation.shape);
-    const { roi, updateAnnotation } = useAnnotator();
+    const { mediaItem, updateAnnotation } = useAnnotator();
+
+    const roi = { x: 0, y: 0, width: mediaItem.width, height: mediaItem.height };
 
     const onComplete = () => {
         updateAnnotation({ ...annotation, shape });
@@ -52,19 +52,15 @@ export const EditBoundingBox = ({ annotation, zoom }: EditBoundingBoxProps) => {
                 <AnnotationShape annotation={{ ...annotation, shape }} />
             </TranslateShape>
 
-            <svg
-                width={roi.width}
-                height={roi.height}
-                className={classes.disabledLayer}
+            <g
+                style={{ pointerEvents: 'auto' }}
                 aria-label={`Edit bounding box points ${annotation.id}`}
                 id={`edit-bounding-box-points-${annotation.id}`}
             >
-                <g style={{ pointerEvents: 'auto' }}>
-                    {anchorPoints.map((anchor) => {
-                        return <ResizeAnchor key={anchor.label} zoom={zoom} onComplete={onComplete} {...anchor} />;
-                    })}
-                </g>
-            </svg>
+                {anchorPoints.map((anchor) => {
+                    return <ResizeAnchor key={anchor.label} zoom={zoom} onComplete={onComplete} {...anchor} />;
+                })}
+            </g>
         </>
     );
 };
