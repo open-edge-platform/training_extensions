@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import {
     ActionButton,
@@ -18,6 +18,8 @@ import {
 } from '@geti/ui';
 import { Add, Delete } from '@geti/ui/icons';
 import { v4 as uuid } from 'uuid';
+
+import { useProject } from '../project-provider.component';
 
 import classes from './label-selection.module.scss';
 
@@ -88,6 +90,11 @@ export const LabelSelection = () => {
     const [items, setItems] = useState<Omit<LabelItemProps, 'onDelete'>[]>([
         { id: uuid(), colorValue: '#F20004', nameValue: 'Car' },
     ]);
+    const { setLabels } = useProject();
+
+    useEffect(() => {
+        setLabels(items.map((item) => ({ name: item.nameValue })));
+    }, [items, setLabels]);
 
     const handleDeleteItem = (id: string) => {
         if (items.length > 1) {

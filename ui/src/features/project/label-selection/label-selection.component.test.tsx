@@ -4,26 +4,32 @@
 import { Toast } from '@geti/ui';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
+import { TestProviders } from '../../../providers';
+import { ProjectProvider } from '../project-provider.component';
 import { LabelSelection } from './label-selection.component';
 
-const renderLabelSelection = () => {
-    return render(
-        <>
-            <LabelSelection />
-            <Toast />
-        </>
+const App = () => {
+    return (
+        <TestProviders>
+            <ProjectProvider>
+                <>
+                    <LabelSelection />
+                    <Toast />
+                </>
+            </ProjectProvider>
+        </TestProviders>
     );
 };
 
 describe('LabelSelection', () => {
     it('renders initial label item', () => {
-        renderLabelSelection();
+        render(<App />);
 
         expect(screen.getByDisplayValue('Car')).toBeInTheDocument();
     });
 
     it('adds a new label item when "Add next object" is clicked', () => {
-        renderLabelSelection();
+        render(<App />);
 
         const addButton = screen.getByRole('button', { name: /add next object/i });
         fireEvent.click(addButton);
@@ -33,7 +39,7 @@ describe('LabelSelection', () => {
     });
 
     it('deletes a label item when delete is clicked', () => {
-        renderLabelSelection();
+        render(<App />);
 
         const addButton = screen.getByRole('button', { name: /add next object/i });
         fireEvent.click(addButton);
@@ -46,7 +52,7 @@ describe('LabelSelection', () => {
     });
 
     it('does not delete the last remaining label item', async () => {
-        renderLabelSelection();
+        render(<App />);
 
         const deleteButton = screen.getByRole('button', { name: /delete label car/i });
         fireEvent.click(deleteButton);
@@ -59,7 +65,7 @@ describe('LabelSelection', () => {
     });
 
     it('can edit the label name', () => {
-        renderLabelSelection();
+        render(<App />);
 
         const input = screen.getByLabelText('Label input for Car');
         fireEvent.change(input, { target: { value: 'Truck' } });

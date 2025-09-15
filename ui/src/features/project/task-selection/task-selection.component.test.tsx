@@ -3,11 +3,23 @@
 
 import { fireEvent, render, screen } from '@testing-library/react';
 
+import { TestProviders } from '../../../providers';
+import { ProjectProvider } from '../project-provider.component';
 import { TaskSelection } from './task-selection.component';
 
 describe('TaskSelection', () => {
+    const App = () => {
+        return (
+            <TestProviders>
+                <ProjectProvider>
+                    <TaskSelection />
+                </ProjectProvider>
+            </TestProviders>
+        );
+    };
+
     it('renders all task options', () => {
-        render(<TaskSelection />);
+        render(<App />);
 
         expect(screen.getByLabelText('Task option: Object Detection')).toBeInTheDocument();
         expect(screen.getByLabelText('Task option: Image Segmentation')).toBeInTheDocument();
@@ -15,14 +27,14 @@ describe('TaskSelection', () => {
     });
 
     it('selects the first task by default', () => {
-        render(<TaskSelection />);
+        render(<App />);
 
         const radio = screen.getByLabelText('detection');
         expect(radio).toBeChecked();
     });
 
     it('selects a task when the whole element is clicked', () => {
-        render(<TaskSelection />);
+        render(<App />);
 
         const segOption = screen.getByLabelText('Task option: Image Segmentation');
         fireEvent.click(segOption);
@@ -32,7 +44,7 @@ describe('TaskSelection', () => {
     });
 
     it('selects a task when the radio element is clicked', () => {
-        render(<TaskSelection />);
+        render(<App />);
 
         const classRadio = screen.getByLabelText('classification');
         fireEvent.click(classRadio);
@@ -41,7 +53,7 @@ describe('TaskSelection', () => {
     });
 
     it('only one task is selected at a time', () => {
-        render(<TaskSelection />);
+        render(<App />);
 
         const segOption = screen.getByLabelText('Task option: Image Segmentation');
         fireEvent.click(segOption);

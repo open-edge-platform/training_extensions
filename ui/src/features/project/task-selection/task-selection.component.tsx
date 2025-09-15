@@ -1,23 +1,15 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState } from 'react';
-
 import { Flex, Heading, Image, Radio, RadioGroup, Text, View } from '@geti/ui';
 
 import thumbnailUrl from '../../../assets/mocked-project-thumbnail.png';
+import { useProject } from '../project-provider.component';
+import { TaskOption } from './interface';
 
 import classes from './task-selection.module.scss';
 
-type TaskOption = {
-    id: string;
-    imageSrc: string;
-    title: string;
-    description: string;
-    verb: string;
-    value: string;
-};
-const TASKS: TaskOption[] = [
+const TASK_OPTIONS: TaskOption[] = [
     {
         id: 'detection_task',
         imageSrc: thumbnailUrl,
@@ -45,51 +37,52 @@ const TASKS: TaskOption[] = [
 ];
 
 type TaskOptionProps = {
-    task: TaskOption;
+    taskOption: TaskOption;
     onPress: () => void;
 };
-const TaskOption = ({ task, onPress }: TaskOptionProps) => {
+const Option = ({ taskOption, onPress }: TaskOptionProps) => {
     return (
-        <div onClick={onPress} className={classes.option} aria-label={`Task option: ${task.title}`}>
+        <div onClick={onPress} className={classes.option} aria-label={`Task option: ${taskOption.title}`}>
             <View maxWidth={'344px'}>
-                <Image height={'size-3000'} width={'size-3600'} src={task.imageSrc} alt={task.title} />
+                <Image height={'size-3000'} width={'size-3600'} src={taskOption.imageSrc} alt={taskOption.title} />
             </View>
 
             <View padding={'size-300'} backgroundColor={'gray-100'}>
                 <Flex justifyContent={'space-between'} alignItems={'center'}>
                     <Heading level={2} UNSAFE_className={classes.title}>
-                        {task.title}
+                        {taskOption.title}
                     </Heading>
-                    <Radio aria-label={task.value} value={task.value} />
+                    <Radio aria-label={taskOption.value} value={taskOption.value} />
                 </Flex>
 
-                <Text UNSAFE_className={classes.description}>{task.description}</Text>
+                <Text UNSAFE_className={classes.description}>{taskOption.description}</Text>
             </View>
         </div>
     );
 };
 
 export const TaskSelection = () => {
-    const [selectedTask, setSelectedTask] = useState(TASKS[0]);
+    const { selectedTask, setSelectedTask } = useProject();
+    const selectedTaskOption = TASK_OPTIONS.find((task) => task.value === selectedTask) || TASK_OPTIONS[0];
 
     return (
         <Flex direction={'column'} gap={'size-300'} alignItems={'center'}>
             <RadioGroup
                 aria-label='Task selection'
-                value={selectedTask.value}
+                value={selectedTaskOption.value}
                 onChange={(value: string) => {
-                    const option = TASKS.find((task) => task.value === value);
+                    const option = TASK_OPTIONS.find((taskOption) => taskOption.value === value);
 
-                    if (option) setSelectedTask(option);
+                    if (option) setSelectedTask(option.value);
                 }}
             >
                 <Flex justifyContent={'center'} gap={'size-300'}>
-                    {TASKS.map((task) => (
-                        <TaskOption
-                            key={task.value}
-                            task={task}
+                    {TASK_OPTIONS.map((taskOption) => (
+                        <Option
+                            key={taskOption.value}
+                            taskOption={taskOption}
                             onPress={() => {
-                                setSelectedTask(task);
+                                setSelectedTask(taskOption.value);
                             }}
                         />
                     ))}
@@ -98,7 +91,7 @@ export const TaskSelection = () => {
 
             <Flex>
                 <Text UNSAFE_style={{ color: 'var(--spectrum-global-color-gray-700)' }}>
-                    {`What objects should the model learn to ${selectedTask.verb}?`}
+                    {`What objects should the model learn to ${selectedTaskOption.verb}?`}
                 </Text>
             </Flex>
         </Flex>
