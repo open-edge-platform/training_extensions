@@ -85,7 +85,7 @@ class TestPipelineServiceUnit:
             fxt_pipeline_service.get_pipeline_metrics(fxt_default_pipeline.project_id)
 
     def test_get_pipeline_metrics_single_measurement(
-        self, fxt_pipeline_service, fxt_metrics_service, fxt_pipeline, fxt_model
+        self, fxt_pipeline_service, fxt_metrics_service, fxt_running_pipeline, fxt_model
     ):
         """Test pipeline metrics with a single throughput measurement."""
         fxt_metrics_service.get_latency_measurements.return_value = [15.0]
@@ -94,8 +94,8 @@ class TestPipelineServiceUnit:
         with (
             patch("app.services.pipeline_service.PipelineService.get_pipeline_by_id") as mock_get_pipeline_by_id,
         ):
-            mock_get_pipeline_by_id.return_value = fxt_pipeline
-            metrics = fxt_pipeline_service.get_pipeline_metrics(fxt_pipeline.id, time_window=60)
+            mock_get_pipeline_by_id.return_value = fxt_running_pipeline
+            metrics = fxt_pipeline_service.get_pipeline_metrics(fxt_running_pipeline.project_id, time_window=60)
 
         fxt_metrics_service.get_latency_measurements.assert_called_once_with(model_id=fxt_model.id, time_window=60)
         assert metrics.inference.latency.avg_ms == 15.0
@@ -110,7 +110,7 @@ class TestPipelineServiceUnit:
         assert metrics.inference.throughput.max_requests_per_second == 1
 
     def test_get_pipeline_metrics_high_throughput_data(
-        self, fxt_pipeline_service, fxt_metrics_service, fxt_pipeline, fxt_model
+        self, fxt_pipeline_service, fxt_metrics_service, fxt_running_pipeline, fxt_model
     ):
         """Test pipeline metrics with high throughput scenarios."""
         fxt_metrics_service.get_latency_measurements.return_value = [5.0, 6.0, 7.0, 8.0, 9.0]
@@ -127,8 +127,8 @@ class TestPipelineServiceUnit:
         with (
             patch("app.services.pipeline_service.PipelineService.get_pipeline_by_id") as mock_get_pipeline_by_id,
         ):
-            mock_get_pipeline_by_id.return_value = fxt_pipeline
-            metrics = fxt_pipeline_service.get_pipeline_metrics(fxt_pipeline.id, time_window=60)
+            mock_get_pipeline_by_id.return_value = fxt_running_pipeline
+            metrics = fxt_pipeline_service.get_pipeline_metrics(fxt_running_pipeline.project_id, time_window=60)
 
         fxt_metrics_service.get_latency_measurements.assert_called_once_with(model_id=fxt_model.id, time_window=60)
         assert metrics.inference.latency.avg_ms == 7.0

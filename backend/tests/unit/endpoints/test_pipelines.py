@@ -249,7 +249,7 @@ class TestPipelineEndpoints:
         assert response_data["inference"]["throughput"]["total_requests"] is None
         assert response_data["inference"]["throughput"]["max_requests_per_second"] is None
 
-        fxt_pipeline_service.get_pipeline_metrics.assert_called_once_with(fxt_pipeline.id, 60)
+        fxt_pipeline_service.get_pipeline_metrics.assert_called_once_with(fxt_pipeline.project_id, 60)
 
     def test_get_pipeline_metrics_success_with_data(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
         """Test successful retrieval of pipeline metrics including throughput data."""
@@ -264,7 +264,7 @@ class TestPipelineEndpoints:
         )
         fxt_pipeline_service.get_pipeline_metrics.return_value = mock_metrics
 
-        response = fxt_client.get(f"/api/pipelines/{str(fxt_pipeline.id)}/metrics")
+        response = fxt_client.get(f"/api/projects/{str(fxt_pipeline.project_id)}/pipeline/metrics")
 
         assert response.status_code == status.HTTP_200_OK
         response_data = response.json()
