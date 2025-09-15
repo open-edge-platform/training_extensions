@@ -4,9 +4,10 @@
 import { Button, ButtonGroup, Divider, Flex, Grid, Text } from '@geti/ui';
 import { useNavigate } from 'react-router';
 
-import { LabelSelection } from '../../features/project/label-selection.component';
-import { ModelSelectionGroup } from '../../features/project/model-selection-group.component';
+import { LabelSelection } from '../../features/project/label-selection/label-selection.component';
 import { ProjectName } from '../../features/project/project-name';
+import { useProject } from '../../features/project/project-provider.component';
+import { TaskSelection } from '../../features/project/task-selection/task-selection.component';
 import { paths } from '../../router';
 import Background from './../../assets/background.png';
 
@@ -14,10 +15,7 @@ import classes from './project.module.scss';
 
 export const CreateProject = () => {
     const navigate = useNavigate();
-
-    const handleCreateProject = () => {
-        navigate(paths.inference.index({}));
-    };
+    const { createProject } = useProject();
 
     return (
         <Grid
@@ -54,7 +52,7 @@ export const CreateProject = () => {
                 maxWidth={'1052px'}
                 UNSAFE_style={{ overflow: 'auto', margin: '0 auto' }}
             >
-                <ModelSelectionGroup />
+                <TaskSelection />
 
                 <Divider size='S' />
 
@@ -63,7 +61,16 @@ export const CreateProject = () => {
 
             <Flex justifyContent={'end'} UNSAFE_className={classes.buttonGroup}>
                 <ButtonGroup>
-                    <Button onPress={handleCreateProject} variant='accent'>
+                    <Button
+                        onPress={() =>
+                            createProject({
+                                onSuccess: () => {
+                                    navigate(paths.inference.index({}));
+                                },
+                            })
+                        }
+                        variant='accent'
+                    >
                         Create project
                     </Button>
                 </ButtonGroup>

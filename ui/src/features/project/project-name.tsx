@@ -1,8 +1,6 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState } from 'react';
-
 import {
     ActionButton,
     Button,
@@ -18,15 +16,17 @@ import {
 } from '@geti/ui';
 import { Edit } from '@geti/ui/icons';
 
+import { useProject } from './project-provider.component';
+
 export const ProjectName = () => {
-    const [name, setName] = useState('Project #1');
+    const { name, setName } = useProject();
 
     return (
         <DialogTrigger>
             <ActionButton isQuiet>
                 <Heading level={4}>
                     <Flex alignItems={'center'} gap='size-200'>
-                        <Text>Project #1</Text>
+                        <Text>{name}</Text>
                         <Edit fill={'white'} />
                     </Flex>
                 </Heading>
