@@ -5,18 +5,19 @@ import { Toast } from '@geti/ui';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import { TestProviders } from '../../../providers';
-import { ProjectProvider } from '../project-provider.component';
 import { LabelSelection } from './label-selection.component';
 
 const App = () => {
+    const mockLabels = [
+        { id: 'id-1', colorValue: '#F20004', nameValue: 'Car' },
+        { id: 'id-2', colorValue: '#F22224', nameValue: 'People' },
+    ];
     return (
         <TestProviders>
-            <ProjectProvider>
-                <>
-                    <LabelSelection />
-                    <Toast />
-                </>
-            </ProjectProvider>
+            <>
+                <LabelSelection labels={mockLabels} setLabels={vi.fn()} />
+                <Toast />
+            </>
         </TestProviders>
     );
 };

@@ -1,11 +1,12 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { Dispatch, SetStateAction } from 'react';
+
 import { Flex, Heading, Image, Radio, RadioGroup, Text, View } from '@geti/ui';
 
 import thumbnailUrl from '../../../assets/mocked-project-thumbnail.png';
-import { useProject } from '../project-provider.component';
-import { TaskOption } from './interface';
+import { TaskOption, TaskType } from './interface';
 
 import classes from './task-selection.module.scss';
 
@@ -61,8 +62,8 @@ const Option = ({ taskOption, onPress }: TaskOptionProps) => {
     );
 };
 
-export const TaskSelection = () => {
-    const { selectedTask, setSelectedTask } = useProject();
+type TaskSelectionProps = { selectedTask: TaskType; setSelectedTask: Dispatch<SetStateAction<TaskType>> };
+export const TaskSelection = ({ selectedTask, setSelectedTask }: TaskSelectionProps) => {
     const selectedTaskOption = TASK_OPTIONS.find((task) => task.value === selectedTask) || TASK_OPTIONS[0];
 
     return (

@@ -11,7 +11,6 @@ import { path } from 'static-path';
 import { ZoomProvider } from './components/zoom/zoom';
 import { WebRTCConnectionProvider } from './features/inference/stream/web-rtc-connection-provider';
 import { ProjectDetails } from './features/project/project-details.component';
-import { ProjectProvider } from './features/project/project-provider.component';
 import { Layout } from './layout';
 import { Dataset } from './routes/dataset/dataset.component';
 import { SelectedDataProvider } from './routes/dataset/provider';
@@ -52,11 +51,7 @@ export const paths = {
 export const router = createBrowserRouter([
     {
         path: paths.project.new.pattern,
-        element: (
-            <ProjectProvider>
-                <CreateProject />
-            </ProjectProvider>
-        ),
+        element: <CreateProject />,
     },
     {
         path: paths.root.pattern,

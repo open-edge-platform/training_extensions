@@ -4,16 +4,13 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 
 import { TestProviders } from '../../../providers';
-import { ProjectProvider } from '../project-provider.component';
 import { TaskSelection } from './task-selection.component';
 
 describe('TaskSelection', () => {
     const App = () => {
         return (
             <TestProviders>
-                <ProjectProvider>
-                    <TaskSelection />
-                </ProjectProvider>
+                <TaskSelection selectedTask={'detection'} setSelectedTask={vi.fn()} />
             </TestProviders>
         );
     };

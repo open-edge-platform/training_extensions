@@ -1,6 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { Dispatch, SetStateAction } from 'react';
+
 import {
     ActionButton,
     Button,
@@ -16,11 +18,8 @@ import {
 } from '@geti/ui';
 import { Edit } from '@geti/ui/icons';
 
-import { useProject } from './project-provider.component';
-
-export const ProjectName = () => {
-    const { name, setName } = useProject();
-
+type ProjectNameProps = { name: string; setName: Dispatch<SetStateAction<string>> };
+export const ProjectName = ({ name, setName }: ProjectNameProps) => {
     return (
         <DialogTrigger>
             <ActionButton isQuiet>

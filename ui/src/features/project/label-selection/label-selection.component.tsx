@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useState } from 'react';
 
 import {
     ActionButton,
@@ -19,7 +19,7 @@ import {
 import { Add, Delete } from '@geti/ui/icons';
 import { v4 as uuid } from 'uuid';
 
-import { useProject } from '../project-provider.component';
+import { LabelItemProps } from './interface';
 
 import classes from './label-selection.module.scss';
 
@@ -54,7 +54,6 @@ const LabelInput = ({ value, onChange }: { value: string; onChange: (newValue: s
     );
 };
 
-type LabelItemProps = { id: string; colorValue: string; nameValue: string; onDelete: (id: string) => void };
 const LabelItem = ({ id, colorValue, nameValue, onDelete }: LabelItemProps) => {
     const [color, setColor] = useState<string>(colorValue);
     const [name, setName] = useState<string>(nameValue);
@@ -86,27 +85,22 @@ const LabelItem = ({ id, colorValue, nameValue, onDelete }: LabelItemProps) => {
     );
 };
 
-export const LabelSelection = () => {
-    const [items, setItems] = useState<Omit<LabelItemProps, 'onDelete'>[]>([
-        { id: uuid(), colorValue: '#F20004', nameValue: 'Car' },
-    ]);
-    const { setLabels } = useProject();
-
-    useEffect(() => {
-        setLabels(items.map((item) => ({ name: item.nameValue })));
-    }, [items, setLabels]);
-
+type LabelSelectionProps = {
+    labels: Omit<LabelItemProps, 'onDelete'>[];
+    setLabels: Dispatch<SetStateAction<Omit<LabelItemProps, 'onDelete'>[]>>;
+};
+export const LabelSelection = ({ labels, setLabels }: LabelSelectionProps) => {
     const handleDeleteItem = (id: string) => {
-        if (items.length > 1) {
-            setItems(items.filter((item) => item.id !== id));
+        if (labels.length > 1) {
+            setLabels(labels.filter((label) => label.id !== id));
         } else {
             toast({ type: 'info', message: 'At least one object is required' });
         }
     };
 
     const handleAddItem = () => {
-        setItems([
-            ...items,
+        setLabels([
+            ...labels,
             {
                 id: uuid(),
                 colorValue: '',
@@ -125,8 +119,8 @@ export const LabelSelection = () => {
             UNSAFE_style={{ overflow: 'auto' }}
         >
             <Flex direction={'column'} alignItems={'center'} gap={'size-100'} width={'100%'}>
-                {items.map((item) => {
-                    return <LabelItem key={item.id} onDelete={handleDeleteItem} {...item} />;
+                {labels.map((label) => {
+                    return <LabelItem key={label.id} {...label} onDelete={handleDeleteItem} />;
                 })}
             </Flex>
 
