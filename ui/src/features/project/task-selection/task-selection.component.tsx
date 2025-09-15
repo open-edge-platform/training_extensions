@@ -5,11 +5,11 @@ import { useState } from 'react';
 
 import { Flex, Heading, Image, Radio, RadioGroup, Text, View } from '@geti/ui';
 
-import thumbnailUrl from '../../assets/mocked-project-thumbnail.png';
+import thumbnailUrl from '../../../assets/mocked-project-thumbnail.png';
 
-import classes from './model-selection.module.scss';
+import classes from './task-selection.module.scss';
 
-type Model = {
+type TaskOption = {
     id: string;
     imageSrc: string;
     title: string;
@@ -17,9 +17,9 @@ type Model = {
     verb: string;
     value: string;
 };
-const MODELS: Model[] = [
+const TASKS: TaskOption[] = [
     {
-        id: 'detection_model',
+        id: 'detection_task',
         imageSrc: thumbnailUrl,
         title: 'Object Detection',
         description: 'Identify and locate objects in your images',
@@ -27,7 +27,7 @@ const MODELS: Model[] = [
         value: 'detection',
     },
     {
-        id: 'segmentation_model',
+        id: 'segmentation_task',
         imageSrc: thumbnailUrl,
         title: 'Image Segmentation',
         description: 'Detect and outline specific regions or shapes',
@@ -35,7 +35,7 @@ const MODELS: Model[] = [
         value: 'segmentation',
     },
     {
-        id: 'classification_model',
+        id: 'classification_task',
         imageSrc: thumbnailUrl,
         title: 'Image Classification',
         description: 'Categorize entire images based on their content',
@@ -44,52 +44,52 @@ const MODELS: Model[] = [
     },
 ];
 
-type ModelOptionProps = {
-    model: Model;
+type TaskOptionProps = {
+    task: TaskOption;
     onPress: () => void;
 };
-const ModelOption = ({ model, onPress }: ModelOptionProps) => {
+const TaskOption = ({ task, onPress }: TaskOptionProps) => {
     return (
-        <div onClick={onPress} className={classes.option} aria-label={`Model option: ${model.title}`}>
+        <div onClick={onPress} className={classes.option} aria-label={`Task option: ${task.title}`}>
             <View maxWidth={'344px'}>
-                <Image height={'size-3000'} width={'size-3600'} src={model.imageSrc} alt={model.title} />
+                <Image height={'size-3000'} width={'size-3600'} src={task.imageSrc} alt={task.title} />
             </View>
 
             <View padding={'size-300'} backgroundColor={'gray-100'}>
                 <Flex justifyContent={'space-between'} alignItems={'center'}>
                     <Heading level={2} UNSAFE_className={classes.title}>
-                        {model.title}
+                        {task.title}
                     </Heading>
-                    <Radio aria-label={model.value} value={model.value} />
+                    <Radio aria-label={task.value} value={task.value} />
                 </Flex>
 
-                <Text UNSAFE_className={classes.description}>{model.description}</Text>
+                <Text UNSAFE_className={classes.description}>{task.description}</Text>
             </View>
         </div>
     );
 };
 
-export const ModelSelectionGroup = () => {
-    const [selectedOption, setSelectedOption] = useState(MODELS[0]);
+export const TaskSelection = () => {
+    const [selectedTask, setSelectedTask] = useState(TASKS[0]);
 
     return (
         <Flex direction={'column'} gap={'size-300'} alignItems={'center'}>
             <RadioGroup
-                aria-label='Model selection'
-                value={selectedOption.value}
+                aria-label='Task selection'
+                value={selectedTask.value}
                 onChange={(value: string) => {
-                    const selectedModel = MODELS.find((model) => model.value === value);
+                    const option = TASKS.find((task) => task.value === value);
 
-                    if (selectedModel) setSelectedOption(selectedModel);
+                    if (option) setSelectedTask(option);
                 }}
             >
                 <Flex justifyContent={'center'} gap={'size-300'}>
-                    {MODELS.map((model) => (
-                        <ModelOption
-                            key={model.value}
-                            model={model}
+                    {TASKS.map((task) => (
+                        <TaskOption
+                            key={task.value}
+                            task={task}
                             onPress={() => {
-                                setSelectedOption(model);
+                                setSelectedTask(task);
                             }}
                         />
                     ))}
@@ -98,7 +98,7 @@ export const ModelSelectionGroup = () => {
 
             <Flex>
                 <Text UNSAFE_style={{ color: 'var(--spectrum-global-color-gray-700)' }}>
-                    {`What objects should the model learn to ${selectedOption.verb}?`}
+                    {`What objects should the model learn to ${selectedTask.verb}?`}
                 </Text>
             </Flex>
         </Flex>
