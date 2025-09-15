@@ -16,12 +16,6 @@
     --annotation-fill: var(--daisy-shade);
     --annotation-stroke: var(--energy-blue-light, #7bdeff);
 
-    --annotation-fill: var(--color-pink-300);
-    --annotation-stroke: var(--color-rose-500);
-
-    --annotation-fill: #e9611580;
-    --annotation-stroke: #7bdeff;
-
     --moss-tint-1: #b1d272;
 
     --spectrum-button-primary-text-font-weight: 500;

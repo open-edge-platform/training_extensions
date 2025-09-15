@@ -80,6 +80,7 @@ export const Anchor = ({
     // clicking area than the visible one
     const interactiveAnchorProps = {
         style: { cursor },
+        stroke: 'none',
         fill: dragFrom === null ? fill : 'var(--energy-blue)',
         'aria-label': label,
         onPointerUp,

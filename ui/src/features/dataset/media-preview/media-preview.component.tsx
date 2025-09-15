@@ -7,6 +7,7 @@ import { Button, ButtonGroup, Content, Dialog, Divider, Grid, Heading, ToggleBut
 
 import { ToolSelectionBar } from '../../../components/tool-selection-bar/tool-selection-bar.component';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas';
+import { AnnotatorProvider } from '../../annotator/annotator-provider.component';
 import { response } from '../mock-response';
 
 type Item = (typeof response.items)[number];
@@ -31,33 +32,35 @@ export const MediaPreview = ({ mediaItem, close }: { mediaItem: Item; close: () 
                         columns={'auto 1fr auto'}
                         rows={'auto 1fr auto'}
                     >
-                        <View gridArea={'toolbar'} margin={'size-350'}>
-                            <ToolSelectionBar />
-                        </View>
+                        <AnnotatorProvider mediaItem={mediaItem}>
+                            <View gridArea={'toolbar'} margin={'size-350'}>
+                                <ToolSelectionBar />
+                            </View>
 
-                        <View gridArea={'canvas'}>
-                            <AnnotatorCanvas mediaItem={mediaItem} isFocussed={isFocussed} />
-                        </View>
+                            <View gridArea={'canvas'}>
+                                <AnnotatorCanvas mediaItem={mediaItem} isFocussed={isFocussed} />
+                            </View>
 
-                        <View gridArea={'aside'}>
-                            <div>Aside</div>
-                        </View>
+                            <View gridArea={'aside'}>
+                                <div>Aside</div>
+                            </View>
 
-                        <View gridArea={'footer'} padding={'size-100'} UNSAFE_style={{ textAlign: 'right' }}>
-                            <ButtonGroup>
-                                <ToggleButton
-                                    marginEnd={'size-100'}
-                                    isEmphasized
-                                    isSelected={isFocussed}
-                                    onChange={setIsFocussed}
-                                >
-                                    Focus
-                                </ToggleButton>
-                                <Button variant='secondary' onPress={close}>
-                                    Close
-                                </Button>
-                            </ButtonGroup>
-                        </View>
+                            <View gridArea={'footer'} padding={'size-100'} UNSAFE_style={{ textAlign: 'right' }}>
+                                <ButtonGroup>
+                                    <ToggleButton
+                                        marginEnd={'size-100'}
+                                        isEmphasized
+                                        isSelected={isFocussed}
+                                        onChange={setIsFocussed}
+                                    >
+                                        Focus
+                                    </ToggleButton>
+                                    <Button variant='secondary' onPress={close}>
+                                        Close
+                                    </Button>
+                                </ButtonGroup>
+                            </View>
+                        </AnnotatorProvider>
                     </Grid>
                 </View>
             </Content>

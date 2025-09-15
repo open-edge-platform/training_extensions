@@ -3,11 +3,11 @@
 
 import { ReactNode, useId } from 'react';
 
-import { AnnotationShape } from './annotation-shape';
-import { Annotation } from './types';
+import { Annotation } from '../types';
+import { AnnotationShape } from './annotation-shape.component';
 
 type MaskAnnotationsProps = {
-    annotations: Array<Annotation>;
+    annotations: Annotation[];
     children: ReactNode;
     width: number;
     height: number;
@@ -44,6 +44,7 @@ export const MaskAnnotations = ({ annotations, children, width, height, isEnable
                 width={width}
                 height={height}
                 mask={`url(#mask-${id})`}
+                pointerEvents={'none'}
                 style={{
                     fillOpacity: maskOpacity,
                     fill: 'black',
@@ -53,7 +54,7 @@ export const MaskAnnotations = ({ annotations, children, width, height, isEnable
                     transitionDuration: isEnabled ? '0.2s' : '0.1s',
                 }}
             />
-            <g>{children}</g>
+            {children}
         </>
     );
 };

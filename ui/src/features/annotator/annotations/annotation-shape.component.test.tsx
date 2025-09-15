@@ -4,9 +4,9 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { getMockedAnnotation } from '../../../tests/test-utils/mocked-annotation';
-import { AnnotationShape } from './annotation-shape';
-import { Annotation, Polygon, Rect } from './types';
+import { getMockedAnnotation } from '../../../../tests/test-utils/mocked-annotation';
+import { Annotation, Polygon, Rect } from '../types';
+import { AnnotationShape } from './annotation-shape.component';
 
 type AnnotationRect = Annotation & { shape: Rect };
 type AnnotationPolygon = Annotation & { shape: Polygon };

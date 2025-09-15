@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Annotation, Point } from './types';
+import { Annotation, Point } from '../types';
 
 type AnnotationShapeProps = {
     annotation: Annotation;

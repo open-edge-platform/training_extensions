@@ -42,3 +42,15 @@ export type AnnotationState = {
     isHidden: boolean;
     isLocked: boolean;
 };
+
+export type MediaItem = {
+    id: string;
+    original_name: string;
+    format: string;
+    width: number;
+    height: number;
+    size: number;
+    thumbhash: string;
+    created_at: string;
+    annotations: Annotation[];
+};
