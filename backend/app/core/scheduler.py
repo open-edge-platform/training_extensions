@@ -53,12 +53,12 @@ class Scheduler:
         stream_loader_proc = StreamLoader(self.frame_queue, self.mp_stop_event, self.mp_config_changed_condition)
 
         inference_server_proc = InferenceWorker(
-            self.frame_queue,
-            self.pred_queue,
-            self.mp_stop_event,
-            self.mp_model_reload_event,
-            self.shm_metrics.name,
-            self.shm_metrics_lock,
+            frame_queue=self.frame_queue,
+            pred_queue=self.pred_queue,
+            stop_event=self.mp_stop_event,
+            model_reload_event=self.mp_model_reload_event,
+            shm_name=self.shm_metrics.name,
+            shm_lock=self.shm_metrics_lock,
         )
 
         dispatching_thread = DispatchingWorker(self.pred_queue, self.rtc_stream_queue, self.mp_stop_event)

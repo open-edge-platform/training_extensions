@@ -7,7 +7,6 @@ import multiprocessing as mp
 import os
 import signal
 import threading
-import time
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from multiprocessing.queues import Queue
@@ -27,18 +26,31 @@ def log_threads(log_level=logging.DEBUG) -> None:  # noqa: ANN001
     logger.log(level=log_level, msg=thread_list_msg)
 
 
-class StopMixin:
+class StoppableMixin:
+    """Mixin providing stop-aware functionality using external stop event."""
+
     def should_stop(self) -> bool:
-        raise NotImplementedError
+        """Check if a stop has been requested."""
+        if not hasattr(self, "_stop_event"):
+            raise AttributeError("StoppableMixin requires a '_stop_event' to be set.")
+        return self._stop_event.is_set()  # type: ignore
 
-    def stop_aware_sleep(self, seconds: float) -> None:
-        """Sleep in small chunks so we can exit quickly when stop is requested."""
-        end = time.monotonic() + seconds
-        while not self.should_stop() and time.monotonic() < end:
-            time.sleep(min(0.1, end - time.monotonic()))
+    def stop_aware_sleep(self, seconds: float) -> bool:
+        """
+        Sleep for the specified time, but wake up immediately if stop is requested.
+
+        Args:
+            seconds: Maximum time to sleep in seconds
+
+        Returns:
+            True if woke up due to stop request, False if timeout elapsed
+        """
+        if not hasattr(self, "_stop_event"):
+            raise AttributeError("StoppableMixin requires _stop_event to be set")
+        return self._stop_event.wait(seconds)  # type: ignore
 
 
-class BaseProcessWorker(mp.Process, StopMixin, ABC):
+class BaseProcessWorker(mp.Process, StoppableMixin, ABC):
     """
     Reusable worker with a clean lifecycle: setup() -> run_loop() [until stop_event] -> teardown()
     Subclasses only implement what's specific to their job.
@@ -75,11 +87,6 @@ class BaseProcessWorker(mp.Process, StopMixin, ABC):
 
     def teardown(self) -> None:
         """Release resources (optional)."""
-
-    # Utilities for subclasses
-
-    def should_stop(self) -> bool:
-        return self._stop_event.is_set()
 
     # Internal + final run orchestration
 
@@ -128,7 +135,7 @@ class BaseProcessWorker(mp.Process, StopMixin, ABC):
                 logger.info("Stopped %s.", self.name)
 
 
-class BaseThreadWorker(threading.Thread, StopMixin, abc.ABC):
+class BaseThreadWorker(threading.Thread, StoppableMixin, abc.ABC):
     ROLE: str = "Worker"
 
     def __init__(self, *, stop_event: Event, daemon: bool = False):
@@ -146,10 +153,7 @@ class BaseThreadWorker(threading.Thread, StopMixin, abc.ABC):
     def teardown(self) -> None:
         pass
 
-    # utilities
-    def should_stop(self) -> bool:
-        return self._stop_event.is_set()
-
+    # final run orchestration
     def run(self) -> None:  # final orchestrator
         logger.info("Starting %s", self.name)
         try:
