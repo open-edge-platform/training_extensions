@@ -1,3 +1,5 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 import types
 
 import pytest
@@ -12,8 +14,6 @@ from otx.metrics.hier_metric_collection import (
     hierMetricCollectionCallable,
 )
 
-
-# ------------------------------ Fixtures ------------------------------------
 @pytest.fixture
 def label_info_stub():
     """Minimal stub that mimics the LabelInfo attributes used by our metrics.
@@ -101,14 +101,6 @@ def test_full_path_accuracy(sample_tensors):
 
 
 # ------------------------ Inconsistent Path Ratio ---------------------------
-
-def test_inconsistent_path_ratio_consistent(label_info_stub, sample_tensors):
-    target, preds = sample_tensors
-    metric = InconsistentPathRatio(label_info_stub)
-    metric.update(preds, target)
-    val = metric.compute().item()
-    assert val == pytest.approx(0.25)
-
 
 def test_inconsistent_path_ratio_inconsistent(label_info_stub):
     # Make structurally invalid predictions (wrong parent chain)

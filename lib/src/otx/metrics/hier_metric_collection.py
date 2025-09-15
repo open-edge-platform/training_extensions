@@ -1,5 +1,7 @@
-"""
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 
+"""
 A ruff-friendly, single-file collection of hierarchical classification metrics
 implemented as ``torchmetrics.Metric`` modules and bundled behind a
 ``MetricCallable``—mirroring the style in this project.
