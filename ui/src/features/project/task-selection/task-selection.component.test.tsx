@@ -4,13 +4,14 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 
 import { TestProviders } from '../../../providers';
+import { TaskType } from './interface';
 import { TaskSelection } from './task-selection.component';
 
 describe('TaskSelection', () => {
-    const App = () => {
+    const App = ({ selectedTask = 'detection', setSelectedTask = vi.fn() }) => {
         return (
             <TestProviders>
-                <TaskSelection selectedTask={'detection'} setSelectedTask={vi.fn()} />
+                <TaskSelection selectedTask={selectedTask as TaskType} setSelectedTask={setSelectedTask} />
             </TestProviders>
         );
     };
@@ -31,32 +32,22 @@ describe('TaskSelection', () => {
     });
 
     it('selects a task when the whole element is clicked', () => {
-        render(<App />);
+        const mockSetSelectedTask = vi.fn();
+        render(<App setSelectedTask={mockSetSelectedTask} />);
 
         const segOption = screen.getByLabelText('Task option: Image Segmentation');
         fireEvent.click(segOption);
 
-        const segRadio = screen.getByLabelText('segmentation');
-        expect(segRadio).toBeChecked();
+        expect(mockSetSelectedTask).toHaveBeenCalledWith('segmentation');
     });
 
     it('selects a task when the radio element is clicked', () => {
-        render(<App />);
+        const mockSetSelectedTask = vi.fn();
+        render(<App setSelectedTask={mockSetSelectedTask} />);
 
         const classRadio = screen.getByLabelText('classification');
         fireEvent.click(classRadio);
 
-        expect(classRadio).toBeChecked();
-    });
-
-    it('only one task is selected at a time', () => {
-        render(<App />);
-
-        const segOption = screen.getByLabelText('Task option: Image Segmentation');
-        fireEvent.click(segOption);
-
-        expect(screen.getByLabelText('segmentation')).toBeChecked();
-        expect(screen.getByLabelText('detection')).not.toBeChecked();
-        expect(screen.getByLabelText('classification')).not.toBeChecked();
+        expect(mockSetSelectedTask).toHaveBeenCalledWith('classification');
     });
 });

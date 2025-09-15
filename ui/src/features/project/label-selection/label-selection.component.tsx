@@ -45,6 +45,7 @@ const ColorPicker = ({ onChange, value }: SpectrumColorPickerProps) => {
 const LabelInput = ({ value, onChange }: { value: string; onChange: (newValue: string) => void }) => {
     return (
         <input
+            name={`Label input for ${value}`}
             aria-label={`Label input for ${value}`}
             className={classes.labelInput}
             type='text'
