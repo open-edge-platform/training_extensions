@@ -90,4 +90,4 @@ COPY --from=web_ui /home/app/web_ui/dist/ /usr/share/nginx/html
 
 EXPOSE 80
 
-CMD ["sh", "-c", "nginx; uv run ./app/main.py;"]
+CMD ["sh", "-c", "nginx && exec uv run ./app/main.py;"]
