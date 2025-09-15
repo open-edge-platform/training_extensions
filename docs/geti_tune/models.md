@@ -8,18 +8,18 @@ predictions on the input data. This document explains how models are created, ma
 In Geti Tune, several key concepts are used to describe and manage models:
 
 - **Model architecture**: The design and structure of a neural network, such as YOLO, ResNet, or EfficientNet.
-The architecture defines the layers, connections, and computational graph, but does not include any learned parameters.
+  The architecture defines the layers, connections, and computational graph, but does not include any learned parameters.
 
 - **Model revision**: A specific instance of a model architecture that has been fine-tuned on a particular dataset
-with a specific configuration. Each model revision corresponds to a set of weights and training artifacts, along with
-metadata about the training process. Model revisions are versioned, allowing users to track the evolution of models.
+  with a specific configuration. Each model revision corresponds to a set of weights and training artifacts, along with
+  metadata about the training process. Model revisions are versioned, allowing users to track the evolution of models.
 
 - **Model weights**: The learned parameters of a neural network, obtained through training.
-Weights determine how the model processes input data and generates predictions.
+  Weights determine how the model processes input data and generates predictions.
 
 - **Model manifests**: A set of YAML files that describe the available model architectures, their capabilities,
-configurable parameters and other properties such as the URL to download the pre-trained weights.
-Model manifests are used internally by the app to populate the list of architectures available for training.
+  configurable parameters and other properties such as the URL to download the pre-trained weights.
+  Model manifests are used internally by the app to populate the list of architectures available for training.
 
 > [!NOTE]
 > The term "model" alone can be ambiguous. Unless otherwise specified, in this document "model" always refers to a
@@ -30,31 +30,31 @@ Model manifests are used internally by the app to populate the list of architect
 The lifecycle of a model revision in Geti Tune consists of several key stages:
 
 1. **Task selection during project creation**: When creating a project, the user selects the machine learning task
-(e.g., classification, object detection, semantic segmentation). This determines the type of model architectures
-available for the project.
+   (e.g., classification, object detection, semantic segmentation). This determines the type of model architectures
+   available for the project.
 
 2. **Selection of architecture, training configuration, and base model**: Before training, the user chooses a suitable
-model architecture (such as YOLO, EfficientNet) and configures training parameters (e.g., learning rate, augmentations).
-The user also selects a base model for fine-tuning, which can be a public pre-trained model or an existing model
-revision from the same project.
+   model architecture (such as YOLO, EfficientNet) and configures training parameters (e.g., learning rate, augmentations).
+   The user also selects a base model for fine-tuning, which can be a public pre-trained model or an existing model
+   revision from the same project.
 
 3. **Training**: The selected model is fine-tuned using OTX (OpenVINO Training Extensions), the open-source framework
-which implements the actual model and relative training pipeline in PyTorch. During training, the model learns from
-the dataset annotations to to predict the specific classes of the project. The training process produces a bunch of
-artifacts, including the trained weights, logs, and metrics.
+   which implements the actual model and relative training pipeline in PyTorch. During training, the model learns from
+   the dataset annotations to to predict the specific classes of the project. The training process produces a bunch of
+   artifacts, including the trained weights, logs, and metrics.
 
 4. **Model conversion**: After training, the model weights are converted from PyTorch format to OpenVINO Intermediate
-Representation (IR) format, for efficient inference on Intel hardware.
+   Representation (IR) format, for efficient inference on Intel hardware.
 
 5. **Evaluation**: The converted model is evaluated on validation data to assess its accuracy and performance.
-Evaluation results help determine whether the model is ready for deployment or requires further fine-tuning.
+   Evaluation results help determine whether the model is ready for deployment or requires further fine-tuning.
 
 6. **Enablement in the inference pipeline**: Once validated, the model revision can be manually enabled in the project's
-inference pipeline. The selected model is then used to generate real-time predictions on the incoming data stream.
+   inference pipeline. The selected model is then used to generate real-time predictions on the incoming data stream.
 
 7. **Model or weight removal**: Eventually, after the model is no longer needed or a more recent and accurate revision
-becomes available, the user may decide to delete the model revision or just its weights to free up storage space.
-Deleted models are no longer available for inference or further training.
+   becomes available, the user may decide to delete the model revision or just its weights to free up storage space.
+   Deleted models are no longer available for inference or further training.
 
 ![Model flow](media/model-flow.jpg)
 
