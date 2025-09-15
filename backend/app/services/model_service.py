@@ -245,8 +245,7 @@ class ModelService:
     def delete_model_by_id(self, model_id: UUID) -> None:
         """Delete a model by its ID"""
         with get_db_session() as db:
-            model = self.get_model_by_id(model_id, db)
-            self._persistence.delete_by_id(model.id, db)
+            self._persistence.delete_by_id(model_id, db)
 
     def list_models(self) -> list[ModelSchema]:
         """Get information about available models"""

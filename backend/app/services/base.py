@@ -26,6 +26,7 @@ class ResourceType(StrEnum):
     PIPELINE = "Pipeline"
     PROJECT = "Project"
     DATASET_ITEM = "DatasetItem"
+    LABEL = "Label"
 
 
 class ResourceError(Exception):
@@ -59,6 +60,14 @@ class ResourceAlreadyExistsError(ResourceError):
     def __init__(self, resource_type: ResourceType, resource_name: str, message: str | None = None):
         msg = message or f"{resource_type} with name '{resource_name}' already exists."
         super().__init__(resource_type, resource_name, msg)
+
+
+class InvalidImageError(Exception):
+    """Exception raised when invalid image is used to create a dataset item."""
+
+    def __init__(self, message: str | None = None):
+        msg = message or "Invalid image has been passed while creating a dataset item."
+        super().__init__(msg)
 
 
 S = TypeVar("S", bound=BaseModel)  # Schema type e.g. Source or Sink
@@ -129,6 +138,8 @@ class GenericPersistenceService(Generic[S, R]):
     def delete_by_id(self, item_id: UUID, db: Session | None = None) -> None:
         try:
             with self._get_repo(db) as repo:
-                repo.delete(str(item_id))
+                deleted = repo.delete(str(item_id))
+            if not deleted:
+                raise ResourceNotFoundError(self.config.resource_type, str(item_id))
         except IntegrityError:
             raise ResourceInUseError(self.config.resource_type, str(item_id))

@@ -160,13 +160,7 @@ async def update_source(
     source_config: Annotated[
         dict,
         Body(
-            description=(
-                "Partial source configuration update. "
-                "May contain any subset of fields from the respective source type "
-                "(e.g., 'device_id' for webcams; 'video_path' for video files). "
-                "Fields not included in the request will remain unchanged. "
-                "The 'source_type' field cannot be changed."
-            ),
+            description=UPDATE_SOURCE_BODY_DESCRIPTION,
             openapi_examples=UPDATE_SOURCE_BODY_EXAMPLES,
         ),
     ],

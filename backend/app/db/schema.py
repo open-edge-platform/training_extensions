@@ -4,7 +4,7 @@
 from datetime import datetime
 from uuid import uuid4
 
-from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -31,11 +31,11 @@ class ProjectDB(Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     task_type: Mapped[str] = mapped_column(String(50), nullable=False)
     exclusive_labels: Mapped[bool] = mapped_column(Boolean, default=False)
-    labels: Mapped[list[str]] = mapped_column(JSON, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
 
     pipeline = relationship("PipelineDB", back_populates="project", uselist=False)
+    labels = relationship("LabelDB", back_populates="project")
 
 
 class PipelineDB(Base):
@@ -99,3 +99,21 @@ class DatasetItemDB(Base):
     subset_assigned_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
+
+
+class LabelDB(Base):
+    __tablename__ = "labels"
+    __table_args__ = (
+        UniqueConstraint("project_id", "name", name="uq_project_label_name"),
+        UniqueConstraint("project_id", "hotkey", name="uq_project_label_hotkey"),
+    )
+
+    id: Mapped[str] = mapped_column(Text, primary_key=True, default=lambda: str(uuid4()))
+    project_id: Mapped[str] = mapped_column(Text, ForeignKey("projects.id", ondelete="CASCADE"))
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
+    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
+    color: Mapped[str | None] = mapped_column(String(7), nullable=True)
+    hotkey: Mapped[str | None] = mapped_column(String(10), nullable=True)
+
+    project = relationship("ProjectDB", back_populates="labels")

@@ -2,45 +2,129 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import BinaryIO
-from uuid import UUID
+from uuid import UUID, uuid4
 
-from app.schemas.dataset_item import DatasetItem
-from app.services.base import ResourceNotFoundError, ResourceType
+from PIL import Image, UnidentifiedImageError
+
+from app.db import get_db_session
+from app.db.schema import DatasetItemDB
+from app.repositories import DatasetItemRepository
+from app.schemas.dataset_item import DatasetItem, DatasetItemSubset
+from app.services.base import InvalidImageError, ResourceNotFoundError, ResourceType
+from app.services.mappers.dataset_item_mapper import DatasetItemMapper
+from app.utils.images import crop_to_thumbnail
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_THUMBNAIL_SIZE = 256
+
 
 class DatasetService:
-    def create_dataset_item(self, project_id: UUID, file: BinaryIO) -> DatasetItem:
+    def __init__(self) -> None:
+        self.mapper = DatasetItemMapper()
+
+    def create_dataset_item(self, project_id: UUID, name: str, format: str, size: int, file: BinaryIO) -> DatasetItem:
         """Creates a new dataset item"""
-        raise NotImplementedError
+        file.seek(0)
+        try:
+            image: Image.Image = Image.open(file)
+        except UnidentifiedImageError:
+            raise InvalidImageError
+        dataset_item_id = uuid4()
+        dataset_item = DatasetItemDB(
+            id=str(dataset_item_id),
+            project_id=str(project_id),
+            name=name,
+            format=format,
+            width=image.width,
+            height=image.height,
+            size=size,
+            subset=DatasetItemSubset.UNASSIGNED,
+        )
+
+        dataset_dir = Path(f"data/projects/{str(project_id)}/dataset")
+        if not os.path.exists(dataset_dir):
+            os.makedirs(dataset_dir)
+        image.save(dataset_dir / f"{str(dataset_item_id)}.{format}")
+
+        try:
+            thumbnail_image = crop_to_thumbnail(
+                image=image, target_width=DEFAULT_THUMBNAIL_SIZE, target_height=DEFAULT_THUMBNAIL_SIZE
+            )
+            if thumbnail_image.mode in ("RGBA", "P"):
+                thumbnail_image = thumbnail_image.convert("RGB")
+            thumbnail_image.save(dataset_dir / f"{str(dataset_item_id)}-thumb.jpg")
+        except Exception as e:
+            logger.exception("Failed to generate thumbnail image %s", e)
+
+        with get_db_session() as db:
+            repo = DatasetItemRepository(project_id=str(project_id), db=db)
+            result = self.mapper.to_schema(repo.save(dataset_item))
+            db.commit()
+        return result
+
+    def count_dataset_items(
+        self,
+        project_id: UUID,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+    ) -> int:
+        """Get number of available dataset items (within date range if specified)"""
+        with get_db_session() as db:
+            repo = DatasetItemRepository(project_id=str(project_id), db=db)
+            return repo.count(start_date=start_date, end_date=end_date)
 
     def list_dataset_items(
         self,
-        project_id: UUID,  # noqa: ARG002
-        limit: int = 20,  # noqa: ARG002
-        offset: int = 0,  # noqa: ARG002
-        start_date: datetime | None = None,  # noqa: ARG002
-        end_date: datetime | None = None,  # noqa: ARG002
+        project_id: UUID,
+        limit: int = 20,
+        offset: int = 0,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
     ) -> list[DatasetItem]:
         """Get information about available dataset items"""
-        return []
+        with get_db_session() as db:
+            repo = DatasetItemRepository(project_id=str(project_id), db=db)
+            return [
+                self.mapper.to_schema(db)
+                for db in repo.list(limit=limit, offset=offset, start_date=start_date, end_date=end_date)
+            ]
 
-    def get_dataset_item_by_id(self, project_id: UUID, dataset_item_id: UUID) -> DatasetItem:  # noqa: ARG002
+    def get_dataset_item_by_id(self, project_id: UUID, dataset_item_id: UUID) -> DatasetItem:
         """Get a dataset item by its ID"""
-        raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
+        with get_db_session() as db:
+            repo = DatasetItemRepository(project_id=str(project_id), db=db)
+            dataset_item = repo.get_by_id(str(dataset_item_id))
+            if not dataset_item:
+                raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
+            return self.mapper.to_schema(dataset_item)
 
-    def get_dataset_item_binary_path_by_id(self, project_id: UUID, dataset_item_id: UUID) -> Path | str:  # noqa: ARG002
+    def get_dataset_item_binary_path_by_id(self, project_id: UUID, dataset_item_id: UUID) -> Path | str:
         """Get a dataset item binary content by its ID"""
-        raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
+        with get_db_session() as db:
+            repo = DatasetItemRepository(project_id=str(project_id), db=db)
+            dataset_item = repo.get_by_id(str(dataset_item_id))
+            if not dataset_item:
+                raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
+        return Path(f"data/projects/{str(project_id)}/dataset/{dataset_item.id}.{dataset_item.format}")
 
-    def get_dataset_item_thumbnail_path_by_id(self, project_id: UUID, dataset_item_id: UUID) -> Path | str:  # noqa: ARG002
+    def get_dataset_item_thumbnail_path_by_id(self, project_id: UUID, dataset_item_id: UUID) -> Path | str:
         """Get a dataset item thumbnail binary content by its ID"""
-        raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
+        with get_db_session() as db:
+            repo = DatasetItemRepository(project_id=str(project_id), db=db)
+            dataset_item = repo.get_by_id(str(dataset_item_id))
+            if not dataset_item:
+                raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
+        return Path(f"data/projects/{str(project_id)}/dataset/{str(dataset_item.id)}-thumb.jpg")
 
-    def delete_dataset_item(self, project_id: UUID, dataset_item_id: UUID) -> None:  # noqa: ARG002
+    def delete_dataset_item(self, project_id: UUID, dataset_item_id: UUID) -> None:
         """Delete a dataset item by its ID"""
-        raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
+        with get_db_session() as db:
+            repo = DatasetItemRepository(project_id=str(project_id), db=db)
+            deleted = repo.delete(obj_id=str(dataset_item_id))
+            if not deleted:
+                raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))

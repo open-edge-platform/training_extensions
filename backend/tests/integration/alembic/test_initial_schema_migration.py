@@ -47,7 +47,7 @@ def test_database_migration_applied(alembic_session):
     result = alembic_session.execute(text("SELECT name FROM sqlite_master WHERE type='table'"))
     tables = [row[0] for row in result.fetchall()]
 
-    assert len(tables) == 7
+    assert len(tables) == 8
     assert "alembic_version" in tables
     assert "projects" in tables
     assert "sinks" in tables
@@ -55,6 +55,7 @@ def test_database_migration_applied(alembic_session):
     assert "sources" in tables
     assert "models" in tables
     assert "dataset_items" in tables
+    assert "labels" in tables
 
     (result,) = alembic_session.execute(text("SELECT version_num FROM alembic_version")).fetchone()
-    assert result == "da82c783f0ed"
+    assert result == "f8a3138c9a60"
