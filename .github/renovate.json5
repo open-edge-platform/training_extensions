@@ -104,11 +104,26 @@
       matchUpdateTypes: ["major", "minor"],
     },
 
-    // Disable non-security upgrades for pypi, npm and crate, except lock file update
+    // Disable docker.io/astral/uv image upgrades, except digital pinning,
+    {
+      enabled: false,
+      matchDatasources: ["docker"],
+      matchPackageNames: ["docker.io/astral/uv"],
+      matchUpdateTypes: ["major", "minor", "patch"],
+    },
+
+    // Disable non-security upgrades for pypi and crate, except lock file update
     // node is upgraded manually
     {
       enabled: false,
-      matchDatasources: ["pypi", "node-version", "crate", "npm"],
+      matchDatasources: ["pypi", "node-version", "crate"],
+    },
+
+    // Disable non-security and lock file upgrades for npm
+    // Lock is updated manually
+    {
+      enabled: false,
+      matchManagers: ["npm"],
     },
 
     // Python version in TOML is updated manually
