@@ -6,6 +6,7 @@ import multiprocessing as mp
 import queue
 import time
 from multiprocessing.synchronize import Event as EventClass
+from multiprocessing.synchronize import Lock
 from typing import Any
 from uuid import UUID
 
@@ -15,18 +16,23 @@ from app.entities.stream_data import InferenceData, StreamData
 from app.services import ModelService
 from app.services.metrics_service import MetricsService
 from app.services.model_service import LoadedModel
-from app.utils import Visualizer, flush_queue, log_threads, suppress_child_shutdown_signals
+from app.utils import Visualizer, log_threads, suppress_child_shutdown_signals
 
 logger = logging.getLogger(__name__)
 
 
 def inference_routine(  # noqa: C901, PLR0915
-    frame_queue: mp.Queue, pred_queue: mp.Queue, stop_event: EventClass, model_reload_event: EventClass
+    frame_queue: mp.Queue,
+    pred_queue: mp.Queue,
+    stop_event: EventClass,
+    model_reload_event: EventClass,
+    shm_name: str,
+    shm_lock: Lock,
 ) -> None:
     """Load frames from the frame queue, run inference then inject the result into the predictions queue"""
     suppress_child_shutdown_signals()
 
-    metrics_collector = MetricsService()
+    metrics_collector = MetricsService(shm_name, shm_lock)
 
     def on_inference_completed(inf_result: DetectionResult, userdata: dict[str, Any]) -> None:
         start_time = float(userdata["inference_start_time"])
@@ -96,11 +102,14 @@ def inference_routine(  # noqa: C901, PLR0915
             else:
                 model.inference_adapter.await_any()
     finally:
-        # Empty the prediction queue to ensure the termination of QueueFeederThread (internal thread of 'mp.Queue')
+        # https://docs.python.org/3/library/multiprocessing.html#all-start-methods
+        # section: Joining processes that use queues
+        # Call cancel_join_thread() to prevent the parent process from blocking
+        # indefinitely when joining child processes that used this queue. This avoids potential
+        # deadlocks if the queue's background thread adds more items during the flush.
         if pred_queue is not None:
-            logger.debug("Flushing the pred queue from leftover frames")
-            flush_queue(pred_queue)
-            del pred_queue
+            logger.debug("Cancelling the pred_queue join thread to allow inference process to exit")
+            pred_queue.cancel_join_thread()
 
         log_threads(log_level=logging.DEBUG)
         logger.info("Stopped inference routine")

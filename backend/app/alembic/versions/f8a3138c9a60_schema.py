@@ -1,11 +1,8 @@
-# Copyright (C) 2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
-
 """schema
 
-Revision ID: cb68fa7db781
+Revision ID: f8a3138c9a60
 Revises:
-Create Date: 2025-08-05 17:27:20.819901
+Create Date: 2025-09-10 15:50:07.886005
 
 """
 
@@ -15,7 +12,7 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "cb68fa7db781"
+revision: str = "f8a3138c9a60"
 down_revision: str | Sequence[str] | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -29,6 +26,16 @@ def upgrade() -> None:
         sa.Column("id", sa.Text(), nullable=False),
         sa.Column("name", sa.String(length=255), nullable=False),
         sa.Column("format", sa.String(length=50), nullable=False),
+        sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
+        sa.Column("updated_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_table(
+        "projects",
+        sa.Column("id", sa.Text(), nullable=False),
+        sa.Column("name", sa.String(length=255), nullable=False),
+        sa.Column("task_type", sa.String(length=50), nullable=False),
+        sa.Column("exclusive_labels", sa.Boolean(), nullable=False),
         sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.Column("updated_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.PrimaryKeyConstraint("id"),
@@ -58,21 +65,56 @@ def upgrade() -> None:
         sa.UniqueConstraint("name"),
     )
     op.create_table(
-        "pipelines",
+        "dataset_items",
         sa.Column("id", sa.Text(), nullable=False),
+        sa.Column("project_id", sa.Text(), nullable=False),
+        sa.Column("name", sa.String(length=255), nullable=False),
+        sa.Column("format", sa.String(length=50), nullable=False),
+        sa.Column("width", sa.Integer(), nullable=False),
+        sa.Column("height", sa.Integer(), nullable=False),
+        sa.Column("size", sa.Integer(), nullable=False),
+        sa.Column("annotation_data", sa.JSON(), nullable=True),
+        sa.Column("user_reviewed", sa.Boolean(), nullable=False),
+        sa.Column("prediction_model_id", sa.Text(), nullable=True),
+        sa.Column("source_id", sa.Text(), nullable=True),
+        sa.Column("subset", sa.String(length=20), nullable=False),
+        sa.Column("subset_assigned_at", sa.DateTime(), nullable=True),
+        sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
+        sa.Column("updated_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
+        sa.ForeignKeyConstraint(["prediction_model_id"], ["models.id"], ondelete="SET NULL"),
+        sa.ForeignKeyConstraint(["project_id"], ["projects.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(["source_id"], ["sources.id"], ondelete="SET NULL"),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_table(
+        "labels",
+        sa.Column("id", sa.Text(), nullable=False),
+        sa.Column("project_id", sa.Text(), nullable=False),
+        sa.Column("name", sa.String(length=255), nullable=False),
+        sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
+        sa.Column("updated_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
+        sa.Column("color", sa.String(length=7), nullable=True),
+        sa.Column("hotkey", sa.String(length=10), nullable=True),
+        sa.ForeignKeyConstraint(["project_id"], ["projects.id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("project_id", "hotkey", name="uq_project_label_hotkey"),
+        sa.UniqueConstraint("project_id", "name", name="uq_project_label_name"),
+    )
+    op.create_table(
+        "pipelines",
+        sa.Column("project_id", sa.Text(), nullable=False),
         sa.Column("source_id", sa.Text(), nullable=True),
         sa.Column("sink_id", sa.Text(), nullable=True),
         sa.Column("model_id", sa.Text(), nullable=True),
-        sa.Column("name", sa.String(length=255), nullable=False),
-        sa.Column("description", sa.Text(), nullable=True),
         sa.Column("is_running", sa.Boolean(), nullable=False),
+        sa.Column("data_collection_policies", sa.JSON(), nullable=False),
         sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.Column("updated_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.ForeignKeyConstraint(["model_id"], ["models.id"], ondelete="RESTRICT"),
+        sa.ForeignKeyConstraint(["project_id"], ["projects.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["sink_id"], ["sinks.id"], ondelete="RESTRICT"),
         sa.ForeignKeyConstraint(["source_id"], ["sources.id"], ondelete="RESTRICT"),
-        sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("name"),
+        sa.PrimaryKeyConstraint("project_id"),
     )
     # ### end Alembic commands ###
 
@@ -81,7 +123,10 @@ def downgrade() -> None:
     """Downgrade schema."""
     # ### commands auto generated by Alembic - please adjust! ###
     op.drop_table("pipelines")
+    op.drop_table("labels")
+    op.drop_table("dataset_items")
     op.drop_table("sources")
     op.drop_table("sinks")
+    op.drop_table("projects")
     op.drop_table("models")
     # ### end Alembic commands ###

@@ -18,3 +18,12 @@ class BaseIDNameModel(ABC, BaseModel):
 
     id: UUID = Field(default_factory=uuid4)
     name: str = "Default Name"
+
+
+class Pagination(ABC, BaseModel):
+    """Pagination model."""
+
+    offset: int  # index of the first item returned (0-based)
+    limit: int  # number of items requested per page
+    count: int  # number of items actually returned (may be less than limit if at the end)
+    total: int  # total number of items available

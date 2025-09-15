@@ -14,7 +14,7 @@ ENV PYTHONPATH=/app
 # Install system dependencies required for OpenCV
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1-mesa-glx=22.3.6-1+deb12u1 \
-    libglib2.0-0=2.74.6-2+deb12u6 \
+    libglib2.0-0=2.74.* \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
@@ -81,7 +81,7 @@ FROM backend-base AS geti-tune
 
 # Install nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    nginx=1.22.1-9+deb12u2 \
+    nginx=1.22.* \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 

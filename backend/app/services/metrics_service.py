@@ -5,10 +5,9 @@ import logging
 import time
 from collections import defaultdict
 from datetime import UTC, datetime
-from multiprocessing import Lock
 from multiprocessing.shared_memory import SharedMemory
-from multiprocessing.synchronize import Lock as LockType
-from typing import ClassVar, NamedTuple
+from multiprocessing.synchronize import Lock
+from typing import NamedTuple
 from uuid import UUID
 
 import numpy as np
@@ -37,39 +36,12 @@ class LatencyMeasurement(NamedTuple):
 class MetricsService:
     """Process-safe metrics service using shared memory for model metric data"""
 
-    _shared_memory: ClassVar[SharedMemory | None] = None
-    _instance_count: ClassVar[int] = 0
-    _lock_class: ClassVar[LockType] = Lock()
-
-    def __init__(self, max_age_seconds: int = 60):
+    def __init__(self, shm_name: str, lock: Lock, max_age_seconds: int = 60):
         self._max_age_seconds = max_age_seconds
-        self._lock: LockType = Lock()
-
-        with MetricsService._lock_class:
-            if MetricsService._shared_memory is None:
-                # Create new shared memory with auto-generated name
-                MetricsService._shared_memory = SharedMemory(create=True, size=SIZE)
-                logger.info(f"Created shared memory with auto-generated name: {MetricsService._shared_memory.name}")
-            MetricsService._instance_count += 1
-
-        self._shm = MetricsService._shared_memory
+        self._lock = lock
+        self._shm = SharedMemory(name=shm_name)
         self._array: np.ndarray = np.ndarray((MAX_MEASUREMENTS,), dtype=DTYPE, buffer=self._shm.buf)
         self._head = 0  # index for next write
-
-        # Initialize the array if this is the first instance
-        if MetricsService._instance_count == 1:
-            self._initialize_array()
-
-    def _initialize_array(self) -> None:
-        """Initialize the shared memory array with default values"""
-        with self._lock:
-            self._array[:] = "00000000-0000-0000-0000-000000000000", 0.0, 0.0
-            self._head = 0
-
-    @classmethod
-    def get_shared_memory_name(cls) -> str | None:
-        """Get the name of the shared memory segment, if it exists"""
-        return cls._shared_memory.name if cls._shared_memory else None
 
     def update_max_age(self, max_age_seconds: int) -> None:
         with self._lock:
@@ -159,13 +131,4 @@ class MetricsService:
             self._head = 0
 
     def __del__(self):
-        try:
-            with MetricsService._lock_class:
-                MetricsService._instance_count -= 1
-                if MetricsService._instance_count <= 0 and MetricsService._shared_memory:
-                    MetricsService._shared_memory.close()
-                    MetricsService._shared_memory.unlink()
-                    MetricsService._shared_memory = None
-                    logger.info("Cleaned up shared memory")
-        except Exception as e:
-            logger.exception("Error cleaning up shared memory in MetricsService __del__: %s", e)
+        self._shm.close()

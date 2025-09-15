@@ -7,7 +7,7 @@ from multiprocessing.synchronize import Condition as ConditionClass
 from threading import Thread
 
 from app.db import get_db_session
-from app.repositories import PipelineRepository, SinkRepository, SourceRepository
+from app.repositories import PipelineRepository
 from app.schemas import DisconnectedSinkConfig, DisconnectedSourceConfig, Sink, Source
 from app.services.mappers import SinkMapper, SourceMapper
 
@@ -60,19 +60,13 @@ class ActivePipelineService:
                 self._sink = DisconnectedSinkConfig()
                 return
 
-            # Get the source for this pipeline
-            if pipeline.source_id:
-                source_repo = SourceRepository(db)
-                source = source_repo.get_by_id(pipeline.source_id)
-                if source is not None:
-                    self._source = SourceMapper.to_schema(source)
+            source = pipeline.source
+            if source is not None:
+                self._source = SourceMapper.to_schema(source)
 
-            # Get the sink for this pipeline
-            if pipeline.sink_id:
-                sink_repo = SinkRepository(db)
-                sink = sink_repo.get_by_id(pipeline.sink_id)
-                if sink is not None:
-                    self._sink = SinkMapper.to_schema(sink)
+            sink = pipeline.sink
+            if sink is not None:
+                self._sink = SinkMapper.to_schema(sink)
 
     def _reload_config_daemon_routine(self) -> None:
         """Daemon thread to reload the configuration file when it changes."""

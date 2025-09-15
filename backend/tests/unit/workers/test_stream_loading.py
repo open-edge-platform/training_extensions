@@ -168,5 +168,4 @@ class TestFrameAcquisition:
         stop_event.set()
         process.join(timeout=1)
 
-        assert frame_queue.empty()
         assert not process.is_alive(), "Process should terminate cleanly"

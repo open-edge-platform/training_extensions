@@ -1,7 +1,7 @@
 name: Geti Tune server checks
 on:
   push:
-    branches: ["main"]
+    branches: ["develop"]
   pull_request:
 
 permissions: {} # No permissions by default on workflow level

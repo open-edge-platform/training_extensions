@@ -6,17 +6,17 @@ import multiprocessing as mp
 import os
 import queue
 import threading
+from multiprocessing.shared_memory import SharedMemory
 
 import psutil
 
-from app.services.metrics_service import MetricsService
-from app.utils.singleton import Singleton
+from app.services.metrics_service import SIZE
 from app.workers import dispatching_routine, frame_acquisition_routine, inference_routine
 
 logger = logging.getLogger(__name__)
 
 
-class Scheduler(metaclass=Singleton):
+class Scheduler:
     """Manages application processes and threads"""
 
     FRAME_QUEUE_SIZE = 5
@@ -37,8 +37,9 @@ class Scheduler(metaclass=Singleton):
         # Condition variable to notify processes about configuration updates
         self.mp_config_changed_condition = mp.Condition()
 
-        # Initialize metrics service to create shared memory with auto-generated name
-        self.metrics_service = MetricsService()
+        # Shared memory for metrics collector
+        self.shm_metrics = SharedMemory(create=True, size=SIZE)
+        self.shm_metrics_lock = mp.Lock()
 
         self.processes: list[mp.Process] = []
         self.threads: list[threading.Thread] = []
@@ -58,7 +59,14 @@ class Scheduler(metaclass=Singleton):
         inference_server_proc = mp.Process(
             target=inference_routine,
             name="Inferencer",
-            args=(self.frame_queue, self.pred_queue, self.mp_stop_event, self.mp_model_reload_event),
+            args=(
+                self.frame_queue,
+                self.pred_queue,
+                self.mp_stop_event,
+                self.mp_model_reload_event,
+                self.shm_metrics.name,
+                self.shm_metrics_lock,
+            ),
         )
 
         dispatching_thread = threading.Thread(
@@ -96,6 +104,8 @@ class Scheduler(metaclass=Singleton):
             if thread.is_alive():
                 logger.debug(f"Joining thread: {thread.name}")
                 thread.join(timeout=10)
+                if thread.is_alive():
+                    logger.warning(f"Thread {thread.name} did not terminate within timeout")
 
         # Join processes in reverse order so that consumers are terminated before producers.
         for process in self.processes[::-1]:
@@ -115,6 +125,9 @@ class Scheduler(metaclass=Singleton):
         # Clear references
         self.processes.clear()
         self.threads.clear()
+        self.shm_metrics.close()
+        self.shm_metrics.unlink()
+
         self._cleanup_queues()
 
     def _cleanup_queues(self) -> None:
