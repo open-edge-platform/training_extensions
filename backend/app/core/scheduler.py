@@ -11,7 +11,7 @@ from multiprocessing.shared_memory import SharedMemory
 import psutil
 
 from app.services.metrics_service import SIZE
-from app.workers import dispatching_routine, frame_acquisition_routine, inference_routine
+from app.workers import DispatchingWorker, InferenceWorker, StreamLoader
 
 logger = logging.getLogger(__name__)
 
@@ -50,30 +50,18 @@ class Scheduler:
         logger.info("Starting worker processes...")
 
         # Create and start processes
-        stream_loader_proc = mp.Process(
-            target=frame_acquisition_routine,
-            name="Stream loader",
-            args=(self.frame_queue, self.mp_stop_event, self.mp_config_changed_condition),
+        stream_loader_proc = StreamLoader(self.frame_queue, self.mp_stop_event, self.mp_config_changed_condition)
+
+        inference_server_proc = InferenceWorker(
+            frame_queue=self.frame_queue,
+            pred_queue=self.pred_queue,
+            stop_event=self.mp_stop_event,
+            model_reload_event=self.mp_model_reload_event,
+            shm_name=self.shm_metrics.name,
+            shm_lock=self.shm_metrics_lock,
         )
 
-        inference_server_proc = mp.Process(
-            target=inference_routine,
-            name="Inferencer",
-            args=(
-                self.frame_queue,
-                self.pred_queue,
-                self.mp_stop_event,
-                self.mp_model_reload_event,
-                self.shm_metrics.name,
-                self.shm_metrics_lock,
-            ),
-        )
-
-        dispatching_thread = threading.Thread(
-            target=dispatching_routine,
-            name="Dispatching thread",
-            args=(self.pred_queue, self.rtc_stream_queue, self.mp_stop_event),
-        )
+        dispatching_thread = DispatchingWorker(self.pred_queue, self.rtc_stream_queue, self.mp_stop_event)
 
         # Start all workers
         stream_loader_proc.start()
