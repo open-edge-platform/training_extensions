@@ -1,8 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ReactNode, useState } from 'react';
+import { useState } from 'react';
 
+import { AnnotationShape } from '../../annotations/annotation-shape.component';
 import { useAnnotator } from '../../annotator-provider.component';
 import { Annotation, Point } from '../../types';
 import { ResizeAnchor } from './resize-anchor.component';
@@ -14,15 +15,13 @@ import classes from './bounding-box-tool.module.scss';
 interface EditBoundingBoxProps {
     annotation: Annotation & { shape: { shapeType: 'rect' } };
     zoom: number;
-    updateAnnotation: (annotation: Annotation) => void;
-    children: ReactNode;
 }
 
 const ANCHOR_SIZE = 8;
 
-export const EditBoundingBox = ({ annotation, zoom, updateAnnotation, children }: EditBoundingBoxProps) => {
+export const EditBoundingBox = ({ annotation, zoom }: EditBoundingBoxProps) => {
     const [shape, setShape] = useState(annotation.shape);
-    const { roi } = useAnnotator();
+    const { roi, updateAnnotation } = useAnnotator();
 
     const onComplete = () => {
         updateAnnotation({ ...annotation, shape });
@@ -50,7 +49,7 @@ export const EditBoundingBox = ({ annotation, zoom, updateAnnotation, children }
                 translateShape={translate}
                 onComplete={onComplete}
             >
-                {children}
+                <AnnotationShape annotation={{ ...annotation, shape }} />
             </TranslateShape>
 
             <svg

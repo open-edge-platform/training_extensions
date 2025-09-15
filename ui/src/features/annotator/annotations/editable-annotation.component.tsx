@@ -4,7 +4,6 @@
 import { ReactNode } from 'react';
 
 import { useZoom } from '../../../components/zoom/zoom';
-import { useAnnotator } from '../annotator-provider.component';
 import { useSelectedAnnotations } from '../select-annotation-provider.component';
 import { EditBoundingBox } from '../tools/bounding-box-tool/bounding-box-tool.component';
 import { Annotation, Rect } from '../types';
@@ -17,7 +16,6 @@ interface EditAnnotationProps {
 export const EditableAnnotation = ({ children }: EditAnnotationProps) => {
     const annotation = useAnnotation() as Annotation & { shape: Rect };
     const { selectedAnnotations } = useSelectedAnnotations();
-    const { updateAnnotation } = useAnnotator();
     const { scale } = useZoom();
 
     const { shape } = annotation;
@@ -30,10 +28,7 @@ export const EditableAnnotation = ({ children }: EditAnnotationProps) => {
                 key={`bbox-${shape.x}-${shape.y}-${shape.width}-${shape.height}`}
                 annotation={annotation}
                 zoom={scale}
-                updateAnnotation={updateAnnotation}
-            >
-                {children}
-            </EditBoundingBox>
+            />
         );
     }
 
