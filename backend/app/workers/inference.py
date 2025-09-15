@@ -4,40 +4,57 @@
 import logging
 import multiprocessing as mp
 import queue
-import time
 from multiprocessing.synchronize import Event as EventClass
 from multiprocessing.synchronize import Lock
 from typing import Any
 from uuid import UUID
 
-from model_api.models import DetectionResult
+from model_api.models import DetectionResult, Model
 
 from app.entities.stream_data import InferenceData, StreamData
 from app.services import ModelService
 from app.services.metrics_service import MetricsService
 from app.services.model_service import LoadedModel
-from app.utils import Visualizer, log_threads, suppress_child_shutdown_signals
+from app.utils import Visualizer
+from app.workers.base import BaseProcessWorker
 
 logger = logging.getLogger(__name__)
 
 
-def inference_routine(  # noqa: C901, PLR0915
-    frame_queue: mp.Queue,
-    pred_queue: mp.Queue,
-    stop_event: EventClass,
-    model_reload_event: EventClass,
-    shm_name: str,
-    shm_lock: Lock,
-) -> None:
-    """Load frames from the frame queue, run inference then inject the result into the predictions queue"""
-    suppress_child_shutdown_signals()
+class InferenceWorker(BaseProcessWorker):
+    """A process that pulls frames from the frame queue, runs inference, and pushes results to the prediction queue."""
 
-    metrics_collector = MetricsService(shm_name, shm_lock)
+    ROLE = "Inference"
 
-    def on_inference_completed(inf_result: DetectionResult, userdata: dict[str, Any]) -> None:
+    def __init__(
+        self,
+        frame_queue: mp.Queue,
+        pred_queue: mp.Queue,
+        stop_event: EventClass,
+        model_reload_event: EventClass,
+        shm_name: str,
+        shm_lock: Lock,
+    ) -> None:
+        super().__init__(stop_event=stop_event, queues_to_cancel=[pred_queue])
+        self._frame_queue = frame_queue
+        self._pred_queue = pred_queue
+        self._model_reload_event = model_reload_event
+        self._shm_name = shm_name
+        self._shm_lock = shm_lock
+
+        self._metrics_service: MetricsService | None = None
+        self._model_service: ModelService | None = None
+        self._loaded_model: LoadedModel | None = None
+        self._last_model_obj_id = 0  # track the id of the Model object to install the callback only once
+
+    def setup(self) -> None:
+        self._metrics_service = MetricsService(self._shm_name, self._shm_lock)
+        self._model_service = ModelService()
+
+    def _on_inference_completed(self, inf_result: DetectionResult, userdata: dict[str, Any]) -> None:
         start_time = float(userdata["inference_start_time"])
         model_id = UUID(userdata["model_id"])
-        metrics_collector.record_inference_end(model_id=model_id, start_time=start_time)
+        self._metrics_service.record_inference_end(model_id=model_id, start_time=start_time)  # type: ignore
 
         stream_data: StreamData = userdata["stream_data"]
         frame_with_predictions = Visualizer.overlay_predictions(
@@ -49,67 +66,68 @@ def inference_routine(  # noqa: C901, PLR0915
             model_name=userdata["model_name"],
         )
         stream_data.inference_data = inference_data
-        while not stop_event.is_set():
+        while not self.should_stop():
             try:
-                pred_queue.put(stream_data, timeout=1)
+                self._pred_queue.put(stream_data, timeout=1)
                 break
             except queue.Full:
                 logger.debug("Prediction queue is full, retrying...")
 
-    model_service = ModelService()
-    loaded_model: LoadedModel | None = None
-    last_model_id: int = 0  # track the id of the Model object to install the callback only once
+    def _install_callback_if_needed(self, model: Model) -> None:
+        """Install inference completion callback once per model object instance."""
+        obj_id = id(model)
+        if obj_id == self._last_model_obj_id:
+            return
 
-    try:
-        while not stop_event.is_set():
-            # Get the model, reloading it if necessary
-            if not model_reload_event.is_set():
-                loaded_model = model_service.get_loaded_inference_model()
-            else:
-                # The 'while' loop handles the case when the active model is switched again while reloading.
-                while model_reload_event.is_set():
-                    model_reload_event.clear()
-                    loaded_model = model_service.get_loaded_inference_model(force_reload=True)
+        model.set_callback(self._on_inference_completed)
+        self._last_model_obj_id = obj_id
+        logger.debug("Installed inference callback for model object with id '%s'", self._last_model_obj_id)
 
-            if loaded_model is None:
-                logger.debug("No model available... retrying in 1 second")
-                time.sleep(1)
-                continue
+    def _refresh_loaded_model(self) -> LoadedModel | None:
+        """
+        Get (or reload) the active model. If reloads are requested repeatedly,
+        clear the event until the latest model is loaded.
+        """
+        # If no reload requested, return current model
+        if not self._model_reload_event.is_set():
+            return self._model_service.get_loaded_inference_model()  # type: ignore
 
-            model = loaded_model.model
-            # Install the callback if it's the first iteration with this model
-            if id(model) != last_model_id:
-                model.set_callback(on_inference_completed)
-                last_model_id = id(model)
-                logger.debug(f"Installed inference callback for model object with id '{last_model_id}'")
+        # Process reload requests - keep reloading until event stabilizes
+        loaded_model = None
+        while self._model_reload_event.is_set():
+            self._model_reload_event.clear()
+            loaded_model = self._model_service.get_loaded_inference_model(force_reload=True)  # type: ignore
+        return loaded_model
 
-            if model.inference_adapter.is_ready():
-                try:
-                    queue_data = frame_queue.get(timeout=1)
-                except queue.Empty:
+    def run_loop(self) -> None:
+        while not self.should_stop():
+            try:
+                self._loaded_model = self._refresh_loaded_model()
+                if self._loaded_model is None:
+                    logger.debug("No model available... retrying in 1 second")
+                    self.stop_aware_sleep(1)
                     continue
 
-                inference_start_time = metrics_collector.record_inference_start()
-                model.infer_async(
-                    queue_data.frame_data,
-                    user_data={
-                        "stream_data": queue_data,
-                        "model_name": model_service.get_active_model_name(),
-                        "model_id": str(loaded_model.id),
-                        "inference_start_time": inference_start_time,
-                    },
-                )
-            else:
-                model.inference_adapter.await_any()
-    finally:
-        # https://docs.python.org/3/library/multiprocessing.html#all-start-methods
-        # section: Joining processes that use queues
-        # Call cancel_join_thread() to prevent the parent process from blocking
-        # indefinitely when joining child processes that used this queue. This avoids potential
-        # deadlocks if the queue's background thread adds more items during the flush.
-        if pred_queue is not None:
-            logger.debug("Cancelling the pred_queue join thread to allow inference process to exit")
-            pred_queue.cancel_join_thread()
+                model = self._loaded_model.model
+                self._install_callback_if_needed(model)
+                if model.inference_adapter.is_ready():
+                    try:
+                        item = self._frame_queue.get(timeout=1)
+                    except queue.Empty:
+                        continue
 
-        log_threads(log_level=logging.DEBUG)
-        logger.info("Stopped inference routine")
+                    inference_start_time = self._metrics_service.record_inference_start()  # type: ignore
+                    model.infer_async(
+                        item.frame_data,
+                        user_data={
+                            "stream_data": item,
+                            "model_name": self._model_service.get_active_model_name(),  # type: ignore
+                            "model_id": str(self._loaded_model.id),
+                            "inference_start_time": inference_start_time,
+                        },
+                    )
+                else:
+                    model.inference_adapter.await_any()
+            except Exception:
+                logger.exception("Unhandled error in inference loop")
+                self.stop_aware_sleep(2)
