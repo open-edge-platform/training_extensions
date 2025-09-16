@@ -1225,7 +1225,6 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
         Raises:
             ValueError: If inputs format is invalid.
         """
-
         if len(_inputs) != 1:
             msg = f"RandomAffine can only transform single input, got {len(_inputs)}"
             raise ValueError(msg)
@@ -1379,12 +1378,12 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
             return warped_mask > 127
 
         return cv2.warpPerspective(
-                    mask.astype(np.uint8),
-                    warp_matrix,
-                    dsize=(width, height),
-                    flags=cv2.INTER_NEAREST,
-                    borderValue=0,
-                )
+            mask.astype(np.uint8),
+            warp_matrix,
+            dsize=(width, height),
+            flags=cv2.INTER_NEAREST,
+            borderValue=0,
+        )
 
     def _transform_polygons(
         self,
@@ -1414,7 +1413,9 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
             valid_index = valid_index.numpy()
 
         # Filter polygons using valid_index if available
-        filtered_polygons = [p for p, keep in zip(inputs.polygons, valid_index) if keep] if valid_index is not None else inputs.polygons
+        filtered_polygons = (
+            [p for p, keep in zip(inputs.polygons, valid_index) if keep] if valid_index is not None else inputs.polygons
+        )
 
         if filtered_polygons:
             inputs.polygons = project_polygons(filtered_polygons, warp_matrix, output_shape)
