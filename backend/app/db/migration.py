@@ -12,7 +12,7 @@ from alembic.script import ScriptDirectory
 from sqlalchemy import text
 
 from app.db import db_engine
-from app.settings import get_settings
+from app.settings import Settings
 
 logger = logging.getLogger(__name__)
 
@@ -24,13 +24,13 @@ class RevisionNotFoundError(Exception):
 class MigrationManager:
     """Manages database connections and migrations"""
 
-    def __init__(self) -> None:
-        self.settings = get_settings()
+    def __init__(self, settings: Settings) -> None:
+        self.settings = settings
         self.__ensure_data_directory()
 
     def __ensure_data_directory(self) -> None:
         """Ensure the data directory exists"""
-        db_path = self.settings.database_dir
+        db_path = self.settings.data_dir
         db_path.parent.mkdir(parents=True, exist_ok=True)
 
     @staticmethod
@@ -118,6 +118,3 @@ class MigrationManager:
         except Exception as e:
             logger.error(f"Database initialization failed: {e}")
             return False
-
-
-migration_manager = MigrationManager()
