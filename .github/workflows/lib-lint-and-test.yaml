@@ -24,8 +24,13 @@ jobs:
     name: Check if workflow should run
     runs-on: ubuntu-latest
     outputs:
-      test_any_changed: ${{ steps.changed-files-yaml.outputs.test_any_changed }}
+      run_workflow: ${{ steps.run_workflow.outputs.run }}
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+
       - name: Get all paths that should trigger the workflow
         id: changed-files-yaml
         uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c # v46.0.5
@@ -35,10 +40,21 @@ jobs:
               - lib/**
               - .github/**
 
+      - name: Check if on_schedule or workflow_dispatch
+        id: run_workflow
+        run: |
+          if [ "${{ github.event_name }}" = "push" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          elif [ "${{ steps.changed-files-yaml.outputs.test_any_changed }}" = "true" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
   Code-Quality-Checks:
     runs-on: ubuntu-24.04
     needs: check_paths
-    if: needs.check_paths.outputs.test_any_changed == 'true'
+    if: needs.check_paths.outputs.run_workflow == 'true'
     permissions:
       contents: read
     steps:
@@ -64,7 +80,7 @@ jobs:
     needs:
       - Code-Quality-Checks
       - check_paths
-    if: needs.check_paths.outputs.test_any_changed == 'true'
+    if: needs.check_paths.outputs.run_workflow == 'true'
     timeout-minutes: 120
     strategy:
       fail-fast: false
@@ -114,7 +130,7 @@ jobs:
     if: |
       github.event.pull_request.draft == false &&
       !(startsWith(github.event.pull_request.title, '[WIP]')) &&
-      needs.check_paths.outputs.test_any_changed == 'true'
+      needs.check_paths.outputs.run_workflow == 'true'
     runs-on: [self-hosted, linux, x64, dev, dmount]
     permissions:
       contents: read
