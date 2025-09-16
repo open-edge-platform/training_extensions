@@ -39,7 +39,7 @@ export const AnnotatorProvider = ({ mediaItem, children }: { mediaItem: MediaIte
             {
                 shape,
                 id: uuid(),
-                labels: [],
+                labels: [{ id: uuid(), name: 'Default label', color: '--annotation-fill', isPrediction: false }],
             },
         ]);
     };
