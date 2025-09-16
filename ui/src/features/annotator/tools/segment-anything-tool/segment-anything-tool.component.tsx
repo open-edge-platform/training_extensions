@@ -6,10 +6,10 @@ import { PointerEvent, useEffect, useRef, useState } from 'react';
 import { clampPointBetweenImage, isPointInShape, pointInRectangle } from '@geti/smart-tools/utils';
 
 import { useZoom } from '../../../../components/zoom/zoom';
-import { AnnotationShape } from '../../annotation-shape';
 import { isRightButton } from '../../annotation/utils';
+import { AnnotationShape } from '../../annotations/annotation-shape.component';
+import { MaskAnnotations } from '../../annotations/mask-annotations.component';
 import { Annotation, Point, RegionOfInterest, Shape } from '../../interfaces';
-import { MaskAnnotations } from '../../mask-annotations';
 import { getRelativePoint, removeOffLimitPoints } from '../../shapes/utils';
 import { InteractiveSegmentationPoint } from './interactive-segmentation-point.component';
 import { useSegmentAnything } from './segment-anything-state-provider.component';
