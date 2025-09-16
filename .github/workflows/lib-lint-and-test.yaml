@@ -1,12 +1,12 @@
-name: PR Checks
+name: Geti Tune Lib checks
 
 on:
+  push:
+    branches:
+      - develop
+    tags:
+      - "v*"
   pull_request:
-    types:
-      - opened
-      - reopened
-      - synchronize
-      - ready_for_review
   merge_group:
     branches:
       - develop
@@ -20,8 +20,25 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  check_paths:
+    name: Check if workflow should run
+    runs-on: ubuntu-latest
+    outputs:
+      test_any_changed: ${{ steps.changed-files-yaml.outputs.test_any_changed }}
+    steps:
+      - name: Get all paths that should trigger the workflow
+        id: changed-files-yaml
+        uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c # v46.0.5
+        with:
+          files_yaml: |
+            test:
+              - lib/**
+              - .github/**
+
   Code-Quality-Checks:
     runs-on: ubuntu-24.04
+    needs: check_paths
+    if: needs.check_paths.outputs.test_any_changed == 'true'
     permissions:
       contents: read
     steps:
@@ -44,7 +61,10 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: read
-    needs: Code-Quality-Checks
+    needs:
+      - Code-Quality-Checks
+      - check_paths
+    if: needs.check_paths.outputs.test_any_changed == 'true'
     timeout-minutes: 120
     strategy:
       fail-fast: false
@@ -93,11 +113,14 @@ jobs:
   Integration-Test:
     if: |
       github.event.pull_request.draft == false &&
-      !(startsWith(github.event.pull_request.title, '[WIP]'))
+      !(startsWith(github.event.pull_request.title, '[WIP]')) &&
+      needs.check_paths.outputs.test_any_changed == 'true'
     runs-on: [self-hosted, linux, x64, dev, dmount]
     permissions:
       contents: read
-    needs: Unit-Test
+    needs:
+      - Unit-Test
+      - check_paths
     strategy:
       fail-fast: false
       matrix:
@@ -128,29 +151,24 @@ jobs:
         working-directory: lib
         run: tox r -vv -e integration-test-${{ matrix.task }} -- --task ${{ matrix.task }} --run-category-only
 
-  Zizmor-Scan-PR:
+  required_check:
+    name: Required Check lib-lint-and-test
+    needs:
+      - check_paths
+      - Code-Quality-Checks
+      - Unit-Test
+      - Integration-Test
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
+    env:
+      CHECKS: ${{ join(needs.*.result, ' ') }}
+    if: always() && !cancelled()
     steps:
-      - name: Run Zizmor scan
-        uses: open-edge-platform/geti-ci/actions/zizmor@db5335076dfe564b039b5a7480b8f6b6ae38370a
-        with:
-          scan-scope: "changed"
-          severity-level: "MEDIUM"
-          confidence-level: "LOW"
-          fail-on-findings: true
-
-  Bandit-Scan-PR:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - name: Run Bandit scan
-        uses: open-edge-platform/geti-ci/actions/bandit@db5335076dfe564b039b5a7480b8f6b6ae38370a
-        with:
-          scan-scope: "changed"
-          severity-level: "LOW"
-          confidence-level: "LOW"
-          config_file: ".ci/ipas_default.config"
-          fail-on-findings: true
+      - name: Check jobs results
+        run: |
+          for check in ${CHECKS}; do
+            echo "::notice::check=${check}"
+            if [[ "$check" != "success" && "$check" != "skipped" ]]; then
+              echo "::error ::Required status checks failed. They must succeed before this pull request can be merged."
+              exit 1
+            fi
+          done
