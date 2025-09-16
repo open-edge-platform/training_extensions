@@ -16,6 +16,11 @@ const BUTTON_WHEEL = {
     buttons: 4,
 };
 
+const BUTTON_ERASER = {
+    button: 5,
+    buttons: 32,
+};
+
 interface MouseButton {
     button: number;
     buttons: number;
@@ -34,6 +39,10 @@ export const isRightButton = (button: MouseButton): boolean => {
 
 export const isWheelButton = (button: MouseButton): boolean => {
     return isButton(button, BUTTON_WHEEL);
+};
+
+export const isEraserButton = (button: MouseButton): boolean => {
+    return isButton(button, BUTTON_ERASER);
 };
 
 type OnPointerDown = SVGProps<SVGElement>['onPointerDown'];
