@@ -12,8 +12,8 @@ const getFormattedPoints = (points: Point[]): string => {
 };
 
 export const AnnotationShape = ({ annotation }: AnnotationShapeProps) => {
-    const shape = annotation.shape;
-    const color = annotation.labels[0].color;
+    const { shape, labels } = annotation;
+    const color = labels.length ? labels[0].color : '--annotation-fill';
 
     if (shape.shapeType === 'rect') {
         return (

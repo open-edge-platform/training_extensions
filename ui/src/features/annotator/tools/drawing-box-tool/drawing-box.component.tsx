@@ -7,6 +7,7 @@ import { clampBox, clampPointBetweenImage, pointsToRect } from '@geti/smart-tool
 import { type KeyboardEvent as ReactKeyboardEvent } from '@geti/ui';
 
 import selectionCursor from '../../../../assets/icons/selection.svg?url';
+import { useZoom } from '../../../../components/zoom/zoom';
 import { useAnnotator } from '../../annotator-provider.component';
 import { Rectangle } from '../../shapes/rectangle.component';
 import { Point, Rect as RectInterface } from '../../types';
@@ -22,19 +23,22 @@ enum PointerType {
 
 const CURSOR_OFFSET = '7 8';
 interface DrawingBoxInterface {
-    zoom: number;
-    image: ImageData;
     onComplete: (shapes: RectInterface) => void;
 }
 
-export const DrawingBox = ({ image, zoom, onComplete }: DrawingBoxInterface) => {
+export const DrawingBox = ({ onComplete }: DrawingBoxInterface) => {
     const { mediaItem } = useAnnotator();
-    const roi = { x: 0, y: 0, width: mediaItem.width, height: mediaItem.height };
+    const { scale: zoom } = useZoom();
 
     const [startPoint, setStartPoint] = useState<Point | null>(null);
     const [boundingBox, setBoundingBox] = useState<RectInterface | null>(null);
     const [hasCrossHair, setHasCrossHair] = useState<boolean>(true);
+
+    const roi = { x: 0, y: 0, width: mediaItem.width, height: mediaItem.height };
+    const image = new ImageData(mediaItem.width, mediaItem.height);
+
     const ref = useRef<SVGRectElement>(null);
+
     const clampPoint = clampPointBetweenImage(image);
     const crosshair = useCrosshair(ref, zoom);
 
