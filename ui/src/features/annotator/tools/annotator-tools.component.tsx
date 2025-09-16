@@ -1,6 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { Divider } from '@geti/ui';
 import { BoundingBox, Selector } from '@geti/ui/icons';
 
 import { ToolConfig } from '../../../components/tool-selection-bar/tools/interface';
@@ -25,5 +26,10 @@ export const AnnotatorTools = () => {
     const { activeTool, setActiveTool } = useAnnotator();
     const availableTools = TASK_TOOL_CONFIG[projectTask] || [];
 
-    return <Tools tools={availableTools} activeTool={activeTool} setActiveTool={setActiveTool} />;
+    return (
+        <>
+            <Tools tools={availableTools} activeTool={activeTool} setActiveTool={setActiveTool} />
+            {availableTools.length > 0 && <Divider size='S' />}
+        </>
+    );
 };

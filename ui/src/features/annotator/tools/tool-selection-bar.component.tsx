@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Divider, Flex, Grid } from '@geti/ui';
+import { Flex, Grid } from '@geti/ui';
 
 import { Hotkeys } from '../../../components/tool-selection-bar/hotkeys/hotkeys.component';
 import { Settings } from '../../../components/tool-selection-bar/settings/settings.component';
@@ -16,8 +16,6 @@ export const ToolSelectionBar = () => {
             <Grid UNSAFE_className={classes.grid}>
                 <Flex UNSAFE_className={classes.section}>
                     <AnnotatorTools />
-
-                    <Divider size='S' />
 
                     <UndoRedo />
                 </Flex>
