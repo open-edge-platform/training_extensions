@@ -68,26 +68,25 @@ overrides:
       num_workers: 4
       to_tv_image: true
       transforms:
-        - class_path: torchvision.transforms.v2.RandomPhotometricDistort
-          init_args:
-            p: 0.5
         - class_path: torchvision.transforms.v2.RandomZoomOut
+          enable: true
           init_args:
             fill: 0
         - class_path: otx.data.transform_libs.torchvision.RandomIoUCrop
+          enable: true
           init_args:
             probability: 0.8
         - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
           init_args:
             min_size: 1
-        - class_path: otx.data.transform_libs.torchvision.RandomFlip
-          init_args:
-            probability: 0.5
         - class_path: otx.data.transform_libs.torchvision.Resize
           init_args:
             scale: $(input_size)
             transform_bbox: true
             keep_ratio: false
+        - class_path: otx.data.transform_libs.torchvision.RandomFlip
+          init_args:
+            probability: 0.5
         - class_path: torchvision.transforms.v2.RandomPhotometricDistort
           enable: false
           init_args:

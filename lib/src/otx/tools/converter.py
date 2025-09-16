@@ -360,6 +360,7 @@ def update_augmentations(augmentation_params: dict, config: dict) -> None:
         "mosaic": ["otx.data.transform_libs.torchvision.CachedMosaic"],
     }
 
+    breakpoint()
     for aug_name, aug_value in augmentation_params.items():
         aug_classes = augs_mapping_list[aug_name]
         found = False

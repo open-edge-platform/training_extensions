@@ -81,15 +81,6 @@ overrides:
         - class_path: otx.data.transform_libs.torchvision.RandomCrop
           init_args:
             crop_size: $(input_size)
-        - class_path: otx.data.transform_libs.torchvision.RandomAffine
-          enable: false
-          init_args:
-            max_rotate_degree: 10.0
-            max_translate_ratio: 0.1
-            scaling_ratio_range:
-              - 0.5
-              - 1.5
-            max_shear_degree: 2.0
         - class_path: torchvision.transforms.v2.RandomPhotometricDistort
           enable: false
           init_args:
@@ -106,6 +97,15 @@ overrides:
               - -0.05
               - 0.05
             p: 0.5
+        - class_path: otx.data.transform_libs.torchvision.RandomAffine
+          enable: false
+          init_args:
+            max_rotate_degree: 10.0
+            max_translate_ratio: 0.1
+            scaling_ratio_range:
+              - 0.5
+              - 1.5
+            max_shear_degree: 2.0
         - class_path: otx.data.transform_libs.torchvision.YOLOXHSVRandomAug
         - class_path: otx.data.transform_libs.torchvision.RandomFlip
           init_args:
