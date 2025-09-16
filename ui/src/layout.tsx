@@ -111,9 +111,6 @@ export const Layout = () => {
                         <Item textValue='models' key={paths.models.index({})}>
                             <Outlet />
                         </Item>
-                        <Item textValue='labels' key={paths.labels.index({})}>
-                            <Outlet />
-                        </Item>
                     </TabPanels>
                 </View>
             </Grid>

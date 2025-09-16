@@ -6,10 +6,12 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import { LabelSelection } from './label-selection.component';
 
-const renderLabelSelection = () => {
-    return render(
+const mockLabels = [{ id: 'id-1', colorValue: '#F20004', nameValue: 'Car' }];
+
+const App = ({ labels = mockLabels, setLabels = vi.fn() }) => {
+    return (
         <>
-            <LabelSelection />
+            <LabelSelection labels={labels} setLabels={setLabels} />
             <Toast />
         </>
     );
@@ -17,36 +19,42 @@ const renderLabelSelection = () => {
 
 describe('LabelSelection', () => {
     it('renders initial label item', () => {
-        renderLabelSelection();
+        render(<App />);
 
         expect(screen.getByDisplayValue('Car')).toBeInTheDocument();
     });
 
     it('adds a new label item when "Add next object" is clicked', () => {
-        renderLabelSelection();
+        const mockSetLabels = vi.fn();
+        render(<App setLabels={mockSetLabels} />);
 
         const addButton = screen.getByRole('button', { name: /add next object/i });
         fireEvent.click(addButton);
 
         expect(screen.getByLabelText('Label input for Car')).toBeInTheDocument();
-        expect(screen.getByLabelText('Label input for Object')).toBeInTheDocument();
+        expect(mockSetLabels).toHaveBeenCalledWith(
+            expect.arrayContaining([mockLabels[0], expect.objectContaining({ nameValue: 'Object' })])
+        );
     });
 
     it('deletes a label item when delete is clicked', () => {
-        renderLabelSelection();
+        const mockSetLabels = vi.fn();
+        render(
+            <App
+                labels={[mockLabels[0], { id: 'id-2', colorValue: '#F20004', nameValue: 'People' }]}
+                setLabels={mockSetLabels}
+            />
+        );
 
-        const addButton = screen.getByRole('button', { name: /add next object/i });
-        fireEvent.click(addButton);
-
-        const deleteButtonObject = screen.getByRole('button', { name: /delete label object/i });
+        const deleteButtonObject = screen.getByRole('button', { name: /delete label people/i });
         fireEvent.click(deleteButtonObject);
 
         expect(screen.getByLabelText('Label input for Car')).toBeInTheDocument();
-        expect(screen.queryByLabelText('Label input for Object')).not.toBeInTheDocument();
+        expect(mockSetLabels).toHaveBeenCalledWith(expect.arrayContaining([mockLabels[0]]));
     });
 
     it('does not delete the last remaining label item', async () => {
-        renderLabelSelection();
+        render(<App />);
 
         const deleteButton = screen.getByRole('button', { name: /delete label car/i });
         fireEvent.click(deleteButton);
@@ -59,7 +67,7 @@ describe('LabelSelection', () => {
     });
 
     it('can edit the label name', () => {
-        renderLabelSelection();
+        render(<App />);
 
         const input = screen.getByLabelText('Label input for Car');
         fireEvent.change(input, { target: { value: 'Truck' } });
