@@ -7,10 +7,8 @@ import { clampBox, clampPointBetweenImage, pointsToRect } from '@geti/smart-tool
 import { type KeyboardEvent as ReactKeyboardEvent } from '@geti/ui';
 
 import selectionCursor from '../../../../assets/icons/selection.svg?url';
-import { useZoom } from '../../../../components/zoom/zoom';
-import { useAnnotator } from '../../annotator-provider.component';
 import { Rectangle } from '../../shapes/rectangle.component';
-import { Point, Rect as RectInterface } from '../../types';
+import { Point, Rect as RectInterface, RegionOfInterest } from '../../types';
 import { isEraserButton, isLeftButton } from '../../utils';
 import { Crosshair } from './crosshair/crosshair.component';
 import { getRelativePoint, useCrosshair } from './crosshair/utils';
@@ -24,18 +22,15 @@ enum PointerType {
 const CURSOR_OFFSET = '7 8';
 interface DrawingBoxInterface {
     onComplete: (shapes: RectInterface) => void;
+    roi: RegionOfInterest;
+    image: ImageData;
+    zoom: number;
 }
 
-export const DrawingBox = ({ onComplete }: DrawingBoxInterface) => {
-    const { mediaItem } = useAnnotator();
-    const { scale: zoom } = useZoom();
-
+export const DrawingBox = ({ roi, zoom, image, onComplete }: DrawingBoxInterface) => {
     const [startPoint, setStartPoint] = useState<Point | null>(null);
     const [boundingBox, setBoundingBox] = useState<RectInterface | null>(null);
     const [hasCrossHair, setHasCrossHair] = useState<boolean>(true);
-
-    const roi = { x: 0, y: 0, width: mediaItem.width, height: mediaItem.height };
-    const image = new ImageData(mediaItem.width, mediaItem.height);
 
     const ref = useRef<SVGRectElement>(null);
 
