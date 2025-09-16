@@ -5,8 +5,8 @@ import { PointerEvent, useEffect, useRef, useState } from 'react';
 
 import { clampBox, clampPointBetweenImage, pointsToRect } from '@geti/smart-tools/utils';
 import { type KeyboardEvent as ReactKeyboardEvent } from '@geti/ui';
-import { isFunction } from 'lodash-es';
 
+import selectionCursor from '../../../../assets/icons/selection.svg?url';
 import { useAnnotator } from '../../annotator-provider.component';
 import { Rectangle } from '../../shapes/rectangle.component';
 import { Point, Rect as RectInterface } from '../../types';
@@ -24,18 +24,16 @@ const CURSOR_OFFSET = '7 8';
 interface DrawingBoxInterface {
     zoom: number;
     image: ImageData;
-    withCrosshair?: boolean;
-    onStart?: () => void;
     onComplete: (shapes: RectInterface) => void;
 }
 
-export const DrawingBox = ({ image, zoom, onStart, onComplete, withCrosshair = true }: DrawingBoxInterface) => {
+export const DrawingBox = ({ image, zoom, onComplete }: DrawingBoxInterface) => {
     const { mediaItem } = useAnnotator();
     const roi = { x: 0, y: 0, width: mediaItem.width, height: mediaItem.height };
 
     const [startPoint, setStartPoint] = useState<Point | null>(null);
     const [boundingBox, setBoundingBox] = useState<RectInterface | null>(null);
-    const [hasCrossHair, setHasCrossHair] = useState<boolean>(withCrosshair);
+    const [hasCrossHair, setHasCrossHair] = useState<boolean>(true);
     const ref = useRef<SVGRectElement>(null);
     const clampPoint = clampPointBetweenImage(image);
     const crosshair = useCrosshair(ref, zoom);
@@ -57,7 +55,7 @@ export const DrawingBox = ({ image, zoom, onStart, onComplete, withCrosshair = t
 
             return;
         } else {
-            setHasCrossHair(withCrosshair);
+            setHasCrossHair(true);
         }
 
         if (startPoint === null || !event.currentTarget.hasPointerCapture(event.pointerId)) {
@@ -82,8 +80,6 @@ export const DrawingBox = ({ image, zoom, onStart, onComplete, withCrosshair = t
         if (event.pointerType === PointerType.Touch || !isLeftButton(button)) {
             return;
         }
-
-        isFunction(onStart) && onStart();
 
         const mouse = clampPoint(getRelativePoint(ref.current, { x: event.clientX, y: event.clientY }, zoom));
 
@@ -138,7 +134,7 @@ export const DrawingBox = ({ image, zoom, onStart, onComplete, withCrosshair = t
             role='editor'
             viewBox={`0 0 ${roi.width} ${roi.height}`}
             style={{
-                cursor: withCrosshair ? `url(/icons/cursor/selection.svg) ${CURSOR_OFFSET}, auto` : 'default',
+                cursor: `url(${selectionCursor}) ${CURSOR_OFFSET}, auto`,
             }}
         >
             <rect {...roi} fillOpacity={0} ref={ref} />
