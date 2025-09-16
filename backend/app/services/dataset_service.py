@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
-import os
 from datetime import datetime
 from pathlib import Path
 from typing import BinaryIO
@@ -48,8 +47,7 @@ class DatasetService:
         )
 
         dataset_dir = self.projects_dir / f"{project_id}/dataset"
-        if not os.path.exists(dataset_dir):
-            os.makedirs(dataset_dir)
+        dataset_dir.mkdir(parents=True, exist_ok=True)
         image.save(dataset_dir / f"{dataset_item_id}.{format}")
 
         try:
