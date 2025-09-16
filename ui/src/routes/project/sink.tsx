@@ -16,7 +16,7 @@ import {
     TextField,
     View,
 } from '@geti/ui';
-import { useNavigate } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 
 import { $api } from '../../api/client';
 import {
@@ -240,6 +240,7 @@ const SINK_ITEMS = [
 
 export const Sink = () => {
     const navigate = useNavigate();
+    const { projectId = '' } = useParams<{ projectId: string }>();
 
     const sinks = $api.useSuspenseQuery('get', '/api/sinks');
     const sinkMutation = $api.useMutation('post', '/api/sinks');
@@ -264,7 +265,7 @@ export const Sink = () => {
             body: forms[selectedSinkType],
         });
 
-        navigate(paths.inference.index({}));
+        navigate(paths.project.inference({ projectId }));
     };
 
     return (
