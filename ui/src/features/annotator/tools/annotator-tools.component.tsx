@@ -5,8 +5,8 @@ import { BoundingBox, Selector } from '@geti/ui/icons';
 
 import { ToolConfig } from '../../../components/tool-selection-bar/tools/interface';
 import { Tools } from '../../../components/tool-selection-bar/tools/tools.component';
+import { useProjectTask } from '../../../hooks/use-project-task.hook';
 import { useAnnotator } from '../annotator-provider.component';
-import { useProjectTask } from '../hooks/use-project-task.hook';
 
 const TASK_TOOL_CONFIG: Record<string, ToolConfig[]> = {
     classification: [],
