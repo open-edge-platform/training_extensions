@@ -50,6 +50,58 @@ jobs:
           TAGS: ${{ steps.meta.outputs.tags }}
           PUBLIC_API_BASE_URL: "/"
 
+      - name: Run simple checks on the built image
+        working-directory: docker
+        run: |
+          # Get the first tag for testing
+          FIRST_TAG=$(echo "$TAGS" | awk 'NR==1 {print $1}')
+          echo "Testing container with tag: $FIRST_TAG"
+
+          # Start the container in detached mode
+          CONTAINER_ID=$(docker run -d --rm -v .:/app/data -p 80:80 geti-tune:${FIRST_TAG})
+          echo "Started container: $CONTAINER_ID"
+
+          # Function to cleanup container on exit
+          cleanup() {
+              echo "Cleaning up container: $CONTAINER_ID"
+              docker stop $CONTAINER_ID || true
+          }
+          trap cleanup EXIT
+
+          TEST_URL="geti-tune.localhost"
+          # Wait for container to be ready (max 60 seconds)
+          echo "Waiting for container to be ready..."
+          for i in {1..12}; do
+              if curl -sf $TEST_URL/health > /dev/null 2>&1; then
+                  echo "✅ Health check passed!"
+                  break
+              fi
+              if [ $i -eq 12 ]; then
+                  echo "❌ Health check failed after 60 seconds"
+                  docker logs $CONTAINER_ID
+                  exit 1
+              fi
+              echo "Attempt $i/12 - waiting 5 seconds..."
+              sleep 5
+          done
+
+          EXPECTED_TITLE="Geti Tune"
+          echo "Checking HTML title..."
+
+          HTML_CONTENT=$(curl -sf $TEST_URL)
+          if echo "$HTML_CONTENT" | grep -q "<title>.*$EXPECTED_TITLE.*</title>"; then
+              echo "✅ HTML title check passed - found: $EXPECTED_TITLE"
+          else
+              echo "❌ HTML title check failed - expected title '$EXPECTED_TITLE' not found"
+              echo "Actual HTML content:"
+              echo "$HTML_CONTENT"
+              exit 1
+          fi
+
+          echo "All checks passed successfully!"
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+
       - name: Get Docker image sizes
         working-directory: docker
         id: image-sizes
