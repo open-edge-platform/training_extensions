@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Annotation } from '../annotator/interfaces';
+import { Annotation } from '../annotator/types';
 
 const polygonAnnotation: Annotation = {
     id: 'mocked-prediction-3',

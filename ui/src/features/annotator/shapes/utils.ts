@@ -7,7 +7,7 @@ import { Shape as SmartToolsShape, Polygon as ToolPolygon, Rect as ToolRect } fr
 import { BoundingBox } from '@geti/smart-tools/utils';
 import { isEmpty } from 'lodash-es';
 
-import { ClipperPoint, Point, Polygon, Rect, RegionOfInterest, Shape } from '../interfaces';
+import { ClipperPoint, Point, Polygon, Rect, RegionOfInterest, Shape } from '../types';
 
 // @ts-expect-error `default` actually exists in the module
 const ClipperJS = Clipper.default || Clipper;

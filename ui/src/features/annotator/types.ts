@@ -26,6 +26,19 @@ export interface Polygon {
     readonly points: Point[];
 }
 
+// Circle is only used for visual purposes on segment-anything tool
+export interface Circle {
+    readonly shapeType: 'circle';
+    readonly x: number;
+    readonly y: number;
+    readonly r: number;
+}
+
+export interface ClipperPoint {
+    X: number;
+    Y: number;
+}
+
 export type Shape = Rect | Polygon;
 
 export type Label = { id: string; name: string; color: string; isPrediction: boolean; score?: number };
