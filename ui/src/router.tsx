@@ -21,30 +21,21 @@ import { CreateProject } from './routes/project/create-project';
 import { EditProject } from './routes/project/edit-project';
 
 const root = path('/');
-const project = root.path('/project');
-const inference = root.path('/inference');
-const dataset = root.path('/dataset');
-const models = root.path('/models');
-const labels = root.path('/labels');
+const projects = root.path('/projects');
+const project = projects.path('/:projectId');
+const inference = projects.path('/:projectId/inference');
+const dataset = projects.path('/:projectId/dataset');
+const models = projects.path('/:projectId/models');
 
 export const paths = {
     root,
     project: {
-        index: project,
-        new: project.path('/new'),
-        edit: project.path('/edit/:projectId'),
-    },
-    inference: {
-        index: inference,
-    },
-    dataset: {
-        index: dataset,
-    },
-    models: {
-        index: models,
-    },
-    labels: {
-        index: labels,
+        index: projects,
+        new: projects.path('/new'),
+        edit: project.path('/:projectId/edit'),
+        inference,
+        dataset,
+        models,
     },
 };
 
@@ -85,7 +76,7 @@ export const router = createBrowserRouter([
                 ],
             },
             {
-                path: paths.inference.index.pattern,
+                path: paths.project.inference.pattern,
                 element: (
                     <WebRTCConnectionProvider>
                         <ZoomProvider>
@@ -95,7 +86,7 @@ export const router = createBrowserRouter([
                 ),
             },
             {
-                path: paths.dataset.index.pattern,
+                path: paths.project.dataset.pattern,
                 element: (
                     <ZoomProvider>
                         <SelectedDataProvider>
@@ -105,7 +96,7 @@ export const router = createBrowserRouter([
                 ),
             },
             {
-                path: paths.models.index.pattern,
+                path: paths.project.models.pattern,
                 element: <Models />,
             },
         ],

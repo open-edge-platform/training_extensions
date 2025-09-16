@@ -27,6 +27,7 @@ import {
     SchemaWebhookSinkConfig,
 } from '../../api/openapi-spec';
 import { RadioDisclosure } from '../../components/radio-disclosure-group/radio-disclosure-group';
+import { useProjectIdentifier } from '../../hooks/use-project-identifier.hook';
 import { paths } from '../../router';
 import { ReactComponent as IconFolder } from './../../assets/icons/folder-arrow-right.svg';
 import { ReactComponent as IconMQTT } from './../../assets/icons/mqtt.svg';
@@ -240,6 +241,7 @@ const SINK_ITEMS = [
 
 export const Sink = () => {
     const navigate = useNavigate();
+    const projectId = useProjectIdentifier();
 
     const sinks = $api.useSuspenseQuery('get', '/api/sinks');
     const sinkMutation = $api.useMutation('post', '/api/sinks');
@@ -264,7 +266,7 @@ export const Sink = () => {
             body: forms[selectedSinkType],
         });
 
-        navigate(paths.inference.index({}));
+        navigate(paths.project.inference({ projectId }));
     };
 
     return (
