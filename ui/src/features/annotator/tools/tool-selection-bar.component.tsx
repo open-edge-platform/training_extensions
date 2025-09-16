@@ -1,12 +1,12 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Divider, Flex, Grid } from '@geti/ui';
+import { Flex, Grid } from '@geti/ui';
 
-import { Hotkeys } from './hotkeys/hotkeys.component';
-import { Settings } from './settings/settings.component';
-import { Tools } from './tools/tools.component';
-import { UndoRedo } from './undo-redo/undo-redo.component';
+import { Hotkeys } from '../../../components/tool-selection-bar/hotkeys/hotkeys.component';
+import { Settings } from '../../../components/tool-selection-bar/settings/settings.component';
+import { UndoRedo } from '../../../components/tool-selection-bar/undo-redo/undo-redo.component';
+import { AnnotatorTools } from './annotator-tools.component';
 
 import classes from './tool-selection-bar.module.scss';
 
@@ -15,9 +15,7 @@ export const ToolSelectionBar = () => {
         <Flex height={'100%'} alignItems={'center'} justifyContent={'center'}>
             <Grid UNSAFE_className={classes.grid}>
                 <Flex UNSAFE_className={classes.section}>
-                    <Tools />
-
-                    <Divider size='S' />
+                    <AnnotatorTools />
 
                     <UndoRedo />
                 </Flex>

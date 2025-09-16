@@ -1,12 +1,3 @@
-.section {
-    background-color: var(--spectrum-global-color-gray-50);
-    padding: var(--spectrum-global-dimension-size-100);
-    border-radius: var(--spectrum-global-dimension-size-50);
-    gap: var(--spectrum-global-dimension-size-50);
-    flex-direction: column;
-    align-items: center;
-}
-
 .iconWrapper {
     display: flex;
     width: var(--spectrum-global-dimension-size-400);
@@ -27,12 +18,4 @@
         background-color: var(--energy-blue);
         fill: var(--spectrum-global-color-gray-50);
     }
-}
-
-.grid {
-    grid-template-rows: 'auto auto auto';
-    gap: var(--spectrum-global-dimension-size-50);
-    background-color: var(--spectrum-global-color-gray-200);
-    border-radius: var(--spectrum-global-dimension-size-100);
-    padding: var(--spectrum-global-dimension-size-50);
 }
