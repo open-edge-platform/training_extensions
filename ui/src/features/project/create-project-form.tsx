@@ -25,16 +25,17 @@ export const CreateProjectForm = () => {
     const [name, setName] = useState<string>('Project #1');
 
     const navigate = useNavigate();
-
     const createProjectMutation = $api.useMutation('post', '/api/projects');
 
     const createProject = (e: FormEvent) => {
         e.preventDefault();
 
+        const projectId = uuid();
+
         createProjectMutation.mutate(
             {
                 body: {
-                    id: uuid(),
+                    id: projectId,
                     task: {
                         task_type: selectedTask,
                         exclusive_labels: selectedTask === 'classification',
@@ -45,7 +46,7 @@ export const CreateProjectForm = () => {
             },
             {
                 onSuccess: () => {
-                    navigate(paths.inference.index({}));
+                    navigate(paths.project.inference({ projectId }));
                 },
             }
         );
