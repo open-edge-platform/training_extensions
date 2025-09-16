@@ -40,7 +40,7 @@ jobs:
               - lib/**
               - .github/**
 
-      - name: Check if on_schedule or workflow_dispatch
+      - name: Set run flag
         id: run_workflow
         run: |
           if [ "${{ github.event_name }}" = "push" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
