@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Point } from '../../../types';
-import { CROSSHAIR_LINE_DIRECTION, CrosshairLine } from './crosshair-line.component';
+import { CrosshairLine } from './crosshair-line.component';
 
 interface CrosshairProps {
     location: Point | null;
@@ -16,8 +16,8 @@ export const Crosshair = ({ location, zoom }: CrosshairProps) => {
 
     return (
         <g>
-            <CrosshairLine zoom={zoom} point={location} direction={CROSSHAIR_LINE_DIRECTION.HORIZONTAL} />
-            <CrosshairLine zoom={zoom} point={location} direction={CROSSHAIR_LINE_DIRECTION.VERTICAL} />
+            <CrosshairLine zoom={zoom} point={location} direction={'horizontal'} />
+            <CrosshairLine zoom={zoom} point={location} direction={'vertical'} />
         </g>
     );
 };

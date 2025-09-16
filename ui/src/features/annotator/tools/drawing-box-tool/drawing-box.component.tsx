@@ -10,8 +10,9 @@ import selectionCursor from '../../../../assets/icons/selection.svg?url';
 import { Rectangle } from '../../shapes/rectangle.component';
 import { Point, Rect as RectInterface, RegionOfInterest } from '../../types';
 import { isEraserButton, isLeftButton } from '../../utils';
+import { getRelativePoint } from '../utils';
 import { Crosshair } from './crosshair/crosshair.component';
-import { getRelativePoint, useCrosshair } from './crosshair/utils';
+import { useCrosshair } from './crosshair/use-crosshair.hook';
 
 enum PointerType {
     Mouse = 'mouse',

@@ -3,17 +3,12 @@
 
 import { Point } from '../../../types';
 
-export enum CROSSHAIR_LINE_DIRECTION {
-    HORIZONTAL,
-    VERTICAL,
-}
-
 const DEFAULT_SIZE = 1.0;
 
 interface CrosshairLineProps {
     zoom: number;
     point: Point;
-    direction: CROSSHAIR_LINE_DIRECTION;
+    direction: 'horizontal' | 'vertical';
 }
 
 const colors = {
@@ -27,17 +22,18 @@ const colors = {
     },
 };
 
-export const CrosshairLine = ({ zoom, direction, point }: CrosshairLineProps) => {
+export const CrosshairLine = ({ direction, point }: CrosshairLineProps) => {
+    const sizeRatio = `calc(${DEFAULT_SIZE} / var(--zoom-level))`;
     const attributes =
-        direction === CROSSHAIR_LINE_DIRECTION.HORIZONTAL
+        direction === 'horizontal'
             ? {
                   y: point.y,
                   width: '100%',
-                  height: DEFAULT_SIZE / zoom,
+                  height: sizeRatio,
               }
             : {
                   x: point.x,
-                  width: DEFAULT_SIZE / zoom,
+                  width: sizeRatio,
                   height: '100%',
               };
 
@@ -48,7 +44,7 @@ export const CrosshairLine = ({ zoom, direction, point }: CrosshairLineProps) =>
             fill={colors.main.color}
             stroke={colors.shade.color}
             strokeOpacity={colors.shade.opacity}
-            strokeWidth={DEFAULT_SIZE / zoom}
+            strokeWidth={sizeRatio}
         />
     );
 };
