@@ -2,11 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Flex, Grid, Item, TabList, TabPanels, Tabs, View } from '@geti/ui';
-import { Outlet, useLocation, useParams } from 'react-router';
+import { Outlet, useLocation } from 'react-router';
 
 import { ReactComponent as BuildIcon } from './assets/icons/build-icon.svg';
 import { ReactComponent as LiveFeedIcon } from './assets/icons/live-feed-icon.svg';
 import { ReactComponent as Webhook } from './assets/icons/webhook.svg';
+import { useProjectIdentifier } from './hooks/use-project-identifier.hook';
 import { paths } from './router';
 
 const iconStyles = {
@@ -15,7 +16,7 @@ const iconStyles = {
 };
 
 const Header = () => {
-    const { projectId = '' } = useParams<{ projectId: string }>();
+    const projectId = useProjectIdentifier();
 
     return (
         <View backgroundColor={'gray-300'} gridArea={'header'}>
@@ -75,7 +76,7 @@ const getFirstPathSegment = (path: string): string => {
 
 export const Layout = () => {
     const { pathname } = useLocation();
-    const { projectId = '' } = useParams<{ projectId: string }>();
+    const projectId = useProjectIdentifier();
 
     return (
         <Tabs aria-label='Header navigation' selectedKey={getFirstPathSegment(pathname)}>

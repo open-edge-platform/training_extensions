@@ -21,16 +21,17 @@ import { CreateProject } from './routes/project/create-project';
 import { EditProject } from './routes/project/edit-project';
 
 const root = path('/');
-const project = root.path('/project');
-const inference = project.path('/:projectId/inference');
-const dataset = project.path('/:projectId/dataset');
-const models = project.path('/:projectId/models');
+const projects = root.path('/projects');
+const project = projects.path('/:projectId');
+const inference = projects.path('/:projectId/inference');
+const dataset = projects.path('/:projectId/dataset');
+const models = projects.path('/:projectId/models');
 
 export const paths = {
     root,
     project: {
-        index: project,
-        new: project.path('/new'),
+        index: projects,
+        new: projects.path('/new'),
         edit: project.path('/:projectId/edit'),
         inference,
         dataset,
