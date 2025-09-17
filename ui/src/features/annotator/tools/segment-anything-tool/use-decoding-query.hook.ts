@@ -3,8 +3,8 @@
 
 import { queryOptions, useMutation, useQuery } from '@tanstack/react-query';
 
-import { RegionOfInterest, Shape } from '../../interfaces';
 import { removeOffLimitPoints } from '../../shapes/utils';
+import { RegionOfInterest, Shape } from '../../types';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';
 
 const selectedMediaItem = {

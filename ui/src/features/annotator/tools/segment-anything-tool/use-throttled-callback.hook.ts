@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo } from 'react';
 
 import { throttle, type DebouncedFunc } from 'lodash-es';
 
@@ -9,18 +9,12 @@ import { throttle, type DebouncedFunc } from 'lodash-es';
 type Callback = (...args: any[]) => void;
 
 export const useThrottledCallback = (callback: Callback, delay: number): DebouncedFunc<Callback> => {
-    const savedCallback = useRef(callback);
-
-    useLayoutEffect(() => {
-        savedCallback.current = callback;
-    }, [callback]);
-
     const debouncedCallback = useMemo(() => {
-        return throttle(savedCallback.current, delay, {
+        return throttle(callback, delay, {
             leading: true,
             trailing: true,
         });
-    }, [delay]);
+    }, [callback, delay]);
 
     useEffect(() => {
         return () => {

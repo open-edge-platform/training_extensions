@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { EncodingOutput, SegmentAnythingModel } from '@geti/smart-tools/segment-anything';
 import { useQuery } from '@tanstack/react-query';
@@ -73,7 +73,7 @@ const useSegmentAnythingWorker = (
 ) => {
     const { worker } = useLoadAIWebworker(algorithmType);
 
-    const modelRef = useRef<Remote<SegmentAnythingModel>>(undefined);
+    const [model, setModel] = useState<Remote<SegmentAnythingModel> | undefined>(undefined);
     const [modelIsLoading, setModelIsLoading] = useState(false);
 
     useEffect(() => {
@@ -81,22 +81,22 @@ const useSegmentAnythingWorker = (
             setModelIsLoading(true);
 
             if (worker) {
-                const model = worker;
+                const modelInstance = worker;
 
-                await model.init(algorithmType);
+                await modelInstance.init(algorithmType);
 
-                modelRef.current = model;
+                setModel(modelInstance);
             }
 
             setModelIsLoading(false);
         };
 
-        if (worker && modelRef.current === undefined && !modelIsLoading) {
+        if (worker && model === undefined && !modelIsLoading) {
             loadWorker();
         }
-    }, [worker, modelIsLoading, algorithmType]);
+    }, [worker, modelIsLoading, algorithmType, model]);
 
-    return modelRef.current;
+    return model;
 };
 
 export const useSegmentAnythingModel = () => {
