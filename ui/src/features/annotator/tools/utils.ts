@@ -196,45 +196,43 @@ export function convertToolShapeToGetiShape(shape: SmartToolsShape): Shape {
 const removeOffPointsRect = (rect: Rect, roi: RegionOfInterest): Rect => {
     const { x, y, width, height } = roi;
 
-    let newRect: Rect = {
-        ...rect,
-    };
-
+    // Left boundary
     if (rect.x < x) {
-        newRect = {
-            ...newRect,
+        return {
+            ...rect,
             x,
-            width: newRect.width - (x - rect.x),
+            width: rect.width - (x - rect.x),
         };
     }
 
+    // Right boundary
     if (rect.x + rect.width > x + width) {
         const diff = rect.x + rect.width - x - width;
-
-        newRect = {
-            ...newRect,
+        return {
+            ...rect,
             width: rect.width - diff,
         };
     }
 
+    // Top boundary
     if (rect.y < y) {
-        newRect = {
-            ...newRect,
+        return {
+            ...rect,
             y,
             height: rect.height - (y - rect.y),
         };
     }
 
-    if (newRect.y + rect.height > y + height) {
+    // Bottom boundary
+    if (rect.y + rect.height > y + height) {
         const diff = rect.y + rect.height - y - height;
-
-        newRect = {
-            ...newRect,
+        return {
+            ...rect,
             height: rect.height - diff,
         };
     }
 
-    return newRect;
+    return rect;
 };
 
 const removeOffLimitPointsPolygon = (shape: Shape, roi: RegionOfInterest): Polygon => {
@@ -275,11 +273,10 @@ const convertPolygonPoints = (shape: Polygon): ClipperPoint[] => {
 };
 
 const transformToClipperShape = (shape: Shape): ClipperShape => {
-    switch (true) {
-        case shape.shapeType === 'rect':
-            return new ClipperJS([calculateRectanglePoints(shape)], true);
-        default:
-            return new ClipperJS([convertPolygonPoints(shape)], true);
+    if (shape.shapeType === 'rect') {
+        return new ClipperJS([calculateRectanglePoints(shape)], true);
+    } else {
+        return new ClipperJS([convertPolygonPoints(shape)], true);
     }
 };
 
