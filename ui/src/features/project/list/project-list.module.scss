@@ -24,19 +24,26 @@
 }
 
 .card {
-    border-width: var(--spectrum-global-dimension-size-thin);
-    border-color: var(--spectrum-global-color-gray-200);
+    border: var(--spectrum-global-dimension-size-25) solid var(--spectrum-global-color-gray-200);
     border-radius: var(--spectrum-global-dimension-size-50);
     background-color: var(--spectrum-global-color-gray-50);
+    transition:
+        background-color,
+        border 0.2s ease-in-out;
 
     img {
         height: 100%;
         object-fit: cover;
     }
+
+    &:hover {
+        background-color: var(--spectrum-global-color-gray-100);
+        border-color: var(--energy-blue);
+    }
 }
 
 .activeCard {
-    border: var(--spectrum-global-dimension-size-25) solid var(--energy-blue);
+    border-color: var(--energy-blue);
 
     h3 {
         color: var(--energy-blue);

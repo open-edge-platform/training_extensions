@@ -13,7 +13,7 @@ import { ProjectCard } from './project-card';
 import classes from './project-list.module.scss';
 
 export const ProjectList = () => {
-    const projects = $api.useQuery('get', '/api/projects');
+    const projects = $api.useSuspenseQuery('get', '/api/projects');
 
     return (
         <View
@@ -53,7 +53,7 @@ export const ProjectList = () => {
                 >
                     <NewProjectLink />
 
-                    {projects.data?.map((item, index) => (
+                    {projects.data.map((item, index) => (
                         <ProjectCard key={item.id} item={item} isActive={index === 0} />
                     ))}
                 </Grid>
