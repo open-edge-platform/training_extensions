@@ -2,12 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useAnnotator } from '../annotator-provider.component';
+import { BoundingBoxTool } from './bounding-box-tool/bounding-box-tool.component';
 
 export const ToolManager = () => {
     const { activeTool } = useAnnotator();
 
     if (activeTool === 'bounding-box') {
-        // TODO: return drawing box here
+        return <BoundingBoxTool />;
     }
 
     return null;
