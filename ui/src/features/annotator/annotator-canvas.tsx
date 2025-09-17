@@ -6,9 +6,10 @@ import { CSSProperties, MouseEvent } from 'react';
 import { Grid, View } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 
-import thumbnailUrl from '../../assets/mocked-project-thumbnail.png';
 import { ZoomProvider } from '../../components/zoom/zoom';
 import { ZoomTransform } from '../../components/zoom/zoom-transform';
+import { useProjectIdentifier } from '../../hooks/use-project-identifier.hook';
+import { getImageUrl } from '../dataset/gallery/utils';
 import { Annotations } from './annotations/annotations.component';
 import { useSelectedAnnotations } from './select-annotation-provider.component';
 import { ToolManager } from './tools/tool-manager.component';
@@ -31,8 +32,10 @@ type AnnotatorCanvasProps = {
 };
 export const AnnotatorCanvas = ({ mediaItem, isFocussed }: AnnotatorCanvasProps) => {
     const { setSelectedAnnotations } = useSelectedAnnotations();
+    const project_id = useProjectIdentifier();
     const size = { width: mediaItem.width, height: mediaItem.height };
-    const annotations: Annotation[] = []; //mediaItem.annotations
+    // todo: pass media annotations
+    const annotations: Annotation[] = [];
 
     const handleClickOutside = (e: MouseEvent<SVGSVGElement>): void => {
         if (e.target === e.currentTarget) {
@@ -45,7 +48,7 @@ export const AnnotatorCanvas = ({ mediaItem, isFocussed }: AnnotatorCanvasProps)
             <ZoomTransform target={size}>
                 <Grid areas={['innercanvas']} width={'100%'} height='100%'>
                     <View gridArea={'innercanvas'}>
-                        <img src={thumbnailUrl} alt='Collected data' />
+                        <img src={getImageUrl(project_id, String(mediaItem.id))} alt='Collected data' />
                     </View>
 
                     {!isEmpty(annotations) && (

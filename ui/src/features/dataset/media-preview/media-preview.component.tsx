@@ -32,11 +32,11 @@ export const MediaPreview = ({ mediaItem, close }: MediaPreviewProps) => {
                         areas={['toolbar canvas aside', 'toolbar canvas aside', 'toolbar footer aside']}
                         width={'100%'}
                         height='100%'
-                        columns={'auto 1fr auto'}
+                        columns={'100px calc(100% - 200px) 100px'}
                         rows={'auto 1fr auto'}
                     >
                         <AnnotatorProvider mediaItem={mediaItem}>
-                            <View gridArea={'toolbar'} margin={'size-350'}>
+                            <View gridArea={'toolbar'}>
                                 <ToolSelectionBar />
                             </View>
 
