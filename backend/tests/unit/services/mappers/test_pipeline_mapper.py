@@ -42,7 +42,7 @@ SUPPORTED_PIPELINE_MAPPING = [
             is_running=True,
             source_id=str(UUID1),
             sink_id=str(UUID2),
-            model_id=str(UUID3),
+            model_revision_id=str(UUID3),
             data_collection_policies=[],
         ),
     ),
@@ -59,7 +59,7 @@ class TestPipelineMapper:
         assert actual_db.is_running == expected_db.is_running
         assert actual_db.source_id == expected_db.source_id
         assert actual_db.sink_id == expected_db.sink_id
-        assert actual_db.model_id == expected_db.model_id
+        assert actual_db.model_revision_id == expected_db.model_revision_id
 
     @pytest.mark.parametrize("db_instance,expected_schema", [(v, k) for (k, v) in SUPPORTED_PIPELINE_MAPPING.copy()])
     def test_to_schema(self, db_instance, expected_schema):
