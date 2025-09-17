@@ -1,6 +1,9 @@
+* {
+    box-sizing: border-box;
+}
+
 :root {
     height: 100vh;
-    box-sizing: border-box;
 
     --background: #313236;
     --background-inverse: #3c3e42;
@@ -49,13 +52,11 @@ html {
     padding: 0;
     background-color: var(--background);
     height: 100%;
-    box-sizing: border-box;
 }
 
 #root,
 #theme-provider {
     height: 100%;
-    box-sizing: border-box;
 }
 
 h1,
