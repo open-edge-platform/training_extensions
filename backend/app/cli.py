@@ -96,16 +96,18 @@ def seed(with_model: bool, model_name: str) -> None:
         pipeline = PipelineDB()
 
         # Create default disconnected source and sink
+        disconnected_source_cfg = DisconnectedSourceConfig()
         disconnected_source = SourceDB(
             id="00000000-0000-0000-0000-000000000000",
-            name=DisconnectedSourceConfig().name,
-            source_type=DisconnectedSourceConfig().source_type,
+            name=disconnected_source_cfg.name,
+            source_type=disconnected_source_cfg.source_type,
             config_data={},
         )
+        disconnected_sink_cfg = DisconnectedSinkConfig()
         disconnected_sink = SinkDB(
             id="00000000-0000-0000-0000-000000000000",
-            name=DisconnectedSinkConfig().name,
-            sink_type=DisconnectedSinkConfig().sink_type,
+            name=disconnected_sink_cfg.name,
+            sink_type=disconnected_sink_cfg.sink_type,
             output_formats=[],
             config_data={},
         )
