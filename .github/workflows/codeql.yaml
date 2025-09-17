@@ -40,8 +40,6 @@ jobs:
               - .github/**
             docs:
               - docs/**
-
-            - name: Set run flags
         
       - name: test
         id: run_workflow
