@@ -16,10 +16,10 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event_name }} == 'pull_request'
     outputs:
-      run_backend: ${{ steps.run_workflow.outputs.run_backend }}
-      run_ui: ${{ steps.run_workflow.outputs.run_ui }}
-      run_actions: ${{ steps.run_workflow.outputs.run_actions }}
-      run_docs: ${{ steps.run_workflow.outputs.run_docs }}
+      run_backend: ${{ steps.changed-files-yaml.outputs.backend_any_change }}
+      run_ui: ${{ steps.changed-files-yaml.outputs.ui_any_change }}
+      run_actions: ${{ steps.changed-files-yaml.outputs.actions_any_change }}
+      run_docs: ${{ steps.changed-files-yaml.outputs.docs_any_change }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -40,38 +40,6 @@ jobs:
               - .github/**
             docs:
               - docs/**
-
-      - name: Set run flags
-        id: run_workflow
-        env:
-          BACKEND_ANY_CHANGED: ${{ steps.changed-files-yaml.outputs.backend_any_changed }}
-          UI_ANY_CHANGED: ${{ steps.changed-files-yaml.outputs.ui_any_changed }}
-          ACTIONS_ANY_CHANGED: ${{ steps.changed-files-yaml.outputs.actions_any_changed }}
-          DOCS_ANY_CHANGED: ${{ steps.changed-files-yaml.outputs.docs_any_changed }}
-        run: |
-          if [ "$BACKEND_ANY_CHANGED" = "true" ]; then
-            echo "run_backend=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "run_backend=false" >> "$GITHUB_OUTPUT"
-          fi
-
-          if [ "$UI_ANY_CHANGED" = "true" ]; then
-            echo "run_ui=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "run_ui=false" >> "$GITHUB_OUTPUT"
-          fi
-
-          if [ "$ACTIONS_ANY_CHANGED" = "true" ]; then
-            echo "run_actions=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "run_actions=false" >> "$GITHUB_OUTPUT"
-          fi
-
-          if [ "$DOCS_ANY_CHANGED" = "true" ]; then
-            echo "run_docs=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "run_docs=false" >> "$GITHUB_OUTPUT"
-          fi
 
   analyze:
     name: Analyze (${{ matrix.language }})
