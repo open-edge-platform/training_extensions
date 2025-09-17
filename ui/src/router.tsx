@@ -10,7 +10,7 @@ import { path } from 'static-path';
 
 import { ZoomProvider } from './components/zoom/zoom';
 import { WebRTCConnectionProvider } from './features/inference/stream/web-rtc-connection-provider';
-import { ProjectDetails } from './features/project/project-details.component';
+import { ProjectList } from './features/project/list/project-list.component';
 import { Layout } from './layout';
 import { Dataset } from './routes/dataset/dataset.component';
 import { SelectedDataProvider } from './routes/dataset/provider';
@@ -41,6 +41,15 @@ export const paths = {
 
 export const router = createBrowserRouter([
     {
+        index: true,
+        path: paths.project.index.pattern,
+        element: (
+            <Suspense fallback={<Loading mode='fullscreen' />}>
+                <ProjectList />
+            </Suspense>
+        ),
+    },
+    {
         path: paths.project.new.pattern,
         element: <CreateProject />,
     },
@@ -58,17 +67,12 @@ export const router = createBrowserRouter([
                 loader: () => {
                     // TODO: If there is no project configured then redirect to new project creation
                     // else redirect to inference
-                    return redirect(paths.project.new({}));
+                    return redirect(paths.project.index({}));
                 },
             },
             {
                 path: paths.project.index.pattern,
                 children: [
-                    {
-                        index: true,
-                        path: paths.project.index.pattern,
-                        element: <ProjectDetails />,
-                    },
                     {
                         path: paths.project.edit.pattern,
                         element: <EditProject />,
