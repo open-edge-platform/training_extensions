@@ -9,11 +9,13 @@ import { AnnotatorCanvas } from '../../annotator/annotator-canvas';
 import { AnnotatorProvider } from '../../annotator/annotator-provider.component';
 import { SelectAnnotationProvider } from '../../annotator/select-annotation-provider.component';
 import { ToolSelectionBar } from '../../annotator/tools/tool-selection-bar.component';
-import { response } from '../mock-response';
+import { DatasetItem } from '../../annotator/types';
 
-type Item = (typeof response.items)[number];
-
-export const MediaPreview = ({ mediaItem, close }: { mediaItem: Item; close: () => void }) => {
+type MediaPreviewProps = {
+    mediaItem: DatasetItem;
+    close: () => void;
+};
+export const MediaPreview = ({ mediaItem, close }: MediaPreviewProps) => {
     const [isFocussed, setIsFocussed] = useState(false);
 
     return (

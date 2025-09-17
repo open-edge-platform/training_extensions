@@ -9,12 +9,10 @@ import { isEmpty } from 'lodash-es';
 import thumbnailUrl from '../../assets/mocked-project-thumbnail.png';
 import { ZoomProvider } from '../../components/zoom/zoom';
 import { ZoomTransform } from '../../components/zoom/zoom-transform';
-import { response } from '../dataset/mock-response';
 import { Annotations } from './annotations/annotations.component';
 import { useSelectedAnnotations } from './select-annotation-provider.component';
 import { ToolManager } from './tools/tool-manager.component';
-
-type Item = (typeof response.items)[number];
+import { Annotation, DatasetItem } from './types';
 
 const DEFAULT_ANNOTATION_STYLES = {
     fillOpacity: 0.4,
@@ -27,10 +25,14 @@ const DEFAULT_ANNOTATION_STYLES = {
     strokeOpacity: 'var(--annotation-border-opacity, 1)',
 } satisfies CSSProperties;
 
-export const AnnotatorCanvas = ({ mediaItem, isFocussed }: { mediaItem: Item; isFocussed: boolean }) => {
+type AnnotatorCanvasProps = {
+    mediaItem: DatasetItem;
+    isFocussed: boolean;
+};
+export const AnnotatorCanvas = ({ mediaItem, isFocussed }: AnnotatorCanvasProps) => {
     const { setSelectedAnnotations } = useSelectedAnnotations();
-
     const size = { width: mediaItem.width, height: mediaItem.height };
+    const annotations: Annotation[] = []; //mediaItem.annotations
 
     const handleClickOutside = (e: MouseEvent<SVGSVGElement>): void => {
         if (e.target === e.currentTarget) {
@@ -46,7 +48,7 @@ export const AnnotatorCanvas = ({ mediaItem, isFocussed }: { mediaItem: Item; is
                         <img src={thumbnailUrl} alt='Collected data' />
                     </View>
 
-                    {!isEmpty(mediaItem.annotations) && (
+                    {!isEmpty(annotations) && (
                         <View gridArea={'innercanvas'}>
                             <svg
                                 width={size.width}
