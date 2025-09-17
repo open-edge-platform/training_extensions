@@ -15,7 +15,7 @@ export const Dataset = () => {
             height={'100%'}
             gridArea={'content'}
             direction={'column'}
-            UNSAFE_style={{ padding: dimensionValue('size-350'), paddingBottom: 0, boxSizing: 'border-box' }}
+            UNSAFE_style={{ padding: dimensionValue('size-350'), paddingBottom: 0 }}
         >
             <Toolbar items={items} />
 

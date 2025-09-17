@@ -41,6 +41,7 @@ export const TestProviders = ({ children, routerProps }: { children: ReactNode; 
         <QueryClientProvider client={queryClient}>
             <ThemeProvider>
                 <Router {...routerProps}>{children}</Router>
+                <Toast />
             </ThemeProvider>
         </QueryClientProvider>
     );
