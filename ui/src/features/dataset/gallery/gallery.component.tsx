@@ -23,10 +23,16 @@ import { MediaPreview } from '../media-preview/media-preview.component';
 import { AnnotationStateIcon } from './annotation-state-icon.component';
 import { MediaItem } from './media-item.component';
 import { MediaThumbnail } from './media-thumbnail.component';
-import { useGetItems } from './use-get-items.hook';
 import { getThumbnailUrl } from './utils';
 
 import classes from './gallery.module.scss';
+
+type GalleryProps = {
+    items: DatasetItem[];
+    fetchNextPage: () => void;
+    hasNextPage: boolean;
+    isFetchingNextPage: boolean;
+};
 
 const layoutOptions = {
     minSpace: new Size(8, 8),
@@ -34,13 +40,12 @@ const layoutOptions = {
     preserveAspectRatio: true,
 };
 
-export const Gallery = () => {
+export const Gallery = ({ items, hasNextPage, isFetchingNextPage, fetchNextPage }: GalleryProps) => {
     const ref = useRef<HTMLDivElement | null>(null);
-
     const project_id = useProjectIdentifier();
+
     const [selectedMediaItem, setSelectedMediaItem] = useState<null | DatasetItem>(null);
     const { selectedKeys, mediaState, setSelectedKeys } = useSelectedData();
-    const { items, fetchNextPage, hasNextPage, isFetchingNextPage } = useGetItems();
 
     const isSetSelectedKeys = selectedKeys instanceof Set;
 
