@@ -12,7 +12,7 @@ permissions: {}
 
 jobs:
   check_paths:
-    name: Check which language should be analyzed
+    name: Check which language should be analyzed by CodeQL
     runs-on: ubuntu-latest
     if: ${{ github.event_name }} == 'pull_request'
     outputs:
