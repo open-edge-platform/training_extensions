@@ -107,8 +107,8 @@ class DatasetItemAnnotationsWithSource(DatasetItemAnnotations):
                         "shape": {"type": "rectangle", "x": 10, "y": 20, "width": 100, "height": 200},
                     }
                 ],
-                "user_reviewed": "false",
-                "prediction_model_id": "null",
+                "user_reviewed": "false",  # type: ignore[dict-item]
+                "prediction_model_id": "null",  # type: ignore[dict-item]
             }
         }
     }
