@@ -3,12 +3,20 @@
 
 import { useAnnotator } from '../annotator-provider.component';
 import { BoundingBoxTool } from './bounding-box-tool/bounding-box-tool.component';
+import { SegmentAnythingStateProvider } from './segment-anything-tool/segment-anything-state-provider.component';
+import { SegmentAnythingTool } from './segment-anything-tool/segment-anything-tool.component';
 
 export const ToolManager = () => {
     const { activeTool } = useAnnotator();
 
     if (activeTool === 'bounding-box') {
         return <BoundingBoxTool />;
+    } else if (activeTool === 'sam') {
+        return (
+            <SegmentAnythingStateProvider>
+                <SegmentAnythingTool />
+            </SegmentAnythingStateProvider>
+        );
     }
 
     return null;

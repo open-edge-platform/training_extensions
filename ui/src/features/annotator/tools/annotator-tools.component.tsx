@@ -17,7 +17,8 @@ const TASK_TOOL_CONFIG: Record<string, ToolConfig[]> = {
     ],
     segmentation: [
         { type: 'selection', icon: Selector },
-        // TODO: Add 'polygon' and 'sam' tools later
+        { type: 'sam', icon: BoundingBox },
+        // TODO: Add 'polygon' tool later
     ],
 };
 
