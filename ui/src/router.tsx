@@ -43,7 +43,11 @@ export const router = createBrowserRouter([
     {
         index: true,
         path: paths.project.index.pattern,
-        element: <ProjectList />,
+        element: (
+            <Suspense fallback={<Loading mode='fullscreen' />}>
+                <ProjectList />
+            </Suspense>
+        ),
     },
     {
         path: paths.project.new.pattern,

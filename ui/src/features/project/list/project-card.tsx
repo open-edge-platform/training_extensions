@@ -19,7 +19,9 @@ type ProjectCardProps = {
 
 export const ProjectCard = ({ item, isActive }: ProjectCardProps) => {
     return (
-        <NavLink to={paths.project.inference({ projectId: item.id })}>
+        // TODO: remove this empty string check once\
+        // https://github.com/open-edge-platform/training_extensions/issues/4721 is done
+        <NavLink to={paths.project.inference({ projectId: item.id || '' })}>
             <Flex UNSAFE_className={clsx({ [classes.card]: true, [classes.activeCard]: isActive })}>
                 <View aria-label={'project thumbnail'}>
                     <img src={thumbnailUrl} alt={item.name} />
