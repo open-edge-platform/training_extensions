@@ -3,7 +3,7 @@
 
 import { Grid } from '@geti/ui';
 
-import { CreateProjectForm } from '../../features/project/create-project-form';
+import { CreateProjectForm } from '../../features/project/create/create-project-form';
 import Background from './../../assets/background.png';
 
 import classes from './project.module.scss';

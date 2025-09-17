@@ -4,9 +4,9 @@
 import { Button, ButtonGroup, Divider, Flex, Grid, Heading, repeat, Text, View } from '@geti/ui';
 import { capitalize, isArray, startsWith } from 'lodash-es';
 
-import { $api } from '../../api/client';
-import { paths } from '../../router';
-import Background from './../../assets/background.png';
+import { $api } from '../../../api/client';
+import { paths } from '../../../router';
+import Background from './../../../assets/background.png';
 
 type FieldProps = {
     field: string;

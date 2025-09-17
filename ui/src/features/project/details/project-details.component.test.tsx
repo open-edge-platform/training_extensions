@@ -4,9 +4,9 @@
 import { render, screen } from '@testing-library/react';
 import { HttpResponse } from 'msw';
 
-import { http } from '../../api/utils';
-import { server } from '../../msw-node-setup';
-import { TestProviders } from '../../providers';
+import { http } from '../../../api/utils';
+import { server } from '../../../msw-node-setup';
+import { TestProviders } from '../../../providers';
 import { ProjectDetails } from './project-details.component';
 
 describe('ProjectDetails', () => {

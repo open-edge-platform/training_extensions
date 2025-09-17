@@ -10,7 +10,7 @@ import { path } from 'static-path';
 
 import { ZoomProvider } from './components/zoom/zoom';
 import { WebRTCConnectionProvider } from './features/inference/stream/web-rtc-connection-provider';
-import { ProjectList } from './features/project/modal/project-list.component';
+import { ProjectList } from './features/project/list/project-list.component';
 import { Layout } from './layout';
 import { Dataset } from './routes/dataset/dataset.component';
 import { SelectedDataProvider } from './routes/dataset/provider';

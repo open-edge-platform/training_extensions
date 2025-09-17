@@ -7,13 +7,13 @@ import { Button, ButtonGroup, Divider, Flex, Form, Text } from '@geti/ui';
 import { useNavigate } from 'react-router';
 import { v4 as uuid } from 'uuid';
 
-import { $api } from '../../api/client';
-import { paths } from '../../router';
-import { LabelItemProps } from './label-selection/interface';
-import { LabelSelection } from './label-selection/label-selection.component';
+import { $api } from '../../../api/client';
+import { paths } from '../../../router';
+import { LabelItemProps } from '../label-selection/interface';
+import { LabelSelection } from '../label-selection/label-selection.component';
+import { TaskType } from '../task-selection/interface';
+import { TaskSelection } from '../task-selection/task-selection.component';
 import { ProjectName } from './project-name';
-import { TaskType } from './task-selection/interface';
-import { TaskSelection } from './task-selection/task-selection.component';
 
 import classes from './create-project-form.module.scss';
 
