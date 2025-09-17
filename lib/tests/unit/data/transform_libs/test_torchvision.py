@@ -52,6 +52,17 @@ class MockVideo:
 
 
 @pytest.fixture()
+def seg_data_entity() -> OTXDataItem:
+    masks = torch.randint(low=0, high=2, size=(1, 112, 224), dtype=torch.uint8)
+    return OTXDataItem(
+        image=tv_tensors.Image(torch.randint(low=0, high=256, size=(3, 112, 224), dtype=torch.uint8)),
+        img_info=ImageInfo(img_idx=0, img_shape=(112, 224), ori_shape=(112, 224)),
+        masks=tv_tensors.Mask(masks),
+        label=LongTensor([1]),
+    )
+
+
+@pytest.fixture()
 def det_data_entity() -> OTXDataItem:
     return OTXDataItem(
         image=tv_tensors.Image(torch.randint(low=0, high=256, size=(3, 112, 224), dtype=torch.uint8)),
@@ -358,6 +369,22 @@ class TestRandomAffine:
         assert results.label.dtype == torch.long
         assert results.bboxes.dtype == torch.float32
         assert results.img_info.img_shape == results.image.shape[:2]
+
+    def test_segmentation_transform(
+        self, random_affine_with_mask_transform: RandomAffine, seg_data_entity: OTXDataItem
+    ) -> None:
+        """Test forward for segmentation task."""
+        original_entity = deepcopy(seg_data_entity)
+        results = random_affine_with_mask_transform(original_entity)
+
+        assert hasattr(results, "masks")
+        assert results.masks is not None
+        assert results.masks.shape[0] > 0  # Should have masks
+        assert results.masks.shape[1:] == results.image.shape[:2]  # Same spatial dimensions as image
+
+        # Check that the number of masks matches the number of remaining bboxes and labels
+        assert results.masks.shape[0] == results.label.shape[0]
+        assert isinstance(results.masks, tv_tensors.Mask)
 
     def test_forward_with_masks_transform_enabled(
         self,
