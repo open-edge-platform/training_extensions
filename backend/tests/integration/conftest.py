@@ -145,11 +145,21 @@ def fxt_db_projects() -> list[ProjectDB]:
 
 
 @pytest.fixture
-def fxt_db_dataset_items() -> list[DatasetItemDB]:
+def fxt_db_dataset_items(fxt_db_projects) -> list[DatasetItemDB]:
     """Fixture to create multiple dataset items in the database."""
     configs = [
         {"name": "test1", "format": "jpg", "size": 1024, "width": 1024, "height": 768, "subset": "unassigned"},
-        {"name": "test2", "format": "jpg", "size": 1024, "width": 1024, "height": 768, "subset": "unassigned"},
+        {
+            "name": "test2",
+            "format": "jpg",
+            "size": 1024,
+            "width": 1024,
+            "height": 768,
+            "subset": "unassigned",
+            "annotation_data": {
+                "annotations": [{"labels": [{"id": fxt_db_projects[0].labels[0].id}], "shape": {"type": "full_image"}}]
+            },
+        },
         {"name": "test3", "format": "jpg", "size": 1024, "width": 1024, "height": 768, "subset": "unassigned"},
     ]
 

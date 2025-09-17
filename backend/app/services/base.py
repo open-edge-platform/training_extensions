@@ -70,6 +70,13 @@ class InvalidImageError(Exception):
         super().__init__(msg)
 
 
+class AnnotationValidationError(Exception):
+    """Exception raised when dataset annotation validation has failed."""
+
+    def __init__(self, message: str):
+        super().__init__(message)
+
+
 S = TypeVar("S", bound=BaseModel)  # Schema type e.g. Source or Sink
 D = TypeVar("D", bound=Base)  # DB model type e.g. SourceDB or SinkDB
 R = TypeVar("R", bound=BaseRepository)  # Repository type

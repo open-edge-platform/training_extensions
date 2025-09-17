@@ -11,10 +11,17 @@ from uuid import UUID, uuid4
 from PIL import Image, UnidentifiedImageError
 
 from app.db import get_db_session
-from app.db.schema import DatasetItemDB
-from app.repositories import DatasetItemRepository
-from app.schemas.dataset_item import DatasetItem, DatasetItemSubset
-from app.services.base import InvalidImageError, ResourceNotFoundError, ResourceType
+from app.db.schema import DatasetItemDB, ProjectDB
+from app.repositories import DatasetItemRepository, ProjectRepository
+from app.schemas.dataset_item import (
+    DatasetItem,
+    DatasetItemAnnotation,
+    DatasetItemAnnotations,
+    DatasetItemAnnotationsWithSource,
+    DatasetItemSubset,
+)
+from app.schemas.shape import FullImage, Polygon, Rectangle
+from app.services.base import AnnotationValidationError, InvalidImageError, ResourceNotFoundError, ResourceType
 from app.services.mappers.dataset_item_mapper import DatasetItemMapper
 from app.utils.images import crop_to_thumbnail
 
@@ -27,7 +34,9 @@ class DatasetService:
     def __init__(self) -> None:
         self.mapper = DatasetItemMapper()
 
-    def create_dataset_item(self, project_id: UUID, name: str, format: str, size: int, file: BinaryIO) -> DatasetItem:
+    def create_dataset_item(
+        self, project_id: UUID, name: str, format: str, size: int, file: BinaryIO, user_reviewed: bool
+    ) -> DatasetItem:
         """Creates a new dataset item"""
         file.seek(0)
         try:
@@ -44,6 +53,7 @@ class DatasetService:
             height=image.height,
             size=size,
             subset=DatasetItemSubset.UNASSIGNED,
+            user_reviewed=user_reviewed,
         )
 
         dataset_dir = Path(f"data/projects/{str(project_id)}/dataset")
@@ -128,3 +138,115 @@ class DatasetService:
             deleted = repo.delete(obj_id=str(dataset_item_id))
             if not deleted:
                 raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
+
+    @staticmethod
+    def _validate_annotations_labels(annotations: list[DatasetItemAnnotation], project: ProjectDB) -> None:
+        for annotation in annotations:
+            for annotation_label in annotation.labels:
+                project_label = next((label for label in project.labels if label.id == str(annotation_label.id)), None)
+                if project_label is None:
+                    raise AnnotationValidationError(f"Label {str(annotation_label.id)} is not found in the project.")
+
+    @staticmethod
+    def _validate_annotations(annotations: list[DatasetItemAnnotation], project: ProjectDB) -> None:  # noqa: C901
+        if project.task_type == "classification":
+            if len(annotations) > 1:
+                raise AnnotationValidationError("Classification project doesn't allow more than one annotation.")
+            annotation = annotations[0]
+            if not isinstance(annotation.shape.root, FullImage):
+                raise AnnotationValidationError("Classification project supports only full_image shapes.")
+            if project.exclusive_labels and len(annotation.labels) > 1:
+                raise AnnotationValidationError(
+                    "Multiclass classification project doesn't allow more than one label per annotation."
+                )
+        if project.task_type == "detection":
+            for annotation in annotations:
+                if not isinstance(annotation.shape.root, Rectangle):
+                    raise AnnotationValidationError("Detection project supports only rectangle shapes.")
+                if len(annotation.labels) > 1:
+                    raise AnnotationValidationError(
+                        "Detection project doesn't allow more than one label per annotation."
+                    )
+        if project.task_type == "segmentation":
+            for annotation in annotations:
+                if not isinstance(annotation.shape.root, Polygon):
+                    raise AnnotationValidationError("Segmentation project supports only polygon shapes.")
+                if len(annotation.labels) > 1:
+                    raise AnnotationValidationError(
+                        "Segmentation project doesn't allow more than one label per annotation."
+                    )
+
+    @staticmethod
+    def _validate_annotations_coordinates(
+        annotations: list[DatasetItemAnnotation], dataset_item: DatasetItemDB
+    ) -> None:
+        for annotation in annotations:
+            if isinstance(annotation.shape.root, Rectangle):
+                rect = annotation.shape.root
+                if rect.x > dataset_item.width or rect.x + rect.width > dataset_item.width:
+                    raise AnnotationValidationError("Rectangle coordinates are out of bounds")
+                if rect.y > dataset_item.height or rect.y + rect.height > dataset_item.height:
+                    raise AnnotationValidationError("Rectangle coordinates are out of bounds")
+            if isinstance(annotation.shape.root, Polygon):
+                poly = annotation.shape.root
+                for point in poly.points:
+                    if point.x > dataset_item.width or point.y > dataset_item.height:
+                        raise AnnotationValidationError("Polygon points are out of bounds")
+
+    def set_dataset_item_annotations(
+        self, project_id: UUID, dataset_item_id: UUID, annotation_data: DatasetItemAnnotations
+    ) -> DatasetItemAnnotationsWithSource:
+        """Set dataset item annotations"""
+        with get_db_session() as db:
+            project_repo = ProjectRepository(db=db)
+            project = project_repo.get_by_id(str(project_id))
+            if project is None:
+                raise ResourceNotFoundError(ResourceType.PROJECT, str(project_id))
+            DatasetService._validate_annotations_labels(annotations=annotation_data.annotations, project=project)
+
+            repo = DatasetItemRepository(project_id=str(project_id), db=db)
+            dataset_item = repo.get_by_id(str(dataset_item_id))
+            if not dataset_item:
+                raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
+            DatasetService._validate_annotations_coordinates(
+                annotations=annotation_data.annotations, dataset_item=dataset_item
+            )
+
+            result = repo.set_annotation_data(
+                obj_id=str(dataset_item_id), annotation_data=annotation_data.model_dump(mode="json")
+            )
+            if not result:
+                raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
+            db.commit()
+
+            return DatasetItemAnnotationsWithSource(
+                annotations=DatasetItemAnnotations.model_validate(result.annotation_data).annotations,
+                user_reviewed=result.user_reviewed,
+                prediction_model_id=result.prediction_model_id,
+            )
+
+    def get_dataset_item_annotations(
+        self, project_id: UUID, dataset_item_id: UUID
+    ) -> DatasetItemAnnotationsWithSource | None:
+        """Get the dataset item annotations"""
+        with get_db_session() as db:
+            repo = DatasetItemRepository(project_id=str(project_id), db=db)
+            dataset_item = repo.get_by_id(str(dataset_item_id))
+            if not dataset_item:
+                raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
+            if not dataset_item.annotation_data:
+                return None
+            return DatasetItemAnnotationsWithSource(
+                annotations=DatasetItemAnnotations.model_validate(dataset_item.annotation_data).annotations,
+                user_reviewed=dataset_item.user_reviewed,
+                prediction_model_id=dataset_item.prediction_model_id,
+            )
+
+    def delete_dataset_item_annotations(self, project_id: UUID, dataset_item_id: UUID) -> None:
+        """Delete the dataset item annotations"""
+        with get_db_session() as db:
+            repo = DatasetItemRepository(project_id=str(project_id), db=db)
+            updated = repo.set_annotation_data(obj_id=str(dataset_item_id), annotation_data=None)
+            if not updated:
+                raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
+            db.commit()
