@@ -7,7 +7,6 @@ import { capitalize, isArray, startsWith } from 'lodash-es';
 import { $api } from '../../api/client';
 import { paths } from '../../router';
 import Background from './../../assets/background.png';
-import { ProjectList } from './modal/project-list.component';
 
 type FieldProps = {
     field: string;
@@ -92,7 +91,6 @@ export const ProjectDetails = () => {
                         </Grid>
                         <Divider size='S' />
                         <ButtonGroup>
-                            <ProjectList />
                             <Button href={paths.project.edit({ projectId: '' })} variant='secondary' marginStart='auto'>
                                 Edit
                             </Button>
