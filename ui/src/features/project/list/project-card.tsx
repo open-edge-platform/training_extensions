@@ -1,9 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, Heading, PressableElement, Tag, Text, View } from '@geti/ui';
+import { Flex, Heading, Tag, Text, View } from '@geti/ui';
 import { clsx } from 'clsx';
-import { useNavigate } from 'react-router';
+import { NavLink } from 'react-router-dom';
 
 import thumbnailUrl from '../../../assets/mocked-project-thumbnail.png';
 import { paths } from '../../../router';
@@ -18,14 +18,8 @@ type ProjectCardProps = {
 };
 
 export const ProjectCard = ({ item, isActive }: ProjectCardProps) => {
-    const navigate = useNavigate();
-
-    const goToProjectDetails = () => {
-        navigate(paths.project.inference({ projectId: item.id }));
-    };
-
     return (
-        <PressableElement onClick={goToProjectDetails}>
+        <NavLink to={paths.project.inference({ projectId: item.id })}>
             <Flex UNSAFE_className={clsx({ [classes.card]: true, [classes.activeCard]: isActive })}>
                 <View aria-label={'project thumbnail'}>
                     <img src={thumbnailUrl} alt={item.name} />
@@ -50,6 +44,6 @@ export const ProjectCard = ({ item, isActive }: ProjectCardProps) => {
                     </Flex>
                 </View>
             </Flex>
-        </PressableElement>
+        </NavLink>
     );
 };
