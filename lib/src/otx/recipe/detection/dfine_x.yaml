@@ -85,6 +85,22 @@ overrides:
         - class_path: otx.data.transform_libs.torchvision.RandomFlip
           init_args:
             probability: 0.5
+        - class_path: torchvision.transforms.v2.RandomPhotometricDistort
+          enable: false
+          init_args:
+            brightness:
+              - 0.875
+              - 1.125
+            contrast:
+              - 0.5
+              - 1.5
+            saturation:
+              - 0.5
+              - 1.5
+            hue:
+              - -0.05
+              - 0.05
+            p: 0.5
         - class_path: otx.data.transform_libs.torchvision.RandomAffine
           enable: false
           init_args:
