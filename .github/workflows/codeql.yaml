@@ -10,6 +10,10 @@ on:
 
 permissions: {}
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.after }}
+  cancel-in-progress: true
+
 jobs:
   check_paths:
     name: Check which language should be analyzed by CodeQL
