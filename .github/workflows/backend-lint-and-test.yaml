@@ -15,6 +15,10 @@ on:
 
 permissions: {} # No permissions by default on workflow level
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.after }}
+  cancel-in-progress: true
+
 jobs:
   # Determines if workflow should execute based on event type and changed paths
   # If push or workflow_dispatch -> always run
