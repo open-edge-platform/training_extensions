@@ -3,13 +3,16 @@
 
 import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useState } from 'react';
 
+import { v4 as uuid } from 'uuid';
+
 import { ToolType } from '../../components/tool-selection-bar/tools/interface';
-import { Annotation, MediaItem } from './types';
+import { Annotation, MediaItem, Shape } from './types';
 
 type AnnotatorContext = {
     activeTool: ToolType | null;
     setActiveTool: Dispatch<SetStateAction<ToolType>>;
 
+    addAnnotation: (shape: Shape) => void;
     updateAnnotation: (updatedAnnotation: Annotation) => void;
 
     mediaItem: MediaItem;
@@ -22,12 +25,23 @@ export const AnnotatorProvider = ({ mediaItem, children }: { mediaItem: MediaIte
     const [activeTool, setActiveTool] = useState<ToolType>('selection');
     const [annotations, setAnnotations] = useState<Annotation[]>(mediaItem.annotations);
 
-    const handleUpdateAnnotation = (updatedAnnotation: Annotation) => {
+    const updateAnnotation = (updatedAnnotation: Annotation) => {
         const { id } = updatedAnnotation;
 
         setAnnotations((prevAnnotations) =>
             prevAnnotations.map((annotation) => (annotation.id === id ? updatedAnnotation : annotation))
         );
+    };
+
+    const addAnnotation = (shape: Shape) => {
+        setAnnotations((prevAnnotations) => [
+            ...prevAnnotations,
+            {
+                shape,
+                id: uuid(),
+                labels: [{ id: uuid(), name: 'Default label', color: 'var(--annotation-fill)', isPrediction: false }],
+            },
+        ]);
     };
 
     return (
@@ -36,7 +50,8 @@ export const AnnotatorProvider = ({ mediaItem, children }: { mediaItem: MediaIte
                 activeTool,
                 setActiveTool,
 
-                updateAnnotation: handleUpdateAnnotation,
+                addAnnotation,
+                updateAnnotation,
 
                 annotations,
 

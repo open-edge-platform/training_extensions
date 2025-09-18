@@ -54,3 +54,16 @@ export type MediaItem = {
     created_at: string;
     annotations: Annotation[];
 };
+
+// Circle is only used for visual purposes on segment-anything tool
+export interface Circle {
+    readonly shapeType: 'circle';
+    readonly x: number;
+    readonly y: number;
+    readonly r: number;
+}
+
+export interface ClipperPoint {
+    X: number;
+    Y: number;
+}

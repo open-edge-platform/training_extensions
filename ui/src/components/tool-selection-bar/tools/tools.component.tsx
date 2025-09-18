@@ -1,26 +1,30 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Divider } from '@geti/ui';
-import { BoundingBox, Selector } from '@geti/ui/icons';
+import { Fragment } from 'react/jsx-runtime';
 
-import { useAnnotator } from '../../../features/annotator/annotator-provider.component';
 import { IconWrapper } from '../icon-wrapper.component';
+import { ToolConfig, ToolType } from './interface';
 
-export const Tools = () => {
-    const { activeTool, setActiveTool } = useAnnotator();
+interface ToolsProps {
+    tools: ToolConfig[];
+    activeTool: ToolType | null;
+    setActiveTool: (tool: ToolType) => void;
+}
+export const Tools = ({ tools, activeTool, setActiveTool }: ToolsProps) => {
+    if (tools.length === 0) {
+        return null;
+    }
 
     return (
         <>
-            <IconWrapper onPress={() => setActiveTool('selection')} isSelected={activeTool === 'selection'}>
-                <Selector data-tool='selection' />
-            </IconWrapper>
-
-            <Divider size='S' />
-
-            <IconWrapper onPress={() => setActiveTool('bounding-box')} isSelected={activeTool === 'bounding-box'}>
-                <BoundingBox />
-            </IconWrapper>
+            {tools.map((tool) => (
+                <Fragment key={tool.type}>
+                    <IconWrapper onPress={() => setActiveTool(tool.type)} isSelected={activeTool === tool.type}>
+                        <tool.icon data-tool={tool.type} />
+                    </IconWrapper>
+                </Fragment>
+            ))}
         </>
     );
 };

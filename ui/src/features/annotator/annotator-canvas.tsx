@@ -1,6 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { CSSProperties, MouseEvent } from 'react';
+
 import { Grid, View } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 
@@ -9,13 +11,32 @@ import { ZoomProvider } from '../../components/zoom/zoom';
 import { ZoomTransform } from '../../components/zoom/zoom-transform';
 import { response } from '../dataset/mock-response';
 import { Annotations } from './annotations/annotations.component';
-import { SelectAnnotationProvider } from './select-annotation-provider.component';
+import { useSelectedAnnotations } from './select-annotation-provider.component';
 import { ToolManager } from './tools/tool-manager.component';
 
 type Item = (typeof response.items)[number];
 
+const DEFAULT_ANNOTATION_STYLES = {
+    fillOpacity: 0.4,
+    fill: 'var(--annotation-fill)',
+    stroke: 'var(--annotation-stroke)',
+    strokeLinecap: 'round',
+    strokeWidth: 'calc(1px / var(--zoom-scale))',
+    strokeDashoffset: 0,
+    strokeDasharray: 0,
+    strokeOpacity: 'var(--annotation-border-opacity, 1)',
+} satisfies CSSProperties;
+
 export const AnnotatorCanvas = ({ mediaItem, isFocussed }: { mediaItem: Item; isFocussed: boolean }) => {
+    const { setSelectedAnnotations } = useSelectedAnnotations();
+
     const size = { width: mediaItem.width, height: mediaItem.height };
+
+    const handleClickOutside = (e: MouseEvent<SVGSVGElement>): void => {
+        if (e.target === e.currentTarget) {
+            setSelectedAnnotations(new Set());
+        }
+    };
 
     return (
         <ZoomProvider>
@@ -27,11 +48,16 @@ export const AnnotatorCanvas = ({ mediaItem, isFocussed }: { mediaItem: Item; is
 
                     {!isEmpty(mediaItem.annotations) && (
                         <View gridArea={'innercanvas'}>
-                            <SelectAnnotationProvider>
+                            <svg
+                                width={size.width}
+                                height={size.height}
+                                style={DEFAULT_ANNOTATION_STYLES}
+                                onClick={handleClickOutside}
+                            >
                                 <Annotations width={size.width} height={size.height} isFocussed={isFocussed} />
 
                                 <ToolManager />
-                            </SelectAnnotationProvider>
+                            </svg>
                         </View>
                     )}
                 </Grid>

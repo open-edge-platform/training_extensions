@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Flex, Grid, Item, TabList, TabPanels, Tabs, View } from '@geti/ui';
-import { Tag } from '@geti/ui/icons';
 import { Outlet, useLocation } from 'react-router';
 
 import { ReactComponent as BuildIcon } from './assets/icons/build-icon.svg';
 import { ReactComponent as LiveFeedIcon } from './assets/icons/live-feed-icon.svg';
 import { ReactComponent as Webhook } from './assets/icons/webhook.svg';
+import { useProjectIdentifier } from './hooks/use-project-identifier.hook';
 import { paths } from './router';
 
 const iconStyles = {
@@ -16,6 +16,8 @@ const iconStyles = {
 };
 
 const Header = () => {
+    const projectId = useProjectIdentifier();
+
     return (
         <View backgroundColor={'gray-300'} gridArea={'header'}>
             <Flex height='100%' alignItems={'center'} marginX='1rem' gap='size-200'>
@@ -32,8 +34,8 @@ const Header = () => {
                 >
                     <Item
                         textValue='Inference page showing live inference on your project'
-                        key={paths.inference.index({})}
-                        href={paths.inference.index({})}
+                        key={paths.project.inference({ projectId })}
+                        href={paths.project.inference({ projectId })}
                     >
                         <Flex alignItems='center' gap='size-100'>
                             <LiveFeedIcon style={iconStyles} />
@@ -42,8 +44,8 @@ const Header = () => {
                     </Item>
                     <Item
                         textValue='Data collection page to visualise your media items'
-                        key={paths.dataset.index({})}
-                        href={paths.dataset.index({})}
+                        key={paths.project.dataset({ projectId })}
+                        href={paths.project.dataset({ projectId })}
                     >
                         <Flex alignItems='center' gap='size-100'>
                             <BuildIcon style={iconStyles} />
@@ -52,22 +54,12 @@ const Header = () => {
                     </Item>
                     <Item
                         textValue='Models page to visualise your models'
-                        key={paths.models.index({})}
-                        href={paths.models.index({})}
+                        key={paths.project.models({ projectId })}
+                        href={paths.project.models({ projectId })}
                     >
                         <Flex alignItems='center' gap='size-100'>
                             <Webhook style={iconStyles} />
                             Models
-                        </Flex>
-                    </Item>
-                    <Item
-                        textValue='Labels page to visualise your labels'
-                        key={paths.labels.index({})}
-                        href={paths.labels.index({})}
-                    >
-                        <Flex alignItems='center' gap='size-100'>
-                            <Tag style={iconStyles} />
-                            Labels
                         </Flex>
                     </Item>
                 </TabList>
@@ -84,6 +76,7 @@ const getFirstPathSegment = (path: string): string => {
 
 export const Layout = () => {
     const { pathname } = useLocation();
+    const projectId = useProjectIdentifier();
 
     return (
         <Tabs aria-label='Header navigation' selectedKey={getFirstPathSegment(pathname)}>
@@ -102,13 +95,13 @@ export const Layout = () => {
                         <Item textValue='index' key={paths.project.index({})}>
                             <Outlet />
                         </Item>
-                        <Item textValue='inference' key={paths.inference.index({})}>
+                        <Item textValue='inference' key={paths.project.inference({ projectId })}>
                             <Outlet />
                         </Item>
-                        <Item textValue='dataset' key={paths.dataset.index({})}>
+                        <Item textValue='dataset' key={paths.project.dataset({ projectId })}>
                             <Outlet />
                         </Item>
-                        <Item textValue='models' key={paths.models.index({})}>
+                        <Item textValue='models' key={paths.project.models({ projectId })}>
                             <Outlet />
                         </Item>
                     </TabPanels>

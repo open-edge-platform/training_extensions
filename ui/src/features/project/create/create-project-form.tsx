@@ -7,13 +7,13 @@ import { Button, ButtonGroup, Divider, Flex, Form, Text } from '@geti/ui';
 import { useNavigate } from 'react-router';
 import { v4 as uuid } from 'uuid';
 
-import { $api } from '../../api/client';
-import { paths } from '../../router';
-import { LabelItemProps } from './label-selection/interface';
-import { LabelSelection } from './label-selection/label-selection.component';
+import { $api } from '../../../api/client';
+import { paths } from '../../../router';
+import { LabelItemProps } from '../label-selection/interface';
+import { LabelSelection } from '../label-selection/label-selection.component';
+import { TaskType } from '../task-selection/interface';
+import { TaskSelection } from '../task-selection/task-selection.component';
 import { ProjectName } from './project-name';
-import { TaskType } from './task-selection/interface';
-import { TaskSelection } from './task-selection/task-selection.component';
 
 import classes from './create-project-form.module.scss';
 
@@ -25,16 +25,17 @@ export const CreateProjectForm = () => {
     const [name, setName] = useState<string>('Project #1');
 
     const navigate = useNavigate();
-
     const createProjectMutation = $api.useMutation('post', '/api/projects');
 
     const createProject = (e: FormEvent) => {
         e.preventDefault();
 
+        const projectId = uuid();
+
         createProjectMutation.mutate(
             {
                 body: {
-                    id: uuid(),
+                    id: projectId,
                     task: {
                         task_type: selectedTask,
                         exclusive_labels: selectedTask === 'classification',
@@ -45,7 +46,7 @@ export const CreateProjectForm = () => {
             },
             {
                 onSuccess: () => {
-                    navigate(paths.inference.index({}));
+                    navigate(paths.project.inference({ projectId }));
                 },
             }
         );

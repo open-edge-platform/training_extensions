@@ -10,7 +10,14 @@ import click
 
 from app.db import get_db_session, migration_manager
 from app.db.schema import DatasetItemDB, LabelDB, ModelDB, PipelineDB, ProjectDB, SinkDB, SourceDB
-from app.schemas import ModelFormat, OutputFormat, SinkType, SourceType
+from app.schemas import (
+    DisconnectedSinkConfig,
+    DisconnectedSourceConfig,
+    ModelFormat,
+    OutputFormat,
+    SinkType,
+    SourceType,
+)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -87,6 +94,26 @@ def seed(with_model: bool, model_name: str) -> None:
             exclusive_labels=True,
         )
         pipeline = PipelineDB()
+
+        # Create default disconnected source and sink
+        disconnected_source_cfg = DisconnectedSourceConfig()
+        disconnected_source = SourceDB(
+            id="00000000-0000-0000-0000-000000000000",
+            name=disconnected_source_cfg.name,
+            source_type=disconnected_source_cfg.source_type,
+            config_data={},
+        )
+        disconnected_sink_cfg = DisconnectedSinkConfig()
+        disconnected_sink = SinkDB(
+            id="00000000-0000-0000-0000-000000000000",
+            name=disconnected_sink_cfg.name,
+            sink_type=disconnected_sink_cfg.sink_type,
+            output_formats=[],
+            config_data={},
+        )
+        db.add(disconnected_source)
+        db.add(disconnected_sink)
+
         project.pipeline = pipeline
         pipeline.source = SourceDB(
             id="f6b1ac22-e36c-4b36-9a23-62b0881e4223",

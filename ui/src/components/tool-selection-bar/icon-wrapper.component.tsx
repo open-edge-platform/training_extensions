@@ -5,7 +5,7 @@ import { ReactNode } from 'react';
 
 import { clsx } from 'clsx';
 
-import classes from './tool-selection-bar.module.scss';
+import classes from './icon-wrapper.module.scss';
 
 export const IconWrapper = ({
     children,

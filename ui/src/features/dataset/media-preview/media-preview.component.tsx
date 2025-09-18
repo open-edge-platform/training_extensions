@@ -5,9 +5,10 @@ import { useState } from 'react';
 
 import { Button, ButtonGroup, Content, Dialog, Divider, Grid, Heading, ToggleButton, View } from '@geti/ui';
 
-import { ToolSelectionBar } from '../../../components/tool-selection-bar/tool-selection-bar.component';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas';
 import { AnnotatorProvider } from '../../annotator/annotator-provider.component';
+import { SelectAnnotationProvider } from '../../annotator/select-annotation-provider.component';
+import { ToolSelectionBar } from '../../annotator/tools/tool-selection-bar.component';
 import { response } from '../mock-response';
 
 type Item = (typeof response.items)[number];
@@ -38,7 +39,9 @@ export const MediaPreview = ({ mediaItem, close }: { mediaItem: Item; close: () 
                             </View>
 
                             <View gridArea={'canvas'}>
-                                <AnnotatorCanvas mediaItem={mediaItem} isFocussed={isFocussed} />
+                                <SelectAnnotationProvider>
+                                    <AnnotatorCanvas mediaItem={mediaItem} isFocussed={isFocussed} />
+                                </SelectAnnotationProvider>
                             </View>
 
                             <View gridArea={'aside'}>
