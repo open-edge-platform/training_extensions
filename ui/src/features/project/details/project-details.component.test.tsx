@@ -22,7 +22,18 @@ describe('ProjectDetails', () => {
                 ]);
             }),
             http.get('/api/models', () => {
-                return HttpResponse.json([{ id: '1', name: 'Test-model', format: 'onnx' }]);
+                return HttpResponse.json([
+                    {
+                        id: '1',
+                        architecture: 'Object_Detection_TestModel',
+                        training_info: {
+                            status: 'successful',
+                            label_schema_revision: {},
+                            configuration: {}
+                        },
+                        files_deleted: false,
+                    },
+                ]);
             }),
             http.get('/api/sinks', () => {
                 return HttpResponse.json([
