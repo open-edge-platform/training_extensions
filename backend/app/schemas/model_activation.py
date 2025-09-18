@@ -14,7 +14,9 @@ class ModelActivationState(BaseModel):
     @classmethod
     def validate_active_model(cls, v, info):  # noqa: ANN001
         if v is not None and "available_models" in info.data and v not in info.data["available_models"]:
-            raise ValueError(f"active_model '{v}' must be one of the available_models: {info.data['available_models']}")
+            raise ValueError(
+                f"active_model_id '{v}' must be one of the available_models: {info.data['available_models']}"
+            )
         return v
 
     def to_json_dict(self) -> dict:
