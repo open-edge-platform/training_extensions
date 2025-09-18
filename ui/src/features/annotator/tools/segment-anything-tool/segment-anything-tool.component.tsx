@@ -8,6 +8,7 @@ import { clampPointBetweenImage, isPointInShape, pointInRectangle } from '@geti/
 import { useZoom } from '../../../../components/zoom/zoom';
 import { AnnotationShape } from '../../annotations/annotation-shape.component';
 import { MaskAnnotations } from '../../annotations/mask-annotations.component';
+import { useAnnotator } from '../../annotator-provider.component';
 import { Annotation, Point, RegionOfInterest, Shape } from '../../types';
 import { isRightButton } from '../../utils';
 import { getRelativePoint, removeOffLimitPoints } from '../utils';
@@ -34,11 +35,6 @@ const isPositivePoint = (point: Point, shapes: Shape[], isRightClick: boolean, r
 // the user's cpu with too many decoding requests
 const THROTTLE_TIME = 150;
 
-const selectedMediaItem = {
-    identifier: 'id',
-    image: new ImageData(100, 100),
-};
-
 const roi: RegionOfInterest = {
     x: 0,
     y: 0,
@@ -60,8 +56,9 @@ const SELECT_ANNOTATION_STYLES = {
 
 export const SegmentAnythingTool = () => {
     const zoom = useZoom();
+    const { mediaItem } = useAnnotator();
 
-    const clampPoint = clampPointBetweenImage(selectedMediaItem.image);
+    const clampPoint = clampPointBetweenImage(new ImageData(mediaItem.width, mediaItem.height));
 
     const ref = useRef<SVGRectElement>(null);
 
@@ -173,12 +170,7 @@ export const SegmentAnythingTool = () => {
                     : `url("/icons/selection.svg") 8 8, auto`,
             }}
         >
-            <MaskAnnotations
-                isEnabled
-                annotations={annotations}
-                width={selectedMediaItem.image.width}
-                height={selectedMediaItem.image.height}
-            >
+            <MaskAnnotations isEnabled annotations={annotations} width={mediaItem.width} height={mediaItem.height}>
                 {annotations.map((annotation, idx) => {
                     return (
                         <g

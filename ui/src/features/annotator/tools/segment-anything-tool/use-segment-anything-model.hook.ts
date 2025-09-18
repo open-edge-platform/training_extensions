@@ -7,14 +7,11 @@ import { EncodingOutput, SegmentAnythingModel } from '@geti/smart-tools/segment-
 import { useQuery } from '@tanstack/react-query';
 import { Remote } from 'comlink';
 
+import { useAnnotator } from '../../annotator-provider.component';
 import { useSegmentAnythingWorkerQuery } from '../../hooks/use-segment-anything.hook';
+import { MediaItem } from '../../types';
 import { convertToolShapeToGetiShape } from '../utils';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';
-
-const selectedMediaItem = {
-    identifier: 'id',
-    image: new ImageData(100, 100),
-};
 
 const useDecodingFn = (model: Remote<SegmentAnythingModel> | undefined, encoding: EncodingOutput | undefined) => {
     const shapeType = 'polygon';
@@ -47,9 +44,9 @@ const useDecodingFn = (model: Remote<SegmentAnythingModel> | undefined, encoding
     };
 };
 
-const useEncodingQuery = (model: Remote<SegmentAnythingModel> | undefined, mediaItem: unknown) => {
+const useEncodingQuery = (model: Remote<SegmentAnythingModel> | undefined, mediaItem: MediaItem | undefined) => {
     return useQuery({
-        queryKey: ['segment-anything-model', 'encoding', selectedMediaItem?.identifier],
+        queryKey: ['segment-anything-model', 'encoding', mediaItem?.id],
         queryFn: async () => {
             if (model === undefined) {
                 throw new Error('Model not yet initialized');
@@ -59,7 +56,7 @@ const useEncodingQuery = (model: Remote<SegmentAnythingModel> | undefined, media
                 throw new Error('Media item not selected');
             }
 
-            return await model.processEncoder(selectedMediaItem.image);
+            return await model.processEncoder(new ImageData(mediaItem.width, mediaItem.height));
         },
         staleTime: Infinity,
         gcTime: 3600 * 15,
@@ -78,10 +75,8 @@ const useSegmentAnythingWorker = (algorithmType: 'SEGMENT_ANYTHING_DECODER' | 'S
             setModelIsLoading(true);
 
             if (worker) {
-                console.log(worker);
                 const modelInstance = worker.data;
 
-                console.log('modelInstance: ', modelInstance);
                 if (modelInstance) {
                     await modelInstance.init(algorithmType);
 
@@ -93,7 +88,6 @@ const useSegmentAnythingWorker = (algorithmType: 'SEGMENT_ANYTHING_DECODER' | 'S
         };
 
         if (worker && model === undefined && !modelIsLoading) {
-            console.log('loading worker');
             loadWorker();
         }
     }, [worker, modelIsLoading, algorithmType, model]);
@@ -104,12 +98,13 @@ const useSegmentAnythingWorker = (algorithmType: 'SEGMENT_ANYTHING_DECODER' | 'S
 export const useSegmentAnythingModel = () => {
     const encoderModel = useSegmentAnythingWorker('SEGMENT_ANYTHING_ENCODER');
     const decoderModel = useSegmentAnythingWorker('SEGMENT_ANYTHING_DECODER');
+    const { mediaItem } = useAnnotator();
     const isLoading = encoderModel === undefined || decoderModel === undefined;
 
-    const encodingQuery = useEncodingQuery(encoderModel, selectedMediaItem);
+    const encodingQuery = useEncodingQuery(encoderModel, mediaItem);
     const decodingQueryFn = useDecodingFn(decoderModel, encodingQuery.data);
 
-    useEncodingQuery(encoderModel, encodingQuery.isFetching ? undefined : selectedMediaItem);
+    useEncodingQuery(encoderModel, encodingQuery.isFetching ? undefined : mediaItem);
 
     return { isLoading, encodingQuery, decodingQueryFn };
 };

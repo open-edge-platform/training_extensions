@@ -8,6 +8,7 @@ import { toast } from '@geti/ui';
 import { useQueryClient, UseQueryResult } from '@tanstack/react-query';
 import { isEmpty } from 'lodash-es';
 
+import { useAnnotator } from '../../annotator-provider.component';
 import { Shape } from '../../types';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';
 import { useDecodingMutation, useDecodingQuery, useDecodingQueryOptions } from './use-decoding-query.hook';
@@ -39,6 +40,8 @@ export const SegmentAnythingStateProvider = ({ children }: { children: ReactNode
         points: [],
     });
     const [_, setIsDrawing] = useState(false);
+
+    const { addAnnotation } = useAnnotator();
 
     const queryClient = useQueryClient();
     const { encodingQuery, decodingQueryFn, isLoading } = useSegmentAnythingModel();
@@ -81,8 +84,7 @@ export const SegmentAnythingStateProvider = ({ children }: { children: ReactNode
         }
 
         if (hasResults) {
-            // TODO: Add callback to add the shapes to the canvas
-            // addShapes(outputShapes);
+            outputShapes.map((shape) => addAnnotation(shape));
         }
 
         reset();
