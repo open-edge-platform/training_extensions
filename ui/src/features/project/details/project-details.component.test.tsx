@@ -29,7 +29,7 @@ describe('ProjectDetails', () => {
                         training_info: {
                             status: 'successful',
                             label_schema_revision: {},
-                            configuration: {}
+                            configuration: {},
                         },
                         files_deleted: false,
                     },
@@ -63,7 +63,7 @@ describe('ProjectDetails', () => {
         // Content
         expect(await screen.findByText('video_file')).toBeInTheDocument();
 
-        expect(await screen.findByText('Test-model')).toBeInTheDocument();
+        expect(await screen.findByText('Object_Detection_TestModel')).toBeInTheDocument();
 
         expect(await screen.findByText('data/sink')).toBeInTheDocument();
         expect(await screen.findByText('image_original,image_with_predictions,predictions')).toBeInTheDocument();
