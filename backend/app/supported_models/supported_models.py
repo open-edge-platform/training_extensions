@@ -5,9 +5,8 @@ import os
 from functools import cache
 from importlib import resources
 
-from model_manifest import ModelManifest, NullModelManifest
-
 from . import manifests
+from .model_manifest import ModelManifest, NullModelManifest
 from .parser import parse_manifest
 
 

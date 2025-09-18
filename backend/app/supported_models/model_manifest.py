@@ -5,8 +5,10 @@
 from enum import Enum
 from functools import cached_property
 
-from default_models import DefaultCategory, DefaultModels
-from hyperparameters import (
+from pydantic import BaseModel, ConfigDict, Field, computed_field
+
+from .default_models import DefaultCategory, DefaultModels
+from .hyperparameters import (
     AugmentationParameters,
     DatasetPreparationParameters,
     EarlyStopping,
@@ -14,7 +16,6 @@ from hyperparameters import (
     Hyperparameters,
     TrainingHyperParameters,
 )
-from pydantic import BaseModel, ConfigDict, Field, computed_field
 
 
 class GPUMaker(str, Enum):

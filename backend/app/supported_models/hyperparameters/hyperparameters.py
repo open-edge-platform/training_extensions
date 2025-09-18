@@ -2,10 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from pydantic import Field, model_validator
-from utils import partial_model
 
 from .augmentation import AugmentationParameters
 from .base_model_no_extra import BaseModelNoExtra
+from .utils import partial_model
 
 
 class DatasetPreparationParameters(BaseModelNoExtra):
