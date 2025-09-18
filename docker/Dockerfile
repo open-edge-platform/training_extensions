@@ -13,7 +13,8 @@ ENV PYTHONPATH=/app
 
 # Install system dependencies required for OpenCV
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgl1-mesa-glx=22.3.6-1+deb12u1 \
+    libgl1 \
+    libglx-mesa0= \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
