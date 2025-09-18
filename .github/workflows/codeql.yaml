@@ -16,10 +16,10 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event_name }} == 'pull_request'
     outputs:
-      run_backend: "${{ steps.prepare_outputs.outputs.run_backend }}"
-      run_ui: "${{ steps.prepare_outputs.outputs.run_ui }}"
+      run_python: "${{ steps.prepare_outputs.outputs.run_python }}"
+      run_javascript_typescript: "${{ steps.prepare_outputs.outputs.run_javascript_typescript }}"
       run_actions: "${{ steps.prepare_outputs.outputs.run_actions }}"
-      run_docs: "${{ steps.prepare_outputs.outputs.run_docs }}"
+      run_rust: "${{ steps.prepare_outputs.outputs.run_rust }}"
     steps:
       - name: Checkout repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -31,36 +31,37 @@ jobs:
         uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c # v46.0.5
         with:
           files_yaml: |
-            backend:
+            python:
               - backend/**
               - lib/**
-            ui:
+              - docker/**
+            rust:
+              - ui/**
+            javascript-typescript:
               - ui/**
             actions:
               - .github/**
-            docs:
-              - docs/**
 
       - name: Prepare outputs
         id: prepare_outputs
         env:
-          BACKEND_ANY_CHANGED: ${{ steps.changed-files-yaml.outputs.backend_any_changed }}
-          UI_ANY_CHANGED: ${{ steps.changed-files-yaml.outputs.ui_any_changed }}
+          PYTHON_ANY_CHANGED: ${{ steps.changed-files-yaml.outputs.python_any_changed }}
+          JAVASCRIPT_ANY_CHANGED: ${{ steps.changed-files-yaml.outputs.javascript-typescript_any_changed }}
           ACTIONS_ANY_CHANGED: ${{ steps.changed-files-yaml.outputs.actions_any_changed }}
-          DOCS_ANY_CHANGED: ${{ steps.changed-files-yaml.outputs.docs_any_changed }}
+          RUST_ANY_CHANGED: ${{ steps.changed-files-yaml.outputs.rust_any_changed }}
         run: |
-          echo "BACKEND_ANY_CHANGED=$BACKEND_ANY_CHANGED"
-          if [ "$BACKEND_ANY_CHANGED" = "true" ]; then
-            echo "run_backend=true" >> "$GITHUB_OUTPUT"
+          echo "PYTHON_ANY_CHANGED=$PYTHON_ANY_CHANGED"
+          if [ "$PYTHON_ANY_CHANGED" = "true" ]; then
+            echo "run_python=true" >> "$GITHUB_OUTPUT"
           else
-            echo "run_backend=false" >> "$GITHUB_OUTPUT"
+            echo "run_python=false" >> "$GITHUB_OUTPUT"
           fi
 
-          echo "UI_ANY_CHANGED=$UI_ANY_CHANGED"
-          if [ "$UI_ANY_CHANGED" = "true" ]; then
-            echo "run_ui=true" >> "$GITHUB_OUTPUT"
+          echo "JAVASCRIPT_ANY_CHANGED=$JAVASCRIPT_ANY_CHANGED"
+          if [ "$JAVASCRIPT_ANY_CHANGED" = "true" ]; then
+            echo "run_javascript_typescript=true" >> "$GITHUB_OUTPUT"
           else
-            echo "run_ui=false" >> "$GITHUB_OUTPUT"
+            echo "run_javascript_typescript=false" >> "$GITHUB_OUTPUT"
           fi
 
           echo "ACTIONS_ANY_CHANGED=$ACTIONS_ANY_CHANGED"
@@ -70,11 +71,11 @@ jobs:
             echo "run_actions=false" >> "$GITHUB_OUTPUT"
           fi
 
-          echo "DOCS_ANY_CHANGED=$DOCS_ANY_CHANGED"
-          if [ "$DOCS_ANY_CHANGED" = "true" ]; then
-            echo "run_docs=true" >> "$GITHUB_OUTPUT"
+          echo "RUST_ANY_CHANGED=$RUST_ANY_CHANGED"
+          if [ "$RUST_ANY_CHANGED" = "true" ]; then
+            echo "run_rust=true" >> "$GITHUB_OUTPUT"
           else
-            echo "run_docs=false" >> "$GITHUB_OUTPUT"
+            echo "run_rust=false" >> "$GITHUB_OUTPUT"
           fi
 
   analyze:
@@ -92,13 +93,13 @@ jobs:
             run: ${{ needs.check_paths.outputs.run_actions || 'true' }}
           - language: python
             build-mode: none
-            run: ${{ needs.check_paths.outputs.run_backend || 'true' }}
+            run: ${{ needs.check_paths.outputs.run_python || 'true' }}
           - language: javascript-typescript
             build-mode: none
-            run: ${{ needs.check_paths.outputs.run_ui || 'true' }}
+            run: ${{ needs.check_paths.outputs.run_javascript_typescript || 'true' }}
           - language: rust
             build-mode: none
-            run: ${{ needs.check_paths.outputs.run_docs || 'true' }}
+            run: ${{ needs.check_paths.outputs.run_rust || 'true' }}
 
     steps:
       - name: Checkout repository
