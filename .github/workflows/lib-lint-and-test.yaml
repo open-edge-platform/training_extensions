@@ -96,6 +96,10 @@ jobs:
             tox-env: "py311"
     name: Unit-Test-with-Python${{ matrix.python-version }}
     steps:
+      - name: Runner cleanup
+        uses: open-edge-platform/geti-ci/actions/cleanup-runner@6bd3a5a348cd0028b6c4b575ac14ce4529feeb0b #FIXME
+        with:
+          type: "initial"
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
