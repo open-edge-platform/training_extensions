@@ -11,20 +11,95 @@ on:
 permissions: {}
 
 jobs:
+  check_paths:
+    name: Check which language should be analyzed by CodeQL
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name }} == 'pull_request'
+    outputs:
+      run_python: "${{ steps.prepare_outputs.outputs.run_python }}"
+      run_javascript_typescript: "${{ steps.prepare_outputs.outputs.run_javascript_typescript }}"
+      run_actions: "${{ steps.prepare_outputs.outputs.run_actions }}"
+      run_rust: "${{ steps.prepare_outputs.outputs.run_rust }}"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+
+      - name: Get all paths that should trigger the workflow
+        id: changed-files-yaml
+        uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c # v46.0.5
+        with:
+          files_yaml: |
+            python:
+              - backend/**
+              - lib/**
+              - docker/**
+            rust:
+              - ui/**
+            javascript-typescript:
+              - ui/**
+            actions:
+              - .github/**
+
+      - name: Prepare outputs
+        id: prepare_outputs
+        env:
+          PYTHON_ANY_CHANGED: ${{ steps.changed-files-yaml.outputs.python_any_changed }}
+          JAVASCRIPT_ANY_CHANGED: ${{ steps.changed-files-yaml.outputs.javascript-typescript_any_changed }}
+          ACTIONS_ANY_CHANGED: ${{ steps.changed-files-yaml.outputs.actions_any_changed }}
+          RUST_ANY_CHANGED: ${{ steps.changed-files-yaml.outputs.rust_any_changed }}
+        run: |
+          echo "PYTHON_ANY_CHANGED=$PYTHON_ANY_CHANGED"
+          if [ "$PYTHON_ANY_CHANGED" = "true" ]; then
+            echo "run_python=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run_python=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "JAVASCRIPT_ANY_CHANGED=$JAVASCRIPT_ANY_CHANGED"
+          if [ "$JAVASCRIPT_ANY_CHANGED" = "true" ]; then
+            echo "run_javascript_typescript=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run_javascript_typescript=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "ACTIONS_ANY_CHANGED=$ACTIONS_ANY_CHANGED"
+          if [ "$ACTIONS_ANY_CHANGED" = "true" ]; then
+            echo "run_actions=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run_actions=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "RUST_ANY_CHANGED=$RUST_ANY_CHANGED"
+          if [ "$RUST_ANY_CHANGED" = "true" ]; then
+            echo "run_rust=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run_rust=false" >> "$GITHUB_OUTPUT"
+          fi
+
   analyze:
     name: Analyze (${{ matrix.language }})
     runs-on: ubuntu-latest
     permissions:
       security-events: write # required to publish sarif
-
+    needs: check_paths
     strategy:
       fail-fast: false
       matrix:
         include:
           - language: actions
             build-mode: none
+            run: ${{ needs.check_paths.outputs.run_actions || 'true' }}
           - language: python
             build-mode: none
+            run: ${{ needs.check_paths.outputs.run_python || 'true' }}
+          - language: javascript-typescript
+            build-mode: none
+            run: ${{ needs.check_paths.outputs.run_javascript_typescript || 'true' }}
+          - language: rust
+            build-mode: none
+            run: ${{ needs.check_paths.outputs.run_rust || 'true' }}
 
     steps:
       - name: Checkout repository
@@ -35,6 +110,7 @@ jobs:
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
         uses: github/codeql-action/init@96f518a34f7a870018057716cc4d7a5c014bd61c # v3.29.10
+        if: ${{ matrix.run == 'true' }}
         with:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
@@ -42,5 +118,6 @@ jobs:
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@96f518a34f7a870018057716cc4d7a5c014bd61c # v3.29.10
+        if: ${{ matrix.run == 'true' }}
         with:
           category: "/language:${{matrix.language}}"
