@@ -4,11 +4,11 @@
 import { dimensionValue, Flex } from '@geti/ui';
 
 import { Gallery } from '../../features/dataset/gallery/gallery.component';
-import { useGetItems } from '../../features/dataset/gallery/use-get-items.hook';
+import { useGetDatasetItems } from '../../features/dataset/gallery/use-get-dataset-items.hook';
 import { Toolbar } from '../../features/dataset/toolbar/toolbar.component';
 
 export const Dataset = () => {
-    const { items, hasNextPage, isFetchingNextPage, fetchNextPage } = useGetItems();
+    const { items, hasNextPage, isFetchingNextPage, fetchNextPage } = useGetDatasetItems();
 
     return (
         <Flex
