@@ -8,7 +8,7 @@ import sys
 
 import click
 
-from app.db import get_db_session, migration_manager
+from app.db import MigrationManager, get_db_session
 from app.db.schema import DatasetItemDB, LabelDB, ModelDB, PipelineDB, ProjectDB, SinkDB, SourceDB
 from app.schemas import (
     DisconnectedSinkConfig,
@@ -18,9 +18,12 @@ from app.schemas import (
     SinkType,
     SourceType,
 )
+from app.settings import get_settings
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+settings = get_settings()
+migration_manager = MigrationManager(settings)
 
 
 @click.group()
