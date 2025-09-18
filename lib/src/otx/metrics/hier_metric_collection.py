@@ -1,83 +1,65 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""
-A ruff-friendly, single-file collection of hierarchical classification metrics
-implemented as ``torchmetrics.Metric`` modules and bundled behind a
-``MetricCallable``—mirroring the style in this project.
+"""A ruff-friendly, single-file collection of hierarchical classification metrics.
 
 Exports
 -------
-- :class:`LeafAccuracy` – macro-averaged accuracy at the leaf level.
-- :class:`FullPathAccuracy` – exact match across all hierarchy levels.
-- :class:`InconsistentPathRatio` – fraction of *predicted* paths violating the tree.
-- :class:`WeightedHierarchicalPrecision` – label-count–weighted macro precision over levels.
-- :func:`hierMetricCollectionCallable` – returns a ``torchmetrics.MetricCollection``
-  containing the above metrics.
-- :data:`hierMetricCollection` – ``MetricCallable`` alias for integration.
+- :class:`LeafAccuracy` - macro-averaged accuracy at the leaf level.
+- :class:`FullPathAccuracy` - exact match across all hierarchy levels.
+- :class:`InconsistentPathRatio` - fraction of *predicted* paths violating the tree.
+- :class:`WeightedHierarchicalPrecision` - label-count-weighted macro precision over levels.
+- :func:`hierMetricCollectionCallable` - returns a ``torchmetrics.MetricCollection`` containing the above metrics.
+- :data:`hierMetricCollection` - ``MetricCallable`` alias for integration.
 
-All metrics are compatible with OTX-style :class:`otx.types.label.LabelInfo`.
-
-Examples
---------
->>> from otx.types.label import LabelInfo  
->>> li = LabelInfo( 
-...     label_groups=[["Boeing","Airbus"],["737","A320"],["737-800","737-900","A320-200"]],
-...     label_tree_edges=[("737","Boeing"),("A320","Airbus"),("737-800","737"),("737-900","737"),("A320-200","A320")],
-...     head_idx_to_logits_range={0:(0,2), 1:(2,4), 2:(4,7)},
-... )
->>> from lib.metrics.hier_metric_collection import hierMetricCollectionCallable  
->>> mc = hierMetricCollectionCallable(li) 
+All metrics are compatible with OTX-style :class:`otx.types.label.HLabelInfo`.
 
 """
+
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Dict, Iterable, List, Mapping, MutableMapping, Optional, Sequence, Tuple
+from typing import Callable
 
 import torch
 from torch import nn
 from torchmetrics import Metric, MetricCollection
 from torchmetrics.classification import Precision as TorchPrecision
 
-from otx.metrics.types import MetricCallable
-from otx.types.label import LabelInfo
+from otx.types.label import HLabelInfo
 
 __all__ = [
     "LeafAccuracy",
     "FullPathAccuracy",
     "InconsistentPathRatio",
     "WeightedHierarchicalPrecision",
-    "hierMetricCollectionCallable",
-    "hierMetricCollection",
+    "HierMetricCollection",
+    "hier_metric_collection_callable",
 ]
 
+_INVALID_SHAPE_MSG = "preds and target must have the same shape"
+_INVALID_2D_SHAPE = "preds must be 2D (N, L)"
 
-def _build_level_idx_to_name(label_groups: Sequence[Sequence[str]]) -> Dict[Tuple[int, int], str]:
+
+def _build_level_idx_to_name(label_groups: list[list[str]]) -> dict[tuple[int, int], str]:
     """Create a mapping ``(level, index) -> label_name``.
 
     Args:
         label_groups: ``L`` lists of label names per hierarchy level.
     """
-    out: Dict[Tuple[int, int], str] = {}
+    out: dict[tuple[int, int], str] = {}
     for lvl, labels in enumerate(label_groups):
         for idx, name in enumerate(labels):
             out[(lvl, idx)] = name
     return out
 
 
-def _make_child_to_parent(edges: Iterable[Tuple[str, str]]) -> Dict[str, str]:
-    """Create a mapping ``child -> parent`` from edges.
-
-    Notes
-    -----
-    In this codebase, ``LabelInfo.label_tree_edges`` may be provided as
-    ``(child, parent)`` pairs. This helper normalizes to a ``child->parent`` map.
-    """
-    c2p: Dict[str, str] = {}
+def _make_child_to_parent(edges: list[list[str]]) -> dict[str, str]:
+    """Create a mapping ``child -> parent`` from edges."""
+    c2p = {}
     for child, parent in edges:
         if child in c2p:  # defensive programming in case of duplicates
-            raise ValueError(f"duplicate child in tree edges: {child!r}")
+            error_msg = f"duplicate child: {child}"
+            raise ValueError(error_msg)
         c2p[child] = parent
     return c2p
 
@@ -85,6 +67,7 @@ def _make_child_to_parent(edges: Iterable[Tuple[str, str]]) -> Dict[str, str]:
 # ---------------------------------------------------------------------------
 # Metrics
 # ---------------------------------------------------------------------------
+
 
 class LeafAccuracy(Metric):
     """Macro-averaged accuracy at the leaf (last) group.
@@ -94,7 +77,7 @@ class LeafAccuracy(Metric):
 
     full_state_update: bool = False
 
-    def __init__(self, label_info: LabelInfo) -> None:  # noqa: D401
+    def __init__(self, label_info: HLabelInfo) -> None:
         super().__init__()
         self.label_info = label_info
 
@@ -113,6 +96,7 @@ class LeafAccuracy(Metric):
         )
 
     def update(self, preds: torch.Tensor, target: torch.Tensor) -> None:  # type: ignore[override]
+        """Update state with predictions and targets."""
         pred_leaf = preds[:, -1]
         target_leaf = target[:, -1]
         for cls in range(self.num_leaf_classes):
@@ -121,6 +105,7 @@ class LeafAccuracy(Metric):
             self.correct_per_class[cls] += (pred_leaf[mask] == cls).sum()
 
     def compute(self) -> torch.Tensor:  # type: ignore[override]
+        """Compute the leaf accuracy metric."""
         total = self.total_per_class.clamp_min_(1)
         per_class_acc = self.correct_per_class.float() / total.float()
         return per_class_acc.mean()
@@ -131,19 +116,21 @@ class FullPathAccuracy(Metric):
 
     full_state_update: bool = False
 
-    def __init__(self) -> None:  # noqa: D401
+    def __init__(self) -> None:
         super().__init__()
         self.add_state("correct", default=torch.tensor(0, dtype=torch.long), dist_reduce_fx="sum")
         self.add_state("total", default=torch.tensor(0, dtype=torch.long), dist_reduce_fx="sum")
 
     def update(self, preds: torch.Tensor, target: torch.Tensor) -> None:  # type: ignore[override]
+        """Update state with predictions and targets."""
         if preds.shape != target.shape:
-            raise ValueError("preds and target must have the same shape (N, L).")
+            raise ValueError(_INVALID_SHAPE_MSG)
         matches = (preds == target).all(dim=1)
         self.correct += matches.sum()
         self.total += preds.size(0)
 
     def compute(self) -> torch.Tensor:  # type: ignore[override]
+        """Compute the full path accuracy metric."""
         return self.correct.float() / self.total.clamp_min(1).float()
 
 
@@ -152,7 +139,7 @@ class InconsistentPathRatio(Metric):
 
     full_state_update: bool = False
 
-    def __init__(self, label_info: LabelInfo) -> None:  # noqa: D401
+    def __init__(self, label_info: HLabelInfo) -> None:
         super().__init__()
         self.level_idx_to_name = _build_level_idx_to_name(label_info.label_groups)
         self.child_to_parent = _make_child_to_parent(label_info.label_tree_edges)
@@ -160,12 +147,13 @@ class InconsistentPathRatio(Metric):
         self.add_state("total", default=torch.tensor(0, dtype=torch.long), dist_reduce_fx="sum")
 
     def update(self, preds: torch.Tensor, target: torch.Tensor) -> None:  # type: ignore[override]
+        """Update state with predictions."""
         if preds.ndim != 2:
-            raise ValueError("preds must be 2D (N, L).")
-        n, L = preds.shape
+            raise ValueError(_INVALID_2D_SHAPE)
+        n, level = preds.shape
         for i in range(n):
             ok = True
-            for lvl in range(1, L):
+            for lvl in range(1, level):
                 child = self.level_idx_to_name[(lvl, int(preds[i, lvl]))]
                 parent = self.level_idx_to_name[(lvl - 1, int(preds[i, lvl - 1]))]
                 if self.child_to_parent.get(child) != parent:
@@ -176,11 +164,12 @@ class InconsistentPathRatio(Metric):
         self.total += n
 
     def compute(self) -> torch.Tensor:  # type: ignore[override]
+        """Compute the inconsistent path ratio error metric."""
         return self.invalid.float() / self.total.clamp_min(1).float()
 
 
 class WeightedHierarchicalPrecision(Metric):
-    """Label-count–weighted macro precision across hierarchy levels.
+    """Label-count-weighted macro precision across hierarchy levels.
 
     At each level ``l``, computes macro precision and aggregates with weight
     ``|labels_l| / sum_k |labels_k|``. Inputs are class indices ``(N, L)``.
@@ -188,9 +177,9 @@ class WeightedHierarchicalPrecision(Metric):
 
     full_state_update: bool = False
 
-    def __init__(self, label_info: LabelInfo) -> None:  # noqa: D401
+    def __init__(self, label_info: HLabelInfo) -> None:
         super().__init__()
-        self.level_sizes: List[int] = []
+        self.level_sizes: list[int] = []
         self.level_metrics = nn.ModuleList()
         for lvl in sorted(label_info.head_idx_to_logits_range):
             lo, hi = label_info.head_idx_to_logits_range[lvl]
@@ -201,26 +190,28 @@ class WeightedHierarchicalPrecision(Metric):
             )
 
     def update(self, preds: torch.Tensor, target: torch.Tensor) -> None:  # type: ignore[override]
+        """Update state with predictions and targets."""
         # Each column corresponds to a level.
         for lvl, metric in enumerate(self.level_metrics):
             metric.update(preds[:, lvl], target[:, lvl])
 
     def compute(self) -> torch.Tensor:  # type: ignore[override]
+        """Compute the wAP."""
         total = float(sum(self.level_sizes))
         weights = [s / total for s in self.level_sizes]
         per_level = [metric.compute() for metric in self.level_metrics]
-        out = torch.stack([w * v for w, v in zip(weights, per_level)]).sum()
-        return out
+        return torch.stack([w * v for w, v in zip(weights, per_level)]).sum()
 
     def reset(self) -> None:  # type: ignore[override]
+        """Reset the metric calculation."""
         for metric in self.level_metrics:
             metric.reset()
 
 
-def hierMetricCollectionCallable(label_info: LabelInfo) -> MetricCollection:
+def hier_metric_collection_callable(label_info: HLabelInfo) -> MetricCollection:
     """Create a ``MetricCollection`` with all hierarchical metrics.
 
-    Returns
+    Returns:
     -------
     torchmetrics.MetricCollection
         Collection with keys: ``leaf_accuracy``, ``full_path_accuracy``,
@@ -235,4 +226,7 @@ def hierMetricCollectionCallable(label_info: LabelInfo) -> MetricCollection:
         },
     )
 
-hierMetricCollection: MetricCallable = hierMetricCollectionCallable
+
+HMetricCallable = Callable[[HLabelInfo], Metric | MetricCollection]
+
+HierMetricCollection: HMetricCallable = hier_metric_collection_callable

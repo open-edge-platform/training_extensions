@@ -7,14 +7,15 @@ import torch
 from torchmetrics.classification import Precision as TorchPrecision
 
 from otx.metrics.hier_metric_collection import (
-    LeafAccuracy,
     FullPathAccuracy,
+    HierMetricCollectionCallable,
     InconsistentPathRatio,
+    LeafAccuracy,
     WeightedHierarchicalPrecision,
-    hierMetricCollectionCallable,
 )
 
-@pytest.fixture
+
+@pytest.fixture()
 def label_info_stub():
     """Minimal stub that mimics the LabelInfo attributes used by our metrics.
 
@@ -42,30 +43,35 @@ def label_info_stub():
     return li
 
 
-@pytest.fixture
+@pytest.fixture()
 def sample_tensors():
     """Return (target, preds) shaped (N, L) with class indices.
 
     N=4, L=3 (3 hierarchy levels)
     """
     # targets (true) indices per level
-    target = torch.tensor([
-        [0, 0, 0],  # Boeing, 737, 737-800
-        [1, 1, 2],  # Airbus, A320, A320-200
-        [0, 0, 1],  # Boeing, 737, 737-900
-        [1, 1, 3],  # Airbus, A320, A320-neo
-    ])
+    target = torch.tensor(
+        [
+            [0, 0, 0],  # Boeing, 737, 737-800
+            [1, 1, 2],  # Airbus, A320, A320-200
+            [0, 0, 1],  # Boeing, 737, 737-900
+            [1, 1, 3],  # Airbus, A320, A320-neo
+        ]
+    )
     # preds: 2 exact matches (rows 1 and 2); two leaf errors
-    preds = torch.tensor([
-        [0, 0, 1],  # leaf wrong
-        [1, 1, 2],  # exact
-        [0, 0, 1],  # exact
-        [1, 1, 0],  # leaf wrong
-    ])
+    preds = torch.tensor(
+        [
+            [0, 0, 1],  # leaf wrong
+            [1, 1, 2],  # exact
+            [0, 0, 1],  # exact
+            [1, 1, 0],  # leaf wrong
+        ]
+    )
     return target, preds
 
 
 # ------------------------------ LeafAccuracy --------------------------------
+
 
 def test_leaf_accuracy_macro_mean(label_info_stub, sample_tensors):
     target, preds = sample_tensors
@@ -90,7 +96,6 @@ def test_leaf_accuracy_macro_mean(label_info_stub, sample_tensors):
 
 
 # --------------------------- FullPathAccuracy -------------------------------
-
 def test_full_path_accuracy(sample_tensors):
     target, preds = sample_tensors
     metric = FullPathAccuracy()
@@ -101,13 +106,14 @@ def test_full_path_accuracy(sample_tensors):
 
 
 # ------------------------ Inconsistent Path Ratio ---------------------------
-
 def test_inconsistent_path_ratio_inconsistent(label_info_stub):
     # Make structurally invalid predictions (wrong parent chain)
-    preds_bad = torch.tensor([
-        [0, 1, 0],  # 737 belongs to Boeing, not Airbus
-        [1, 0, 3],  # A320 belongs to Airbus, not Boeing
-    ])
+    preds_bad = torch.tensor(
+        [
+            [0, 1, 0],  # 737 belongs to Boeing, not Airbus
+            [1, 0, 3],  # A320 belongs to Airbus, not Boeing
+        ]
+    )
     target_dummy = torch.zeros_like(preds_bad)
 
     metric = InconsistentPathRatio(label_info_stub)
@@ -117,7 +123,6 @@ def test_inconsistent_path_ratio_inconsistent(label_info_stub):
 
 
 # --------------------- Weighted Hierarchical Precision ----------------------
-
 def test_weighted_hierarchical_precision_matches_reference(label_info_stub, sample_tensors):
     target, preds = sample_tensors
     metric = WeightedHierarchicalPrecision(label_info_stub)
@@ -140,10 +145,9 @@ def test_weighted_hierarchical_precision_matches_reference(label_info_stub, samp
 
 
 # -------------------------- MetricCollection callable -----------------------
-
 def test_hier_metric_collection_callable(label_info_stub, sample_tensors):
     target, preds = sample_tensors
-    mc = hierMetricCollectionCallable(label_info_stub)
+    mc = HierMetricCollectionCallable(label_info_stub)
 
     # update/compute over the whole collection
     mc.update(preds, target)
@@ -164,11 +168,12 @@ def test_hier_metric_collection_callable(label_info_stub, sample_tensors):
 
 # ------------------------------ Error handling ------------------------------
 
+
 def test_full_path_accuracy_shape_mismatch_raises():
     metric = FullPathAccuracy()
     preds = torch.tensor([[0, 0, 0]])
     target = torch.tensor([[0, 0]])  # wrong shape
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="preds and target must have the same shape"):
         metric.update(preds, target)
 
 
@@ -176,5 +181,5 @@ def test_inconsistent_path_ratio_requires_2d(label_info_stub):
     metric = InconsistentPathRatio(label_info_stub)
     preds = torch.tensor([0, 1, 2])  # 1D
     target = torch.tensor([0, 1, 2])
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="preds must be 2D (N, L)"):
         metric.update(preds, target)
