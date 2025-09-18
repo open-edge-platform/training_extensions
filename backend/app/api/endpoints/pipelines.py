@@ -159,8 +159,8 @@ def get_project_metrics(
     """
     Calculate model metrics for a pipeline over a specified time window.
 
-    Returns inference latency metrics including average, min, max, 95th percentile,
-    and latest latency measurements over the specified duration.
+    Returns inference latency and throughput metrics including average, min, max, 95th percentile,
+    and latest latency measurements, plus throughput data over the specified duration.
     """
     if time_window <= 0 or time_window > 3600:  # Limit to 1 hour max
         raise HTTPException(
