@@ -81,7 +81,7 @@ FROM backend-base AS geti-tune
 
 # Install nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    nginx=1.22.* \
+    nginx=1.26.* \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
