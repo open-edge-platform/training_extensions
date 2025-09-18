@@ -12,9 +12,9 @@ from uuid import UUID
 from model_api.models import DetectionResult, Model
 
 from app.entities.stream_data import InferenceData, StreamData
-from app.services import ModelService
-from app.services.metrics_service import MetricsService
+from app.services import MetricsService, ModelService
 from app.services.model_service import LoadedModel
+from app.settings import get_settings
 from app.utils import Visualizer
 from app.workers.base import BaseProcessWorker
 
@@ -49,7 +49,7 @@ class InferenceWorker(BaseProcessWorker):
 
     def setup(self) -> None:
         self._metrics_service = MetricsService(self._shm_name, self._shm_lock)
-        self._model_service = ModelService()
+        self._model_service = ModelService(get_settings().data_dir)
 
     def _on_inference_completed(self, inf_result: DetectionResult, userdata: dict[str, Any]) -> None:
         start_time = float(userdata["inference_start_time"])

@@ -49,8 +49,7 @@ def fxt_model_service(fxt_db_projects, db_session):
     db_session.add(db_project)
     db_session.flush()
     with TemporaryDirectory(suffix="models") as tmpdir:
-        service = ModelService()
-        service.models_dir = Path(tmpdir)
+        service = ModelService(Path(tmpdir).parent)
         service._model_activation_state = ModelActivationState(
             active_model=None, active_model_id=None, available_models=[]
         )
