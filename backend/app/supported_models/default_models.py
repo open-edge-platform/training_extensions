@@ -37,10 +37,10 @@ class DefaultModels:
 
     default_models_by_task: dict[TaskType, dict[DefaultCategory, str | None]] = {
         TaskType.CLASSIFICATION: {
-            DefaultCategory.DEFAULT: "Custom_Image_Classification_EfficinetNet-B0",
+            DefaultCategory.DEFAULT: "Custom_Image_Classification_EfficientNet-B0",
             DefaultCategory.ACCURACY: "Custom_Image_Classification_EfficientNet-V2-S",
             DefaultCategory.SPEED: "Custom_Image_Classification_MobileNet-V3-large-1x",
-            DefaultCategory.BALANCE: "Custom_Image_Classification_EfficinetNet-B0",
+            DefaultCategory.BALANCE: "Custom_Image_Classification_EfficientNet-B0",
         },
         TaskType.DETECTION: {
             DefaultCategory.DEFAULT: "Custom_Object_Detection_Gen3_ATSS",

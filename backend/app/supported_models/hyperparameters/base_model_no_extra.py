@@ -6,6 +6,6 @@ from pydantic import BaseModel, ConfigDict
 
 
 class BaseModelNoExtra(BaseModel):
-    """Base model class that do not allow for extra fields."""
+    """Base model class that does not allow for extra fields."""
 
     model_config = ConfigDict(extra="forbid")

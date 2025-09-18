@@ -14,7 +14,7 @@ class SupportedModels:
     @classmethod
     def get_model_manifest_by_id(cls, model_manifest_id: str) -> ModelManifest:
         """
-        R
+        Retrieve a specific model manifest by its ID.
         """
         model_manifests = cls.get_model_manifests()
         if model_manifest_id not in model_manifests:
