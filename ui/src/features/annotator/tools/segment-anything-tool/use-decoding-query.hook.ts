@@ -52,6 +52,7 @@ export const useDecodingQuery = (
 };
 
 export const useDecodingMutation = (queryFn: (points: InteractiveAnnotationPoint[]) => Promise<Shape[]>) => {
+    const { addAnnotation } = useAnnotator();
     return useMutation({
         mutationFn: async (points: InteractiveAnnotationPoint[]) => {
             // Round points so that when the user slightly moves their mouse we do not
@@ -62,14 +63,12 @@ export const useDecodingMutation = (queryFn: (points: InteractiveAnnotationPoint
                 positive: point.positive,
             }));
 
-            // TODO: Add callback to add shapes
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const shapes = (await queryFn(roundedPoints)).map((shape) => {
                 return removeOffLimitPoints(shape, roi);
             });
 
             // Add the shapes to the canvas here
-            // addShapes(shapes);
+            shapes.map((shape) => addAnnotation(shape));
         },
     });
 };
