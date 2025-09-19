@@ -34,12 +34,13 @@ test.describe('Dataset', () => {
 
     test('list items', async ({ page }) => {
         await page.goto('projects/some-id/dataset');
+        const loadedItems = 40;
 
-        await expect(page.getByText(`${mockedItems.length} images`)).toBeVisible();
+        await expect(page.getByText(`${loadedItems} images`)).toBeVisible();
 
         await page.getByLabel('select all').click();
 
-        await expect(page.getByText(`${mockedItems.length} selected`)).toBeVisible();
+        await expect(page.getByText(`${loadedItems} selected`)).toBeVisible();
     });
 
     test('select multiple images', async ({ page }) => {
