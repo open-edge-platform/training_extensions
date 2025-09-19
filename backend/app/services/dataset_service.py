@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import BinaryIO
@@ -124,6 +125,20 @@ class DatasetService:
         """Delete a dataset item by its ID"""
         with get_db_session() as db:
             repo = DatasetItemRepository(project_id=str(project_id), db=db)
-            deleted = repo.delete(obj_id=str(dataset_item_id))
-            if not deleted:
+            dataset_item = repo.get_by_id(str(dataset_item_id))
+            if not dataset_item:
                 raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
+
+            dataset_dir = self.projects_dir / f"{project_id}/dataset"
+            try:
+                os.remove(dataset_dir / f"{dataset_item.id}.{dataset_item.format}")
+            except FileNotFoundError:
+                logger.warning(f"Dataset item {dataset_item_id} binary was not found during deletion")
+            try:
+                os.remove(dataset_dir / f"{dataset_item_id}-thumb.jpg")
+            except FileNotFoundError:
+                logger.warning(f"Dataset item {dataset_item_id} thumbnail was not found during deletion")
+
+            deleted = repo.delete(obj_id=dataset_item.id)
+            if not deleted:
+                raise ResourceNotFoundError(ResourceType.DATASET_ITEM, dataset_item.id)
