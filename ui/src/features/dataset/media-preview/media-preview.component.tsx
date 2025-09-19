@@ -9,11 +9,13 @@ import { AnnotatorCanvas } from '../../annotator/annotator-canvas';
 import { AnnotatorProvider } from '../../annotator/annotator-provider.component';
 import { SelectAnnotationProvider } from '../../annotator/select-annotation-provider.component';
 import { ToolSelectionBar } from '../../annotator/tools/tool-selection-bar.component';
-import { response } from '../mock-response';
+import { DatasetItem } from '../../annotator/types';
 
-type Item = (typeof response.items)[number];
-
-export const MediaPreview = ({ mediaItem, close }: { mediaItem: Item; close: () => void }) => {
+type MediaPreviewProps = {
+    mediaItem: DatasetItem;
+    close: () => void;
+};
+export const MediaPreview = ({ mediaItem, close }: MediaPreviewProps) => {
     const [isFocussed, setIsFocussed] = useState(false);
 
     return (
@@ -30,11 +32,11 @@ export const MediaPreview = ({ mediaItem, close }: { mediaItem: Item; close: () 
                         areas={['toolbar canvas aside', 'toolbar canvas aside', 'toolbar footer aside']}
                         width={'100%'}
                         height='100%'
-                        columns={'auto 1fr auto'}
+                        columns={'100px calc(100% - 200px) 100px'}
                         rows={'auto 1fr auto'}
                     >
                         <AnnotatorProvider mediaItem={mediaItem}>
-                            <View gridArea={'toolbar'} margin={'size-350'}>
+                            <View gridArea={'toolbar'}>
                                 <ToolSelectionBar />
                             </View>
 

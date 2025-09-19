@@ -1,6 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { components } from '../../api/openapi-spec';
+
 export interface RegionOfInterest {
     x: number;
     y: number;
@@ -43,18 +45,6 @@ export type AnnotationState = {
     isLocked: boolean;
 };
 
-export type MediaItem = {
-    id: string;
-    original_name: string;
-    format: string;
-    width: number;
-    height: number;
-    size: number;
-    thumbhash: string;
-    created_at: string;
-    annotations: Annotation[];
-};
-
 // Circle is only used for visual purposes on segment-anything tool
 export interface Circle {
     readonly shapeType: 'circle';
@@ -67,3 +57,4 @@ export interface ClipperPoint {
     X: number;
     Y: number;
 }
+export type DatasetItem = components['schemas']['DatasetItem'];

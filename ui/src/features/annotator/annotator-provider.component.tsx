@@ -6,7 +6,7 @@ import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useStat
 import { v4 as uuid } from 'uuid';
 
 import { ToolType } from '../../components/tool-selection-bar/tools/interface';
-import { Annotation, MediaItem, Shape } from './types';
+import { Annotation, DatasetItem, Shape } from './types';
 
 type AnnotatorContext = {
     activeTool: ToolType | null;
@@ -15,15 +15,16 @@ type AnnotatorContext = {
     addAnnotation: (shape: Shape) => void;
     updateAnnotation: (updatedAnnotation: Annotation) => void;
 
-    mediaItem: MediaItem;
+    mediaItem: DatasetItem;
     annotations: Annotation[];
 };
 
 export const AnnotatorProviderContext = createContext<AnnotatorContext | null>(null);
 
-export const AnnotatorProvider = ({ mediaItem, children }: { mediaItem: MediaItem; children: ReactNode }) => {
+export const AnnotatorProvider = ({ mediaItem, children }: { mediaItem: DatasetItem; children: ReactNode }) => {
     const [activeTool, setActiveTool] = useState<ToolType>('selection');
-    const [annotations, setAnnotations] = useState<Annotation[]>(mediaItem.annotations);
+    // todo: pass media annotations
+    const [annotations, setAnnotations] = useState<Annotation[]>([]);
 
     const updateAnnotation = (updatedAnnotation: Annotation) => {
         const { id } = updatedAnnotation;
