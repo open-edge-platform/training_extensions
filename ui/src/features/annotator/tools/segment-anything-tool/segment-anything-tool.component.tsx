@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { PointerEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { PointerEvent, useEffect, useRef, useState } from 'react';
 
 import { clampPointBetweenImage, isPointInShape, pointInRectangle } from '@geti/smart-tools/utils';
 
@@ -50,10 +50,9 @@ const SELECT_ANNOTATION_STYLES = {
 
 export const SegmentAnythingTool = () => {
     const zoom = useZoom();
-    const { mediaItem } = useAnnotator();
-    const roi = useMemo(() => ({ x: 0, y: 0, width: mediaItem.width, height: mediaItem.height }), [mediaItem]);
+    const { mediaItem, roi, image } = useAnnotator();
 
-    const clampPoint = clampPointBetweenImage(new ImageData(mediaItem.width, mediaItem.height));
+    const clampPoint = clampPointBetweenImage(image);
 
     const ref = useRef<SVGRectElement>(null);
 

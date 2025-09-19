@@ -53,26 +53,23 @@ const useSegmentAnythingWorker = (algorithmType: 'SEGMENT_ANYTHING_DECODER' | 'S
     return modelRef.current;
 };
 
-const useEncodingQuery = (
-    model: Remote<SegmentAnythingModel> | undefined,
-    selectedMediaItem: Pick<MediaItem, 'id' | 'width' | 'height'> | undefined
-) => {
+const useEncodingQuery = (model: Remote<SegmentAnythingModel> | undefined, mediaItem: MediaItem, image: ImageData) => {
     return useQuery({
-        queryKey: ['segment-anything-model', 'encoding', selectedMediaItem?.id],
+        queryKey: ['segment-anything-model', 'encoding', mediaItem?.id],
         queryFn: async () => {
             if (model === undefined) {
                 throw new Error('Model not yet initialized');
             }
 
-            if (selectedMediaItem === undefined) {
-                throw new Error('Media item not selected');
+            if (image === undefined) {
+                throw new Error('Image not available');
             }
 
-            return await model.processEncoder(new ImageData(selectedMediaItem.width, selectedMediaItem.height));
+            return await model.processEncoder(image);
         },
         staleTime: Infinity,
-        gcTime: 3600 * 15, // WIP
-        enabled: model !== undefined && selectedMediaItem !== undefined,
+        gcTime: 3600 * 15,
+        enabled: model !== undefined && mediaItem !== undefined,
     });
 };
 
@@ -110,8 +107,8 @@ export const useSegmentAnythingModel = () => {
     const decoderModel = useSegmentAnythingWorker('SEGMENT_ANYTHING_DECODER');
     const isLoading = encoderModel === undefined || decoderModel === undefined;
 
-    const { mediaItem } = useAnnotator();
-    const encodingQuery = useEncodingQuery(encoderModel, mediaItem);
+    const { mediaItem, image } = useAnnotator();
+    const encodingQuery = useEncodingQuery(encoderModel, mediaItem, image);
     const decodingQueryFn = useDecodingFn(decoderModel, encodingQuery.data);
 
     return { isLoading, encodingQuery, decodingQueryFn };

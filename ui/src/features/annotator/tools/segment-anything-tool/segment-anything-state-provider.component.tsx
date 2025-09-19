@@ -10,6 +10,7 @@ import { isEmpty } from 'lodash-es';
 
 import { useAnnotator } from '../../annotator-provider.component';
 import { Shape } from '../../types';
+import { ModelLoading } from './model-loading.component';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';
 import { useDecodingMutation, useDecodingQuery, useDecodingQueryOptions } from './use-decoding-query.hook';
 import { useSegmentAnythingModel } from './use-segment-anything.hook';
@@ -107,6 +108,10 @@ export const SegmentAnythingStateProvider = ({ children }: { children: ReactNode
             });
         }
     };
+
+    if (isLoading || encodingQuery.data === undefined) {
+        return <ModelLoading isLoadingModel={isLoading} />;
+    }
 
     return (
         <SegmentAnythingStateContext.Provider

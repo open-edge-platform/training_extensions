@@ -6,7 +6,8 @@ import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useStat
 import { v4 as uuid } from 'uuid';
 
 import { ToolType } from '../../components/tool-selection-bar/tools/interface';
-import { Annotation, DatasetItem, Shape } from './types';
+import { useLoadImageQuery } from './hooks/use-load-image-query.hook';
+import { Annotation, DatasetItem, RegionOfInterest, Shape } from './types';
 
 type AnnotatorContext = {
     activeTool: ToolType | null;
@@ -16,6 +17,8 @@ type AnnotatorContext = {
     updateAnnotation: (updatedAnnotation: Annotation) => void;
 
     mediaItem: DatasetItem;
+    image: ImageData;
+    roi: RegionOfInterest;
     annotations: Annotation[];
 };
 
@@ -25,6 +28,8 @@ export const AnnotatorProvider = ({ mediaItem, children }: { mediaItem: DatasetI
     const [activeTool, setActiveTool] = useState<ToolType>('selection');
     // todo: pass media annotations
     const [annotations, setAnnotations] = useState<Annotation[]>([]);
+
+    const imageQuery = useLoadImageQuery(mediaItem);
 
     const updateAnnotation = (updatedAnnotation: Annotation) => {
         const { id } = updatedAnnotation;
@@ -57,6 +62,8 @@ export const AnnotatorProvider = ({ mediaItem, children }: { mediaItem: DatasetI
                 annotations,
 
                 mediaItem,
+                image: imageQuery.data || new ImageData(mediaItem.width, mediaItem.height),
+                roi: { x: 0, y: 0, width: mediaItem.width, height: mediaItem.height },
             }}
         >
             {children}

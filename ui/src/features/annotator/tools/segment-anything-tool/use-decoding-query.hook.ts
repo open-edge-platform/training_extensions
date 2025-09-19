@@ -4,22 +4,15 @@
 import { queryOptions, useMutation, useQuery } from '@tanstack/react-query';
 
 import { useAnnotator } from '../../annotator-provider.component';
-import { RegionOfInterest, Shape } from '../../types';
+import { Shape } from '../../types';
 import { removeOffLimitPoints } from '../utils';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';
-
-const roi: RegionOfInterest = {
-    x: 0,
-    y: 0,
-    width: 100,
-    height: 100,
-};
 
 export const useDecodingQueryOptions = (
     points: InteractiveAnnotationPoint[],
     queryFn: (points: InteractiveAnnotationPoint[]) => Promise<Shape[]>
 ) => {
-    const { mediaItem } = useAnnotator();
+    const { mediaItem, roi } = useAnnotator();
     // Round points so that when the user slightly moves their mouse we do not
     // immediately recompute the decoding
     const roundedPoints = points.map((point) => ({
@@ -52,7 +45,8 @@ export const useDecodingQuery = (
 };
 
 export const useDecodingMutation = (queryFn: (points: InteractiveAnnotationPoint[]) => Promise<Shape[]>) => {
-    const { addAnnotation } = useAnnotator();
+    const { addAnnotation, roi } = useAnnotator();
+
     return useMutation({
         mutationFn: async (points: InteractiveAnnotationPoint[]) => {
             // Round points so that when the user slightly moves their mouse we do not
