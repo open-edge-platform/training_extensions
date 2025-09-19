@@ -37,7 +37,7 @@ const isPositivePoint = (point: Point, shapes: Shape[], isRightClick: boolean, r
 const THROTTLE_TIME = 150;
 
 const toolSettings = {
-    interactiveMode: false,
+    interactiveMode: true,
     rightClickMode: false,
 };
 
@@ -171,7 +171,7 @@ export const SegmentAnythingTool = () => {
                             strokeWidth={'calc(3px / var(--zoom-level))'}
                             cursor={
                                 !showPreviewShapes
-                                    ? `url(/icons/cursor/pencil-${
+                                    ? `url(/icons/pencil-${
                                           interactiveMode === true && rightClickMode === false ? 'minus' : 'plus'
                                       }.svg) 16 16, auto`
                                     : undefined
