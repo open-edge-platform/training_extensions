@@ -51,20 +51,19 @@ export const AnnotatorCanvas = ({ mediaItem, isFocussed }: AnnotatorCanvasProps)
                         <img src={getImageUrl(project_id, String(mediaItem.id))} alt='Collected data' />
                     </View>
 
-                    {!isEmpty(annotations) && (
-                        <View gridArea={'innercanvas'}>
-                            <svg
-                                width={size.width}
-                                height={size.height}
-                                style={DEFAULT_ANNOTATION_STYLES}
-                                onClick={handleClickOutside}
-                            >
+                    <View gridArea={'innercanvas'}>
+                        <svg
+                            width={size.width}
+                            height={size.height}
+                            style={DEFAULT_ANNOTATION_STYLES}
+                            onClick={handleClickOutside}
+                        >
+                            {!isEmpty(annotations) && (
                                 <Annotations width={size.width} height={size.height} isFocussed={isFocussed} />
-
-                                <ToolManager />
-                            </svg>
-                        </View>
-                    )}
+                            )}
+                            <ToolManager />
+                        </svg>
+                    </View>
                 </Grid>
             </ZoomTransform>
         </ZoomProvider>
