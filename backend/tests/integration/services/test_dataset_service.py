@@ -447,15 +447,18 @@ class TestDatasetServiceIntegration:
         fxt_dataset_service: DatasetService,
         fxt_stored_projects: list[ProjectDB],
         fxt_stored_dataset_items: list[DatasetItemDB],
-        fxt_annotations: Callable[[str], list[DatasetItemAnnotation]],
     ):
         """Test setting a dataset item annotation with wrong project id."""
-        annotations = fxt_annotations(fxt_stored_projects[1].labels[0].id)
         with pytest.raises(ResourceNotFoundError) as excinfo:
             fxt_dataset_service.set_dataset_item_annotations(
                 project_id=UUID(fxt_stored_projects[1].id),
                 dataset_item_id=UUID(fxt_stored_dataset_items[0].id),
-                annotations=annotations,
+                annotations=[
+                    DatasetItemAnnotation(
+                        labels=[LabelReference(id=UUID(fxt_stored_projects[1].labels[0].id))],
+                        shape=FullImage(type="full_image"),
+                    )
+                ],
             )
 
         assert excinfo.value.resource_type == ResourceType.DATASET_ITEM
