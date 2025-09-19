@@ -376,6 +376,7 @@ class TestDatasetServiceIntegration:
         fxt_dataset_service: DatasetService,
         fxt_stored_projects: list[ProjectDB],
         fxt_db_dataset_items: list[DatasetItemDB],
+        projects_dir,
         db_session: Session,
     ):
         """Test deleting a dataset item."""
@@ -384,11 +385,24 @@ class TestDatasetServiceIntegration:
         db_session.add(db_dataset_item)
         db_session.flush()
 
+        dataset_dir = projects_dir / fxt_stored_projects[0].id / "dataset"
+        dataset_dir.mkdir(parents=True, exist_ok=True)
+
+        binary_path = dataset_dir / f"{db_dataset_item.id}.{db_dataset_item.format}"
+        binary_path.touch()
+        assert os.path.exists(binary_path)
+
+        thumbnail_path = dataset_dir / f"{db_dataset_item.id}-thumb.jpg"
+        thumbnail_path.touch()
+        assert os.path.exists(thumbnail_path)
+
         fxt_dataset_service.delete_dataset_item(
             project_id=UUID(fxt_stored_projects[0].id), dataset_item_id=UUID(db_dataset_item.id)
         )
 
         assert db_session.get(DatasetItemDB, db_dataset_item.id) is None
+        assert not os.path.exists(binary_path)
+        assert not os.path.exists(thumbnail_path)
 
     def test_delete_dataset_item_wrong_project_id(
         self,
