@@ -6,12 +6,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from otx.backend.native.engine import OTXEngine
-from otx.backend.native.models.base import OTXModel
-from otx.data.module import OTXDataModule
 from otx.engine import Engine, create_engine
-
 from otx.metrics.hier_metric_collection import hier_metric_collection_callable
+
 
 class TestCreateEngine:
     @pytest.fixture()
@@ -20,7 +17,7 @@ class TestCreateEngine:
         mock_engine_cls = MagicMock(spec=Engine)
         mock_engine_cls.is_supported.return_value = True
         return mock_engine_cls
-    
+
     @patch("otx.engine.Engine.__subclasses__", autospec=True)
     def test_hier_metric_collection_by_engine(self, mock___subclasses__, mock_engine_subclass):
         """Test create_engine with arbitrary Engine."""
@@ -31,4 +28,3 @@ class TestCreateEngine:
         engine_instance = create_engine(mock_model, mock_data)
         engine_instance.train(metric=hier_metric_collection_callable)
         engine_instance.test(metric=hier_metric_collection_callable)
-      
