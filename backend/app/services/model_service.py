@@ -45,8 +45,8 @@ class LoadedModel:
 class ModelService:
     """Service to register and activate models"""
 
-    def __init__(self, mp_model_reload_event: EventClass | None = None) -> None:
-        self.models_dir = Path("data/models")
+    def __init__(self, data_dir: Path, mp_model_reload_event: EventClass | None = None) -> None:
+        self.models_dir = data_dir / "models"
         self._mp_model_reload_event = mp_model_reload_event
 
         self._persistence: GenericPersistenceService[Model, ModelRepository] = GenericPersistenceService(
@@ -245,8 +245,7 @@ class ModelService:
     def delete_model_by_id(self, model_id: UUID) -> None:
         """Delete a model by its ID"""
         with get_db_session() as db:
-            model = self.get_model_by_id(model_id, db)
-            self._persistence.delete_by_id(model.id, db)
+            self._persistence.delete_by_id(model_id, db)
 
     def list_models(self) -> list[ModelSchema]:
         """Get information about available models"""

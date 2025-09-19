@@ -1,6 +1,9 @@
+* {
+    box-sizing: border-box;
+}
+
 :root {
     height: 100vh;
-    box-sizing: border-box;
 
     --background: #313236;
     --background-inverse: #3c3e42;
@@ -15,12 +18,6 @@
 
     --annotation-fill: var(--daisy-shade);
     --annotation-stroke: var(--energy-blue-light, #7bdeff);
-
-    --annotation-fill: var(--color-pink-300);
-    --annotation-stroke: var(--color-rose-500);
-
-    --annotation-fill: #e9611580;
-    --annotation-stroke: #7bdeff;
 
     --moss-tint-1: #b1d272;
 
@@ -55,13 +52,11 @@ html {
     padding: 0;
     background-color: var(--background);
     height: 100%;
-    box-sizing: border-box;
 }
 
 #root,
 #theme-provider {
     height: 100%;
-    box-sizing: border-box;
 }
 
 h1,

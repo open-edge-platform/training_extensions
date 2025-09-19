@@ -14,7 +14,7 @@ ModelType = TypeVar("ModelType", bound=Base)
 class BaseRepository[ModelType]:
     """Base repository class for database operations."""
 
-    def __init__(self, db: Session, model: type[ModelType]):
+    def __init__(self, db: Session, model: type[ModelType]) -> None:
         self.db = db
         self.model = model
 
@@ -32,9 +32,27 @@ class BaseRepository[ModelType]:
 
     def update(self, item: ModelType) -> ModelType:
         item.updated_at = datetime.now()  # type: ignore[attr-defined]
-        self.db.merge(item)
+        updated = self.db.merge(item)
         self.db.flush()
-        return item
+        self.db.refresh(updated)
+        return updated
 
-    def delete(self, obj_id: str) -> None:
-        self.db.query(self.model).filter(self.model.id == obj_id).delete()  # type: ignore[attr-defined]
+    def delete(self, obj_id: str) -> bool:
+        return self.db.query(self.model).filter(self.model.id == obj_id).delete() > 0  # type: ignore[attr-defined]
+
+    def save_batch(self, items: list[ModelType]) -> list[ModelType]:
+        for item in items:
+            item.updated_at = datetime.now()  # type: ignore[attr-defined]
+        self.db.add_all(items)
+        self.db.flush()
+        return items
+
+    def update_batch(self, updates: list[ModelType]) -> None:
+        for update in updates:
+            update.updated_at = datetime.now()  # type: ignore[attr-defined]
+            self.db.merge(update)
+        self.db.flush()
+
+    def delete_batch(self, obj_ids: list[str]) -> None:
+        self.db.query(self.model).filter(self.model.id.in_(obj_ids)).delete(synchronize_session=False)  # type: ignore[attr-defined]
+        self.db.flush()

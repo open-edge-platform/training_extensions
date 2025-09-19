@@ -1,0 +1,49 @@
+name: Security Scans on PR
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - releases/**
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.after }}
+  cancel-in-progress: true
+
+jobs:
+  zizmor-scan-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+      - name: Run Zizmor scan
+        uses: open-edge-platform/geti-ci/actions/zizmor@c2bb2697178bb2e50014420aef2351a45749b925
+        with:
+          scan-scope: "changed"
+          severity-level: "MEDIUM"
+          confidence-level: "LOW"
+          fail-on-findings: true
+
+  bandit-scan-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+      - name: Run Bandit scan
+        uses: open-edge-platform/geti-ci/actions/bandit@c2bb2697178bb2e50014420aef2351a45749b925
+        with:
+          scan-scope: "changed"
+          severity-level: "LOW"
+          confidence-level: "LOW"
+          config_file: ".ci/ipas_default.config"
+          fail-on-findings: true

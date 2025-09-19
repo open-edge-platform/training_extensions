@@ -1,15 +1,24 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
+import os
 from functools import lru_cache
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import Depends, HTTPException, Request, status
+from fastapi import Depends, HTTPException, Request, UploadFile, status
 
 from app.core import Scheduler
-from app.services import ActivePipelineService, ConfigurationService, ModelService, PipelineService, SystemService
-from app.services.metrics_service import MetricsService
+from app.services import (
+    ActivePipelineService,
+    ConfigurationService,
+    DatasetService,
+    MetricsService,
+    ModelService,
+    PipelineService,
+    ProjectService,
+    SystemService,
+)
+from app.services.label_service import LabelService
 from app.webrtc.manager import WebRTCManager
 
 
@@ -27,11 +36,40 @@ def is_valid_uuid(identifier: str) -> bool:
     return True
 
 
+def get_file_name_and_extension(file: UploadFile) -> tuple[str, str]:
+    """Return the file name and extension"""
+    if not file.filename:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File name cannot be empty.")
+    full_name = file.filename.strip()
+    if not full_name:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File name cannot be empty.")
+    file_name, file_ext = os.path.splitext(full_name)
+    file_name = file_name.strip()  # remove whitespace characters between the basename and the extension
+    file_ext = file_ext[1:]  # remove leading dot in the extension
+    if not file_ext:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File extension cannot be empty.")
+    return file_name, file_ext
+
+
+def get_file_size(file: UploadFile) -> int:
+    """Return the file size in bytes"""
+    if not file.size:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File size should be defined.")
+    return file.size
+
+
 def get_source_id(source_id: str) -> UUID:
     """Initializes and validates a source ID"""
     if not is_valid_uuid(source_id):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid source ID")
     return UUID(source_id)
+
+
+def get_project_id(project_id: str) -> UUID:
+    """Initializes and validates a project ID"""
+    if not is_valid_uuid(project_id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid project ID")
+    return UUID(project_id)
 
 
 def get_sink_id(sink_id: str) -> UUID:
@@ -48,11 +86,11 @@ def get_model_id(model_id: str) -> UUID:
     return UUID(model_id)
 
 
-def get_pipeline_id(pipeline_id: str) -> UUID:
-    """Initializes and validates a pipeline ID"""
-    if not is_valid_uuid(pipeline_id):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid pipeline ID")
-    return UUID(pipeline_id)
+def get_dataset_item_id(dataset_item_id: str) -> UUID:
+    """Initializes and validates a dataset item ID"""
+    if not is_valid_uuid(dataset_item_id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid dataset item ID")
+    return UUID(dataset_item_id)
 
 
 @lru_cache
@@ -61,15 +99,15 @@ def get_active_pipeline_service() -> ActivePipelineService:
     return ActivePipelineService()
 
 
-@lru_cache
-def get_metrics_service() -> MetricsService:
-    """Provides a MetricsService instance for collecting and retrieving metrics."""
-    return MetricsService()
-
-
 def get_scheduler(request: Request) -> Scheduler:
     """Provides the global Scheduler instance."""
     return request.app.state.scheduler
+
+
+@lru_cache
+def get_metrics_service(scheduler: Annotated[Scheduler, Depends(get_scheduler)]) -> MetricsService:
+    """Provides a MetricsService instance for collecting and retrieving metrics."""
+    return MetricsService(scheduler.shm_metrics.name, scheduler.shm_metrics_lock)
 
 
 @lru_cache
@@ -106,14 +144,33 @@ def get_system_service() -> SystemService:
 
 @lru_cache
 def get_model_service(
+    request: Request,
     scheduler: Annotated[Scheduler, Depends(get_scheduler)],
 ) -> ModelService:
     """Provides a ModelService instance with the model reload event from the scheduler."""
     return ModelService(
+        data_dir=request.app.state.settings.data_dir,
         mp_model_reload_event=scheduler.mp_model_reload_event,
     )
+
+
+@lru_cache
+def get_dataset_service(request: Request) -> DatasetService:
+    """Provides a DatasetService instance."""
+    return DatasetService(request.app.state.settings.data_dir)
 
 
 def get_webrtc_manager(request: Request) -> WebRTCManager:
     """Provides the global WebRTCManager instance from FastAPI application's state."""
     return request.app.state.webrtc_manager
+
+
+@lru_cache
+def get_project_service() -> ProjectService:
+    """Provides a ProjectService instance for managing projects."""
+    return ProjectService()
+
+
+def get_label_service() -> type[LabelService]:
+    """Provides a LabelService instance for managing labels."""
+    return LabelService

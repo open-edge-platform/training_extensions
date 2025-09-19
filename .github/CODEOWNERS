@@ -1,7 +1,15 @@
 # See help here: https://help.github.com/en/github/creating-cloning-and-archiving-repositories/about-code-owners
 
-# These owners will be the default owners for everything in the repo.
-* @samet-akcay @eugene123tw @kprokofi @sovrasov @daankrol @ashwinvaidya17 @rajeshgangireddy
+# Default owners for any file not covered by other rules
+* @samet-akcay @leoll2 @Radwan-Ibrahim
+
+# CI and security
+.github/workflows/ @kamillipka @mramotowski @ivanzati @AlexanderBarabanov
+renovate.json5 @kamillipka @mramotowski @ivanzati @AlexanderBarabanov
+security.md @kamillipka @mramotowski @ivanzati @AlexanderBarabanov
+
+# Library (OTX)
+lib/ @samet-akcay @eugene123tw @kprokofi @sovrasov @daankrol @ashwinvaidya17 @rajeshgangireddy
 
 # Backend
 backend/ @leoll2 @itallix @warrkan @A-Artemis
@@ -9,5 +17,12 @@ backend/ @leoll2 @itallix @warrkan @A-Artemis
 # Frontend
 ui/ @jpggvilaca @MarkRedeman @camiloHimura @pplaskie @romanowska @dwesolow
 
+# Docker files
+docker/ @samet-akcay @eugene123tw @kprokofi @sovrasov @daankrol @ashwinvaidya17 @rajeshgangireddy
+docker/Dockerfile @leoll2 @itallix @warrkan @A-Artemis
+docker/docker-compose.yaml @leoll2 @itallix @warrkan @A-Artemis
+docker/nginx.conf @leoll2 @itallix @warrkan @A-Artemis
+
 # Docs
+docs/ @samet-akcay @eugene123tw @kprokofi @sovrasov @daankrol @ashwinvaidya17 @rajeshgangireddy
 docs/geti_tune/ @leoll2 @jpggvilaca

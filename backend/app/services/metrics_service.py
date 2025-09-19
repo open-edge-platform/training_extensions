@@ -3,17 +3,17 @@
 
 import logging
 import time
+from collections import defaultdict
 from datetime import UTC, datetime
-from multiprocessing import Lock
 from multiprocessing.shared_memory import SharedMemory
+from multiprocessing.synchronize import Lock
 from typing import NamedTuple
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import numpy as np
 
 logger = logging.getLogger(__name__)
 
-SHM_NAME = f"latency_metrics_shm_{uuid4()}"
 MAX_MEASUREMENTS = 1024  # max number of measurements to keep
 DTYPE = np.dtype(
     [
@@ -36,10 +36,10 @@ class LatencyMeasurement(NamedTuple):
 class MetricsService:
     """Process-safe metrics service using shared memory for model metric data"""
 
-    def __init__(self, max_age_seconds: int = 60):
+    def __init__(self, shm_name: str, lock: Lock, max_age_seconds: int = 60):
         self._max_age_seconds = max_age_seconds
-        self._lock = Lock()
-        self._shm = SharedMemory(name=SHM_NAME)
+        self._lock = lock
+        self._shm = SharedMemory(name=shm_name)
         self._array: np.ndarray = np.ndarray((MAX_MEASUREMENTS,), dtype=DTYPE, buffer=self._shm.buf)
         self._head = 0  # index for next write
 
@@ -80,16 +80,51 @@ class MetricsService:
 
         Returns: List of latency measurements in milliseconds
         """
+        str_model_id = str(model_id)
         cutoff_time = datetime.now(UTC).timestamp() - time_window
         with self._lock:
             arr = self._array.copy()
-            result = []
-            for entry in arr:
-                if entry["timestamp"] < cutoff_time or entry["timestamp"] == 0.0:
-                    continue
-                if entry["model_id"] == str(model_id):
-                    result.append(entry["latency_ms"])
-            return result
+        result = []
+        for entry in arr:
+            if entry["timestamp"] < cutoff_time or entry["timestamp"] == 0.0:
+                continue
+            if entry["model_id"] == str_model_id:
+                result.append(entry["latency_ms"])
+        return result
+
+    def get_throughput_measurements(self, model_id: UUID, time_window: int = 60) -> tuple[int, list[tuple[float, int]]]:
+        """
+        Retrieve throughput measurements for a specific model within the given time window.
+
+        Args:
+            model_id: UUID of the model to filter measurements
+            time_window: Time window in seconds to look back for measurements (default 60s)
+
+        Returns: Tuple of (total_requests, list of (timestamp, inference_count) per second)
+        """
+        str_model_id = str(model_id)
+        cutoff_time = datetime.now(UTC).timestamp() - time_window
+        with self._lock:
+            arr = self._array.copy()
+
+        # Count inferences per second
+        inferences_per_second: dict[int, int] = defaultdict(int)
+        total_requests = 0
+
+        for entry in arr:
+            if entry["timestamp"] < cutoff_time or entry["timestamp"] == 0.0:
+                continue
+            if entry["model_id"] == str_model_id:
+                # Round timestamp to the nearest second
+                second_timestamp = int(entry["timestamp"])
+                inferences_per_second[second_timestamp] += 1
+                total_requests += 1
+
+        # Convert to list of (timestamp, count) tuples
+        throughput_data = [(float(ts), count) for ts, count in inferences_per_second.items()]
+        throughput_data.sort()  # Sort by timestamp
+
+        return total_requests, throughput_data
 
     def reset(self) -> None:
         with self._lock:
@@ -98,7 +133,4 @@ class MetricsService:
             self._head = 0
 
     def __del__(self):
-        try:
-            self._shm.close()
-        except Exception as e:
-            logger.exception("Error cleaning up shared memory in MetricsService __del__: %s", e)
+        self._shm.close()
