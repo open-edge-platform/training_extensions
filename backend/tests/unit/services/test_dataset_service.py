@@ -1,6 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
+from pathlib import Path
 from uuid import uuid4
 
 import pytest
@@ -31,7 +31,7 @@ class TestDatasetServiceUnit:
                 shape=Rectangle(type="rectangle", x=0, y=0, width=10, height=10),
             )
         ]
-        DatasetService()._validate_annotations_labels(annotations=annotations, project=project)
+        DatasetService(Path("/tmp"))._validate_annotations_labels(annotations=annotations, project=project)
 
     def test_validate_annotations_labels_not_found(self):
         label_id = uuid4()
@@ -48,7 +48,7 @@ class TestDatasetServiceUnit:
             )
         ]
         with pytest.raises(AnnotationValidationError):
-            DatasetService()._validate_annotations_labels(annotations=annotations, project=project)
+            DatasetService(Path("/tmp"))._validate_annotations_labels(annotations=annotations, project=project)
 
     def test_validate_annotations_coordinates_rectangle(self):
         dataset_item = DatasetItemDB(name="test", format="jpg", width=100, height=50, size=1024)
@@ -58,7 +58,9 @@ class TestDatasetServiceUnit:
                 shape=Rectangle(type="rectangle", x=0, y=0, width=10, height=10),
             )
         ]
-        DatasetService()._validate_annotations_coordinates(annotations=annotations, dataset_item=dataset_item)
+        DatasetService(Path("/tmp"))._validate_annotations_coordinates(
+            annotations=annotations, dataset_item=dataset_item
+        )
 
     @pytest.mark.parametrize(
         "x, y, width, height",
@@ -78,7 +80,9 @@ class TestDatasetServiceUnit:
             )
         ]
         with pytest.raises(AnnotationValidationError):
-            DatasetService()._validate_annotations_coordinates(annotations=annotations, dataset_item=dataset_item)
+            DatasetService(Path("/tmp"))._validate_annotations_coordinates(
+                annotations=annotations, dataset_item=dataset_item
+            )
 
     def test_validate_annotations_coordinates_polygon(self):
         dataset_item = DatasetItemDB(name="test", format="jpg", width=100, height=50, size=1024)
@@ -88,7 +92,9 @@ class TestDatasetServiceUnit:
                 shape=Polygon(type="polygon", points=[Point(x=0, y=0), Point(x=10, y=10)]),
             )
         ]
-        DatasetService()._validate_annotations_coordinates(annotations=annotations, dataset_item=dataset_item)
+        DatasetService(Path("/tmp"))._validate_annotations_coordinates(
+            annotations=annotations, dataset_item=dataset_item
+        )
 
     @pytest.mark.parametrize(
         "x, y",
@@ -106,7 +112,9 @@ class TestDatasetServiceUnit:
             )
         ]
         with pytest.raises(AnnotationValidationError):
-            DatasetService()._validate_annotations_coordinates(annotations=annotations, dataset_item=dataset_item)
+            DatasetService(Path("/tmp"))._validate_annotations_coordinates(
+                annotations=annotations, dataset_item=dataset_item
+            )
 
     def test_validate_annotations_multilabel_classification(self):
         project = ProjectDB(
@@ -118,7 +126,7 @@ class TestDatasetServiceUnit:
                 shape=FullImage(type="full_image"),
             )
         ]
-        DatasetService()._validate_annotations(annotations=annotations, project=project)
+        DatasetService(Path("/tmp"))._validate_annotations(annotations=annotations, project=project)
 
     def test_validate_annotations_multilabel_classification_multi_annotations(self):
         project = ProjectDB(
@@ -137,7 +145,7 @@ class TestDatasetServiceUnit:
             ),
         ]
         with pytest.raises(AnnotationValidationError):
-            DatasetService()._validate_annotations(annotations=annotations, project=project)
+            DatasetService(Path("/tmp"))._validate_annotations(annotations=annotations, project=project)
 
     @pytest.mark.parametrize(
         "shape",
@@ -159,7 +167,7 @@ class TestDatasetServiceUnit:
             )
         ]
         with pytest.raises(AnnotationValidationError):
-            DatasetService()._validate_annotations(annotations=annotations, project=project)
+            DatasetService(Path("/tmp"))._validate_annotations(annotations=annotations, project=project)
 
     def test_validate_annotations_multiclass_classification_multiple_labels(self):
         project = ProjectDB(
@@ -174,7 +182,7 @@ class TestDatasetServiceUnit:
             )
         ]
         with pytest.raises(AnnotationValidationError):
-            DatasetService()._validate_annotations(annotations=annotations, project=project)
+            DatasetService(Path("/tmp"))._validate_annotations(annotations=annotations, project=project)
 
     def test_validate_annotations_detection(self):
         project = ProjectDB(
@@ -192,7 +200,7 @@ class TestDatasetServiceUnit:
                 shape=Rectangle(type="rectangle", x=10, y=10, width=10, height=10),
             ),
         ]
-        DatasetService()._validate_annotations(annotations=annotations, project=project)
+        DatasetService(Path("/tmp"))._validate_annotations(annotations=annotations, project=project)
 
     @pytest.mark.parametrize(
         "shape",
@@ -218,7 +226,7 @@ class TestDatasetServiceUnit:
             ),
         ]
         with pytest.raises(AnnotationValidationError):
-            DatasetService()._validate_annotations(annotations=annotations, project=project)
+            DatasetService(Path("/tmp"))._validate_annotations(annotations=annotations, project=project)
 
     def test_validate_annotations_detection_wrong_shape_multiple_labels(self):
         project = ProjectDB(
@@ -237,7 +245,7 @@ class TestDatasetServiceUnit:
             ),
         ]
         with pytest.raises(AnnotationValidationError):
-            DatasetService()._validate_annotations(annotations=annotations, project=project)
+            DatasetService(Path("/tmp"))._validate_annotations(annotations=annotations, project=project)
 
     def test_validate_annotations_segmentation(self):
         project = ProjectDB(
@@ -255,7 +263,7 @@ class TestDatasetServiceUnit:
                 shape=Polygon(type="polygon", points=[Point(x=10, y=10), Point(x=20, y=20)]),
             ),
         ]
-        DatasetService()._validate_annotations(annotations=annotations, project=project)
+        DatasetService(Path("/tmp"))._validate_annotations(annotations=annotations, project=project)
 
     @pytest.mark.parametrize(
         "shape",
@@ -281,7 +289,7 @@ class TestDatasetServiceUnit:
             ),
         ]
         with pytest.raises(AnnotationValidationError):
-            DatasetService()._validate_annotations(annotations=annotations, project=project)
+            DatasetService(Path("/tmp"))._validate_annotations(annotations=annotations, project=project)
 
     def test_validate_annotations_segmentation_wrong_shape_multiple_labels(self):
         project = ProjectDB(
@@ -300,4 +308,4 @@ class TestDatasetServiceUnit:
             ),
         ]
         with pytest.raises(AnnotationValidationError):
-            DatasetService()._validate_annotations(annotations=annotations, project=project)
+            DatasetService(Path("/tmp"))._validate_annotations(annotations=annotations, project=project)

@@ -218,6 +218,7 @@ class DatasetService:
             if project is None:
                 raise ResourceNotFoundError(ResourceType.PROJECT, str(project_id))
             DatasetService._validate_annotations_labels(annotations=annotations, project=project)
+            DatasetService._validate_annotations(annotations=annotations, project=project)
 
             repo = DatasetItemRepository(project_id=str(project_id), db=db)
             dataset_item = repo.get_by_id(str(dataset_item_id))
