@@ -17,8 +17,16 @@ UUID3 = uuid4()
 
 SUPPORTED_PIPELINE_MAPPING = [
     (
-        Pipeline(project_id=UUID0, status=PipelineStatus.IDLE),
-        PipelineDB(project_id=str(UUID0), is_running=False),
+        Pipeline(
+            project_id=UUID0,
+            status=PipelineStatus.IDLE,
+            data_collection_policies=[],
+        ),
+        PipelineDB(
+            project_id=str(UUID0),
+            is_running=False,
+            data_collection_policies=[],
+        ),
     ),
     (
         Pipeline(
@@ -27,6 +35,7 @@ SUPPORTED_PIPELINE_MAPPING = [
             source_id=UUID1,
             sink_id=UUID2,
             model_id=UUID3,
+            data_collection_policies=[],
         ),
         PipelineDB(
             project_id=str(UUID0),
@@ -34,6 +43,7 @@ SUPPORTED_PIPELINE_MAPPING = [
             source_id=str(UUID1),
             sink_id=str(UUID2),
             model_id=str(UUID3),
+            data_collection_policies=[],
         ),
     ),
 ]
@@ -58,7 +68,7 @@ class TestPipelineMapper:
 
     def test_misconfigured_pipeline(self):
         with pytest.raises(ValidationError):
-            PipelineMapper.to_schema(PipelineDB(project_id=str(UUID0), is_running=True))
+            PipelineMapper.to_schema(PipelineDB(project_id=str(UUID0), is_running=True, data_collection_policies=[]))
 
         with pytest.raises(ValidationError):
             Pipeline(project_id=UUID1, status=PipelineStatus.RUNNING)
