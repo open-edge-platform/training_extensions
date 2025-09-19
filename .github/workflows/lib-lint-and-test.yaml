@@ -97,9 +97,9 @@ jobs:
     name: Unit-Test-with-Python${{ matrix.python-version }}
     steps:
       - name: Runner cleanup
-        uses: open-edge-platform/geti-ci/actions/cleanup-runner@6bd3a5a348cd0028b6c4b575ac14ce4529feeb0b #FIXME
+        uses: open-edge-platform/geti-ci/actions/cleanup-runner@fe057c331605364551b3dc0be609807b1b588a05 #FIXME
         with:
-          type: "initial"
+          type: "all"
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
