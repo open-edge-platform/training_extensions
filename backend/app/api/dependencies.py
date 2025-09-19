@@ -144,18 +144,20 @@ def get_system_service() -> SystemService:
 
 @lru_cache
 def get_model_service(
+    request: Request,
     scheduler: Annotated[Scheduler, Depends(get_scheduler)],
 ) -> ModelService:
     """Provides a ModelService instance with the model reload event from the scheduler."""
     return ModelService(
+        data_dir=request.app.state.settings.data_dir,
         mp_model_reload_event=scheduler.mp_model_reload_event,
     )
 
 
 @lru_cache
-def get_dataset_service() -> DatasetService:
+def get_dataset_service(request: Request) -> DatasetService:
     """Provides a DatasetService instance."""
-    return DatasetService()
+    return DatasetService(request.app.state.settings.data_dir)
 
 
 def get_webrtc_manager(request: Request) -> WebRTCManager:

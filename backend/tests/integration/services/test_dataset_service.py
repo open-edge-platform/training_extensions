@@ -2,7 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 import logging
 import os.path
-from collections.abc import Callable
+import shutil
+from collections.abc import Callable, Generator
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
@@ -23,6 +24,16 @@ from app.services.dataset_service import DatasetService, InvalidImageError
 logger = logging.getLogger(__name__)
 
 
+@pytest.fixture(scope="session", autouse=True)
+def projects_dir() -> Generator[Path]:
+    """Setup a temporary data directory for tests."""
+    projects_dir = Path("data/projects")
+    if not projects_dir.exists():
+        projects_dir.mkdir(parents=True)
+    yield projects_dir
+    shutil.rmtree(projects_dir)
+
+
 @pytest.fixture(autouse=True)
 def mock_get_db_session(db_session):
     """Mock the get_db_session to use test database."""
@@ -33,9 +44,9 @@ def mock_get_db_session(db_session):
 
 
 @pytest.fixture
-def fxt_dataset_service() -> DatasetService:
+def fxt_dataset_service(projects_dir: Path) -> DatasetService:
     """Fixture to create a DatasetService instance."""
-    return DatasetService()
+    return DatasetService(projects_dir.parent)
 
 
 @pytest.fixture

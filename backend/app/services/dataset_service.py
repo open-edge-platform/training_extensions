@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
-import os
 from datetime import datetime
 from pathlib import Path
 from typing import BinaryIO
@@ -46,8 +45,9 @@ class InvalidImageError(Exception):
 
 
 class DatasetService:
-    def __init__(self) -> None:
+    def __init__(self, data_dir: Path) -> None:
         self.mapper = DatasetItemMapper()
+        self.projects_dir = data_dir / "projects"
 
     def create_dataset_item(
         self, project_id: UUID, name: str, format: str, size: int, file: BinaryIO, user_reviewed: bool
@@ -71,10 +71,9 @@ class DatasetService:
             user_reviewed=user_reviewed,
         )
 
-        dataset_dir = Path(f"data/projects/{str(project_id)}/dataset")
-        if not os.path.exists(dataset_dir):
-            os.makedirs(dataset_dir)
-        image.save(dataset_dir / f"{str(dataset_item_id)}.{format}")
+        dataset_dir = self.projects_dir / f"{project_id}/dataset"
+        dataset_dir.mkdir(parents=True, exist_ok=True)
+        image.save(dataset_dir / f"{dataset_item_id}.{format}")
 
         try:
             thumbnail_image = crop_to_thumbnail(
@@ -82,7 +81,7 @@ class DatasetService:
             )
             if thumbnail_image.mode in ("RGBA", "P"):
                 thumbnail_image = thumbnail_image.convert("RGB")
-            thumbnail_image.save(dataset_dir / f"{str(dataset_item_id)}-thumb.jpg")
+            thumbnail_image.save(dataset_dir / f"{dataset_item_id}-thumb.jpg")
         except Exception as e:
             logger.exception("Failed to generate thumbnail image %s", e)
 
@@ -135,7 +134,7 @@ class DatasetService:
             dataset_item = repo.get_by_id(str(dataset_item_id))
             if not dataset_item:
                 raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
-        return Path(f"data/projects/{str(project_id)}/dataset/{dataset_item.id}.{dataset_item.format}")
+        return self.projects_dir / f"{project_id}/dataset/{dataset_item.id}.{dataset_item.format}"
 
     def get_dataset_item_thumbnail_path_by_id(self, project_id: UUID, dataset_item_id: UUID) -> Path | str:
         """Get a dataset item thumbnail binary content by its ID"""
@@ -144,7 +143,7 @@ class DatasetService:
             dataset_item = repo.get_by_id(str(dataset_item_id))
             if not dataset_item:
                 raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
-        return Path(f"data/projects/{str(project_id)}/dataset/{str(dataset_item.id)}-thumb.jpg")
+        return self.projects_dir / f"{project_id}/dataset/{dataset_item.id}-thumb.jpg"
 
     def delete_dataset_item(self, project_id: UUID, dataset_item_id: UUID) -> None:
         """Delete a dataset item by its ID"""
