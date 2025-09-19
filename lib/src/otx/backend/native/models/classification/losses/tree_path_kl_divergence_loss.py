@@ -6,14 +6,12 @@
 from __future__ import annotations
 
 import torch
-import torch.nn.functional as F
 from torch import nn
+from torch.nn import functional
 
 
 class TreePathKLDivergenceLoss(nn.Module):
-    """KL divergence between model distribution over concatenated heads and a
-    target distribution that allocates equal mass to the ground-truth class
-    at each hierarchy level.
+    """KL divergence between model distribution over concatenated heads and a target distribution.
 
     Inputs:
         logits_list: list of tensors [B, C_l], ordered from root -> leaf
@@ -30,20 +28,23 @@ class TreePathKLDivergenceLoss(nn.Module):
         self.kl_div = nn.KLDivLoss(reduction=self.reduction)
 
     def forward(self, logits_list: list[torch.Tensor], targets: torch.Tensor) -> torch.Tensor:
-        assert isinstance(logits_list, (list, tuple)) and len(logits_list) > 0, "logits_list must be non-empty"
+        """Calculate tree_path KL Divergence loss."""
+        if not (isinstance(logits_list, (list, tuple)) and len(logits_list) > 0):
+            msg = "logits_list must be non-empty"
+            raise ValueError(msg)
         num_levels = len(logits_list)
 
         # concat logits across all levels
         dims = [t.size(1) for t in logits_list]
         logits_concat = torch.cat(logits_list, dim=1)  # [B, sum(C_l)]
-        log_probs = F.log_softmax(logits_concat, dim=1)  # [B, sum(C_l)]
+        log_probs = functional.log_softmax(logits_concat, dim=1)  # [B, sum(C_l)]
 
         # build sparse target distribution with 1/L at each GT index
-        B = log_probs.size(0)
+        batch = log_probs.size(0)
         tgt = torch.zeros_like(log_probs)  # [B, sum(C_l)]
         offset = 0
         for num_c, tgt_l in zip(dims, targets.T):  # level-by-level
-            idx_rows = torch.arange(B, device=log_probs.device)
+            idx_rows = torch.arange(batch, device=log_probs.device)
             tgt[idx_rows, offset + tgt_l] = 1.0 / num_levels
             offset += num_c
 

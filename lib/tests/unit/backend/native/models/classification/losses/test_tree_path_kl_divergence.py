@@ -1,19 +1,25 @@
-import torch
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 import pytest
-import torch.nn.functional as F
+import torch
+from torch.nn import functional
 
-from otx.backend.native.models.classification.losses.tree_path_KL_divergence_loss import TreePathKLDivergenceLoss
+from otx.backend.native.models.classification.losses.tree_path_kl_divergence_loss import TreePathKLDivergenceLoss
 
 
-@pytest.mark.parametrize("levels,classes_per_level", [
-    (2, [3, 5]),
-    (3, [2, 3, 4]),
-])
+@pytest.mark.parametrize(
+    ("levels", "classes_per_level"),
+    [
+        (2, [3, 5]),
+        (3, [2, 3, 4]),
+    ],
+)
 def test_forward_scalar_and_finite(levels, classes_per_level):
     torch.manual_seed(0)
-    B = 4
-    logits_list = [torch.randn(B, c) for c in classes_per_level]
-    targets = torch.stack([torch.randint(0, c, (B,)) for c in classes_per_level], dim=1)
+    batch = 4
+    logits_list = [torch.randn(batch, c) for c in classes_per_level]
+    targets = torch.stack([torch.randint(0, c, (batch,)) for c in classes_per_level], dim=1)
 
     loss_fn = TreePathKLDivergenceLoss(reduction="batchmean")
     loss = loss_fn(logits_list, targets)
@@ -23,10 +29,10 @@ def test_forward_scalar_and_finite(levels, classes_per_level):
 
 
 def test_backward_produces_grads():
-    B = 3
-    C = [4, 6]
-    logits_list = [torch.randn(B, c, requires_grad=True) for c in C]
-    targets = torch.stack([torch.randint(0, c, (B,)) for c in C], dim=1)
+    batch = 3
+    channel = [4, 6]
+    logits_list = [torch.randn(batch, c, requires_grad=True) for c in channel]
+    targets = torch.stack([torch.randint(0, c, (batch,)) for c in channel], dim=1)
 
     loss = TreePathKLDivergenceLoss()(logits_list, targets)
     loss.backward()
@@ -36,21 +42,21 @@ def test_backward_produces_grads():
 
 
 def test_alignment_vs_misalignment_loss():
-    B = 2
-    C0, C1 = 3, 4
+    batch = 2
+    channel0, channel1 = 3, 4
     targets = torch.tensor([[0, 1], [2, 3]])
 
     # Aligned: boost GT logits
-    aligned0 = torch.zeros(B, C0)
-    aligned1 = torch.zeros(B, C1)
-    aligned0[torch.arange(B), targets[:, 0]] = 5.0
-    aligned1[torch.arange(B), targets[:, 1]] = 5.0
+    aligned0 = torch.zeros(batch, channel0)
+    aligned1 = torch.zeros(batch, channel1)
+    aligned0[torch.arange(batch), targets[:, 0]] = 5.0
+    aligned1[torch.arange(batch), targets[:, 1]] = 5.0
 
     # Misaligned: boost wrong logits
-    mis0 = torch.zeros(B, C0)
-    mis1 = torch.zeros(B, C1)
-    mis0[torch.arange(B), (targets[:, 0] + 1) % C0] = 5.0
-    mis1[torch.arange(B), (targets[:, 1] + 1) % C1] = 5.0
+    mis0 = torch.zeros(batch, channel0)
+    mis1 = torch.zeros(batch, channel1)
+    mis0[torch.arange(batch), (targets[:, 0] + 1) % channel0] = 5.0
+    mis1[torch.arange(batch), (targets[:, 1] + 1) % channel1] = 5.0
 
     loss_fn = TreePathKLDivergenceLoss()
     loss_aligned = loss_fn([aligned0, aligned1], targets)
@@ -64,19 +70,18 @@ def test_single_level_exact_value():
     We check exact value against F.cross_entropy.
     """
 
-    B, C = 2, 3
-    logits = torch.tensor([[2.0, 0.0, -1.0],
-                           [0.5, 1.0, -0.5]])
+    logits = torch.tensor([[2.0, 0.0, -1.0], [0.5, 1.0, -0.5]])
     targets = torch.tensor([[0], [2]])  # shape [B,1]
 
-    # TreePathKL
+    # TreePathKLP
     loss_fn = TreePathKLDivergenceLoss(reduction="batchmean")
     kl_loss = loss_fn([logits], targets)
 
     # CrossEntropy with one-hot is same as NLLLoss(log_softmax)
-    ce_loss = F.cross_entropy(logits, targets.view(-1), reduction="mean")
+    ce_loss = functional.cross_entropy(logits, targets.view(-1), reduction="mean")
 
     assert torch.allclose(kl_loss, ce_loss, atol=1e-6)
+
 
 def test_multi_level_exact_value_batchmean():
     """
@@ -90,45 +95,41 @@ def test_multi_level_exact_value_batchmean():
     """
 
     # Use double for better numerical agreement
-    B = 2
+    batch = 2
     l0, l1 = 2, 3
-    logits0 = torch.tensor([[2.0, -1.0],
-                            [0.0,  1.0]], dtype=torch.float64)              # [B, l0]
-    logits1 = torch.tensor([[ 0.5,  0.0, -0.5],
-                            [-1.0,  2.0,  0.5]], dtype=torch.float64)       # [B, l1]
-    logits_list = [logits0, logits1]
+    logits0 = torch.tensor([[2.0, -1.0], [0.0, 1.0]], dtype=torch.float64)  # [B, l0]
+    logits1 = torch.tensor([[0.5, 0.0, -0.5], [-1.0, 2.0, 0.5]], dtype=torch.float64)  # [B, l1]
 
     # Ground-truth indices per level
     # sample 0: level0->0, level1->1
     # sample 1: level0->1, level1->2
-    targets = torch.tensor([[0, 1],
-                            [1, 2]], dtype=torch.long)                      # [B, 2]
-    L = 2  # number of levels
+    targets = torch.tensor([[0, 1], [1, 2]], dtype=torch.long)  # [B, 2]
+    level = 2  # number of levels
 
     # Model log probs over concatenated heads
-    concat = torch.cat([logits0, logits1], dim=1)                           # [B, l0+l1]
-    log_q = F.log_softmax(concat, dim=1)                                    # log(q_j)
+    concat = torch.cat([logits0, logits1], dim=1)  # [B, l0+l1]
+    log_q = functional.log_softmax(concat, dim=1)  # log(q_j)
 
-    # Build target distribution p: 1/L at each GT index, 0 elsewhere
+    # Build target distribution p: 1/level at each GT index, 0 elsewhere
     p = torch.zeros_like(log_q, dtype=torch.float64)
     offset = 0
     for num_c, tgt_l in zip([l0, l1], targets.T):
-        rows = torch.arange(B)
-        p[rows, offset + tgt_l] = 1.0 / L
+        rows = torch.arange(batch)
+        p[rows, offset + tgt_l] = 1.0 / level
         offset += num_c
 
     # Manual KL with 'batchmean' reduction:
-    # sum_i sum_j p_ij * (log p_ij - log q_ij) / B
+    # sum_i sum_j p_ij * (log p_ij - log q_ij) / batch
     # (avoid log(0) by masking since p is sparse)
     mask = p > 0
     log_p = torch.zeros_like(p)
     log_p[mask] = torch.log(p[mask])
-    manual_kl = (p * (log_p - log_q)).sum() / B
+    manual_kl = (p * (log_p - log_q)).sum() / batch
 
     # Loss under test (must match manual)
     loss_fn = TreePathKLDivergenceLoss(reduction="batchmean")
     test_kl = loss_fn([logits0.float(), logits1.float()], targets)
 
-    assert torch.allclose(test_kl.double(), manual_kl, atol=1e-8), (
-        f"manual={manual_kl.item():.12f} vs loss={test_kl.item():.12f}"
-    )
+    assert torch.allclose(
+        test_kl.double(), manual_kl, atol=1e-8
+    ), f"manual={manual_kl.item():.12f} vs loss={test_kl.item():.12f}"
