@@ -3,7 +3,7 @@
 #######
 # Backend base
 #######
-FROM python:3.13-slim@sha256:6f79e7a10bb7d0b0a50534a70ebc78823f941fba26143ecd7e6c5dca9d7d7e8a AS backend-base
+FROM python:3.13-slim@sha256:58c30f5bfaa718b5803a53393190b9c68bd517c44c6c94c1b6c8c172bcfad040 AS backend-base
 COPY --from=docker.io/astral/uv:0.8.8@sha256:67b2bcccdc103d608727d1b577e58008ef810f751ed324715eb60b3f0c040d30 /uv /uvx /bin/
 
 # Set working directory
@@ -13,7 +13,8 @@ ENV PYTHONPATH=/app
 
 # Install system dependencies required for OpenCV
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgl1-mesa-glx=22.3.6-1+deb12u1 \
+    libgl1=1.7.0-1+b2 \
+    libglx-mesa0=25.0.7-2 \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
@@ -28,7 +29,7 @@ COPY backend/app ./app
 #############
 # build_rest_api_specs
 #############
-FROM node:24-alpine3.22@sha256:7aaba6b13a55a1d78411a1162c1994428ed039c6bbef7b1d9859c25ada1d7cc5 AS build_rest_api_specs
+FROM node:24-alpine3.22@sha256:3e843c608bb5232f39ecb2b25e41214b958b0795914707374c8acc28487dea17 AS build_rest_api_specs
 
 WORKDIR /home/app/web_ui/
 
@@ -39,7 +40,7 @@ RUN npm run build:api
 #############
 # geti_ui_packages
 #############
-FROM node:24-alpine3.22@sha256:7aaba6b13a55a1d78411a1162c1994428ed039c6bbef7b1d9859c25ada1d7cc5 AS geti_ui_packags
+FROM node:24-alpine3.22@sha256:3e843c608bb5232f39ecb2b25e41214b958b0795914707374c8acc28487dea17 AS geti_ui_packags
 
 WORKDIR /home/app/web_ui/
 RUN apk add --no-cache git=2.49.1-r0
@@ -49,7 +50,7 @@ RUN npm run clone-geti-ui-packages
 #############
 # web_ui_deps
 #############
-FROM node:24-alpine3.22@sha256:7aaba6b13a55a1d78411a1162c1994428ed039c6bbef7b1d9859c25ada1d7cc5 AS base_web_ui
+FROM node:24-alpine3.22@sha256:3e843c608bb5232f39ecb2b25e41214b958b0795914707374c8acc28487dea17 AS base_web_ui
 
 WORKDIR /home/app/web_ui/
 
@@ -80,7 +81,7 @@ FROM backend-base AS geti-tune
 
 # Install nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    nginx=1.22.* \
+    nginx=1.26.* \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
