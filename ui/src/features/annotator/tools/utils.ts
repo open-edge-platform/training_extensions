@@ -343,7 +343,7 @@ export const getRelativePoint = (element: ElementType, point: Point, zoom: numbe
 export const loadImage = (link: string): Promise<HTMLImageElement> =>
     new Promise<HTMLImageElement>((resolve, reject) => {
         const image = new Image();
-        image.crossOrigin = 'use-credentials';
+        image.crossOrigin = 'anonymous';
 
         image.onload = () => resolve(image);
         image.onerror = (error) => reject(error);

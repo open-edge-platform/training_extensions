@@ -8,7 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Remote, wrap } from 'comlink';
 
 import { useAnnotator } from '../../annotator-provider.component';
-import { MediaItem } from '../../types';
+import { DatasetItem } from '../../types';
 import { convertToolShapeToGetiShape } from '../utils';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';
 
@@ -53,7 +53,11 @@ const useSegmentAnythingWorker = (algorithmType: 'SEGMENT_ANYTHING_DECODER' | 'S
     return modelRef.current;
 };
 
-const useEncodingQuery = (model: Remote<SegmentAnythingModel> | undefined, mediaItem: MediaItem, image: ImageData) => {
+const useEncodingQuery = (
+    model: Remote<SegmentAnythingModel> | undefined,
+    mediaItem: DatasetItem,
+    image: ImageData
+) => {
     return useQuery({
         queryKey: ['segment-anything-model', 'encoding', mediaItem?.id],
         queryFn: async () => {
