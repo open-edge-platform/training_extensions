@@ -3,12 +3,11 @@
 
 import { Flex, Heading, View } from '@geti/ui';
 
-import IntelBrandedLoadingGif from '../../../../assets/intel-loading.webp';
+import IntelBrandedLoadingGif from '../../assets/intel-loading.webp';
 
-export const ModelLoading = ({ isLoadingModel }: { isLoadingModel: boolean }) => {
+export const Loading = ({ isLoading }: { isLoading: boolean }) => {
     return (
         <View
-            height={'100%'}
             position={'absolute'}
             left={0}
             top={0}
@@ -37,7 +36,7 @@ export const ModelLoading = ({ isLoadingModel }: { isLoadingModel: boolean }) =>
                         textShadow: '1px 1px 2px black, 1px 1px 2px white',
                     }}
                 >
-                    {isLoadingModel ? 'Loading image model' : 'Extracting image features'}
+                    {isLoading && 'Processing image, please wait...'}
                 </Heading>
             </Flex>
         </View>

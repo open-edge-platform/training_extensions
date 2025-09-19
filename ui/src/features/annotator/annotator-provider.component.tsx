@@ -10,16 +10,23 @@ import { useLoadImageQuery } from './hooks/use-load-image-query.hook';
 import { Annotation, DatasetItem, RegionOfInterest, Shape } from './types';
 
 type AnnotatorContext = {
+    // Tools
     activeTool: ToolType | null;
     setActiveTool: Dispatch<SetStateAction<ToolType>>;
 
+    // Annotations
+    annotations: Annotation[];
     addAnnotation: (shape: Shape) => void;
     updateAnnotation: (updatedAnnotation: Annotation) => void;
 
+    // Media item
     mediaItem: DatasetItem;
     image: ImageData;
     roi: RegionOfInterest;
-    annotations: Annotation[];
+
+    // Any loading state needed
+    isLoading: boolean;
+    setIsLoading: Dispatch<SetStateAction<boolean>>;
 };
 
 export const AnnotatorProviderContext = createContext<AnnotatorContext | null>(null);
@@ -28,6 +35,7 @@ export const AnnotatorProvider = ({ mediaItem, children }: { mediaItem: DatasetI
     const [activeTool, setActiveTool] = useState<ToolType>('selection');
     // todo: pass media annotations
     const [annotations, setAnnotations] = useState<Annotation[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
 
     const imageQuery = useLoadImageQuery(mediaItem);
 
@@ -64,6 +72,9 @@ export const AnnotatorProvider = ({ mediaItem, children }: { mediaItem: DatasetI
                 mediaItem,
                 image: imageQuery.data || new ImageData(mediaItem.width, mediaItem.height),
                 roi: { x: 0, y: 0, width: mediaItem.width, height: mediaItem.height },
+
+                isLoading,
+                setIsLoading,
             }}
         >
             {children}

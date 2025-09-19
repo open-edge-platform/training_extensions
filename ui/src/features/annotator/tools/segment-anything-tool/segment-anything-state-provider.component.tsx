@@ -10,7 +10,6 @@ import { isEmpty } from 'lodash-es';
 
 import { useAnnotator } from '../../annotator-provider.component';
 import { Shape } from '../../types';
-import { ModelLoading } from './model-loading.component';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';
 import { useDecodingMutation, useDecodingQuery, useDecodingQueryOptions } from './use-decoding-query.hook';
 import { useSegmentAnythingModel } from './use-segment-anything.hook';
@@ -42,7 +41,7 @@ export const SegmentAnythingStateProvider = ({ children }: { children: ReactNode
     });
     const [_, setIsDrawing] = useState(false);
 
-    const { addAnnotation } = useAnnotator();
+    const { addAnnotation, setIsLoading } = useAnnotator();
 
     const queryClient = useQueryClient();
     const { encodingQuery, decodingQueryFn, isLoading } = useSegmentAnythingModel();
@@ -64,6 +63,14 @@ export const SegmentAnythingStateProvider = ({ children }: { children: ReactNode
     }, [decodingQuery.data, decodingQuery.isPlaceholderData, state.points]);
 
     const decodingMutation = useDecodingMutation(decodingQueryFn);
+
+    useEffect(() => {
+        if (isLoading) {
+            setIsLoading(true);
+        } else if (encodingQuery.data !== undefined) {
+            setIsLoading(false);
+        }
+    }, [isLoading, encodingQuery.data, setIsLoading]);
 
     const reset = async () => {
         queryClient.removeQueries({ queryKey: decodingQueryOptions.queryKey });
@@ -108,10 +115,6 @@ export const SegmentAnythingStateProvider = ({ children }: { children: ReactNode
             });
         }
     };
-
-    if (isLoading || encodingQuery.data === undefined) {
-        return <ModelLoading isLoadingModel={isLoading} />;
-    }
 
     return (
         <SegmentAnythingStateContext.Provider
