@@ -162,8 +162,8 @@ class DFine(RTDETR):
     def load_state_dict(self, ckpt: dict[str, Any], *args, **kwargs) -> None:
         """Load state dictionary from checkpoint state dictionary.
 
-        If checkpoint's label_info and OTXLitModule's label_info are different,
-        load_state_pre_hook for smart weight loading will be registered.
+        If a RuntimeError occurs due to size mismatch, non-trainable anchors and valid_mask
+        are removed from the checkpoint before loading.
         """
         try:
             return super().load_state_dict(ckpt, *args, **kwargs)
