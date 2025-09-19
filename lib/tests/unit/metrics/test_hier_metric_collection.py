@@ -1,5 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+import re
 import types
 
 import pytest
@@ -8,10 +9,10 @@ from torchmetrics.classification import Precision as TorchPrecision
 
 from otx.metrics.hier_metric_collection import (
     FullPathAccuracy,
-    HierMetricCollectionCallable,
     InconsistentPathRatio,
     LeafAccuracy,
     WeightedHierarchicalPrecision,
+    hier_metric_collection_callable,
 )
 
 
@@ -40,6 +41,8 @@ def label_info_stub():
     ]
     # per-level class ranges (concatenated logits indices convention)
     li.head_idx_to_logits_range = {0: (0, 2), 1: (2, 4), 2: (4, 8)}
+    li.num_multiclass_heads = len(li.label_groups)
+    li.num_multilabel_classes = sum(len(g) for g in li.label_groups)
     return li
 
 
@@ -147,18 +150,19 @@ def test_weighted_hierarchical_precision_matches_reference(label_info_stub, samp
 # -------------------------- MetricCollection callable -----------------------
 def test_hier_metric_collection_callable(label_info_stub, sample_tensors):
     target, preds = sample_tensors
-    mc = HierMetricCollectionCallable(label_info_stub)
+    mc = hier_metric_collection_callable(label_info_stub)
 
     # update/compute over the whole collection
     mc.update(preds, target)
     out = mc.compute()
 
-    # keys present
     assert set(out.keys()) == {
         "leaf_accuracy",
         "full_path_accuracy",
         "inconsistent_path_ratio",
         "weighted_precision",
+        "accuracy",
+        "conf_matrix",
     }
 
     # spot-check a couple of values
@@ -173,7 +177,7 @@ def test_full_path_accuracy_shape_mismatch_raises():
     metric = FullPathAccuracy()
     preds = torch.tensor([[0, 0, 0]])
     target = torch.tensor([[0, 0]])  # wrong shape
-    with pytest.raises(ValueError, match="preds and target must have the same shape"):
+    with pytest.raises(ValueError, match=re.escape("preds and target must have the same shape")):
         metric.update(preds, target)
 
 
@@ -181,5 +185,5 @@ def test_inconsistent_path_ratio_requires_2d(label_info_stub):
     metric = InconsistentPathRatio(label_info_stub)
     preds = torch.tensor([0, 1, 2])  # 1D
     target = torch.tensor([0, 1, 2])
-    with pytest.raises(ValueError, match="preds must be 2D (N, L)"):
+    with pytest.raises(ValueError, match=re.escape("preds must be 2D (N, L)")):
         metric.update(preds, target)

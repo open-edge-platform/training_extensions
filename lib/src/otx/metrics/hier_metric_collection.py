@@ -25,6 +25,7 @@ from torch import nn
 from torchmetrics import Metric, MetricCollection
 from torchmetrics.classification import Precision as TorchPrecision
 
+from otx.metrics.accuracy import HlabelAccuracy
 from otx.types.label import HLabelInfo
 
 __all__ = [
@@ -219,6 +220,7 @@ def hier_metric_collection_callable(label_info: HLabelInfo) -> MetricCollection:
     """
     return MetricCollection(
         {
+            "accuracy": HlabelAccuracy(label_info=label_info),
             "leaf_accuracy": LeafAccuracy(label_info=label_info),
             "full_path_accuracy": FullPathAccuracy(),
             "inconsistent_path_ratio": InconsistentPathRatio(label_info=label_info),
