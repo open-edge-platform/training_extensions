@@ -12,7 +12,7 @@ import { useAnnotator } from '../../annotator-provider.component';
 import { Shape } from '../../types';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';
 import { useDecodingMutation, useDecodingQuery, useDecodingQueryOptions } from './use-decoding-query.hook';
-import { useSegmentAnythingModel } from './use-segment-anything-model.hook';
+import { useSegmentAnythingModel } from './use-segment-anything.hook';
 import { useSingleStackFn } from './use-single-stack-fn.hook';
 
 interface SegmentAnythingState {
