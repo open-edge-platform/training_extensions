@@ -362,14 +362,28 @@ class TestDatasetServiceIntegration:
         fxt_dataset_service: DatasetService,
         fxt_stored_projects: list[ProjectDB],
         fxt_stored_dataset_items: list[DatasetItemDB],
+        projects_dir,
         db_session: Session,
     ):
+        dataset_dir = projects_dir / fxt_stored_projects[0].id / "dataset"
+        dataset_dir.mkdir(parents=True, exist_ok=True)
+
+        binary_path = dataset_dir / f"{fxt_stored_dataset_items[0].id}.{fxt_stored_dataset_items[0].format}"
+        binary_path.touch()
+        assert os.path.exists(binary_path)
+
+        thumbnail_path = dataset_dir / f"{fxt_stored_dataset_items[0].id}-thumb.jpg"
+        thumbnail_path.touch()
+        assert os.path.exists(thumbnail_path)
+
         """Test deleting a dataset item."""
         fxt_dataset_service.delete_dataset_item(
             project_id=UUID(fxt_stored_projects[0].id), dataset_item_id=UUID(fxt_stored_dataset_items[0].id)
         )
 
         assert db_session.get(DatasetItemDB, fxt_stored_dataset_items[0].id) is None
+        assert not os.path.exists(binary_path)
+        assert not os.path.exists(thumbnail_path)
 
     def test_delete_dataset_item_not_found(
         self, fxt_dataset_service: DatasetService, fxt_stored_projects: list[ProjectDB]
