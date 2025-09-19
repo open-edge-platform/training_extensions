@@ -14,11 +14,11 @@ from PIL import Image
 from sqlalchemy.orm import Session
 
 from app.db.schema import DatasetItemDB, ProjectDB
-from app.schemas.dataset_item import DatasetItemAnnotation, DatasetItemAnnotations
+from app.schemas.dataset_item import DatasetItemAnnotation, DatasetItemAnnotationsWithSource
 from app.schemas.label import LabelReference
-from app.schemas.shape import Rectangle, Shape
-from app.services.base import InvalidImageError, ResourceNotFoundError, ResourceType
-from app.services.dataset_service import DatasetService
+from app.schemas.shape import FullImage, Rectangle
+from app.services.base import ResourceNotFoundError, ResourceType
+from app.services.dataset_service import DatasetService, InvalidImageError
 
 logger = logging.getLogger(__name__)
 
@@ -56,18 +56,16 @@ def fxt_stored_dataset_items(fxt_db_projects, fxt_db_dataset_items, db_session) 
 
 
 @pytest.fixture
-def fxt_annotation_data():
-    def _create_annotation_data(label_id: str) -> DatasetItemAnnotations:
-        return DatasetItemAnnotations(
-            annotations=[
-                DatasetItemAnnotation(
-                    labels=[LabelReference(id=UUID(label_id))],
-                    shape=Shape(root=Rectangle(type="rectangle", x=0, y=0, width=10, height=10)),
-                )
-            ]
-        )
+def fxt_annotations():
+    def _create_annotations(label_id: str) -> list[DatasetItemAnnotation]:
+        return [
+            DatasetItemAnnotation(
+                labels=[LabelReference(id=UUID(label_id))],
+                shape=Rectangle(type="rectangle", x=0, y=0, width=10, height=10),
+            )
+        ]
 
-    return _create_annotation_data
+    return _create_annotations
 
 
 class TestDatasetServiceIntegration:
@@ -396,36 +394,38 @@ class TestDatasetServiceIntegration:
         fxt_dataset_service: DatasetService,
         fxt_stored_projects: list[ProjectDB],
         fxt_stored_dataset_items: list[DatasetItemDB],
-        fxt_annotation_data: Callable[[str], DatasetItemAnnotations],
+        fxt_annotations: Callable[[str], list[DatasetItemAnnotation]],
         db_session: Session,
     ):
         """Test setting a dataset item annotation."""
-        annotation_data = fxt_annotation_data(fxt_stored_projects[0].labels[0].id)
+        annotations = fxt_annotations(fxt_stored_projects[0].labels[0].id)
         fxt_dataset_service.set_dataset_item_annotations(
             project_id=UUID(fxt_stored_projects[0].id),
             dataset_item_id=UUID(fxt_stored_dataset_items[0].id),
-            annotation_data=annotation_data,
+            annotations=annotations,
         )
 
         dataset_item = db_session.get(DatasetItemDB, fxt_stored_dataset_items[0].id)
         assert dataset_item is not None
         assert dataset_item.annotation_data is not None
-        assert DatasetItemAnnotations.model_validate(dataset_item.annotation_data) == annotation_data
+        assert [
+            DatasetItemAnnotation.model_validate(annotation) for annotation in dataset_item.annotation_data
+        ] == annotations
 
     def test_set_dataset_item_annotations_not_found(
         self,
         fxt_dataset_service: DatasetService,
         fxt_stored_projects: list[ProjectDB],
-        fxt_annotation_data: Callable[[str], DatasetItemAnnotations],
+        fxt_annotations: Callable[[str], list[DatasetItemAnnotation]],
     ):
         """Test setting a dataset item annotation for a non-existent dataset item."""
         non_existent_id = uuid4()
-        annotation_data = fxt_annotation_data(fxt_stored_projects[0].labels[0].id)
+        annotations = fxt_annotations(fxt_stored_projects[0].labels[0].id)
         with pytest.raises(ResourceNotFoundError) as excinfo:
             fxt_dataset_service.set_dataset_item_annotations(
                 project_id=UUID(fxt_stored_projects[0].id),
                 dataset_item_id=non_existent_id,
-                annotation_data=annotation_data,
+                annotations=annotations,
             )
 
         assert excinfo.value.resource_type == ResourceType.DATASET_ITEM
@@ -436,15 +436,15 @@ class TestDatasetServiceIntegration:
         fxt_dataset_service: DatasetService,
         fxt_stored_projects: list[ProjectDB],
         fxt_stored_dataset_items: list[DatasetItemDB],
-        fxt_annotation_data: Callable[[str], DatasetItemAnnotations],
+        fxt_annotations: Callable[[str], list[DatasetItemAnnotation]],
     ):
         """Test setting a dataset item annotation with wrong project id."""
-        annotation_data = fxt_annotation_data(fxt_stored_projects[1].labels[0].id)
+        annotations = fxt_annotations(fxt_stored_projects[1].labels[0].id)
         with pytest.raises(ResourceNotFoundError) as excinfo:
             fxt_dataset_service.set_dataset_item_annotations(
                 project_id=UUID(fxt_stored_projects[1].id),
                 dataset_item_id=UUID(fxt_stored_dataset_items[0].id),
-                annotation_data=annotation_data,
+                annotations=annotations,
             )
 
         assert excinfo.value.resource_type == ResourceType.DATASET_ITEM
@@ -463,7 +463,9 @@ class TestDatasetServiceIntegration:
             dataset_item_id=UUID(fxt_stored_dataset_items[0].id),
         )
 
-        assert annotations is None
+        assert annotations == DatasetItemAnnotationsWithSource(
+            annotations=[], user_reviewed=False, prediction_model_id=None
+        )
 
     def test_get_dataset_item_annotations(
         self,
@@ -478,7 +480,16 @@ class TestDatasetServiceIntegration:
             dataset_item_id=UUID(fxt_stored_dataset_items[1].id),
         )
 
-        assert annotations is not None
+        assert annotations == DatasetItemAnnotationsWithSource(
+            annotations=[
+                DatasetItemAnnotation(
+                    labels=[LabelReference(id=UUID(fxt_stored_projects[0].labels[0].id))],
+                    shape=FullImage(type="full_image"),
+                )
+            ],
+            user_reviewed=False,
+            prediction_model_id=None,
+        )
 
     def test_get_dataset_item_annotations_not_found(
         self,
@@ -529,7 +540,7 @@ class TestDatasetServiceIntegration:
 
         dataset_item = db_session.get(DatasetItemDB, fxt_stored_dataset_items[1].id)
         assert dataset_item is not None
-        assert dataset_item.annotation_data is None
+        assert dataset_item.annotation_data == []
 
     def test_delete_dataset_item_annotations_not_found(
         self,

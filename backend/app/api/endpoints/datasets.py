@@ -19,7 +19,7 @@ from app.schemas import DatasetItem, DatasetItemsWithPagination
 from app.schemas.base import Pagination
 from app.schemas.dataset_item import DatasetItemAnnotation, DatasetItemAnnotations, DatasetItemAnnotationsWithSource
 from app.services import DatasetService, ResourceNotFoundError
-from app.services.base import AnnotationValidationError, InvalidImageError
+from app.services.dataset_service import AnnotationValidationError, InvalidImageError
 
 router = APIRouter(prefix="/api/projects/{project_id}/dataset/items", tags=["Datasets"])
 
@@ -126,7 +126,7 @@ def list_dataset_items(
     responses={
         status.HTTP_200_OK: {"description": "Dataset item found", "model": DatasetItem},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid dataset item ID"},
-        status.HTTP_404_NOT_FOUND: {"description": "Dataset item not found"},
+        status.HTTP_404_NOT_FOUND: {"description": "Dataset item or project not found"},
     },
 )
 def get_dataset_item(
@@ -146,7 +146,7 @@ def get_dataset_item(
     responses={
         status.HTTP_200_OK: {"description": "Dataset item binary found"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid dataset item ID"},
-        status.HTTP_404_NOT_FOUND: {"description": "Dataset item binary not found"},
+        status.HTTP_404_NOT_FOUND: {"description": "Dataset item, dataset item binary or project not found"},
     },
 )
 def get_dataset_item_binary(
@@ -169,7 +169,7 @@ def get_dataset_item_binary(
     responses={
         status.HTTP_200_OK: {"description": "Dataset item thumbnail found"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid dataset item ID"},
-        status.HTTP_404_NOT_FOUND: {"description": "Dataset item thumbnail not found"},
+        status.HTTP_404_NOT_FOUND: {"description": "Dataset item, dataset item thumbnail or project not found"},
     },
 )
 def get_dataset_item_thumbnail(
@@ -193,7 +193,7 @@ def get_dataset_item_thumbnail(
     responses={
         status.HTTP_204_NO_CONTENT: {"description": "Dataset item deleted"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid dataset item ID"},
-        status.HTTP_404_NOT_FOUND: {"description": "Dataset item not found"},
+        status.HTTP_404_NOT_FOUND: {"description": "Dataset item or project not found"},
     },
 )
 def delete_dataset_item(
@@ -212,7 +212,9 @@ def delete_dataset_item(
     "/{dataset_item_id}/annotations",
     status_code=status.HTTP_201_CREATED,
     responses={
-        status.HTTP_201_CREATED: {"description": "Dataset item annotation created", "model": DatasetItemAnnotation}
+        status.HTTP_201_CREATED: {"description": "Dataset item annotation created", "model": DatasetItemAnnotation},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid dataset item ID or invalid annotation content"},
+        status.HTTP_404_NOT_FOUND: {"description": "Dataset item or project not found"},
     },
 )
 def set_dataset_item_annotations(
@@ -226,7 +228,7 @@ def set_dataset_item_annotations(
     """Set dataset item annotations"""
     try:
         return dataset_service.set_dataset_item_annotations(
-            project_id=project_id, dataset_item_id=dataset_item_id, annotation_data=dataset_item_annotations
+            project_id=project_id, dataset_item_id=dataset_item_id, annotations=dataset_item_annotations.annotations
         )
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
@@ -240,7 +242,7 @@ def set_dataset_item_annotations(
     responses={
         status.HTTP_200_OK: {"description": "Dataset item found", "model": DatasetItemAnnotationsWithSource},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid dataset item ID"},
-        status.HTTP_404_NOT_FOUND: {"description": "Dataset item not found or it doesn't have annotation assigned"},
+        status.HTTP_404_NOT_FOUND: {"description": "Dataset item or project not found"},
     },
 )
 def get_dataset_item_annotations(
@@ -268,7 +270,7 @@ def get_dataset_item_annotations(
     responses={
         status.HTTP_204_NO_CONTENT: {"description": "Dataset item annotations deleted"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid dataset item ID"},
-        status.HTTP_404_NOT_FOUND: {"description": "Dataset item not found"},
+        status.HTTP_404_NOT_FOUND: {"description": "Dataset item or project not found"},
     },
 )
 def delete_dataset_item_annotation(

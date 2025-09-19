@@ -1,6 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
+from enum import StrEnum
 from typing import Literal
 
 from pydantic import BaseModel
@@ -9,8 +9,14 @@ from app.schemas.base import BaseIDNameModel
 from app.schemas.label import Label
 
 
+class TaskType(StrEnum):
+    CLASSIFICATION = "classification"
+    DETECTION = "detection"
+    SEGMENTATION = "segmentation"
+
+
 class Task(BaseModel):
-    task_type: Literal["classification", "detection", "segmentation"]
+    task_type: Literal[TaskType.CLASSIFICATION, TaskType.DETECTION, TaskType.SEGMENTATION]
     exclusive_labels: bool = False
     labels: list[Label] = []
 

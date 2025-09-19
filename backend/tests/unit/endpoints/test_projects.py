@@ -11,7 +11,7 @@ from app.api.dependencies import get_label_service, get_project_service
 from app.main import app
 from app.schemas import Label, PatchLabels, Project
 from app.schemas.label import LabelToAdd, LabelToEdit, LabelToRemove
-from app.schemas.project import Task
+from app.schemas.project import Task, TaskType
 from app.services import (
     ProjectService,
     ResourceAlreadyExistsError,
@@ -27,7 +27,7 @@ def fxt_project() -> Project:
         id=uuid4(),
         name="Test Project",
         task=Task(
-            task_type="classification",
+            task_type=TaskType.CLASSIFICATION,
             exclusive_labels=True,
             labels=[Label(name="cat", color="#11AA22", hotkey="s"), Label(name="dog", color="#AA2233", hotkey="d")],
         ),

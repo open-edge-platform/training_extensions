@@ -10,7 +10,7 @@ from app.db.schema import DatasetItemDB
 
 
 class UpdateDatasetItemAnnotation(NamedTuple):
-    annotation_data: dict | None
+    annotation_data: list
     user_reviewed: bool
     prediction_model_id: str | None
 
@@ -36,7 +36,7 @@ class DatasetItemRepository:
             query = query.filter(DatasetItemDB.created_at < end_date)
         return query.count()
 
-    def list(
+    def list_items(
         self, limit: int, offset: int, start_date: datetime | None = None, end_date: datetime | None = None
     ) -> list[DatasetItemDB]:
         query = self.db.query(DatasetItemDB).filter(DatasetItemDB.project_id == self.project_id)
@@ -63,7 +63,7 @@ class DatasetItemRepository:
             > 0
         )
 
-    def set_annotation_data(self, obj_id: str, annotation_data: dict | None) -> UpdateDatasetItemAnnotation | None:
+    def set_annotation_data(self, obj_id: str, annotation_data: list) -> UpdateDatasetItemAnnotation | None:
         result = self.db.execute(
             update(DatasetItemDB)
             .returning(DatasetItemDB.annotation_data, DatasetItemDB.user_reviewed, DatasetItemDB.prediction_model_id)

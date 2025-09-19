@@ -1,8 +1,8 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field, RootModel
+from pydantic import BaseModel, Field
 
 
 class Point(BaseModel):
@@ -46,8 +46,4 @@ class FullImage(ShapeBase):
     }
 
 
-ShapeUnion = Rectangle | Polygon | FullImage
-
-
-class Shape(RootModel[ShapeUnion]):
-    pass
+Shape = Annotated[Rectangle | Polygon | FullImage, Field(discriminator="type")]
