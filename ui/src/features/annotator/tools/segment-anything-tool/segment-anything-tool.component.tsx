@@ -11,9 +11,9 @@ import { MaskAnnotations } from '../../annotations/mask-annotations.component';
 import { useAnnotator } from '../../annotator-provider.component';
 import { Annotation, Point, Shape } from '../../types';
 import { isRightButton } from '../../utils';
+import { SvgToolCanvas } from '../svg-tool-canvas.component';
 import { getRelativePoint, removeOffLimitPoints } from '../utils';
 import { InteractiveSegmentationPoint } from './interactive-segmentation-point.component';
-import { ModelLoading } from './model-loading.component';
 import { useSegmentAnything } from './segment-anything-state-provider.component';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';
 import { useSingleStackFn } from './use-single-stack-fn.hook';
@@ -56,7 +56,7 @@ export const SegmentAnythingTool = () => {
 
     const ref = useRef<SVGRectElement>(null);
 
-    const { result, points, addPoint, isLoading, encodingQuery } = useSegmentAnything();
+    const { result, points, addPoint } = useSegmentAnything();
     const [mousePosition, setMousePosition] = useState<InteractiveAnnotationPoint>();
 
     const [previewShapes, setPreviewShapes] = useState<Shape[]>([]);
@@ -139,17 +139,15 @@ export const SegmentAnythingTool = () => {
     const annotations = (showPreviewShapes ? previewShapes : result.shapes).map((shape, idx): Annotation => {
         return {
             shape,
-            labels: [{ id: `sam-${idx}`, name: 'SAM', color: 'var(--energy-blue-shade)', isPrediction: true }],
+            labels: [{ id: 'id', color: 'red', name: 'Segment Anything', isPrediction: false }],
             id: `${idx}`,
         };
     });
 
-    if (isLoading || encodingQuery.data === undefined) {
-        return <ModelLoading isLoadingModel={isLoading} />;
-    }
-
     return (
-        <svg
+        <SvgToolCanvas
+            image={image}
+            canvasRef={ref}
             onPointerMove={handleMouseMove}
             onPointerUp={onPointerUp}
             onPointerLeave={() => {
@@ -193,6 +191,48 @@ export const SegmentAnythingTool = () => {
                 })}
             </MaskAnnotations>
 
+            {showPreviewShapes &&
+                previewShapes.map((shape, idx) => (
+                    <g
+                        key={idx}
+                        aria-label='Segment anything preview'
+                        {...SELECT_ANNOTATION_STYLES}
+                        strokeWidth={'calc(3px / var(--zoom-level))'}
+                        fillOpacity={0.0}
+                        className={interactiveMode ? classes.stroke : classes.animateStroke}
+                    >
+                        <AnnotationShape
+                            annotation={{
+                                shape,
+                                id: '',
+                                labels: [{ id: 'id', color: 'red', name: 'Segment Anything', isPrediction: false }],
+                            }}
+                        />
+                    </g>
+                ))}
+
+            {result.shapes.map((shape, idx) => (
+                <g
+                    key={idx}
+                    aria-label='Segment anything result'
+                    {...SELECT_ANNOTATION_STYLES}
+                    strokeWidth={'calc(3px / var(--zoom-level))'}
+                    cursor={`url(/icons/cursor/pencil-${
+                        interactiveMode === true && rightClickMode === false ? 'minus' : 'plus'
+                    }.svg) 16 16, auto`}
+                    fillOpacity={0.0}
+                    className={classes.stroke}
+                >
+                    <AnnotationShape
+                        annotation={{
+                            shape,
+                            id: '',
+                            labels: [{ id: 'id', color: 'red', name: 'Segment Anything', isPrediction: false }],
+                        }}
+                    />
+                </g>
+            ))}
+
             {points.map((point, index) => (
                 <InteractiveSegmentationPoint
                     key={index}
@@ -202,6 +242,6 @@ export const SegmentAnythingTool = () => {
                     isLoading={false}
                 />
             ))}
-        </svg>
+        </SvgToolCanvas>
     );
 };

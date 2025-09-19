@@ -51,7 +51,7 @@ export const AnnotatorCanvas = ({ mediaItem, isFocussed }: AnnotatorCanvasProps)
                         <img src={getImageUrl(project_id, String(mediaItem.id))} alt='Collected data' />
                     </View>
 
-                    <View gridArea={'innercanvas'}>
+                    <View gridArea={'innercanvas'} position={'relative'}>
                         <svg
                             width={size.width}
                             height={size.height}

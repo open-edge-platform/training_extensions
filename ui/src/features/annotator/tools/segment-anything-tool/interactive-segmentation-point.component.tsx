@@ -9,14 +9,14 @@ interface InteractiveSegmentationPointProps extends InteractiveAnnotationPoint {
 
 export const InteractiveSegmentationPoint = ({ x, y, positive, isLoading }: InteractiveSegmentationPointProps) => {
     const fill = positive ? 'var(--brand-moss)' : 'var(--brand-coral-cobalt)';
-    const radius = `1 / var(--zoom-scale)`;
+    const radius = `calc(1 / var(--zoom-scale))`;
 
     return (
         <>
             <circle
                 cx={x}
                 cy={y}
-                r={`5 / var(--zoom-scale)`}
+                r={`calc(5 / var(--zoom-scale))`}
                 aria-label={`${positive ? 'Positive' : 'Negative'} interactive segmentation point`}
                 style={{
                     fill,
