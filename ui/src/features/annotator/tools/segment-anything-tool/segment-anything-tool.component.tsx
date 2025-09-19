@@ -13,6 +13,7 @@ import { Annotation, Point, Shape } from '../../types';
 import { isRightButton } from '../../utils';
 import { getRelativePoint, removeOffLimitPoints } from '../utils';
 import { InteractiveSegmentationPoint } from './interactive-segmentation-point.component';
+import { ModelLoading } from './model-loading.component';
 import { useSegmentAnything } from './segment-anything-state-provider.component';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';
 import { useSingleStackFn } from './use-single-stack-fn.hook';
@@ -56,7 +57,7 @@ export const SegmentAnythingTool = () => {
 
     const ref = useRef<SVGRectElement>(null);
 
-    const { result, points, addPoint } = useSegmentAnything();
+    const { result, points, addPoint, isLoading, encodingQuery } = useSegmentAnything();
     const [mousePosition, setMousePosition] = useState<InteractiveAnnotationPoint>();
 
     const [previewShapes, setPreviewShapes] = useState<Shape[]>([]);
@@ -143,6 +144,10 @@ export const SegmentAnythingTool = () => {
             id: `${idx}`,
         };
     });
+
+    if (isLoading || encodingQuery.data === undefined) {
+        return <ModelLoading isLoadingModel={isLoading} />;
+    }
 
     return (
         <svg
