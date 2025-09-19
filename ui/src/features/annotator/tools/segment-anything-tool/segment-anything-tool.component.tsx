@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { PointerEvent, useEffect, useRef, useState } from 'react';
+import { PointerEvent, useEffect, useMemo, useRef, useState } from 'react';
 
 import { clampPointBetweenImage, isPointInShape, pointInRectangle } from '@geti/smart-tools/utils';
 
@@ -9,7 +9,7 @@ import { useZoom } from '../../../../components/zoom/zoom';
 import { AnnotationShape } from '../../annotations/annotation-shape.component';
 import { MaskAnnotations } from '../../annotations/mask-annotations.component';
 import { useAnnotator } from '../../annotator-provider.component';
-import { Annotation, Point, RegionOfInterest, Shape } from '../../types';
+import { Annotation, Point, Shape } from '../../types';
 import { isRightButton } from '../../utils';
 import { getRelativePoint, removeOffLimitPoints } from '../utils';
 import { InteractiveSegmentationPoint } from './interactive-segmentation-point.component';
@@ -35,13 +35,6 @@ const isPositivePoint = (point: Point, shapes: Shape[], isRightClick: boolean, r
 // the user's cpu with too many decoding requests
 const THROTTLE_TIME = 150;
 
-const roi: RegionOfInterest = {
-    x: 0,
-    y: 0,
-    width: 100,
-    height: 100,
-};
-
 const toolSettings = {
     interactiveMode: false,
     rightClickMode: false,
@@ -57,6 +50,7 @@ const SELECT_ANNOTATION_STYLES = {
 export const SegmentAnythingTool = () => {
     const zoom = useZoom();
     const { mediaItem } = useAnnotator();
+    const roi = useMemo(() => ({ x: 0, y: 0, width: mediaItem.width, height: mediaItem.height }), [mediaItem]);
 
     const clampPoint = clampPointBetweenImage(new ImageData(mediaItem.width, mediaItem.height));
 
@@ -89,7 +83,7 @@ export const SegmentAnythingTool = () => {
                 // start to compute the next decoding
                 return [];
             });
-    }, [mousePosition, throttledDecodingQueryFn, throttleSetMousePosition]);
+    }, [mousePosition, throttledDecodingQueryFn, throttleSetMousePosition, roi]);
 
     const { interactiveMode, rightClickMode } = toolSettings;
 
@@ -99,11 +93,6 @@ export const SegmentAnythingTool = () => {
         }
 
         const point = clampPoint(getRelativePoint(ref.current, { x: event.clientX, y: event.clientY }, zoom.scale));
-
-        // In task chain don't allow the user to place a point outside the ROI
-        if (!pointInRectangle(roi, point)) {
-            return;
-        }
 
         const positive = isPositivePoint(point, result.shapes, isRightButton(event), rightClickMode);
 
