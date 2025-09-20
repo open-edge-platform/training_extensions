@@ -3,6 +3,11 @@
 
 """Module for OTX custom models."""
 
+import multiprocessing
+
+if multiprocessing.get_start_method(allow_none=True) is None:
+    multiprocessing.set_start_method("forkserver")
+
 from .anomaly import Padim, Stfpm, Uflow
 from .classification import (
     EfficientNet,

@@ -189,17 +189,12 @@ class InstanceSegmentationSample(OTXSample):
 
     image: np.ndarray | tv_tensors.Image = image_field(dtype=pl.UInt8)
     bboxes: np.ndarray | tv_tensors.BoundingBoxes = bbox_field(dtype=pl.Float32)
-    masks: np.ndarray | tv_tensors.Mask = instance_mask_field(dtype=pl.UInt8)
     label: np.ndarray | torch.Tensor = label_field(is_list=True)
     polygons: np.ndarray = polygon_field(dtype=pl.Float32)  # Ragged array of (Npoly, 2) arrays
     dm_image_info: DmImageInfo = image_info_field()
 
     def __post_init__(self) -> None:
         shape = (self.dm_image_info.height, self.dm_image_info.width)
-
-        # Convert image to tv_tensors format
-        if isinstance(self.image, np.ndarray):
-            self.image = tv_tensors.Image(self.image.transpose(2, 0, 1))
 
         # Convert bboxes to tv_tensors format
         if isinstance(self.bboxes, np.ndarray):
@@ -210,6 +205,47 @@ class InstanceSegmentationSample(OTXSample):
                 dtype=torch.float32,
             )
 
+        # Convert image to tv_tensors format
+        if isinstance(self.image, np.ndarray):
+            self.image = tv_tensors.Image(self.image.transpose(2, 0, 1))
+
+        # Convert labels to tensor
+        if isinstance(self.label, np.ndarray):
+            self.label = torch.as_tensor(self.label, dtype=torch.long)
+
+        self.img_info = ImageInfo(
+            img_idx=0,
+            img_shape=shape,
+            ori_shape=shape,
+        )
+
+
+class InstanceSegmentationSampleWithMask(OTXSample):
+    """OTXSample for instance segmentation tasks."""
+
+    image: np.ndarray | tv_tensors.Image = image_field(dtype=pl.UInt8)
+    bboxes: np.ndarray | tv_tensors.BoundingBoxes = bbox_field(dtype=pl.Float32)
+    masks: np.ndarray | tv_tensors.Mask = instance_mask_field(dtype=pl.UInt8)
+    label: np.ndarray | torch.Tensor = label_field(is_list=True)
+    polygons: np.ndarray = polygon_field(dtype=pl.Float32)  # Ragged array of (Npoly, 2) arrays
+    dm_image_info: DmImageInfo = image_info_field()
+
+    def __post_init__(self) -> None:
+        shape = (self.dm_image_info.height, self.dm_image_info.width)
+
+        # Convert bboxes to tv_tensors format
+        if isinstance(self.bboxes, np.ndarray):
+            self.bboxes = tv_tensors.BoundingBoxes(
+                self.bboxes,
+                format=tv_tensors.BoundingBoxFormat.XYXY,
+                canvas_size=shape,
+                dtype=torch.float32,
+            )
+
+        # Convert image to tv_tensors format
+        if isinstance(self.image, np.ndarray):
+            self.image = tv_tensors.Image(self.image.transpose(2, 0, 1))
+
         # Convert masks to tv_tensors format
         if isinstance(self.masks, np.ndarray):
             self.masks = tv_tensors.Mask(self.masks, dtype=torch.uint8)
@@ -217,8 +253,6 @@ class InstanceSegmentationSample(OTXSample):
         # Convert labels to tensor
         if isinstance(self.label, np.ndarray):
             self.label = torch.as_tensor(self.label, dtype=torch.long)
-
-        # polygons is already a ragged array of np.ndarray objects, no conversion needed
 
         self.img_info = ImageInfo(
             img_idx=0,

@@ -142,7 +142,9 @@ class TVRoIHeads(RoIHeads):
                     raise ValueError(msg)
 
                 gt_masks = (
-                    [t["masks"] for t in targets] if len(targets[0]["masks"]) else [t["polygons"] for t in targets]
+                    [t["masks"] for t in targets]
+                    if targets[0]["masks"] is not None
+                    else [t["polygons"] for t in targets]
                 )
                 gt_labels = [t["labels"] for t in targets]
                 rcnn_loss_mask = maskrcnn_loss(

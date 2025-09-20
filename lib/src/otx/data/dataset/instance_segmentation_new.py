@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 from otx import LabelInfo
 from otx.data.dataset.base_new import OTXDataset
-from otx.data.entity.sample import InstanceSegmentationSample
+from otx.data.entity.sample import InstanceSegmentationSample, InstanceSegmentationSampleWithMask
 
 if TYPE_CHECKING:
     from datumaro.experimental import Dataset
@@ -18,8 +18,8 @@ if TYPE_CHECKING:
 class OTXInstanceSegDataset(OTXDataset):
     """OTXDataset class for instance segmentation task."""
 
-    def __init__(self, dm_subset: Dataset, **kwargs) -> None:
-        sample_type = InstanceSegmentationSample
+    def __init__(self, dm_subset: Dataset, include_polygons: bool = True, **kwargs) -> None:
+        sample_type = InstanceSegmentationSample if include_polygons else InstanceSegmentationSampleWithMask
         dm_subset = dm_subset.convert_to_schema(sample_type)
         super().__init__(dm_subset=dm_subset, sample_type=sample_type, **kwargs)
 
