@@ -46,7 +46,7 @@ export const Gallery = ({ items, hasNextPage, isFetchingNextPage, fetchNextPage 
     const project_id = useProjectIdentifier();
 
     const [selectedMediaItem, setSelectedMediaItem] = useState<null | DatasetItem>(null);
-    const { selectedKeys, mediaState, setSelectedKeys } = useSelectedData();
+    const { selectedKeys, mediaState, setSelectedKeys, toggleSelectedKeys } = useSelectedData();
 
     const isSetSelectedKeys = selectedKeys instanceof Set;
 
@@ -94,7 +94,9 @@ export const Gallery = ({ items, hasNextPage, isFetchingNextPage, fetchNextPage 
                                         isChecked={isSetSelectedKeys && selectedKeys.has(String(item.id))}
                                     />
                                 )}
-                                topRightElement={() => <DeleteMediaItem itemId={String(item.id)} />}
+                                topRightElement={() => (
+                                    <DeleteMediaItem itemsIds={[String(item.id)]} onDeleted={toggleSelectedKeys} />
+                                )}
                                 bottomRightElement={() => (
                                     <AnnotationStateIcon state={mediaState.get(String(item.id))} />
                                 )}
