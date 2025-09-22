@@ -109,11 +109,19 @@ const useDecodingFn = (model: Remote<SegmentAnythingModel> | undefined, encoding
 export const useSegmentAnythingModel = () => {
     const encoderModel = useSegmentAnythingWorker('SEGMENT_ANYTHING_ENCODER');
     const decoderModel = useSegmentAnythingWorker('SEGMENT_ANYTHING_DECODER');
-    const isLoading = encoderModel === undefined || decoderModel === undefined;
+    const isLoadingWorkers = encoderModel === undefined || decoderModel === undefined;
 
     const { mediaItem, image } = useAnnotator();
     const encodingQuery = useEncodingQuery(encoderModel, mediaItem, image);
     const decodingQueryFn = useDecodingFn(decoderModel, encodingQuery.data);
 
-    return { isLoading, encodingQuery, decodingQueryFn };
+    const isLoading = isLoadingWorkers || encodingQuery.isLoading;
+    const isProcessing = encodingQuery.isFetching;
+
+    return {
+        isLoading,
+        isProcessing,
+        encodingQuery,
+        decodingQueryFn,
+    };
 };

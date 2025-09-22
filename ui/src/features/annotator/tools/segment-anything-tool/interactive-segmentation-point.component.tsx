@@ -11,7 +11,7 @@ interface InteractiveSegmentationPointProps extends InteractiveAnnotationPoint {
 export const InteractiveSegmentationPoint = ({ x, y, positive, isLoading }: InteractiveSegmentationPointProps) => {
     const { scale } = useZoom();
     const fill = positive ? 'var(--brand-moss)' : 'var(--brand-coral-cobalt)';
-    const animationScale = `calc(1 / var(--zoom-scale))`;
+    const animationScale = 1 / scale;
     const pointRadius = 5 / scale;
 
     return (

@@ -44,7 +44,7 @@ export const SegmentAnythingStateProvider = ({ children }: { children: ReactNode
     const { addAnnotation } = useAnnotator();
 
     const queryClient = useQueryClient();
-    const { encodingQuery, decodingQueryFn, isLoading } = useSegmentAnythingModel();
+    const { encodingQuery, decodingQueryFn, isLoading, isProcessing: isEncodingProcessing } = useSegmentAnythingModel();
     const throttledDecodingQueryFn = useSingleStackFn(decodingQueryFn);
     const decodingQueryOptions = useDecodingQueryOptions(state.points, throttledDecodingQueryFn);
     const decodingQuery = useDecodingQuery(state.points, throttledDecodingQueryFn);
@@ -74,7 +74,7 @@ export const SegmentAnythingStateProvider = ({ children }: { children: ReactNode
         return () => setIsDrawing(false);
     }, [setIsDrawing]);
 
-    const isProcessing = decodingQuery.isFetching;
+    const isProcessing = isEncodingProcessing || decodingQuery.isFetching;
 
     const hasResults = decodingQuery.data && !isEmpty(decodingQuery.data) && !isEmpty(state.points);
     const outputShapes = decodingQuery.data ?? [];

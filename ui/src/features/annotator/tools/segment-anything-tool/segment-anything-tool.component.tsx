@@ -58,11 +58,11 @@ export const SegmentAnythingTool = () => {
 
     const ref = useRef<SVGRectElement>(null);
 
-    const { result, points, addPoint } = useSegmentAnything();
+    const { result, points, addPoint, isProcessing, isLoading } = useSegmentAnything();
     const [mousePosition, setMousePosition] = useState<InteractiveAnnotationPoint>();
 
     const [previewShapes, setPreviewShapes] = useState<Shape[]>([]);
-    const { decodingQueryFn, isLoading } = useSegmentAnything();
+    const { decodingQueryFn } = useSegmentAnything();
     const throttledDecodingQueryFn = useSingleStackFn(decodingQueryFn);
 
     const throttleSetMousePosition = useThrottledCallback((point: InteractiveAnnotationPoint) => {
@@ -219,7 +219,7 @@ export const SegmentAnythingTool = () => {
                     x={point.x}
                     y={point.y}
                     positive={point.positive}
-                    isLoading={false}
+                    isLoading={isProcessing}
                 />
             ))}
         </SvgToolCanvas>
