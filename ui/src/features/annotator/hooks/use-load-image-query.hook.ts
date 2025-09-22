@@ -3,6 +3,7 @@
 
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
 
+import { API_BASE_URL } from '../../../api/client';
 import { useProjectIdentifier } from '../../../hooks/use-project-identifier.hook';
 import { getImageData, loadImage } from '../tools/utils';
 import { DatasetItem } from '../types';
@@ -17,12 +18,12 @@ export const useLoadImageQuery = (mediaItem: DatasetItem | undefined): UseQueryR
                 throw new Error("Can't fetch undefined media item");
             }
 
-            const imageUrl = `http://localhost:7860/api/projects/${projectId}/dataset/items/${mediaItem.id}/binary`;
+            const imageUrl = `${API_BASE_URL}/api/projects/${projectId}/dataset/items/${mediaItem.id}/binary`;
             const image = await loadImage(imageUrl);
 
             return getImageData(image);
         },
-        enabled: mediaItem !== undefined && !!projectId,
+        enabled: mediaItem !== undefined && Boolean(projectId),
         // The image of a media item never changes so we don't want to refetch stale data
         staleTime: Infinity,
         retry: 0,

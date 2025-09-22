@@ -9,14 +9,15 @@ interface InteractiveSegmentationPointProps extends InteractiveAnnotationPoint {
 
 export const InteractiveSegmentationPoint = ({ x, y, positive, isLoading }: InteractiveSegmentationPointProps) => {
     const fill = positive ? 'var(--brand-moss)' : 'var(--brand-coral-cobalt)';
-    const radius = `calc(1 / var(--zoom-scale))`;
+    const animationScale = `calc(1 / var(--zoom-scale))`;
+    const pointRadius = `calc(5 / var(--zoom-scale))`;
 
     return (
         <>
             <circle
                 cx={x}
                 cy={y}
-                r={`calc(5 / var(--zoom-scale))`}
+                r={pointRadius}
                 aria-label={`${positive ? 'Positive' : 'Negative'} interactive segmentation point`}
                 style={{
                     fill,
@@ -27,7 +28,10 @@ export const InteractiveSegmentationPoint = ({ x, y, positive, isLoading }: Inte
                 data-testid={`point-${positive ? 'positive' : 'negative'}`}
             />
             {isLoading && (
-                <g transform={`translate(${x}, ${y}) scale(${radius}, ${radius})`} aria-label='Processing input'>
+                <g
+                    transform={`translate(${x}, ${y}) scale(${animationScale}, ${animationScale})`}
+                    aria-label='Processing input'
+                >
                     <path d='M 0 -20 A 20 20 00 0 1 0 20' stroke='white' strokeWidth='3' fillOpacity='0'>
                         <animateTransform
                             attributeName='transform'

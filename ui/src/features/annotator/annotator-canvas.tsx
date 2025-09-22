@@ -12,7 +12,7 @@ import { useProjectIdentifier } from '../../hooks/use-project-identifier.hook';
 import { getImageUrl } from '../dataset/gallery/utils';
 import { Annotations } from './annotations/annotations.component';
 import { useAnnotator } from './annotator-provider.component';
-import { Loading } from './loading.component';
+import { AnnotatorLoading } from './loading.component';
 import { useSelectedAnnotations } from './select-annotation-provider.component';
 import { ToolManager } from './tools/tool-manager.component';
 import { Annotation, DatasetItem } from './types';
@@ -67,7 +67,7 @@ export const AnnotatorCanvas = ({ mediaItem, isFocussed }: AnnotatorCanvasProps)
                             <ToolManager />
                         </svg>
 
-                        {isLoading && <Loading isLoading={isLoading} />}
+                        {isLoading && <AnnotatorLoading isLoading={isLoading} />}
                     </View>
                 </Grid>
             </ZoomTransform>

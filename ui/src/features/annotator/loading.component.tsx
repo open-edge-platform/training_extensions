@@ -5,7 +5,7 @@ import { Flex, Heading, View } from '@geti/ui';
 
 import IntelBrandedLoadingGif from '../../assets/intel-loading.webp';
 
-export const Loading = ({ isLoading }: { isLoading: boolean }) => {
+export const AnnotatorLoading = ({ isLoading }: { isLoading: boolean }) => {
     return (
         <View
             position={'absolute'}
@@ -24,7 +24,7 @@ export const Loading = ({ isLoading }: { isLoading: boolean }) => {
                     src={IntelBrandedLoadingGif}
                     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-to-interactive-role
                     role='progressbar'
-                    alt='Extracting image features'
+                    alt='Processing image'
                     style={{
                         width: 300,
                         height: 300,
