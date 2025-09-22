@@ -4,6 +4,7 @@
 from datetime import datetime
 from typing import TypeVar
 
+from sqlalchemy import exists
 from sqlalchemy.orm import Session
 
 from app.db.schema import Base
@@ -20,6 +21,9 @@ class BaseRepository[ModelType]:
 
     def get_by_id(self, obj_id: str) -> ModelType | None:
         return self.db.get(self.model, obj_id)
+
+    def exists(self, obj_id: str) -> bool:
+        return self.db.query(exists().where(self.model.id == obj_id)).scalar()  # type: ignore[attr-defined]
 
     def list_all(self) -> list[ModelType]:
         return self.db.query(self.model).all()

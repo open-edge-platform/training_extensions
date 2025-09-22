@@ -36,6 +36,7 @@ class ProjectDB(Base):
 
     pipeline = relationship("PipelineDB", back_populates="project", uselist=False)
     labels = relationship("LabelDB", back_populates="project")
+    model_revisions = relationship("ModelRevisionDB", backref="project")
 
 
 class PipelineDB(Base):
