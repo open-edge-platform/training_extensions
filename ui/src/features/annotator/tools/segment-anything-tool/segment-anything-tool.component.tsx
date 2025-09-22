@@ -146,11 +146,7 @@ export const SegmentAnythingTool = () => {
     });
 
     if (isLoading) {
-        return (
-            <foreignObject x={0} y={0} width='100%' height='100%'>
-                <AnnotatorLoading isLoading={isLoading} />
-            </foreignObject>
-        );
+        return <AnnotatorLoading isLoading={isLoading} />;
     }
 
     return (
