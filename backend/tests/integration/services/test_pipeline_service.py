@@ -8,6 +8,7 @@ import pytest
 
 from app.db.schema import PipelineDB, ProjectDB
 from app.schemas import PipelineStatus
+from app.schemas.pipeline import FixedRateDataCollectionPolicy
 from app.schemas.project import TaskType
 from app.services import PipelineService, ResourceNotFoundError, ResourceType
 from app.services.configuration_service import PipelineField
@@ -48,6 +49,7 @@ class TestPipelineServiceIntegration:
         pipeline_db.sink = fxt_db_sinks[0]
         pipeline_db.source = fxt_db_sources[0]
         pipeline_db.model = fxt_db_models[0]
+        pipeline_db.data_collection_policies = [{"type": "fixed_rate", "enabled": "true", "rate": 0.1}]
         project_db.pipeline = pipeline_db
         db_session.add(project_db)
         db_session.flush()
@@ -60,6 +62,7 @@ class TestPipelineServiceIntegration:
         assert pipeline.sink.name == fxt_db_sinks[0].name
         assert pipeline.source.name == fxt_db_sources[0].name
         assert pipeline.model.name == fxt_db_models[0].name
+        assert pipeline.data_collection_policies == [FixedRateDataCollectionPolicy(type="fixed_rate", rate=0.1)]
 
     def test_get_non_existent_pipeline(self, fxt_pipeline_service):
         """Test retrieving a non-existent pipeline raises error."""
@@ -153,3 +156,55 @@ class TestPipelineServiceIntegration:
 
         assert exc_info.value.resource_type == ResourceType.PIPELINE
         assert exc_info.value.resource_id == str(project_id)
+
+    def test_set_pipeline_dataset_collection_policy(
+        self, fxt_pipeline_service, fxt_db_sinks, fxt_db_sources, fxt_db_models, db_session
+    ):
+        """Test setting pipeline dataset collection policy."""
+        project_id = uuid4()
+        project_db = ProjectDB(
+            id=str(project_id),
+            name="Test Project",
+            task_type="detection",
+        )
+        pipeline_db = PipelineDB(project_id=str(project_id))
+        pipeline_db.sink = fxt_db_sinks[0]
+        pipeline_db.source = fxt_db_sources[0]
+        pipeline_db.model = fxt_db_models[0]
+        project_db.pipeline = pipeline_db
+        db_session.add(project_db)
+        db_session.flush()
+
+        pipeline = fxt_pipeline_service.update_pipeline(
+            project_id=project_id,
+            partial_config={"data_collection_policies": [FixedRateDataCollectionPolicy(type="fixed_rate", rate=0.1)]},
+        )
+
+        assert pipeline is not None
+        assert pipeline.data_collection_policies == [FixedRateDataCollectionPolicy(type="fixed_rate", rate=0.1)]
+
+    def test_reset_pipeline_dataset_collection_policy(
+        self, fxt_pipeline_service, fxt_db_sinks, fxt_db_sources, fxt_db_models, db_session
+    ):
+        """Test resetting pipeline dataset collection policy."""
+        project_id = uuid4()
+        project_db = ProjectDB(
+            id=str(project_id),
+            name="Test Project",
+            task_type="detection",
+        )
+        pipeline_db = PipelineDB(project_id=str(project_id))
+        pipeline_db.sink = fxt_db_sinks[0]
+        pipeline_db.source = fxt_db_sources[0]
+        pipeline_db.model = fxt_db_models[0]
+        pipeline_db.data_collection_policies = [{"type": "fixed_rate", "enabled": "true", "rate": 0.1}]
+        project_db.pipeline = pipeline_db
+        db_session.add(project_db)
+        db_session.flush()
+
+        pipeline = fxt_pipeline_service.update_pipeline(
+            project_id=project_id, partial_config={"data_collection_policies": []}
+        )
+
+        assert pipeline is not None
+        assert pipeline.data_collection_policies == []

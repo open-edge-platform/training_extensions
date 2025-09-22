@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from enum import StrEnum
-from typing import Any
+from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
@@ -25,6 +25,19 @@ class PipelineStatus(StrEnum):
         return self == PipelineStatus.RUNNING
 
 
+class DataCollectionPolicyBase(BaseModel):
+    type: str
+    enabled: bool = True
+
+
+class FixedRateDataCollectionPolicy(DataCollectionPolicyBase):
+    type: Literal["fixed_rate"]
+    rate: float
+
+
+DataCollectionPolicy = Annotated[FixedRateDataCollectionPolicy, Field(discriminator="type")]
+
+
 class Pipeline(BaseModel):
     project_id: UUID  # ID of the project this pipeline belongs to
     source: Source | None = None  # None if disconnected
@@ -38,6 +51,7 @@ class Pipeline(BaseModel):
         default=None, exclude=True
     )  # ID of the model, used for DB mapping, not exposed in API
     status: PipelineStatus = PipelineStatus.IDLE  # Current status of the pipeline
+    data_collection_policies: list[DataCollectionPolicy] = []  # List of data collection policies
 
     model_config = {
         "json_schema_extra": {
@@ -63,6 +77,13 @@ class Pipeline(BaseModel):
                     "format": "openvino_ir",
                 },
                 "status": "running",
+                "data_collection_policies": [
+                    {
+                        "type": "fixed_rate",
+                        "enabled": "true",
+                        "rate": 0.02,
+                    }
+                ],
             }
         }
     }
