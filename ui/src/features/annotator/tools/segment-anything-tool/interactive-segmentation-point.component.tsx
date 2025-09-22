@@ -24,7 +24,7 @@ export const InteractiveSegmentationPoint = ({ x, y, positive, isLoading }: Inte
                 style={{
                     fill,
                     opacity: 'var(--markers-opacity)',
-                    strokeWidth: 'calc(1.5px / var(--zoom-level))',
+                    strokeWidth: 'calc(1.5px / var(--zoom-scale))',
                     stroke: 'var(--spectrum-global-color-static-gray-100)',
                 }}
                 data-testid={`point-${positive ? 'positive' : 'negative'}`}

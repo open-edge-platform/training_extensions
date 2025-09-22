@@ -47,7 +47,7 @@ const SELECT_ANNOTATION_STYLES = {
     fillOpacity: 0.3,
     fill: 'var(--energy-blue-shade)',
     stroke: 'var(--energy-blue-shade)',
-    strokeWidth: 'calc(2px / var(--zoom-level))',
+    strokeWidth: 'calc(2px / var(--zoom-scale))',
 };
 
 export const SegmentAnythingTool = () => {
@@ -177,7 +177,7 @@ export const SegmentAnythingTool = () => {
                         key={idx}
                         aria-label='Segment anything preview'
                         {...SELECT_ANNOTATION_STYLES}
-                        strokeWidth={'calc(3px / var(--zoom-level))'}
+                        strokeWidth={'calc(3px / var(--zoom-scale))'}
                         fillOpacity={0.0}
                         className={classes.stroke}
                     >
@@ -196,7 +196,7 @@ export const SegmentAnythingTool = () => {
                     key={idx}
                     aria-label='Segment anything result'
                     {...SELECT_ANNOTATION_STYLES}
-                    strokeWidth={'calc(3px / var(--zoom-level))'}
+                    strokeWidth={'calc(3px / var(--zoom-scale))'}
                     cursor={`url(/icons/pencil-${
                         interactiveMode === true && rightClickMode === false ? 'minus' : 'plus'
                     }.svg) 16 16, auto`}
