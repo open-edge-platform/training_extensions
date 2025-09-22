@@ -6,7 +6,6 @@ from unittest.mock import patch
 from uuid import UUID, uuid4
 
 import pytest
-from mypy.dmypy.client import is_running
 
 from app.db.schema import PipelineDB, ProjectDB
 from app.schemas import PipelineStatus
@@ -41,7 +40,7 @@ def fxt_project_with_pipeline(
 ) -> Callable[[bool, list[dict] | None], tuple[ProjectDB, PipelineDB]]:
     """Fixture to create a ProjectDB with an associated PipelineDB."""
 
-    def _create_project_with_pipeline(is_running: bool, data_policies: list[dict] = None) -> tuple[ProjectDB, PipelineDB]:
+    def _create_project_with_pipeline(is_running: bool, data_policies: list[dict] | None = None) -> tuple[ProjectDB, PipelineDB]:
         db_project = fxt_db_projects[0]
         db_session.add(db_project)
         db_session.flush()
@@ -79,7 +78,7 @@ class TestPipelineServiceIntegration:
         assert pipeline.sink.name == db_pipeline.sink.name
         assert pipeline.source.name == db_pipeline.source.name
         assert str(pipeline.model.id) == db_pipeline.model_revision_id
-        assert pipeline.data_collection_policies == [FixedRateDataCollectionPolicy(type="fixed_rate", rate=0.1)]
+        assert pipeline.data_collection_policies == [FixedRateDataCollectionPolicy(rate=0.1)]
 
     def test_get_non_existent_pipeline(self, fxt_pipeline_service):
         """Test retrieving a non-existent pipeline raises error."""

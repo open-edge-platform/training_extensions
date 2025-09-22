@@ -31,7 +31,7 @@ class DataCollectionPolicyBase(BaseModel):
 
 
 class FixedRateDataCollectionPolicy(DataCollectionPolicyBase):
-    type: Literal["fixed_rate"]
+    type: Literal["fixed_rate"] = "fixed_rate"
     rate: float
 
 
