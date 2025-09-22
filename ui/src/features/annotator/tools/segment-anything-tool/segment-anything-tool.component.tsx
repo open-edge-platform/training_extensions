@@ -9,6 +9,7 @@ import { useZoom } from '../../../../components/zoom/zoom';
 import { AnnotationShape } from '../../annotations/annotation-shape.component';
 import { MaskAnnotations } from '../../annotations/mask-annotations.component';
 import { useAnnotator } from '../../annotator-provider.component';
+import { AnnotatorLoading } from '../../loading.component';
 import { Annotation, Point, Shape } from '../../types';
 import { isRightButton } from '../../utils';
 import { SvgToolCanvas } from '../svg-tool-canvas.component';
@@ -60,7 +61,7 @@ export const SegmentAnythingTool = () => {
     const [mousePosition, setMousePosition] = useState<InteractiveAnnotationPoint>();
 
     const [previewShapes, setPreviewShapes] = useState<Shape[]>([]);
-    const { decodingQueryFn } = useSegmentAnything();
+    const { decodingQueryFn, isLoading } = useSegmentAnything();
     const throttledDecodingQueryFn = useSingleStackFn(decodingQueryFn);
 
     const throttleSetMousePosition = useThrottledCallback((point: InteractiveAnnotationPoint) => {
@@ -143,6 +144,14 @@ export const SegmentAnythingTool = () => {
             id: `${idx}`,
         };
     });
+
+    if (isLoading) {
+        return (
+            <foreignObject x={0} y={0} width='100%' height='100%'>
+                <AnnotatorLoading isLoading={isLoading} />
+            </foreignObject>
+        );
+    }
 
     return (
         <SvgToolCanvas

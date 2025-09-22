@@ -11,8 +11,6 @@ import { ZoomTransform } from '../../components/zoom/zoom-transform';
 import { useProjectIdentifier } from '../../hooks/use-project-identifier.hook';
 import { getImageUrl } from '../dataset/gallery/utils';
 import { Annotations } from './annotations/annotations.component';
-import { useAnnotator } from './annotator-provider.component';
-import { AnnotatorLoading } from './loading.component';
 import { useSelectedAnnotations } from './select-annotation-provider.component';
 import { ToolManager } from './tools/tool-manager.component';
 import { Annotation, DatasetItem } from './types';
@@ -35,7 +33,6 @@ type AnnotatorCanvasProps = {
 export const AnnotatorCanvas = ({ mediaItem, isFocussed }: AnnotatorCanvasProps) => {
     const { setSelectedAnnotations } = useSelectedAnnotations();
     const project_id = useProjectIdentifier();
-    const { isLoading } = useAnnotator();
     const size = { width: mediaItem.width, height: mediaItem.height };
     // todo: pass media annotations
     const annotations: Annotation[] = [];
@@ -66,8 +63,6 @@ export const AnnotatorCanvas = ({ mediaItem, isFocussed }: AnnotatorCanvasProps)
                             )}
                             <ToolManager />
                         </svg>
-
-                        {isLoading && <AnnotatorLoading isLoading={isLoading} />}
                     </View>
                 </Grid>
             </ZoomTransform>

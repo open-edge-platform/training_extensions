@@ -41,7 +41,7 @@ export const SegmentAnythingStateProvider = ({ children }: { children: ReactNode
     });
     const [_, setIsDrawing] = useState(false);
 
-    const { addAnnotation, setIsLoading } = useAnnotator();
+    const { addAnnotation } = useAnnotator();
 
     const queryClient = useQueryClient();
     const { encodingQuery, decodingQueryFn, isLoading } = useSegmentAnythingModel();
@@ -63,14 +63,6 @@ export const SegmentAnythingStateProvider = ({ children }: { children: ReactNode
     }, [decodingQuery.data, decodingQuery.isPlaceholderData, state.points]);
 
     const decodingMutation = useDecodingMutation(decodingQueryFn);
-
-    useEffect(() => {
-        if (isLoading) {
-            setIsLoading(true);
-        } else if (encodingQuery.data !== undefined) {
-            setIsLoading(false);
-        }
-    }, [isLoading, encodingQuery.data, setIsLoading]);
 
     const reset = async () => {
         queryClient.removeQueries({ queryKey: decodingQueryOptions.queryKey });
