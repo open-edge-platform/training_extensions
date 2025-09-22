@@ -40,7 +40,9 @@ def fxt_project_with_pipeline(
 ) -> Callable[[bool, list[dict] | None], tuple[ProjectDB, PipelineDB]]:
     """Fixture to create a ProjectDB with an associated PipelineDB."""
 
-    def _create_project_with_pipeline(is_running: bool, data_policies: list[dict] | None = None) -> tuple[ProjectDB, PipelineDB]:
+    def _create_project_with_pipeline(
+        is_running: bool, data_policies: list[dict] | None = None
+    ) -> tuple[ProjectDB, PipelineDB]:
         db_project = fxt_db_projects[0]
         db_session.add(db_project)
         db_session.flush()
@@ -65,9 +67,9 @@ class TestPipelineServiceIntegration:
 
     def test_get_pipeline(self, fxt_pipeline_service, fxt_project_with_pipeline, db_session):
         """Test retrieving a pipeline by ID."""
-        _, db_pipeline = fxt_project_with_pipeline(is_running=False, data_policies=[
-            {"type": "fixed_rate", "enabled": "true", "rate": 0.1}
-        ])
+        _, db_pipeline = fxt_project_with_pipeline(
+            is_running=False, data_policies=[{"type": "fixed_rate", "enabled": "true", "rate": 0.1}]
+        )
 
         project_id = UUID(db_pipeline.project_id)
         pipeline = fxt_pipeline_service.get_pipeline_by_id(project_id)
