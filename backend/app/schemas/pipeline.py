@@ -27,7 +27,7 @@ class PipelineStatus(StrEnum):
 
 class DataCollectionPolicyBase(BaseModel):
     type: str
-    enabled: bool
+    enabled: bool = True
 
 
 class FixedRateDataCollectionPolicy(DataCollectionPolicyBase):
