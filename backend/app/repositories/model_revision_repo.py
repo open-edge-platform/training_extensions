@@ -13,12 +13,16 @@ class ModelRevisionRepository(BaseRepository[ModelRevisionDB]):
     def __init__(self, db: Session):
         super().__init__(db, ModelRevisionDB)
 
-    def __get_active_pipeline(self) -> PipelineDB | None:
-        """Get the active pipeline from database."""
-        return self.db.query(PipelineDB).filter(PipelineDB.is_running).first()
-
     def get_active_revision(self) -> ModelRevisionDB | None:
-        pipeline = self.__get_active_pipeline()
-        if not pipeline:
-            return None
-        return self.db.query(ModelRevisionDB).filter(ModelRevisionDB.id == pipeline.model_revision_id).first()
+        """
+        Get the active model revision from database.
+
+        An active model revision is one that is associated with a running pipeline.
+        """
+        return (
+            self.db.query(ModelRevisionDB)
+            .join(PipelineDB, ModelRevisionDB.project_id == PipelineDB.project_id)
+            .filter(PipelineDB.is_running)
+            .filter(ModelRevisionDB.id == PipelineDB.model_revision_id)
+            .first()
+        )
