@@ -1,10 +1,18 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from datetime import datetime
+from typing import NamedTuple
 
+from sqlalchemy import update
 from sqlalchemy.orm import Session
 
 from app.db.schema import DatasetItemDB
+
+
+class UpdateDatasetItemAnnotation(NamedTuple):
+    annotation_data: list
+    user_reviewed: bool
+    prediction_model_id: str | None
 
 
 class DatasetItemRepository:
@@ -28,7 +36,7 @@ class DatasetItemRepository:
             query = query.filter(DatasetItemDB.created_at < end_date)
         return query.count()
 
-    def list(
+    def list_items(
         self, limit: int, offset: int, start_date: datetime | None = None, end_date: datetime | None = None
     ) -> list[DatasetItemDB]:
         query = self.db.query(DatasetItemDB).filter(DatasetItemDB.project_id == self.project_id)
@@ -54,3 +62,13 @@ class DatasetItemRepository:
             .delete()
             > 0
         )
+
+    def set_annotation_data(self, obj_id: str, annotation_data: list) -> UpdateDatasetItemAnnotation | None:
+        result = self.db.execute(
+            update(DatasetItemDB)
+            .returning(DatasetItemDB.annotation_data, DatasetItemDB.user_reviewed, DatasetItemDB.prediction_model_id)
+            .filter(DatasetItemDB.project_id == self.project_id)
+            .filter(DatasetItemDB.id == obj_id)
+            .values({DatasetItemDB.annotation_data: annotation_data, DatasetItemDB.updated_at: datetime.now()})
+        )
+        return next((UpdateDatasetItemAnnotation(**row) for row in result.mappings().all()), None)

@@ -4,7 +4,7 @@
 import pytest
 
 from app.db.schema import LabelDB, ProjectDB
-from app.schemas.project import Label, Project, Task
+from app.schemas.project import Label, Project, Task, TaskType
 from app.services.mappers import LabelMapper, ProjectMapper
 
 SUPPORTED_PROJECT_MAPPING = [
@@ -12,16 +12,16 @@ SUPPORTED_PROJECT_MAPPING = [
         Project(
             name="Test Project",
             task=Task(
-                task_type="classification",
+                task_type=TaskType.CLASSIFICATION,
                 exclusive_labels=True,
                 labels=[Label(name="label1"), Label(name="label2")],  # type: ignore[call-arg]
             ),
         ),
-        ProjectDB(name="Test Project", task_type="classification", exclusive_labels=True),
+        ProjectDB(name="Test Project", task_type=TaskType.CLASSIFICATION, exclusive_labels=True),
     ),
     (
-        Project(name="Test Project", task=Task(task_type="detection", exclusive_labels=False, labels=[])),
-        ProjectDB(name="Test Project", task_type="detection", exclusive_labels=False),
+        Project(name="Test Project", task=Task(task_type=TaskType.DETECTION, exclusive_labels=False, labels=[])),
+        ProjectDB(name="Test Project", task_type=TaskType.DETECTION, exclusive_labels=False),
     ),
 ]
 

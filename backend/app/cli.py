@@ -18,6 +18,7 @@ from app.schemas import (
     SinkType,
     SourceType,
 )
+from app.schemas.project import TaskType
 from app.settings import get_settings
 
 logging.basicConfig(level=logging.INFO)
@@ -93,7 +94,7 @@ def seed(with_model: bool, model_name: str) -> None:
         project = ProjectDB(
             id="9d6af8e8-6017-4ebe-9126-33aae739c5fa",
             name="Test Project",
-            task_type="detection",
+            task_type=TaskType.DETECTION,
             exclusive_labels=True,
         )
         pipeline = PipelineDB()

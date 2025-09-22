@@ -102,3 +102,15 @@ class Label(BaseIDModel):
             }
         }
     }
+
+
+class LabelReference(BaseModel):
+    id: UUID = Field(..., description="UUID of the label")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "id": "123e4567-e89b-12d3-a456-426614174000",
+            }
+        }
+    }
