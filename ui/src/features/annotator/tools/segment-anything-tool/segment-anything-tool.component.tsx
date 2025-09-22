@@ -168,36 +168,10 @@ export const SegmentAnythingTool = () => {
             }}
         >
             <MaskAnnotations isEnabled annotations={annotations} width={mediaItem.width} height={mediaItem.height}>
-                {annotations.map((annotation, idx) => {
-                    return (
-                        <g
-                            key={idx}
-                            aria-label={showPreviewShapes ? 'Segment anything preview' : 'Segment anything result'}
-                            {...SELECT_ANNOTATION_STYLES}
-                            strokeWidth={'calc(3px / var(--zoom-level))'}
-                            cursor={
-                                !showPreviewShapes
-                                    ? `url(/icons/pencil-${
-                                          interactiveMode === true && rightClickMode === false ? 'minus' : 'plus'
-                                      }.svg) 16 16, auto`
-                                    : undefined
-                            }
-                            fillOpacity={0.0}
-                            className={
-                                showPreviewShapes
-                                    ? interactiveMode
-                                        ? classes.stroke
-                                        : classes.animateStroke
-                                    : classes.stroke
-                            }
-                        >
-                            <AnnotationShape annotation={annotation} />
-                        </g>
-                    );
-                })}
+                <></>
             </MaskAnnotations>
 
-            {showPreviewShapes &&
+            {previewShapes.length > 0 &&
                 previewShapes.map((shape, idx) => (
                     <g
                         key={idx}

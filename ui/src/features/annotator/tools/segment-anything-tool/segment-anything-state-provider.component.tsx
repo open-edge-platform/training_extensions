@@ -102,6 +102,7 @@ export const SegmentAnythingStateProvider = ({ children }: { children: ReactNode
         if (keepPreviousData) {
             setState((r) => ({ points: [...r.points, point] }));
         } else {
+            setState({ points: [point] });
             decodingMutation.mutateAsync([point]).then(() => {
                 setIsDrawing(false);
             });
