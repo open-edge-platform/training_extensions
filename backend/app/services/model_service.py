@@ -60,7 +60,8 @@ class ModelService:
         return self.models_dir / f"{model_id}.bin"
 
     def get_loaded_inference_model(self, force_reload: bool = False) -> LoadedModel | None:
-        """Get the currently active model for inference.
+        """
+        Get the currently active model for inference.
 
         Args:
             force_reload: If True, reload the state and the model from disk. This option can be useful
@@ -90,7 +91,8 @@ class ModelService:
         return self._loaded_model
 
     def get_model_by_id(self, project_id: UUID, model_id: UUID) -> ModelSchema:
-        """Get a model by its ID within a specific project.
+        """
+        Get a model by its ID within a specific project.
 
         Retrieves a model revision from the specified project by matching the model ID.
         The method first validates that the project exists, then searches through the
@@ -119,7 +121,8 @@ class ModelService:
 
     @parent_process_only
     def delete_model_by_id(self, project_id: UUID, model_id: UUID) -> None:
-        """Delete a model by its ID from a specific project.
+        """
+        Delete a model by its ID from a specific project.
 
         Permanently removes a model revision from the specified project. The method
         first validates that the project exists, then attempts to delete the model
@@ -151,7 +154,8 @@ class ModelService:
                 raise ResourceInUseError(ResourceType.MODEL, str(model_id))
 
     def list_models(self, project_id: UUID) -> list[ModelSchema]:
-        """Get information about all available model revisions in a project.
+        """
+        Get information about all available model revisions in a project.
 
         Retrieves a list of all model revisions that belong to the specified project.
         Each model revision is converted to a schema object containing the model's
