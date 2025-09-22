@@ -37,8 +37,9 @@ const isPositivePoint = (point: Point, shapes: Shape[], isRightClick: boolean, r
 // the user's cpu with too many decoding requests
 const THROTTLE_TIME = 150;
 
+// TODO: Remove/move this to the secondary toolbar
 const toolSettings = {
-    interactiveMode: true,
+    interactiveMode: false,
     rightClickMode: false,
 };
 
@@ -204,7 +205,7 @@ export const SegmentAnythingTool = () => {
                         {...SELECT_ANNOTATION_STYLES}
                         strokeWidth={'calc(3px / var(--zoom-level))'}
                         fillOpacity={0.0}
-                        className={interactiveMode ? classes.stroke : classes.animateStroke}
+                        className={classes.stroke}
                     >
                         <AnnotationShape
                             annotation={{
@@ -222,7 +223,7 @@ export const SegmentAnythingTool = () => {
                     aria-label='Segment anything result'
                     {...SELECT_ANNOTATION_STYLES}
                     strokeWidth={'calc(3px / var(--zoom-level))'}
-                    cursor={`url(/icons/cursor/pencil-${
+                    cursor={`url(/icons/pencil-${
                         interactiveMode === true && rightClickMode === false ? 'minus' : 'plus'
                     }.svg) 16 16, auto`}
                     fillOpacity={0.0}

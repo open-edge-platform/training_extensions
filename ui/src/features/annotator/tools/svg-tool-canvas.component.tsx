@@ -1,11 +1,10 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { FC, MouseEvent, PropsWithChildren, RefObject, SVGProps } from 'react';
+import { FC, PropsWithChildren, RefObject, SVGProps } from 'react';
 
 import { roiFromImage } from '@geti/smart-tools/utils';
 
-import { useSelectedAnnotations } from '../select-annotation-provider.component';
 import { allowPanning } from '../utils';
 
 type CanvasProps = SVGProps<SVGSVGElement> & { image: ImageData } & { canvasRef?: RefObject<SVGRectElement | null> };
@@ -19,20 +18,11 @@ export const SvgToolCanvas: FC<PropsWithChildren<CanvasProps>> = ({
     onPointerDown,
     ...props
 }) => {
-    const { setSelectedAnnotations } = useSelectedAnnotations();
-
     const roi = roiFromImage(image);
-
-    const handleClickOutside = (e: MouseEvent<SVGSVGElement>): void => {
-        if (e.target === e.currentTarget) {
-            setSelectedAnnotations(new Set());
-        }
-    };
 
     return (
         <svg
             {...props}
-            onClick={handleClickOutside}
             onPointerDown={allowPanning(onPointerDown)}
             // eslint-disable-next-line jsx-a11y/aria-role
             role='editor'
