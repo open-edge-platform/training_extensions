@@ -167,6 +167,7 @@ class DatasetService:
             deleted = repo.delete(obj_id=dataset_item.id)
             if not deleted:
                 raise ResourceNotFoundError(ResourceType.DATASET_ITEM, dataset_item.id)
+            db.commit()
 
     @staticmethod
     def _validate_annotations_labels(annotations: list[DatasetItemAnnotation], project: ProjectDB) -> None:

@@ -4,19 +4,23 @@
 import { Button, Divider, Flex, Heading, Text } from '@geti/ui';
 
 import { useSelectedData } from '../../../routes/dataset/provider';
+import { DatasetItem } from '../../annotator/types';
 import { CheckboxInput } from '../checkbox-input';
-import { response } from '../mock-response';
 import { toggleMultipleSelection, updateSelectedKeysTo } from './util';
 
-export const Toolbar = () => {
+type ToolbarProps = {
+    items: DatasetItem[];
+};
+
+export const Toolbar = ({ items }: ToolbarProps) => {
     const { selectedKeys, setSelectedKeys, setMediaState } = useSelectedData();
     const totalSelectedElements = selectedKeys instanceof Set ? selectedKeys.size : 0;
     const hasSelectedElements = totalSelectedElements > 0;
 
-    const message = hasSelectedElements ? `${totalSelectedElements} selected` : `${response.items.length} images`;
+    const message = hasSelectedElements ? `${totalSelectedElements} selected` : `${items.length} images`;
 
     const handleToggleManyItemSelection = () => {
-        const images = response.items.map((item) => item.id);
+        const images = items.map((item) => String(item.id));
         setSelectedKeys(toggleMultipleSelection(images));
     };
 
@@ -46,7 +50,7 @@ export const Toolbar = () => {
                     <CheckboxInput
                         name={'select all'}
                         onChange={handleToggleManyItemSelection}
-                        isChecked={totalSelectedElements === response.items.length}
+                        isChecked={totalSelectedElements === items.length}
                     />
 
                     <Divider orientation={'vertical'} size={'S'} />
