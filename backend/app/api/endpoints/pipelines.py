@@ -107,11 +107,11 @@ def update_pipeline(
     """Reconfigure an existing pipeline"""
     if "status" in pipeline_config:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The 'status' field cannot be changed")
-    if "data_collection_policies" in pipeline_config:
-        pipeline_config["data_collection_policies"] = [
-            DataCollectionPolicy.model_validate(policy) for policy in pipeline_config["data_collection_policies"]
-        ]
     try:
+        if "data_collection_policies" in pipeline_config:
+            pipeline_config["data_collection_policies"] = [
+                DataCollectionPolicy.model_validate(policy) for policy in pipeline_config["data_collection_policies"]
+            ]
         return pipeline_service.update_pipeline(project_id, pipeline_config)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

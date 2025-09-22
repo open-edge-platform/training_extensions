@@ -95,6 +95,22 @@ class TestPipelineEndpoints:
             },
         )
 
+    def test_update_pipeline_data_collection_policies_invalid(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
+        project_id = fxt_pipeline.project_id
+        fxt_pipeline_service.update_pipeline.return_value = fxt_pipeline
+
+        response = fxt_client.patch(
+            f"/api/projects/{project_id}/pipeline",
+            json={
+                "data_collection_policies": [
+                    {"type": "wrong_policy", "enabled": "true"},
+                ]
+            },
+        )
+
+        assert response.status_code == status.HTTP_409_CONFLICT
+        fxt_pipeline_service.update_pipeline.assert_not_called()
+
     def test_update_pipeline_not_found(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
         project_id, sink_id = fxt_pipeline.project_id, uuid4()
         fxt_pipeline_service.update_pipeline.side_effect = ResourceNotFoundError(ResourceType.PIPELINE, str(project_id))
