@@ -11,6 +11,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.db.schema import Base, DatasetItemDB, LabelDB, ModelDB, PipelineDB, ProjectDB, SinkDB, SourceDB
 from app.schemas import ModelFormat, OutputFormat, SinkType, SourceType
+from app.schemas.project import TaskType
 from app.services import ActivePipelineService, MetricsService
 
 
@@ -116,17 +117,17 @@ def fxt_db_projects() -> list[ProjectDB]:
     configs = [
         {
             "name": "Test Detection Project",
-            "task_type": "detection",
+            "task_type": TaskType.DETECTION,
             "exclusive_labels": False,
         },
         {
             "name": "Test Classification Project",
-            "task_type": "classification",
+            "task_type": TaskType.CLASSIFICATION,
             "exclusive_labels": True,
         },
         {
             "name": "Test Segmentation Project",
-            "task_type": "segmentation",
+            "task_type": TaskType.SEGMENTATION,
             "exclusive_labels": True,
         },
     ]
@@ -145,11 +146,19 @@ def fxt_db_projects() -> list[ProjectDB]:
 
 
 @pytest.fixture
-def fxt_db_dataset_items() -> list[DatasetItemDB]:
+def fxt_db_dataset_items(fxt_db_projects) -> list[DatasetItemDB]:
     """Fixture to create multiple dataset items in the database."""
     configs = [
         {"name": "test1", "format": "jpg", "size": 1024, "width": 1024, "height": 768, "subset": "unassigned"},
-        {"name": "test2", "format": "jpg", "size": 1024, "width": 1024, "height": 768, "subset": "unassigned"},
+        {
+            "name": "test2",
+            "format": "jpg",
+            "size": 1024,
+            "width": 1024,
+            "height": 768,
+            "subset": "unassigned",
+            "annotation_data": [{"labels": [{"id": fxt_db_projects[0].labels[0].id}], "shape": {"type": "full_image"}}],
+        },
         {"name": "test3", "format": "jpg", "size": 1024, "width": 1024, "height": 768, "subset": "unassigned"},
     ]
 

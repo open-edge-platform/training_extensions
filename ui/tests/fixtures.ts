@@ -1,10 +1,18 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
 import { createNetworkFixture, NetworkFixture } from '@msw/playwright';
 import { expect, test as testBase } from '@playwright/test';
+import { HttpResponse } from 'msw';
 
 import { handlers, http } from '../src/api/utils';
+
+const filename = fileURLToPath(import.meta.url);
+const dirname = path.dirname(filename);
 
 interface Fixtures {
     network: NetworkFixture;
@@ -29,6 +37,14 @@ const test = testBase.extend<Fixtures>({
             http.post('/api/webrtc/input_hook', ({ response }) => {
                 // Schema is empty, so we return an empty object
                 return response(200).json({} as never);
+            }),
+            http.get('/api/projects/{project_id}/dataset/items/{dataset_item_id}/thumbnail', ({}) => {
+                const sampleImagePath = path.resolve(dirname, './assets/candy-thumbnail.png');
+                const sampleImageBuffer = fs.readFileSync(sampleImagePath);
+
+                return HttpResponse.arrayBuffer(sampleImageBuffer.buffer, {
+                    headers: { 'content-type': 'image/png' },
+                });
             }),
         ],
     }),

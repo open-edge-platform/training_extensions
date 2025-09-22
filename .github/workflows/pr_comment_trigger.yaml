@@ -21,7 +21,7 @@ jobs:
     name: PR-Comment-Integration-Tests
     steps:
       - name: Is comment allowed?
-        uses: actions/github-script@v7
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         with:
           script: |
             const actorPermission = (await github.rest.repos.getCollaboratorPermissionLevel({
@@ -79,7 +79,7 @@ jobs:
         run: echo "$(git branch)"
 
       - name: Install Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6
         with:
           python-version: "3.12"
 
@@ -113,7 +113,7 @@ jobs:
 
       - name: Update PR description with workflow run link and result
         if: always() # Ensure this runs even if the job fails
-        uses: actions/github-script@v7
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }} # Or your PAT if needed
           script: |

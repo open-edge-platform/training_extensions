@@ -1,19 +1,38 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
-import { AriaComponentsListBox, DialogContainer, GridLayout, ListBoxItem, Size, View, Virtualizer } from '@geti/ui';
+import {
+    AriaComponentsListBox,
+    DialogContainer,
+    GridLayout,
+    ListBoxItem,
+    Loading,
+    Size,
+    View,
+    Virtualizer,
+} from '@geti/ui';
+import { useLoadMore } from '@react-aria/utils';
 
-import thumbnailUrl from '../../../assets/mocked-project-thumbnail.png';
+import { useProjectIdentifier } from '../../../hooks/use-project-identifier.hook';
 import { useSelectedData } from '../../../routes/dataset/provider';
+import { DatasetItem } from '../../annotator/types';
 import { CheckboxInput } from '../checkbox-input';
 import { MediaPreview } from '../media-preview/media-preview.component';
-import { response } from '../mock-response';
 import { AnnotationStateIcon } from './annotation-state-icon.component';
 import { MediaItem } from './media-item.component';
+import { MediaThumbnail } from './media-thumbnail.component';
+import { getThumbnailUrl } from './utils';
 
 import classes from './gallery.module.scss';
+
+type GalleryProps = {
+    items: DatasetItem[];
+    fetchNextPage: () => void;
+    hasNextPage: boolean;
+    isFetchingNextPage: boolean;
+};
 
 const layoutOptions = {
     minSpace: new Size(8, 8),
@@ -21,30 +40,28 @@ const layoutOptions = {
     preserveAspectRatio: true,
 };
 
-type Item = (typeof response.items)[number];
+export const Gallery = ({ items, hasNextPage, isFetchingNextPage, fetchNextPage }: GalleryProps) => {
+    const ref = useRef<HTMLDivElement | null>(null);
+    const project_id = useProjectIdentifier();
 
-type MediaThumbnailProps = {
-    onDoubleClick: () => void;
-    url: string;
-    alt: string;
-};
-const MediaThumbnail = ({ onDoubleClick, url, alt }: MediaThumbnailProps) => {
-    return (
-        <div onDoubleClick={onDoubleClick}>
-            <img src={url} alt={alt} style={{ objectFit: 'cover', width: '100%', height: '100%' }} />
-        </div>
-    );
-};
-
-export const Gallery = () => {
-    const [selectedMediaItem, setSelectedMediaItem] = useState<null | Item>(null);
+    const [selectedMediaItem, setSelectedMediaItem] = useState<null | DatasetItem>(null);
     const { selectedKeys, mediaState, setSelectedKeys } = useSelectedData();
+
     const isSetSelectedKeys = selectedKeys instanceof Set;
+
+    useLoadMore(
+        {
+            isLoading: isFetchingNextPage,
+            onLoadMore: () => hasNextPage && fetchNextPage(),
+        },
+        ref
+    );
 
     return (
         <View UNSAFE_className={classes.mainContainer}>
             <Virtualizer layout={GridLayout} layoutOptions={layoutOptions}>
                 <AriaComponentsListBox
+                    ref={ref}
                     layout='grid'
                     aria-label='data-collection-grid'
                     className={classes.container}
@@ -52,34 +69,39 @@ export const Gallery = () => {
                     selectionMode={'multiple'}
                     onSelectionChange={setSelectedKeys}
                 >
-                    {response.items.map((item) => (
+                    {items.map((item) => (
                         <ListBoxItem
                             id={item.id}
                             key={item.id}
                             textValue={item.id}
                             className={classes.mediaItem}
-                            data-accepted={mediaState.get(item.id) === 'accepted'}
-                            data-rejected={mediaState.get(item.id) === 'rejected'}
+                            data-accepted={mediaState.get(String(item.id)) === 'accepted'}
+                            data-rejected={mediaState.get(String(item.id)) === 'rejected'}
                         >
                             <MediaItem
                                 contentElement={() => (
                                     <MediaThumbnail
+                                        alt={item.name}
+                                        url={getThumbnailUrl(project_id, String(item.id))}
                                         onDoubleClick={() => setSelectedMediaItem(item)}
-                                        url={thumbnailUrl}
-                                        alt={item.original_name}
                                     />
                                 )}
-                                topRightElement={() => <AnnotationStateIcon state={mediaState.get(item.id)} />}
+                                topRightElement={() => <AnnotationStateIcon state={mediaState.get(String(item.id))} />}
                                 topLeftElement={() => (
                                     <CheckboxInput
                                         isReadOnly
                                         name={`select-${item.id}`}
-                                        isChecked={isSetSelectedKeys && selectedKeys.has(item.id)}
+                                        isChecked={isSetSelectedKeys && selectedKeys.has(String(item.id))}
                                     />
                                 )}
                             />
                         </ListBoxItem>
                     ))}
+                    {isFetchingNextPage && (
+                        <ListBoxItem id={'loader'} textValue={'loading'}>
+                            <Loading mode='overlay' />
+                        </ListBoxItem>
+                    )}
                 </AriaComponentsListBox>
             </Virtualizer>
 
