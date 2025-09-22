@@ -21,6 +21,7 @@ import { DatasetItem } from '../../annotator/types';
 import { CheckboxInput } from '../checkbox-input';
 import { MediaPreview } from '../media-preview/media-preview.component';
 import { AnnotationStateIcon } from './annotation-state-icon.component';
+import { DeleteMediaItem } from './delete-media-item/delete-media-item.component';
 import { MediaItem } from './media-item.component';
 import { MediaThumbnail } from './media-thumbnail.component';
 import { getThumbnailUrl } from './utils';
@@ -86,13 +87,16 @@ export const Gallery = ({ items, hasNextPage, isFetchingNextPage, fetchNextPage 
                                         onDoubleClick={() => setSelectedMediaItem(item)}
                                     />
                                 )}
-                                topRightElement={() => <AnnotationStateIcon state={mediaState.get(String(item.id))} />}
                                 topLeftElement={() => (
                                     <CheckboxInput
                                         isReadOnly
                                         name={`select-${item.id}`}
                                         isChecked={isSetSelectedKeys && selectedKeys.has(String(item.id))}
                                     />
+                                )}
+                                topRightElement={() => <DeleteMediaItem itemId={String(item.id)} />}
+                                bottomRightElement={() => (
+                                    <AnnotationStateIcon state={mediaState.get(String(item.id))} />
                                 )}
                             />
                         </ListBoxItem>

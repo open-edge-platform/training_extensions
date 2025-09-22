@@ -21,6 +21,15 @@
     right: var(--spectrum-global-dimension-size-50);
 }
 
+.bottomLeftElement {
+    bottom: var(--spectrum-global-dimension-size-50);
+    left: var(--spectrum-global-dimension-size-50);
+}
+.bottomRightElement {
+    bottom: var(--spectrum-global-dimension-size-50);
+    right: var(--spectrum-global-dimension-size-50);
+}
+
 [data-hovered],
 [data-selected],
 [data-accepted='true'],
