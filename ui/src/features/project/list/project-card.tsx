@@ -19,7 +19,7 @@ type ProjectCardProps = {
 
 export const ProjectCard = ({ item, isActive }: ProjectCardProps) => {
     return (
-        // TODO: remove this empty string check once\
+        // TODO: remove this empty string check once
         // https://github.com/open-edge-platform/training_extensions/issues/4721 is done
         <NavLink to={paths.project.inference({ projectId: item.id || '' })}>
             <Flex UNSAFE_className={clsx({ [classes.card]: true, [classes.activeCard]: isActive })}>
@@ -30,7 +30,7 @@ export const ProjectCard = ({ item, isActive }: ProjectCardProps) => {
                 <View width={'100%'} padding={'size-200'}>
                     <Flex alignItems={'center'} justifyContent={'space-between'}>
                         <Heading level={3}>{item.name}</Heading>
-                        <MenuActions />
+                        <MenuActions projectId={item.id || ''} />
                     </Flex>
 
                     <Flex marginBottom={'size-200'} gap={'size-50'}>
