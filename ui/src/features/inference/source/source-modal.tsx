@@ -8,15 +8,16 @@ import { Button, Content, Dialog, DialogTrigger, Text } from '@geti/ui';
 import { ReactComponent as Camera } from '../../../assets/icons/camera.svg';
 import { ReactComponent as GenICam } from '../../../assets/icons/genicam.svg';
 import { ReactComponent as Image } from '../../../assets/icons/images-folder.svg';
-import { ReactComponent as IpCamera } from '../../../assets/icons/ip-camera.svg';
+import { ReactComponent as IpCameraIcon } from '../../../assets/icons/ip-camera.svg';
 import { ReactComponent as Video } from '../../../assets/icons/video-file.svg';
 import { ReactComponent as Webcam } from '../../../assets/icons/webcam.svg';
-import { DisclosureGroup } from './disclosure-group/disclosure-group.component';
+import { DisclosureGroup } from './disclosure-group.component';
 import { ImageFolder } from './image-folder/image-folder.component';
+import { IpCamera } from './ip-camera/ip-camera.component';
 
 const inputs = [
     { label: 'Webcam', value: 'webcam', content: 'Test', icon: <Webcam width={'24px'} /> },
-    { label: 'IP Camera', value: 'ip-camera', content: 'Test', icon: <IpCamera width={'24px'} /> },
+    { label: 'IP Camera', value: 'ip-camera', content: <IpCamera />, icon: <IpCameraIcon width={'24px'} /> },
     { label: 'GenICam', value: 'gen-i-cam', content: 'Test', icon: <GenICam width={'24px'} /> },
     { label: 'Video file', value: 'video-file', content: 'Test', icon: <Video width={'24px'} /> },
     {
