@@ -166,9 +166,9 @@ def get_webrtc_manager(request: Request) -> WebRTCManager:
 
 
 @lru_cache
-def get_project_service() -> ProjectService:
+def get_project_service(request: Request) -> ProjectService:
     """Provides a ProjectService instance for managing projects."""
-    return ProjectService()
+    return ProjectService(request.app.state.settings.data_dir)
 
 
 def get_label_service() -> type[LabelService]:

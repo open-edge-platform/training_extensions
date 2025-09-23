@@ -31,6 +31,7 @@ class ProjectDB(Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     task_type: Mapped[str] = mapped_column(String(50), nullable=False)
     exclusive_labels: Mapped[bool] = mapped_column(Boolean, default=False)
+    thumbnail_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
 

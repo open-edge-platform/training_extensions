@@ -1,6 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+
 import pytest
 
 from app.db.schema import LabelDB, ProjectDB
@@ -23,6 +24,16 @@ SUPPORTED_PROJECT_MAPPING = [
         Project(name="Test Project", task=Task(task_type=TaskType.DETECTION, exclusive_labels=False, labels=[])),
         ProjectDB(name="Test Project", task_type=TaskType.DETECTION, exclusive_labels=False),
     ),
+    (
+        Project(
+            name="Test Project",
+            task=Task(task_type=TaskType.SEGMENTATION, exclusive_labels=False, labels=[]),
+            thumbnail_id="thumbnail_123",
+        ),
+        ProjectDB(
+            name="Test Project", task_type=TaskType.SEGMENTATION, exclusive_labels=False, thumbnail_id="thumbnail_123"
+        ),
+    ),
 ]
 
 
@@ -39,6 +50,7 @@ class TestProjectMapper:
         assert actual_db.task_type == expected_db.task_type
         assert actual_db.exclusive_labels == expected_db.exclusive_labels
         assert {label.name for label in actual_db.labels} == {label.name for label in expected_db.labels}
+        assert actual_db.thumbnail_id == expected_db.thumbnail_id
 
     @pytest.mark.parametrize("db_instance,expected_schema", [(v, k) for (k, v) in SUPPORTED_PROJECT_MAPPING.copy()])
     def test_to_schema(self, db_instance, expected_schema):
@@ -53,3 +65,4 @@ class TestProjectMapper:
         assert {label.name for label in actual_schema.task.labels} == {
             label.name for label in expected_schema.task.labels
         }
+        assert actual_schema.thumbnail_id == expected_schema.thumbnail_id

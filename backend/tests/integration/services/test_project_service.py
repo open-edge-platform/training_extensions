@@ -1,6 +1,8 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
+import shutil
+from collections.abc import Generator
+from pathlib import Path
 from unittest.mock import patch
 from uuid import UUID, uuid4
 
@@ -11,6 +13,16 @@ from app.db.schema import LabelDB, PipelineDB, ProjectDB
 from app.schemas.project import Label, Project, Task, TaskType
 from app.services.base import ResourceInUseError, ResourceNotFoundError, ResourceType
 from app.services.project_service import ProjectService
+
+
+@pytest.fixture(scope="session", autouse=True)
+def projects_dir() -> Generator[Path]:
+    """Setup a temporary data directory for tests."""
+    projects_dir = Path("data/projects")
+    if not projects_dir.exists():
+        projects_dir.mkdir(parents=True)
+    yield projects_dir
+    shutil.rmtree(projects_dir)
 
 
 @pytest.fixture(autouse=True)
@@ -28,9 +40,9 @@ def mock_get_db_session(db_session):
 
 
 @pytest.fixture
-def fxt_project_service() -> ProjectService:
+def fxt_project_service(projects_dir: Path) -> ProjectService:
     """Fixture to create a ProjectService instance."""
-    return ProjectService()
+    return ProjectService(projects_dir.parent)
 
 
 class TestProjectServiceIntegration:
@@ -93,6 +105,20 @@ class TestProjectServiceIntegration:
         fetched_project = fxt_project_service.get_project_by_id(UUID(db_project.id))
         assert str(fetched_project.id) == db_project.id
         assert fetched_project.name == db_project.name
+
+    def test_get_project_by_id_with_thumbnail(self, fxt_project_service: ProjectService, db_session: Session):
+        """Test retrieving a project returns correct thumbnail ID."""
+        db_project = ProjectDB(
+            name="P1",
+            task_type=TaskType.CLASSIFICATION,
+            exclusive_labels=True,
+            thumbnail_id="thumb_123",
+        )
+        db_project.id = str(uuid4())
+        db_session.add(db_project)
+        db_session.flush()
+        fetched_project = fxt_project_service.get_project_by_id(UUID(db_project.id))
+        assert fetched_project.thumbnail_id == "thumb_123"
 
     def test_get_project_by_id_not_found(self, fxt_project_service: ProjectService):
         """Test retrieving a non-existent project raises error."""

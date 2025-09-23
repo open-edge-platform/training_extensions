@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from enum import StrEnum
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.schemas.base import BaseIDNameModel
 from app.schemas.label import Label
@@ -22,12 +22,14 @@ class Task(BaseModel):
 
 class Project(BaseIDNameModel):
     task: Task
+    thumbnail_id: str | None = Field(default=None)
 
     model_config = {
         "json_schema_extra": {
             "example": {
                 "id": "7b073838-99d3-42ff-9018-4e901eb047fc",
                 "name": "animals",
+                "thumbnail_id": "thumbnail_123",
                 "task": {
                     "task_type": "classification",
                     "exclusive_labels": True,
