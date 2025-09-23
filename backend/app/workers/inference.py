@@ -7,7 +7,6 @@ import queue
 from multiprocessing.synchronize import Event as EventClass
 from multiprocessing.synchronize import Lock
 from typing import Any
-from uuid import UUID
 
 from model_api.models import DetectionResult, Model
 
@@ -53,7 +52,7 @@ class InferenceWorker(BaseProcessWorker):
 
     def _on_inference_completed(self, inf_result: DetectionResult, userdata: dict[str, Any]) -> None:
         start_time = float(userdata["inference_start_time"])
-        model_id = UUID(userdata["model_id"])
+        model_id = userdata["model_id"]
         self._metrics_service.record_inference_end(model_id=model_id, start_time=start_time)  # type: ignore
 
         stream_data: StreamData = userdata["stream_data"]
@@ -63,7 +62,7 @@ class InferenceWorker(BaseProcessWorker):
         inference_data = InferenceData(
             prediction=inf_result,
             visualized_prediction=frame_with_predictions,
-            model_name=userdata["model_name"],
+            model_id=model_id,
         )
         stream_data.inference_data = inference_data
         while not self.should_stop():
@@ -121,8 +120,7 @@ class InferenceWorker(BaseProcessWorker):
                         item.frame_data,
                         user_data={
                             "stream_data": item,
-                            "model_name": self._model_service.get_active_model_name(),  # type: ignore
-                            "model_id": str(self._loaded_model.id),
+                            "model_id": self._loaded_model.id,
                             "inference_start_time": inference_start_time,
                         },
                     )

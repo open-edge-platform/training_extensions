@@ -1,15 +1,15 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+from collections.abc import Callable
 from unittest.mock import patch
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 
 from app.db.schema import PipelineDB, ProjectDB
 from app.schemas import PipelineStatus
 from app.schemas.pipeline import FixedRateDataCollectionPolicy
-from app.schemas.project import TaskType
 from app.services import PipelineService, ResourceNotFoundError, ResourceType
 from app.services.configuration_service import PipelineField
 
@@ -34,35 +34,53 @@ def fxt_pipeline_service(fxt_active_pipeline_service, fxt_metrics_service, fxt_c
     return PipelineService(fxt_active_pipeline_service, fxt_metrics_service, fxt_condition)
 
 
+@pytest.fixture
+def fxt_project_with_pipeline(
+    fxt_db_projects, fxt_db_sinks, fxt_db_sources, fxt_db_models, db_session
+) -> Callable[[bool, list[dict] | None], tuple[ProjectDB, PipelineDB]]:
+    """Fixture to create a ProjectDB with an associated PipelineDB."""
+
+    def _create_project_with_pipeline(
+        is_running: bool, data_policies: list[dict] | None = None
+    ) -> tuple[ProjectDB, PipelineDB]:
+        db_project = fxt_db_projects[0]
+        db_session.add(db_project)
+        db_session.flush()
+        db_pipeline = db_project.pipeline
+        db_pipeline.is_running = is_running
+        db_pipeline.source = fxt_db_sources[0]
+        db_pipeline.sink = fxt_db_sinks[0]
+        if data_policies:
+            db_pipeline.data_collection_policies = data_policies
+        db_model_rev = fxt_db_models[0]
+        db_model_rev.project_id = db_project.id
+        db_pipeline.model_revision = db_model_rev
+        db_session.add_all([db_pipeline, fxt_db_sources[1], fxt_db_sinks[1]])
+        db_session.flush()
+        return db_project, db_pipeline
+
+    return _create_project_with_pipeline
+
+
 class TestPipelineServiceIntegration:
     """Integration tests for PipelineService."""
 
-    def test_get_pipeline(self, fxt_pipeline_service, fxt_db_sinks, fxt_db_sources, fxt_db_models, db_session):
+    def test_get_pipeline(self, fxt_pipeline_service, fxt_project_with_pipeline, db_session):
         """Test retrieving a pipeline by ID."""
-        project_id = uuid4()
-        project_db = ProjectDB(
-            id=str(project_id),
-            name="Test Project",
-            task_type=TaskType.DETECTION,
+        _, db_pipeline = fxt_project_with_pipeline(
+            is_running=False, data_policies=[{"type": "fixed_rate", "enabled": "true", "rate": 0.1}]
         )
-        pipeline_db = PipelineDB(project_id=str(project_id))
-        pipeline_db.sink = fxt_db_sinks[0]
-        pipeline_db.source = fxt_db_sources[0]
-        pipeline_db.model = fxt_db_models[0]
-        pipeline_db.data_collection_policies = [{"type": "fixed_rate", "enabled": "true", "rate": 0.1}]
-        project_db.pipeline = pipeline_db
-        db_session.add(project_db)
-        db_session.flush()
 
+        project_id = UUID(db_pipeline.project_id)
         pipeline = fxt_pipeline_service.get_pipeline_by_id(project_id)
 
         assert pipeline is not None
         assert pipeline.project_id == project_id
         assert pipeline.status == PipelineStatus.IDLE
-        assert pipeline.sink.name == fxt_db_sinks[0].name
-        assert pipeline.source.name == fxt_db_sources[0].name
-        assert pipeline.model.name == fxt_db_models[0].name
-        assert pipeline.data_collection_policies == [FixedRateDataCollectionPolicy(type="fixed_rate", rate=0.1)]
+        assert pipeline.sink.name == db_pipeline.sink.name
+        assert pipeline.source.name == db_pipeline.source.name
+        assert str(pipeline.model.id) == db_pipeline.model_revision_id
+        assert pipeline.data_collection_policies == [FixedRateDataCollectionPolicy(rate=0.1)]
 
     def test_get_non_existent_pipeline(self, fxt_pipeline_service):
         """Test retrieving a non-existent pipeline raises error."""
@@ -77,26 +95,16 @@ class TestPipelineServiceIntegration:
     def test_reconfigure_running_pipeline(
         self,
         pipeline_attr,
+        fxt_project_with_pipeline,
         fxt_db_sinks,
         fxt_db_sources,
-        fxt_db_models,
-        fxt_db_projects,
         fxt_pipeline_service,
         fxt_active_pipeline_service,
         fxt_condition,
         db_session,
     ):
         """Test updating a pipeline by ID."""
-        db_project = fxt_db_projects[0]
-        db_pipeline = db_project.pipeline
-        db_pipeline.is_running = True
-        db_pipeline.source = fxt_db_sources[0]
-        db_pipeline.sink = fxt_db_sinks[0]
-        db_pipeline.model = fxt_db_models[0]
-        db_session.add(db_project)
-        db_session.add(fxt_db_sources[1])
-        db_session.add(fxt_db_sinks[1])
-        db_session.flush()
+        _, db_pipeline = fxt_project_with_pipeline(is_running=True)
 
         if pipeline_attr == PipelineField.SINK_ID:
             item_id = fxt_db_sinks[1].id
@@ -119,24 +127,14 @@ class TestPipelineServiceIntegration:
     def test_enable_disable_pipeline(
         self,
         pipeline_status,
-        fxt_db_sinks,
-        fxt_db_sources,
-        fxt_db_models,
-        fxt_db_projects,
+        fxt_project_with_pipeline,
         fxt_pipeline_service,
         fxt_active_pipeline_service,
         fxt_condition,
         db_session,
     ):
         """Test activating and deactivating an existing pipeline by ID."""
-        db_project = fxt_db_projects[0]
-        db_pipeline = db_project.pipeline
-        db_pipeline.is_running = not pipeline_status.as_bool
-        db_pipeline.source = fxt_db_sources[0]
-        db_pipeline.sink = fxt_db_sinks[0]
-        db_pipeline.model = fxt_db_models[0]
-        db_session.add(db_project)
-        db_session.flush()
+        _, db_pipeline = fxt_project_with_pipeline(is_running=not pipeline_status.as_bool)
 
         fxt_pipeline_service.update_pipeline(db_pipeline.project_id, {"status": pipeline_status})
 

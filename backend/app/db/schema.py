@@ -44,7 +44,7 @@ class PipelineDB(Base):
     project_id: Mapped[str] = mapped_column(Text, ForeignKey("projects.id", ondelete="CASCADE"), primary_key=True)
     source_id: Mapped[str | None] = mapped_column(Text, ForeignKey("sources.id", ondelete="RESTRICT"))
     sink_id: Mapped[str | None] = mapped_column(Text, ForeignKey("sinks.id", ondelete="RESTRICT"))
-    model_id: Mapped[str | None] = mapped_column(Text, ForeignKey("models.id", ondelete="RESTRICT"))
+    model_revision_id: Mapped[str | None] = mapped_column(Text, ForeignKey("model_revisions.id", ondelete="RESTRICT"))
     is_running: Mapped[bool] = mapped_column(Boolean, default=False)
     data_collection_policies: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
@@ -53,7 +53,7 @@ class PipelineDB(Base):
     project = relationship("ProjectDB", back_populates="pipeline")
     sink = relationship("SinkDB", uselist=False)
     source = relationship("SourceDB", uselist=False)
-    model = relationship("ModelDB", uselist=False)
+    model_revision = relationship("ModelRevisionDB", uselist=False)
 
 
 class SinkDB(Base):
@@ -69,12 +69,30 @@ class SinkDB(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
 
 
-class ModelDB(Base):
-    __tablename__ = "models"
+class ModelRevisionDB(Base):
+    __tablename__ = "model_revisions"
 
     id: Mapped[str] = mapped_column(Text, primary_key=True, default=lambda: str(uuid4()))
-    name: Mapped[str] = mapped_column(String(255), nullable=False)
-    format: Mapped[str] = mapped_column(String(50), nullable=False)
+    project_id: Mapped[str] = mapped_column(Text, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    architecture: Mapped[str] = mapped_column(String(100), nullable=False)
+    parent_revision: Mapped[str | None] = mapped_column(Text, ForeignKey("model_revisions.id"), nullable=True)
+    training_status: Mapped[str] = mapped_column(String(50), nullable=False)
+    training_configuration: Mapped[dict] = mapped_column(JSON, nullable=False)
+    training_dataset_id: Mapped[str | None] = mapped_column(Text, ForeignKey("dataset_revisions.id"), nullable=True)
+    label_schema_revision: Mapped[dict] = mapped_column(JSON, nullable=False)
+    training_started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    training_finished_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    files_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
+    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
+
+
+class DatasetRevisionDB(Base):
+    __tablename__ = "dataset_revisions"
+
+    id: Mapped[str] = mapped_column(Text, primary_key=True, default=lambda: str(uuid4()))
+    project_id: Mapped[str] = mapped_column(Text, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    files_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
 
@@ -92,7 +110,7 @@ class DatasetItemDB(Base):
     annotation_data: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
     user_reviewed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     prediction_model_id: Mapped[str | None] = mapped_column(
-        Text, ForeignKey("models.id", ondelete="SET NULL"), nullable=True
+        Text, ForeignKey("model_revisions.id", ondelete="SET NULL"), nullable=True
     )
     source_id: Mapped[str | None] = mapped_column(Text, ForeignKey("sources.id", ondelete="SET NULL"), nullable=True)
     subset: Mapped[str | None] = mapped_column(String(20), nullable=False)
