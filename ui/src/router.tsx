@@ -32,7 +32,7 @@ export const paths = {
     project: {
         index: projects,
         new: projects.path('/new'),
-        edit: project.path('/:projectId/edit'),
+        edit: project.path('/edit'),
         inference,
         dataset,
         models,
