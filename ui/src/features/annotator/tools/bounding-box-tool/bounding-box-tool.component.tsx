@@ -6,13 +6,13 @@ import { useAnnotator } from '../../annotator-provider.component';
 import { DrawingBox } from '../drawing-box-tool/drawing-box.component';
 
 export const BoundingBoxTool = () => {
-    const { mediaItem, addAnnotation } = useAnnotator();
+    const { mediaItem, addAnnotation, image } = useAnnotator();
     const { scale: zoom } = useZoom();
 
     return (
         <DrawingBox
             roi={{ x: 0, y: 0, width: mediaItem.width, height: mediaItem.height }}
-            image={new ImageData(mediaItem.width, mediaItem.height)}
+            image={image}
             zoom={zoom}
             onComplete={addAnnotation}
         />

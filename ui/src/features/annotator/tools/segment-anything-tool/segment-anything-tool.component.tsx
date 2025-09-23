@@ -3,32 +3,24 @@
 
 import { PointerEvent, useEffect, useRef, useState } from 'react';
 
-import { clampPointBetweenImage, isPointInShape, pointInRectangle } from '@geti/smart-tools/utils';
+import { clampPointBetweenImage } from '@geti/smart-tools/utils';
+import { isEmpty } from 'lodash-es';
 
 import { useZoom } from '../../../../components/zoom/zoom';
 import { AnnotationShape } from '../../annotations/annotation-shape.component';
 import { MaskAnnotations } from '../../annotations/mask-annotations.component';
 import { useAnnotator } from '../../annotator-provider.component';
 import { AnnotatorLoading } from '../../loading.component';
-import { Annotation, Point, Shape } from '../../types';
-import { isRightButton } from '../../utils';
+import { Annotation, Shape } from '../../types';
 import { SvgToolCanvas } from '../svg-tool-canvas.component';
 import { getRelativePoint, removeOffLimitPoints } from '../utils';
-import { InteractiveSegmentationPoint } from './interactive-segmentation-point.component';
-import { useSegmentAnything } from './segment-anything-state-provider.component';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';
+import { useDecodingMutation, useDecodingQuery } from './use-decoding-query.hook';
+import { useSegmentAnythingModel } from './use-segment-anything.hook';
 import { useSingleStackFn } from './use-single-stack-fn.hook';
 import { useThrottledCallback } from './use-throttle-callback.hook';
 
 import classes from './segment-anything.module.scss';
-
-const isPositivePoint = (point: Point, shapes: Shape[], isRightClick: boolean, rightClickMode: boolean) => {
-    if (rightClickMode) {
-        return !isRightClick;
-    }
-
-    return !shapes.some((shape) => isPointInShape(shape, point));
-};
 
 // Whenever the user moves their mouse over the canvas  we compute a preview of
 // SAM being applied to the user's mouse position.
@@ -36,12 +28,6 @@ const isPositivePoint = (point: Point, shapes: Shape[], isRightClick: boolean, r
 // exception. We throttle the mouse update based on this so that we don't overload
 // the user's cpu with too many decoding requests
 const THROTTLE_TIME = 150;
-
-// TODO: Remove/move this to the secondary toolbar
-const toolSettings = {
-    interactiveMode: false,
-    rightClickMode: false,
-};
 
 const SELECT_ANNOTATION_STYLES = {
     fillOpacity: 0.3,
@@ -51,23 +37,25 @@ const SELECT_ANNOTATION_STYLES = {
 };
 
 export const SegmentAnythingTool = () => {
+    const [mousePosition, setMousePosition] = useState<InteractiveAnnotationPoint>();
+    const [previewShapes, setPreviewShapes] = useState<Shape[]>([]);
+
     const zoom = useZoom();
     const { mediaItem, roi, image } = useAnnotator();
-
-    const clampPoint = clampPointBetweenImage(image);
+    const { isLoading, decodingQueryFn } = useSegmentAnythingModel();
+    const throttledDecodingQueryFn = useSingleStackFn(decodingQueryFn);
+    const decodingQuery = useDecodingQuery(mousePosition ? [mousePosition] : [], throttledDecodingQueryFn);
+    const decodingMutation = useDecodingMutation(decodingQueryFn);
 
     const ref = useRef<SVGRectElement>(null);
 
-    const { result, points, addPoint, isProcessing, isLoading } = useSegmentAnything();
-    const [mousePosition, setMousePosition] = useState<InteractiveAnnotationPoint>();
-
-    const [previewShapes, setPreviewShapes] = useState<Shape[]>([]);
-    const { decodingQueryFn } = useSegmentAnything();
-    const throttledDecodingQueryFn = useSingleStackFn(decodingQueryFn);
+    const clampPoint = clampPointBetweenImage(image);
 
     const throttleSetMousePosition = useThrottledCallback((point: InteractiveAnnotationPoint) => {
         setMousePosition(point);
     }, THROTTLE_TIME);
+
+    const result = decodingQuery.data ?? [];
 
     useEffect(() => {
         if (mousePosition === undefined) {
@@ -87,8 +75,6 @@ export const SegmentAnythingTool = () => {
             });
     }, [mousePosition, throttledDecodingQueryFn, throttleSetMousePosition, roi]);
 
-    const { interactiveMode, rightClickMode } = toolSettings;
-
     const handleMouseMove = (event: PointerEvent<SVGSVGElement>) => {
         if (!ref.current) {
             return;
@@ -96,9 +82,7 @@ export const SegmentAnythingTool = () => {
 
         const point = clampPoint(getRelativePoint(ref.current, { x: event.clientX, y: event.clientY }, zoom.scale));
 
-        const positive = isPositivePoint(point, result.shapes, isRightButton(event), rightClickMode);
-
-        throttleSetMousePosition({ ...point, positive });
+        throttleSetMousePosition({ ...point, positive: true });
     };
 
     const onPointerUp = (event: PointerEvent<SVGSVGElement>) => {
@@ -110,35 +94,12 @@ export const SegmentAnythingTool = () => {
             return;
         }
 
-        if (event.pointerType === 'touch') {
-            return;
-        }
-
-        if (!rightClickMode && isRightButton(event)) {
-            return;
-        }
-
-        // The user must first place a positive point as otherwise we can't show a preview
-        if (rightClickMode && isRightButton(event) && points.length === 0) {
-            return;
-        }
-
         const point = clampPoint(getRelativePoint(ref.current, { x: event.clientX, y: event.clientY }, zoom.scale));
 
-        // In task chain don't allow the user to place a point outside the ROI
-        if (!pointInRectangle(roi, point)) {
-            return;
-        }
-
-        const positive = isPositivePoint(point, result.shapes, isRightButton(event), rightClickMode);
-
-        const shouldKeepPreviousPoints = interactiveMode === true || isRightButton(event);
-
-        addPoint({ x: point.x, y: point.y, positive }, shouldKeepPreviousPoints);
+        decodingMutation.mutate([{ ...point, positive: true }]);
     };
 
-    const showPreviewShapes = result.shapes.length === 0 && mousePosition !== undefined;
-    const annotations = (showPreviewShapes ? previewShapes : result.shapes).map((shape, idx): Annotation => {
+    const annotations = result.map((shape, idx): Annotation => {
         return {
             shape,
             labels: [{ id: 'id', color: 'red', name: 'Segment Anything', isPrediction: false }],
@@ -162,9 +123,7 @@ export const SegmentAnythingTool = () => {
                 setPreviewShapes([]);
             }}
             style={{
-                cursor: interactiveMode
-                    ? `url("/icons/pencil-plus.svg") 16 16, auto`
-                    : `url("/icons/selection.svg") 8 8, auto`,
+                cursor: `url("/icons/selection.svg") 8 8, auto`,
             }}
         >
             <MaskAnnotations isEnabled annotations={annotations} width={mediaItem.width} height={mediaItem.height}>
@@ -190,38 +149,6 @@ export const SegmentAnythingTool = () => {
                         />
                     </g>
                 ))}
-
-            {result.shapes.map((shape, idx) => (
-                <g
-                    key={idx}
-                    aria-label='Segment anything result'
-                    {...SELECT_ANNOTATION_STYLES}
-                    strokeWidth={'calc(3px / var(--zoom-scale))'}
-                    cursor={`url(/icons/pencil-${
-                        interactiveMode === true && rightClickMode === false ? 'minus' : 'plus'
-                    }.svg) 16 16, auto`}
-                    fillOpacity={0.0}
-                    className={classes.stroke}
-                >
-                    <AnnotationShape
-                        annotation={{
-                            shape,
-                            id: '',
-                            labels: [{ id: 'id', color: 'red', name: 'Segment Anything', isPrediction: false }],
-                        }}
-                    />
-                </g>
-            ))}
-
-            {points.map((point, index) => (
-                <InteractiveSegmentationPoint
-                    key={index}
-                    x={point.x}
-                    y={point.y}
-                    positive={point.positive}
-                    isLoading={isProcessing}
-                />
-            ))}
         </SvgToolCanvas>
     );
 };

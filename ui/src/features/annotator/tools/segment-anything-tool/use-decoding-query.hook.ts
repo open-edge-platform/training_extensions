@@ -59,7 +59,6 @@ export const useDecodingMutation = (queryFn: (points: InteractiveAnnotationPoint
                 return removeOffLimitPoints(shape, roi);
             });
 
-            // Add the shapes to the canvas here
             shapes.map((shape) => addAnnotation(shape));
         },
     });

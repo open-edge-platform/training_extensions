@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 
 import { Button, ButtonGroup, Content, Dialog, Divider, Grid, Heading, ToggleButton, View } from '@geti/ui';
 
@@ -35,37 +35,39 @@ export const MediaPreview = ({ mediaItem, close }: MediaPreviewProps) => {
                         columns={'100px calc(100% - 200px) 100px'}
                         rows={'auto 1fr auto'}
                     >
-                        <AnnotatorProvider mediaItem={mediaItem}>
-                            <View gridArea={'toolbar'}>
-                                <ToolSelectionBar />
-                            </View>
+                        <Suspense fallback={<div>Loading...</div>}>
+                            <AnnotatorProvider mediaItem={mediaItem}>
+                                <View gridArea={'toolbar'}>
+                                    <ToolSelectionBar />
+                                </View>
 
-                            <View gridArea={'canvas'}>
-                                <SelectAnnotationProvider>
-                                    <AnnotatorCanvas mediaItem={mediaItem} isFocussed={isFocussed} />
-                                </SelectAnnotationProvider>
-                            </View>
+                                <View gridArea={'canvas'}>
+                                    <SelectAnnotationProvider>
+                                        <AnnotatorCanvas mediaItem={mediaItem} isFocussed={isFocussed} />
+                                    </SelectAnnotationProvider>
+                                </View>
 
-                            <View gridArea={'aside'}>
-                                <div>Aside</div>
-                            </View>
+                                <View gridArea={'aside'}>
+                                    <div>Aside</div>
+                                </View>
 
-                            <View gridArea={'footer'} padding={'size-100'} UNSAFE_style={{ textAlign: 'right' }}>
-                                <ButtonGroup>
-                                    <ToggleButton
-                                        marginEnd={'size-100'}
-                                        isEmphasized
-                                        isSelected={isFocussed}
-                                        onChange={setIsFocussed}
-                                    >
-                                        Focus
-                                    </ToggleButton>
-                                    <Button variant='secondary' onPress={close}>
-                                        Close
-                                    </Button>
-                                </ButtonGroup>
-                            </View>
-                        </AnnotatorProvider>
+                                <View gridArea={'footer'} padding={'size-100'} UNSAFE_style={{ textAlign: 'right' }}>
+                                    <ButtonGroup>
+                                        <ToggleButton
+                                            marginEnd={'size-100'}
+                                            isEmphasized
+                                            isSelected={isFocussed}
+                                            onChange={setIsFocussed}
+                                        >
+                                            Focus
+                                        </ToggleButton>
+                                        <Button variant='secondary' onPress={close}>
+                                            Close
+                                        </Button>
+                                    </ButtonGroup>
+                                </View>
+                            </AnnotatorProvider>
+                        </Suspense>
                     </Grid>
                 </View>
             </Content>

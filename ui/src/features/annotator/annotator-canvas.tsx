@@ -4,7 +4,6 @@
 import { MouseEvent } from 'react';
 
 import { Grid, View } from '@geti/ui';
-import { isEmpty } from 'lodash-es';
 
 import { ZoomProvider } from '../../components/zoom/zoom';
 import { ZoomTransform } from '../../components/zoom/zoom-transform';
@@ -24,7 +23,8 @@ export const AnnotatorCanvas = ({ mediaItem, isFocussed }: AnnotatorCanvasProps)
     const { setSelectedAnnotations } = useSelectedAnnotations();
 
     const size = { width: mediaItem.width, height: mediaItem.height };
-    // todo: pass media annotations
+    // TODO: pass media annotations
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const annotations: Annotation[] = [];
 
     const handleClickOutside = (e: MouseEvent<SVGSVGElement>): void => {
@@ -43,11 +43,9 @@ export const AnnotatorCanvas = ({ mediaItem, isFocussed }: AnnotatorCanvasProps)
 
                     <View gridArea={'innercanvas'}>
                         <>
-                            {!isEmpty(annotations) && (
-                                <svg onClick={handleClickOutside}>
-                                    <Annotations width={size.width} height={size.height} isFocussed={isFocussed} />
-                                </svg>
-                            )}
+                            <svg onClick={handleClickOutside}>
+                                <Annotations width={size.width} height={size.height} isFocussed={isFocussed} />
+                            </svg>
                             <ToolManager />
                         </>
                     </View>
