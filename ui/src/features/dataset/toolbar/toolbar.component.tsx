@@ -6,6 +6,7 @@ import { Button, Divider, Flex, Heading, Text } from '@geti/ui';
 import { useSelectedData } from '../../../routes/dataset/provider';
 import { DatasetItem } from '../../annotator/types';
 import { CheckboxInput } from '../checkbox-input';
+import { DeleteMediaItem } from '../gallery/delete-media-item/delete-media-item.component';
 import { toggleMultipleSelection, updateSelectedKeysTo } from './util';
 
 type ToolbarProps = {
@@ -13,7 +14,7 @@ type ToolbarProps = {
 };
 
 export const Toolbar = ({ items }: ToolbarProps) => {
-    const { selectedKeys, setSelectedKeys, setMediaState } = useSelectedData();
+    const { selectedKeys, setSelectedKeys, setMediaState, toggleSelectedKeys } = useSelectedData();
     const totalSelectedElements = selectedKeys instanceof Set ? selectedKeys.size : 0;
     const hasSelectedElements = totalSelectedElements > 0;
 
@@ -57,6 +58,11 @@ export const Toolbar = ({ items }: ToolbarProps) => {
 
                     {hasSelectedElements && (
                         <>
+                            <DeleteMediaItem
+                                itemsIds={Array.from(selectedKeys) as string[]}
+                                onDeleted={toggleSelectedKeys}
+                            />
+
                             <Button variant={'accent'} onPress={handleAccept}>
                                 Accept
                             </Button>

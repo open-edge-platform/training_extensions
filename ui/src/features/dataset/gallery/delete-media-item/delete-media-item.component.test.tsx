@@ -18,6 +18,8 @@ vi.mock('react-router', () => ({
 describe('DeleteMediaItem', () => {
     it('deletes a media item and shows a success toast', async () => {
         const itemId = '123';
+        const mockedOnDeleted = vitest.fn();
+
         server.use(
             http.delete('/api/projects/{project_id}/dataset/items/{dataset_item_id}', () => {
                 return HttpResponse.json(null, { status: 204 });
@@ -26,7 +28,7 @@ describe('DeleteMediaItem', () => {
 
         render(
             <TestProviders>
-                <DeleteMediaItem itemId={itemId} />
+                <DeleteMediaItem itemsIds={[itemId]} onDeleted={mockedOnDeleted} />
             </TestProviders>
         );
 
@@ -36,23 +38,30 @@ describe('DeleteMediaItem', () => {
         userEvent.click(screen.getByRole('button', { name: /confirm/i }));
         await waitForElementToBeRemoved(() => screen.queryByRole('button', { name: /confirm/i }));
 
-        expect(screen.getByText(`Item "${itemId}" was deleted successfully`)).toBeVisible();
+        expect(screen.getByText(`1 item(s) deleted successfully`)).toBeVisible();
+        expect(mockedOnDeleted).toHaveBeenCalledWith([itemId]);
     });
 
     it('shows an error toast when deleting a media item fails', async () => {
-        const itemId = '123';
+        const itemToFail = '321';
+        const itemToDelete = '123';
         const errorMessage = 'test error message';
+        const mockedOnDeleted = vitest.fn();
+
         server.use(
-            http.delete('/api/projects/{project_id}/dataset/items/{dataset_item_id}', () => {
-                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-expect-error
-                return HttpResponse.json({ detail: errorMessage }, { status: 500 });
+            http.delete('/api/projects/{project_id}/dataset/items/{dataset_item_id}', ({ params }) => {
+                const { dataset_item_id } = params;
+                return dataset_item_id === itemToDelete
+                    ? HttpResponse.json(null, { status: 204 })
+                    : // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                      // @ts-expect-error
+                      HttpResponse.json({ detail: errorMessage }, { status: 500 });
             })
         );
 
         render(
             <TestProviders>
-                <DeleteMediaItem itemId={itemId} />
+                <DeleteMediaItem itemsIds={[itemToFail, itemToDelete]} onDeleted={mockedOnDeleted} />
             </TestProviders>
         );
 
@@ -62,6 +71,8 @@ describe('DeleteMediaItem', () => {
         userEvent.click(screen.getByRole('button', { name: /confirm/i }));
         await waitForElementToBeRemoved(() => screen.queryByRole('button', { name: /confirm/i }));
 
-        expect(screen.getByText(`Failed to delete item: ${errorMessage}`)).toBeVisible();
+        expect(screen.getByText(`1 item(s) deleted successfully`)).toBeVisible();
+        expect(screen.getByText(`Failed to delete, ${errorMessage}`)).toBeVisible();
+        expect(mockedOnDeleted).toHaveBeenCalledWith([itemToDelete]);
     });
 });
