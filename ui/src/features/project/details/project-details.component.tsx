@@ -72,7 +72,11 @@ export const ProjectDetails = () => {
                                 <Flex direction={'column'} gap={'size-300'}>
                                     {isArray(models.data) &&
                                         models.data.map((model) => (
-                                            <Field key={model.id} field={model.name} value={model.format} />
+                                            <Field
+                                                key={model.id}
+                                                field={model.architecture}
+                                                value={model.architecture}
+                                            />
                                         ))}
                                 </Flex>
                             </View>

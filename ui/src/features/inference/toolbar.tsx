@@ -26,7 +26,7 @@ const ActiveModel = () => {
                     color: 'var(--spectrum-global-color-gray-700)',
                 }}
             >
-                {modelsQuery.data.length > 0 ? modelsQuery.data[0].name : 'Unknown'}
+                {modelsQuery.data.length > 0 ? modelsQuery.data[0].architecture : 'Unknown'}
             </Text>
         </Flex>
     );

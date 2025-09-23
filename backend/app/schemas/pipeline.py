@@ -31,7 +31,7 @@ class DataCollectionPolicyBase(BaseModel):
 
 
 class FixedRateDataCollectionPolicy(DataCollectionPolicyBase):
-    type: Literal["fixed_rate"]
+    type: Literal["fixed_rate"] = "fixed_rate"
     rate: float
 
 
@@ -73,8 +73,17 @@ class Pipeline(BaseModel):
                 },
                 "model": {
                     "id": "76e07d18-196e-4e33-bf98-ac1d35dca4cb",
-                    "name": "YOLO-X for Vehicle Detection",
-                    "format": "openvino_ir",
+                    "architecture": "Object_Detection_YOLOX_X",
+                    "parent_revision": "06091f82-5506-41b9-b97f-c761380df870",
+                    "training_info": {
+                        "status": "in_progress",
+                        "start_time": "2021-06-29T16:24:30.928000+00:00",
+                        "end_time": "2021-06-29T16:24:30.928000+00:00",
+                        "dataset_revision_id": "3c6c6d38-1cd8-4458-b759-b9880c048b78",
+                        "label_schema_revision": {},
+                        "configuration": {},
+                    },
+                    "files_deleted": False,
                 },
                 "status": "running",
                 "data_collection_policies": [

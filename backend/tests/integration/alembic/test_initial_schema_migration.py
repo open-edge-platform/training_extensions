@@ -47,15 +47,16 @@ def test_database_migration_applied(alembic_session):
     result = alembic_session.execute(text("SELECT name FROM sqlite_master WHERE type='table'"))
     tables = [row[0] for row in result.fetchall()]
 
-    assert len(tables) == 8
+    assert len(tables) == 9
     assert "alembic_version" in tables
     assert "projects" in tables
     assert "sinks" in tables
     assert "pipelines" in tables
     assert "sources" in tables
-    assert "models" in tables
+    assert "model_revisions" in tables
+    assert "dataset_revisions" in tables
     assert "dataset_items" in tables
     assert "labels" in tables
 
     (result,) = alembic_session.execute(text("SELECT version_num FROM alembic_version")).fetchone()
-    assert result == "f8a3138c9a60"
+    assert result == "daf666ef6f34"

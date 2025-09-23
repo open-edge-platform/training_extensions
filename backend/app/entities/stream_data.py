@@ -3,6 +3,7 @@
 
 from dataclasses import dataclass
 from typing import Any
+from uuid import UUID
 
 import numpy as np
 from model_api.models.result import Result
@@ -16,7 +17,7 @@ class InferenceData:
 
     prediction: Result  # prediction result, e.g., bounding boxes, masks, etc.
     visualized_prediction: np.ndarray  # visualized prediction (e.g., bounding boxes, masks, etc. drawn on the frame)
-    model_name: str  # name of the model that produced the prediction
+    model_id: UUID  # ID of the model that produced the prediction
 
 
 @dataclass(kw_only=True)
