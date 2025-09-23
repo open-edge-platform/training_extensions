@@ -13,20 +13,18 @@ import torch
 from torchvision.ops import roi_align
 
 if TYPE_CHECKING:
-    from datumaro import Polygon
     from torchvision import tv_tensors
 
 
 def polygon_to_bitmap(
-    polygons: np.ndarray | list[Polygon],
+    polygons: np.ndarray,
     height: int,
     width: int,
 ) -> np.ndarray:
     """Convert polygons to a bitmap mask.
 
     Args:
-        polygons: Either a ragged array containing np.ndarray objects of shape (Npoly, 2)
-                 or a list of datumaro.Polygon objects
+        polygons: a ragged array containing np.ndarray objects of shape (Npoly, 2)
         height: bitmap height
         width: bitmap width
 
@@ -34,27 +32,20 @@ def polygon_to_bitmap(
         np.ndarray: bitmap masks
     """
     # Convert to list of flat point arrays for pycocotools
-    if isinstance(polygons, list):
-        # Handle list of datumaro.Polygon objects
-        polygon_points = [polygon.points for polygon in polygons]
-    else:
-        # Handle ragged array of np.ndarray objects
-        polygon_points = [points.reshape(-1) for points in polygons]
-
+    polygon_points = [points.reshape(-1) for points in polygons]
     rles = mask_utils.frPyObjects(polygon_points, height, width)
     return mask_utils.decode(rles).astype(bool).transpose((2, 0, 1))
 
 
 def polygon_to_rle(
-    polygons: np.ndarray | list[Polygon],
+    polygons: np.ndarray,
     height: int,
     width: int,
 ) -> list[dict]:
     """Convert polygons to a list of RLE masks.
 
     Args:
-        polygons: Either a ragged array containing np.ndarray objects of shape (Npoly, 2)
-                 or a list of datumaro.Polygon objects
+        polygons: a ragged array containing np.ndarray objects of shape (Npoly, 2)
         height: bitmap height
         width: bitmap width
 
@@ -62,12 +53,7 @@ def polygon_to_rle(
         list[dict]: List of RLE masks.
     """
     # Convert to list of flat point arrays for pycocotools
-    if isinstance(polygons, list):
-        # Handle list of datumaro.Polygon objects
-        polygon_points = [polygon.points for polygon in polygons]
-    else:
-        # Handle ragged array of np.ndarray objects
-        polygon_points = [points.reshape(-1) for points in polygons]
+    polygon_points = [points.reshape(-1) for points in polygons]
 
     return mask_utils.frPyObjects(polygon_points, height, width)
 
