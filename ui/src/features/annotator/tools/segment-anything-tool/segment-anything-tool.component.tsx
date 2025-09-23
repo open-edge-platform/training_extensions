@@ -4,7 +4,6 @@
 import { PointerEvent, useEffect, useRef, useState } from 'react';
 
 import { clampPointBetweenImage } from '@geti/smart-tools/utils';
-import { isEmpty } from 'lodash-es';
 
 import { useZoom } from '../../../../components/zoom/zoom';
 import { AnnotationShape } from '../../annotations/annotation-shape.component';
@@ -15,7 +14,7 @@ import { Annotation, Shape } from '../../types';
 import { SvgToolCanvas } from '../svg-tool-canvas.component';
 import { getRelativePoint, removeOffLimitPoints } from '../utils';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';
-import { useDecodingMutation, useDecodingQuery } from './use-decoding-query.hook';
+import { useDecodingMutation } from './use-decoding-query.hook';
 import { useSegmentAnythingModel } from './use-segment-anything.hook';
 import { useSingleStackFn } from './use-single-stack-fn.hook';
 import { useThrottledCallback } from './use-throttle-callback.hook';
@@ -44,7 +43,6 @@ export const SegmentAnythingTool = () => {
     const { mediaItem, roi, image } = useAnnotator();
     const { isLoading, decodingQueryFn } = useSegmentAnythingModel();
     const throttledDecodingQueryFn = useSingleStackFn(decodingQueryFn);
-    const decodingQuery = useDecodingQuery(mousePosition ? [mousePosition] : [], throttledDecodingQueryFn);
     const decodingMutation = useDecodingMutation(decodingQueryFn);
 
     const ref = useRef<SVGRectElement>(null);
@@ -54,8 +52,6 @@ export const SegmentAnythingTool = () => {
     const throttleSetMousePosition = useThrottledCallback((point: InteractiveAnnotationPoint) => {
         setMousePosition(point);
     }, THROTTLE_TIME);
-
-    const result = decodingQuery.data ?? [];
 
     useEffect(() => {
         if (mousePosition === undefined) {
@@ -99,7 +95,7 @@ export const SegmentAnythingTool = () => {
         decodingMutation.mutate([{ ...point, positive: true }]);
     };
 
-    const annotations = result.map((shape, idx): Annotation => {
+    const annotations = previewShapes.map((shape, idx): Annotation => {
         return {
             shape,
             labels: [{ id: 'id', color: 'red', name: 'Segment Anything', isPrediction: false }],

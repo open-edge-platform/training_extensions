@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { MouseEvent } from 'react';
+import { PointerEvent } from 'react';
 
 import { Grid, View } from '@geti/ui';
 
@@ -27,7 +27,7 @@ export const AnnotatorCanvas = ({ mediaItem, isFocussed }: AnnotatorCanvasProps)
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const annotations: Annotation[] = [];
 
-    const handleClickOutside = (e: MouseEvent<SVGSVGElement>): void => {
+    const handleClickOutside = (e: PointerEvent<HTMLDivElement>): void => {
         if (e.target === e.currentTarget) {
             setSelectedAnnotations(new Set());
         }
@@ -43,9 +43,9 @@ export const AnnotatorCanvas = ({ mediaItem, isFocussed }: AnnotatorCanvasProps)
 
                     <View gridArea={'innercanvas'}>
                         <>
-                            <svg onClick={handleClickOutside}>
+                            <div onPointerDown={handleClickOutside}>
                                 <Annotations width={size.width} height={size.height} isFocussed={isFocussed} />
-                            </svg>
+                            </div>
                             <ToolManager />
                         </>
                     </View>
