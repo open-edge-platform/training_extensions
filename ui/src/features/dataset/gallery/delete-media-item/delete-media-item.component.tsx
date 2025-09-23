@@ -17,21 +17,13 @@ type DeleteMediaItemProps = {
     onDeleted?: (deletedIds: string[]) => void;
 };
 
+const isFulfilled = (response: PromiseSettledResult<{ itemId: string }>) => response.status === 'fulfilled';
+
 export const DeleteMediaItem = ({ itemsIds = [], onDeleted }: DeleteMediaItemProps) => {
     const project_id = useProjectIdentifier();
     const alertDialogState = useOverlayTriggerState({});
 
     const removeMutation = $api.useMutation('delete', `/api/projects/{project_id}/dataset/items/{dataset_item_id}`, {
-        onSuccess: (_, { params: { path } }) => {
-            const { dataset_item_id: itemId } = path;
-
-            toast({
-                id: itemId,
-                type: 'success',
-                message: `Item "${itemId}" was deleted successfully`,
-                duration: 3000,
-            });
-        },
         onError: (error, { params: { path } }) => {
             const { dataset_item_id: itemId } = path;
 
@@ -43,22 +35,27 @@ export const DeleteMediaItem = ({ itemsIds = [], onDeleted }: DeleteMediaItemPro
         },
     });
 
-    const handleRemoveItems = () => {
+    const handleRemoveItems = async () => {
         alertDialogState.close();
 
-        const deleteItemPromises = itemsIds.map(async (itemId) => {
-            toast({ id: itemId, type: 'info', message: `Deleting item "${itemId}"...` });
+        toast({ id: 'deleting-notification', type: 'info', message: `Deleting items...` });
 
-            await removeMutation.mutateAsync({
-                params: { path: { project_id, dataset_item_id: itemId } },
-            });
+        const deleteItemPromises = itemsIds.map(async (dataset_item_id) => {
+            await removeMutation.mutateAsync({ params: { path: { project_id, dataset_item_id } } });
 
-            return { itemId };
+            return { itemId: dataset_item_id };
         });
 
-        Promise.allSettled(deleteItemPromises).then((responses) => {
-            const deletedIds = responses.filter((res) => res.status === 'fulfilled').map(({ value }) => value.itemId);
-            isFunction(onDeleted) && onDeleted(deletedIds);
+        const responses = await Promise.allSettled(deleteItemPromises);
+        const deletedIds = responses.filter(isFulfilled).map(({ value }) => value.itemId);
+
+        isFunction(onDeleted) && onDeleted(deletedIds);
+
+        toast({
+            id: 'deleting-notification',
+            type: 'success',
+            message: `${deletedIds.length} item(s) deleted successfully`,
+            duration: 3000,
         });
     };
 

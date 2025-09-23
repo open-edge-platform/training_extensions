@@ -38,11 +38,11 @@ describe('DeleteMediaItem', () => {
         userEvent.click(screen.getByRole('button', { name: /confirm/i }));
         await waitForElementToBeRemoved(() => screen.queryByRole('button', { name: /confirm/i }));
 
-        expect(screen.getByText(`Item "${itemId}" was deleted successfully`)).toBeVisible();
+        expect(screen.getByText(`1 item(s) deleted successfully`)).toBeVisible();
         expect(mockedOnDeleted).toHaveBeenCalledWith([itemId]);
     });
 
-    it.only('shows an error toast when deleting a media item fails', async () => {
+    it('shows an error toast when deleting a media item fails', async () => {
         const itemToFail = '321';
         const itemToDelete = '123';
         const errorMessage = 'test error message';
@@ -71,6 +71,7 @@ describe('DeleteMediaItem', () => {
         userEvent.click(screen.getByRole('button', { name: /confirm/i }));
         await waitForElementToBeRemoved(() => screen.queryByRole('button', { name: /confirm/i }));
 
+        expect(screen.getByText(`1 item(s) deleted successfully`)).toBeVisible();
         expect(screen.getByText(`Failed to delete, ${errorMessage}`)).toBeVisible();
         expect(mockedOnDeleted).toHaveBeenCalledWith([itemToDelete]);
     });
