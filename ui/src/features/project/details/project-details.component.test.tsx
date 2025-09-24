@@ -16,39 +16,47 @@ vi.mock('react-router', () => ({
 describe('ProjectDetails', () => {
     it('renders the correct values for each resource', async () => {
         server.use(
-            http.get('/api/sources', () => {
-                return HttpResponse.json([
-                    {
+            http.get('/api/projects/{project_id}', () => {
+                return HttpResponse.json({
+                    id: '123',
+                    name: 'Test Project',
+                    task: {
+                        task_type: 'detection',
+                        exclusive_labels: false,
+                        labels: [{ name: 'person' }, { name: 'car' }],
+                    },
+                });
+            }),
+            http.get('/api/projects/{project_id}/pipeline', () => {
+                return HttpResponse.json({
+                    project_id: '123',
+                    status: 'running' as const,
+                    data_collection_policies: [],
+                    source: {
                         name: 'source',
-                        source_type: 'video_file',
+                        source_type: 'video_file' as const,
                         video_path: 'video.mp4',
                     },
-                ]);
-            }),
-            http.get('/api/projects/{project_id}/models', () => {
-                return HttpResponse.json([
-                    {
+                    model: {
                         id: '1',
                         architecture: 'Object_Detection_TestModel',
                         training_info: {
-                            status: 'successful',
+                            status: 'successful' as const,
                             label_schema_revision: {},
                             configuration: {},
                         },
                         files_deleted: false,
                     },
-                ]);
-            }),
-            http.get('/api/sinks', () => {
-                return HttpResponse.json([
-                    {
+                    sink: {
                         name: 'sink',
                         folder_path: 'data/sink',
-                        output_formats: ['image_original', 'image_with_predictions', 'predictions'],
+                        output_formats: ['image_original', 'image_with_predictions', 'predictions'] as Array<
+                            'image_original' | 'image_with_predictions' | 'predictions'
+                        >,
                         rate_limit: 0.2,
-                        sink_type: 'folder',
+                        sink_type: 'folder' as const,
                     },
-                ]);
+                } satisfies Record<string, unknown>);
             })
         );
 
@@ -58,20 +66,32 @@ describe('ProjectDetails', () => {
             </TestProviders>
         );
 
-        // Headers
-        expect(screen.getByRole('heading', { name: 'Source' })).toBeInTheDocument();
-        expect(screen.getByRole('heading', { name: 'Model' })).toBeInTheDocument();
-        expect(screen.getByRole('heading', { name: 'Sink' })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument();
+        // Wait for the component to load and render the Project heading
+        expect(await screen.findByRole('heading', { name: 'Project' })).toBeInTheDocument();
+        expect(screen.getAllByRole('heading', { name: 'Name' })[0]).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: 'Task type' })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: 'Labels' })).toBeInTheDocument();
 
-        // Content
-        expect(await screen.findByText('video_file')).toBeInTheDocument();
+        // Project content
+        expect(screen.getByText('Test Project')).toBeInTheDocument();
+        expect(screen.getByText('detection')).toBeInTheDocument();
+        expect(screen.getByText('person, car')).toBeInTheDocument();
 
-        expect(await screen.findByText('Object_Detection_TestModel')).toBeInTheDocument();
+        // Pipeline section headers
+        expect(await screen.findByRole('heading', { name: 'Pipeline' })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: 'Source(s)' })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: 'Model(s)' })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: 'Sink(s)' })).toBeInTheDocument();
 
-        expect(await screen.findByText('data/sink')).toBeInTheDocument();
-        expect(await screen.findByText('image_original,image_with_predictions,predictions')).toBeInTheDocument();
-        expect(await screen.findByText('0.2')).toBeInTheDocument();
-        expect(await screen.findByText('folder')).toBeInTheDocument();
+        // Pipeline content
+        expect(screen.getByText('video_file')).toBeInTheDocument();
+        expect(screen.getByText('video.mp4')).toBeInTheDocument();
+
+        expect(screen.getByText('Object_Detection_TestModel')).toBeInTheDocument();
+
+        expect(screen.getByText('data/sink')).toBeInTheDocument();
+        expect(screen.getByText('image_original,image_with_predictions,predictions')).toBeInTheDocument();
+        expect(screen.getByText('0.2')).toBeInTheDocument();
+        expect(screen.getByText('folder')).toBeInTheDocument();
     });
 });
