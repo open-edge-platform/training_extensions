@@ -8,7 +8,7 @@ import { AddMediaButton } from '../../../components/add-media-button/add-media-b
 import { useProjectIdentifier } from '../../../hooks/use-project-identifier.hook';
 import { useSelectedData } from '../../../routes/dataset/provider';
 import { DatasetItem } from '../../annotator/types';
-import { CheckboxInput } from '../checkbox-input';
+import { CheckboxInput } from '../checkbox-input.component';
 import { DeleteMediaItem } from '../gallery/delete-media-item/delete-media-item.component';
 import { toggleMultipleSelection, updateSelectedKeysTo } from './util';
 
