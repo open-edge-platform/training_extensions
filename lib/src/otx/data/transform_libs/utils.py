@@ -199,7 +199,7 @@ def rescale_polygons(polygons: np.ndarray, scale_factor: float | tuple[float, fl
     rescaled_polygons = np.empty_like(polygons)
     for i, poly_points in enumerate(polygons):
         if poly_points.size > 0:
-            scaled_points = poly_points.copy()
+            scaled_points = poly_points.astype(np.float32)
             scaled_points[:, 0] *= w_scale  # x coordinates
             scaled_points[:, 1] *= h_scale  # y coordinates
             rescaled_polygons[i] = scaled_points
@@ -767,12 +767,12 @@ def flip_polygons(polygons: np.ndarray, height: int, width: int, direction: str 
     for i, poly_points in enumerate(polygons):
         flipped_points = poly_points.copy()
         if direction == "horizontal":
-            flipped_points[:, 0] = width - 1 - flipped_points[:, 0]  # x coordinates
+            flipped_points[:, 0] = width - flipped_points[:, 0]  # x coordinates
         elif direction == "vertical":
-            flipped_points[:, 1] = height - 1 - flipped_points[:, 1]  # y coordinates
+            flipped_points[:, 1] = height - flipped_points[:, 1]  # y coordinates
         else:
-            flipped_points[:, 0] = width - 1 - flipped_points[:, 0]  # x coordinates
-            flipped_points[:, 1] = height - 1 - flipped_points[:, 1]  # y coordinates
+            flipped_points[:, 0] = width - flipped_points[:, 0]  # x coordinates
+            flipped_points[:, 1] = height - flipped_points[:, 1]  # y coordinates
         flipped_polygons[i] = flipped_points
 
     return flipped_polygons
