@@ -22,11 +22,7 @@ export const EditProject = () => {
             width='100%'
         >
             <View paddingY='size-800'>
-                <View
-                    UNSAFE_style={{ color: 'var(--spectrum-global-color-gray-700)' }}
-                    maxWidth={'1320px'}
-                    marginX='auto'
-                >
+                <View maxWidth={'1320px'} marginX='auto'>
                     <ProjectDetails />
                 </View>
             </View>

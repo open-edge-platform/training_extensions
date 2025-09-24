@@ -41,7 +41,6 @@ export const paths = {
 
 export const router = createBrowserRouter([
     {
-        index: true,
         path: paths.project.index.pattern,
         element: (
             <Suspense fallback={<Loading mode='fullscreen' />}>
@@ -52,6 +51,10 @@ export const router = createBrowserRouter([
     {
         path: paths.project.new.pattern,
         element: <CreateProject />,
+    },
+    {
+        path: paths.project.edit.pattern,
+        element: <EditProject />,
     },
     {
         path: paths.root.pattern,
@@ -69,15 +72,6 @@ export const router = createBrowserRouter([
                     // else redirect to inference
                     return redirect(paths.project.index({}));
                 },
-            },
-            {
-                path: paths.project.index.pattern,
-                children: [
-                    {
-                        path: paths.project.edit.pattern,
-                        element: <EditProject />,
-                    },
-                ],
             },
             {
                 path: paths.project.inference.pattern,
