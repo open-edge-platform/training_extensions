@@ -5,7 +5,7 @@ import { Button, Divider, Flex, Heading, Text } from '@geti/ui';
 
 import { useSelectedData } from '../../../routes/dataset/provider';
 import { DatasetItem } from '../../annotator/types';
-import { CheckboxInput } from '../checkbox-input';
+import { CheckboxInput } from '../checkbox-input.component';
 import { DeleteMediaItem } from '../gallery/delete-media-item/delete-media-item.component';
 import { toggleMultipleSelection, updateSelectedKeysTo } from './util';
 
