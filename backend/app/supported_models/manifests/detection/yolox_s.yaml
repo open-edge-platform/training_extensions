@@ -1,0 +1,72 @@
+id: Object_Detection_YOLOX_S
+name: YOLOX-S
+
+description: "YOLOX is a high-performance, anchor-free object detection algorithm that builds on the YOLO series with modern improvements. It features a decoupled head for separate classification and regression tasks, strong data augmentation techniques, and advanced label assignment strategies. YOLOX achieves a great balance between speed and accuracy, making it suitable for real-time applications across various domains."
+stats:
+  gigaflops: 26.8
+  trainable_parameters: 9.0
+  performance_ratings: # scores range from 1 (below average) to 3 (excellent)
+    accuracy: 2
+    training_time: 3
+    inference_speed: 3
+
+hyperparameters:
+  dataset_preparation:
+    augmentation:
+      iou_random_crop:
+        enable: false
+      mosaic:
+        enable: true
+      random_affine:
+        enable: true
+        max_rotate_degree: 10.0
+        max_translate_ratio: 0.1
+        scaling_ratio_range:
+          - 0.1
+          - 2.0
+        max_shear_degree: 2.0
+      mixup:
+        enable: true
+        probability: 0.5
+      hsv_random_aug:
+        enable: true
+        hue_delta: 5
+        saturation_delta: 30
+        value_delta: 30
+      random_horizontal_flip:
+        enable: true
+        probability: 0.5
+      random_vertical_flip:
+        enable: false
+        probability: 0.5
+      gaussian_blur:
+        enable: false
+        kernel_size: 5
+        sigma:
+          - 0.1
+          - 2.0
+        probability: 0.5
+      color_jitter:
+        enable: false
+        brightness:
+          - 0.875
+          - 1.125
+        contrast:
+          - 0.5
+          - 1.5
+        saturation:
+          - 0.5
+          - 1.5
+        hue:
+          - -0.05
+          - 0.05
+        probability: 0.5
+      gaussian_noise:
+        enable: false
+        mean: 0.0
+        sigma: 0.1
+        probability: 0.5
+  training:
+    learning_rate: 0.001
+    input_size_width: 640
+    input_size_height: 640
