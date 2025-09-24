@@ -51,6 +51,7 @@ dependencies = [
     "nncf==2.17.0",
     "anomalib[core]==1.1.3",
     "numpy<2.0.0",
+    "tensorboardX>=1.8",
 ]
 
 [project.optional-dependencies]

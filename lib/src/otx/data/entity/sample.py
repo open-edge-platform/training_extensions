@@ -131,23 +131,8 @@ class DetectionSample(OTXSample):
     """DetectionSample is a base class for OTX detection items."""
 
     image: np.ndarray | tv_tensors.Image = image_field(dtype=pl.UInt8)
-    label: torch.Tensor = label_field(pl.Int32(), is_list=True)
-    bboxes: torch.Tensor = bbox_field(dtype=pl.Float32)
-
-    @classmethod
-    def from_dm_item(cls, item: DatasetItem) -> DetectionSample:
-        """Create a DetectionSample from a Datumaro DatasetItem.
-
-        Args:
-            item: Datumaro DatasetItem containing image and label
-
-        Returns:
-            DetectionSample: Instance with image and label set
-        """
-        image = item.media_as(Image).data
-        bboxes = [bbox.points for bbox in item.annotations] if item.annotations else None
-        labels = [bbox.label for bbox in item.annotations] if item.annotations else None
-        return cls(image=image, label=labels, bboxes=bboxes)
+    label: np.ndarray | torch.Tensor = label_field(pl.Int32(), is_list=True)
+    bboxes: np.ndarray | tv_tensors.BoundingBoxes = bbox_field(dtype=pl.Float32)
 
     def __post_init__(self) -> None:
         shape = self.image.shape[:2]
