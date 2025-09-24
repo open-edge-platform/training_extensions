@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 import { ReactComponent as BuildIcon } from './assets/icons/build-icon.svg';
 import { ReactComponent as LiveFeedIcon } from './assets/icons/live-feed-icon.svg';
 import { ReactComponent as Webhook } from './assets/icons/webhook.svg';
+import { ProjectsListPanel } from './components/project-panel/projects-list-panel.component';
 import { useProjectIdentifier } from './hooks/use-project-identifier.hook';
 import { paths } from './router';
 
@@ -21,8 +22,15 @@ const Header = () => {
 
     return (
         <View backgroundColor={'gray-300'} gridArea={'header'}>
-            <Flex height='100%' alignItems={'center'} marginX='1rem' gap='size-200'>
-                <View marginEnd='size-200'>
+            <Grid
+                height='100%'
+                gap={'size-200'}
+                marginX={'size-200'}
+                columns={['auto', '2fr', 'auto']}
+                rows={'1fr'}
+                alignItems={'center'}
+            >
+                <View paddingEnd={'size-200'}>
                     <Link to={paths.project.index({})}>Geti Tune</Link>
                 </View>
 
@@ -64,7 +72,9 @@ const Header = () => {
                         </Flex>
                     </Item>
                 </TabList>
-            </Flex>
+
+                <ProjectsListPanel />
+            </Grid>
         </View>
     );
 };
@@ -88,6 +98,7 @@ export const Layout = () => {
                 height={'100%'}
             >
                 <Header />
+
                 <View backgroundColor={'gray-50'} gridArea={'content'}>
                     <TabPanels height={'100%'} UNSAFE_style={{ border: 'none' }}>
                         <Item textValue='index' key={'index'}>
