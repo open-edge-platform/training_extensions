@@ -1,10 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { CSSProperties, MouseEvent } from 'react';
+import { PointerEvent } from 'react';
 
 import { Grid, View } from '@geti/ui';
-import { isEmpty } from 'lodash-es';
 
 import { ZoomProvider } from '../../components/zoom/zoom';
 import { ZoomTransform } from '../../components/zoom/zoom-transform';
@@ -15,29 +14,20 @@ import { useSelectedAnnotations } from './select-annotation-provider.component';
 import { ToolManager } from './tools/tool-manager.component';
 import { Annotation, DatasetItem } from './types';
 
-const DEFAULT_ANNOTATION_STYLES = {
-    fillOpacity: 0.4,
-    fill: 'var(--annotation-fill)',
-    stroke: 'var(--annotation-stroke)',
-    strokeLinecap: 'round',
-    strokeWidth: 'calc(1px / var(--zoom-scale))',
-    strokeDashoffset: 0,
-    strokeDasharray: 0,
-    strokeOpacity: 'var(--annotation-border-opacity, 1)',
-} satisfies CSSProperties;
-
 type AnnotatorCanvasProps = {
     mediaItem: DatasetItem;
     isFocussed: boolean;
 };
 export const AnnotatorCanvas = ({ mediaItem, isFocussed }: AnnotatorCanvasProps) => {
-    const { setSelectedAnnotations } = useSelectedAnnotations();
     const project_id = useProjectIdentifier();
+    const { setSelectedAnnotations } = useSelectedAnnotations();
+
     const size = { width: mediaItem.width, height: mediaItem.height };
-    // todo: pass media annotations
+    // TODO: pass media annotations
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const annotations: Annotation[] = [];
 
-    const handleClickOutside = (e: MouseEvent<SVGSVGElement>): void => {
+    const handleClickOutside = (e: PointerEvent<HTMLDivElement>): void => {
         if (e.target === e.currentTarget) {
             setSelectedAnnotations(new Set());
         }
@@ -51,20 +41,14 @@ export const AnnotatorCanvas = ({ mediaItem, isFocussed }: AnnotatorCanvasProps)
                         <img src={getImageUrl(project_id, String(mediaItem.id))} alt='Collected data' />
                     </View>
 
-                    {!isEmpty(annotations) && (
-                        <View gridArea={'innercanvas'}>
-                            <svg
-                                width={size.width}
-                                height={size.height}
-                                style={DEFAULT_ANNOTATION_STYLES}
-                                onClick={handleClickOutside}
-                            >
+                    <View gridArea={'innercanvas'}>
+                        <>
+                            <div onPointerDown={handleClickOutside}>
                                 <Annotations width={size.width} height={size.height} isFocussed={isFocussed} />
-
-                                <ToolManager />
-                            </svg>
-                        </View>
-                    )}
+                            </div>
+                            <ToolManager />
+                        </>
+                    </View>
                 </Grid>
             </ZoomTransform>
         </ZoomProvider>
