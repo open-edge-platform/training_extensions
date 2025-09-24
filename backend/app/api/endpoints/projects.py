@@ -218,6 +218,6 @@ def get_project_thumbnail(
         thumbnail_path = project_service.get_project_thumbnail_path(project_id)
         if thumbnail_path:
             return FileResponse(path=thumbnail_path)
-        raise HTTPException(status_code=status.HTTP_204_NO_CONTENT, detail="No thumbnail available")
+        raise HTTPException(status_code=status.HTTP_204_NO_CONTENT)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
