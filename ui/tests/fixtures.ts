@@ -28,6 +28,19 @@ const test = testBase.extend<Fixtures>({
             http.get('/api/projects/{project_id}/models', ({ response }) => {
                 return response(200).json([]);
             }),
+            http.get('/api/projects', ({ response }) => {
+                return response(200).json([
+                    {
+                        id: 'id-1',
+                        name: 'Project 1',
+                        task: {
+                            task_type: 'detection',
+                            exclusive_labels: false,
+                            labels: [],
+                        },
+                    },
+                ]);
+            }),
             http.post('/api/webrtc/offer', ({ response }) => {
                 return response(200).json({
                     type: 'answer',
