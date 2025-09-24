@@ -15,8 +15,8 @@ from app.services.base import ResourceInUseError, ResourceNotFoundError, Resourc
 from app.services.project_service import ProjectService
 
 
-@pytest.fixture(scope="session", autouse=True)
-def projects_dir() -> Generator[Path]:
+@pytest.fixture()
+def fxt_projects_dir() -> Generator[Path]:
     """Setup a temporary data directory for tests."""
     projects_dir = Path("data/projects")
     if not projects_dir.exists():
@@ -40,9 +40,9 @@ def mock_get_db_session(db_session):
 
 
 @pytest.fixture
-def fxt_project_service(projects_dir: Path) -> ProjectService:
+def fxt_project_service(fxt_projects_dir: Path) -> ProjectService:
     """Fixture to create a ProjectService instance."""
-    return ProjectService(projects_dir.parent)
+    return ProjectService(fxt_projects_dir.parent)
 
 
 class TestProjectServiceIntegration:

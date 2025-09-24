@@ -24,8 +24,8 @@ from app.services.dataset_service import DatasetService, InvalidImageError
 logger = logging.getLogger(__name__)
 
 
-@pytest.fixture(scope="session", autouse=True)
-def projects_dir() -> Generator[Path]:
+@pytest.fixture()
+def fxt_projects_dir() -> Generator[Path]:
     """Setup a temporary data directory for tests."""
     projects_dir = Path("data/projects")
     if not projects_dir.exists():
@@ -44,9 +44,9 @@ def mock_get_db_session(db_session):
 
 
 @pytest.fixture
-def fxt_dataset_service(projects_dir: Path) -> DatasetService:
+def fxt_dataset_service(fxt_projects_dir: Path) -> DatasetService:
     """Fixture to create a DatasetService instance."""
-    return DatasetService(projects_dir.parent)
+    return DatasetService(fxt_projects_dir.parent)
 
 
 @pytest.fixture
@@ -362,10 +362,10 @@ class TestDatasetServiceIntegration:
         fxt_dataset_service: DatasetService,
         fxt_stored_projects: list[ProjectDB],
         fxt_stored_dataset_items: list[DatasetItemDB],
-        projects_dir,
+        fxt_projects_dir: Path,
         db_session: Session,
     ):
-        dataset_dir = projects_dir / fxt_stored_projects[0].id / "dataset"
+        dataset_dir = fxt_projects_dir / fxt_stored_projects[0].id / "dataset"
         dataset_dir.mkdir(parents=True, exist_ok=True)
 
         binary_path = dataset_dir / f"{fxt_stored_dataset_items[0].id}.{fxt_stored_dataset_items[0].format}"
