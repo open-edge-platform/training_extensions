@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Divider } from '@geti/ui';
-import { BoundingBox, Selector } from '@geti/ui/icons';
+import { BoundingBox, SegmentAnythingIcon, Selector } from '@geti/ui/icons';
 
 import { ToolConfig } from '../../../components/tool-selection-bar/tools/interface';
 import { Tools } from '../../../components/tool-selection-bar/tools/tools.component';
@@ -17,7 +17,8 @@ const TASK_TOOL_CONFIG: Record<string, ToolConfig[]> = {
     ],
     segmentation: [
         { type: 'selection', icon: Selector },
-        // TODO: Add 'polygon' and 'sam' tools later
+        { type: 'sam', icon: SegmentAnythingIcon },
+        // TODO: Add 'polygon' tool later
     ],
 };
 

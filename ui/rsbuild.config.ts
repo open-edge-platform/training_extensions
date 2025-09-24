@@ -29,7 +29,6 @@ export default defineConfig({
             },
         }),
     ],
-
     source: {
         define: {
             ...publicVars,
@@ -52,6 +51,19 @@ export default defineConfig({
             watchOptions: {
                 ignored: ['**/src-tauri/**'],
             },
+        },
+    },
+    server: {
+        headers: {
+            'Cross-Origin-Embedder-Policy': 'credentialless',
+            'Cross-Origin-Opener-Policy': 'same-origin',
+            'Content-Security-Policy':
+                "default-src 'self'; " +
+                "script-src 'self' 'unsafe-eval' blob:; " +
+                "worker-src 'self' blob:; " +
+                "connect-src 'self' http://localhost:7860 data:; " +
+                "img-src 'self' http://localhost:7860 data: blob:; " +
+                "style-src 'self' 'unsafe-inline';",
         },
     },
 });
