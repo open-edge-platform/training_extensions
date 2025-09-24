@@ -111,6 +111,8 @@ class ModelService:
         """
         with get_db_session() as db:
             project_repo = ProjectRepository(db)
+            # Prefer using a JOIN here since the list of model revisions per project is not large,
+            # and it allows us to check for project existence and fetch the model in a single query.
             project = project_repo.get_by_id(str(project_id))
             if not project:
                 raise ResourceNotFoundError(ResourceType.PROJECT, str(project_id))
@@ -147,6 +149,7 @@ class ModelService:
                 raise ResourceNotFoundError(ResourceType.PROJECT, str(project_id))
             model_rev_repo = ModelRevisionRepository(db)
             try:
+                # TODO: delete model artifacts from filesystem when implemented
                 deleted = model_rev_repo.delete(str(model_id))
                 if not deleted:
                     raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))

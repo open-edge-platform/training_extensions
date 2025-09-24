@@ -49,7 +49,7 @@ def get_model(
 ) -> Model:
     """Get a specific model by ID."""
     try:
-        return model_service.get_model_by_id(project_id, model_id)
+        return model_service.get_model_by_id(project_id=project_id, model_id=model_id)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -91,7 +91,7 @@ def delete_model(
 ) -> None:
     """Delete a model from a project."""
     try:
-        model_service.delete_model_by_id(project_id, model_id)
+        model_service.delete_model_by_id(project_id=project_id, model_id=model_id)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ResourceInUseError as e:
