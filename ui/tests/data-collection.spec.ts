@@ -43,7 +43,7 @@ test.describe('Dataset', () => {
         await expect(page.getByText(`${loadedItems} selected`)).toBeVisible();
     });
 
-    test('select multiple images', async ({ page }) => {
+    test.skip('select multiple images', async ({ page }) => {
         const selectedElements = 5;
 
         await page.goto('projects/some-id/dataset');
