@@ -14,7 +14,14 @@ from datumaro import Mask
 from datumaro.components.media import Image
 from datumaro.experimental.dataset import Sample
 from datumaro.experimental.fields import ImageInfo as DmImageInfo
-from datumaro.experimental.fields import bbox_field, image_field, image_info_field, label_field, mask_field
+from datumaro.experimental.fields import (
+    bbox_field,
+    image_field,
+    image_info_field,
+    keypoints_field,
+    label_field,
+    mask_field,
+)
 from torchvision import tv_tensors
 
 from otx.data.entity.base import ImageInfo
@@ -174,3 +181,11 @@ class SegmentationSample(OTXSample):
             img_shape=shape,
             ori_shape=shape,
         )
+
+
+class KeypointSample(OTXSample):
+    """KeypointSample is a base class for OTX keypoint detection items."""
+
+    image: np.ndarray | tv_tensors.Image = image_field(dtype=pl.UInt8)
+    label: torch.Tensor = label_field(pl.Int32(), is_list=True)
+    keypoints: torch.Tensor = keypoints_field()
