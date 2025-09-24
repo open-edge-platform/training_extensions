@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from enum import StrEnum
-from typing import Any
+from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
@@ -25,6 +25,19 @@ class PipelineStatus(StrEnum):
         return self == PipelineStatus.RUNNING
 
 
+class DataCollectionPolicyBase(BaseModel):
+    type: str
+    enabled: bool = True
+
+
+class FixedRateDataCollectionPolicy(DataCollectionPolicyBase):
+    type: Literal["fixed_rate"] = "fixed_rate"
+    rate: float
+
+
+DataCollectionPolicy = Annotated[FixedRateDataCollectionPolicy, Field(discriminator="type")]
+
+
 class Pipeline(BaseModel):
     project_id: UUID  # ID of the project this pipeline belongs to
     source: Source | None = None  # None if disconnected
@@ -38,6 +51,7 @@ class Pipeline(BaseModel):
         default=None, exclude=True
     )  # ID of the model, used for DB mapping, not exposed in API
     status: PipelineStatus = PipelineStatus.IDLE  # Current status of the pipeline
+    data_collection_policies: list[DataCollectionPolicy] = []  # List of data collection policies
 
     model_config = {
         "json_schema_extra": {
@@ -59,10 +73,26 @@ class Pipeline(BaseModel):
                 },
                 "model": {
                     "id": "76e07d18-196e-4e33-bf98-ac1d35dca4cb",
-                    "name": "YOLO-X for Vehicle Detection",
-                    "format": "openvino_ir",
+                    "architecture": "Object_Detection_YOLOX_X",
+                    "parent_revision": "06091f82-5506-41b9-b97f-c761380df870",
+                    "training_info": {
+                        "status": "in_progress",
+                        "start_time": "2021-06-29T16:24:30.928000+00:00",
+                        "end_time": "2021-06-29T16:24:30.928000+00:00",
+                        "dataset_revision_id": "3c6c6d38-1cd8-4458-b759-b9880c048b78",
+                        "label_schema_revision": {},
+                        "configuration": {},
+                    },
+                    "files_deleted": False,
                 },
                 "status": "running",
+                "data_collection_policies": [
+                    {
+                        "type": "fixed_rate",
+                        "enabled": "true",
+                        "rate": 0.02,
+                    }
+                ],
             }
         }
     }

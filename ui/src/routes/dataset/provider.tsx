@@ -14,6 +14,7 @@ type SelectedDataState = null | {
 
     mediaState: MediaState;
     setMediaState: Dispatch<SetStateAction<MediaState>>;
+    toggleSelectedKeys: (key: string[]) => void;
 };
 
 export const SelectedDataContext = createContext<SelectedDataState>(null);
@@ -22,8 +23,22 @@ export const SelectedDataProvider = ({ children }: { children: ReactNode }) => {
     const [mediaState, setMediaState] = useState<MediaState>(new Map());
     const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set());
 
+    const toggleSelectedKeys = (keys: string[]) => {
+        setSelectedKeys((prevSelectedKeys) => {
+            const updatedSelectedKeys = new Set(prevSelectedKeys);
+
+            keys.forEach((key) => {
+                updatedSelectedKeys.has(key) ? updatedSelectedKeys.delete(key) : updatedSelectedKeys.add(key);
+            });
+
+            return updatedSelectedKeys;
+        });
+    };
+
     return (
-        <SelectedDataContext.Provider value={{ selectedKeys, setSelectedKeys, mediaState, setMediaState }}>
+        <SelectedDataContext.Provider
+            value={{ selectedKeys, setSelectedKeys, mediaState, setMediaState, toggleSelectedKeys }}
+        >
             {children}
         </SelectedDataContext.Provider>
     );

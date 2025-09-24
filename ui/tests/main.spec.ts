@@ -5,7 +5,7 @@ import { expect, test } from './fixtures';
 
 test.describe('Inference', () => {
     test('starts stream', async ({ page }) => {
-        await page.goto('/projects/some-id/inference');
+        await page.goto('/projects/id-1/inference');
 
         await expect(page.getByLabel('Idle')).toBeVisible();
 

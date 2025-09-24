@@ -3,7 +3,7 @@
 import tempfile
 from datetime import datetime
 from io import BytesIO
-from unittest.mock import MagicMock
+from unittest.mock import ANY, MagicMock
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
@@ -13,8 +13,17 @@ from fastapi import status
 from app.api.dependencies import get_dataset_service
 from app.main import app
 from app.schemas import DatasetItem
-from app.schemas.dataset_item import DatasetItemFormat, DatasetItemSubset
+from app.schemas.dataset_item import (
+    DatasetItemAnnotation,
+    DatasetItemAnnotations,
+    DatasetItemAnnotationsWithSource,
+    DatasetItemFormat,
+    DatasetItemSubset,
+)
+from app.schemas.label import LabelReference
+from app.schemas.shape import Rectangle
 from app.services import DatasetService, ResourceNotFoundError, ResourceType
+from app.services.dataset_service import AnnotationValidationError
 
 
 @pytest.fixture
@@ -48,14 +57,23 @@ class TestDatasetItemEndpoints:
         fxt_dataset_service.create_dataset_item.assert_not_called()
 
     def test_create_dataset_item_success(self, fxt_dataset_item, fxt_dataset_service, fxt_client):
+        project_id = uuid4()
         fxt_dataset_service.create_dataset_item.return_value = fxt_dataset_item
 
         response = fxt_client.post(
-            f"/api/projects/{uuid4()}/dataset/items", files={"file": ("test_file.jpg", BytesIO(b"123"), "image/jpeg")}
+            f"/api/projects/{str(project_id)}/dataset/items",
+            files={"file": ("test_file.jpg", BytesIO(b"123"), "image/jpeg")},
         )
 
         assert response.status_code == status.HTTP_201_CREATED
-        fxt_dataset_service.create_dataset_item.assert_called_once()
+        fxt_dataset_service.create_dataset_item.assert_called_once_with(
+            project_id=project_id,
+            file=ANY,
+            name="test_file",
+            format="jpg",
+            size=3,
+            user_reviewed=True,
+        )
 
     def test_list_dataset_items(self, fxt_dataset_item, fxt_dataset_service, fxt_client):
         project_id = uuid4()
@@ -247,4 +265,151 @@ class TestDatasetItemEndpoints:
         assert response.status_code == status.HTTP_204_NO_CONTENT
         fxt_dataset_service.delete_dataset_item.assert_called_once_with(
             project_id=project_id, dataset_item_id=dataset_item_id
+        )
+
+    def test_set_dataset_item_annotations_success(self, fxt_dataset_service, fxt_client):
+        project_id = uuid4()
+        label_id = uuid4()
+        dataset_item_id = uuid4()
+        annotations = [
+            DatasetItemAnnotation(
+                labels=[LabelReference(id=label_id)],
+                shape=Rectangle(type="rectangle", x=0, y=0, width=10, height=10),
+            )
+        ]
+        fxt_dataset_service.set_dataset_item_annotations.return_value = DatasetItemAnnotationsWithSource(
+            annotations=annotations,
+            user_reviewed=True,
+            prediction_model_id=None,
+        )
+
+        response = fxt_client.post(
+            f"/api/projects/{str(project_id)}/dataset/items/{str(dataset_item_id)}/annotations",
+            json=DatasetItemAnnotations(annotations=annotations).model_dump(mode="json"),
+        )
+
+        assert response.status_code == status.HTTP_201_CREATED
+        fxt_dataset_service.set_dataset_item_annotations.assert_called_once_with(
+            project_id=project_id,
+            dataset_item_id=dataset_item_id,
+            annotations=annotations,
+        )
+
+    def test_set_dataset_item_annotations_label_not_found(self, fxt_dataset_service, fxt_client):
+        project_id = uuid4()
+        label_id = uuid4()
+        dataset_item_id = uuid4()
+        annotations = [
+            DatasetItemAnnotation(
+                labels=[LabelReference(id=label_id)],
+                shape=Rectangle(type="rectangle", x=0, y=0, width=10, height=10),
+            )
+        ]
+        fxt_dataset_service.set_dataset_item_annotations.side_effect = AnnotationValidationError(str(label_id))
+
+        response = fxt_client.post(
+            f"/api/projects/{str(project_id)}/dataset/items/{str(dataset_item_id)}/annotations",
+            json=DatasetItemAnnotations(annotations=annotations).model_dump(mode="json"),
+        )
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        fxt_dataset_service.set_dataset_item_annotations.assert_called_once_with(
+            project_id=project_id,
+            dataset_item_id=dataset_item_id,
+            annotations=annotations,
+        )
+
+    def test_set_dataset_item_annotations_not_found(self, fxt_dataset_service, fxt_client):
+        project_id = uuid4()
+        label_id = uuid4()
+        dataset_item_id = uuid4()
+        annotations = [
+            DatasetItemAnnotation(
+                labels=[LabelReference(id=label_id)],
+                shape=Rectangle(type="rectangle", x=0, y=0, width=10, height=10),
+            )
+        ]
+        fxt_dataset_service.set_dataset_item_annotations.side_effect = ResourceNotFoundError(
+            ResourceType.DATASET_ITEM, str(dataset_item_id)
+        )
+
+        response = fxt_client.post(
+            f"/api/projects/{str(project_id)}/dataset/items/{str(dataset_item_id)}/annotations",
+            json=DatasetItemAnnotations(annotations=annotations).model_dump(mode="json"),
+        )
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        fxt_dataset_service.set_dataset_item_annotations.assert_called_once_with(
+            project_id=project_id,
+            dataset_item_id=dataset_item_id,
+            annotations=annotations,
+        )
+
+    def test_get_dataset_item_annotations(self, fxt_dataset_service, fxt_client):
+        project_id = uuid4()
+        label_id = uuid4()
+        dataset_item_id = uuid4()
+        fxt_dataset_service.get_dataset_item_annotations.return_value = DatasetItemAnnotationsWithSource(
+            annotations=[
+                DatasetItemAnnotation(
+                    labels=[LabelReference(id=label_id)],
+                    shape=Rectangle(type="rectangle", x=0, y=0, width=10, height=10),
+                )
+            ],
+            user_reviewed=True,
+            prediction_model_id=None,
+        )
+
+        response = fxt_client.get(f"/api/projects/{str(project_id)}/dataset/items/{str(dataset_item_id)}/annotations")
+
+        assert response.status_code == status.HTTP_200_OK
+        fxt_dataset_service.get_dataset_item_annotations.assert_called_once_with(
+            project_id=project_id,
+            dataset_item_id=dataset_item_id,
+        )
+
+    def test_get_dataset_item_annotations_not_found(self, fxt_dataset_service, fxt_client):
+        project_id = uuid4()
+        dataset_item_id = uuid4()
+        fxt_dataset_service.get_dataset_item_annotations.side_effect = ResourceNotFoundError(
+            ResourceType.DATASET_ITEM, str(dataset_item_id)
+        )
+
+        response = fxt_client.get(f"/api/projects/{str(project_id)}/dataset/items/{str(dataset_item_id)}/annotations")
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        fxt_dataset_service.get_dataset_item_annotations.assert_called_once_with(
+            project_id=project_id,
+            dataset_item_id=dataset_item_id,
+        )
+
+    def test_delete_dataset_item_annotations(self, fxt_dataset_service, fxt_client):
+        project_id = uuid4()
+        dataset_item_id = uuid4()
+
+        response = fxt_client.delete(
+            f"/api/projects/{str(project_id)}/dataset/items/{str(dataset_item_id)}/annotations"
+        )
+
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        fxt_dataset_service.delete_dataset_item_annotations.assert_called_once_with(
+            project_id=project_id,
+            dataset_item_id=dataset_item_id,
+        )
+
+    def test_delete_dataset_item_annotations_not_found(self, fxt_dataset_service, fxt_client):
+        project_id = uuid4()
+        dataset_item_id = uuid4()
+        fxt_dataset_service.delete_dataset_item_annotations.side_effect = ResourceNotFoundError(
+            ResourceType.DATASET_ITEM, str(dataset_item_id)
+        )
+
+        response = fxt_client.delete(
+            f"/api/projects/{str(project_id)}/dataset/items/{str(dataset_item_id)}/annotations"
+        )
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        fxt_dataset_service.delete_dataset_item_annotations.assert_called_once_with(
+            project_id=project_id,
+            dataset_item_id=dataset_item_id,
         )

@@ -13,6 +13,7 @@ from fastapi.openapi.models import Example
 from pydantic import ValidationError
 
 from app.api.dependencies import get_pipeline_service, get_project_id
+from app.schemas import DataCollectionPolicy
 from app.schemas.metrics import PipelineMetrics
 from app.schemas.pipeline import Pipeline, PipelineStatus
 from app.services import PipelineService, ResourceNotFoundError
@@ -40,6 +41,24 @@ UPDATE_PIPELINE_BODY_EXAMPLES = {
             "source_id": "e3cbd8d0-17b8-463e-85a2-4aaed031674e",
             "sink_id": "c6787c06-964b-4097-8eca-238b8cf79fc9",
         },
+    ),
+    "enable_data_collection_policies": Example(
+        summary="Enable data collection policies",
+        description="Change data collection policies of the pipeline to fixed rate",
+        value={
+            "data_collection_policies": [
+                {
+                    "type": "fixed_rate",
+                    "enabled": "true",
+                    "rate": 0.1,
+                }
+            ]
+        },
+    ),
+    "clean_data_collection_policies": Example(
+        summary="Clean data collection policies",
+        description="Remove all data collection policies of the pipeline",
+        value={"data_collection_policies": []},
     ),
 }
 
@@ -89,6 +108,10 @@ def update_pipeline(
     if "status" in pipeline_config:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The 'status' field cannot be changed")
     try:
+        if "data_collection_policies" in pipeline_config:
+            pipeline_config["data_collection_policies"] = [
+                DataCollectionPolicy.model_validate(policy) for policy in pipeline_config["data_collection_policies"]
+            ]
         return pipeline_service.update_pipeline(project_id, pipeline_config)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

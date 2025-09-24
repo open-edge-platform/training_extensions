@@ -6,7 +6,6 @@ import { isEmpty } from 'lodash-es';
 
 import { $api } from '../../../api/client';
 import Background from '../../../assets/background.png';
-import { mockedProjects } from './mocked-projects';
 import { NewProjectLink } from './new-project-link.component';
 import { ProjectCard } from './project-card';
 
@@ -27,7 +26,13 @@ export const ProjectList = () => {
                 backgroundSize: 'cover',
             }}
         >
-            <Content maxHeight={'90vh'} maxWidth={'1052px'} margin={'0 auto'} UNSAFE_style={{ overflow: 'auto' }}>
+            <Content
+                height={'100%'}
+                maxHeight={'90vh'}
+                maxWidth={'1052px'}
+                margin={'0 auto'}
+                UNSAFE_style={{ overflow: 'auto' }}
+            >
                 <Heading
                     level={1}
                     marginBottom={'size-250'}
@@ -49,7 +54,7 @@ export const ProjectList = () => {
                     gap={'size-300'}
                     marginX={'auto'}
                     justifyContent={'center'}
-                    columns={isEmpty(mockedProjects) ? ['size-3600'] : ['1fr', '1fr']}
+                    columns={isEmpty(projects.data) ? ['size-3600'] : ['1fr', '1fr']}
                 >
                     <NewProjectLink />
 

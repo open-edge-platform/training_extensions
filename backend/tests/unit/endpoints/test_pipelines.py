@@ -13,6 +13,7 @@ from app.api.dependencies import get_pipeline_service
 from app.main import app
 from app.schemas import Pipeline, PipelineStatus
 from app.schemas.metrics import InferenceMetrics, LatencyMetrics, PipelineMetrics, ThroughputMetrics, TimeWindow
+from app.schemas.pipeline import FixedRateDataCollectionPolicy
 from app.services import PipelineService, ResourceNotFoundError, ResourceType
 
 
@@ -21,6 +22,7 @@ def fxt_pipeline() -> Pipeline:
     return Pipeline(
         project_id=uuid4(),
         status=PipelineStatus.IDLE,
+        data_collection_policies=[FixedRateDataCollectionPolicy(type="fixed_rate", rate=0.1)],
     )
 
 
@@ -68,6 +70,45 @@ class TestPipelineEndpoints:
         )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
+        fxt_pipeline_service.update_pipeline.assert_not_called()
+
+    def test_update_pipeline_data_collection_policies(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
+        project_id = fxt_pipeline.project_id
+        fxt_pipeline_service.update_pipeline.return_value = fxt_pipeline
+
+        response = fxt_client.patch(
+            f"/api/projects/{project_id}/pipeline",
+            json={
+                "data_collection_policies": [
+                    {"type": "fixed_rate", "enabled": "true", "rate": 0.1},
+                ]
+            },
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        fxt_pipeline_service.update_pipeline.assert_called_once_with(
+            project_id,
+            {
+                "data_collection_policies": [
+                    FixedRateDataCollectionPolicy(type="fixed_rate", rate=0.1),
+                ]
+            },
+        )
+
+    def test_update_pipeline_data_collection_policies_invalid(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
+        project_id = fxt_pipeline.project_id
+        fxt_pipeline_service.update_pipeline.return_value = fxt_pipeline
+
+        response = fxt_client.patch(
+            f"/api/projects/{project_id}/pipeline",
+            json={
+                "data_collection_policies": [
+                    {"type": "wrong_policy", "enabled": "true"},
+                ]
+            },
+        )
+
+        assert response.status_code == status.HTTP_409_CONFLICT
         fxt_pipeline_service.update_pipeline.assert_not_called()
 
     def test_update_pipeline_not_found(self, fxt_pipeline, fxt_pipeline_service, fxt_client):

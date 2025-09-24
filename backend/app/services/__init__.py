@@ -8,7 +8,7 @@ from .dataset_service import DatasetService
 from .dispatch_service import DispatchService
 from .label_service import LabelService
 from .metrics_service import MetricsService
-from .model_service import ModelAlreadyExistsError, ModelService
+from .model_service import ModelService
 from .pipeline_service import PipelineService
 from .project_service import ProjectService
 from .system_service import SystemService
@@ -21,7 +21,6 @@ __all__ = [
     "DispatchService",
     "LabelService",
     "MetricsService",
-    "ModelAlreadyExistsError",
     "ModelService",
     "PipelineService",
     "ProjectService",

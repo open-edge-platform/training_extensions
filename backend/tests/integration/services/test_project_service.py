@@ -8,7 +8,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.db.schema import LabelDB, PipelineDB, ProjectDB
-from app.schemas.project import Label, Project, Task
+from app.schemas.project import Label, Project, Task, TaskType
 from app.services.base import ResourceInUseError, ResourceNotFoundError, ResourceType
 from app.services.project_service import ProjectService
 
@@ -45,7 +45,7 @@ class TestProjectServiceIntegration:
         new_project = Project(
             name="Test Project",
             task=Task(
-                task_type="classification",
+                task_type=TaskType.CLASSIFICATION,
                 exclusive_labels=True,
                 labels=labels,
             ),

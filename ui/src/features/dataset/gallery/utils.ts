@@ -3,16 +3,17 @@
 
 import { API_BASE_URL } from '../../../api/client';
 
-const getBaseUrl = (src: string) => `${API_BASE_URL}/api/data-collection/${src}`;
+const getBaseUrl = (projectId: string, itemId: string) =>
+    `${API_BASE_URL}/api/projects/${projectId}/dataset/items/${itemId}`;
 
-export const getImageUrl = (src: string) => {
-    return `${getBaseUrl(src)}/image`;
+export const getImageUrl = (projectId: string, itemId: string) => {
+    return `${getBaseUrl(projectId, itemId)}/binary`;
 };
 
-export const getThumbnailUrl = (src: string) => {
-    return `${getImageUrl(src)}-thumbnail`;
+export const getThumbnailUrl = (projectId: string, itemId: string) => {
+    return `${getBaseUrl(projectId, itemId)}/thumbnail`;
 };
 
-export const getPredictionThumbnailUrl = (src: string) => {
-    return `${getBaseUrl(src)}/prediction-thumbnail`;
+export const getPredictionThumbnailUrl = (projectId: string, itemId: string) => {
+    return `${getBaseUrl(projectId, itemId)}/thumbnail`;
 };

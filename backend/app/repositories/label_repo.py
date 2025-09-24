@@ -10,7 +10,7 @@ from app.repositories.base import BaseRepository
 class LabelRepository(BaseRepository[LabelDB]):
     """Repository for label-related database operations."""
 
-    def __init__(self, db: Session, project_id: str):
+    def __init__(self, project_id: str, db: Session):
         super().__init__(db, LabelDB)
         self.project_id = project_id
 

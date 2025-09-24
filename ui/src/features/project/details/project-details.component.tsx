@@ -5,6 +5,7 @@ import { Button, ButtonGroup, Divider, Flex, Grid, Heading, repeat, Text, View }
 import { capitalize, isArray, startsWith } from 'lodash-es';
 
 import { $api } from '../../../api/client';
+import { useProjectIdentifier } from '../../../hooks/use-project-identifier.hook';
 import { paths } from '../../../router';
 import Background from './../../../assets/background.png';
 
@@ -30,10 +31,14 @@ const Field = ({ field, value }: FieldProps) => {
 };
 
 export const ProjectDetails = () => {
+    const projectId = useProjectIdentifier();
+
     // TODO: Replace this by /pipeline once available and maybe extract it to a hook
     const sources = $api.useQuery('get', '/api/sources');
     const sinks = $api.useQuery('get', '/api/sinks');
-    const models = $api.useQuery('get', '/api/models');
+    const models = $api.useQuery('get', '/api/projects/{project_id}/models', {
+        params: { path: { project_id: projectId } },
+    });
 
     return (
         <View
@@ -72,7 +77,11 @@ export const ProjectDetails = () => {
                                 <Flex direction={'column'} gap={'size-300'}>
                                     {isArray(models.data) &&
                                         models.data.map((model) => (
-                                            <Field key={model.id} field={model.name} value={model.format} />
+                                            <Field
+                                                key={model.id}
+                                                field={model.architecture}
+                                                value={model.architecture}
+                                            />
                                         ))}
                                 </Flex>
                             </View>

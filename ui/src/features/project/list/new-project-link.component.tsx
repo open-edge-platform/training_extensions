@@ -13,7 +13,7 @@ export const NewProjectLink = () => {
     return (
         <Link to={paths.project.new.pattern} className={classes.link}>
             <AddCircle />
-            <Text>Add another project</Text>
+            <Text>Add project</Text>
         </Link>
     );
 };
