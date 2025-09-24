@@ -145,25 +145,35 @@ class DetectionSample(OTXSample):
             DetectionSample: Instance with image and label set
         """
         image = item.media_as(Image).data
-        img_shape = image.shape[:2]
-        img_info = ImageInfo(
-            img_idx=0,
-            img_shape=img_shape,
-            ori_shape=img_shape,
-        )
         bboxes = [bbox.points for bbox in item.annotations] if item.annotations else None
         labels = [bbox.label for bbox in item.annotations] if item.annotations else None
-        sample = cls(
-            image=image,
-            label=torch.as_tensor(labels, dtype=torch.long)
-            if labels is not None
-            else torch.tensor([], dtype=torch.long),
-            bboxes=torch.as_tensor(bboxes, dtype=torch.float32)
-            if bboxes is not None
-            else torch.tensor([], dtype=torch.float32),
+        return cls(image=image, label=labels, bboxes=bboxes)
+
+    def __post_init__(self) -> None:
+        shape = self.image.shape[:2]
+
+        # Convert bboxes to tv_tensors format
+        if isinstance(self.bboxes, np.ndarray):
+            self.bboxes = tv_tensors.BoundingBoxes(
+                self.bboxes,
+                format=tv_tensors.BoundingBoxFormat.XYXY,
+                canvas_size=shape,
+                dtype=torch.float32,
+            )
+
+        # Convert image to tv_tensors format
+        if isinstance(self.image, np.ndarray):
+            self.image = tv_tensors.Image(self.image.transpose(2, 0, 1))
+
+        # Convert labels to tensor
+        if isinstance(self.label, np.ndarray):
+            self.label = torch.as_tensor(self.label, dtype=torch.long)
+
+        self.img_info = ImageInfo(
+            img_idx=0,
+            img_shape=shape,
+            ori_shape=shape,
         )
-        sample.img_info = img_info
-        return sample
 
 
 class SegmentationSample(OTXSample):
