@@ -59,4 +59,4 @@ def test_database_migration_applied(alembic_session):
     assert "labels" in tables
 
     (result,) = alembic_session.execute(text("SELECT version_num FROM alembic_version")).fetchone()
-    assert result == "daf666ef6f34"
+    assert result == "95b8e3d1e0a7"
