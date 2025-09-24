@@ -10,16 +10,17 @@ import { ReactComponent as GenICam } from '../../../assets/icons/genicam.svg';
 import { ReactComponent as Image } from '../../../assets/icons/images-folder.svg';
 import { ReactComponent as IpCameraIcon } from '../../../assets/icons/ip-camera.svg';
 import { ReactComponent as Video } from '../../../assets/icons/video-file.svg';
-import { ReactComponent as Webcam } from '../../../assets/icons/webcam.svg';
+import { ReactComponent as WebcamIcon } from '../../../assets/icons/webcam.svg';
 import { DisclosureGroup } from './disclosure-group.component';
 import { ImageFolder } from './image-folder/image-folder.component';
 import { IpCamera } from './ip-camera/ip-camera.component';
+import { Webcam } from './webcam/webcam.component';
 
 const inputs = [
-    { label: 'Webcam', value: 'webcam', content: 'Test', icon: <Webcam width={'24px'} /> },
+    { label: 'Webcam', value: 'webcam', content: <Webcam />, icon: <WebcamIcon width={'24px'} /> },
     { label: 'IP Camera', value: 'ip-camera', content: <IpCamera />, icon: <IpCameraIcon width={'24px'} /> },
-    { label: 'GenICam', value: 'gen-i-cam', content: 'Test', icon: <GenICam width={'24px'} /> },
-    { label: 'Video file', value: 'video-file', content: 'Test', icon: <Video width={'24px'} /> },
+    { label: 'GenICam', value: 'gen-i-cam', content: <ImageFolder />, icon: <GenICam width={'24px'} /> },
+    { label: 'Video file', value: 'video-file', content: <ImageFolder />, icon: <Video width={'24px'} /> },
     {
         label: 'Image folder',
         value: 'image-folder',
