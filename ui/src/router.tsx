@@ -18,7 +18,7 @@ import { ErrorPage } from './routes/error-page/error-page';
 import { Inference } from './routes/inference/inference';
 import { Models } from './routes/models/models';
 import { CreateProject } from './routes/project/create-project';
-import { EditProject } from './routes/project/edit-project';
+import { ViewProject } from './routes/project/view-project';
 
 const root = path('/');
 const projects = root.path('/projects');
@@ -32,7 +32,7 @@ export const paths = {
     project: {
         index: projects,
         new: projects.path('/new'),
-        edit: project.path('/edit'),
+        details: project,
         inference,
         dataset,
         models,
@@ -53,8 +53,8 @@ export const router = createBrowserRouter([
         element: <CreateProject />,
     },
     {
-        path: paths.project.edit.pattern,
-        element: <EditProject />,
+        path: paths.project.details.pattern,
+        element: <ViewProject />,
     },
     {
         path: paths.root.pattern,

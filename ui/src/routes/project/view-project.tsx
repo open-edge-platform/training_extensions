@@ -6,7 +6,7 @@ import { View } from '@geti/ui';
 import { ProjectDetails } from '../../features/project/details/project-details.component';
 import Background from './../../assets/background.png';
 
-export const EditProject = () => {
+export const ViewProject = () => {
     return (
         <View
             backgroundColor={'gray-100'}

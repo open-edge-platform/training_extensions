@@ -78,7 +78,7 @@ export const ProjectDetails = () => {
 
                             <Divider orientation='vertical' />
 
-                            <Grid columns={repeat(3, '1fr')} rows={repeat(2, 'auto')} gap='size-400' flex='1'>
+                            <Grid columns={repeat(3, '1fr')} rows={repeat(2, 'auto')} gap='size-100' flex='1'>
                                 <Heading level={2}>Name</Heading>
                                 <Heading level={2}>Task type</Heading>
                                 <Heading level={2}>Labels</Heading>

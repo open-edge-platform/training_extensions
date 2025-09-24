@@ -26,7 +26,7 @@ export const MenuActions = ({ projectId }: { projectId: string }) => {
                 // Handle export action
                 break;
             case 'edit':
-                navigate(paths.project.edit({ projectId }));
+                navigate(paths.project.details({ projectId }));
                 break;
             case 'delete':
                 deleteMutation.mutate({ params: { path: { project_id: projectId } } });
