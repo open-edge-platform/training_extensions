@@ -18,10 +18,11 @@ import {
     View,
 } from '@geti/ui';
 import { AddCircle } from '@geti/ui/icons';
-import { v4 as uuid } from 'uuid';
+import { useNavigate } from 'react-router';
 
 import { $api } from '../../api/client';
 import { useProjectIdentifier } from '../../hooks/use-project-identifier.hook';
+import { paths } from '../../router';
 import { ProjectsList } from './projects-list.component';
 
 import styles from './projects-list.module.scss';
@@ -41,31 +42,11 @@ const SelectedProjectButton = ({ name }: SelectedProjectProps) => {
     );
 };
 
-interface AddProjectProps {
-    onSetProjectInEdition: (projectId: string) => void;
-    projectsCount: number;
-}
-
-const AddProjectButton = ({ onSetProjectInEdition, projectsCount }: AddProjectProps) => {
-    const createProjectMutation = $api.useMutation('post', '/api/projects');
+const AddProjectButton = () => {
+    const navigate = useNavigate();
 
     const addProject = () => {
-        const newProjectId = uuid();
-        const newProjectName = `Project #${projectsCount + 1}`;
-
-        // createProjectMutation.mutate({
-        //     body: {
-        //             id: projectId,
-        //             task: {
-        //                 task_type: selectedTask,
-        //                 exclusive_labels: selectedTask === 'classification',
-        //                 labels: labels.map((label) => ({ name: label.nameValue })),
-        //             },
-        //             name,
-        //         },
-        // });
-
-        onSetProjectInEdition(newProjectId);
+        navigate(paths.project.new({}));
     };
 
     return (
@@ -120,7 +101,7 @@ export const ProjectsListPanel = () => {
                 </Content>
 
                 <ButtonGroup UNSAFE_className={styles.panelButtons}>
-                    <AddProjectButton onSetProjectInEdition={setProjectInEdition} projectsCount={data.length} />
+                    <AddProjectButton />
                 </ButtonGroup>
             </Dialog>
         </DialogTrigger>
