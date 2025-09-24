@@ -4,13 +4,19 @@
 import { Suspense } from 'react';
 
 import { Button, Divider, Flex, StatusLight, Text, View } from '@geti/ui';
+import { isEmpty } from 'lodash-es';
 
 import { $api } from '../../api/client';
+import { useProjectIdentifier } from '../../hooks/use-project-identifier.hook';
 import { SourceModal } from './source/source-modal';
 import { useWebRTCConnection } from './stream/web-rtc-connection-provider';
 
 const ActiveModel = () => {
-    const modelsQuery = $api.useSuspenseQuery('get', '/api/models');
+    const projectId = useProjectIdentifier();
+
+    const modelsQuery = $api.useSuspenseQuery('get', '/api/projects/{project_id}/models', {
+        params: { path: { project_id: projectId } },
+    });
 
     return (
         <Flex gap='size-50' alignItems='center'>
@@ -26,7 +32,7 @@ const ActiveModel = () => {
                     color: 'var(--spectrum-global-color-gray-700)',
                 }}
             >
-                {modelsQuery.data.length > 0 ? modelsQuery.data[0].architecture : 'Unknown'}
+                {!isEmpty(modelsQuery.data) ? modelsQuery.data[0].architecture : 'Unknown'}
             </Text>
         </Flex>
     );

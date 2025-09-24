@@ -310,6 +310,7 @@ dependencies = [
     { name = "aiortc" },
     { name = "alembic" },
     { name = "fastapi", extra = ["standard"] },
+    { name = "hiyapyco" },
     { name = "openvino" },
     { name = "openvino-model-api" },
     { name = "pillow" },
@@ -348,6 +349,7 @@ requires-dist = [
     { name = "aiortc", specifier = "~=1.13.0" },
     { name = "alembic", specifier = "~=1.16.4" },
     { name = "fastapi", extras = ["standard"], specifier = "~=0.115.12" },
+    { name = "hiyapyco", specifier = "==0.7.0" },
     { name = "openvino", specifier = "==2025.2.0" },
     { name = "openvino-model-api", specifier = "~=0.3.0.2" },
     { name = "paho-mqtt", marker = "extra == 'mqtt'", specifier = "~=2.1.0" },
@@ -423,6 +425,20 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/01/ee/02a2c011bdab74c6fb3c75474d40b3052059d95df7e73351460c8588d963/h11-0.16.0.tar.gz", hash = "sha256:4e35b956cf45792e4caa5885e69fba00bdbc6ffafbfa020300e549b208ee5ff1", size = 101250, upload-time = "2025-04-24T03:35:25.427Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/04/4b/29cac41a4d98d144bf5f6d33995617b185d14b22401f75ca86f384e87ff1/h11-0.16.0-py3-none-any.whl", hash = "sha256:63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86", size = 37515, upload-time = "2025-04-24T03:35:24.344Z" },
+]
+
+[[package]]
+name = "hiyapyco"
+version = "0.7.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "jinja2" },
+    { name = "markupsafe" },
+    { name = "pyyaml" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/4a/4c/48999f3383f99a4bb49723983147b2b4ef62f29fdeca81ec87cb0cc70d8c/HiYaPyCo-0.7.0.tar.gz", hash = "sha256:83387c217e109956af61a23884cf8cc9ba5f19241b3ac68141e3ad1153fc4597", size = 33358, upload-time = "2024-10-20T04:14:00.309Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/03/3d/3f847839e28e354873c81ebc3d3322d6e73d0d386971e84c178b45e82ff4/HiYaPyCo-0.7.0-py2.py3-none-any.whl", hash = "sha256:d56ae0f746506955c6b0072f7338f1cd50661bfd07c7ee9b49175a085fcbaf41", size = 24720, upload-time = "2024-10-20T04:13:57.817Z" },
 ]
 
 [[package]]

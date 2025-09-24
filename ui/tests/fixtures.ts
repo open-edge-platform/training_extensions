@@ -25,7 +25,7 @@ const test = testBase.extend<Fixtures>({
             http.get('/api/system/metrics/memory', ({ response }) => {
                 return response(200).json({});
             }),
-            http.get('/api/models', ({ response }) => {
+            http.get('/api/projects/{project_id}/models', ({ response }) => {
                 return response(200).json([]);
             }),
             http.post('/api/webrtc/offer', ({ response }) => {

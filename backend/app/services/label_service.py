@@ -77,7 +77,7 @@ class LabelService:
         """
         try:
             with get_db_session() as db:
-                label_repo = LabelRepository(db, str(project_id))
+                label_repo = LabelRepository(project_id=str(project_id), db=db)
                 if labels_to_update:
                     label_repo.update_batch(_convert_labels_to_db(labels_to_update, project_id))
                 if label_ids_to_remove:

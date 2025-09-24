@@ -1,0 +1,15 @@
+id: Custom_Image_Classification_EfficientNet-B0
+name: EfficientNet-B0
+
+description: "EfficientNet-B0 is the baseline model of the EfficientNet family, designed using neural architecture search to optimize accuracy and efficiency. It uses a compound scaling method to balance network depth, width, and resolution, achieving strong performance with relatively low computational cost and around 5.3M parameters."
+stats:
+  gigaflops: 0.81
+  trainable_parameters: 5.3
+  performance_ratings: # scores range from 1 (below average) to 3 (excellent)
+    accuracy: 3
+    training_time: 2
+    inference_speed: 2
+
+hyperparameters:
+  training:
+    learning_rate: 0.0049
