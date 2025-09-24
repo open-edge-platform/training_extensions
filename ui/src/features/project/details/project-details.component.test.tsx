@@ -9,6 +9,10 @@ import { server } from '../../../msw-node-setup';
 import { TestProviders } from '../../../providers';
 import { ProjectDetails } from './project-details.component';
 
+vi.mock('react-router', () => ({
+    useParams: vi.fn(() => ({ projectId: '123' })),
+}));
+
 describe('ProjectDetails', () => {
     it('renders the correct values for each resource', async () => {
         server.use(
@@ -21,7 +25,7 @@ describe('ProjectDetails', () => {
                     },
                 ]);
             }),
-            http.get('/api/models', () => {
+            http.get('/api/projects/{project_id}/models', () => {
                 return HttpResponse.json([
                     {
                         id: '1',

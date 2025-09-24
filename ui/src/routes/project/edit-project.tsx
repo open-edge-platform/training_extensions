@@ -3,6 +3,7 @@
 
 import { View } from '@geti/ui';
 
+import { ProjectDetails } from '../../features/project/details/project-details.component';
 import Background from './../../assets/background.png';
 
 export const EditProject = () => {
@@ -26,7 +27,7 @@ export const EditProject = () => {
                     maxWidth={'1320px'}
                     marginX='auto'
                 >
-                    TBD
+                    <ProjectDetails />
                 </View>
             </View>
         </View>

@@ -36,6 +36,7 @@ class ProjectDB(Base):
 
     pipeline = relationship("PipelineDB", back_populates="project", uselist=False)
     labels = relationship("LabelDB", back_populates="project")
+    model_revisions = relationship("ModelRevisionDB", back_populates="project")
 
 
 class PipelineDB(Base):
@@ -85,6 +86,8 @@ class ModelRevisionDB(Base):
     files_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
+
+    project = relationship("ProjectDB", back_populates="model_revisions")
 
 
 class DatasetRevisionDB(Base):
