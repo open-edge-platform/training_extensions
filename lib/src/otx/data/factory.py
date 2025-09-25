@@ -60,6 +60,7 @@ class OTXDatasetFactory:
             "to_tv_image": cfg_subset.to_tv_image,
         }
 
+        # Test
         if task in (
             OTXTaskType.ANOMALY,
             OTXTaskType.ANOMALY_CLASSIFICATION,
