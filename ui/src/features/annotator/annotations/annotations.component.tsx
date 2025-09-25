@@ -1,12 +1,11 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { CSSProperties } from 'react';
-
 import { isEmpty } from 'lodash-es';
 
 import { useAnnotator } from '../annotator-provider.component';
 import { useSelectedAnnotations } from '../select-annotation-provider.component';
+import { DEFAULT_ANNOTATION_STYLES } from '../utils';
 import { Annotation } from './annotation.component';
 import { MaskAnnotations } from './mask-annotations.component';
 
@@ -15,17 +14,6 @@ type AnnotationsProps = {
     height: number;
     isFocussed: boolean;
 };
-
-const DEFAULT_ANNOTATION_STYLES = {
-    fillOpacity: 0.4,
-    fill: 'var(--annotation-fill)',
-    stroke: 'var(--annotation-stroke)',
-    strokeLinecap: 'round',
-    strokeWidth: 'calc(1px / var(--zoom-scale))',
-    strokeDashoffset: 0,
-    strokeDasharray: 0,
-    strokeOpacity: 'var(--annotation-border-opacity, 1)',
-} satisfies CSSProperties;
 
 export const Annotations = ({ width, height, isFocussed }: AnnotationsProps) => {
     const { annotations } = useAnnotator();

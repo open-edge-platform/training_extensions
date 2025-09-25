@@ -45,8 +45,8 @@ export const AnnotatorCanvas = ({ mediaItem, isFocussed }: AnnotatorCanvasProps)
                         <>
                             <div onPointerDown={handleClickOutside}>
                                 <Annotations width={size.width} height={size.height} isFocussed={isFocussed} />
+                                <ToolManager />
                             </div>
-                            <ToolManager />
                         </>
                     </View>
                 </Grid>
