@@ -8,9 +8,7 @@ on:
       - releases/**
     tags:
       - "v*"
-          with:
-          name: dist
-          path: "application/ui/dist.tar.gz"l_request:
+  pull_request:
   merge_group:
     branches:
       - develop
