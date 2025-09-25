@@ -174,3 +174,11 @@ class SegmentationSample(OTXSample):
             img_shape=shape,
             ori_shape=shape,
         )
+
+
+class AnomalySample(OTXSample):
+    """ClassificationSample is a base class for OTX classification items."""
+
+    image: np.ndarray | tv_tensors.Image = image_field(dtype=pl.UInt8)
+    mask: np.ndarray | tv_tensors.Image | None = mask_field(dtype=pl.UInt8)
+    label: torch.Tensor = label_field(pl.Int32())
