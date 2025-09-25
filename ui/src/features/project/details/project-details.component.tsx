@@ -35,7 +35,7 @@ const VerticalHeader = ({ text }: { text: string }) => {
         <Flex
             alignItems={'center'}
             justifyContent={'center'}
-            minWidth={'size-800'}
+            minWidth={'size-600'}
             UNSAFE_style={{
                 writingMode: 'vertical-rl',
                 textOrientation: 'mixed',
@@ -73,7 +73,7 @@ export const ProjectDetails = () => {
             <View maxWidth={'1048px'} marginX='auto' paddingY='size-800'>
                 <View>
                     <Flex direction='column' gap='size-600'>
-                        <Flex direction='row' alignItems='stretch' gap='size-300'>
+                        <Flex direction='row' alignItems='stretch' gap='size-200'>
                             <VerticalHeader text={'Project'} />
 
                             <Divider orientation='vertical' />
@@ -91,12 +91,12 @@ export const ProjectDetails = () => {
 
                         <Divider />
 
-                        <Flex direction='row' alignItems='stretch' gap='size-300'>
+                        <Flex direction='row' alignItems='stretch' gap='size-200'>
                             <VerticalHeader text={'Pipeline'} />
 
                             <Divider orientation='vertical' />
 
-                            <Grid columns={repeat(3, '1fr')} rows={repeat(5, 'auto')} gap='size-400' flex='1'>
+                            <Grid columns={repeat(3, '1fr')} rows={repeat(5, 'auto')} gap='size-300' flex='1'>
                                 <View>
                                     <Heading level={2} marginBottom={'size-300'}>
                                         Source(s)
@@ -117,9 +117,21 @@ export const ProjectDetails = () => {
                                         Model(s)
                                     </Heading>
                                     <Flex direction={'column'} gap={'size-300'}>
-                                        {Object.entries(pipeline.data.model || {}).map(([field, value]) => (
-                                            <Field key={`model-${field}`} field={field} value={value} />
-                                        ))}
+                                        {Object.entries(pipeline.data.model || {}).map(
+                                            ([field, value], idx, entries) => {
+                                                const displayableFields = ['id', 'architecture'];
+
+                                                if (displayableFields.includes(field)) {
+                                                    return (
+                                                        <Fragment key={`model-${field}`}>
+                                                            <Field field={field} value={value} />
+                                                            {idx < entries.length - 1 && <Divider size={'S'} />}
+                                                        </Fragment>
+                                                    );
+                                                }
+                                                return null;
+                                            }
+                                        )}
                                     </Flex>
                                 </View>
                                 <View>
