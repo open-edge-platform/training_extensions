@@ -50,7 +50,7 @@ class OTXDataItem(ValidateItemMixin, Mapping):
     masks: Mask | None = None
     bboxes: BoundingBoxes | None = None
     keypoints: torch.Tensor | None = None
-    polygons: list[Polygon] | None = None
+    polygons: np.ndarray | None = None
     img_info: ImageInfo | None = None  # TODO(ashwinvaidya17): revisit and try to remove this
 
     @staticmethod

@@ -14,8 +14,8 @@ from otx.data.dataset.classification import (
 )
 from otx.data.dataset.classification_new import OTXMulticlassClsDataset
 from otx.data.dataset.detection_new import OTXDetectionDataset
-from otx.data.dataset.instance_segmentation import OTXInstanceSegDataset
-from otx.data.dataset.segmentation import OTXSegmentationDataset
+from otx.data.dataset.instance_segmentation_new import OTXInstanceSegDataset
+from otx.data.dataset.segmentation_new import OTXSegmentationDataset
 from otx.data.factory import OTXDatasetFactory, TransformLibFactory
 from otx.data.transform_libs.torchvision import TorchVisionTransformLib
 from otx.types.image import ImageColorChannel

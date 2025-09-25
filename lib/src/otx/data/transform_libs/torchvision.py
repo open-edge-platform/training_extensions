@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import ast
 import copy
-import itertools
 import math
 import operator
 import typing
@@ -36,6 +35,7 @@ from otx.data.entity.base import (
     _resize_image_info,
     _resized_crop_image_info,
 )
+from otx.data.entity.sample import OTXSample
 from otx.data.entity.torch import OTXDataItem
 from otx.data.transform_libs.utils import (
     CV2_INTERP_CODES,
@@ -1409,9 +1409,8 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
             valid_index = valid_index.numpy()
 
         # Filter polygons using valid_index
-        filtered_polygons = [p for p, keep in zip(inputs.polygons, valid_index) if keep]
-
-        if filtered_polygons:
+        filtered_polygons = inputs.polygons[valid_index]
+        if len(filtered_polygons) > 0:
             inputs.polygons = project_polygons(filtered_polygons, warp_matrix, output_shape)
 
     def _recompute_bboxes(self, inputs: OTXDataItem, output_shape: tuple[int, int]) -> None:
@@ -1442,14 +1441,13 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
 
         elif has_polygons:
             polygons = inputs.polygons
-            for i, polygon in enumerate(polygons):  # type: ignore[arg-type]
-                points_1d = np.array(polygon.points, dtype=np.float32)
-                if len(points_1d) % 2 != 0:
-                    continue
 
-                points = points_1d.reshape(-1, 2)
-                x, y, w, h = cv2.boundingRect(points)
-                bboxes[i] = np.array([x, y, x + w, y + h])
+            for i, poly_points in enumerate(polygons):  # type: ignore[arg-type]
+                if poly_points.size > 0:
+                    points = poly_points.astype(np.float32)
+                    if len(points) >= 3:  # Need at least 3 points for valid polygon
+                        x, y, w, h = cv2.boundingRect(points)
+                        bboxes[i] = np.array([x, y, x + w, y + h])
 
         inputs.bboxes = tv_tensors.BoundingBoxes(
             bboxes,
@@ -1765,9 +1763,7 @@ class CachedMosaic(tvt_v2.Transform, NumpytoTVTensorMixin):
             if len(mosaic_masks) > 0:
                 inputs.masks = np.concatenate(mosaic_masks, axis=0)[inside_inds]
             if len(mosaic_polygons) > 0:
-                inputs.polygons = [
-                    polygon for ind, polygon in zip(inside_inds, itertools.chain(*mosaic_polygons)) if ind
-                ]  # type: ignore[union-attr]
+                inputs.polygons = np.concatenate(mosaic_polygons, axis=0)[inside_inds]
         return self.convert(inputs)
 
     def _mosaic_combine(
@@ -2040,7 +2036,7 @@ class CachedMixUp(tvt_v2.Transform, NumpytoTVTensorMixin):
         mixup_img = 0.5 * ori_img + 0.5 * padded_cropped_img.astype(np.float32)
 
         # TODO(ashwinvaidya17): remove this once we have a unified TorchDataItem
-        if isinstance(retrieve_results, OTXDataItem):
+        if isinstance(retrieve_results, (OTXDataItem, OTXSample)):
             retrieve_gt_bboxes_labels = retrieve_results.label
         else:
             retrieve_gt_bboxes_labels = retrieve_results.labels
@@ -2113,9 +2109,9 @@ class CachedMixUp(tvt_v2.Transform, NumpytoTVTensorMixin):
                 )
 
                 # 8. mix up
-                mixup_gt_polygons = list(itertools.chain(*[inputs.polygons, retrieve_gt_polygons]))
+                mixup_gt_polygons = np.concatenate((inputs.polygons, retrieve_gt_polygons))
 
-                inputs.polygons = [mixup_gt_polygons[i] for i in np.where(inside_inds)[0]]
+                inputs.polygons = mixup_gt_polygons[np.where(inside_inds)[0]]
 
         return self.convert(inputs)
 
@@ -2632,8 +2628,16 @@ class RandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
                 )
 
         if (polygons := getattr(inputs, "polygons", None)) is not None and len(polygons) > 0:
+            # Handle both ragged array and legacy polygon formats
+            if isinstance(polygons, np.ndarray):
+                # Filter valid polygons using valid_inds for ragged array
+                filtered_polygons = polygons[valid_inds.nonzero()[0]]
+            else:
+                # Filter valid polygons for legacy format
+                filtered_polygons = [polygons[i] for i in valid_inds.nonzero()[0]]
+
             inputs.polygons = crop_polygons(
-                [polygons[i] for i in valid_inds.nonzero()[0]],
+                filtered_polygons,
                 np.asarray([crop_x1, crop_y1, crop_x2, crop_y2]),
                 *orig_shape,
             )

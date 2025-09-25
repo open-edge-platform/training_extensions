@@ -107,8 +107,10 @@ def fxt_dm_item_bbox_only(request, tmpdir) -> DatasetItem:
 def fxt_mock_dm_subset(mocker: MockerFixture, fxt_dm_item: DatasetItem) -> MagicMock:
     mock_dm_subset = mocker.MagicMock(spec=DmDataset)
     mock_dm_subset.__getitem__.return_value = fxt_dm_item
+    mock_dm_subset.__iter__.return_value = [fxt_dm_item]
     mock_dm_subset.__len__.return_value = 1
     mock_dm_subset.categories().__getitem__.return_value = LabelCategories.from_iterable(_LABEL_NAMES)
+    mock_dm_subset.media_type.return_value = Image
     mock_dm_subset.ann_types.return_value = [
         AnnotationType.label,
         AnnotationType.bbox,

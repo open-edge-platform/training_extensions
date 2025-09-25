@@ -18,16 +18,18 @@ from datumaro.experimental.fields import (
     bbox_field,
     image_field,
     image_info_field,
+    instance_mask_field,
     keypoints_field,
     label_field,
     mask_field,
+    polygon_field,
 )
 from torchvision import tv_tensors
 
 from otx.data.entity.base import ImageInfo
 
 if TYPE_CHECKING:
-    from datumaro import DatasetItem, Polygon
+    from datumaro import DatasetItem
     from torchvision.tv_tensors import BoundingBoxes, Mask
 
 
@@ -62,7 +64,7 @@ class OTXSample(Sample):
         return None
 
     @property
-    def polygons(self) -> list[Polygon] | None:
+    def polygons(self) -> np.ndarray | None:
         """Get polygons for the sample."""
         return None
 
@@ -130,39 +132,34 @@ class DetectionSample(OTXSample):
     """DetectionSample is a base class for OTX detection items."""
 
     image: np.ndarray | tv_tensors.Image = image_field(dtype=pl.UInt8)
-    label: torch.Tensor = label_field(pl.Int32(), is_list=True)
-    bboxes: torch.Tensor = bbox_field(dtype=pl.Float32)
+    label: np.ndarray | torch.Tensor = label_field(pl.Int32(), is_list=True)
+    bboxes: np.ndarray | tv_tensors.BoundingBoxes = bbox_field(dtype=pl.Float32)
 
-    @classmethod
-    def from_dm_item(cls, item: DatasetItem) -> DetectionSample:
-        """Create a DetectionSample from a Datumaro DatasetItem.
+    def __post_init__(self) -> None:
+        shape = self.image.shape[:2]
 
-        Args:
-            item: Datumaro DatasetItem containing image and label
+        # Convert bboxes to tv_tensors format
+        if isinstance(self.bboxes, np.ndarray):
+            self.bboxes = tv_tensors.BoundingBoxes(
+                self.bboxes,
+                format=tv_tensors.BoundingBoxFormat.XYXY,
+                canvas_size=shape,
+                dtype=torch.float32,
+            )
 
-        Returns:
-            DetectionSample: Instance with image and label set
-        """
-        image = item.media_as(Image).data
-        img_shape = image.shape[:2]
-        img_info = ImageInfo(
+        # Convert image to tv_tensors format
+        if isinstance(self.image, np.ndarray):
+            self.image = tv_tensors.Image(self.image.transpose(2, 0, 1))
+
+        # Convert labels to tensor
+        if isinstance(self.label, np.ndarray):
+            self.label = torch.as_tensor(self.label, dtype=torch.long)
+
+        self.img_info = ImageInfo(
             img_idx=0,
-            img_shape=img_shape,
-            ori_shape=img_shape,
+            img_shape=shape,
+            ori_shape=shape,
         )
-        bboxes = [bbox.points for bbox in item.annotations] if item.annotations else None
-        labels = [bbox.label for bbox in item.annotations] if item.annotations else None
-        sample = cls(
-            image=image,
-            label=torch.as_tensor(labels, dtype=torch.long)
-            if labels is not None
-            else torch.tensor([], dtype=torch.long),
-            bboxes=torch.as_tensor(bboxes, dtype=torch.float32)
-            if bboxes is not None
-            else torch.tensor([], dtype=torch.float32),
-        )
-        sample.img_info = img_info
-        return sample
 
 
 class SegmentationSample(OTXSample):
@@ -176,6 +173,83 @@ class SegmentationSample(OTXSample):
         shape = (self.dm_image_info.height, self.dm_image_info.width)
         self.image = tv_tensors.Image(self.image.transpose(2, 0, 1))
         self.masks = tv_tensors.Mask(self.masks[np.newaxis, ...])
+        self.img_info = ImageInfo(
+            img_idx=0,
+            img_shape=shape,
+            ori_shape=shape,
+        )
+
+
+class InstanceSegmentationSample(OTXSample):
+    """OTXSample for instance segmentation tasks."""
+
+    image: np.ndarray | tv_tensors.Image = image_field(dtype=pl.UInt8)
+    bboxes: np.ndarray | tv_tensors.BoundingBoxes = bbox_field(dtype=pl.Float32)
+    label: np.ndarray | torch.Tensor = label_field(is_list=True)
+    polygons: np.ndarray = polygon_field(dtype=pl.Float32)  # Ragged array of (Npoly, 2) arrays
+    dm_image_info: DmImageInfo = image_info_field()
+
+    def __post_init__(self) -> None:
+        shape = (self.dm_image_info.height, self.dm_image_info.width)
+
+        # Convert bboxes to tv_tensors format
+        if isinstance(self.bboxes, np.ndarray):
+            self.bboxes = tv_tensors.BoundingBoxes(
+                self.bboxes,
+                format=tv_tensors.BoundingBoxFormat.XYXY,
+                canvas_size=shape,
+                dtype=torch.float32,
+            )
+
+        # Convert image to tv_tensors format
+        if isinstance(self.image, np.ndarray):
+            self.image = tv_tensors.Image(self.image.transpose(2, 0, 1))
+
+        # Convert labels to tensor
+        if isinstance(self.label, np.ndarray):
+            self.label = torch.as_tensor(self.label, dtype=torch.long)
+
+        self.img_info = ImageInfo(
+            img_idx=0,
+            img_shape=shape,
+            ori_shape=shape,
+        )
+
+
+class InstanceSegmentationSampleWithMask(OTXSample):
+    """OTXSample for instance segmentation tasks."""
+
+    image: np.ndarray | tv_tensors.Image = image_field(dtype=pl.UInt8)
+    bboxes: np.ndarray | tv_tensors.BoundingBoxes = bbox_field(dtype=pl.Float32)
+    masks: np.ndarray | tv_tensors.Mask = instance_mask_field(dtype=pl.UInt8)
+    label: np.ndarray | torch.Tensor = label_field(is_list=True)
+    polygons: np.ndarray = polygon_field(dtype=pl.Float32)  # Ragged array of (Npoly, 2) arrays
+    dm_image_info: DmImageInfo = image_info_field()
+
+    def __post_init__(self) -> None:
+        shape = (self.dm_image_info.height, self.dm_image_info.width)
+
+        # Convert bboxes to tv_tensors format
+        if isinstance(self.bboxes, np.ndarray):
+            self.bboxes = tv_tensors.BoundingBoxes(
+                self.bboxes,
+                format=tv_tensors.BoundingBoxFormat.XYXY,
+                canvas_size=shape,
+                dtype=torch.float32,
+            )
+
+        # Convert image to tv_tensors format
+        if isinstance(self.image, np.ndarray):
+            self.image = tv_tensors.Image(self.image.transpose(2, 0, 1))
+
+        # Convert masks to tv_tensors format
+        if isinstance(self.masks, np.ndarray):
+            self.masks = tv_tensors.Mask(self.masks, dtype=torch.uint8)
+
+        # Convert labels to tensor
+        if isinstance(self.label, np.ndarray):
+            self.label = torch.as_tensor(self.label, dtype=torch.long)
+
         self.img_info = ImageInfo(
             img_idx=0,
             img_shape=shape,

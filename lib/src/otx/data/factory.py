@@ -100,18 +100,18 @@ class OTXDatasetFactory:
             return OTXHlabelClsDataset(**common_kwargs)
 
         if task == OTXTaskType.DETECTION:
-            from .dataset.detection_new import DetectionSample, OTXDetectionDataset
+            from .dataset.detection_new import OTXDetectionDataset
 
-            categories = cls._get_label_categories(dm_subset, data_format)
-            dataset = DatasetNew(DetectionSample, categories={"label": categories})
-            for item in dm_subset:
-                if len(item.media.data.shape) == 3:
-                    dataset.append(DetectionSample.from_dm_item(item))
+            dataset = convert_from_legacy(dm_subset)
             common_kwargs["dm_subset"] = dataset
+
             return OTXDetectionDataset(**common_kwargs)
 
         if task in [OTXTaskType.ROTATED_DETECTION, OTXTaskType.INSTANCE_SEGMENTATION]:
-            from .dataset.instance_segmentation import OTXInstanceSegDataset
+            from .dataset.instance_segmentation_new import OTXInstanceSegDataset
+
+            dataset = convert_from_legacy(dm_subset)
+            common_kwargs["dm_subset"] = dataset
 
             return OTXInstanceSegDataset(include_polygons=include_polygons, **common_kwargs)
 
