@@ -22,7 +22,7 @@ class ProjectMapper:
                 exclusive_labels=project_db.exclusive_labels,
                 labels=[LabelMapper.to_schema(db_label) for db_label in project_db.labels],
             ),
-            thumbnail_id=project_db.thumbnail_id,
+            thumbnail_id=UUID(project_db.thumbnail_id) if project_db.thumbnail_id else None,
         )
 
     @staticmethod
