@@ -46,6 +46,23 @@ class DatasetItemRepository:
             query = query.filter(DatasetItemDB.created_at < end_date)
         return query.slice(offset, offset + limit).all()
 
+    def get_earliest(self) -> DatasetItemDB | None:
+        """
+        Get the earliest dataset item based on creation date.
+
+        This method efficiently uses the multicolumn index on (project_id, created_at)
+        for optimal query performance.
+
+        Returns:
+            The earliest DatasetItemDB instance or None if no items exist.
+        """
+        return (
+            self.db.query(DatasetItemDB)
+            .filter(DatasetItemDB.project_id == self.project_id)
+            .order_by(DatasetItemDB.created_at.asc())
+            .first()
+        )
+
     def get_by_id(self, obj_id: str) -> DatasetItemDB | None:
         return (
             self.db.query(DatasetItemDB)

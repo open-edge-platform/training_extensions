@@ -22,7 +22,6 @@ class ProjectMapper:
                 exclusive_labels=project_db.exclusive_labels,
                 labels=[LabelMapper.to_schema(db_label) for db_label in project_db.labels],
             ),
-            thumbnail_id=UUID(project_db.thumbnail_id) if project_db.thumbnail_id else None,
         )
 
     @staticmethod
@@ -34,7 +33,6 @@ class ProjectMapper:
             name=project.name,
             task_type=project.task.task_type,
             exclusive_labels=project.task.exclusive_labels,
-            thumbnail_id=str(project.thumbnail_id) if project.thumbnail_id else None,
         )
         project_db.labels = [LabelMapper.from_schema(label_schema) for label_schema in project.task.labels]
 

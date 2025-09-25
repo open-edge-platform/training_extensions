@@ -51,35 +51,11 @@ class ProjectService:
             db.commit()
 
     def get_project_thumbnail_path(self, project_id: UUID) -> Path | None:
-        """Get the path to the project's thumbnail image, selecting one if none is set"""
-        project = self.get_project_by_id(project_id)
-
-        if project.thumbnail_id:
-            thumbnail_path = self._get_thumbnail_path_for_item(
-                project_id=project_id,
-                thumbnail_id=str(project.thumbnail_id),
-            )
-            if thumbnail_path.exists():
-                return thumbnail_path
-
+        """Get the path to the project's thumbnail image, as determined by the earliest dataset item"""
         with get_db_session() as db:
-            project_repo = ProjectRepository(db)
             dataset_repo = DatasetItemRepository(str(project_id), db)
-            # Note: In theory, all items on the first page of 10 could be invalid.
-            # However, this is extremely rare, so we assume the happy path for simplicity.
-            dataset_items = dataset_repo.list_items(limit=10, offset=0)
-            for item in dataset_items:
-                thumbnail_path = self._get_thumbnail_path_for_item(project_id=project_id, thumbnail_id=item.id)
-                if thumbnail_path.exists():
-                    # Found a valid thumbnail, link it to the project
-                    project.thumbnail_id = UUID(item.id)
-                    project_repo.update(ProjectMapper.from_schema(project))
-                    db.commit()
-                    return thumbnail_path
+            earliest_dataset_item = dataset_repo.get_earliest()
 
-        # No thumbnails available
+        if earliest_dataset_item:
+            return self.projects_dir / f"{project_id}/dataset/{earliest_dataset_item.id}-thumb.jpg"
         return None
-
-    def _get_thumbnail_path_for_item(self, project_id: UUID, thumbnail_id: str) -> Path:
-        """Get the thumbnail path for a specific dataset item"""
-        return self.projects_dir / f"{project_id}/dataset/{thumbnail_id}-thumb.jpg"

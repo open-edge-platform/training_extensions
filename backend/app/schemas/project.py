@@ -1,9 +1,8 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from enum import StrEnum
-from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from app.schemas.base import BaseIDNameModel
 from app.schemas.label import Label
@@ -23,16 +22,12 @@ class Task(BaseModel):
 
 class Project(BaseIDNameModel):
     task: Task
-    thumbnail_id: UUID | None = Field(
-        default=None, description="ID of the thumbnail image for the project, it matches a dataset item ID"
-    )
 
     model_config = {
         "json_schema_extra": {
             "example": {
                 "id": "7b073838-99d3-42ff-9018-4e901eb047fc",
                 "name": "animals",
-                "thumbnail_id": "7b073838-99d3-42ff-9018-4e901eb047fd",
                 "task": {
                     "task_type": "classification",
                     "exclusive_labels": True,

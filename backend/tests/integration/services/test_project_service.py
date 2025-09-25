@@ -106,7 +106,7 @@ class TestProjectServiceIntegration:
         assert str(fetched_project.id) == db_project.id
         assert fetched_project.name == db_project.name
 
-    def test_get_project_by_id_with_thumbnail(self, fxt_project_service: ProjectService, db_session: Session):
+    def test_get_project_thumbnail(self, fxt_project_service: ProjectService, db_session: Session):
         """Test retrieving a project returns correct thumbnail ID."""
         # First create a project
         db_project = ProjectDB(
@@ -116,9 +116,13 @@ class TestProjectServiceIntegration:
             exclusive_labels=True,
         )
         db_session.add(db_project)
-        db_session.commit()
+        db_session.flush()
 
-        # Then create a dataset item linked to the project to be used as thumbnail
+        # No dataset items yet, should return None
+        fetched_thumbnail_path = fxt_project_service.get_project_thumbnail_path(UUID(db_project.id))
+        assert fetched_thumbnail_path is None
+
+        # Add a dataset item
         db_dataset_item = DatasetItemDB(
             id=str(uuid4()),
             project_id=db_project.id,
@@ -130,15 +134,14 @@ class TestProjectServiceIntegration:
             subset="unassigned",
         )
         db_session.add(db_dataset_item)
-        db_session.commit()
+        db_session.flush()
 
-        # Lastly, update the project to set its thumbnail_id from the dataset item
-        db_project.thumbnail_id = db_dataset_item.id
-        db_session.add(db_project)
-        db_session.commit()
-
-        fetched_project = fxt_project_service.get_project_by_id(UUID(db_project.id))
-        assert fetched_project.thumbnail_id == UUID(db_dataset_item.id)
+        # Now it should return the path to the thumbnail
+        fetched_thumbnail_path = fxt_project_service.get_project_thumbnail_path(UUID(db_project.id))
+        assert (
+            fetched_thumbnail_path
+            == fxt_project_service.projects_dir / f"{db_project.id}/dataset/{db_dataset_item.id}-thumb.jpg"
+        )
 
     def test_get_project_by_id_not_found(self, fxt_project_service: ProjectService):
         """Test retrieving a non-existent project raises error."""
