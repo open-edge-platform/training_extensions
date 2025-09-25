@@ -1,34 +1,20 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Item, Loading, Picker } from '@geti/ui';
+import { useState } from 'react';
 
-import { PermissionError } from './permissions-error.component';
-import { useVideoDevices } from './use-video-devices.hook';
-import { hasPermissionsDenied, isPermissionPending } from './util';
+import { Button, Flex, TextField } from '@geti/ui';
+import { isEmpty } from 'lodash-es';
 
 export const Webcam = () => {
-    const { videoDevices, userPermissions, selectedDeviceId, setSelectedDeviceId } = useVideoDevices();
-
-    if (isPermissionPending(userPermissions)) {
-        return <Loading aria-label='permissions pending' size='S' />;
-    }
-
-    if (hasPermissionsDenied(userPermissions)) {
-        return <PermissionError />;
-    }
+    const [deviceId, setDeviceId] = useState('');
 
     return (
-        <Picker
-            width={'100%'}
-            label={'Device'}
-            items={videoDevices}
-            aria-label={'devices'}
-            selectedKey={selectedDeviceId}
-            placeholder={'Integrated Cameras'}
-            onSelectionChange={(key) => setSelectedDeviceId(String(key))}
-        >
-            {({ deviceId, label }) => <Item key={deviceId}>{label}</Item>}
-        </Picker>
+        <Flex direction='column' gap='size-200'>
+            <TextField label='Webcam device id' name='device_id' value={deviceId} onChange={setDeviceId} />
+            <Button maxWidth={'size-1000'} isDisabled={isEmpty(deviceId)}>
+                Apply
+            </Button>
+        </Flex>
     );
 };

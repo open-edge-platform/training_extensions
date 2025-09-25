@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 
-import { Button, FileTrigger, Flex, TextField } from '@geti/ui';
+import { Button, Flex, TextField } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 
 import { ReactComponent as Folder } from '../../../../assets/icons/folder.svg';
@@ -24,11 +24,9 @@ export const ImageFolder = () => {
                     onChange={setRoute}
                 />
 
-                <FileTrigger allowsMultiple aria-label='upload items'>
-                    <Button UNSAFE_className={classes.sourceButton}>
-                        <Folder />
-                    </Button>
-                </FileTrigger>
+                <Flex alignItems={'center'} justifyContent={'center'} UNSAFE_className={classes.folderIcon}>
+                    <Folder />
+                </Flex>
             </Flex>
 
             <Button maxWidth={'size-1000'} isDisabled={isEmpty(route)}>
