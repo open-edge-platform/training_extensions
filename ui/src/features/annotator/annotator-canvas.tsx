@@ -11,7 +11,6 @@ import { useProjectIdentifier } from '../../hooks/use-project-identifier.hook';
 import { getImageUrl } from '../dataset/gallery/utils';
 import { Annotations } from './annotations/annotations.component';
 import { useSelectedAnnotations } from './select-annotation-provider.component';
-import { ToolManager } from './tools/tool-manager.component';
 import { Annotation, DatasetItem } from './types';
 
 type AnnotatorCanvasProps = {
@@ -42,12 +41,9 @@ export const AnnotatorCanvas = ({ mediaItem, isFocussed }: AnnotatorCanvasProps)
                     </View>
 
                     <View gridArea={'innercanvas'}>
-                        <>
-                            <div onPointerDown={handleClickOutside}>
-                                <Annotations width={size.width} height={size.height} isFocussed={isFocussed} />
-                                <ToolManager />
-                            </div>
-                        </>
+                        <div onPointerDown={handleClickOutside}>
+                            <Annotations width={size.width} height={size.height} isFocussed={isFocussed} />
+                        </div>
                     </View>
                 </Grid>
             </ZoomTransform>
