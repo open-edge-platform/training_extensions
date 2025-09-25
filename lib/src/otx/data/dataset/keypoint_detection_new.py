@@ -29,8 +29,6 @@ class OTXKeypointDetectionDataset(OTXDataset):
         sample_type = KeypointSample
         dm_subset = dm_subset.convert_to_schema(sample_type)
         super().__init__(dm_subset=dm_subset, sample_type=sample_type, **kwargs)
-        dm_subset = dm_subset.convert_to_schema(sample_type)
-        self.dm_subset = dm_subset
         labels = dm_subset.schema.attributes["label"].categories.labels
         self.label_info = LabelInfo(
             label_names=labels,
