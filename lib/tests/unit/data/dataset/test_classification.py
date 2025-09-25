@@ -8,10 +8,9 @@ from unittest.mock import MagicMock
 from otx.data.dataset.classification import (
     HLabelInfo,
     OTXHlabelClsDataset,
+    OTXMulticlassClsDataset,
     OTXMultilabelClsDataset,
 )
-from otx.data.dataset.classification_new import OTXMulticlassClsDataset
-from otx.data.entity.sample import ClassificationSample
 from otx.data.entity.torch import OTXDataItem
 
 
@@ -25,7 +24,7 @@ class TestOTXMulticlassClsDataset:
             transforms=[lambda x: x],
             max_refetch=3,
         )
-        assert isinstance(dataset[0], ClassificationSample)
+        assert isinstance(dataset[0], OTXDataItem)
 
     def test_get_item_from_bbox_dataset(
         self,
@@ -36,7 +35,7 @@ class TestOTXMulticlassClsDataset:
             transforms=[lambda x: x],
             max_refetch=3,
         )
-        assert isinstance(dataset[0], ClassificationSample)
+        assert isinstance(dataset[0], OTXDataItem)
 
 
 class TestOTXMultilabelClsDataset:

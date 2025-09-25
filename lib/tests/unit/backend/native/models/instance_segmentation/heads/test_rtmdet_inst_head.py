@@ -7,9 +7,9 @@ from __future__ import annotations
 from functools import partial
 from unittest.mock import Mock
 
+import numpy as np
 import pytest
 import torch
-from datumaro import Polygon
 from torch import nn
 
 from otx.backend.native.models.common.utils.assigners import DynamicSoftLabelAssigner
@@ -124,6 +124,11 @@ class TestRTMDetInsHead:
         mocker.patch.object(rtmdet_ins_head, "_mask_predict_by_feat_single", return_value=torch.randn(4, 80, 80))
 
         x = (torch.randn(2, 96, 80, 80), torch.randn(2, 96, 40, 40), torch.randn(2, 96, 20, 20))
+
+        polygons = [np.empty((1,), dtype=object), np.empty((1,), dtype=object)]
+        polygons[0] = np.array([[0, 0], [0, 1], [1, 1], [1, 0]])
+        polygons[1] = np.array([[0, 0], [0, 1], [1, 1], [1, 0]])
+
         entity = OTXDataBatch(
             batch_size=2,
             images=[torch.randn(3, 640, 640), torch.randn(3, 640, 640)],
@@ -134,7 +139,7 @@ class TestRTMDetInsHead:
             bboxes=[torch.randn(2, 4), torch.randn(3, 4)],
             labels=[torch.randint(0, 3, (2,)), torch.randint(0, 3, (3,))],
             masks=[torch.zeros(2, 640, 640), torch.zeros(3, 640, 640)],
-            polygons=[[Polygon(points=[0, 0, 0, 1, 1, 1, 1, 0])], [Polygon(points=[0, 0, 0, 1, 1, 1, 1, 0])]],
+            polygons=polygons,
         )
 
         results = rtmdet_ins_head.prepare_loss_inputs(x, entity)

@@ -18,7 +18,6 @@ from typing import Callable
 import numpy as np
 import torch
 import torch.nn.functional
-from datumaro import Polygon
 from torch import Tensor, nn
 
 from otx.backend.native.models.common.utils.nms import batched_nms, multiclass_nms
@@ -644,7 +643,7 @@ class RTMDetInstHead(RTMDetHead):
         )
 
         # Convert polygon masks to bitmap masks
-        if isinstance(batch_gt_instances[0].masks[0], Polygon):
+        if isinstance(batch_gt_instances[0].masks, np.ndarray):
             for gt_instances, img_meta in zip(batch_gt_instances, batch_img_metas):
                 ndarray_masks = polygon_to_bitmap(gt_instances.masks, *img_meta["img_shape"])
                 if len(ndarray_masks) == 0:

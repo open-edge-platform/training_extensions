@@ -21,6 +21,28 @@ from otx.data.utils.structures.mask.mask_util import polygon_to_bitmap
 from .base import OTXDataset, Transforms
 
 
+def convert_datumaro_polygons_to_ragged_array(polygons: list[Polygon]) -> np.ndarray:
+    """Convert list of datumaro.Polygon to ragged array format.
+
+    Args:
+        polygons: List of datumaro.Polygon objects
+
+    Returns:
+        np.ndarray: Object array containing np.ndarray objects of shape (Npoly, 2)
+    """
+    if not polygons:
+        return np.array([], dtype=object)
+
+    ragged_polygons = np.empty(len(polygons), dtype=object)
+    for i, polygon in enumerate(polygons):
+        points = np.array(polygon.points, dtype=np.float32)
+        if len(points) % 2 != 0:
+            # Handle invalid polygon by creating a degenerate triangle
+            points = np.array([0, 0, 0, 0, 0, 0], dtype=np.float32)
+        ragged_polygons[i] = points.reshape(-1, 2)
+    return ragged_polygons
+
+
 class OTXInstanceSegDataset(OTXDataset):
     """OTXDataset class for instance segmentation.
 
@@ -89,6 +111,11 @@ class OTXInstanceSegDataset(OTXDataset):
 
         labels = np.array(gt_labels, dtype=np.int64)
 
+        # Convert polygons to ragged array format
+        polygons = None
+        if gt_polygons:
+            polygons = convert_datumaro_polygons_to_ragged_array(gt_polygons)
+
         entity = OTXDataItem(
             image=img_data,
             img_info=ImageInfo(
@@ -106,7 +133,7 @@ class OTXInstanceSegDataset(OTXDataset):
             ),
             masks=tv_tensors.Mask(masks, dtype=torch.uint8),
             label=torch.as_tensor(labels, dtype=torch.long),
-            polygons=gt_polygons if len(gt_polygons) > 0 else None,
+            polygons=polygons,
         )
 
         return self._apply_transforms(entity)  # type: ignore[return-value]
