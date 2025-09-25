@@ -65,7 +65,8 @@ class ProjectService:
         with get_db_session() as db:
             project_repo = ProjectRepository(db)
             dataset_repo = DatasetItemRepository(str(project_id), db)
-
+            # Note: In theory, all items on the first page of 10 could be invalid.
+            # However, this is extremely rare, so we assume the happy path for simplicity.
             dataset_items = dataset_repo.list_items(limit=10, offset=0)
             for item in dataset_items:
                 thumbnail_path = self._get_thumbnail_path_for_item(project_id=project_id, thumbnail_id=item.id)
