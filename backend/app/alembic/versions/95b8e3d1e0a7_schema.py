@@ -27,7 +27,7 @@ def upgrade() -> None:
         sa.Column("name", sa.String(length=255), nullable=False),
         sa.Column("task_type", sa.String(length=50), nullable=False),
         sa.Column("exclusive_labels", sa.Boolean(), nullable=False),
-        sa.Column("thumbnail_id", sa.String(length=255), nullable=True),
+        sa.Column("thumbnail_id", sa.Text(), nullable=True),
         sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.Column("updated_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.PrimaryKeyConstraint("id"),

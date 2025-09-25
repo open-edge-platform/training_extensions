@@ -9,7 +9,7 @@ from uuid import UUID, uuid4
 import pytest
 from sqlalchemy.orm import Session
 
-from app.db.schema import LabelDB, PipelineDB, ProjectDB
+from app.db.schema import DatasetItemDB, LabelDB, PipelineDB, ProjectDB
 from app.schemas.project import Label, Project, Task, TaskType
 from app.services.base import ResourceInUseError, ResourceNotFoundError, ResourceType
 from app.services.project_service import ProjectService
@@ -108,17 +108,37 @@ class TestProjectServiceIntegration:
 
     def test_get_project_by_id_with_thumbnail(self, fxt_project_service: ProjectService, db_session: Session):
         """Test retrieving a project returns correct thumbnail ID."""
+        # First create a project
         db_project = ProjectDB(
+            id=str(uuid4()),
             name="P1",
             task_type=TaskType.CLASSIFICATION,
             exclusive_labels=True,
-            thumbnail_id="thumb_123",
         )
-        db_project.id = str(uuid4())
         db_session.add(db_project)
-        db_session.flush()
+        db_session.commit()
+
+        # Then create a dataset item linked to the project to be used as thumbnail
+        db_dataset_item = DatasetItemDB(
+            id=str(uuid4()),
+            project_id=db_project.id,
+            name="item1",
+            format="jpg",
+            width=1920,
+            height=1080,
+            size=1024,
+            subset="unassigned",
+        )
+        db_session.add(db_dataset_item)
+        db_session.commit()
+
+        # Lastly, update the project to set its thumbnail_id from the dataset item
+        db_project.thumbnail_id = db_dataset_item.id
+        db_session.add(db_project)
+        db_session.commit()
+
         fetched_project = fxt_project_service.get_project_by_id(UUID(db_project.id))
-        assert fetched_project.thumbnail_id == "thumb_123"
+        assert fetched_project.thumbnail_id == UUID(db_dataset_item.id)
 
     def test_get_project_by_id_not_found(self, fxt_project_service: ProjectService):
         """Test retrieving a non-existent project raises error."""

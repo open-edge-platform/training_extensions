@@ -55,7 +55,10 @@ class ProjectService:
         project = self.get_project_by_id(project_id)
 
         if project.thumbnail_id:
-            thumbnail_path = self._get_thumbnail_path_for_item(project_id=project_id, thumbnail_id=project.thumbnail_id)
+            thumbnail_path = self._get_thumbnail_path_for_item(
+                project_id=project_id,
+                thumbnail_id=str(project.thumbnail_id),
+            )
             if thumbnail_path.exists():
                 return thumbnail_path
         else:
@@ -68,7 +71,7 @@ class ProjectService:
                     thumbnail_path = self._get_thumbnail_path_for_item(project_id=project_id, thumbnail_id=item.id)
                     if thumbnail_path.exists():
                         # Found a valid thumbnail, link it to the project
-                        project.thumbnail_id = item.id
+                        project.thumbnail_id = UUID(item.id)
                         project_repo.update(ProjectMapper.from_schema(project))
                         db.commit()
                         return thumbnail_path

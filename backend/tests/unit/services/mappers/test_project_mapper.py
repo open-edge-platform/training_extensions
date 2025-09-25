@@ -1,6 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
+from uuid import UUID
 
 import pytest
 
@@ -28,10 +28,13 @@ SUPPORTED_PROJECT_MAPPING = [
         Project(
             name="Test Project",
             task=Task(task_type=TaskType.SEGMENTATION, exclusive_labels=False, labels=[]),
-            thumbnail_id="thumbnail_123",
+            thumbnail_id=UUID("7b073838-99d3-42ff-9018-4e901eb047fd"),
         ),
         ProjectDB(
-            name="Test Project", task_type=TaskType.SEGMENTATION, exclusive_labels=False, thumbnail_id="thumbnail_123"
+            name="Test Project",
+            task_type=TaskType.SEGMENTATION,
+            exclusive_labels=False,
+            thumbnail_id="7b073838-99d3-42ff-9018-4e901eb047fd",
         ),
     ),
 ]
@@ -43,6 +46,7 @@ class TestProjectMapper:
     @pytest.mark.parametrize("schema_instance,expected_db", SUPPORTED_PROJECT_MAPPING.copy())
     def test_from_schema(self, schema_instance, expected_db):
         expected_db.id = str(schema_instance.id)
+        expected_db.thumbnail_id = str(schema_instance.thumbnail_id) if schema_instance.thumbnail_id else None
         expected_db.labels = [LabelMapper.from_schema(schema_label) for schema_label in schema_instance.task.labels]
         actual_db = ProjectMapper.from_schema(schema_instance)
         assert actual_db.id == expected_db.id
@@ -55,6 +59,7 @@ class TestProjectMapper:
     @pytest.mark.parametrize("db_instance,expected_schema", [(v, k) for (k, v) in SUPPORTED_PROJECT_MAPPING.copy()])
     def test_to_schema(self, db_instance, expected_schema):
         db_instance.id = str(expected_schema.id)
+        db_instance.thumbnail_id = str(expected_schema.thumbnail_id) if expected_schema.thumbnail_id else None
         db_instance.labels = [
             LabelDB(id=str(schema_label.id), name=schema_label.name) for schema_label in expected_schema.task.labels
         ]

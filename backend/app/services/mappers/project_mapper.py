@@ -34,7 +34,7 @@ class ProjectMapper:
             name=project.name,
             task_type=project.task.task_type,
             exclusive_labels=project.task.exclusive_labels,
-            thumbnail_id=project.thumbnail_id,
+            thumbnail_id=str(project.thumbnail_id) if project.thumbnail_id else None,
         )
         project_db.labels = [LabelMapper.from_schema(label_schema) for label_schema in project.task.labels]
 
