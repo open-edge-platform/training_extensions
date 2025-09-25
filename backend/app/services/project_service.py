@@ -61,20 +61,20 @@ class ProjectService:
             )
             if thumbnail_path.exists():
                 return thumbnail_path
-        else:
-            with get_db_session() as db:
-                project_repo = ProjectRepository(db)
-                dataset_repo = DatasetItemRepository(str(project_id), db)
 
-                dataset_items = dataset_repo.list_items(limit=10, offset=0)
-                for item in dataset_items:
-                    thumbnail_path = self._get_thumbnail_path_for_item(project_id=project_id, thumbnail_id=item.id)
-                    if thumbnail_path.exists():
-                        # Found a valid thumbnail, link it to the project
-                        project.thumbnail_id = UUID(item.id)
-                        project_repo.update(ProjectMapper.from_schema(project))
-                        db.commit()
-                        return thumbnail_path
+        with get_db_session() as db:
+            project_repo = ProjectRepository(db)
+            dataset_repo = DatasetItemRepository(str(project_id), db)
+
+            dataset_items = dataset_repo.list_items(limit=10, offset=0)
+            for item in dataset_items:
+                thumbnail_path = self._get_thumbnail_path_for_item(project_id=project_id, thumbnail_id=item.id)
+                if thumbnail_path.exists():
+                    # Found a valid thumbnail, link it to the project
+                    project.thumbnail_id = UUID(item.id)
+                    project_repo.update(ProjectMapper.from_schema(project))
+                    db.commit()
+                    return thumbnail_path
 
         # No thumbnails available
         return None
