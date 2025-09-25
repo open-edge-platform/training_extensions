@@ -33,8 +33,8 @@ FROM node:24-alpine3.22@sha256:3e843c608bb5232f39ecb2b25e41214b958b0795914707374
 
 WORKDIR /home/app/web_ui/
 
-COPY --link ui/package.json .
-COPY --link ui/openapi.json /home/app/web_ui/src/api/openapi-spec.json
+COPY --link application/ui/package.json .
+COPY --link application/ui/openapi.json /home/app/web_ui/src/api/openapi-spec.json
 RUN npm run build:api
 
 #############
@@ -44,7 +44,7 @@ FROM node:24-alpine3.22@sha256:3e843c608bb5232f39ecb2b25e41214b958b0795914707374
 
 WORKDIR /home/app/web_ui/
 RUN apk add --no-cache git=2.49.1-r0
-COPY --link ./ui/package.json ./
+COPY --link ./application/ui/package.json ./
 RUN npm run clone-geti-ui-packages
 
 #############
@@ -54,16 +54,16 @@ FROM node:24-alpine3.22@sha256:3e843c608bb5232f39ecb2b25e41214b958b0795914707374
 
 WORKDIR /home/app/web_ui/
 
-COPY --link ui/package.json ./
-COPY --link ui/package-lock.json ./
+COPY --link application/ui/package.json ./
+COPY --link application/ui/package-lock.json ./
 COPY --from=geti_ui_packags /home/app/web_ui/packages/ /home/app/web_ui/packages/
 RUN npm ci --audit=false --ignore-scripts
 
-COPY --link ui/eslint.config.js ./
-COPY --link ui/.prettierrc ./
-COPY --link ui/tsconfig.json ./
-COPY --link ui/rsbuild.config.ts ./
-COPY --link ui/src/ src/
+COPY --link application/ui/eslint.config.js ./
+COPY --link application/ui/.prettierrc ./
+COPY --link application/ui/tsconfig.json ./
+COPY --link application/ui/rsbuild.config.ts ./
+COPY --link application/ui/src/ src/
 
 ARG PUBLIC_API_BASE_URL=""
 ENV PUBLIC_API_BASE_URL ${PUBLIC_API_BASE_URL}

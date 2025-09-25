@@ -15,7 +15,7 @@ lib/ @samet-akcay @eugene123tw @kprokofi @sovrasov @daankrol @ashwinvaidya17 @ra
 backend/ @leoll2 @itallix @warrkan @A-Artemis
 
 # Frontend
-ui/ @jpggvilaca @MarkRedeman @camiloHimura @pplaskie @romanowska @dwesolow
+application/ui/ @jpggvilaca @MarkRedeman @camiloHimura @pplaskie @romanowska @dwesolow
 
 # Docker files
 docker/ @samet-akcay @eugene123tw @kprokofi @sovrasov @daankrol @ashwinvaidya17 @rajeshgangireddy

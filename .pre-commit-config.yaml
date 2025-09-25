@@ -9,7 +9,7 @@ repos:
     rev: v3.0.3
     hooks:
       - id: prettier
-        exclude: ^ui/
+        exclude: ^application/ui/
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: "v1.6.1"

@@ -8,14 +8,14 @@ Geti Tune Backend:
 Geti Tune UI:
   - changed-files:
       - any-glob-to-any-file:
-          - "ui/**/*"
+          - "application/ui/**/*"
 
 TEST:
   - changed-files:
       - any-glob-to-any-file:
           - "lib/tests/**/*"
           - "backend/tests/**/*"
-          - "ui/tests/**/*"
+          - "application/ui/tests/**/*"
 
 DOC:
   - changed-files:

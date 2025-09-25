@@ -41,7 +41,7 @@ jobs:
         with:
           files_yaml: |
             test:
-              - ui/**
+              - application/ui/**
               - backend/**
               - docker/**
               - .github/**
