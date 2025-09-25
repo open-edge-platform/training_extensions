@@ -8,7 +8,9 @@ on:
       - releases/**
     tags:
       - "v*"
-  pull_request:
+          with:
+          name: dist
+          path: "application/ui/dist.tar.gz"l_request:
   merge_group:
     branches:
       - develop
@@ -135,7 +137,7 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: ui-dist
-          path: "ui/dist.tar.gz"
+          path: "application/ui/dist.tar.gz"
 
   lint:
     name: Eslint checks
@@ -155,7 +157,7 @@ jobs:
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         id: setup-node
         with:
-          node-version-file: /application/ui/.nvmrc
+          node-version-file: application/ui/.nvmrc
 
       - name: Install dependencies
         working-directory: "application/ui"
@@ -165,7 +167,7 @@ jobs:
         uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         with:
           name: openapi-spec
-          path: ui/src/api
+          path: application/ui/src/api
 
       - name: Build OpenAPI type definitions
         working-directory: "application/ui"
@@ -264,7 +266,7 @@ jobs:
 
             let coverageComment = '';
             try {
-              coverageComment = fs.readFileSync('ui/coverage.md', 'utf8');
+              coverageComment = fs.readFileSync('application/ui/coverage.md', 'utf8');
             } catch (error) {
               coverageComment = '## 📊 Test Coverage Report\n\nCoverage report generation failed.';
             }
@@ -350,7 +352,7 @@ jobs:
         if: always()
         with:
           name: playwright-report
-          path: ui/playwright-report/
+          path: application/ui/playwright-report/
           retention-days: 30
 
   required_check:

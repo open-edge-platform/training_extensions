@@ -40,9 +40,9 @@ jobs:
               - lib/**
               - docker/**
             rust:
-              - ui/**
+              - application/ui/**
             javascript-typescript:
-              - ui/**
+              - application/ui/**
             actions:
               - .github/**
 

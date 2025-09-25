@@ -54,8 +54,8 @@ FROM node:24-alpine3.22@sha256:3e843c608bb5232f39ecb2b25e41214b958b0795914707374
 
 WORKDIR /home/app/web_ui/
 
-COPY --link ui/package.json ./
-COPY --link ui/package-lock.json ./
+COPY --link application/ui/package.json ./
+COPY --link application/ui/package-lock.json ./
 COPY --from=geti_ui_packags /home/app/web_ui/packages/ /home/app/web_ui/packages/
 RUN npm ci --audit=false --ignore-scripts
 
