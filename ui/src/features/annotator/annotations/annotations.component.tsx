@@ -3,39 +3,33 @@
 
 import { isEmpty } from 'lodash-es';
 
-import { useAnnotator } from '../annotator-provider.component';
-import { useSelectedAnnotations } from '../select-annotation-provider.component';
-import { ToolManager } from '../tools/tool-manager.component';
+import { Annotation as AnnotationType } from '../types';
 import { DEFAULT_ANNOTATION_STYLES } from '../utils';
 import { Annotation } from './annotation.component';
 import { MaskAnnotations } from './mask-annotations.component';
 
 type AnnotationsProps = {
+    annotations: AnnotationType[];
     width: number;
     height: number;
     isFocussed: boolean;
 };
 
-export const Annotations = ({ width, height, isFocussed }: AnnotationsProps) => {
-    const { annotations } = useAnnotator();
-    const { selectedAnnotations } = useSelectedAnnotations();
-
-    // Order annotations by selection. Selected annotation should always be on top.
-    const orderedAnnotations = [
-        ...annotations.filter((a) => !selectedAnnotations.has(a.id)),
-        ...annotations.filter((a) => selectedAnnotations.has(a.id)),
-    ];
-
+export const Annotations = ({ annotations, width, height, isFocussed }: AnnotationsProps) => {
     return (
-        <svg width={width} height={height} style={DEFAULT_ANNOTATION_STYLES}>
+        <svg
+            aria-label={'annotations'}
+            width={width}
+            height={height}
+            style={{ position: 'absolute', inset: 0, ...DEFAULT_ANNOTATION_STYLES }}
+        >
             {!isEmpty(annotations) && (
-                <MaskAnnotations annotations={orderedAnnotations} width={width} height={height} isEnabled={isFocussed}>
-                    {orderedAnnotations.map((annotation) => (
+                <MaskAnnotations annotations={annotations} width={width} height={height} isEnabled={isFocussed}>
+                    {annotations.map((annotation) => (
                         <Annotation annotation={annotation} key={annotation.id} />
                     ))}
                 </MaskAnnotations>
             )}
-            <ToolManager />
         </svg>
     );
 };

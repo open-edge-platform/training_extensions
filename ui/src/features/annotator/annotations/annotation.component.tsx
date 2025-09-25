@@ -3,12 +3,12 @@
 
 import { createContext, useContext } from 'react';
 
-import { Annotation as AnnotationInterface } from '../types';
+import { Annotation as AnnotationType } from '../types';
 import { AnnotationShape } from './annotation-shape.component';
 import { EditableAnnotation } from './editable-annotation.component';
 import { SelectableAnnotation } from './selectable-annotation.component';
 
-const AnnotationContext = createContext<AnnotationInterface | null>(null);
+const AnnotationContext = createContext<AnnotationType | null>(null);
 
 export const useAnnotation = () => {
     const ctx = useContext(AnnotationContext);
@@ -17,7 +17,7 @@ export const useAnnotation = () => {
 };
 
 interface AnnotationProps {
-    annotation: AnnotationInterface;
+    annotation: AnnotationType;
 }
 export const Annotation = ({ annotation }: AnnotationProps) => {
     return (

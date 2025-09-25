@@ -1,7 +1,6 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useZoom } from '../../../../../components/zoom/zoom';
 import { Point } from '../../../types';
 
 const DEFAULT_SIZE = 1.0;
@@ -23,9 +22,8 @@ const colors = {
     },
 };
 
-export const CrosshairLine = ({ direction, point }: CrosshairLineProps) => {
-    const { scale } = useZoom();
-    const sizeRatio = DEFAULT_SIZE / scale;
+export const CrosshairLine = ({ direction, point, zoom }: CrosshairLineProps) => {
+    const sizeRatio = DEFAULT_SIZE / zoom;
     const attributes =
         direction === 'horizontal'
             ? {

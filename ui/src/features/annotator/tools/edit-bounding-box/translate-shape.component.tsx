@@ -4,14 +4,14 @@
 import { ReactNode } from 'react';
 
 import { useTranslate } from '../../hooks/use-translate.hook';
-import { Annotation as AnnotationInterface } from '../../types';
+import { Annotation as AnnotationType } from '../../types';
 import { allowPanning } from '../../utils';
 
 const STROKE_WIDTH = 2;
 
 interface TranslateShapeProps {
     zoom: number;
-    annotation: AnnotationInterface;
+    annotation: AnnotationType;
     translateShape: ({ x, y }: { x: number; y: number }) => void;
     onComplete: () => void;
     children: ReactNode;

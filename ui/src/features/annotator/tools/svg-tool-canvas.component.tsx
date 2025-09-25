@@ -23,10 +23,12 @@ export const SvgToolCanvas: FC<PropsWithChildren<CanvasProps>> = ({
     return (
         <svg
             {...props}
+            style={{ ...props.style, inset: 0, position: 'absolute' }}
             onPointerDown={allowPanning(onPointerDown)}
             // eslint-disable-next-line jsx-a11y/aria-role
             role='editor'
             viewBox={`0 0 ${roi.width} ${roi.height}`}
+            aria-label='tool'
         >
             <rect {...roi} fillOpacity={0} ref={canvasRef} />
             {children}
