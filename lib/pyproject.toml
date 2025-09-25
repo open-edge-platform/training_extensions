@@ -27,7 +27,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
-    "datumaro[experimental] @ git+https://github.com/open-edge-platform/datumaro.git@gppayend/masks",
+    "datumaro[experimental] @ git+https://github.com/open-edge-platform/datumaro.git@develop",
     "omegaconf==2.3.0",
     "rich==14.0.0",
     "jsonargparse==4.35.0",
@@ -72,11 +72,11 @@ dev = [
 cuda = ["torch==2.8.0",
         "torchvision==0.23.0"
 ]
-#xpu = [
-#    "torch==2.8.0+xpu",
-#    "pytorch-triton-xpu==3.4.0",
-#    "torchvision==0.23.0"
-#]
+xpu = [
+    "torch==2.8.0+xpu",
+    "pytorch-triton-xpu==3.4.0",
+    "torchvision==0.23.0"
+]
 
 docs = [
     "furo",
@@ -115,14 +115,14 @@ Repository = "https://github.com/open-edge-platform/training_extensions/"
 
 [tool.uv.sources]
 torch = [
-    #{ index = "torch-xpu", extra = "xpu"},
+    { index = "torch-xpu", extra = "xpu"},
     { index = "torch-cuda", extra = "cuda"},
 ]
-#pytorch-triton-xpu = [
-#    { index = "torch-xpu", extra = "xpu"},
-#]
+pytorch-triton-xpu = [
+    { index = "torch-xpu", extra = "xpu"},
+]
 torchvision = [
-    #{ index = "torch-xpu", extra = "xpu"},
+    { index = "torch-xpu", extra = "xpu"},
     { index = "torch-cuda", extra = "cuda"},
 ]
 
@@ -396,6 +396,6 @@ convention = "google"
 markers = [
     "gpu",  # mark tests which require NVIDIA GPU
     "cpu",
-    #"xpu",  # mark tests which require Intel dGPU,
+    "xpu",  # mark tests which require Intel dGPU,
 ]
 python_files = "tests/**/*.py"
