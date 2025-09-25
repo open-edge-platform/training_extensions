@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { PointerEvent, SVGProps } from 'react';
+import { CSSProperties, PointerEvent, SVGProps } from 'react';
 
 const BUTTON_LEFT = {
     button: 0,
@@ -61,3 +61,14 @@ export const allowPanning = (onPointerDown?: OnPointerDown): OnPointerDown | und
         return onPointerDown(event);
     };
 };
+
+export const DEFAULT_ANNOTATION_STYLES = {
+    fillOpacity: 0.4,
+    fill: 'var(--annotation-fill)',
+    stroke: 'var(--annotation-stroke)',
+    strokeLinecap: 'round',
+    strokeWidth: 'calc(1px / var(--zoom-scale))',
+    strokeDashoffset: 0,
+    strokeDasharray: 0,
+    strokeOpacity: 'var(--annotation-border-opacity, 1)',
+} satisfies CSSProperties;

@@ -18,7 +18,7 @@ import { ErrorPage } from './routes/error-page/error-page';
 import { Inference } from './routes/inference/inference';
 import { Models } from './routes/models/models';
 import { CreateProject } from './routes/project/create-project';
-import { EditProject } from './routes/project/edit-project';
+import { ViewProject } from './routes/project/view-project';
 
 const root = path('/');
 const projects = root.path('/projects');
@@ -32,7 +32,7 @@ export const paths = {
     project: {
         index: projects,
         new: projects.path('/new'),
-        edit: project.path('/edit'),
+        details: project,
         inference,
         dataset,
         models,
@@ -41,7 +41,6 @@ export const paths = {
 
 export const router = createBrowserRouter([
     {
-        index: true,
         path: paths.project.index.pattern,
         element: (
             <Suspense fallback={<Loading mode='fullscreen' />}>
@@ -52,6 +51,10 @@ export const router = createBrowserRouter([
     {
         path: paths.project.new.pattern,
         element: <CreateProject />,
+    },
+    {
+        path: paths.project.details.pattern,
+        element: <ViewProject />,
     },
     {
         path: paths.root.pattern,
@@ -69,15 +72,6 @@ export const router = createBrowserRouter([
                     // else redirect to inference
                     return redirect(paths.project.index({}));
                 },
-            },
-            {
-                path: paths.project.index.pattern,
-                children: [
-                    {
-                        path: paths.project.edit.pattern,
-                        element: <EditProject />,
-                    },
-                ],
             },
             {
                 path: paths.project.inference.pattern,

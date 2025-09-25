@@ -9,7 +9,8 @@ import { type KeyboardEvent as ReactKeyboardEvent } from '@geti/ui';
 import selectionCursor from '../../../../assets/icons/selection.svg?url';
 import { Rectangle } from '../../shapes/rectangle.component';
 import { Point, Rect as RectInterface, RegionOfInterest } from '../../types';
-import { isEraserButton, isLeftButton } from '../../utils';
+import { DEFAULT_ANNOTATION_STYLES, isEraserButton, isLeftButton } from '../../utils';
+import { SvgToolCanvas } from '../svg-tool-canvas.component';
 import { getRelativePoint } from '../utils';
 import { Crosshair } from './crosshair/crosshair.component';
 import { useCrosshair } from './crosshair/use-crosshair.hook';
@@ -126,22 +127,24 @@ export const DrawingBox = ({ roi, zoom, image, onComplete }: DrawingBoxInterface
     }, []);
 
     return (
-        <svg
+        <SvgToolCanvas
+            image={image}
+            canvasRef={ref}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
             onPointerDown={onPointerDown}
-            // eslint-disable-next-line jsx-a11y/aria-role
-            role='editor'
-            viewBox={`0 0 ${roi.width} ${roi.height}`}
             style={{
                 cursor: `url(${selectionCursor}) ${CURSOR_OFFSET}, auto`,
             }}
         >
-            <rect {...roi} fillOpacity={0} ref={ref} />
             {boundingBox ? (
-                <Rectangle ariaLabel={'bounding box'} rect={boundingBox} styles={{ role: 'application' }} />
+                <Rectangle
+                    ariaLabel={'bounding box'}
+                    rect={boundingBox}
+                    styles={{ role: 'application', ...DEFAULT_ANNOTATION_STYLES }}
+                />
             ) : null}
             {hasCrossHair && <Crosshair location={crosshair.location} zoom={zoom} />}
-        </svg>
+        </SvgToolCanvas>
     );
 };

@@ -258,29 +258,25 @@ export const Source = () => {
                 ariaLabel={'Select your source'}
                 value={selectedSourceType}
                 setValue={setSelectedSourceType}
-                items={DEFAULT_SOURCE_ITEMS.map((item) => {
-                    return {
-                        value: item.source_type,
-                        label: <Label item={item} />,
-                        content: (
-                            <Flex direction={'column'} gap={'size-200'}>
-                                <ConfigureSource
-                                    source={forms[item.source_type]}
-                                    setSource={(newSource) => {
-                                        setForms((oldSource) => {
-                                            return { ...oldSource, [item.source_type]: newSource };
-                                        });
-                                    }}
-                                />
-                                <ButtonGroup>
-                                    <Button variant={'accent'} onPress={() => handleSaveSource(item.source_type)}>
-                                        Save & connect
-                                    </Button>
-                                </ButtonGroup>
-                            </Flex>
-                        ),
-                    };
-                })}
+                items={DEFAULT_SOURCE_ITEMS.map((item) => ({
+                    value: item.source_type,
+                    label: <Label item={item} />,
+                    content: (
+                        <Flex direction={'column'} gap={'size-200'}>
+                            <ConfigureSource
+                                source={forms[item.source_type]}
+                                setSource={(newSource) =>
+                                    setForms((oldSource) => ({ ...oldSource, [item.source_type]: newSource }))
+                                }
+                            />
+                            <ButtonGroup>
+                                <Button variant={'accent'} onPress={() => handleSaveSource(item.source_type)}>
+                                    Save & connect
+                                </Button>
+                            </ButtonGroup>
+                        </Flex>
+                    ),
+                }))}
             />
 
             <Divider size={'S'} />

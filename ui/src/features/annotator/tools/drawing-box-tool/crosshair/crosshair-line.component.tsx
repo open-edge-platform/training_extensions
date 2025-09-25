@@ -22,8 +22,8 @@ const colors = {
     },
 };
 
-export const CrosshairLine = ({ direction, point }: CrosshairLineProps) => {
-    const sizeRatio = `calc(${DEFAULT_SIZE} / var(--zoom-scale))`;
+export const CrosshairLine = ({ direction, point, zoom }: CrosshairLineProps) => {
+    const sizeRatio = DEFAULT_SIZE / zoom;
     const attributes =
         direction === 'horizontal'
             ? {
