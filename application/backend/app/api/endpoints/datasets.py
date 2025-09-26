@@ -8,13 +8,7 @@ from fastapi import APIRouter, Body, Depends, File, HTTPException, Query, Upload
 from fastapi.openapi.models import Example
 from starlette.responses import FileResponse
 
-from app.api.dependencies import (
-    get_dataset_item_id,
-    get_dataset_service,
-    get_file_name_and_extension,
-    get_file_size,
-    get_project_id,
-)
+from app.api.dependencies import get_dataset_item_id, get_dataset_service, get_file_name_and_extension, get_project_id
 from app.schemas import DatasetItem, DatasetItemsWithPagination
 from app.schemas.base import Pagination
 from app.schemas.dataset_item import DatasetItemAnnotation, DatasetItemAnnotations, DatasetItemAnnotationsWithSource
@@ -69,7 +63,6 @@ def add_dataset_item(
     project_id: Annotated[UUID, Depends(get_project_id)],
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
     file_name_and_extension: Annotated[tuple[str, str], Depends(get_file_name_and_extension)],
-    size: Annotated[int, Depends(get_file_size)],
     file: Annotated[UploadFile, File()],
 ) -> DatasetItem:
     """Add a new item to the dataset by uploading an image"""
@@ -77,10 +70,9 @@ def add_dataset_item(
     try:
         return dataset_service.create_dataset_item(
             project_id=project_id,
-            file=file.file,
+            data=file.file,
             name=name,
             format=format,
-            size=size,
             user_reviewed=True,
         )
     except InvalidImageError:

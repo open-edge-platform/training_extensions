@@ -14,6 +14,7 @@ from app.schemas import Pipeline, PipelineStatus
 from app.schemas.metrics import InferenceMetrics, LatencyMetrics, PipelineMetrics, ThroughputMetrics, TimeWindow
 from app.services import ActivePipelineService
 from app.services.base import GenericPersistenceService, ResourceNotFoundError, ResourceType, ServiceConfig
+from app.services.data_collect import DataCollector
 from app.services.mappers import PipelineMapper
 from app.services.metrics_service import MetricsService
 from app.services.parent_process_guard import parent_process_only
@@ -45,6 +46,7 @@ class PipelineService:
     def _notify_pipeline_changed(self) -> None:
         self._notify_source_changed()
         self._notify_sink_changed()
+        DataCollector().reload_policies()
 
     def get_pipeline_by_id(self, project_id: UUID, db: Session | None = None) -> Pipeline:
         """Retrieve a pipeline by project ID."""
@@ -66,6 +68,9 @@ class PipelineService:
                     self._notify_source_changed()
                 if pipeline.sink.id != updated.sink.id:  # type: ignore[union-attr] # sink is always there for running pipeline
                     self._notify_sink_changed()
+                if pipeline.data_collection_policies != updated.data_collection_policies:
+                    self._active_pipeline_service.reload()
+                    DataCollector().reload_policies()
             elif pipeline.status != updated.status:
                 # If the pipeline is being activated or stopped
                 self._notify_pipeline_changed()

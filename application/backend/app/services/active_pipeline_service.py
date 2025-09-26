@@ -8,8 +8,9 @@ from threading import Thread
 
 from app.db import get_db_session
 from app.repositories import PipelineRepository
-from app.schemas import DisconnectedSinkConfig, DisconnectedSourceConfig, Sink, Source
-from app.services.mappers import SinkMapper, SourceMapper
+from app.schemas import DisconnectedSinkConfig, DisconnectedSourceConfig, Project, Sink, Source
+from app.schemas.pipeline import DataCollectionPolicy
+from app.services.mappers import ProjectMapper, SinkMapper, SourceMapper
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +34,8 @@ class ActivePipelineService:
         self.config_changed_condition = config_changed_condition
         self._source: Source = DisconnectedSourceConfig()
         self._sink: Sink = DisconnectedSinkConfig()
+        self._project: Project | None = None
+        self._data_collection_policies: list[DataCollectionPolicy] = []
         self._load_app_config()
 
         # For child processes, start a daemon to monitor configuration changes and reload it when necessary.
@@ -58,6 +61,8 @@ class ActivePipelineService:
             if pipeline is None:
                 self._source = DisconnectedSourceConfig()
                 self._sink = DisconnectedSinkConfig()
+                self._project = None
+                self._data_collection_policies = []
                 return
 
             source = pipeline.source
@@ -67,6 +72,17 @@ class ActivePipelineService:
             sink = pipeline.sink
             if sink is not None:
                 self._sink = SinkMapper.to_schema(sink)
+
+            project = pipeline.project
+            if project is not None:
+                self._project = ProjectMapper.to_schema(project)
+            self._data_collection_policies = [
+                policy
+                for policy in [
+                    DataCollectionPolicy.model_validate(policy) for policy in pipeline.data_collection_policies
+                ]
+                if policy.enabled
+            ]
 
     def _reload_config_daemon_routine(self) -> None:
         """Daemon thread to reload the configuration file when it changes."""
@@ -85,3 +101,9 @@ class ActivePipelineService:
 
     def get_sink_config(self) -> Sink:
         return self._sink
+
+    def get_project(self) -> Project | None:
+        return self._project
+
+    def get_data_collection_policies(self) -> list[DataCollectionPolicy]:
+        return self._data_collection_policies

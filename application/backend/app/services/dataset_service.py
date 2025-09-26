@@ -3,11 +3,14 @@
 
 import logging
 import os
+import os.path
 from datetime import datetime
+from io import BytesIO
 from pathlib import Path
 from typing import BinaryIO
 from uuid import UUID, uuid4
 
+import numpy as np
 from PIL import Image, UnidentifiedImageError
 
 from app.db import get_db_session
@@ -50,16 +53,58 @@ class DatasetService:
         self.mapper = DatasetItemMapper()
         self.projects_dir = data_dir / "projects"
 
-    def create_dataset_item(
-        self, project_id: UUID, name: str, format: str, size: int, file: BinaryIO, user_reviewed: bool
-    ) -> DatasetItem:
-        """Creates a new dataset item"""
-        file.seek(0)
+    @staticmethod
+    def _read_image_from_ndarray(data: np.ndarray) -> Image.Image:
+        return Image.fromarray(data)
+
+    @staticmethod
+    def _read_image_from_binary(data: BinaryIO | BytesIO) -> Image.Image:
+        data.seek(0)
         try:
-            image: Image.Image = Image.open(file)
+            return Image.open(data)
         except UnidentifiedImageError:
             raise InvalidImageError
+
+    @staticmethod
+    def _generate_and_save_thumbnail(image: Image.Image, path: Path) -> None:
+        try:
+            thumbnail_image = crop_to_thumbnail(
+                image=image, target_width=DEFAULT_THUMBNAIL_SIZE, target_height=DEFAULT_THUMBNAIL_SIZE
+            )
+            if thumbnail_image.mode in ("RGBA", "P"):
+                thumbnail_image = thumbnail_image.convert("RGB")
+            thumbnail_image.save(path)
+        except Exception as e:
+            logger.exception("Failed to generate thumbnail image %s", e)
+
+    def create_dataset_item(  # noqa: PLR0913
+        self,
+        project_id: UUID,
+        name: str,
+        format: str,
+        data: Image.Image | np.ndarray | BinaryIO | BytesIO,
+        user_reviewed: bool,
+        source_id: UUID | None = None,
+        prediction_model_id: UUID | None = None,
+        annotations: list[DatasetItemAnnotation] = [],
+    ) -> DatasetItem:
+        """Creates a new dataset item"""
         dataset_item_id = uuid4()
+        match data:
+            case np.ndarray():
+                image = self._read_image_from_ndarray(data)
+            case BinaryIO() | BytesIO():
+                image = self._read_image_from_binary(data)
+            case _:
+                image = data
+
+        dataset_dir = self.projects_dir / f"{project_id}/dataset"
+        dataset_dir.mkdir(parents=True, exist_ok=True)
+        binary_path = dataset_dir / f"{dataset_item_id}.{format}"
+        image.save(binary_path)
+
+        DatasetService._generate_and_save_thumbnail(image, dataset_dir / f"{dataset_item_id}-thumb.jpg")
+
         dataset_item = DatasetItemDB(
             id=str(dataset_item_id),
             project_id=str(project_id),
@@ -67,28 +112,28 @@ class DatasetService:
             format=format,
             width=image.width,
             height=image.height,
-            size=size,
+            size=os.path.getsize(binary_path),
             subset=DatasetItemSubset.UNASSIGNED,
             user_reviewed=user_reviewed,
+            source_id=str(source_id) if source_id is not None else None,
+            prediction_model_id=str(prediction_model_id) if prediction_model_id is not None else None,
         )
 
-        dataset_dir = self.projects_dir / f"{project_id}/dataset"
-        dataset_dir.mkdir(parents=True, exist_ok=True)
-        image.save(dataset_dir / f"{dataset_item_id}.{format}")
-
-        try:
-            thumbnail_image = crop_to_thumbnail(
-                image=image, target_width=DEFAULT_THUMBNAIL_SIZE, target_height=DEFAULT_THUMBNAIL_SIZE
-            )
-            if thumbnail_image.mode in ("RGBA", "P"):
-                thumbnail_image = thumbnail_image.convert("RGB")
-            thumbnail_image.save(dataset_dir / f"{dataset_item_id}-thumb.jpg")
-        except Exception as e:
-            logger.exception("Failed to generate thumbnail image %s", e)
-
         with get_db_session() as db:
+            project_repo = ProjectRepository(db=db)
+            project = project_repo.get_by_id(str(project_id))
+            if project is None:
+                raise ResourceNotFoundError(ResourceType.PROJECT, str(project_id))
+
+            DatasetService._validate_annotations_labels(annotations=annotations, project=project)
+            DatasetService._validate_annotations(annotations=annotations, project=project)
+            DatasetService._validate_annotations_coordinates(annotations=annotations, dataset_item=dataset_item)
+
+            dataset_item.annotation_data = [annotation.model_dump(mode="json") for annotation in annotations]
+
             repo = DatasetItemRepository(project_id=str(project_id), db=db)
-            result = self.mapper.to_schema(repo.save(dataset_item))
+            dataset_item = repo.save(dataset_item)
+            result = self.mapper.to_schema(dataset_item)
             db.commit()
         return result
 

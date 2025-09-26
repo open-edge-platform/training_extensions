@@ -58,6 +58,7 @@ class DatasetItemAnnotation(BaseModel):
 
     labels: list[LabelReference]
     shape: Shape
+    probability: float | None = None
 
     model_config = {
         "json_schema_extra": {
