@@ -21,7 +21,8 @@ export const Annotations = ({ annotations, width, height, isFocussed }: Annotati
             aria-label={'annotations'}
             width={width}
             height={height}
-            style={{ position: 'absolute', inset: 0, ...DEFAULT_ANNOTATION_STYLES }}
+            tabIndex={-1}
+            style={{ position: 'absolute', inset: 0, outline: 'none', ...DEFAULT_ANNOTATION_STYLES }}
         >
             {!isEmpty(annotations) && (
                 <MaskAnnotations annotations={annotations} width={width} height={height} isEnabled={isFocussed}>
