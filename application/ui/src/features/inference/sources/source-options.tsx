@@ -3,9 +3,6 @@
 
 import { useState } from 'react';
 
-import { Button, Content, Dialog, DialogTrigger, Text } from '@geti/ui';
-
-import { ReactComponent as Camera } from '../../../assets/icons/camera.svg';
 import { ReactComponent as GenICam } from '../../../assets/icons/genicam.svg';
 import { ReactComponent as Image } from '../../../assets/icons/images-folder.svg';
 import { ReactComponent as IpCameraIcon } from '../../../assets/icons/ip-camera.svg';
@@ -29,26 +26,12 @@ const inputs = [
     },
 ];
 
-export const SourceModal = () => {
+export const SourceOptions = () => {
     const [activeInput, setActiveInput] = useState<string | null>(null);
 
     const handleActiveInputChange = (value: string) => {
         setActiveInput((prevValue) => (value !== prevValue ? value : null));
     };
 
-    return (
-        <DialogTrigger type='popover'>
-            <Button width={'size-2000'} variant={'secondary'}>
-                <Camera fill='white' />
-                <Text width={'auto'} marginStart={'size-100'}>
-                    Input source
-                </Text>
-            </Button>
-            <Dialog>
-                <Content>
-                    <DisclosureGroup items={inputs} value={activeInput} onChange={handleActiveInputChange} />
-                </Content>
-            </Dialog>
-        </DialogTrigger>
-    );
+    return <DisclosureGroup items={inputs} value={activeInput} onChange={handleActiveInputChange} />;
 };

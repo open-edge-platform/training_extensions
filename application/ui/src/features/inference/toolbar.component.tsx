@@ -8,7 +8,7 @@ import { isEmpty } from 'lodash-es';
 
 import { $api } from '../../api/client';
 import { useProjectIdentifier } from '../../hooks/use-project-identifier.hook';
-import { SourceModal } from './source/source-modal';
+import { InputSource } from './input-source.component';
 import { useWebRTCConnection } from './stream/web-rtc-connection-provider';
 
 const ActiveModel = () => {
@@ -117,7 +117,7 @@ export const Toolbar = () => {
                 <Divider orientation='vertical' size='S' />
 
                 <Flex marginStart='auto'>
-                    <SourceModal />
+                    <InputSource />
                 </Flex>
             </Flex>
         </View>
