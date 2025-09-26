@@ -1,0 +1,11 @@
+capabilities:
+  tiling: false
+  xai: true # by default, all models support XAI features (unless specified otherwise)
+supported_gpus: # by default, all models are supported on all GPUs
+  intel: true
+  nvidia: true
+support_status: active
+
+hyperparameters:
+  training:
+    max_epochs: 200

@@ -5,7 +5,8 @@ from uuid import uuid4
 
 import pytest
 
-from app.schemas import Model, ModelFormat, OutputFormat, Pipeline, PipelineStatus, SinkType, SourceType
+from app.schemas import Model, OutputFormat, Pipeline, PipelineStatus, SinkType, SourceType
+from app.schemas.model import TrainingInfo, TrainingStatus
 from app.schemas.sink import MqttSinkConfig
 from app.schemas.source import WebcamSourceConfig
 
@@ -33,7 +34,10 @@ def fxt_mqtt_sink() -> MqttSinkConfig:
 @pytest.fixture
 def fxt_model() -> Model:
     """Sample model data."""
-    return Model(name="YOLO-X for Vehicle Detection", format=ModelFormat.OPENVINO)
+    return Model(
+        architecture="Object_Detection_YOLOX",
+        training_info=TrainingInfo(status=TrainingStatus.NOT_STARTED, label_schema_revision={}, configuration={}),  # type: ignore
+    )  # type: ignore
 
 
 @pytest.fixture

@@ -1,0 +1,194 @@
+name: Geti Tune Library checks
+
+on:
+  push:
+    branches:
+      - develop
+      - releases/**
+    tags:
+      - "v*"
+  pull_request:
+  merge_group:
+    branches:
+      - develop
+      - releases/**
+  workflow_dispatch: # run on request (no need for PR)
+
+permissions: {} # No permissions by default
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.after }}
+  cancel-in-progress: true
+
+jobs:
+  # Determines if workflow should execute based on event type and changed paths
+  # If push or workflow_dispatch -> always run
+  # If PR or merge_group -> run only if files in specified paths changed
+  check_paths:
+    name: Check if workflow should run
+    runs-on: ubuntu-latest
+    outputs:
+      run_workflow: ${{ steps.run_workflow.outputs.run }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+
+      - name: Get all paths that should trigger the workflow
+        id: changed-files-yaml
+        uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v47.0.0
+        with:
+          files_yaml: |
+            test:
+              - library/**
+              - .github/**
+
+      - name: Set run flag
+        id: run_workflow
+        run: |
+          if [ "${{ github.event_name }}" = "push" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          elif [ "${{ steps.changed-files-yaml.outputs.test_any_changed }}" = "true" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  Code-Quality-Checks:
+    runs-on: ubuntu-24.04
+    needs: check_paths
+    if: needs.check_paths.outputs.run_workflow == 'true'
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        with:
+          python-version: "3.12"
+      - name: Install tox
+        working-directory: library
+        run: |
+          pip install '.[dev]'
+      - name: Code quality checks
+        working-directory: library
+        run: tox r -vv -e pre-commit
+  Unit-Test:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    needs:
+      - Code-Quality-Checks
+      - check_paths
+    if: needs.check_paths.outputs.run_workflow == 'true'
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - python-version: "3.12"
+            tox-env: "py312"
+          - python-version: "3.11"
+            tox-env: "py311"
+    name: Unit-Test-with-Python${{ matrix.python-version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+      - name: Install Python
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install tox
+        working-directory: library
+        run: |
+          pip install '.[dev]'
+      - name: Run unit test
+        working-directory: library
+        run: tox r -vv -e unit-test-${{ matrix.tox-env }}
+      - name: Upload coverage reports to Codecov
+        working-directory: library
+        run: |
+          # If the workflow is triggered from PR then it gets the commit id from the PR.
+          # else it uses the commit id of the latest commit. This is because the commit
+          # of the checked-out branch/commit does not exist in the tree as it is grafted.
+          # Also note: GitHub does not pass secrets to pipelines triggered from a fork.
+          # This means that upload will fail for PRs from forks.
+          if [ -n "${{ github.event.pull_request.head.sha }}" ]
+          then
+            COMMIT_ID=${{ github.event.pull_request.head.sha }}
+          else
+            COMMIT_ID=${{ github.sha }}
+          fi
+          # current version of codecov-action does not support uploading reports through the proxy
+          # so we use the latest version of codecov uploader binary
+          curl -Os https://uploader.codecov.io/latest/linux/codecov
+          chmod +x codecov
+          ./codecov -t ${{ secrets.CODECOV_TOKEN }} --sha $COMMIT_ID -U $HTTP_PROXY -f .tox/coverage_unit-test-${{ matrix.tox-env }}.xml -F ${{ matrix.tox-env }}
+  Integration-Test:
+    if: |
+      github.event.pull_request.draft == false &&
+      !(startsWith(github.event.pull_request.title, '[WIP]')) &&
+      needs.check_paths.outputs.run_workflow == 'true'
+    runs-on: [self-hosted, linux, x64, dev, dmount]
+    permissions:
+      contents: read
+    needs:
+      - Unit-Test
+      - check_paths
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - task: "multi_class_cls"
+          - task: "multi_label_cls"
+          - task: "h_label_cls"
+          - task: "anomaly"
+          - task: "keypoint_detection"
+          - task: "detection"
+          - task: "instance_segmentation"
+          - task: "semantic_segmentation"
+    name: Integration-Test-${{ matrix.task }}-py312
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+      - name: Install Python
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        with:
+          python-version: "3.12"
+      - name: Install tox
+        working-directory: library
+        run: |
+          pip install '.[dev]'
+      - name: Run Integration Test
+        working-directory: library
+        run: tox r -vv -e integration-test-${{ matrix.task }} -- --task ${{ matrix.task }} --run-category-only
+
+  required_check:
+    name: Required Check lib-lint-and-test
+    needs:
+      - check_paths
+      - Code-Quality-Checks
+      - Unit-Test
+      - Integration-Test
+    runs-on: ubuntu-latest
+    env:
+      CHECKS: ${{ join(needs.*.result, ' ') }}
+    if: always() && !cancelled()
+    steps:
+      - name: Check jobs results
+        run: |
+          for check in ${CHECKS}; do
+            echo "::notice::check=${check}"
+            if [[ "$check" != "success" && "$check" != "skipped" ]]; then
+              echo "::error ::Required status checks failed. They must succeed before this pull request can be merged."
+              exit 1
+            fi
+          done

@@ -26,6 +26,7 @@ class ResourceType(StrEnum):
     PIPELINE = "Pipeline"
     PROJECT = "Project"
     DATASET_ITEM = "DatasetItem"
+    LABEL = "Label"
 
 
 class ResourceError(Exception):
@@ -129,6 +130,8 @@ class GenericPersistenceService(Generic[S, R]):
     def delete_by_id(self, item_id: UUID, db: Session | None = None) -> None:
         try:
             with self._get_repo(db) as repo:
-                repo.delete(str(item_id))
+                deleted = repo.delete(str(item_id))
+            if not deleted:
+                raise ResourceNotFoundError(self.config.resource_type, str(item_id))
         except IntegrityError:
             raise ResourceInUseError(self.config.resource_type, str(item_id))
