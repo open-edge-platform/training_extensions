@@ -5,9 +5,9 @@ import { useActionState } from 'react';
 
 import { Button, Flex, Item, NumberField, Picker, TextField } from '@geti/ui';
 
-import { JsonBuilder } from './json-builder.component';
-import { OutputFormats } from './output-formats.component';
-import { getObjectFromFormData, OutputFormat, SinkType, WebhookHttpMethod } from './utils';
+import { KeyValueBuilder } from '../json-builder.component';
+import { OutputFormats } from '../output-formats.component';
+import { getObjectFromFormData, OutputFormat, SinkType, WebhookHttpMethod } from '../utils';
 
 type WebhookFormData = {
     name: string;
@@ -74,7 +74,7 @@ export const Webhook = () => {
 
                 <OutputFormats />
 
-                <JsonBuilder title='Headers' keysName='headers-keys' valuesName='headers-values' />
+                <KeyValueBuilder title='Headers' keysName='headers-keys' valuesName='headers-values' />
 
                 <Button maxWidth={'size-1000'} type='submit' isDisabled={isPending}>
                     Apply

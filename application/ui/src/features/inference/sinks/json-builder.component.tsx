@@ -11,7 +11,7 @@ import { RequiredTextField } from '../../../components/required-text-field/requi
 
 import classes from './json-builder.module.scss';
 
-type JsonBuilderProps = {
+type KeyValueBuilderProps = {
     title: string;
     keysName: string;
     valuesName: string;
@@ -27,7 +27,7 @@ enum Fields {
 const updatePairAtIndex = (indexToUpdate: number, field: Fields, value: string) => (pair: Pair, index: number) =>
     index === indexToUpdate ? { ...pair, [field]: value } : pair;
 
-export const JsonBuilder = ({ title, keysName, valuesName }: JsonBuilderProps) => {
+export const KeyValueBuilder = ({ title, keysName, valuesName }: KeyValueBuilderProps) => {
     const [pairs, setPairs] = useState<Pair[]>([]);
 
     const addPair = () => {
@@ -64,7 +64,7 @@ export const JsonBuilder = ({ title, keysName, valuesName }: JsonBuilderProps) =
                         </Content>
                     </ContextualHelp>
                 </Flex>
-                <ActionButton isQuiet onPress={addPair} UNSAFE_className={classes.addButton}>
+                <ActionButton isQuiet onPress={addPair} UNSAFE_className={classes.button}>
                     <Add />
                 </ActionButton>
             </Flex>
@@ -93,7 +93,7 @@ export const JsonBuilder = ({ title, keysName, valuesName }: JsonBuilderProps) =
                         />
                         <ActionButton
                             aria-label='Remove'
-                            UNSAFE_className={classes.addButton}
+                            UNSAFE_className={classes.button}
                             onPress={() => removePair(index)}
                         >
                             <Delete />

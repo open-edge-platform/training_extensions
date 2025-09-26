@@ -5,8 +5,8 @@ import { useActionState } from 'react';
 
 import { Button, Flex, NumberField, Switch, TextField } from '@geti/ui';
 
-import { OutputFormats } from './output-formats.component';
-import { OutputFormat, SinkType } from './utils';
+import { OutputFormats } from '../output-formats.component';
+import { OutputFormat, SinkType } from '../utils';
 
 type MqttFormData = {
     name: string;

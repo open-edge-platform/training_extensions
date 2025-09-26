@@ -5,8 +5,11 @@ import { useActionState } from 'react';
 
 import { Button, Flex, NumberField, TextField } from '@geti/ui';
 
-import { OutputFormats } from './output-formats.component';
-import { OutputFormat, SinkType } from './utils';
+import { ReactComponent as Folder } from '../../../../assets/icons/folder.svg';
+import { OutputFormats } from '../output-formats.component';
+import { OutputFormat, SinkType } from '../utils';
+
+import classes from './local-folder.module.scss';
 
 type FolderFormData = {
     name: string;
@@ -16,7 +19,7 @@ type FolderFormData = {
     output_formats: OutputFormat[];
 };
 
-export const Folder = () => {
+export const LocalFolder = () => {
     const initData = {
         name: '124',
         sink_type: SinkType.FOLDER,
@@ -50,7 +53,24 @@ export const Folder = () => {
                     />
                 </Flex>
 
-                <TextField width={'100%'} label='Folder Path' name='folder_path' defaultValue={state?.folder_path} />
+                <Flex direction='row' gap='size-200'>
+                    <TextField
+                        width={'100%'}
+                        label='Folder Path'
+                        name='folder_path'
+                        defaultValue={state?.folder_path}
+                    />
+
+                    <Flex
+                        alignSelf={'end'}
+                        height={'size-400'}
+                        alignItems={'center'}
+                        justifyContent={'center'}
+                        UNSAFE_className={classes.folderIcon}
+                    >
+                        <Folder />
+                    </Flex>
+                </Flex>
 
                 <OutputFormats />
 
