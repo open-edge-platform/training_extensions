@@ -1,0 +1,4 @@
+*
+!src/otx
+!pyproject.toml
+!docker/download_pretrained_weights.py
