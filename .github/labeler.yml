@@ -13,7 +13,7 @@ Geti Tune UI:
 TEST:
   - changed-files:
       - any-glob-to-any-file:
-          - "lib/tests/**/*"
+          - "library/tests/**/*"
           - "backend/tests/**/*"
           - "application/ui/tests/**/*"
 

@@ -16,8 +16,8 @@ repos:
     hooks:
       - id: mypy
         alias: mypy_lib
-        name: mypy (lib)
-        files: '^lib/(src/otx)/.*\.py'
+        name: mypy (library)
+        files: '^library/(src/otx)/.*\.py'
         additional_dependencies:
           [
             types-PyYAML,
@@ -31,7 +31,7 @@ repos:
             types-python-dateutil,
             tokenize-rt==3.2.0,
           ]
-        args: [--disallow-untyped-calls, --config-file, lib/pyproject.toml]
+        args: [--disallow-untyped-calls, --config-file, library/pyproject.toml]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: "v1.12.0"
