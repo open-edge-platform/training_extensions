@@ -9,16 +9,16 @@ renovate.json5 @kamillipka @mramotowski @ivanzati @AlexanderBarabanov
 security.md @kamillipka @mramotowski @ivanzati @AlexanderBarabanov
 
 # Library (OTX)
-library/ @training_extensions-lib-write
+library/ @open-edge-platform/training_extensions-lib-write
 
 # Application backend
-application/backend/ @training_extensions-backend-write
+application/backend/ @open-edge-platform/training_extensions-backend-write
 
 # Application frontend
-application/ui/ @training_extensions-ui-write
+application/ui/ @open-edge-platform/training_extensions-ui-write
 
 # Application build and deployment
-application/docker/ @training_extensions-backend-write
+application/docker/ @open-edge-platform/training_extensions-backend-write
 
 # Application documentation
 application/docs/ @leoll2 @jpggvilaca
