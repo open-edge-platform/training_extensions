@@ -90,9 +90,7 @@ class TestClassificationSample:
 
     def test_inheritance(self):
         """Test that ClassificationSample inherits from OTXSample."""
-        sample = ClassificationSample(
-            image=np.random.rand(3, 224, 224).astype(np.uint8), label=torch.tensor(1)
-        )
+        sample = ClassificationSample(image=np.random.rand(3, 224, 224).astype(np.uint8), label=torch.tensor(1))
 
         assert isinstance(sample, OTXSample)
 
@@ -165,9 +163,7 @@ class TestClassificationSample:
 
     def test_label_property_override(self):
         """Test that ClassificationSample has actual label property (not None)."""
-        sample = ClassificationSample(
-            image=np.random.rand(3, 224, 224).astype(np.uint8), label=torch.tensor(42)
-        )
+        sample = ClassificationSample(image=np.random.rand(3, 224, 224).astype(np.uint8), label=torch.tensor(42))
 
         assert sample.label is not None
         assert torch.equal(sample.label, torch.tensor(42))
@@ -181,9 +177,7 @@ class TestDetectionSample:
         sample = DetectionSample(
             image=np.random.rand(3, 224, 224).astype(np.uint8),
             label=torch.tensor([0, 1]),
-            bboxes=torch.tensor(
-                [[10.0, 10.0, 50.0, 50.0], [100.0, 100.0, 150.0, 150.0]]
-            ),
+            bboxes=torch.tensor([[10.0, 10.0, 50.0, 50.0], [100.0, 100.0, 150.0, 150.0]]),
         )
 
         assert isinstance(sample, OTXSample)

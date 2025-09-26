@@ -46,7 +46,7 @@ class TestOTXMulticlassClsDataset:
         """Test get_idx_list_per_classes with single class."""
         # Mock dataset items with labels
         mock_items = []
-        for i in range(5):
+        for _ in range(5):
             mock_item = Mock()
             mock_item.label.item.return_value = 0  # All items have label 0
             mock_items.append(mock_item)

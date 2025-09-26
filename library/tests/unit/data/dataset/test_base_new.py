@@ -221,9 +221,7 @@ class TestOTXDataset:
             data_format="arrow",
         )
 
-        with patch.object(
-            dataset, "_apply_transforms", return_value=mock_transformed_item
-        ):
+        with patch.object(dataset, "_apply_transforms", return_value=mock_transformed_item):
             result = dataset[5]
 
             self.mock_dm_subset.__getitem__.assert_called_once_with(5)
@@ -244,9 +242,9 @@ class TestOTXDataset:
         mock_transformed_item = Mock(spec=OTXSample)
 
         # First call returns None, second returns valid item
-        with patch.object(
-            dataset, "_apply_transforms", side_effect=[None, mock_transformed_item]
-        ), patch.object(dataset, "_sample_another_idx", return_value=10):
+        with patch.object(dataset, "_apply_transforms", side_effect=[None, mock_transformed_item]), patch.object(
+            dataset, "_sample_another_idx", return_value=10
+        ):
             result = dataset[5]
 
             assert result == mock_transformed_item
