@@ -1,6 +1,10 @@
 id: Object_Detection_RTMDet_tiny
 name: RTMdet-Tiny
 
+pretrained_weights:
+  url: https://storage.openvinotoolkit.org/repositories/openvino_training_extensions/models/object_detection/v2/rtmdet_tiny.pth
+  sha_sum: 209f3947dc501bed1e382bc57a4dcc4e5b21c61619cf01466cfca6291b48a8d6
+
 description: "RTMDet is a real-time object detection algorithm that builds on a unified and scalable architecture optimized for both speed and accuracy. It features an efficient backbone, a strong neck with task-specific design, and a decoupled head for improved classification and localization. "
 stats:
   gigaflops: 32

@@ -1,6 +1,10 @@
 id: Custom_Instance_Segmentation_MaskRCNN_ResNet50_v2
 name: MaskRCNN-ResNet50-V2
 
+pretrained_weights:
+  url: https://download.pytorch.org/models/maskrcnn_resnet50_fpn_v2_coco-73cbd019.pth
+  sha_sum: 73cbd0190fcbe3ba339921fbce2c3a0b6bb9126c9a133c85e43a2a8e060a109e
+
 description: "Mask R-CNN with a ResNet-50 backbone is a widely used instance segmentation model that balances accuracy and speed. The ResNet-50 backbone provides strong feature extraction, while the Mask R-CNN head enables precise object detection and mask prediction for each instance."
 stats:
   gigaflops: 200.0

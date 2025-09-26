@@ -1,6 +1,10 @@
 id: Custom_Image_Classification_MobileNet-V3-large-1x
 name: MobileNet-V3-large-1x
 
+pretrained_weights:
+  url: https://raw.githubusercontent.com/d-li14/mobilenetv3.pytorch/master/pretrained/mobilenetv3-large-1cd25616.pth
+  sha_sum: 1cd25616db4b6481677fcbe5f6932520894cb34860ed86f7080f03eedf937b11
+
 description: "MobileNetV3-Large is a lightweight and efficient image classification model tailored for high-performance applications on mobile and embedded devices. It combines MobileNetV2’s inverted residuals with enhancements like squeeze-and-excitation (SE) blocks, hard-swish activation, and neural architecture search for optimal speed-accuracy trade-offs."
 stats:
   gigaflops: 0.44

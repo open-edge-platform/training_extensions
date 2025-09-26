@@ -1,6 +1,10 @@
 id: Custom_Image_Classification_EfficientNet-V2-S
 name: EfficientNet-V2-S
 
+pretrained_weights:
+  url: https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-effv2-weights/tf_efficientnetv2_s_21k-6337ad01.pth
+  sha_sum: 6337ad01eda2fde154ffd358cf1583fb3040f1bf467739f28f17fb1dce1c3eb3
+
 description: "EfficientNetV2-Small is a compact and fast classification model that combines neural architecture search with training-aware optimizations. It introduces fused MBConv layers for early-stage acceleration and improves training speed while maintaining accuracy, making it ideal for edge and mobile devices."
 stats:
   gigaflops: 5.76

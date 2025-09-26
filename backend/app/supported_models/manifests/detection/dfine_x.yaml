@@ -1,6 +1,10 @@
 id: Object_Detection_DFine_X
 name: DFine-X
 
+pretrained_weights:
+  url: https://github.com/Peterande/storage/releases/download/dfinev1.0/dfine_x_coco.pth
+  sha_sum: 9a82252f2d0426b2c24e99905c36c33a4ea850f247c247bda76fb5f76daea123
+
 description: "D-FINE is a powerful real-time object detector that redefines the bounding box regression task in DETRs as Fine-grained Distribution Refinement (FDR) and introduces Global Optimal Localization Self-Distillation (GO-LSD), achieving outstanding performance without introducing additional inference and training costs."
 stats:
   gigaflops: 202

@@ -1,6 +1,10 @@
 id: Custom_Image_Classification_EfficientNet-B0
 name: EfficientNet-B0
 
+pretrained_weights:
+  url: https://github.com/osmr/imgclsmob/releases/download/v0.0.364/efficientnet_b0-0752-0e386130.pth.zip
+  sha_sum: bb693fa44ebec3faa35219513eb876cf0e1a1bf9c18dc60949089b9b30e03580
+
 description: "EfficientNet-B0 is the baseline model of the EfficientNet family, designed using neural architecture search to optimize accuracy and efficiency. It uses a compound scaling method to balance network depth, width, and resolution, achieving strong performance with relatively low computational cost and around 5.3M parameters."
 stats:
   gigaflops: 0.81
