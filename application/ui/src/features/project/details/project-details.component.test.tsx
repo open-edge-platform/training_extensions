@@ -79,9 +79,9 @@ describe('ProjectDetails', () => {
 
         // Pipeline section headers
         expect(await screen.findByRole('heading', { name: 'Pipeline' })).toBeInTheDocument();
-        expect(screen.getByRole('heading', { name: 'Source(s)' })).toBeInTheDocument();
-        expect(screen.getByRole('heading', { name: 'Model(s)' })).toBeInTheDocument();
-        expect(screen.getByRole('heading', { name: 'Sink(s)' })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: 'Source' })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: 'Model' })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: 'Sink' })).toBeInTheDocument();
 
         // Pipeline content
         expect(screen.getByText('video_file')).toBeInTheDocument();

@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Dispatch, SetStateAction, useState } from 'react';
+import { Dispatch, SetStateAction } from 'react';
 
 import {
     ActionButton,
@@ -19,6 +19,7 @@ import {
 import { Add, Delete } from '@geti/ui/icons';
 import { v4 as uuid } from 'uuid';
 
+import { Label } from '../../annotator/types';
 import { LabelItemProps } from './interface';
 
 import classes from './label-selection.module.scss';
@@ -55,22 +56,21 @@ const LabelInput = ({ value, onChange }: { value: string; onChange: (newValue: s
     );
 };
 
-const LabelItem = ({ id, colorValue, nameValue, onDelete }: LabelItemProps) => {
-    const [color, setColor] = useState<string>(colorValue);
-    const [name, setName] = useState<string>(nameValue);
+const LabelItem = ({ label, onDelete, onUpdate }: LabelItemProps) => {
+    const { id, name, color } = label;
 
     return (
         <Grid columns={['size-400', '1fr', 'size-400']} gap={'size-50'} maxWidth={'640px'} width={'100%'} id={id}>
             <ColorPicker
                 onChange={(newColor) => {
-                    setColor(newColor.toString());
+                    onUpdate({ ...label, color: newColor.toString() });
                 }}
                 value={color ?? undefined}
             />
             <LabelInput
                 value={name}
-                onChange={(newValue) => {
-                    setName(newValue);
+                onChange={(newName) => {
+                    onUpdate({ ...label, name: newName });
                 }}
             />
             <Flex justifyContent={'center'} alignItems={'center'}>
@@ -87,8 +87,8 @@ const LabelItem = ({ id, colorValue, nameValue, onDelete }: LabelItemProps) => {
 };
 
 type LabelSelectionProps = {
-    labels: Omit<LabelItemProps, 'onDelete'>[];
-    setLabels: Dispatch<SetStateAction<Omit<LabelItemProps, 'onDelete'>[]>>;
+    labels: Label[];
+    setLabels: Dispatch<SetStateAction<Label[]>>;
 };
 export const LabelSelection = ({ labels, setLabels }: LabelSelectionProps) => {
     const handleDeleteItem = (id: string) => {
@@ -104,10 +104,16 @@ export const LabelSelection = ({ labels, setLabels }: LabelSelectionProps) => {
             ...labels,
             {
                 id: uuid(),
-                colorValue: '',
-                nameValue: 'Object',
+                color: '',
+                name: 'Object',
             },
         ]);
+    };
+
+    const handleUpdateItem = (updatedLabel: Label) => {
+        const updatedLabels = labels.map((label) => (label.id === updatedLabel.id ? updatedLabel : label));
+
+        setLabels(updatedLabels);
     };
 
     return (
@@ -121,7 +127,14 @@ export const LabelSelection = ({ labels, setLabels }: LabelSelectionProps) => {
         >
             <Flex direction={'column'} alignItems={'center'} gap={'size-100'} width={'100%'}>
                 {labels.map((label) => {
-                    return <LabelItem key={label.id} {...label} onDelete={handleDeleteItem} />;
+                    return (
+                        <LabelItem
+                            key={label.id}
+                            label={label}
+                            onDelete={handleDeleteItem}
+                            onUpdate={handleUpdateItem}
+                        />
+                    );
                 })}
             </Flex>
 

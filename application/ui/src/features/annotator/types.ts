@@ -30,7 +30,7 @@ export interface Polygon {
 
 export type Shape = Rect | Polygon;
 
-export type Label = { id: string; name: string; color: string; isPrediction: boolean; score?: number };
+export type Label = { id: string; name: string; color: string; isPrediction?: boolean; score?: number };
 
 export type Annotation = {
     id: string;

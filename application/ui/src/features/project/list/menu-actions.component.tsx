@@ -11,6 +11,8 @@ import { paths } from '../../../router';
 export const MenuActions = ({ projectId }: { projectId: string }) => {
     const navigate = useNavigate();
 
+    const enablePipelineMutation = $api.useMutation('post', '/api/projects/{project_id}/pipeline:enable');
+
     const deleteMutation = $api.useMutation('delete', '/api/projects/{project_id}', {
         onSuccess: () => {
             toast({ type: 'success', message: 'Project deleted successfully' });
@@ -22,8 +24,19 @@ export const MenuActions = ({ projectId }: { projectId: string }) => {
 
     const handleMenuAction = (key: Key) => {
         switch (key) {
-            case 'export':
-                // Handle export action
+            case 'activate':
+                enablePipelineMutation.mutate(
+                    { params: { path: { project_id: projectId } } },
+                    {
+                        onSuccess: () => {
+                            toast({ type: 'success', message: 'Project enabled successfully' });
+                        },
+                        onError: () => {
+                            toast({ type: 'error', message: 'Failed to enable project' });
+                        },
+                    }
+                );
+
                 break;
             case 'edit':
                 navigate(paths.project.details({ projectId }));
@@ -42,8 +55,7 @@ export const MenuActions = ({ projectId }: { projectId: string }) => {
                 <MoreMenu />
             </ActionButton>
             <Menu onAction={handleMenuAction}>
-                {/* TODO: unsupported for now. Uncomment if we ever support this */}
-                {/* <Item key={'export'}>Export</Item> */}
+                <Item key={'activate'}>Activate</Item>
                 <Item key={'edit'}>Edit</Item>
                 <Item key={'delete'}>Delete</Item>
             </Menu>
