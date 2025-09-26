@@ -15,7 +15,7 @@ import logging
 from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 import numpy as np
-from datumaro.components.annotation import Bbox
+from datumaro.experimental.dataset import Dataset as DmDataset
 
 from otx.backend.native.exporter.base import OTXModelExporter
 from otx.backend.native.exporter.native import OTXNativeModelExporter
@@ -30,6 +30,7 @@ from otx.backend.native.models.detection.utils.prior_generators import SSDAnchor
 from otx.backend.native.models.utils.support_otx_v1 import OTXv1Helper
 from otx.backend.native.models.utils.utils import load_checkpoint
 from otx.config.data import TileConfig
+from otx.data.entity.sample import DetectionSample
 from otx.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 
 if TYPE_CHECKING:
@@ -231,7 +232,7 @@ class SSD(OTXDetectionModel):
         return self._get_anchor_boxes(wh_stats, group_as)
 
     @staticmethod
-    def _get_sizes_from_dataset_entity(dataset: OTXDataset, target_wh: list[int]) -> list[tuple[int, int]]:
+    def _get_sizes_from_dataset_entity(dataset: OTXDataset, target_wh: list[int]) -> np.ndarray:
         """Function to get width and height size of items in OTXDataset.
 
         Args:
@@ -240,20 +241,34 @@ class SSD(OTXDetectionModel):
         Return
             list[tuple[int, int]]: tuples with width and height of each instance
         """
-        wh_stats: list[tuple[int, int]] = []
+        wh_stats = np.empty((0, 2), dtype=np.float32)
+        if not isinstance(dataset.dm_subset, DmDataset):
+            exc_str = "The variable dataset.dm_subset must be an instance of DmDataset"
+            raise TypeError(exc_str)
+
         for item in dataset.dm_subset:
-            for ann in item.annotations:
-                if isinstance(ann, Bbox):
-                    x1, y1, x2, y2 = ann.points
-                    x1 = x1 / item.media.size[1] * target_wh[0]
-                    y1 = y1 / item.media.size[0] * target_wh[1]
-                    x2 = x2 / item.media.size[1] * target_wh[0]
-                    y2 = y2 / item.media.size[0] * target_wh[1]
-                    wh_stats.append((x2 - x1, y2 - y1))
+            if not isinstance(item, DetectionSample):
+                exc_str = "The variable item must be an instance of DetectionSample"
+                raise TypeError(exc_str)
+
+            if item.img_info is None:
+                exc_str = "The image info must not be None"
+                raise RuntimeError(exc_str)
+
+            height, width = item.img_info.img_shape
+            x1 = item.bboxes[:, 0]
+            y1 = item.bboxes[:, 1]
+            x2 = item.bboxes[:, 2]
+            y2 = item.bboxes[:, 3]
+
+            w = (x2 - x1) / width * target_wh[0]
+            h = (y2 - y1) / height * target_wh[1]
+
+            wh_stats = np.concatenate((wh_stats, np.stack((w, h), axis=1)), axis=0)
         return wh_stats
 
     @staticmethod
-    def _get_anchor_boxes(wh_stats: list[tuple[int, int]], group_as: list[int]) -> tuple:
+    def _get_anchor_boxes(wh_stats: np.ndarray, group_as: list[int]) -> tuple:
         """Get new anchor box widths & heights using KMeans."""
         from sklearn.cluster import KMeans
 

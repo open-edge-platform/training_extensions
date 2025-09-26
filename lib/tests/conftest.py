@@ -5,10 +5,10 @@ from __future__ import annotations
 from collections import defaultdict
 from pathlib import Path
 
+import numpy as np
 import pytest
 import torch
 import yaml
-from datumaro import Polygon
 from torch import LongTensor
 from torchvision import tv_tensors
 from torchvision.tv_tensors import Image, Mask
@@ -267,7 +267,9 @@ def fxt_inst_seg_data_entity() -> tuple[tuple, OTXDataItem, OTXDataBatch]:
     fake_bboxes = tv_tensors.BoundingBoxes(data=torch.Tensor([0, 0, 5, 5]), format="xyxy", canvas_size=(10, 10))
     fake_labels = LongTensor([1])
     fake_masks = Mask(torch.randint(low=0, high=255, size=(1, *img_size), dtype=torch.uint8))
-    fake_polygons = [Polygon(points=[1, 1, 2, 2, 3, 3, 4, 4])]
+    fake_polygons = np.empty(shape=(1,), dtype=object)
+    fake_polygons[0] = np.array([[1, 1], [2, 2], [3, 3], [4, 4]])
+
     # define data entity
     single_data_entity = OTXDataItem(
         image=fake_image,

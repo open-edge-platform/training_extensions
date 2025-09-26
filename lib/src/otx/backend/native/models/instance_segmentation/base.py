@@ -442,7 +442,7 @@ class OTXInstanceSegModel(OTXModel):
 
             rles = (
                 [encode_rle(mask) for mask in masks.data]
-                if len(masks)
+                if masks is not None
                 else polygon_to_rle(polygons, *imgs_info.ori_shape)  # type: ignore[union-attr,arg-type]
             )
             target_info.append(
