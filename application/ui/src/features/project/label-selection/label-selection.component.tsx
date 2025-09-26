@@ -110,8 +110,8 @@ export const LabelSelection = ({ labels, setLabels }: LabelSelectionProps) => {
         ]);
     };
 
-    const handleUpdateItem = (label: Label) => {
-        const updatedLabels = labels.map((l) => (l.id === label.id ? label : l));
+    const handleUpdateItem = (updatedLabel: Label) => {
+        const updatedLabels = labels.map((label) => (label.id === updatedLabel.id ? updatedLabel : label));
 
         setLabels(updatedLabels);
     };
