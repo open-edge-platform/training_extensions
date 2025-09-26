@@ -5,7 +5,7 @@ import { Label } from '../features/annotator/types';
 
 export const getMockedLabel = (label?: Partial<Label>): Label => {
     return {
-        color: 'red',
+        color: '#ffff00',
         id: 'label-1',
         name: 'label-1',
         isPrediction: false,

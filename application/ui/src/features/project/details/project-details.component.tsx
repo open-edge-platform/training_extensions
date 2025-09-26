@@ -99,7 +99,7 @@ export const ProjectDetails = () => {
                             <Grid columns={repeat(3, '1fr')} rows={repeat(5, 'auto')} gap='size-300' flex='1'>
                                 <View>
                                     <Heading level={2} marginBottom={'size-300'}>
-                                        Source(s)
+                                        Source
                                     </Heading>
                                     <Flex direction={'column'} gap={'size-300'}>
                                         {Object.entries(pipeline.data.source || {}).map(
@@ -114,7 +114,7 @@ export const ProjectDetails = () => {
                                 </View>
                                 <View>
                                     <Heading level={2} marginBottom={'size-300'}>
-                                        Model(s)
+                                        Model
                                     </Heading>
                                     <Flex direction={'column'} gap={'size-300'}>
                                         {Object.entries(pipeline.data.model || {}).map(
@@ -136,7 +136,7 @@ export const ProjectDetails = () => {
                                 </View>
                                 <View>
                                     <Heading level={2} marginBottom={'size-300'}>
-                                        Sink(s)
+                                        Sink
                                     </Heading>
                                     <Flex direction={'column'} gap={'size-300'}>
                                         {Object.entries(pipeline.data.sink || {}).map(

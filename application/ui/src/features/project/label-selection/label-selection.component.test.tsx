@@ -4,9 +4,10 @@
 import { Toast } from '@geti/ui';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
+import { getMockedLabel } from '../../../test-utils/mocked-labels';
 import { LabelSelection } from './label-selection.component';
 
-const mockLabels = [{ id: 'id-1', colorValue: '#F20004', nameValue: 'Car' }];
+const mockLabels = [getMockedLabel({ id: 'id-1', name: 'Car' })];
 
 const App = ({ labels = mockLabels, setLabels = vi.fn() }) => {
     return (
@@ -33,7 +34,7 @@ describe('LabelSelection', () => {
 
         expect(screen.getByLabelText('Label input for Car')).toBeInTheDocument();
         expect(mockSetLabels).toHaveBeenCalledWith(
-            expect.arrayContaining([mockLabels[0], expect.objectContaining({ nameValue: 'Object' })])
+            expect.arrayContaining([mockLabels[0], expect.objectContaining({ name: 'Object' })])
         );
     });
 
@@ -41,7 +42,7 @@ describe('LabelSelection', () => {
         const mockSetLabels = vi.fn();
         render(
             <App
-                labels={[mockLabels[0], { id: 'id-2', colorValue: '#F20004', nameValue: 'People' }]}
+                labels={[mockLabels[0], getMockedLabel({ id: 'id-2', color: '#F20004', name: 'People' })]}
                 setLabels={mockSetLabels}
             />
         );
@@ -67,11 +68,20 @@ describe('LabelSelection', () => {
     });
 
     it('can edit the label name', () => {
-        render(<App />);
+        const mockSetLabels = vi.fn();
+        render(<App setLabels={mockSetLabels} />);
 
         const input = screen.getByLabelText('Label input for Car');
         fireEvent.change(input, { target: { value: 'Truck' } });
 
-        expect(screen.getByLabelText('Label input for Truck')).toBeInTheDocument();
+        expect(mockSetLabels).toHaveBeenCalledWith(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    id: 'id-1',
+                    name: 'Truck',
+                    color: expect.any(String),
+                }),
+            ])
+        );
     });
 });
