@@ -29,7 +29,7 @@ def get_model_architectures(task: str | None = None) -> ModelArchitectures:
         task: Optional task type filter (e.g., 'detection', 'classification', 'segmentation')
 
     Returns:
-        ModelArchitecturesResponse containing list of model architectures
+        ModelArchitectures containing list of model architectures
     """
     model_manifests = SupportedModels.get_model_manifests()
 
