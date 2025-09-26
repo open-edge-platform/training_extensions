@@ -39,8 +39,7 @@ dependencies = [
     "einops==0.8.1",
     "decord==0.6.0",
     "typeguard>=4.3,<4.5",
-    # TODO(ashwinvaidya17): https://github.com/openvinotoolkit/anomalib/issues/2126
-    "setuptools<70",
+    "setuptools==78.1.1",
     "lightning==2.4.0",
     "torchmetrics==1.6.0",
     "pytorchcv==0.0.67",
