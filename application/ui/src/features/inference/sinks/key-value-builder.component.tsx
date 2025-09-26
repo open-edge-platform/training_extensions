@@ -9,8 +9,6 @@ import { isEmpty } from 'lodash-es';
 
 import { RequiredTextField } from '../../../components/required-text-field/required-text-field.component';
 
-import classes from './json-builder.module.scss';
-
 type KeyValueBuilderProps = {
     title: string;
     keysName: string;
@@ -64,7 +62,7 @@ export const KeyValueBuilder = ({ title, keysName, valuesName }: KeyValueBuilder
                         </Content>
                     </ContextualHelp>
                 </Flex>
-                <ActionButton isQuiet onPress={addPair} UNSAFE_className={classes.button}>
+                <ActionButton isQuiet onPress={addPair}>
                     <Add />
                 </ActionButton>
             </Flex>
@@ -91,11 +89,7 @@ export const KeyValueBuilder = ({ title, keysName, valuesName }: KeyValueBuilder
                             isDisabled={isEmpty(pair.key)}
                             onChange={(val) => updatePair(index, Fields.VALUE, val)}
                         />
-                        <ActionButton
-                            aria-label='Remove'
-                            UNSAFE_className={classes.button}
-                            onPress={() => removePair(index)}
-                        >
+                        <ActionButton aria-label='Remove' onPress={() => removePair(index)}>
                             <Delete />
                         </ActionButton>
                     </Fragment>

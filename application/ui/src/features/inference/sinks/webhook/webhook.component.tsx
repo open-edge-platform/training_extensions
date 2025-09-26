@@ -5,7 +5,7 @@ import { useActionState } from 'react';
 
 import { Button, Flex, Item, NumberField, Picker, TextField } from '@geti/ui';
 
-import { KeyValueBuilder } from '../json-builder.component';
+import { KeyValueBuilder } from '../key-value-builder.component';
 import { OutputFormats } from '../output-formats.component';
 import { getObjectFromFormData, OutputFormat, SinkType, WebhookHttpMethod } from '../utils';
 
