@@ -1,8 +1,8 @@
 """schema
 
-Revision ID: daf666ef6f34
+Revision ID: da385d690aae
 Revises:
-Create Date: 2025-09-17 16:00:56.718056
+Create Date: 2025-09-25 14:55:31.182061
 
 """
 
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "daf666ef6f34"
+revision: str = "da385d690aae"
 down_revision: str | Sequence[str] | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -120,6 +120,7 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["project_id"], ["projects.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["source_id"], ["sources.id"], ondelete="SET NULL"),
         sa.PrimaryKeyConstraint("id"),
+        sa.Index("idx_dataset_items_project_created_at", "project_id", "created_at"),
     )
     op.create_table(
         "pipelines",

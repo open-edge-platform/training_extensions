@@ -1,6 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
+import tempfile
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
@@ -213,3 +213,17 @@ class TestProjectEndpoints:
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         fxt_project_service.get_project_by_id.assert_not_called()
+
+    def test_get_project_thumbnail(self, fxt_project, fxt_project_service, fxt_client):
+        with tempfile.NamedTemporaryFile(suffix=".jpg") as tmp_file:
+            fxt_project_service.get_project_thumbnail_path.return_value = tmp_file.name
+            response = fxt_client.get(f"/api/projects/{str(fxt_project.id)}/thumbnail")
+
+        assert response.status_code == status.HTTP_200_OK
+        fxt_project_service.get_project_thumbnail_path.assert_called_once()
+
+    def test_get_project_thumbnail_none(self, fxt_project, fxt_project_service, fxt_client):
+        fxt_project_service.get_project_thumbnail_path.return_value = None
+        response = fxt_client.get(f"/api/projects/{str(fxt_project.id)}/thumbnail")
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        fxt_project_service.get_project_thumbnail_path.assert_called_once()

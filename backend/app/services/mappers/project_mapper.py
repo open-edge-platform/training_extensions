@@ -1,8 +1,10 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+from uuid import UUID
 
 from app.db.schema import ProjectDB
 from app.schemas import Project
+from app.schemas.project import Task, TaskType
 from app.services.mappers.label_mapper import LabelMapper
 
 
@@ -12,12 +14,15 @@ class ProjectMapper:
     @staticmethod
     def to_schema(project_db: ProjectDB) -> Project:
         """Convert Project db entity to schema."""
-        task_dict = {
-            "task_type": project_db.task_type,
-            "exclusive_labels": project_db.exclusive_labels,
-            "labels": [LabelMapper.to_schema(db_label) for db_label in project_db.labels],
-        }
-        return Project.model_validate({"id": project_db.id, "name": project_db.name, "task": task_dict})
+        return Project(
+            id=UUID(project_db.id),
+            name=project_db.name,
+            task=Task(
+                task_type=TaskType(project_db.task_type),
+                exclusive_labels=project_db.exclusive_labels,
+                labels=[LabelMapper.to_schema(db_label) for db_label in project_db.labels],
+            ),
+        )
 
     @staticmethod
     def from_schema(project: Project) -> ProjectDB:

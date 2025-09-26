@@ -1,16 +1,28 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
+import shutil
+from collections.abc import Generator
+from pathlib import Path
 from unittest.mock import patch
 from uuid import UUID, uuid4
 
 import pytest
 from sqlalchemy.orm import Session
 
-from app.db.schema import LabelDB, PipelineDB, ProjectDB
+from app.db.schema import DatasetItemDB, LabelDB, PipelineDB, ProjectDB
 from app.schemas.project import Label, Project, Task, TaskType
 from app.services.base import ResourceInUseError, ResourceNotFoundError, ResourceType
 from app.services.project_service import ProjectService
+
+
+@pytest.fixture()
+def fxt_projects_dir() -> Generator[Path]:
+    """Setup a temporary data directory for tests."""
+    projects_dir = Path("data/projects")
+    if not projects_dir.exists():
+        projects_dir.mkdir(parents=True)
+    yield projects_dir
+    shutil.rmtree(projects_dir)
 
 
 @pytest.fixture(autouse=True)
@@ -28,9 +40,9 @@ def mock_get_db_session(db_session):
 
 
 @pytest.fixture
-def fxt_project_service() -> ProjectService:
+def fxt_project_service(fxt_projects_dir: Path) -> ProjectService:
     """Fixture to create a ProjectService instance."""
-    return ProjectService()
+    return ProjectService(fxt_projects_dir.parent)
 
 
 class TestProjectServiceIntegration:
@@ -93,6 +105,43 @@ class TestProjectServiceIntegration:
         fetched_project = fxt_project_service.get_project_by_id(UUID(db_project.id))
         assert str(fetched_project.id) == db_project.id
         assert fetched_project.name == db_project.name
+
+    def test_get_project_thumbnail(self, fxt_project_service: ProjectService, db_session: Session):
+        """Test retrieving a project returns correct thumbnail ID."""
+        # First create a project
+        db_project = ProjectDB(
+            id=str(uuid4()),
+            name="P1",
+            task_type=TaskType.CLASSIFICATION,
+            exclusive_labels=True,
+        )
+        db_session.add(db_project)
+        db_session.flush()
+
+        # No dataset items yet, should return None
+        fetched_thumbnail_path = fxt_project_service.get_project_thumbnail_path(UUID(db_project.id))
+        assert fetched_thumbnail_path is None
+
+        # Add a dataset item
+        db_dataset_item = DatasetItemDB(
+            id=str(uuid4()),
+            project_id=db_project.id,
+            name="item1",
+            format="jpg",
+            width=1920,
+            height=1080,
+            size=1024,
+            subset="unassigned",
+        )
+        db_session.add(db_dataset_item)
+        db_session.flush()
+
+        # Now it should return the path to the thumbnail
+        fetched_thumbnail_path = fxt_project_service.get_project_thumbnail_path(UUID(db_project.id))
+        assert (
+            fetched_thumbnail_path
+            == fxt_project_service.projects_dir / f"{db_project.id}/dataset/{db_dataset_item.id}-thumb.jpg"
+        )
 
     def test_get_project_by_id_not_found(self, fxt_project_service: ProjectService):
         """Test retrieving a non-existent project raises error."""

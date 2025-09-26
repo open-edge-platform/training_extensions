@@ -19,7 +19,10 @@ from app.services import (
     SystemService,
 )
 from app.services.label_service import LabelService
+from app.settings import get_settings
 from app.webrtc.manager import WebRTCManager
+
+settings = get_settings()
 
 
 def is_valid_uuid(identifier: str) -> bool:
@@ -143,21 +146,18 @@ def get_system_service() -> SystemService:
 
 
 @lru_cache
-def get_model_service(
-    request: Request,
-    scheduler: Annotated[Scheduler, Depends(get_scheduler)],
-) -> ModelService:
+def get_model_service(scheduler: Annotated[Scheduler, Depends(get_scheduler)]) -> ModelService:
     """Provides a ModelService instance with the model reload event from the scheduler."""
     return ModelService(
-        data_dir=request.app.state.settings.data_dir,
+        data_dir=settings.data_dir,
         mp_model_reload_event=scheduler.mp_model_reload_event,
     )
 
 
 @lru_cache
-def get_dataset_service(request: Request) -> DatasetService:
+def get_dataset_service() -> DatasetService:
     """Provides a DatasetService instance."""
-    return DatasetService(request.app.state.settings.data_dir)
+    return DatasetService(settings.data_dir)
 
 
 def get_webrtc_manager(request: Request) -> WebRTCManager:
@@ -168,7 +168,7 @@ def get_webrtc_manager(request: Request) -> WebRTCManager:
 @lru_cache
 def get_project_service() -> ProjectService:
     """Provides a ProjectService instance for managing projects."""
-    return ProjectService()
+    return ProjectService(settings.data_dir)
 
 
 def get_label_service() -> type[LabelService]:

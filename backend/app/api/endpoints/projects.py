@@ -10,6 +10,7 @@ from uuid import UUID
 from fastapi import APIRouter, Body, Depends, status
 from fastapi.exceptions import HTTPException
 from fastapi.openapi.models import Example
+from starlette.responses import FileResponse
 
 from app.api.dependencies import get_label_service, get_project_id, get_project_service
 from app.schemas import Label, PatchLabels, Project
@@ -197,3 +198,26 @@ def update_labels(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ResourceAlreadyExistsError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+
+
+@router.get(
+    "/{project_id}/thumbnail",
+    responses={
+        status.HTTP_200_OK: {"description": "Project thumbnail found"},
+        status.HTTP_204_NO_CONTENT: {"description": "No thumbnail available"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID"},
+        status.HTTP_404_NOT_FOUND: {"description": "Project not found"},
+    },
+)
+def get_project_thumbnail(
+    project_id: Annotated[UUID, Depends(get_project_id)],
+    project_service: Annotated[ProjectService, Depends(get_project_service)],
+) -> FileResponse:
+    """Get the project's thumbnail image"""
+    try:
+        thumbnail_path = project_service.get_project_thumbnail_path(project_id)
+        if thumbnail_path:
+            return FileResponse(path=thumbnail_path)
+        raise HTTPException(status_code=status.HTTP_204_NO_CONTENT)
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
