@@ -23,11 +23,11 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install tox
-        working-directory: lib
+        working-directory: library
         run: |
           pip install '.[dev]'
       - name: Build-Docs
-        working-directory: lib
+        working-directory: library
         run: tox -e build-doc
       - name: Create gh-pages branch
         run: |

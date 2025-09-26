@@ -9,20 +9,16 @@ renovate.json5 @kamillipka @mramotowski @ivanzati @AlexanderBarabanov
 security.md @kamillipka @mramotowski @ivanzati @AlexanderBarabanov
 
 # Library (OTX)
-lib/ @samet-akcay @eugene123tw @kprokofi @sovrasov @daankrol @ashwinvaidya17 @rajeshgangireddy
+library/ @open-edge-platform/training_extensions-lib-write
 
-# Backend
-backend/ @leoll2 @itallix @warrkan @A-Artemis
+# Application backend
+application/backend/ @open-edge-platform/training_extensions-backend-write
 
-# Frontend
-application/ui/ @jpggvilaca @MarkRedeman @camiloHimura @pplaskie @romanowska @dwesolow
+# Application frontend
+application/ui/ @open-edge-platform/training_extensions-ui-write
 
-# Docker files
-docker/ @samet-akcay @eugene123tw @kprokofi @sovrasov @daankrol @ashwinvaidya17 @rajeshgangireddy
-docker/Dockerfile @leoll2 @itallix @warrkan @A-Artemis
-docker/docker-compose.yaml @leoll2 @itallix @warrkan @A-Artemis
-docker/nginx.conf @leoll2 @itallix @warrkan @A-Artemis
+# Application build and deployment
+application/docker/ @open-edge-platform/training_extensions-backend-write
 
-# Docs
-docs/ @samet-akcay @eugene123tw @kprokofi @sovrasov @daankrol @ashwinvaidya17 @rajeshgangireddy
-docs/geti_tune/ @leoll2 @jpggvilaca
+# Application documentation
+application/docs/ @leoll2 @jpggvilaca
