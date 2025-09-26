@@ -9,8 +9,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.db.schema import Base, ModelDB, PipelineDB, ProjectDB, SinkDB, SourceDB
-from app.schemas import ModelFormat, OutputFormat, SinkType, SourceType
+from app.db.schema import Base, DatasetItemDB, LabelDB, ModelRevisionDB, PipelineDB, ProjectDB, SinkDB, SourceDB
+from app.schemas import OutputFormat, SinkType, SourceType
+from app.schemas.model import TrainingStatus
+from app.schemas.project import TaskType
 from app.services import ActivePipelineService, MetricsService
 
 
@@ -40,16 +42,20 @@ def db_session(db_engine):
 
 
 @pytest.fixture
-def fxt_db_models() -> list[ModelDB]:
+def fxt_db_models() -> list[ModelRevisionDB]:
     """Fixture to create multiple models in the database."""
     return [
-        ModelDB(
-            name="Test OpenVino Model",
-            format=ModelFormat.OPENVINO,
+        ModelRevisionDB(
+            training_status=TrainingStatus.NOT_STARTED,
+            architecture="Object_Detection_YOLOv5",
+            training_configuration={},
+            label_schema_revision={},
         ),
-        ModelDB(
-            name="Test ONNX Model",
-            format=ModelFormat.ONNX,
+        ModelRevisionDB(
+            training_status=TrainingStatus.NOT_STARTED,
+            architecture="Object_Detection_YOLOX",
+            training_configuration={},
+            label_schema_revision={},
         ),
     ]
 
@@ -116,21 +122,18 @@ def fxt_db_projects() -> list[ProjectDB]:
     configs = [
         {
             "name": "Test Detection Project",
-            "task_type": "detection",
+            "task_type": TaskType.DETECTION,
             "exclusive_labels": False,
-            "labels": ["cat", "dog"],
         },
         {
             "name": "Test Classification Project",
-            "task_type": "classification",
+            "task_type": TaskType.CLASSIFICATION,
             "exclusive_labels": True,
-            "labels": ["car", "truck", "bus"],
         },
         {
             "name": "Test Segmentation Project",
-            "task_type": "segmentation",
-            "exclusive_labels": False,
-            "labels": ["person", "bicycle"],
+            "task_type": TaskType.SEGMENTATION,
+            "exclusive_labels": True,
         },
     ]
     db_projects = []
@@ -139,8 +142,36 @@ def fxt_db_projects() -> list[ProjectDB]:
         project.pipeline = PipelineDB(
             project_id=project.id,
         )
+        project.labels = [
+            LabelDB(name="cat", color="#00FF00", hotkey="c"),
+            LabelDB(name="dog", color="#FF0000", hotkey="d"),
+        ]
         db_projects.append(project)
     return db_projects
+
+
+@pytest.fixture
+def fxt_db_dataset_items(fxt_db_projects) -> list[DatasetItemDB]:
+    """Fixture to create multiple dataset items in the database."""
+    configs = [
+        {"name": "test1", "format": "jpg", "size": 1024, "width": 1024, "height": 768, "subset": "unassigned"},
+        {
+            "name": "test2",
+            "format": "jpg",
+            "size": 1024,
+            "width": 1024,
+            "height": 768,
+            "subset": "unassigned",
+            "annotation_data": [{"labels": [{"id": fxt_db_projects[0].labels[0].id}], "shape": {"type": "full_image"}}],
+        },
+        {"name": "test3", "format": "jpg", "size": 1024, "width": 1024, "height": 768, "subset": "unassigned"},
+    ]
+
+    db_dataset_items = []
+    for config in configs:
+        dataset_item = DatasetItemDB(**config)
+        db_dataset_items.append(dataset_item)
+    return db_dataset_items
 
 
 @pytest.fixture

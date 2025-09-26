@@ -1,11 +1,11 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
+import os
 from functools import lru_cache
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import Depends, HTTPException, Request, status
+from fastapi import Depends, HTTPException, Request, UploadFile, status
 
 from app.core import Scheduler
 from app.services import (
@@ -18,7 +18,11 @@ from app.services import (
     ProjectService,
     SystemService,
 )
+from app.services.label_service import LabelService
+from app.settings import get_settings
 from app.webrtc.manager import WebRTCManager
+
+settings = get_settings()
 
 
 def is_valid_uuid(identifier: str) -> bool:
@@ -33,6 +37,28 @@ def is_valid_uuid(identifier: str) -> bool:
     except ValueError:
         return False
     return True
+
+
+def get_file_name_and_extension(file: UploadFile) -> tuple[str, str]:
+    """Return the file name and extension"""
+    if not file.filename:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File name cannot be empty.")
+    full_name = file.filename.strip()
+    if not full_name:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File name cannot be empty.")
+    file_name, file_ext = os.path.splitext(full_name)
+    file_name = file_name.strip()  # remove whitespace characters between the basename and the extension
+    file_ext = file_ext[1:]  # remove leading dot in the extension
+    if not file_ext:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File extension cannot be empty.")
+    return file_name, file_ext
+
+
+def get_file_size(file: UploadFile) -> int:
+    """Return the file size in bytes"""
+    if not file.size:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File size should be defined.")
+    return file.size
 
 
 def get_source_id(source_id: str) -> UUID:
@@ -120,11 +146,10 @@ def get_system_service() -> SystemService:
 
 
 @lru_cache
-def get_model_service(
-    scheduler: Annotated[Scheduler, Depends(get_scheduler)],
-) -> ModelService:
+def get_model_service(scheduler: Annotated[Scheduler, Depends(get_scheduler)]) -> ModelService:
     """Provides a ModelService instance with the model reload event from the scheduler."""
     return ModelService(
+        data_dir=settings.data_dir,
         mp_model_reload_event=scheduler.mp_model_reload_event,
     )
 
@@ -132,7 +157,7 @@ def get_model_service(
 @lru_cache
 def get_dataset_service() -> DatasetService:
     """Provides a DatasetService instance."""
-    return DatasetService()
+    return DatasetService(settings.data_dir)
 
 
 def get_webrtc_manager(request: Request) -> WebRTCManager:
@@ -143,4 +168,9 @@ def get_webrtc_manager(request: Request) -> WebRTCManager:
 @lru_cache
 def get_project_service() -> ProjectService:
     """Provides a ProjectService instance for managing projects."""
-    return ProjectService()
+    return ProjectService(settings.data_dir)
+
+
+def get_label_service() -> type[LabelService]:
+    """Provides a LabelService instance for managing labels."""
+    return LabelService

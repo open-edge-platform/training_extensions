@@ -39,7 +39,7 @@ SUPPORTED_DATASET_ITEM_MAPPING = [
 class TestDatasetItemMapper:
     """Test suite for DatasetItemMapper methods."""
 
-    @pytest.mark.parametrize("schema_instance,expected_db", SUPPORTED_DATASET_ITEM_MAPPING)
+    @pytest.mark.parametrize("schema_instance,expected_db", SUPPORTED_DATASET_ITEM_MAPPING.copy())
     def test_from_schema(self, schema_instance, expected_db):
         actual_db = DatasetItemMapper.from_schema(schema_instance)
         assert actual_db.project_id == expected_db.project_id
@@ -51,7 +51,9 @@ class TestDatasetItemMapper:
         assert actual_db.source_id == expected_db.source_id
         assert actual_db.subset == expected_db.subset
 
-    @pytest.mark.parametrize("db_instance,expected_schema", [(v, k) for (k, v) in SUPPORTED_DATASET_ITEM_MAPPING])
+    @pytest.mark.parametrize(
+        "db_instance,expected_schema", [(v, k) for (k, v) in SUPPORTED_DATASET_ITEM_MAPPING.copy()]
+    )
     def test_to_schema(self, db_instance, expected_schema):
         db_instance.id = str(expected_schema.id)
         actual_schema = DatasetItemMapper.to_schema(db_instance)

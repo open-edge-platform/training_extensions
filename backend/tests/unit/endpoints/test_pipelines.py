@@ -12,7 +12,8 @@ from pydantic import ValidationError
 from app.api.dependencies import get_pipeline_service
 from app.main import app
 from app.schemas import Pipeline, PipelineStatus
-from app.schemas.metrics import InferenceMetrics, LatencyMetrics, PipelineMetrics, TimeWindow
+from app.schemas.metrics import InferenceMetrics, LatencyMetrics, PipelineMetrics, ThroughputMetrics, TimeWindow
+from app.schemas.pipeline import FixedRateDataCollectionPolicy
 from app.services import PipelineService, ResourceNotFoundError, ResourceType
 
 
@@ -21,6 +22,7 @@ def fxt_pipeline() -> Pipeline:
     return Pipeline(
         project_id=uuid4(),
         status=PipelineStatus.IDLE,
+        data_collection_policies=[FixedRateDataCollectionPolicy(type="fixed_rate", rate=0.1)],
     )
 
 
@@ -68,6 +70,45 @@ class TestPipelineEndpoints:
         )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
+        fxt_pipeline_service.update_pipeline.assert_not_called()
+
+    def test_update_pipeline_data_collection_policies(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
+        project_id = fxt_pipeline.project_id
+        fxt_pipeline_service.update_pipeline.return_value = fxt_pipeline
+
+        response = fxt_client.patch(
+            f"/api/projects/{project_id}/pipeline",
+            json={
+                "data_collection_policies": [
+                    {"type": "fixed_rate", "enabled": "true", "rate": 0.1},
+                ]
+            },
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        fxt_pipeline_service.update_pipeline.assert_called_once_with(
+            project_id,
+            {
+                "data_collection_policies": [
+                    FixedRateDataCollectionPolicy(type="fixed_rate", rate=0.1),
+                ]
+            },
+        )
+
+    def test_update_pipeline_data_collection_policies_invalid(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
+        project_id = fxt_pipeline.project_id
+        fxt_pipeline_service.update_pipeline.return_value = fxt_pipeline
+
+        response = fxt_client.patch(
+            f"/api/projects/{project_id}/pipeline",
+            json={
+                "data_collection_policies": [
+                    {"type": "wrong_policy", "enabled": "true"},
+                ]
+            },
+        )
+
+        assert response.status_code == status.HTTP_409_CONFLICT
         fxt_pipeline_service.update_pipeline.assert_not_called()
 
     def test_update_pipeline_not_found(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
@@ -146,7 +187,8 @@ class TestPipelineEndpoints:
         mock_metrics = PipelineMetrics(
             time_window=TimeWindow(start=datetime.now(UTC), end=datetime.now(UTC), time_window=60),
             inference=InferenceMetrics(
-                latency=LatencyMetrics(avg_ms=100.5, min_ms=50.0, max_ms=200.0, p95_ms=180.0, latest_ms=120.0)
+                latency=LatencyMetrics(avg_ms=100.5, min_ms=50.0, max_ms=200.0, p95_ms=180.0, latest_ms=120.0),
+                throughput=ThroughputMetrics(avg_requests_per_second=5, total_requests=100, max_requests_per_second=8),
             ),
         )
         fxt_pipeline_service.get_pipeline_metrics.return_value = mock_metrics
@@ -207,7 +249,8 @@ class TestPipelineEndpoints:
         mock_metrics = PipelineMetrics(
             time_window=TimeWindow(start=datetime.now(UTC), end=datetime.now(UTC), time_window=valid_time_window),
             inference=InferenceMetrics(
-                latency=LatencyMetrics(avg_ms=100.0, min_ms=50.0, max_ms=200.0, p95_ms=180.0, latest_ms=120.0)
+                latency=LatencyMetrics(avg_ms=100.0, min_ms=50.0, max_ms=200.0, p95_ms=180.0, latest_ms=120.0),
+                throughput=ThroughputMetrics(avg_requests_per_second=5, total_requests=100, max_requests_per_second=8),
             ),
         )
         fxt_pipeline_service.get_pipeline_metrics.return_value = mock_metrics
@@ -224,7 +267,10 @@ class TestPipelineEndpoints:
         mock_metrics = PipelineMetrics(
             time_window=TimeWindow(start=datetime.now(UTC), end=datetime.now(UTC), time_window=60),
             inference=InferenceMetrics(
-                latency=LatencyMetrics(avg_ms=None, min_ms=None, max_ms=None, p95_ms=None, latest_ms=None)
+                latency=LatencyMetrics(avg_ms=None, min_ms=None, max_ms=None, p95_ms=None, latest_ms=None),
+                throughput=ThroughputMetrics(
+                    avg_requests_per_second=None, total_requests=None, max_requests_per_second=None
+                ),
             ),
         )
         fxt_pipeline_service.get_pipeline_metrics.return_value = mock_metrics
@@ -233,9 +279,45 @@ class TestPipelineEndpoints:
 
         assert response.status_code == status.HTTP_200_OK
         response_data = response.json()
+
         assert response_data["inference"]["latency"]["avg_ms"] is None
         assert response_data["inference"]["latency"]["min_ms"] is None
         assert response_data["inference"]["latency"]["max_ms"] is None
         assert response_data["inference"]["latency"]["p95_ms"] is None
         assert response_data["inference"]["latency"]["latest_ms"] is None
+
+        assert response_data["inference"]["throughput"]["avg_requests_per_second"] is None
+        assert response_data["inference"]["throughput"]["total_requests"] is None
+        assert response_data["inference"]["throughput"]["max_requests_per_second"] is None
+
+        fxt_pipeline_service.get_pipeline_metrics.assert_called_once_with(fxt_pipeline.project_id, 60)
+
+    def test_get_pipeline_metrics_success_with_data(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
+        """Test successful retrieval of pipeline metrics including throughput data."""
+        mock_metrics = PipelineMetrics(
+            time_window=TimeWindow(start=datetime.now(UTC), end=datetime.now(UTC), time_window=60),
+            inference=InferenceMetrics(
+                latency=LatencyMetrics(avg_ms=100.5, min_ms=50.0, max_ms=200.0, p95_ms=180.0, latest_ms=120.0),
+                throughput=ThroughputMetrics(
+                    avg_requests_per_second=66.7, total_requests=4000, max_requests_per_second=85.2
+                ),
+            ),
+        )
+        fxt_pipeline_service.get_pipeline_metrics.return_value = mock_metrics
+
+        response = fxt_client.get(f"/api/projects/{str(fxt_pipeline.project_id)}/pipeline/metrics")
+
+        assert response.status_code == status.HTTP_200_OK
+        response_data = response.json()
+
+        assert response_data["inference"]["latency"]["avg_ms"] == 100.5
+        assert response_data["inference"]["latency"]["min_ms"] == 50.0
+        assert response_data["inference"]["latency"]["max_ms"] == 200.0
+        assert response_data["inference"]["latency"]["p95_ms"] == 180.0
+        assert response_data["inference"]["latency"]["latest_ms"] == 120.0
+
+        assert response_data["inference"]["throughput"]["avg_requests_per_second"] == 66.7
+        assert response_data["inference"]["throughput"]["total_requests"] == 4000
+        assert response_data["inference"]["throughput"]["max_requests_per_second"] == 85.2
+
         fxt_pipeline_service.get_pipeline_metrics.assert_called_once_with(fxt_pipeline.project_id, 60)

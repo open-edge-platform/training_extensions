@@ -1,0 +1,15 @@
+id: Custom_Object_Detection_Gen3_ATSS
+name: ATSS-MobileNetV2
+
+description: "ATSS (Adaptive Training Sample Selection) is an anchor-based object detection algorithm that introduces an adaptive strategy for selecting positive and negative samples during training. Instead of using fixed IoU thresholds, ATSS dynamically determines positive samples based on the statistical characteristics of object candidates for each ground truth. This improves training stability and enhances detection performance, especially for objects of varying sizes and aspect ratios."
+stats:
+  gigaflops: 20.6
+  trainable_parameters: 3.9
+  performance_ratings: # scores range from 1 (below average) to 3 (excellent)
+    accuracy: 2
+    training_time: 3
+    inference_speed: 3
+
+hyperparameters:
+  training:
+    learning_rate: 0.004

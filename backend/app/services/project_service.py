@@ -1,10 +1,11 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+from pathlib import Path
 from uuid import UUID
 
 from app.db import get_db_session
-from app.repositories import PipelineRepository, ProjectRepository
+from app.repositories import DatasetItemRepository, PipelineRepository, ProjectRepository
 from app.schemas import Project
 from app.services.base import (
     GenericPersistenceService,
@@ -20,10 +21,11 @@ MSG_ERR_DELETE_ACTIVE_PROJECT = "Cannot delete a project with a running pipeline
 
 
 class ProjectService:
-    def __init__(self) -> None:
+    def __init__(self, data_dir: Path) -> None:
         self._persistence: GenericPersistenceService[Project, ProjectRepository] = GenericPersistenceService(
             ServiceConfig(ProjectRepository, ProjectMapper, ResourceType.PROJECT)
         )
+        self.projects_dir = data_dir / "projects"
 
     @parent_process_only
     def create_project(self, project: Project) -> Project:
@@ -47,3 +49,13 @@ class ProjectService:
                 raise ResourceInUseError(ResourceType.PROJECT, str(project_id), MSG_ERR_DELETE_ACTIVE_PROJECT)
             self._persistence.delete_by_id(project_id, db)
             db.commit()
+
+    def get_project_thumbnail_path(self, project_id: UUID) -> Path | None:
+        """Get the path to the project's thumbnail image, as determined by the earliest dataset item"""
+        with get_db_session() as db:
+            dataset_repo = DatasetItemRepository(str(project_id), db)
+            earliest_dataset_item = dataset_repo.get_earliest()
+
+        if earliest_dataset_item:
+            return self.projects_dir / f"{project_id}/dataset/{earliest_dataset_item.id}-thumb.jpg"
+        return None

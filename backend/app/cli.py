@@ -5,15 +5,21 @@
 
 import logging
 import sys
+from datetime import datetime, timedelta
 
 import click
 
-from app.db import get_db_session, migration_manager
-from app.db.schema import DatasetItemDB, ModelDB, PipelineDB, ProjectDB, SinkDB, SourceDB
-from app.schemas import ModelFormat, OutputFormat, SinkType, SourceType
+from app.db import MigrationManager, get_db_session
+from app.db.schema import DatasetItemDB, LabelDB, ModelRevisionDB, PipelineDB, ProjectDB, SinkDB, SourceDB
+from app.schemas import DisconnectedSinkConfig, DisconnectedSourceConfig, OutputFormat, SinkType, SourceType
+from app.schemas.model import TrainingStatus
+from app.schemas.project import TaskType
+from app.settings import get_settings
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+settings = get_settings()
+migration_manager = MigrationManager(settings)
 
 
 @click.group()
@@ -73,8 +79,7 @@ def check_db() -> None:
 
 @cli.command()
 @click.option("--with-model", default=False)
-@click.option("--model-name", default="card-detection-ssd")
-def seed(with_model: bool, model_name: str) -> None:
+def seed(with_model: bool) -> None:
     """Seed the database with test data."""
     # If the app is running, it needs to be restarted since it doesn't track direct DB changes
     # Fixed IDs are used to ensure consistency in tests
@@ -83,12 +88,35 @@ def seed(with_model: bool, model_name: str) -> None:
         project = ProjectDB(
             id="9d6af8e8-6017-4ebe-9126-33aae739c5fa",
             name="Test Project",
-            task_type="detection",
+            task_type=TaskType.DETECTION,
             exclusive_labels=True,
-            labels=["card", "person"],
         )
-        pipeline = PipelineDB()
-        project.pipeline = pipeline
+        project.labels = [
+            LabelDB(name="card", color="#FF0000", hotkey="c"),
+            LabelDB(name="person", color="#00FF00", hotkey="p"),
+        ]
+        db.add(project)
+        db.flush()
+
+        # Create default disconnected source and sink
+        disconnected_source_cfg = DisconnectedSourceConfig()
+        disconnected_source = SourceDB(
+            id="00000000-0000-0000-0000-000000000000",
+            name=disconnected_source_cfg.name,
+            source_type=disconnected_source_cfg.source_type,
+            config_data={},
+        )
+        disconnected_sink_cfg = DisconnectedSinkConfig()
+        disconnected_sink = SinkDB(
+            id="00000000-0000-0000-0000-000000000000",
+            name=disconnected_sink_cfg.name,
+            sink_type=disconnected_sink_cfg.sink_type,
+            output_formats=[],
+            config_data={},
+        )
+        db.add_all([disconnected_source, disconnected_sink])
+
+        pipeline = PipelineDB(project_id=project.id)
         pipeline.source = SourceDB(
             id="f6b1ac22-e36c-4b36-9a23-62b0881e4223",
             name="Video Source",
@@ -104,13 +132,18 @@ def seed(with_model: bool, model_name: str) -> None:
             config_data={"folder_path": "data/output"},
         )
         if with_model:
-            pipeline.model = ModelDB(
+            pipeline.model_revision = ModelRevisionDB(
                 id="977eeb18-eaac-449d-bc80-e340fbe052ad",
-                name=model_name,
-                format=ModelFormat.OPENVINO,
+                project_id=project.id,
+                architecture="Object_Detection_SSD",
+                training_status=TrainingStatus.SUCCESSFUL,
+                training_started_at=datetime.now() - timedelta(hours=24),
+                training_finished_at=datetime.now() - timedelta(hours=23),
+                training_configuration={},
+                label_schema_revision={},
             )
             pipeline.is_running = True
-        db.add(project)
+        db.add(pipeline)
         db.commit()
     click.echo("✓ Seeding successful!")
 
@@ -121,7 +154,7 @@ def clean_db() -> None:
     with get_db_session() as db:
         db.query(DatasetItemDB).delete()
         db.query(ProjectDB).delete()
-        db.query(ModelDB).delete()
+        db.query(ModelRevisionDB).delete()
         db.query(SinkDB).delete()
         db.query(SourceDB).delete()
         db.commit()

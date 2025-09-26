@@ -8,4 +8,4 @@
 !docker/nginx.conf
 !.ci
 !backend
-!ui
+!application

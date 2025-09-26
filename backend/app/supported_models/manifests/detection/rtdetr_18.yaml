@@ -1,0 +1,18 @@
+id: Object_Detection_RTDetr_18
+name: RTDetr-R18
+
+description: "RT-DETR is a real-time object detection algorithm based on the transformer architecture. It combines a convolutional backbone with an efficient encoder-decoder transformer to directly predict object classes and bounding boxes without the need for anchor boxes or NMS."
+stats:
+  gigaflops: 59
+  trainable_parameters: 20
+  performance_ratings: # scores range from 1 (below average) to 3 (excellent)
+    accuracy: 2
+    training_time: 2
+    inference_speed: 3
+support_status: deprecated
+
+hyperparameters:
+  training:
+    learning_rate: 0.0001
+    input_size_width: 640
+    input_size_height: 640
