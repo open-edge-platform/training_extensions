@@ -72,11 +72,11 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install tox
-        working-directory: lib
+        working-directory: library
         run: |
           pip install '.[dev]'
       - name: Run Performance Test
-        working-directory: lib
+        working-directory: library
         env:
           BENCHMARK_RESULTS_CLEAR: ${{ vars.BENCHMARK_RESULTS_CLEAR }}
           GH_CTX_REF_NAME: ${{ github.ref_name }}
@@ -103,4 +103,4 @@ jobs:
         with:
           name: benchmark-results-${{ matrix.task }}
           include-hidden-files: true
-          path: ${{ github.workspace }}/lib/.tox/${{ matrix.task }}-*.xlsx
+          path: ${{ github.workspace }}/library/.tox/${{ matrix.task }}-*.xlsx

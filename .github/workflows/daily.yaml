@@ -38,9 +38,9 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install tox
-        working-directory: lib
+        working-directory: library
         run: |
           pip install '.[dev]'
       - name: Run Daily Integration Test
-        working-directory: lib
+        working-directory: library
         run: tox -vv -e daily-integration-test-${{ matrix.task }} -- --run-category-only=False

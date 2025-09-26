@@ -9,7 +9,7 @@ renovate.json5 @kamillipka @mramotowski @ivanzati @AlexanderBarabanov
 security.md @kamillipka @mramotowski @ivanzati @AlexanderBarabanov
 
 # Library (OTX)
-lib/ @samet-akcay @eugene123tw @kprokofi @sovrasov @daankrol @ashwinvaidya17 @rajeshgangireddy
+library/ @samet-akcay @eugene123tw @kprokofi @sovrasov @daankrol @ashwinvaidya17 @rajeshgangireddy
 
 # Backend
 backend/ @leoll2 @itallix @warrkan @A-Artemis
@@ -17,12 +17,8 @@ backend/ @leoll2 @itallix @warrkan @A-Artemis
 # Frontend
 application/ui/ @jpggvilaca @MarkRedeman @camiloHimura @pplaskie @romanowska @dwesolow
 
-# Docker files
-docker/ @samet-akcay @eugene123tw @kprokofi @sovrasov @daankrol @ashwinvaidya17 @rajeshgangireddy
-docker/Dockerfile @leoll2 @itallix @warrkan @A-Artemis
-docker/docker-compose.yaml @leoll2 @itallix @warrkan @A-Artemis
-docker/nginx.conf @leoll2 @itallix @warrkan @A-Artemis
+# Geti Tune Docker files
+docker/ @leoll2 @itallix @warrkan @A-Artemis
 
-# Docs
-docs/ @samet-akcay @eugene123tw @kprokofi @sovrasov @daankrol @ashwinvaidya17 @rajeshgangireddy
+# Geti Tune Docs
 docs/geti_tune/ @leoll2 @jpggvilaca

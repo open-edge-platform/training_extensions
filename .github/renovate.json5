@@ -36,7 +36,7 @@
     // Prevent renovate from trying to update demo code
     enabled: false,
     managerFilePatterns: [
-      "lib/src/otx/backend/native/exporter/exportable_code/demo/requirements.txt",
+      "library/src/otx/backend/native/exporter/exportable_code/demo/requirements.txt",
     ],
   },
 
