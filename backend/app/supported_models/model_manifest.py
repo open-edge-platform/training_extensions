@@ -169,6 +169,7 @@ class NullModelManifest(ModelManifest):
 
     id: str = Field(default="null")
     name: str = Field(default="null")
+    pretrained_weights: PretrainedWeights = Field(default=PretrainedWeights(url="null", sha_sum="null"))
     description: str = Field(default="null")
     task: str = Field(default="null")
     stats: ModelStats = Field(
