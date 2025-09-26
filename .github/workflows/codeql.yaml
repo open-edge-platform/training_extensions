@@ -36,9 +36,8 @@ jobs:
         with:
           files_yaml: |
             python:
-              - backend/**
+              - application/backend/**
               - library/**
-              - docker/**
             rust:
               - application/ui/**
             javascript-typescript:

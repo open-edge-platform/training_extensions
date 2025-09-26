@@ -3,7 +3,8 @@
 Geti Tune Backend:
   - changed-files:
       - any-glob-to-any-file:
-          - "backend/**/*"
+          - "application/backend/**/*"
+          - "application/docker/**/*"
 
 Geti Tune UI:
   - changed-files:
@@ -14,13 +15,13 @@ TEST:
   - changed-files:
       - any-glob-to-any-file:
           - "library/tests/**/*"
-          - "backend/tests/**/*"
+          - "application/backend/tests/**/*"
           - "application/ui/tests/**/*"
 
 DOC:
   - changed-files:
       - any-glob-to-any-file:
-          - "docs/**/*"
+          - "**/docs/**/*"
           - "**/*.md"
           - "LICENSE"
           - "third-party-programs.txt"
@@ -35,6 +36,7 @@ BUILD:
           - "markdownlint.rb"
           - "**/pyproject.toml"
           - "**/tox.ini"
+          - "**/Dockerfile"
           - "MANIFEST.in"
 
 DEPENDENCY:

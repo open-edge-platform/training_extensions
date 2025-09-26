@@ -40,7 +40,7 @@ jobs:
         with:
           files_yaml: |
             test:
-              - backend/**
+              - application/backend/**
               - .github/**
 
       - name: Set run flag
@@ -85,29 +85,29 @@ jobs:
             libglib2.0-0
 
       - name: Prepare venv and install Python dependencies
-        working-directory: backend
+        working-directory: application/backend
         run: |
           uv lock --check
           uv sync --frozen --all-extras
 
       - name: Check formatting with ruff
-        working-directory: backend
+        working-directory: application/backend
         run: |
           uv run ruff check --output-format=github .
           uv run ruff format --check .
 
       - name: Check source code with mypy
-        working-directory: backend
+        working-directory: application/backend
         run: |
           uv run mypy . --config-file=pyproject.toml
 
       - name: Run unit tests
-        working-directory: backend
+        working-directory: application/backend
         run: |
           uv run pytest tests/unit
 
       - name: Run integration tests
-        working-directory: backend
+        working-directory: application/backend
         run: |
           uv run pytest tests/integration
 
