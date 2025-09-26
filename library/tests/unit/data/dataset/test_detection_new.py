@@ -20,6 +20,7 @@ class TestOTXDetectionDataset:
         """Set up test fixtures."""
         self.mock_dm_subset = Mock(spec=Dataset)
         self.mock_dm_subset.__len__ = Mock(return_value=10)
+        self.mock_dm_subset.convert_to_schema = Mock(return_value=self.mock_dm_subset)
 
         # Mock schema attributes for label_info
         mock_schema = Mock()

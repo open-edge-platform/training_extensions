@@ -28,10 +28,10 @@ class TestOTXMulticlassClsDataset:
 
     def test_get_item_from_bbox_dataset(
         self,
-        fxt_mock_det_dm_subset,
+        fxt_mock_detection_dm_subset,
     ) -> None:
         dataset = OTXMulticlassClsDataset(
-            dm_subset=fxt_mock_det_dm_subset,
+            dm_subset=fxt_mock_detection_dm_subset,
             transforms=[lambda x: x],
             max_refetch=3,
         )
@@ -52,10 +52,10 @@ class TestOTXMultilabelClsDataset:
 
     def test_get_item_from_bbox_dataset(
         self,
-        fxt_mock_det_dm_subset,
+        fxt_mock_detection_dm_subset,
     ) -> None:
         dataset = OTXMultilabelClsDataset(
-            dm_subset=fxt_mock_det_dm_subset,
+            dm_subset=fxt_mock_detection_dm_subset,
             transforms=[lambda x: x],
             max_refetch=3,
         )
@@ -92,12 +92,12 @@ class TestOTXHlabelClsDataset:
     def test_get_item_from_bbox_dataset(
         self,
         mocker,
-        fxt_mock_det_dm_subset,
+        fxt_mock_detection_dm_subset,
         fxt_mock_hlabelinfo,
     ) -> None:
         mocker.patch.object(HLabelInfo, "from_dm_label_groups", return_value=fxt_mock_hlabelinfo)
         dataset = OTXHlabelClsDataset(
-            dm_subset=fxt_mock_det_dm_subset,
+            dm_subset=fxt_mock_detection_dm_subset,
             transforms=[lambda x: x],
             max_refetch=3,
         )

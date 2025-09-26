@@ -22,10 +22,10 @@ class TestOTXSegmentationDataset:
 
     def test_get_item_from_bbox_dataset(
         self,
-        fxt_mock_det_dm_subset,
+        fxt_mock_detection_dm_subset,
     ) -> None:
         dataset = OTXSegmentationDataset(
-            dm_subset=fxt_mock_det_dm_subset,
+            dm_subset=fxt_mock_detection_dm_subset,
             transforms=[lambda x: x],
             max_refetch=3,
         )
