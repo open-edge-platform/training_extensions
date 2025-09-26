@@ -106,12 +106,23 @@ class Capabilities(BaseModel):
     )
 
 
+class PretrainedWeights(BaseModel):
+    """Pretrained weights information."""
+
+    model_config = ConfigDict(extra="forbid")
+    url: str = Field(title="Weights URL", description="URL to download the pretrained weights")
+    sha_sum: str = Field(title="Weights SHA256", description="SHA256 checksum of the pretrained weights file")
+
+
 class ModelManifest(BaseModel):
     """ModelManifest contains the necessary information for training a specific machine learning model."""
 
     model_config = ConfigDict(extra="forbid")
     id: str = Field(title="Model architecture ID", description="Unique identifier for the model architecture")
     name: str = Field(title="Model architecture name", description="Friendly name of the model architecture")
+    pretrained_weights: PretrainedWeights = Field(
+        title="Pretrained Weights", description="URL and SHA sum of the pretrained weights"
+    )
     description: str = Field(title="Description", description="Detailed description of the model capabilities")
     task: str = Field(title="Task Type", description="Type of machine learning task addressed by the model")
     stats: ModelStats = Field(title="Model Statistics", description="Statistics about the model")
@@ -158,6 +169,7 @@ class NullModelManifest(ModelManifest):
 
     id: str = Field(default="null")
     name: str = Field(default="null")
+    pretrained_weights: PretrainedWeights = Field(default=PretrainedWeights(url="null", sha_sum="null"))
     description: str = Field(default="null")
     task: str = Field(default="null")
     stats: ModelStats = Field(

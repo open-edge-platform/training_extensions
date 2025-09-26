@@ -1,6 +1,10 @@
 id: Custom_Image_Classification_DeiT-Tiny
 name: DeiT-Tiny
 
+pretrained_weights:
+  url: https://download.openmmlab.com/mmclassification/v0/deit/deit-tiny_pt-4xb256_in1k_20220218-13b382a0.pth
+  sha_sum: 13b382a0e7b4a79b8bcf7c908b9cae5eb922b8bb1d40810998d01a87b075e6b6
+
 description: "DeiT (Data-efficient Image Transformers) is a vision transformer model designed to be efficient in terms of data usage. It uses a distillation technique to train the model with fewer labeled images, making it suitable for scenarios with limited data availability. DeiT-Tiny is the smallest variant, optimized for speed and efficiency while maintaining competitive performance on image classification tasks."
 stats:
   gigaflops: 1.26

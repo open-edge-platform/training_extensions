@@ -1,5 +1,8 @@
 id: dummy_model_manifest
 name: "Dummy ModelManifest"
+pretrained_weights:
+  url: "https://example.com/dummy_model_weights.pth"
+  sha_sum: "example_sha256_checksum"
 description: "Dummy manifest for test purposes only"
 task: classification
 stats:

@@ -26,6 +26,7 @@ from app.supported_models.model_manifest import (
     ModelStats,
     NullModelManifest,
     PerformanceRatings,
+    PretrainedWeights,
 )
 from app.supported_models.parser import parse_manifest
 
@@ -49,6 +50,14 @@ def fxt_dummy_model_stats():
 
 
 @pytest.fixture
+def fxt_dummy_pretrained_weights():
+    yield PretrainedWeights(
+        url="https://example.com/dummy_model_weights.pth",
+        sha_sum="example_sha256_checksum",
+    )
+
+
+@pytest.fixture
 def fxt_dummy_supported_gpu():
     yield {GPUMaker.INTEL: True, GPUMaker.NVIDIA: True}
 
@@ -63,10 +72,13 @@ def fxt_dummy_hyperparameters():
 
 
 @pytest.fixture
-def fxt_dummy_model_manifest(fxt_dummy_model_stats, fxt_dummy_supported_gpu, fxt_dummy_hyperparameters):
+def fxt_dummy_model_manifest(
+    fxt_dummy_model_stats, fxt_dummy_pretrained_weights, fxt_dummy_supported_gpu, fxt_dummy_hyperparameters
+):
     yield ModelManifest(
         id="dummy_model_manifest",
         name="Dummy ModelManifest",
+        pretrained_weights=fxt_dummy_pretrained_weights,
         description="Dummy manifest for test purposes only",
         task="classification",
         stats=fxt_dummy_model_stats,
@@ -97,6 +109,10 @@ class TestModelManifest:
         mock_yaml_result = {
             "id": "test",
             "name": "Test Model",
+            "pretrained_weights": {
+                "url": "https://example.com/test_model_weights.pth",
+                "sha_sum": "test_sha256_checksum",
+            },
             "description": "Test",
             "task": "detection",
             "stats": {
@@ -144,6 +160,9 @@ class TestModelManifest:
         null_model_manifest = NullModelManifest()
 
         assert null_model_manifest.id == "null"
+        assert null_model_manifest.name == "null"
+        assert null_model_manifest.pretrained_weights.url == "null"
+        assert null_model_manifest.pretrained_weights.sha_sum == "null"
         assert null_model_manifest.support_status == ModelManifestDeprecationStatus.OBSOLETE
         assert null_model_manifest.stats.gigaflops == 1
         assert null_model_manifest.stats.trainable_parameters == 1

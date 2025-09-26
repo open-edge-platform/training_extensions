@@ -1,6 +1,10 @@
 id: Object_Detection_YOLOX_S
 name: YOLOX-S
 
+pretrained_weights:
+  url: https://download.openmmlab.com/mmdetection/v2.0/yolox/yolox_s_8x8_300e_coco/yolox_s_8x8_300e_coco_20211121_095711-4592a793.pth
+  sha_sum: 4592a793b95f18f62fd73fbb6cfe61dd445f71a8e072366e114e7134d4492760
+
 description: "YOLOX is a high-performance, anchor-free object detection algorithm that builds on the YOLO series with modern improvements. It features a decoupled head for separate classification and regression tasks, strong data augmentation techniques, and advanced label assignment strategies. YOLOX achieves a great balance between speed and accuracy, making it suitable for real-time applications across various domains."
 stats:
   gigaflops: 26.8

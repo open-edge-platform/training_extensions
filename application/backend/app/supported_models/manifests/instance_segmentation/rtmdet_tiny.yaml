@@ -1,6 +1,10 @@
 id: Custom_Instance_Segmentation_RTMDet_tiny
 name: RTMDet-Tiny
 
+pretrained_weights:
+  url: https://download.openmmlab.com/mmdetection/v3.0/rtmdet/rtmdet-ins_tiny_8xb32-300e_coco/rtmdet-ins_tiny_8xb32-300e_coco_20221130_151727-ec670f7e.pth
+  sha_sum: ec670f7ee9e20bd7931e15f15b7016f7fe531baaab81f2e6153382d046111885
+
 description: "RTMDet for instance segmentation extends the real-time object detection framework with mask prediction capabilities. It features a unified, anchor-free architecture with a decoupled head and task-specific neck, enabling high-performance instance segmentation with real-time inference speed."
 stats:
   gigaflops: 11.8

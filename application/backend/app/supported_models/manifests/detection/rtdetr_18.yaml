@@ -1,6 +1,10 @@
 id: Object_Detection_RTDetr_18
 name: RTDetr-R18
 
+pretrained_weights:
+  url: https://github.com/lyuwenyu/storage/releases/download/v0.1/rtdetr_r18vd_5x_coco_objects365_from_paddle.pth
+  sha_sum: 8f2278c42012a41971f900448b3d4dcb398356e8175e2b3ee4600e37eab0a045
+
 description: "RT-DETR is a real-time object detection algorithm based on the transformer architecture. It combines a convolutional backbone with an efficient encoder-decoder transformer to directly predict object classes and bounding boxes without the need for anchor boxes or NMS."
 stats:
   gigaflops: 59

@@ -1,6 +1,10 @@
 id: Object_Detection_Deim_DFine_X
 name: Deim-DFine-X
 
+pretrained_weights:
+  url: https://github.com/eugene123tw/DEIM/releases/download/poc/deim_dfine_hgnetv2_x_coco_50e.pth
+  sha_sum: e729436f96d95e78dbf67452bf3fb654cd5bed37de43067f5cf0aafb24d0fc7a
+
 description: "DEIM is an advanced training framework designed to enhance the matching mechanism in DETRs, enabling faster convergence and improved accuracy."
 stats:
   gigaflops: 202

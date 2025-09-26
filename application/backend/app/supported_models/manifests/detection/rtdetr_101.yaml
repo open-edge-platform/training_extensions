@@ -1,6 +1,10 @@
 id: Object_Detection_RTDetr_101
 name: RTDetr-R101
 
+pretrained_weights:
+  url: https://github.com/lyuwenyu/storage/releases/download/v0.1/rtdetr_r101vd_2x_coco_objects365_from_paddle.pth
+  sha_sum: db3d85e3e9787daa63586284cba77bd98d0836aaf76e07b4b16aeb87d370ef00
+
 description: "RT-DETR is a real-time object detection algorithm based on the transformer architecture. It combines a convolutional backbone with an efficient encoder-decoder transformer to directly predict object classes and bounding boxes without the need for anchor boxes or NMS."
 stats:
   gigaflops: 259

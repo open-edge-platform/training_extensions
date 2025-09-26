@@ -1,6 +1,10 @@
 id: Custom_Image_Classification_EfficientNet-V2-L
 name: EfficientNet-V2-L
 
+pretrained_weights:
+  url: https://download.pytorch.org/models/efficientnet_v2_l-59c71312.pth
+  sha_sum: 59c713125fb834e97ba84e540464ea0b0a07de5e7d74c53ac6e5b8fdadab5f89
+
 description: "EfficientNetV2-Large is a high-capacity image classification model optimized for both accuracy and training efficiency. It leverages progressive learning strategies and architectural improvements to outperform previous models on benchmarks like ImageNet."
 stats:
   gigaflops: 24.46

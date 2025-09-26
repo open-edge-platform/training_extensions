@@ -1,6 +1,10 @@
 id: Custom_Object_Detection_YOLOX
 name: YOLOX-Tiny
 
+pretrained_weights:
+  url: https://storage.openvinotoolkit.org/repositories/openvino_training_extensions/models/object_detection/v2/yolox_tiny_8x8.pth
+  sha_sum: 4ff3b67e005a6356a5794f5fbc42b133e077aa30ddcb0449b2153cfd953a0030
+
 description: "YOLOX is a high-performance, anchor-free object detection algorithm that builds on the YOLO series with modern improvements. It features a decoupled head for separate classification and regression tasks, strong data augmentation techniques, and advanced label assignment strategies. YOLOX achieves a great balance between speed and accuracy, making it suitable for real-time applications across various domains."
 stats:
   gigaflops: 6.45

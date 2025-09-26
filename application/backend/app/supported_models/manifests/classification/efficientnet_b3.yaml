@@ -1,6 +1,10 @@
 id: Custom_Image_Classification_EfficientNet-B3
 name: EfficientNet-B3
 
+pretrained_weights:
+  url: https://download.pytorch.org/models/efficientnet_b3_rwightman-b3899882.pth
+  sha_sum: b3899882250c22946d0229d266049fcd133c169233530b36b9ffa7983988362f
+
 description: "EfficientNet-B3 is a scaled-up version of EfficientNet-B0, offering improved accuracy by increasing the network's depth, width, and resolution using compound scaling. It provides a good balance between performance and computational cost, making it suitable for applications that require higher accuracy without significantly sacrificing efficiency."
 stats:
   gigaflops: 1.92
