@@ -84,7 +84,7 @@ export const SelectableAnnotation = ({ children }: { children: ReactNode }) => {
                 position: 'relative',
                 zIndex: 999,
                 pointerEvents: 'auto',
-                outline: 'none', // Remove browser focus outline since we have custom selection styling
+                outline: 'none',
             }}
         >
             {children}
