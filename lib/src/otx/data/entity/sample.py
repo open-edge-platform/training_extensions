@@ -184,9 +184,31 @@ class AnomalySample(OTXSample):
     """ClassificationSample is a base class for OTX classification items."""
 
     image: np.ndarray | tv_tensors.Image = image_field(dtype=pl.UInt8)
-    mask: np.ndarray | tv_tensors.Image | None = mask_field(dtype=pl.UInt8, semantic=Semantic.Anomaly)
     label: torch.Tensor = label_field(pl.Int32())
     dm_image_info: DmImageInfo = image_info_field()
+
+    masks: np.ndarray | tv_tensors.Image | None = mask_field(dtype=pl.UInt8, semantic=Semantic.Anomaly)
+
+    def __post_init__(self) -> None:
+        shape = (self.dm_image_info.height, self.dm_image_info.width)
+
+        # Convert image to tv_tensors format
+        if isinstance(self.image, np.ndarray):
+            self.image = tv_tensors.Image(self.image.transpose(2, 0, 1))
+
+        # Convert masks to tv_tensors format
+        if isinstance(self.masks, np.ndarray):
+            self.masks = tv_tensors.Mask(self.masks, dtype=torch.uint8)
+
+        # Convert labels to tensor
+        if isinstance(self.label, np.ndarray):
+            self.label = torch.as_tensor(self.label, dtype=torch.long)
+
+        self.img_info = ImageInfo(
+            img_idx=0,
+            img_shape=shape,
+            ori_shape=shape,
+        )
 
 
 class InstanceSegmentationSample(OTXSample):

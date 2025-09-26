@@ -73,7 +73,10 @@ class OTXDatasetFactory:
             OTXTaskType.ANOMALY_DETECTION,
             OTXTaskType.ANOMALY_SEGMENTATION,
         ):
-            from .dataset.anomaly import OTXAnomalyDataset
+            from .dataset.anomaly_new import OTXAnomalyDataset
+
+            dataset = convert_from_legacy(dm_subset)
+            common_kwargs["dm_subset"] = dataset
 
             return OTXAnomalyDataset(task_type=task, **common_kwargs)
 
