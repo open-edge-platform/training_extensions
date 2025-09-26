@@ -5,6 +5,7 @@ import { Flex, Heading, Tag, Text, View } from '@geti/ui';
 import { clsx } from 'clsx';
 import { NavLink } from 'react-router-dom';
 
+import { $api } from '../../../api/client';
 import { SchemaProjectInput } from '../../../api/openapi-spec';
 import thumbnailUrl from '../../../assets/mocked-project-thumbnail.png';
 import { paths } from '../../../router';
@@ -14,10 +15,15 @@ import classes from './project-list.module.scss';
 
 type ProjectCardProps = {
     item: SchemaProjectInput;
-    isActive: boolean;
 };
 
-export const ProjectCard = ({ item, isActive }: ProjectCardProps) => {
+export const ProjectCard = ({ item }: ProjectCardProps) => {
+    const pipeline = $api.useSuspenseQuery('get', '/api/projects/{project_id}/pipeline', {
+        params: { path: { project_id: item.id || '' } },
+    });
+
+    const isActive = pipeline.data?.status === 'running';
+
     return (
         // TODO: remove this empty string check once
         // https://github.com/open-edge-platform/training_extensions/issues/4721 is done

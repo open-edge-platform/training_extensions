@@ -22,8 +22,11 @@ export const MenuActions = ({ projectId }: { projectId: string }) => {
 
     const handleMenuAction = (key: Key) => {
         switch (key) {
-            case 'export':
-                // Handle export action
+            case 'activate':
+                const enablePipelineMutation = $api.useMutation('post', '/api/projects/{project_id}/pipeline:enable');
+
+                enablePipelineMutation.mutate({ params: { path: { project_id: projectId } } });
+
                 break;
             case 'edit':
                 navigate(paths.project.details({ projectId }));
@@ -42,8 +45,7 @@ export const MenuActions = ({ projectId }: { projectId: string }) => {
                 <MoreMenu />
             </ActionButton>
             <Menu onAction={handleMenuAction}>
-                {/* TODO: unsupported for now. Uncomment if we ever support this */}
-                {/* <Item key={'export'}>Export</Item> */}
+                <Item key={'activate'}>Activate</Item>
                 <Item key={'edit'}>Edit</Item>
                 <Item key={'delete'}>Delete</Item>
             </Menu>
