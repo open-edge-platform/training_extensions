@@ -4,11 +4,10 @@
 import { useActionState } from 'react';
 
 import { Button, Flex, Item, NumberField, Picker, TextField } from '@geti/ui';
-import { isEmpty, omitBy } from 'lodash-es';
 
 import { JsonBuilder } from './json-builder.component';
 import { OutputFormats } from './output-formats.component';
-import { OutputFormat, SinkType, WebhookHttpMethod } from './utils';
+import { getObjectFromFormData, OutputFormat, SinkType, WebhookHttpMethod } from './utils';
 
 type WebhookFormData = {
     name: string;
@@ -19,13 +18,6 @@ type WebhookFormData = {
     http_method: WebhookHttpMethod;
     output_formats: OutputFormat[];
     headers: Record<string, string>;
-};
-
-const getJsonHeaders = (keys: FormDataEntryValue[], values: FormDataEntryValue[]) => {
-    const entries = keys.map((key, index) => [key, values[index]]);
-    const newObject = Object.fromEntries(entries);
-
-    return omitBy(newObject, isEmpty);
 };
 
 export const Webhook = () => {
@@ -44,7 +36,7 @@ export const Webhook = () => {
         //Todo: call create endpoint
         const data = {
             name: formData.get('name'),
-            headers: getJsonHeaders(formData.getAll('headers-keys'), formData.getAll('headers-values')),
+            headers: getObjectFromFormData(formData.getAll('headers-keys'), formData.getAll('headers-values')),
             timeout: formData.get('timeout'),
             sink_type: SinkType.WEBHOOK,
             rate_limit: formData.get('rate_limit'),
@@ -53,13 +45,8 @@ export const Webhook = () => {
             output_formats: formData.getAll('output_formats'),
         } as unknown as WebhookFormData;
 
-        console.log('data', data);
-        console.log('_prevState', _prevState);
-
         return data;
     }, initData);
-
-    console.log('state', state.headers);
 
     return (
         <form action={submitAction}>

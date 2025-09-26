@@ -3,8 +3,11 @@
 
 import { Fragment, useState } from 'react';
 
-import { ActionButton, Content, ContextualHelp, dimensionValue, Flex, Grid, Text, TextField } from '@geti/ui';
+import { ActionButton, Content, ContextualHelp, dimensionValue, Flex, Grid, Text } from '@geti/ui';
 import { Add, Delete } from '@geti/ui/icons';
+import { isEmpty } from 'lodash-es';
+
+import { RequiredTextField } from '../../../components/required-text-field/required-text-field.component';
 
 import classes from './json-builder.module.scss';
 
@@ -55,8 +58,8 @@ export const JsonBuilder = ({ title, keysName, valuesName }: JsonBuilderProps) =
                     <ContextualHelp variant='info'>
                         <Content>
                             <Text>
-                                Add as many key-value pairs as needed. Each pair will be included in the `headers`
-                                object.
+                                Add as many key-value pairs as needed. Each pair will be included in the &apos;{title}
+                                &apos; object.
                             </Text>
                         </Content>
                     </ContextualHelp>
@@ -69,20 +72,23 @@ export const JsonBuilder = ({ title, keysName, valuesName }: JsonBuilderProps) =
             <Grid columns={['1fr', '1fr', '50px']} gap={'size-100'}>
                 {pairs.map((pair, index) => (
                     <Fragment key={`pair-${index}`}>
-                        <TextField
+                        <RequiredTextField
                             isQuiet
                             width={'100%'}
                             value={pair.key}
                             name={keysName}
                             placeholder='key'
+                            errorMessage='Key cannot be empty'
                             onChange={(val) => updatePair(index, Fields.KEY, val)}
                         />
-                        <TextField
+                        <RequiredTextField
                             isQuiet
                             width={'100%'}
                             value={pair.value}
                             name={valuesName}
                             placeholder='value'
+                            errorMessage='Value cannot be empty'
+                            isDisabled={isEmpty(pair.key)}
                             onChange={(val) => updatePair(index, Fields.VALUE, val)}
                         />
                         <ActionButton
