@@ -12,7 +12,8 @@ import { ReactComponent as WebcamIcon } from '../../../assets/icons/webcam.svg';
 import { DisclosureGroup } from './disclosure-group.component';
 import { ImageFolder } from './image-folder/image-folder.component';
 import { IpCamera } from './ip-camera/ip-camera.component';
-import { getImageFolderData, getIpCameraData, getWebcamData } from './util';
+import { getImageFolderData, getIpCameraData, getVideoFileData, getWebcamData } from './util';
+import { VideoFile } from './video-file/video-file.component';
 import { Webcam } from './webcam/webcam.component';
 
 export const SourceOptions = () => {
@@ -41,7 +42,12 @@ export const SourceOptions = () => {
                     content: <IpCamera config={getIpCameraData(sources)} />,
                 },
                 { label: 'GenICam', value: 'gen_i_cam', content: <ImageFolder />, icon: <GenICam width={'24px'} /> },
-                { label: 'Video file', value: 'video_file', content: <ImageFolder />, icon: <Video width={'24px'} /> },
+                {
+                    label: 'Video file',
+                    value: 'video_file',
+                    content: <VideoFile config={getVideoFileData(sources)} />,
+                    icon: <Video width={'24px'} />,
+                },
                 {
                     label: 'Images folder',
                     value: 'images_folder',

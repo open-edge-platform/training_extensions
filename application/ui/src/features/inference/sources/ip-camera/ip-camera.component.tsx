@@ -34,10 +34,12 @@ export const IpCamera = ({ config = initConfig }: IpCameraProps) => {
     return (
         <Form action={submitAction}>
             <Flex direction='column' gap='size-200'>
+                <TextField isHidden label='id' name='id' defaultValue={state?.id} />
                 <TextField width={'100%'} label='Name' name='name' defaultValue={state?.name} />
-                <TextField width={'100%'} label='Stream Path:' name='stream_path' defaultValue={state.stream_url} />
+                <TextField width={'100%'} label='Stream Url:' name='stream_url' defaultValue={state.stream_url} />
                 <Switch
                     name='auth_required'
+                    aria-label='Require Authentication'
                     defaultSelected={state?.auth_required}
                     key={state?.auth_required ? 'true' : 'false'}
                 >

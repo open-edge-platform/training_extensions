@@ -5,8 +5,8 @@ import { render, screen, waitFor } from '@test-utils/render';
 import userEvent from '@testing-library/user-event';
 
 import { useSourceAction } from '../hooks/use-source-action.hook';
-import { WebcamSourceConfig } from '../util';
-import { Webcam } from './webcam.component';
+import { VideoFileSourceConfig } from '../util';
+import { VideoFile } from './video-file.component';
 
 vi.mock('react-router', async (importOriginal) => {
     const actual = await importOriginal<typeof import('react-router')>();
@@ -18,18 +18,18 @@ vi.mock('react-router', async (importOriginal) => {
 
 vi.mock('../hooks/use-source-action.hook');
 
-const mockedConfig: WebcamSourceConfig = {
+const mockedConfig: VideoFileSourceConfig = {
     id: '1',
     name: 'Test Folder',
-    source_type: 'webcam',
-    device_id: 0,
+    video_path: './test/123',
+    source_type: 'video_file',
 };
 
-describe('Webcam', () => {
+describe('VideoFile', () => {
     it('disables the Apply button when loading', () => {
         vi.mocked(useSourceAction).mockReturnValue([mockedConfig, vi.fn(), true]);
 
-        render(<Webcam />);
+        render(<VideoFile />);
 
         expect(screen.getByRole('button', { name: 'Apply' })).toBeDisabled();
     });
@@ -38,7 +38,7 @@ describe('Webcam', () => {
         const mockedSubmitAction = vi.fn();
         vi.mocked(useSourceAction).mockReturnValue([mockedConfig, mockedSubmitAction, false]);
 
-        render(<Webcam config={mockedConfig} />);
+        render(<VideoFile config={mockedConfig} />);
 
         userEvent.click(screen.getByRole('button', { name: 'Apply' }));
 
@@ -49,7 +49,7 @@ describe('Webcam', () => {
         const mockedSubmitAction = vi.fn();
         vi.mocked(useSourceAction).mockReturnValue([mockedConfig, mockedSubmitAction, false]);
 
-        render(<Webcam config={mockedConfig} />);
+        render(<VideoFile config={mockedConfig} />);
 
         expect(useSourceAction).toHaveBeenCalledWith({
             config: mockedConfig,
@@ -59,7 +59,7 @@ describe('Webcam', () => {
 
         expect(screen.getByRole('textbox', { name: /^Id$/i, hidden: true })).toHaveValue(mockedConfig.id);
         expect(screen.getByRole('textbox', { name: /Name/i })).toHaveValue(mockedConfig.name);
-        expect(screen.getByRole('textbox', { name: /Webcam device id/i })).toHaveValue(String(mockedConfig.device_id));
+        expect(screen.getByRole('textbox', { name: /Video file path/i })).toHaveValue(mockedConfig.video_path);
 
         expect(screen.getByRole('button', { name: 'Apply' })).toBeEnabled();
     });

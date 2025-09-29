@@ -5,7 +5,7 @@ import { render, screen, waitFor } from '@test-utils/render';
 import userEvent from '@testing-library/user-event';
 
 import { useSourceAction } from '../hooks/use-source-action.hook';
-import { ImagesFolderSourceConfig } from '../util';
+import { IPCameraSourceConfig } from '../util';
 import { IpCamera } from './ip-camera.component';
 
 vi.mock('react-router', async (importOriginal) => {
@@ -18,12 +18,12 @@ vi.mock('react-router', async (importOriginal) => {
 
 vi.mock('../hooks/use-source-action.hook');
 
-const mockedConfig: ImagesFolderSourceConfig = {
+const mockedConfig: IPCameraSourceConfig = {
     id: '1',
     name: 'Test Folder',
-    source_type: 'images_folder',
-    images_folder_path: '/path/to/images',
-    ignore_existing_images: false,
+    source_type: 'ip_camera',
+    stream_url: './folder/111',
+    auth_required: true,
 };
 
 describe('IpCamera', () => {
@@ -35,16 +35,34 @@ describe('IpCamera', () => {
         expect(screen.getByRole('button', { name: 'Apply' })).toBeDisabled();
     });
 
-    it('calls submit action when Apply button is clicked', () => {
+    it('calls submit action when Apply button is clicked', async () => {
         const mockedSubmitAction = vi.fn();
         vi.mocked(useSourceAction).mockReturnValue([mockedConfig, mockedSubmitAction, false]);
 
-        render(<IpCamera />);
+        render(<IpCamera config={mockedConfig} />);
 
         userEvent.click(screen.getByRole('button', { name: 'Apply' }));
 
-        waitFor(() => {
-            expect(mockedSubmitAction).toHaveBeenCalled();
+        await waitFor(() => expect(mockedSubmitAction).toHaveBeenCalled());
+    });
+
+    it('renders fields with correct values from config', () => {
+        const mockedSubmitAction = vi.fn();
+        vi.mocked(useSourceAction).mockReturnValue([mockedConfig, mockedSubmitAction, false]);
+
+        render(<IpCamera config={mockedConfig} />);
+
+        expect(useSourceAction).toHaveBeenCalledWith({
+            config: mockedConfig,
+            isNewSource: false,
+            bodyFormatter: expect.anything(),
         });
+
+        expect(screen.getByRole('textbox', { name: /Id/i, hidden: true })).toHaveValue(mockedConfig.id);
+        expect(screen.getByRole('textbox', { name: /Name/i })).toHaveValue(mockedConfig.name);
+        expect(screen.getByRole('textbox', { name: /Stream URL/i })).toHaveValue(mockedConfig.stream_url);
+        expect(screen.getByLabelText('Require Authentication')).toBeChecked();
+
+        expect(screen.getByRole('button', { name: 'Apply' })).toBeEnabled();
     });
 });

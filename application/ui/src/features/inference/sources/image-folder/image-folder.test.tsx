@@ -22,7 +22,7 @@ const mockedConfig: ImagesFolderSourceConfig = {
     name: 'Test Folder',
     source_type: 'images_folder',
     images_folder_path: '/path/to/images',
-    ignore_existing_images: false,
+    ignore_existing_images: true,
 };
 
 describe('ImageFolder', () => {
@@ -34,16 +34,36 @@ describe('ImageFolder', () => {
         expect(screen.getByRole('button', { name: 'Apply' })).toBeDisabled();
     });
 
-    it('calls submit action when Apply button is clicked', () => {
+    it('calls submit action when Apply button is clicked', async () => {
         const mockedSubmitAction = vi.fn();
         vi.mocked(useSourceAction).mockReturnValue([mockedConfig, mockedSubmitAction, false]);
 
-        render(<ImageFolder />);
+        render(<ImageFolder config={mockedConfig} />);
 
         fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
 
-        waitFor(() => {
-            expect(mockedSubmitAction).toHaveBeenCalled();
+        await waitFor(() => expect(mockedSubmitAction).toHaveBeenCalled());
+    });
+
+    it('renders fields with correct values from config', () => {
+        const mockedSubmitAction = vi.fn();
+        vi.mocked(useSourceAction).mockReturnValue([mockedConfig, mockedSubmitAction, false]);
+
+        render(<ImageFolder config={mockedConfig} />);
+
+        expect(useSourceAction).toHaveBeenCalledWith({
+            config: mockedConfig,
+            isNewSource: false,
+            bodyFormatter: expect.anything(),
         });
+
+        expect(screen.getByRole('textbox', { name: /^Id$/i, hidden: true })).toHaveValue(mockedConfig.id);
+        expect(screen.getByRole('textbox', { name: /Name/i })).toHaveValue(mockedConfig.name);
+        expect(screen.getByRole('textbox', { name: /Images folder path/i })).toHaveValue(
+            mockedConfig.images_folder_path
+        );
+        expect(screen.getByLabelText(/ignore existing images/i)).toBeChecked();
+
+        expect(screen.getByRole('button', { name: 'Apply' })).toBeEnabled();
     });
 });

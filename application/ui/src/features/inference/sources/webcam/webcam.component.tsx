@@ -33,16 +33,10 @@ export const Webcam = ({ config = initConfig }: WebcamProps) => {
     return (
         <Form action={submitAction}>
             <Flex direction='column' gap='size-200'>
-                <RequiredTextField
-                    width='100%'
-                    label='Name'
-                    name='name'
-                    defaultValue={state?.name}
-                    errorMessage={'This field is required'}
-                />
+                <TextField isHidden label='id' name='id' defaultValue={state?.id} />
+                <TextField width={'100%'} label='Name' name='name' defaultValue={state?.name} />
 
                 <TextField
-                    isRequired
                     width='100%'
                     label='Webcam device id'
                     name='device_id'

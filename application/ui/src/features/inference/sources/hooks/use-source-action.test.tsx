@@ -47,7 +47,6 @@ const renderApp = async ({
         http.patch('/api/projects/{project_id}/pipeline', () => HttpResponse.json({}))
     );
 
-    /* const { result } = renderHook(() => useSourceAction(config, isNew), { wrapper: TestProviders }); */
     const { result } = renderHook(() => useSourceAction({ config: mockedConfig, isNewSource, bodyFormatter }), {
         wrapper: TestProviders,
     });
