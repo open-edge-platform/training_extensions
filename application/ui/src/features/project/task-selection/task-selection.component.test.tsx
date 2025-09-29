@@ -1,19 +1,14 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@test-utils/render';
 
-import { TestProviders } from '../../../providers';
 import { TaskType } from './interface';
 import { TaskSelection } from './task-selection.component';
 
 describe('TaskSelection', () => {
     const App = ({ selectedTask = 'detection', setSelectedTask = vi.fn() }) => {
-        return (
-            <TestProviders>
-                <TaskSelection selectedTask={selectedTask as TaskType} setSelectedTask={setSelectedTask} />
-            </TestProviders>
-        );
+        return <TaskSelection selectedTask={selectedTask as TaskType} setSelectedTask={setSelectedTask} />;
     };
 
     it('renders all task options', () => {

@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen } from '@testing-library/react';
+import { render, screen } from '@test-utils/render';
 import { vi } from 'vitest';
 
 import { useContainerSize } from './use-container-size';

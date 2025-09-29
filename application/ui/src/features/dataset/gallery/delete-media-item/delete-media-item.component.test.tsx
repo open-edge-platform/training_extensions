@@ -1,19 +1,22 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen, waitForElementToBeRemoved } from '@testing-library/react';
+import { render, screen, waitForElementToBeRemoved } from '@test-utils/render';
 import { userEvent } from '@testing-library/user-event';
 import { HttpResponse } from 'msw';
 import { vi } from 'vitest';
 
 import { http } from '../../../../api/utils';
 import { server } from '../../../../msw-node-setup';
-import { TestProviders } from '../../../../providers';
 import { DeleteMediaItem } from './delete-media-item.component';
 
-vi.mock('react-router', () => ({
-    useParams: vi.fn(() => ({ projectId: '123' })),
-}));
+vi.mock('react-router', async (importOriginal) => {
+    const actual = await importOriginal<typeof import('react-router')>();
+    return {
+        ...actual,
+        useParams: vi.fn(() => ({ projectId: '123' })),
+    };
+});
 
 describe('DeleteMediaItem', () => {
     it('deletes a media item and shows a success toast', async () => {
@@ -26,11 +29,7 @@ describe('DeleteMediaItem', () => {
             })
         );
 
-        render(
-            <TestProviders>
-                <DeleteMediaItem itemsIds={[itemId]} onDeleted={mockedOnDeleted} />
-            </TestProviders>
-        );
+        render(<DeleteMediaItem itemsIds={[itemId]} onDeleted={mockedOnDeleted} />);
 
         userEvent.click(screen.getByLabelText(/delete media item/i));
         await screen.findByText(/Are you sure you want to delete the next items?/i);
@@ -59,11 +58,7 @@ describe('DeleteMediaItem', () => {
             })
         );
 
-        render(
-            <TestProviders>
-                <DeleteMediaItem itemsIds={[itemToFail, itemToDelete]} onDeleted={mockedOnDeleted} />
-            </TestProviders>
-        );
+        render(<DeleteMediaItem itemsIds={[itemToFail, itemToDelete]} onDeleted={mockedOnDeleted} />);
 
         userEvent.click(screen.getByLabelText(/delete media item/i));
         await screen.findByText(/Are you sure you want to delete the next items?/i);

@@ -1,17 +1,20 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen } from '@testing-library/react';
+import { render, screen } from '@test-utils/render';
 import { HttpResponse } from 'msw';
 
 import { http } from '../../../api/utils';
 import { server } from '../../../msw-node-setup';
-import { TestProviders } from '../../../providers';
 import { ProjectDetails } from './project-details.component';
 
-vi.mock('react-router', () => ({
-    useParams: vi.fn(() => ({ projectId: '123' })),
-}));
+vi.mock('react-router', async (importOriginal) => {
+    const actual = await importOriginal<typeof import('react-router')>();
+    return {
+        ...actual,
+        useParams: vi.fn(() => ({ projectId: '123' })),
+    };
+});
 
 describe('ProjectDetails', () => {
     it('renders the correct values for each resource', async () => {
@@ -60,11 +63,7 @@ describe('ProjectDetails', () => {
             })
         );
 
-        render(
-            <TestProviders>
-                <ProjectDetails />
-            </TestProviders>
-        );
+        render(<ProjectDetails />);
 
         // Wait for the component to load and render the Project heading
         expect(await screen.findByRole('heading', { name: 'Project' })).toBeInTheDocument();

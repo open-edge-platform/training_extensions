@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Toast } from '@geti/ui';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { getMockedLabel } from '@test-utils/mocked-labels';
+import { fireEvent, render, screen, waitFor } from '@test-utils/render';
 
-import { getMockedLabel } from '../../../test-utils/mocked-labels';
 import { LabelSelection } from './label-selection.component';
 
 const mockLabels = [getMockedLabel({ id: 'id-1', name: 'Car' })];
