@@ -171,7 +171,8 @@ class BaseWeightsService:
             OSError: If there's insufficient disk space
         """
         try:
-            response = requests.head(remote_url, allow_redirects=True, timeout=5)
+            # Use a longer read timeout to allow for large file downloads
+            response = requests.head(remote_url, allow_redirects=True, timeout=(10, 600))
             response.raise_for_status()
 
             content_length = response.headers.get("content-length")
@@ -213,8 +214,8 @@ class BaseWeightsService:
         # Create temporary file for download
         temp_path = local_path.with_suffix(".tmp")
         try:
-            # Stream the download to handle large files
-            with requests.get(remote_url, stream=True, timeout=5) as response:
+            # Stream the download to handle large files, use a longer read timeout to allow for large file downloads
+            with requests.get(remote_url, stream=True, timeout=(10, 600)) as response:
                 response.raise_for_status()
                 with open(temp_path, "wb") as f:
                     for data in response.iter_content(chunk_size=4096):
