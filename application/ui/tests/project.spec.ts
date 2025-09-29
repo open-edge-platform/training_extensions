@@ -67,7 +67,7 @@ test.describe('Project', () => {
         await expect(page.getByText('Project 3')).toBeVisible();
     });
 
-    test.only('creates a project', async ({ page, network }) => {
+    test('creates a project', async ({ page, network }) => {
         await page.goto('/projects/new');
 
         await fillProjectForm({ page, name: 'New Project', task: 'segmentation', labelNames: ['Person', 'Animal'] });
