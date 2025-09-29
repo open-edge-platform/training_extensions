@@ -24,6 +24,7 @@ const useMutationSource = (isNewSource: boolean) => {
     return async (body: ImagesFolderSourceConfig) => {
         if (isNewSource) {
             const response = await addSource.mutateAsync({ body: omit(body, 'id') });
+
             return String(response.id);
         }
 
@@ -53,12 +54,17 @@ export const useActionImageFolder = (config = iniConfig, isNewSource = false) =>
         try {
             const source_id = await addOrUpdateSource(body);
 
-            await pipeline.mutateAsync({ params: { path: { project_id: projectId } }, body: { source_id } });
+            await pipeline.mutateAsync({
+                params: { path: { project_id: projectId } },
+                body: { source_id },
+            });
 
             toast({
                 type: 'success',
-                message: 'Source configuration saved successfully.',
+                message: `Image folder configuration ${isNewSource ? 'created' : 'updated'} successfully.`,
             });
+
+            return { ...body, id: source_id };
         } catch (error: unknown) {
             const details = (error as { detail?: string })?.detail;
 
