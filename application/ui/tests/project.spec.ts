@@ -70,7 +70,12 @@ test.describe('Project', () => {
     test('creates a project', async ({ page, network }) => {
         await page.goto('/projects/new');
 
-        await fillProjectForm({ page, name: 'New Project', task: 'segmentation', labelNames: ['Person', 'Animal'] });
+        await fillProjectForm({
+            page,
+            name: 'New Project',
+            task: 'instance_segmentation',
+            labelNames: ['Person', 'Animal'],
+        });
 
         network.use(
             http.post('/api/projects', ({ response }) => {
@@ -79,7 +84,7 @@ test.describe('Project', () => {
                         id: 'new project id',
                         name: 'New Project',
                         task: {
-                            task_type: 'segmentation',
+                            task_type: 'instance_segmentation',
                             exclusive_labels: false,
                             labels: [{ name: 'Person' }, { name: 'Animal' }],
                         },
@@ -107,7 +112,7 @@ test.describe('Project', () => {
                         id: 'new project id',
                         name: 'New Project',
                         task: {
-                            task_type: 'segmentation',
+                            task_type: 'instance_segmentation',
                             exclusive_labels: false,
                             labels: [{ name: 'Person' }, { name: 'Animal' }],
                         },
