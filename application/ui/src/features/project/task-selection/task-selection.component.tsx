@@ -25,7 +25,7 @@ const TASK_OPTIONS: TaskOption[] = [
         title: 'Image Segmentation',
         description: 'Detect and outline specific regions or shapes',
         verb: 'segment',
-        value: 'segmentation',
+        value: 'instance_segmentation',
     },
     {
         id: 'classification_task',

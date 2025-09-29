@@ -249,8 +249,8 @@ class TestDatasetServiceUnit:
 
     def test_validate_annotations_segmentation(self):
         project = ProjectDB(
-            name="Test Segmentation Project",
-            task_type=TaskType.SEGMENTATION,
+            name="Test Instance Segmentation Project",
+            task_type=TaskType.INSTANCE_SEGMENTATION,
             exclusive_labels=False,
         )
         annotations = [
@@ -274,8 +274,8 @@ class TestDatasetServiceUnit:
     )
     def test_validate_annotations_segmentation_wrong_shape(self, shape):
         project = ProjectDB(
-            name="Test Segmentation Project",
-            task_type=TaskType.SEGMENTATION,
+            name="Test Instance Segmentation Project",
+            task_type=TaskType.INSTANCE_SEGMENTATION,
             exclusive_labels=False,
         )
         annotations = [
@@ -293,8 +293,8 @@ class TestDatasetServiceUnit:
 
     def test_validate_annotations_segmentation_wrong_shape_multiple_labels(self):
         project = ProjectDB(
-            name="Test Segmentation Project",
-            task_type=TaskType.SEGMENTATION,
+            name="Test Instance Segmentation Project",
+            task_type=TaskType.INSTANCE_SEGMENTATION,
             exclusive_labels=False,
         )
         annotations = [

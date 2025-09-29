@@ -131,8 +131,8 @@ def fxt_db_projects() -> list[ProjectDB]:
             "exclusive_labels": True,
         },
         {
-            "name": "Test Segmentation Project",
-            "task_type": TaskType.SEGMENTATION,
+            "name": "Test Instance Segmentation Project",
+            "task_type": TaskType.INSTANCE_SEGMENTATION,
             "exclusive_labels": True,
         },
     ]
