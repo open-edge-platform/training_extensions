@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router';
 import { v4 as uuid } from 'uuid';
 
 import { $api } from '../../../api/client';
-import { paths } from '../../../router';
+import { paths } from '../../../constants/paths';
 import { Label } from '../../annotator/types';
 import { LabelSelection } from '../label-selection/label-selection.component';
 import { TaskType } from '../task-selection/interface';

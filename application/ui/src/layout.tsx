@@ -9,8 +9,8 @@ import { ReactComponent as BuildIcon } from './assets/icons/build-icon.svg';
 import { ReactComponent as LiveFeedIcon } from './assets/icons/live-feed-icon.svg';
 import { ReactComponent as Webhook } from './assets/icons/webhook.svg';
 import { ProjectsListPanel } from './components/project-panel/projects-list-panel.component';
+import { paths } from './constants/paths';
 import { useProjectIdentifier } from './hooks/use-project-identifier.hook';
-import { paths } from './router';
 
 const iconStyles = {
     width: 'var(--spectrum-global-dimension-size-200)',
