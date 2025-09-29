@@ -23,7 +23,7 @@ def fxt_models_dir() -> Generator[Path]:
     if not models_dir.exists():
         models_dir.mkdir(parents=True)
     yield models_dir
-    shutil.rmtree(models_dir)
+    shutil.rmtree(models_dir / "pretrained_weights", ignore_errors=True)
 
 
 @pytest.fixture
