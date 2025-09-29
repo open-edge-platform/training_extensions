@@ -1,8 +1,6 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Loading } from '@geti/ui';
-
 import { $api } from '../../../api/client';
 import { ReactComponent as GenICam } from '../../../assets/icons/genicam.svg';
 import { ReactComponent as Image } from '../../../assets/icons/images-folder.svg';
@@ -19,16 +17,11 @@ import { Webcam } from './webcam/webcam.component';
 export const SourceOptions = () => {
     const projectId = useProjectIdentifier();
 
-    const sourcesQuery = $api.useQuery('get', '/api/sources');
-    const pipeline = $api.useQuery('get', '/api/projects/{project_id}/pipeline', {
+    const sourcesQuery = $api.useSuspenseQuery('get', '/api/sources');
+    const pipeline = $api.useSuspenseQuery('get', '/api/projects/{project_id}/pipeline', {
         params: { path: { project_id: projectId } },
     });
-
     const sources = sourcesQuery.data ?? [];
-
-    if (sourcesQuery.isPending || pipeline.isPending) {
-        return <Loading size='M'></Loading>;
-    }
 
     return (
         <DisclosureGroup

@@ -50,7 +50,7 @@ export const ImageFolder = ({ config }: ImageFolderProps) => {
                     Ignore existing images
                 </Switch>
 
-                <Button maxWidth={'size-1000'} type='submit' isDisabled={isPending}>
+                <Button type='submit' maxWidth='size-1000' isDisabled={isPending || isEmpty(state.images_folder_path)}>
                     Apply
                 </Button>
             </Flex>
