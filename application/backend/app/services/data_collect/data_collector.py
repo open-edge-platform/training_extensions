@@ -81,7 +81,7 @@ class DataCollector(metaclass=Singleton):
         )
         self.dataset_service.create_dataset_item(
             project_id=project.id,
-            name=str(int(timestamp)),
+            name=f"{timestamp:.4f}".replace(".", "_"),
             format=DatasetItemFormat.JPG,
             data=frame_data,
             user_reviewed=False,

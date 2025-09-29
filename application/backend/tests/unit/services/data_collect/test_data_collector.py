@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
 import numpy as np
+from freezegun import freeze_time
 
 from app.schemas.dataset_item import DatasetItemAnnotation, DatasetItemFormat
 from app.schemas.label import LabelReference
@@ -75,6 +76,7 @@ class TestDataCollectorUnit:
         mock_convert_prediction.assert_not_called()
         mock_create_dataset_item.assert_not_called()
 
+    @freeze_time("2025-01-01 00:00:01")
     def test_collect(self, fxt_active_pipeline_service):
         """
         Image should be collected if policy conditions are met
@@ -104,7 +106,7 @@ class TestDataCollectorUnit:
             data_collector.collect(
                 source_id=source_id,
                 project=project,
-                timestamp=now + 1,
+                timestamp=now,
                 frame_data=frame_data,
                 inference_data=inference_data,
             )
@@ -115,7 +117,7 @@ class TestDataCollectorUnit:
         )
         mock_create_dataset_item.assert_called_once_with(
             project_id=project.id,
-            name=str(int(now + 1)),
+            name="1735689601_0000",
             format=DatasetItemFormat.JPG,
             data=frame_data,
             user_reviewed=False,
