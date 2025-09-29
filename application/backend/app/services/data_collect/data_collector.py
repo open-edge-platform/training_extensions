@@ -23,6 +23,7 @@ class PolicyChecker(metaclass=ABCMeta):
     def should_collect(self, timestamp: float) -> bool:
         """
         Checks if certain dispatched image should be collected to the project dataset
+
         :param timestamp: dispatched image timestamp
         :return: True if image should be collected, False otherwise
         """
@@ -64,6 +65,7 @@ class DataCollector(metaclass=Singleton):
     ) -> None:
         """
         Collects the dispatched image if any of the policy checkers indicate that it should be collected.
+
         :param source_id: ID of the pipeline source
         :param project: Pipeline project
         :param timestamp: Timestamp of the image

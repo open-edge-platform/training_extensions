@@ -6,8 +6,8 @@ from pydantic import BaseModel, Field
 
 
 class Point(BaseModel):
-    x: float = Field(..., description="Point x coordinate", ge=0)
-    y: float = Field(..., description="Point y coordinate", ge=0)
+    x: int = Field(..., description="Point x coordinate", ge=0)
+    y: int = Field(..., description="Point y coordinate", ge=0)
 
 
 # Base class with discriminator field
@@ -17,10 +17,10 @@ class ShapeBase(BaseModel):
 
 class Rectangle(ShapeBase):
     type: Literal["rectangle"] = "rectangle"
-    x: float = Field(..., description="Rectangle x coordinate", ge=0)
-    y: float = Field(..., description="Rectangle y coordinate", ge=0)
-    width: float = Field(..., description="Rectangle width", ge=0)
-    height: float = Field(..., description="Rectangle height", ge=0)
+    x: int = Field(..., description="Rectangle x coordinate", ge=0)
+    y: int = Field(..., description="Rectangle y coordinate", ge=0)
+    width: int = Field(..., description="Rectangle width", ge=0)
+    height: int = Field(..., description="Rectangle height", ge=0)
 
     model_config = {
         "json_schema_extra": {"example": {"type": "rectangle", "x": 10, "y": 20, "width": 100, "height": 200}}

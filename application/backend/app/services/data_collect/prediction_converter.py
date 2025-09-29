@@ -18,7 +18,7 @@ def _convert_detection_prediction(labels: list[Label], prediction: DetectionResu
     result = []
     for idx, box in enumerate(prediction.bboxes):
         label_name = prediction.label_names[idx]
-        probability = prediction.scores.tolist()[idx]
+        confidence = prediction.scores.tolist()[idx]
         label = next((label for label in labels if label.name == label_name), None)
         if not label:
             logger.warning(f"Prediction label {label_name} cannot be found in the project")
@@ -27,7 +27,7 @@ def _convert_detection_prediction(labels: list[Label], prediction: DetectionResu
         annotation = DatasetItemAnnotation(
             labels=[LabelReference(id=label.id)],
             shape=Rectangle(x=x, y=y, width=width, height=height),
-            probability=probability,
+            confidence=confidence,
         )
         result.append(annotation)
     return result
@@ -37,16 +37,16 @@ def _convert_classification_prediction(
     labels: list[Label], prediction: ClassificationResult
 ) -> list[DatasetItemAnnotation]:
     annotation_labels: list[LabelReference] = []
-    probability = 0
+    confidence = 0
     for predicted_label in prediction.top_labels:
         label_name = predicted_label.name
-        probability = predicted_label.confidence
+        confidence = predicted_label.confidence
         label = next((label for label in labels if label.name == label_name), None)
         if not label:
             logger.warning(f"Prediction label {label_name} cannot be found in the project")
             continue
         annotation_labels.append(LabelReference(id=label.id))
-    return [DatasetItemAnnotation(labels=annotation_labels, shape=FullImage(), probability=probability)]
+    return [DatasetItemAnnotation(labels=annotation_labels, shape=FullImage(), confidence=confidence)]
 
 
 def _convert_segmentation_prediction(
@@ -58,7 +58,7 @@ def _convert_segmentation_prediction(
     result = []
     for idx, box in enumerate(prediction.bboxes):
         label_name = prediction.label_names[idx]
-        probability = prediction.scores.tolist()[idx]
+        confidence = prediction.scores.tolist()[idx]
         label = next((label for label in labels if label.name == label_name), None)
         if not label:
             logger.warning(f"Prediction label {label_name} cannot be found in the project")
@@ -72,16 +72,9 @@ def _convert_segmentation_prediction(
                 continue
             if len(contour) <= 2 or cv2.contourArea(contour) < 1.0:
                 continue
-            points = [
-                Point(
-                    x=point[0][0] / width,
-                    y=point[0][1] / height,
-                )
-                for point in list(contour)
-            ]
-            polygon = Polygon(points=points)
+            polygon = Polygon(points=[Point(x=point[0][0], y=point[0][1]) for point in list(contour)])
             annotation = DatasetItemAnnotation(
-                labels=[LabelReference(id=label.id)], shape=polygon, probability=probability
+                labels=[LabelReference(id=label.id)], shape=polygon, confidence=confidence
             )
             result.append(annotation)
     return result

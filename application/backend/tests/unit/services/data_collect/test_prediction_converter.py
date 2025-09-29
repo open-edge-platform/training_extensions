@@ -33,7 +33,7 @@ def test_convert_prediction_classification() -> None:
         DatasetItemAnnotation(
             labels=[LabelReference(id=label.id)],
             shape=FullImage(),
-            probability=0.81,
+            confidence=0.81,
         )
     ]
 
@@ -42,7 +42,7 @@ def test_convert_prediction_detection() -> None:
     # Arrange
     frame_data = np.random.rand(100, 100, 3)
     label = Label(id=uuid4(), name="cat", color="#ff0000", hotkey="c")
-    coords = [12.0, 41.0, 12.5, 45.5]
+    coords = [12, 41, 12, 46]
     raw_prediction = DetectionResult(
         bboxes=np.array([coords]),
         labels=np.array([1]),
@@ -59,8 +59,8 @@ def test_convert_prediction_detection() -> None:
     assert annotations == [
         DatasetItemAnnotation(
             labels=[LabelReference(id=label.id)],
-            shape=Rectangle(x=12.0, y=41.0, width=12.5, height=45.5),
-            probability=0.81,
+            shape=Rectangle(x=12, y=41, width=12, height=46),
+            confidence=0.81,
         )
     ]
 
@@ -72,7 +72,7 @@ def test_convert_prediction_segmentation() -> None:
     cv2.rectangle(mask, (0, 0), (100, 100), 255, -1)
 
     label = Label(id=uuid4(), name="cat", color="#ff0000", hotkey="c")
-    coords = [12.0, 41.0, 12.5, 45.5]
+    coords = [12, 41, 12, 46]
     raw_prediction = InstanceSegmentationResult(
         bboxes=np.array([coords]),
         labels=np.array([1]),
@@ -90,9 +90,7 @@ def test_convert_prediction_segmentation() -> None:
     assert annotations == [
         DatasetItemAnnotation(
             labels=[LabelReference(id=label.id)],
-            shape=Polygon(
-                points=[Point(x=0.0, y=0.0), Point(x=0.0, y=0.99), Point(x=0.5, y=0.99), Point(x=0.5, y=0.0)]
-            ),
-            probability=0.81,
+            shape=Polygon(points=[Point(x=0, y=0), Point(x=0, y=99), Point(x=100, y=99), Point(x=100, y=0)]),
+            confidence=0.81,
         )
     ]
