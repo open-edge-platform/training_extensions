@@ -38,7 +38,7 @@ describe('TaskSelection', () => {
         const segOption = screen.getByLabelText('Task option: Image Segmentation');
         fireEvent.click(segOption);
 
-        expect(mockSetSelectedTask).toHaveBeenCalledWith('segmentation');
+        expect(mockSetSelectedTask).toHaveBeenCalledWith('instance_segmentation');
     });
 
     it('selects a task when the radio element is clicked', () => {
