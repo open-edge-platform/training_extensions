@@ -3,6 +3,8 @@
 
 from enum import Enum, auto
 
+from app.schemas.project import TaskType
+
 
 class DefaultCategory(str, Enum):
     """Model optimization preference categories.
@@ -18,12 +20,6 @@ class DefaultCategory(str, Enum):
     ACCURACY = auto()
     SPEED = auto()
     BALANCE = auto()
-
-
-class TaskType(str, Enum):
-    CLASSIFICATION = auto()
-    DETECTION = auto()
-    INSTANCE_SEGMENTATION = auto()
 
 
 class DefaultModels:

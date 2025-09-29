@@ -198,10 +198,10 @@ class DatasetService:
                         raise AnnotationValidationError(
                             "Detection project doesn't allow more than one label per annotation."
                         )
-            case TaskType.SEGMENTATION:
+            case TaskType.INSTANCE_SEGMENTATION:
                 for annotation in annotations:
                     if not isinstance(annotation.shape, Polygon):
-                        raise AnnotationValidationError("Segmentation project supports only polygon shapes.")
+                        raise AnnotationValidationError("Instance Segmentation project supports only polygon shapes.")
                     if len(annotation.labels) > 1:
                         raise AnnotationValidationError(
                             "Segmentation project doesn't allow more than one label per annotation."

@@ -11,7 +11,7 @@ from app.schemas.label import Label
 class TaskType(StrEnum):
     CLASSIFICATION = "classification"
     DETECTION = "detection"
-    SEGMENTATION = "segmentation"
+    INSTANCE_SEGMENTATION = "instance_segmentation"
 
 
 class Task(BaseModel):
