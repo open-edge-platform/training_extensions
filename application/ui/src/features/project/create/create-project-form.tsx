@@ -19,7 +19,7 @@ import classes from './create-project-form.module.scss';
 
 export const CreateProjectForm = () => {
     const [selectedTask, setSelectedTask] = useState<TaskType>('detection');
-    const [labels, setLabels] = useState<Label[]>([{ id: uuid(), color: '#F20004', name: 'Car' }]);
+    const [labels, setLabels] = useState<Label[]>([{ id: uuid(), color: '#F20004', name: 'Object' }]);
     const [name, setName] = useState<string>('Project #1');
 
     const navigate = useNavigate();

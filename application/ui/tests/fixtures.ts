@@ -28,6 +28,19 @@ const test = testBase.extend<Fixtures>({
             http.get('/api/projects/{project_id}/models', ({ response }) => {
                 return response(200).json([]);
             }),
+            http.get('/api/projects/{project_id}/pipeline', ({ response }) => {
+                return response(200).json({
+                    project_id: 'id-1',
+                    status: 'idle',
+                    source: null,
+                    sink: null,
+                    model: null,
+                    data_collection_policies: [],
+                });
+            }),
+            http.post('/api/projects/{project_id}/pipeline:enable', () => {
+                return HttpResponse.json(null, { status: 204 });
+            }),
             http.get('/api/projects', ({ response }) => {
                 return response(200).json([
                     {
@@ -40,6 +53,9 @@ const test = testBase.extend<Fixtures>({
                         },
                     },
                 ]);
+            }),
+            http.delete('/api/projects/{project_id}', () => {
+                return HttpResponse.json(null, { status: 204 });
             }),
             http.post('/api/webrtc/offer', ({ response }) => {
                 return response(200).json({
