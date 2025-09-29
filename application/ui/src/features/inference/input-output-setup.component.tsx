@@ -7,7 +7,7 @@ import { ReactComponent as Camera } from './../../assets/icons/camera.svg';
 import { SinkOptions } from './sinks/sink-options';
 import { SourceOptions } from './sources/source-options';
 
-export const InputSource = () => {
+export const InputOutputSetup = () => {
     return (
         <DialogTrigger type='popover'>
             <Button width={'size-2000'} variant={'secondary'}>
