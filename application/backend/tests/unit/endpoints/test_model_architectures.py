@@ -47,16 +47,6 @@ class TestModelArchitecturesEndpoint:
         assert detection_model["stats"]["trainable_parameters"] == 3.9
         assert "performance_ratings" in detection_model["stats"]
 
-        # Verify hyperparameters structure
-        assert "hyperparameters" in detection_model
-        assert "dataset_preparation" in detection_model["hyperparameters"]
-        assert "training" in detection_model["hyperparameters"]
-        assert "evaluation" in detection_model["hyperparameters"]
-
-        # Verify extra fields
-        assert "is_default_model" in detection_model
-        assert "model_category" in detection_model
-
     @pytest.mark.parametrize(
         "task_filter, total_models",
         [

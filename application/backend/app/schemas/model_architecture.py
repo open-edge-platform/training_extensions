@@ -4,13 +4,42 @@
 
 from pydantic import BaseModel, Field
 
-from app.supported_models.model_manifest import ModelManifest
+from app.supported_models.model_manifest import Capabilities, ModelManifest, ModelManifestDeprecationStatus, ModelStats
+
+
+class ModelArchitecture(BaseModel):
+    """Simplified model architecture information for API responses"""
+
+    id: str = Field(title="Model architecture ID", description="Unique identifier for the model architecture")
+    task: str = Field(title="Task Type", description="Type of machine learning task addressed by the model")
+    name: str = Field(title="Model architecture name", description="Friendly name of the model architecture")
+    description: str = Field(title="Description", description="Detailed description of the model capabilities")
+    capabilities: Capabilities = Field(
+        title="Model Capabilities", description="Special capabilities supported by the model"
+    )
+    stats: ModelStats = Field(title="Model Statistics", description="Statistics about the model")
+    support_status: ModelManifestDeprecationStatus = Field(
+        title="Support Status", description="Current support level (active, deprecated, or obsolete)"
+    )
+
+    @classmethod
+    def from_manifest(cls, manifest: ModelManifest) -> "ModelArchitecture":
+        """Create a ModelArchitecture from a ModelManifest, excluding unwanted fields"""
+        return cls(
+            id=manifest.id,
+            task=manifest.task,
+            name=manifest.name,
+            description=manifest.description,
+            capabilities=manifest.capabilities,
+            stats=manifest.stats,
+            support_status=manifest.support_status,
+        )
 
 
 class ModelArchitectures(BaseModel):
     """Model architectures response"""
 
-    model_architectures: list[ModelManifest] = Field(
+    model_architectures: list[ModelArchitecture] = Field(
         title="Model Architectures", description="List of available model architectures"
     )
 
@@ -20,55 +49,17 @@ class ModelArchitectures(BaseModel):
                 "model_architectures": [
                     {
                         "id": "Object_Detection_Deim_DFine_M",
+                        "task": "detection",
                         "name": "Deim-DFine-M",
                         "description": "DEIM is an advanced training framework designed to enhance the matching"
                         " mechanism in DETRs, enabling faster convergence and improved accuracy.",
-                        "task": "detection",
+                        "capabilities": {"xai": True, "tiling": True},
                         "stats": {
                             "gigaflops": 57,
                             "trainable_parameters": 19,
                             "performance_ratings": {"accuracy": 2, "training_time": 2, "inference_speed": 2},
                         },
                         "support_status": "active",
-                        "supported_gpus": {"intel": True, "nvidia": True},
-                        "capabilities": {"xai": True, "tiling": True},
-                        "hyperparameters": {
-                            "dataset_preparation": {
-                                "augmentation": {
-                                    "topdown_affine": None,
-                                    "random_zoom_out": None,
-                                    "iou_random_crop": None,
-                                    "mosaic": None,
-                                    "random_resize_crop": None,
-                                    "random_affine": None,
-                                    "mixup": None,
-                                    "hsv_random_aug": None,
-                                    "random_horizontal_flip": None,
-                                    "random_vertical_flip": None,
-                                    "color_jitter": None,
-                                    "gaussian_blur": None,
-                                    "photometric_distort": None,
-                                    "gaussian_noise": None,
-                                    "tiling": {
-                                        "enable": False,
-                                        "adaptive_tiling": True,
-                                        "tile_size": 400,
-                                        "tile_overlap": 0.2,
-                                    },
-                                }
-                            },
-                            "training": {
-                                "max_epochs": 200,
-                                "early_stopping": {"enable": True, "patience": 10},
-                                "learning_rate": 0.0004,
-                                "input_size_width": 640,
-                                "input_size_height": 640,
-                                "allowed_values_input_size": [640],
-                            },
-                            "evaluation": {"metric": "f_measure"},
-                        },
-                        "is_default_model": False,
-                        "model_category": None,
                     },
                 ]
             }
