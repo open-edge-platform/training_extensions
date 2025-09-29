@@ -18,6 +18,7 @@ from app.services import (
     ProjectService,
     SystemService,
 )
+from app.services.base_weights_service import BaseWeightsService
 from app.services.label_service import LabelService
 from app.settings import get_settings
 from app.webrtc.manager import WebRTCManager
@@ -174,3 +175,9 @@ def get_project_service() -> ProjectService:
 def get_label_service() -> type[LabelService]:
     """Provides a LabelService instance for managing labels."""
     return LabelService
+
+
+@lru_cache
+def get_base_weights_service() -> BaseWeightsService:
+    """Provides a BaseWeightsService instance for managing base weights."""
+    return BaseWeightsService(settings.data_dir)
