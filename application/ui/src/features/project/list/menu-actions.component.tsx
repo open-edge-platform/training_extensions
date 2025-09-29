@@ -51,7 +51,12 @@ export const MenuActions = ({ projectId }: { projectId: string }) => {
 
     return (
         <MenuTrigger>
-            <ActionButton isQuiet UNSAFE_style={{ fill: 'var(--spectrum-gray-900)' }}>
+            <ActionButton
+                isQuiet
+                UNSAFE_style={{ fill: 'var(--spectrum-gray-900)' }}
+                aria-label={'open project options'}
+                data-testid={projectId}
+            >
                 <MoreMenu />
             </ActionButton>
             <Menu onAction={handleMenuAction}>

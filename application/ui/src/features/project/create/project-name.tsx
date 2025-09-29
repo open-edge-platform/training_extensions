@@ -36,7 +36,7 @@ export const ProjectName = ({ name, setName }: ProjectNameProps) => {
                     <Divider />
 
                     <Content>
-                        <TextField value={name} onChange={setName} />
+                        <TextField aria-label={'edit project name'} value={name} onChange={setName} />
                     </Content>
 
                     <ButtonGroup>
