@@ -14,7 +14,3 @@ export const isValidIp6 = (ip: string): boolean => {
 export const isValidIp = (ip: string) => {
     return isValidIp6(ip) || isValidIp4(ip);
 };
-
-export const isOnlyDigits = (str: string): boolean => {
-    return /^\d+$/.test(str);
-};

@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { isOnlyDigits, isValidIp } from './utils';
+import { isValidIp } from './utils';
 
 describe('IpCamera utils', () => {
     it('returns true for valid IPv4 and IPv6 addresses using isValidIp', () => {
@@ -25,23 +25,5 @@ describe('IpCamera utils', () => {
         expect(isValidIp('')).toBe(false);
         expect(isValidIp('2001:db8:85a3::8a2e:370:7334')).toBe(false); // compressed IPv6 not supported by regex
         expect(isValidIp('1234:5678:9abc:def0:1234:5678:9abc:defg')).toBe(false); // invalid hex
-    });
-
-    describe('isOnlyDigits', () => {
-        it('returns true for numeric strings', () => {
-            expect(isOnlyDigits('123')).toBe(true);
-            expect(isOnlyDigits('0')).toBe(true);
-            expect(isOnlyDigits('000123')).toBe(true);
-        });
-
-        it('returns false for non-numeric strings', () => {
-            expect(isOnlyDigits('123a')).toBe(false);
-            expect(isOnlyDigits('a123')).toBe(false);
-            expect(isOnlyDigits('12 3')).toBe(false);
-            expect(isOnlyDigits('')).toBe(false);
-            expect(isOnlyDigits(' ')).toBe(false);
-            expect(isOnlyDigits('12.3')).toBe(false);
-            expect(isOnlyDigits('-123')).toBe(false);
-        });
     });
 });

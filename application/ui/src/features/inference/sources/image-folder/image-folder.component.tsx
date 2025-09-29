@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Flex, Switch, TextField } from '@geti/ui';
+import { Button, Flex, Form, Switch, TextField } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 
 import { ReactComponent as Folder } from '../../../../assets/icons/folder.svg';
@@ -34,7 +34,7 @@ export const ImageFolder = ({ config = iniConfig }: ImageFolderProps) => {
     });
 
     return (
-        <form action={submitAction}>
+        <Form action={submitAction}>
             <Flex direction='column' gap='size-200'>
                 <TextField isHidden label='id' name='id' defaultValue={state?.id} />
                 <TextField width={'100%'} label='Name' name='name' defaultValue={state?.name} />
@@ -70,6 +70,6 @@ export const ImageFolder = ({ config = iniConfig }: ImageFolderProps) => {
                     Apply
                 </Button>
             </Flex>
-        </form>
+        </Form>
     );
 };

@@ -5,8 +5,13 @@ import { components } from '../../../api/openapi-spec';
 
 export type ImagesFolderSourceConfig = components['schemas']['ImagesFolderSourceConfig'];
 export type IPCameraSourceConfig = components['schemas']['IPCameraSourceConfig'];
+export type WebcamSourceConfig = components['schemas']['WebcamSourceConfig'];
 
-export type SourceConfig = ImagesFolderSourceConfig | IPCameraSourceConfig;
+export type SourceConfig = ImagesFolderSourceConfig | IPCameraSourceConfig | WebcamSourceConfig;
+
+export const isOnlyDigits = (str: string): boolean => {
+    return /^\d+$/.test(str);
+};
 
 export const getImageFolderData = <T extends { source_type: string }>(sources: T[]) => {
     return sources
@@ -16,4 +21,8 @@ export const getImageFolderData = <T extends { source_type: string }>(sources: T
 
 export const getIpCameraData = <T extends { source_type: string }>(sources: T[]) => {
     return sources.filter(({ source_type }) => source_type === 'ip_camera').at(0) as unknown as IPCameraSourceConfig;
+};
+
+export const getWebcamData = <T extends { source_type: string }>(sources: T[]) => {
+    return sources.filter(({ source_type }) => source_type === 'webcam').at(0) as unknown as WebcamSourceConfig;
 };

@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Flex, Switch, TextField } from '@geti/ui';
+import { Button, Flex, Form, Switch, TextField } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 
 import { useSourceAction } from '../hooks/use-source-action.hook';
@@ -32,7 +32,7 @@ export const IpCamera = ({ config = initConfig }: IpCameraProps) => {
     });
 
     return (
-        <form action={submitAction}>
+        <Form action={submitAction}>
             <Flex direction='column' gap='size-200'>
                 <TextField width={'100%'} label='Name' name='name' defaultValue={state?.name} />
                 <TextField width={'100%'} label='Stream Path:' name='stream_path' defaultValue={state.stream_url} />
@@ -48,6 +48,6 @@ export const IpCamera = ({ config = initConfig }: IpCameraProps) => {
                     Apply
                 </Button>
             </Flex>
-        </form>
+        </Form>
     );
 };
