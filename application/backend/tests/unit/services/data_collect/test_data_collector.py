@@ -38,10 +38,11 @@ class TestFixedRatePolicyCheckerUnit:
         assert should_collect is False
 
 
+@patch.object(DataCollector, "reload_policies")
 class TestDataCollectorUnit:
     """Unit tests for DataCollector."""
 
-    def test_collect_no(self):
+    def test_collect_no(self, mock_reload_policies):
         """
         No images should be collected if policy conditions aren't met
         """
@@ -75,7 +76,7 @@ class TestDataCollectorUnit:
         mock_convert_prediction.assert_not_called()
         mock_create_dataset_item.assert_not_called()
 
-    def test_collect(self):
+    def test_collect(self, mock_reload_policies):
         """
         Image should be collected if policy conditions are met
         """
