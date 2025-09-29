@@ -8,7 +8,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from datumaro.components.annotation import AnnotationType
-from datumaro.experimental import Dataset as DatasetNew
 from datumaro.experimental.categories import LabelCategories
 from datumaro.experimental.legacy import convert_from_legacy
 
@@ -22,6 +21,7 @@ from .dataset.base_new import OTXDataset as OTXDatasetNew
 
 if TYPE_CHECKING:
     from datumaro.components.dataset import Dataset as DmDataset
+    from datumaro.experimental import Dataset as DatasetNew
 
     from otx.config.data import SubsetConfig
 
@@ -79,13 +79,9 @@ class OTXDatasetFactory:
             return OTXAnomalyDataset(task_type=task, **common_kwargs)
 
         if task == OTXTaskType.MULTI_CLASS_CLS:
-            from .dataset.classification_new import ClassificationSample, OTXMulticlassClsDataset
+            from .dataset.classification_new import OTXMulticlassClsDataset
 
-            categories = cls._get_label_categories(dm_subset, data_format)
-            dataset = DatasetNew(ClassificationSample, categories={"label": categories})
-            for item in dm_subset:
-                if len(item.media.data.shape) == 3:  # TODO(albert): Account for grayscale images
-                    dataset.append(ClassificationSample.from_dm_item(item))
+            dataset = convert_from_legacy(dm_subset)
             common_kwargs["dm_subset"] = dataset
             return OTXMulticlassClsDataset(**common_kwargs)
 
@@ -104,7 +100,6 @@ class OTXDatasetFactory:
 
             dataset = convert_from_legacy(dm_subset)
             common_kwargs["dm_subset"] = dataset
-
             return OTXDetectionDataset(**common_kwargs)
 
         if task in [OTXTaskType.ROTATED_DETECTION, OTXTaskType.INSTANCE_SEGMENTATION]:
@@ -112,7 +107,6 @@ class OTXDatasetFactory:
 
             dataset = convert_from_legacy(dm_subset)
             common_kwargs["dm_subset"] = dataset
-
             return OTXInstanceSegDataset(include_polygons=include_polygons, **common_kwargs)
 
         if task == OTXTaskType.SEMANTIC_SEGMENTATION:
@@ -120,7 +114,6 @@ class OTXDatasetFactory:
 
             dataset = convert_from_legacy(dm_subset)
             common_kwargs["dm_subset"] = dataset
-
             return OTXSegmentationDataset(**common_kwargs)
 
         if task == OTXTaskType.KEYPOINT_DETECTION:

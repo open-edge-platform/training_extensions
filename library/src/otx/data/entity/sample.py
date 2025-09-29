@@ -11,7 +11,6 @@ import numpy as np
 import polars as pl
 import torch
 from datumaro import Mask
-from datumaro.components.media import Image
 from datumaro.experimental.dataset import Sample
 from datumaro.experimental.fields import ImageInfo as DmImageInfo
 from datumaro.experimental.fields import (
@@ -29,7 +28,6 @@ from torchvision import tv_tensors
 from otx.data.entity.base import ImageInfo
 
 if TYPE_CHECKING:
-    from datumaro import DatasetItem
     from torchvision.tv_tensors import BoundingBoxes, Mask
 
 
@@ -99,33 +97,6 @@ class ClassificationSample(OTXSample):
 
     image: np.ndarray | tv_tensors.Image = image_field(dtype=pl.UInt8)
     label: torch.Tensor = label_field(pl.Int32())
-
-    @classmethod
-    def from_dm_item(cls, item: DatasetItem) -> ClassificationSample:
-        """Create a ClassificationSample from a Datumaro DatasetItem.
-
-        Args:
-            item: Datumaro DatasetItem containing image and label
-
-        Returns:
-            ClassificationSample: Instance with image and label set
-        """
-        image = item.media_as(Image).data
-        label = item.annotations[0].label if item.annotations else None
-
-        img_shape = image.shape[:2]
-        img_info = ImageInfo(
-            img_idx=0,
-            img_shape=img_shape,
-            ori_shape=img_shape,
-        )
-
-        sample = cls(
-            image=image,
-            label=torch.as_tensor(label, dtype=torch.long) if label is not None else torch.tensor(-1, dtype=torch.long),
-        )
-        sample.img_info = img_info
-        return sample
 
 
 class DetectionSample(OTXSample):
