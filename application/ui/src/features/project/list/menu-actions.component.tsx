@@ -6,7 +6,7 @@ import { MoreMenu } from '@geti/ui/icons';
 import { useNavigate } from 'react-router';
 
 import { $api } from '../../../api/client';
-import { paths } from '../../../router';
+import { paths } from '../../../constants/paths';
 
 export const MenuActions = ({ projectId }: { projectId: string }) => {
     const navigate = useNavigate();

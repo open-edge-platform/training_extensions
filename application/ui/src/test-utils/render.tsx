@@ -9,8 +9,8 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { render, RenderOptions } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 
+import { paths } from '../constants/paths';
 import { queryClient } from '../providers';
-import { paths } from '../router';
 
 interface Options extends RenderOptions {
     route: string;

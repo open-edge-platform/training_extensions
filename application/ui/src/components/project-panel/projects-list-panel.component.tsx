@@ -21,8 +21,8 @@ import { AddCircle } from '@geti/ui/icons';
 import { useNavigate } from 'react-router';
 
 import { $api } from '../../api/client';
+import { paths } from '../../constants/paths';
 import { useProjectIdentifier } from '../../hooks/use-project-identifier.hook';
-import { paths } from '../../router';
 import { ProjectsList } from './projects-list.component';
 
 import styles from './projects-list.module.scss';

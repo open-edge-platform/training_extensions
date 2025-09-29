@@ -8,7 +8,7 @@ import { NavLink } from 'react-router-dom';
 import { $api } from '../../../api/client';
 import { SchemaProjectInput } from '../../../api/openapi-spec';
 import thumbnailUrl from '../../../assets/mocked-project-thumbnail.png';
-import { paths } from '../../../router';
+import { paths } from '../../../constants/paths';
 import { MenuActions } from './menu-actions.component';
 
 import classes from './project-list.module.scss';

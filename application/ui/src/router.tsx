@@ -6,9 +6,9 @@ import { Suspense } from 'react';
 import { Loading } from '@geti/ui';
 import { redirect } from 'react-router';
 import { createBrowserRouter } from 'react-router-dom';
-import { path } from 'static-path';
 
 import { ZoomProvider } from './components/zoom/zoom';
+import { paths } from './constants/paths';
 import { WebRTCConnectionProvider } from './features/inference/stream/web-rtc-connection-provider';
 import { ProjectList } from './features/project/list/project-list.component';
 import { Layout } from './layout';
@@ -19,25 +19,6 @@ import { Inference } from './routes/inference/inference';
 import { Models } from './routes/models/models';
 import { CreateProject } from './routes/project/create-project';
 import { ViewProject } from './routes/project/view-project';
-
-const root = path('/');
-const projects = root.path('/projects');
-const project = projects.path('/:projectId');
-const inference = projects.path('/:projectId/inference');
-const dataset = projects.path('/:projectId/dataset');
-const models = projects.path('/:projectId/models');
-
-export const paths = {
-    root,
-    project: {
-        index: projects,
-        new: projects.path('/new'),
-        details: project,
-        inference,
-        dataset,
-        models,
-    },
-};
 
 export const router = createBrowserRouter([
     {
