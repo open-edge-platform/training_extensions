@@ -96,7 +96,7 @@ class DispatchingWorker(BaseThreadWorker):
 
             # Collect the image to project dataset if needed
             source_config = self._active_pipeline_service.get_source_config()  # type: ignore
-            DataCollector().collect(
+            DataCollector(self._active_pipeline_service).collect(  # type: ignore
                 source_id=source_config.id,
                 project=project,
                 timestamp=stream_data.timestamp,

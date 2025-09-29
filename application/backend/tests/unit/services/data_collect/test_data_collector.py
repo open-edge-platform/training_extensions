@@ -38,11 +38,10 @@ class TestFixedRatePolicyCheckerUnit:
         assert should_collect is False
 
 
-@patch.object(DataCollector, "reload_policies")
 class TestDataCollectorUnit:
     """Unit tests for DataCollector."""
 
-    def test_collect_no(self, mock_reload_policies):
+    def test_collect_no(self, fxt_active_pipeline_service):
         """
         No images should be collected if policy conditions aren't met
         """
@@ -54,7 +53,7 @@ class TestDataCollectorUnit:
 
         now = datetime.timestamp(datetime.now())
 
-        data_collector = DataCollector()
+        data_collector = DataCollector(fxt_active_pipeline_service)
         policy_checker = MagicMock()
         policy_checker.should_collect.return_value = False
         data_collector.policy_checkers = [policy_checker]
@@ -76,7 +75,7 @@ class TestDataCollectorUnit:
         mock_convert_prediction.assert_not_called()
         mock_create_dataset_item.assert_not_called()
 
-    def test_collect(self, mock_reload_policies):
+    def test_collect(self, fxt_active_pipeline_service):
         """
         Image should be collected if policy conditions are met
         """
@@ -88,7 +87,7 @@ class TestDataCollectorUnit:
 
         now = datetime.timestamp(datetime.now())
 
-        data_collector = DataCollector()
+        data_collector = DataCollector(fxt_active_pipeline_service)
         policy_checker = MagicMock()
         policy_checker.should_collect.return_value = True
         data_collector.policy_checkers = [policy_checker]

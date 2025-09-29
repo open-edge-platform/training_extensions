@@ -47,8 +47,9 @@ class FixedRatePolicyChecker(PolicyChecker):
 
 
 class DataCollector(metaclass=Singleton):
-    def __init__(self) -> None:
+    def __init__(self, active_pipeline_service: ActivePipelineService) -> None:
         super().__init__()
+        self.active_pipeline_service = active_pipeline_service
         self.dataset_service = DatasetService(get_settings().data_dir)
         self.policy_checkers: list[PolicyChecker] = []
         self.reload_policies()
@@ -91,7 +92,7 @@ class DataCollector(metaclass=Singleton):
         """
         Reloads data collection policies from active pipeline and re-initialize policy checkers.
         """
-        policies = [policy for policy in ActivePipelineService().get_data_collection_policies() if policy.enabled]
+        policies = [policy for policy in self.active_pipeline_service.get_data_collection_policies() if policy.enabled]
         self.policy_checkers = []
         for policy in policies:
             manager = None
