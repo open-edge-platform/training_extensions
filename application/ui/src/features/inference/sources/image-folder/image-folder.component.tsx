@@ -5,17 +5,33 @@ import { Button, Flex, Switch, TextField } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 
 import { ReactComponent as Folder } from '../../../../assets/icons/folder.svg';
+import { useSourceAction } from '../hooks/use-source-action.hook';
 import { ImagesFolderSourceConfig } from '../util';
-import { useActionImageFolder } from './use-action-image-folder.hook';
 
 import classes from './image-folder.module.scss';
 
 type ImageFolderProps = {
     config?: ImagesFolderSourceConfig;
 };
+const iniConfig: ImagesFolderSourceConfig = {
+    name: '',
+    source_type: 'images_folder',
+    images_folder_path: '',
+    ignore_existing_images: false,
+};
 
-export const ImageFolder = ({ config }: ImageFolderProps) => {
-    const [state, submitAction, isPending] = useActionImageFolder(config, isEmpty(config?.id));
+export const ImageFolder = ({ config = iniConfig }: ImageFolderProps) => {
+    const [state, submitAction, isPending] = useSourceAction({
+        config,
+        isNewSource: isEmpty(config?.id),
+        bodyFormatter: (formData: FormData) => ({
+            id: String(formData.get('id')),
+            name: String(formData.get('name')),
+            source_type: 'images_folder',
+            images_folder_path: String(formData.get('images_folder_path')),
+            ignore_existing_images: formData.get('ignore_existing_images') === 'on' ? true : false,
+        }),
+    });
 
     return (
         <form action={submitAction}>

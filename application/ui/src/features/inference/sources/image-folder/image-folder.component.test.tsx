@@ -3,9 +3,9 @@
 
 import { fireEvent, render, screen, waitFor } from 'test-utils/render';
 
+import { useSourceAction } from '../hooks/use-source-action.hook';
 import { ImagesFolderSourceConfig } from '../util';
 import { ImageFolder } from './image-folder.component';
-import { useActionImageFolder } from './use-action-image-folder.hook';
 
 vi.mock('react-router', async (importOriginal) => {
     const actual = await importOriginal<typeof import('react-router')>();
@@ -15,7 +15,7 @@ vi.mock('react-router', async (importOriginal) => {
     };
 });
 
-vi.mock('./use-action-image-folder.hook');
+vi.mock('../hooks/use-source-action.hook');
 
 const mockedConfig: ImagesFolderSourceConfig = {
     id: '1',
@@ -27,7 +27,7 @@ const mockedConfig: ImagesFolderSourceConfig = {
 
 describe('ImageFolder', () => {
     it('disables the Apply button when loading', () => {
-        vi.mocked(useActionImageFolder).mockReturnValue([mockedConfig, vi.fn(), true]);
+        vi.mocked(useSourceAction).mockReturnValue([mockedConfig, vi.fn(), true]);
 
         render(<ImageFolder />);
 
@@ -36,7 +36,7 @@ describe('ImageFolder', () => {
 
     it('calls submit action when Apply button is clicked', () => {
         const mockedSubmitAction = vi.fn();
-        vi.mocked(useActionImageFolder).mockReturnValue([mockedConfig, mockedSubmitAction, false]);
+        vi.mocked(useSourceAction).mockReturnValue([mockedConfig, mockedSubmitAction, false]);
 
         render(<ImageFolder />);
 

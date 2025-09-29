@@ -12,7 +12,7 @@ import { ReactComponent as WebcamIcon } from '../../../assets/icons/webcam.svg';
 import { DisclosureGroup } from './disclosure-group.component';
 import { ImageFolder } from './image-folder/image-folder.component';
 import { IpCamera } from './ip-camera/ip-camera.component';
-import { getImageFolderData } from './util';
+import { getImageFolderData, getIpCameraData } from './util';
 import { Webcam } from './webcam/webcam.component';
 
 export const SourceOptions = () => {
@@ -32,7 +32,7 @@ export const SourceOptions = () => {
                 {
                     label: 'IP Camera',
                     value: 'ip_camera',
-                    content: <IpCamera />,
+                    content: <IpCamera config={getIpCameraData(sources)} />,
                     icon: <IpCameraIcon width={'24px'} />,
                 },
                 { label: 'GenICam', value: 'gen_i_cam', content: <ImageFolder />, icon: <GenICam width={'24px'} /> },
