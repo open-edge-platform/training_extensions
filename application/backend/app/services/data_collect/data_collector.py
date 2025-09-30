@@ -13,7 +13,6 @@ from app.schemas.pipeline import FixedRateDataCollectionPolicy
 from app.services import ActivePipelineService, DatasetService
 from app.services.data_collect.prediction_converter import convert_prediction
 from app.settings import get_settings
-from app.utils import Singleton
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +46,7 @@ class FixedRatePolicyChecker(PolicyChecker):
         return True
 
 
-class DataCollector(metaclass=Singleton):
+class DataCollector:
     def __init__(self, active_pipeline_service: ActivePipelineService) -> None:
         super().__init__()
         self.active_pipeline_service = active_pipeline_service
