@@ -3,9 +3,10 @@
 
 import { Page } from '@playwright/test';
 import { HttpResponse } from 'msw';
+import { Project } from 'src/features/project/types';
 
+import { getMockedProject } from '../mocks/mock-project';
 import { expect, http, test } from './fixtures';
-import { getMockedProject } from './test-utils/mocks';
 
 const fillProjectForm = async ({
     page,
@@ -42,15 +43,15 @@ test.describe('Project', () => {
         network.use(
             http.get('/api/projects', () => {
                 return HttpResponse.json([
-                    getMockedProject({
+                    getMockedProject<Project>({
                         id: 'id-1',
                         name: 'Project 1',
                     }),
-                    getMockedProject({
+                    getMockedProject<Project>({
                         id: 'id-2',
                         name: 'Project 2',
                     }),
-                    getMockedProject({
+                    getMockedProject<Project>({
                         id: 'id-3',
                         name: 'Project 3',
                     }),
@@ -96,19 +97,19 @@ test.describe('Project', () => {
         network.use(
             http.get('/api/projects', () => {
                 return HttpResponse.json([
-                    getMockedProject({
+                    getMockedProject<Project>({
                         id: '1',
                         name: 'Project 1',
                     }),
-                    getMockedProject({
+                    getMockedProject<Project>({
                         id: '2',
                         name: 'Project 2',
                     }),
-                    getMockedProject({
+                    getMockedProject<Project>({
                         id: 'id-3',
                         name: 'Project 3',
                     }),
-                    getMockedProject({
+                    getMockedProject<Project>({
                         id: 'new project id',
                         name: 'New Project',
                         task: {
@@ -141,11 +142,11 @@ test.describe('Project', () => {
         network.use(
             http.get('/api/projects', () => {
                 return HttpResponse.json([
-                    getMockedProject({
+                    getMockedProject<Project>({
                         id: '1',
                         name: 'Project 1',
                     }),
-                    getMockedProject({
+                    getMockedProject<Project>({
                         id: '2',
                         name: 'Project 2',
                     }),
