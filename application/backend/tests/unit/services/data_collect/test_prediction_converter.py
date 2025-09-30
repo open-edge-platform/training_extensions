@@ -42,7 +42,7 @@ def test_convert_prediction_detection() -> None:
     # Arrange
     frame_data = np.random.rand(100, 100, 3)
     label = Label(id=uuid4(), name="cat", color="#ff0000", hotkey="c")
-    coords = [12, 41, 12, 46]
+    coords = [12, 41, 30, 65]  # x1, y1, x2, y2
     raw_prediction = DetectionResult(
         bboxes=np.array([coords]),
         labels=np.array([1]),
@@ -59,7 +59,7 @@ def test_convert_prediction_detection() -> None:
     assert annotations == [
         DatasetItemAnnotation(
             labels=[LabelReference(id=label.id)],
-            shape=Rectangle(x=12, y=41, width=12, height=46),
+            shape=Rectangle(x=12, y=41, width=18, height=24),
             confidence=0.81,
         )
     ]
