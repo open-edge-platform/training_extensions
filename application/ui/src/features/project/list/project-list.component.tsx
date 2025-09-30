@@ -18,6 +18,7 @@ export const ProjectList = () => {
         <View
             paddingTop={'size-1000'}
             height={'100%'}
+            backgroundColor={'gray-100'}
             UNSAFE_style={{
                 backgroundImage: `url(${Background})`,
                 backgroundBlendMode: 'luminosity',
