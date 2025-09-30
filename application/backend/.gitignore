@@ -14,5 +14,6 @@ wheels/
 TODO*
 
 data/
+docs/openapi.json
 .idea
 .DS_Store
