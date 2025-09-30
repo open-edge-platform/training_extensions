@@ -240,7 +240,6 @@ def capture_next_pipeline_frame(
     """Marks next pipeline frame to be collected"""
     try:
         project_service.get_project_by_id(project_id)
-        logger.info(data_collector)
         data_collector.collect_next_frame()
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
