@@ -1,8 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen, waitFor } from '@test-utils/render';
 import userEvent from '@testing-library/user-event';
+import { render, screen, waitFor } from 'test-utils/render';
 
 import { useSourceAction } from '../hooks/use-source-action.hook';
 import { VideoFileSourceConfig } from '../util';

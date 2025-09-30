@@ -4,7 +4,6 @@
 import { Button, Flex, Form, TextField } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 
-import { RequiredTextField } from '../../../../components/required-text-field/required-text-field.component';
 import { useSourceAction } from '../hooks/use-source-action.hook';
 import { isOnlyDigits, WebcamSourceConfig } from '../util';
 

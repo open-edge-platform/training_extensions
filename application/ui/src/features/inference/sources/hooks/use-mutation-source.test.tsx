@@ -1,9 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { TestProviders } from '@test-utils/render';
 import { act, renderHook } from '@testing-library/react';
 import { HttpResponse } from 'msw';
+import { TestProviders } from 'test-utils/render';
 
 import { http } from '../../../../api/utils';
 import { server } from '../../../../msw-node-setup';
