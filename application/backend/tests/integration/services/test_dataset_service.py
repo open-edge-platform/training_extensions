@@ -106,7 +106,6 @@ class TestDatasetServiceIntegration:
         db_session.flush()
         stored_source_id = fxt_db_sources[0].id
         model_revision_id = fxt_db_models[0].id
-        db_session.commit()
 
         created_dataset_item = fxt_dataset_service.create_dataset_item(
             project_id=UUID(project_id),

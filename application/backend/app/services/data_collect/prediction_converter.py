@@ -21,7 +21,7 @@ def _convert_detection_prediction(labels: list[Label], prediction: DetectionResu
         confidence = prediction.scores.tolist()[idx]
         label = next((label for label in labels if label.name == label_name), None)
         if not label:
-            logger.warning(f"Prediction label {label_name} cannot be found in the project")
+            logger.warning("Prediction label %s cannot be found in the project", label_name)
             continue
         x, y, width, height = box.tolist()
         annotation = DatasetItemAnnotation(
@@ -43,7 +43,7 @@ def _convert_classification_prediction(
         confidence = predicted_label.confidence
         label = next((label for label in labels if label.name == label_name), None)
         if not label:
-            logger.warning(f"Prediction label {label_name} cannot be found in the project")
+            logger.warning("Prediction label %s cannot be found in the project", label_name)
             continue
         annotation_labels.append(LabelReference(id=label.id))
     return [DatasetItemAnnotation(labels=annotation_labels, shape=FullImage(), confidence=confidence)]
@@ -61,7 +61,7 @@ def _convert_segmentation_prediction(
         confidence = prediction.scores.tolist()[idx]
         label = next((label for label in labels if label.name == label_name), None)
         if not label:
-            logger.warning(f"Prediction label {label_name} cannot be found in the project")
+            logger.warning("Prediction label %s cannot be found in the project", label_name)
             continue
         mask = prediction.masks[idx].astype(np.uint8)
         contours, hierarchies = cv2.findContours(mask, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)

@@ -26,6 +26,7 @@ class PipelineService:
     def __init__(
         self,
         active_pipeline_service: ActivePipelineService,
+        data_collector: DataCollector,
         metrics_service: MetricsService,
         config_changed_condition: Condition,
     ) -> None:
@@ -33,6 +34,7 @@ class PipelineService:
             ServiceConfig(PipelineRepository, PipelineMapper, ResourceType.PIPELINE)
         )
         self._active_pipeline_service: ActivePipelineService = active_pipeline_service
+        self._data_collector: DataCollector = data_collector
         self._config_changed_condition: Condition = config_changed_condition
         self._metrics_service: MetricsService = metrics_service
 
@@ -46,7 +48,7 @@ class PipelineService:
     def _notify_pipeline_changed(self) -> None:
         self._notify_source_changed()
         self._notify_sink_changed()
-        DataCollector(self._active_pipeline_service).reload_policies()
+        self._data_collector.reload_policies()
 
     def get_pipeline_by_id(self, project_id: UUID, db: Session | None = None) -> Pipeline:
         """Retrieve a pipeline by project ID."""
@@ -70,7 +72,7 @@ class PipelineService:
                     self._notify_sink_changed()
                 if pipeline.data_collection_policies != updated.data_collection_policies:
                     self._active_pipeline_service.reload()
-                    DataCollector(self._active_pipeline_service).reload_policies()
+                    self._data_collector.reload_policies()
             elif pipeline.status != updated.status:
                 # If the pipeline is being activated or stopped
                 self._notify_pipeline_changed()

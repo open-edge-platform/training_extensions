@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
 import numpy as np
+import pytest
 from freezegun import freeze_time
 
 from app.schemas.dataset_item import DatasetItemAnnotation, DatasetItemFormat
@@ -39,10 +40,16 @@ class TestFixedRatePolicyCheckerUnit:
         assert should_collect is False
 
 
+@pytest.fixture
+def fxt_data_collector(fxt_active_pipeline_service) -> DataCollector:
+    """Fixture to create a DataCollector instance with mocked dependencies."""
+    return DataCollector(fxt_active_pipeline_service)
+
+
 class TestDataCollectorUnit:
     """Unit tests for DataCollector."""
 
-    def test_collect_no(self, fxt_active_pipeline_service):
+    def test_collect_no(self, fxt_data_collector):
         """
         No images should be collected if policy conditions aren't met
         """
@@ -54,17 +61,16 @@ class TestDataCollectorUnit:
 
         now = datetime.timestamp(datetime.now())
 
-        data_collector = DataCollector(fxt_active_pipeline_service)
         policy_checker = MagicMock()
         policy_checker.should_collect.return_value = False
-        data_collector.policy_checkers = [policy_checker]
+        fxt_data_collector.policy_checkers = [policy_checker]
 
         # Act
         with (
             patch.object(DatasetService, "create_dataset_item") as mock_create_dataset_item,
             patch("app.services.data_collect.data_collector.convert_prediction") as mock_convert_prediction,
         ):
-            data_collector.collect(
+            fxt_data_collector.collect(
                 source_id=source_id,
                 project=project,
                 timestamp=now + 1,
@@ -77,7 +83,7 @@ class TestDataCollectorUnit:
         mock_create_dataset_item.assert_not_called()
 
     @freeze_time("2025-01-01 00:00:01")
-    def test_collect(self, fxt_active_pipeline_service):
+    def test_collect(self, fxt_data_collector):
         """
         Image should be collected if policy conditions are met
         """
@@ -89,10 +95,9 @@ class TestDataCollectorUnit:
 
         now = datetime.timestamp(datetime.now())
 
-        data_collector = DataCollector(fxt_active_pipeline_service)
         policy_checker = MagicMock()
         policy_checker.should_collect.return_value = True
-        data_collector.policy_checkers = [policy_checker]
+        fxt_data_collector.policy_checkers = [policy_checker]
 
         annotations = [DatasetItemAnnotation(labels=[LabelReference(id=uuid4())], shape=FullImage())]
 
@@ -103,7 +108,7 @@ class TestDataCollectorUnit:
                 "app.services.data_collect.data_collector.convert_prediction", return_value=annotations
             ) as mock_convert_prediction,
         ):
-            data_collector.collect(
+            fxt_data_collector.collect(
                 source_id=source_id,
                 project=project,
                 timestamp=now,

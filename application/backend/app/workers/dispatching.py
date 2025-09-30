@@ -31,13 +31,15 @@ class DispatchingWorker(BaseThreadWorker):
         self._rtc_stream_queue = rtc_stream_queue
 
         self._active_pipeline_service: ActivePipelineService | None = None
+        self._data_collector: DataCollector | None = None
         self._prev_sink_config: Sink | None = None
         self._destinations: list[Dispatcher] = []
 
     def setup(self) -> None:
-        from app.api.dependencies import get_active_pipeline_service  # Avoid circular import
+        from app.api.dependencies import get_active_pipeline_service, get_data_collector  # Avoid circular import
 
         self._active_pipeline_service = get_active_pipeline_service()
+        self._data_collector = get_data_collector(self._active_pipeline_service)
 
     def _reset_sink_if_needed(self, sink_config: Sink) -> None:
         if not self._prev_sink_config or sink_config != self._prev_sink_config:
@@ -96,7 +98,7 @@ class DispatchingWorker(BaseThreadWorker):
 
             # Collect the image to project dataset if needed
             source_config = self._active_pipeline_service.get_source_config()  # type: ignore
-            DataCollector(self._active_pipeline_service).collect(  # type: ignore
+            self._data_collector.collect(  # type: ignore
                 source_id=source_config.id,
                 project=project,
                 timestamp=stream_data.timestamp,
