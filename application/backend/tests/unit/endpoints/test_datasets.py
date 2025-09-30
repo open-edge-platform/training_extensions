@@ -68,10 +68,9 @@ class TestDatasetItemEndpoints:
         assert response.status_code == status.HTTP_201_CREATED
         fxt_dataset_service.create_dataset_item.assert_called_once_with(
             project_id=project_id,
-            file=ANY,
+            data=ANY,
             name="test_file",
             format="jpg",
-            size=3,
             user_reviewed=True,
         )
 

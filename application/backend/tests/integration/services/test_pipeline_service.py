@@ -12,6 +12,7 @@ from app.schemas import PipelineStatus
 from app.schemas.pipeline import FixedRateDataCollectionPolicy
 from app.services import PipelineService, ResourceNotFoundError, ResourceType
 from app.services.configuration_service import PipelineField
+from app.services.data_collect import DataCollector
 
 
 @pytest.fixture(autouse=True)
@@ -29,9 +30,17 @@ def mock_get_db_session(db_session):
 
 
 @pytest.fixture
-def fxt_pipeline_service(fxt_active_pipeline_service, fxt_metrics_service, fxt_condition) -> PipelineService:
+def fxt_data_collector(fxt_active_pipeline_service) -> DataCollector:
+    """Fixture to create a DataCollector instance with mocked dependencies."""
+    return DataCollector(fxt_active_pipeline_service)
+
+
+@pytest.fixture
+def fxt_pipeline_service(
+    fxt_active_pipeline_service, fxt_data_collector, fxt_metrics_service, fxt_condition
+) -> PipelineService:
     """Fixture to create a PipelineService instance with mocked dependencies."""
-    return PipelineService(fxt_active_pipeline_service, fxt_metrics_service, fxt_condition)
+    return PipelineService(fxt_active_pipeline_service, fxt_data_collector, fxt_metrics_service, fxt_condition)
 
 
 @pytest.fixture

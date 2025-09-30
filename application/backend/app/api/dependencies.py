@@ -18,6 +18,7 @@ from app.services import (
     ProjectService,
     SystemService,
 )
+from app.services.data_collect import DataCollector
 from app.services.label_service import LabelService
 from app.settings import get_settings
 from app.webrtc.manager import WebRTCManager
@@ -102,6 +103,14 @@ def get_active_pipeline_service() -> ActivePipelineService:
     return ActivePipelineService()
 
 
+@lru_cache
+def get_data_collector(
+    active_pipeline_service: Annotated[ActivePipelineService, Depends(get_active_pipeline_service)],
+) -> DataCollector:
+    """Provides an DataCollector instance."""
+    return DataCollector(active_pipeline_service=active_pipeline_service)
+
+
 def get_scheduler(request: Request) -> Scheduler:
     """Provides the global Scheduler instance."""
     return request.app.state.scheduler
@@ -128,12 +137,14 @@ def get_configuration_service(
 @lru_cache
 def get_pipeline_service(
     active_pipeline_service: Annotated[ActivePipelineService, Depends(get_active_pipeline_service)],
+    data_collector: Annotated[DataCollector, Depends(get_data_collector)],
     metrics_service: Annotated[MetricsService, Depends(get_metrics_service)],
     scheduler: Annotated[Scheduler, Depends(get_scheduler)],
 ) -> PipelineService:
     """Provides a PipelineService instance with the active pipeline service and config changed condition."""
     return PipelineService(
         active_pipeline_service=active_pipeline_service,
+        data_collector=data_collector,
         metrics_service=metrics_service,
         config_changed_condition=scheduler.mp_config_changed_condition,
     )

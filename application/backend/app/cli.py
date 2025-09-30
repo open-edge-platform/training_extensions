@@ -92,8 +92,11 @@ def seed(with_model: bool) -> None:
             exclusive_labels=True,
         )
         project.labels = [
-            LabelDB(name="card", color="#FF0000", hotkey="c"),
-            LabelDB(name="person", color="#00FF00", hotkey="p"),
+            LabelDB(name="Clubs", color="#2d6311", hotkey="c"),
+            LabelDB(name="Diamonds", color="#baa3b3", hotkey="d"),
+            LabelDB(name="Spades", color="#000702", hotkey="s"),
+            LabelDB(name="Hearts", color="#1f016b", hotkey="h"),
+            LabelDB(name="No_object", color="#565a84", hotkey="n"),
         ]
         db.add(project)
         db.flush()
