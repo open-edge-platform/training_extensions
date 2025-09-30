@@ -1,10 +1,10 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { useProjectIdentifier } from '@hooks/use-project-identifier.hook';
 import { useSuspenseQuery, UseSuspenseQueryResult } from '@tanstack/react-query';
 
 import { API_BASE_URL } from '../../../api/client';
-import { useProjectIdentifier } from '../../../hooks/use-project-identifier.hook';
 import { getImageData, loadImage } from '../tools/utils';
 import { DatasetItem } from '../types';
 

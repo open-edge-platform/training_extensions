@@ -3,11 +3,11 @@
 
 import { ActionButton, DialogContainer, toast } from '@geti/ui';
 import { Delete } from '@geti/ui/icons';
+import { useProjectIdentifier } from '@hooks/use-project-identifier.hook';
 import { useOverlayTriggerState } from '@react-stately/overlays';
 import { isFunction } from 'lodash-es';
 
 import { $api } from '../../../../api/client';
-import { useProjectIdentifier } from '../../../../hooks/use-project-identifier.hook';
 import { AlertDialogContent } from './alert-dialog-content.component';
 
 import classes from './delete-media-item.module.scss';

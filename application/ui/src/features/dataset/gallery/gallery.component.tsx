@@ -13,9 +13,9 @@ import {
     View,
     Virtualizer,
 } from '@geti/ui';
+import { useProjectIdentifier } from '@hooks/use-project-identifier.hook';
 import { useLoadMore } from '@react-aria/utils';
 
-import { useProjectIdentifier } from '../../../hooks/use-project-identifier.hook';
 import { useSelectedData } from '../../../routes/dataset/provider';
 import { DatasetItem } from '../../annotator/types';
 import { CheckboxInput } from '../checkbox-input.component';
