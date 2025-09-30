@@ -19,8 +19,10 @@ class BaseWeightsService:
     """Service for downloading and managing pretrained model weights from external archives."""
 
     def __init__(self, data_dir: Path) -> None:
-        self._weights_cache_dir = data_dir / "models" / "pretrained_weights"
-        self._weights_cache_dir.mkdir(parents=True, exist_ok=True)
+        self.pretrained_weights_dir = data_dir / "pretrained_weights"
+        for task in TaskType:
+            task_dir = self.pretrained_weights_dir / task.name.lower()
+            task_dir.mkdir(parents=True, exist_ok=True)
 
     def get_remote_weights_path(self, task: TaskType, model_manifest_id: str) -> str:
         """
@@ -55,10 +57,7 @@ class BaseWeightsService:
         """
         manifest = self._get_and_validate_model_manifest(task, model_manifest_id)
 
-        task_dir = self._weights_cache_dir / task.name.lower()
-        task_dir.mkdir(parents=True, exist_ok=True)
-        local_path = task_dir / Path(manifest.pretrained_weights.url).name
-
+        local_path = self.pretrained_weights_dir / task.name.lower() / Path(manifest.pretrained_weights.url).name
         if local_path.exists():
             if self._verify_file_integrity(file_path=local_path, sha_sum=manifest.pretrained_weights.sha_sum):
                 logger.info(f"Using cached weights for {model_manifest_id}: {local_path}")
@@ -91,7 +90,7 @@ class BaseWeightsService:
             bool: True if weights were successfully removed, False if they didn't exist
         """
         manifest = self._get_and_validate_model_manifest(task, model_manifest_id)
-        local_path = self._weights_cache_dir / task.name.lower() / Path(manifest.pretrained_weights.url).name
+        local_path = self.pretrained_weights_dir / task.name.lower() / Path(manifest.pretrained_weights.url).name
         if local_path.exists():
             try:
                 local_path.unlink()
@@ -110,12 +109,11 @@ class BaseWeightsService:
             int: Number of weight files that were removed
         """
         removed_count = 0
-
-        if not self._weights_cache_dir.exists():
+        if not self.pretrained_weights_dir.exists():
             return 0
 
         try:
-            for weights_file in self._weights_cache_dir.rglob("*"):
+            for weights_file in self.pretrained_weights_dir.rglob("*"):
                 if weights_file.is_file() and not weights_file.name.startswith("."):
                     try:
                         weights_file.unlink()
@@ -142,10 +140,6 @@ class BaseWeightsService:
         Returns:
             bool: True if the file integrity is valid, False otherwise
         """
-        if sha_sum == "null" or not sha_sum:
-            logger.warning(f"No SHA sum available for {file_path}, skipping integrity check")
-            return True
-
         try:
             sha256_hash = hashlib.sha256()
             with open(file_path, "rb") as f:
@@ -154,7 +148,6 @@ class BaseWeightsService:
 
             actual_sha_sum = sha256_hash.hexdigest()
             return actual_sha_sum == sha_sum
-
         except Exception as e:
             logger.error(f"Failed to verify file integrity for {file_path}: {e}")
             return False
@@ -186,7 +179,7 @@ class BaseWeightsService:
             logger.warning(f"Could not check remote file size for {remote_url}: {e}, assuming 500MB")
             file_size = 500 * 1024 * 1024
 
-        stat = shutil.disk_usage(self._weights_cache_dir)
+        stat = shutil.disk_usage(self.pretrained_weights_dir)
         available_space = stat.free
         required_space = file_size + (safety_margin_gb * 1024 * 1024 * 1024)
 
@@ -253,10 +246,6 @@ class BaseWeightsService:
             ValueError: If the model manifest is not found, task type mismatch, or doesn't have pretrained weights
         """
         manifest = SupportedModels.get_model_manifest_by_id(model_manifest_id)
-        if manifest.id == "null":
-            raise ValueError(f"Model manifest '{model_manifest_id}' not found")
-        if manifest.task.lower() != task.name.lower():
+        if manifest.task != task:
             raise ValueError(f"Task mismatch: expected '{task.name.lower()}', got '{manifest.task.lower()}'")
-        if not manifest.pretrained_weights.url or manifest.pretrained_weights.url == "null":
-            raise ValueError(f"No pretrained weights configured for model '{model_manifest_id}'")
         return manifest

@@ -4,6 +4,7 @@
 
 from pydantic import BaseModel, Field
 
+from app.schemas.project import TaskType
 from app.supported_models.model_manifest import Capabilities, ModelManifest, ModelManifestDeprecationStatus, ModelStats
 
 
@@ -11,7 +12,7 @@ class ModelArchitecture(BaseModel):
     """Simplified model architecture information for API responses"""
 
     id: str = Field(title="Model architecture ID", description="Unique identifier for the model architecture")
-    task: str = Field(title="Task Type", description="Type of machine learning task addressed by the model")
+    task: TaskType = Field(title="Task Type", description="Type of machine learning task addressed by the model")
     name: str = Field(title="Model architecture name", description="Friendly name of the model architecture")
     description: str = Field(title="Description", description="Detailed description of the model capabilities")
     capabilities: Capabilities = Field(

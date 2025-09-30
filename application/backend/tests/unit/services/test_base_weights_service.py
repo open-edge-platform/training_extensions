@@ -10,6 +10,7 @@ import pytest
 
 from app.schemas.project import TaskType
 from app.services.base_weights_service import BaseWeightsService
+from app.supported_models.supported_models import ManifestNotFoundException
 
 DETECTION_MODEL_MANIFEST_ID = "Custom_Object_Detection_Gen3_SSD"
 DETECTION_WEIGHTS_FILENAME = "mobilenet_v2-2s_ssd-992x736.pth"
@@ -17,19 +18,19 @@ CLASSIFICATION_MODEL_MANIFEST_ID = "Custom_Image_Classification_MobileNet-V3-sma
 
 
 @pytest.fixture()
-def fxt_models_dir() -> Generator[Path]:
+def fxt_pretrained_weights_dir() -> Generator[Path]:
     """Setup a temporary data directory for tests."""
-    models_dir = Path("data/models")
-    if not models_dir.exists():
-        models_dir.mkdir(parents=True)
-    yield models_dir
-    shutil.rmtree(models_dir / "pretrained_weights", ignore_errors=True)
+    pretrained_weights_dir = Path("data/pretrained_weights")
+    if not pretrained_weights_dir.exists():
+        pretrained_weights_dir.mkdir(parents=True)
+    yield pretrained_weights_dir
+    shutil.rmtree(pretrained_weights_dir)
 
 
 @pytest.fixture
-def fxt_base_weights_service(fxt_models_dir: Path) -> BaseWeightsService:
+def fxt_base_weights_service(fxt_pretrained_weights_dir: Path) -> BaseWeightsService:
     """Create a BaseWeightsService instance for testing."""
-    return BaseWeightsService(fxt_models_dir.parent)
+    return BaseWeightsService(fxt_pretrained_weights_dir.parent)
 
 
 class TestBaseWeightsService:
@@ -47,7 +48,7 @@ class TestBaseWeightsService:
 
     def test_get_remote_weights_path_model_not_found(self, fxt_base_weights_service):
         """Test error when model manifest is not found."""
-        with pytest.raises(ValueError, match="Model manifest 'unknown_model' not found"):
+        with pytest.raises(ManifestNotFoundException, match="Model manifest with ID unknown_model not found."):
             fxt_base_weights_service.get_remote_weights_path(task=TaskType.DETECTION, model_manifest_id="unknown_model")
 
     def test_get_remote_weights_path_task_mismatch(self, fxt_base_weights_service):
@@ -63,7 +64,7 @@ class TestBaseWeightsService:
             task=TaskType.DETECTION, model_manifest_id=DETECTION_MODEL_MANIFEST_ID, allow_download=True
         )
 
-        expected_path = fxt_base_weights_service._weights_cache_dir / "detection" / DETECTION_WEIGHTS_FILENAME
+        expected_path = fxt_base_weights_service.pretrained_weights_dir / "detection" / DETECTION_WEIGHTS_FILENAME
         assert result == expected_path
 
     def test_get_local_weights_path_cached_invalid_redownload(self, fxt_base_weights_service):
@@ -73,7 +74,7 @@ class TestBaseWeightsService:
                 task=TaskType.DETECTION, model_manifest_id=DETECTION_MODEL_MANIFEST_ID, allow_download=True
             )
 
-        expected_path = fxt_base_weights_service._weights_cache_dir / "detection" / DETECTION_WEIGHTS_FILENAME
+        expected_path = fxt_base_weights_service.pretrained_weights_dir / "detection" / DETECTION_WEIGHTS_FILENAME
         assert result == expected_path
 
     def test_get_local_weights_path_download_required(self, fxt_base_weights_service):
@@ -83,7 +84,7 @@ class TestBaseWeightsService:
                 task=TaskType.DETECTION, model_manifest_id=DETECTION_MODEL_MANIFEST_ID, allow_download=True
             )
 
-        expected_path = fxt_base_weights_service._weights_cache_dir / "detection" / DETECTION_WEIGHTS_FILENAME
+        expected_path = fxt_base_weights_service.pretrained_weights_dir / "detection" / DETECTION_WEIGHTS_FILENAME
         assert result == expected_path
 
     def test_get_local_weights_path_no_download_not_allowed(self, fxt_base_weights_service):
