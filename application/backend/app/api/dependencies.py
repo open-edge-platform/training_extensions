@@ -97,18 +97,14 @@ def get_dataset_item_id(dataset_item_id: str) -> UUID:
     return UUID(dataset_item_id)
 
 
-@lru_cache
-def get_active_pipeline_service() -> ActivePipelineService:
+def get_active_pipeline_service(request: Request) -> ActivePipelineService:
     """Provides an ActivePipelineService instance for managing the active pipeline."""
-    return ActivePipelineService()
+    return request.app.state.active_pipeline_service
 
 
-@lru_cache
-def get_data_collector(
-    active_pipeline_service: Annotated[ActivePipelineService, Depends(get_active_pipeline_service)],
-) -> DataCollector:
+def get_data_collector(request: Request) -> DataCollector:
     """Provides an DataCollector instance."""
-    return DataCollector(active_pipeline_service=active_pipeline_service)
+    return request.app.state.data_collector
 
 
 def get_scheduler(request: Request) -> Scheduler:
