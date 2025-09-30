@@ -49,6 +49,7 @@ class FixedRatePolicyChecker(PolicyChecker):
 class DataCollector:
     def __init__(self, active_pipeline_service: ActivePipelineService) -> None:
         super().__init__()
+        self.should_collect_next_frame = False
         self.active_pipeline_service = active_pipeline_service
         self.dataset_service = DatasetService(get_settings().data_dir)
         self.policy_checkers: list[PolicyChecker] = []
@@ -72,7 +73,9 @@ class DataCollector:
         :param inference_data: Inference data including predictions
         :return:
         """
-        should_collect = any(checker.should_collect(timestamp) for checker in self.policy_checkers)
+        should_collect = (
+            any(checker.should_collect(timestamp) for checker in self.policy_checkers) or self.should_collect_next_frame
+        )
         if not should_collect:
             return
         annotations = convert_prediction(
@@ -88,6 +91,13 @@ class DataCollector:
             prediction_model_id=inference_data.model_id,
             annotations=annotations,
         )
+        self.should_collect_next_frame = False
+
+    def collect_next_frame(self) -> None:
+        """
+        Sets flag to collect the next available frame. This flag will be reset to False upon successful collection.
+        """
+        self.should_collect_next_frame = True
 
     def reload_policies(self) -> None:
         """

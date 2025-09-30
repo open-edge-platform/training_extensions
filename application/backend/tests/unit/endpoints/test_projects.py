@@ -7,7 +7,7 @@ from uuid import uuid4
 import pytest
 from fastapi import status
 
-from app.api.dependencies import get_label_service, get_project_service
+from app.api.dependencies import get_data_collector, get_label_service, get_project_service
 from app.main import app
 from app.schemas import Label, PatchLabels, Project
 from app.schemas.label import LabelToAdd, LabelToEdit, LabelToRemove
@@ -19,6 +19,7 @@ from app.services import (
     ResourceNotFoundError,
     ResourceType,
 )
+from app.services.data_collect import DataCollector
 
 
 @pytest.fixture
@@ -39,6 +40,13 @@ def fxt_project_service() -> MagicMock:
     project_service = MagicMock(spec=ProjectService)
     app.dependency_overrides[get_project_service] = lambda: project_service
     return project_service
+
+
+@pytest.fixture
+def fxt_data_collector() -> MagicMock:
+    data_collector = MagicMock(spec=DataCollector)
+    app.dependency_overrides[get_data_collector] = lambda: data_collector
+    return data_collector
 
 
 @pytest.fixture
@@ -227,3 +235,30 @@ class TestProjectEndpoints:
         response = fxt_client.get(f"/api/projects/{str(fxt_project.id)}/thumbnail")
         assert response.status_code == status.HTTP_204_NO_CONTENT
         fxt_project_service.get_project_thumbnail_path.assert_called_once()
+
+    def test_capture_next_pipeline_frame_invalid_project_id(self, fxt_project_service, fxt_client):
+        """Test capture next pipeline frame with invalid project ID returns 400."""
+        response = fxt_client.post("/api/projects/invalid-id/pipeline:capture")
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        fxt_project_service.get_project_by_id.assert_not_called()
+
+    def test_capture_next_pipeline_frame_project_not_found(self, fxt_project_service, fxt_data_collector, fxt_client):
+        """Test capture next pipeline frame for non-existent project returns 404."""
+        project_id = uuid4()
+        fxt_project_service.get_project_by_id.side_effect = ResourceNotFoundError(ResourceType.PROJECT, str(project_id))
+
+        response = fxt_client.post(f"/api/projects/{str(project_id)}/pipeline:capture")
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        fxt_data_collector.collect_next_frame.assert_not_called()
+
+    def test_capture_next_pipeline_frame(self, fxt_project, fxt_project_service, fxt_data_collector, fxt_client):
+        """Test capture next pipeline frame for existing project returns 200."""
+        project_id = uuid4()
+        fxt_project_service.get_project_by_id.return_value = fxt_project
+
+        response = fxt_client.post(f"/api/projects/{str(project_id)}/pipeline:capture")
+
+        assert response.status_code == status.HTTP_200_OK
+        fxt_data_collector.collect_next_frame.assert_called_once_with()
