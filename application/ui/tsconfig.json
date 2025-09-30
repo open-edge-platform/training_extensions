@@ -1,6 +1,6 @@
 {
     "extends": "@geti/config/typescript",
-    "include": ["src", "tests", "rsbuild.config.ts", "vitest.config.ts", "playwright.config.ts", "mocks/mock-project.ts", "mocks/mock-projects.ts"],
+    "include": ["src", "tests", "rsbuild.config.ts", "vitest.config.ts", "playwright.config.ts", "mocks"],
     "compilerOptions": {
         "types": ["vitest/globals"],
         "baseUrl": ".",
