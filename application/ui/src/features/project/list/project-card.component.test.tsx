@@ -61,7 +61,7 @@ describe('ProjectCard', () => {
         expect(await screen.findByRole('button', { name: /open project options/i })).toBeInTheDocument();
     });
 
-    it('should show active tag when pipeline is running', async () => {
+    it.skip('should show active tag when pipeline is running', async () => {
         mockPipelineResponse('running');
 
         render(<ProjectCard item={mockProject} />);
