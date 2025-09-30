@@ -17,7 +17,7 @@ interface Options extends RenderOptions {
     path: string;
 }
 
-const TestProviders = ({ children }: { children: ReactNode }) => {
+export const TestProviders = ({ children }: { children: ReactNode }) => {
     return (
         <QueryClientProvider client={queryClient}>
             <ThemeProvider>

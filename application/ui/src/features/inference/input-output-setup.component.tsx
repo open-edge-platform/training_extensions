@@ -1,13 +1,15 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Content, Dialog, DialogTrigger, Item, TabList, TabPanels, Tabs, Text, View } from '@geti/ui';
+import { Suspense } from 'react';
+
+import { Button, Content, Dialog, DialogTrigger, Item, Loading, TabList, TabPanels, Tabs, Text, View } from '@geti/ui';
 
 import { ReactComponent as Camera } from './../../assets/icons/camera.svg';
 import { SinkOptions } from './sinks/sink-options';
 import { SourceOptions } from './sources/source-options';
 
-export const InputSource = () => {
+export const InputOutputSetup = () => {
     return (
         <DialogTrigger type='popover'>
             <Button width={'size-2000'} variant={'secondary'}>
@@ -30,7 +32,9 @@ export const InputSource = () => {
                         <TabPanels>
                             <Item key='sources'>
                                 <View marginTop={'size-200'}>
-                                    <SourceOptions />
+                                    <Suspense fallback={<Loading size='M' />}>
+                                        <SourceOptions />
+                                    </Suspense>
                                 </View>
                             </Item>
                             <Item key='sinks'>

@@ -10,6 +10,7 @@ from multiprocessing.synchronize import Event as EventClass
 from app.entities.stream_data import StreamData
 from app.schemas import Sink, SinkType
 from app.services import ActivePipelineService, DispatchService
+from app.services.data_collect import DataCollector
 from app.services.dispatchers import Dispatcher
 from app.workers.base import BaseThreadWorker
 
@@ -30,13 +31,15 @@ class DispatchingWorker(BaseThreadWorker):
         self._rtc_stream_queue = rtc_stream_queue
 
         self._active_pipeline_service: ActivePipelineService | None = None
+        self._data_collector: DataCollector | None = None
         self._prev_sink_config: Sink | None = None
         self._destinations: list[Dispatcher] = []
 
     def setup(self) -> None:
-        from app.api.dependencies import get_active_pipeline_service  # Avoid circular import
+        from app.api.dependencies import get_active_pipeline_service, get_data_collector  # Avoid circular import
 
         self._active_pipeline_service = get_active_pipeline_service()
+        self._data_collector = get_data_collector(self._active_pipeline_service)
 
     def _reset_sink_if_needed(self, sink_config: Sink) -> None:
         if not self._prev_sink_config or sink_config != self._prev_sink_config:
@@ -47,9 +50,15 @@ class DispatchingWorker(BaseThreadWorker):
     def run_loop(self) -> None:
         while not self.should_stop():
             sink_config = self._active_pipeline_service.get_sink_config()  # type: ignore
+            project = self._active_pipeline_service.get_project()  # type: ignore
 
             if sink_config.sink_type == SinkType.DISCONNECTED:
                 logger.debug("No sink available... retrying in 1 second")
+                self.stop_aware_sleep(1)
+                continue
+
+            if project is None:
+                logger.debug("No project available... retrying in 1 second")
                 self.stop_aware_sleep(1)
                 continue
 
@@ -86,3 +95,13 @@ class DispatchingWorker(BaseThreadWorker):
                 self._rtc_stream_queue.put(image_with_visualization, block=False)
             except queue.Full:
                 logger.debug("Visualization queue is full; skipping")
+
+            # Collect the image to project dataset if needed
+            source_config = self._active_pipeline_service.get_source_config()  # type: ignore
+            self._data_collector.collect(  # type: ignore
+                source_id=source_config.id,
+                project=project,
+                timestamp=stream_data.timestamp,
+                frame_data=stream_data.frame_data,
+                inference_data=inference_data,
+            )

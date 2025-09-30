@@ -6,12 +6,21 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from app.services import MetricsService, PipelineService
+from app.services.data_collect import DataCollector
 
 
 @pytest.fixture
-def fxt_pipeline_service(fxt_active_pipeline_service, fxt_metrics_service, fxt_condition) -> PipelineService:
+def fxt_data_collector(fxt_active_pipeline_service) -> DataCollector:
+    """Fixture to create a DataCollector instance with mocked dependencies."""
+    return DataCollector(fxt_active_pipeline_service)
+
+
+@pytest.fixture
+def fxt_pipeline_service(
+    fxt_active_pipeline_service, fxt_data_collector, fxt_metrics_service, fxt_condition
+) -> PipelineService:
     """Fixture to create a PipelineService instance with mocked dependencies."""
-    return PipelineService(fxt_active_pipeline_service, fxt_metrics_service, fxt_condition)
+    return PipelineService(fxt_active_pipeline_service, fxt_data_collector, fxt_metrics_service, fxt_condition)
 
 
 @pytest.fixture

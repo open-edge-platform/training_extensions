@@ -1,0 +1,104 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+import logging
+from abc import ABCMeta, abstractmethod
+from uuid import UUID
+
+import numpy as np
+
+from app.entities.stream_data import InferenceData
+from app.schemas import Project
+from app.schemas.dataset_item import DatasetItemFormat
+from app.schemas.pipeline import FixedRateDataCollectionPolicy
+from app.services import ActivePipelineService, DatasetService
+from app.services.data_collect.prediction_converter import convert_prediction
+from app.settings import get_settings
+
+logger = logging.getLogger(__name__)
+
+
+class PolicyChecker(metaclass=ABCMeta):
+    @abstractmethod
+    def should_collect(self, timestamp: float) -> bool:
+        """
+        Checks if certain dispatched image should be collected to the project dataset
+
+        :param timestamp: dispatched image timestamp
+        :return: True if image should be collected, False otherwise
+        """
+
+
+class FixedRatePolicyChecker(PolicyChecker):
+    """
+    Fixed rate data collection policy checker.
+    Checks when the last image has been collected against collection rate.
+    """
+
+    def __init__(self, policy: FixedRateDataCollectionPolicy):
+        self.min_interval = 1.0 / policy.rate
+        self.last_collect_time = 0.0
+
+    def should_collect(self, timestamp: float) -> bool:
+        time_since_last = timestamp - self.last_collect_time
+        if time_since_last < self.min_interval:
+            return False
+        self.last_collect_time = timestamp
+        return True
+
+
+class DataCollector:
+    def __init__(self, active_pipeline_service: ActivePipelineService) -> None:
+        super().__init__()
+        self.active_pipeline_service = active_pipeline_service
+        self.dataset_service = DatasetService(get_settings().data_dir)
+        self.policy_checkers: list[PolicyChecker] = []
+        self.reload_policies()
+
+    def collect(
+        self,
+        source_id: UUID,
+        project: Project,
+        timestamp: float,
+        frame_data: np.ndarray,
+        inference_data: InferenceData,
+    ) -> None:
+        """
+        Collects the dispatched image if any of the policy checkers indicate that it should be collected.
+
+        :param source_id: ID of the pipeline source
+        :param project: Pipeline project
+        :param timestamp: Timestamp of the image
+        :param frame_data: Image binary data in ndarray format
+        :param inference_data: Inference data including predictions
+        :return:
+        """
+        should_collect = any(checker.should_collect(timestamp) for checker in self.policy_checkers)
+        if not should_collect:
+            return
+        annotations = convert_prediction(
+            labels=project.task.labels, frame_data=frame_data, prediction=inference_data.prediction
+        )
+        self.dataset_service.create_dataset_item(
+            project_id=project.id,
+            name=f"{timestamp:.4f}".replace(".", "_"),
+            format=DatasetItemFormat.JPG,
+            data=frame_data,
+            user_reviewed=False,
+            source_id=source_id,
+            prediction_model_id=inference_data.model_id,
+            annotations=annotations,
+        )
+
+    def reload_policies(self) -> None:
+        """
+        Reloads data collection policies from active pipeline and re-initialize policy checkers.
+        """
+        policies = [policy for policy in self.active_pipeline_service.get_data_collection_policies() if policy.enabled]
+        self.policy_checkers = []
+        for policy in policies:
+            manager = None
+            match policy:
+                case FixedRateDataCollectionPolicy():
+                    manager = FixedRatePolicyChecker(policy)
+            if manager is not None:
+                self.policy_checkers.append(manager)
