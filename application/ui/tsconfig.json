@@ -5,9 +5,9 @@
         "types": ["vitest/globals"],
         "baseUrl": ".",
         "paths": {
-            "@test-utils/*": ["./src/test-utils/*"],
-            "@hooks/*": ["./src/hooks/*"],
-            "@mocks/*": ["./mocks/*"],
+            "test-utils/*": ["./src/test-utils/*"],
+            "hooks/*": ["./src/hooks/*"],
+            "mocks/*": ["./mocks/*"],
         }
     }
 }

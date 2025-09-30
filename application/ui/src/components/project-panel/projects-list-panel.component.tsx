@@ -18,7 +18,7 @@ import {
     View,
 } from '@geti/ui';
 import { AddCircle } from '@geti/ui/icons';
-import { useProjectIdentifier } from '@hooks/use-project-identifier.hook';
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { useNavigate } from 'react-router';
 
 import { $api } from '../../api/client';

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { AlertDialog, Flex, Text } from '@geti/ui';
-import { useEventListener } from '@hooks/event-listener.hook';
+import { useEventListener } from 'hooks/event-listener.hook';
 
 type AlertDialogContentProps = {
     itemsIds: string[];

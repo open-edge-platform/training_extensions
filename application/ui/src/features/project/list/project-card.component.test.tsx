@@ -1,20 +1,16 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen } from '@test-utils/render';
-import { userEvent } from '@testing-library/user-event';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 import { server } from 'src/msw-node-setup';
+import { fireEvent, render, screen } from 'test-utils/render';
 import { http } from 'tests/fixtures';
 
-import { Project } from '../types';
 import { ProjectCard } from './project-card.component';
 
 describe('ProjectCard', () => {
-    const user = userEvent.setup();
-
-    const mockProject = getMockedProject<Project>({
+    const mockProject = getMockedProject({
         id: 'test-project-id',
         name: 'Test Project',
         task: {
@@ -83,7 +79,7 @@ describe('ProjectCard', () => {
     });
 
     it('should display single label correctly', async () => {
-        const singleLabelProject = getMockedProject<Project>({
+        const singleLabelProject = getMockedProject({
             task: {
                 task_type: 'classification',
                 exclusive_labels: true,
@@ -97,7 +93,7 @@ describe('ProjectCard', () => {
     });
 
     it('should display multiple labels separated by commas', async () => {
-        const multiLabelProject = getMockedProject<Project>({
+        const multiLabelProject = getMockedProject({
             task: {
                 task_type: 'detection',
                 exclusive_labels: false,
@@ -115,7 +111,7 @@ describe('ProjectCard', () => {
     });
 
     it('should handle empty labels array', async () => {
-        const noLabelsProject = getMockedProject<Project>({
+        const noLabelsProject = getMockedProject({
             task: {
                 task_type: 'instance_segmentation',
                 exclusive_labels: false,
@@ -129,7 +125,7 @@ describe('ProjectCard', () => {
     });
 
     it('should display classification task type', async () => {
-        const classificationProject = getMockedProject<Project>({
+        const classificationProject = getMockedProject({
             task: { ...mockProject.task, task_type: 'classification' },
         });
 
@@ -152,7 +148,7 @@ describe('ProjectCard', () => {
         const cardLink = await screen.findByRole('link');
 
         // Menu button should be clickable without triggering link navigation
-        await user.click(menuButton);
+        fireEvent.click(menuButton);
 
         expect(menuButton).toBeInTheDocument();
         expect(cardLink).toBeInTheDocument();

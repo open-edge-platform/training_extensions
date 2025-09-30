@@ -3,7 +3,7 @@
 
 import { Divider } from '@geti/ui';
 import { BoundingBox, SegmentAnythingIcon, Selector } from '@geti/ui/icons';
-import { useProjectTask } from '@hooks/use-project-task.hook';
+import { useProjectTask } from 'hooks/use-project-task.hook';
 
 import { ToolConfig } from '../../../components/tool-selection-bar/tools/interface';
 import { Tools } from '../../../components/tool-selection-bar/tools/tools.component';

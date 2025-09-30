@@ -16,7 +16,7 @@ import {
     TextField,
     View,
 } from '@geti/ui';
-import { useProjectIdentifier } from '@hooks/use-project-identifier.hook';
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { useNavigate } from 'react-router';
 
 import { $api } from '../../api/client';

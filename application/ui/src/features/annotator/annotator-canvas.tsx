@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useProjectIdentifier } from '@hooks/use-project-identifier.hook';
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { ZoomProvider } from '../../components/zoom/zoom';
 import { ZoomTransform } from '../../components/zoom/zoom-transform';

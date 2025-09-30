@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, Divider, Flex, Heading, Text, toast } from '@geti/ui';
-import { useProjectIdentifier } from '@hooks/use-project-identifier.hook';
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { $api } from '../../../api/client';
 import { AddMediaButton } from '../../../components/add-media-button/add-media-button.component';

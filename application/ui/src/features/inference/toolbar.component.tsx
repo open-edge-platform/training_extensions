@@ -4,7 +4,7 @@
 import { Suspense } from 'react';
 
 import { Button, Divider, Flex, StatusLight, Text, View } from '@geti/ui';
-import { useProjectIdentifier } from '@hooks/use-project-identifier.hook';
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isEmpty } from 'lodash-es';
 
 import { $api } from '../../api/client';

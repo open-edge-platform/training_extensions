@@ -1,8 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen } from '@test-utils/render';
-import userEvent from '@testing-library/user-event';
+import { fireEvent, render, screen } from 'test-utils/render';
 
 import { TaskType } from './interface';
 import { TaskSelection } from './task-selection.component';
@@ -27,22 +26,22 @@ describe('TaskSelection', () => {
         expect(radio).toBeChecked();
     });
 
-    it('selects a task when the whole element is clicked', async () => {
+    it('selects a task when the whole element is clicked', () => {
         const mockSetSelectedTask = vi.fn();
         render(<App setSelectedTask={mockSetSelectedTask} />);
 
         const segOption = screen.getByLabelText('Task option: Image Segmentation');
-        await userEvent.click(segOption);
+        fireEvent.click(segOption);
 
         expect(mockSetSelectedTask).toHaveBeenCalledWith('instance_segmentation');
     });
 
-    it('selects a task when the radio element is clicked', async () => {
+    it('selects a task when the radio element is clicked', () => {
         const mockSetSelectedTask = vi.fn();
         render(<App setSelectedTask={mockSetSelectedTask} />);
 
         const classRadio = screen.getByLabelText('classification');
-        await userEvent.click(classRadio);
+        fireEvent.click(classRadio);
 
         expect(mockSetSelectedTask).toHaveBeenCalledWith('classification');
     });

@@ -4,7 +4,7 @@
 import { useActionState } from 'react';
 
 import { toast } from '@geti/ui';
-import { useProjectIdentifier } from '@hooks/use-project-identifier.hook';
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { omit } from 'lodash-es';
 
 import { $api } from '../../../../api/client';

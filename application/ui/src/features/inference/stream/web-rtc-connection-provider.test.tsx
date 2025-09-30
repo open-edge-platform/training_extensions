@@ -1,8 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { render } from '@test-utils/render';
-import userEvent from '@testing-library/user-event';
+import { fireEvent, render } from 'test-utils/render';
 import { vi } from 'vitest';
 
 import { Listener, WebRTCConnection, WebRTCConnectionStatus } from './web-rtc-connection';
@@ -77,30 +76,30 @@ describe('WebRTCConnectionProvider', () => {
         expect(getByLabelText('status')).toHaveTextContent('idle');
     });
 
-    it('updates status to connected after start', async () => {
+    it('updates status to connected after start', () => {
         const { getByLabelText } = render(
             <WebRTCConnectionProvider>
                 <App />
             </WebRTCConnectionProvider>
         );
 
-        await userEvent.click(getByLabelText('start'));
+        fireEvent.click(getByLabelText('start'));
 
         expect(getByLabelText('status')).toHaveTextContent('connected');
     });
 
-    it('updates status to idle after stop', async () => {
+    it('updates status to idle after stop', () => {
         const { getByLabelText } = render(
             <WebRTCConnectionProvider>
                 <App />
             </WebRTCConnectionProvider>
         );
 
-        await userEvent.click(getByLabelText('start'));
+        fireEvent.click(getByLabelText('start'));
 
         expect(getByLabelText('status')).toHaveTextContent('connected');
 
-        await userEvent.click(getByLabelText('stop'));
+        fireEvent.click(getByLabelText('stop'));
 
         expect(getByLabelText('status')).toHaveTextContent('idle');
     });
@@ -119,20 +118,20 @@ describe('WebRTCConnectionProvider', () => {
         expect(stopSpy).toHaveBeenCalled();
     });
 
-    it('handles status sequence: start -> stop -> start', async () => {
+    it('handles status sequence: start -> stop -> start', () => {
         const { getByLabelText } = render(
             <WebRTCConnectionProvider>
                 <App />
             </WebRTCConnectionProvider>
         );
 
-        await userEvent.click(getByLabelText('start'));
+        fireEvent.click(getByLabelText('start'));
         expect(getByLabelText('status')).toHaveTextContent('connected');
 
-        await userEvent.click(getByLabelText('stop'));
+        fireEvent.click(getByLabelText('stop'));
         expect(getByLabelText('status')).toHaveTextContent('idle');
 
-        await userEvent.click(getByLabelText('start'));
+        fireEvent.click(getByLabelText('start'));
         expect(getByLabelText('status')).toHaveTextContent('connected');
     });
 });
