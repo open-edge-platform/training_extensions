@@ -24,7 +24,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     """FastAPI lifespan context manager"""
     # Startup
     settings = get_settings()
-    app.state.settings = settings
     logger.info("Starting %s application...", settings.app_name)
 
     # Initialize database
@@ -36,7 +35,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     active_pipeline_service = ActivePipelineService()
     app.state.active_pipeline_service = active_pipeline_service
 
-    data_collector = DataCollector(active_pipeline_service=active_pipeline_service)
+    data_collector = DataCollector(data_dir=settings.data_dir, active_pipeline_service=active_pipeline_service)
     app.state.data_collector = data_collector
 
     # Initialize Scheduler

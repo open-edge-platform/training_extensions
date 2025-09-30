@@ -11,9 +11,9 @@ from typing import Any
 from model_api.models import DetectionResult, Model
 
 from app.entities.stream_data import InferenceData, StreamData
-from app.services import MetricsService, ModelService
-from app.services.model_service import LoadedModel
-from app.settings import get_settings
+from app.services import ActiveModelService, MetricsService
+from app.services.active_model_service import LoadedModel
+from app.settings import Settings, get_settings
 from app.utils import Visualizer
 from app.workers.base import BaseProcessWorker
 
@@ -41,14 +41,15 @@ class InferenceWorker(BaseProcessWorker):
         self._shm_name = shm_name
         self._shm_lock = shm_lock
 
+        self._settings: Settings | None = None
         self._metrics_service: MetricsService | None = None
-        self._model_service: ModelService | None = None
+        self._model_service: ActiveModelService | None = None
         self._loaded_model: LoadedModel | None = None
         self._last_model_obj_id = 0  # track the id of the Model object to install the callback only once
 
     def setup(self) -> None:
         self._metrics_service = MetricsService(self._shm_name, self._shm_lock)
-        self._model_service = ModelService(get_settings().data_dir)
+        self._model_service = ActiveModelService(get_settings().data_dir, self._model_reload_event)
 
     def _on_inference_completed(self, inf_result: DetectionResult, userdata: dict[str, Any]) -> None:
         start_time = float(userdata["inference_start_time"])

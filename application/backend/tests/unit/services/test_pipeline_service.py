@@ -1,31 +1,28 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import Mock, patch
 
 import pytest
+from sqlalchemy.orm import Session
 
 from app.services import MetricsService, PipelineService
 from app.services.data_collect import DataCollector
 
 
 @pytest.fixture
-def fxt_data_collector(fxt_active_pipeline_service) -> DataCollector:
-    """Fixture to create a DataCollector instance with mocked dependencies."""
-    return DataCollector(fxt_active_pipeline_service)
-
-
-@pytest.fixture
-def fxt_pipeline_service(
-    fxt_active_pipeline_service, fxt_data_collector, fxt_metrics_service, fxt_condition
-) -> PipelineService:
+def fxt_pipeline_service(fxt_active_pipeline_service, fxt_metrics_service, fxt_condition) -> PipelineService:
     """Fixture to create a PipelineService instance with mocked dependencies."""
-    return PipelineService(fxt_active_pipeline_service, fxt_data_collector, fxt_metrics_service, fxt_condition)
+    mock_collector = Mock(spec=DataCollector)
+    mock_db_session = Mock(spec=Session)
+    return PipelineService(
+        fxt_active_pipeline_service, mock_collector, fxt_metrics_service, fxt_condition, mock_db_session
+    )
 
 
 @pytest.fixture
-def fxt_metrics_service() -> MagicMock:
-    return MagicMock(spec=MetricsService)
+def fxt_metrics_service() -> Mock:
+    return Mock(spec=MetricsService)
 
 
 class TestPipelineServiceUnit:

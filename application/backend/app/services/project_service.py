@@ -4,7 +4,8 @@
 from pathlib import Path
 from uuid import UUID
 
-from app.db import get_db_session
+from sqlalchemy.orm import Session
+
 from app.repositories import DatasetItemRepository, PipelineRepository, ProjectRepository
 from app.schemas import Project
 from app.services.base import (
@@ -21,21 +22,22 @@ MSG_ERR_DELETE_ACTIVE_PROJECT = "Cannot delete a project with a running pipeline
 
 
 class ProjectService:
-    def __init__(self, data_dir: Path) -> None:
+    def __init__(self, data_dir: Path, db_session: Session) -> None:
         self._persistence: GenericPersistenceService[Project, ProjectRepository] = GenericPersistenceService(
             ServiceConfig(ProjectRepository, ProjectMapper, ResourceType.PROJECT)
         )
         self.projects_dir = data_dir / "projects"
+        self._db_session: Session = db_session
 
     @parent_process_only
     def create_project(self, project: Project) -> Project:
-        return self._persistence.create(project)
+        return self._persistence.create(project, self._db_session)
 
     def list_projects(self) -> list[Project]:
-        return self._persistence.list_all()
+        return self._persistence.list_all(self._db_session)
 
     def get_project_by_id(self, project_id: UUID) -> Project:
-        project = self._persistence.get_by_id(project_id)
+        project = self._persistence.get_by_id(project_id, self._db_session)
         if not project:
             raise ResourceNotFoundError(ResourceType.PROJECT, str(project_id))
         return project
@@ -48,19 +50,16 @@ class ProjectService:
 
     @parent_process_only
     def delete_project_by_id(self, project_id: UUID) -> None:
-        with get_db_session() as db:
-            pipeline_repo = PipelineRepository(db)
-            pipeline_db = pipeline_repo.get_by_id(str(project_id))
-            if pipeline_db and pipeline_db.is_running:
-                raise ResourceInUseError(ResourceType.PROJECT, str(project_id), MSG_ERR_DELETE_ACTIVE_PROJECT)
-            self._persistence.delete_by_id(project_id, db)
-            db.commit()
+        pipeline_repo = PipelineRepository(self._db_session)
+        pipeline_db = pipeline_repo.get_by_id(str(project_id))
+        if pipeline_db and pipeline_db.is_running:
+            raise ResourceInUseError(ResourceType.PROJECT, str(project_id), MSG_ERR_DELETE_ACTIVE_PROJECT)
+        self._persistence.delete_by_id(project_id, self._db_session)
 
     def get_project_thumbnail_path(self, project_id: UUID) -> Path | None:
         """Get the path to the project's thumbnail image, as determined by the earliest dataset item"""
-        with get_db_session() as db:
-            dataset_repo = DatasetItemRepository(str(project_id), db)
-            earliest_dataset_item = dataset_repo.get_earliest()
+        dataset_repo = DatasetItemRepository(str(project_id), self._db_session)
+        earliest_dataset_item = dataset_repo.get_earliest()
 
         if earliest_dataset_item:
             return self.projects_dir / f"{project_id}/dataset/{earliest_dataset_item.id}-thumb.jpg"

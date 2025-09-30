@@ -7,7 +7,6 @@ from collections.abc import Callable, Generator
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
-from unittest.mock import patch
 from uuid import UUID, uuid4
 
 import pytest
@@ -34,19 +33,10 @@ def fxt_projects_dir() -> Generator[Path]:
     shutil.rmtree(projects_dir)
 
 
-@pytest.fixture(autouse=True)
-def mock_get_db_session(db_session):
-    """Mock the get_db_session to use test database."""
-    with patch("app.services.dataset_service.get_db_session") as mock:
-        mock.return_value.__enter__.return_value = db_session
-        mock.return_value.__exit__.return_value = None
-        yield
-
-
 @pytest.fixture
-def fxt_dataset_service(fxt_projects_dir: Path) -> DatasetService:
+def fxt_dataset_service(fxt_projects_dir: Path, db_session: Session) -> DatasetService:
     """Fixture to create a DatasetService instance."""
-    return DatasetService(fxt_projects_dir.parent)
+    return DatasetService(fxt_projects_dir.parent, db_session=db_session)
 
 
 @pytest.fixture

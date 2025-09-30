@@ -1,7 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from unittest.mock import patch
 from uuid import uuid4
 
 import pytest
@@ -11,24 +10,10 @@ from app.services import ConfigurationService, ResourceInUseError, ResourceNotFo
 from app.services.base import ResourceAlreadyExistsError
 
 
-@pytest.fixture(autouse=True)
-def mock_get_db_session(db_session):
-    """Mock the get_db_session to use test database."""
-    with (
-        patch("app.services.configuration_service.get_db_session") as mock,
-        patch("app.services.base.get_db_session") as mock_base,
-    ):
-        mock.return_value.__enter__.return_value = db_session
-        mock.return_value.__exit__.return_value = None
-        mock_base.return_value.__enter__.return_value = db_session
-        mock_base.return_value.__exit__.return_value = None
-        yield
-
-
 @pytest.fixture
-def fxt_config_service(fxt_active_pipeline_service, fxt_condition) -> ConfigurationService:
+def fxt_config_service(fxt_active_pipeline_service, fxt_condition, db_session) -> ConfigurationService:
     """Fixture to provide a ConfigurationService instance with mocked dependencies."""
-    return ConfigurationService(fxt_active_pipeline_service, fxt_condition)
+    return ConfigurationService(fxt_active_pipeline_service, db_session, fxt_condition)
 
 
 class TestConfigurationServiceIntegration:
