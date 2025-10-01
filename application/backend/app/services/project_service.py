@@ -41,6 +41,12 @@ class ProjectService:
         return project
 
     @parent_process_only
+    def update_project_name(self, project_id: UUID, name: str) -> Project:
+        """Update only the project name"""
+        project = self.get_project_by_id(project_id)
+        return self._persistence.update(project, {"name": name})
+
+    @parent_process_only
     def delete_project_by_id(self, project_id: UUID) -> None:
         with get_db_session() as db:
             pipeline_repo = PipelineRepository(db)

@@ -13,7 +13,7 @@ from fastapi.openapi.models import Example
 from starlette.responses import FileResponse
 
 from app.api.dependencies import get_data_collector, get_label_service, get_project_id, get_project_service
-from app.schemas import Label, PatchLabels, Project
+from app.schemas import Label, PatchLabels, Project, ProjectUpdateName
 from app.services import (
     LabelService,
     ProjectService,
@@ -122,6 +122,27 @@ def get_project(
     """Get info about a given project"""
     try:
         return project_service.get_project_by_id(project_id)
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.patch(
+    "/{project_id}",
+    response_model=Project,
+    responses={
+        status.HTTP_200_OK: {"description": "Project name updated successfully"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID or request body"},
+        status.HTTP_404_NOT_FOUND: {"description": "Project not found"},
+    },
+)
+def rename_project(
+    project_id: Annotated[UUID, Depends(get_project_id)],
+    project_update_name: Annotated[ProjectUpdateName, Body(description="Updated project name")],
+    project_service: Annotated[ProjectService, Depends(get_project_service)],
+) -> Project:
+    """Rename a project"""
+    try:
+        return project_service.update_project_name(project_id, project_update_name.name)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 

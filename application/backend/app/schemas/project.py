@@ -20,6 +20,14 @@ class Task(BaseModel):
     labels: list[Label] = []
 
 
+class ProjectUpdateName(BaseModel):
+    """Schema for updating project name"""
+
+    name: str
+
+    model_config = {"json_schema_extra": {"example": {"name": "updated_project_name"}}}
+
+
 class Project(BaseIDNameModel):
     task: Task
 
