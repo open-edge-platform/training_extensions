@@ -125,6 +125,8 @@ class GenericPersistenceService(Generic[S, R]):
         with self._get_repo(db) as repo:
             to_update = item.model_copy(update=partial_config)
             updated = repo.update(self.config.mapper_class.from_schema(to_update))
+            if db:
+                db.commit()  # Ensure changes are committed for notification purposes
             return self.config.mapper_class.to_schema(updated)
 
     def delete_by_id(self, item_id: UUID, db: Session | None = None) -> None:

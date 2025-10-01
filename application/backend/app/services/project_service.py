@@ -46,8 +46,12 @@ class ProjectService:
     @parent_process_only
     def update_project_name(self, project_id: UUID, name: str) -> Project:
         """Update only the project name"""
-        project = self.get_project_by_id(project_id)
-        return self._persistence.update(project, {"name": name})
+        project_repo = ProjectRepository(self._db_session)
+        project_db = project_repo.get_by_id(str(project_id))
+        if not project_db:
+            raise ResourceNotFoundError(ResourceType.PROJECT, str(project_id))
+        project_db.name = name
+        return ProjectMapper.to_schema(project_repo.update(project_db))
 
     @parent_process_only
     def delete_project_by_id(self, project_id: UUID) -> None:

@@ -72,7 +72,7 @@ class ActiveModelService:
             self._model_activation_state = self._load_state()
             self._loaded_model = None
 
-        if self._model_activation_state.active_model_id is None:
+        if self._model_activation_state.active_model_id is None or self._model_activation_state.project_id is None:
             return None
 
         project_id = self._model_activation_state.project_id
