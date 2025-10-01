@@ -13,6 +13,7 @@ from app.db import MigrationManager, get_db_session
 from app.db.schema import DatasetItemDB, LabelDB, ModelRevisionDB, PipelineDB, ProjectDB, SinkDB, SourceDB
 from app.schemas import DisconnectedSinkConfig, DisconnectedSourceConfig, OutputFormat, SinkType, SourceType
 from app.schemas.model import TrainingStatus
+from app.schemas.pipeline import FixedRateDataCollectionPolicy
 from app.schemas.project import TaskType
 from app.settings import get_settings
 
@@ -134,6 +135,7 @@ def seed(with_model: bool) -> None:
             output_formats=[OutputFormat.IMAGE_ORIGINAL, OutputFormat.IMAGE_WITH_PREDICTIONS, OutputFormat.PREDICTIONS],
             config_data={"folder_path": "data/output"},
         )
+        pipeline.data_collection_policies = [FixedRateDataCollectionPolicy(rate=0.1).model_dump(mode="json")]
         if with_model:
             pipeline.model_revision = ModelRevisionDB(
                 id="977eeb18-eaac-449d-bc80-e340fbe052ad",
