@@ -69,7 +69,12 @@ class TestBaseWeightsService:
 
     def test_get_local_weights_path_cached_invalid_redownload(self, fxt_base_weights_service):
         """Test redownloading when cached file fails integrity check."""
-        with patch.object(fxt_base_weights_service, "_verify_file_integrity", return_value=False):
+        # Download the first valid file
+        result = fxt_base_weights_service.get_local_weights_path(
+            task=TaskType.DETECTION, model_manifest_id=DETECTION_MODEL_MANIFEST_ID, allow_download=True
+        )
+        # Mock that the existing file is invalid
+        with patch.object(fxt_base_weights_service, "_verify_file_integrity", side_effect=[False, True]):
             result = fxt_base_weights_service.get_local_weights_path(
                 task=TaskType.DETECTION, model_manifest_id=DETECTION_MODEL_MANIFEST_ID, allow_download=True
             )
