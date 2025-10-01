@@ -10,7 +10,7 @@ import { screen, TestProviders } from 'test-utils/render';
 import { http } from '../../../../api/utils';
 import { server } from '../../../../msw-node-setup';
 import { ImagesFolderSourceConfig } from '../util';
-import { useActionImageFolder } from './use-action-image-folder.hook';
+import { useSourceAction } from './use-source-action.hook';
 
 vi.mock('react-router', async (importOriginal) => {
     const actual = await importOriginal<typeof import('react-router')>();
@@ -27,8 +27,16 @@ const mockedConfig: ImagesFolderSourceConfig = {
     ignore_existing_images: false,
 };
 
+const bodyFormatter = (formData: FormData) => ({
+    id: String(formData.get('id')),
+    name: String(formData.get('name')),
+    source_type: 'images_folder' as const,
+    images_folder_path: String(formData.get('images_folder_path')),
+    ignore_existing_images: formData.get('ignore_existing_images') === 'on' ? true : false,
+});
+
 const renderApp = async ({
-    isNew = false,
+    isNewSource = false,
     config = mockedConfig,
     newResource = () => HttpResponse.error(),
     updateResource = () => HttpResponse.error(),
@@ -39,7 +47,9 @@ const renderApp = async ({
         http.patch('/api/projects/{project_id}/pipeline', () => HttpResponse.json({}))
     );
 
-    const { result } = renderHook(() => useActionImageFolder(config, isNew), { wrapper: TestProviders });
+    const { result } = renderHook(() => useSourceAction({ config: mockedConfig, isNewSource, bodyFormatter }), {
+        wrapper: TestProviders,
+    });
     const [_state, submitAction] = result.current;
 
     const formData = new FormData();
@@ -56,9 +66,12 @@ const renderApp = async ({
     return result.current;
 };
 
-describe('useActionImageFolder', () => {
+describe('useSourceAction', () => {
     it('return initial config', () => {
-        const { result } = renderHook(() => useActionImageFolder(mockedConfig), { wrapper: TestProviders });
+        const { result } = renderHook(
+            () => useSourceAction({ config: mockedConfig, isNewSource: true, bodyFormatter }),
+            { wrapper: TestProviders }
+        );
 
         expect(result.current[0]).toEqual(mockedConfig);
     });
@@ -67,7 +80,7 @@ describe('useActionImageFolder', () => {
         it('submits folder config and display error message on failure', async () => {
             const mockedError = 'test-error';
             await renderApp({
-                isNew: true,
+                isNewSource: true,
                 newResource: () => HttpResponse.json({ detail: mockedError }, { status: 400 }),
             });
 
@@ -79,12 +92,12 @@ describe('useActionImageFolder', () => {
         it('submit new image folder config and show success message', async () => {
             const mockedNewItemId = 'new-id-test';
             const [state] = await renderApp({
-                isNew: true,
+                isNewSource: true,
                 newResource: () => HttpResponse.json({ ...mockedConfig, id: mockedNewItemId }),
             });
 
             await waitFor(() => {
-                expect(screen.getByText('Image folder configuration created successfully.')).toBeVisible();
+                expect(screen.getByText('Source configuration created successfully.')).toBeVisible();
                 expect(state.id).toBe(mockedNewItemId);
             });
         });
@@ -95,7 +108,7 @@ describe('useActionImageFolder', () => {
             const mockedError = 'test-error';
 
             await renderApp({
-                isNew: false,
+                isNewSource: false,
                 updateResource: () => HttpResponse.json({ detail: mockedError }, { status: 400 }),
             });
 
@@ -108,13 +121,13 @@ describe('useActionImageFolder', () => {
             const newConfig = { ...mockedConfig, id: 'mockedResponseId', name: 'Updated Name' };
 
             const [state] = await renderApp({
-                isNew: false,
+                isNewSource: false,
                 config: newConfig,
                 updateResource: () => HttpResponse.json(newConfig),
             });
 
             await waitFor(() => {
-                expect(screen.getByText('Image folder configuration updated successfully.')).toBeVisible();
+                expect(screen.getByText('Source configuration updated successfully.')).toBeVisible();
                 expect(state.id).toBe(newConfig.id);
             });
         });
