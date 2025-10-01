@@ -9,7 +9,7 @@ import { useProjectIdentifier } from '../../../hooks/use-project-identifier.hook
 import { DisclosureGroup } from '../sources/disclosure-group.component';
 import { LocalFolder } from './local-folder/local-folder.component';
 import { Mqtt } from './mqtt/mqtt.component';
-import { getLocalFolderData } from './utils';
+import { getLocalFolderData, getMqttData } from './utils';
 import { Webhook } from './webhook/webhook.component';
 
 export const SinkOptions = () => {
@@ -30,7 +30,12 @@ export const SinkOptions = () => {
             icon: <FolderIcon width={'24px'} />,
         },
         { label: 'Webhook', value: 'webhook', content: <Webhook />, icon: <WebhookIcon width={'24px'} /> },
-        { label: 'MQTT', value: 'mqtt', content: <Mqtt />, icon: <MqttIcon width={'24px'} /> },
+        {
+            label: 'MQTT',
+            value: 'mqtt',
+            content: <Mqtt config={getMqttData(sinks)} />,
+            icon: <MqttIcon width={'24px'} />,
+        },
     ];
 
     return <DisclosureGroup items={inputs} defaultActiveInput={pipeline.data?.sink?.sink_type ?? null} />;
