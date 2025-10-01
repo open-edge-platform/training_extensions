@@ -4,6 +4,7 @@ import logging
 from abc import ABCMeta, abstractmethod
 from uuid import UUID
 
+import cv2
 import numpy as np
 
 from app.entities.stream_data import InferenceData
@@ -78,6 +79,7 @@ class DataCollector:
         )
         if not should_collect:
             return
+        frame_data = cv2.cvtColor(frame_data, cv2.COLOR_BGR2RGB)  # Convert BGR to RGB
         annotations = convert_prediction(
             labels=project.task.labels, frame_data=frame_data, prediction=inference_data.prediction
         )
