@@ -7,9 +7,10 @@ import { components } from '../../../api/openapi-spec';
 
 export type LocalFolderSinkConfig = components['schemas']['FolderSinkConfig'];
 export type MqttSinkConfig = components['schemas']['MqttSinkConfig'];
+export type WebhookSinkConfig = components['schemas']['WebhookSinkConfig'];
 export type SinkOutputFormats = LocalFolderSinkConfig['output_formats'];
 
-export type SinkConfig = LocalFolderSinkConfig | MqttSinkConfig;
+export type SinkConfig = LocalFolderSinkConfig | MqttSinkConfig | WebhookSinkConfig;
 
 export enum SinkType {
     FOLDER = 'folder',
@@ -25,8 +26,9 @@ export enum OutputFormat {
 }
 
 export enum WebhookHttpMethod {
-    POST = 'POST',
     PUT = 'PUT',
+    POST = 'POST',
+    PATCH = 'PATCH',
 }
 
 const toStringAndTrim = (value: unknown) => String(value).trim();
@@ -46,4 +48,8 @@ export const getLocalFolderData = <T extends { sink_type: string }>(sources: T[]
 
 export const getMqttData = <T extends { sink_type: string }>(sources: T[]) => {
     return sources.filter(({ sink_type }) => sink_type === 'mqtt').at(0) as unknown as MqttSinkConfig;
+};
+
+export const getWebhookData = <T extends { sink_type: string }>(sources: T[]) => {
+    return sources.filter(({ sink_type }) => sink_type === 'webhook').at(0) as unknown as WebhookSinkConfig;
 };

@@ -13,6 +13,7 @@ type KeyValueBuilderProps = {
     title: string;
     keysName: string;
     valuesName: string;
+    config?: Record<string, string>;
 };
 
 type Pair = Record<Fields, string>;
@@ -25,8 +26,12 @@ enum Fields {
 const updatePairAtIndex = (indexToUpdate: number, field: Fields, value: string) => (pair: Pair, index: number) =>
     index === indexToUpdate ? { ...pair, [field]: value } : pair;
 
-export const KeyValueBuilder = ({ title, keysName, valuesName }: KeyValueBuilderProps) => {
-    const [pairs, setPairs] = useState<Pair[]>([]);
+const getPairsFromObject = (obj: Record<string, string>): Pair[] => {
+    return Object.entries(obj).map(([key, value]) => ({ key, value }));
+};
+
+export const KeyValueBuilder = ({ title, keysName, valuesName, config = {} }: KeyValueBuilderProps) => {
+    const [pairs, setPairs] = useState<Pair[]>(getPairsFromObject(config));
 
     const addPair = () => {
         setPairs([...pairs, { key: '', value: '' }]);
@@ -69,12 +74,13 @@ export const KeyValueBuilder = ({ title, keysName, valuesName }: KeyValueBuilder
 
             <Grid columns={['1fr', '1fr', '50px']} gap={'size-100'}>
                 {pairs.map((pair, index) => (
-                    <Fragment key={`pair-${index}`}>
+                    <Fragment key={`${keysName}-${index}`}>
                         <RequiredTextField
                             isQuiet
                             width={'100%'}
-                            value={pair.key}
                             name={keysName}
+                            value={pair.key}
+                            aria-label={keysName}
                             placeholder='key'
                             errorMessage='Key cannot be empty'
                             onChange={(val) => updatePair(index, Fields.KEY, val)}
@@ -82,8 +88,9 @@ export const KeyValueBuilder = ({ title, keysName, valuesName }: KeyValueBuilder
                         <RequiredTextField
                             isQuiet
                             width={'100%'}
-                            value={pair.value}
                             name={valuesName}
+                            value={pair.value}
+                            aria-label={valuesName}
                             placeholder='value'
                             errorMessage='Value cannot be empty'
                             isDisabled={isEmpty(pair.key)}

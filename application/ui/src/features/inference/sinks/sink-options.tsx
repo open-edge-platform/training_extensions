@@ -9,7 +9,7 @@ import { useProjectIdentifier } from '../../../hooks/use-project-identifier.hook
 import { DisclosureGroup } from '../sources/disclosure-group.component';
 import { LocalFolder } from './local-folder/local-folder.component';
 import { Mqtt } from './mqtt/mqtt.component';
-import { getLocalFolderData, getMqttData } from './utils';
+import { getLocalFolderData, getMqttData, getWebhookData } from './utils';
 import { Webhook } from './webhook/webhook.component';
 
 export const SinkOptions = () => {
@@ -29,7 +29,12 @@ export const SinkOptions = () => {
             content: <LocalFolder config={getLocalFolderData(sinks)} />,
             icon: <FolderIcon width={'24px'} />,
         },
-        { label: 'Webhook', value: 'webhook', content: <Webhook />, icon: <WebhookIcon width={'24px'} /> },
+        {
+            label: 'Webhook',
+            value: 'webhook',
+            content: <Webhook config={getWebhookData(sinks)} />,
+            icon: <WebhookIcon width={'24px'} />,
+        },
         {
             label: 'MQTT',
             value: 'mqtt',
