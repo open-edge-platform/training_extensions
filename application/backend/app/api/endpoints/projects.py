@@ -134,12 +134,12 @@ def get_project(
         status.HTTP_404_NOT_FOUND: {"description": "Project not found"},
     },
 )
-def update_project(
+def rename_project(
     project_id: Annotated[UUID, Depends(get_project_id)],
     project_update: Annotated[ProjectUpdate, Body(description="Updated project name")],
     project_service: Annotated[ProjectService, Depends(get_project_service)],
 ) -> Project:
-    """Update project name only"""
+    """Rename a project"""
     try:
         return project_service.update_project_name(project_id, project_update.name)
     except ResourceNotFoundError as e:
