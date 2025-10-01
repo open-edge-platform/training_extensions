@@ -78,7 +78,7 @@ jobs:
         working-directory: lib
         run: tox r -vv -e pre-commit
   Unit-Test:
-    runs-on: ubuntu-24.04
+    runs-on: [self-hosted, linux, x64, dev, dmount]
     permissions:
       contents: read
     needs:
@@ -96,10 +96,6 @@ jobs:
             tox-env: "py311"
     name: Unit-Test-with-Python${{ matrix.python-version }}
     steps:
-      - name: Runner cleanup
-        uses: open-edge-platform/geti-ci/actions/cleanup-runner@fe057c331605364551b3dc0be609807b1b588a05 #FIXME
-        with:
-          type: "initial"
       - name: Checkout repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
