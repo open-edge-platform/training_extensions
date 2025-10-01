@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Divider, Flex, Grid, Heading, Slider, Switch, Text, View } from '@geti/ui';
+import { Divider, Flex, Heading, Slider, Switch, Text } from '@geti/ui';
 import { $api } from 'src/api/client';
 import { useProjectIdentifier } from 'src/hooks/use-project-identifier.hook';
 
