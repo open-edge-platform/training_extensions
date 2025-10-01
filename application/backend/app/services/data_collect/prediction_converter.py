@@ -23,10 +23,10 @@ def _convert_detection_prediction(labels: list[Label], prediction: DetectionResu
         if not label:
             logger.warning("Prediction label %s cannot be found in the project", label_name)
             continue
-        x, y, width, height = box.tolist()
+        x1, y1, x2, y2 = box.tolist()
         annotation = DatasetItemAnnotation(
             labels=[LabelReference(id=label.id)],
-            shape=Rectangle(x=x, y=y, width=width, height=height),
+            shape=Rectangle(x=x1, y=y1, width=(x2 - x1), height=(y2 - y1)),
             confidence=confidence,
         )
         result.append(annotation)
