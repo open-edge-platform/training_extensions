@@ -12,8 +12,14 @@ from sqlalchemy.orm import Session
 from app.db import get_db_session
 from app.repositories import PipelineRepository, SinkRepository, SourceRepository
 from app.schemas import Sink, Source
-from app.services import ActivePipelineService
-from app.services.base import GenericPersistenceService, ResourceNotFoundError, ResourceType, ServiceConfig
+from app.services import ActivePipelineService, ResourceWithNameAlreadyExistsError
+from app.services.base import (
+    GenericPersistenceService,
+    ResourceConstraintsError,
+    ResourceNotFoundError,
+    ResourceType,
+    ServiceConfig,
+)
 from app.services.mappers import SinkMapper, SourceMapper
 from app.services.parent_process_guard import parent_process_only
 
@@ -27,14 +33,44 @@ class PipelineField(StrEnum):
     SINK_ID = "sink_id"
 
 
+class SourceService(GenericPersistenceService[Source, SourceRepository]):
+    def __init__(self):
+        super().__init__(ServiceConfig(SourceRepository, SourceMapper, ResourceType.SOURCE))
+
+    def create(self, item: Source, db: Session | None = None) -> Source:
+        try:
+            return super().create(item, db)
+        except ResourceConstraintsError:
+            raise ResourceWithNameAlreadyExistsError(ResourceType.SOURCE, item.name)
+
+    def update(self, item: Source, partial_config: dict, db: Session | None = None) -> Source:
+        try:
+            return super().update(item, partial_config, db)
+        except ResourceConstraintsError:
+            raise ResourceWithNameAlreadyExistsError(ResourceType.SOURCE, item.name)
+
+
+class SinkService(GenericPersistenceService[Sink, SinkRepository]):
+    def __init__(self):
+        super().__init__(ServiceConfig(SinkRepository, SinkMapper, ResourceType.SINK))
+
+    def create(self, item: Sink, db: Session | None = None) -> Sink:
+        try:
+            return super().create(item, db)
+        except ResourceConstraintsError:
+            raise ResourceWithNameAlreadyExistsError(ResourceType.SINK, item.name)
+
+    def update(self, item: Sink, partial_config: dict, db: Session | None = None) -> Sink:
+        try:
+            return super().update(item, partial_config, db)
+        except ResourceConstraintsError:
+            raise ResourceWithNameAlreadyExistsError(ResourceType.SINK, item.name)
+
+
 class ConfigurationService:
     def __init__(self, active_pipeline_service: ActivePipelineService, config_changed_condition: Condition) -> None:
-        self._source_service: GenericPersistenceService[Source, SourceRepository] = GenericPersistenceService(
-            ServiceConfig(SourceRepository, SourceMapper, ResourceType.SOURCE)
-        )
-        self._sink_service: GenericPersistenceService[Sink, SinkRepository] = GenericPersistenceService(
-            ServiceConfig(SinkRepository, SinkMapper, ResourceType.SINK)
-        )
+        self._source_service: SourceService = SourceService()
+        self._sink_service: SinkService = SinkService()
         self._active_pipeline_service: ActivePipelineService = active_pipeline_service
         self._config_changed_condition: Condition = config_changed_condition
 

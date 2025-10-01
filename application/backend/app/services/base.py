@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 
 from app.db import get_db_session
 from app.db.schema import Base
-from app.repositories.base import BaseRepository
+from app.repositories.base import BaseRepository, PrimaryKeyIntegrityError, UniqueConstraintIntegrityError
 
 
 class ResourceType(StrEnum):
@@ -54,11 +54,27 @@ class ResourceInUseError(ResourceError):
         super().__init__(resource_type, resource_id, msg)
 
 
-class ResourceAlreadyExistsError(ResourceError):
+class ResourceWithNameAlreadyExistsError(ResourceError):
     """Exception raised when a resource with the same name already exists."""
 
     def __init__(self, resource_type: ResourceType, resource_name: str, message: str | None = None):
         msg = message or f"{resource_type} with name '{resource_name}' already exists."
+        super().__init__(resource_type, resource_name, msg)
+
+
+class ResourceWithIdAlreadyExistsError(ResourceError):
+    """Exception raised when a resource with the same ID already exists."""
+
+    def __init__(self, resource_type: ResourceType, resource_id: str, message: str | None = None):
+        msg = message or f"{resource_type} with ID '{resource_id}' already exists."
+        super().__init__(resource_type, resource_id, msg)
+
+
+class ResourceConstraintsError(ResourceError):
+    """Exception raised when a resource being stored, but internal constraints have failed."""
+
+    def __init__(self, resource_type: ResourceType, resource_name: str, message: str | None = None):
+        msg = message or f"{resource_type} with name '{resource_name}' has failed constraints."
         super().__init__(resource_type, resource_name, msg)
 
 
@@ -116,16 +132,21 @@ class GenericPersistenceService(Generic[S, R]):
                 item_db = self.config.mapper_class.from_schema(item)
                 repo.save(item_db)
                 return self.config.mapper_class.to_schema(item_db)
-        except IntegrityError as e:
-            if "unique constraint failed" in str(e).lower():
-                raise ResourceAlreadyExistsError(self.config.resource_type, getattr(item, "name", str(item.id)))  # type: ignore[attr-defined]
-            raise
+        except PrimaryKeyIntegrityError:
+            raise ResourceWithIdAlreadyExistsError(self.config.resource_type, str(item.id))  # type: ignore[attr-defined]
+        except UniqueConstraintIntegrityError:
+            raise ResourceConstraintsError(self.config.resource_type, getattr(item, "name", str(item.id)))  # type: ignore[attr-defined]
 
     def update(self, item: S, partial_config: dict, db: Session | None = None) -> S:
-        with self._get_repo(db) as repo:
-            to_update = item.model_copy(update=partial_config)
-            updated = repo.update(self.config.mapper_class.from_schema(to_update))
-            return self.config.mapper_class.to_schema(updated)
+        try:
+            with self._get_repo(db) as repo:
+                to_update = item.model_copy(update=partial_config)
+                updated = repo.update(self.config.mapper_class.from_schema(to_update))
+                return self.config.mapper_class.to_schema(updated)
+        except PrimaryKeyIntegrityError:
+            raise ResourceWithIdAlreadyExistsError(self.config.resource_type, str(item.id))  # type: ignore[attr-defined]
+        except UniqueConstraintIntegrityError:
+            raise ResourceConstraintsError(self.config.resource_type, getattr(item, "name", str(item.id)))  # type: ignore[attr-defined]
 
     def delete_by_id(self, item_id: UUID, db: Session | None = None) -> None:
         try:

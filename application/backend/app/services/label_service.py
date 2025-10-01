@@ -3,13 +3,11 @@
 
 from uuid import UUID
 
-from sqlalchemy.exc import IntegrityError
-
 from app.db import get_db_session
 from app.db.schema import LabelDB
 from app.repositories import LabelRepository
+from app.repositories.base import UniqueConstraintIntegrityError
 from app.schemas import Label
-from app.services import ResourceAlreadyExistsError, ResourceType
 from app.services.mappers.label_mapper import LabelMapper
 
 
@@ -20,6 +18,13 @@ def _convert_labels_to_db(labels: list[Label], project_id: UUID) -> list[LabelDB
         db_label.project_id = str(project_id)
         db_labels.append(db_label)
     return db_labels
+
+
+class DuplicateLabelsError(Exception):
+    """Exception raised when label with duplicated names or hotkeys are being stored."""
+
+    def __init__(self):
+        super().__init__("Either label names or hotkeys have duplicates")
 
 
 class LabelService:
@@ -56,8 +61,7 @@ class LabelService:
                         the database.
 
         Raises:
-            ResourceAlreadyExistsError: If any label to be added or updated would
-                                       violate uniqueness constraints (same name,
+            DuplicateLabelsError: If any label to be added or updated would violate uniqueness constraints (same name,
                                        or hotkey as an existing label in the project).
             IntegrityError: For other database integrity violations.
             DatabaseError: For general database operation failures.
@@ -87,11 +91,5 @@ class LabelService:
                 db.commit()
                 label_dbs = label_repo.list_all()
                 return [LabelMapper.to_schema(label_db) for label_db in label_dbs]
-        except IntegrityError as e:
-            if "unique constraint failed" in str(e).lower():
-                raise ResourceAlreadyExistsError(
-                    ResourceType.LABEL,
-                    "",
-                    message="Label with the same name or hotkey already exists in this project.",
-                )
-            raise
+        except UniqueConstraintIntegrityError:
+            raise DuplicateLabelsError

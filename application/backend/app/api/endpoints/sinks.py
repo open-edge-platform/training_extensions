@@ -16,7 +16,12 @@ from fastapi.responses import FileResponse, Response
 from app.api.dependencies import get_configuration_service, get_sink_id
 from app.schemas import Sink, SinkType
 from app.schemas.sink import SinkAdapter
-from app.services import ConfigurationService, ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError
+from app.services import (
+    ConfigurationService,
+    ResourceInUseError,
+    ResourceNotFoundError,
+    ResourceWithNameAlreadyExistsError,
+)
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/sinks", tags=["Sinks"])
@@ -97,7 +102,7 @@ async def create_sink(
 
     try:
         return configuration_service.create_sink(sink_config)
-    except ResourceAlreadyExistsError as e:
+    except ResourceWithNameAlreadyExistsError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 

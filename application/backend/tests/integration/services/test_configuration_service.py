@@ -8,7 +8,7 @@ import pytest
 
 from app.db.schema import SinkDB, SourceDB
 from app.services import ConfigurationService, ResourceInUseError, ResourceNotFoundError, ResourceType
-from app.services.base import ResourceAlreadyExistsError
+from app.services.base import ResourceWithNameAlreadyExistsError
 
 
 @pytest.fixture(autouse=True)
@@ -82,7 +82,7 @@ class TestConfigurationServiceIntegration:
         config = request.getfixturevalue(fixture_name)
         config.name = db_resources[0].name  # Set the same name as existing resource
 
-        with pytest.raises(ResourceAlreadyExistsError) as excinfo:
+        with pytest.raises(ResourceWithNameAlreadyExistsError) as excinfo:
             getattr(fxt_config_service, create_method)(config)
 
         assert excinfo.value.resource_type == resource_type

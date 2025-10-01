@@ -6,6 +6,7 @@ from uuid import UUID
 
 from app.db import get_db_session
 from app.repositories import DatasetItemRepository, PipelineRepository, ProjectRepository
+from app.repositories.base import UniqueConstraintIntegrityError
 from app.schemas import Project
 from app.services.base import (
     GenericPersistenceService,
@@ -14,6 +15,7 @@ from app.services.base import (
     ResourceType,
     ServiceConfig,
 )
+from app.services.label_service import DuplicateLabelsError
 from app.services.mappers.project_mapper import ProjectMapper
 from app.services.parent_process_guard import parent_process_only
 
@@ -29,7 +31,10 @@ class ProjectService:
 
     @parent_process_only
     def create_project(self, project: Project) -> Project:
-        return self._persistence.create(project)
+        try:
+            return self._persistence.create(project)
+        except UniqueConstraintIntegrityError:
+            raise DuplicateLabelsError
 
     def list_projects(self) -> list[Project]:
         return self._persistence.list_all()

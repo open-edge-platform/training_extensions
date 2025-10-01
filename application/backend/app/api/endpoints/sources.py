@@ -16,7 +16,12 @@ from fastapi.responses import FileResponse, Response
 from app.api.dependencies import get_configuration_service, get_source_id
 from app.schemas import Source, SourceType
 from app.schemas.source import SourceAdapter
-from app.services import ConfigurationService, ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError
+from app.services import (
+    ConfigurationService,
+    ResourceInUseError,
+    ResourceNotFoundError,
+    ResourceWithNameAlreadyExistsError,
+)
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/sources", tags=["Sources"])
@@ -111,7 +116,7 @@ async def create_source(
 
     try:
         return configuration_service.create_source(source_config)
-    except ResourceAlreadyExistsError as e:
+    except ResourceWithNameAlreadyExistsError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 

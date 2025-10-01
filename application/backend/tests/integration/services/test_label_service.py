@@ -9,8 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.db.schema import ProjectDB
 from app.schemas.label import Label
-from app.services import ResourceAlreadyExistsError
-from app.services.label_service import LabelService
+from app.services.label_service import DuplicateLabelsError, LabelService
 
 
 @pytest.fixture(autouse=True)
@@ -64,7 +63,7 @@ class TestLabelServiceIntegration:
         self, new_label_attrs, fxt_db_projects: list[ProjectDB], db_session: Session
     ):
         """
-        Test that adding labels with duplicate attributes raises ResourceAlreadyExistsError.
+        Test that adding labels with duplicate attributes raises DuplicateLabelsError.
 
         Parametrized to test all uniqueness constraints:
         - Duplicate name
@@ -77,10 +76,8 @@ class TestLabelServiceIntegration:
 
         new_label = Label(name="mouse", color="#0000FF", hotkey="r")
         new_label = new_label.model_copy(update=new_label_attrs)
-        with pytest.raises(ResourceAlreadyExistsError) as exc_info:
+        with pytest.raises(DuplicateLabelsError):
             LabelService.update_labels_in_project(UUID(fxt_db_projects[0].id), [new_label], None, None)
-
-        assert str(exc_info.value) == "Label with the same name or hotkey already exists in this project."
 
     def test_remove_labels_from_project(self, fxt_db_projects: list[ProjectDB], db_session: Session):
         """
@@ -137,15 +134,13 @@ class TestLabelServiceIntegration:
         db_session.add(db_project)
         db_session.flush()
 
-        with pytest.raises(ResourceAlreadyExistsError) as exc_info:
+        with pytest.raises(DuplicateLabelsError):
             LabelService.update_labels_in_project(
                 UUID(db_project.id),
                 [Label(name="mouse", color="#0000FF", hotkey="r")],
                 [Label(id=db_project.labels[0].id, name="mouse")],  # type: ignore[call-arg]
                 None,
             )
-
-        assert str(exc_info.value) == "Label with the same name or hotkey already exists in this project."
 
     def test_remove_update_add_combined_operation(self, fxt_db_projects: list[ProjectDB], db_session: Session):
         """
