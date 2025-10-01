@@ -91,7 +91,7 @@ export const router = createBrowserRouter([
                 ),
             },
             {
-                path: 'dataset',
+                path: paths.project.dataset.pattern,
                 element: (
                     <ZoomProvider>
                         <SelectedDataProvider>
@@ -101,7 +101,7 @@ export const router = createBrowserRouter([
                 ),
             },
             {
-                path: 'models',
+                path: paths.project.models.pattern,
                 element: <Models />,
             },
         ],
