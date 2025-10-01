@@ -1,8 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen, waitFor } from '@test-utils/render';
-import userEvent from '@testing-library/user-event';
+import { fireEvent, render, screen, waitFor } from 'test-utils/render';
 
 import { ImagesFolderSourceConfig } from '../util';
 import { ImageFolder } from './image-folder.component';
@@ -41,7 +40,7 @@ describe('ImageFolder', () => {
 
         render(<ImageFolder />);
 
-        userEvent.click(screen.getByRole('button', { name: 'Apply' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
 
         waitFor(() => {
             expect(mockedSubmitAction).toHaveBeenCalled();

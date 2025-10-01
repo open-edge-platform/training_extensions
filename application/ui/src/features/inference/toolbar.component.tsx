@@ -4,10 +4,10 @@
 import { Suspense } from 'react';
 
 import { Button, Divider, Flex, StatusLight, Text, View } from '@geti/ui';
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isEmpty } from 'lodash-es';
 
 import { $api } from '../../api/client';
-import { useProjectIdentifier } from '../../hooks/use-project-identifier.hook';
 import { InputOutputSetup } from './input-output-setup.component';
 import { PipelineSwitch } from './pipeline-toggle.component';
 import { useWebRTCConnection } from './stream/web-rtc-connection-provider';

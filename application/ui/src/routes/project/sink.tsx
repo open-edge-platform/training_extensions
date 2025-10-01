@@ -16,6 +16,7 @@ import {
     TextField,
     View,
 } from '@geti/ui';
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { useNavigate } from 'react-router';
 
 import { $api } from '../../api/client';
@@ -28,7 +29,6 @@ import {
 } from '../../api/openapi-spec';
 import { RadioDisclosure } from '../../components/radio-disclosure-group/radio-disclosure-group';
 import { paths } from '../../constants/paths';
-import { useProjectIdentifier } from '../../hooks/use-project-identifier.hook';
 import { ReactComponent as IconFolder } from './../../assets/icons/folder-arrow-right.svg';
 import { ReactComponent as IconMQTT } from './../../assets/icons/mqtt.svg';
 import { ReactComponent as IconRos } from './../../assets/icons/ros.svg';

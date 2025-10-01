@@ -2,15 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { isEmpty } from 'lodash-es';
+import { SchemaProjectInput } from 'src/api/openapi-spec';
 
 import { $api } from '../../api/client';
-import { Project } from '../../features/project/types';
 import { ProjectListItem } from './project-list-item/project-list-item.component';
 
 import styles from './projects-list.module.scss';
 
 interface ProjectListProps {
-    projects: Project[];
+    projects: SchemaProjectInput[];
     projectIdInEdition: string | null;
     setProjectInEdition: (projectId: string | null) => void;
 }

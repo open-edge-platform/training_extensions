@@ -1,10 +1,10 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { getMultipleMockedMediaItems } from 'mocks/mock-media-item';
 import { HttpResponse } from 'msw';
 
 import { expect, http, test } from './fixtures';
-import { getMultipleMockedMediaItems } from './test-utils/mocks';
 
 const mockedItems = getMultipleMockedMediaItems(20, '1');
 const mockedItems2 = getMultipleMockedMediaItems(20, '2');

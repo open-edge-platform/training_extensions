@@ -4,8 +4,8 @@
 import { Page } from '@playwright/test';
 import { HttpResponse } from 'msw';
 
+import { getMockedProject } from '../mocks/mock-project';
 import { expect, http, test } from './fixtures';
-import { getMockedProject } from './test-utils/mocks';
 
 const fillProjectForm = async ({
     page,

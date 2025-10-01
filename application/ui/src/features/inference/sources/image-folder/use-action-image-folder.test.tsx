@@ -3,9 +3,9 @@
 
 import { startTransition } from 'react';
 
-import { screen, TestProviders } from '@test-utils/render';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { HttpResponse } from 'msw';
+import { screen, TestProviders } from 'test-utils/render';
 
 import { http } from '../../../../api/utils';
 import { server } from '../../../../msw-node-setup';
