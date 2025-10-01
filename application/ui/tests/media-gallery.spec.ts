@@ -43,14 +43,18 @@ test.describe('Dataset', () => {
         await expect(page.getByText(`${loadedItems} selected`)).toBeVisible();
     });
 
-    test.skip('select multiple images', async ({ page }) => {
+    test('select multiple images', async ({ page }) => {
         const selectedElements = 5;
 
         await page.goto('projects/id-1/dataset');
-        const elements = await page.getByRole('option').all();
 
-        for await (const element of elements.slice(0, selectedElements)) {
-            await element.click();
+        await expect(page.getByText('40 images')).toBeVisible();
+
+        const listbox = page.getByRole('listbox', { name: 'data-collection-grid' });
+        const options = listbox.getByRole('option');
+
+        for (let i = 0; i < selectedElements; i++) {
+            await options.nth(i).click();
         }
 
         await expect(page.getByText(`${selectedElements} selected`)).toBeVisible();
