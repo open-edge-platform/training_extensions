@@ -200,7 +200,7 @@ class BaseWeightsService:
             sha_sum: Expected SHA256 checksum for verification
 
         Raises:
-            ValueError: If downloaded file fails integrity check
+            ValueError: If downloaded file fails integrity check, or if download fails
         """
         self._check_disk_space(remote_url)
 
@@ -223,8 +223,10 @@ class BaseWeightsService:
             logger.info(f"Successfully downloaded and verified weights: {local_path}")
         except requests.RequestException as e:
             logger.error(f"Failed to download weights from {remote_url}: {e}")
+            raise ValueError(f"Failed to download weights from {remote_url}: {e}")
         except Exception as e:
             logger.error(f"Unexpected error downloading weights from {remote_url}: {e}")
+            raise ValueError(f"Unexpected error downloading weights from {remote_url}: {e}")
         finally:
             # Clean up temporary file if it exists
             if temp_path.exists():
