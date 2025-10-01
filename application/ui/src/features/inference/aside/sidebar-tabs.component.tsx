@@ -6,12 +6,13 @@ import { useState } from 'react';
 import { Flex, Grid, ToggleButton, View } from '@geti/ui';
 import { Gear, GraphChart } from '@geti/ui/icons';
 
+import { DataCollection } from './data-collection.component';
 import { Graphs } from './graphs.component';
 
 import styles from './sidebar-tabs.module.scss';
 
 const TABS = [
-    { label: 'Data collection policy', icon: <Gear />, content: <>Models</> },
+    { label: 'Data collection policy', icon: <Gear />, content: <DataCollection /> },
     { label: 'Model statistics', icon: <GraphChart />, content: <Graphs /> },
 ];
 
