@@ -1,10 +1,10 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Suspense, useEffect } from 'react';
+import { Suspense } from 'react';
 
 import { Loading } from '@geti/ui';
-import { createBrowserRouter, useNavigate } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 
 import { $api } from './api/client';
 import { ZoomProvider } from './components/zoom/zoom';
@@ -21,31 +21,29 @@ import { CreateProject } from './routes/project/create-project';
 import { ViewProject } from './routes/project/view-project';
 
 const Redirect = () => {
-    const navigate = useNavigate();
+    let path = paths.project.index({});
 
     const { data: projects } = $api.useSuspenseQuery('get', '/api/projects');
 
-    useEffect(() => {
-        // No projects -> Go to create project
-        if (!projects || projects.length === 0) {
-            navigate(paths.project.new({}), { replace: true });
+    // No projects -> Go to create project
+    if (!projects || projects.length === 0) {
+        path = paths.project.new({});
 
-            // Only 1 project -> Redirect to the inference page
-        } else if (projects.length === 1) {
-            const projectId = projects[0].id;
+        // Only 1 project -> Redirect to the inference page
+    } else if (projects.length === 1) {
+        const projectId = projects[0].id;
 
-            if (projectId) {
-                navigate(paths.project.inference({ projectId }), { replace: true });
-            } else {
-                navigate(paths.project.new({}), { replace: true });
-            }
+        if (projectId) {
+            path = paths.project.inference({ projectId });
         } else {
-            // More than 1 project -> Load index page (/projects)
-            navigate(paths.project.index({}), { replace: true });
+            path = paths.project.new({});
         }
-    }, [projects, navigate]);
+    } else {
+        // More than 1 project -> Load index page (/projects)
+        path = paths.project.index({});
+    }
 
-    return <Loading />;
+    return <Navigate to={path} replace />;
 };
 
 export const router = createBrowserRouter([
@@ -83,7 +81,7 @@ export const router = createBrowserRouter([
                 element: <ViewProject />,
             },
             {
-                path: 'inference',
+                path: paths.project.inference.pattern,
                 element: (
                     <WebRTCConnectionProvider>
                         <ZoomProvider>
