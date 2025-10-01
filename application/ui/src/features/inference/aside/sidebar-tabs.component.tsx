@@ -28,6 +28,10 @@ const SidebarTabs = ({ tabs, selectedTab }: TabProps) => {
 
     const content = tabs.find(({ label }) => label === tab)?.content;
 
+    const handleSetTab = (label: string) => {
+        setTab(label === tab ? null : label);
+    };
+
     return (
         <Grid
             gridArea={'aside'}
@@ -52,7 +56,7 @@ const SidebarTabs = ({ tabs, selectedTab }: TabProps) => {
                             key={label}
                             isQuiet
                             isSelected={label === tab}
-                            onChange={() => setTab(label === tab ? null : label)}
+                            onChange={() => handleSetTab(label)}
                             UNSAFE_className={styles.toggleButton}
                             aria-label={`Toggle ${label} tab`}
                         >
