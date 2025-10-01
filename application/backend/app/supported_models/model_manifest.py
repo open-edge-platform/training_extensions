@@ -7,15 +7,10 @@ from functools import cached_property
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field
 
+from app.schemas.project import TaskType
+
 from .default_models import DefaultCategory, DefaultModels
-from .hyperparameters import (
-    AugmentationParameters,
-    DatasetPreparationParameters,
-    EarlyStopping,
-    EvaluationParameters,
-    Hyperparameters,
-    TrainingHyperParameters,
-)
+from .hyperparameters import Hyperparameters
 
 
 class GPUMaker(str, Enum):
@@ -124,7 +119,7 @@ class ModelManifest(BaseModel):
         title="Pretrained Weights", description="URL and SHA sum of the pretrained weights"
     )
     description: str = Field(title="Description", description="Detailed description of the model capabilities")
-    task: str = Field(title="Task Type", description="Type of machine learning task addressed by the model")
+    task: TaskType = Field(title="Task Type", description="Type of machine learning task addressed by the model")
     stats: ModelStats = Field(title="Model Statistics", description="Statistics about the model")
     support_status: ModelManifestDeprecationStatus = Field(
         default=ModelManifestDeprecationStatus.ACTIVE,
@@ -157,49 +152,4 @@ class ModelManifest(BaseModel):
             return DefaultCategory.SPEED.name.lower()
         if DefaultModels.get_balanced_model(self.task) == self.id:
             return DefaultCategory.BALANCE.name.lower()
-        return None
-
-
-class NullModelManifest(ModelManifest):
-    """
-    NullModelManifest is a placeholder for an empty or non-existent model manifest.
-
-    This class is used to represent the absence of a valid model manifest.
-    """
-
-    id: str = Field(default="null")
-    name: str = Field(default="null")
-    pretrained_weights: PretrainedWeights = Field(default=PretrainedWeights(url="null", sha_sum="null"))
-    description: str = Field(default="null")
-    task: str = Field(default="null")
-    stats: ModelStats = Field(
-        default=ModelStats(
-            gigaflops=1,
-            trainable_parameters=1,
-            performance_ratings=PerformanceRatings(),
-        )
-    )
-    support_status: ModelManifestDeprecationStatus = Field(default=ModelManifestDeprecationStatus.OBSOLETE)
-    supported_gpus: dict[GPUMaker, bool] = Field(default={})
-    hyperparameters: Hyperparameters = Field(
-        default=Hyperparameters(
-            dataset_preparation=DatasetPreparationParameters(augmentation=AugmentationParameters()),
-            training=TrainingHyperParameters(
-                max_epochs=1,
-                early_stopping=EarlyStopping(patience=1),
-                learning_rate=0.001,
-            ),
-            evaluation=EvaluationParameters(metric=None),
-        )
-    )
-    capabilities: Capabilities = Field(default=Capabilities(xai=False, tiling=False))
-
-    @computed_field  # type: ignore[misc]
-    @cached_property
-    def is_default_model(self) -> bool:
-        return False
-
-    @computed_field  # type: ignore[misc]
-    @cached_property
-    def model_category(self) -> str | None:
         return None

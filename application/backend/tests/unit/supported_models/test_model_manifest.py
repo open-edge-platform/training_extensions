@@ -24,7 +24,6 @@ from app.supported_models.model_manifest import (
     ModelManifest,
     ModelManifestDeprecationStatus,
     ModelStats,
-    NullModelManifest,
     PerformanceRatings,
     PretrainedWeights,
 )
@@ -155,16 +154,3 @@ class TestModelManifest:
                 none_behavior=hiyapyco.NONE_BEHAVIOR_OVERRIDE,
             )
             assert model_manifest == ModelManifest(**mock_yaml_result)
-
-    def test_null_model_manifest(self):
-        null_model_manifest = NullModelManifest()
-
-        assert null_model_manifest.id == "null"
-        assert null_model_manifest.name == "null"
-        assert null_model_manifest.pretrained_weights.url == "null"
-        assert null_model_manifest.pretrained_weights.sha_sum == "null"
-        assert null_model_manifest.support_status == ModelManifestDeprecationStatus.OBSOLETE
-        assert null_model_manifest.stats.gigaflops == 1
-        assert null_model_manifest.stats.trainable_parameters == 1
-        assert null_model_manifest.supported_gpus == {}
-        assert null_model_manifest.hyperparameters.dataset_preparation.augmentation == AugmentationParameters()

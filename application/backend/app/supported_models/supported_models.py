@@ -6,8 +6,15 @@ from functools import cache
 from importlib import resources
 
 from . import manifests
-from .model_manifest import ModelManifest, NullModelManifest
+from .model_manifest import ModelManifest
 from .parser import parse_manifest
+
+
+class ManifestNotFoundException(Exception):
+    """Exception raised when a model manifest is not found."""
+
+    def __init__(self, model_manifest_id: str):
+        super().__init__(f"Model manifest with ID {model_manifest_id} not found.")
 
 
 class SupportedModels:
@@ -15,10 +22,15 @@ class SupportedModels:
     def get_model_manifest_by_id(cls, model_manifest_id: str) -> ModelManifest:
         """
         Retrieve a specific model manifest by its ID.
+
+        :param model_manifest_id: The ID of the model manifest to retrieve.
+
+        :return: The ModelManifest object corresponding to the given ID.
+        :raises ManifestNotFoundException: If the model manifest with the given ID does not exist.
         """
         model_manifests = cls.get_model_manifests()
         if model_manifest_id not in model_manifests:
-            return NullModelManifest()
+            raise ManifestNotFoundException(model_manifest_id=model_manifest_id)
         return model_manifests[model_manifest_id]
 
     @staticmethod
