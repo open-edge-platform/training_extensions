@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, Divider, Flex, Heading, Text, toast } from '@geti/ui';
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { $api } from '../../../api/client';
 import { AddMediaButton } from '../../../components/add-media-button/add-media-button.component';
-import { useProjectIdentifier } from '../../../hooks/use-project-identifier.hook';
 import { useSelectedData } from '../../../routes/dataset/provider';
 import { DatasetItem } from '../../annotator/types';
 import { CheckboxInput } from '../checkbox-input.component';

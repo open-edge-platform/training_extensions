@@ -1,9 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { DatasetItem } from '../../src/features/annotator/types';
+import { DatasetItem } from 'src/features/annotator/types';
 
-export const getMockedMediaItem = (data: Partial<DatasetItem>): DatasetItem => ({
+const getMockedMediaItem = (data: Partial<DatasetItem>): DatasetItem => ({
     id: '2f3c9f61-7aa0-4529-a924-193761a64b22',
     name: 'IMG_20210209_161319',
     format: 'png',

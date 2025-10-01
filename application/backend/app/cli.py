@@ -13,6 +13,7 @@ from app.db import MigrationManager, get_db_session
 from app.db.schema import DatasetItemDB, LabelDB, ModelRevisionDB, PipelineDB, ProjectDB, SinkDB, SourceDB
 from app.schemas import DisconnectedSinkConfig, DisconnectedSourceConfig, OutputFormat, SinkType, SourceType
 from app.schemas.model import TrainingStatus
+from app.schemas.pipeline import FixedRateDataCollectionPolicy
 from app.schemas.project import TaskType
 from app.settings import get_settings
 
@@ -92,8 +93,11 @@ def seed(with_model: bool) -> None:
             exclusive_labels=True,
         )
         project.labels = [
-            LabelDB(name="card", color="#FF0000", hotkey="c"),
-            LabelDB(name="person", color="#00FF00", hotkey="p"),
+            LabelDB(name="Clubs", color="#2d6311", hotkey="c"),
+            LabelDB(name="Diamonds", color="#baa3b3", hotkey="d"),
+            LabelDB(name="Spades", color="#000702", hotkey="s"),
+            LabelDB(name="Hearts", color="#1f016b", hotkey="h"),
+            LabelDB(name="No_object", color="#565a84", hotkey="n"),
         ]
         db.add(project)
         db.flush()
@@ -131,6 +135,7 @@ def seed(with_model: bool) -> None:
             output_formats=[OutputFormat.IMAGE_ORIGINAL, OutputFormat.IMAGE_WITH_PREDICTIONS, OutputFormat.PREDICTIONS],
             config_data={"folder_path": "data/output"},
         )
+        pipeline.data_collection_policies = [FixedRateDataCollectionPolicy(rate=0.1).model_dump(mode="json")]
         if with_model:
             pipeline.model_revision = ModelRevisionDB(
                 id="977eeb18-eaac-449d-bc80-e340fbe052ad",

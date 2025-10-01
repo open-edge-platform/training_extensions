@@ -1,8 +1,6 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState } from 'react';
-
 import { ReactComponent as FolderIcon } from '../../../assets/icons/folder.svg';
 import { ReactComponent as MqttIcon } from '../../../assets/icons/mqtt.svg';
 import { ReactComponent as WebhookIcon } from '../../../assets/icons/webhook.svg';
@@ -18,11 +16,5 @@ const inputs = [
 ];
 
 export const SinkOptions = () => {
-    const [activeInput, setActiveInput] = useState<string | null>(null);
-
-    const handleActiveInputChange = (value: string) => {
-        setActiveInput((prevValue) => (value !== prevValue ? value : null));
-    };
-
-    return <DisclosureGroup items={inputs} value={activeInput} onChange={handleActiveInputChange} />;
+    return <DisclosureGroup items={inputs} defaultActiveInput={null} />;
 };

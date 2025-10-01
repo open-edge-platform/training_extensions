@@ -7,7 +7,7 @@ import { isEmpty } from 'lodash-es';
 import { $api } from '../../../api/client';
 import Background from '../../../assets/background.png';
 import { NewProjectLink } from './new-project-link.component';
-import { ProjectCard } from './project-card';
+import { ProjectCard } from './project-card.component';
 
 import classes from './project-list.module.scss';
 
@@ -18,6 +18,7 @@ export const ProjectList = () => {
         <View
             paddingTop={'size-1000'}
             height={'100%'}
+            backgroundColor={'gray-100'}
             UNSAFE_style={{
                 backgroundImage: `url(${Background})`,
                 backgroundBlendMode: 'luminosity',

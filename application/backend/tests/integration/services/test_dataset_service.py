@@ -14,8 +14,8 @@ import pytest
 from PIL import Image
 from sqlalchemy.orm import Session
 
-from app.db.schema import DatasetItemDB, ProjectDB
-from app.schemas.dataset_item import DatasetItemAnnotation, DatasetItemAnnotationsWithSource
+from app.db.schema import DatasetItemDB, ModelRevisionDB, ProjectDB, SourceDB
+from app.schemas.dataset_item import DatasetItemAnnotation, DatasetItemAnnotationsWithSource, DatasetItemSubset
 from app.schemas.label import LabelReference
 from app.schemas.shape import FullImage, Rectangle
 from app.services.base import ResourceNotFoundError, ResourceType
@@ -82,43 +82,70 @@ def fxt_annotations():
 class TestDatasetServiceIntegration:
     """Integration tests for DatasetService."""
 
+    @pytest.mark.parametrize("use_pipeline_model", [True, False])
+    @pytest.mark.parametrize("use_pipeline_source", [True, False])
     @pytest.mark.parametrize("user_reviewed", [True, False])
     @pytest.mark.parametrize("format", ["jpg", "png"])
     def test_create_dataset_item(
         self,
         fxt_dataset_service: DatasetService,
+        fxt_db_models: list[ModelRevisionDB],
+        fxt_db_sources: list[SourceDB],
         fxt_stored_projects: list[ProjectDB],
         db_session: Session,
-        format: str,
+        format: DatasetItemSubset,
         user_reviewed: bool,
+        use_pipeline_source: bool,
+        use_pipeline_model: bool,
     ):
         """Test creating a dataset item."""
-        img_byte_arr = BytesIO()
-        img = Image.new("RGB", (1024, 768))
-        img.save(img_byte_arr, "PNG")
+        project_id = fxt_stored_projects[0].id
+        image = Image.new("RGB", (1024, 768))
+        fxt_db_models[0].project_id = project_id
+        db_session.add_all([fxt_db_sources[0], fxt_db_models[0]])
+        db_session.flush()
+        stored_source_id = fxt_db_sources[0].id
+        model_revision_id = fxt_db_models[0].id
 
         created_dataset_item = fxt_dataset_service.create_dataset_item(
-            project_id=UUID(fxt_stored_projects[0].id),
+            project_id=UUID(project_id),
             name="test",
             format=format,
-            size=2048,
-            file=img_byte_arr,
+            data=image,
             user_reviewed=user_reviewed,
+            source_id=UUID(stored_source_id) if use_pipeline_source else None,
+            prediction_model_id=UUID(model_revision_id) if use_pipeline_model else None,
         )
         logger.info(f"Created dataset item: {created_dataset_item}")
-        assert created_dataset_item.id is not None
-        assert created_dataset_item.name == "test"
-        assert created_dataset_item.format == format
-        assert created_dataset_item.size == 2048
-        assert created_dataset_item.width == 1024
-        assert created_dataset_item.height == 768
 
-        binary_file_path = Path(f"data/projects/{fxt_stored_projects[0].id}/dataset/{created_dataset_item.id}.{format}")
-        assert os.path.exists(binary_file_path)
-
-        thumbnail_file_path = Path(
-            f"data/projects/{fxt_stored_projects[0].id}/dataset/{created_dataset_item.id}-thumb.jpg"
+        dataset_item = db_session.get(DatasetItemDB, str(created_dataset_item.id))
+        assert dataset_item is not None
+        assert (
+            dataset_item.id == str(created_dataset_item.id)
+            and dataset_item.project_id == project_id
+            and dataset_item.name == "test"
+            and dataset_item.format == format
+            and dataset_item.width == 1024
+            and dataset_item.height == 768
+            and dataset_item.annotation_data == []
+            and dataset_item.user_reviewed == user_reviewed
+            and dataset_item.subset == DatasetItemSubset.UNASSIGNED
+            and dataset_item.subset_assigned_at is None
         )
+        if use_pipeline_source:
+            assert dataset_item.source_id == stored_source_id
+        else:
+            assert dataset_item.source_id is None
+        if use_pipeline_model:
+            assert dataset_item.prediction_model_id == model_revision_id
+        else:
+            assert dataset_item.prediction_model_id is None
+
+        binary_file_path = Path(f"data/projects/{project_id}/dataset/{created_dataset_item.id}.{format}")
+        assert os.path.exists(binary_file_path)
+        assert created_dataset_item.size == os.path.getsize(binary_file_path)
+
+        thumbnail_file_path = Path(f"data/projects/{project_id}/dataset/{created_dataset_item.id}-thumb.jpg")
         assert os.path.exists(thumbnail_file_path)
 
     def test_create_dataset_item_invalid_image(
@@ -130,8 +157,7 @@ class TestDatasetServiceIntegration:
                 project_id=UUID(fxt_stored_projects[0].id),
                 name="test",
                 format="jpg",
-                size=1024,
-                file=BytesIO(b"123"),
+                data=BytesIO(b"123"),
                 user_reviewed=True,
             )
 
@@ -202,7 +228,6 @@ class TestDatasetServiceIntegration:
         fxt_dataset_service: DatasetService,
         fxt_stored_projects: list[ProjectDB],
         fxt_stored_dataset_items: list[DatasetItemDB],
-        db_session: Session,
         limit,
         limit_out_of_range,
         offset,
@@ -231,7 +256,6 @@ class TestDatasetServiceIntegration:
         fxt_dataset_service: DatasetService,
         fxt_stored_projects: list[ProjectDB],
         fxt_stored_dataset_items: list[DatasetItemDB],
-        db_session: Session,
     ):
         """Test retrieving a dataset item by ID."""
         fetched_dataset_item = fxt_dataset_service.get_dataset_item_by_id(
@@ -258,7 +282,6 @@ class TestDatasetServiceIntegration:
         fxt_dataset_service: DatasetService,
         fxt_stored_projects: list[ProjectDB],
         fxt_stored_dataset_items: list[DatasetItemDB],
-        db_session: Session,
     ):
         """Test retrieving a dataset item with wrong project ID raises error."""
         with pytest.raises(ResourceNotFoundError) as excinfo:
@@ -274,7 +297,6 @@ class TestDatasetServiceIntegration:
         fxt_dataset_service: DatasetService,
         fxt_stored_projects: list[ProjectDB],
         fxt_stored_dataset_items: list[DatasetItemDB],
-        db_session: Session,
     ):
         """Test retrieving a dataset item binary path by ID."""
         dataset_item_binary_path = fxt_dataset_service.get_dataset_item_binary_path_by_id(
@@ -302,7 +324,6 @@ class TestDatasetServiceIntegration:
         fxt_dataset_service: DatasetService,
         fxt_stored_projects: list[ProjectDB],
         fxt_stored_dataset_items: list[DatasetItemDB],
-        db_session: Session,
     ):
         """Test retrieving a dataset item binary path with wrong project ID raises error."""
         with pytest.raises(ResourceNotFoundError) as excinfo:
@@ -318,7 +339,6 @@ class TestDatasetServiceIntegration:
         fxt_dataset_service: DatasetService,
         fxt_stored_projects: list[ProjectDB],
         fxt_stored_dataset_items: list[DatasetItemDB],
-        db_session: Session,
     ):
         """Test retrieving a dataset item thumbnail path by ID."""
         dataset_item_binary_path = fxt_dataset_service.get_dataset_item_thumbnail_path_by_id(
@@ -346,7 +366,6 @@ class TestDatasetServiceIntegration:
         fxt_dataset_service: DatasetService,
         fxt_stored_projects: list[ProjectDB],
         fxt_stored_dataset_items: list[DatasetItemDB],
-        db_session: Session,
     ):
         """Test retrieving a dataset item thumbnail path with wrong project ID raises error."""
         with pytest.raises(ResourceNotFoundError) as excinfo:
@@ -403,7 +422,6 @@ class TestDatasetServiceIntegration:
         fxt_dataset_service: DatasetService,
         fxt_stored_projects: list[ProjectDB],
         fxt_stored_dataset_items: list[DatasetItemDB],
-        db_session: Session,
     ):
         """Test deleting a dataset item."""
         with pytest.raises(ResourceNotFoundError) as excinfo:
@@ -483,7 +501,6 @@ class TestDatasetServiceIntegration:
         fxt_dataset_service: DatasetService,
         fxt_stored_projects: list[ProjectDB],
         fxt_stored_dataset_items: list[DatasetItemDB],
-        db_session: Session,
     ):
         """Test getting a dataset item annotation and it's missing."""
         annotations = fxt_dataset_service.get_dataset_item_annotations(
@@ -500,7 +517,6 @@ class TestDatasetServiceIntegration:
         fxt_dataset_service: DatasetService,
         fxt_stored_projects: list[ProjectDB],
         fxt_stored_dataset_items: list[DatasetItemDB],
-        db_session: Session,
     ):
         """Test getting a dataset item annotation."""
         annotations = fxt_dataset_service.get_dataset_item_annotations(
@@ -524,7 +540,6 @@ class TestDatasetServiceIntegration:
         fxt_dataset_service: DatasetService,
         fxt_stored_projects: list[ProjectDB],
         fxt_stored_dataset_items: list[DatasetItemDB],
-        db_session: Session,
     ):
         """Test getting a dataset item annotation."""
         non_existent_id = uuid4()

@@ -3,7 +3,7 @@
 
 import { useActionState } from 'react';
 
-import { Button, Flex, NumberField, Switch, TextField } from '@geti/ui';
+import { Button, Flex, Form, NumberField, Switch, TextField } from '@geti/ui';
 
 import { OutputFormats } from '../output-formats.component';
 import { OutputFormat, SinkType } from '../utils';
@@ -51,7 +51,7 @@ export const Mqtt = () => {
     }, initData);
 
     return (
-        <form action={submitAction}>
+        <Form action={submitAction}>
             <Flex direction='column' gap='size-200'>
                 <TextField width={'100%'} label='Name' name='name' defaultValue={state?.name} />
 
@@ -90,6 +90,6 @@ export const Mqtt = () => {
                     Apply
                 </Button>
             </Flex>
-        </form>
+        </Form>
     );
 };

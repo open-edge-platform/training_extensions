@@ -11,6 +11,8 @@ from fastapi import FastAPI
 
 from app.core.scheduler import Scheduler
 from app.db import MigrationManager
+from app.services import ActivePipelineService
+from app.services.data_collect import DataCollector
 from app.settings import get_settings
 from app.webrtc.manager import WebRTCManager
 
@@ -31,8 +33,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         logger.error("Failed to initialize database. Application cannot start.")
         raise RuntimeError("Database initialization failed")
 
+    active_pipeline_service = ActivePipelineService()
+    app.state.active_pipeline_service = active_pipeline_service
+
+    data_collector = DataCollector(active_pipeline_service=active_pipeline_service)
+    app.state.data_collector = data_collector
+
     # Initialize Scheduler
-    app_scheduler = Scheduler()
+    app_scheduler = Scheduler(active_pipeline_service=active_pipeline_service, data_collector=data_collector)
     app_scheduler.start_workers()
     app.state.scheduler = app_scheduler
 

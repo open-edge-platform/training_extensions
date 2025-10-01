@@ -10,6 +10,8 @@ from multiprocessing.shared_memory import SharedMemory
 
 import psutil
 
+from app.services import ActivePipelineService
+from app.services.data_collect import DataCollector
 from app.services.metrics_service import SIZE
 from app.workers import DispatchingWorker, InferenceWorker, StreamLoader
 
@@ -22,7 +24,10 @@ class Scheduler:
     FRAME_QUEUE_SIZE = 5
     PREDICTION_QUEUE_SIZE = 5
 
-    def __init__(self) -> None:
+    def __init__(self, active_pipeline_service: ActivePipelineService, data_collector: DataCollector) -> None:
+        self._active_pipeline_service = active_pipeline_service
+        self._data_collector = data_collector
+
         logger.info("Initializing Scheduler...")
         # Queue for the frames acquired from the stream source and decoded
         self.frame_queue: mp.Queue = mp.Queue(maxsize=self.FRAME_QUEUE_SIZE)
@@ -61,7 +66,13 @@ class Scheduler:
             shm_lock=self.shm_metrics_lock,
         )
 
-        dispatching_thread = DispatchingWorker(self.pred_queue, self.rtc_stream_queue, self.mp_stop_event)
+        dispatching_thread = DispatchingWorker(
+            pred_queue=self.pred_queue,
+            rtc_stream_queue=self.rtc_stream_queue,
+            stop_event=self.mp_stop_event,
+            active_pipeline_service=self._active_pipeline_service,
+            data_collector=self._data_collector,
+        )
 
         # Start all workers
         stream_loader_proc.start()

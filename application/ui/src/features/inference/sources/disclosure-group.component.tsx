@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 
 import { Disclosure, DisclosurePanel, DisclosureTitle, Flex, Text } from '@geti/ui';
 import { clsx } from 'clsx';
@@ -17,8 +17,9 @@ type DisclosureItemProps = {
     item: DisclosureItem;
 };
 
-interface DisclosureGroupProps extends Omit<DisclosureItemProps, 'item'> {
+interface DisclosureGroupProps {
     items: DisclosureItem[];
+    defaultActiveInput: string | null;
 }
 
 const DisclosureItem = ({ item, value, onChange }: DisclosureItemProps) => {
@@ -49,11 +50,17 @@ const DisclosureItem = ({ item, value, onChange }: DisclosureItemProps) => {
     );
 };
 
-export const DisclosureGroup = ({ onChange, items, value }: DisclosureGroupProps) => {
+export const DisclosureGroup = ({ items, defaultActiveInput }: DisclosureGroupProps) => {
+    const [activeInput, setActiveInput] = useState(defaultActiveInput);
+
+    const handleActiveInputChange = (value: string) => {
+        setActiveInput((prevValue) => (value !== prevValue ? value : null));
+    };
+
     return (
         <Flex width={'100%'} direction={'column'} gap={'size-100'}>
             {items.map((item) => (
-                <DisclosureItem item={item} key={item.label} onChange={onChange} value={value} />
+                <DisclosureItem item={item} key={item.label} onChange={handleActiveInputChange} value={activeInput} />
             ))}
         </Flex>
     );

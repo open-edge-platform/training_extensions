@@ -12,8 +12,8 @@ from fastapi.exceptions import HTTPException
 from fastapi.openapi.models import Example
 from starlette.responses import FileResponse
 
-from app.api.dependencies import get_label_service, get_project_id, get_project_service
-from app.schemas import Label, PatchLabels, Project
+from app.api.dependencies import get_data_collector, get_label_service, get_project_id, get_project_service
+from app.schemas import Label, PatchLabels, Project, ProjectUpdateName
 from app.services import (
     LabelService,
     ProjectService,
@@ -21,6 +21,7 @@ from app.services import (
     ResourceInUseError,
     ResourceNotFoundError,
 )
+from app.services.data_collect import DataCollector
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/projects", tags=["Projects"])
@@ -125,6 +126,27 @@ def get_project(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
+@router.patch(
+    "/{project_id}",
+    response_model=Project,
+    responses={
+        status.HTTP_200_OK: {"description": "Project name updated successfully"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID or request body"},
+        status.HTTP_404_NOT_FOUND: {"description": "Project not found"},
+    },
+)
+def rename_project(
+    project_id: Annotated[UUID, Depends(get_project_id)],
+    project_update_name: Annotated[ProjectUpdateName, Body(description="Updated project name")],
+    project_service: Annotated[ProjectService, Depends(get_project_service)],
+) -> Project:
+    """Rename a project"""
+    try:
+        return project_service.update_project_name(project_id, project_update_name.name)
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
 @router.delete(
     "/{project_id}",
     status_code=status.HTTP_204_NO_CONTENT,
@@ -219,5 +241,26 @@ def get_project_thumbnail(
         if thumbnail_path:
             return FileResponse(path=thumbnail_path)
         raise HTTPException(status_code=status.HTTP_204_NO_CONTENT)
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.post(
+    "/{project_id}/pipeline:capture",
+    responses={
+        status.HTTP_200_OK: {"description": "Successfully marked next pipeline frame to be collected"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID"},
+        status.HTTP_404_NOT_FOUND: {"description": "Project not found"},
+    },
+)
+def capture_next_pipeline_frame(
+    project_id: Annotated[UUID, Depends(get_project_id)],
+    project_service: Annotated[ProjectService, Depends(get_project_service)],
+    data_collector: Annotated[DataCollector, Depends(get_data_collector)],
+) -> None:
+    """Marks next pipeline frame to be collected"""
+    try:
+        project_service.get_project_by_id(project_id)
+        data_collector.collect_next_frame()
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

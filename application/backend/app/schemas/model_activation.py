@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field, field_validator
 
 
 class ModelActivationState(BaseModel):
+    project_id: UUID | None = Field(..., description="Project ID of the model that is currently used for inference")
     active_model_id: UUID | None = Field(..., description="ID of the model that is currently used for inference")
     available_models: list[UUID] = Field(..., description="List of all available model IDs that can be activated")
 

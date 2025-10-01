@@ -18,6 +18,8 @@ from app.services import (
     ProjectService,
     SystemService,
 )
+from app.services.base_weights_service import BaseWeightsService
+from app.services.data_collect import DataCollector
 from app.services.label_service import LabelService
 from app.settings import get_settings
 from app.webrtc.manager import WebRTCManager
@@ -96,10 +98,14 @@ def get_dataset_item_id(dataset_item_id: str) -> UUID:
     return UUID(dataset_item_id)
 
 
-@lru_cache
-def get_active_pipeline_service() -> ActivePipelineService:
+def get_active_pipeline_service(request: Request) -> ActivePipelineService:
     """Provides an ActivePipelineService instance for managing the active pipeline."""
-    return ActivePipelineService()
+    return request.app.state.active_pipeline_service
+
+
+def get_data_collector(request: Request) -> DataCollector:
+    """Provides an DataCollector instance."""
+    return request.app.state.data_collector
 
 
 def get_scheduler(request: Request) -> Scheduler:
@@ -128,12 +134,14 @@ def get_configuration_service(
 @lru_cache
 def get_pipeline_service(
     active_pipeline_service: Annotated[ActivePipelineService, Depends(get_active_pipeline_service)],
+    data_collector: Annotated[DataCollector, Depends(get_data_collector)],
     metrics_service: Annotated[MetricsService, Depends(get_metrics_service)],
     scheduler: Annotated[Scheduler, Depends(get_scheduler)],
 ) -> PipelineService:
     """Provides a PipelineService instance with the active pipeline service and config changed condition."""
     return PipelineService(
         active_pipeline_service=active_pipeline_service,
+        data_collector=data_collector,
         metrics_service=metrics_service,
         config_changed_condition=scheduler.mp_config_changed_condition,
     )
@@ -174,3 +182,9 @@ def get_project_service() -> ProjectService:
 def get_label_service() -> type[LabelService]:
     """Provides a LabelService instance for managing labels."""
     return LabelService
+
+
+@lru_cache
+def get_base_weights_service() -> BaseWeightsService:
+    """Provides a BaseWeightsService instance for managing base weights."""
+    return BaseWeightsService(settings.data_dir)

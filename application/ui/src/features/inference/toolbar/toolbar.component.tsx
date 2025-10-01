@@ -4,12 +4,13 @@
 import { Suspense } from 'react';
 
 import { Button, Divider, Flex, StatusLight, Text, View } from '@geti/ui';
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isEmpty } from 'lodash-es';
 
-import { $api } from '../../api/client';
-import { useProjectIdentifier } from '../../hooks/use-project-identifier.hook';
-import { InputSource } from './input-source.component';
-import { useWebRTCConnection } from './stream/web-rtc-connection-provider';
+import { $api } from '../../../api/client';
+import { useWebRTCConnection } from '../stream/web-rtc-connection-provider';
+import { InputOutputSetup } from './input-output-setup.component';
+import { PipelineSwitch } from './pipeline-toggle.component';
 
 const ActiveModel = () => {
     const projectId = useProjectIdentifier();
@@ -116,8 +117,11 @@ export const Toolbar = () => {
 
                 <Divider orientation='vertical' size='S' />
 
+                <Divider orientation='vertical' size='S' />
+
                 <Flex marginStart='auto'>
-                    <InputSource />
+                    <PipelineSwitch />
+                    <InputOutputSetup />
                 </Flex>
             </Flex>
         </View>

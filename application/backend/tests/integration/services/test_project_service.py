@@ -197,3 +197,26 @@ class TestProjectServiceIntegration:
 
         assert excinfo.value.resource_type == ResourceType.PROJECT
         assert excinfo.value.resource_id == str(non_existent_id)
+
+    def test_update_project_name(
+        self, fxt_project_service: ProjectService, fxt_db_projects: list[ProjectDB], db_session: Session
+    ):
+        """Test updating a project's name."""
+        db_project = fxt_db_projects[0]
+        db_session.add(db_project)
+        db_session.flush()
+
+        new_name = "Updated Project Name"
+        updated_project = fxt_project_service.update_project_name(UUID(db_project.id), new_name)
+
+        assert updated_project.name == new_name
+
+    def test_update_project_name_not_found(self, fxt_project_service: ProjectService):
+        """Test updating a non-existent project name raises error."""
+        non_existent_id = uuid4()
+        new_name = "New Project Name"
+        with pytest.raises(ResourceNotFoundError) as excinfo:
+            fxt_project_service.update_project_name(non_existent_id, new_name)
+
+        assert excinfo.value.resource_type == ResourceType.PROJECT
+        assert excinfo.value.resource_id == str(non_existent_id)

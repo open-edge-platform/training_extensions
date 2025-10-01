@@ -3,7 +3,7 @@
 
 import { useActionState } from 'react';
 
-import { Button, Flex, NumberField, TextField } from '@geti/ui';
+import { Button, Flex, Form, NumberField, TextField } from '@geti/ui';
 
 import { ReactComponent as Folder } from '../../../../assets/icons/folder.svg';
 import { OutputFormats } from '../output-formats.component';
@@ -40,7 +40,7 @@ export const LocalFolder = () => {
     }, initData);
 
     return (
-        <form action={submitAction}>
+        <Form action={submitAction}>
             <Flex direction='column' gap='size-200'>
                 <Flex direction={'row'} gap='size-200'>
                     <TextField label='Name' name='name' defaultValue={state?.name} />
@@ -78,6 +78,6 @@ export const LocalFolder = () => {
                     Apply
                 </Button>
             </Flex>
-        </form>
+        </Form>
     );
 };
