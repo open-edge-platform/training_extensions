@@ -13,7 +13,7 @@ from app.services.label_service import LabelService
 
 
 @pytest.fixture
-def fxt_label_service(db_session):
+def fxt_label_service(db_session: Session) -> LabelService:
     return LabelService(db_session)
 
 

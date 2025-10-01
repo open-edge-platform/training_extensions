@@ -125,7 +125,7 @@ class TestProjectServiceIntegration:
         fetched_thumbnail_path = fxt_project_service.get_project_thumbnail_path(UUID(db_project.id))
         assert (
             fetched_thumbnail_path
-            == fxt_project_service.projects_dir / f"{db_project.id}/dataset/{db_dataset_item.id}-thumb.jpg"
+            == fxt_project_service._projects_dir / f"{db_project.id}/dataset/{db_dataset_item.id}-thumb.jpg"
         )
 
     def test_get_project_by_id_not_found(self, fxt_project_service: ProjectService):

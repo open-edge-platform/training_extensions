@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.schema import PipelineDB
@@ -16,4 +17,5 @@ class PipelineRepository(BaseRepository[PipelineDB]):
 
     def get_active_pipeline(self) -> PipelineDB | None:
         """Get the active pipeline from database."""
-        return self.db.query(PipelineDB).filter(PipelineDB.is_running).first()
+        stmt = select(PipelineDB).where(PipelineDB.is_running)
+        return self.db.execute(stmt).scalar_one_or_none()

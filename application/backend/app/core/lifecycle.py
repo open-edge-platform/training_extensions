@@ -24,6 +24,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     """FastAPI lifespan context manager"""
     # Startup
     settings = get_settings()
+    app.state.settings = settings
     logger.info("Starting %s application...", settings.app_name)
 
     # Initialize database

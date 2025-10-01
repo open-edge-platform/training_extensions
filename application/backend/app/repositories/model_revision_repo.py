@@ -1,6 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.schema import ModelRevisionDB, PipelineDB
@@ -19,10 +20,13 @@ class ModelRevisionRepository(BaseRepository[ModelRevisionDB]):
 
         An active model revision is one that is associated with a running pipeline.
         """
-        return (
-            self.db.query(ModelRevisionDB)
-            .join(PipelineDB, ModelRevisionDB.project_id == PipelineDB.project_id)
-            .filter(PipelineDB.is_running)
-            .filter(ModelRevisionDB.id == PipelineDB.model_revision_id)
-            .first()
+        stmt = (
+            select(ModelRevisionDB)
+            .join(
+                PipelineDB,
+                (ModelRevisionDB.id == PipelineDB.model_revision_id)
+                & (ModelRevisionDB.project_id == PipelineDB.project_id),
+            )
+            .where(PipelineDB.is_running)
         )
+        return self.db.execute(stmt).scalar_one_or_none()
