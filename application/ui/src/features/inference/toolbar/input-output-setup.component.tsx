@@ -5,9 +5,9 @@ import { Suspense } from 'react';
 
 import { Button, Content, Dialog, DialogTrigger, Item, Loading, TabList, TabPanels, Tabs, Text, View } from '@geti/ui';
 
-import { ReactComponent as Camera } from './../../assets/icons/camera.svg';
-import { SinkOptions } from './sinks/sink-options';
-import { SourceOptions } from './sources/source-options';
+import { ReactComponent as Camera } from '../../../assets/icons/camera.svg';
+import { SinkOptions } from '../sinks/sink-options';
+import { SourceOptions } from '../sources/source-options';
 
 export const InputOutputSetup = () => {
     return (

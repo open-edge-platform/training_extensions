@@ -3,9 +3,9 @@
 
 import { Grid } from '@geti/ui';
 
-import { Sidebar } from '../../features/inference/sidebar-tabs.component';
+import { Sidebar } from '../../features/inference/aside/sidebar-tabs.component';
 import { StreamContainer } from '../../features/inference/stream/stream-container';
-import { Toolbar } from '../../features/inference/toolbar.component';
+import { Toolbar } from '../../features/inference/toolbar/toolbar.component';
 
 export const Inference = () => {
     return (
