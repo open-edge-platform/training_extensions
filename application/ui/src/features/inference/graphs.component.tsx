@@ -3,10 +3,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-import { ActionButton, Flex, Grid, Heading, View } from '@geti/ui';
+import { Flex, Grid, Heading, View } from '@geti/ui';
 import { CartesianGrid, Label, Line, LineChart, ReferenceLine, XAxis, YAxis } from 'recharts';
-
-import { ReactComponent as DoubleChevronRight } from './../../assets/icons/double-chevron-right-icon.svg';
 
 const generateData = (n: number) => {
     const result = new Array(n);
@@ -123,9 +121,7 @@ const Graph = ({ label }: { label: string }) => {
     );
 };
 
-export const Aside = () => {
-    const [isHidden, setIsHidden] = useState(false);
-
+export const Graphs = () => {
     return (
         <Grid
             gridArea={'aside'}
@@ -134,35 +130,12 @@ export const Aside = () => {
             rows={['min-content', 'minmax(0, 1fr)']}
             UNSAFE_style={{
                 padding: 'var(--spectrum-global-dimension-size-200)',
-                paddingLeft: isHidden
-                    ? 'var(--spectrum-global-dimension-size-100)'
-                    : 'var(--spectrum-global-dimension-size-200)',
-                paddingRight: isHidden
-                    ? 'var(--spectrum-global-dimension-size-100)'
-                    : 'var(--spectrum-global-dimension-size-200)',
-                backgroundColor: 'var(--spectrum-global-color-gray-100)',
-                transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-                width: isHidden
-                    ? 'var(--spectrum-global-dimension-size-400)'
-                    : 'var(--spectrum-global-dimension-size-6000)',
             }}
         >
             <Flex gridArea={'header'} alignItems='center' gap={'size-100'} marginBottom={'size-300'}>
-                <ActionButton
-                    isQuiet
-                    onPress={() => setIsHidden((hidden) => !hidden)}
-                    UNSAFE_style={{
-                        transform: isHidden ? 'scaleX(-1)' : 'scaleX(1)',
-                        cursor: 'pointer',
-                    }}
-                >
-                    <DoubleChevronRight />
-                </ActionButton>
-                <Heading level={4} isHidden={isHidden}>
-                    Model statistics
-                </Heading>
+                <Heading level={4}>Model statistics</Heading>
             </Flex>
-            <View gridArea={'graphs'} isHidden={isHidden} UNSAFE_style={{ overflow: 'hidden auto' }}>
+            <View gridArea={'graphs'} UNSAFE_style={{ overflow: 'hidden auto' }}>
                 {/* TODO: Extract these into a shared component */}
                 <View paddingY='size-200'>
                     <Heading level={4} marginBottom={'size-300'}>
