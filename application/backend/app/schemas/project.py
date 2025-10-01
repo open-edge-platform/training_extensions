@@ -20,7 +20,7 @@ class Task(BaseModel):
     labels: list[Label] = []
 
 
-class ProjectUpdate(BaseModel):
+class ProjectUpdateName(BaseModel):
     """Schema for updating project name"""
 
     name: str
