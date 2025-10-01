@@ -3,6 +3,13 @@
 
 import { isEmpty } from 'lodash-es';
 
+import { components } from '../../../api/openapi-spec';
+
+export type LocalFolderSinkConfig = components['schemas']['FolderSinkConfig'];
+export type SinkOutputFormats = LocalFolderSinkConfig['output_formats'];
+
+export type SinkConfig = LocalFolderSinkConfig;
+
 export enum SinkType {
     FOLDER = 'folder',
     MQTT = 'mqtt',
@@ -30,4 +37,8 @@ export const getObjectFromFormData = (keys: FormDataEntryValue[], values: FormDa
     );
 
     return Object.fromEntries(validEntries);
+};
+
+export const getLocalFolderData = <T extends { sink_type: string }>(sources: T[]) => {
+    return sources.filter(({ sink_type }) => sink_type === 'folder').at(0) as unknown as LocalFolderSinkConfig;
 };

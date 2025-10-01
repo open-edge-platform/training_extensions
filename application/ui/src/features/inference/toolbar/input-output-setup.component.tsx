@@ -39,7 +39,9 @@ export const InputOutputSetup = () => {
                             </Item>
                             <Item key='sinks'>
                                 <View marginTop={'size-200'}>
-                                    <SinkOptions />
+                                    <Suspense fallback={<Loading size='M' />}>
+                                        <SinkOptions />
+                                    </Suspense>
                                 </View>
                             </Item>
                         </TabPanels>
