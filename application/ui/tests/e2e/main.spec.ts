@@ -39,7 +39,7 @@ test('Project creation', async ({ page }) => {
     });
 
     await test.step('Create new project', async () => {
-        await page.getByRole('link', { name: 'Create project' }).click();
+        await page.getByText('Create project').click();
 
         await fillProjectForm({
             page,
@@ -55,7 +55,7 @@ test('Project creation', async ({ page }) => {
     });
 
     await test.step('Verify project appears in project list', async () => {
-        await page.getByRole('link', { name: 'Geti Tune' }).click(); // Go back to /projects
+        await page.getByText('Geti Tune').click(); // Go back to /projects
         await expect(page.getByText('New Project')).toBeVisible();
     });
 
