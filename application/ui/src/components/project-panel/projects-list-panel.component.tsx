@@ -59,7 +59,7 @@ const AddProjectButton = () => {
             onPress={addProject}
         >
             <AddCircle />
-            <Text marginX='size-50'>Add project</Text>
+            <Text marginX='size-50'>Create project</Text>
         </ActionButton>
     );
 };

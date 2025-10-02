@@ -187,7 +187,7 @@ test.describe('Inference', () => {
         );
         await page.goto('/projects/id-1/inference');
 
-        await page.getByRole('button', { name: 'Source configuration' }).click();
+        await page.getByRole('button', { name: 'Pipeline configuration' }).click();
         await page.getByRole('button', { name: 'Webcam' }).click();
 
         await page.locator('input[name="name"]').fill('New Webcam');
@@ -211,7 +211,7 @@ test.describe('Inference', () => {
         // Click outside the dialog to close it
         await page.click('body', { position: { x: 10, y: 10 } });
 
-        await page.getByRole('button', { name: 'Source configuration' }).click();
+        await page.getByRole('button', { name: 'Pipeline configuration' }).click();
 
         await expect(page.locator('input[name="name"]')).toHaveValue('New Webcam');
         await expect(page.locator('input[name="device_id"]')).toHaveValue('1');
@@ -246,7 +246,7 @@ test.describe('Inference', () => {
         // Click outside the dialog to close it
         await page.click('body', { position: { x: 10, y: 10 } });
 
-        await page.getByRole('button', { name: 'Source configuration' }).click();
+        await page.getByRole('button', { name: 'Pipeline configuration' }).click();
         await page.getByLabel('Dataset import tabs').getByText('Output').click();
 
         await expect(page.locator('input[name="name"]')).toHaveValue('New Folder');

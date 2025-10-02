@@ -15,7 +15,7 @@ export const InputOutputSetup = () => {
             <Button width={'size-2000'} variant={'secondary'}>
                 <Camera fill='white' />
                 <Text width={'auto'} marginStart={'size-100'}>
-                    Source configuration
+                    Pipeline configuration
                 </Text>
             </Button>
             <Dialog minWidth={'size-6000'}>
