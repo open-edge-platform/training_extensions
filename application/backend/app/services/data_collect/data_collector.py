@@ -2,18 +2,19 @@
 # SPDX-License-Identifier: Apache-2.0
 import logging
 from abc import ABCMeta, abstractmethod
+from pathlib import Path
 from uuid import UUID
 
 import cv2
 import numpy as np
 
+from app.db import get_db_session
 from app.entities.stream_data import InferenceData
 from app.schemas import Project
 from app.schemas.dataset_item import DatasetItemFormat
 from app.schemas.pipeline import FixedRateDataCollectionPolicy
 from app.services import ActivePipelineService, DatasetService
 from app.services.data_collect.prediction_converter import convert_prediction
-from app.settings import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -48,11 +49,11 @@ class FixedRatePolicyChecker(PolicyChecker):
 
 
 class DataCollector:
-    def __init__(self, active_pipeline_service: ActivePipelineService) -> None:
+    def __init__(self, data_dir: Path, active_pipeline_service: ActivePipelineService) -> None:
         super().__init__()
         self.should_collect_next_frame = False
+        self.data_dir = data_dir
         self.active_pipeline_service = active_pipeline_service
-        self.dataset_service = DatasetService(get_settings().data_dir)
         self.policy_checkers: list[PolicyChecker] = []
         self.reload_policies()
 
@@ -83,16 +84,18 @@ class DataCollector:
         annotations = convert_prediction(
             labels=project.task.labels, frame_data=frame_data, prediction=inference_data.prediction
         )
-        self.dataset_service.create_dataset_item(
-            project_id=project.id,
-            name=f"{timestamp:.4f}".replace(".", "_"),
-            format=DatasetItemFormat.JPG,
-            data=frame_data,
-            user_reviewed=False,
-            source_id=source_id,
-            prediction_model_id=inference_data.model_id,
-            annotations=annotations,
-        )
+        with get_db_session() as session:
+            dataset_service = DatasetService(self.data_dir, session)
+            dataset_service.create_dataset_item(
+                project_id=project.id,
+                name=f"{timestamp:.4f}".replace(".", "_"),
+                format=DatasetItemFormat.JPG,
+                data=frame_data,
+                user_reviewed=False,
+                source_id=source_id,
+                prediction_model_id=inference_data.model_id,
+                annotations=annotations,
+            )
         self.should_collect_next_frame = False
 
     def collect_next_frame(self) -> None:

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Callable
-from unittest.mock import patch
+from unittest.mock import MagicMock
 from uuid import UUID, uuid4
 
 import pytest
@@ -15,32 +15,13 @@ from app.services.configuration_service import PipelineField
 from app.services.data_collect import DataCollector
 
 
-@pytest.fixture(autouse=True)
-def mock_get_db_session(db_session):
-    """Mock the get_db_session to use test database."""
-    with (
-        patch("app.services.pipeline_service.get_db_session") as mock,
-        patch("app.services.base.get_db_session") as mock_base,
-    ):
-        mock.return_value.__enter__.return_value = db_session
-        mock.return_value.__exit__.return_value = None
-        mock_base.return_value.__enter__.return_value = db_session
-        mock_base.return_value.__exit__.return_value = None
-        yield
-
-
-@pytest.fixture
-def fxt_data_collector(fxt_active_pipeline_service) -> DataCollector:
-    """Fixture to create a DataCollector instance with mocked dependencies."""
-    return DataCollector(fxt_active_pipeline_service)
-
-
 @pytest.fixture
 def fxt_pipeline_service(
-    fxt_active_pipeline_service, fxt_data_collector, fxt_metrics_service, fxt_condition
+    fxt_active_pipeline_service, fxt_metrics_service, fxt_condition, db_session
 ) -> PipelineService:
     """Fixture to create a PipelineService instance with mocked dependencies."""
-    return PipelineService(fxt_active_pipeline_service, fxt_data_collector, fxt_metrics_service, fxt_condition)
+    collector = MagicMock(spec=DataCollector)
+    return PipelineService(fxt_active_pipeline_service, collector, fxt_metrics_service, fxt_condition, db_session)
 
 
 @pytest.fixture
