@@ -12,7 +12,7 @@ from app.repositories import PipelineRepository
 from app.schemas import Pipeline, PipelineStatus
 from app.schemas.metrics import InferenceMetrics, LatencyMetrics, PipelineMetrics, ThroughputMetrics, TimeWindow
 from app.services import ActivePipelineService
-from app.services.base import GenericPersistenceService, ResourceNotFoundError, ResourceType, ServiceConfig
+from app.services.base import ResourceNotFoundError, ResourceType
 from app.services.data_collect import DataCollector
 from app.services.mappers import PipelineMapper
 from app.services.metrics_service import MetricsService
@@ -30,9 +30,6 @@ class PipelineService:
         config_changed_condition: Condition,
         db_session: Session,
     ) -> None:
-        self._persistence: GenericPersistenceService[Pipeline, PipelineRepository] = GenericPersistenceService(
-            ServiceConfig(PipelineRepository, PipelineMapper, ResourceType.PIPELINE), db_session
-        )
         self._active_pipeline_service: ActivePipelineService = active_pipeline_service
         self._data_collector: DataCollector = data_collector
         self._config_changed_condition: Condition = config_changed_condition
@@ -53,16 +50,19 @@ class PipelineService:
 
     def get_pipeline_by_id(self, project_id: UUID) -> Pipeline:
         """Retrieve a pipeline by project ID."""
-        pipeline = self._persistence.get_by_id(project_id)
+        pipeline_repo = PipelineRepository(self._db_session)
+        pipeline = pipeline_repo.get_by_id(str(project_id))
         if not pipeline:
             raise ResourceNotFoundError(ResourceType.PIPELINE, str(project_id))
-        return pipeline
+        return PipelineMapper.to_schema(pipeline)
 
     @parent_process_only
     def update_pipeline(self, project_id: UUID, partial_config: dict) -> Pipeline:
         """Update an existing pipeline."""
         pipeline = self.get_pipeline_by_id(project_id)
-        updated = self._persistence.update(pipeline, partial_config)
+        to_update = pipeline.model_copy(update=partial_config)
+        pipeline_repo = PipelineRepository(self._db_session)
+        updated = PipelineMapper.to_schema(pipeline_repo.update(PipelineMapper.from_schema(to_update)))
         if pipeline.status == PipelineStatus.RUNNING and updated.status == PipelineStatus.RUNNING:
             # If the pipeline source_id or sink_id is being updated while running
             if pipeline.source.id != updated.source.id:  # type: ignore[union-attr] # source is always there for running pipeline
