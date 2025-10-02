@@ -17,6 +17,10 @@ export default defineConfig({
     forbidOnly: CI,
     retries: process.env.CI ? 2 : 0,
     workers: 1,
+    timeout: CI ? 120000 : 60000,
+    expect: {
+        timeout: CI ? 10000 : 5000,
+    },
     reporter: [[CI ? 'github' : 'list'], ['html', { open: 'never' }]],
     use: {
         baseURL: 'http://localhost:3000',
@@ -29,7 +33,11 @@ export default defineConfig({
     projects: [
         {
             name: 'E2E',
-            use: { ...devices['Desktop Chrome'] },
+            use: {
+                ...devices['Desktop Chrome'],
+                headless: CI,
+                viewport: { width: 1280, height: 720 },
+            },
         },
     ],
 

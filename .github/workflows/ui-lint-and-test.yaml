@@ -364,6 +364,8 @@ jobs:
       contents: read
     timeout-minutes: 30
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.54.0-noble@sha256:18d6adb6aaccf1b0f30eba890069972e089138e4a59ddb5303d7e7290e4e38b6
     steps:
       - name: Checkout code
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -387,8 +389,8 @@ jobs:
 
       - name: Install OpenCV dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y libgl1 libglib2.0-0
+          apt-get update
+          apt-get install -y libgl1 libglib2.0-0
 
       - name: Setup Backend
         working-directory: application/backend
@@ -407,13 +409,12 @@ jobs:
           name: openapi-spec
           path: application/ui/src/api
 
-      - name: Prepare UI and install Playwright
+      - name: Prepare UI
         working-directory: application/ui
         run: |
           tar -xzf dist.tar.gz
           npm ci
           npm run build:api
-          npx playwright install --with-deps chromium
 
       - name: Run E2E tests
         working-directory: application/ui
