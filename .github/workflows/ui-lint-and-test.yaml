@@ -395,13 +395,7 @@ jobs:
         run: |
           uv sync --frozen --all-extras
 
-      - name: Install Playwright
-        working-directory: application/ui
-        run: |
-          npm ci
-          npx playwright install --with-deps chromium
-
-      - name: Download artifacts
+      - name: Download UI build
         uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         with:
           name: ui-dist
@@ -413,11 +407,13 @@ jobs:
           name: openapi-spec
           path: application/ui/src/api
 
-      - name: Prepare UI build
+      - name: Prepare UI and install Playwright
         working-directory: application/ui
         run: |
           tar -xzf dist.tar.gz
+          npm ci
           npm run build:api
+          npx playwright install --with-deps chromium
 
       - name: Run E2E tests
         working-directory: application/ui
@@ -439,6 +435,7 @@ jobs:
       - lint
       - unit-tests
       - playwright-tests
+      - e2e-tests
     runs-on: ubuntu-latest
     env:
       CHECKS: ${{ join(needs.*.result, ' ') }}
