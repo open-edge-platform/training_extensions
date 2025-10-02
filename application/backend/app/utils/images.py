@@ -5,13 +5,23 @@ from PIL import Image
 
 def crop_to_thumbnail(image: Image.Image, target_height: int, target_width: int) -> Image.Image:
     """
-    Crop an image to a thumbnail. The image is first scaled according to the side with the least amount of
-    rescaling, and then the other side is cropped. In this way, a maximal portion of the image is visible in the
-    thumbnail.
+    Crop an image to a thumbnail using maximal visible area preservation.
 
-    :param image: image to generate thumbnail for
-    :param target_height: target height to crop the thumbnail to
-    :param target_width: target width to crop the thumbnail to
+    The image is first scaled according to the side with the least amount of
+    rescaling, and then the other side is cropped. This approach ensures that
+    a maximal portion of the original image is visible in the final thumbnail.
+
+    Args:
+        image: PIL Image object to generate thumbnail for.
+        target_height: Target height in pixels to crop the thumbnail to.
+        target_width: Target width in pixels to crop the thumbnail to.
+
+    Returns:
+        Image.Image: Cropped and resized thumbnail image.
+
+    Note:
+        Uses center cropping after scaling to maintain the most important
+        visual content from the original image.
     """
     scale_width = target_width / image.width
     scale_height = target_height / image.height
