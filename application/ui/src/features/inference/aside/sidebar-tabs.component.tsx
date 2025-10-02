@@ -18,7 +18,7 @@ const TABS = [
 
 interface TabProps {
     tabs: (typeof TABS)[number][];
-    selectedTab: string;
+    selectedTab: string | null;
 }
 
 const SidebarTabs = ({ tabs, selectedTab }: TabProps) => {
@@ -70,5 +70,5 @@ const SidebarTabs = ({ tabs, selectedTab }: TabProps) => {
 };
 
 export const Sidebar = () => {
-    return <SidebarTabs tabs={TABS} selectedTab={TABS[0].label} />;
+    return <SidebarTabs tabs={TABS} selectedTab={null} />;
 };
