@@ -1,0 +1,17 @@
+*
+
+# Backend files
+!backend/app
+!backend/pyproject.toml
+!backend/uv.lock
+
+# UI files
+!ui/src
+!ui/packages
+!ui/package.json
+!ui/package-lock.json
+!ui/tsconfig.json
+!ui/rsbuild.config.ts
+
+# Other files
+!docker/nginx.conf

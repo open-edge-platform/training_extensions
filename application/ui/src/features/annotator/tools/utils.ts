@@ -1,0 +1,392 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
+import type ClipperShape from '@doodle3d/clipper-js';
+import Clipper from '@doodle3d/clipper-js';
+import { Shape as SmartToolsShape, Polygon as ToolPolygon, Rect as ToolRect } from '@geti/smart-tools/types';
+import { BoundingBox } from '@geti/smart-tools/utils';
+import { isEmpty } from 'lodash-es';
+
+import { ClipperPoint, Point, Polygon, Rect, RegionOfInterest, Shape } from '../types';
+
+// @ts-expect-error `default` actually exists in the module
+const ClipperJS = Clipper.default || Clipper;
+
+export const getBoundingBoxInRoi = (boundingBox: RegionOfInterest, roi: RegionOfInterest) => {
+    const x = Math.max(0, boundingBox.x);
+    const y = Math.max(0, boundingBox.y);
+
+    return {
+        x,
+        y,
+        width: Math.min(roi.width - x, boundingBox.width),
+        height: Math.min(roi.height - y, boundingBox.height),
+    };
+};
+
+interface getBoundingBoxResizePointsProps {
+    gap: number;
+    boundingBox: RegionOfInterest;
+    onResized: (boundingBox: RegionOfInterest) => void;
+}
+export const getBoundingBoxResizePoints = ({ boundingBox, gap, onResized }: getBoundingBoxResizePointsProps) => {
+    return [
+        {
+            x: boundingBox.x,
+            y: boundingBox.y,
+            moveAnchorTo: (x: number, y: number) => {
+                const x1 = Math.max(0, Math.min(x, boundingBox.x + boundingBox.width - gap));
+                const y1 = Math.max(0, Math.min(y, boundingBox.y + boundingBox.height - gap));
+
+                onResized({
+                    x: x1,
+                    width: Math.max(gap, boundingBox.width + boundingBox.x - x1),
+                    y: y1,
+                    height: Math.max(gap, boundingBox.height + boundingBox.y - y1),
+                });
+            },
+            cursor: 'nw-resize',
+            label: 'North west resize anchor',
+        },
+        {
+            x: boundingBox.x + boundingBox.width / 2,
+            y: boundingBox.y,
+            moveAnchorTo: (_x: number, y: number) => {
+                const y1 = Math.max(0, Math.min(y, boundingBox.y + boundingBox.height - gap));
+
+                onResized({
+                    ...boundingBox,
+                    y: y1,
+                    height: Math.max(gap, boundingBox.height + boundingBox.y - y1),
+                });
+            },
+            cursor: 'n-resize',
+            label: 'North resize anchor',
+        },
+        {
+            x: boundingBox.x + boundingBox.width,
+            y: boundingBox.y,
+            moveAnchorTo: (x: number, y: number) => {
+                const y1 = Math.max(0, Math.min(y, boundingBox.y + boundingBox.height - gap));
+
+                onResized({
+                    ...boundingBox,
+                    width: Math.max(gap, x - boundingBox.x),
+                    y: y1,
+                    height: Math.max(gap, boundingBox.height + boundingBox.y - y1),
+                });
+            },
+            cursor: 'ne-resize',
+            label: 'North east resize anchor',
+        },
+        {
+            x: boundingBox.x + boundingBox.width,
+            y: boundingBox.y + boundingBox.height / 2,
+            moveAnchorTo: (x: number) => {
+                onResized({ ...boundingBox, width: Math.max(gap, x - boundingBox.x) });
+            },
+            cursor: 'e-resize',
+            label: 'East resize anchor',
+        },
+        {
+            x: boundingBox.x + boundingBox.width,
+            y: boundingBox.y + boundingBox.height,
+            moveAnchorTo: (x: number, y: number) => {
+                onResized({
+                    x: boundingBox.x,
+                    width: Math.max(gap, x - boundingBox.x),
+
+                    y: boundingBox.y,
+                    height: Math.max(gap, y - boundingBox.y),
+                });
+            },
+            cursor: 'se-resize',
+            label: 'South east resize anchor',
+        },
+        {
+            x: boundingBox.x + boundingBox.width / 2,
+            y: boundingBox.y + boundingBox.height,
+            moveAnchorTo: (_x: number, y: number) => {
+                onResized({
+                    ...boundingBox,
+                    y: boundingBox.y,
+                    height: Math.max(gap, y - boundingBox.y),
+                });
+            },
+            cursor: 's-resize',
+            label: 'South resize anchor',
+        },
+        {
+            x: boundingBox.x,
+            y: boundingBox.y + boundingBox.height,
+            moveAnchorTo: (x: number, y: number) => {
+                const x1 = Math.max(0, Math.min(x, boundingBox.x + boundingBox.width - gap));
+
+                onResized({
+                    x: x1,
+                    width: Math.max(gap, boundingBox.width + boundingBox.x - x1),
+
+                    y: boundingBox.y,
+                    height: Math.max(gap, y - boundingBox.y),
+                });
+            },
+            cursor: 'sw-resize',
+            label: 'South west resize anchor',
+        },
+        {
+            x: boundingBox.x,
+            y: boundingBox.y + boundingBox.height / 2,
+            moveAnchorTo: (x: number, _y: number) => {
+                const x1 = Math.max(0, Math.min(x, boundingBox.x + boundingBox.width - gap));
+
+                onResized({
+                    ...boundingBox,
+                    x: x1,
+                    width: Math.max(gap, boundingBox.width + boundingBox.x - x1),
+                });
+            },
+            cursor: 'w-resize',
+            label: 'West resize anchor',
+        },
+    ];
+};
+
+const clampBetween = (min: number, value: number, max: number): number => {
+    return Math.max(min, Math.min(max, value));
+};
+
+export const getClampedBoundingBox = (point: Point, boundingBox: RegionOfInterest, roi: RegionOfInterest) => {
+    const roiX = roi.width + roi.x;
+    const roiY = roi.height + roi.y;
+    const shapeX = boundingBox.width + boundingBox.x;
+    const shapeY = boundingBox.height + boundingBox.y;
+
+    const clampedTranslate = {
+        x: clampBetween(shapeX - roiX, -point.x, boundingBox.x - roi.x),
+        y: clampBetween(shapeY - roiY, -point.y, boundingBox.y - roi.y),
+    };
+
+    return {
+        ...boundingBox,
+        x: boundingBox.x - clampedTranslate.x,
+        y: boundingBox.y - clampedTranslate.y,
+    };
+};
+
+export function convertToolShapeToGetiShape(shape: ToolPolygon): Polygon;
+export function convertToolShapeToGetiShape(shape: ToolRect): Rect;
+export function convertToolShapeToGetiShape(shape: SmartToolsShape): Shape;
+export function convertToolShapeToGetiShape(shape: SmartToolsShape): Shape {
+    switch (shape.shapeType) {
+        case 'polygon':
+            return { shapeType: 'polygon', points: shape.points };
+        case 'rect':
+            return {
+                shapeType: 'rect',
+                x: shape.x,
+                y: shape.y,
+                width: shape.width,
+                height: shape.height,
+            };
+        default:
+            throw new Error('Unknown shape type');
+    }
+}
+
+const removeOffPointsRect = (rect: Rect, roi: RegionOfInterest): Rect => {
+    const { x, y, width, height } = roi;
+
+    // Left boundary
+    if (rect.x < x) {
+        return {
+            ...rect,
+            x,
+            width: rect.width - (x - rect.x),
+        };
+    }
+
+    // Right boundary
+    if (rect.x + rect.width > x + width) {
+        const diff = rect.x + rect.width - x - width;
+        return {
+            ...rect,
+            width: rect.width - diff,
+        };
+    }
+
+    // Top boundary
+    if (rect.y < y) {
+        return {
+            ...rect,
+            y,
+            height: rect.height - (y - rect.y),
+        };
+    }
+
+    // Bottom boundary
+    if (rect.y + rect.height > y + height) {
+        const diff = rect.y + rect.height - y - height;
+        return {
+            ...rect,
+            height: rect.height - diff,
+        };
+    }
+
+    return rect;
+};
+
+const removeOffLimitPointsPolygon = (shape: Shape, roi: RegionOfInterest): Polygon => {
+    const { width, height, x, y } = roi;
+    const getRect = (rx: number, ry: number, rWidth: number, rHeight: number): Rect => ({
+        x: rx,
+        y: ry,
+        width: rWidth,
+        height: rHeight,
+        shapeType: 'rect',
+    });
+    // `eraserSize` Builds and positions rect shapes around ROI limits (top, left, right, bottom),
+    // finally `getShapesDifference` will use those rects to calc and remove offline polygons
+    const eraserSize = 10;
+    const topRect = getRect(x - eraserSize, y - eraserSize, width + eraserSize * 3, eraserSize);
+    const leftRect = getRect(x - eraserSize, y - eraserSize, eraserSize, height * 2);
+    const rightRect = getRect(x + width, y - eraserSize, eraserSize, height * 2);
+    const bottomRect = getRect(x - eraserSize, y + height, width + eraserSize * 3, eraserSize);
+
+    return [leftRect, bottomRect, rightRect, topRect].reduce(
+        (accum, current) => getShapesDifference(roi, accum, current),
+        shape
+    ) as Polygon;
+};
+
+const calculateRectanglePoints = (shape: BoundingBox): ClipperPoint[] => {
+    const { x: X, y: Y, width, height } = shape;
+    const topLeftPoint = { X, Y };
+    const topRightPoint = { X: X + width, Y };
+    const bottomLeftPoint = { X, Y: Y + height };
+    const bottomRightPoint = { X: X + width, Y: Y + height };
+
+    return [topLeftPoint, topRightPoint, bottomRightPoint, bottomLeftPoint];
+};
+
+const convertPolygonPoints = (shape: Polygon): ClipperPoint[] => {
+    return shape.points.map(({ x, y }: Point) => ({ X: x, Y: y }));
+};
+
+const transformToClipperShape = (shape: Shape): ClipperShape => {
+    if (shape.shapeType === 'rect') {
+        return new ClipperJS([calculateRectanglePoints(shape)], true);
+    } else {
+        return new ClipperJS([convertPolygonPoints(shape)], true);
+    }
+};
+
+const runUnionOrDifference =
+    <T>(algorithm: 'union' | 'difference', formatTo: (path: ClipperPoint[]) => T) =>
+    (roi: RegionOfInterest, subj: Shape, clip: Shape): T => {
+        const subjShape = transformToClipperShape(subj);
+        const clipShape = transformToClipperShape(clip);
+        const solutionPath = subjShape[algorithm](clipShape);
+        const filteredPath = filterIntersectedPathsWithRoi(roi, solutionPath);
+        const biggestPath = findBiggerSubPath(filteredPath);
+
+        return formatTo(biggestPath);
+    };
+
+const clipperShapeToPolygon = (path: ClipperPoint[]): Polygon => ({
+    shapeType: 'polygon',
+    points: path.map(({ X, Y }) => ({ x: X, y: Y })),
+});
+
+export const getShapesDifference = runUnionOrDifference<Polygon>('difference', clipperShapeToPolygon);
+
+const findBiggerSubPath = (shape: ClipperShape): ClipperPoint[] => {
+    const areas = shape.areas();
+    const { index: shapeIndex } = areas.reduce(
+        (accum: { value: number; index: number }, value, index) => {
+            return value > accum.value ? { value, index } : accum;
+        },
+        { value: 0, index: 0 }
+    );
+
+    return shape.paths.length ? shape.paths[shapeIndex] : [];
+};
+
+const hasIntersection = (clip: ClipperShape, subj: ClipperShape) => {
+    const { paths } = clip.intersect(subj);
+
+    return !isEmpty(paths);
+};
+
+const filterIntersectedPathsWithRoi = (roi: RegionOfInterest, shape: ClipperShape): ClipperShape => {
+    const newPath = shape.clone();
+    const roiRect = transformToClipperShape({ ...roi, shapeType: 'rect' });
+
+    newPath.paths = newPath.paths.filter((subPath) => hasIntersection(roiRect, new ClipperJS([subPath])));
+
+    return newPath;
+};
+
+export const removeOffLimitPoints = (shape: Shape, roi: RegionOfInterest): Shape => {
+    return shape.shapeType === 'rect' ? removeOffPointsRect(shape, roi) : removeOffLimitPointsPolygon(shape, roi);
+};
+
+type ElementType = SVGElement | HTMLDivElement;
+export const getRelativePoint = (element: ElementType, point: Point, zoom: number): Point => {
+    const rect = element.getBoundingClientRect();
+
+    return {
+        x: Math.round((point.x - rect.left) / zoom),
+        y: Math.round((point.y - rect.top) / zoom),
+    };
+};
+
+export const loadImage = (link: string): Promise<HTMLImageElement> =>
+    new Promise<HTMLImageElement>((resolve, reject) => {
+        const image = new Image();
+        image.crossOrigin = 'anonymous';
+
+        image.onload = () => resolve(image);
+        image.onerror = (error) => reject(error);
+
+        image.fetchPriority = 'high';
+        image.src = link;
+
+        if (process.env.NODE_ENV === 'test') {
+            // Immediately load the media item's image
+            resolve(image);
+        }
+    });
+
+const drawImageOnCanvas = (img: HTMLImageElement, filter = ''): HTMLCanvasElement => {
+    const canvas: HTMLCanvasElement = document.createElement('canvas');
+
+    canvas.width = img.naturalWidth ? img.naturalWidth : img.width;
+    canvas.height = img.naturalHeight ? img.naturalHeight : img.height;
+
+    const ctx = canvas.getContext('2d');
+
+    if (ctx) {
+        const width = img.naturalWidth ? img.naturalWidth : img.width;
+        const height = img.naturalHeight ? img.naturalHeight : img.height;
+
+        ctx.filter = filter;
+        ctx.drawImage(img, 0, 0, width, height);
+    }
+
+    return canvas;
+};
+
+export const getImageData = (img: HTMLImageElement): ImageData => {
+    // Always return valid imageData, even if the image isn't loaded yet.
+    if (img.width === 0 && img.height === 0) {
+        return new ImageData(1, 1);
+    }
+
+    const canvas = drawImageOnCanvas(img);
+    const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
+
+    const width = img.naturalWidth ? img.naturalWidth : img.width;
+    const height = img.naturalHeight ? img.naturalHeight : img.height;
+
+    return ctx.getImageData(0, 0, width, height);
+};
