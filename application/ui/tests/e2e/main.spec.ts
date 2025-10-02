@@ -1,9 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Page } from '@playwright/test';
-
-import { expect, test } from './fixtures';
+import { expect, Page, test } from '@playwright/test';
 
 const fillProjectForm = async ({
     page,
