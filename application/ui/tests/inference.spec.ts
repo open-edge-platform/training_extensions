@@ -176,7 +176,7 @@ test.describe('Inference', () => {
         await expect(sliderInput).toHaveValue('20');
     });
 
-    test.only('updates input and output source', async ({ page, network }) => {
+    test('updates input and output source', async ({ page, network }) => {
         network.use(
             http.patch('/api/sources/{source_id}', () => {
                 return HttpResponse.json({});
