@@ -31,7 +31,7 @@ class PipelineService:
         db_session: Session,
     ) -> None:
         self._persistence: GenericPersistenceService[Pipeline, PipelineRepository] = GenericPersistenceService(
-            ServiceConfig(PipelineRepository, PipelineMapper, ResourceType.PIPELINE)
+            ServiceConfig(PipelineRepository, PipelineMapper, ResourceType.PIPELINE), db_session
         )
         self._active_pipeline_service: ActivePipelineService = active_pipeline_service
         self._data_collector: DataCollector = data_collector
@@ -53,7 +53,7 @@ class PipelineService:
 
     def get_pipeline_by_id(self, project_id: UUID) -> Pipeline:
         """Retrieve a pipeline by project ID."""
-        pipeline = self._persistence.get_by_id(project_id, db=self._db_session)
+        pipeline = self._persistence.get_by_id(project_id)
         if not pipeline:
             raise ResourceNotFoundError(ResourceType.PIPELINE, str(project_id))
         return pipeline
@@ -62,7 +62,7 @@ class PipelineService:
     def update_pipeline(self, project_id: UUID, partial_config: dict) -> Pipeline:
         """Update an existing pipeline."""
         pipeline = self.get_pipeline_by_id(project_id)
-        updated = self._persistence.update(pipeline, partial_config, self._db_session)
+        updated = self._persistence.update(pipeline, partial_config)
         if pipeline.status == PipelineStatus.RUNNING and updated.status == PipelineStatus.RUNNING:
             # If the pipeline source_id or sink_id is being updated while running
             if pipeline.source.id != updated.source.id:  # type: ignore[union-attr] # source is always there for running pipeline
