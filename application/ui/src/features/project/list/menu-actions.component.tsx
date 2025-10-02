@@ -44,7 +44,6 @@ export const MenuActions = ({ projectId }: { projectId: string }) => {
                 <MoreMenu />
             </ActionButton>
             <Menu onAction={handleMenuAction}>
-                <Item key={'activate'}>Activate</Item>
                 <Item key={'edit'}>Edit</Item>
                 <Item key={'delete'}>Delete</Item>
             </Menu>
