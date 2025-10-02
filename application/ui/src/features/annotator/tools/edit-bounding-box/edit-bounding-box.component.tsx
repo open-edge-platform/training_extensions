@@ -1,0 +1,66 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
+import { useState } from 'react';
+
+import { AnnotationShape } from '../../annotations/annotation-shape.component';
+import { useAnnotator } from '../../annotator-provider.component';
+import { Annotation, Point } from '../../types';
+import { getBoundingBoxInRoi, getBoundingBoxResizePoints, getClampedBoundingBox } from '../utils';
+import { ResizeAnchor } from './resize-anchor.component';
+import { TranslateShape } from './translate-shape.component';
+
+interface EditBoundingBoxProps {
+    annotation: Annotation & { shape: { shapeType: 'rect' } };
+    zoom: number;
+}
+
+const ANCHOR_SIZE = 8;
+
+export const EditBoundingBox = ({ annotation, zoom }: EditBoundingBoxProps) => {
+    const [shape, setShape] = useState(annotation.shape);
+    const { mediaItem, updateAnnotation } = useAnnotator();
+
+    const roi = { x: 0, y: 0, width: mediaItem.width, height: mediaItem.height };
+
+    const onComplete = () => {
+        updateAnnotation({ ...annotation, shape });
+    };
+
+    const translate = (point: Point) => {
+        const newBoundingBox = getClampedBoundingBox(point, shape, roi);
+
+        setShape({ ...shape, ...newBoundingBox });
+    };
+
+    const anchorPoints = getBoundingBoxResizePoints({
+        gap: (2 * ANCHOR_SIZE) / zoom,
+        boundingBox: shape,
+        onResized: (boundingBox) => {
+            setShape({ ...shape, ...getBoundingBoxInRoi(boundingBox, roi) });
+        },
+    });
+
+    return (
+        <>
+            <TranslateShape
+                zoom={zoom}
+                annotation={{ ...annotation, shape }}
+                translateShape={translate}
+                onComplete={onComplete}
+            >
+                <AnnotationShape annotation={{ ...annotation, shape }} />
+            </TranslateShape>
+
+            <g
+                style={{ pointerEvents: 'auto' }}
+                aria-label={`Edit bounding box points ${annotation.id}`}
+                id={`edit-bounding-box-points-${annotation.id}`}
+            >
+                {anchorPoints.map((anchor) => {
+                    return <ResizeAnchor key={anchor.label} zoom={zoom} onComplete={onComplete} {...anchor} />;
+                })}
+            </g>
+        </>
+    );
+};
