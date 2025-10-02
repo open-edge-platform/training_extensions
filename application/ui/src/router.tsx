@@ -4,11 +4,11 @@
 import { Suspense } from 'react';
 
 import { Loading } from '@geti/ui';
-import { redirect } from 'react-router';
-import { createBrowserRouter } from 'react-router-dom';
-import { path } from 'static-path';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 
+import { $api } from './api/client';
 import { ZoomProvider } from './components/zoom/zoom';
+import { paths } from './constants/paths';
 import { WebRTCConnectionProvider } from './features/inference/stream/web-rtc-connection-provider';
 import { ProjectList } from './features/project/list/project-list.component';
 import { Layout } from './layout';
@@ -20,26 +20,41 @@ import { Models } from './routes/models/models';
 import { CreateProject } from './routes/project/create-project';
 import { ViewProject } from './routes/project/view-project';
 
-const root = path('/');
-const projects = root.path('/projects');
-const project = projects.path('/:projectId');
-const inference = projects.path('/:projectId/inference');
-const dataset = projects.path('/:projectId/dataset');
-const models = projects.path('/:projectId/models');
+const Redirect = () => {
+    let path = paths.project.index({});
 
-export const paths = {
-    root,
-    project: {
-        index: projects,
-        new: projects.path('/new'),
-        details: project,
-        inference,
-        dataset,
-        models,
-    },
+    const { data: projects } = $api.useSuspenseQuery('get', '/api/projects');
+
+    // No projects -> Go to create project
+    if (!projects || projects.length === 0) {
+        path = paths.project.new({});
+
+        // Only 1 project -> Redirect to the inference page
+    } else if (projects.length === 1) {
+        const projectId = projects[0].id;
+
+        if (projectId) {
+            path = paths.project.inference({ projectId });
+        } else {
+            path = paths.project.new({});
+        }
+    } else {
+        // More than 1 project -> Load index page (/projects)
+        path = paths.project.index({});
+    }
+
+    return <Navigate to={path} replace />;
 };
 
 export const router = createBrowserRouter([
+    {
+        path: paths.root.pattern,
+        element: (
+            <Suspense fallback={<Loading />}>
+                <Redirect />
+            </Suspense>
+        ),
+    },
     {
         path: paths.project.index.pattern,
         element: (
@@ -54,10 +69,6 @@ export const router = createBrowserRouter([
     },
     {
         path: paths.project.details.pattern,
-        element: <ViewProject />,
-    },
-    {
-        path: paths.root.pattern,
         element: (
             <Suspense fallback={<Loading mode='fullscreen' />}>
                 <Layout />
@@ -67,11 +78,7 @@ export const router = createBrowserRouter([
         children: [
             {
                 index: true,
-                loader: () => {
-                    // TODO: If there is no project configured then redirect to new project creation
-                    // else redirect to inference
-                    return redirect(paths.project.index({}));
-                },
+                element: <ViewProject />,
             },
             {
                 path: paths.project.inference.pattern,

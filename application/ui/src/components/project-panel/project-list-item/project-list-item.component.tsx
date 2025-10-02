@@ -15,9 +15,9 @@ import {
     type TextFieldRef,
 } from '@geti/ui';
 import { useNavigate } from 'react-router';
+import { SchemaProjectInput } from 'src/api/openapi-spec';
 
-import { Project } from '../../../features/project/types';
-import { paths } from '../../../router';
+import { paths } from '../../../constants/paths';
 
 import styles from './project-list-item.module.scss';
 
@@ -101,7 +101,7 @@ const ProjectActions = ({ onAction }: ProjectActionsProps) => {
 };
 
 interface ProjectListItemProps {
-    project: Project;
+    project: SchemaProjectInput;
     isInEditMode: boolean;
     onBlur: (projectId: string, newName: string) => void;
     onRename: (projectId: string) => void;
