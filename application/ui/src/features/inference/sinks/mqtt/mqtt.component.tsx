@@ -1,63 +1,55 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useActionState } from 'react';
-
 import { Button, Flex, Form, NumberField, Switch, TextField } from '@geti/ui';
+import { isEmpty } from 'lodash';
 
+import { useSinkAction } from '../hooks/use-sink-action.hook';
 import { OutputFormats } from '../output-formats.component';
-import { OutputFormat, SinkType } from '../utils';
+import { MqttSinkConfig, SinkOutputFormats } from '../utils';
 
-type MqttFormData = {
-    name: string;
-    topic: string;
-    timeout: number;
-    sink_type: SinkType;
-    rate_limit: number;
-    broker_host: string;
-    output_formats: OutputFormat[];
-    broker_port: number;
-    auth_required: boolean;
+type MqttProps = {
+    config?: MqttSinkConfig;
+};
+const initConfig: MqttSinkConfig = {
+    name: '',
+    topic: '',
+    sink_type: 'mqtt',
+    rate_limit: 0,
+    broker_host: '',
+    broker_port: 0,
+    auth_required: false,
+    output_formats: [],
 };
 
-export const Mqtt = () => {
-    const initData = {
-        name: 'mqtt test',
-        topic: 'test/topic',
-        timeout: 5000,
-        sink_type: SinkType.MQTT,
-        rate_limit: 0.2,
-        broker_host: 'localhost',
-        broker_port: 1883,
-        auth_required: false,
-        output_formats: [OutputFormat.IMAGE_ORIGINAL, OutputFormat.PREDICTIONS],
-    };
-
-    const [state, submitAction, isPending] = useActionState<MqttFormData, FormData>(async (_prevState, formData) => {
-        //Todo: call create endpoint
-        const data = {
-            name: formData.get('name'),
-            output_formats: formData.getAll('output_formats'),
-            topic: formData.get('topic'),
-            timeout: formData.get('timeout'),
-            sink_type: SinkType.MQTT,
-            rate_limit: formData.get('rate_limit'),
-            broker_host: formData.get('broker_host'),
-            broker_port: formData.get('broker_port'),
-            auth_required: formData.get('auth_required') === 'on',
-        } as unknown as MqttFormData;
-
-        return data;
-    }, initData);
+export const Mqtt = ({ config = initConfig }: MqttProps) => {
+    const [state, submitAction, isPending] = useSinkAction<MqttSinkConfig>({
+        config,
+        isNewSink: isEmpty(config?.id),
+        bodyFormatter: (formData: FormData): MqttSinkConfig => ({
+            id: String(formData.get('id')),
+            name: String(formData.get('name')),
+            topic: String(formData.get('topic')),
+            sink_type: 'mqtt',
+            rate_limit: formData.get('rate_limit') ? Number(formData.get('rate_limit')) : 0,
+            broker_host: String(formData.get('broker_host')),
+            broker_port: formData.get('broker_port') ? Number(formData.get('broker_port')) : 0,
+            auth_required: formData.get('auth_required') === 'on' ? true : false,
+            output_formats: formData.getAll('output_formats') as SinkOutputFormats,
+        }),
+    });
 
     return (
         <Form action={submitAction}>
+            <TextField isHidden label='id' name='id' defaultValue={state?.id} />
+
             <Flex direction='column' gap='size-200'>
                 <TextField width={'100%'} label='Name' name='name' defaultValue={state?.name} />
 
                 <TextField width={'100%'} label='Broker Host' name='broker_host' defaultValue={state?.broker_host} />
 
                 <Flex direction={'row'} gap='size-200'>
+                    <TextField flex='1' label='Topic' name='topic' defaultValue={state?.topic} />
                     <NumberField
                         label='Broker Port'
                         name='broker_port'
@@ -65,26 +57,28 @@ export const Mqtt = () => {
                         step={1}
                         defaultValue={state?.broker_port}
                     />
+                </Flex>
 
+                <Flex direction={'row'} gap='size-200' justifyContent='space-between'>
                     <NumberField
                         label='Rate Limit'
                         name='rate_limit'
                         minValue={0}
                         step={0.1}
-                        defaultValue={state?.rate_limit}
+                        defaultValue={state?.rate_limit ?? undefined}
                     />
-
-                    <NumberField label='Timeout' name='timeout' minValue={0} step={1} defaultValue={state?.timeout} />
-                </Flex>
-
-                <Flex direction={'row'} gap='size-200'>
-                    <TextField flex='1' label='Topic' name='topic' defaultValue={state?.topic} />
-                    <Switch name='auth_required' defaultSelected={state?.auth_required} alignSelf={'end'}>
+                    <Switch
+                        name='auth_required'
+                        alignSelf='end'
+                        aria-label='Require Authentication'
+                        defaultSelected={state?.auth_required}
+                        key={state?.auth_required ? 'true' : 'false'}
+                    >
                         Auth Required
                     </Switch>
                 </Flex>
 
-                <OutputFormats />
+                <OutputFormats config={state?.output_formats} />
 
                 <Button maxWidth={'size-1000'} type='submit' isDisabled={isPending}>
                     Apply
