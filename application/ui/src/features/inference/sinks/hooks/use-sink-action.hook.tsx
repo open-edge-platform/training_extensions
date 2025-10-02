@@ -8,7 +8,7 @@ import { toast } from '@geti/ui';
 import { $api } from '../../../../api/client';
 import { useProjectIdentifier } from '../../../../hooks/use-project-identifier.hook';
 import { SinkConfig } from '../utils';
-import { useMutationSink } from './use-mutation-sink.hook';
+import { useSinkMutation } from './use-sink-mutation.hook';
 
 interface useSinkActionProps<T> {
     config: Awaited<T>;
@@ -19,7 +19,7 @@ interface useSinkActionProps<T> {
 export const useSinkAction = <T extends SinkConfig>({ config, isNewSink, bodyFormatter }: useSinkActionProps<T>) => {
     const projectId = useProjectIdentifier();
     const pipeline = $api.useMutation('patch', '/api/projects/{project_id}/pipeline');
-    const addOrUpdateSink = useMutationSink(isNewSink);
+    const addOrUpdateSink = useSinkMutation(isNewSink);
 
     return useActionState<T, FormData>(async (_prevState: T, formData: FormData) => {
         const body = bodyFormatter(formData);

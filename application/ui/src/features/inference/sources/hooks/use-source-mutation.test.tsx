@@ -8,7 +8,7 @@ import { TestProviders } from 'test-utils/render';
 import { http } from '../../../../api/utils';
 import { server } from '../../../../msw-node-setup';
 import { WebcamSourceConfig } from '../util';
-import { useMutationSource } from './use-mutation-source.hook';
+import { useSourceMutation } from './use-source-mutation.hook';
 
 const mockedSource: WebcamSourceConfig = {
     id: 'original-id',
@@ -17,10 +17,10 @@ const mockedSource: WebcamSourceConfig = {
     device_id: 0,
 };
 
-describe('useMutationSource', () => {
+describe('useSourceMutation', () => {
     it('creates a new source and return its resource id', async () => {
         const newResourceId = 'resource-id-123';
-        const { result } = renderHook(() => useMutationSource(true), {
+        const { result } = renderHook(() => useSourceMutation(true), {
             wrapper: TestProviders,
         });
 
@@ -36,7 +36,7 @@ describe('useMutationSource', () => {
     });
 
     it('update a source item and returns its resource id', async () => {
-        const { result } = renderHook(() => useMutationSource(false), {
+        const { result } = renderHook(() => useSourceMutation(false), {
             wrapper: TestProviders,
         });
 

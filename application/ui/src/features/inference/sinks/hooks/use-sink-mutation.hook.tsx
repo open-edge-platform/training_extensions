@@ -6,7 +6,7 @@ import { omit } from 'lodash-es';
 import { $api } from '../../../../api/client';
 import { SinkConfig } from '../utils';
 
-export const useMutationSink = (isNewSink: boolean) => {
+export const useSinkMutation = (isNewSink: boolean) => {
     const addSink = $api.useMutation('post', '/api/sinks');
     const updateSink = $api.useMutation('patch', '/api/sinks/{sink_id}');
 

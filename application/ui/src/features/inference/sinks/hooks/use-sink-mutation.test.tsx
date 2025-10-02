@@ -8,7 +8,7 @@ import { TestProviders } from 'test-utils/render';
 import { http } from '../../../../api/utils';
 import { server } from '../../../../msw-node-setup';
 import { LocalFolderSinkConfig } from '../utils';
-import { useMutationSink } from './use-mutation-sink.hook';
+import { useSinkMutation } from './use-sink-mutation.hook';
 
 const mockedSource: LocalFolderSinkConfig = {
     id: 'original-id',
@@ -18,10 +18,10 @@ const mockedSource: LocalFolderSinkConfig = {
     folder_path: './folder/111',
 };
 
-describe('useMutationSink', () => {
+describe('useSinkMutation', () => {
     it('creates a new sink and return its resource id', async () => {
         const newResourceId = 'resource-id-123';
-        const { result } = renderHook(() => useMutationSink(true), {
+        const { result } = renderHook(() => useSinkMutation(true), {
             wrapper: TestProviders,
         });
 
@@ -37,7 +37,7 @@ describe('useMutationSink', () => {
     });
 
     it('update a source item and returns its resource id', async () => {
-        const { result } = renderHook(() => useMutationSink(false), {
+        const { result } = renderHook(() => useSinkMutation(false), {
             wrapper: TestProviders,
         });
 
