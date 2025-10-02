@@ -42,7 +42,7 @@ describe('ProjectCard', () => {
         mockPipelineResponse('idle');
     });
 
-    it('should all elements correctly', async () => {
+    it('should render all elements correctly', async () => {
         render(<ProjectCard item={mockProject} />);
 
         expect(await screen.findByRole('heading', { name: 'Test Project' })).toBeInTheDocument();
@@ -57,6 +57,7 @@ describe('ProjectCard', () => {
         expect(await screen.findByRole('button', { name: /open project options/i })).toBeInTheDocument();
     });
 
+    // TODO: unskip and update test suite once pipeline metadata is added onto /projects endpoint
     it.skip('should show active tag when pipeline is running', async () => {
         mockPipelineResponse('running');
 

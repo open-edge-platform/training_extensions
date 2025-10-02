@@ -1,6 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { toast } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 import { SchemaProjectInput } from 'src/api/openapi-spec';
 
@@ -20,20 +21,34 @@ export const ProjectsList = ({ projects, setProjectInEdition, projectIdInEdition
     const patchProjectMutation = $api.useMutation('patch', '/api/projects/{project_id}');
 
     const updateProjectName = (id: string, name: string): void => {
-        patchProjectMutation.mutate({
-            params: { path: { project_id: id } },
-            body: { name },
-        });
+        patchProjectMutation.mutate(
+            {
+                params: { path: { project_id: id } },
+                body: { name },
+            },
+            {
+                onSuccess: () => {
+                    toast({ type: 'success', message: 'Project updated successfully' });
+                },
+            }
+        );
     };
 
     const deleteProject = (id: string): void => {
-        deleteProjectMutation.mutate({
-            params: {
-                path: {
-                    project_id: id,
+        deleteProjectMutation.mutate(
+            {
+                params: {
+                    path: {
+                        project_id: id,
+                    },
                 },
             },
-        });
+            {
+                onSuccess: () => {
+                    toast({ type: 'success', message: 'Project deleted successfully' });
+                },
+            }
+        );
     };
 
     const isInEditionMode = (projectId: string) => {
