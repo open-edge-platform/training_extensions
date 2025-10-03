@@ -59,3 +59,29 @@ class Model(BaseIDModel):
             }
         }
     }
+
+
+class TrainingRequest(BaseModel):
+    """Request schema for training a new model."""
+
+    model_architecture_id: str = Field(..., description="Model architecture identifier")
+    parent_model_revision_id: UUID | None = Field(
+        None, description="Parent model revision ID for fine-tuning, null for training from scratch"
+    )
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "model_architecture_id": "Custom_Object_Detection_Gen3_ATSS",
+                "parent_model_revision_id": "ef3983f1-cef0-4ebe-91db-7330f1dd6e27",
+            }
+        }
+    }
+
+
+class TrainingResponse(BaseModel):
+    """Response schema for training job creation."""
+
+    job_id: UUID = Field(..., description="Training job identifier")
+
+    model_config = {"json_schema_extra": {"example": {"job_id": "94939cbe-e692-4423-b9d3-5f6d93823be3"}}}

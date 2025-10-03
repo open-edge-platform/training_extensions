@@ -4,10 +4,10 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Body, Depends, HTTPException, status
 
 from app.api.dependencies import get_model_id, get_model_service, get_project_id
-from app.schemas import Label, Model
+from app.schemas import Label, Model, TrainingRequest, TrainingResponse
 from app.services import ModelService, ResourceInUseError, ResourceNotFoundError
 
 router = APIRouter(prefix="/api/projects/{project_id}/models", tags=["Models"])
@@ -96,3 +96,43 @@ def delete_model(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ResourceInUseError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+
+
+@router.post(
+    ":train",
+    response_model=TrainingResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+    responses={
+        status.HTTP_202_ACCEPTED: {"description": "Training job successfully created"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID or request body"},
+        status.HTTP_404_NOT_FOUND: {"description": "Project not found"},
+    },
+)
+def train_model(
+    project_id: Annotated[UUID, Depends(get_project_id)],
+    training_request: Annotated[TrainingRequest, Body()],
+    model_service: Annotated[ModelService, Depends(get_model_service)],
+) -> TrainingResponse:
+    """
+    Start training a new model.
+
+    Creates a new training job for the specified model architecture.
+    If parent_model_revision_id is provided, the model will be fine-tuned from that revision.
+    If parent_model_revision_id is null, the model will be trained from scratch using base weights.
+
+    Args:
+        project_id (UUID): The ID of the project.
+        training_request (TrainingRequest): The training request payload.
+        model_service (ModelService): The model service dependency.
+
+    Returns:
+        TrainingResponse: The response containing the training job ID.
+    """
+    try:
+        # TODO: Implement actual training logic
+        _ = model_service, project_id, training_request  # to avoid unused variable warnings
+        return TrainingResponse(job_id=UUID("94939cbe-e692-4423-b9d3-5f6d93823be3"))
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
