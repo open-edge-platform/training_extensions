@@ -18,7 +18,7 @@ class TrainingConfiguration(BaseModel):
     dataset_preparation: DatasetPreparationParameters = Field(
         title="Dataset preparation", description="Parameters for dataset preparation before training"
     )
-    training: TrainingHyperParameters = Field(
+    training: TrainingHyperParameters | None = Field(
         title="Training hyperparameters", description="Hyperparameters for model training process"
     )
     evaluation: EvaluationParameters = Field(

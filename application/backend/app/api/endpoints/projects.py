@@ -333,7 +333,7 @@ def update_training_configuration(
 
     Args:
         project_id (UUID): The unique identifier of the project.
-        training_config_update (TrainingConfigurationUpdate): The training configuration updates.
+        training_config_update (TrainingConfiguration): The training configuration updates.
         project_service (ProjectService): The project service
         model_architecture_id (Optional[str]): The model architecture ID for specific configuration update.
     """
