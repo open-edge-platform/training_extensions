@@ -226,12 +226,13 @@ async def import_source(
         yaml_content = await yaml_file.read()
         source_data = yaml.safe_load(yaml_content)
 
-        source_config = SourceAdapter.validate_python(source_data)
-        if source_config.source_type == SourceType.DISCONNECTED:
+        source_create = SourceCreateAdapter.validate_python(source_data)
+        if source_create.source_type == SourceType.DISCONNECTED:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="The source with source_type=DISCONNECTED cannot be imported",
             )
+        source_config = SourceAdapter.validate_python(source_create.model_dump())
         return configuration_service.create_source(source_config)
     except yaml.YAMLError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid YAML format: {str(e)}")

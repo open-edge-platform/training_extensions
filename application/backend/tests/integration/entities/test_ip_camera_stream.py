@@ -80,7 +80,9 @@ class TestIPCameraStream:
     def test_invalid_url(self):
         """Test that IPCameraStream handles invalid URLs with specific error."""
         invalid_url = "http://invalid-url:9999/stream"
-        config = IPCameraSourceConfig(source_type=SourceType.IP_CAMERA, stream_url=invalid_url)
+        config = IPCameraSourceConfig(
+            source_type=SourceType.IP_CAMERA, id=uuid4(), name="Test IP Camera", stream_url=invalid_url
+        )
 
         # Should raise exception during initialization
         with pytest.raises(RuntimeError, match=f"Could not open video source: {invalid_url}"):

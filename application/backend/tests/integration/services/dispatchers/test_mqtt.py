@@ -169,6 +169,8 @@ class TestMqttDispatcher:
         """Test connection failure to invalid broker."""
         config = MqttSinkConfig(
             sink_type="mqtt",
+            id=uuid4(),
+            name="Test MQTT Sink",
             broker_host="invalid_host",
             broker_port=1883,
             topic="topic",

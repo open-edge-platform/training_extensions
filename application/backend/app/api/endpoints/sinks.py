@@ -215,12 +215,13 @@ async def import_sink(
         yaml_content = await yaml_file.read()
         sink_data = yaml.safe_load(yaml_content)
 
-        sink_config = SinkAdapter.validate_python(sink_data)
-        if sink_config.sink_type == SinkType.DISCONNECTED:
+        sink_create = SinkCreateAdapter.validate_python(sink_data)
+        if sink_create.sink_type == SinkType.DISCONNECTED:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="The sink with sink_type=DISCONNECTED cannot be imported",
             )
+        sink_config = SinkAdapter.validate_python(sink_create.model_dump())
         return configuration_service.create_sink(sink_config)
     except yaml.YAMLError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid YAML format: {str(e)}")
