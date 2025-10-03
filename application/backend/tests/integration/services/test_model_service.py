@@ -1,47 +1,29 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from pathlib import Path
-from tempfile import TemporaryDirectory
-from unittest.mock import patch
 from uuid import UUID, uuid4
 
 import pytest
+from sqlalchemy.orm import Session
 
 from app.db.schema import ModelRevisionDB, ProjectDB
 from app.schemas import Model
-from app.schemas.model_activation import ModelActivationState
 from app.services import ModelService, ResourceNotFoundError, ResourceType
 
 
 @pytest.fixture(autouse=True)
-def mock_get_db_session(db_session):
-    """Mock the get_db_session to use test database."""
-    with (
-        patch("app.services.model_service.get_db_session") as mock,
-        patch("app.services.base.get_db_session") as mock_base,
-    ):
-        mock.return_value.__enter__.return_value = db_session
-        mock.return_value.__exit__.return_value = None
-        mock_base.return_value.__enter__.return_value = db_session
-        mock_base.return_value.__exit__.return_value = None
-        yield
-
-
-@pytest.fixture
-def fxt_model_service(fxt_db_projects, db_session):
-    """Fixture to create a ModelService instance with a temporary models directory."""
+def setup_project(fxt_db_projects: list[ProjectDB], db_session: Session) -> None:
     db_project = fxt_db_projects[0]
     db_pipeline = db_project.pipeline
     db_pipeline.is_running = True
     db_session.add(db_project)
     db_session.flush()
-    with TemporaryDirectory(suffix="models") as tmpdir:
-        service = ModelService(Path(tmpdir).parent)
-        service._model_activation_state = ModelActivationState(
-            project_id=None, active_model_id=None, available_models=[]
-        )
-        return service
+
+
+@pytest.fixture
+def fxt_model_service(db_session: Session) -> ModelService:
+    """Fixture to create a ModelService instance."""
+    return ModelService(db_session=db_session)
 
 
 def create_model_db(project: ProjectDB, models: list[ModelRevisionDB], db_session) -> None:

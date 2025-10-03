@@ -1,46 +1,46 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useActionState } from 'react';
-
 import { Button, Flex, Form, NumberField, TextField } from '@geti/ui';
+import { isEmpty } from 'lodash-es';
 
 import { ReactComponent as Folder } from '../../../../assets/icons/folder.svg';
+import { useSinkAction } from '../hooks/use-sink-action.hook';
 import { OutputFormats } from '../output-formats.component';
-import { OutputFormat, SinkType } from '../utils';
+import { LocalFolderSinkConfig, SinkOutputFormats } from '../utils';
 
 import classes from './local-folder.module.scss';
 
-type FolderFormData = {
-    name: string;
-    sink_type: SinkType;
-    rate_limit: number;
-    folder_path: string;
-    output_formats: OutputFormat[];
+type LocalFolderProps = {
+    config?: LocalFolderSinkConfig;
 };
 
-export const LocalFolder = () => {
-    const initData = {
-        name: '124',
-        sink_type: SinkType.FOLDER,
-        rate_limit: 0.2,
-        folder_path: './123',
-        output_formats: [OutputFormat.IMAGE_ORIGINAL, OutputFormat.PREDICTIONS],
-    };
+const initConfig: LocalFolderSinkConfig = {
+    name: '',
+    sink_type: 'folder',
+    rate_limit: 0,
+    folder_path: '',
+    output_formats: [],
+};
 
-    const [state, submitAction, isPending] = useActionState<FolderFormData, FormData>(async (_prevState, formData) => {
-        //Todo: call create endpoint
-        return {
-            name: formData.get('name'),
-            sink_type: SinkType.FOLDER,
-            rate_limit: formData.get('rate_limit'),
-            folder_path: formData.get('folder_path'),
-            output_formats: formData.getAll('output_formats'),
-        } as unknown as FolderFormData;
-    }, initData);
+export const LocalFolder = ({ config = initConfig }: LocalFolderProps) => {
+    const [state, submitAction, isPending] = useSinkAction<LocalFolderSinkConfig>({
+        config,
+        isNewSink: isEmpty(config?.id),
+        bodyFormatter: (formData: FormData) => ({
+            id: String(formData.get('id')),
+            name: String(formData.get('name')),
+            sink_type: 'folder',
+            rate_limit: formData.get('rate_limit') ? Number(formData.get('rate_limit')) : 0,
+            folder_path: String(formData.get('folder_path')),
+            output_formats: formData.getAll('output_formats') as SinkOutputFormats,
+        }),
+    });
 
     return (
         <Form action={submitAction}>
+            <TextField isHidden label='id' name='id' defaultValue={state?.id} />
+
             <Flex direction='column' gap='size-200'>
                 <Flex direction={'row'} gap='size-200'>
                     <TextField label='Name' name='name' defaultValue={state?.name} />
@@ -49,7 +49,7 @@ export const LocalFolder = () => {
                         name='rate_limit'
                         minValue={0}
                         step={0.1}
-                        defaultValue={state?.rate_limit}
+                        defaultValue={state?.rate_limit ?? undefined}
                     />
                 </Flex>
 
@@ -72,7 +72,7 @@ export const LocalFolder = () => {
                     </Flex>
                 </Flex>
 
-                <OutputFormats />
+                <OutputFormats config={state?.output_formats} />
 
                 <Button maxWidth={'size-1000'} type='submit' isDisabled={isPending}>
                     Apply

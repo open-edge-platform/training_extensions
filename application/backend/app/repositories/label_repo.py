@@ -1,6 +1,8 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+from collections.abc import Sequence
 
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.db.schema import LabelDB
@@ -14,14 +16,13 @@ class LabelRepository(BaseRepository[LabelDB]):
         super().__init__(db, LabelDB)
         self.project_id = project_id
 
-    def list_all(self) -> list[LabelDB]:
+    def list_all(self) -> Sequence[LabelDB]:
         """Get labels by project ID."""
-        return self.db.query(LabelDB).filter(LabelDB.project_id == self.project_id).all()
+        stmt = select(LabelDB).where(LabelDB.project_id == self.project_id)
+        return self.db.execute(stmt).scalars().all()
 
-    def delete_batch(self, obj_ids: list[str]) -> None:
+    def delete_batch(self, obj_ids: list[str]) -> int:
         """Delete labels by IDs within the project."""
-        self.db.query(self.model).filter(
-            self.model.id.in_(obj_ids),
-            self.model.project_id == self.project_id,
-        ).delete(synchronize_session=False)
-        self.db.flush()
+        stmt = delete(self.model).where((self.model.id.in_(obj_ids)) & (self.model.project_id == self.project_id))
+        result = self.db.execute(stmt)
+        return result.rowcount  # type: ignore[union-attr]

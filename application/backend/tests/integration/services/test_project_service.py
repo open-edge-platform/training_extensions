@@ -3,7 +3,6 @@
 import shutil
 from collections.abc import Generator
 from pathlib import Path
-from unittest.mock import patch
 from uuid import UUID, uuid4
 
 import pytest
@@ -25,24 +24,10 @@ def fxt_projects_dir() -> Generator[Path]:
     shutil.rmtree(projects_dir)
 
 
-@pytest.fixture(autouse=True)
-def mock_get_db_session(db_session):
-    """Mock the get_db_session to use test database."""
-    with (
-        patch("app.services.project_service.get_db_session") as mock,
-        patch("app.services.base.get_db_session") as mock_base,
-    ):
-        mock.return_value.__enter__.return_value = db_session
-        mock.return_value.__exit__.return_value = None
-        mock_base.return_value.__enter__.return_value = db_session
-        mock_base.return_value.__exit__.return_value = None
-        yield
-
-
 @pytest.fixture
-def fxt_project_service(fxt_projects_dir: Path) -> ProjectService:
+def fxt_project_service(fxt_projects_dir: Path, db_session: Session) -> ProjectService:
     """Fixture to create a ProjectService instance."""
-    return ProjectService(fxt_projects_dir.parent)
+    return ProjectService(data_dir=fxt_projects_dir.parent, db_session=db_session)
 
 
 class TestProjectServiceIntegration:
@@ -140,7 +125,7 @@ class TestProjectServiceIntegration:
         fetched_thumbnail_path = fxt_project_service.get_project_thumbnail_path(UUID(db_project.id))
         assert (
             fetched_thumbnail_path
-            == fxt_project_service.projects_dir / f"{db_project.id}/dataset/{db_dataset_item.id}-thumb.jpg"
+            == fxt_project_service._projects_dir / f"{db_project.id}/dataset/{db_dataset_item.id}-thumb.jpg"
         )
 
     def test_get_project_by_id_not_found(self, fxt_project_service: ProjectService):
@@ -161,10 +146,11 @@ class TestProjectServiceIntegration:
         db_session.flush()
 
         fxt_project_service.delete_project_by_id(UUID(db_project.id))
+        db_session.expire_all()  # Clear the session cache
 
         assert db_session.get(ProjectDB, db_project.id) is None
         # Ensure the associated pipeline is deleted
-        assert db_session.get(PipelineDB, str(db_project.id)) is None
+        assert db_session.get(PipelineDB, db_project.id) is None
 
     def test_delete_active_project(
         self,

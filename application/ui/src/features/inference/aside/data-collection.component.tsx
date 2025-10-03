@@ -66,6 +66,7 @@ export const DataCollection = () => {
                     marginY={'size-200'}
                     onChangeEnd={updateRate}
                     label='Rate'
+                    aria-label={'capture rate'}
                     defaultValue={defaultRate}
                 />
             </Flex>

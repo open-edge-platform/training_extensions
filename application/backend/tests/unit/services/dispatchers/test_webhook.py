@@ -99,7 +99,7 @@ class TestWebhookDispatcher:
                 fxt_webhook_config.webhook_url,
                 headers=fxt_webhook_config.headers,
                 json={
-                    "timestamp": "2025-01-01T12:00:00",
+                    "timestamp": "2025-01-01T12:00:00+00:00",
                     "result": expected_result,
                 },
                 timeout=fxt_webhook_config.timeout,

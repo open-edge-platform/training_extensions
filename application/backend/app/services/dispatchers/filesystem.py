@@ -3,7 +3,7 @@
 
 import logging
 import os
-from datetime import datetime
+from datetime import UTC, datetime
 
 import cv2
 import numpy as np
@@ -49,7 +49,7 @@ class FolderDispatcher(BaseDispatcher):
         image_with_visualization: np.ndarray,
         predictions: Result,
     ) -> None:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]  # up to milliseconds
+        timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S_%f")[:-3]  # up to milliseconds
         image_orig_file = os.path.join(self.output_folder, f"{timestamp}-original.jpg")
         image_viz_file = os.path.join(self.output_folder, f"{timestamp}-pred.jpg")
         pred_txt_file = os.path.join(self.output_folder, f"{timestamp}-pred.txt")
