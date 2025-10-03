@@ -15,7 +15,7 @@ from fastapi.responses import FileResponse, Response
 
 from app.api.dependencies import get_configuration_service, get_source_id
 from app.schemas import Source, SourceCreate, SourceType
-from app.schemas.source import SourceAdapter, SourceCreateAdapter
+from app.schemas.source import SourceCreateAdapter
 from app.services import ConfigurationService, ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError
 
 logger = logging.getLogger(__name__)
@@ -111,8 +111,7 @@ def create_source(
         )
 
     try:
-        source_config = SourceCreateAdapter.validate_python(source_create.model_dump())
-        return configuration_service.create_source(source_config)
+        return configuration_service.create_source(source_create)
     except ResourceAlreadyExistsError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
@@ -215,7 +214,7 @@ def export_source(
     responses={
         status.HTTP_201_CREATED: {"description": "Source imported successfully", "model": Source},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid YAML format or source type is DISCONNECTED"},
-        status.HTTP_409_CONFLICT: {"description": "Sink already exists"},
+        status.HTTP_409_CONFLICT: {"description": "Source already exists"},
     },
 )
 def import_source(
@@ -233,8 +232,7 @@ def import_source(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="The source with source_type=DISCONNECTED cannot be imported",
             )
-        source_config = SourceAdapter.validate_python(source_create.model_dump())
-        return configuration_service.create_source(source_config)
+        return configuration_service.create_source(source_create)
     except yaml.YAMLError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid YAML format: {str(e)}")
     except ResourceAlreadyExistsError as e:

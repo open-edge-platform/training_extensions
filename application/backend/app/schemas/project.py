@@ -56,7 +56,7 @@ class ProjectBase(BaseModel):
         return {
             **({"id": "7b073838-99d3-42ff-9018-4e901eb047fc"} if view else {}),
             "name": "animals",
-            "active_pipeline": True if view else None,
+            "active_pipeline": False if view else None,
             "task": {
                 "task_type": "classification",
                 "exclusive_labels": True,

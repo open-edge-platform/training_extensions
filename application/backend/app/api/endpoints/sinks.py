@@ -15,7 +15,7 @@ from fastapi.responses import FileResponse, Response
 
 from app.api.dependencies import get_configuration_service, get_sink_id
 from app.schemas import Sink, SinkCreate, SinkType
-from app.schemas.sink import SinkAdapter, SinkCreateAdapter
+from app.schemas.sink import SinkCreateAdapter
 from app.services import ConfigurationService, ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError
 
 logger = logging.getLogger(__name__)
@@ -97,8 +97,7 @@ def create_sink(
         )
 
     try:
-        sink_config = SinkCreateAdapter.validate_python(sink_create.model_dump())
-        return configuration_service.create_sink(sink_config)
+        return configuration_service.create_sink(sink_create)
     except ResourceAlreadyExistsError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
@@ -222,8 +221,7 @@ def import_sink(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="The sink with sink_type=DISCONNECTED cannot be imported",
             )
-        sink_config = SinkAdapter.validate_python(sink_create.model_dump())
-        return configuration_service.create_sink(sink_config)
+        return configuration_service.create_sink(sink_create)
     except yaml.YAMLError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid YAML format: {str(e)}")
     except ResourceAlreadyExistsError as e:
