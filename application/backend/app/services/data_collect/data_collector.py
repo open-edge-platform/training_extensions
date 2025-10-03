@@ -24,13 +24,9 @@ class PolicyChecker(metaclass=ABCMeta):
         """
         Determines whether a dispatched image should be collected to the project dataset.
 
-        This abstract method defines the interface for policy checkers to evaluate
-        collection criteria based on the image timestamp. Implementations should
-        provide specific logic for when images qualify for dataset collection.
-
         Args:
             timestamp: Floating-point timestamp representing when the image was
-                    dispatched, typically in seconds or milliseconds since epoch.
+                    dispatched, in seconds since epoch.
 
         Returns:
             bool: True if the image meets the collection criteria and should be
@@ -81,7 +77,7 @@ class DataCollector:
         """
         Collects dispatched images to project dataset based on policy checkers.
 
-        Evaluates collection policies and optional next-frame flag to determine if image
+        Evaluates automated collection policies and the manual next-frame trigger to determine if image
         should be added to dataset. If collection is warranted, processes the image and
         creates a dataset item with annotations.
 
@@ -94,12 +90,6 @@ class DataCollector:
 
         Returns:
             None: Method performs operations with side effects but returns no value.
-
-        Side Effects:
-            - Creates a new dataset item in the project dataset
-            - Converts image color space from BGR to RGB
-            - Resets the should_collect_next_frame flag to False
-            - Calls external services to store dataset items
 
         Note:
             Collection occurs if any policy checker returns True OR if the
