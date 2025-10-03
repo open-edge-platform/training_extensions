@@ -10,6 +10,7 @@ from app.schemas.pipeline import DataCollectionPolicy, Pipeline, PipelineStatus
 from app.schemas.project import Project, ProjectUpdateName
 from app.schemas.sink import DisconnectedSinkConfig, OutputFormat, Sink, SinkType
 from app.schemas.source import DisconnectedSourceConfig, Source, SourceType
+from app.schemas.training_configuration import TrainingConfiguration
 
 __all__ = [
     "DataCollectionPolicy",
@@ -35,4 +36,5 @@ __all__ = [
     "Source",
     "SourceType",
     "TimeWindow",
+    "TrainingConfiguration",
 ]
