@@ -21,6 +21,7 @@ vi.mock('react-router', async (importOriginal) => {
 });
 
 const mockedConfig: ImagesFolderSourceConfig = {
+    id: 'images_folder-id',
     name: 'Test Folder',
     source_type: 'images_folder',
     images_folder_path: '/path/to/images',

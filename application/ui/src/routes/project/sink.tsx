@@ -49,17 +49,20 @@ type SinkFormRecord = {
 };
 const DEFAULT_SINK_FORMS: SinkFormRecord = {
     disconnected: {
+        id: 'disconnected-id',
         sink_type: 'disconnected',
         name: 'Disconnected',
         output_formats: [],
     },
     folder: {
+        id: 'folder-id',
         sink_type: 'folder',
         name: 'Folder',
         folder_path: '',
         output_formats: [],
     },
     mqtt: {
+        id: 'mqtt-id',
         sink_type: 'mqtt',
         auth_required: false,
         name: 'MQTT',
@@ -69,12 +72,14 @@ const DEFAULT_SINK_FORMS: SinkFormRecord = {
         output_formats: [],
     },
     ros: {
+        id: 'ros-id',
         name: 'Ros',
         sink_type: 'ros',
         topic: '',
         output_formats: [],
     },
     webhook: {
+        id: 'webhook-id',
         name: 'Webhook',
         sink_type: 'webhook',
         webhook_url: '',

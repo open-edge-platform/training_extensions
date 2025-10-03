@@ -12,6 +12,7 @@ type WebcamProps = {
 };
 
 const initConfig: WebcamSourceConfig = {
+    id: 'webcam-id',
     name: '',
     source_type: 'webcam',
     device_id: 0,

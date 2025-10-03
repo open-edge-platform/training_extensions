@@ -56,6 +56,9 @@ export const ProjectDetails = () => {
         params: { path: { project_id: projectId } },
     });
 
+    const { name, task } = project.data;
+    const { task_type, labels = [] } = task;
+
     return (
         <View
             backgroundColor={'gray-100'}
@@ -83,9 +86,9 @@ export const ProjectDetails = () => {
                                 <Heading level={2}>Task type</Heading>
                                 <Heading level={2}>Labels</Heading>
 
-                                <Text>{project.data.name}</Text>
-                                <Text>{project.data.task.task_type}</Text>
-                                <Text>{project.data.task.labels.map((label) => label.name).join(', ')}</Text>
+                                <Text>{name}</Text>
+                                <Text>{task_type}</Text>
+                                <Text>{labels.map((label) => label.name).join(', ')}</Text>
                             </Grid>
                         </Flex>
 

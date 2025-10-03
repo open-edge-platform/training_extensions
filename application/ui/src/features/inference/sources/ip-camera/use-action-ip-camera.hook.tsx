@@ -11,6 +11,7 @@ import { useSourceMutation } from '../hooks/use-source-mutation.hook';
 import { IPCameraSourceConfig } from '../util';
 
 const iniConfig: IPCameraSourceConfig = {
+    id: 'ip_camera-id',
     name: '',
     source_type: 'ip_camera',
     stream_url: '',
