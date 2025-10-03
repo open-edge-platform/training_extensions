@@ -51,7 +51,7 @@ How to Use Hierarchical Metric Collection
 
       .. code-block:: bash
 
-         (otx) $ otx train ... --metric hier_metric_collection_callable
+         (otx) $ otx train ... --metric otx.metrics.hier_metric_collection.hier_metric_collection_callable
 
    .. tab-item:: YAML
 
