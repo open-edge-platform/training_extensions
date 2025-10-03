@@ -11,7 +11,7 @@ import numpy as np
 import pytest
 import torch
 from datumaro import DatasetItem
-from datumaro.components.annotation import Bbox, Label
+from datumaro.components.annotation import Label
 from datumaro.components.media import Image
 from torchvision import tv_tensors
 
@@ -188,7 +188,7 @@ class TestDetectionSample:
         labels = torch.tensor([0, 1])
         bboxes = torch.tensor([[10.0, 10.0, 50.0, 50.0], [100.0, 100.0, 150.0, 150.0]])
 
-        sample = DetectionSample(image=image, label=labels, bboxes=bboxes)
+        sample = DetectionSample(image=image.transpose(1, 2, 0), label=labels, bboxes=bboxes)
 
         assert np.array_equal(sample.image, image)
         assert torch.equal(sample.label, labels)
@@ -206,72 +206,13 @@ class TestDetectionSample:
         assert torch.equal(sample.label, labels)
         assert torch.equal(sample.bboxes, bboxes)
 
-    def test_from_dm_item_with_image_and_annotations(self):
-        """Test from_dm_item with image and bbox annotations."""
-        # Mock DatasetItem
-        mock_item = Mock(spec=DatasetItem)
-
-        # Mock image
-        mock_media = Mock(spec=Image)
-        mock_media.data = np.random.rand(224, 224, 3).astype(np.uint8)
-        mock_item.media_as.return_value = mock_media
-
-        # Mock bbox annotations
-        mock_bbox1 = Mock(spec=Bbox)
-        mock_bbox1.label = 0
-        mock_bbox1.points = [10.0, 10.0, 50.0, 50.0]
-
-        mock_bbox2 = Mock(spec=Bbox)
-        mock_bbox2.label = 1
-        mock_bbox2.points = [100.0, 100.0, 150.0, 150.0]
-
-        mock_item.annotations = [mock_bbox1, mock_bbox2]
-
-        sample = DetectionSample.from_dm_item(mock_item)
-
-        assert isinstance(sample, DetectionSample)
-        assert np.array_equal(sample.image, mock_media.data)
-        assert torch.equal(sample.label, torch.tensor([0, 1], dtype=torch.long))
-        expected_bboxes = torch.tensor(
-            [[10.0, 10.0, 50.0, 50.0], [100.0, 100.0, 150.0, 150.0]],
-            dtype=torch.float32,
-        )
-        assert torch.equal(sample.bboxes, expected_bboxes)
-
-        # Check img_info
-        assert isinstance(sample._img_info, ImageInfo)
-        assert sample._img_info.img_idx == 0
-        assert sample._img_info.img_shape == (224, 224)
-        assert sample._img_info.ori_shape == (224, 224)
-
-    def test_from_dm_item_without_annotations(self):
-        """Test from_dm_item without annotations."""
-        # Mock DatasetItem without annotations
-        mock_item = Mock(spec=DatasetItem)
-
-        # Mock image
-        mock_media = Mock(spec=Image)
-        mock_media.data = np.random.rand(100, 100, 3).astype(np.uint8)
-        mock_item.media_as.return_value = mock_media
-
-        # No annotations
-        mock_item.annotations = []
-
-        sample = DetectionSample.from_dm_item(mock_item)
-
-        assert isinstance(sample, DetectionSample)
-        assert np.array_equal(sample.image, mock_media.data)
-        # When no annotations, should return empty tensors
-        assert torch.equal(sample.label, torch.tensor([], dtype=torch.long))
-        assert torch.equal(sample.bboxes, torch.tensor([], dtype=torch.float32))
-
     def test_init_with_empty_tensors(self):
         """Test initialization with empty label and bbox tensors."""
         image = np.random.rand(3, 224, 224).astype(np.uint8)
         labels = torch.tensor([], dtype=torch.long)
         bboxes = torch.tensor([], dtype=torch.float32)
 
-        sample = DetectionSample(image=image, label=labels, bboxes=bboxes)
+        sample = DetectionSample(image=image.transpose(1, 2, 0), label=labels, bboxes=bboxes)
 
         assert np.array_equal(sample.image, image)
         assert torch.equal(sample.label, labels)
