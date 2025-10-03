@@ -388,6 +388,27 @@ class TestSourceAndSinkEndpoints:
         getattr(fxt_config_service, create_method).assert_called_once()
 
     @pytest.mark.parametrize(
+        "fixture_name, api_path, create_method",
+        [
+            ("fxt_webcam_source", ConfigApiPath.SOURCES, "create_source"),
+            ("fxt_folder_sink", ConfigApiPath.SINKS, "create_sink"),
+        ],
+    )
+    def test_import_config_exists(self, fixture_name, api_path, create_method, fxt_config_service, fxt_client, request):
+        fxt_config = request.getfixturevalue(fixture_name)
+        sink_data = fxt_config.model_dump(exclude={"id"}, mode="json")
+        yaml_content = yaml.safe_dump(sink_data)
+        getattr(fxt_config_service, create_method).side_effect = ResourceAlreadyExistsError(
+            resource_type=ResourceType(api_path[:-1].capitalize()), resource_name="New Config"
+        )
+
+        files = {"yaml_file": ("test.yaml", io.BytesIO(yaml_content.encode()), "application/x-yaml")}
+        response = fxt_client.post(f"/api/{api_path}:import", files=files)
+
+        assert response.status_code == status.HTTP_409_CONFLICT
+        getattr(fxt_config_service, create_method).assert_called_once()
+
+    @pytest.mark.parametrize(
         "api_path",
         [ConfigApiPath.SOURCES, ConfigApiPath.SINKS],
     )

@@ -98,7 +98,7 @@ UPDATE_SOURCE_BODY_EXAMPLES = {
         status.HTTP_409_CONFLICT: {"description": "Source already exists"},
     },
 )
-async def create_source(
+def create_source(
     source_create: Annotated[
         SourceCreate, Body(description=CREATE_SOURCE_BODY_DESCRIPTION, openapi_examples=CREATE_SOURCE_BODY_EXAMPLES)
     ],
@@ -123,7 +123,7 @@ async def create_source(
         status.HTTP_200_OK: {"description": "List of available source configurations", "model": list[Source]},
     },
 )
-async def list_sources(
+def list_sources(
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> list[Source]:
     """List the available sources"""
@@ -138,7 +138,7 @@ async def list_sources(
         status.HTTP_404_NOT_FOUND: {"description": "Source not found"},
     },
 )
-async def get_source(
+def get_source(
     source_id: Annotated[UUID, Depends(get_source_id)],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> Source:
@@ -157,7 +157,7 @@ async def get_source(
         status.HTTP_404_NOT_FOUND: {"description": "Source not found"},
     },
 )
-async def update_source(
+def update_source(
     source_id: Annotated[UUID, Depends(get_source_id)],
     source_config: Annotated[
         dict,
@@ -191,7 +191,7 @@ async def update_source(
         status.HTTP_404_NOT_FOUND: {"description": "Source not found"},
     },
 )
-async def export_source(
+def export_source(
     source_id: Annotated[UUID, Depends(get_source_id)],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> Response:
@@ -215,15 +215,16 @@ async def export_source(
     responses={
         status.HTTP_201_CREATED: {"description": "Source imported successfully", "model": Source},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid YAML format or source type is DISCONNECTED"},
+        status.HTTP_409_CONFLICT: {"description": "Sink already exists"},
     },
 )
-async def import_source(
+def import_source(
     yaml_file: Annotated[UploadFile, File(description="YAML file containing the source configuration")],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> Source:
     """Import a source from file"""
     try:
-        yaml_content = await yaml_file.read()
+        yaml_content = yaml_file.file.read()
         source_data = yaml.safe_load(yaml_content)
 
         source_create = SourceCreateAdapter.validate_python(source_data)
@@ -236,6 +237,8 @@ async def import_source(
         return configuration_service.create_source(source_config)
     except yaml.YAMLError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid YAML format: {str(e)}")
+    except ResourceAlreadyExistsError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 
 @router.delete(
@@ -250,7 +253,7 @@ async def import_source(
         status.HTTP_409_CONFLICT: {"description": "Source is used by at least one pipeline"},
     },
 )
-async def delete_source(
+def delete_source(
     source_id: Annotated[UUID, Depends(get_source_id)],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> None:

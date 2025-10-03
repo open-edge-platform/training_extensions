@@ -83,7 +83,7 @@ UPDATE_SINK_BODY_EXAMPLES = {
         status.HTTP_409_CONFLICT: {"description": "Sink already exists"},
     },
 )
-async def create_sink(
+def create_sink(
     sink_create: Annotated[
         SinkCreate, Body(description=CREATE_SINK_BODY_DESCRIPTION, openapi_examples=CREATE_SINK_BODY_EXAMPLES)
     ],
@@ -109,7 +109,7 @@ async def create_sink(
         status.HTTP_200_OK: {"description": "List of available sink configurations", "model": list[Sink]},
     },
 )
-async def list_sinks(
+def list_sinks(
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> list[Sink]:
     """List the available sinks"""
@@ -124,7 +124,7 @@ async def list_sinks(
         status.HTTP_404_NOT_FOUND: {"description": "Sink not found"},
     },
 )
-async def get_sink(
+def get_sink(
     sink_id: Annotated[UUID, Depends(get_sink_id)],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> Sink:
@@ -143,7 +143,7 @@ async def get_sink(
         status.HTTP_404_NOT_FOUND: {"description": "Sink not found"},
     },
 )
-async def update_sink(
+def update_sink(
     sink_id: Annotated[UUID, Depends(get_sink_id)],
     sink_config: Annotated[
         dict,
@@ -177,7 +177,7 @@ async def update_sink(
         status.HTTP_404_NOT_FOUND: {"description": "Sink not found"},
     },
 )
-async def export_sink(
+def export_sink(
     sink_id: Annotated[UUID, Depends(get_sink_id)],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> Response:
@@ -204,15 +204,16 @@ async def export_sink(
     responses={
         status.HTTP_201_CREATED: {"description": "Sink imported successfully", "model": Sink},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid YAML format or sink type is DISCONNECTED"},
+        status.HTTP_409_CONFLICT: {"description": "Sink already exists"},
     },
 )
-async def import_sink(
+def import_sink(
     yaml_file: Annotated[UploadFile, File(description="YAML file containing the sink configuration")],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> Sink:
     """Import a sink from file"""
     try:
-        yaml_content = await yaml_file.read()
+        yaml_content = yaml_file.file.read()
         sink_data = yaml.safe_load(yaml_content)
 
         sink_create = SinkCreateAdapter.validate_python(sink_data)
@@ -225,6 +226,8 @@ async def import_sink(
         return configuration_service.create_sink(sink_config)
     except yaml.YAMLError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid YAML format: {str(e)}")
+    except ResourceAlreadyExistsError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 
 @router.delete(
@@ -239,7 +242,7 @@ async def import_sink(
         status.HTTP_409_CONFLICT: {"description": "Sink is used by at least one pipeline"},
     },
 )
-async def delete_sink(
+def delete_sink(
     sink_id: Annotated[UUID, Depends(get_sink_id)],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> None:
