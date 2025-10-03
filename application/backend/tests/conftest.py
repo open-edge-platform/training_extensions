@@ -14,13 +14,14 @@ from app.schemas.source import WebcamSourceConfig
 @pytest.fixture
 def fxt_webcam_source() -> WebcamSourceConfig:
     """Sample source configuration data."""
-    return WebcamSourceConfig(source_type=SourceType.WEBCAM, name="Test Source", device_id=1)
+    return WebcamSourceConfig(id=uuid4(), source_type=SourceType.WEBCAM, name="Test Source", device_id=1)
 
 
 @pytest.fixture
 def fxt_mqtt_sink() -> MqttSinkConfig:
     """Sample sink configuration data."""
     return MqttSinkConfig(
+        id=uuid4(),
         sink_type=SinkType.MQTT,
         name="Test Sink",
         rate_limit=0.1,

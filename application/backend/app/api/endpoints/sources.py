@@ -14,8 +14,8 @@ from fastapi.openapi.models import Example
 from fastapi.responses import FileResponse, Response
 
 from app.api.dependencies import get_configuration_service, get_source_id
-from app.schemas import Source, SourceType
-from app.schemas.source import SourceAdapter
+from app.schemas import Source, SourceCreate, SourceType
+from app.schemas.source import SourceAdapter, SourceCreateAdapter
 from app.services import ConfigurationService, ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError
 
 logger = logging.getLogger(__name__)
@@ -91,25 +91,27 @@ UPDATE_SOURCE_BODY_EXAMPLES = {
 @router.post(
     "",
     status_code=status.HTTP_201_CREATED,
+    response_model=Source,
     responses={
-        status.HTTP_201_CREATED: {"description": "Source created", "model": Source},
+        status.HTTP_201_CREATED: {"description": "Source created"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid source ID or request body"},
         status.HTTP_409_CONFLICT: {"description": "Source already exists"},
     },
 )
 async def create_source(
-    source_config: Annotated[
-        Source, Body(description=CREATE_SOURCE_BODY_DESCRIPTION, openapi_examples=CREATE_SOURCE_BODY_EXAMPLES)
+    source_create: Annotated[
+        SourceCreate, Body(description=CREATE_SOURCE_BODY_DESCRIPTION, openapi_examples=CREATE_SOURCE_BODY_EXAMPLES)
     ],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> Source:
     """Create and configure a new source"""
-    if source_config.source_type == SourceType.DISCONNECTED:
+    if source_create.source_type == SourceType.DISCONNECTED:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="The source with source_type=DISCONNECTED cannot be created"
         )
 
     try:
+        source_config = SourceCreateAdapter.validate_python(source_create.model_dump())
         return configuration_service.create_source(source_config)
     except ResourceAlreadyExistsError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))

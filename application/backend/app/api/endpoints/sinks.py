@@ -14,8 +14,8 @@ from fastapi.openapi.models import Example
 from fastapi.responses import FileResponse, Response
 
 from app.api.dependencies import get_configuration_service, get_sink_id
-from app.schemas import Sink, SinkType
-from app.schemas.sink import SinkAdapter
+from app.schemas import Sink, SinkCreate, SinkType
+from app.schemas.sink import SinkAdapter, SinkCreateAdapter
 from app.services import ConfigurationService, ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError
 
 logger = logging.getLogger(__name__)
@@ -76,26 +76,28 @@ UPDATE_SINK_BODY_EXAMPLES = {
 @router.post(
     "",
     status_code=status.HTTP_201_CREATED,
+    response_model=Sink,
     responses={
-        status.HTTP_201_CREATED: {"description": "Sink created", "model": Sink},
+        status.HTTP_201_CREATED: {"description": "Sink created"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid sink ID or request body"},
         status.HTTP_409_CONFLICT: {"description": "Sink already exists"},
     },
 )
 async def create_sink(
-    sink_config: Annotated[
-        Sink, Body(description=CREATE_SINK_BODY_DESCRIPTION, openapi_examples=CREATE_SINK_BODY_EXAMPLES)
+    sink_create: Annotated[
+        SinkCreate, Body(description=CREATE_SINK_BODY_DESCRIPTION, openapi_examples=CREATE_SINK_BODY_EXAMPLES)
     ],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> Sink:
     """Create and configure a new sink"""
-    if sink_config.sink_type == SinkType.DISCONNECTED:
+    if sink_create.sink_type == SinkType.DISCONNECTED:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="The sink with sink_type=DISCONNECTED cannot be created",
         )
 
     try:
+        sink_config = SinkCreateAdapter.validate_python(sink_create.model_dump())
         return configuration_service.create_sink(sink_config)
     except ResourceAlreadyExistsError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
