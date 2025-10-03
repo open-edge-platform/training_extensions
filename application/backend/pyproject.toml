@@ -21,6 +21,7 @@ dependencies = [
     "aiofiles==24.1.0",
     "pydantic-settings~=2.10.1",
     "aiortc~=1.13.0",
+    "datumaro[experimental] @ git+https://github.com/open-edge-platform/datumaro.git@develop"
 ]
 
 [project.optional-dependencies]

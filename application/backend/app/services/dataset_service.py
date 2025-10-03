@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import BinaryIO
 from uuid import UUID, uuid4
 
+import datumaro.experimental as dm
 import numpy as np
 from PIL import Image, UnidentifiedImageError
 from sqlalchemy.orm import Session
@@ -25,6 +26,7 @@ from app.schemas.dataset_item import (
 from app.schemas.project import TaskType
 from app.schemas.shape import FullImage, Polygon, Rectangle
 from app.services.base import ResourceNotFoundError, ResourceType
+from app.services.datumaro_converter import convert_dataset
 from app.services.mappers.dataset_item_mapper import DatasetItemMapper
 from app.utils.images import crop_to_thumbnail
 
@@ -310,3 +312,22 @@ class DatasetService:
         updated = repo.set_annotation_data(obj_id=str(dataset_item_id), annotation_data=[])
         if not updated:
             raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
+
+    def get_dataset_item_binary_path(self, project_id: UUID, dataset_item: DatasetItemDB) -> Path:
+        dataset_dir = self.projects_dir / f"{project_id}/dataset"
+        return dataset_dir / f"{dataset_item.id}.{dataset_item.format}"
+
+    def get_dm_dataset(self, project_id: UUID) -> dm.Dataset:
+        def _get_image_path(item: DatasetItemDB) -> str:
+            return str(self.get_dataset_item_binary_path(project_id=project_id, dataset_item=item))
+
+        project_repo = ProjectRepository(db=self._db_session)
+        project = project_repo.get_by_id(str(project_id))
+        if project is None:
+            raise ResourceNotFoundError(ResourceType.PROJECT, str(project_id))
+
+        repo = DatasetItemRepository(project_id=str(project_id), db=self._db_session)
+        count = repo.count()
+        dataset_items = repo.list_items(offset=0, limit=count)
+
+        return convert_dataset(project=project, dataset_items=dataset_items, get_image_path=_get_image_path)
