@@ -15,7 +15,7 @@ export const InputOutputSetup = () => {
             <Button width={'size-2000'} variant={'secondary'}>
                 <Camera fill='white' />
                 <Text width={'auto'} marginStart={'size-100'}>
-                    Input source
+                    Pipeline configuration
                 </Text>
             </Button>
             <Dialog minWidth={'size-6000'}>
@@ -23,10 +23,10 @@ export const InputOutputSetup = () => {
                     <Tabs aria-label='Dataset import tabs' height={'100%'}>
                         <TabList>
                             <Item key='sources' textValue='FoR'>
-                                <Text>Input setup</Text>
+                                <Text>Input</Text>
                             </Item>
                             <Item key='sinks' textValue='MaR'>
-                                <Text>Output setup</Text>
+                                <Text>Output</Text>
                             </Item>
                         </TabList>
                         <TabPanels>

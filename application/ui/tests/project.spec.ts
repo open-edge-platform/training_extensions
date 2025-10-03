@@ -157,7 +157,7 @@ test.describe('Project', () => {
 
         await expect(page.getByText('Project deleted successfully')).toBeVisible();
 
-        await expect(page.getByText('Project 3')).not.toBeVisible();
+        await expect(page.getByText('Project 3')).toBeHidden();
         await expect(page.getByText('Project 1')).toBeVisible();
         await expect(page.getByText('Project 2')).toBeVisible();
     });

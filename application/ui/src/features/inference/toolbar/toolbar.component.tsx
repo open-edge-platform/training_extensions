@@ -117,8 +117,6 @@ export const Toolbar = () => {
 
                 <Divider orientation='vertical' size='S' />
 
-                <Divider orientation='vertical' size='S' />
-
                 <Flex marginStart='auto'>
                     <PipelineSwitch />
                     <InputOutputSetup />
