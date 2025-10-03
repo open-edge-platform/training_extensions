@@ -409,12 +409,17 @@ jobs:
           name: openapi-spec
           path: application/ui/src/api
 
-      - name: Prepare UI
-        working-directory: application/ui
-        run: |
-          tar -xzf dist.tar.gz
-          npm ci
-          npm run build:api
+      - name: Unpack build
+        working-directory: "application/ui"
+        run: tar -xzf dist.tar.gz
+
+      - name: Install dependencies
+        working-directory: "application/ui"
+        run: npm ci
+
+      - name: Build OpenAPI type definitions
+        working-directory: "application/ui"
+        run: npm run build:api
 
       - name: Run E2E tests
         working-directory: application/ui
