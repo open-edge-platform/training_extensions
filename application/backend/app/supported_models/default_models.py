@@ -69,16 +69,9 @@ class DefaultModels:
         Raises:
             ValueError: If the task_type is not a supported TaskType value or if the default_type
                     is not available for the given task type.
-
-        Note:
-            VISUAL_PROMPTING task type always returns None as no specific model is recommended.
-            The method uses class-level configuration (default_models_by_task) to determine
-            appropriate models for each task and optimization preference.
         """
         try:
             task_type_str = task_type.upper()
-            if task_type_str == "VISUAL_PROMPTING":
-                return None
             _task_type = TaskType[task_type_str]
         except KeyError:
             raise ValueError(f"Unknown task type: `{task_type}`")
