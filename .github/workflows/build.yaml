@@ -41,9 +41,7 @@ jobs:
         with:
           files_yaml: |
             test:
-              - application/ui/**
-              - backend/**
-              - docker/**
+              - application/**
               - .github/**
 
       - name: Set run flag
@@ -86,7 +84,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
 
       - name: Build images
-        working-directory: docker
+        working-directory: application/docker
         run: |
           # Build and tag images using provided metadata
           for TAG in $TAGS ; do
@@ -99,7 +97,7 @@ jobs:
           PUBLIC_API_BASE_URL: "/"
 
       - name: Run simple checks on the built image
-        working-directory: docker
+        working-directory: application/docker
         run: |
           # Get the first tag for testing
           FIRST_TAG=$(echo "$TAGS" | awk 'NR==1 {print $1}')
@@ -151,7 +149,7 @@ jobs:
           TAGS: ${{ steps.meta.outputs.tags }}
 
       - name: Get Docker image sizes
-        working-directory: docker
+        working-directory: application/docker
         id: image-sizes
         if: github.event_name == 'pull_request'
         run: |

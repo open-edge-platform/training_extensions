@@ -39,9 +39,14 @@ repos:
       - id: mypy
         alias: mypy_backend
         name: mypy (backend)
-        files: '^backend/.*\.py'
+        files: '^application/backend/.*\.py'
         additional_dependencies: [types-PyYAML, types-aiofiles, types-requests]
-        args: [--disallow-untyped-calls, --config-file, backend/pyproject.toml]
+        args:
+          [
+            --disallow-untyped-calls,
+            --config-file,
+            application/backend/pyproject.toml,
+          ]
 
   - repo: https://github.com/AleksaC/hadolint-py
     rev: v2.12.0.3

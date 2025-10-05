@@ -78,7 +78,7 @@ jobs:
         working-directory: library
         run: tox r -vv -e pre-commit
   Unit-Test:
-    runs-on: ubuntu-24.04
+    runs-on: [self-hosted, linux, x64, dev, dmount]
     permissions:
       contents: read
     needs:

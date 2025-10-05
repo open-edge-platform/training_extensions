@@ -17,6 +17,7 @@ type AnnotatorContext = {
     // Annotations
     annotations: Annotation[];
     addAnnotation: (shape: Shape) => void;
+    deleteAnnotation: (annotationId: string) => void;
     updateAnnotation: (updatedAnnotation: Annotation) => void;
 
     // Media item
@@ -53,6 +54,10 @@ export const AnnotatorProvider = ({ mediaItem, children }: { mediaItem: DatasetI
         ]);
     };
 
+    const deleteAnnotation = (annotationId: string) => {
+        setAnnotations((prevAnnotations) => prevAnnotations.filter((annotation) => annotation.id !== annotationId));
+    };
+
     return (
         <AnnotatorProviderContext.Provider
             value={{
@@ -61,6 +66,7 @@ export const AnnotatorProvider = ({ mediaItem, children }: { mediaItem: DatasetI
 
                 addAnnotation,
                 updateAnnotation,
+                deleteAnnotation,
 
                 annotations,
 
