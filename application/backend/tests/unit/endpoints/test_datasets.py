@@ -83,10 +83,10 @@ class TestDatasetItemEndpoints:
 
         assert response.status_code == status.HTTP_200_OK
         fxt_dataset_service.count_dataset_items.assert_called_once_with(
-            project_id=project_id, start_date=None, end_date=None
+            project_id=project_id, start_date=None, end_date=None, annotation_status='reviewed'
         )
         fxt_dataset_service.list_dataset_items.assert_called_once_with(
-            project_id=project_id, limit=10, offset=0, start_date=None, end_date=None
+            project_id=project_id, limit=10, offset=0, start_date=None, end_date=None, annotation_status='reviewed'
         )
 
     def test_list_dataset_items_filtering_and_pagination(self, fxt_dataset_item, fxt_dataset_service, fxt_client):
