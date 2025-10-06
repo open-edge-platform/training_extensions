@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Annotation, Point } from '../types';
+import { Annotation, Point, Polygon } from '../types';
 
 type AnnotationShapeProps = {
     annotation: Annotation;
@@ -28,5 +28,7 @@ export const AnnotationShape = ({ annotation }: AnnotationShapeProps) => {
         );
     }
 
-    return <polygon aria-label='annotation polygon' points={getFormattedPoints(shape.points)} fill={color} />;
+    return (
+        <polygon aria-label='annotation polygon' points={getFormattedPoints((shape as Polygon).points)} fill={color} />
+    );
 };
