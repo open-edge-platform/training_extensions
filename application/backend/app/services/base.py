@@ -12,7 +12,6 @@ from pydantic import BaseModel
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.db import get_db_session
 from app.db.schema import Base
 from app.repositories.base import BaseRepository
 
@@ -87,32 +86,27 @@ class ServiceConfig(Generic[R]):
 class GenericPersistenceService(Generic[S, R]):
     """Generic service for CRUD operations on a repository."""
 
-    def __init__(self, config: ServiceConfig[R]) -> None:
+    def __init__(self, config: ServiceConfig[R], db: Session) -> None:
         self.config = config
+        self.db = db
 
     @contextmanager
-    def _get_repo(self, db: Session | None = None) -> Generator[R]:
-        if db is None:
-            with get_db_session() as db_session:
-                repo = self.config.repository_class(db_session)  # type: ignore[call-arg]
-                yield repo
-                db_session.commit()
-        else:
-            repo = self.config.repository_class(db)  # type: ignore[call-arg]
-            yield repo
+    def _get_repo(self) -> Generator[R]:
+        repo = self.config.repository_class(self.db)  # type: ignore[call-arg]
+        yield repo
 
-    def list_all(self, db: Session | None = None) -> list[S]:
-        with self._get_repo(db) as repo:
+    def list_all(self) -> list[S]:
+        with self._get_repo() as repo:
             return [self.config.mapper_class.to_schema(o) for o in repo.list_all()]
 
-    def get_by_id(self, item_id: UUID, db: Session | None = None) -> S | None:
-        with self._get_repo(db) as repo:
+    def get_by_id(self, item_id: UUID) -> S | None:
+        with self._get_repo() as repo:
             item_db = repo.get_by_id(str(item_id))
             return self.config.mapper_class.to_schema(item_db) if item_db else None
 
-    def create(self, item: S, db: Session | None = None) -> S:
+    def create(self, item: S) -> S:
         try:
-            with self._get_repo(db) as repo:
+            with self._get_repo() as repo:
                 item_db = self.config.mapper_class.from_schema(item)
                 repo.save(item_db)
                 return self.config.mapper_class.to_schema(item_db)
@@ -121,15 +115,17 @@ class GenericPersistenceService(Generic[S, R]):
                 raise ResourceAlreadyExistsError(self.config.resource_type, getattr(item, "name", str(item.id)))  # type: ignore[attr-defined]
             raise
 
-    def update(self, item: S, partial_config: dict, db: Session | None = None) -> S:
-        with self._get_repo(db) as repo:
+    def update(self, item: S, partial_config: dict) -> S:
+        with self._get_repo() as repo:
             to_update = item.model_copy(update=partial_config)
             updated = repo.update(self.config.mapper_class.from_schema(to_update))
+            # Explicit early commit to ensure changes are visible to other transactions before the session is closed
+            self.db.commit()
             return self.config.mapper_class.to_schema(updated)
 
-    def delete_by_id(self, item_id: UUID, db: Session | None = None) -> None:
+    def delete_by_id(self, item_id: UUID) -> None:
         try:
-            with self._get_repo(db) as repo:
+            with self._get_repo() as repo:
                 deleted = repo.delete(str(item_id))
             if not deleted:
                 raise ResourceNotFoundError(self.config.resource_type, str(item_id))

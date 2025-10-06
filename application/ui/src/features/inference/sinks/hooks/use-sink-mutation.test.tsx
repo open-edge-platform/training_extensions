@@ -7,26 +7,27 @@ import { TestProviders } from 'test-utils/render';
 
 import { http } from '../../../../api/utils';
 import { server } from '../../../../msw-node-setup';
-import { WebcamSourceConfig } from '../util';
-import { useMutationSource } from './use-mutation-source.hook';
+import { LocalFolderSinkConfig } from '../utils';
+import { useSinkMutation } from './use-sink-mutation.hook';
 
-const mockedSource: WebcamSourceConfig = {
+const mockedSource: LocalFolderSinkConfig = {
     id: 'original-id',
     name: 'Mock Source',
-    source_type: 'webcam' as const,
-    device_id: 0,
+    output_formats: [],
+    sink_type: 'folder',
+    folder_path: './folder/111',
 };
 
-describe('useMutationSource', () => {
-    it('creates a new source and return its resource id', async () => {
+describe('useSinkMutation', () => {
+    it('creates a new sink and return its resource id', async () => {
         const newResourceId = 'resource-id-123';
-        const { result } = renderHook(() => useMutationSource(true), {
+        const { result } = renderHook(() => useSinkMutation(true), {
             wrapper: TestProviders,
         });
 
         server.use(
-            http.post('/api/sources', () => HttpResponse.json({ ...mockedSource, id: newResourceId })),
-            http.patch('/api/sources/{source_id}', () => HttpResponse.error())
+            http.post('/api/sinks', () => HttpResponse.json({ ...mockedSource, id: newResourceId })),
+            http.patch('/api/sinks/{sink_id}', () => HttpResponse.error())
         );
 
         await act(async () => {
@@ -36,13 +37,13 @@ describe('useMutationSource', () => {
     });
 
     it('update a source item and returns its resource id', async () => {
-        const { result } = renderHook(() => useMutationSource(false), {
+        const { result } = renderHook(() => useSinkMutation(false), {
             wrapper: TestProviders,
         });
 
         server.use(
-            http.post('/api/sources', () => HttpResponse.error()),
-            http.patch('/api/sources/{source_id}', () => HttpResponse.json(mockedSource))
+            http.post('/api/sinks', () => HttpResponse.error()),
+            http.patch('/api/sinks/{sink_id}', () => HttpResponse.json(mockedSource))
         );
 
         await act(async () => {

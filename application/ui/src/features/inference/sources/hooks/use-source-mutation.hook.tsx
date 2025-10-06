@@ -4,9 +4,9 @@
 import { omit } from 'lodash-es';
 
 import { $api } from '../../../../api/client';
-import { SourceConfig } from './../util';
+import { SourceConfig } from '../util';
 
-export const useMutationSource = (isNewSource: boolean) => {
+export const useSourceMutation = (isNewSource: boolean) => {
     const addSource = $api.useMutation('post', '/api/sources');
     const updateSource = $api.useMutation('patch', '/api/sources/{source_id}');
 

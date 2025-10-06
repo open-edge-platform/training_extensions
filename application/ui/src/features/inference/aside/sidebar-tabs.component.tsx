@@ -18,7 +18,7 @@ const TABS = [
 
 interface TabProps {
     tabs: (typeof TABS)[number][];
-    selectedTab: string;
+    selectedTab: string | null;
 }
 
 const SidebarTabs = ({ tabs, selectedTab }: TabProps) => {
@@ -27,6 +27,10 @@ const SidebarTabs = ({ tabs, selectedTab }: TabProps) => {
     const gridTemplateColumns = tab !== null ? ['clamp(size-4600, 35vw, 40rem)', 'size-600'] : ['0px', 'size-600'];
 
     const content = tabs.find(({ label }) => label === tab)?.content;
+
+    const handleSetTab = (label: string) => {
+        setTab(label === tab ? null : label);
+    };
 
     return (
         <Grid
@@ -52,7 +56,7 @@ const SidebarTabs = ({ tabs, selectedTab }: TabProps) => {
                             key={label}
                             isQuiet
                             isSelected={label === tab}
-                            onChange={() => setTab(label === tab ? null : label)}
+                            onChange={() => handleSetTab(label)}
                             UNSAFE_className={styles.toggleButton}
                             aria-label={`Toggle ${label} tab`}
                         >
@@ -66,5 +70,5 @@ const SidebarTabs = ({ tabs, selectedTab }: TabProps) => {
 };
 
 export const Sidebar = () => {
-    return <SidebarTabs tabs={TABS} selectedTab={TABS[0].label} />;
+    return <SidebarTabs tabs={TABS} selectedTab={null} />;
 };

@@ -9,7 +9,6 @@ from uuid import UUID
 
 from sqlalchemy.orm import Session
 
-from app.db import get_db_session
 from app.repositories import PipelineRepository, SinkRepository, SourceRepository
 from app.schemas import Sink, Source
 from app.services import ActivePipelineService
@@ -28,13 +27,16 @@ class PipelineField(StrEnum):
 
 
 class ConfigurationService:
-    def __init__(self, active_pipeline_service: ActivePipelineService, config_changed_condition: Condition) -> None:
+    def __init__(
+        self, active_pipeline_service: ActivePipelineService, db_session: Session, config_changed_condition: Condition
+    ) -> None:
         self._source_service: GenericPersistenceService[Source, SourceRepository] = GenericPersistenceService(
-            ServiceConfig(SourceRepository, SourceMapper, ResourceType.SOURCE)
+            ServiceConfig(SourceRepository, SourceMapper, ResourceType.SOURCE), db_session
         )
         self._sink_service: GenericPersistenceService[Sink, SinkRepository] = GenericPersistenceService(
-            ServiceConfig(SinkRepository, SinkMapper, ResourceType.SINK)
+            ServiceConfig(SinkRepository, SinkMapper, ResourceType.SINK), db_session
         )
+        self._db_session = db_session
         self._active_pipeline_service: ActivePipelineService = active_pipeline_service
         self._config_changed_condition: Condition = config_changed_condition
 
@@ -45,11 +47,10 @@ class ConfigurationService:
         with self._config_changed_condition:
             self._config_changed_condition.notify_all()
 
-    @staticmethod
-    def _on_config_changed(config_id: UUID, field: PipelineField, db: Session, notify_fn: Callable[[], None]) -> None:
+    def _on_config_changed(self, config_id: UUID, field: PipelineField, notify_fn: Callable[[], None]) -> None:
         """Notify threads or child processes that the configuration has changed.
         Notification triggered only when the configuration is used by the active pipeline."""
-        pipeline_repo = PipelineRepository(db)
+        pipeline_repo = PipelineRepository(self._db_session)
         active_pipeline = pipeline_repo.get_active_pipeline()
         if active_pipeline and getattr(active_pipeline, field) == str(config_id):
             notify_fn()
@@ -60,14 +61,14 @@ class ConfigurationService:
     def list_sinks(self) -> list[Sink]:
         return self._sink_service.list_all()
 
-    def get_source_by_id(self, source_id: UUID, db: Session | None = None) -> Source:
-        source = self._source_service.get_by_id(source_id, db)
+    def get_source_by_id(self, source_id: UUID) -> Source:
+        source = self._source_service.get_by_id(source_id)
         if not source:
             raise ResourceNotFoundError(ResourceType.SOURCE, str(source_id))
         return source
 
-    def get_sink_by_id(self, sink_id: UUID, db: Session | None = None) -> Sink:
-        sink = self._sink_service.get_by_id(sink_id, db)
+    def get_sink_by_id(self, sink_id: UUID) -> Sink:
+        sink = self._sink_service.get_by_id(sink_id)
         if not sink:
             raise ResourceNotFoundError(ResourceType.SINK, str(sink_id))
         return sink
@@ -82,32 +83,24 @@ class ConfigurationService:
 
     @parent_process_only
     def update_source(self, source_id: UUID, partial_config: dict) -> Source:
-        with get_db_session() as db:
-            source = self.get_source_by_id(source_id, db)
-            updated = self._source_service.update(source, partial_config, db)
-            db.commit()
-            self._on_config_changed(updated.id, PipelineField.SOURCE_ID, db, self._notify_source_changed)
-            return updated
+        source = self.get_source_by_id(source_id)
+        updated = self._source_service.update(source, partial_config)
+        self._on_config_changed(updated.id, PipelineField.SOURCE_ID, self._notify_source_changed)
+        return updated
 
     @parent_process_only
     def update_sink(self, sink_id: UUID, partial_config: dict) -> Sink:
-        with get_db_session() as db:
-            sink = self.get_sink_by_id(sink_id, db)
-            updated = self._sink_service.update(sink, partial_config, db)
-            db.commit()
-            self._on_config_changed(updated.id, PipelineField.SINK_ID, db, self._notify_sink_changed)
-            return updated
+        sink = self.get_sink_by_id(sink_id)
+        updated = self._sink_service.update(sink, partial_config)
+        self._on_config_changed(updated.id, PipelineField.SINK_ID, self._notify_sink_changed)
+        return updated
 
     @parent_process_only
     def delete_source_by_id(self, source_id: UUID) -> None:
-        with get_db_session() as db:
-            source = self.get_source_by_id(source_id, db)
-            self._source_service.delete_by_id(source.id, db)
-            db.commit()
+        source = self.get_source_by_id(source_id)
+        self._source_service.delete_by_id(source.id)
 
     @parent_process_only
     def delete_sink_by_id(self, sink_id: UUID) -> None:
-        with get_db_session() as db:
-            sink = self.get_sink_by_id(sink_id, db)
-            self._sink_service.delete_by_id(sink.id, db)
-            db.commit()
+        sink = self.get_sink_by_id(sink_id)
+        self._sink_service.delete_by_id(sink.id)

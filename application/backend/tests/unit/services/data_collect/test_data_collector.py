@@ -1,6 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from datetime import datetime
+from pathlib import Path
 from unittest.mock import ANY, MagicMock, patch
 from uuid import uuid4
 
@@ -43,7 +44,7 @@ class TestFixedRatePolicyCheckerUnit:
 @pytest.fixture
 def fxt_data_collector(fxt_active_pipeline_service) -> DataCollector:
     """Fixture to create a DataCollector instance with mocked dependencies."""
-    return DataCollector(fxt_active_pipeline_service)
+    return DataCollector(Path("data"), fxt_active_pipeline_service)
 
 
 class TestDataCollectorUnit:

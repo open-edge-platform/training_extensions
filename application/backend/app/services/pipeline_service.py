@@ -8,12 +8,11 @@ from uuid import UUID
 
 from sqlalchemy.orm import Session
 
-from app.db import get_db_session
 from app.repositories import PipelineRepository
 from app.schemas import Pipeline, PipelineStatus
 from app.schemas.metrics import InferenceMetrics, LatencyMetrics, PipelineMetrics, ThroughputMetrics, TimeWindow
 from app.services import ActivePipelineService
-from app.services.base import GenericPersistenceService, ResourceNotFoundError, ResourceType, ServiceConfig
+from app.services.base import ResourceNotFoundError, ResourceType
 from app.services.data_collect import DataCollector
 from app.services.mappers import PipelineMapper
 from app.services.metrics_service import MetricsService
@@ -29,14 +28,13 @@ class PipelineService:
         data_collector: DataCollector,
         metrics_service: MetricsService,
         config_changed_condition: Condition,
+        db_session: Session,
     ) -> None:
-        self._persistence: GenericPersistenceService[Pipeline, PipelineRepository] = GenericPersistenceService(
-            ServiceConfig(PipelineRepository, PipelineMapper, ResourceType.PIPELINE)
-        )
         self._active_pipeline_service: ActivePipelineService = active_pipeline_service
         self._data_collector: DataCollector = data_collector
         self._config_changed_condition: Condition = config_changed_condition
         self._metrics_service: MetricsService = metrics_service
+        self._db_session: Session = db_session
 
     def _notify_source_changed(self) -> None:
         with self._config_changed_condition:
@@ -50,33 +48,34 @@ class PipelineService:
         self._notify_sink_changed()
         self._data_collector.reload_policies()
 
-    def get_pipeline_by_id(self, project_id: UUID, db: Session | None = None) -> Pipeline:
+    def get_pipeline_by_id(self, project_id: UUID) -> Pipeline:
         """Retrieve a pipeline by project ID."""
-        pipeline = self._persistence.get_by_id(project_id, db)
+        pipeline_repo = PipelineRepository(self._db_session)
+        pipeline = pipeline_repo.get_by_id(str(project_id))
         if not pipeline:
             raise ResourceNotFoundError(ResourceType.PIPELINE, str(project_id))
-        return pipeline
+        return PipelineMapper.to_schema(pipeline)
 
     @parent_process_only
     def update_pipeline(self, project_id: UUID, partial_config: dict) -> Pipeline:
         """Update an existing pipeline."""
-        with get_db_session() as db:
-            pipeline = self.get_pipeline_by_id(project_id, db)
-            updated = self._persistence.update(pipeline, partial_config, db)
-            db.commit()
-            if pipeline.status == PipelineStatus.RUNNING and updated.status == PipelineStatus.RUNNING:
-                # If the pipeline source_id or sink_id is being updated while running
-                if pipeline.source.id != updated.source.id:  # type: ignore[union-attr] # source is always there for running pipeline
-                    self._notify_source_changed()
-                if pipeline.sink.id != updated.sink.id:  # type: ignore[union-attr] # sink is always there for running pipeline
-                    self._notify_sink_changed()
-                if pipeline.data_collection_policies != updated.data_collection_policies:
-                    self._active_pipeline_service.reload()
-                    self._data_collector.reload_policies()
-            elif pipeline.status != updated.status:
-                # If the pipeline is being activated or stopped
-                self._notify_pipeline_changed()
-            return updated
+        pipeline = self.get_pipeline_by_id(project_id)
+        to_update = pipeline.model_copy(update=partial_config)
+        pipeline_repo = PipelineRepository(self._db_session)
+        updated = PipelineMapper.to_schema(pipeline_repo.update(PipelineMapper.from_schema(to_update)))
+        if pipeline.status == PipelineStatus.RUNNING and updated.status == PipelineStatus.RUNNING:
+            # If the pipeline source_id or sink_id is being updated while running
+            if pipeline.source.id != updated.source.id:  # type: ignore[union-attr] # source is always there for running pipeline
+                self._notify_source_changed()
+            if pipeline.sink.id != updated.sink.id:  # type: ignore[union-attr] # sink is always there for running pipeline
+                self._notify_sink_changed()
+            if pipeline.data_collection_policies != updated.data_collection_policies:
+                self._active_pipeline_service.reload()
+                self._data_collector.reload_policies()
+        elif pipeline.status != updated.status:
+            # If the pipeline is being activated or stopped
+            self._notify_pipeline_changed()
+        return updated
 
     def get_pipeline_metrics(self, pipeline_id: UUID, time_window: int = 60) -> PipelineMetrics:
         """Calculate metrics for a pipeline over a specified time window."""

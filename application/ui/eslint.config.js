@@ -57,10 +57,10 @@ export default [
     },
     ...compat.extends('plugin:playwright/playwright-test').map((config) => ({
         ...config,
-        files: ['tests/features/**/*.ts', 'tests/utils/**/*.ts', 'tests/fixtures/**/*.ts', 'tests/e2e/**/*.ts'],
+        files: ['tests/**/*.ts'],
     })),
     {
-        files: ['tests/features/**/*.ts', 'tests/utils/**/*.ts', 'tests/fixtures/**/*.ts', 'tests/e2e/**/*.ts'],
+        files: ['tests/**/*.ts'],
 
         rules: {
             'playwright/no-wait-for-selector': ['off'],
