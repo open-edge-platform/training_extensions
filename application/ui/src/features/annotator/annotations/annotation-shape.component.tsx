@@ -15,7 +15,7 @@ export const AnnotationShape = ({ annotation }: AnnotationShapeProps) => {
     const { shape, labels } = annotation;
     const color = labels[0].color;
 
-    if (shape.shapeType === 'rect') {
+    if (shape.type === 'rectangle') {
         return (
             <rect
                 aria-label='annotation rect'

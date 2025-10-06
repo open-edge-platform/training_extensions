@@ -51,7 +51,7 @@ export const DrawingBox = ({ roi, zoom, image, onComplete }: DrawingBoxInterface
 
         const endPoint = clampPoint(getRelativePoint(ref.current, { x: event.clientX, y: event.clientY }, zoom));
 
-        setBoundingBox({ shapeType: 'rect', ...clampBox(pointsToRect(startPoint, endPoint), roi) });
+        setBoundingBox({ type: 'rectangle', ...clampBox(pointsToRect(startPoint, endPoint), roi) });
     };
 
     const onPointerDown = (event: PointerEvent<SVGSVGElement>): void => {
@@ -73,7 +73,7 @@ export const DrawingBox = ({ roi, zoom, image, onComplete }: DrawingBoxInterface
         event.currentTarget.setPointerCapture(event.pointerId);
 
         setStartPoint(mouse);
-        setBoundingBox({ shapeType: 'rect', x: mouse.x, y: mouse.y, width: 0, height: 0 });
+        setBoundingBox({ type: 'rectangle', x: mouse.x, y: mouse.y, width: 0, height: 0 });
     };
 
     const onPointerUp = (event: PointerEvent<SVGSVGElement>): void => {

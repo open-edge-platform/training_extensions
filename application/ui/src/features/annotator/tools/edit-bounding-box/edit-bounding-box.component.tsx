@@ -11,7 +11,7 @@ import { ResizeAnchor } from './resize-anchor.component';
 import { TranslateShape } from './translate-shape.component';
 
 interface EditBoundingBoxProps {
-    annotation: Annotation & { shape: { shapeType: 'rect' } };
+    annotation: Annotation & { shape: { type: 'rectangle' } };
     zoom: number;
 }
 

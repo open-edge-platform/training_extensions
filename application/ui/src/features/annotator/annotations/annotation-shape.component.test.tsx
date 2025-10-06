@@ -31,7 +31,7 @@ describe('AnnotationShape', () => {
             { x: 3, y: 4 },
             { x: 5, y: 6 },
         ];
-        const annotation = getMockedAnnotation({ shape: { shapeType: 'polygon', points } }) as AnnotationPolygon;
+        const annotation = getMockedAnnotation({ shape: { type: 'polygon', points } }) as AnnotationPolygon;
 
         render(<AnnotationShape annotation={annotation} />);
         const polygon = screen.getByLabelText('annotation polygon');

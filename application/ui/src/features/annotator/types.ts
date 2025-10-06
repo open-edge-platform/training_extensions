@@ -10,33 +10,15 @@ export interface RegionOfInterest {
     height: number;
 }
 
-export interface Point {
-    x: number;
-    y: number;
-}
-
-export interface Rect {
-    readonly shapeType: 'rect';
-    readonly x: number;
-    readonly y: number;
-    readonly width: number;
-    readonly height: number;
-}
-
-export interface Polygon {
-    readonly shapeType: 'polygon';
-    readonly points: Point[];
-}
+export type Point = components['schemas']['Point'];
+export type Rect = components['schemas']['Rectangle'];
+export type Polygon = components['schemas']['Polygon'];
 
 export type Shape = Rect | Polygon;
 
-export type Label = { id: string; name: string; color: string; isPrediction?: boolean; score?: number };
+export type Label = components['schemas']['Label'];
 
-export type Annotation = {
-    id: string;
-    shape: Shape;
-    labels: Array<Label>;
-};
+export type Annotation = components['schemas']['DatasetItemAnnotation-Input'];
 
 export type AnnotationState = {
     isHovered: boolean;
@@ -46,15 +28,15 @@ export type AnnotationState = {
 };
 
 // Circle is only used for visual purposes on segment-anything tool
-export interface Circle {
-    readonly shapeType: 'circle';
+export type Circle = {
+    readonly type: 'circle';
     readonly x: number;
     readonly y: number;
     readonly r: number;
-}
+};
 
-export interface ClipperPoint {
+export type ClipperPoint = {
     X: number;
     Y: number;
-}
+};
 export type DatasetItem = components['schemas']['DatasetItem'];
