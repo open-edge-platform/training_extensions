@@ -14,7 +14,7 @@ type WebhookProps = {
 };
 
 const initConfig: WebhookSinkConfig = {
-    id: 'webhook-id',
+    id: '',
     name: '',
     timeout: 0,
     sink_type: 'webhook',
