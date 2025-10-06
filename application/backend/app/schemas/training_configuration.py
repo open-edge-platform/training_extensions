@@ -34,7 +34,7 @@ class TrainingConfiguration(BaseModel):
             evaluation=hyperparameters.evaluation,
         )
 
-    # TODO: Add example values
+    # TODO: Add example values #4799
     model_config = {
         "json_schema_extra": {
             "example": {
