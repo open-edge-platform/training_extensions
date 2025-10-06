@@ -1,7 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Optional, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends, File, HTTPException, Query, UploadFile, status
@@ -92,15 +92,19 @@ def list_dataset_items(
     offset: Annotated[int, Query(ge=0)] = 0,
     start_date: Annotated[datetime | None, Query()] = None,
     end_date: Annotated[datetime | None, Query()] = None,
+    annotation_status: Annotated[
+        Optional[Literal["unannotated", "reviewed", "to_review"]],
+        Query(description="Filter dataset items by annotation status"),
+    ] = None,
 ) -> DatasetItemsWithPagination:
     """List the available dataset items and their metadata. This endpoint supports pagination."""
     if start_date is not None and end_date is not None and start_date > end_date:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Start date must be before end date."
         )
-    total = dataset_service.count_dataset_items(project_id=project_id, start_date=start_date, end_date=end_date)
+    total = dataset_service.count_dataset_items(project_id=project_id, start_date=start_date, end_date=end_date, annotation_status=annotation_status,)
     dataset_items = dataset_service.list_dataset_items(
-        project_id=project_id, limit=limit, offset=offset, start_date=start_date, end_date=end_date
+        project_id=project_id, limit=limit, offset=offset, start_date=start_date, end_date=end_date, annotation_status=annotation_status,
     )
     return DatasetItemsWithPagination(
         items=dataset_items,

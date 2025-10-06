@@ -1,7 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from datetime import UTC, datetime
-from typing import NamedTuple
+from typing import NamedTuple, Literal
 
 from sqlalchemy import Select, delete, func, select, update
 from sqlalchemy.orm import Session
@@ -36,22 +36,86 @@ class DatasetItemRepository:
             stmt = stmt.where(DatasetItemDB.created_at < end_date)
         return stmt
 
+    def _apply_annotation_status_filter(
+        self, stmt: Select, annotation_status: Literal["unannotated", "reviewed", "to_review"] | None
+    ) -> Select:
+        """Apply annotation status filter to SQL query statement.
+
+        Args:
+            stmt: Select statement to apply filters to.
+            annotation_status: Filter criteria for annotation status. Valid values are:
+                - "unannotated": Items with no annotation data
+                - "reviewed": Items with annotation data that have been user reviewed
+                - "to_review": Items with annotation data pending user review
+                - None: No filtering applied
+
+        Returns:
+            Select: Modified SQLAlchemy Select statement with annotation status filters applied.
+        """
+        if annotation_status == "unannotated":
+            stmt = stmt.where(DatasetItemDB.annotation_data.is_(None))
+        elif annotation_status == "reviewed":
+            stmt = stmt.where(
+                DatasetItemDB.annotation_data.is_not(None),
+                DatasetItemDB.user_reviewed.is_(True),
+            )
+        elif annotation_status == "to_review":
+            stmt = stmt.where(
+                DatasetItemDB.annotation_data.is_not(None),
+                DatasetItemDB.user_reviewed.is_(False),
+            )
+        return stmt
+
     def save(self, dataset_item_db: DatasetItemDB) -> DatasetItemDB:
+        """Save dataset item to database with updated timestamp.
+
+        Args:
+            dataset_item_db: DatasetItemDB instance to be saved.
+
+        Returns:
+            DatasetItemDB: The saved DatasetItemDB instance.
+        """
         dataset_item_db.updated_at = datetime.now(UTC)
         self.db.add(dataset_item_db)
         self.db.flush()
         return dataset_item_db
 
-    def count(self, start_date: datetime | None = None, end_date: datetime | None = None) -> int:
+    def count(
+        self, start_date: datetime | None = None, end_date: datetime | None = None, annotation_status: Literal["unannotated", "reviewed", "to_review"] | None = None,
+    ) -> int:
+        """Count dataset items matching specified filters.
+
+        Args:
+            start_date: Optional start date for filtering items by creation date.
+            end_date: Optional end date for filtering items by creation date.
+            annotation_status: Optional annotation status filter.
+
+        Returns:
+            int: Count of dataset items matching the specified filters.
+        """
         stmt = select(func.count()).select_from(DatasetItemDB).where(DatasetItemDB.project_id == self.project_id)
         stmt = self._apply_date_filters(stmt, start_date, end_date)
+        stmt = self._apply_annotation_status_filter(stmt, annotation_status)
         return self.db.scalar(stmt) or 0
 
     def list_items(
-        self, limit: int, offset: int, start_date: datetime | None = None, end_date: datetime | None = None
+        self, limit: int, offset: int, start_date: datetime | None = None, end_date: datetime | None = None, annotation_status: Literal["unannotated", "reviewed", "to_review"] | None = None,
     ) -> list[DatasetItemDB]:
+        """Retrieve paginated list of dataset items with optional filtering.
+
+        Args:
+            limit: Maximum number of items to return.
+            offset: Number of items to skip for pagination.
+            start_date: Optional start date for creation date filtering.
+            end_date: Optional end date for creation date filtering.
+            annotation_status: Optional annotation status filter.
+
+        Returns:
+            list[DatasetItemDB]: List of DatasetItemDB instances ordered by creation date (descending).
+        """
         stmt = self._base_select()
         stmt = self._apply_date_filters(stmt, start_date, end_date)
+        stmt = self._apply_annotation_status_filter(stmt, annotation_status)
         stmt = stmt.order_by(DatasetItemDB.created_at.desc()).offset(offset).limit(limit)
         return list(self.db.scalars(stmt).all())
 
