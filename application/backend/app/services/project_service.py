@@ -7,7 +7,7 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 
 from app.repositories import DatasetItemRepository, PipelineRepository, ProjectRepository
-from app.repositories.base import UniqueConstraintIntegrityError, PrimaryKeyIntegrityError
+from app.repositories.base import PrimaryKeyIntegrityError, UniqueConstraintIntegrityError
 from app.schemas import Project
 from app.services.base import ResourceInUseError, ResourceNotFoundError, ResourceType, ResourceWithIdAlreadyExistsError
 from app.services.label_service import DuplicateLabelsError
