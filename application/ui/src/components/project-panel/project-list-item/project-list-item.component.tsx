@@ -114,7 +114,7 @@ export const ProjectListItem = ({ project, isInEditMode, onBlur, onRename, onDel
 
     const handleAction = (key: Key) => {
         if (key === PROJECT_ACTIONS.RENAME) {
-            onRename(project.id || '');
+            onRename(project.id);
         } else if (key === PROJECT_ACTIONS.DELETE) {
             setIsDeleteDialogOpen(true);
         }
@@ -125,11 +125,11 @@ export const ProjectListItem = ({ project, isInEditMode, onBlur, onRename, onDel
     };
 
     const handleDelete = () => {
-        onDelete(project.id || '');
+        onDelete(project.id);
     };
 
     const handleNavigateToProject = () => {
-        navigate(paths.project.details({ projectId: project.id || '' }));
+        navigate(paths.project.details({ projectId: project.id }));
     };
 
     return (
@@ -137,7 +137,7 @@ export const ProjectListItem = ({ project, isInEditMode, onBlur, onRename, onDel
             <li className={styles.projectListItem} onClick={isInEditMode ? undefined : handleNavigateToProject}>
                 <Flex justifyContent='space-between' alignItems='center' marginX={'size-200'}>
                     {isInEditMode ? (
-                        <ProjectEdition name={project.name} onBlur={handleBlur(project.id || '')} />
+                        <ProjectEdition name={project.name} onBlur={handleBlur(project.id)} />
                     ) : (
                         <Flex alignItems={'center'} gap={'size-100'}>
                             <PhotoPlaceholder
