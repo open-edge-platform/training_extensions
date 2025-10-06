@@ -21,6 +21,7 @@ from app.schemas.dataset_item import (
     DatasetItemAnnotation,
     DatasetItemAnnotationsWithSource,
     DatasetItemSubset,
+    AnnotationStatus
 )
 from app.schemas.project import TaskType
 from app.schemas.shape import FullImage, Polygon, Rectangle
@@ -140,7 +141,7 @@ class DatasetService:
         project_id: UUID,
         start_date: datetime | None = None,
         end_date: datetime | None = None,
-        annotation_status: str | None = None,
+        annotation_status: AnnotationStatus | None = None,
     ) -> int:
         """Get number of available dataset items (within date range if specified)"""
         repo = DatasetItemRepository(project_id=str(project_id), db=self._db_session)
@@ -153,14 +154,20 @@ class DatasetService:
         offset: int = 0,
         start_date: datetime | None = None,
         end_date: datetime | None = None,
-        annotation_status: str | None = None,
+        annotation_status: AnnotationStatus | None = None,
     ) -> list[DatasetItem]:
         """Get information about available dataset items"""
         repo = DatasetItemRepository(project_id=str(project_id), db=self._db_session)
         return [
             self.mapper.to_schema(db)
-            for db in repo.list_items(limit=limit, offset=offset, start_date=start_date, end_date=end_date, annotation_status=annotation_status)
+            for db in repo.list_items(
+                        limit=limit,
+                        offset=offset,
+                        start_date=start_date,
+                        end_date=end_date,
+                        annotation_status=annotation_status)
         ]
+
     def get_dataset_item_by_id(self, project_id: UUID, dataset_item_id: UUID) -> DatasetItem:
         """Get a dataset item by its ID"""
         repo = DatasetItemRepository(project_id=str(project_id), db=self._db_session)

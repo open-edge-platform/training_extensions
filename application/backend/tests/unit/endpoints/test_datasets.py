@@ -95,7 +95,7 @@ class TestDatasetItemEndpoints:
         fxt_dataset_service.list_dataset_items.return_value = [fxt_dataset_item]
 
         response = fxt_client.get(
-            f"/api/projects/{str(project_id)}/dataset/items?limit=50&offset=2&start_date=2025-01-09T00:00:00Z&end_date=2025-12-31T23:59:59Z"
+            f"/api/projects/{str(project_id)}/dataset/items?limit=50&offset=2&start_date=2025-01-09T00:00:00Z&end_date=2025-12-31T23:59:59Z&annotation_status=reviewed"
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -103,6 +103,7 @@ class TestDatasetItemEndpoints:
             project_id=project_id,
             start_date=datetime(2025, 1, 9, 0, 0, 0, tzinfo=ZoneInfo("UTC")),
             end_date=datetime(2025, 12, 31, 23, 59, 59, tzinfo=ZoneInfo("UTC")),
+            annotation_status='reviewed',
         )
         fxt_dataset_service.list_dataset_items.assert_called_once_with(
             project_id=project_id,
@@ -110,11 +111,14 @@ class TestDatasetItemEndpoints:
             offset=2,
             start_date=datetime(2025, 1, 9, 0, 0, 0, tzinfo=ZoneInfo("UTC")),
             end_date=datetime(2025, 12, 31, 23, 59, 59, tzinfo=ZoneInfo("UTC")),
+            annotation_status='reviewed',
         )
 
     @pytest.mark.parametrize("limit", [1000, 0, -20])
     def test_list_dataset_items_wrong_limit(self, fxt_dataset_service, fxt_client, limit):
-        response = fxt_client.get(f"/api/projects/{uuid4()}/dataset/items?limit=${limit}")
+        response = fxt_client.get(f"/api/projects/{uuid4()}/dataset/items?limit={limit}&annotation_status=None")
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        fxt_dataset_service.list_dataset_items.assert_not_called()
 
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
         fxt_dataset_service.list_dataset_items.assert_not_called()

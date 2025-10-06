@@ -1,7 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from datetime import UTC, datetime
-from typing import NamedTuple, Literal
+from typing import NamedTuple
 
 from sqlalchemy import Select, delete, func, select, update
 from sqlalchemy.orm import Session
@@ -37,9 +37,7 @@ class DatasetItemRepository:
             stmt = stmt.where(DatasetItemDB.created_at < end_date)
         return stmt
 
-    def _apply_annotation_status_filter(
-        self, stmt: Select, annotation_status: AnnotationStatus | None
-    ) -> Select:
+    def _apply_annotation_status_filter(self, stmt: Select, annotation_status: str | None) -> Select:
         """Apply annotation status filter to SQL query statement.
 
         Args:
@@ -82,7 +80,10 @@ class DatasetItemRepository:
         return dataset_item_db
 
     def count(
-        self, start_date: datetime | None = None, end_date: datetime | None = None, annotation_status: AnnotationStatus | None = None,
+        self,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+        annotation_status: AnnotationStatus | None = None,
     ) -> int:
         """Count dataset items matching specified filters.
 
@@ -94,13 +95,20 @@ class DatasetItemRepository:
         Returns:
             int: Count of dataset items matching the specified filters.
         """
-        stmt = select(func.count()).select_from(DatasetItemDB).where(DatasetItemDB.project_id == self.project_id)
+        stmt = select(func.count()) \
+                .select_from(DatasetItemDB) \
+                .where(DatasetItemDB.project_id == self.project_id)
         stmt = self._apply_date_filters(stmt, start_date, end_date)
         stmt = self._apply_annotation_status_filter(stmt, annotation_status)
         return self.db.scalar(stmt) or 0
 
     def list_items(
-        self, limit: int, offset: int, start_date: datetime | None = None, end_date: datetime | None = None, annotation_status: AnnotationStatus | None = None,
+        self,
+        limit: int,
+        offset: int,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+        annotation_status: AnnotationStatus | None = None,
     ) -> list[DatasetItemDB]:
         """Retrieve paginated list of dataset items with optional filtering.
 
@@ -112,7 +120,8 @@ class DatasetItemRepository:
             annotation_status: Optional annotation status filter.
 
         Returns:
-            list[DatasetItemDB]: List of DatasetItemDB instances ordered by creation date (descending).
+            list[DatasetItemDB]: List of DatasetItemDB instances
+                        ordered by creation date (descending).
         """
         stmt = self._base_select()
         stmt = self._apply_date_filters(stmt, start_date, end_date)

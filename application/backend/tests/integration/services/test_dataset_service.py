@@ -234,6 +234,7 @@ class TestDatasetServiceIntegration:
             offset=offset,
             start_date=start_date,
             end_date=end_date,
+            annotation_status=None,
         )
         assert (
             len(dataset_items) == 0
