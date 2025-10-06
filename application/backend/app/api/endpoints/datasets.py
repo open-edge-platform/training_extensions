@@ -11,7 +11,7 @@ from starlette.responses import FileResponse
 from app.api.dependencies import get_dataset_item_id, get_dataset_service, get_file_name_and_extension, get_project_id
 from app.schemas import DatasetItem, DatasetItemsWithPagination
 from app.schemas.base import Pagination
-from app.schemas.dataset_item import DatasetItemAnnotation, DatasetItemAnnotations, DatasetItemAnnotationsWithSource
+from app.schemas.dataset_item import DatasetItemAnnotation, DatasetItemAnnotations, DatasetItemAnnotationsWithSource, AnnotationStatus
 from app.services import DatasetService, ResourceNotFoundError
 from app.services.dataset_service import AnnotationValidationError, InvalidImageError
 
@@ -92,10 +92,7 @@ def list_dataset_items(
     offset: Annotated[int, Query(ge=0)] = 0,
     start_date: Annotated[datetime | None, Query()] = None,
     end_date: Annotated[datetime | None, Query()] = None,
-    annotation_status: Annotated[
-        Optional[Literal["unannotated", "reviewed", "to_review"]],
-        Query(description="Filter dataset items by annotation status"),
-    ] = None,
+    annotation_status: Annotated[Optional[AnnotationStatus], Query(description="Filter dataset items by annotation status"), ] = None,
 ) -> DatasetItemsWithPagination:
     """List the available dataset items and their metadata. This endpoint supports pagination."""
     if start_date is not None and end_date is not None and start_date > end_date:

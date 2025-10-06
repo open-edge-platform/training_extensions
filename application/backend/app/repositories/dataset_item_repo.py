@@ -7,6 +7,7 @@ from sqlalchemy import Select, delete, func, select, update
 from sqlalchemy.orm import Session
 
 from app.db.schema import DatasetItemDB
+from app.schemas.dataset_item import AnnotationStatus
 
 
 class UpdateDatasetItemAnnotation(NamedTuple):
@@ -37,7 +38,7 @@ class DatasetItemRepository:
         return stmt
 
     def _apply_annotation_status_filter(
-        self, stmt: Select, annotation_status: Literal["unannotated", "reviewed", "to_review"] | None
+        self, stmt: Select, annotation_status: AnnotationStatus | None
     ) -> Select:
         """Apply annotation status filter to SQL query statement.
 
@@ -52,14 +53,14 @@ class DatasetItemRepository:
         Returns:
             Select: Modified SQLAlchemy Select statement with annotation status filters applied.
         """
-        if annotation_status == "unannotated":
+        if annotation_status == AnnotationStatus.UNANNOTATED:
             stmt = stmt.where(DatasetItemDB.annotation_data.is_(None))
-        elif annotation_status == "reviewed":
+        elif annotation_status == AnnotationStatus.REVIEWED:
             stmt = stmt.where(
                 DatasetItemDB.annotation_data.is_not(None),
                 DatasetItemDB.user_reviewed.is_(True),
             )
-        elif annotation_status == "to_review":
+        elif annotation_status == AnnotationStatus.TO_REVIEW:
             stmt = stmt.where(
                 DatasetItemDB.annotation_data.is_not(None),
                 DatasetItemDB.user_reviewed.is_(False),
@@ -81,7 +82,7 @@ class DatasetItemRepository:
         return dataset_item_db
 
     def count(
-        self, start_date: datetime | None = None, end_date: datetime | None = None, annotation_status: Literal["unannotated", "reviewed", "to_review"] | None = None,
+        self, start_date: datetime | None = None, end_date: datetime | None = None, annotation_status: AnnotationStatus | None = None,
     ) -> int:
         """Count dataset items matching specified filters.
 
@@ -99,7 +100,7 @@ class DatasetItemRepository:
         return self.db.scalar(stmt) or 0
 
     def list_items(
-        self, limit: int, offset: int, start_date: datetime | None = None, end_date: datetime | None = None, annotation_status: Literal["unannotated", "reviewed", "to_review"] | None = None,
+        self, limit: int, offset: int, start_date: datetime | None = None, end_date: datetime | None = None, annotation_status: AnnotationStatus | None = None,
     ) -> list[DatasetItemDB]:
         """Retrieve paginated list of dataset items with optional filtering.
 
