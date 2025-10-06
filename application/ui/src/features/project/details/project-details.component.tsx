@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Divider, Flex, Grid, Heading, repeat, Text, View } from '@geti/ui';
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { capitalize, startsWith } from 'lodash-es';
 import { Fragment } from 'react/jsx-runtime';
 
 import { $api } from '../../../api/client';
-import { useProjectIdentifier } from '../../../hooks/use-project-identifier.hook';
 import Background from './../../../assets/background.png';
 
 type FieldProps = {

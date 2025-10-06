@@ -1,24 +1,38 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Checkbox, CheckboxGroup } from '@geti/ui';
+import { Checkbox, Flex } from '@geti/ui';
 
-import { OutputFormat } from './utils';
+import { OutputFormat, SinkOutputFormats } from './utils';
 
-import classes from './output-formats.module.scss';
+type OutputFormatsProps = {
+    config?: SinkOutputFormats;
+};
 
-export const OutputFormats = () => {
+export const OutputFormats = ({ config = [] }: OutputFormatsProps) => {
     return (
-        <CheckboxGroup label='Output Formats' UNSAFE_className={classes.checkboxGroup}>
-            <Checkbox name='output_formats' value={OutputFormat.PREDICTIONS}>
+        <Flex wrap='wrap' gap='size-100'>
+            <Checkbox
+                name='output_formats'
+                value={OutputFormat.PREDICTIONS}
+                defaultSelected={config?.includes(OutputFormat.PREDICTIONS)}
+            >
                 Predictions
             </Checkbox>
-            <Checkbox name='output_formats' value={OutputFormat.IMAGE_ORIGINAL}>
+            <Checkbox
+                name='output_formats'
+                value={OutputFormat.IMAGE_ORIGINAL}
+                defaultSelected={config?.includes(OutputFormat.IMAGE_ORIGINAL)}
+            >
                 Image Original
             </Checkbox>
-            <Checkbox name='output_formats' value={OutputFormat.IMAGE_WITH_PREDICTIONS}>
+            <Checkbox
+                name='output_formats'
+                value={OutputFormat.IMAGE_WITH_PREDICTIONS}
+                defaultSelected={config?.includes(OutputFormat.IMAGE_WITH_PREDICTIONS)}
+            >
                 Image with Predictions
             </Checkbox>
-        </CheckboxGroup>
+        </Flex>
     );
 };

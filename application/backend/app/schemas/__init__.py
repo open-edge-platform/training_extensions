@@ -7,7 +7,7 @@ from app.schemas.metrics import InferenceMetrics, LatencyMetrics, PipelineMetric
 from app.schemas.model import Model, ModelFormat
 from app.schemas.model_architecture import ModelArchitectures
 from app.schemas.pipeline import DataCollectionPolicy, Pipeline, PipelineStatus
-from app.schemas.project import Project
+from app.schemas.project import Project, ProjectUpdateName
 from app.schemas.sink import DisconnectedSinkConfig, OutputFormat, Sink, SinkType
 from app.schemas.source import DisconnectedSourceConfig, Source, SourceType
 
@@ -29,6 +29,7 @@ __all__ = [
     "PipelineMetrics",
     "PipelineStatus",
     "Project",
+    "ProjectUpdateName",
     "Sink",
     "SinkType",
     "Source",

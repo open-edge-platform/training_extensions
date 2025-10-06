@@ -13,7 +13,7 @@ import { Label } from '../../annotator/types';
 import { LabelSelection } from '../label-selection/label-selection.component';
 import { TaskType } from '../task-selection/interface';
 import { TaskSelection } from '../task-selection/task-selection.component';
-import { ProjectName } from './project-name';
+import { ProjectName } from './project-name.component';
 
 import classes from './create-project-form.module.scss';
 

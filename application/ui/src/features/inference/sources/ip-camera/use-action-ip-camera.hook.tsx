@@ -4,52 +4,32 @@
 import { useActionState } from 'react';
 
 import { toast } from '@geti/ui';
-import { omit } from 'lodash-es';
 
 import { $api } from '../../../../api/client';
 import { useProjectIdentifier } from '../../../../hooks/use-project-identifier.hook';
-import { ImagesFolderSourceConfig } from '../util';
+import { useSourceMutation } from '../hooks/use-source-mutation.hook';
+import { IPCameraSourceConfig } from '../util';
 
-const iniConfig: ImagesFolderSourceConfig = {
+const iniConfig: IPCameraSourceConfig = {
     name: '',
-    source_type: 'images_folder',
-    images_folder_path: '',
-    ignore_existing_images: false,
-};
-
-const useMutationSource = (isNewSource: boolean) => {
-    const addSource = $api.useMutation('post', '/api/sources');
-    const updateSource = $api.useMutation('patch', '/api/sources/{source_id}');
-
-    return async (body: ImagesFolderSourceConfig) => {
-        if (isNewSource) {
-            const response = await addSource.mutateAsync({ body: omit(body, 'id') });
-
-            return String(response.id);
-        }
-
-        const response = await updateSource.mutateAsync({
-            params: { path: { source_id: String(body.id) } },
-            body: omit(body, 'source_type'),
-        });
-
-        return String(response.id);
-    };
+    source_type: 'ip_camera',
+    stream_url: '',
+    auth_required: false,
 };
 
 export const useActionImageFolder = (config = iniConfig, isNewSource = false) => {
     const projectId = useProjectIdentifier();
     const pipeline = $api.useMutation('patch', '/api/projects/{project_id}/pipeline');
-    const addOrUpdateSource = useMutationSource(isNewSource);
+    const addOrUpdateSource = useSourceMutation(isNewSource);
 
-    return useActionState<ImagesFolderSourceConfig, FormData>(async (_prevState, formData) => {
+    return useActionState<IPCameraSourceConfig, FormData>(async (_prevState, formData) => {
         const body = {
             id: String(formData.get('id')),
             name: formData.get('name'),
-            source_type: 'images_folder',
-            images_folder_path: formData.get('images_folder_path'),
-            ignore_existing_images: formData.get('ignore_existing_images') === 'on' ? true : false,
-        } as ImagesFolderSourceConfig;
+            source_type: 'ip_camera',
+            stream_url: formData.get('stream_url'),
+            auth_required: formData.get('auth_required') === 'on' ? true : false,
+        } as unknown as IPCameraSourceConfig;
 
         try {
             const source_id = await addOrUpdateSource(body);

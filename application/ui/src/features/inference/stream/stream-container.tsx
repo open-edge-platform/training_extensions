@@ -9,7 +9,7 @@ import { Play } from '@geti/ui/icons';
 import { Stream } from './stream';
 import { useWebRTCConnection } from './web-rtc-connection-provider';
 
-import classes from '../inference.module.scss';
+import classes from './stream.module.scss';
 
 export const StreamContainer = () => {
     const [size, setSize] = useState({ height: 608, width: 892 });

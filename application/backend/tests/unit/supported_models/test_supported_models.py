@@ -3,7 +3,7 @@
 
 import pytest
 
-from app.supported_models import NullModelManifest, SupportedModels
+from app.supported_models import SupportedModels
 
 
 class TestSupportedModels:
@@ -24,6 +24,5 @@ class TestSupportedModels:
     def test_get_model_manifest_by_id(self, model_manifest_id, expected_task) -> None:
         model_manifest = SupportedModels.get_model_manifest_by_id(model_manifest_id)
 
-        assert not isinstance(model_manifest, NullModelManifest)
         assert model_manifest.id == model_manifest_id
         assert model_manifest.task == expected_task

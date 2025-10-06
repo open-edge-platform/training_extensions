@@ -1,7 +1,8 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from datetime import datetime
-from unittest.mock import MagicMock, patch
+from pathlib import Path
+from unittest.mock import ANY, MagicMock, patch
 from uuid import uuid4
 
 import numpy as np
@@ -43,7 +44,7 @@ class TestFixedRatePolicyCheckerUnit:
 @pytest.fixture
 def fxt_data_collector(fxt_active_pipeline_service) -> DataCollector:
     """Fixture to create a DataCollector instance with mocked dependencies."""
-    return DataCollector(fxt_active_pipeline_service)
+    return DataCollector(Path("data"), fxt_active_pipeline_service)
 
 
 class TestDataCollectorUnit:
@@ -90,7 +91,7 @@ class TestDataCollectorUnit:
         # Arrange
         source_id = uuid4()
         project = MagicMock()
-        frame_data = np.random.rand(100, 100, 3)
+        frame_data = np.random.randint(low=0, high=255, size=(100, 100), dtype=np.uint8)
         inference_data = MagicMock()
 
         now = datetime.timestamp(datetime.now())
@@ -119,13 +120,13 @@ class TestDataCollectorUnit:
 
         # Assert
         mock_convert_prediction.assert_called_once_with(
-            labels=project.task.labels, frame_data=frame_data, prediction=inference_data.prediction
+            labels=project.task.labels, frame_data=ANY, prediction=inference_data.prediction
         )
         mock_create_dataset_item.assert_called_once_with(
             project_id=project.id,
             name="1735689601_0000",
             format=DatasetItemFormat.JPG,
-            data=frame_data,
+            data=ANY,
             user_reviewed=False,
             source_id=source_id,
             prediction_model_id=inference_data.model_id,
@@ -140,7 +141,7 @@ class TestDataCollectorUnit:
         # Arrange
         source_id = uuid4()
         project = MagicMock()
-        frame_data = np.random.rand(100, 100, 3)
+        frame_data = np.random.randint(low=0, high=255, size=(100, 100), dtype=np.uint8)
         inference_data = MagicMock()
 
         now = datetime.timestamp(datetime.now())
@@ -169,13 +170,13 @@ class TestDataCollectorUnit:
 
         # Assert
         mock_convert_prediction.assert_called_once_with(
-            labels=project.task.labels, frame_data=frame_data, prediction=inference_data.prediction
+            labels=project.task.labels, frame_data=ANY, prediction=inference_data.prediction
         )
         mock_create_dataset_item.assert_called_once_with(
             project_id=project.id,
             name="1735689601_0000",
             format=DatasetItemFormat.JPG,
-            data=frame_data,
+            data=ANY,
             user_reviewed=False,
             source_id=source_id,
             prediction_model_id=inference_data.model_id,

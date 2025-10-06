@@ -3,7 +3,8 @@
 
 from uuid import UUID
 
-from app.db import get_db_session
+from sqlalchemy.orm import Session
+
 from app.db.schema import LabelDB
 from app.repositories import LabelRepository
 from app.repositories.base import UniqueConstraintIntegrityError
@@ -28,8 +29,11 @@ class DuplicateLabelsError(Exception):
 
 
 class LabelService:
-    @staticmethod
+    def __init__(self, db_session: Session):
+        self._db_session = db_session
+
     def update_labels_in_project(
+        self,
         project_id: UUID,
         labels_to_add: list[Label] | None,
         labels_to_update: list[Label] | None,
@@ -80,16 +84,14 @@ class LabelService:
             Uniqueness constraints are enforced at the database level for name and hotkey within each project.
         """
         try:
-            with get_db_session() as db:
-                label_repo = LabelRepository(project_id=str(project_id), db=db)
-                if labels_to_update:
-                    label_repo.update_batch(_convert_labels_to_db(labels_to_update, project_id))
-                if label_ids_to_remove:
-                    label_repo.delete_batch([str(lid) for lid in label_ids_to_remove])
-                if labels_to_add:
-                    label_repo.save_batch(_convert_labels_to_db(labels_to_add, project_id))
-                db.commit()
-                label_dbs = label_repo.list_all()
-                return [LabelMapper.to_schema(label_db) for label_db in label_dbs]
+            label_repo = LabelRepository(project_id=str(project_id), db=self._db_session)
+            if labels_to_update:
+                label_repo.update_batch(_convert_labels_to_db(labels_to_update, project_id))
+            if label_ids_to_remove:
+                label_repo.delete_batch([str(lid) for lid in label_ids_to_remove])
+            if labels_to_add:
+                label_repo.save_batch(_convert_labels_to_db(labels_to_add, project_id))
+            label_dbs = label_repo.list_all()
+            return [LabelMapper.to_schema(label_db) for label_db in label_dbs]
         except UniqueConstraintIntegrityError:
             raise DuplicateLabelsError

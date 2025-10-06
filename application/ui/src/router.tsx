@@ -4,9 +4,9 @@
 import { Suspense } from 'react';
 
 import { Loading } from '@geti/ui';
-import { redirect } from 'react-router';
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 
+import { $api } from './api/client';
 import { ZoomProvider } from './components/zoom/zoom';
 import { paths } from './constants/paths';
 import { WebRTCConnectionProvider } from './features/inference/stream/web-rtc-connection-provider';
@@ -20,63 +20,87 @@ import { Models } from './routes/models/models';
 import { CreateProject } from './routes/project/create-project';
 import { ViewProject } from './routes/project/view-project';
 
+const Redirect = () => {
+    let path = paths.project.index({});
+
+    const { data: projects } = $api.useSuspenseQuery('get', '/api/projects');
+
+    // No projects -> Go to create project
+    if (!projects || projects.length === 0) {
+        path = paths.project.new({});
+
+        // Only 1 project -> Redirect to the inference page
+    } else if (projects.length === 1) {
+        const projectId = projects[0].id;
+
+        if (projectId) {
+            path = paths.project.inference({ projectId });
+        } else {
+            path = paths.project.new({});
+        }
+    } else {
+        // More than 1 project -> Load index page (/projects)
+        path = paths.project.index({});
+    }
+
+    return <Navigate to={path} replace />;
+};
+
 export const router = createBrowserRouter([
-    {
-        path: paths.project.index.pattern,
-        element: (
-            <Suspense fallback={<Loading mode='fullscreen' />}>
-                <ProjectList />
-            </Suspense>
-        ),
-    },
-    {
-        path: paths.project.new.pattern,
-        element: <CreateProject />,
-    },
-    {
-        path: paths.project.details.pattern,
-        element: <ViewProject />,
-    },
     {
         path: paths.root.pattern,
         element: (
             <Suspense fallback={<Loading mode='fullscreen' />}>
-                <Layout />
+                <Outlet />
             </Suspense>
         ),
         errorElement: <ErrorPage />,
         children: [
             {
                 index: true,
-                loader: () => {
-                    // TODO: If there is no project configured then redirect to new project creation
-                    // else redirect to inference
-                    return redirect(paths.project.index({}));
-                },
+                element: <Redirect />,
             },
             {
-                path: paths.project.inference.pattern,
-                element: (
-                    <WebRTCConnectionProvider>
-                        <ZoomProvider>
-                            <Inference />
-                        </ZoomProvider>
-                    </WebRTCConnectionProvider>
-                ),
+                path: paths.project.index.pattern,
+                element: <ProjectList />,
             },
             {
-                path: paths.project.dataset.pattern,
-                element: (
-                    <ZoomProvider>
-                        <SelectedDataProvider>
-                            <Dataset />
-                        </SelectedDataProvider>
-                    </ZoomProvider>
-                ),
+                path: paths.project.new.pattern,
+                element: <CreateProject />,
             },
             {
-                path: paths.project.models.pattern,
-                element: <Models />,
+                path: paths.project.details.pattern,
+                element: <Layout />,
+                children: [
+                    {
+                        index: true,
+                        element: <ViewProject />,
+                    },
+                    {
+                        path: paths.project.inference.pattern,
+                        element: (
+                            <WebRTCConnectionProvider>
+                                <ZoomProvider>
+                                    <Inference />
+                                </ZoomProvider>
+                            </WebRTCConnectionProvider>
+                        ),
+                    },
+                    {
+                        path: paths.project.dataset.pattern,
+                        element: (
+                            <ZoomProvider>
+                                <SelectedDataProvider>
+                                    <Dataset />
+                                </SelectedDataProvider>
+                            </ZoomProvider>
+                        ),
+                    },
+                    {
+                        path: paths.project.models.pattern,
+                        element: <Models />,
+                    },
+                ],
             },
         ],
     },

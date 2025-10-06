@@ -1,14 +1,15 @@
+<!-- Contributing guide: https://github.com/open-edge-platform/training_extensions/blob/develop/CONTRIBUTING.md -->
+
 ### Summary
 
 <!--
+Please add a summary of changes. You may use Copilot to auto-generate the PR description but please consider
+including any other relevant facts which Copilot may be unaware of (such as design choices and testing procedure).
+
+Add references to the relevant issues and pull requests if any like so:
+
 Resolves #111 and #222.
 Depends on #1000 (for series of dependent commits).
-
-This PR introduces this capability to make the project better in this and that.
-
-- Added this feature
-- Removed that feature
-- Fixed the problem #1234
 -->
 
 ### How to test
@@ -20,20 +21,8 @@ not fully covered by unit tests or manual testing can be complicated. -->
 
 <!-- Put an 'x' in all the boxes that apply -->
 
-- [ ] I have added unit tests to cover my changes.​
-- [ ] I have added integration tests to cover my changes.​
-- [ ] I have ran e2e tests and there is no issues.
-- [ ] I have added the description of my changes into CHANGELOG in my target branch (e.g., [CHANGELOG](https://github.com/open-edge-platform/training_extensions/blob/develop/CHANGELOG.md) in develop).​
-- [ ] I have updated the documentation in my target branch accordingly (e.g., [documentation](https://github.com/open-edge-platform/training_extensions/tree/develop/docs) in develop).
-- [ ] I have [linked related issues](https://help.github.com/en/github/managing-your-work-on-github/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword).
-
-### License
-
-- [ ] I submit _my code changes_ under the same [Apache License](https://github.com/open-edge-platform/training_extensions/blob/develop/LICENSE) that covers the project.
-      Feel free to contact the maintainers if that's a concern.
-- [ ] I have updated the license header for each file (see an example below).
-
-```python
-# Copyright (C) 2025 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
-```
+- [ ] The PR title and description are clear and descriptive
+- [ ] I have manually tested the changes
+- [ ] All changes are covered by automated tests
+- [ ] All related issues are linked to this PR (if applicable)
+- [ ] Documentation has been updated (if applicable)

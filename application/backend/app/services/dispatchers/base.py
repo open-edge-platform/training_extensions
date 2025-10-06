@@ -4,7 +4,7 @@
 import base64
 import time
 from abc import ABCMeta, abstractmethod
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 import cv2
@@ -68,7 +68,7 @@ class BaseDispatcher(metaclass=ABCMeta):
     ) -> dict[str, Any]:
         """Create a JSON payload with the requested output formats."""
         result: dict[str, Any] = {}
-        payload = {"timestamp": datetime.now().isoformat(), "result": result}
+        payload = {"timestamp": datetime.now(UTC).isoformat(), "result": result}
 
         if OutputFormat.IMAGE_ORIGINAL in self.output_formats:
             result[OutputFormat.IMAGE_ORIGINAL] = {

@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { SchemaProjectInput } from '../../../api/openapi-spec';
+import { SchemaProjectInput } from '../src/api/openapi-spec';
 
 export const mockedProjects: SchemaProjectInput[] = [
     {
