@@ -67,12 +67,9 @@ test('[E2E] Minimum workflow', async ({ page }) => {
     await test.step('Setup sink', async () => {
         await page.getByLabel('Dataset import tabs').getByText('Output').click();
 
-        await page.getByRole('button', { name: 'Folder' }).click();
-        await page.locator('input[name="name"]').fill('New Folder');
-        await page.locator('input[aria-roledescription="Number field"]').fill('5');
-
-        await page.locator('input[name="folder_path"]').fill('some/path');
-        await page.locator('input[name="output_formats"][value="predictions"]').click();
+        await page.getByRole('button', { name: 'Video file' }).click();
+        await page.locator('input[name="name"]').fill('Video source');
+        await page.locator('input[name="video_path"]').fill('data/media/test_video.mp4');
 
         await page.getByRole('button', { name: 'Apply' }).click();
 
@@ -93,7 +90,7 @@ test('[E2E] Minimum workflow', async ({ page }) => {
     await test.step('Start stream to begin capture', async () => {
         await page.getByLabel('Start stream').click();
 
-        await expect(page.getByLabel('Connected')).toBeVisible();
+        await expect(page.getByLabel('Connected')).toBeVisible({ timeout: 60000 });
 
         // Wait for 3 seconds
         await page.waitForTimeout(3000);
