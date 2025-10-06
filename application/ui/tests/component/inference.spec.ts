@@ -4,7 +4,7 @@
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 
-import { expect, http, test } from './component/fixtures';
+import { expect, http, test } from './fixtures';
 
 test.describe('Inference', () => {
     test.beforeEach(({ network }) => {
