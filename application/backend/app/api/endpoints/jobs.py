@@ -10,7 +10,7 @@ from app.api.dependencies import get_model_service, get_project_id
 from app.schemas import JobRequest, JobResponse
 from app.services import ModelService, ResourceNotFoundError
 
-router = APIRouter(prefix="/api/jobs", tags=["Models"])
+router = APIRouter(prefix="/api/jobs", tags=["Jobs"])
 
 
 @router.post(
