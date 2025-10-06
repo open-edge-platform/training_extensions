@@ -12,9 +12,10 @@ from fastapi import APIRouter, Body, Depends, File, UploadFile, status
 from fastapi.exceptions import HTTPException
 from fastapi.openapi.models import Example
 from fastapi.responses import FileResponse, Response
+from pydantic import ValidationError
 
 from app.api.dependencies import get_configuration_service, get_sink_id
-from app.schemas import Sink, SinkCreate, SinkType
+from app.schemas import Sink, SinkCreate
 from app.schemas.sink import SinkCreateAdapter
 from app.services import ConfigurationService, ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError
 
@@ -79,7 +80,7 @@ UPDATE_SINK_BODY_EXAMPLES = {
     response_model=Sink,
     responses={
         status.HTTP_201_CREATED: {"description": "Sink created"},
-        status.HTTP_400_BAD_REQUEST: {"description": "Invalid sink ID or request body"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid sink ID"},
         status.HTTP_409_CONFLICT: {"description": "Sink already exists"},
     },
 )
@@ -90,12 +91,6 @@ def create_sink(
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> Sink:
     """Create and configure a new sink"""
-    if sink_create.sink_type == SinkType.DISCONNECTED:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="The sink with sink_type=DISCONNECTED cannot be created",
-        )
-
     try:
         return configuration_service.create_sink(sink_create)
     except ResourceAlreadyExistsError as e:
@@ -202,8 +197,9 @@ def export_sink(
     status_code=status.HTTP_201_CREATED,
     responses={
         status.HTTP_201_CREATED: {"description": "Sink imported successfully", "model": Sink},
-        status.HTTP_400_BAD_REQUEST: {"description": "Invalid YAML format or sink type is DISCONNECTED"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid YAML format"},
         status.HTTP_409_CONFLICT: {"description": "Sink already exists"},
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Validation error(s)"},
     },
 )
 def import_sink(
@@ -214,18 +210,14 @@ def import_sink(
     try:
         yaml_content = yaml_file.file.read()
         sink_data = yaml.safe_load(yaml_content)
-
         sink_create = SinkCreateAdapter.validate_python(sink_data)
-        if sink_create.sink_type == SinkType.DISCONNECTED:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="The sink with sink_type=DISCONNECTED cannot be imported",
-            )
         return configuration_service.create_sink(sink_create)
     except yaml.YAMLError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid YAML format: {str(e)}")
     except ResourceAlreadyExistsError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+    except ValidationError as e:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
 
 
 @router.delete(

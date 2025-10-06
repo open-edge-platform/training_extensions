@@ -131,10 +131,6 @@ SourceAdapter: TypeAdapter[Source] = TypeAdapter(Source)
 # MRO (Method Resolution Order).
 
 
-class DisconnectedSourceConfigCreate(HasID, DisconnectedSourceConfig):
-    pass
-
-
 class WebcamSourceConfigCreate(HasID, WebcamSourceConfig):
     pass
 
@@ -152,8 +148,7 @@ class ImagesFolderSourceConfigCreate(HasID, ImagesFolderSourceConfig):
 
 
 SourceCreate = Annotated[
-    DisconnectedSourceConfigCreate
-    | WebcamSourceConfigCreate
+    WebcamSourceConfigCreate
     | IPCameraSourceConfigCreate
     | VideoFileSourceConfigCreate
     | ImagesFolderSourceConfigCreate,

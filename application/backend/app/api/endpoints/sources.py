@@ -12,9 +12,10 @@ from fastapi import APIRouter, Body, Depends, File, UploadFile, status
 from fastapi.exceptions import HTTPException
 from fastapi.openapi.models import Example
 from fastapi.responses import FileResponse, Response
+from pydantic import ValidationError
 
 from app.api.dependencies import get_configuration_service, get_source_id
-from app.schemas import Source, SourceCreate, SourceType
+from app.schemas import Source, SourceCreate
 from app.schemas.source import SourceCreateAdapter
 from app.services import ConfigurationService, ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError
 
@@ -105,11 +106,6 @@ def create_source(
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> Source:
     """Create and configure a new source"""
-    if source_create.source_type == SourceType.DISCONNECTED:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="The source with source_type=DISCONNECTED cannot be created"
-        )
-
     try:
         return configuration_service.create_source(source_create)
     except ResourceAlreadyExistsError as e:
@@ -213,8 +209,9 @@ def export_source(
     status_code=status.HTTP_201_CREATED,
     responses={
         status.HTTP_201_CREATED: {"description": "Source imported successfully", "model": Source},
-        status.HTTP_400_BAD_REQUEST: {"description": "Invalid YAML format or source type is DISCONNECTED"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid YAML format "},
         status.HTTP_409_CONFLICT: {"description": "Source already exists"},
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Validation error(s)"},
     },
 )
 def import_source(
@@ -225,18 +222,14 @@ def import_source(
     try:
         yaml_content = yaml_file.file.read()
         source_data = yaml.safe_load(yaml_content)
-
         source_create = SourceCreateAdapter.validate_python(source_data)
-        if source_create.source_type == SourceType.DISCONNECTED:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="The source with source_type=DISCONNECTED cannot be imported",
-            )
         return configuration_service.create_source(source_create)
     except yaml.YAMLError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid YAML format: {str(e)}")
     except ResourceAlreadyExistsError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+    except ValidationError as e:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
 
 
 @router.delete(

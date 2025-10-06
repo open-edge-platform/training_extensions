@@ -161,10 +161,6 @@ SinkAdapter: TypeAdapter[Sink] = TypeAdapter(Sink)
 # MRO (Method Resolution Order).
 
 
-class DisconnectedSinkConfigCreate(HasID, DisconnectedSinkConfig):
-    pass
-
-
 class FolderSinkConfigCreate(HasID, FolderSinkConfig):
     pass
 
@@ -182,11 +178,7 @@ class WebhookSinkConfigCreate(HasID, WebhookSinkConfig):
 
 
 SinkCreate = Annotated[
-    FolderSinkConfigCreate
-    | MqttSinkConfigCreate
-    | RosSinkConfigCreate
-    | WebhookSinkConfigCreate
-    | DisconnectedSinkConfigCreate,
+    FolderSinkConfigCreate | MqttSinkConfigCreate | RosSinkConfigCreate | WebhookSinkConfigCreate,
     Field(discriminator="sink_type"),
 ]
 
