@@ -33,8 +33,8 @@ const fillProjectForm = async ({
     }
 };
 
-test('Project creation', async ({ page }) => {
-    await test.step('Navigate to projects page', async () => {
+test('[E2E] Minimum workflow', async ({ page }) => {
+    await test.step('Navigate to root page', async () => {
         await page.goto('/projects');
     });
 
@@ -54,12 +54,73 @@ test('Project creation', async ({ page }) => {
         await page.waitForURL(/inference/);
     });
 
-    await test.step('Verify project appears in project list', async () => {
-        await page.getByText('Geti Tune').click(); // Go back to /projects
-        await expect(page.getByText('New Project')).toBeVisible();
+    await test.step('Setup source', async () => {
+        await page.getByRole('button', { name: 'Pipeline configuration' }).click();
+        await page.getByRole('button', { name: 'Webcam' }).click();
+
+        await page.locator('input[name="name"]').fill('New Webcam');
+        await page.getByLabel('webcam device id').fill('1');
+
+        await page.getByRole('button', { name: 'Apply' }).click();
     });
 
-    await test.step('Delete created project', async () => {
+    await test.step('Setup sink', async () => {
+        await page.getByLabel('Dataset import tabs').getByText('Output').click();
+
+        await page.getByRole('button', { name: 'Folder' }).click();
+        await page.locator('input[name="name"]').fill('New Folder');
+        await page.locator('input[aria-roledescription="Number field"]').fill('5');
+
+        await page.locator('input[name="folder_path"]').fill('some/path');
+        await page.locator('input[name="output_formats"][value="predictions"]').click();
+
+        await page.getByRole('button', { name: 'Apply' }).click();
+
+        // Click outside the dialog to close it
+        await page.click('body', { position: { x: 10, y: 10 } });
+    });
+
+    await test.step('Update data collection policy', async () => {
+        await page.getByRole('button', { name: 'Toggle Data collection policy' }).click();
+        await expect(page.getByRole('heading', { name: 'Data collection' })).toBeVisible();
+
+        await expect(page.getByRole('switch', { name: 'Toggle auto capturing' })).not.toBeChecked();
+
+        await page.getByRole('switch', { name: 'Toggle auto capturing' }).click();
+        await expect(page.getByRole('switch', { name: 'Toggle auto capturing' })).toBeChecked();
+    });
+
+    await test.step('Start stream to begin capture', async () => {
+        await page.getByLabel('Start stream').click();
+
+        await expect(page.getByLabel('Connected')).toBeVisible();
+
+        // Wait for 3 seconds
+        await page.waitForTimeout(3000);
+    });
+
+    await test.step('Confirm data was collected', async () => {
+        await page.getByLabel('Start stream').click();
+
+        await expect(page.getByLabel('Connected')).toBeVisible();
+
+        // Wait for 3 seconds and stop the stream
+        await page.waitForTimeout(3000);
+        await page.getByRole('button', { name: 'Stop' }).click();
+
+        await page.getByLabel('Header navigation').getByText('Dataset').click();
+
+        // Confirm media was uploaded
+        const listbox = page.getByRole('listbox', { name: 'data-collection-grid' });
+        const options = listbox.getByRole('option');
+
+        expect(options.count).toBeGreaterThanOrEqual(40);
+    });
+
+    await test.step('Cleanup', async () => {
+        await page.getByText('Geti Tune').click(); // Go back to /projects
+        await expect(page.getByText('New Project')).toBeVisible();
+
         await page.getByRole('button', { name: /open project options/i }).click();
         await page.getByText(/Delete/).click();
         await expect(page.getByText('Project deleted successfully')).toBeVisible();
