@@ -1,9 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { SchemaProjectInput } from './../src/api/openapi-spec.d';
+import { SchemaProjectView } from './../src/api/openapi-spec.d';
 
-export const getMockedProject = (customProject: Partial<SchemaProjectInput>): SchemaProjectInput => {
+export const getMockedProject = (customProject: Partial<SchemaProjectView>): SchemaProjectView => {
     return {
         id: '7b073838-99d3-42ff-9018-4e901eb047fc',
         name: 'animals',
@@ -19,6 +19,7 @@ export const getMockedProject = (customProject: Partial<SchemaProjectInput>): Sc
             ],
             task_type: 'classification',
         },
+        active_pipeline: false,
         ...customProject,
     };
 };

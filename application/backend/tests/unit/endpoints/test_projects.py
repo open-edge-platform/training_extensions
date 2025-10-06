@@ -9,7 +9,7 @@ from fastapi import status
 
 from app.api.dependencies import get_data_collector, get_label_service, get_project_service
 from app.main import app
-from app.schemas import Label, PatchLabels, Project
+from app.schemas import Label, PatchLabels, ProjectView
 from app.schemas.label import LabelToAdd, LabelToEdit, LabelToRemove
 from app.schemas.project import Task, TaskType
 from app.services import (
@@ -23,10 +23,11 @@ from app.services.data_collect import DataCollector
 
 
 @pytest.fixture
-def fxt_project() -> Project:
-    return Project(
+def fxt_project() -> ProjectView:
+    return ProjectView(
         id=uuid4(),
         name="Test Project",
+        active_pipeline=False,
         task=Task(
             task_type=TaskType.CLASSIFICATION,
             exclusive_labels=True,
@@ -88,19 +89,21 @@ class TestProjectEndpoints:
         assert response.status_code == status.HTTP_200_OK
         fxt_project_service.get_project_by_id.assert_called_once_with(fxt_project.id)
 
-    def test_create_project_success(self, fxt_project, fxt_project_service, fxt_client):
+    @pytest.mark.parametrize("exclude_attrs", [{}, {"id"}])
+    def test_create_project_success(self, exclude_attrs, fxt_project, fxt_project_service, fxt_client):
         fxt_project_service.create_project.return_value = fxt_project
 
-        response = fxt_client.post("/api/projects", json=fxt_project.model_dump(mode="json", exclude={"id"}))
+        response = fxt_client.post("/api/projects", json=fxt_project.model_dump(mode="json", exclude=exclude_attrs))
 
         assert response.status_code == status.HTTP_201_CREATED
         fxt_project_service.create_project.assert_called_once()
 
-    def test_create_project_exists(self, fxt_project_service, fxt_project, fxt_client):
+    @pytest.mark.parametrize("exclude_attrs", [{}, {"id"}])
+    def test_create_project_exists(self, exclude_attrs, fxt_project_service, fxt_project, fxt_client):
         fxt_project_service.create_project.side_effect = ResourceAlreadyExistsError(
             resource_type=ResourceType.PROJECT, resource_name="New Project"
         )
-        response = fxt_client.post("/api/projects", json=fxt_project.model_dump(mode="json", exclude={"id"}))
+        response = fxt_client.post("/api/projects", json=fxt_project.model_dump(mode="json", exclude=exclude_attrs))
 
         assert response.status_code == status.HTTP_409_CONFLICT
         fxt_project_service.create_project.assert_called_once()

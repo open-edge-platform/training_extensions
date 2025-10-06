@@ -4,7 +4,7 @@
 import { Suspense } from 'react';
 
 import { Loading } from '@geti/ui';
-import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 
 import { $api } from './api/client';
 import { ZoomProvider } from './components/zoom/zoom';
@@ -50,59 +50,57 @@ export const router = createBrowserRouter([
     {
         path: paths.root.pattern,
         element: (
-            <Suspense fallback={<Loading />}>
-                <Redirect />
-            </Suspense>
-        ),
-    },
-    {
-        path: paths.project.index.pattern,
-        element: (
             <Suspense fallback={<Loading mode='fullscreen' />}>
-                <ProjectList />
-            </Suspense>
-        ),
-    },
-    {
-        path: paths.project.new.pattern,
-        element: <CreateProject />,
-    },
-    {
-        path: paths.project.details.pattern,
-        element: (
-            <Suspense fallback={<Loading mode='fullscreen' />}>
-                <Layout />
+                <Outlet />
             </Suspense>
         ),
         errorElement: <ErrorPage />,
         children: [
             {
                 index: true,
-                element: <ViewProject />,
+                element: <Redirect />,
             },
             {
-                path: paths.project.inference.pattern,
-                element: (
-                    <WebRTCConnectionProvider>
-                        <ZoomProvider>
-                            <Inference />
-                        </ZoomProvider>
-                    </WebRTCConnectionProvider>
-                ),
+                path: paths.project.index.pattern,
+                element: <ProjectList />,
             },
             {
-                path: paths.project.dataset.pattern,
-                element: (
-                    <ZoomProvider>
-                        <SelectedDataProvider>
-                            <Dataset />
-                        </SelectedDataProvider>
-                    </ZoomProvider>
-                ),
+                path: paths.project.new.pattern,
+                element: <CreateProject />,
             },
             {
-                path: paths.project.models.pattern,
-                element: <Models />,
+                path: paths.project.details.pattern,
+                element: <Layout />,
+                children: [
+                    {
+                        index: true,
+                        element: <ViewProject />,
+                    },
+                    {
+                        path: paths.project.inference.pattern,
+                        element: (
+                            <WebRTCConnectionProvider>
+                                <ZoomProvider>
+                                    <Inference />
+                                </ZoomProvider>
+                            </WebRTCConnectionProvider>
+                        ),
+                    },
+                    {
+                        path: paths.project.dataset.pattern,
+                        element: (
+                            <ZoomProvider>
+                                <SelectedDataProvider>
+                                    <Dataset />
+                                </SelectedDataProvider>
+                            </ZoomProvider>
+                        ),
+                    },
+                    {
+                        path: paths.project.models.pattern,
+                        element: <Models />,
+                    },
+                ],
             },
         ],
     },

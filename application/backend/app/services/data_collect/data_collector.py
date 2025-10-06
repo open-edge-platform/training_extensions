@@ -10,7 +10,7 @@ import numpy as np
 
 from app.db import get_db_session
 from app.entities.stream_data import InferenceData
-from app.schemas import Project
+from app.schemas import ProjectView
 from app.schemas.dataset_item import DatasetItemFormat
 from app.schemas.pipeline import FixedRateDataCollectionPolicy
 from app.services import ActivePipelineService, DatasetService
@@ -60,7 +60,7 @@ class DataCollector:
     def collect(
         self,
         source_id: UUID,
-        project: Project,
+        project: ProjectView,
         timestamp: float,
         frame_data: np.ndarray,
         inference_data: InferenceData,

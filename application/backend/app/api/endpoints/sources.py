@@ -12,10 +12,11 @@ from fastapi import APIRouter, Body, Depends, File, UploadFile, status
 from fastapi.exceptions import HTTPException
 from fastapi.openapi.models import Example
 from fastapi.responses import FileResponse, Response
+from pydantic import ValidationError
 
 from app.api.dependencies import get_configuration_service, get_source_id
-from app.schemas import Source, SourceType
-from app.schemas.source import SourceAdapter
+from app.schemas import Source, SourceCreate
+from app.schemas.source import SourceCreateAdapter
 from app.services import ConfigurationService, ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError
 
 logger = logging.getLogger(__name__)
@@ -91,26 +92,22 @@ UPDATE_SOURCE_BODY_EXAMPLES = {
 @router.post(
     "",
     status_code=status.HTTP_201_CREATED,
+    response_model=Source,
     responses={
-        status.HTTP_201_CREATED: {"description": "Source created", "model": Source},
+        status.HTTP_201_CREATED: {"description": "Source created"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid source ID or request body"},
         status.HTTP_409_CONFLICT: {"description": "Source already exists"},
     },
 )
-async def create_source(
-    source_config: Annotated[
-        Source, Body(description=CREATE_SOURCE_BODY_DESCRIPTION, openapi_examples=CREATE_SOURCE_BODY_EXAMPLES)
+def create_source(
+    source_create: Annotated[
+        SourceCreate, Body(description=CREATE_SOURCE_BODY_DESCRIPTION, openapi_examples=CREATE_SOURCE_BODY_EXAMPLES)
     ],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> Source:
     """Create and configure a new source"""
-    if source_config.source_type == SourceType.DISCONNECTED:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="The source with source_type=DISCONNECTED cannot be created"
-        )
-
     try:
-        return configuration_service.create_source(source_config)
+        return configuration_service.create_source(source_create)
     except ResourceAlreadyExistsError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
@@ -121,7 +118,7 @@ async def create_source(
         status.HTTP_200_OK: {"description": "List of available source configurations", "model": list[Source]},
     },
 )
-async def list_sources(
+def list_sources(
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> list[Source]:
     """List the available sources"""
@@ -136,7 +133,7 @@ async def list_sources(
         status.HTTP_404_NOT_FOUND: {"description": "Source not found"},
     },
 )
-async def get_source(
+def get_source(
     source_id: Annotated[UUID, Depends(get_source_id)],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> Source:
@@ -155,7 +152,7 @@ async def get_source(
         status.HTTP_404_NOT_FOUND: {"description": "Source not found"},
     },
 )
-async def update_source(
+def update_source(
     source_id: Annotated[UUID, Depends(get_source_id)],
     source_config: Annotated[
         dict,
@@ -189,7 +186,7 @@ async def update_source(
         status.HTTP_404_NOT_FOUND: {"description": "Source not found"},
     },
 )
-async def export_source(
+def export_source(
     source_id: Annotated[UUID, Depends(get_source_id)],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> Response:
@@ -212,27 +209,27 @@ async def export_source(
     status_code=status.HTTP_201_CREATED,
     responses={
         status.HTTP_201_CREATED: {"description": "Source imported successfully", "model": Source},
-        status.HTTP_400_BAD_REQUEST: {"description": "Invalid YAML format or source type is DISCONNECTED"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid YAML format "},
+        status.HTTP_409_CONFLICT: {"description": "Source already exists"},
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Validation error(s)"},
     },
 )
-async def import_source(
+def import_source(
     yaml_file: Annotated[UploadFile, File(description="YAML file containing the source configuration")],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> Source:
     """Import a source from file"""
     try:
-        yaml_content = await yaml_file.read()
+        yaml_content = yaml_file.file.read()
         source_data = yaml.safe_load(yaml_content)
-
-        source_config = SourceAdapter.validate_python(source_data)
-        if source_config.source_type == SourceType.DISCONNECTED:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="The source with source_type=DISCONNECTED cannot be imported",
-            )
-        return configuration_service.create_source(source_config)
+        source_create = SourceCreateAdapter.validate_python(source_data)
+        return configuration_service.create_source(source_create)
     except yaml.YAMLError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid YAML format: {str(e)}")
+    except ResourceAlreadyExistsError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+    except ValidationError as e:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
 
 
 @router.delete(
@@ -247,7 +244,7 @@ async def import_source(
         status.HTTP_409_CONFLICT: {"description": "Source is used by at least one pipeline"},
     },
 )
-async def delete_source(
+def delete_source(
     source_id: Annotated[UUID, Depends(get_source_id)],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
 ) -> None:

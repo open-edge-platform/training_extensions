@@ -15,7 +15,7 @@ import {
     type TextFieldRef,
 } from '@geti/ui';
 import { useNavigate } from 'react-router';
-import { SchemaProjectInput } from 'src/api/openapi-spec';
+import { SchemaProjectView } from 'src/api/openapi-spec';
 
 import { paths } from '../../../constants/paths';
 
@@ -101,7 +101,7 @@ const ProjectActions = ({ onAction }: ProjectActionsProps) => {
 };
 
 interface ProjectListItemProps {
-    project: SchemaProjectInput;
+    project: SchemaProjectView;
     isInEditMode: boolean;
     onBlur: (projectId: string, newName: string) => void;
     onRename: (projectId: string) => void;
@@ -140,7 +140,12 @@ export const ProjectListItem = ({ project, isInEditMode, onBlur, onRename, onDel
                         <ProjectEdition name={project.name} onBlur={handleBlur(project.id || '')} />
                     ) : (
                         <Flex alignItems={'center'} gap={'size-100'}>
-                            <PhotoPlaceholder name={project.name} email='' height={'size-300'} width={'size-300'} />
+                            <PhotoPlaceholder
+                                name={project.name}
+                                indicator={project.id ?? project.name}
+                                height={'size-300'}
+                                width={'size-300'}
+                            />
                             <Text>{project.name}</Text>
                         </Flex>
                     )}

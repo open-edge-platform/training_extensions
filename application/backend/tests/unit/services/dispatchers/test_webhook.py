@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from unittest.mock import Mock, patch
+from uuid import uuid4
 
 import numpy as np
 import pytest
@@ -18,6 +19,7 @@ from app.services.dispatchers.webhook import WebhookDispatcher
 def fxt_webhook_config():
     return WebhookSinkConfig(
         sink_type=SinkType.WEBHOOK,
+        id=uuid4(),
         name="Test Webhook Sink",
         rate_limit=0.2,
         output_formats=[
