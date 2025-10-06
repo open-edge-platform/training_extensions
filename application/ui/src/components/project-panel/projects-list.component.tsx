@@ -79,7 +79,7 @@ export const ProjectsList = ({ projects, setProjectInEdition, projectIdInEdition
                     onRename={handleRename}
                     onDelete={deleteProject}
                     onBlur={handleBlur}
-                    isInEditMode={isInEditionMode(project.id || '')}
+                    isInEditMode={isInEditionMode(project.id)}
                 />
             ))}
         </ul>
