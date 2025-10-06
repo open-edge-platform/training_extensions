@@ -895,7 +895,7 @@ class RTMDetInstSepBNHead(RTMDetInstHead):
                     ),
                 )
             self.cls_convs.append(cls_convs)
-            self.reg_convs.append(cls_convs)
+            self.reg_convs.append(reg_convs)
             self.kernel_convs.append(kernel_convs)
 
             self.rtm_cls.append(
