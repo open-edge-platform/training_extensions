@@ -18,6 +18,7 @@ import {
 } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { useNavigate } from 'react-router';
+import { v4 as uuid } from 'uuid';
 
 import { $api } from '../../api/client';
 import {
@@ -267,8 +268,18 @@ export const Sink = () => {
     const onSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
+        if (selectedSinkType === 'disconnected') {
+            return;
+        }
+
+        const sinkData = forms[selectedSinkType];
+        const sinkPayload = {
+            ...sinkData,
+            id: sinkData.id || uuid(),
+        };
+
         sinkMutation.mutateAsync({
-            body: forms[selectedSinkType],
+            body: sinkPayload,
         });
 
         navigate(paths.project.inference({ projectId }));
