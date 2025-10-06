@@ -56,22 +56,24 @@ test('[E2E] Minimum workflow', async ({ page }) => {
 
     await test.step('Setup source', async () => {
         await page.getByRole('button', { name: 'Pipeline configuration' }).click();
-        await page.getByRole('button', { name: 'Webcam' }).click();
+        await page.getByRole('button', { name: 'Video file' }).click();
 
-        await page.locator('input[name="name"]').fill('New Webcam');
-        await page.getByLabel('webcam device id').fill('1');
+        await page.locator('input[name="name"]').fill('Video source');
+        await page.locator('input[name="video_path"]').fill('data/media/test_video.mp4');
 
         await page.getByRole('button', { name: 'Apply' }).click();
     });
 
     await test.step('Setup sink', async () => {
+        // Go to output tab
         await page.getByLabel('Dataset import tabs').getByText('Output').click();
 
-        await page.getByRole('button', { name: 'Video file' }).click();
-        await page.locator('input[name="name"]').fill('Video source');
-        await page.locator('input[name="video_path"]').fill('data/media/test_video.mp4');
+        await page.getByRole('button', { name: 'Folder' }).click();
+        await page.locator('input[name="name"]').fill('New Folder');
+        await page.locator('input[aria-roledescription="Number field"]').fill('5');
 
-        await page.getByRole('button', { name: 'Apply' }).click();
+        await page.locator('input[name="folder_path"]').fill('some/path');
+        await page.locator('input[name="output_formats"][value="predictions"]').click();
 
         // Click outside the dialog to close it
         await page.click('body', { position: { x: 10, y: 10 } });
