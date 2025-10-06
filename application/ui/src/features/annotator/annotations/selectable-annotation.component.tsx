@@ -3,13 +3,13 @@
 
 import { KeyboardEvent, MouseEvent, ReactNode, useEffect, useRef } from 'react';
 
-import { useAnnotator } from '../annotator-provider.component';
+import { useAnnotations } from '../annotations-provider.component';
 import { useSelectedAnnotations } from '../select-annotation-provider.component';
 import { useAnnotation } from './annotation-context';
 
 export const SelectableAnnotation = ({ children }: { children: ReactNode }) => {
     const annotation = useAnnotation();
-    const { deleteAnnotation } = useAnnotator();
+    const { deleteAnnotation } = useAnnotations();
     const { setSelectedAnnotations, selectedAnnotations } = useSelectedAnnotations();
     const elementRef = useRef<SVGGElement>(null);
 

@@ -2,11 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useZoom } from '../../../../components/zoom/zoom';
+import { useAnnotations } from '../../annotations-provider.component';
 import { useAnnotator } from '../../annotator-provider.component';
 import { DrawingBox } from '../drawing-box-tool/drawing-box.component';
 
 export const BoundingBoxTool = () => {
-    const { mediaItem, addAnnotation, image } = useAnnotator();
+    const { mediaItem, image } = useAnnotator();
+    const { addAnnotation } = useAnnotations();
     const { scale: zoom } = useZoom();
 
     return (
