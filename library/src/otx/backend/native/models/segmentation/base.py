@@ -231,7 +231,7 @@ class OTXSegmentationModel(OTXModel):
             self.explain_mode,
         )
         for batch_tile_attrs, batch_tile_input in inputs.unbind():
-            tile_size = batch_tile_attrs[0]["tile_size"]
+            tile_size = (batch_tile_attrs[0].height, batch_tile_attrs[0].width)
             output = self.model(
                 inputs=batch_tile_input.images,
                 img_metas=batch_tile_input.imgs_info,
