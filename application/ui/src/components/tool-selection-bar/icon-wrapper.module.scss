@@ -1,0 +1,21 @@
+.iconWrapper {
+    display: flex;
+    width: var(--spectrum-global-dimension-size-400);
+    background-color: transparent;
+    fill: white;
+    height: var(--spectrum-global-dimension-size-400);
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--spectrum-global-dimension-size-50);
+    cursor: pointer;
+
+    svg {
+        width: var(--spectrum-global-dimension-size-200);
+        height: var(--spectrum-global-dimension-size-200);
+    }
+
+    &.selected {
+        background-color: var(--energy-blue);
+        fill: var(--spectrum-global-color-gray-50);
+    }
+}
