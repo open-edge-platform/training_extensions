@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from app.schemas.dataset_item import DatasetItem, DatasetItemsWithPagination
-from app.schemas.job import JobRequest, JobResponse, TrainingRequest
+from app.schemas.job import JobRequest, JobResponse
 from app.schemas.label import Label, PatchLabels
 from app.schemas.metrics import InferenceMetrics, LatencyMetrics, PipelineMetrics, TimeWindow
 from app.schemas.model import Model, ModelFormat
@@ -38,5 +38,4 @@ __all__ = [
     "Source",
     "SourceType",
     "TimeWindow",
-    "TrainingRequest",
 ]
