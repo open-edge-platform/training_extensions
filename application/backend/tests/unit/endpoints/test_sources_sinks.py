@@ -115,8 +115,7 @@ class TestSourceAndSinkEndpoints:
     ):
         response = fxt_client.post(f"/api/{api_path}", json=config_data)
 
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert "DISCONNECTED cannot be created" in response.json()["detail"]
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
         getattr(fxt_config_service, create_method).assert_not_called()
 
     @pytest.mark.parametrize(
@@ -129,7 +128,7 @@ class TestSourceAndSinkEndpoints:
     def test_create_sink_validation_error(self, api_path, create_method, fxt_config_service, fxt_client):
         response = fxt_client.post(f"/api/{api_path}", json={"name": ""})
 
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
         getattr(fxt_config_service, create_method).assert_not_called()
 
     @pytest.mark.parametrize(
@@ -388,6 +387,27 @@ class TestSourceAndSinkEndpoints:
         getattr(fxt_config_service, create_method).assert_called_once()
 
     @pytest.mark.parametrize(
+        "fixture_name, api_path, create_method",
+        [
+            ("fxt_webcam_source", ConfigApiPath.SOURCES, "create_source"),
+            ("fxt_folder_sink", ConfigApiPath.SINKS, "create_sink"),
+        ],
+    )
+    def test_import_config_exists(self, fixture_name, api_path, create_method, fxt_config_service, fxt_client, request):
+        fxt_config = request.getfixturevalue(fixture_name)
+        sink_data = fxt_config.model_dump(exclude={"id"}, mode="json")
+        yaml_content = yaml.safe_dump(sink_data)
+        getattr(fxt_config_service, create_method).side_effect = ResourceAlreadyExistsError(
+            resource_type=ResourceType(api_path[:-1].capitalize()), resource_name="New Config"
+        )
+
+        files = {"yaml_file": ("test.yaml", io.BytesIO(yaml_content.encode()), "application/x-yaml")}
+        response = fxt_client.post(f"/api/{api_path}:import", files=files)
+
+        assert response.status_code == status.HTTP_409_CONFLICT
+        getattr(fxt_config_service, create_method).assert_called_once()
+
+    @pytest.mark.parametrize(
         "api_path",
         [ConfigApiPath.SOURCES, ConfigApiPath.SINKS],
     )
@@ -401,18 +421,20 @@ class TestSourceAndSinkEndpoints:
         assert "Invalid YAML format" in response.json()["detail"]
 
     @pytest.mark.parametrize(
-        "api_path, config_type",
+        "api_path, config_type, create_method",
         [
-            (ConfigApiPath.SOURCES, "source_type"),
-            (ConfigApiPath.SINKS, "sink_type"),
+            (ConfigApiPath.SOURCES, "source_type", "create_source"),
+            (ConfigApiPath.SINKS, "sink_type", "create_sink"),
         ],
     )
-    def test_import_disconnected_config_fails(self, api_path, config_type, fxt_client):
+    def test_import_disconnected_config_fails(
+        self, api_path, config_type, create_method, fxt_config_service, fxt_client
+    ):
         config_data = {config_type: "disconnected", "name": "Test"}
         yaml_content = yaml.safe_dump(config_data)
         files = {"yaml_file": ("test.yaml", io.BytesIO(yaml_content.encode()), "application/x-yaml")}
 
         response = fxt_client.post(f"/api/{api_path}:import", files=files)
 
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert "DISCONNECTED cannot be imported" in response.json()["detail"]
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        getattr(fxt_config_service, create_method).assert_not_called()

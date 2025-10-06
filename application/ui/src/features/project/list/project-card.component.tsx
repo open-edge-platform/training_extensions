@@ -6,7 +6,7 @@ import { clsx } from 'clsx';
 import { NavLink } from 'react-router-dom';
 
 import { $api } from '../../../api/client';
-import { SchemaProjectInput } from '../../../api/openapi-spec';
+import { SchemaProjectView } from '../../../api/openapi-spec';
 import thumbnailUrl from '../../../assets/mocked-project-thumbnail.png';
 import { paths } from '../../../constants/paths';
 import { MenuActions } from './menu-actions.component';
@@ -14,20 +14,18 @@ import { MenuActions } from './menu-actions.component';
 import classes from './project-list.module.scss';
 
 type ProjectCardProps = {
-    item: SchemaProjectInput;
+    item: SchemaProjectView;
 };
 
 export const ProjectCard = ({ item }: ProjectCardProps) => {
     const pipeline = $api.useSuspenseQuery('get', '/api/projects/{project_id}/pipeline', {
-        params: { path: { project_id: item.id || '' } },
+        params: { path: { project_id: item.id } },
     });
 
     const isActive = pipeline.data?.status === 'running';
 
     return (
-        // TODO: remove this empty string check once
-        // https://github.com/open-edge-platform/training_extensions/issues/4721 is done
-        <NavLink to={paths.project.inference({ projectId: item.id || '' })}>
+        <NavLink to={paths.project.inference({ projectId: item.id })}>
             <Flex UNSAFE_className={clsx({ [classes.card]: true, [classes.activeCard]: isActive })}>
                 <View aria-label={'project thumbnail'}>
                     <img src={thumbnailUrl} alt={item.name} />
@@ -36,7 +34,7 @@ export const ProjectCard = ({ item }: ProjectCardProps) => {
                 <View width={'100%'} padding={'size-200'}>
                     <Flex alignItems={'center'} justifyContent={'space-between'}>
                         <Heading level={3}>{item.name}</Heading>
-                        <MenuActions projectId={item.id || ''} />
+                        <MenuActions projectId={item.id} />
                     </Flex>
 
                     <Flex marginBottom={'size-200'} gap={'size-50'}>
@@ -48,7 +46,7 @@ export const ProjectCard = ({ item }: ProjectCardProps) => {
 
                     <Flex alignItems={'center'} gap={'size-100'} direction={'row'} wrap='wrap'>
                         <Text>• Edited: 2025-08-07 06:05 AM</Text>
-                        <Text>• Labels: {item.task.labels.map((label) => label.name).join(', ')}</Text>
+                        <Text>• Labels: {(item.task.labels || []).map((label) => label.name).join(', ')}</Text>
                     </Flex>
                 </View>
             </Flex>

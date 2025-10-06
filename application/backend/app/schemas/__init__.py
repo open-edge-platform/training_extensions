@@ -6,10 +6,10 @@ from app.schemas.label import Label, PatchLabels
 from app.schemas.metrics import InferenceMetrics, LatencyMetrics, PipelineMetrics, TimeWindow
 from app.schemas.model import Model, ModelFormat
 from app.schemas.model_architecture import ModelArchitectures
-from app.schemas.pipeline import DataCollectionPolicy, Pipeline, PipelineStatus
-from app.schemas.project import Project, ProjectUpdateName
-from app.schemas.sink import DisconnectedSinkConfig, OutputFormat, Sink, SinkType
-from app.schemas.source import DisconnectedSourceConfig, Source, SourceType
+from app.schemas.pipeline import DataCollectionPolicy, PipelineStatus, PipelineView
+from app.schemas.project import ProjectCreate, ProjectUpdateName, ProjectView
+from app.schemas.sink import DisconnectedSinkConfig, OutputFormat, Sink, SinkCreate, SinkType
+from app.schemas.source import DisconnectedSourceConfig, Source, SourceCreate, SourceType
 
 __all__ = [
     "DataCollectionPolicy",
@@ -25,14 +25,17 @@ __all__ = [
     "ModelFormat",
     "OutputFormat",
     "PatchLabels",
-    "Pipeline",
     "PipelineMetrics",
     "PipelineStatus",
-    "Project",
+    "PipelineView",
+    "ProjectCreate",
     "ProjectUpdateName",
+    "ProjectView",
     "Sink",
+    "SinkCreate",
     "SinkType",
     "Source",
+    "SourceCreate",
     "SourceType",
     "TimeWindow",
 ]

@@ -13,7 +13,7 @@ from fastapi.openapi.models import Example
 from starlette.responses import FileResponse
 
 from app.api.dependencies import get_data_collector, get_label_service, get_project_id, get_project_service
-from app.schemas import Label, PatchLabels, Project, ProjectUpdateName
+from app.schemas import Label, PatchLabels, ProjectCreate, ProjectUpdateName, ProjectView
 from app.services import (
     LabelService,
     ProjectService,
@@ -74,7 +74,7 @@ CREATE_PROJECT_BODY_EXAMPLES = {
 @router.post(
     "",
     status_code=status.HTTP_201_CREATED,
-    response_model=Project,
+    response_model=ProjectView,
     responses={
         status.HTTP_201_CREATED: {"description": "Project successfully created"},
         status.HTTP_409_CONFLICT: {"description": "Project already exists"},
@@ -83,10 +83,10 @@ CREATE_PROJECT_BODY_EXAMPLES = {
 )
 def create_project(
     project_config: Annotated[
-        Project, Body(description=CREATE_PROJECT_BODY_DESCRIPTION, openapi_examples=CREATE_PROJECT_BODY_EXAMPLES)
+        ProjectCreate, Body(description=CREATE_PROJECT_BODY_DESCRIPTION, openapi_examples=CREATE_PROJECT_BODY_EXAMPLES)
     ],
     project_service: Annotated[ProjectService, Depends(get_project_service)],
-) -> Project:
+) -> ProjectView:
     """Create and configure a new project"""
     try:
         return project_service.create_project(project_config)
@@ -96,19 +96,19 @@ def create_project(
 
 @router.get(
     "",
-    response_model=list[Project],
+    response_model=list[ProjectView],
     responses={
         status.HTTP_200_OK: {"description": "List of available projects"},
     },
 )
-def list_projects(project_service: Annotated[ProjectService, Depends(get_project_service)]) -> list[Project]:
+def list_projects(project_service: Annotated[ProjectService, Depends(get_project_service)]) -> list[ProjectView]:
     """List the available projects"""
     return project_service.list_projects()
 
 
 @router.get(
     "/{project_id}",
-    response_model=Project,
+    response_model=ProjectView,
     responses={
         status.HTTP_200_OK: {"description": "Project found"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID"},
@@ -118,7 +118,7 @@ def list_projects(project_service: Annotated[ProjectService, Depends(get_project
 def get_project(
     project_id: Annotated[UUID, Depends(get_project_id)],
     project_service: Annotated[ProjectService, Depends(get_project_service)],
-) -> Project:
+) -> ProjectView:
     """Get info about a given project"""
     try:
         return project_service.get_project_by_id(project_id)
@@ -128,7 +128,7 @@ def get_project(
 
 @router.patch(
     "/{project_id}",
-    response_model=Project,
+    response_model=ProjectView,
     responses={
         status.HTTP_200_OK: {"description": "Project name updated successfully"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID or request body"},
@@ -139,7 +139,7 @@ def rename_project(
     project_id: Annotated[UUID, Depends(get_project_id)],
     project_update_name: Annotated[ProjectUpdateName, Body(description="Updated project name")],
     project_service: Annotated[ProjectService, Depends(get_project_service)],
-) -> Project:
+) -> ProjectView:
     """Rename a project"""
     try:
         return project_service.update_project_name(project_id, project_update_name.name)

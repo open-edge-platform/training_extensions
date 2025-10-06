@@ -11,15 +11,15 @@ from pydantic import ValidationError
 
 from app.api.dependencies import get_pipeline_service
 from app.main import app
-from app.schemas import Pipeline, PipelineStatus
+from app.schemas import PipelineStatus, PipelineView
 from app.schemas.metrics import InferenceMetrics, LatencyMetrics, PipelineMetrics, ThroughputMetrics, TimeWindow
 from app.schemas.pipeline import FixedRateDataCollectionPolicy
 from app.services import PipelineService, ResourceNotFoundError, ResourceType
 
 
 @pytest.fixture
-def fxt_pipeline() -> Pipeline:
-    return Pipeline(
+def fxt_pipeline() -> PipelineView:
+    return PipelineView(
         project_id=uuid4(),
         status=PipelineStatus.IDLE,
         data_collection_policies=[FixedRateDataCollectionPolicy(type="fixed_rate", rate=0.1)],

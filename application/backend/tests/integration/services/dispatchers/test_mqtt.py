@@ -7,6 +7,7 @@ import re
 import time
 from datetime import datetime
 from unittest.mock import Mock, patch
+from uuid import uuid4
 
 import cv2
 import numpy as np
@@ -52,6 +53,8 @@ def mqtt_config(mqtt_broker) -> MqttSinkConfig:
     host, port = mqtt_broker
     return MqttSinkConfig(
         sink_type=SinkType.MQTT,
+        id=uuid4(),
+        name="Test MQTT Sink",
         broker_host=host,
         broker_port=port,
         topic="topic",
@@ -65,6 +68,8 @@ def mqtt_config_with_auth(mqtt_broker) -> MqttSinkConfig:
     host, port = mqtt_broker
     return MqttSinkConfig(
         sink_type=SinkType.MQTT,
+        id=uuid4(),
+        name="Test MQTT Sink with Auth",
         broker_host=host,
         broker_port=port,
         topic="topic",
@@ -164,6 +169,8 @@ class TestMqttDispatcher:
         """Test connection failure to invalid broker."""
         config = MqttSinkConfig(
             sink_type="mqtt",
+            id=uuid4(),
+            name="Test MQTT Sink",
             broker_host="invalid_host",
             broker_port=1883,
             topic="topic",
