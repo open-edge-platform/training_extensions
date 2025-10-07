@@ -5,7 +5,6 @@ import { Flex, Heading, Tag, Text, View } from '@geti/ui';
 import { clsx } from 'clsx';
 import { NavLink } from 'react-router-dom';
 
-import { $api } from '../../../api/client';
 import { SchemaProjectView } from '../../../api/openapi-spec';
 import thumbnailUrl from '../../../assets/mocked-project-thumbnail.png';
 import { paths } from '../../../constants/paths';
@@ -18,11 +17,7 @@ type ProjectCardProps = {
 };
 
 export const ProjectCard = ({ item }: ProjectCardProps) => {
-    const pipeline = $api.useSuspenseQuery('get', '/api/projects/{project_id}/pipeline', {
-        params: { path: { project_id: item.id } },
-    });
-
-    const isActive = pipeline.data?.status === 'running';
+    const isActive = item.active_pipeline;
 
     return (
         <NavLink to={paths.project.inference({ projectId: item.id })}>
