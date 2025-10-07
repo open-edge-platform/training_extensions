@@ -9,11 +9,12 @@ const ACTION_TIMEOUT = 30000;
 const SERVER_TIMEOUT = 60000;
 
 /**
+ * E2E tests with seeded database
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
     testDir: './tests/e2e',
-    testMatch: '**/new-project.spec.ts',
+    testMatch: '**/existing-project.spec.ts',
     fullyParallel: false,
     forbidOnly: CI,
     retries: process.env.CI ? 2 : 0,
@@ -33,7 +34,7 @@ export default defineConfig({
 
     projects: [
         {
-            name: 'new-project-tests',
+            name: 'existing-project-tests',
             use: {
                 ...devices['Desktop Chrome'],
                 headless: CI,
@@ -44,7 +45,7 @@ export default defineConfig({
 
     webServer: [
         {
-            command: 'cd ../backend && rm -f data/geti_tune.db && ./run.sh',
+            command: 'cd ../backend && rm -f data/geti_tune.db && SEED_DB=true ./run.sh',
             name: 'backend',
             url: 'http://localhost:7860/health',
             reuseExistingServer: !CI,

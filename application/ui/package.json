@@ -27,8 +27,9 @@
         "test:unit:watch": "vitest --config vitest.config.ts --reporter=verbose --watch",
         "test:unit:coverage": "vitest --coverage",
         "test:component": "npx playwright test --config=playwright.config.ts",
-        "test:e2e": "npx playwright test --config=playwright.e2e.config.ts",
-        "test:e2e:ui": "npx playwright test --config=playwright.e2e.config.ts --ui",
+        "test:e2e": "npm run test:e2e:seeded",
+        "test:e2e:new": "npx playwright test --config=playwright.e2e.config.ts",
+        "test:e2e:seeded": "npx playwright test --config=playwright.e2e-seeded.config.ts",
         "type-check": "tsc --noEmit",
         "tauri": "tauri"
     },
