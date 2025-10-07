@@ -78,7 +78,7 @@ async function globalSetup() {
 
     const mediaDir = resolveBackendPath('media');
     const modelsDir = resolveBackendPath('models');
-    const targetVideo = path.join(mediaDir, 'video.mp4');
+    const targetVideo = path.join(mediaDir, 'sample-video-small.mp4');
 
     // Create directories
     if (!fs.existsSync(mediaDir)) {

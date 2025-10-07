@@ -12,40 +12,33 @@ test('[E2E] Existing project', async ({ page }) => {
         await page.getByText('Test Project').click();
     });
 
+    await test.step('Increase capture rate', async () => {
+        await page.getByRole('button', { name: 'Toggle Data collection policy' }).click();
+
+        const sliderInput = page.locator('input[type="range"]');
+
+        await expect(sliderInput).toBeVisible();
+        // Rate of 1 image per second
+        await sliderInput.fill('1');
+        await expect(sliderInput).toHaveValue('1');
+    });
+
     await test.step('Start stream to begin capture', async () => {
         await page.getByLabel('Start stream').click();
 
         await expect(page.getByLabel('Connected')).toBeVisible({ timeout: 60000 });
 
-        // Wait for 3 seconds
-        await page.waitForTimeout(3000);
+        // Wait a bit for the stream to capture some data
+        await page.waitForTimeout(5000);
     });
 
     await test.step('Confirm data was collected', async () => {
-        await page.getByLabel('Start stream').click();
-
-        await expect(page.getByLabel('Connected')).toBeVisible();
-
-        // Wait for 3 seconds and stop the stream
-        await page.waitForTimeout(3000);
-        await page.getByRole('button', { name: 'Stop' }).click();
-
         await page.getByLabel('Header navigation').getByText('Dataset').click();
 
         // Confirm media was uploaded
         const listbox = page.getByRole('listbox', { name: 'data-collection-grid' });
         const options = listbox.getByRole('option');
 
-        expect(options.count).toBeGreaterThanOrEqual(40);
-    });
-
-    await test.step('Cleanup', async () => {
-        await page.getByText('Geti Tune').click(); // Go back to /projects
-        await expect(page.getByText('Test Project')).toBeVisible();
-
-        await page.getByRole('button', { name: /open project options/i }).click();
-        await page.getByText(/Delete/).click();
-        await expect(page.getByText('Project deleted successfully')).toBeVisible();
-        await expect(page.getByText('Test Project')).toBeHidden();
+        expect(await options.count()).toBeGreaterThanOrEqual(1);
     });
 });

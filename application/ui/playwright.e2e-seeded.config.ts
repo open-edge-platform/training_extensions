@@ -39,6 +39,14 @@ export default defineConfig({
                 ...devices['Desktop Chrome'],
                 headless: CI,
                 viewport: { width: 1280, height: 720 },
+                // Additional browser args for WebRTC in headless mode
+                launchOptions: {
+                    args: [
+                        '--use-fake-ui-for-media-stream',
+                        '--use-fake-device-for-media-stream',
+                        '--disable-web-security',
+                    ],
+                },
             },
         },
     ],
@@ -61,4 +69,5 @@ export default defineConfig({
     ],
 
     globalSetup: './tests/e2e/global-setup.ts',
+    globalTeardown: './tests/e2e/global-teardown.ts',
 });
