@@ -4,11 +4,51 @@
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import { get } from 'lodash-es';
 import { $api } from 'src/api/client';
+import { components } from 'src/api/openapi-spec';
 import { v4 as uuid } from 'uuid';
 
 import { useAnnotator } from './annotator-provider.component';
-import { Annotation, Shape } from './types';
+import { Annotation, Label, Shape } from './types';
+
+type ServerAnnotation = components['schemas']['DatasetItemAnnotation-Input'];
+type LabelReference = components['schemas']['LabelReference'];
+type ProjectLabel = components['schemas']['Label'];
+
+const mapServerAnnotationsToLocal = (
+    serverAnnotations: ServerAnnotation[],
+    projectLabels: ProjectLabel[]
+): Annotation[] => {
+    return serverAnnotations.map((annotation) => {
+        const labels: Label[] = annotation.labels
+            .map((labelRef) => {
+                const projectLabel = projectLabels.find((label) => label.id === labelRef.id);
+                if (!projectLabel) return null;
+
+                return {
+                    id: projectLabel.id || uuid(),
+                    name: projectLabel.name || 'Unknown',
+                    color: projectLabel.color || '#888888',
+                } as Label;
+            })
+            .filter((label): label is Label => label !== null);
+
+        return {
+            ...annotation,
+            id: uuid(),
+            labels,
+        } as Annotation;
+    });
+};
+
+const mapLocalAnnotationsToServer = (localAnnotations: Annotation[]): ServerAnnotation[] => {
+    return localAnnotations.map((annotation) => ({
+        labels: annotation.labels.map((label): LabelReference => ({ id: label.id })),
+        shape: annotation.shape,
+        ...(annotation.confidence !== undefined && { confidence: annotation.confidence }),
+    }));
+};
 
 interface AnnotationsContextValue {
     annotations: Annotation[];
@@ -21,7 +61,7 @@ interface AnnotationsContextValue {
 
 const AnnotationsContext = createContext<AnnotationsContextValue | null>(null);
 
-export const AnnotationsProvider = ({ children }: { children: ReactNode }): AnnotationsContextValue => {
+export const AnnotationsProvider = ({ children }: { children: ReactNode }) => {
     const { mediaItem } = useAnnotator();
     const projectId = useProjectIdentifier();
     const saveMutation = $api.useMutation(
@@ -35,6 +75,9 @@ export const AnnotationsProvider = ({ children }: { children: ReactNode }): Anno
             params: { path: { project_id: projectId, dataset_item_id: mediaItem.id || '' } },
         }
     );
+    const { data: project } = $api.useQuery('get', '/api/projects/{project_id}', {
+        params: { path: { project_id: projectId } },
+    });
 
     const [localAnnotations, setLocalAnnotations] = useState<Annotation[]>([]);
     const [isDirty, setIsDirty] = useState(false);
@@ -45,6 +88,7 @@ export const AnnotationsProvider = ({ children }: { children: ReactNode }): Anno
         setLocalAnnotations((prevAnnotations) =>
             prevAnnotations.map((annotation) => (annotation.id === id ? updatedAnnotation : annotation))
         );
+        setIsDirty(true);
     };
 
     const addAnnotation = (shape: Shape) => {
@@ -56,40 +100,54 @@ export const AnnotationsProvider = ({ children }: { children: ReactNode }): Anno
                 labels: [{ id: uuid(), name: 'Default label', color: 'var(--annotation-fill)', isPrediction: false }],
             },
         ]);
+        setIsDirty(true);
     };
 
     const deleteAnnotation = (annotationId: string) => {
         setLocalAnnotations((prevAnnotations) =>
             prevAnnotations.filter((annotation) => annotation.id !== annotationId)
         );
+        setIsDirty(true);
     };
 
     const saveAnnotations = async () => {
         if (!isDirty) return;
 
+        const serverFormattedAnnotations = mapLocalAnnotationsToServer(localAnnotations);
+
         await saveMutation.mutateAsync({
             params: { path: { dataset_item_id: mediaItem.id || '', project_id: projectId } },
-            body: { annotations: localAnnotations },
+            body: { annotations: serverFormattedAnnotations },
         });
 
         setIsDirty(false);
     };
 
     useEffect(() => {
-        if (serverAnnotations) {
-            setLocalAnnotations(serverAnnotations);
+        if (!project || !serverAnnotations) return;
+
+        const projectLabels = project.task?.labels || [];
+        const annotations = get(serverAnnotations, 'annotations', []);
+
+        if (annotations.length > 0) {
+            const localFormattedAnnotations = mapServerAnnotationsToLocal(annotations, projectLabels);
+
+            setLocalAnnotations(localFormattedAnnotations);
             setIsDirty(false);
         }
-    }, [serverAnnotations]);
+    }, [serverAnnotations, project]);
 
     return (
         <AnnotationsContext.Provider
             value={{
                 annotations: localAnnotations,
 
+                // Local
                 addAnnotation,
                 updateAnnotation,
                 deleteAnnotation,
+
+                // Remote
                 saveAnnotations,
 
                 isSaving: saveMutation.isPending,
