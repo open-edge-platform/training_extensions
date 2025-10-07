@@ -26,7 +26,7 @@ packages/
 
 # Playwright assets
 tests/assets/models
-tests/assets/test_video.mp4
+tests/assets/*.mp4
 
 src/api/openapi-spec.d.ts
 src/api/openapi-spec.json

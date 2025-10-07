@@ -60,5 +60,5 @@ export default defineConfig({
         },
     ],
 
-    globalSetup: './tests/e2e/global-setup-seeded.ts',
+    globalSetup: './tests/e2e/global-setup.ts',
 });
