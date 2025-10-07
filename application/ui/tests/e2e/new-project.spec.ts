@@ -33,7 +33,7 @@ const fillProjectForm = async ({
     }
 };
 
-test('[E2E] Minimum workflow', async ({ page }) => {
+test('[E2E] New project', async ({ page }) => {
     await test.step('Navigate to root page', async () => {
         await page.goto('/projects');
     });
@@ -59,7 +59,7 @@ test('[E2E] Minimum workflow', async ({ page }) => {
         await page.getByRole('button', { name: 'Video file' }).click();
 
         await page.locator('input[name="name"]').fill('Video source');
-        await page.locator('input[name="video_path"]').fill('data/media/test_video.mp4');
+        await page.locator('input[name="video_path"]').fill('data/media/video.mp4');
 
         await page.getByRole('button', { name: 'Apply' }).click();
     });

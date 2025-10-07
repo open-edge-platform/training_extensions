@@ -11,7 +11,7 @@ const dirname = path.dirname(filename);
 async function globalSetup() {
     // Copy video file from test assets to backend media directory
     const sourceVideo = path.join(dirname, '../assets/test_video.mp4');
-    const targetVideo = path.join(dirname, '../../../backend/data/media/test_video.mp4');
+    const targetVideo = path.join(dirname, '../../../backend/data/media/video.mp4');
 
     const targetDir = path.dirname(targetVideo);
     if (!fs.existsSync(targetDir)) {
