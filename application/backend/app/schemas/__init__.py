@@ -11,6 +11,7 @@ from app.schemas.pipeline import DataCollectionPolicy, PipelineStatus, PipelineV
 from app.schemas.project import ProjectCreate, ProjectUpdateName, ProjectView
 from app.schemas.sink import DisconnectedSinkConfig, OutputFormat, Sink, SinkCreate, SinkType
 from app.schemas.source import DisconnectedSourceConfig, Source, SourceCreate, SourceType
+from app.schemas.training_configuration import TrainingConfiguration
 
 __all__ = [
     "DataCollectionPolicy",
@@ -41,4 +42,5 @@ __all__ = [
     "SourceCreate",
     "SourceType",
     "TimeWindow",
+    "TrainingConfiguration",
 ]
