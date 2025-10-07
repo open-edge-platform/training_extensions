@@ -25,6 +25,8 @@ In Geti Tune, several key concepts are used to describe and manage models:
 > The term "model" alone can be ambiguous. Unless otherwise specified, in this document "model" always refers to a
 > model revision — a trained, versioned instance of a model architecture ready for deployment in the inference pipeline.
 
+![Model concepts](media/model-concepts.jpg)
+
 ## Model lifecycle
 
 The lifecycle of a model revision in Geti Tune consists of several key stages:
@@ -55,8 +57,6 @@ The lifecycle of a model revision in Geti Tune consists of several key stages:
 7. **Model or weight removal**: Eventually, after the model is no longer needed or a more recent and accurate revision
    becomes available, the user may decide to delete the model revision or just its weights to free up storage space.
    Deleted models are no longer available for inference or further training.
-
-![Model flow](media/model-flow.jpg)
 
 ## Model versioning
 
@@ -153,17 +153,56 @@ BASE_DATA_DIR/
 
 TODO explain what the training job does
 
-### Job scheduling
+Training a model is a complex, multi-step process, and as such, it is represented by a job in Geti Tune.
+A job is an instance of a structured workflow that performs a specific function (in this case, training a model).
+It runs in the background when resources are available, and eventually finishes after a potentially long but
+finite amount of time; for details about how jobs are scheduled and executed, see [Jobs](jobs.md).
 
-TODO explain how jobs are scheduled and executed
+The first step of the training job is the preparation of the dataset. In fact, the dataset items as well as their
+annotations already exist within the database, but in a layout designed for transactional workloads, like an API
+that returns or modifies individual items. On the other hand, training needs to read items in batches and repeatedly
+(every epoch), so the dataset must be converted into a format optimized for this kind of access pattern.
+For this purpose, the training job creates a [Datumaro](https://github.com/open-edge-platform/datumaro) `Dataset` and
+populates it with the samples from the database.
+During the conversion, a subset is assigned to any item that doesn't already have one; the assignment is based on
+stratified sampling, and each item's subset remains unchanged in subsequent training rounds to avoid subset leakage.
 
-## Inference
+The actual training loop is controlled by the OTX `Engine`, configured with an `OTXDataModule` that is initialized
+from the previously created `Dataset`. Just before the loop starts, the hyperparameters are serialized to a YAML file
+in OTX-compatible format, and any necessary base weights are downloaded if not already cached locally.
+Training is a lengthy process that involves multiple epochs of forward and backward passes, optimization steps,
+and periodic evaluation on the validation set. All these operations are handled internally by OTX, which works
+seamlessly with different devices including CPU and GPUs (Intel and Nvidia).
+Throughout the training, various metrics (e.g. accuracy and loss) are logged to a JSON file for later analysis.
+After training, the resulting PyTorch weights are converted to OpenVINO IR format using the
+[OpenVINO model converter](https://docs.openvino.ai/2024/notebooks/convert-to-openvino-with-output.html).
+Finally, the training job updates the model revision record in the database with the training status, timestamps,
+and other relevant metadata.
 
-TODO how the trained models are used for inference
+The final step is the evaluation of the trained model on the testing subset, using standard metrics such as accuracy
+for classification. The results are stored in the `evaluations` table in the database, linked to the corresponding
+model revision. The metrics help users assess the model's performance and decide whether to enable it in the inference
+pipeline. Implementation-wise, the evaluation step relies on ModelAPI to generate the predictions which are then
+compared to the ground truth annotations to compute the metrics.
+
+![Training data flow](media/training-data-flow.jpg)
+
+> [!NOTE]
+> For training purposes, the Datumaro `Dataset` can be kept in-memory and consumed as is by OTX.
+> However, persisting it to disk is still necessary if, at a later time, the user wants to re-train another model
+> on the same dataset revision, or to simply inspect the dataset contents. For this reason, it is recommended to
+> store the dataset in a format like Parquet that allows efficient loading and querying, with or without Datumaro.
 
 ## Model deletion
 
-TODO
+Model artifacts, especially the weights, can consume a significant amount of disk space.
+To manage storage effectively, Geti Tune allows users to delete model revisions or just their weights when they
+are no longer needed. Deleting a model revision removes its metadata from the database and all associated files
+from the filesystem, while deleting just the weights retains the metadata for tracking purposes but frees up
+the disk space used by the weight files.
+After removing the weights, it is no longer possible to use the model for inference or as a base for further training.
+In any case, the deletion of a model has no impact on the other models in the project, even if they were fine-tuned
+from the deleted model (in this case, the parent link is deleted too).
 
 ## API
 
