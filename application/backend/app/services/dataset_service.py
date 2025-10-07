@@ -92,12 +92,12 @@ class DatasetService:
         """Creates a new dataset item"""
         dataset_item_id = uuid4()
         match data:
+            case Image.Image():
+                image = data
             case np.ndarray():
                 image = self._read_image_from_ndarray(data)
-            case BinaryIO() | BytesIO():
-                image = self._read_image_from_binary(data)
             case _:
-                image = data
+                image = self._read_image_from_binary(data)
 
         dataset_dir = self.projects_dir / f"{project_id}/dataset"
         dataset_dir.mkdir(parents=True, exist_ok=True)
