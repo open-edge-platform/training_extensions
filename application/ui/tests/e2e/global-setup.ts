@@ -103,7 +103,7 @@ async function globalSetup() {
 
         // Download video
         if (!videoExists) {
-            const videoUrl = `${S3_BUCKET_URL}/media/${VIDEO_FILE}`;
+            const videoUrl = `${S3_BUCKET_URL}/media/video.mp4`;
             await downloadFile(videoUrl, targetVideo);
         }
 
