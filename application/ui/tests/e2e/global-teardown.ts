@@ -11,7 +11,7 @@ const dirname = path.dirname(filename);
 async function globalTeardown() {
     const targetVideo = path.join(dirname, '../../../backend/data/media/test_video.mp4');
 
-    if (fs.existsSync(targetVideo)) {
+    if (fs.existsSync(targetVideo) && process.env.CI) {
         fs.unlinkSync(targetVideo);
         console.info('✓ Test video file cleaned up');
     }
