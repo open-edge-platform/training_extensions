@@ -7,7 +7,7 @@ import { createUseGesture, pinchAction, wheelAction } from '@use-gesture/react';
 
 import { useContainerSize } from './use-container-size';
 import { Size, useSyncZoom } from './use-sync-zoom.hook';
-import { useSetZoom, useZoom } from './zoom.provider';
+import { useSetZoom, useZoom, ZoomState } from './zoom.provider';
 
 import classes from './zoom.module.scss';
 
@@ -21,49 +21,57 @@ export const ZoomTransform = ({ children, target }: { children: ReactNode; targe
     const initialCoordinates = useSyncZoom({ container: containerSize, target });
     const maxZoomIn = initialCoordinates.scale * 100;
     const maxZoomOut = initialCoordinates.scale / 2;
-    console.log('initialCoordinates', initialCoordinates.translate);
 
     useGesture(
         {
-            onWheel: ({ event, delta: [, dy] }) => {
-                event.preventDefault();
-
+            onPinch: ({ origin, offset: [deltaDistance] }) => {
                 const rect = containerRef.current?.getBoundingClientRect();
                 if (!rect) return;
 
-                const isZoomingOut = dy > 0;
-                const factor = 1 - dy / 500;
-                const newScale = Math.max(maxZoomOut, Math.min(maxZoomIn, zoom.scale * factor));
+                const factor = 1 + deltaDistance / 200;
+                const newScale = getClampScale(initialCoordinates.scale * factor);
+                const relativeCursor = { x: origin[0] - rect.left, y: origin[1] - rect.top };
 
-                const cursorX = event.clientX - rect.left;
-                const cursorY = event.clientY - rect.top;
+                setZoom(getZoomState(newScale, relativeCursor.x, relativeCursor.y));
+            },
+            onWheel: ({ event, delta: [, verticalScrollDelta] }) => {
+                const rect = containerRef.current?.getBoundingClientRect();
+                if (!rect) return;
 
-                setZoom((prev) => {
-                    if (isZoomingOut && newScale <= initialCoordinates.scale) {
-                        return { ...prev, ...initialCoordinates };
-                    }
+                const factor = 1 - verticalScrollDelta / 500;
+                const newScale = getClampScale(zoom.scale * factor);
+                const relativeCursor = { x: event.clientX - rect.left, y: event.clientY - rect.top };
 
-                    const scaleRatio = newScale / prev.scale;
-                    const newTranslateX = cursorX - scaleRatio * (cursorX - prev.translate.x);
-                    const newTranslateY = cursorY - scaleRatio * (cursorY - prev.translate.y);
-
-                    return {
-                        ...prev,
-                        scale: newScale,
-                        translate: {
-                            x: newTranslateX,
-                            y: newTranslateY,
-                        },
-                    };
-                });
+                setZoom(getZoomState(newScale, relativeCursor.x, relativeCursor.y));
             },
         },
         {
             target: containerRef,
             eventOptions: { passive: false },
             wheel: { preventDefault: true },
+            pinch: { preventDefault: true },
         }
     );
+
+    const getClampScale = (value: number) => {
+        return Math.max(maxZoomOut, Math.min(maxZoomIn, value));
+    };
+
+    const getZoomState = (newScale: number, cursorX: number, cursorY: number) => (prev: ZoomState) => {
+        if (newScale <= initialCoordinates.scale) {
+            return { ...prev, ...initialCoordinates };
+        }
+
+        const scaleRatio = newScale / prev.scale;
+        const newTranslateX = cursorX - scaleRatio * (cursorX - prev.translate.x);
+        const newTranslateY = cursorY - scaleRatio * (cursorY - prev.translate.y);
+
+        return {
+            ...prev,
+            scale: newScale,
+            translate: { x: newTranslateX, y: newTranslateY },
+        };
+    };
 
     return (
         <div
@@ -77,7 +85,6 @@ export const ZoomTransform = ({ children, target }: { children: ReactNode; targe
                 style={{
                     transformOrigin: '0 0',
                     transform: `translate(${zoom.translate.x}px, ${zoom.translate.y}px) scale(var(--zoom-scale))`,
-                    transition: 'transform 100ms ease',
                 }}
             >
                 {children}

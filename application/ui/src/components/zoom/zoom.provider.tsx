@@ -3,7 +3,8 @@
 
 import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useState } from 'react';
 
-type ZoomState = { scale: number; min: number; max: number; translate: { x: number; y: number } };
+export type ZoomState = { scale: number; min: number; max: number; translate: { x: number; y: number } };
+
 export const Zoom = createContext<ZoomState>({
     scale: 1.0,
     min: 1,
