@@ -15,6 +15,7 @@ import numpy as np
 from datumaro.components.annotation import AnnotationType
 from datumaro.util.image import IMAGE_BACKEND, IMAGE_COLOR_CHANNEL, ImageBackend
 from datumaro.util.image import ImageColorChannel as DatumaroImageColorChannel
+from otx.types import OTXTaskType
 from torch.utils.data import Dataset
 
 from otx.data.entity.torch import OTXDataItem
@@ -61,6 +62,7 @@ class OTXDataset(Dataset):
 
     Args:
         dm_subset: Datumaro subset of a dataset
+        task_type: OTX task type
         transforms: Transforms to apply on images
         max_refetch: Maximum number of images to fetch in cache
         image_color_channel: Color channel of images
@@ -73,6 +75,7 @@ class OTXDataset(Dataset):
         self,
         dm_subset: DatasetSubset,
         transforms: Transforms,
+        task_type: OTXTaskType,
         max_refetch: int = 1000,
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
         stack_images: bool = True,
@@ -80,6 +83,7 @@ class OTXDataset(Dataset):
         data_format: str = "",
     ) -> None:
         self.dm_subset = dm_subset
+        self.task_type = task_type
         self.transforms = transforms
         self.max_refetch = max_refetch
         self.image_color_channel = image_color_channel

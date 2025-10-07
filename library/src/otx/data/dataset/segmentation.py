@@ -18,11 +18,12 @@ from otx.data.entity.base import ImageInfo
 from otx.data.entity.torch import OTXDataItem
 from otx.types.image import ImageColorChannel
 from otx.types.label import SegLabelInfo
+from otx.types import OTXTaskType
 
 from .base import OTXDataset
 
 if TYPE_CHECKING:
-    from datumaro import Dataset as DmDataset
+    from datumaro import DatasetSubset
     from datumaro import DatasetItem
 
     from otx.data.dataset.base import Transforms
@@ -158,8 +159,9 @@ class OTXSegmentationDataset(OTXDataset):
 
     def __init__(
         self,
-        dm_subset: DmDataset,
+        dm_subset: DatasetSubset,
         transforms: Transforms,
+        task_type: OTXTaskType = OTXTaskType.SEMANTIC_SEGMENTATION,
         max_refetch: int = 1000,
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
         to_tv_image: bool = True,
@@ -167,11 +169,12 @@ class OTXSegmentationDataset(OTXDataset):
         data_format: str = "",
     ) -> None:
         super().__init__(
-            dm_subset,
-            transforms,
-            max_refetch,
-            image_color_channel,
-            to_tv_image,
+            dm_subset=dm_subset,
+            task_type=task_type,
+            transforms=transforms,
+            max_refetch=max_refetch,
+            image_color_channel=image_color_channel,
+            to_tv_image=to_tv_image,
             data_format=data_format,
         )
         if self.has_polygons:

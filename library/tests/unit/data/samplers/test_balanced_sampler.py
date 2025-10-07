@@ -43,6 +43,7 @@ def fxt_imbalanced_dataset() -> OTXDataset:
     return OTXDataset(
         dm_subset=dm_dataset.get_subset("train"),
         transforms=[],
+        task_type="",
     )
 
 

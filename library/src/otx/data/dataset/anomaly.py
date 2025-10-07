@@ -48,14 +48,15 @@ class OTXAnomalyDataset(OTXDataset):
         to_tv_image: bool = True,
         data_format: str = "",
     ) -> None:
-        self.task_type = task_type
         super().__init__(
-            dm_subset,
-            transforms,
-            max_refetch,
-            image_color_channel,
-            stack_images,
-            to_tv_image,
+            dm_subset=dm_subset,
+            task_type=task_type,
+            transforms=transforms,
+            max_refetch=max_refetch,
+            image_color_channel=image_color_channel,
+            stack_images=stack_images,
+            to_tv_image=to_tv_image,
+            data_format=data_format,
         )
         self.label_info = AnomalyLabelInfo()
         self._label_mapping = self._map_id_to_label()

@@ -19,6 +19,7 @@ from otx.data.entity.torch import OTXDataItem
 from otx.data.transform_libs.torchvision import Compose
 from otx.types.image import ImageColorChannel
 from otx.types.label import LabelInfo
+from otx.types import OTXTaskType
 
 from .base import OTXDataset
 
@@ -32,6 +33,7 @@ class OTXKeypointDetectionDataset(OTXDataset):
         self,
         dm_subset: DatasetSubset,
         transforms: Transforms,
+        task_type: OTXTaskType = OTXTaskType.KEYPOINT_DETECTION,
         max_refetch: int = 1000,
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
         stack_images: bool = True,
@@ -39,13 +41,14 @@ class OTXKeypointDetectionDataset(OTXDataset):
         data_format: str = "",
     ) -> None:
         super().__init__(
-            dm_subset,
-            transforms,
-            max_refetch,
-            image_color_channel,
-            stack_images,
-            to_tv_image,
-            data_format,
+            dm_subset=dm_subset,
+            task_type=task_type,
+            transforms=transforms,
+            max_refetch=max_refetch,
+            image_color_channel=image_color_channel,
+            stack_images=stack_images,
+            to_tv_image=to_tv_image,
+            data_format=data_format,
         )
 
         self.dm_subset = self._get_single_bbox_dataset(dm_subset)

@@ -8,6 +8,7 @@ from __future__ import annotations
 import logging as log
 from typing import TYPE_CHECKING
 
+from attrs import has
 from datumaro import Dataset as DmDataset
 from lightning import LightningDataModule
 from omegaconf import DictConfig, OmegaConf
@@ -80,10 +81,13 @@ class OTXDataModule(LightningDataModule):
         self.data_format = data_format
         self.data_root = data_root
 
-        self.train_subset = train_subset if train_subset is not None else self._get_default_subset_config("train")
-        self.val_subset = val_subset if val_subset is not None else self._get_default_subset_config("val")
-        self.test_subset = test_subset if test_subset is not None else self._get_default_subset_config("test")
+        if input_size is not None and not isinstance(input_size, (tuple, list)):
+            msg = f"input_size should be tuple/list of ints or 'auto', but got {input_size}"
+            raise ValueError(msg)
 
+        self.train_subset = train_subset if train_subset is not None else self._get_default_subset_config("train", input_size)
+        self.val_subset = val_subset if val_subset is not None else self._get_default_subset_config("val", input_size)
+        self.test_subset = test_subset if test_subset is not None else self._get_default_subset_config("test", input_size)
         self.tile_config = tile_config
 
         self.image_color_channel = image_color_channel
@@ -109,14 +113,11 @@ class OTXDataModule(LightningDataModule):
                 ignore_index=self.ignore_index if self.task == "SEMANTIC_SEGMENTATION" else None,
             )
 
-        if input_size is not None and not isinstance(input_size, (tuple, list)):
-            msg = f"input_size should be tuple/list of ints or 'auto', but got {input_size}"
-            raise ValueError(msg)
-
-        elif input_size is not None:
+        if input_size is not None:
             # override input_size to all subset configs when it is given
             for subset_cfg in [self.train_subset, self.val_subset, self.test_subset]:
-                subset_cfg.input_size = input_size  # type: ignore[assignment]
+                if subset_cfg.input_size is None:
+                    subset_cfg.input_size = input_size  # type: ignore[assignment]
 
         # Extract mean and std from Normalize transform
         self.input_mean, self.input_std = self._extract_normalization_params(self.train_subset.transforms)
@@ -172,7 +173,6 @@ class OTXDataModule(LightningDataModule):
 
             if self.tile_config.enable_tiler:
                 dataset = OTXTileDatasetFactory.create(
-                    task=self.task,
                     dataset=dataset,
                     tile_config=self.tile_config,
                 )
@@ -217,15 +217,12 @@ class OTXDataModule(LightningDataModule):
     @classmethod
     def from_otx_datasets(
         cls,
-        task: OTXTaskType,
         train_dataset: OTXDataset,
         val_dataset: OTXDataset,
         test_dataset: OTXDataset | None = None,
         train_subset: SubsetConfig | None = None,
         val_subset: SubsetConfig | None = None,
         test_subset: SubsetConfig | None = None,
-        tile_config: TileConfig = TileConfig(enable_tiler=False),
-        image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
         auto_num_workers: bool = False,
         device: DeviceType = DeviceType.auto,
     ) -> OTXDataModule:
@@ -283,7 +280,6 @@ class OTXDataModule(LightningDataModule):
             >>> from otx.config.data import SubsetConfig
             >>> train_config = SubsetConfig(
             ...     batch_size=64,
-            ...     subset_name="train",
             ...     transforms=[],
             ...     num_workers=8,
             ... )
@@ -308,13 +304,10 @@ class OTXDataModule(LightningDataModule):
         LightningDataModule.__init__(instance)
 
         # Set basic attributes
-        instance.task = task
+        instance.task = train_dataset.task
         instance.data_format = train_dataset.data_format
         instance.data_root = None
-        instance.train_subset = train_subset if train_subset is not None else instance._get_default_subset_config("train")
-        instance.val_subset = val_subset if val_subset is not None else instance._get_default_subset_config("val")
-        instance.test_subset = test_subset if test_subset is not None else instance._get_default_subset_config("test")
-        instance.tile_config = tile_config
+        instance.tile_config = train_dataset.tile_config if hasattr(train_dataset, "tile_config") else TileConfig(enable_tiler=False)
         instance.image_color_channel = train_dataset.image_color_channel
         instance.include_polygons = False
         instance.ignore_index = 255
@@ -335,6 +328,9 @@ class OTXDataModule(LightningDataModule):
         example_item = next(iter(train_dataset))
         input_size = example_item.img_info["img_shape"]
         instance.input_size = input_size
+        instance.train_subset = train_subset if train_subset is not None else instance._get_default_subset_config("train", input_size)
+        instance.val_subset = val_subset if val_subset is not None else instance._get_default_subset_config("val", input_size)
+        instance.test_subset = test_subset if test_subset is not None else instance._get_default_subset_config("test", input_size)
 
         # Extract normalization parameters from first dataset's transforms if available
         transforms_to_extract = None
@@ -364,7 +360,7 @@ class OTXDataModule(LightningDataModule):
 
         return instance
 
-    def _get_default_subset_config(self, subset_name: str) -> SubsetConfig:
+    def _get_default_subset_config(self, subset_name: str, input_size: tuple[int, int] | None = None) -> SubsetConfig:
         """Create a default SubsetConfig for a given subset when not provided.
 
         This method loads the configuration from the base YAML files in
@@ -423,7 +419,11 @@ class OTXDataModule(LightningDataModule):
 
         # Extract subset config and convert to container (dict)
         subset_config_dict = OmegaConf.to_container(config_dict[subset_key], resolve=True)  # type: ignore[index]
-        subset_config_dict["input_size"] = config_dict["input_size"]
+        if subset_config_dict["input_size"] is None and input_size is not None:
+            subset_config_dict["input_size"] = input_size
+        elif subset_config_dict["input_size"] is None and input_size is None:
+            subset_config_dict["input_size"] = config_dict["input_size"]
+
         # Create structured config from dict
         config = OmegaConf.structured(SubsetConfig)
         config = OmegaConf.merge(config, subset_config_dict)
@@ -445,10 +445,6 @@ class OTXDataModule(LightningDataModule):
 
     def train_dataloader(self) -> DataLoader:
         """Get train dataloader."""
-        if self.train_subset is None:
-            # Use default configuration when datasets are provided directly
-            self.train_subset = self._get_default_subset_config("train")
-
         config = self.train_subset
         dataset = self._get_dataset(config.subset_name)
         sampler = instantiate_sampler(config.sampler, dataset=dataset, batch_size=config.batch_size)
@@ -478,9 +474,6 @@ class OTXDataModule(LightningDataModule):
 
     def val_dataloader(self) -> DataLoader:
         """Get val dataloader."""
-        if self.val_subset is None:
-            self.val_subset = self._get_default_subset_config("val")
-
         config = self.val_subset
         dataset = self._get_dataset(config.subset_name)
 
@@ -496,10 +489,6 @@ class OTXDataModule(LightningDataModule):
 
     def test_dataloader(self) -> DataLoader:
         """Get test dataloader."""
-        if self.test_subset is None:
-            # Use default configuration when datasets are provided directly
-            self.test_subset = self._get_default_subset_config("test")
-
         config = self.test_subset
         dataset = self._get_dataset(config.subset_name)
 
@@ -512,26 +501,6 @@ class OTXDataModule(LightningDataModule):
             collate_fn=dataset.collate_fn,
             persistent_workers=config.num_workers > 0,
         )
-
-    @property
-    def default_input_size_per_task(self):
-        """Return default input size per OTX task type."""
-        task_to_size = {
-            OTXTaskType.ANOMALY: (256, 256),
-            OTXTaskType.ANOMALY_CLASSIFICATION: (256, 256),
-            OTXTaskType.ANOMALY_DETECTION: (256, 256),
-            OTXTaskType.ANOMALY_SEGMENTATION: (256, 256),
-            OTXTaskType.MULTI_CLASS_CLS: (224, 224),
-            OTXTaskType.MULTI_LABEL_CLS: (224, 224),
-            OTXTaskType.H_LABEL_CLS: (224, 224),
-            OTXTaskType.DETECTION: (640, 640),
-            OTXTaskType.INSTANCE_SEGMENTATION: (640, 640),
-            OTXTaskType.SEMANTIC_SEGMENTATION: (512, 512),
-            OTXTaskType.ROTATED_DETECTION: (640, 640),
-            OTXTaskType.KEYPOINT_DETECTION: (512, 512),
-        }
-
-        return task_to_size[self.task]
 
     def setup(self, stage: str) -> None:
         """Setup for each stage."""
@@ -577,5 +546,4 @@ class OTXDataModule(LightningDataModule):
                 self.device,
                 self.input_size,
             ),
-        )
         )
