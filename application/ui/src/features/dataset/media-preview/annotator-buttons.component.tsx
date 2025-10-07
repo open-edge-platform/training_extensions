@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, ButtonGroup, ToggleButton } from '@geti/ui';
-import { useAnnotations } from 'src/features/annotator/annotations-provider.component';
+import { useAnnotationActions } from 'src/features/annotator/annotation-actions-provider.component';
 
 type AnnotatorButtonsProps = {
     isFocussed: boolean;
@@ -10,7 +10,7 @@ type AnnotatorButtonsProps = {
     onClose: () => void;
 };
 export const AnnotatorButtons = ({ isFocussed, onFocus, onClose }: AnnotatorButtonsProps) => {
-    const { saveAnnotations, isSaving } = useAnnotations();
+    const { saveAnnotations, isSaving } = useAnnotationActions();
 
     return (
         <ButtonGroup>

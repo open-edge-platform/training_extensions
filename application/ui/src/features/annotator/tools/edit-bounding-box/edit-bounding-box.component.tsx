@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 
-import { useAnnotations } from '../../annotations-provider.component';
+import { useAnnotationActions } from '../../annotation-actions-provider.component';
 import { AnnotationShape } from '../../annotations/annotation-shape.component';
 import { useAnnotator } from '../../annotator-provider.component';
 import { Annotation, Point } from '../../types';
@@ -21,7 +21,7 @@ const ANCHOR_SIZE = 8;
 export const EditBoundingBox = ({ annotation, zoom }: EditBoundingBoxProps) => {
     const [shape, setShape] = useState(annotation.shape);
     const { mediaItem } = useAnnotator();
-    const { updateAnnotation } = useAnnotations();
+    const { updateAnnotation } = useAnnotationActions();
 
     const roi = { x: 0, y: 0, width: mediaItem.width, height: mediaItem.height };
 

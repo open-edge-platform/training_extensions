@@ -15,7 +15,7 @@ import {
 } from '@geti/ui';
 import { useLoadMore } from '@react-aria/utils';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-import { AnnotationsProvider } from 'src/features/annotator/annotations-provider.component';
+import { AnnotationActionsProvider } from 'src/features/annotator/annotation-actions-provider.component';
 import { AnnotatorProvider } from 'src/features/annotator/annotator-provider.component';
 
 import { useSelectedData } from '../../../routes/dataset/provider';
@@ -116,9 +116,9 @@ export const Gallery = ({ items, hasNextPage, isFetchingNextPage, fetchNextPage 
             <DialogContainer onDismiss={() => setSelectedMediaItem(null)}>
                 {selectedMediaItem !== null && (
                     <AnnotatorProvider mediaItem={selectedMediaItem}>
-                        <AnnotationsProvider>
+                        <AnnotationActionsProvider>
                             <MediaPreview mediaItem={selectedMediaItem} close={() => setSelectedMediaItem(null)} />
-                        </AnnotationsProvider>
+                        </AnnotationActionsProvider>
                     </AnnotatorProvider>
                 )}
             </DialogContainer>

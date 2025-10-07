@@ -61,7 +61,7 @@ interface AnnotationsContextValue {
 
 const AnnotationsContext = createContext<AnnotationsContextValue | null>(null);
 
-export const AnnotationsProvider = ({ children }: { children: ReactNode }) => {
+export const AnnotationActionsProvider = ({ children }: { children: ReactNode }) => {
     const { mediaItem } = useAnnotator();
     const projectId = useProjectIdentifier();
     const saveMutation = $api.useMutation(
@@ -158,11 +158,11 @@ export const AnnotationsProvider = ({ children }: { children: ReactNode }) => {
     );
 };
 
-export const useAnnotations = () => {
+export const useAnnotationActions = () => {
     const context = useContext(AnnotationsContext);
 
     if (context === null) {
-        throw new Error('useAnnotations must be used within "AnnotationsProvider"');
+        throw new Error('useAnnotationActions must be used within "AnnotationActionsProvider"');
     }
 
     return context;
