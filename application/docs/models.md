@@ -151,8 +151,6 @@ BASE_DATA_DIR/
 
 ## Training and evaluation
 
-TODO explain what the training job does
-
 Training a model is a complex, multi-step process, and as such, it is represented by a job in Geti Tune.
 A job is an instance of a structured workflow that performs a specific function (in this case, training a model).
 It runs in the background when resources are available, and eventually finishes after a potentially long but
