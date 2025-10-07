@@ -94,8 +94,8 @@ test('[E2E] New project', async ({ page }) => {
 
         await expect(page.getByLabel('Connected')).toBeVisible({ timeout: 60000 });
 
-        // Wait for 3 seconds
-        await page.waitForTimeout(3000);
+        // Wait a bit for the stream to capture some data
+        await page.waitForTimeout(5000);
     });
 
     await test.step('Confirm data was collected', async () => {

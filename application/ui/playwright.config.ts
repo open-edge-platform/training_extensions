@@ -38,7 +38,19 @@ export default defineConfig({
     projects: [
         {
             name: 'Component tests',
-            use: { ...devices['Desktop Chrome'] },
+            use: {
+                ...devices['Desktop Chrome'],
+                headless: CI,
+                viewport: { width: 1280, height: 720 },
+                // Additional browser args for WebRTC in headless mode
+                launchOptions: {
+                    args: [
+                        '--use-fake-ui-for-media-stream',
+                        '--use-fake-device-for-media-stream',
+                        '--disable-web-security',
+                    ],
+                },
+            },
         },
     ],
 

@@ -98,7 +98,7 @@ async function globalSetup() {
     }
 
     // Download from S3 or use local files
-    if (S3_BUCKET_URL) {
+    if (!!process.env.CI && S3_BUCKET_URL) {
         console.info(`Downloading test assets from ${S3_BUCKET_URL}...`);
 
         // Download video
