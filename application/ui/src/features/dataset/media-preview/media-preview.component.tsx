@@ -3,9 +3,9 @@
 
 import { Suspense, useState } from 'react';
 
-import { Content, Dialog, Divider, Grid, Heading, View } from '@geti/ui';
-import { ZoomProvider } from 'src/components/zoom/zoom';
+import { Content, Dialog, Divider, Grid, Heading, Loading, View } from '@geti/ui';
 
+import { ZoomProvider } from '../../../components/zoom/zoom.provider';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas';
 import { SelectAnnotationProvider } from '../../annotator/select-annotation-provider.component';
 import { ToolSelectionBar } from '../../annotator/tools/tool-selection-bar.component';
@@ -36,7 +36,7 @@ export const MediaPreview = ({ mediaItem, close }: MediaPreviewProps) => {
                         columns={'100px calc(100% - 200px) 100px'}
                         rows={'auto 1fr auto'}
                     >
-                        <Suspense fallback={<div>Loading...</div>}>
+                        <Suspense fallback={<Loading />}>
                             <ZoomProvider>
                                 <View gridArea={'toolbar'}>
                                     <ToolSelectionBar />

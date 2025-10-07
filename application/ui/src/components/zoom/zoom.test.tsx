@@ -5,8 +5,8 @@ import { render, screen } from 'test-utils/render';
 import { vi } from 'vitest';
 
 import { useContainerSize } from './use-container-size';
-import { ZoomProvider } from './zoom';
 import { ZoomTransform } from './zoom-transform';
+import { ZoomProvider } from './zoom.provider';
 
 vi.mock('./use-container-size', () => ({
     useContainerSize: vi.fn(),

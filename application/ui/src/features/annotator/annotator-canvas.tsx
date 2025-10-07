@@ -3,8 +3,8 @@
 
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
-import { ZoomProvider } from '../../components/zoom/zoom';
 import { ZoomTransform } from '../../components/zoom/zoom-transform';
+import { ZoomProvider } from '../../components/zoom/zoom.provider';
 import { getImageUrl } from '../dataset/gallery/utils';
 import { useAnnotationActions } from './annotation-actions-provider.component';
 import { Annotations } from './annotations/annotations.component';
