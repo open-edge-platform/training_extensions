@@ -58,7 +58,4 @@ export default defineConfig({
             timeout: ACTION_TIMEOUT,
         },
     ],
-
-    globalSetup: './tests/e2e/global-setup.ts',
-    globalTeardown: './tests/e2e/global-teardown.ts',
 });

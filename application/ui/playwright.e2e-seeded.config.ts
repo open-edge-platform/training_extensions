@@ -60,6 +60,5 @@ export default defineConfig({
         },
     ],
 
-    globalSetup: './tests/e2e/global-setup.ts',
-    globalTeardown: './tests/e2e/global-teardown.ts',
+    globalSetup: './tests/e2e/global-setup-seeded.ts',
 });
