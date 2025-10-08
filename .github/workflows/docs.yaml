@@ -67,11 +67,10 @@ jobs:
           git fetch
           git checkout gh-pages
           mkdir -p /tmp/docs_build
-          ls -R
-          ls .. -R
+          ls ./docs/build/html
+          ls ../docs/build/html
 
-
-          cp -r build/html/* /tmp/docs_build/
+          cp -r ./docs/build/html* /tmp/docs_build/
           rm -rf ${{ env.RELEASE_VERSION }}/*
           echo '<html><head><meta http-equiv="refresh" content="0; url=stable/" /></head></html>' > index.html
           mkdir -p ${{ env.RELEASE_VERSION }}
