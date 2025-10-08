@@ -73,36 +73,36 @@ class OTXDatasetFactory:
         if task == OTXTaskType.MULTI_CLASS_CLS:
             from .dataset.classification import OTXMulticlassClsDataset
 
-            return OTXMulticlassClsDataset(**common_kwargs)
+            return OTXMulticlassClsDataset(task_type=task, **common_kwargs)
 
         if task == OTXTaskType.MULTI_LABEL_CLS:
             from .dataset.classification import OTXMultilabelClsDataset
 
-            return OTXMultilabelClsDataset(**common_kwargs)
+            return OTXMultilabelClsDataset(task_type=task, **common_kwargs)
 
         if task == OTXTaskType.H_LABEL_CLS:
             from .dataset.classification import OTXHlabelClsDataset
 
-            return OTXHlabelClsDataset(**common_kwargs)
+            return OTXHlabelClsDataset(task_type=task, **common_kwargs)
 
         if task == OTXTaskType.DETECTION:
             from .dataset.detection import OTXDetectionDataset
 
-            return OTXDetectionDataset(**common_kwargs)
+            return OTXDetectionDataset(task_type=task, **common_kwargs)
 
         if task in [OTXTaskType.ROTATED_DETECTION, OTXTaskType.INSTANCE_SEGMENTATION]:
             from .dataset.instance_segmentation import OTXInstanceSegDataset
 
-            return OTXInstanceSegDataset(include_polygons=include_polygons, task_type=task, **common_kwargs)
+            return OTXInstanceSegDataset(task_type=task, include_polygons=include_polygons, **common_kwargs)
 
         if task == OTXTaskType.SEMANTIC_SEGMENTATION:
             from .dataset.segmentation import OTXSegmentationDataset
 
-            return OTXSegmentationDataset(ignore_index=ignore_index, **common_kwargs)
+            return OTXSegmentationDataset(task_type=task, ignore_index=ignore_index, **common_kwargs)
 
         if task == OTXTaskType.KEYPOINT_DETECTION:
             from .dataset.keypoint_detection import OTXKeypointDetectionDataset
 
-            return OTXKeypointDetectionDataset(**common_kwargs)
+            return OTXKeypointDetectionDataset(task_type=task, **common_kwargs)
 
         raise NotImplementedError(task)

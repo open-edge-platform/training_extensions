@@ -75,6 +75,7 @@ val_subset:
         mean: [123.675, 116.28, 103.53]
         std: [58.395, 57.12, 57.375]
 test_subset:
+  subset_name: test
   batch_size: 32
   num_workers: 2
   transforms:

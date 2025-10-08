@@ -106,6 +106,9 @@ class OTXDataModule(LightningDataModule):
 
         dataset = DmDataset.import_from(self.data_root, format=self.data_format)
 
+        if self.data_format is None:
+            self.data_format = dataset.format
+
         if self.task != OTXTaskType.H_LABEL_CLS and not (
             self.task == OTXTaskType.KEYPOINT_DETECTION and self.data_format == "arrow"
         ):
@@ -169,7 +172,7 @@ class OTXDataModule(LightningDataModule):
                 task=self.task,
                 dm_subset=dm_subset.as_dataset(),
                 cfg_subset=config_mapping[name],
-                data_format=self.data_format,
+                data_format=self.data_format,  # type: ignore [arg-type]
                 image_color_channel=self.image_color_channel,
                 include_polygons=self.include_polygons,
                 ignore_index=self.ignore_index,
@@ -190,7 +193,9 @@ class OTXDataModule(LightningDataModule):
 
         self.label_info = next(iter(label_infos))
 
-    def extract_normalization_params(self, transforms_source: list | None) -> tuple[tuple, tuple]:
+    def extract_normalization_params(
+        self, transforms_source: list | None
+    ) -> tuple[tuple[float, float, float], tuple[float, float, float]]:
         """Extract mean and std from transforms.
 
         Args:
@@ -311,7 +316,7 @@ class OTXDataModule(LightningDataModule):
         # Set basic attributes
         instance.task = train_dataset.task
         instance.data_format = train_dataset.data_format
-        instance.data_root = None
+        instance.data_root = ""
         instance.tile_config = (
             train_dataset.tile_config if hasattr(train_dataset, "tile_config") else TileConfig(enable_tiler=False)
         )
@@ -357,9 +362,9 @@ class OTXDataModule(LightningDataModule):
         instance.input_mean, instance.input_std = instance.extract_normalization_params(transforms_to_extract)
 
         # override transforms in subset_config based on provided datasets
-        instance.train_subset.transforms = train_dataset.transforms
-        instance.val_subset.transforms = val_dataset.transforms
-        instance.test_subset.transforms = test_dataset.transforms
+        instance.train_subset.transforms = train_dataset.transforms  # type: ignore[assignment]
+        instance.val_subset.transforms = val_dataset.transforms  # type: ignore[assignment]
+        instance.test_subset.transforms = test_dataset.transforms  # type: ignore[assignment]
 
         # Save hyperparameters
         instance.save_hyperparameters(
