@@ -4,10 +4,20 @@
 
 set -euo pipefail
 
-echo "=== E2E Backend Setup: Preparing test assets ===" 
+exec 1>&2
+
+echo "============================================="
+echo "=== E2E BACKEND SETUP STARTING ==="
+echo "============================================="
+echo "PWD: $(pwd)"
+echo "SEED_DB: ${SEED_DB:-not set}"
+echo "E2E_ASSETS_S3_URL: ${E2E_ASSETS_S3_URL:-not set}"
+echo "============================================="
+
+echo "=== Preparing test assets ===" 
 
 # Backend data directory
-DATA_DIR="$(dirname "$0")/data"
+DATA_DIR="$(pwd)/data"
 MEDIA_DIR="$DATA_DIR/media"
 MODELS_DIR="$DATA_DIR/models"
 
@@ -40,11 +50,13 @@ if [ -n "${E2E_ASSETS_S3_URL:-}" ]; then
     
     echo "✓ All test assets downloaded from S3"
 else
-    echo "E2E_ASSETS_S3_URL not set, assets must be provided locally"
+    echo "⚠️  E2E_ASSETS_S3_URL not set, assuming assets exist locally"
 fi
 
+echo "============================================="
 echo "=== E2E Backend Setup: Complete ==="
-echo "Starting backend with SEED_DB=true..."
+echo "=== Starting backend with SEED_DB=${SEED_DB:-false} ==="
+echo "============================================="
 
 # Now start the backend with seeding
 exec ./run.sh
