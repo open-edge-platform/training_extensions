@@ -3,10 +3,11 @@
 
 import asyncio
 import logging
+import os
 import queue
 from typing import Any
 
-from aiortc import RTCPeerConnection, RTCSessionDescription
+from aiortc import RTCConfiguration, RTCIceServer, RTCPeerConnection, RTCSessionDescription
 
 from app.schemas.webrtc import Answer, InputData, Offer
 from app.webrtc.stream import InferenceVideoStreamTrack
@@ -21,10 +22,25 @@ class WebRTCManager:
         self._pcs: dict[str, RTCPeerConnection] = {}
         self._input_data: dict[str, Any] = {}
         self._stream_queue = stream_queue
+        
+        # Configure ICE servers based on environment
+        # In CI/container environments, use minimal configuration for local connections
+        if os.getenv("CI"):
+            # Empty ICE servers = local connections only, no STUN/TURN
+            self._rtc_config = RTCConfiguration(iceServers=[])
+            logger.info("WebRTC: Using local-only ICE configuration (CI environment)")
+        else:
+            # Use Google's public STUN servers for local development
+            self._rtc_config = RTCConfiguration(
+                iceServers=[
+                    RTCIceServer(urls=["stun:stun.l.google.com:19302"]),
+                ]
+            )
+            logger.info("WebRTC: Using STUN server configuration (local environment)")
 
     async def handle_offer(self, offer: Offer) -> Answer:
         """Create an SDP offer for a new WebRTC connection."""
-        pc = RTCPeerConnection()
+        pc = RTCPeerConnection(configuration=self._rtc_config)
         self._pcs[offer.webrtc_id] = pc
 
         # Add video track

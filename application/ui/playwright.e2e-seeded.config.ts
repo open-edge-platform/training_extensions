@@ -45,11 +45,9 @@ export default defineConfig({
                         '--use-fake-ui-for-media-stream',
                         '--use-fake-device-for-media-stream',
                         '--disable-web-security',
-                        // Force WebRTC to use loopback/local connections only
-                        '--force-webrtc-ip-handling-policy=default_public_interface_only',
-                        '--enforce-webrtc-ip-permission-check',
-                        // Disable mDNS in WebRTC (can cause issues in containers)
+                        // WebRTC optimizations for container environments
                         '--disable-features=WebRtcHideLocalIpsWithMdns',
+                        '--force-webrtc-ip-handling-policy=default_public_interface_only',
                     ],
                 },
             },
