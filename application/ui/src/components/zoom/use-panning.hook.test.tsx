@@ -3,8 +3,7 @@
 
 import { fireEvent, renderHook } from '@testing-library/react';
 
-import { KeyMap } from '../../constants/keyboard.interface';
-import { usePanning } from './use-pannig.hook';
+import { usePanning } from './use-panning.hook';
 
 describe('usePanning', () => {
     it('returns false by default', () => {
@@ -15,24 +14,24 @@ describe('usePanning', () => {
     it('sets isPanning to true on Space keydown', () => {
         const { result } = renderHook(() => usePanning());
 
-        fireEvent.keyDown(document.body, { code: KeyMap.Space });
+        fireEvent.keyDown(document.body, { code: 'Space' });
         expect(result.current).toBe(true);
     });
 
     it('sets isPanning to false on Space keyup after keydown', () => {
         const { result } = renderHook(() => usePanning());
 
-        fireEvent.keyDown(document.body, { code: KeyMap.Space });
+        fireEvent.keyDown(document.body, { code: 'Space' });
         expect(result.current).toBe(true);
 
-        fireEvent.keyUp(document.body, { code: KeyMap.Space });
+        fireEvent.keyUp(document.body, { code: 'Space' });
         expect(result.current).toBe(false);
     });
 
     it('does not set isPanning to true for other keys', () => {
         const { result } = renderHook(() => usePanning());
 
-        fireEvent.keyDown(document.body, { code: KeyMap.Enter });
+        fireEvent.keyDown(document.body, { code: 'Enter' });
         expect(result.current).toBe(false);
     });
 });

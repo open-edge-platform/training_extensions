@@ -33,9 +33,7 @@ export const useSetZoom = () => {
 };
 
 export const ZoomProvider = ({ children }: { children: ReactNode }) => {
-    // TODO:
-    // 1. Add scale restrictions - min max
-    // 2. Add translate restrictions - min max
+    // 1. Add translate restrictions - min max
     const [zoom, setZoom] = useState<ZoomState>({
         scale: 1.0,
         maxZoomIn: 1,

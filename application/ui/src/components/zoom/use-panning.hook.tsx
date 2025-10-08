@@ -5,20 +5,18 @@ import { useState } from 'react';
 
 import { useEventListener } from 'hooks/event-listener.hook';
 
-import { KeyboardEvents, KeyMap } from '../../constants/keyboard.interface';
-
 export const usePanning = () => {
     const [isPanning, setIsPanning] = useState(false);
 
-    useEventListener(KeyboardEvents.KeyDown, (event: KeyboardEvent) => {
-        if (event.code === KeyMap.Space) {
+    useEventListener('keydown', (event: KeyboardEvent) => {
+        if (event.code === 'Space') {
             event.preventDefault();
             setIsPanning(true);
         }
     });
 
-    useEventListener(KeyboardEvents.KeyUp, (event: KeyboardEvent) => {
-        if (event.code === KeyMap.Space) {
+    useEventListener('keyup', (event: KeyboardEvent) => {
+        if (event.code === 'Space') {
             setIsPanning(false);
         }
     });

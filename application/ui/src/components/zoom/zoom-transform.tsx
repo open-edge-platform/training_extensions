@@ -7,7 +7,7 @@ import { clampBetween } from '@geti/smart-tools/utils';
 import { createUseGesture, dragAction, pinchAction, wheelAction } from '@use-gesture/react';
 
 import { useContainerSize } from './use-container-size';
-import { usePanning } from './use-pannig.hook';
+import { usePanning } from './use-panning.hook';
 import { Size, useSyncZoom } from './use-sync-zoom.hook';
 import { getZoomState } from './util';
 import { useSetZoom, useZoom } from './zoom.provider';
