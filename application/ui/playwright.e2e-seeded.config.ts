@@ -45,7 +45,6 @@ export default defineConfig({
                         '--use-fake-ui-for-media-stream',
                         '--use-fake-device-for-media-stream',
                         '--disable-web-security',
-                        '--use-file-for-fake-video-capture=../backend/data/media/video.mp4',
                     ],
                 },
             },
