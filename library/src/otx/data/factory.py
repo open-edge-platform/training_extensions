@@ -88,7 +88,7 @@ class OTXDatasetFactory:
         if task == OTXTaskType.MULTI_LABEL_CLS:
             from .dataset.classification_new import OTXMultilabelClsDataset
 
-            dataset = convert_from_legacy(dm_subset, multi_label=True)
+            dataset = convert_from_legacy(dm_subset)
             common_kwargs["dm_subset"] = dataset
             return OTXMultilabelClsDataset(**common_kwargs)
 
