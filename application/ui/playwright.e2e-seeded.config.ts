@@ -14,6 +14,7 @@ const SERVER_TIMEOUT = 60000;
  */
 export default defineConfig({
     testDir: './tests/e2e',
+    testMatch: '**/existing-project.spec.ts',
     fullyParallel: false,
     forbidOnly: CI,
     retries: process.env.CI ? 2 : 0,
@@ -33,15 +34,7 @@ export default defineConfig({
 
     projects: [
         {
-            name: 'e2e-setup',
-            testDir: './tests/e2e/setup',
-            testMatch: '**/e2e-setup.spec.ts',
-        },
-        {
             name: 'existing-project-tests',
-            testDir: './tests/e2e',
-            testMatch: '**/existing-project.spec.ts',
-            dependencies: ['e2e-setup'],
             use: {
                 ...devices['Desktop Chrome'],
                 headless: CI,
@@ -65,9 +58,6 @@ export default defineConfig({
             url: 'http://localhost:7860/health',
             reuseExistingServer: !CI,
             timeout: SERVER_TIMEOUT,
-            env: {
-                E2E_ASSETS_S3_URL: process.env.E2E_ASSETS_S3_URL || '',
-            },
         },
         {
             command: CI ? 'npx serve -s dist -p 3000' : 'npm run start',

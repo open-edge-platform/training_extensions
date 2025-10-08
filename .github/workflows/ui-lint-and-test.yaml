@@ -421,6 +421,40 @@ jobs:
         working-directory: "application/ui"
         run: npm run build:api
 
+      - name: Download E2E test assets
+        working-directory: application/backend
+        env:
+          E2E_ASSETS_S3_URL: ${{ secrets.E2E_ASSETS_S3_URL }}
+        run: |
+          # Project and model IDs
+          PROJECT_ID="9d6af8e8-6017-4ebe-9126-33aae739c5fa"
+          MODEL_ID="977eeb18-eaac-449d-bc80-e340fbe052ad"
+
+          # Create directories
+          mkdir -p "data/media"
+          mkdir -p "data/projects/$PROJECT_ID/models/$MODEL_ID"
+
+          echo "Downloading test assets from S3..."
+
+          # Download video
+          curl -L --fail --show-error --silent \
+            -o "data/media/video.mp4" \
+            "$E2E_ASSETS_S3_URL/media/sample-video-small.mp4"
+          echo "✓ Downloaded video.mp4"
+
+          # Download model files
+          curl -L --fail --show-error --silent \
+            -o "data/projects/$PROJECT_ID/models/$MODEL_ID/model.xml" \
+            "$E2E_ASSETS_S3_URL/models/ssd-card-detection.xml"
+          echo "✓ Downloaded model.xml"
+
+          curl -L --fail --show-error --silent \
+            -o "data/projects/$PROJECT_ID/models/$MODEL_ID/model.bin" \
+            "$E2E_ASSETS_S3_URL/models/ssd-card-detection.bin"
+          echo "✓ Downloaded model.bin"
+
+          echo "✓ All E2E test assets ready"
+
       - name: Run E2E tests
         working-directory: application/ui
         env:
