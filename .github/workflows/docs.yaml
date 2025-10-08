@@ -78,15 +78,6 @@ jobs:
           if [[ ${{ env.RELEASE_VERSION }} != 'test_build' ]]; then
             ln -sfn ${{ env.RELEASE_VERSION }} latest
           fi
-          echo 'ls -la ----'
-          ls -la
-
-          echo 'ls -la  latest ----'
-          ls -la latest
-
-          echo 'ls -la .. ----'
-          ls -la ..
-
           git add latest ${{ env.RELEASE_VERSION }}
           git commit -m "Update documentation" -a || true
       - name: Push changes
