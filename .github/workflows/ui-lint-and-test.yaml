@@ -364,6 +364,8 @@ jobs:
       contents: read
     timeout-minutes: 30
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.54.0-noble@sha256:18d6adb6aaccf1b0f30eba890069972e089138e4a59ddb5303d7e7290e4e38b6
     steps:
       - name: Checkout code
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -385,38 +387,15 @@ jobs:
           version: "0.8.8"
           enable-cache: false
 
-      - name: Install dependencies
-        working-directory: "application/ui"
-        run: npm ci
+      - name: Install OpenCV dependencies
+        run: |
+          apt-get update
+          apt-get install -y libgl1 libglib2.0-0
 
-      - name: Install Playwright
-        working-directory: "application/ui"
-        run: npx playwright install chromium --with-deps
-
-      - name: Setup Backend
+      - name: Setup Backend dependencies
         working-directory: application/backend
         run: |
           uv sync --frozen --all-extras
-
-      - name: Download UI build
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
-        with:
-          name: ui-dist
-          path: application/ui
-
-      - name: Download OpenAPI spec
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
-        with:
-          name: openapi-spec
-          path: application/ui/src/api
-
-      - name: Unpack build
-        working-directory: "application/ui"
-        run: tar -xzf dist.tar.gz
-
-      - name: Build OpenAPI type definitions
-        working-directory: "application/ui"
-        run: npm run build:api
 
       - name: Download E2E test assets
         working-directory: application/backend
@@ -452,11 +431,64 @@ jobs:
 
           echo "✓ All E2E test assets ready"
 
+      - name: Start backend in background
+        working-directory: application/backend
+        run: |
+          rm -f data/geti_tune.db
+          SEED_DB=true PYTHONUNBUFFERED=1 nohup uv run app/main.py > backend.log 2>&1 &
+          echo $! > backend.pid
+          echo "Backend started with PID $(cat backend.pid)"
+
+      - name: Wait for backend health
+        run: |
+          echo "Waiting for backend to be healthy..."
+          for i in {1..60}; do
+            if curl -f http://localhost:7860/health 2>/dev/null; then
+              echo "✓ Backend is ready"
+              exit 0
+            fi
+            echo "Attempt $i/60: Backend not ready yet..."
+            sleep 2
+          done
+          echo "ERROR: Backend failed to start"
+          cat application/backend/backend.log
+          exit 1
+
+      - name: Download UI build
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        with:
+          name: ui-dist
+          path: application/ui
+
+      - name: Download OpenAPI spec
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        with:
+          name: openapi-spec
+          path: application/ui/src/api
+
+      - name: Unpack build
+        working-directory: "application/ui"
+        run: tar -xzf dist.tar.gz
+
+      - name: Install dependencies
+        working-directory: "application/ui"
+        run: npm ci
+
+      - name: Build OpenAPI type definitions
+        working-directory: "application/ui"
+        run: npm run build:api
+
       - name: Run E2E tests
         working-directory: application/ui
-        env:
-          E2E_ASSETS_S3_URL: ${{ secrets.E2E_ASSETS_S3_URL }}
         run: npm run test:e2e
+
+      - name: Stop backend
+        if: always()
+        run: |
+          if [ -f application/backend/backend.pid ]; then
+            kill $(cat application/backend/backend.pid) || true
+            echo "Backend stopped"
+          fi
 
       - name: Upload E2E results
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

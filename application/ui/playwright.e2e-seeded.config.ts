@@ -51,20 +51,33 @@ export default defineConfig({
         },
     ],
 
-    webServer: [
-        {
-            command: 'cd ../backend && rm -f data/geti_tune.db && SEED_DB=true ./run.sh',
-            name: 'backend',
-            url: 'http://localhost:7860/health',
-            reuseExistingServer: !CI,
-            timeout: SERVER_TIMEOUT,
-        },
-        {
-            command: CI ? 'npx serve -s dist -p 3000' : 'npm run start',
-            name: 'frontend',
-            url: 'http://localhost:3000',
-            reuseExistingServer: !CI,
-            timeout: ACTION_TIMEOUT,
-        },
-    ],
+    // In CI, servers are started manually in workflow to control lifecycle
+    // Locally, Playwright manages the servers
+    webServer: CI
+        ? [
+              // Frontend only - backend runs as background process in CI
+              {
+                  command: 'npx serve -s dist -p 3000',
+                  name: 'frontend',
+                  url: 'http://localhost:3000',
+                  reuseExistingServer: false,
+                  timeout: ACTION_TIMEOUT,
+              },
+          ]
+        : [
+              {
+                  command: 'cd ../backend && rm -f data/geti_tune.db && SEED_DB=true ./run.sh',
+                  name: 'backend',
+                  url: 'http://localhost:7860/health',
+                  reuseExistingServer: true,
+                  timeout: SERVER_TIMEOUT,
+              },
+              {
+                  command: 'npm run start',
+                  name: 'frontend',
+                  url: 'http://localhost:3000',
+                  reuseExistingServer: true,
+                  timeout: ACTION_TIMEOUT,
+              },
+          ],
 });
