@@ -83,7 +83,6 @@ class OTXDataModule(LightningDataModule):
         if input_size is not None and not isinstance(input_size, (tuple, list)):
             msg = f"input_size should be tuple/list of ints or 'auto', but got {input_size}"
             raise ValueError(msg)
-
         self.train_subset = (
             train_subset if train_subset is not None else self.get_default_subset_config("train", input_size)
         )
