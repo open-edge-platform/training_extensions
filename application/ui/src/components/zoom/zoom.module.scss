@@ -13,5 +13,5 @@
     flex-wrap: wrap;
     width: fit-content;
     height: fit-content;
-    transform-origin: center;
+    transition: 'transform 100ms ease';
 }

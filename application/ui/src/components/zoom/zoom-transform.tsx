@@ -1,78 +1,119 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ReactNode, useEffect, useMemo, useRef } from 'react';
+import { ReactNode, useRef, useState } from 'react';
+
+import { clampBetween } from '@geti/smart-tools/utils';
+import { createUseGesture, dragAction, pinchAction, wheelAction } from '@use-gesture/react';
 
 import { useContainerSize } from './use-container-size';
-import { useSetZoom, useZoom } from './zoom';
+import { usePanning } from './use-panning.hook';
+import { Size, useSyncZoom } from './use-sync-zoom.hook';
+import { getZoomState } from './util';
+import { useSetZoom, useZoom } from './zoom.provider';
 
 import classes from './zoom.module.scss';
 
-type Size = { width: number; height: number };
-
-const DEFAULT_SCREEN_ZOOM = 0.9;
-const getCenterCoordinates = (container: Size, target: Size) => {
-    // Scale image so that it fits perfectly in the container
-    const scale = DEFAULT_SCREEN_ZOOM * Math.min(container.width / target.width, container.height / target.height);
-
-    return {
-        scale,
-        // Center image
-        translate: {
-            x: container.width / 2 - target.width / 2,
-            y: container.height / 2 - target.height / 2,
-        },
-    };
+type ZoomTransformProps = {
+    target: Size;
+    children: ReactNode;
+    zoomOutDivisor?: number;
+    zoomInMultiplier?: number;
 };
 
-const INITIAL_ZOOM = { scale: 1.0, translate: { x: 0, y: 0 } };
-const SyncZoom = ({ container, target }: { container: Size; target: Size }) => {
-    const setZoom = useSetZoom();
+const useGesture = createUseGesture([wheelAction, pinchAction, dragAction]);
 
-    const targetZoom = useMemo(() => {
-        if (container.width === undefined || container.height === undefined) {
-            return INITIAL_ZOOM;
-        }
-
-        return getCenterCoordinates({ width: container.width, height: container.height }, target);
-    }, [container, target]);
-
-    useEffect(() => {
-        setZoom({
-            scale: Number(targetZoom.scale.toFixed(3)),
-            translate: {
-                x: Number(targetZoom.translate.x.toFixed(3)),
-                y: Number(targetZoom.translate.y.toFixed(3)),
-            },
-        });
-    }, [targetZoom.scale, targetZoom.translate.x, targetZoom.translate.y, setZoom]);
-
-    return null;
-};
-
-export const ZoomTransform = ({ children, target }: { children: ReactNode; target: Size }) => {
+export const ZoomTransform = ({ children, target, zoomInMultiplier = 10, zoomOutDivisor = 2 }: ZoomTransformProps) => {
     const zoom = useZoom();
-    const ref = useRef<HTMLDivElement>(null);
-    const containerSize = useContainerSize(ref);
+    const setZoom = useSetZoom();
+    const isPanning = usePanning();
+    const [isGrabbing, setIsGrabbing] = useState(false);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const containerSize = useContainerSize(containerRef);
+    useSyncZoom({ container: containerSize, zoomInMultiplier, zoomOutDivisor, target });
+
+    const cursorIcon = isPanning && isGrabbing ? 'grabbing' : isPanning ? 'grab' : 'default';
+
+    useGesture(
+        {
+            onPinch: ({ origin, offset: [deltaDistance] }) => {
+                const rect = containerRef.current?.getBoundingClientRect();
+                if (!rect) return;
+
+                const factor = 1 + deltaDistance / 200;
+                const newScale = clampBetween(
+                    zoom.initialCoordinates.scale,
+                    zoom.initialCoordinates.scale * factor,
+                    zoom.maxZoomIn
+                );
+                const relativeCursor = { x: origin[0] - rect.left, y: origin[1] - rect.top };
+
+                setZoom(
+                    getZoomState({
+                        newScale,
+                        cursorX: relativeCursor.x,
+                        cursorY: relativeCursor.y,
+                        initialCoordinates: zoom.initialCoordinates,
+                    })
+                );
+            },
+            onWheel: ({ event, delta: [, verticalScrollDelta] }) => {
+                const rect = containerRef.current?.getBoundingClientRect();
+                if (!rect) return;
+
+                const factor = 1 - verticalScrollDelta / 500;
+                const newScale = clampBetween(zoom.initialCoordinates.scale, zoom.scale * factor, zoom.maxZoomIn);
+                const relativeCursor = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+
+                setZoom(
+                    getZoomState({
+                        newScale,
+                        cursorX: relativeCursor.x,
+                        cursorY: relativeCursor.y,
+                        initialCoordinates: zoom.initialCoordinates,
+                    })
+                );
+            },
+            onDrag: ({ delta: [dx, dy] }) => {
+                setZoom((prev) => ({
+                    ...prev,
+                    translate: {
+                        x: prev.translate.x + dx,
+                        y: prev.translate.y + dy,
+                    },
+                }));
+            },
+        },
+        {
+            target: containerRef,
+            eventOptions: { passive: false },
+            wheel: { preventDefault: true },
+            pinch: { preventDefault: true },
+            drag: { enabled: isPanning },
+        }
+    );
 
     return (
         <div
-            ref={ref}
+            ref={containerRef}
             className={classes.wrapper}
             style={{
-                // Enable hardware acceleration
+                cursor: cursorIcon,
+                touchAction: 'none',
                 transform: 'translate3d(0, 0, 0)',
                 '--zoom-scale': zoom.scale,
             }}
+            onPointerUp={() => setIsGrabbing(false)}
+            onPointerDown={() => setIsGrabbing(true)}
         >
             <div
                 data-testid='zoom-transform'
                 className={classes.wrapperInternal}
                 style={{
+                    transformOrigin: '0 0',
                     transform: `translate(${zoom.translate.x}px, ${zoom.translate.y}px) scale(${zoom.scale})`,
                 }}
             >
-                <SyncZoom container={containerSize} target={target} />
                 {children}
             </div>
         </div>

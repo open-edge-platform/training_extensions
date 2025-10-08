@@ -3,10 +3,18 @@
 
 import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useState } from 'react';
 
-type ZoomState = { scale: number; translate: { x: number; y: number } };
+export type ZoomState = {
+    scale: number;
+    maxZoomIn: number;
+    translate: { x: number; y: number };
+    initialCoordinates: { scale: number; x: number; y: number };
+};
+
 export const Zoom = createContext<ZoomState>({
     scale: 1.0,
+    maxZoomIn: 1,
     translate: { x: 0, y: 0 },
+    initialCoordinates: { scale: 1.0, x: 0, y: 0 },
 });
 const SetZoom = createContext<Dispatch<SetStateAction<ZoomState>> | null>(null);
 
@@ -25,12 +33,12 @@ export const useSetZoom = () => {
 };
 
 export const ZoomProvider = ({ children }: { children: ReactNode }) => {
-    // TODO:
-    // 1. Add scale restrictions - min max
-    // 2. Add translate restrictions - min max
+    // 1. Add translate restrictions - min max
     const [zoom, setZoom] = useState<ZoomState>({
         scale: 1.0,
+        maxZoomIn: 1,
         translate: { x: 0, y: 0 },
+        initialCoordinates: { scale: 1.0, x: 0, y: 0 },
     });
 
     return (
