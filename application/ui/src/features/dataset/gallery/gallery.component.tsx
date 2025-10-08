@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useRef, useState } from 'react';
+import { Suspense, useRef, useState } from 'react';
 
 import {
     AriaComponentsListBox,
@@ -115,11 +115,13 @@ export const Gallery = ({ items, hasNextPage, isFetchingNextPage, fetchNextPage 
 
             <DialogContainer onDismiss={() => setSelectedMediaItem(null)}>
                 {selectedMediaItem !== null && (
-                    <AnnotatorProvider mediaItem={selectedMediaItem}>
-                        <AnnotationActionsProvider>
-                            <MediaPreview mediaItem={selectedMediaItem} close={() => setSelectedMediaItem(null)} />
-                        </AnnotationActionsProvider>
-                    </AnnotatorProvider>
+                    <Suspense fallback={<Loading size='L' />}>
+                        <AnnotatorProvider mediaItem={selectedMediaItem}>
+                            <AnnotationActionsProvider>
+                                <MediaPreview mediaItem={selectedMediaItem} close={() => setSelectedMediaItem(null)} />
+                            </AnnotationActionsProvider>
+                        </AnnotatorProvider>
+                    </Suspense>
                 )}
             </DialogContainer>
         </View>

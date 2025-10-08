@@ -9,7 +9,8 @@ import { createUseGesture, dragAction, pinchAction, wheelAction } from '@use-ges
 import { useContainerSize } from './use-container-size';
 import { usePanning } from './use-pannig.hook';
 import { Size, useSyncZoom } from './use-sync-zoom.hook';
-import { useSetZoom, useZoom, ZoomState } from './zoom.provider';
+import { getZoomState } from './util';
+import { useSetZoom, useZoom } from './zoom.provider';
 
 import classes from './zoom.module.scss';
 
@@ -29,10 +30,8 @@ export const ZoomTransform = ({ children, target, zoomInMultiplier = 10, zoomOut
     const [isGrabbing, setIsGrabbing] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
     const containerSize = useContainerSize(containerRef);
-    const initialCoordinates = useSyncZoom({ container: containerSize, target });
+    useSyncZoom({ container: containerSize, zoomInMultiplier, zoomOutDivisor, target });
 
-    const maxZoomIn = initialCoordinates.scale * zoomInMultiplier;
-    const maxZoomOut = initialCoordinates.scale / zoomOutDivisor;
     const cursorIcon = isPanning && isGrabbing ? 'grabbing' : isPanning ? 'grab' : 'default';
 
     useGesture(
@@ -42,20 +41,38 @@ export const ZoomTransform = ({ children, target, zoomInMultiplier = 10, zoomOut
                 if (!rect) return;
 
                 const factor = 1 + deltaDistance / 200;
-                const newScale = clampBetween(maxZoomOut, initialCoordinates.scale * factor, maxZoomIn);
+                const newScale = clampBetween(
+                    zoom.initialCoordinates.scale,
+                    zoom.initialCoordinates.scale * factor,
+                    zoom.maxZoomIn
+                );
                 const relativeCursor = { x: origin[0] - rect.left, y: origin[1] - rect.top };
 
-                setZoom(getZoomState(newScale, relativeCursor.x, relativeCursor.y));
+                setZoom(
+                    getZoomState({
+                        newScale,
+                        cursorX: relativeCursor.x,
+                        cursorY: relativeCursor.y,
+                        initialCoordinates: zoom.initialCoordinates,
+                    })
+                );
             },
             onWheel: ({ event, delta: [, verticalScrollDelta] }) => {
                 const rect = containerRef.current?.getBoundingClientRect();
                 if (!rect) return;
 
                 const factor = 1 - verticalScrollDelta / 500;
-                const newScale = clampBetween(maxZoomOut, zoom.scale * factor, maxZoomIn);
+                const newScale = clampBetween(zoom.initialCoordinates.scale, zoom.scale * factor, zoom.maxZoomIn);
                 const relativeCursor = { x: event.clientX - rect.left, y: event.clientY - rect.top };
 
-                setZoom(getZoomState(newScale, relativeCursor.x, relativeCursor.y));
+                setZoom(
+                    getZoomState({
+                        newScale,
+                        cursorX: relativeCursor.x,
+                        cursorY: relativeCursor.y,
+                        initialCoordinates: zoom.initialCoordinates,
+                    })
+                );
             },
             onDrag: ({ delta: [dx, dy] }) => {
                 setZoom((prev) => ({
@@ -75,22 +92,6 @@ export const ZoomTransform = ({ children, target, zoomInMultiplier = 10, zoomOut
             drag: { enabled: isPanning },
         }
     );
-
-    const getZoomState = (newScale: number, cursorX: number, cursorY: number) => (prev: ZoomState) => {
-        if (newScale <= initialCoordinates.scale) {
-            return { ...prev, ...initialCoordinates };
-        }
-
-        const scaleRatio = newScale / prev.scale;
-        const newTranslateX = cursorX - scaleRatio * (cursorX - prev.translate.x);
-        const newTranslateY = cursorY - scaleRatio * (cursorY - prev.translate.y);
-
-        return {
-            ...prev,
-            scale: newScale,
-            translate: { x: newTranslateX, y: newTranslateY },
-        };
-    };
 
     return (
         <div

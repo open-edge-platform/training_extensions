@@ -4,7 +4,6 @@
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { ZoomTransform } from '../../components/zoom/zoom-transform';
-import { ZoomProvider } from '../../components/zoom/zoom.provider';
 import { getImageUrl } from '../dataset/gallery/utils';
 import { useAnnotationActions } from './annotation-actions-provider.component';
 import { Annotations } from './annotations/annotations.component';
@@ -30,19 +29,17 @@ export const AnnotatorCanvas = ({ mediaItem, isFocussed }: AnnotatorCanvasProps)
     const size = { width: mediaItem.width, height: mediaItem.height };
 
     return (
-        <ZoomProvider>
-            <ZoomTransform target={size}>
-                <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-                    <img src={getImageUrl(project_id, String(mediaItem.id))} alt='Collected data' />
-                    <Annotations
-                        annotations={orderedAnnotations}
-                        width={size.width}
-                        height={size.height}
-                        isFocussed={isFocussed}
-                    />
-                    <ToolManager />
-                </div>
-            </ZoomTransform>
-        </ZoomProvider>
+        <ZoomTransform target={size}>
+            <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+                <img src={getImageUrl(project_id, String(mediaItem.id))} alt='Collected data' />
+                <Annotations
+                    annotations={orderedAnnotations}
+                    width={size.width}
+                    height={size.height}
+                    isFocussed={isFocussed}
+                />
+                <ToolManager />
+            </div>
+        </ZoomTransform>
     );
 };
