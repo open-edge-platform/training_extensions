@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { createContext, ReactNode, useContext, useEffect, useRef, useState } from 'react';
 
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { get } from 'lodash-es';
@@ -55,7 +55,7 @@ interface AnnotationsContextValue {
     addAnnotation: (shape: Shape) => void;
     deleteAnnotation: (annotationId: string) => void;
     updateAnnotation: (updatedAnnotation: Annotation) => void;
-    saveAnnotations: () => Promise<void>;
+    submitAnnotations: () => Promise<void>;
     isSaving: boolean;
 }
 
@@ -80,7 +80,7 @@ export const AnnotationActionsProvider = ({ children }: { children: ReactNode })
     });
 
     const [localAnnotations, setLocalAnnotations] = useState<Annotation[]>([]);
-    const [isDirty, setIsDirty] = useState(false);
+    const isDirty = useRef<boolean>(false);
 
     const updateAnnotation = (updatedAnnotation: Annotation) => {
         const { id } = updatedAnnotation;
@@ -88,7 +88,7 @@ export const AnnotationActionsProvider = ({ children }: { children: ReactNode })
         setLocalAnnotations((prevAnnotations) =>
             prevAnnotations.map((annotation) => (annotation.id === id ? updatedAnnotation : annotation))
         );
-        setIsDirty(true);
+        isDirty.current = true;
     };
 
     const addAnnotation = (shape: Shape) => {
@@ -100,17 +100,17 @@ export const AnnotationActionsProvider = ({ children }: { children: ReactNode })
                 labels: [{ id: uuid(), name: 'Default label', color: 'var(--annotation-fill)', isPrediction: false }],
             },
         ]);
-        setIsDirty(true);
+        isDirty.current = true;
     };
 
     const deleteAnnotation = (annotationId: string) => {
         setLocalAnnotations((prevAnnotations) =>
             prevAnnotations.filter((annotation) => annotation.id !== annotationId)
         );
-        setIsDirty(true);
+        isDirty.current = true;
     };
 
-    const saveAnnotations = async () => {
+    const submitAnnotations = async () => {
         if (!isDirty) return;
 
         const serverFormattedAnnotations = mapLocalAnnotationsToServer(localAnnotations);
@@ -120,7 +120,7 @@ export const AnnotationActionsProvider = ({ children }: { children: ReactNode })
             body: { annotations: serverFormattedAnnotations },
         });
 
-        setIsDirty(false);
+        isDirty.current = false;
     };
 
     useEffect(() => {
@@ -133,7 +133,7 @@ export const AnnotationActionsProvider = ({ children }: { children: ReactNode })
             const localFormattedAnnotations = mapServerAnnotationsToLocal(annotations, projectLabels);
 
             setLocalAnnotations(localFormattedAnnotations);
-            setIsDirty(false);
+            isDirty.current = false;
         }
     }, [serverAnnotations, project]);
 
@@ -148,7 +148,7 @@ export const AnnotationActionsProvider = ({ children }: { children: ReactNode })
                 deleteAnnotation,
 
                 // Remote
-                saveAnnotations,
+                submitAnnotations,
 
                 isSaving: saveMutation.isPending,
             }}

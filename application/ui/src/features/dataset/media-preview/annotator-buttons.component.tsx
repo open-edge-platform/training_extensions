@@ -10,14 +10,14 @@ type AnnotatorButtonsProps = {
     onClose: () => void;
 };
 export const AnnotatorButtons = ({ isFocussed, onFocus, onClose }: AnnotatorButtonsProps) => {
-    const { saveAnnotations, isSaving } = useAnnotationActions();
+    const { submitAnnotations, isSaving } = useAnnotationActions();
 
     return (
         <ButtonGroup>
             <Button
                 variant='secondary'
                 onPress={() => {
-                    saveAnnotations();
+                    submitAnnotations();
                     onClose();
                 }}
                 isDisabled={isSaving}
