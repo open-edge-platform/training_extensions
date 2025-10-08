@@ -41,47 +41,33 @@ def fxt_active_model_service(fxt_model_activation_state, fxt_condition) -> Itera
 class TestActiveModelServiceUnit:
     """Unit tests for ActiveModelService."""
 
-    def test_get_model_xml_path(self, fxt_active_model_service):
-        """Test retrieval of model XML path."""
+    def test_get_model_file_path(self, fxt_active_model_service):
+        """Test retrieval of model file path."""
         project_id = UUID("82d20877-4dd6-4df3-b6bc-418bb300007d")
         model_id = UUID("d4992996-4d87-422b-aaf3-7427267a50df")
-        expected_path = fxt_active_model_service.projects_dir / f"{project_id}/models/{model_id}/model.xml"
-        xml_path = fxt_active_model_service._get_model_xml_path(project_id=project_id, model_id=model_id)
-        assert xml_path == expected_path
+        extension = "bin"
+        expected_path = fxt_active_model_service.projects_dir / f"{project_id}/models/{model_id}/model.{extension}"
+        expected_path.parent.mkdir(parents=True, exist_ok=True)
+        expected_path.touch()
 
-    def test_get_model_bin_path(self, fxt_active_model_service):
-        """Test retrieval of model BIN path."""
-        project_id = UUID("82d20877-4dd6-4df3-b6bc-418bb300007d")
-        model_id = UUID("d4992996-4d87-422b-aaf3-7427267a50df")
-        expected_path = fxt_active_model_service.projects_dir / f"{project_id}/models/{model_id}/model.bin"
-        bin_path = fxt_active_model_service._get_model_bin_path(project_id=project_id, model_id=model_id)
-        assert bin_path == expected_path
+        file_path = fxt_active_model_service._get_model_file_path(
+            project_id=project_id, model_id=model_id, extension=extension
+        )
+
+        assert file_path == expected_path
 
     def test_get_loaded_inference_model(self, fxt_active_model_service, fxt_model_activation_state, monkeypatch):
         """Test loading the active inference model."""
         dummy_model = Mock(spec=Model)
 
-        # Setup temp files to simulate model XML and BIN
         with (
-            tempfile.TemporaryDirectory() as tmpdir,
             patch.object(Model, "create_model", return_value=dummy_model),
             patch.object(
                 fxt_active_model_service,
-                "_get_model_xml_path",
-                new=lambda project_id, model_id: Path(tmpdir) / "model.xml",
-            ),
-            patch.object(
-                fxt_active_model_service,
-                "_get_model_bin_path",
-                new=lambda project_id, model_id: Path(tmpdir) / "model.bin",
+                "_get_model_file_path",
+                new=lambda project_id, model_id, ext: f"model.{ext}",
             ),
         ):
-            tmpdir_path = Path(tmpdir)
-            xml_path = tmpdir_path / "model.xml"
-            bin_path = tmpdir_path / "model.bin"
-            xml_path.touch()
-            bin_path.touch()
-
             loaded = fxt_active_model_service.get_loaded_inference_model(force_reload=True)
             assert isinstance(loaded, LoadedModel)
             assert loaded.id == fxt_model_activation_state.active_model_id
