@@ -442,15 +442,28 @@ jobs:
       - name: Wait for backend health
         run: |
           echo "Waiting for backend to be healthy..."
-          for i in {1..60}; do
+          for i in $(seq 1 60); do
             if curl -f http://localhost:7860/health 2>/dev/null; then
-              echo "✓ Backend is ready"
+              echo "✓ Backend is ready after ~$((i * 2)) seconds"
               exit 0
             fi
-            echo "Attempt $i/60: Backend not ready yet..."
+            
+            # Check if process is still alive
+            if [ -f application/backend/backend.pid ]; then
+              PID=$(cat application/backend/backend.pid)
+              if ! kill -0 $PID 2>/dev/null; then
+                echo "ERROR: Backend process died!"
+                echo "=== Backend Log ==="
+                cat application/backend/backend.log
+                exit 1
+              fi
+            fi
+            
             sleep 2
           done
-          echo "ERROR: Backend failed to start"
+
+          echo "ERROR: Backend failed to become healthy after 120 seconds"
+          echo "=== Backend Log ==="
           cat application/backend/backend.log
           exit 1
 
