@@ -56,6 +56,15 @@ class TestActiveModelServiceUnit:
 
         assert file_path == expected_path
 
+    def test_get_model_file_path_not_found(self, fxt_active_model_service):
+        """Test error when model file is not found."""
+        project_id = UUID("82d20877-4dd6-4df3-b6bc-418bb300007d")
+        model_id = UUID("d4992996-4d87-422b-aaf3-7427267a50df")
+        extension = "bin"
+
+        with pytest.raises(FileNotFoundError, match="Model file not found"):
+            fxt_active_model_service._get_model_file_path(project_id=project_id, model_id=model_id, extension=extension)
+
     def test_get_loaded_inference_model(self, fxt_active_model_service, fxt_model_activation_state, monkeypatch):
         """Test loading the active inference model."""
         dummy_model = Mock(spec=Model)
