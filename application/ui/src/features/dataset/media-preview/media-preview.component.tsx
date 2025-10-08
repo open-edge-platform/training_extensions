@@ -3,13 +3,14 @@
 
 import { Suspense, useState } from 'react';
 
-import { Button, ButtonGroup, Content, Dialog, Divider, Grid, Heading, ToggleButton, View } from '@geti/ui';
+import { Content, Dialog, Divider, Grid, Heading, View } from '@geti/ui';
+import { ZoomProvider } from 'src/components/zoom/zoom';
 
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas';
-import { AnnotatorProvider } from '../../annotator/annotator-provider.component';
 import { SelectAnnotationProvider } from '../../annotator/select-annotation-provider.component';
 import { ToolSelectionBar } from '../../annotator/tools/tool-selection-bar.component';
 import { DatasetItem } from '../../annotator/types';
+import { AnnotatorButtons } from './annotator-buttons.component';
 
 type MediaPreviewProps = {
     mediaItem: DatasetItem;
@@ -36,7 +37,7 @@ export const MediaPreview = ({ mediaItem, close }: MediaPreviewProps) => {
                         rows={'auto 1fr auto'}
                     >
                         <Suspense fallback={<div>Loading...</div>}>
-                            <AnnotatorProvider mediaItem={mediaItem}>
+                            <ZoomProvider>
                                 <View gridArea={'toolbar'}>
                                     <ToolSelectionBar />
                                 </View>
@@ -52,21 +53,9 @@ export const MediaPreview = ({ mediaItem, close }: MediaPreviewProps) => {
                                 </View>
 
                                 <View gridArea={'footer'} padding={'size-100'} UNSAFE_style={{ textAlign: 'right' }}>
-                                    <ButtonGroup>
-                                        <ToggleButton
-                                            marginEnd={'size-100'}
-                                            isEmphasized
-                                            isSelected={isFocussed}
-                                            onChange={setIsFocussed}
-                                        >
-                                            Focus
-                                        </ToggleButton>
-                                        <Button variant='secondary' onPress={close}>
-                                            Close
-                                        </Button>
-                                    </ButtonGroup>
+                                    <AnnotatorButtons onFocus={setIsFocussed} isFocussed={isFocussed} onClose={close} />
                                 </View>
-                            </AnnotatorProvider>
+                            </ZoomProvider>
                         </Suspense>
                     </Grid>
                 </View>
