@@ -78,7 +78,7 @@ jobs:
           if [[ ${{ env.RELEASE_VERSION }} != 'test_build' ]]; then
             ln -sfn ${{ env.RELEASE_VERSION }} latest
           fi
-          git add latest ${{ env.RELEASE_VERSION }}
+          git add ./latest ${{ env.RELEASE_VERSION }}
           git commit -m "Update documentation" -a || true
       - name: Push changes
         uses: ad-m/github-push-action@77c5b412c50b723d2a4fbc6d71fb5723bcd439aa # master
