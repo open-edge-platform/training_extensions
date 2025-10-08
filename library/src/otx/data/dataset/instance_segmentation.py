@@ -7,23 +7,24 @@ from __future__ import annotations
 
 import warnings
 from collections import defaultdict
-
 from typing import TYPE_CHECKING
+
 import numpy as np
-from otx.types import OTXTaskType
 import torch
-from otx.types.image import ImageColorChannel
 from datumaro import Bbox, Ellipse, Image, Polygon
 from torchvision import tv_tensors
 
 from otx.data.entity.base import ImageInfo
 from otx.data.entity.torch import OTXDataItem
 from otx.data.utils.structures.mask.mask_util import polygon_to_bitmap
+from otx.types import OTXTaskType
+from otx.types.image import ImageColorChannel
 
 from .base import OTXDataset, Transforms
 
 if TYPE_CHECKING:
     from datumaro import DatasetSubset
+
 
 class OTXInstanceSegDataset(OTXDataset):
     """OTXDataset class for instance segmentation.
@@ -46,12 +47,18 @@ class OTXInstanceSegDataset(OTXDataset):
         stack_images: bool = True,
         to_tv_image: bool = True,
         data_format: str = "",
-        include_polygons: bool = False
+        include_polygons: bool = False,
     ) -> None:
-        super().__init__(dm_subset=dm_subset,
-                         task_type=task_type,
-                         transforms=transforms,
-                         max_refetch=max_refetch, image_color_channel=image_color_channel, stack_images=stack_images, to_tv_image=to_tv_image, data_format=data_format)
+        super().__init__(
+            dm_subset=dm_subset,
+            task_type=task_type,
+            transforms=transforms,
+            max_refetch=max_refetch,
+            image_color_channel=image_color_channel,
+            stack_images=stack_images,
+            to_tv_image=to_tv_image,
+            data_format=data_format,
+        )
         self.include_polygons = include_polygons
 
     def _get_item_impl(self, index: int) -> OTXDataItem | None:

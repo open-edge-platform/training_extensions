@@ -50,11 +50,11 @@ class SubsetConfig:
         ```
     """
 
-    batch_size: int = 1
+    batch_size: int = 6
     subset_name: str = "train"
     transforms: list[dict[str, Any]] = field(default_factory=list)
     transform_lib_type: TransformLibType = TransformLibType.TORCHVISION
-    num_workers: int = 2
+    num_workers: int = 4
     sampler: SamplerConfig = field(default_factory=lambda: SamplerConfig())
     to_tv_image: bool = True
     input_size: tuple[int, int] | None = None

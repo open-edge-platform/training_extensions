@@ -214,7 +214,7 @@ class TestModule:
         mock_train.data_format = "coco"
         mock_train.image_color_channel = "RGB"
         mock_train.transforms = []
-        mock_train.__iter__ = lambda self: iter([MagicMock(img_info={"img_shape": (224, 224)})])
+        mock_train.__iter__ = lambda _: iter([MagicMock(img_info={"img_shape": (224, 224)})])
 
         mock_val = MagicMock()
         mock_val.label_info = mock_train.label_info
@@ -261,7 +261,7 @@ class TestModule:
         mock_train.data_format = "coco"
         mock_train.image_color_channel = "RGB"
         mock_train.transforms = []
-        mock_train.__iter__ = lambda self: iter([MagicMock(img_info={"img_shape": (640, 640)})])
+        mock_train.__iter__ = lambda _: iter([MagicMock(img_info={"img_shape": (640, 640)})])
 
         mock_val = MagicMock()
         mock_val.label_info = mock_train.label_info
@@ -316,7 +316,7 @@ class TestModule:
         mock_train.data_format = "coco"
         mock_train.image_color_channel = "RGB"
         mock_train.transforms = []
-        mock_train.__iter__ = lambda self: iter([MagicMock(img_info={"img_shape": (512, 512)})])
+        mock_train.__iter__ = lambda _: iter([MagicMock(img_info={"img_shape": (512, 512)})])
 
         mock_val = MagicMock()
         mock_val.label_info = mock_train.label_info
@@ -357,7 +357,7 @@ class TestModule:
         mock_train.data_format = "coco"
         mock_train.image_color_channel = "RGB"
         mock_train.transforms = []
-        mock_train.__iter__ = lambda self: iter([MagicMock(img_info={"img_shape": (224, 224)})])
+        mock_train.__iter__ = lambda _: iter([MagicMock(img_info={"img_shape": (224, 224)})])
 
         mock_val = MagicMock()
         mock_val.label_info = MagicMock()  # Different label_info
@@ -384,7 +384,7 @@ class TestModule:
         mock_train.image_color_channel = "RGB"
         mock_train.transforms = MagicMock()
         mock_train.transforms.transforms = [normalize_transform]
-        mock_train.__iter__ = lambda self: iter([MagicMock(img_info={"img_shape": (224, 224)})])
+        mock_train.__iter__ = lambda _: iter([MagicMock(img_info={"img_shape": (224, 224)})])
 
         mock_val = MagicMock()
         mock_val.label_info = mock_train.label_info
@@ -422,7 +422,7 @@ class TestModule:
         mock_train.data_format = "coco"
         mock_train.image_color_channel = "RGB"
         mock_train.transforms = []
-        mock_train.__iter__ = lambda self: iter([MagicMock(img_info={"img_shape": (640, 640)})])
+        mock_train.__iter__ = lambda _: iter([MagicMock(img_info={"img_shape": (640, 640)})])
 
         mock_val = MagicMock()
         mock_val.label_info = mock_train.label_info

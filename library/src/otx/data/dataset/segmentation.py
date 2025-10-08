@@ -16,15 +16,14 @@ from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from otx.data.entity.base import ImageInfo
 from otx.data.entity.torch import OTXDataItem
+from otx.types import OTXTaskType
 from otx.types.image import ImageColorChannel
 from otx.types.label import SegLabelInfo
-from otx.types import OTXTaskType
 
 from .base import OTXDataset
 
 if TYPE_CHECKING:
-    from datumaro import DatasetSubset
-    from datumaro import DatasetItem
+    from datumaro import DatasetItem, DatasetSubset
 
     from otx.data.dataset.base import Transforms
 

@@ -6,15 +6,16 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+
 import numpy as np
 import torch
 from datumaro import Bbox, Image
 from torchvision import tv_tensors
 
-from otx.types.image import ImageColorChannel
 from otx.data.entity.base import ImageInfo
 from otx.data.entity.torch import OTXDataItem
 from otx.types import OTXTaskType
+from otx.types.image import ImageColorChannel
 
 from .base import OTXDataset, Transforms
 from .mixins import DataAugSwitchMixin
@@ -25,6 +26,7 @@ if TYPE_CHECKING:
 
 class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):  # type: ignore[misc]
     """OTXDataset class for detection task."""
+
     def __init__(
         self,
         dm_subset: DatasetSubset,
@@ -36,10 +38,16 @@ class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):  # type: ignore[misc]
         to_tv_image: bool = True,
         data_format: str = "",
     ) -> None:
-        super().__init__(dm_subset=dm_subset,
-                         task_type=task_type,
-                         transforms=transforms,
-                         max_refetch=max_refetch, image_color_channel=image_color_channel, stack_images=stack_images, to_tv_image=to_tv_image, data_format=data_format)
+        super().__init__(
+            dm_subset=dm_subset,
+            task_type=task_type,
+            transforms=transforms,
+            max_refetch=max_refetch,
+            image_color_channel=image_color_channel,
+            stack_images=stack_images,
+            to_tv_image=to_tv_image,
+            data_format=data_format,
+        )
 
     def _get_item_impl(self, index: int) -> OTXDataItem | None:
         item = self.dm_subset[index]

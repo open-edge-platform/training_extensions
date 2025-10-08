@@ -17,9 +17,9 @@ from torchvision.transforms.v2.functional import to_dtype, to_image
 from otx.data.entity.base import ImageInfo
 from otx.data.entity.torch import OTXDataItem
 from otx.data.transform_libs.torchvision import Compose
+from otx.types import OTXTaskType
 from otx.types.image import ImageColorChannel
 from otx.types.label import LabelInfo
-from otx.types import OTXTaskType
 
 from .base import OTXDataset
 

@@ -7,7 +7,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from otx.types.image import ImageColorChannel
 import torch
 from datumaro import Image, Label
 from datumaro.components.annotation import AnnotationType
@@ -17,16 +16,19 @@ from torchvision.transforms.v2.functional import to_dtype, to_image
 from otx.data.dataset.base import OTXDataset, Transforms
 from otx.data.entity.base import ImageInfo
 from otx.data.entity.torch import OTXDataItem
-from otx.types.label import HLabelInfo
 from otx.types import OTXTaskType
+from otx.types.image import ImageColorChannel
+from otx.types.label import HLabelInfo
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+
     from datumaro import DatasetSubset
 
 
 class OTXMulticlassClsDataset(OTXDataset):
     """OTXDataset class for multi-class classification task."""
+
     def __init__(
         self,
         dm_subset: DatasetSubset,
@@ -38,10 +40,16 @@ class OTXMulticlassClsDataset(OTXDataset):
         to_tv_image: bool = True,
         data_format: str = "",
     ) -> None:
-        super().__init__(dm_subset=dm_subset,
-                         task_type=task_type,
-                         transforms=transforms,
-                         max_refetch=max_refetch, image_color_channel=image_color_channel, stack_images=stack_images, to_tv_image=to_tv_image, data_format=data_format)
+        super().__init__(
+            dm_subset=dm_subset,
+            task_type=task_type,
+            transforms=transforms,
+            max_refetch=max_refetch,
+            image_color_channel=image_color_channel,
+            stack_images=stack_images,
+            to_tv_image=to_tv_image,
+            data_format=data_format,
+        )
 
     def _get_item_impl(self, index: int) -> OTXDataItem | None:
         item = self.dm_subset[index]
@@ -98,10 +106,16 @@ class OTXMultilabelClsDataset(OTXDataset):
         to_tv_image: bool = True,
         data_format: str = "",
     ) -> None:
-        super().__init__(dm_subset=dm_subset,
-                         task_type=task_type,
-                         transforms=transforms,
-                         max_refetch=max_refetch, image_color_channel=image_color_channel, stack_images=stack_images, to_tv_image=to_tv_image, data_format=data_format)
+        super().__init__(
+            dm_subset=dm_subset,
+            task_type=task_type,
+            transforms=transforms,
+            max_refetch=max_refetch,
+            image_color_channel=image_color_channel,
+            stack_images=stack_images,
+            to_tv_image=to_tv_image,
+            data_format=data_format,
+        )
         self.num_classes = len(self.dm_subset.categories()[AnnotationType.label])
 
     def _get_item_impl(self, index: int) -> OTXDataItem | None:
@@ -165,10 +179,16 @@ class OTXHlabelClsDataset(OTXDataset):
         to_tv_image: bool = True,
         data_format: str = "",
     ) -> None:
-        super().__init__(dm_subset=dm_subset,
-                         task_type=task_type,
-                         transforms=transforms,
-                         max_refetch=max_refetch, image_color_channel=image_color_channel, stack_images=stack_images, to_tv_image=to_tv_image, data_format=data_format)
+        super().__init__(
+            dm_subset=dm_subset,
+            task_type=task_type,
+            transforms=transforms,
+            max_refetch=max_refetch,
+            image_color_channel=image_color_channel,
+            stack_images=stack_images,
+            to_tv_image=to_tv_image,
+            data_format=data_format,
+        )
         self.dm_categories = self.dm_subset.categories()[AnnotationType.label]
 
         # Hlabel classification used HLabelInfo to insert the HLabelData.

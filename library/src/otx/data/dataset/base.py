@@ -15,11 +15,11 @@ import numpy as np
 from datumaro.components.annotation import AnnotationType
 from datumaro.util.image import IMAGE_BACKEND, IMAGE_COLOR_CHANNEL, ImageBackend
 from datumaro.util.image import ImageColorChannel as DatumaroImageColorChannel
-from otx.types import OTXTaskType
 from torch.utils.data import Dataset
 
 from otx.data.entity.torch import OTXDataItem
 from otx.data.transform_libs.torchvision import Compose
+from otx.types import OTXTaskType
 from otx.types.image import ImageColorChannel
 from otx.types.label import LabelInfo, NullLabelInfo
 
