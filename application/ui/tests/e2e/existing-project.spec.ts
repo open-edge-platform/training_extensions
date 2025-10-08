@@ -34,13 +34,13 @@ test('[E2E] Existing project', async ({ page }) => {
 
     await test.step('Confirm data was collected', async () => {
         await page.getByLabel('Header navigation').getByText('Dataset').click();
-        await page.reload();
 
-        // Confirm media was uploaded
+        await expect(page.getByText(/\d+ images?/)).toBeVisible({ timeout: 10000 });
+
         const listbox = page.getByRole('listbox', { name: 'data-collection-grid' });
         const options = listbox.getByRole('option');
-        await page.pause();
 
-        expect(await options.count()).toBeGreaterThanOrEqual(1);
+        const count = await options.count();
+        expect(count).toBeGreaterThanOrEqual(1);
     });
 });
