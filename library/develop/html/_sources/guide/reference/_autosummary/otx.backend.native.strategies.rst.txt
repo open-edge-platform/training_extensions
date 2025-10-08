@@ -1,0 +1,29 @@
+otx.backend.native.strategies
+=============================
+
+.. automodule:: otx.backend.native.strategies
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      SingleXPUStrategy
+   
+   
+
+   
+   
+   
+
+
+
