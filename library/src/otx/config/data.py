@@ -76,6 +76,7 @@ class SubsetConfig:
     to_tv_image: bool = True
     input_size: tuple[int, int] | None = None
 
+
 @dataclass
 class TileConfig:
     """DTO for tiler configuration."""
