@@ -15,6 +15,23 @@ from otx.types.transformer_libs import TransformLibType
 
 
 @dataclass
+class SamplerConfig:
+    """Configuration class for defining the sampler used in the data loading process.
+
+    This is passed in the form of a dataclass, which is instantiated when the dataloader is created.
+
+    [TODO]: Need to replace this with a proper Sampler class.
+    Currently, SamplerConfig, which belongs to the sampler of SubsetConfig,
+    belongs to the nested dataclass of dataclass, which is not easy to instantiate from the CLI.
+    So currently replace sampler with a corresponding dataclass that resembles the configuration of another object,
+    providing limited functionality.
+    """
+
+    class_path: str = "torch.utils.data.RandomSampler"
+    init_args: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
 class SubsetConfig:
     """DTO for dataset subset configuration.
 
@@ -55,10 +72,9 @@ class SubsetConfig:
     transforms: list[dict[str, Any]] = field(default_factory=list)
     transform_lib_type: TransformLibType = TransformLibType.TORCHVISION
     num_workers: int = 4
-    sampler: SamplerConfig = field(default_factory=lambda: SamplerConfig())
+    sampler: SamplerConfig = field(default_factory=SamplerConfig)
     to_tv_image: bool = True
     input_size: tuple[int, int] | None = None
-
 
 @dataclass
 class TileConfig:
@@ -77,20 +93,3 @@ class TileConfig:
     def clone(self) -> TileConfig:
         """Return a deep copied one of this instance."""
         return deepcopy(self)
-
-
-@dataclass
-class SamplerConfig:
-    """Configuration class for defining the sampler used in the data loading process.
-
-    This is passed in the form of a dataclass, which is instantiated when the dataloader is created.
-
-    [TODO]: Need to replace this with a proper Sampler class.
-    Currently, SamplerConfig, which belongs to the sampler of SubsetConfig,
-    belongs to the nested dataclass of dataclass, which is not easy to instantiate from the CLI.
-    So currently replace sampler with a corresponding dataclass that resembles the configuration of another object,
-    providing limited functionality.
-    """
-
-    class_path: str = "torch.utils.data.RandomSampler"
-    init_args: dict[str, Any] = field(default_factory=dict)

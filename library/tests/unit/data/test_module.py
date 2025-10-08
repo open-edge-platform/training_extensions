@@ -233,7 +233,7 @@ class TestModule:
 
         mocker.patch.object(
             OTXDataModule,
-            "_get_default_subset_config",
+            "get_default_subset_config",
             return_value=mock_subset_config,
         )
 
@@ -289,7 +289,7 @@ class TestModule:
 
         mocker.patch.object(
             OTXDataModule,
-            "_get_default_subset_config",
+            "get_default_subset_config",
             return_value=mock_test_config,
         )
 
@@ -322,7 +322,7 @@ class TestModule:
         mock_val.label_info = mock_train.label_info
         mock_val.transforms = []
 
-        # Mock _get_default_subset_config
+        # Mock get_default_subset_config
         mock_subset_config = MagicMock(spec=SubsetConfig)
         mock_subset_config.batch_size = 8
         mock_subset_config.num_workers = 2
@@ -331,7 +331,7 @@ class TestModule:
 
         mocker.patch.object(
             OTXDataModule,
-            "_get_default_subset_config",
+            "get_default_subset_config",
             return_value=mock_subset_config,
         )
 
@@ -390,7 +390,7 @@ class TestModule:
         mock_val.label_info = mock_train.label_info
         mock_val.transforms = []
 
-        # Mock _get_default_subset_config
+        # Mock get_default_subset_config
         mock_subset_config = MagicMock(spec=SubsetConfig)
         mock_subset_config.batch_size = 32
         mock_subset_config.num_workers = 2
@@ -399,7 +399,7 @@ class TestModule:
 
         mocker.patch.object(
             OTXDataModule,
-            "_get_default_subset_config",
+            "get_default_subset_config",
             return_value=mock_subset_config,
         )
 
@@ -428,7 +428,7 @@ class TestModule:
         mock_val.label_info = mock_train.label_info
         mock_val.transforms = []
 
-        # Mock _get_default_subset_config
+        # Mock get_default_subset_config
         mock_subset_config = MagicMock(spec=SubsetConfig)
         mock_subset_config.batch_size = 32
         mock_subset_config.num_workers = 2
@@ -437,7 +437,7 @@ class TestModule:
 
         mocker.patch.object(
             OTXDataModule,
-            "_get_default_subset_config",
+            "get_default_subset_config",
             return_value=mock_subset_config,
         )
 

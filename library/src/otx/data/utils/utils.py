@@ -310,7 +310,6 @@ def instantiate_sampler(sampler_config: SamplerConfig, dataset: Dataset, **kwarg
     if "batch_size" not in init_signature:
         kwargs.pop("batch_size", None)
     sampler_kwargs = {**sampler_config.init_args, **kwargs}
-
     return sampler_class(dataset, **sampler_kwargs)
 
 

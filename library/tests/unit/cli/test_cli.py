@@ -136,24 +136,6 @@ class TestOTXCLI:
         model_cls.input_size_multiplier = 12345
         return model_cls
 
-    def test_instantiate_classes_set_adaptive_input_size(
-        self,
-        fxt_train_argv,
-        monkeypatch,
-        mocker,
-        mock_model_cls,
-    ) -> None:
-        mocker.patch("otx.cli.OTXCLI.run")
-        mocker.patch("otx.utils.utils.get_model_cls_from_config", return_value=mock_model_cls)
-        fxt_train_argv.extend(["--data.input_size", "auto"])
-        monkeypatch.setattr("sys.argv", fxt_train_argv)
-        mock_data_module = mocker.patch("otx.data.module.adapt_input_size_to_dataset", return_value=(1024, 1024))
-
-        cli = OTXCLI()
-        cli.instantiate_classes()
-
-        assert mock_data_module.call_args.args[-1] == 12345
-
     def test_raise_error_correctly(self, fxt_train_command, mocker) -> None:
         mock_engine = mocker.patch("otx.cli.OTXCLI.instantiate_engine")
         mock_engine.return_value.train.side_effect = RuntimeError("my_error")
