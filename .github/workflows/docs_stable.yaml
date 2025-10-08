@@ -56,6 +56,7 @@ jobs:
             echo "Branch gh-pages already exists"
           fi
       - name: Commit docs to gh-pages branch
+        working-directory: library
         run: |
           git fetch
           git checkout gh-pages
