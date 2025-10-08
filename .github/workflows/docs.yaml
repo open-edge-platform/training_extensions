@@ -62,14 +62,10 @@ jobs:
             echo "Branch gh-pages already exists"
           fi
       - name: Commit docs to gh-pages branch
-        working-directory: library
         run: |
           git fetch
           git checkout gh-pages
           mkdir -p /tmp/docs_build
-          ls ./docs/build/html
-          ls ../docs/build/html
-
           cp -r ./docs/build/html* /tmp/docs_build/
           rm -rf ${{ env.RELEASE_VERSION }}/*
           echo '<html><head><meta http-equiv="refresh" content="0; url=stable/" /></head></html>' > index.html
