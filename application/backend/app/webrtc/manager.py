@@ -22,7 +22,7 @@ class WebRTCManager:
         self._pcs: dict[str, RTCPeerConnection] = {}
         self._input_data: dict[str, Any] = {}
         self._stream_queue = stream_queue
-        
+
         # Configure ICE servers based on environment
         # In CI/container environments, use minimal configuration for local connections
         if os.getenv("CI"):
