@@ -8,7 +8,7 @@ import { fileURLToPath } from 'url';
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
 
-const VIDEO_FILE = 'sample-video-small.mp4';
+const VIDEO_FILE = 'video.mp4';
 const MODEL_FILES = ['ssd-card-detection.bin', 'ssd-card-detection.xml'];
 
 function resolveBackendPath(subpath: string): string {

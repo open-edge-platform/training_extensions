@@ -78,7 +78,8 @@ async function globalSetup() {
 
     const mediaDir = resolveBackendPath('media');
     const modelsDir = resolveBackendPath('models');
-    const targetVideo = path.join(mediaDir, 'sample-video-small.mp4');
+
+    const targetVideo = path.join(mediaDir, 'video.mp4');
 
     // Create directories
     if (!fs.existsSync(mediaDir)) {
@@ -103,7 +104,8 @@ async function globalSetup() {
 
         // Download video
         if (!videoExists) {
-            const videoUrl = `${S3_BUCKET_URL}/media/video.mp4`;
+            const videoUrl = `${S3_BUCKET_URL}/media/${VIDEO_FILE}`;
+            console.info(`Downloading ${VIDEO_FILE} from S3 and saving as video.mp4`);
             await downloadFile(videoUrl, targetVideo);
         }
 
@@ -131,7 +133,7 @@ async function globalSetup() {
                 );
             }
             fs.copyFileSync(sourceVideo, targetVideo);
-            console.info('✓ Test video copied from local assets');
+            console.info(`✓ Test video copied from local assets (${VIDEO_FILE} → video.mp4)`);
         }
 
         // Copy model files
