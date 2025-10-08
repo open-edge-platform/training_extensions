@@ -435,7 +435,7 @@ jobs:
         working-directory: application/backend
         run: |
           rm -f data/geti_tune.db
-          CI=true SEED_DB=true nohup ./run.sh > backend.log 2>&1 &
+          SEED_DB=true nohup ./run.sh > backend.log 2>&1 &
           echo $! > backend.pid
           echo "Backend started with PID $(cat backend.pid)"
 
