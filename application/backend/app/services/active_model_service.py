@@ -66,7 +66,7 @@ class ActiveModelService:
             force_reload: If True, reload the state and the model from disk. This option can be useful
             to bypass the cache after the state has been modified externally.
 
-        Returns: Model for inference or None if no model is active
+        Returns: Model for inference or None if no model is active, or if the model can't be loaded.
         """
         if force_reload:
             self._model_activation_state = self._load_state()
@@ -79,13 +79,25 @@ class ActiveModelService:
         active_model_id = self._model_activation_state.active_model_id
         if self._loaded_model is None or self._loaded_model.id != active_model_id:
             logger.info("Loading model with ID '%s'", active_model_id)
-            model_path = self._get_model_xml_path(project_id, active_model_id)
-            self._loaded_model = LoadedModel(
-                id=self._model_activation_state.active_model_id,
-                model=Model.create_model(
-                    model=str(model_path),
+            model_xml_path = self._get_model_xml_path(project_id, active_model_id)
+            model_bin_path = self._get_model_bin_path(project_id, active_model_id)
+            if not os.path.isfile(model_xml_path):
+                logger.error("Model XML file not found at path: %s", model_xml_path)
+                return None
+            if not os.path.isfile(model_bin_path):
+                logger.error("Model BIN file not found at path: %s", model_bin_path)
+                return None
+            try:
+                mapi_model = Model.create_model(
+                    model=str(model_xml_path),
                     device=MODELAPI_DEVICE,
                     nstreams=MODELAPI_NSTREAMS,
-                ),
+                )
+            except Exception:
+                logger.exception("Failed to create Model API model from '%s'", model_xml_path)
+                return None
+            self._loaded_model = LoadedModel(
+                id=self._model_activation_state.active_model_id,
+                model=mapi_model,
             )
         return self._loaded_model
