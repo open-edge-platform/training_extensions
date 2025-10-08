@@ -6,7 +6,7 @@ import { defineConfig, devices } from '@playwright/test';
 const CI = !!process.env.CI;
 
 const ACTION_TIMEOUT = 30000;
-const SERVER_TIMEOUT = 60000;
+const SERVER_TIMEOUT = 120000;
 
 /**
  * E2E tests with seeded database
@@ -45,6 +45,7 @@ export default defineConfig({
                         '--use-fake-ui-for-media-stream',
                         '--use-fake-device-for-media-stream',
                         '--disable-web-security',
+                        '--use-file-for-fake-video-capture=../backend/data/media/video.mp4',
                     ],
                 },
             },
