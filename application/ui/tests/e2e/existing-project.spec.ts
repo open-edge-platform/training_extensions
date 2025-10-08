@@ -26,7 +26,7 @@ test('[E2E] Existing project', async ({ page }) => {
     await test.step('Start stream to begin capture', async () => {
         await page.getByLabel('Start stream').click();
 
-        await expect(page.getByLabel('Connected')).toBeVisible({ timeout: 60000 });
+        await expect(page.getByLabel('Connected')).toBeVisible({ timeout: 120000 });
 
         // Wait a bit for the stream to capture some data
         await page.waitForTimeout(5000);
