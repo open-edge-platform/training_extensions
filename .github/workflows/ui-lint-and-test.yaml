@@ -364,9 +364,6 @@ jobs:
       contents: read
     timeout-minutes: 30
     runs-on: ubuntu-latest
-    container:
-      image: mcr.microsoft.com/playwright:v1.54.0-noble@sha256:18d6adb6aaccf1b0f30eba890069972e089138e4a59ddb5303d7e7290e4e38b6
-      options: --network host
     steps:
       - name: Checkout code
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -388,10 +385,13 @@ jobs:
           version: "0.8.8"
           enable-cache: false
 
-      - name: Install OpenCV dependencies
-        run: |
-          apt-get update
-          apt-get install -y libgl1 libglib2.0-0
+      - name: Install dependencies
+        working-directory: "application/ui"
+        run: npm ci
+
+      - name: Install Playwright
+        working-directory: "application/ui"
+        run: npx playwright install chromium --with-deps
 
       - name: Setup Backend
         working-directory: application/backend
@@ -413,10 +413,6 @@ jobs:
       - name: Unpack build
         working-directory: "application/ui"
         run: tar -xzf dist.tar.gz
-
-      - name: Install dependencies
-        working-directory: "application/ui"
-        run: npm ci
 
       - name: Build OpenAPI type definitions
         working-directory: "application/ui"
