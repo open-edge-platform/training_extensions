@@ -40,7 +40,7 @@ export default defineConfig({
             name: 'Component tests',
             use: {
                 ...devices['Desktop Chrome'],
-                headless: CI,
+                headless: true,
                 viewport: { width: 1280, height: 720 },
                 // Additional browser args for WebRTC in headless mode
                 launchOptions: {

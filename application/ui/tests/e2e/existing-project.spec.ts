@@ -18,9 +18,9 @@ test('[E2E] Existing project', async ({ page }) => {
         const sliderInput = page.locator('input[type="range"]');
 
         await expect(sliderInput).toBeVisible();
-        // Rate of 1 image per second
-        await sliderInput.fill('1');
-        await expect(sliderInput).toHaveValue('1');
+        // Rate of 5 images per second
+        await sliderInput.fill('5');
+        await expect(sliderInput).toHaveValue('5');
     });
 
     await test.step('Start stream to begin capture', async () => {
@@ -34,10 +34,12 @@ test('[E2E] Existing project', async ({ page }) => {
 
     await test.step('Confirm data was collected', async () => {
         await page.getByLabel('Header navigation').getByText('Dataset').click();
+        await page.reload();
 
         // Confirm media was uploaded
         const listbox = page.getByRole('listbox', { name: 'data-collection-grid' });
         const options = listbox.getByRole('option');
+        await page.pause();
 
         expect(await options.count()).toBeGreaterThanOrEqual(1);
     });

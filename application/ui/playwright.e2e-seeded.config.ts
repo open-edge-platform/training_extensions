@@ -53,11 +53,14 @@ export default defineConfig({
 
     webServer: [
         {
-            command: 'cd ../backend && rm -f data/geti_tune.db && SEED_DB=true ./run.sh',
+            command: 'cd ../backend && rm -f data/geti_tune.db && SEED_DB=true ./run-e2e.sh',
             name: 'backend',
             url: 'http://localhost:7860/health',
             reuseExistingServer: !CI,
             timeout: SERVER_TIMEOUT,
+            env: {
+                E2E_ASSETS_S3_URL: process.env.E2E_ASSETS_S3_URL || '',
+            },
         },
         {
             command: CI ? 'npx serve -s dist -p 3000' : 'npm run start',
@@ -67,7 +70,4 @@ export default defineConfig({
             timeout: ACTION_TIMEOUT,
         },
     ],
-
-    globalSetup: './tests/e2e/global-setup.ts',
-    globalTeardown: './tests/e2e/global-teardown.ts',
 });
