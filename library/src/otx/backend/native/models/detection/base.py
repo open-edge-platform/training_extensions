@@ -85,9 +85,20 @@ class OTXDetectionModel(OTXModel):
     def test_step(self, batch: OTXDataBatch, batch_idx: int) -> OTXPredBatch:
         """Perform a single test step on a batch of data from the test set.
 
-        :param batch: A batch of data (a tuple) containing the input tensor of images and target
-            labels.
-        :param batch_idx: The index of the current batch.
+        Args:
+            batch: A batch of data containing the input tensor of images and target labels.
+            batch_idx: The index of the current batch.
+
+        Returns:
+            OTXPredBatch: The prediction results for the batch after threshold filtering.
+
+        Raises:
+            TypeError: If predictions are of type OTXBatchLossEntity or if metric inputs
+                    have an unsupported type.
+
+        Note:
+            Applies threshold filtering to predictions before updating test metrics.
+            Handles both single dictionary and list of dictionaries for metric inputs.
         """
         preds = self.forward(inputs=batch)
 
