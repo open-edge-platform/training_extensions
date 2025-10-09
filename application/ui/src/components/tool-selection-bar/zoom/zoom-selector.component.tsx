@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Flex } from '@geti/ui';
+import { ActionButton, Flex, Text } from '@geti/ui';
 import { Add, Remove } from '@geti/ui/icons';
 
 import { useSetZoom, useZoom } from '../../zoom/zoom.provider';
@@ -24,8 +24,10 @@ export const ZoomSelector = () => {
                 </IconWrapper>
             </ActionButton>
 
-            <Flex width={'size-600'} justifyContent={'center'}>
-                {(zoom.scale * 100).toFixed(1)}%
+            <Flex>
+                <Text UNSAFE_style={{ fontSize: 'var(--spectrum-global-dimension-font-size-25)' }}>
+                    {(zoom.scale * 100).toFixed(1)}%
+                </Text>
             </Flex>
 
             <ActionButton

@@ -66,16 +66,16 @@ export const ZoomProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const onZoomChange = (factor: number) => {
-        const step = (zoom.maxZoomIn - zoom.initialCoordinates.scale) / ZOOM_STEP_DIVISOR;
+        setZoom((prev) => {
+            const step = (prev.maxZoomIn - prev.initialCoordinates.scale) / ZOOM_STEP_DIVISOR;
 
-        setZoom(
-            getZoomState({
-                newScale: clampBetween(zoom.initialCoordinates.scale, zoom.scale + step * factor, zoom.maxZoomIn),
-                cursorX: zoom.initialCoordinates.x,
-                cursorY: zoom.initialCoordinates.y,
-                initialCoordinates: zoom.initialCoordinates,
-            })
-        );
+            return getZoomState({
+                newScale: clampBetween(prev.initialCoordinates.scale, prev.scale + step * factor, prev.maxZoomIn),
+                cursorX: prev.initialCoordinates.x,
+                cursorY: prev.initialCoordinates.y,
+                initialCoordinates: prev.initialCoordinates,
+            })(prev);
+        });
     };
 
     return (
