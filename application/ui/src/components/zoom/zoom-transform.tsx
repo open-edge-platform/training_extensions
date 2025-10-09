@@ -25,7 +25,7 @@ const useGesture = createUseGesture([wheelAction, pinchAction, dragAction]);
 
 export const ZoomTransform = ({ children, target, zoomInMultiplier = 10, zoomOutDivisor = 2 }: ZoomTransformProps) => {
     const zoom = useZoom();
-    const setZoom = useSetZoom();
+    const { setZoom } = useSetZoom();
     const isPanning = usePanning();
     const [isGrabbing, setIsGrabbing] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);

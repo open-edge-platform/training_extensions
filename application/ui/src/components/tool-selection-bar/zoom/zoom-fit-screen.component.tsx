@@ -8,18 +8,10 @@ import { useSetZoom } from '../../zoom/zoom.provider';
 import { IconWrapper } from '../icon-wrapper.component';
 
 export const ZoomFitScreen = () => {
-    const setZoom = useSetZoom();
-
-    const handleFitScreen = () => {
-        setZoom((prev) => ({
-            ...prev,
-            scale: prev.initialCoordinates.scale,
-            translate: { x: prev.initialCoordinates.x, y: prev.initialCoordinates.y },
-        }));
-    };
+    const { fitToScreen } = useSetZoom();
 
     return (
-        <ActionButton isQuiet onPress={handleFitScreen} aria-label='Fit to screen'>
+        <ActionButton isQuiet onPress={fitToScreen} aria-label='Fit to screen'>
             <IconWrapper>
                 <FitScreen />
             </IconWrapper>

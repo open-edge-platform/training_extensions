@@ -29,10 +29,23 @@ from app.webrtc.manager import WebRTCManager
 
 def is_valid_uuid(identifier: str) -> bool:
     """
-    Check if a given string identifier is formatted as a valid UUID
+    Check if a given string identifier is formatted as a valid UUID.
 
-    :param identifier: String to check
-    :return: True if valid UUID, False otherwise
+    Args:
+        identifier: String to check for UUID validity.
+
+    Returns:
+        bool: True if the string is a valid UUID, False otherwise.
+
+    Example:
+        >>> is_valid_uuid("550e8400-e29b-41d4-a716-446655440000")
+        True
+        >>> is_valid_uuid("invalid-uuid")
+        False
+
+    Note:
+        This function only validates the UUID format, not whether the UUID
+        actually exists in any system or database.
     """
     try:
         UUID(identifier)
