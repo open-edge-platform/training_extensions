@@ -8,7 +8,6 @@ import { RouterProvider } from 'react-router';
 
 import { router } from './router';
 
-// Type for mutation meta with query invalidation
 export type MutationMeta = {
     invalidateQueries?: Array<string | string[]>;
 };
