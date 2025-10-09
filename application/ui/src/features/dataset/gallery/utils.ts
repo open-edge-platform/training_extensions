@@ -13,7 +13,3 @@ export const getImageUrl = (projectId: string, itemId: string) => {
 export const getThumbnailUrl = (projectId: string, itemId: string) => {
     return `${getBaseUrl(projectId, itemId)}/thumbnail`;
 };
-
-export const getPredictionThumbnailUrl = (projectId: string, itemId: string) => {
-    return `${getBaseUrl(projectId, itemId)}/thumbnail`;
-};

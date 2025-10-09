@@ -17,7 +17,7 @@ type SelectedDataState = null | {
     toggleSelectedKeys: (key: string[]) => void;
 };
 
-export const SelectedDataContext = createContext<SelectedDataState>(null);
+const SelectedDataContext = createContext<SelectedDataState>(null);
 
 export const SelectedDataProvider = ({ children }: { children: ReactNode }) => {
     const [mediaState, setMediaState] = useState<MediaState>(new Map());
