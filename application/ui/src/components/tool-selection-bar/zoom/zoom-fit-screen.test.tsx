@@ -11,7 +11,11 @@ vi.mock(import('../../../components/zoom/zoom.provider'), async (importOriginal)
     const actual = await importOriginal();
     return {
         ...actual,
-        useSetZoom: () => mockedSetZoom,
+        useSetZoom: () => ({
+            setZoom: mockedSetZoom,
+            fitToScreen: vi.fn(),
+            onZoomChange: vi.fn(),
+        }),
     };
 });
 

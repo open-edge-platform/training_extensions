@@ -3,6 +3,8 @@
 
 import { ZoomState } from './zoom.provider';
 
+export const ZOOM_STEP_DIVISOR = 10;
+
 export const getZoomState =
     ({
         initialCoordinates,

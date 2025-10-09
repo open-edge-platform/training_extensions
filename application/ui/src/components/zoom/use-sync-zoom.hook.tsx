@@ -25,7 +25,7 @@ const INITIAL_ZOOM = { scale: 1.0, x: 0, y: 0 };
 type useSyncZoomProps = { container: Size; target: Size; zoomInMultiplier: number; zoomOutDivisor: number };
 
 export const useSyncZoom = ({ container, target, zoomInMultiplier, zoomOutDivisor }: useSyncZoomProps) => {
-    const setZoom = useSetZoom();
+    const { setZoom } = useSetZoom();
 
     const targetZoom = useMemo(() => {
         if (container.width === undefined || container.height === undefined) {
