@@ -171,7 +171,6 @@ class KLHLabelClassifier(HLabelClassifier):
         super().__init__(*args, **kwargs)
         self.kl_weight = kl_weight
         self.kl_loss = TreePathKLDivergenceLoss(reduction="batchmean", loss_weight=1.0)
-
     def loss(self, inputs: torch.Tensor, labels: torch.Tensor, **kwargs) -> torch.Tensor:
         """Calculate losses from a batch of inputs and data samples.
 

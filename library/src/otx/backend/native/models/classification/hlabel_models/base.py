@@ -7,14 +7,16 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from copy import deepcopy
+from functools import wraps
 from typing import TYPE_CHECKING, Any
 
 import torch
 from torch import Tensor
-
+    
 from otx.backend.native.exporter.base import OTXModelExporter
 from otx.backend.native.exporter.native import OTXNativeModelExporter
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel
+from otx.backend.native.models.classification.classifier import HLabelClassifier, KLHLabelClassifier
 from otx.backend.native.schedulers import LRSchedulerListCallable
 from otx.data.entity.base import OTXBatchLossEntity
 from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
@@ -59,7 +61,9 @@ class OTXHlabelClsModel(OTXModel):
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = HLabelClsMetricCallable,
         torch_compile: bool = False,
+        **kwargs,
     ) -> None:
+        self.kl_weight = kwargs.get("kl_weight", 0.0)
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
@@ -70,15 +74,46 @@ class OTXHlabelClsModel(OTXModel):
             metric=metric,
             torch_compile=torch_compile,
         )
-
         if freeze_backbone:
             classification_layers = self._identify_classification_layers()
             for name, param in self.named_parameters():
                 param.requires_grad = name in classification_layers
 
+    def __getattribute__(self, name: str):
+        attr = super().__getattribute__(name)
+        if name == "_create_model" and callable(attr):
+            cache_name = "__cm_cached__"
+            cache = super().__getattribute__("__dict__").get(cache_name)
+            if cache:
+                return cache
+            @wraps(attr)
+            def wrapped(*a, **kw) -> nn.Module:
+                model = attr(*a, **kw)
+                return self._finalize_model(model)
+            self.__dict__[cache_name] = wrapped
+            return wrapped
+        return attr
+
     @abstractmethod
     def _create_model(self, head_config: dict | None = None) -> nn.Module:  # type: ignore[override]
         """Create a PyTorch model for this class."""
+
+    def _finalize_model(self, model: nn.Module) -> nn.Module:
+        """Run after child _create_model(); upgrade to KL if enabled."""
+        if self.kl_weight > 0:
+            kl_model = KLHLabelClassifier(
+                backbone=model.backbone,
+                neck=model.neck,
+                head=model.head,
+                multiclass_loss=model.multiclass_loss,
+                multilabel_loss=model.multilabel_loss,
+                init_cfg=getattr(model, "init_cfg", None),
+                kl_weight=self.kl_weight,
+            )
+            return kl_model
+        else:
+            return model
+
 
     def _identify_classification_layers(self, prefix: str = "model.") -> list[str]:
         """Simple identification of the classification layers. Used for incremental learning."""

@@ -1,8 +1,8 @@
 task: H_LABEL_CLS
 model:
-  class_path: otx.backend.native.models.classification.hlabel_models.timm_model.TimmModelHLabelClsWithKL
+  class_path: otx.backend.native.models.classification.hlabel_models.timm_model.TimmModelHLabelCls
   init_args:
-    kl_weight: 1.0
+    kl_weight: 2.0
     model_name: tf_efficientnetv2_s.in21k
 
     optimizer:
