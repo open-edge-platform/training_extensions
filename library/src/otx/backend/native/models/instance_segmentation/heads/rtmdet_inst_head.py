@@ -453,8 +453,8 @@ class RTMDetInstHead(RTMDetHead):
                 ori_h, ori_w = img_meta["ori_shape"][:2]
                 masks = self.mask_postprocess(
                     mask_logits,
-                    math.ceil(mask_logits.shape[-1] * scale_factor[1]),
                     math.ceil(mask_logits.shape[-2] * scale_factor[0]),
+                    math.ceil(mask_logits.shape[-1] * scale_factor[1]),
                     threshold=cfg["mask_thr_binary"],
                 )[..., :ori_h, :ori_w]
                 masks = masks.squeeze(0)
@@ -895,7 +895,7 @@ class RTMDetInstSepBNHead(RTMDetInstHead):
                     ),
                 )
             self.cls_convs.append(cls_convs)
-            self.reg_convs.append(cls_convs)
+            self.reg_convs.append(reg_convs)
             self.kernel_convs.append(kernel_convs)
 
             self.rtm_cls.append(

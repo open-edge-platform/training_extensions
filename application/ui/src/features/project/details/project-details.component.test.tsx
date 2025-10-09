@@ -28,6 +28,7 @@ describe('ProjectDetails', () => {
                         exclusive_labels: false,
                         labels: [{ name: 'person' }, { name: 'car' }],
                     },
+                    active_pipeline: true,
                 });
             }),
             http.get('/api/projects/{project_id}/pipeline', () => {
@@ -36,6 +37,7 @@ describe('ProjectDetails', () => {
                     status: 'running' as const,
                     data_collection_policies: [],
                     source: {
+                        id: 'source-id',
                         name: 'source',
                         source_type: 'video_file' as const,
                         video_path: 'video.mp4',
@@ -51,6 +53,7 @@ describe('ProjectDetails', () => {
                         files_deleted: false,
                     },
                     sink: {
+                        id: 'sink-id',
                         name: 'sink',
                         folder_path: 'data/sink',
                         output_formats: ['image_original', 'image_with_predictions', 'predictions'] as Array<

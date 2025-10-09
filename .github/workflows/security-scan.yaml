@@ -19,6 +19,10 @@ jobs:
       contents: read
       security-events: write # Needed to upload the results to code-scanning dashboard
     steps:
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
       - name: Run Zizmor scan
         uses: open-edge-platform/geti-ci/actions/zizmor@c2bb2697178bb2e50014420aef2351a45749b925
         with:
@@ -33,6 +37,10 @@ jobs:
       contents: read
       security-events: write # Needed to upload the results to code-scanning dashboard
     steps:
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
       - name: Run Bandit scan
         uses: open-edge-platform/geti-ci/actions/bandit@c2bb2697178bb2e50014420aef2351a45749b925
         with:
@@ -48,6 +56,10 @@ jobs:
       contents: read
       security-events: write # Needed to upload the results to code-scanning dashboard
     steps:
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
       - name: Run Trivy scan
         id: trivy
         uses: open-edge-platform/geti-ci/actions/trivy@c2bb2697178bb2e50014420aef2351a45749b925

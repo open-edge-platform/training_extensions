@@ -7,7 +7,6 @@ import { Loading } from '@geti/ui';
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 
 import { $api } from './api/client';
-import { ZoomProvider } from './components/zoom/zoom';
 import { paths } from './constants/paths';
 import { WebRTCConnectionProvider } from './features/inference/stream/web-rtc-connection-provider';
 import { ProjectList } from './features/project/list/project-list.component';
@@ -80,20 +79,16 @@ export const router = createBrowserRouter([
                         path: paths.project.inference.pattern,
                         element: (
                             <WebRTCConnectionProvider>
-                                <ZoomProvider>
-                                    <Inference />
-                                </ZoomProvider>
+                                <Inference />
                             </WebRTCConnectionProvider>
                         ),
                     },
                     {
                         path: paths.project.dataset.pattern,
                         element: (
-                            <ZoomProvider>
-                                <SelectedDataProvider>
-                                    <Dataset />
-                                </SelectedDataProvider>
-                            </ZoomProvider>
+                            <SelectedDataProvider>
+                                <Dataset />
+                            </SelectedDataProvider>
                         ),
                     },
                     {

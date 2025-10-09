@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { omit } from 'lodash-es';
+import { v4 as uuid } from 'uuid';
 
 import { $api } from '../../../../api/client';
 import { SourceConfig } from '../util';
@@ -12,7 +13,12 @@ export const useSourceMutation = (isNewSource: boolean) => {
 
     return async (body: SourceConfig) => {
         if (isNewSource) {
-            const response = await addSource.mutateAsync({ body: omit(body, 'id') as SourceConfig });
+            const sourcePayload = {
+                ...body,
+                id: uuid(),
+            };
+
+            const response = await addSource.mutateAsync({ body: sourcePayload });
 
             return String(response.id);
         }

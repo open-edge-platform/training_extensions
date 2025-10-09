@@ -2,10 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { getMockedProject } from 'mocks/mock-project';
-import { HttpResponse } from 'msw';
-import { server } from 'src/msw-node-setup';
 import { fireEvent, render, screen } from 'test-utils/render';
-import { http } from 'tests/fixtures';
 
 import { ProjectCard } from './project-card.component';
 
@@ -23,25 +20,6 @@ describe('ProjectCard', () => {
         },
     });
 
-    const mockPipelineResponse = (status: 'idle' | 'running' = 'idle') => {
-        server.use(
-            http.get('/api/projects/{project_id}/pipeline', () => {
-                return HttpResponse.json({
-                    project_id: 'test-project-id',
-                    status,
-                    source: null,
-                    sink: null,
-                    model: null,
-                    data_collection_policies: [],
-                });
-            })
-        );
-    };
-
-    beforeEach(() => {
-        mockPipelineResponse('idle');
-    });
-
     it('should render all elements correctly', async () => {
         render(<ProjectCard item={mockProject} />);
 
@@ -57,11 +35,8 @@ describe('ProjectCard', () => {
         expect(await screen.findByRole('button', { name: /open project options/i })).toBeInTheDocument();
     });
 
-    // TODO: unskip and update test suite once pipeline metadata is added onto /projects endpoint
-    it.skip('should show active tag when pipeline is running', async () => {
-        mockPipelineResponse('running');
-
-        render(<ProjectCard item={mockProject} />);
+    it('should show active tag when pipeline is running', async () => {
+        render(<ProjectCard item={{ ...mockProject, active_pipeline: true }} />);
 
         expect(await screen.findByLabelText('Active')).toBeInTheDocument();
     });

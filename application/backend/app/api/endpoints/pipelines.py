@@ -15,7 +15,7 @@ from pydantic import ValidationError
 from app.api.dependencies import get_pipeline_service, get_project_id
 from app.schemas import DataCollectionPolicy
 from app.schemas.metrics import PipelineMetrics
-from app.schemas.pipeline import Pipeline, PipelineStatus
+from app.schemas.pipeline import PipelineStatus, PipelineView
 from app.services import PipelineService, ResourceNotFoundError
 
 logger = logging.getLogger(__name__)
@@ -65,7 +65,7 @@ UPDATE_PIPELINE_BODY_EXAMPLES = {
 
 @router.get(
     "",
-    response_model=Pipeline,
+    response_model=PipelineView,
     responses={
         status.HTTP_200_OK: {"description": "Pipeline found"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID"},
@@ -75,7 +75,7 @@ UPDATE_PIPELINE_BODY_EXAMPLES = {
 def get_pipeline(
     project_id: Annotated[UUID, Depends(get_project_id)],
     pipeline_service: Annotated[PipelineService, Depends(get_pipeline_service)],
-) -> Pipeline:
+) -> PipelineView:
     """Get info about a given pipeline"""
     try:
         return pipeline_service.get_pipeline_by_id(project_id)
@@ -85,7 +85,7 @@ def get_pipeline(
 
 @router.patch(
     "",
-    response_model=Pipeline,
+    response_model=PipelineView,
     responses={
         status.HTTP_200_OK: {"description": "Pipeline successfully reconfigured"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID or request body"},
@@ -103,7 +103,7 @@ def update_pipeline(
         ),
     ],
     pipeline_service: Annotated[PipelineService, Depends(get_pipeline_service)],
-) -> Pipeline:
+) -> PipelineView:
     """Reconfigure an existing pipeline"""
     if "status" in pipeline_config:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The 'status' field cannot be changed")

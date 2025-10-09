@@ -79,5 +79,8 @@ a {
 
 button {
     cursor: pointer !important;
-    fill: var(--spectrum-global-color-gray-900);
+}
+
+svg {
+    fill: currentColor;
 }
