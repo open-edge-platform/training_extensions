@@ -12,7 +12,11 @@ export const DataCollection = () => {
         params: { path: { project_id: projectId } },
     });
 
-    const patchPipelineMutation = $api.useMutation('patch', '/api/projects/{project_id}/pipeline');
+    const patchPipelineMutation = $api.useMutation('patch', '/api/projects/{project_id}/pipeline', {
+        meta: {
+            invalidateQueries: [['get', '/api/projects/{project_id}/pipeline']],
+        },
+    });
 
     const isAutoCapturingEnabled = pipelineQuery.data?.data_collection_policies[0]?.enabled ?? false;
     const defaultRate = 12;

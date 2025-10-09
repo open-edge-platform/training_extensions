@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { AlertDialog, Flex, Text } from '@geti/ui';
+import { AlertDialog, Text } from '@geti/ui';
 import { useEventListener } from 'hooks/event-listener.hook';
 
 type AlertDialogContentProps = {
@@ -26,13 +26,7 @@ export const AlertDialogContent = ({ itemsIds, onPrimaryAction }: AlertDialogCon
             secondaryActionLabel='Close'
             onPrimaryAction={onPrimaryAction}
         >
-            <Text>Are you sure you want to delete the next items?</Text>
-
-            <Flex direction={'column'} marginTop={'size-100'}>
-                {itemsIds.map((itemId) => (
-                    <Text key={itemId}>- {itemId}</Text>
-                ))}
-            </Flex>
+            <Text>{`Are you sure you want to delete ${itemsIds.length} item(s)?`}</Text>
         </AlertDialog>
     );
 };

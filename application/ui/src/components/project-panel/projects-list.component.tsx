@@ -17,8 +17,16 @@ interface ProjectListProps {
 }
 
 export const ProjectsList = ({ projects, setProjectInEdition, projectIdInEdition }: ProjectListProps) => {
-    const deleteProjectMutation = $api.useMutation('delete', '/api/projects/{project_id}');
-    const patchProjectMutation = $api.useMutation('patch', '/api/projects/{project_id}');
+    const deleteProjectMutation = $api.useMutation('delete', '/api/projects/{project_id}', {
+        meta: {
+            invalidateQueries: [['get', '/api/projects']],
+        },
+    });
+    const patchProjectMutation = $api.useMutation('patch', '/api/projects/{project_id}', {
+        meta: {
+            invalidateQueries: [['get', '/api/projects']],
+        },
+    });
 
     const updateProjectName = (id: string, name: string): void => {
         patchProjectMutation.mutate(

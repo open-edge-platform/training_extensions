@@ -6,7 +6,23 @@ import { ThemeProvider } from '@geti/ui/theme';
 import { MutationCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from 'react-router';
 
+import type { paths } from './api/openapi-spec';
 import { router } from './router';
+
+type HttpMethod = 'get';
+type PathsWithMethod<M extends HttpMethod> = {
+    [P in keyof paths]: M extends keyof paths[P] ? P : never;
+}[keyof paths];
+export type QueryKey = [HttpMethod, PathsWithMethod<HttpMethod>];
+export type MutationMeta = {
+    invalidateQueries?: QueryKey[];
+};
+
+declare module '@tanstack/react-query' {
+    interface Register {
+        mutationMeta: MutationMeta;
+    }
+}
 
 export const queryClient = new QueryClient({
     defaultOptions: {
@@ -16,8 +32,15 @@ export const queryClient = new QueryClient({
         },
     },
     mutationCache: new MutationCache({
-        onSuccess: () => {
-            queryClient.invalidateQueries();
+        onSuccess: (_data, _variables, _context, mutation) => {
+            const meta = mutation.meta as MutationMeta | undefined;
+            const invalidateQueries = meta?.invalidateQueries;
+
+            if (invalidateQueries) {
+                invalidateQueries.forEach((queryKey) => {
+                    queryClient.invalidateQueries({ queryKey });
+                });
+            }
         },
     }),
 });

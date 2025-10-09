@@ -12,11 +12,9 @@ import { SourceOptions } from '../sources/source-options';
 export const InputOutputSetup = () => {
     return (
         <DialogTrigger type='popover'>
-            <Button width={'size-2000'} variant={'secondary'}>
+            <Button width={'size-3000'} variant={'secondary'}>
                 <Camera fill='white' />
-                <Text width={'auto'} marginStart={'size-100'}>
-                    Pipeline configuration
-                </Text>
+                <Text>Pipeline configuration</Text>
             </Button>
             <Dialog minWidth={'size-6000'}>
                 <Content>
