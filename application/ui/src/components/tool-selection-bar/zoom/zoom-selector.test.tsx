@@ -7,17 +7,26 @@ import { describe, expect, it, vi } from 'vitest';
 import { useZoom } from '../../../components/zoom/zoom.provider';
 import { ZoomSelector } from './zoom-selector.component';
 
-const mockedSetZoom = vi.fn();
+const mockedOnZoomChange = vi.fn();
+
 vi.mock(import('../../../components/zoom/zoom.provider'), async (importOriginal) => {
     const actual = await importOriginal();
     return {
         ...actual,
+        useSetZoom: () => ({
+            setZoom: vi.fn(),
+            fitToScreen: vi.fn(),
+            onZoomChange: mockedOnZoomChange,
+        }),
         useZoom: vi.fn(),
-        useSetZoom: () => mockedSetZoom,
     };
 });
 
 describe('ZoomSelector', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
     it('displays the correct zoom value', () => {
         vi.mocked(useZoom).mockReturnValue({
             scale: 0.21,
@@ -30,7 +39,7 @@ describe('ZoomSelector', () => {
         expect(screen.getByText('21.0%')).toBeVisible();
     });
 
-    it('calls setZoom when zoom in button is clicked', () => {
+    it('calls onZoomChange when zoom in button is clicked', () => {
         vi.mocked(useZoom).mockReturnValue({
             scale: 0.5,
             maxZoomIn: 2,
@@ -41,10 +50,10 @@ describe('ZoomSelector', () => {
         render(<ZoomSelector />);
         const zoomInButton = screen.getByRole('button', { name: /zoom in/i });
         fireEvent.click(zoomInButton);
-        expect(mockedSetZoom).toHaveBeenCalled();
+        expect(mockedOnZoomChange).toHaveBeenCalledWith(1);
     });
 
-    it('calls setZoom when zoom out button is clicked', () => {
+    it('calls onZoomChange when zoom out button is clicked', () => {
         vi.mocked(useZoom).mockReturnValue({
             scale: 1,
             maxZoomIn: 2,
@@ -55,7 +64,7 @@ describe('ZoomSelector', () => {
         render(<ZoomSelector />);
         const zoomOutButton = screen.getByRole('button', { name: /zoom out/i });
         fireEvent.click(zoomOutButton);
-        expect(mockedSetZoom).toHaveBeenCalled();
+        expect(mockedOnZoomChange).toHaveBeenCalledWith(-1);
     });
 
     it('disables zoom in button at max zoom in', () => {
