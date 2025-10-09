@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Intel Corporation
+# Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 import pytest
@@ -8,9 +8,9 @@ from torch import nn
 from otx.backend.native.models.classification.backbones import EfficientNetBackbone
 from otx.backend.native.models.classification.classifier import HLabelClassifier, KLHLabelClassifier
 from otx.backend.native.models.classification.heads import LinearClsHead, MultiLabelLinearClsHead
+from otx.backend.native.models.classification.heads.hlabel_cls_head import HierarchicalClsHead
 from otx.backend.native.models.classification.losses import AsymmetricAngularLossWithIgnore
 from otx.backend.native.models.classification.necks.gap import GlobalAveragePooling
-from otx.backend.native.models.classification.heads.hlabel_cls_head import HierarchicalClsHead
 
 
 class TestHierHead(HierarchicalClsHead):
@@ -53,10 +53,6 @@ class TestHierHead(HierarchicalClsHead):
             x = x[0]
         return self.classifier(x)
 
-    # H/KLH classifiers call this to slice per-head logits
-    def _get_head_idx_to_logits_range(self, i: int):
-        return self._head_ranges[i]
-
 
 class TestKLHLabelClassifier:
     @pytest.fixture(
@@ -74,15 +70,14 @@ class TestKLHLabelClassifier:
         head = TestHierHead(in_channels=backbone.num_features, head_class_sizes=head_class_sizes)
         loss = nn.CrossEntropyLoss()
         fxt_input = request.getfixturevalue(input_fxt_name)
-        l = len(head_class_sizes)
+        level = len(head_class_sizes)
         fxt_labels = torch.stack(fxt_input.labels)
-        fxt_labels = fxt_labels.repeat(1, l)
+        fxt_labels = fxt_labels.repeat(1, level)
         return (backbone, neck, head, loss, fxt_input.images, fxt_labels)
-        
 
     def test_forward(self, fxt_model_and_inputs):
         backbone, neck, head, loss, images, labels = fxt_model_and_inputs
-        
+
         model = KLHLabelClassifier(
             backbone=backbone,
             neck=neck,
@@ -90,13 +85,13 @@ class TestKLHLabelClassifier:
             multiclass_loss=loss,
             kl_weight=1,
         )
-        
-        output = model(images, labels, mode='explain')
+
+        output = model(images, labels, mode="explain")
         assert isinstance(output, dict)
         assert "logits" in output
         assert "scores" in output
         assert "preds" in output
-    
+
     def test_klh_loss_greater_than_hlabel(self, fxt_model_and_inputs):
         """KLHLabelClassifier should have strictly larger loss than HLabelClassifier
         when kl_weight > 0 and there are >= 2 multiclass heads."""
@@ -120,7 +115,7 @@ class TestKLHLabelClassifier:
 
         print(f"HLabel loss: {h_loss.item():.6f} | KLH loss: {klh_loss.item():.6f}")
         assert klh_loss > h_loss, "Expected KLH loss to be greater due to added KL term"
-    
+
     def test_klh_weight_zero_match_hlabel(self, fxt_model_and_inputs):
         """With kl_weight == 0, KLH loss should match H label loss (within tolerance)."""
         backbone, neck, head, loss, images, labels = fxt_model_and_inputs
