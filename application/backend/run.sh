@@ -35,6 +35,7 @@ export PYTHONPATH=.
 
 if [[ "$SEED_DB" == "true" ]]; then
   echo "Seeding the database..."
+  rm data/geti_tune.db || true
   $UV_CMD app/cli.py init-db
   $UV_CMD app/cli.py seed --with-model=True
 fi
