@@ -1,14 +1,17 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import asyncio
+from collections.abc import AsyncGenerator
 from typing import Annotated
-from uuid import UUID
+from uuid import uuid4
 
-from fastapi import APIRouter, Body, Depends, HTTPException, status
+from fastapi import APIRouter, Body, HTTPException, Request, status
+from starlette.responses import StreamingResponse
 
-from app.api.dependencies import get_model_service, get_project_id
+from app.api.validators import JobID
 from app.schemas import JobRequest, JobResponse
-from app.services import ModelService, ResourceNotFoundError
+from app.services import ResourceNotFoundError
 
 router = APIRouter(prefix="/api/jobs", tags=["Jobs"])
 
@@ -23,27 +26,101 @@ router = APIRouter(prefix="/api/jobs", tags=["Jobs"])
         status.HTTP_404_NOT_FOUND: {"description": "Project not found"},
     },
 )
-def submit_job(
-    project_id: Annotated[UUID, Depends(get_project_id)],
+async def submit_job(
     job_request: Annotated[JobRequest, Body()],
-    model_service: Annotated[ModelService, Depends(get_model_service)],
 ) -> JobResponse:
     """
     Create a new job for the project.
 
     Args:
-        project_id (UUID): The ID of the project.
         job_request (JobRequest): The Job request payload.
-        model_service (ModelService): The model service dependency.
 
     Returns:
         JobResponse: The response containing the job ID.
     """
     try:
-        # TODO: Implement actual training logic
-        _ = model_service, project_id, job_request  # to avoid unused variable warnings
-        return JobResponse(job_id=UUID("94939cbe-e692-4423-b9d3-5f6d93823be3"))
+        # TODO: Request job scheduling using Jobs Control Plane (TBD)
+        return JobResponse(job_id=job_request.id)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.get(
+    "",
+    response_model=list[JobResponse],
+    responses={
+        status.HTTP_200_OK: {"description": "List all jobs"},
+    },
+)
+async def list_jobs() -> list[JobResponse]:
+    """
+    Retrieve a list of all jobs.
+
+    This endpoint returns a list of all jobs that have been registered
+    during the active server session.
+
+    Returns:
+        list[JobResponse]: A list of job responses.
+    """
+    return [JobResponse(job_id=uuid4())]
+
+
+@router.get(
+    "/{job_id}",
+    response_model=JobResponse,
+    responses={
+        status.HTTP_200_OK: {"description": "List all jobs"},
+    },
+)
+async def get_job(job_id: JobID) -> JobResponse:
+    """
+    Retrieve details of a specific job.
+
+    This endpoint fetches the details of a job using its unique job ID.
+
+    Args:
+        job_id (JobID): The unique identifier of the job.
+
+    Returns:
+        JobResponse: The response containing the job details.
+    """
+    return JobResponse(job_id=job_id)
+
+
+@router.get("/{job_id}/status")
+async def stream_job_status(job_id: JobID, request: Request) -> StreamingResponse:
+    """
+    Stream real-time status updates for a specific job.
+
+    This endpoint streams job status updates using Server-Sent Events (SSE).
+    It sends periodic updates until the client disconnects or the job reaches
+    terminal state.
+
+    Args:
+        job_id (JobID): The unique identifier of the job.
+        request (Request): The HTTP request object to monitor client
+        connection status.
+
+    Returns:
+        StreamingResponse: A streaming response with job status updates.
+    """
+
+    async def gen_job_updates() -> AsyncGenerator[str]:
+        """Generate job status updates."""
+        for _ in range(20):
+            if await request.is_disconnected():
+                break
+            yield f"Hey there from {job_id}\n"
+            await asyncio.sleep(1)
+
+    return StreamingResponse(
+        gen_job_updates(),
+        media_type="text/event-stream",
+        headers={
+            "Content-Type": "text/event-stream",
+            "Connection": "keep-alive",
+            "Cache-Control": "no-cache",
+        },
+    )

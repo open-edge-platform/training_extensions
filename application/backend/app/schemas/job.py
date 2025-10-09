@@ -6,6 +6,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from app.schemas.base import HasID
+
 
 class TrainingRequest(BaseModel):
     """Request schema for training a new model."""
@@ -29,7 +31,7 @@ class JobType(StrEnum):
     TRAIN = "train"
 
 
-class JobRequest(BaseModel):
+class JobRequest(HasID, BaseModel):
     job_type: JobType = Field(..., description="Type of the job to be created")
     project_id: UUID = Field(..., description="ID of the project associated with the job")
     parameters: TrainingRequest = Field(..., description="Parameters required for the job")
