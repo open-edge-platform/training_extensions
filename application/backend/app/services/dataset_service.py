@@ -24,7 +24,7 @@ from app.schemas.dataset_item import (
     DatasetItemAnnotationsWithSource,
     DatasetItemSubset,
 )
-from app.schemas.project import Project, TaskType
+from app.schemas.project import ProjectBase, TaskType
 from app.schemas.shape import FullImage, Polygon, Rectangle
 from app.services import ProjectService
 from app.services.base import ResourceNotFoundError, ResourceType
@@ -96,12 +96,12 @@ class DatasetService:
         """Creates a new dataset item"""
         dataset_item_id = uuid4()
         match data:
+            case Image.Image():
+                image = data
             case np.ndarray():
                 image = self._read_image_from_ndarray(data)
-            case BinaryIO() | BytesIO():
-                image = self._read_image_from_binary(data)
             case _:
-                image = data
+                image = self._read_image_from_binary(data)
 
         dataset_dir = self.projects_dir / f"{project_id}/dataset"
         dataset_dir.mkdir(parents=True, exist_ok=True)
@@ -219,7 +219,7 @@ class DatasetService:
                     raise AnnotationValidationError(f"Label {str(annotation_label.id)} is not found in the project.")
 
     @staticmethod
-    def _validate_annotations(annotations: list[DatasetItemAnnotation], project: Project) -> None:  # noqa: C901
+    def _validate_annotations(annotations: list[DatasetItemAnnotation], project: ProjectBase) -> None:  # noqa: C901
         match project.task.task_type:
             case TaskType.CLASSIFICATION:
                 if len(annotations) > 1:

@@ -10,7 +10,7 @@ import numpy as np
 
 from app.db import get_db_session
 from app.entities.stream_data import InferenceData
-from app.schemas import Project
+from app.schemas import ProjectView
 from app.schemas.dataset_item import DatasetItemFormat
 from app.schemas.pipeline import FixedRateDataCollectionPolicy
 from app.services import ActivePipelineService, DatasetService, LabelService, ProjectService
@@ -23,10 +23,20 @@ class PolicyChecker(metaclass=ABCMeta):
     @abstractmethod
     def should_collect(self, timestamp: float) -> bool:
         """
-        Checks if certain dispatched image should be collected to the project dataset
+        Determines whether a dispatched image should be collected to the project dataset.
 
-        :param timestamp: dispatched image timestamp
-        :return: True if image should be collected, False otherwise
+        Args:
+            timestamp: Floating-point timestamp representing when the image was
+                    dispatched, in seconds since epoch.
+
+        Returns:
+            bool: True if the image meets the collection criteria and should be
+                added to the dataset, False otherwise.
+
+        Note:
+            This is an abstract method and must be implemented by subclasses.
+            Different policy implementations may use different strategies such as
+            time-based sampling, random sampling, or condition-based triggering.
         """
 
 
@@ -60,20 +70,32 @@ class DataCollector:
     def collect(
         self,
         source_id: UUID,
-        project: Project,
+        project: ProjectView,
         timestamp: float,
         frame_data: np.ndarray,
         inference_data: InferenceData,
     ) -> None:
         """
-        Collects the dispatched image if any of the policy checkers indicate that it should be collected.
+        Collects dispatched images to project dataset based on policy checkers.
 
-        :param source_id: ID of the pipeline source
-        :param project: Pipeline project
-        :param timestamp: Timestamp of the image
-        :param frame_data: Image binary data in ndarray format
-        :param inference_data: Inference data including predictions
-        :return:
+        Evaluates automated collection policies and the manual next-frame trigger to determine if image
+        should be added to dataset. If collection is warranted, processes the image and
+        creates a dataset item with annotations.
+
+        Args:
+            source_id: UUID identifying the pipeline source that generated the image.
+            project: Project object representing the target project for dataset collection.
+            timestamp: Floating-point timestamp of the captured image, used for item naming.
+            frame_data: Image data in numpy ndarray format (expected in BGR color space).
+            inference_data: Inference data containing model predictions and model identifier.
+
+        Returns:
+            None: Method performs operations with side effects but returns no value.
+
+        Note:
+            Collection occurs if any policy checker returns True OR if the
+            should_collect_next_frame flag is set. Timestamp is formatted to string
+            with 4 decimal places for use as dataset item name.
         """
         should_collect = (
             any(checker.should_collect(timestamp) for checker in self.policy_checkers) or self.should_collect_next_frame

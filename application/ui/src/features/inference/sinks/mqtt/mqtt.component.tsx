@@ -12,6 +12,7 @@ type MqttProps = {
     config?: MqttSinkConfig;
 };
 const initConfig: MqttSinkConfig = {
+    id: '',
     name: '',
     topic: '',
     sink_type: 'mqtt',

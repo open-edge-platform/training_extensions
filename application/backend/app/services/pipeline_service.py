@@ -9,7 +9,7 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 
 from app.repositories import PipelineRepository
-from app.schemas import Pipeline, PipelineStatus
+from app.schemas import PipelineStatus, PipelineView
 from app.schemas.metrics import InferenceMetrics, LatencyMetrics, PipelineMetrics, ThroughputMetrics, TimeWindow
 from app.services import ActivePipelineService
 from app.services.base import ResourceNotFoundError, ResourceType
@@ -48,7 +48,7 @@ class PipelineService:
         self._notify_sink_changed()
         self._data_collector.reload_policies()
 
-    def get_pipeline_by_id(self, project_id: UUID) -> Pipeline:
+    def get_pipeline_by_id(self, project_id: UUID) -> PipelineView:
         """Retrieve a pipeline by project ID."""
         pipeline_repo = PipelineRepository(self._db_session)
         pipeline = pipeline_repo.get_by_id(str(project_id))
@@ -57,7 +57,7 @@ class PipelineService:
         return PipelineMapper.to_schema(pipeline)
 
     @parent_process_only
-    def update_pipeline(self, project_id: UUID, partial_config: dict) -> Pipeline:
+    def update_pipeline(self, project_id: UUID, partial_config: dict) -> PipelineView:
         """Update an existing pipeline."""
         pipeline = self.get_pipeline_by_id(project_id)
         to_update = pipeline.model_copy(update=partial_config)

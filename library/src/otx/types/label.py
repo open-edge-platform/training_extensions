@@ -161,54 +161,43 @@ class HLabelInfo(LabelInfo):
 
     All params should be kept since they're also used at the Model API side.
 
-    :param num_multiclass_heads: the number of the multiclass heads
-    :param num_multilabel_classes: the number of multilabel classes
-    :param head_to_logits_range: the logit range of each heads
-    :param num_single_label_classes: the number of single label classes
-    :param class_to_group_idx: represents the head index and label index
-    :param all_groups: represents information of all groups
-    :param label_to_idx: index of each label
-    :param empty_multiclass_head_indices: the index of head that doesn't include any label
-                                          due to the label removing
+    Args:
+        num_multiclass_heads: The number of multiclass heads in the hierarchy.
+        num_multilabel_classes: The number of multilabel classes.
+        head_to_logits_range: The logit range for each head as a dictionary mapping
+                            head indices to (start, end) tuples.
+        num_single_label_classes: The number of single label classes.
+        class_to_group_idx: Dictionary mapping class names to (head_index, label_index)
+                        tuples representing position in hierarchy.
+        all_groups: List of all label groups in the hierarchy.
+        label_to_idx: Dictionary mapping label names to their global indices.
+        empty_multiclass_head_indices: List of head indices that don't include any
+                                    labels due to label removal.
 
-    i.e.
-    Single-selection group information (Multiclass, Exclusive)
-    {
-        "Shape": ["Rigid", "Non-Rigid"],
-        "Rigid": ["Rectangle", "Triangle"],
-        "Non-Rigid": ["Circle"]
-    }
-
-    Multi-selection group information (Multilabel)
-    {
-        "Animal": ["Lion", "Panda"]
-    }
-
-    In the case above, HlabelInfo will be generated as below.
-    NOTE, If there was only one label in the multiclass group, it will be handeled as multilabel(Circle).
-
-        num_multiclass_heads: 2  (Shape, Rigid)
-        num_multilabel_classes: 3 (Circle, Lion, Panda)
-        head_to_logits_range: {'0': (0, 2), '1': (2, 4)} (Each multiclass head have 2 labels)
-        num_single_label_classes: 4 (Rigid, Non-Rigid, Rectangle, Triangle)
-        class_to_group_idx: {
-            'Non-Rigid': (0, 0), 'Rigid': (0, 1),
-            'Rectangle': (1, 0), 'Triangle': (1, 1),
-            'Circle': (2, 0), 'Lion': (2,1), 'Panda': (2,2)
-        } (head index, label index for each head)
-        all_groups: [['Non-Rigid', 'Rigid'], ['Rectangle', 'Triangle'], ['Circle'], ['Lion'], ['Panda']]
-        label_to_idx: {
-            'Rigid': 0, 'Rectangle': 1,
-            'Triangle': 2, 'Non-Rigid': 3, 'Circle': 4
-            'Lion': 5, 'Panda': 6
+    Example:
+        Single-selection group information (Multiclass, Exclusive):
+        {
+            "Shape": ["Rigid", "Non-Rigid"],
+            "Rigid": ["Rectangle", "Triangle"],
+            "Non-Rigid": ["Circle"]
         }
-        label_tree_edges: [
-            ["Rectangle", "Rigid"], ["Triangle", "Rigid"], ["Circle", "Non-Rigid"],
-        ] # NOTE, label_tree_edges format could be changed.
-        empty_multiclass_head_indices: []
 
-    All of the member variables should be considered for the Model API.
-    https://github.com/open-edge-platform/training_extensions/blob/develop/lib/src/otx/algorithms/classification/utils/cls_utils.py#L97
+        Multi-selection group information (Multilabel):
+        {
+            "Animal": ["Lion", "Panda"]
+        }
+
+        Results in HLabelInfo with:
+        - num_multiclass_heads: 2 (Shape, Rigid)
+        - num_multilabel_classes: 3 (Circle, Lion, Panda)
+        - head_to_logits_range: {'0': (0, 2), '1': (2, 4)}
+        - class_to_group_idx: {'Non-Rigid': (0, 0), 'Rigid': (0, 1), 'Rectangle': (1, 0), ...}
+        - all_groups: [['Non-Rigid', 'Rigid'], ['Rectangle', 'Triangle'], ['Circle'], ...]
+
+    Note:
+        If there was only one label in the multiclass group, it will be handled as multilabel (Circle).
+        All of the member variables should be considered for the Model API.
+        Reference: https://github.com/open-edge-platform/training_extensions/blob/develop/lib/src/otx/algorithms/classification/utils/cls_utils.py#L97
     """
 
     num_multiclass_heads: int

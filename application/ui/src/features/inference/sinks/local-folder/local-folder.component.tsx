@@ -16,6 +16,7 @@ type LocalFolderProps = {
 };
 
 const initConfig: LocalFolderSinkConfig = {
+    id: '',
     name: '',
     sink_type: 'folder',
     rate_limit: 0,

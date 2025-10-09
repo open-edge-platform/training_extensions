@@ -11,25 +11,28 @@ from app.schemas.dataset_item import DatasetItemFormat, DatasetItemSubset
 from app.services.mappers import DatasetItemMapper
 
 UUID0 = uuid4()
+UUID1 = uuid4()
 
 SUPPORTED_DATASET_ITEM_MAPPING = [
     (
         DatasetItem(
+            id=UUID0,
             name="DatasetItem1",
             format=DatasetItemFormat.JPG,
             width=1024,
             height=768,
             size=1024,
-            source_id=UUID0,
+            source_id=UUID1,
             subset=DatasetItemSubset.TRAINING,
         ),
         DatasetItemDB(
+            id=str(UUID0),
             name="DatasetItem1",
             format="jpg",
             width=1024,
             height=768,
             size=1024,
-            source_id=str(UUID0),
+            source_id=str(UUID1),
             subset="training",
         ),
     )
@@ -42,6 +45,7 @@ class TestDatasetItemMapper:
     @pytest.mark.parametrize("schema_instance,expected_db", SUPPORTED_DATASET_ITEM_MAPPING.copy())
     def test_from_schema(self, schema_instance, expected_db):
         actual_db = DatasetItemMapper.from_schema(schema_instance)
+        assert actual_db.id == expected_db.id
         assert actual_db.project_id == expected_db.project_id
         assert actual_db.name == expected_db.name
         assert actual_db.format == expected_db.format

@@ -3,7 +3,7 @@
 from uuid import UUID
 
 from app.db.schema import ProjectDB
-from app.schemas import Label, Project
+from app.schemas import Label, ProjectCreate, ProjectView
 from app.schemas.project import Task, TaskType
 
 
@@ -11,10 +11,11 @@ class ProjectMapper:
     """Mapper for Project schema entity <-> DB entity conversions."""
 
     @staticmethod
-    def to_schema(project_db: ProjectDB, labels: list[Label]) -> Project:
+    def to_schema(project_db: ProjectDB, labels: list[Label]) -> ProjectView:
         """Convert Project db entity to schema."""
-        return Project(
+        return ProjectView(
             id=UUID(project_db.id),
+            active_pipeline=project_db.pipeline.is_running,
             name=project_db.name,
             task=Task(
                 task_type=TaskType(project_db.task_type),
@@ -24,7 +25,7 @@ class ProjectMapper:
         )
 
     @staticmethod
-    def from_schema(project: Project) -> ProjectDB:
+    def from_schema(project: ProjectCreate) -> ProjectDB:
         """Convert Project schema to db model."""
 
         return ProjectDB(

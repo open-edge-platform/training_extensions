@@ -9,7 +9,7 @@ export const getMockedAnnotation = (annotation?: Partial<Annotation>): Annotatio
     return {
         id: 'annotation-1',
         shape: {
-            shapeType: 'rect',
+            type: 'rectangle',
             x: 10,
             y: 20,
             width: 100,

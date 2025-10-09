@@ -7,7 +7,7 @@ import pytest
 from app.db.schema import DatasetItemDB
 from app.schemas.dataset_item import DatasetItemAnnotation
 from app.schemas.label import Label, LabelReference
-from app.schemas.project import Project, Task, TaskType
+from app.schemas.project import ProjectCreate, Task, TaskType
 from app.schemas.shape import FullImage, Point, Polygon, Rectangle
 from app.services import DatasetService
 from app.services.dataset_service import AnnotationValidationError
@@ -98,7 +98,7 @@ class TestDatasetServiceUnit:
             DatasetService._validate_annotations_coordinates(annotations=annotations, dataset_item=dataset_item)
 
     def test_validate_annotations_multilabel_classification(self):
-        project = Project(name="Test Classification Project", task=Task(task_type=TaskType.CLASSIFICATION))
+        project = ProjectCreate(name="Test Classification Project", task=Task(task_type=TaskType.CLASSIFICATION))
         annotations = [
             DatasetItemAnnotation(
                 labels=[LabelReference(id=uuid4()), LabelReference(id=uuid4())],
@@ -108,7 +108,7 @@ class TestDatasetServiceUnit:
         DatasetService._validate_annotations(annotations=annotations, project=project)
 
     def test_validate_annotations_multilabel_classification_multi_annotations(self):
-        project = Project(name="Test Classification Project", task=Task(task_type=TaskType.CLASSIFICATION))
+        project = ProjectCreate(name="Test Classification Project", task=Task(task_type=TaskType.CLASSIFICATION))
         annotations = [
             DatasetItemAnnotation(
                 labels=[LabelReference(id=uuid4()), LabelReference(id=uuid4())],
@@ -130,7 +130,7 @@ class TestDatasetServiceUnit:
         ],
     )
     def test_validate_annotations_multilabel_classification_wrong_shape(self, shape):
-        project = Project(name="Test Classification Project", task=Task(task_type=TaskType.CLASSIFICATION))
+        project = ProjectCreate(name="Test Classification Project", task=Task(task_type=TaskType.CLASSIFICATION))
         annotations = [
             DatasetItemAnnotation(
                 labels=[LabelReference(id=uuid4()), LabelReference(id=uuid4())],
@@ -141,7 +141,7 @@ class TestDatasetServiceUnit:
             DatasetService._validate_annotations(annotations=annotations, project=project)
 
     def test_validate_annotations_multiclass_classification_multiple_labels(self):
-        project = Project(
+        project = ProjectCreate(
             name="Test Classification Project",
             task=Task(
                 task_type=TaskType.CLASSIFICATION,
@@ -158,7 +158,7 @@ class TestDatasetServiceUnit:
             DatasetService._validate_annotations(annotations=annotations, project=project)
 
     def test_validate_annotations_detection(self):
-        project = Project(name="Test Detection Project", task=Task(task_type=TaskType.DETECTION))
+        project = ProjectCreate(name="Test Detection Project", task=Task(task_type=TaskType.DETECTION))
         annotations = [
             DatasetItemAnnotation(
                 labels=[LabelReference(id=uuid4())],
@@ -179,7 +179,7 @@ class TestDatasetServiceUnit:
         ],
     )
     def test_validate_annotations_detection_wrong_shape(self, shape):
-        project = Project(name="Test Detection Project", task=Task(task_type=TaskType.DETECTION))
+        project = ProjectCreate(name="Test Detection Project", task=Task(task_type=TaskType.DETECTION))
         annotations = [
             DatasetItemAnnotation(
                 labels=[LabelReference(id=uuid4())],
@@ -194,7 +194,7 @@ class TestDatasetServiceUnit:
             DatasetService._validate_annotations(annotations=annotations, project=project)
 
     def test_validate_annotations_detection_wrong_shape_multiple_labels(self):
-        project = Project(name="Test Detection Project", task=Task(task_type=TaskType.DETECTION))
+        project = ProjectCreate(name="Test Detection Project", task=Task(task_type=TaskType.DETECTION))
         annotations = [
             DatasetItemAnnotation(
                 labels=[LabelReference(id=uuid4()), LabelReference(id=uuid4())],
@@ -209,7 +209,7 @@ class TestDatasetServiceUnit:
             DatasetService._validate_annotations(annotations=annotations, project=project)
 
     def test_validate_annotations_segmentation(self):
-        project = Project(
+        project = ProjectCreate(
             name="Test Instance Segmentation Project", task=Task(task_type=TaskType.INSTANCE_SEGMENTATION)
         )
         annotations = [
@@ -232,7 +232,7 @@ class TestDatasetServiceUnit:
         ],
     )
     def test_validate_annotations_segmentation_wrong_shape(self, shape):
-        project = Project(
+        project = ProjectCreate(
             name="Test Instance Segmentation Project", task=Task(task_type=TaskType.INSTANCE_SEGMENTATION)
         )
         annotations = [
@@ -249,7 +249,7 @@ class TestDatasetServiceUnit:
             DatasetService._validate_annotations(annotations=annotations, project=project)
 
     def test_validate_annotations_segmentation_wrong_shape_multiple_labels(self):
-        project = Project(
+        project = ProjectCreate(
             name="Test Instance Segmentation Project", task=Task(task_type=TaskType.INSTANCE_SEGMENTATION)
         )
         annotations = [

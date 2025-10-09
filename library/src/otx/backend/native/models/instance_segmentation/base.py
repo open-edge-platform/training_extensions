@@ -273,9 +273,25 @@ class OTXInstanceSegModel(OTXModel):
     def test_step(self, batch: OTXDataBatch, batch_idx: int) -> OTXPredBatch:
         """Perform a single test step on a batch of data from the test set.
 
-        :param batch: A batch of data (a tuple) containing the input tensor of images and target
-            labels.
-        :param batch_idx: The index of the current batch.
+        Processes the batch through the model, applies threshold filtering to predictions,
+        and updates test metrics accordingly.
+
+        Args:
+            batch: A batch of data containing the input tensor of images and target labels.
+            batch_idx: The index of the current batch.
+
+        Returns:
+            OTXPredBatch: The filtered prediction results for the batch.
+
+        Raises:
+            TypeError: If predictions are of type OTXBatchLossEntity or if metric inputs
+                    have an unsupported format.
+
+        Note:
+            The method follows a two-step process:
+            1. Filters model outputs by confidence threshold
+            2. Updates metrics with the filtered predictions
+            Supports both single dictionary and list of dictionaries for metric inputs.
         """
         preds = self.forward(inputs=batch)
 

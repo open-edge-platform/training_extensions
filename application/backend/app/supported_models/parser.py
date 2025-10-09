@@ -16,11 +16,18 @@ def parse_manifest(*manifest_sources, relative: bool = True) -> ModelManifest:
     This function takes multiple manifest source paths, merges them using hierarchical
     YAML configuration, and converts the merged result into a structured Algorithm model.
 
-    :param manifest_sources: YAML manifest files.
-        Files are merged in order, with later files overriding values from earlier files.
-    :param relative: If True, the paths are treated as relative to the package where the manifest files are stored.
-        If False, they are treated as absolute paths.
-    :return: A populated Algorithm object containing the parsed manifest data.
+    Args:
+        *manifest_sources: Variable length list of YAML manifest file paths.
+            Files are merged in order, with later files overriding values from earlier files.
+        relative: If True, the paths are treated as relative to the package where the
+            manifest files are stored. If False, they are treated as absolute paths.
+
+    Returns:
+        ModelManifest: A populated Algorithm object containing the parsed manifest data.
+
+    Note:
+        Uses hiyapyco library for YAML merging with substitution method and interpolation.
+        Fails if any of the specified manifest files cannot be found.
     """
     if relative:
         manifest_sources = tuple(str(resources.files(manifests).joinpath(path)) for path in manifest_sources)

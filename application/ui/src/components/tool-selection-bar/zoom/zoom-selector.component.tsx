@@ -1,23 +1,45 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex } from '@geti/ui';
+import { ActionButton, Flex, Text } from '@geti/ui';
 import { Add, Remove } from '@geti/ui/icons';
 
+import { useSetZoom, useZoom } from '../../zoom/zoom.provider';
 import { IconWrapper } from '../icon-wrapper.component';
 
 export const ZoomSelector = () => {
+    const zoom = useZoom();
+    const { onZoomChange } = useSetZoom();
+
     return (
         <>
-            <IconWrapper>
-                <Add />
-            </IconWrapper>
+            <ActionButton
+                isQuiet
+                aria-label='Zoom In'
+                onPress={() => onZoomChange(1)}
+                isDisabled={zoom.scale >= zoom.maxZoomIn}
+            >
+                <IconWrapper>
+                    <Add />
+                </IconWrapper>
+            </ActionButton>
 
-            <Flex>110%</Flex>
+            <Flex>
+                <Text UNSAFE_style={{ fontSize: 'var(--spectrum-global-dimension-font-size-25)' }}>
+                    {(zoom.scale * 100).toFixed(1)}%
+                </Text>
+            </Flex>
 
-            <IconWrapper>
-                <Remove />
-            </IconWrapper>
+            <ActionButton
+                isQuiet
+                aria-label='Zoom Out'
+                onPress={() => onZoomChange(-1)}
+                isDisabled={zoom.scale <= zoom.initialCoordinates.scale}
+            >
+                <IconWrapper>
+                    <Remove />
+                </IconWrapper>
+            </ActionButton>
         </>
     );
 };

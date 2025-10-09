@@ -3,6 +3,7 @@
 
 import { queryOptions, useMutation, useQuery } from '@tanstack/react-query';
 
+import { useAnnotationActions } from '../../annotation-actions-provider.component';
 import { useAnnotator } from '../../annotator-provider.component';
 import { Shape } from '../../types';
 import { removeOffLimitPoints } from '../utils';
@@ -47,7 +48,8 @@ export const useDecodingQuery = (
 };
 
 export const useDecodingMutation = (queryFn: (points: InteractiveAnnotationPoint[]) => Promise<Shape[]>) => {
-    const { addAnnotation, roi } = useAnnotator();
+    const { roi } = useAnnotator();
+    const { addAnnotation } = useAnnotationActions();
 
     return useMutation({
         mutationFn: async (points: InteractiveAnnotationPoint[]) => {

@@ -9,7 +9,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.db.schema import DatasetItemDB, LabelDB, PipelineDB, ProjectDB
-from app.schemas.project import Label, Project, Task, TaskType
+from app.schemas.project import Label, ProjectCreate, Task, TaskType
 from app.services import LabelService, ResourceWithIdAlreadyExistsError
 from app.services.base import ResourceInUseError, ResourceNotFoundError, ResourceType
 from app.services.label_service import DuplicateLabelsError
@@ -47,7 +47,7 @@ class TestProjectServiceIntegration:
             Label(name="cat", color="#00FF00", hotkey="c"),
             Label(name="dog", color="#FF0000", hotkey="d"),
         ]
-        new_project = Project(
+        new_project = ProjectCreate(
             name="Test Project",
             task=Task(
                 task_type=TaskType.CLASSIFICATION,
@@ -76,7 +76,7 @@ class TestProjectServiceIntegration:
             Label(name="cat", color="#00FF00", hotkey="c"),
             Label(name="cat", color="#FF0000", hotkey="d"),
         ]
-        new_project = Project(
+        new_project = ProjectCreate(
             id=project_id,
             name="Test Project",
             task=Task(
@@ -101,7 +101,7 @@ class TestProjectServiceIntegration:
             Label(name="cat", color="#00FF00", hotkey="c"),
             Label(name="dog", color="#FF0000", hotkey="d"),
         ]
-        new_project = Project(
+        new_project = ProjectCreate(
             id=UUID(project_id),
             name="Test Project",
             task=Task(

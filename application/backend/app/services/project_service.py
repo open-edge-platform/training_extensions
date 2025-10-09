@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.repositories import DatasetItemRepository, PipelineRepository, ProjectRepository
 from app.repositories.base import PrimaryKeyIntegrityError
-from app.schemas import Label, Project
+from app.schemas import Label, ProjectCreate, ProjectView
 from app.services.base import ResourceInUseError, ResourceNotFoundError, ResourceType, ResourceWithIdAlreadyExistsError
 from app.services.label_service import LabelService
 from app.services.mappers.project_mapper import ProjectMapper
@@ -24,27 +24,27 @@ class ProjectService:
         self._label_service: LabelService = label_service
 
     @parent_process_only
-    def create_project(self, project: Project) -> Project:
+    def create_project(self, project: ProjectCreate) -> ProjectView:
         project_repo = ProjectRepository(self._db_session)
         try:
-            saved = project_repo.save(ProjectMapper.from_schema(project))
+            project_db = project_repo.save(ProjectMapper.from_schema(project))
         except PrimaryKeyIntegrityError:
             raise ResourceWithIdAlreadyExistsError(ResourceType.PROJECT, str(project.id))
         labels: list[Label] = []
         for label in project.task.labels:
-            labels.append(self._label_service.create_label(project_id=UUID(saved.id), label=label))
-        return ProjectMapper.to_schema(saved, labels)
+            labels.append(self._label_service.create_label(project_id=UUID(project_db.id), label=label))
+        return ProjectMapper.to_schema(project_db, labels)
 
-    def list_projects(self) -> list[Project]:
+    def list_projects(self) -> list[ProjectView]:
         project_repo = ProjectRepository(self._db_session)
         projects = project_repo.list_all()
-        result: list[Project] = []
+        result: list[ProjectView] = []
         for project in projects:
             labels = self._label_service.list_all(project_id=UUID(project.id))
             result.append(ProjectMapper.to_schema(project, labels))
         return result
 
-    def get_project_by_id(self, project_id: UUID) -> Project:
+    def get_project_by_id(self, project_id: UUID) -> ProjectView:
         project_repo = ProjectRepository(self._db_session)
         project_db = project_repo.get_by_id(str(project_id))
         if not project_db:
@@ -52,7 +52,7 @@ class ProjectService:
         return ProjectMapper.to_schema(project_db, self._label_service.list_all(project_id))
 
     @parent_process_only
-    def update_project_name(self, project_id: UUID, name: str) -> Project:
+    def update_project_name(self, project_id: UUID, name: str) -> ProjectView:
         """Update only the project name"""
         project_repo = ProjectRepository(self._db_session)
         project_db = project_repo.get_by_id(str(project_id))

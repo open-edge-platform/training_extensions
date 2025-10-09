@@ -9,7 +9,7 @@ from uuid import UUID
 
 from app.db import get_db_session
 from app.repositories import PipelineRepository
-from app.schemas import DisconnectedSinkConfig, DisconnectedSourceConfig, Project, Sink, Source
+from app.schemas import DisconnectedSinkConfig, DisconnectedSourceConfig, ProjectView, Sink, Source
 from app.schemas.pipeline import DataCollectionPolicy
 from app.services import LabelService
 from app.services.mappers import ProjectMapper, SinkMapper, SourceMapper
@@ -36,7 +36,7 @@ class ActivePipelineService:
         self.config_changed_condition = config_changed_condition
         self._source: Source = DisconnectedSourceConfig()
         self._sink: Sink = DisconnectedSinkConfig()
-        self._project: Project | None = None
+        self._project: ProjectView | None = None
         self._data_collection_policies: list[DataCollectionPolicy] = []
         self._load_app_config()
 
@@ -104,7 +104,7 @@ class ActivePipelineService:
     def get_sink_config(self) -> Sink:
         return self._sink
 
-    def get_project(self) -> Project | None:
+    def get_project(self) -> ProjectView | None:
         return self._project
 
     def get_data_collection_policies(self) -> list[DataCollectionPolicy]:

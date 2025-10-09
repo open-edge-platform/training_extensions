@@ -14,6 +14,7 @@ type ImageFolderProps = {
     config?: ImagesFolderSourceConfig;
 };
 const iniConfig: ImagesFolderSourceConfig = {
+    id: '',
     name: '',
     source_type: 'images_folder',
     images_folder_path: '',

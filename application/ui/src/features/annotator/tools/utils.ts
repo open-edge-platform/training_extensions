@@ -179,10 +179,10 @@ export function convertToolShapeToGetiShape(shape: SmartToolsShape): Shape;
 export function convertToolShapeToGetiShape(shape: SmartToolsShape): Shape {
     switch (shape.shapeType) {
         case 'polygon':
-            return { shapeType: 'polygon', points: shape.points };
+            return { type: 'polygon', points: shape.points };
         case 'rect':
             return {
-                shapeType: 'rect',
+                type: 'rectangle',
                 x: shape.x,
                 y: shape.y,
                 width: shape.width,
@@ -242,7 +242,7 @@ const removeOffLimitPointsPolygon = (shape: Shape, roi: RegionOfInterest): Polyg
         y: ry,
         width: rWidth,
         height: rHeight,
-        shapeType: 'rect',
+        type: 'rectangle',
     });
     // `eraserSize` Builds and positions rect shapes around ROI limits (top, left, right, bottom),
     // finally `getShapesDifference` will use those rects to calc and remove offline polygons
@@ -273,7 +273,7 @@ const convertPolygonPoints = (shape: Polygon): ClipperPoint[] => {
 };
 
 const transformToClipperShape = (shape: Shape): ClipperShape => {
-    if (shape.shapeType === 'rect') {
+    if (shape.type === 'rectangle') {
         return new ClipperJS([calculateRectanglePoints(shape)], true);
     } else {
         return new ClipperJS([convertPolygonPoints(shape)], true);
@@ -293,7 +293,7 @@ const runUnionOrDifference =
     };
 
 const clipperShapeToPolygon = (path: ClipperPoint[]): Polygon => ({
-    shapeType: 'polygon',
+    type: 'polygon',
     points: path.map(({ X, Y }) => ({ x: X, y: Y })),
 });
 
@@ -319,7 +319,7 @@ const hasIntersection = (clip: ClipperShape, subj: ClipperShape) => {
 
 const filterIntersectedPathsWithRoi = (roi: RegionOfInterest, shape: ClipperShape): ClipperShape => {
     const newPath = shape.clone();
-    const roiRect = transformToClipperShape({ ...roi, shapeType: 'rect' });
+    const roiRect = transformToClipperShape({ ...roi, type: 'rectangle' });
 
     newPath.paths = newPath.paths.filter((subPath) => hasIntersection(roiRect, new ClipperJS([subPath])));
 
@@ -327,7 +327,7 @@ const filterIntersectedPathsWithRoi = (roi: RegionOfInterest, shape: ClipperShap
 };
 
 export const removeOffLimitPoints = (shape: Shape, roi: RegionOfInterest): Shape => {
-    return shape.shapeType === 'rect' ? removeOffPointsRect(shape, roi) : removeOffLimitPointsPolygon(shape, roi);
+    return shape.type === 'rectangle' ? removeOffPointsRect(shape, roi) : removeOffLimitPointsPolygon(shape, roi);
 };
 
 type ElementType = SVGElement | HTMLDivElement;

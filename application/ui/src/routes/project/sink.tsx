@@ -18,6 +18,7 @@ import {
 } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { useNavigate } from 'react-router';
+import { v4 as uuid } from 'uuid';
 
 import { $api } from '../../api/client';
 import {
@@ -49,17 +50,20 @@ type SinkFormRecord = {
 };
 const DEFAULT_SINK_FORMS: SinkFormRecord = {
     disconnected: {
+        id: 'disconnected-id',
         sink_type: 'disconnected',
         name: 'Disconnected',
         output_formats: [],
     },
     folder: {
+        id: 'folder-id',
         sink_type: 'folder',
         name: 'Folder',
         folder_path: '',
         output_formats: [],
     },
     mqtt: {
+        id: 'mqtt-id',
         sink_type: 'mqtt',
         auth_required: false,
         name: 'MQTT',
@@ -69,12 +73,14 @@ const DEFAULT_SINK_FORMS: SinkFormRecord = {
         output_formats: [],
     },
     ros: {
+        id: 'ros-id',
         name: 'Ros',
         sink_type: 'ros',
         topic: '',
         output_formats: [],
     },
     webhook: {
+        id: 'webhook-id',
         name: 'Webhook',
         sink_type: 'webhook',
         webhook_url: '',
@@ -262,8 +268,18 @@ export const Sink = () => {
     const onSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
+        if (selectedSinkType === 'disconnected') {
+            return;
+        }
+
+        const sinkData = forms[selectedSinkType];
+        const sinkPayload = {
+            ...sinkData,
+            id: sinkData.id || uuid(),
+        };
+
         sinkMutation.mutateAsync({
-            body: forms[selectedSinkType],
+            body: sinkPayload,
         });
 
         navigate(paths.project.inference({ projectId }));

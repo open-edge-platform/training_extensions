@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useRef, useState } from 'react';
+import { Suspense, useRef, useState } from 'react';
 
 import {
     AriaComponentsListBox,
@@ -15,6 +15,8 @@ import {
 } from '@geti/ui';
 import { useLoadMore } from '@react-aria/utils';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import { AnnotationActionsProvider } from 'src/features/annotator/annotation-actions-provider.component';
+import { AnnotatorProvider } from 'src/features/annotator/annotator-provider.component';
 
 import { useSelectedData } from '../../../routes/dataset/provider';
 import { DatasetItem } from '../../annotator/types';
@@ -113,7 +115,13 @@ export const Gallery = ({ items, hasNextPage, isFetchingNextPage, fetchNextPage 
 
             <DialogContainer onDismiss={() => setSelectedMediaItem(null)}>
                 {selectedMediaItem !== null && (
-                    <MediaPreview mediaItem={selectedMediaItem} close={() => setSelectedMediaItem(null)} />
+                    <Suspense fallback={<Loading size='L' />}>
+                        <AnnotatorProvider mediaItem={selectedMediaItem}>
+                            <AnnotationActionsProvider>
+                                <MediaPreview mediaItem={selectedMediaItem} close={() => setSelectedMediaItem(null)} />
+                            </AnnotationActionsProvider>
+                        </AnnotatorProvider>
+                    </Suspense>
                 )}
             </DialogContainer>
         </View>
