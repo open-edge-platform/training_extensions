@@ -6,7 +6,6 @@ import { Delete } from '@geti/ui/icons';
 import { useOverlayTriggerState } from '@react-stately/overlays';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isFunction } from 'lodash-es';
-import { queryClient } from 'src/providers';
 
 import { $api } from '../../../../api/client';
 import { AlertDialogContent } from './alert-dialog-content.component';
@@ -25,6 +24,9 @@ export const DeleteMediaItem = ({ itemsIds = [], onDeleted }: DeleteMediaItemPro
     const alertDialogState = useOverlayTriggerState({});
 
     const removeMutation = $api.useMutation('delete', `/api/projects/{project_id}/dataset/items/{dataset_item_id}`, {
+        meta: {
+            invalidateQueries: [['get', `/api/projects/${project_id}/dataset/items`]],
+        },
         onError: (error, { params: { path } }) => {
             const { dataset_item_id: itemId } = path;
 
@@ -57,10 +59,6 @@ export const DeleteMediaItem = ({ itemsIds = [], onDeleted }: DeleteMediaItemPro
             type: 'success',
             message: `${deletedIds.length} item(s) deleted successfully`,
             duration: 3000,
-        });
-
-        queryClient.invalidateQueries({
-            queryKey: ['get', `/api/projects/{project_id}/dataset/items`],
         });
     };
 

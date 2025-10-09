@@ -4,7 +4,6 @@
 import { toast } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 import { SchemaProjectView } from 'src/api/openapi-spec';
-import { queryClient } from 'src/providers';
 
 import { $api } from '../../api/client';
 import { ProjectListItem } from './project-list-item/project-list-item.component';
@@ -18,8 +17,16 @@ interface ProjectListProps {
 }
 
 export const ProjectsList = ({ projects, setProjectInEdition, projectIdInEdition }: ProjectListProps) => {
-    const deleteProjectMutation = $api.useMutation('delete', '/api/projects/{project_id}');
-    const patchProjectMutation = $api.useMutation('patch', '/api/projects/{project_id}');
+    const deleteProjectMutation = $api.useMutation('delete', '/api/projects/{project_id}', {
+        meta: {
+            invalidateQueries: [['get', '/api/projects']],
+        },
+    });
+    const patchProjectMutation = $api.useMutation('patch', '/api/projects/{project_id}', {
+        meta: {
+            invalidateQueries: [['get', '/api/projects']],
+        },
+    });
 
     const updateProjectName = (id: string, name: string): void => {
         patchProjectMutation.mutate(
@@ -30,7 +37,6 @@ export const ProjectsList = ({ projects, setProjectInEdition, projectIdInEdition
             {
                 onSuccess: () => {
                     toast({ type: 'success', message: 'Project updated successfully' });
-                    queryClient.invalidateQueries({ queryKey: ['get', '/api/projects'] });
                 },
             }
         );
@@ -48,7 +54,6 @@ export const ProjectsList = ({ projects, setProjectInEdition, projectIdInEdition
             {
                 onSuccess: () => {
                     toast({ type: 'success', message: 'Project deleted successfully' });
-                    queryClient.invalidateQueries({ queryKey: ['get', '/api/projects'] });
                 },
             }
         );

@@ -4,7 +4,6 @@
 import { Divider, Flex, Heading, Slider, Switch, Text } from '@geti/ui';
 import { $api } from 'src/api/client';
 import { useProjectIdentifier } from 'src/hooks/use-project-identifier.hook';
-import { queryClient } from 'src/providers';
 
 export const DataCollection = () => {
     const projectId = useProjectIdentifier();
@@ -13,37 +12,27 @@ export const DataCollection = () => {
         params: { path: { project_id: projectId } },
     });
 
-    const patchPipelineMutation = $api.useMutation('patch', '/api/projects/{project_id}/pipeline');
+    const patchPipelineMutation = $api.useMutation('patch', '/api/projects/{project_id}/pipeline', {
+        meta: {
+            invalidateQueries: [['get', '/api/projects/{project_id}/pipeline']],
+        },
+    });
 
     const isAutoCapturingEnabled = pipelineQuery.data?.data_collection_policies[0]?.enabled ?? false;
     const defaultRate = 12;
 
     const toggleAutoCapturing = (isEnabled: boolean) => {
-        patchPipelineMutation.mutate(
-            {
-                params: { path: { project_id: projectId } },
-                body: { data_collection_policies: [{ rate: defaultRate, enabled: isEnabled }] },
-            },
-            {
-                onSuccess: () => {
-                    queryClient.invalidateQueries({ queryKey: ['get', `/api/projects/{project_id}/pipeline`] });
-                },
-            }
-        );
+        patchPipelineMutation.mutate({
+            params: { path: { project_id: projectId } },
+            body: { data_collection_policies: [{ rate: defaultRate, enabled: isEnabled }] },
+        });
     };
 
     const updateRate = (value: number) => {
-        patchPipelineMutation.mutate(
-            {
-                params: { path: { project_id: projectId } },
-                body: { data_collection_policies: [{ rate: value, enabled: isAutoCapturingEnabled }] },
-            },
-            {
-                onSuccess: () => {
-                    queryClient.invalidateQueries({ queryKey: ['get', `/api/projects/{project_id}/pipeline`] });
-                },
-            }
-        );
+        patchPipelineMutation.mutate({
+            params: { path: { project_id: projectId } },
+            body: { data_collection_policies: [{ rate: value, enabled: isAutoCapturingEnabled }] },
+        });
     };
 
     return (

@@ -5,7 +5,6 @@ import { FormEvent, useState } from 'react';
 
 import { Button, ButtonGroup, Divider, Flex, Form, Text } from '@geti/ui';
 import { useNavigate } from 'react-router';
-import { queryClient } from 'src/providers';
 import { v4 as uuid } from 'uuid';
 
 import { $api } from '../../../api/client';
@@ -24,7 +23,11 @@ export const CreateProjectForm = () => {
     const [name, setName] = useState<string>('Project #1');
 
     const navigate = useNavigate();
-    const createProjectMutation = $api.useMutation('post', '/api/projects');
+    const createProjectMutation = $api.useMutation('post', '/api/projects', {
+        meta: {
+            invalidateQueries: [['get', '/api/projects']],
+        },
+    });
 
     const createProject = (e: FormEvent) => {
         e.preventDefault();
@@ -46,7 +49,6 @@ export const CreateProjectForm = () => {
             {
                 onSuccess: () => {
                     navigate(paths.project.inference({ projectId }));
-                    queryClient.invalidateQueries({ queryKey: ['get', '/api/projects'] });
                 },
             }
         );

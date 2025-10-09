@@ -3,10 +3,15 @@
 
 import { Toast } from '@geti/ui';
 import { ThemeProvider } from '@geti/ui/theme';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MutationCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from 'react-router';
 
 import { router } from './router';
+
+// Type for mutation meta with query invalidation
+export type MutationMeta = {
+    invalidateQueries?: Array<string | string[]>;
+};
 
 export const queryClient = new QueryClient({
     defaultOptions: {
@@ -15,6 +20,19 @@ export const queryClient = new QueryClient({
             staleTime: 5 * 60 * 1000,
         },
     },
+    mutationCache: new MutationCache({
+        onSuccess: (_data, _variables, _context, mutation) => {
+            const meta = mutation.meta as MutationMeta | undefined;
+            const invalidateQueries = meta?.invalidateQueries;
+
+            if (invalidateQueries) {
+                invalidateQueries.forEach((queryKey) => {
+                    const key = Array.isArray(queryKey) ? queryKey : [queryKey];
+                    queryClient.invalidateQueries({ queryKey: key });
+                });
+            }
+        },
+    }),
 });
 
 export const Providers = () => {

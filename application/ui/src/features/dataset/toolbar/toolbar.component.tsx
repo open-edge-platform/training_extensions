@@ -3,7 +3,6 @@
 
 import { Button, Divider, Flex, Heading, Text, toast } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-import { queryClient } from 'src/providers';
 
 import { $api } from '../../../api/client';
 import { AddMediaButton } from '../../../components/add-media-button/add-media-button.component';
@@ -21,7 +20,11 @@ export const Toolbar = ({ items }: ToolbarProps) => {
     const projectId = useProjectIdentifier();
     const { selectedKeys, setSelectedKeys, setMediaState, toggleSelectedKeys } = useSelectedData();
 
-    const addItemMutation = $api.useMutation('post', '/api/projects/{project_id}/dataset/items');
+    const addItemMutation = $api.useMutation('post', '/api/projects/{project_id}/dataset/items', {
+        meta: {
+            invalidateQueries: [['get', '/api/projects/{project_id}/dataset/items']],
+        },
+    });
 
     const totalSelectedElements = selectedKeys instanceof Set ? selectedKeys.size : 0;
     const hasSelectedElements = totalSelectedElements > 0;
@@ -56,9 +59,6 @@ export const Toolbar = ({ items }: ToolbarProps) => {
                 {
                     onSuccess: () => {
                         toast({ type: 'success', message: `Uploaded ${files.length} item(s)` });
-                        queryClient.invalidateQueries({
-                            queryKey: ['get', `/api/projects/{project_id}/dataset/items`],
-                        });
                     },
                 }
             );
