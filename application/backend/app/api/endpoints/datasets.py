@@ -57,7 +57,11 @@ SET_DATASET_ITEM_ANNOTATIONS_BODY_EXAMPLES = {
 @router.post(
     "",
     status_code=status.HTTP_201_CREATED,
-    responses={status.HTTP_201_CREATED: {"description": "Dataset item created", "model": DatasetItem}},
+    response_model=DatasetItem,
+    responses={
+        status.HTTP_201_CREATED: {"description": "Dataset item created"},
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Invalid image has been uploaded"},
+    },
 )
 def add_dataset_item(
     project_id: Annotated[UUID, Depends(get_project_id)],

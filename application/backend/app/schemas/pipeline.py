@@ -38,7 +38,7 @@ class FixedRateDataCollectionPolicy(DataCollectionPolicyBase):
 DataCollectionPolicy = Annotated[FixedRateDataCollectionPolicy, Field(discriminator="type")]
 
 
-class Pipeline(BaseModel):
+class PipelineView(BaseModel):
     project_id: UUID  # ID of the project this pipeline belongs to
     source: Source | None = None  # None if disconnected
     sink: Sink | None = None  # None if disconnected
@@ -107,7 +107,7 @@ class Pipeline(BaseModel):
         return data
 
     @model_validator(mode="after")
-    def validate_running_status(self) -> "Pipeline":
+    def validate_running_status(self) -> "PipelineView":
         if self.status == PipelineStatus.RUNNING and any(
             x is None for x in (self.source_id, self.sink_id, self.model_id)
         ):

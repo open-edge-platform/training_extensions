@@ -8,8 +8,9 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.repositories import DatasetItemRepository, PipelineRepository, ProjectRepository
-from app.schemas import Project
-from app.services.base import ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError, ResourceType
+from app.schemas import ProjectCreate, ProjectView
+from app.services import ResourceAlreadyExistsError
+from app.services.base import ResourceInUseError, ResourceNotFoundError, ResourceType
 from app.services.mappers.project_mapper import ProjectMapper
 from app.services.parent_process_guard import parent_process_only
 
@@ -22,21 +23,21 @@ class ProjectService:
         self._db_session: Session = db_session
 
     @parent_process_only
-    def create_project(self, project: Project) -> Project:
+    def create_project(self, project: ProjectCreate) -> ProjectView:
         try:
             project_repo = ProjectRepository(self._db_session)
-            saved = project_repo.save(ProjectMapper.from_schema(project))
-            return ProjectMapper.to_schema(saved)
+            project_db = project_repo.save(ProjectMapper.from_schema(project))
+            return ProjectMapper.to_schema(project_db)
         except IntegrityError as e:
             if "unique constraint failed" in str(e).lower():
                 raise ResourceAlreadyExistsError(ResourceType.PROJECT, str(project.id))
             raise
 
-    def list_projects(self) -> list[Project]:
+    def list_projects(self) -> list[ProjectView]:
         project_repo = ProjectRepository(self._db_session)
         return [ProjectMapper.to_schema(p) for p in project_repo.list_all()]
 
-    def get_project_by_id(self, project_id: UUID) -> Project:
+    def get_project_by_id(self, project_id: UUID) -> ProjectView:
         project_repo = ProjectRepository(self._db_session)
         project_db = project_repo.get_by_id(str(project_id))
         if not project_db:
@@ -44,7 +45,7 @@ class ProjectService:
         return ProjectMapper.to_schema(project_db)
 
     @parent_process_only
-    def update_project_name(self, project_id: UUID, name: str) -> Project:
+    def update_project_name(self, project_id: UUID, name: str) -> ProjectView:
         """Update only the project name"""
         project_repo = ProjectRepository(self._db_session)
         project_db = project_repo.get_by_id(str(project_id))

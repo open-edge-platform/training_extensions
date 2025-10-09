@@ -4,15 +4,18 @@ on:
   release:
     types: [published]
 
-# Declare default permissions as read only.
-permissions: read-all
+permissions: {} # No permissions by default on workflow level
 
 jobs:
   Build-Docs:
     runs-on: ubuntu-24.04
     permissions:
-      contents: write
+      contents: write # needed to commit docs
     steps:
+      - name: Runner cleanup
+        uses: open-edge-platform/geti-ci/actions/cleanup-runner@c2bb2697178bb2e50014420aef2351a45749b925
+        with:
+          type: "initial"
       - name: Checkout repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
@@ -53,11 +56,12 @@ jobs:
             echo "Branch gh-pages already exists"
           fi
       - name: Commit docs to gh-pages branch
+        working-directory: library
         run: |
           git fetch
           git checkout gh-pages
           mkdir -p /tmp/docs_build
-          cp -r docs/build/html/* /tmp/docs_build/
+          cp -r ./docs/build/html* /tmp/docs_build/
           rm -rf ${{ env.RELEASE_VERSION }}/*
           echo '<html><head><meta http-equiv="refresh" content="0; url=stable/" /></head></html>' > index.html
           mkdir -p ${{ env.RELEASE_VERSION }}

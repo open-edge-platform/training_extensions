@@ -3,7 +3,7 @@
 
 import { toast } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
-import { SchemaProjectInput } from 'src/api/openapi-spec';
+import { SchemaProjectView } from 'src/api/openapi-spec';
 
 import { $api } from '../../api/client';
 import { ProjectListItem } from './project-list-item/project-list-item.component';
@@ -11,7 +11,7 @@ import { ProjectListItem } from './project-list-item/project-list-item.component
 import styles from './projects-list.module.scss';
 
 interface ProjectListProps {
-    projects: SchemaProjectInput[];
+    projects: SchemaProjectView[];
     projectIdInEdition: string | null;
     setProjectInEdition: (projectId: string | null) => void;
 }
@@ -79,7 +79,7 @@ export const ProjectsList = ({ projects, setProjectInEdition, projectIdInEdition
                     onRename={handleRename}
                     onDelete={deleteProject}
                     onBlur={handleBlur}
-                    isInEditMode={isInEditionMode(project.id || '')}
+                    isInEditMode={isInEditionMode(project.id)}
                 />
             ))}
         </ul>

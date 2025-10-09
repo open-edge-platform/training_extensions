@@ -7,17 +7,44 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, Field
 
 
-class BaseIDModel(ABC, BaseModel):
-    """Base model with an id field."""
+class HasID(ABC, BaseModel):
+    """Mixin: Optional UUID with auto-generation."""
 
-    id: UUID = Field(default_factory=uuid4)
+    id: UUID = Field(default_factory=uuid4, description="Unique identifier")
 
 
-class BaseIDNameModel(ABC, BaseModel):
-    """Base model with id and name fields."""
+class RequiresID(ABC, BaseModel):
+    """Mixin: Required UUID field."""
 
-    id: UUID = Field(default_factory=uuid4)
-    name: str = "Default Name"
+    id: UUID = Field(..., description="Unique identifier")
+
+
+class HasName(ABC, BaseModel):
+    """Mixin: Optional name with default value."""
+
+    name: str = Field(default="Default Name", description="Name of the entity")
+
+
+class RequiresName(ABC, BaseModel):
+    """Mixin: Required name field."""
+
+    name: str = Field(..., description="Name of the entity")
+
+
+class BaseIDModel(HasID):
+    """Base model with auto-generated ID."""
+
+
+class BaseIDNameModel(HasID, HasName):
+    """Base model with auto-generated ID and default name."""
+
+
+class BaseRequiredIDModel(RequiresID):
+    """Base model with required ID."""
+
+
+class BaseRequiredIDNameModel(RequiresID, RequiresName):
+    """Base model with required ID and name."""
 
 
 class Pagination(ABC, BaseModel):
