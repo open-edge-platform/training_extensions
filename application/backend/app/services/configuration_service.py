@@ -10,15 +10,10 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 
 from app.repositories import PipelineRepository, SinkRepository, SourceRepository
+from app.repositories.base import UniqueConstraintIntegrityError
 from app.schemas import Sink, Source
 from app.services import ActivePipelineService, ResourceWithNameAlreadyExistsError
-from app.services.base import (
-    GenericPersistenceService,
-    ResourceConstraintsError,
-    ResourceNotFoundError,
-    ResourceType,
-    ServiceConfig,
-)
+from app.services.base import GenericPersistenceService, ResourceNotFoundError, ResourceType, ServiceConfig
 from app.services.mappers import SinkMapper, SourceMapper
 from app.services.parent_process_guard import parent_process_only
 
@@ -39,14 +34,14 @@ class SourceService(GenericPersistenceService[Source, SourceRepository]):
     def create(self, item: Source) -> Source:
         try:
             return super().create(item)
-        except ResourceConstraintsError:
+        except UniqueConstraintIntegrityError:
             raise ResourceWithNameAlreadyExistsError(ResourceType.SOURCE, item.name)
 
     def update(self, item: Source, partial_config: dict) -> Source:
         try:
             return super().update(item, partial_config)
-        except ResourceConstraintsError:
-            raise ResourceWithNameAlreadyExistsError(ResourceType.SOURCE, item.name)
+        except UniqueConstraintIntegrityError:
+            raise ResourceWithNameAlreadyExistsError(ResourceType.SOURCE, partial_config["name"])
 
 
 class SinkService(GenericPersistenceService[Sink, SinkRepository]):
@@ -56,14 +51,14 @@ class SinkService(GenericPersistenceService[Sink, SinkRepository]):
     def create(self, item: Sink) -> Sink:
         try:
             return super().create(item)
-        except ResourceConstraintsError:
+        except UniqueConstraintIntegrityError:
             raise ResourceWithNameAlreadyExistsError(ResourceType.SINK, item.name)
 
     def update(self, item: Sink, partial_config: dict) -> Sink:
         try:
             return super().update(item, partial_config)
-        except ResourceConstraintsError:
-            raise ResourceWithNameAlreadyExistsError(ResourceType.SINK, item.name)
+        except UniqueConstraintIntegrityError:
+            raise ResourceWithNameAlreadyExistsError(ResourceType.SINK, partial_config["name"])
 
 
 class ConfigurationService:

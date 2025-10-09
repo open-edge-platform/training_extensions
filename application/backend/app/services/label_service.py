@@ -7,15 +7,16 @@ from sqlalchemy.orm import Session
 
 from app.db.schema import LabelDB
 from app.repositories import LabelRepository
-from app.repositories.base import UniqueConstraintIntegrityError
+from app.repositories.base import PrimaryKeyIntegrityError, UniqueConstraintIntegrityError
 from app.schemas import Label
+from app.services import ResourceType, ResourceWithIdAlreadyExistsError
 from app.services.mappers.label_mapper import LabelMapper
 
 
 def _convert_labels_to_db(labels: list[Label], project_id: UUID) -> list[LabelDB]:
     db_labels: list[LabelDB] = []
     for label in labels:
-        db_label = LabelMapper.from_schema(label)
+        db_label = LabelMapper.from_schema(project_id=project_id, label=label)
         db_label.project_id = str(project_id)
         db_labels.append(db_label)
     return db_labels
@@ -31,6 +32,21 @@ class DuplicateLabelsError(Exception):
 class LabelService:
     def __init__(self, db_session: Session):
         self._db_session = db_session
+
+    def create_label(self, project_id: UUID, label: Label) -> Label:
+        label_repo = LabelRepository(str(project_id), self._db_session)
+        try:
+            saved = label_repo.save(LabelMapper.from_schema(project_id=project_id, label=label))
+            return LabelMapper.to_schema(saved)
+        except UniqueConstraintIntegrityError:
+            raise DuplicateLabelsError
+        except PrimaryKeyIntegrityError:
+            raise ResourceWithIdAlreadyExistsError(ResourceType.LABEL, str(label.id))
+
+    def list_all(self, project_id: UUID) -> list[Label]:
+        label_repo = LabelRepository(str(project_id), self._db_session)
+        labels = label_repo.list_all()
+        return [LabelMapper.to_schema(label) for label in labels]
 
     def update_labels_in_project(
         self,

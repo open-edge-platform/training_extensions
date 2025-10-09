@@ -13,7 +13,7 @@ from app.entities.stream_data import InferenceData
 from app.schemas import Project
 from app.schemas.dataset_item import DatasetItemFormat
 from app.schemas.pipeline import FixedRateDataCollectionPolicy
-from app.services import ActivePipelineService, DatasetService
+from app.services import ActivePipelineService, DatasetService, LabelService, ProjectService
 from app.services.data_collect.prediction_converter import convert_prediction
 
 logger = logging.getLogger(__name__)
@@ -85,7 +85,11 @@ class DataCollector:
             labels=project.task.labels, frame_data=frame_data, prediction=inference_data.prediction
         )
         with get_db_session() as session:
-            dataset_service = DatasetService(self.data_dir, session)
+            label_service = LabelService(db_session=session)
+            project_service = ProjectService(data_dir=self.data_dir, db_session=session, label_service=label_service)
+            dataset_service = DatasetService(
+                data_dir=self.data_dir, db_session=session, project_service=project_service
+            )
             dataset_service.create_dataset_item(
                 project_id=project.id,
                 name=f"{timestamp:.4f}".replace(".", "_"),

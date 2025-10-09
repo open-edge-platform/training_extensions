@@ -13,7 +13,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.db.schema import Base
-from app.repositories.base import BaseRepository, PrimaryKeyIntegrityError, UniqueConstraintIntegrityError
+from app.repositories.base import BaseRepository, PrimaryKeyIntegrityError
 
 
 class ResourceType(StrEnum):
@@ -69,14 +69,6 @@ class ResourceWithIdAlreadyExistsError(ResourceError):
         super().__init__(resource_type, resource_id, msg)
 
 
-class ResourceConstraintsError(ResourceError):
-    """Exception raised when a resource being stored, but internal constraints have failed."""
-
-    def __init__(self, resource_type: ResourceType, resource_name: str, message: str | None = None):
-        msg = message or f"{resource_type} with name '{resource_name}' has failed constraints."
-        super().__init__(resource_type, resource_name, msg)
-
-
 S = TypeVar("S", bound=BaseModel)  # Schema type e.g. Source or Sink
 D = TypeVar("D", bound=Base)  # DB model type e.g. SourceDB or SinkDB
 R = TypeVar("R", bound=BaseRepository)  # Repository type
@@ -128,21 +120,14 @@ class GenericPersistenceService(Generic[S, R]):
                 return self.config.mapper_class.to_schema(item_db)
         except PrimaryKeyIntegrityError:
             raise ResourceWithIdAlreadyExistsError(self.config.resource_type, str(item.id))  # type: ignore[attr-defined]
-        except UniqueConstraintIntegrityError:
-            raise ResourceConstraintsError(self.config.resource_type, getattr(item, "name", str(item.id)))  # type: ignore[attr-defined]
 
     def update(self, item: S, partial_config: dict) -> S:
-        try:
-            with self._get_repo() as repo:
-                to_update = item.model_copy(update=partial_config)
-                updated = repo.update(self.config.mapper_class.from_schema(to_update))
-                # Explicit early commit to ensure changes are visible to other transactions before the session is closed
-                self.db.commit()
-                return self.config.mapper_class.to_schema(updated)
-        except PrimaryKeyIntegrityError:
-            raise ResourceWithIdAlreadyExistsError(self.config.resource_type, str(item.id))  # type: ignore[attr-defined]
-        except UniqueConstraintIntegrityError:
-            raise ResourceConstraintsError(self.config.resource_type, getattr(item, "name", str(item.id)))  # type: ignore[attr-defined]
+        with self._get_repo() as repo:
+            to_update = item.model_copy(update=partial_config)
+            updated = repo.update(self.config.mapper_class.from_schema(to_update))
+            # Explicit early commit to ensure changes are visible to other transactions before the session is closed
+            self.db.commit()
+            return self.config.mapper_class.to_schema(updated)
 
     def delete_by_id(self, item_id: UUID) -> None:
         try:
