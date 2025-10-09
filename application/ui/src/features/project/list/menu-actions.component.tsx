@@ -4,6 +4,7 @@
 import { ActionButton, Item, Key, Menu, MenuTrigger, toast } from '@geti/ui';
 import { MoreMenu } from '@geti/ui/icons';
 import { useNavigate } from 'react-router';
+import { queryClient } from 'src/providers';
 
 import { $api } from '../../../api/client';
 import { paths } from '../../../constants/paths';
@@ -14,6 +15,7 @@ export const MenuActions = ({ projectId }: { projectId: string }) => {
     const deleteMutation = $api.useMutation('delete', '/api/projects/{project_id}', {
         onSuccess: () => {
             toast({ type: 'success', message: 'Project deleted successfully' });
+            queryClient.invalidateQueries({ queryKey: ['get', '/api/projects'] });
         },
         onError: () => {
             toast({ type: 'error', message: 'Failed to delete project' });

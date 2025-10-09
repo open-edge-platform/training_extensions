@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { omit } from 'lodash-es';
+import { queryClient } from 'src/providers';
 
 import { $api } from '../../../../api/client';
 import { SinkConfig } from '../utils';
@@ -21,6 +22,9 @@ export const useSinkMutation = (isNewSink: boolean) => {
             params: { path: { sink_id: String(body.id) } },
             body: omit(body, 'sink_type'),
         });
+
+        queryClient.invalidateQueries({ queryKey: ['get', `/api/sinks`] });
+        queryClient.invalidateQueries({ queryKey: ['get', `/api/sinks/{sink_id}`] });
 
         return String(response.id);
     };

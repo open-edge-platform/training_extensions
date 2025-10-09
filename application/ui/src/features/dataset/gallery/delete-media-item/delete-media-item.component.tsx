@@ -6,6 +6,7 @@ import { Delete } from '@geti/ui/icons';
 import { useOverlayTriggerState } from '@react-stately/overlays';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isFunction } from 'lodash-es';
+import { queryClient } from 'src/providers';
 
 import { $api } from '../../../../api/client';
 import { AlertDialogContent } from './alert-dialog-content.component';
@@ -56,6 +57,10 @@ export const DeleteMediaItem = ({ itemsIds = [], onDeleted }: DeleteMediaItemPro
             type: 'success',
             message: `${deletedIds.length} item(s) deleted successfully`,
             duration: 3000,
+        });
+
+        queryClient.invalidateQueries({
+            queryKey: ['get', `/api/projects/{project_id}/dataset/items`],
         });
     };
 

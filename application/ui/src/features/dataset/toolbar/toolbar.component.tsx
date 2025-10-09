@@ -3,6 +3,7 @@
 
 import { Button, Divider, Flex, Heading, Text, toast } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import { queryClient } from 'src/providers';
 
 import { $api } from '../../../api/client';
 import { AddMediaButton } from '../../../components/add-media-button/add-media-button.component';
@@ -55,6 +56,9 @@ export const Toolbar = ({ items }: ToolbarProps) => {
                 {
                     onSuccess: () => {
                         toast({ type: 'success', message: `Uploaded ${files.length} item(s)` });
+                        queryClient.invalidateQueries({
+                            queryKey: ['get', `/api/projects/{project_id}/dataset/items`],
+                        });
                     },
                 }
             );

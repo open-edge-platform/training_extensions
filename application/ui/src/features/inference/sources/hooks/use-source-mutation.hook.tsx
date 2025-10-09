@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { omit } from 'lodash-es';
+import { queryClient } from 'src/providers';
 import { v4 as uuid } from 'uuid';
 
 import { $api } from '../../../../api/client';
@@ -27,6 +28,9 @@ export const useSourceMutation = (isNewSource: boolean) => {
             params: { path: { source_id: String(body.id) } },
             body: omit(body, 'source_type'),
         });
+
+        queryClient.invalidateQueries({ queryKey: ['get', `/api/sources`] });
+        queryClient.invalidateQueries({ queryKey: ['get', `/api/sources/{source_id}`] });
 
         return String(response.id);
     };

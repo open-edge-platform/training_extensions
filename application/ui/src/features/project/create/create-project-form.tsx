@@ -5,6 +5,7 @@ import { FormEvent, useState } from 'react';
 
 import { Button, ButtonGroup, Divider, Flex, Form, Text } from '@geti/ui';
 import { useNavigate } from 'react-router';
+import { queryClient } from 'src/providers';
 import { v4 as uuid } from 'uuid';
 
 import { $api } from '../../../api/client';
@@ -45,6 +46,7 @@ export const CreateProjectForm = () => {
             {
                 onSuccess: () => {
                     navigate(paths.project.inference({ projectId }));
+                    queryClient.invalidateQueries({ queryKey: ['get', '/api/projects'] });
                 },
             }
         );
