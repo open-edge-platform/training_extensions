@@ -103,7 +103,7 @@ def convert_prediction(labels: list[Label], frame_data: np.ndarray, prediction: 
         The function uses pattern matching to dispatch to appropriate conversion
         methods based on the prediction type. Each prediction type has its own
         specialized conversion logic.
-        
+
     Example:
         >>> annotations = convert_prediction(
         ...     labels=project_labels,

@@ -55,7 +55,7 @@ class SupportedModels:
         Note:
             Directory structure follows:
             - manifests/base.yaml: Base configuration for all models
-            - manifests/task/base.yaml: Base configuration for specific task types  
+            - manifests/task/base.yaml: Base configuration for specific task types
             - manifests/task/model.yaml: Model-specific configurations
         """
         # Get the manifests directory path

@@ -88,11 +88,11 @@ class DefaultModels:
         recommendation for the given task type by delegating to get_model_by_type.
 
         Args:
-            task_type: The computer vision task category as a string 
+            task_type: The computer vision task category as a string
                     (e.g., 'DETECTION', 'CLASSIFICATION').
 
         Returns:
-            str | None: The name of the default model architecture, or None if no 
+            str | None: The name of the default model architecture, or None if no
                     default model is available for the given task type.
 
         Raises:
@@ -109,11 +109,11 @@ class DefaultModels:
         task type by delegating to get_model_by_type with the ACCURACY preference.
 
         Args:
-            task_type: The computer vision task category as a string 
+            task_type: The computer vision task category as a string
                     (e.g., 'DETECTION', 'CLASSIFICATION').
 
         Returns:
-            str | None: The name of the accuracy-optimized model architecture, or None 
+            str | None: The name of the accuracy-optimized model architecture, or None
                     if no accuracy model is available for the given task type.
 
         Raises:
@@ -130,11 +130,11 @@ class DefaultModels:
         task type by delegating to get_model_by_type with the SPEED preference.
 
         Args:
-            task_type: The computer vision task category as a string 
+            task_type: The computer vision task category as a string
                     (e.g., 'DETECTION', 'CLASSIFICATION').
 
         Returns:
-            str | None: The name of the speed-optimized model architecture, or None 
+            str | None: The name of the speed-optimized model architecture, or None
                     if no speed model is available for the given task type.
 
         Raises:
@@ -151,11 +151,11 @@ class DefaultModels:
         by delegating to get_model_by_type with the BALANCE preference.
 
         Args:
-            task_type: The computer vision task category as a string 
+            task_type: The computer vision task category as a string
                     (e.g., 'DETECTION', 'CLASSIFICATION').
 
         Returns:
-            str | None: The name of the balanced model architecture, or None 
+            str | None: The name of the balanced model architecture, or None
                     if no balanced model is available for the given task type.
 
         Raises:

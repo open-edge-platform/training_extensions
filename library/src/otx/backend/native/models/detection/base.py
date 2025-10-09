@@ -83,8 +83,7 @@ class OTXDetectionModel(OTXModel):
         self.model.explain_fn = self.get_explain_fn()
 
     def test_step(self, batch: OTXDataBatch, batch_idx: int) -> OTXPredBatch:
-        """
-        Perform a single test step on a batch of data from the test set.
+        """Perform a single test step on a batch of data from the test set.
 
         Args:
             batch: A batch of data containing the input tensor of images and target labels.

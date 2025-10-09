@@ -271,8 +271,7 @@ class OTXInstanceSegModel(OTXModel):
         )
 
     def test_step(self, batch: OTXDataBatch, batch_idx: int) -> OTXPredBatch:
-        """
-        Perform a single test step on a batch of data from the test set.
+        """Perform a single test step on a batch of data from the test set.
 
         Processes the batch through the model, applies threshold filtering to predictions,
         and updates test metrics accordingly.

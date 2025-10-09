@@ -157,8 +157,7 @@ class LabelInfo:
 
 @dataclass
 class HLabelInfo(LabelInfo):
-    """
-    The label information represents the hierarchy.
+    """The label information represents the hierarchy.
 
     All params should be kept since they're also used at the Model API side.
 

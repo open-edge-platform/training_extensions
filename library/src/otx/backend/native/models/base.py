@@ -210,8 +210,7 @@ class OTXModel(LightningModule):
         raise TypeError(train_loss)
 
     def validation_step(self, batch: OTXDataBatch, batch_idx: int) -> OTXPredBatch:
-        """
-        Perform a single test step on a batch of data from the test set.
+        """Perform a single test step on a batch of data from the test set.
 
         Args:
             batch: A batch of data containing the input tensor of images and target labels.
@@ -247,8 +246,7 @@ class OTXModel(LightningModule):
         raise TypeError(metric_inputs)
 
     def test_step(self, batch: OTXDataBatch, batch_idx: int) -> OTXPredBatch:
-        """
-        Lightning hook called at the beginning of fit, validate, test, or predict stages.
+        """Lightning hook called at the beginning of fit, validate, test, or predict stages.
 
         This hook is used for dynamic model building or model adjustments. It is called
         on every process when using Distributed Data Parallel (DDP).
@@ -320,8 +318,7 @@ class OTXModel(LightningModule):
         self._log_metrics(self.metric, "test")
 
     def setup(self, stage: str) -> None:
-        """
-        Lightning hook called at the beginning of fit, validate, test, or predict stages.
+        """Lightning hook called at the beginning of fit, validate, test, or predict stages.
 
         This hook is used for dynamic model building or model adjustments. It is called
         on every process when using Distributed Data Parallel (DDP).
