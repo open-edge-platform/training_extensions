@@ -1,7 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ZoomState } from './zoom.provider';
+import { ZoomState } from './types';
+
+export const ZOOM_STEP_DIVISOR = 10;
 
 export const getZoomState =
     ({
