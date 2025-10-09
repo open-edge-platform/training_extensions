@@ -23,23 +23,32 @@ from otx.types.image import ImageColorChannel
 from .base import OTXDataset, Transforms
 
 if TYPE_CHECKING:
-    from datumaro import DatasetSubset
+    from datumaro import Dataset as DmDataset
 
 
 class OTXInstanceSegDataset(OTXDataset):
-    """OTXDataset class for instance segmentation.
+    """Dataset class for instance segmentation tasks in OTX.
+
+    This class handles loading images and their instance segmentation annotations,
+    supporting polygons, bounding boxes, and ellipses. Annotations can be kept as polygons
+    or converted to bitmaps for training, depending on the `include_polygons` flag.
 
     Args:
-        dm_subset (DmDataset): The subset of the dataset.
+        dm_subset (DmDataset): The subset of the dataset to use.
         transforms (Transforms): Data transformations to be applied.
-        include_polygons (bool): Flag indicating whether to include polygons in the dataset.
-            If set to False, polygons will be converted to bitmaps, and bitmaps will be used for training.
-        **kwargs: Additional keyword arguments passed to the base class.
+        task_type (OTXTaskType, optional): The task type. Defaults to INSTANCE_SEGMENTATION.
+        max_refetch (int, optional): Maximum number of times to refetch data. Defaults to 1000.
+        image_color_channel (ImageColorChannel, optional): Image color channel format. Defaults to RGB.
+        stack_images (bool, optional): Whether to stack images. Defaults to True.
+        to_tv_image (bool, optional): Whether to convert images to torchvision format. Defaults to True.
+        data_format (str, optional): Data format string. Defaults to "".
+        include_polygons (bool, optional): If True, polygons are included in the dataset.
+            If False, polygons are converted to bitmaps for training. Defaults to False.
     """
 
     def __init__(
         self,
-        dm_subset: DatasetSubset,
+        dm_subset: DmDataset,
         transforms: Transforms,
         task_type: OTXTaskType = OTXTaskType.INSTANCE_SEGMENTATION,
         max_refetch: int = 1000,
@@ -51,7 +60,6 @@ class OTXInstanceSegDataset(OTXDataset):
     ) -> None:
         super().__init__(
             dm_subset=dm_subset,
-            task_type=task_type,
             transforms=transforms,
             max_refetch=max_refetch,
             image_color_channel=image_color_channel,
@@ -60,6 +68,7 @@ class OTXInstanceSegDataset(OTXDataset):
             data_format=data_format,
         )
         self.include_polygons = include_polygons
+        self._task_type = task_type
 
     def _get_item_impl(self, index: int) -> OTXDataItem | None:
         item = self.dm_subset[index]
@@ -135,3 +144,12 @@ class OTXInstanceSegDataset(OTXDataset):
         )
 
         return self._apply_transforms(entity)  # type: ignore[return-value]
+
+    @property
+    def task_type(self) -> OTXTaskType:
+        """OTX Task Type for the dataset.
+
+        Returns:
+            OTXTaskType: The semantic segmentation task type.
+        """
+        return self._task_type

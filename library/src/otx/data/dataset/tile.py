@@ -286,7 +286,6 @@ class OTXTileDataset(OTXDataset):
         super().__init__(
             dataset.dm_subset,
             dataset.transforms,
-            dataset.task_type,
             dataset.max_refetch,
             dataset.image_color_channel,
             dataset.stack_images,

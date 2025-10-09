@@ -21,17 +21,39 @@ from .base import OTXDataset, Transforms
 from .mixins import DataAugSwitchMixin
 
 if TYPE_CHECKING:
-    from datumaro import DatasetSubset
+    from datumaro import Dataset as DmDataset
 
 
 class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):  # type: ignore[misc]
-    """OTXDataset class for detection task."""
+    """OTX Dataset for object detection tasks.
+
+    This dataset handles object detection where each image contains multiple objects with
+    bounding box annotations. It processes Datumaro dataset items and converts them into
+    OTXDataItem format suitable for object detection training and inference.
+
+    Args:
+        dm_subset (): Datumaro dataset subset containing the data items.
+        transforms: Transform operations to apply to the data items.
+        max_refetch: Maximum number of retries when fetching a data item fails.
+        image_color_channel: Color channel format for images (RGB, BGR, etc.).
+        stack_images: Whether to stack images in batch processing.
+        to_tv_image: Whether to convert images to torchvision format.
+        data_format: Format of the source data (e.g., "coco", "pascal_voc").
+
+    Example:
+        >>> from otx.data.dataset.detection import OTXDetectionDataset
+        >>> dataset = OTXDetectionDataset(
+        ...     dm_subset=my_dm_subset,
+        ...     transforms=my_transforms,
+        ...     image_color_channel=ImageColorChannel.RGB
+        ... )
+        >>> item = dataset[0]  # Get first item with bounding boxes
+    """
 
     def __init__(
         self,
-        dm_subset: DatasetSubset,
+        dm_subset: DmDataset,
         transforms: Transforms,
-        task_type: OTXTaskType = OTXTaskType.DETECTION,
         max_refetch: int = 1000,
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
         stack_images: bool = True,
@@ -40,7 +62,6 @@ class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):  # type: ignore[misc]
     ) -> None:
         super().__init__(
             dm_subset=dm_subset,
-            task_type=task_type,
             transforms=transforms,
             max_refetch=max_refetch,
             image_color_channel=image_color_channel,
@@ -50,6 +71,15 @@ class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):  # type: ignore[misc]
         )
 
     def _get_item_impl(self, index: int) -> OTXDataItem | None:
+        """Get a single data item from the dataset.
+
+        Args:
+            index: Index of the item to retrieve.
+
+        Returns:
+            OTXDataItem or None: The processed data item with image, bounding boxes, and labels,
+                or None if the item could not be processed.
+        """
         item = self.dm_subset[index]
         img = item.media_as(Image)
         ignored_labels: list[int] = []  # This should be assigned form item
@@ -85,3 +115,12 @@ class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):  # type: ignore[misc]
             self._apply_augmentation_switch()
 
         return self._apply_transforms(entity)
+
+    @property
+    def task_type(self) -> OTXTaskType:
+        """OTX Task Type for the dataset.
+
+        Returns:
+            OTXTaskType: The object detection task type.
+        """
+        return OTXTaskType.DETECTION

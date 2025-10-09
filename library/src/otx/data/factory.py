@@ -73,22 +73,22 @@ class OTXDatasetFactory:
         if task == OTXTaskType.MULTI_CLASS_CLS:
             from .dataset.classification import OTXMulticlassClsDataset
 
-            return OTXMulticlassClsDataset(task_type=task, **common_kwargs)
+            return OTXMulticlassClsDataset(**common_kwargs)
 
         if task == OTXTaskType.MULTI_LABEL_CLS:
             from .dataset.classification import OTXMultilabelClsDataset
 
-            return OTXMultilabelClsDataset(task_type=task, **common_kwargs)
+            return OTXMultilabelClsDataset(**common_kwargs)
 
         if task == OTXTaskType.H_LABEL_CLS:
             from .dataset.classification import OTXHlabelClsDataset
 
-            return OTXHlabelClsDataset(task_type=task, **common_kwargs)
+            return OTXHlabelClsDataset(**common_kwargs)
 
         if task == OTXTaskType.DETECTION:
             from .dataset.detection import OTXDetectionDataset
 
-            return OTXDetectionDataset(task_type=task, **common_kwargs)
+            return OTXDetectionDataset(**common_kwargs)
 
         if task in [OTXTaskType.ROTATED_DETECTION, OTXTaskType.INSTANCE_SEGMENTATION]:
             from .dataset.instance_segmentation import OTXInstanceSegDataset
@@ -98,11 +98,11 @@ class OTXDatasetFactory:
         if task == OTXTaskType.SEMANTIC_SEGMENTATION:
             from .dataset.segmentation import OTXSegmentationDataset
 
-            return OTXSegmentationDataset(task_type=task, ignore_index=ignore_index, **common_kwargs)
+            return OTXSegmentationDataset(ignore_index=ignore_index, **common_kwargs)
 
         if task == OTXTaskType.KEYPOINT_DETECTION:
             from .dataset.keypoint_detection import OTXKeypointDetectionDataset
 
-            return OTXKeypointDetectionDataset(task_type=task, **common_kwargs)
+            return OTXKeypointDetectionDataset(**common_kwargs)
 
         raise NotImplementedError(task)

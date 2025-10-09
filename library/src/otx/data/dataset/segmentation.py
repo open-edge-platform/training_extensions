@@ -154,13 +154,39 @@ def _extract_class_mask(item: DatasetItem, img_shape: tuple[int, int], ignore_in
 
 
 class OTXSegmentationDataset(OTXDataset):
-    """OTXDataset class for segmentation task."""
+    """OTX Dataset for semantic segmentation tasks.
+
+    This dataset handles semantic segmentation where each pixel in an image is classified
+    into one of multiple classes. It processes Datumaro dataset items and converts them
+    into OTXDataItem format suitable for semantic segmentation training and inference.
+
+    Args:
+        dm_subset: Datumaro dataset subset containing the data items.
+        transforms: Transform operations to apply to the data items.
+        max_refetch: Maximum number of retries when fetching a data item fails.
+        image_color_channel: Color channel format for images (RGB, BGR, etc.).
+        stack_images: Whether to stack images in batch processing.
+        to_tv_image: Whether to convert images to torchvision format.
+        data_format: Format of the source data (e.g., "cityscapes", "pascal_voc").
+        ignore_index: Index value for pixels to be ignored during training.
+
+    Attributes:
+        ignore_index: Index value for pixels to be ignored during training.
+
+    Example:
+        >>> from otx.data.dataset.segmentation import OTXSegmentationDataset
+        >>> dataset = OTXSegmentationDataset(
+        ...     dm_subset=my_dm_subset,
+        ...     transforms=my_transforms,
+        ...     ignore_index=255
+        ... )
+        >>> item = dataset[0]  # Get first item with segmentation masks
+    """
 
     def __init__(
         self,
         dm_subset: DatasetSubset,
         transforms: Transforms,
-        task_type: OTXTaskType = OTXTaskType.SEMANTIC_SEGMENTATION,
         max_refetch: int = 1000,
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
         to_tv_image: bool = True,
@@ -169,7 +195,6 @@ class OTXSegmentationDataset(OTXDataset):
     ) -> None:
         super().__init__(
             dm_subset=dm_subset,
-            task_type=task_type,
             transforms=transforms,
             max_refetch=max_refetch,
             image_color_channel=image_color_channel,
@@ -198,6 +223,15 @@ class OTXSegmentationDataset(OTXDataset):
         return False
 
     def _get_item_impl(self, index: int) -> OTXDataItem | None:
+        """Get a single data item from the dataset.
+
+        Args:
+            index: Index of the item to retrieve.
+
+        Returns:
+            OTXDataItem or None: The processed data item with image and segmentation masks,
+                or None if the item could not be processed.
+        """
         item = self.dm_subset[index]
         img = item.media_as(Image)
         ignored_labels: list[int] = []
@@ -221,3 +255,12 @@ class OTXSegmentationDataset(OTXDataset):
             masks=masks,
         )
         return self._apply_transforms(entity)
+
+    @property
+    def task_type(self) -> OTXTaskType:
+        """OTX Task Type for the dataset.
+
+        Returns:
+            OTXTaskType: The semantic segmentation task type.
+        """
+        return OTXTaskType.SEMANTIC_SEGMENTATION

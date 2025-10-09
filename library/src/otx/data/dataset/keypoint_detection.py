@@ -27,13 +27,36 @@ Transforms = Union[Compose, Callable, List[Callable], dict[str, Compose | Callab
 
 
 class OTXKeypointDetectionDataset(OTXDataset):
-    """OTXDataset class for keypoint detection task."""
+    """OTX Dataset for keypoint detection tasks.
+
+    This dataset handles keypoint detection where specific key points (like body joints)
+    are detected and localized in images. It processes Datumaro dataset items and
+    converts them into OTXDataItem format suitable for keypoint detection training
+    and inference.
+
+    Args:
+        dm_subset: Datumaro dataset subset containing the data items.
+        transforms: Transform operations to apply to the data items.
+        max_refetch: Maximum number of retries when fetching a data item fails.
+        image_color_channel: Color channel format for images (RGB, BGR, etc.).
+        stack_images: Whether to stack images in batch processing.
+        to_tv_image: Whether to convert images to torchvision format.
+        data_format: Format of the source data (e.g., "coco", "arrow").
+
+    Example:
+        >>> from otx.data.dataset.keypoint_detection import OTXKeypointDetectionDataset
+        >>> dataset = OTXKeypointDetectionDataset(
+        ...     dm_subset=my_dm_subset,
+        ...     transforms=my_transforms,
+        ...     data_format="coco"
+        ... )
+        >>> item = dataset[0]  # Get first item with keypoints
+    """
 
     def __init__(
         self,
         dm_subset: DatasetSubset,
         transforms: Transforms,
-        task_type: OTXTaskType = OTXTaskType.KEYPOINT_DETECTION,
         max_refetch: int = 1000,
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
         stack_images: bool = True,
@@ -42,7 +65,6 @@ class OTXKeypointDetectionDataset(OTXDataset):
     ) -> None:
         super().__init__(
             dm_subset=dm_subset,
-            task_type=task_type,
             transforms=transforms,
             max_refetch=max_refetch,
             image_color_channel=image_color_channel,
@@ -87,6 +109,15 @@ class OTXKeypointDetectionDataset(OTXDataset):
         return Dataset.from_iterable(dm_items, categories=self.dm_subset.categories())
 
     def _get_item_impl(self, index: int) -> OTXDataItem | None:
+        """Get a single data item from the dataset.
+
+        Args:
+            index: Index of the item to retrieve.
+
+        Returns:
+            OTXDataItem or None: The processed data item with image and keypoint annotations,
+                or None if the item could not be processed.
+        """
         item = self.dm_subset[index]
         img = item.media_as(Image)
         ignored_labels: list[int] = []  # This should be assigned form item
@@ -133,3 +164,12 @@ class OTXKeypointDetectionDataset(OTXDataset):
         )
 
         return self._apply_transforms(entity)  # type: ignore[return-value]
+
+    @property
+    def task_type(self) -> OTXTaskType:
+        """OTX Task Type for the dataset.
+
+        Returns:
+            OTXTaskType: The keypoint detection task type.
+        """
+        return OTXTaskType.KEYPOINT_DETECTION
