@@ -3,7 +3,7 @@
 #######
 # Backend base
 #######
-FROM python:3.13-slim@sha256:58c30f5bfaa718b5803a53393190b9c68bd517c44c6c94c1b6c8c172bcfad040 AS backend-base
+FROM python:3.13-slim@sha256:087a9f3b880e8b2c7688debb9df2a5106e060225ebd18c264d5f1d7a73399db0 AS backend-base
 COPY --from=docker.io/astral/uv:0.8.8@sha256:67b2bcccdc103d608727d1b577e58008ef810f751ed324715eb60b3f0c040d30 /uv /uvx /bin/
 
 # Set working directory
@@ -29,7 +29,7 @@ COPY backend/app ./app
 #############
 # build_rest_api_specs
 #############
-FROM node:24-alpine3.22@sha256:3e843c608bb5232f39ecb2b25e41214b958b0795914707374c8acc28487dea17 AS build_rest_api_specs
+FROM node:24-alpine3.22@sha256:f8baf2c963e3bff767993135ae3447bb433e8d64a5e4bb65780cd29ef3a525c2 AS build_rest_api_specs
 
 WORKDIR /home/app/web_ui/
 
@@ -40,7 +40,7 @@ RUN npm run build:api
 #############
 # geti_ui_packages
 #############
-FROM node:24-alpine3.22@sha256:3e843c608bb5232f39ecb2b25e41214b958b0795914707374c8acc28487dea17 AS geti_ui_packags
+FROM node:24-alpine3.22@sha256:f8baf2c963e3bff767993135ae3447bb433e8d64a5e4bb65780cd29ef3a525c2 AS geti_ui_packags
 
 WORKDIR /home/app/web_ui/
 RUN apk add --no-cache git=2.49.1-r0
@@ -50,7 +50,7 @@ RUN npm run clone-geti-ui-packages
 #############
 # web_ui_deps
 #############
-FROM node:24-alpine3.22@sha256:3e843c608bb5232f39ecb2b25e41214b958b0795914707374c8acc28487dea17 AS base_web_ui
+FROM node:24-alpine3.22@sha256:f8baf2c963e3bff767993135ae3447bb433e8d64a5e4bb65780cd29ef3a525c2 AS base_web_ui
 
 WORKDIR /home/app/web_ui/
 
