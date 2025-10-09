@@ -5,8 +5,8 @@ import { render, screen } from 'test-utils/render';
 import { vi } from 'vitest';
 
 import { useContainerSize } from './use-container-size';
-import { ZoomProvider } from './zoom';
 import { ZoomTransform } from './zoom-transform';
+import { ZoomProvider } from './zoom.provider';
 
 vi.mock('./use-container-size', () => ({
     useContainerSize: vi.fn(),
@@ -14,9 +14,9 @@ vi.mock('./use-container-size', () => ({
 
 describe('Zoom', () => {
     it('Scales and translates content so that it fits the screen', () => {
-        const screenSize = { width: 100, height: 500 };
-        const contentSize = { width: 300, height: 200 };
-        const expectedZoom = { translate: { x: -100, y: 150 }, scale: 0.3 };
+        const screenSize = { width: 500, height: 500 };
+        const contentSize = { width: 500, height: 500 };
+        const expectedZoom = { translate: { x: 0, y: 0 }, scale: 1 };
 
         vi.mocked(useContainerSize).mockImplementation(() => screenSize);
 

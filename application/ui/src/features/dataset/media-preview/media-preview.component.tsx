@@ -4,8 +4,8 @@
 import { Suspense, useState } from 'react';
 
 import { Content, Dialog, Divider, Grid, Heading, View } from '@geti/ui';
-import { ZoomProvider } from 'src/components/zoom/zoom';
 
+import { ZoomProvider } from '../../../components/zoom/zoom.provider';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas';
 import { SelectAnnotationProvider } from '../../annotator/select-annotation-provider.component';
 import { ToolSelectionBar } from '../../annotator/tools/tool-selection-bar.component';

@@ -82,11 +82,34 @@ def _convert_segmentation_prediction(
 
 def convert_prediction(labels: list[Label], frame_data: np.ndarray, prediction: Result) -> list[DatasetItemAnnotation]:
     """
-    Converts an image prediction to dataset item annotations depending on the prediction type.
-    :param labels: project labels list
-    :param frame_data: image binary data
-    :param prediction: prediction result
-    :return: list of dataset item annotations
+    Converts model predictions to dataset annotations based on prediction type.
+
+    Routes the conversion process to appropriate handlers depending on the
+    specific type of prediction result (segmentation, detection, or classification).
+
+    Args:
+        labels: List of Label objects available in the project for annotation.
+        frame_data: Image data in numpy ndarray format, used for segmentation
+                   annotations that may require image dimensions.
+        prediction: Prediction result object containing model outputs, which can
+                   be one of: InstanceSegmentationResult, DetectionResult, or
+                   ClassificationResult.
+
+    Returns:
+        list[DatasetItemAnnotation]: List of annotations converted from the
+        prediction results. Returns empty list if prediction type is not recognized.
+
+    Note:
+        The function uses pattern matching to dispatch to appropriate conversion
+        methods based on the prediction type. Each prediction type has its own
+        specialized conversion logic.
+
+    Example:
+        >>> annotations = convert_prediction(
+        ...     labels=project_labels,
+        ...     frame_data=image_array,
+        ...     prediction=detection_result
+        ... )
     """
     match prediction:
         case InstanceSegmentationResult():
