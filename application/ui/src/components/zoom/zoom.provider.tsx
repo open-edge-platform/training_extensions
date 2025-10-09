@@ -8,7 +8,7 @@ import { clampBetween } from '@geti/smart-tools/utils';
 import { ZoomState } from './types';
 import { getZoomState, ZOOM_STEP_DIVISOR } from './util';
 
-export const Zoom = createContext<ZoomState>({
+const Zoom = createContext<ZoomState>({
     scale: 1.0,
     maxZoomIn: 1,
     translate: { x: 0, y: 0 },
