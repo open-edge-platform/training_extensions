@@ -26,9 +26,8 @@
         "test:unit": "vitest --config vitest.config.ts",
         "test:unit:watch": "vitest --config vitest.config.ts --reporter=verbose --watch",
         "test:unit:coverage": "vitest --coverage",
-        "test:component": "npx playwright test --config=playwright.config.ts",
-        "test:e2e": "npx playwright test --config=playwright.e2e.config.ts",
-        "test:e2e:ui": "npx playwright test --config=playwright.e2e.config.ts --ui",
+        "test:component": "npx playwright test --project=component",
+        "test:e2e": "ENABLE_BACKEND=True npx playwright test --project=e2e",
         "type-check": "tsc --noEmit",
         "tauri": "tauri"
     },

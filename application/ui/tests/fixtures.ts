@@ -9,7 +9,7 @@ import { createNetworkFixture, NetworkFixture } from '@msw/playwright';
 import { expect, test as testBase } from '@playwright/test';
 import { HttpResponse } from 'msw';
 
-import { handlers, http } from '../../src/api/utils';
+import { handlers, http } from '../src/api/utils';
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -69,7 +69,7 @@ const test = testBase.extend<Fixtures>({
                 return response(200).json({} as never);
             }),
             http.get('/api/projects/{project_id}/dataset/items/{dataset_item_id}/thumbnail', ({}) => {
-                const sampleImagePath = path.resolve(dirname, '../assets/candy-thumbnail.png');
+                const sampleImagePath = path.resolve(dirname, './assets/candy-thumbnail.png');
                 const sampleImageBuffer = fs.readFileSync(sampleImagePath);
 
                 return HttpResponse.arrayBuffer(sampleImageBuffer.buffer, {
