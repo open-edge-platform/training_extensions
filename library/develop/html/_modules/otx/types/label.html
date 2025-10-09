@@ -439,54 +439,43 @@
 
 <span class="sd">    All params should be kept since they&#39;re also used at the Model API side.</span>
 
-<span class="sd">    :param num_multiclass_heads: the number of the multiclass heads</span>
-<span class="sd">    :param num_multilabel_classes: the number of multilabel classes</span>
-<span class="sd">    :param head_to_logits_range: the logit range of each heads</span>
-<span class="sd">    :param num_single_label_classes: the number of single label classes</span>
-<span class="sd">    :param class_to_group_idx: represents the head index and label index</span>
-<span class="sd">    :param all_groups: represents information of all groups</span>
-<span class="sd">    :param label_to_idx: index of each label</span>
-<span class="sd">    :param empty_multiclass_head_indices: the index of head that doesn&#39;t include any label</span>
-<span class="sd">                                          due to the label removing</span>
+<span class="sd">    Args:</span>
+<span class="sd">        num_multiclass_heads: The number of multiclass heads in the hierarchy.</span>
+<span class="sd">        num_multilabel_classes: The number of multilabel classes.</span>
+<span class="sd">        head_to_logits_range: The logit range for each head as a dictionary mapping</span>
+<span class="sd">                            head indices to (start, end) tuples.</span>
+<span class="sd">        num_single_label_classes: The number of single label classes.</span>
+<span class="sd">        class_to_group_idx: Dictionary mapping class names to (head_index, label_index)</span>
+<span class="sd">                        tuples representing position in hierarchy.</span>
+<span class="sd">        all_groups: List of all label groups in the hierarchy.</span>
+<span class="sd">        label_to_idx: Dictionary mapping label names to their global indices.</span>
+<span class="sd">        empty_multiclass_head_indices: List of head indices that don&#39;t include any</span>
+<span class="sd">                                    labels due to label removal.</span>
 
-<span class="sd">    i.e.</span>
-<span class="sd">    Single-selection group information (Multiclass, Exclusive)</span>
-<span class="sd">    {</span>
-<span class="sd">        &quot;Shape&quot;: [&quot;Rigid&quot;, &quot;Non-Rigid&quot;],</span>
-<span class="sd">        &quot;Rigid&quot;: [&quot;Rectangle&quot;, &quot;Triangle&quot;],</span>
-<span class="sd">        &quot;Non-Rigid&quot;: [&quot;Circle&quot;]</span>
-<span class="sd">    }</span>
-
-<span class="sd">    Multi-selection group information (Multilabel)</span>
-<span class="sd">    {</span>
-<span class="sd">        &quot;Animal&quot;: [&quot;Lion&quot;, &quot;Panda&quot;]</span>
-<span class="sd">    }</span>
-
-<span class="sd">    In the case above, HlabelInfo will be generated as below.</span>
-<span class="sd">    NOTE, If there was only one label in the multiclass group, it will be handeled as multilabel(Circle).</span>
-
-<span class="sd">        num_multiclass_heads: 2  (Shape, Rigid)</span>
-<span class="sd">        num_multilabel_classes: 3 (Circle, Lion, Panda)</span>
-<span class="sd">        head_to_logits_range: {&#39;0&#39;: (0, 2), &#39;1&#39;: (2, 4)} (Each multiclass head have 2 labels)</span>
-<span class="sd">        num_single_label_classes: 4 (Rigid, Non-Rigid, Rectangle, Triangle)</span>
-<span class="sd">        class_to_group_idx: {</span>
-<span class="sd">            &#39;Non-Rigid&#39;: (0, 0), &#39;Rigid&#39;: (0, 1),</span>
-<span class="sd">            &#39;Rectangle&#39;: (1, 0), &#39;Triangle&#39;: (1, 1),</span>
-<span class="sd">            &#39;Circle&#39;: (2, 0), &#39;Lion&#39;: (2,1), &#39;Panda&#39;: (2,2)</span>
-<span class="sd">        } (head index, label index for each head)</span>
-<span class="sd">        all_groups: [[&#39;Non-Rigid&#39;, &#39;Rigid&#39;], [&#39;Rectangle&#39;, &#39;Triangle&#39;], [&#39;Circle&#39;], [&#39;Lion&#39;], [&#39;Panda&#39;]]</span>
-<span class="sd">        label_to_idx: {</span>
-<span class="sd">            &#39;Rigid&#39;: 0, &#39;Rectangle&#39;: 1,</span>
-<span class="sd">            &#39;Triangle&#39;: 2, &#39;Non-Rigid&#39;: 3, &#39;Circle&#39;: 4</span>
-<span class="sd">            &#39;Lion&#39;: 5, &#39;Panda&#39;: 6</span>
+<span class="sd">    Example:</span>
+<span class="sd">        Single-selection group information (Multiclass, Exclusive):</span>
+<span class="sd">        {</span>
+<span class="sd">            &quot;Shape&quot;: [&quot;Rigid&quot;, &quot;Non-Rigid&quot;],</span>
+<span class="sd">            &quot;Rigid&quot;: [&quot;Rectangle&quot;, &quot;Triangle&quot;],</span>
+<span class="sd">            &quot;Non-Rigid&quot;: [&quot;Circle&quot;]</span>
 <span class="sd">        }</span>
-<span class="sd">        label_tree_edges: [</span>
-<span class="sd">            [&quot;Rectangle&quot;, &quot;Rigid&quot;], [&quot;Triangle&quot;, &quot;Rigid&quot;], [&quot;Circle&quot;, &quot;Non-Rigid&quot;],</span>
-<span class="sd">        ] # NOTE, label_tree_edges format could be changed.</span>
-<span class="sd">        empty_multiclass_head_indices: []</span>
 
-<span class="sd">    All of the member variables should be considered for the Model API.</span>
-<span class="sd">    https://github.com/open-edge-platform/training_extensions/blob/develop/lib/src/otx/algorithms/classification/utils/cls_utils.py#L97</span>
+<span class="sd">        Multi-selection group information (Multilabel):</span>
+<span class="sd">        {</span>
+<span class="sd">            &quot;Animal&quot;: [&quot;Lion&quot;, &quot;Panda&quot;]</span>
+<span class="sd">        }</span>
+
+<span class="sd">        Results in HLabelInfo with:</span>
+<span class="sd">        - num_multiclass_heads: 2 (Shape, Rigid)</span>
+<span class="sd">        - num_multilabel_classes: 3 (Circle, Lion, Panda)</span>
+<span class="sd">        - head_to_logits_range: {&#39;0&#39;: (0, 2), &#39;1&#39;: (2, 4)}</span>
+<span class="sd">        - class_to_group_idx: {&#39;Non-Rigid&#39;: (0, 0), &#39;Rigid&#39;: (0, 1), &#39;Rectangle&#39;: (1, 0), ...}</span>
+<span class="sd">        - all_groups: [[&#39;Non-Rigid&#39;, &#39;Rigid&#39;], [&#39;Rectangle&#39;, &#39;Triangle&#39;], [&#39;Circle&#39;], ...]</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        If there was only one label in the multiclass group, it will be handled as multilabel (Circle).</span>
+<span class="sd">        All of the member variables should be considered for the Model API.</span>
+<span class="sd">        Reference: https://github.com/open-edge-platform/training_extensions/blob/develop/lib/src/otx/algorithms/classification/utils/cls_utils.py#L97</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">num_multiclass_heads</span><span class="p">:</span> <span class="nb">int</span>

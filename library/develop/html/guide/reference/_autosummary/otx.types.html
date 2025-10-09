@@ -421,20 +421,22 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>num_multiclass_heads</strong> – the number of the multiclass heads</p></li>
-<li><p><strong>num_multilabel_classes</strong> – the number of multilabel classes</p></li>
-<li><p><strong>head_to_logits_range</strong> – the logit range of each heads</p></li>
-<li><p><strong>num_single_label_classes</strong> – the number of single label classes</p></li>
-<li><p><strong>class_to_group_idx</strong> – represents the head index and label index</p></li>
-<li><p><strong>all_groups</strong> – represents information of all groups</p></li>
-<li><p><strong>label_to_idx</strong> – index of each label</p></li>
-<li><p><strong>empty_multiclass_head_indices</strong> – the index of head that doesn’t include any label
-due to the label removing</p></li>
+<li><p><strong>num_multiclass_heads</strong> – The number of multiclass heads in the hierarchy.</p></li>
+<li><p><strong>num_multilabel_classes</strong> – The number of multilabel classes.</p></li>
+<li><p><strong>head_to_logits_range</strong> – The logit range for each head as a dictionary mapping
+head indices to (start, end) tuples.</p></li>
+<li><p><strong>num_single_label_classes</strong> – The number of single label classes.</p></li>
+<li><p><strong>class_to_group_idx</strong> – Dictionary mapping class names to (head_index, label_index)
+tuples representing position in hierarchy.</p></li>
+<li><p><strong>all_groups</strong> – List of all label groups in the hierarchy.</p></li>
+<li><p><strong>label_to_idx</strong> – Dictionary mapping label names to their global indices.</p></li>
+<li><p><strong>empty_multiclass_head_indices</strong> – List of head indices that don’t include any
+labels due to label removal.</p></li>
 </ul>
 </dd>
 </dl>
-<p>i.e.
-Single-selection group information (Multiclass, Exclusive)
+<p class="rubric">Example</p>
+<p>Single-selection group information (Multiclass, Exclusive):
 {</p>
 <blockquote>
 <div><p>“Shape”: [“Rigid”, “Non-Rigid”],
@@ -442,43 +444,24 @@ Single-selection group information (Multiclass, Exclusive)
 “Non-Rigid”: [“Circle”]</p>
 </div></blockquote>
 <p>}</p>
-<p>Multi-selection group information (Multilabel)
+<p>Multi-selection group information (Multilabel):
 {</p>
 <blockquote>
 <div><p>“Animal”: [“Lion”, “Panda”]</p>
 </div></blockquote>
 <p>}</p>
-<p>In the case above, HlabelInfo will be generated as below.
-NOTE, If there was only one label in the multiclass group, it will be handeled as multilabel(Circle).</p>
-<blockquote>
-<div><p>num_multiclass_heads: 2  (Shape, Rigid)
-num_multilabel_classes: 3 (Circle, Lion, Panda)
-head_to_logits_range: {‘0’: (0, 2), ‘1’: (2, 4)} (Each multiclass head have 2 labels)
-num_single_label_classes: 4 (Rigid, Non-Rigid, Rectangle, Triangle)
-class_to_group_idx: {</p>
-<blockquote>
-<div><p>‘Non-Rigid’: (0, 0), ‘Rigid’: (0, 1),
-‘Rectangle’: (1, 0), ‘Triangle’: (1, 1),
-‘Circle’: (2, 0), ‘Lion’: (2,1), ‘Panda’: (2,2)</p>
-</div></blockquote>
-<p>} (head index, label index for each head)
-all_groups: [[‘Non-Rigid’, ‘Rigid’], [‘Rectangle’, ‘Triangle’], [‘Circle’], [‘Lion’], [‘Panda’]]
-label_to_idx: {</p>
-<blockquote>
-<div><p>‘Rigid’: 0, ‘Rectangle’: 1,
-‘Triangle’: 2, ‘Non-Rigid’: 3, ‘Circle’: 4
-‘Lion’: 5, ‘Panda’: 6</p>
-</div></blockquote>
-<p>}
-label_tree_edges: [</p>
-<blockquote>
-<div><p>[“Rectangle”, “Rigid”], [“Triangle”, “Rigid”], [“Circle”, “Non-Rigid”],</p>
-</div></blockquote>
-<p>] # NOTE, label_tree_edges format could be changed.
-empty_multiclass_head_indices: []</p>
-</div></blockquote>
-<p>All of the member variables should be considered for the Model API.
-<a class="github reference external" href="https://github.com/open-edge-platform/training_extensions/blob/develop/lib/src/otx/algorithms/classification/utils/cls_utils.py#L97">open-edge-platform/training_extensions</a></p>
+<p>Results in HLabelInfo with:
+- num_multiclass_heads: 2 (Shape, Rigid)
+- num_multilabel_classes: 3 (Circle, Lion, Panda)
+- head_to_logits_range: {‘0’: (0, 2), ‘1’: (2, 4)}
+- class_to_group_idx: {‘Non-Rigid’: (0, 0), ‘Rigid’: (0, 1), ‘Rectangle’: (1, 0), …}
+- all_groups: [[‘Non-Rigid’, ‘Rigid’], [‘Rectangle’, ‘Triangle’], [‘Circle’], …]</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If there was only one label in the multiclass group, it will be handled as multilabel (Circle).
+All of the member variables should be considered for the Model API.
+Reference: <a class="github reference external" href="https://github.com/open-edge-platform/training_extensions/blob/develop/lib/src/otx/algorithms/classification/utils/cls_utils.py#L97">open-edge-platform/training_extensions</a></p>
+</div>
 <dl class="py method">
 <dt class="sig sig-object py" id="otx.types.HLabelInfo.as_head_config_dict">
 <span class="sig-name descname"><span class="pre">as_head_config_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../../_modules/otx/types/label.html#HLabelInfo.as_head_config_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.types.HLabelInfo.as_head_config_dict" title="Link to this definition">#</a></dt>
