@@ -56,7 +56,7 @@ def _scale_batch_reset_params(trainer: Trainer, steps_per_trial: int) -> None:
     trainer.logger = DummyLogger() if trainer.logger is not None else None
     trainer.callbacks = []
     # For XPU devices 1 epoch sometimes is not enough to catch an error
-    max_epochs = 3 if is_xpu_available() else 1
+    max_epochs = 5 if is_xpu_available() else 1
 
     loop = trainer._active_loop  # noqa: SLF001
     if loop is None:
