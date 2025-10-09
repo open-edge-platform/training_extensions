@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import logging as log
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from datumaro import Dataset as DmDataset
@@ -14,7 +15,7 @@ from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, RandomSampler
 from torchvision.transforms.v2 import Normalize
 
-from otx.config.data import TileConfig
+from otx.config.data import SubsetConfig, TileConfig
 from otx.data.dataset.tile import OTXTileDatasetFactory
 from otx.data.factory import OTXDatasetFactory
 from otx.data.utils import adapt_tile_config, get_adaptive_num_workers, instantiate_sampler
@@ -27,7 +28,6 @@ from otx.types.task import OTXTaskType
 if TYPE_CHECKING:
     from lightning.pytorch.utilities.parsing import AttributeDict
 
-    from otx.config.data import SubsetConfig
     from otx.data.dataset.base import OTXDataset
 
 
@@ -81,7 +81,7 @@ class OTXDataModule(LightningDataModule):
         self.data_root = data_root
 
         if input_size is not None and not isinstance(input_size, (tuple, list)):
-            msg = f"input_size should be tuple/list of ints or 'auto', but got {input_size}"
+            msg = f"input_size should be a tuple or list of ints, but got {input_size!r}"
             raise ValueError(msg)
         self.train_subset = (
             train_subset if train_subset is not None else self.get_default_subset_config("train", input_size)
@@ -385,17 +385,6 @@ class OTXDataModule(LightningDataModule):
         Returns:
             SubsetConfig: Default configuration for the subset loaded from base config.
         """
-        from pathlib import Path
-
-        from omegaconf import OmegaConf
-
-        from otx.config.data import SubsetConfig
-
-        # Check if the subset exists in our datasets
-        if subset_name not in self.subsets:
-            msg = f"Subset '{subset_name}' not found in provided datasets. Available: {list(self.subsets.keys())}"
-            raise ValueError(msg)
-
         # Map task type to config file name
         task_to_data_config_file = {
             OTXTaskType.ANOMALY: "anomaly.yaml",
