@@ -94,6 +94,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=web_ui /home/app/web_ui/dist/ /usr/share/nginx/html
 COPY --from=backend-build /app /app
+COPY --from=backend-build /bin/uv /bin/uv
 
 EXPOSE 80
 
