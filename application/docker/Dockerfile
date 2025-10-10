@@ -25,6 +25,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-editable
 
 COPY backend/app ./app
+COPY backend/run.sh ./run.sh
+RUN chmod +x ./run.sh
 
 #############
 # build_rest_api_specs

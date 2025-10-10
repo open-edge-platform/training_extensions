@@ -9,6 +9,7 @@ x-proxies: &proxies
 
 services:
   geti-tune:
+    profiles: [prod]
     image: geti-tune:${TAG:-latest}
     restart: unless-stopped
     build:
@@ -49,3 +50,89 @@ services:
       - mosquitto
     ports:
       - "8081:80"
+
+  backend-e2e:
+    profiles:
+      - e2e
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: backend-base
+      <<: *proxies
+    working_dir: /app
+    environment:
+      - DATABASE_FILE=geti_tune_e2e.db
+      - SEED_DB=true
+      - DOWNLOAD_FILES=true
+      - PYTHONUNBUFFERED=1
+      - E2E_ASSETS_S3_URL=${E2E_ASSETS_S3_URL}
+    volumes:
+      - ../backend/data/:/app/data/
+    ports:
+      - "7860:7860"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python3",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:7860/health').read()",
+        ]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    command: ["sh", "-c", "./run.sh"]
+    develop:
+      watch:
+        - path: ../backend/app
+          action: sync+restart
+          target: /app/app
+        - path: ../backend/pyproject.toml
+          action: rebuild
+
+  frontend-e2e:
+    profiles:
+      - e2e
+    image: nginx:1.26-alpine
+    volumes:
+      - ../ui/dist:/usr/share/nginx/html:ro
+      - ./nginx-e2e.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "3000:80"
+    depends_on:
+      backend-e2e:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://127.0.0.1:80",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  playwright-e2e:
+    profiles:
+      - e2e
+    image: mcr.microsoft.com/playwright:v1.54.0-noble@sha256:18d6adb6aaccf1b0f30eba890069972e089138e4a59ddb5303d7e7290e4e38b6
+    working_dir: /app
+    volumes:
+      - ../ui/tests:/app/tests:ro
+      - ../ui/playwright.config.ts:/app/playwright.config.ts:ro
+      - ../ui/package.json:/app/package.json:ro
+      - ../ui/playwright-report:/app/playwright-report
+      - ../ui/node_modules:/app/node_modules:ro
+    environment:
+      - CI=true
+      - BASE_URL=http://frontend-e2e
+    depends_on:
+      frontend-e2e:
+        condition: service_healthy
+    command: npx playwright test --project=e2e
