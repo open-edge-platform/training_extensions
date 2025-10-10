@@ -11,13 +11,19 @@ WORKDIR /app
 
 ENV PYTHONPATH=/app
 
-# Install system dependencies required for OpenCV
+# Install required system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1=1.7.0-1+b2 \
     libglx-mesa0=25.0.7-2 \
     git=1:2.47.3-0+deb13u1 \
+    build-essential=12.12 \
+    curl=8.14.1-2 \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
+
+# Install Rust compiler
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
 
 # Install dependencies
 RUN --mount=type=cache,target=/root/.cache/uv \
