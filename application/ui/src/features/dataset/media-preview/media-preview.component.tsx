@@ -12,11 +12,13 @@ import { DatasetItem } from '../../annotator/types';
 import { AnnotatorButtons } from './annotator-buttons.component';
 import { ToolSelectionBar } from './primary-toolbar/primary-toolbar.component';
 import { SecondaryToolbar } from './secondary-toolbar/secondary-toolbar.component';
+import { SidebarItems } from './sidebar-items.component';
 
 type MediaPreviewProps = {
     mediaItem: DatasetItem;
     close: () => void;
 };
+
 export const MediaPreview = ({ mediaItem, close }: MediaPreviewProps) => {
     const [isFocussed, setIsFocussed] = useState(false);
 
@@ -34,8 +36,8 @@ export const MediaPreview = ({ mediaItem, close }: MediaPreviewProps) => {
                 <Grid
                     areas={['toolbar header aside', 'toolbar canvas aside', 'toolbar footer aside']}
                     width={'100%'}
-                    height={'100%'}
-                    columns={'100px 1fr 100px'}
+                    height='100%'
+                    columns={'100px calc(100% - 318px) 218px'}
                     rows={'auto 1fr auto'}
                 >
                     <Suspense fallback={<div>Loading...</div>}>
@@ -54,7 +56,7 @@ export const MediaPreview = ({ mediaItem, close }: MediaPreviewProps) => {
                             </SelectAnnotationProvider>
 
                             <View gridArea={'aside'}>
-                                <div>Aside</div>
+                                <SidebarItems />
                             </View>
 
                             <View gridArea={'footer'} padding={'size-100'} UNSAFE_style={{ textAlign: 'right' }}>
