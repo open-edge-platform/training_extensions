@@ -24,6 +24,7 @@ from app.services import (
 from app.services.base_weights_service import BaseWeightsService
 from app.services.data_collect import DataCollector
 from app.services.label_service import LabelService
+from app.services.training_configuration_service import TrainingConfigurationService
 from app.webrtc.manager import WebRTCManager
 
 
@@ -198,3 +199,8 @@ def get_label_service(db: Annotated[Session, Depends(get_db)]) -> LabelService:
 def get_base_weights_service(data_dir: Annotated[Path, Depends(get_data_dir)]) -> BaseWeightsService:
     """Provides a BaseWeightsService instance for managing base weights."""
     return BaseWeightsService(data_dir)
+
+
+def get_training_configuration_service(db: Annotated[Session, Depends(get_db)]) -> TrainingConfigurationService:
+    """Provides a TrainingConfigurationService instance for managing training configurations."""
+    return TrainingConfigurationService(db_session=db)

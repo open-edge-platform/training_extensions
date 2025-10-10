@@ -122,3 +122,14 @@ class LabelDB(BaseID):
     hotkey: Mapped[str | None] = mapped_column(String(10), nullable=True)
 
     project = relationship("ProjectDB", back_populates="labels")
+
+
+class TrainingConfigurationDB(BaseID):
+    __tablename__ = "training_configurations"
+    __table_args__ = (UniqueConstraint("project_id", "model_architecture_id", name="uq_project_model_config"),)
+
+    project_id: Mapped[str] = mapped_column(Text, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    model_architecture_id: Mapped[str | None] = mapped_column(String(255), nullable=True)  # NULL for general config
+    configuration_data: Mapped[dict] = mapped_column(JSON, nullable=False)
+
+    project = relationship("ProjectDB")
