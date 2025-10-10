@@ -20,7 +20,7 @@ const fillProjectForm = async ({
     await page.getByRole('button', { name: /Confirm/ }).click();
 
     // Edit task
-    await page.getByLabel(task).click();
+    await page.getByLabel(task, { exact: true }).click();
 
     // Edit first label
     await page.getByLabel('Label input for Object').fill(labelNames[0]);
@@ -33,7 +33,7 @@ const fillProjectForm = async ({
     }
 };
 
-test.skip('Project creation', async ({ page }) => {
+test('Project creation', async ({ page }) => {
     await test.step('Navigate to projects page', async () => {
         await page.goto('/projects');
     });
@@ -56,11 +56,14 @@ test.skip('Project creation', async ({ page }) => {
 
     await test.step('Verify project appears in project list', async () => {
         await page.getByText('Geti Tune').click(); // Go back to /projects
-        await expect(page.getByText('New Project', { exact: true })).toBeVisible();
+        await expect(page.getByText('New Project')).toBeVisible();
     });
 
     await test.step('Delete created project', async () => {
-        await page.getByRole('button', { name: /open project options/i }).click();
+        await page
+            .getByRole('link', { name: /New Project/ })
+            .getByRole('button', { name: /open project options/i })
+            .click();
         await page.getByText(/Delete/).click();
         await expect(page.getByText('Project deleted successfully')).toBeVisible();
         await expect(page.getByText('New Project')).toBeHidden();

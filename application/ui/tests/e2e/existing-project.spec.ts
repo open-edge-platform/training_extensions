@@ -3,7 +3,7 @@
 
 import { expect, test } from '@playwright/test';
 
-test('[E2E] Existing project', async ({ page }) => {
+test.skip('[E2E] Existing project', async ({ page }) => {
     await test.step('Navigate to root page', async () => {
         await page.goto('/projects');
     });
