@@ -11,6 +11,7 @@ import { getZoomState, ZOOM_STEP_DIVISOR } from './util';
 const Zoom = createContext<ZoomState>({
     scale: 1.0,
     maxZoomIn: 1,
+    hasAnimation: false,
     translate: { x: 0, y: 0 },
     initialCoordinates: { scale: 1.0, x: 0, y: 0 },
 });
@@ -48,6 +49,7 @@ export const ZoomProvider = ({ children }: { children: ReactNode }) => {
     const [zoom, setZoom] = useState<ZoomState>({
         scale: 1.0,
         maxZoomIn: 1,
+        hasAnimation: false,
         translate: { x: 0, y: 0 },
         initialCoordinates: { scale: 1.0, x: 0, y: 0 },
     });
@@ -55,21 +57,24 @@ export const ZoomProvider = ({ children }: { children: ReactNode }) => {
     const fitToScreen = () => {
         setZoom((prev) => ({
             ...prev,
+            hasAnimation: true,
             scale: prev.initialCoordinates.scale,
             translate: { x: prev.initialCoordinates.x, y: prev.initialCoordinates.y },
         }));
     };
 
-    const onZoomChange = (factor: number) => {
+    const onZoomChange = (factor: number, hasAnimation = true) => {
         setZoom((prev) => {
             const step = (prev.maxZoomIn - prev.initialCoordinates.scale) / ZOOM_STEP_DIVISOR;
 
-            return getZoomState({
+            const newState = getZoomState({
                 newScale: clampBetween(prev.initialCoordinates.scale, prev.scale + step * factor, prev.maxZoomIn),
                 cursorX: prev.initialCoordinates.x,
                 cursorY: prev.initialCoordinates.y,
                 initialCoordinates: prev.initialCoordinates,
             })(prev);
+
+            return { ...newState, hasAnimation };
         });
     };
 

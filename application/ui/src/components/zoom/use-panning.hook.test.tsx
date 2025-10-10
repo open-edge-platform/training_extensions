@@ -8,30 +8,30 @@ import { usePanning } from './use-panning.hook';
 describe('usePanning', () => {
     it('returns false by default', () => {
         const { result } = renderHook(() => usePanning());
-        expect(result.current).toBe(false);
+        expect(result.current.isPanning).toBe(false);
     });
 
     it('sets isPanning to true on Space keydown', () => {
         const { result } = renderHook(() => usePanning());
 
         fireEvent.keyDown(document.body, { code: 'Space' });
-        expect(result.current).toBe(true);
+        expect(result.current.isPanning).toBe(true);
     });
 
     it('sets isPanning to false on Space keyup after keydown', () => {
         const { result } = renderHook(() => usePanning());
 
         fireEvent.keyDown(document.body, { code: 'Space' });
-        expect(result.current).toBe(true);
+        expect(result.current.isPanning).toBe(true);
 
         fireEvent.keyUp(document.body, { code: 'Space' });
-        expect(result.current).toBe(false);
+        expect(result.current.isPanning).toBe(false);
     });
 
     it('does not set isPanning to true for other keys', () => {
         const { result } = renderHook(() => usePanning());
 
         fireEvent.keyDown(document.body, { code: 'Enter' });
-        expect(result.current).toBe(false);
+        expect(result.current.isPanning).toBe(false);
     });
 });
