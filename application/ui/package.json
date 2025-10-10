@@ -9,6 +9,7 @@
     },
     "scripts": {
         "build": "rsbuild build",
+        "build:e2e": "PUBLIC_API_BASE_URL='' rsbuild build",
         "build:api": "npx openapi-typescript ./src/api/openapi-spec.json -o ./src/api/openapi-spec.d.ts  --root-types && prettier --write src/api/openapi-spec.d.ts",
         "build:api:download": "curl -o ./src/api/openapi-spec.json http://localhost:7860/api/openapi.json && prettier --write src/api/openapi-spec.json",
         "update-spec": "npm run build:api:download && npm run build:api",
@@ -27,7 +28,9 @@
         "test:unit:watch": "vitest --config vitest.config.ts --reporter=verbose --watch",
         "test:unit:coverage": "vitest --coverage",
         "test:component": "npx playwright test --project=component",
-        "test:e2e": "ENABLE_BACKEND=True npx playwright test --project=e2e",
+        "test:e2e": "npx playwright test --project=e2e",
+        "test:e2e:docker": "npm run build:e2e && cd ../docker && docker compose --profile e2e up --build --abort-on-container-exit",
+        "test:e2e:docker:watch": "cd ../docker && docker compose --profile e2e watch",
         "type-check": "tsc --noEmit",
         "tauri": "tauri"
     },
