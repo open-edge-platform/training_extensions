@@ -272,7 +272,7 @@ def _run_trial(train_func: Callable[[int], Any], bs: int, trial_queue: mp.Queue)
             or "UR error" in str(e)
             or "UR_RESULT_ERROR_UNKNOWN" in str(e)
             or "UR_RESULT_ERROR_OUT_OF_HOST_MEMORY" in str(e)
-            or "UR_RESULT_ERROR"  in str(e)
+            or "UR_RESULT_ERROR" in str(e)
         ):  # XPU OOM
             oom = True
         else:

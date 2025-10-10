@@ -271,6 +271,7 @@ def update_num_iters(param_value: int | None, config: dict) -> None:
         return
     config["max_epochs"] = param_value
 
+
 def update_batch_size(param_value: int | None, config: dict) -> None:
     """Update batch size in the config."""
     if param_value is None:
