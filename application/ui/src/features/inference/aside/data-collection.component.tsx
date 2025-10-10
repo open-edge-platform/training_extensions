@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Divider, Flex, Heading, Slider, Switch, Text } from '@geti/ui';
 import { $api } from 'src/api/client';
@@ -26,6 +26,10 @@ export const DataCollection = () => {
 
     // Local state for the slider value while dragging
     const [localRate, setLocalRate] = useState(serverRate);
+
+    useEffect(() => {
+        setLocalRate(serverRate);
+    }, [serverRate]);
 
     const toggleAutoCapturing = (isEnabled: boolean) => {
         patchPipelineMutation.mutate({
