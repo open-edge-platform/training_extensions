@@ -144,10 +144,11 @@ def test_convert_detection_dataset(fxt_project_labels, fxt_detection_dataset_ite
     project_id = str(uuid4())
     dataset_item_1 = fxt_detection_dataset_item(project_id, "cat", fxt_project_labels[0].id, 4, 5, 10, 10)
     dataset_item_2 = fxt_detection_dataset_item(project_id, "dog", fxt_project_labels[1].id, 14, 35, 10, 10)
+    get_dataset_items = MagicMock(side_effect=[[dataset_item_1, dataset_item_2], []])
     get_image_path = MagicMock(side_effect=["path1", "path2"])
 
     dataset = convert_detection_dataset(
-        project_labels=fxt_project_labels, dataset_items=[dataset_item_1, dataset_item_2], get_image_path=get_image_path
+        project_labels=fxt_project_labels, get_dataset_items=get_dataset_items, get_image_path=get_image_path
     )
 
     assert len(dataset) == 2
@@ -174,10 +175,11 @@ def test_convert_classification_dataset(fxt_project_labels, fxt_classification_d
     project_id = str(uuid4())
     dataset_item_1 = fxt_classification_dataset_item(project_id, "cat", fxt_project_labels[0].id)
     dataset_item_2 = fxt_classification_dataset_item(project_id, "dog", fxt_project_labels[1].id)
+    get_dataset_items = MagicMock(side_effect=[[dataset_item_1, dataset_item_2], []])
     get_image_path = MagicMock(side_effect=["path1", "path2"])
 
     dataset = convert_classification_dataset(
-        project_labels=fxt_project_labels, dataset_items=[dataset_item_1, dataset_item_2], get_image_path=get_image_path
+        project_labels=fxt_project_labels, get_dataset_items=get_dataset_items, get_image_path=get_image_path
     )
 
     assert len(dataset) == 2
@@ -199,10 +201,11 @@ def test_convert_multiclass_classification_dataset_item(
     dataset_item = fxt_multiclass_classification_dataset_item(
         project_id, "1", [fxt_project_labels[0].id, fxt_project_labels[1].id]
     )
+    get_dataset_items = MagicMock(side_effect=[[dataset_item], []])
     get_image_path = MagicMock(side_effect=["path1"])
 
     dataset = convert_multiclass_classification_dataset(
-        project_labels=fxt_project_labels, dataset_items=[dataset_item], get_image_path=get_image_path
+        project_labels=fxt_project_labels, get_dataset_items=get_dataset_items, get_image_path=get_image_path
     )
 
     assert len(dataset) == 1
@@ -232,10 +235,11 @@ def test_convert_instance_segmentation_dataset(fxt_project_labels, fxt_instance_
             (fxt_project_labels[1].id, [[49, 20], [59, 20], [49, 30], [59, 30]]),
         ],
     )
+    get_dataset_items = MagicMock(side_effect=[[dataset_item_1, dataset_item_2], []])
     get_image_path = MagicMock(side_effect=["path1", "path2"])
 
     dataset = convert_instance_segmentation_dataset(
-        project_labels=fxt_project_labels, dataset_items=[dataset_item_1, dataset_item_2], get_image_path=get_image_path
+        project_labels=fxt_project_labels, get_dataset_items=get_dataset_items, get_image_path=get_image_path
     )
 
     assert len(dataset) == 2
