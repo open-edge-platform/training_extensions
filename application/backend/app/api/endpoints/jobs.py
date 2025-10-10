@@ -22,7 +22,6 @@ router = APIRouter(prefix="/api/jobs", tags=["Jobs"])
     status_code=status.HTTP_202_ACCEPTED,
     responses={
         status.HTTP_202_ACCEPTED: {"description": "Job successfully created"},
-        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID or request body"},
         status.HTTP_404_NOT_FOUND: {"description": "Project not found"},
     },
 )
@@ -89,6 +88,35 @@ async def get_job(job_id: JobID) -> JobResponse:
     return JobResponse(job_id=job_id)
 
 
+@router.post(
+    "/{job_id}:cancel",
+    status_code=status.HTTP_202_ACCEPTED,
+    response_model=JobResponse,
+    responses={
+        status.HTTP_202_ACCEPTED: {"description": "Job cancel successfully requested"},
+        status.HTTP_404_NOT_FOUND: {"description": "Job with ID not found"},
+        status.HTTP_409_CONFLICT: {"description": "Job cannot be canceled in its current state"},
+    },
+)
+async def cancel_job(job_id: JobID) -> JobResponse:
+    """
+    Request cancellation of a specific job.
+
+    This endpoint allows the client to request the cancellation of a job
+    using its unique job ID. The cancellation request is processed asynchronously.
+
+    Args:
+        job_id (JobID): The unique identifier of the job to be canceled.
+
+    Returns:
+        JobResponse: The response containing the job ID of the canceled job.
+
+    Raises:
+        HTTPException: If the job is not found (404) or the cancellation fails (409).
+    """
+    return JobResponse(job_id=job_id)
+
+
 @router.get("/{job_id}/status")
 async def stream_job_status(job_id: JobID, request: Request) -> StreamingResponse:
     """
@@ -113,7 +141,7 @@ async def stream_job_status(job_id: JobID, request: Request) -> StreamingRespons
             if await request.is_disconnected():
                 break
             yield f"Hey there from {job_id}\n"
-            await asyncio.sleep(1)
+            await asyncio.sleep(0.5)
 
     return StreamingResponse(
         gen_job_updates(),
