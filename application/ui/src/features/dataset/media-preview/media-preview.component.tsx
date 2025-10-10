@@ -56,7 +56,7 @@ export const MediaPreview = ({ mediaItem, close }: MediaPreviewProps) => {
                             </SelectAnnotationProvider>
 
                             <View gridArea={'aside'}>
-                                <SidebarItems />
+                                <SidebarItems mediaItem={mediaItem} />
                             </View>
 
                             <View gridArea={'footer'} padding={'size-100'} UNSAFE_style={{ textAlign: 'right' }}>

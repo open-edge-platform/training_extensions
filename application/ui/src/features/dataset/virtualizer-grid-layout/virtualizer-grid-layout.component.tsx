@@ -3,14 +3,13 @@
 
 import { ComponentProps, ReactNode, useRef } from 'react';
 
-import { AriaComponentsListBox, GridLayout, ListBoxItem, Loading, Size, View, Virtualizer } from '@geti/ui';
+import { AriaComponentsListBox, GridLayout, ListBoxItem, Loading, View, Virtualizer } from '@geti/ui';
 import { useLoadMore } from '@react-aria/utils';
-import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { GridLayoutOptions } from 'react-aria-components';
 import { components } from 'src/api/openapi-spec';
-import { MediaState, useSelectedData } from 'src/routes/dataset/provider';
+import { MediaState } from 'src/routes/dataset/provider';
 
-import { useGetDatasetItems } from './gallery/use-get-dataset-items.hook';
+import { useGetTargetPosition } from './use-get-target-position.hook';
 
 import classes from './virtualizer-grid-layout.module.scss';
 
@@ -21,12 +20,15 @@ interface VirtualizerGridLayoutProps extends Pick<AriaComponentsListBoxProps, 's
     items: Item[];
     ariaLabel: string;
     mediaState: MediaState;
+    scrollToIndex?: number;
     selectionMode: 'single' | 'multiple' | 'none';
     layoutOptions: GridLayoutOptions;
     isLoadingMore: boolean;
     onLoadMore: () => void;
     contentItem: (item: Item) => ReactNode;
 }
+
+const MIN_SPACE = 18; // it the default values on GridLayoutOptions
 
 export const VirtualizerGridLayout = ({
     items,
@@ -36,6 +38,7 @@ export const VirtualizerGridLayout = ({
     isLoadingMore,
     selectionMode,
     layoutOptions,
+    scrollToIndex,
     onLoadMore,
     contentItem,
     onSelectionChange,
@@ -43,6 +46,16 @@ export const VirtualizerGridLayout = ({
     const ref = useRef<HTMLDivElement | null>(null);
 
     useLoadMore({ isLoading: isLoadingMore, onLoadMore }, ref);
+
+    useGetTargetPosition({
+        ref,
+        delay: 100,
+        gap: layoutOptions.minSpace?.height ?? MIN_SPACE,
+        scrollToIndex,
+        callback: (top) => {
+            ref.current?.scrollTo({ top, behavior: 'smooth' });
+        },
+    });
 
     return (
         <View UNSAFE_className={classes.mainContainer}>

@@ -1,15 +1,18 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Size } from '@geti/ui';
+import { useState } from 'react';
+
+import { Selection, Size } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import { DatasetItem } from 'src/features/annotator/types';
 import { useSelectedData } from 'src/routes/dataset/provider';
 
 import { MediaItem } from '../gallery/media-item.component';
 import { MediaThumbnail } from '../gallery/media-thumbnail.component';
 import { useGetDatasetItems } from '../gallery/use-get-dataset-items.hook';
 import { getThumbnailUrl } from '../gallery/utils';
-import { VirtualizerGridLayout } from '../virtualizer-grid-layout.component';
+import { VirtualizerGridLayout } from '../virtualizer-grid-layout/virtualizer-grid-layout.component';
 
 const layoutOptions = {
     maxColumns: 1,
@@ -18,10 +21,17 @@ const layoutOptions = {
     preserveAspectRatio: true,
 };
 
-export const SidebarItems = () => {
+type SidebarItemsProps = {
+    mediaItem: DatasetItem;
+};
+
+export const SidebarItems = ({ mediaItem }: SidebarItemsProps) => {
     const project_id = useProjectIdentifier();
-    const { mediaState, selectedKeys, setSelectedKeys } = useSelectedData();
+    const { mediaState } = useSelectedData();
+    const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set([String(mediaItem.id)]));
     const { items, hasNextPage, isFetchingNextPage, fetchNextPage } = useGetDatasetItems();
+
+    const selectedIndex = items.findIndex((item) => item.id === mediaItem.id);
 
     return (
         <VirtualizerGridLayout
@@ -32,6 +42,7 @@ export const SidebarItems = () => {
             selectedKeys={selectedKeys}
             layoutOptions={layoutOptions}
             isLoadingMore={isFetchingNextPage}
+            scrollToIndex={selectedIndex}
             onLoadMore={() => hasNextPage && fetchNextPage()}
             onSelectionChange={setSelectedKeys}
             contentItem={(item) => (

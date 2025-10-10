@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Suspense, useRef, useState } from 'react';
+import { Suspense, useState } from 'react';
 
 import { DialogContainer, Loading, Size } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
@@ -12,7 +12,7 @@ import { CheckboxInput } from '../../../components/checkbox-input/checkbox-input
 import { useSelectedData } from '../../../routes/dataset/provider';
 import { DatasetItem } from '../../annotator/types';
 import { MediaPreview } from '../media-preview/media-preview.component';
-import { VirtualizerGridLayout } from '../virtualizer-grid-layout.component';
+import { VirtualizerGridLayout } from '../virtualizer-grid-layout/virtualizer-grid-layout.component';
 import { AnnotationStateIcon } from './annotation-state-icon.component';
 import { DeleteMediaItem } from './delete-media-item/delete-media-item.component';
 import { MediaItem } from './media-item.component';
@@ -33,7 +33,6 @@ const layoutOptions = {
 };
 
 export const Gallery = ({ items, hasNextPage, isFetchingNextPage, fetchNextPage }: GalleryProps) => {
-    const ref = useRef<HTMLDivElement | null>(null);
     const project_id = useProjectIdentifier();
 
     const [selectedMediaItem, setSelectedMediaItem] = useState<null | DatasetItem>(null);
