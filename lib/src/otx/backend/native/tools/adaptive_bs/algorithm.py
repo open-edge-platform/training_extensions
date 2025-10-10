@@ -47,8 +47,8 @@ class BsSearchAlgo:
         self._max_bs = max_bs
         self._bs_try_history: dict[int, int] = {}
         self._total_mem = _get_total_memory_size()
-        self._mem_lower_bound = 0.8 * self._total_mem
-        self._mem_upper_bound = 0.85 * self._total_mem
+        self._mem_lower_bound = 0.75 * self._total_mem
+        self._mem_upper_bound = 0.9 * self._total_mem
         self._mp_ctx = mp.get_context("spawn")
 
     def _try_batch_size(self, bs: int) -> tuple[bool, int]:
@@ -122,7 +122,7 @@ class BsSearchAlgo:
             logger.warning(
                 "Even with a batch size of 2, most of the memory is used, "
                 "which could cause the training to fail midway."
-                "For safety reasons, decease bs to 1.",
+                "For safety reasons, decrease bs to 1.",
             )
             available_bs = 1
 
