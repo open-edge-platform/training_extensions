@@ -15,7 +15,7 @@ ENV PYTHONPATH=/app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1=1.7.0-1+b2 \
     libglx-mesa0=25.0.7-2 \
-    curl=8.* \
+    curl \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 

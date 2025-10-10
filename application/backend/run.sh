@@ -50,9 +50,7 @@ if [[ "$SEED_DB" == "true" ]]; then
     echo "Removing existing database: $DB_PATH"
     rm "$DB_PATH"
   fi
-  echo "Initializing database..."
   $UV_CMD app/cli.py init-db
-  echo "Seeding database with test data..."
   $UV_CMD app/cli.py seed --with-model=True
 fi
 
