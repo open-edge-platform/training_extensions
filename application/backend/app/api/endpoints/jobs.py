@@ -70,7 +70,7 @@ async def list_jobs() -> list[JobResponse]:
     "/{job_id}",
     response_model=JobResponse,
     responses={
-        status.HTTP_200_OK: {"description": "List all jobs"},
+        status.HTTP_200_OK: {"description": "Job found"},
     },
 )
 async def get_job(job_id: JobID) -> JobResponse:
