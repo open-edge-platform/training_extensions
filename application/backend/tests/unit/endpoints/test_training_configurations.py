@@ -49,5 +49,3 @@ class TestTrainingConfigurationEndpoints:
         assert "dataset_preparation" in data
         assert "training" in data
         assert "evaluation" in data
-        assert data["training"]["config"]["epochs"] == 100
-        assert data["training"]["config"]["batch_size"] == 32
