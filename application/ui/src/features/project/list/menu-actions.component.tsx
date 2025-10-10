@@ -12,6 +12,9 @@ export const MenuActions = ({ projectId }: { projectId: string }) => {
     const navigate = useNavigate();
 
     const deleteMutation = $api.useMutation('delete', '/api/projects/{project_id}', {
+        meta: {
+            invalidateQueries: [['get', '/api/projects']],
+        },
         onSuccess: () => {
             toast({ type: 'success', message: 'Project deleted successfully' });
         },

@@ -1,6 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { useEffect, useState } from 'react';
+
 import { Divider, Flex, Heading, Slider, Switch, Text } from '@geti/ui';
 import { $api } from 'src/api/client';
 import { useProjectIdentifier } from 'src/hooks/use-project-identifier.hook';
@@ -12,10 +14,22 @@ export const DataCollection = () => {
         params: { path: { project_id: projectId } },
     });
 
-    const patchPipelineMutation = $api.useMutation('patch', '/api/projects/{project_id}/pipeline');
+    const patchPipelineMutation = $api.useMutation('patch', '/api/projects/{project_id}/pipeline', {
+        meta: {
+            invalidateQueries: [['get', '/api/projects/{project_id}/pipeline']],
+        },
+    });
 
     const isAutoCapturingEnabled = pipelineQuery.data?.data_collection_policies[0]?.enabled ?? false;
     const defaultRate = 12;
+    const serverRate = pipelineQuery.data?.data_collection_policies[0]?.rate ?? defaultRate;
+
+    // Local state for the slider value while dragging
+    const [localRate, setLocalRate] = useState(serverRate);
+
+    useEffect(() => {
+        setLocalRate(serverRate);
+    }, [serverRate]);
 
     const toggleAutoCapturing = (isEnabled: boolean) => {
         patchPipelineMutation.mutate({
@@ -63,11 +77,12 @@ export const DataCollection = () => {
                     step={0.1}
                     minValue={0}
                     maxValue={60}
-                    marginY={'size-200'}
+                    value={localRate}
+                    onChange={setLocalRate}
                     onChangeEnd={updateRate}
+                    marginY={'size-200'}
                     label='Rate'
-                    aria-label={'capture rate'}
-                    defaultValue={defaultRate}
+                    isDisabled={patchPipelineMutation.isPending}
                 />
             </Flex>
         </Flex>

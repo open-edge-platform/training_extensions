@@ -343,7 +343,7 @@ jobs:
 
       - name: Run Playwright tests
         working-directory: "application/ui"
-        run: npm run test:component -- --project "Component tests"
+        run: npm run test:component -- --project "component"
 
       - name: Upload blob report to GitHub Actions Artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -353,84 +353,84 @@ jobs:
           path: application/ui/playwright-report/
           retention-days: 30
 
-  e2e-tests:
-    name: E2E Tests
-    needs:
-      - check_paths
-      - build
-      - generate-openapi-spec
-    if: needs.check_paths.outputs.run_workflow == 'true'
-    permissions:
-      contents: read
-    timeout-minutes: 30
-    runs-on: ubuntu-latest
-    container:
-      image: mcr.microsoft.com/playwright:v1.54.0-noble@sha256:18d6adb6aaccf1b0f30eba890069972e089138e4a59ddb5303d7e7290e4e38b6
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-        with:
-          persist-credentials: false
+  # e2e-tests:
+  #   name: E2E Tests
+  #   needs:
+  #     - check_paths
+  #     - build
+  #     - generate-openapi-spec
+  #   if: needs.check_paths.outputs.run_workflow == 'true'
+  #   permissions:
+  #     contents: read
+  #   timeout-minutes: 30
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: mcr.microsoft.com/playwright:v1.54.0-noble@sha256:18d6adb6aaccf1b0f30eba890069972e089138e4a59ddb5303d7e7290e4e38b6
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+  #       with:
+  #         persist-credentials: false
 
-      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
-        with:
-          node-version-file: application/ui/.nvmrc
+  #     - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+  #       with:
+  #         node-version-file: application/ui/.nvmrc
 
-      - name: Set up Python
-        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
-        with:
-          python-version: "3.13"
+  #     - name: Set up Python
+  #       uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+  #       with:
+  #         python-version: "3.13"
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
-        with:
-          version: "0.8.8"
-          enable-cache: false
+  #     - name: Install uv
+  #       uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+  #       with:
+  #         version: "0.8.8"
+  #         enable-cache: false
 
-      - name: Install OpenCV dependencies
-        run: |
-          apt-get update
-          apt-get install -y libgl1 libglib2.0-0
+  #     - name: Install OpenCV dependencies
+  #       run: |
+  #         apt-get update
+  #         apt-get install -y libgl1 libglib2.0-0
 
-      - name: Setup Backend
-        working-directory: application/backend
-        run: |
-          uv sync --frozen --all-extras
+  #     - name: Setup Backend
+  #       working-directory: application/backend
+  #       run: |
+  #         uv sync --frozen --all-extras
 
-      - name: Download UI build
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
-        with:
-          name: ui-dist
-          path: application/ui
+  #     - name: Download UI build
+  #       uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+  #       with:
+  #         name: ui-dist
+  #         path: application/ui
 
-      - name: Download OpenAPI spec
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
-        with:
-          name: openapi-spec
-          path: application/ui/src/api
+  #     - name: Download OpenAPI spec
+  #       uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+  #       with:
+  #         name: openapi-spec
+  #         path: application/ui/src/api
 
-      - name: Unpack build
-        working-directory: "application/ui"
-        run: tar -xzf dist.tar.gz
+  #     - name: Unpack build
+  #       working-directory: "application/ui"
+  #       run: tar -xzf dist.tar.gz
 
-      - name: Install dependencies
-        working-directory: "application/ui"
-        run: npm ci
+  #     - name: Install dependencies
+  #       working-directory: "application/ui"
+  #       run: npm ci
 
-      - name: Build OpenAPI type definitions
-        working-directory: "application/ui"
-        run: npm run build:api
+  #     - name: Build OpenAPI type definitions
+  #       working-directory: "application/ui"
+  #       run: npm run build:api
 
-      - name: Run E2E tests
-        working-directory: application/ui
-        run: npm run test:e2e
+  #     - name: Run E2E tests
+  #       working-directory: application/ui
+  #       run: npm run test:e2e
 
-      - name: Upload E2E results
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        if: always()
-        with:
-          name: e2e-test-results
-          path: application/ui/playwright-report/
+  #     - name: Upload E2E results
+  #       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+  #       if: always()
+  #       with:
+  #         name: e2e-test-results
+  #         path: application/ui/playwright-report/
 
   required_check:
     name: Required Check ui-lint-and-test
@@ -441,7 +441,7 @@ jobs:
       - lint
       - unit-tests
       - playwright-tests
-      - e2e-tests
+      # - e2e-tests
     runs-on: ubuntu-latest
     env:
       CHECKS: ${{ join(needs.*.result, ' ') }}

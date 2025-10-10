@@ -6,12 +6,17 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { ZoomFitScreen } from './zoom-fit-screen.component';
 
-const mockedSetZoom = vi.fn();
+const mockedFitToScreen = vi.fn();
+
 vi.mock(import('../../../components/zoom/zoom.provider'), async (importOriginal) => {
     const actual = await importOriginal();
     return {
         ...actual,
-        useSetZoom: () => mockedSetZoom,
+        useSetZoom: () => ({
+            setZoom: vi.fn(),
+            fitToScreen: mockedFitToScreen,
+            onZoomChange: vi.fn(),
+        }),
     };
 });
 
@@ -20,24 +25,11 @@ describe('ZoomFitScreen', () => {
         vi.clearAllMocks();
     });
 
-    it('calls onFitScreen when button is clicked', () => {
+    it('calls fitToScreen when button is clicked', () => {
         render(<ZoomFitScreen />);
 
         fireEvent.click(screen.getByRole('button', { name: /fit to screen/i }));
 
-        expect(mockedSetZoom).toHaveBeenCalledTimes(1);
-        const setZoomCall = mockedSetZoom.mock.calls[0][0];
-
-        const mockPrev = {
-            scale: 2,
-            translate: { x: 100, y: 200 },
-            initialCoordinates: { scale: 1, x: 0, y: 0 },
-        };
-
-        expect(setZoomCall(mockPrev)).toEqual({
-            ...mockPrev,
-            scale: mockPrev.initialCoordinates.scale,
-            translate: { x: mockPrev.initialCoordinates.x, y: mockPrev.initialCoordinates.y },
-        });
+        expect(mockedFitToScreen).toHaveBeenCalledTimes(1);
     });
 });

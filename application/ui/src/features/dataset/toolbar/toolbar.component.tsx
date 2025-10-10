@@ -20,7 +20,11 @@ export const Toolbar = ({ items }: ToolbarProps) => {
     const projectId = useProjectIdentifier();
     const { selectedKeys, setSelectedKeys, setMediaState, toggleSelectedKeys } = useSelectedData();
 
-    const addItemMutation = $api.useMutation('post', '/api/projects/{project_id}/dataset/items');
+    const addItemMutation = $api.useMutation('post', '/api/projects/{project_id}/dataset/items', {
+        meta: {
+            invalidateQueries: [['get', '/api/projects/{project_id}/dataset/items']],
+        },
+    });
 
     const totalSelectedElements = selectedKeys instanceof Set ? selectedKeys.size : 0;
     const hasSelectedElements = totalSelectedElements > 0;

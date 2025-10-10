@@ -24,6 +24,9 @@ export const DeleteMediaItem = ({ itemsIds = [], onDeleted }: DeleteMediaItemPro
     const alertDialogState = useOverlayTriggerState({});
 
     const removeMutation = $api.useMutation('delete', `/api/projects/{project_id}/dataset/items/{dataset_item_id}`, {
+        meta: {
+            invalidateQueries: [['get', '/api/projects/{project_id}/dataset/items']],
+        },
         onError: (error, { params: { path } }) => {
             const { dataset_item_id: itemId } = path;
 
