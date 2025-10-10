@@ -99,7 +99,7 @@ def create_sink(
     """Create and configure a new sink"""
     try:
         return configuration_service.create_sink(sink_create)
-    except ResourceWithNameAlreadyExistsError as e:
+    except (ResourceWithNameAlreadyExistsError, ResourceWithIdAlreadyExistsError) as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 
@@ -141,6 +141,7 @@ def get_sink(
         status.HTTP_200_OK: {"description": "Sink successfully updated", "model": Sink},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid sink ID or request body"},
         status.HTTP_404_NOT_FOUND: {"description": "Sink not found"},
+        status.HTTP_409_CONFLICT: {"description": "Sink already exists"},
     },
 )
 def update_sink(
@@ -161,6 +162,8 @@ def update_sink(
         return configuration_service.update_sink(sink_id, sink_config)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except ResourceWithNameAlreadyExistsError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 
 @router.post(

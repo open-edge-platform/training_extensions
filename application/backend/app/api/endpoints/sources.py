@@ -114,7 +114,7 @@ def create_source(
     """Create and configure a new source"""
     try:
         return configuration_service.create_source(source_create)
-    except ResourceWithNameAlreadyExistsError as e:
+    except (ResourceWithNameAlreadyExistsError, ResourceWithIdAlreadyExistsError) as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 
@@ -156,6 +156,7 @@ def get_source(
         status.HTTP_200_OK: {"description": "Source successfully updated", "model": Source},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid source ID or request body"},
         status.HTTP_404_NOT_FOUND: {"description": "Source not found"},
+        status.HTTP_409_CONFLICT: {"description": "Source already exists"},
     },
 )
 def update_source(
@@ -176,6 +177,8 @@ def update_source(
         return configuration_service.update_source(source_id, source_config)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except ResourceWithNameAlreadyExistsError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 
 @router.post(
