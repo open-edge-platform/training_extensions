@@ -91,6 +91,7 @@ export const ZoomTransform = ({ children, target, zoomInMultiplier = 10, zoomOut
     const handleTranslateUpdate = ({ x, y }: Point) => {
         setZoom((prev) => ({
             ...prev,
+            hasAnimation: false,
             translate: { x: prev.translate.x + x, y: prev.translate.y + y },
         }));
     };
@@ -115,6 +116,7 @@ export const ZoomTransform = ({ children, target, zoomInMultiplier = 10, zoomOut
                 className={classes.wrapperInternal}
                 style={{
                     transformOrigin: '0 0',
+                    transition: zoom.hasAnimation ? 'transform 0.2s ease' : 'none',
                     transform: `translate(${zoom.translate.x}px, ${zoom.translate.y}px) scale(${zoom.scale})`,
                 }}
             >

@@ -10,5 +10,6 @@ export type ZoomState = {
     scale: number;
     maxZoomIn: number;
     translate: Point;
+    hasAnimation: boolean;
     initialCoordinates: Point & { scale: number };
 };
