@@ -115,16 +115,16 @@ class BsSearchAlgo:
             if oom:
                 logger.warning(
                     "The auto batch size algorithm attempted to use a batch size of 2 but still "
-                    "encountered a CUDA OOM error. OTX will proceed with training at batch size 2; "
-                    "however, you will likely encounter a CUDA OOM error once training starts. "
-                    "If the issue persists, please report it accordingly.",
+                    "encountered a CUDA OOM error. OTX will proceed with training at batch size 1; "
+                    "however, it is also possible to encounter a CUDA OOM error during training.",
                 )
-                return 2
+                return 1
             logger.warning(
                 "Even with a batch size of 2, most of the memory is used, "
-                "which could cause the training to fail midway.",
+                "which could cause the training to fail midway."
+                "For safety reasons, decease bs to 1.",
             )
-            available_bs = 2
+            available_bs = 1
 
         return available_bs
 
@@ -157,9 +157,10 @@ class BsSearchAlgo:
                     raise RuntimeError(msg)
                 logger.warning(
                     "Even with a batch size of 2, most of the memory is used, "
-                    "which could cause the training to fail midway.",
+                    "which could cause the training to fail midway."
+                    "For safety reasons, decease bs to 1.",
                 )
-                return 2
+                return 1
 
             return self.auto_decrease_batch_size()
 
