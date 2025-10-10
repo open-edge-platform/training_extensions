@@ -39,7 +39,8 @@ async def submit_job(
     """
     try:
         # TODO: Request job scheduling using Jobs Control Plane (TBD)
-        return JobResponse(job_id=job_request.id)
+        _ = job_request
+        return JobResponse(job_id=uuid4())
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ValueError as e:

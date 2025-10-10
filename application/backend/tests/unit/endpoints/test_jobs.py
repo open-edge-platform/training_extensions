@@ -21,7 +21,7 @@ class TestJobEndpoints:
         )
         response = fxt_client.post("/api/jobs", json=job_request.model_dump(mode="json"))
         assert response.status_code == status.HTTP_202_ACCEPTED
-        assert response.json() == {"job_id": str(job_request.id)}
+        assert response.json()["job_id"]
 
     def test_list_jobs(self, fxt_client):
         response = fxt_client.get("/api/jobs")
