@@ -2,6 +2,7 @@
 
 # Backend files
 !backend/app
+!backend/run.sh
 !backend/pyproject.toml
 !backend/uv.lock
 
