@@ -158,7 +158,7 @@ class BsSearchAlgo:
                 logger.warning(
                     "Even with a batch size of 2, most of the memory is used, "
                     "which could cause the training to fail midway."
-                    "For safety reasons, decease bs to 1.",
+                    "For safety reasons, decrease bs to 1.",
                 )
                 return 1
 
