@@ -17,10 +17,6 @@ Geti Tune is a full-stack application for efficiently fine-tuning state-of-the-a
 # Full E2E setup with database seeding and test file downloads
 DATABASE_FILE=geti_tune_e2e.db SEED_DB=true DOWNLOAD_FILES=true ./run.sh
 
-# Or use the convenience script
-./start_e2e.sh
-```
-
 ## Configuration
 
 ### What `run.sh` Does
