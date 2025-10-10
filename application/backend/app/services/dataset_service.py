@@ -26,10 +26,11 @@ from app.schemas.dataset_item import (
 )
 from app.schemas.project import ProjectBase, TaskType
 from app.schemas.shape import FullImage, Polygon, Rectangle
-from app.services import ProjectService
-from app.services.base import ResourceNotFoundError, ResourceType
-from app.services.mappers.dataset_item_mapper import DatasetItemMapper
 from app.utils.images import crop_to_thumbnail
+
+from .base import ResourceNotFoundError, ResourceType
+from .mappers.dataset_item_mapper import DatasetItemMapper
+from .project_service import ProjectService
 
 logger = logging.getLogger(__name__)
 

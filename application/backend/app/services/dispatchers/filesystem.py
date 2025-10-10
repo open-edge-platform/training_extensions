@@ -10,7 +10,8 @@ import numpy as np
 from model_api.models.result import Result
 
 from app.schemas.sink import FolderSinkConfig, OutputFormat
-from app.services.dispatchers.base import BaseDispatcher
+
+from .base import BaseDispatcher
 
 logger = logging.getLogger(__name__)
 

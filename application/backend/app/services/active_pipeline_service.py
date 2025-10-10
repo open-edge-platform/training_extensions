@@ -11,8 +11,9 @@ from app.db import get_db_session
 from app.repositories import PipelineRepository
 from app.schemas import DisconnectedSinkConfig, DisconnectedSourceConfig, ProjectView, Sink, Source
 from app.schemas.pipeline import DataCollectionPolicy
-from app.services import LabelService
-from app.services.mappers import ProjectMapper, SinkMapper, SourceMapper
+
+from .label_service import LabelService
+from .mappers import ProjectMapper, SinkMapper, SourceMapper
 
 logger = logging.getLogger(__name__)
 

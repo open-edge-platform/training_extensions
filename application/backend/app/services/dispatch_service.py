@@ -4,7 +4,8 @@
 from collections.abc import Callable, Sequence
 
 from app.schemas import Sink, SinkType
-from app.services.dispatchers import Dispatcher, FolderDispatcher, MqttDispatcher, WebhookDispatcher
+
+from .dispatchers import Dispatcher, FolderDispatcher, MqttDispatcher, WebhookDispatcher
 
 
 class DispatchService:

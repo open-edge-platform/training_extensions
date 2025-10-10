@@ -11,7 +11,8 @@ import numpy as np
 from model_api.models.result import Result
 
 from app.schemas.sink import MqttSinkConfig
-from app.services.dispatchers.base import BaseDispatcher
+
+from .base import BaseDispatcher
 
 try:
     import paho.mqtt.client as mqtt

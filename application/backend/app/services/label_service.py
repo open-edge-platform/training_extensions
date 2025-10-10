@@ -9,8 +9,9 @@ from app.db.schema import LabelDB
 from app.repositories import LabelRepository
 from app.repositories.base import PrimaryKeyIntegrityError, UniqueConstraintIntegrityError
 from app.schemas import Label
-from app.services import ResourceType, ResourceWithIdAlreadyExistsError
-from app.services.mappers.label_mapper import LabelMapper
+
+from .base import ResourceType, ResourceWithIdAlreadyExistsError
+from .mappers.label_mapper import LabelMapper
 
 
 def _convert_labels_to_db(labels: list[Label], project_id: UUID) -> list[LabelDB]:

@@ -9,10 +9,11 @@ from sqlalchemy.orm import Session
 from app.repositories import DatasetItemRepository, PipelineRepository, ProjectRepository
 from app.repositories.base import PrimaryKeyIntegrityError
 from app.schemas import Label, ProjectCreate, ProjectView
-from app.services.base import ResourceInUseError, ResourceNotFoundError, ResourceType, ResourceWithIdAlreadyExistsError
-from app.services.label_service import LabelService
-from app.services.mappers.project_mapper import ProjectMapper
-from app.services.parent_process_guard import parent_process_only
+
+from .base import ResourceInUseError, ResourceNotFoundError, ResourceType, ResourceWithIdAlreadyExistsError
+from .label_service import LabelService
+from .mappers.project_mapper import ProjectMapper
+from .parent_process_guard import parent_process_only
 
 MSG_ERR_DELETE_ACTIVE_PROJECT = "Cannot delete a project with a running pipeline."
 

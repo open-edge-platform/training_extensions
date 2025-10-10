@@ -13,7 +13,8 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 from app.schemas.sink import WebhookSinkConfig
-from app.services.dispatchers.base import BaseDispatcher
+
+from .base import BaseDispatcher
 
 logger = logging.getLogger(__name__)
 

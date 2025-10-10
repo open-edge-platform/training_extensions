@@ -12,10 +12,17 @@ from sqlalchemy.orm import Session
 from app.repositories import PipelineRepository, SinkRepository, SourceRepository
 from app.repositories.base import UniqueConstraintIntegrityError
 from app.schemas import Sink, Source
-from app.services import ActivePipelineService, ResourceWithNameAlreadyExistsError
-from app.services.base import GenericPersistenceService, ResourceNotFoundError, ResourceType, ServiceConfig
-from app.services.mappers import SinkMapper, SourceMapper
-from app.services.parent_process_guard import parent_process_only
+
+from .active_pipeline_service import ActivePipelineService
+from .base import (
+    GenericPersistenceService,
+    ResourceNotFoundError,
+    ResourceType,
+    ResourceWithNameAlreadyExistsError,
+    ServiceConfig,
+)
+from .mappers import SinkMapper, SourceMapper
+from .parent_process_guard import parent_process_only
 
 logger = logging.getLogger(__name__)
 
