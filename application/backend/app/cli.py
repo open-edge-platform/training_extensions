@@ -93,6 +93,8 @@ def seed(with_model: bool) -> None:
             task_type=TaskType.DETECTION,
             exclusive_labels=True,
         )
+        db.add(project)
+        db.flush()
         labels = [
             LabelDB(project_id=project_id, name="Clubs", color="#2d6311", hotkey="c"),
             LabelDB(project_id=project_id, name="Diamonds", color="#baa3b3", hotkey="d"),
@@ -100,7 +102,7 @@ def seed(with_model: bool) -> None:
             LabelDB(project_id=project_id, name="Hearts", color="#1f016b", hotkey="h"),
             LabelDB(project_id=project_id, name="No_object", color="#565a84", hotkey="n"),
         ]
-        db.add_all([*labels, project])
+        db.add_all(labels)
         db.flush()
 
         # Create default disconnected source and sink
