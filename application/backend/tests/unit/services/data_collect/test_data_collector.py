@@ -7,7 +7,7 @@ from uuid import uuid4
 
 import numpy as np
 import pytest
-from freezegun import freeze_time
+import time_machine
 
 from app.schemas.dataset_item import DatasetItemAnnotation, DatasetItemFormat
 from app.schemas.label import LabelReference
@@ -83,7 +83,7 @@ class TestDataCollectorUnit:
         mock_convert_prediction.assert_not_called()
         mock_create_dataset_item.assert_not_called()
 
-    @freeze_time("2025-01-01 00:00:01")
+    @time_machine.travel("2025-01-01 00:00:01 +0000", tick=False)
     def test_collect_by_flag(self, fxt_data_collector):
         """
         Image should be collected if should_collect_next_frame flag has been set
@@ -133,7 +133,7 @@ class TestDataCollectorUnit:
             annotations=annotations,
         )
 
-    @freeze_time("2025-01-01 00:00:01")
+    @time_machine.travel("2025-01-01 00:00:01 +0000", tick=False)
     def test_collect(self, fxt_data_collector):
         """
         Image should be collected if policy conditions are met

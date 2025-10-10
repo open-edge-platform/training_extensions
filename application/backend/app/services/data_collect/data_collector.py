@@ -60,7 +60,6 @@ class FixedRatePolicyChecker(PolicyChecker):
 
 class DataCollector:
     def __init__(self, data_dir: Path, active_pipeline_service: ActivePipelineService) -> None:
-        super().__init__()
         self.should_collect_next_frame = False
         self.data_dir = data_dir
         self.active_pipeline_service = active_pipeline_service
