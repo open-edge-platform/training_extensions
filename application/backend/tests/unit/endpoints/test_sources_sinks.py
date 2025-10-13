@@ -17,10 +17,10 @@ from app.schemas.sink import FolderSinkConfig, MqttSinkConfig
 from app.schemas.source import VideoFileSourceConfig, WebcamSourceConfig
 from app.services import (
     ConfigurationService,
-    ResourceAlreadyExistsError,
     ResourceInUseError,
     ResourceNotFoundError,
     ResourceType,
+    ResourceWithNameAlreadyExistsError,
 )
 
 
@@ -142,7 +142,7 @@ class TestSourceAndSinkEndpoints:
         self, resource_type, api_path, fixture_name, create_method, fxt_config_service, fxt_client, request
     ):
         fxt_config = request.getfixturevalue(fixture_name)
-        getattr(fxt_config_service, create_method).side_effect = ResourceAlreadyExistsError(
+        getattr(fxt_config_service, create_method).side_effect = ResourceWithNameAlreadyExistsError(
             resource_type=resource_type, resource_name="New Config"
         )
         response = fxt_client.post(f"/api/{api_path}", json=fxt_config.model_dump(exclude={"id"}))
@@ -397,7 +397,7 @@ class TestSourceAndSinkEndpoints:
         fxt_config = request.getfixturevalue(fixture_name)
         sink_data = fxt_config.model_dump(exclude={"id"}, mode="json")
         yaml_content = yaml.safe_dump(sink_data)
-        getattr(fxt_config_service, create_method).side_effect = ResourceAlreadyExistsError(
+        getattr(fxt_config_service, create_method).side_effect = ResourceWithNameAlreadyExistsError(
             resource_type=ResourceType(api_path[:-1].capitalize()), resource_name="New Config"
         )
 

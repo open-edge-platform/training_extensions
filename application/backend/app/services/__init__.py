@@ -1,8 +1,15 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
 from .active_model_service import ActiveModelService
 from .active_pipeline_service import ActivePipelineService
-from .base import ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError, ResourceType
+from .base import (
+    ResourceInUseError,
+    ResourceNotFoundError,
+    ResourceType,
+    ResourceWithIdAlreadyExistsError,
+    ResourceWithNameAlreadyExistsError,
+)
 from .configuration_service import ConfigurationService
 from .dataset_service import DatasetService
 from .dispatch_service import DispatchService
@@ -25,10 +32,11 @@ __all__ = [
     "ModelService",
     "PipelineService",
     "ProjectService",
-    "ResourceAlreadyExistsError",
     "ResourceInUseError",
     "ResourceNotFoundError",
     "ResourceType",
+    "ResourceWithIdAlreadyExistsError",
+    "ResourceWithNameAlreadyExistsError",
     "SystemService",
     "VideoStreamService",
 ]

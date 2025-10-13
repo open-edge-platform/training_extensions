@@ -4,12 +4,12 @@
 import { fireEvent, render, screen } from 'test-utils/render';
 import { describe, expect, it, vi } from 'vitest';
 
-import { useZoom } from '../../../components/zoom/zoom.provider';
+import { useZoom } from '../../../../../components/zoom/zoom.provider';
 import { ZoomSelector } from './zoom-selector.component';
 
 const mockedOnZoomChange = vi.fn();
 
-vi.mock(import('../../../components/zoom/zoom.provider'), async (importOriginal) => {
+vi.mock(import('../../../../../components/zoom/zoom.provider'), async (importOriginal) => {
     const actual = await importOriginal();
     return {
         ...actual,
@@ -31,6 +31,7 @@ describe('ZoomSelector', () => {
         vi.mocked(useZoom).mockReturnValue({
             scale: 0.21,
             maxZoomIn: 0,
+            hasAnimation: false,
             translate: { x: 0, y: 0 },
             initialCoordinates: { scale: 0, x: 0, y: 0 },
         });
@@ -43,6 +44,7 @@ describe('ZoomSelector', () => {
         vi.mocked(useZoom).mockReturnValue({
             scale: 0.5,
             maxZoomIn: 2,
+            hasAnimation: false,
             translate: { x: 0, y: 0 },
             initialCoordinates: { scale: 0, x: 0, y: 0 },
         });
@@ -57,6 +59,7 @@ describe('ZoomSelector', () => {
         vi.mocked(useZoom).mockReturnValue({
             scale: 1,
             maxZoomIn: 2,
+            hasAnimation: false,
             translate: { x: 0, y: 0 },
             initialCoordinates: { scale: 0, x: 0, y: 0 },
         });
@@ -71,6 +74,7 @@ describe('ZoomSelector', () => {
         vi.mocked(useZoom).mockReturnValue({
             scale: 2,
             maxZoomIn: 2,
+            hasAnimation: false,
             translate: { x: 0, y: 0 },
             initialCoordinates: { scale: 0, x: 0, y: 0 },
         });
@@ -84,6 +88,7 @@ describe('ZoomSelector', () => {
         vi.mocked(useZoom).mockReturnValue({
             scale: 0.1,
             maxZoomIn: 2,
+            hasAnimation: false,
             translate: { x: 0, y: 0 },
             initialCoordinates: { scale: 0.1, x: 0, y: 0 },
         });

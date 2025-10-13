@@ -16,8 +16,6 @@ import {
     TextField,
     View,
 } from '@geti/ui';
-import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-import { useNavigate } from 'react-router';
 import { v4 as uuid } from 'uuid';
 
 import { $api } from '../../api/client';
@@ -29,7 +27,6 @@ import {
     SchemaWebhookSinkConfig,
 } from '../../api/openapi-spec';
 import { RadioDisclosure } from '../../components/radio-disclosure-group/radio-disclosure-group';
-import { paths } from '../../constants/paths';
 import { ReactComponent as IconFolder } from './../../assets/icons/folder-arrow-right.svg';
 import { ReactComponent as IconMQTT } from './../../assets/icons/mqtt.svg';
 import { ReactComponent as IconRos } from './../../assets/icons/ros.svg';
@@ -246,9 +243,6 @@ const SINK_ITEMS = [
 ] satisfies Array<{ sink_type: SinkType; name: string; icon: ReactNode }>;
 
 export const Sink = () => {
-    const navigate = useNavigate();
-    const projectId = useProjectIdentifier();
-
     const sinks = $api.useSuspenseQuery('get', '/api/sinks');
     const sinkMutation = $api.useMutation('post', '/api/sinks');
     const currentSinks: SinkConfig[] = sinks.data;
@@ -281,8 +275,6 @@ export const Sink = () => {
         sinkMutation.mutateAsync({
             body: sinkPayload,
         });
-
-        navigate(paths.project.inference({ projectId }));
     };
 
     return (

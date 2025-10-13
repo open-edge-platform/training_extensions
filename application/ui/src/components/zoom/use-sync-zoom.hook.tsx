@@ -41,6 +41,7 @@ export const useSyncZoom = ({ container, target, zoomInMultiplier, zoomOutDiviso
 
         setZoom({
             scale,
+            hasAnimation: false,
             maxZoomIn: scale * zoomInMultiplier,
             translate: {
                 x: Number(targetZoom.x.toFixed(3)),

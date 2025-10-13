@@ -35,7 +35,6 @@ class ProjectDB(BaseID):
     exclusive_labels: Mapped[bool] = mapped_column(Boolean, default=False)
 
     pipeline = relationship("PipelineDB", back_populates="project", uselist=False)
-    labels = relationship("LabelDB", back_populates="project")
     model_revisions = relationship("ModelRevisionDB", back_populates="project")
 
 
@@ -120,5 +119,3 @@ class LabelDB(BaseID):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     color: Mapped[str | None] = mapped_column(String(7), nullable=True)
     hotkey: Mapped[str | None] = mapped_column(String(10), nullable=True)
-
-    project = relationship("ProjectDB", back_populates="labels")

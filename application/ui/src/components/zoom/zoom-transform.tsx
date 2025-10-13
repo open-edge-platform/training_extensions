@@ -1,14 +1,16 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ReactNode, useRef, useState } from 'react';
+import { ReactNode, useRef } from 'react';
 
 import { clampBetween } from '@geti/smart-tools/utils';
 import { createUseGesture, dragAction, pinchAction, wheelAction } from '@use-gesture/react';
 
+import { Point } from './types';
 import { useContainerSize } from './use-container-size';
 import { usePanning } from './use-panning.hook';
 import { Size, useSyncZoom } from './use-sync-zoom.hook';
+import { useWheelPanning } from './use-wheel-panning.hook';
 import { getZoomState } from './util';
 import { useSetZoom, useZoom } from './zoom.provider';
 
@@ -26,10 +28,11 @@ const useGesture = createUseGesture([wheelAction, pinchAction, dragAction]);
 export const ZoomTransform = ({ children, target, zoomInMultiplier = 10, zoomOutDivisor = 2 }: ZoomTransformProps) => {
     const zoom = useZoom();
     const { setZoom } = useSetZoom();
-    const isPanning = usePanning();
-    const [isGrabbing, setIsGrabbing] = useState(false);
+    const { isPanning, setIsPanning } = usePanning();
     const containerRef = useRef<HTMLDivElement>(null);
     const containerSize = useContainerSize(containerRef);
+    const { onPointerDown, onPointerUp, onPointerMove, onMouseLeave, isGrabbing } = useWheelPanning(setIsPanning);
+
     useSyncZoom({ container: containerSize, zoomInMultiplier, zoomOutDivisor, target });
 
     const cursorIcon = isPanning && isGrabbing ? 'grabbing' : isPanning ? 'grab' : 'default';
@@ -74,15 +77,7 @@ export const ZoomTransform = ({ children, target, zoomInMultiplier = 10, zoomOut
                     })
                 );
             },
-            onDrag: ({ delta: [dx, dy] }) => {
-                setZoom((prev) => ({
-                    ...prev,
-                    translate: {
-                        x: prev.translate.x + dx,
-                        y: prev.translate.y + dy,
-                    },
-                }));
-            },
+            onDrag: ({ delta: [x, y] }) => handleTranslateUpdate({ x, y }),
         },
         {
             target: containerRef,
@@ -92,6 +87,14 @@ export const ZoomTransform = ({ children, target, zoomInMultiplier = 10, zoomOut
             drag: { enabled: isPanning },
         }
     );
+
+    const handleTranslateUpdate = ({ x, y }: Point) => {
+        setZoom((prev) => ({
+            ...prev,
+            hasAnimation: false,
+            translate: { x: prev.translate.x + x, y: prev.translate.y + y },
+        }));
+    };
 
     return (
         <div
@@ -103,14 +106,17 @@ export const ZoomTransform = ({ children, target, zoomInMultiplier = 10, zoomOut
                 transform: 'translate3d(0, 0, 0)',
                 '--zoom-scale': zoom.scale,
             }}
-            onPointerUp={() => setIsGrabbing(false)}
-            onPointerDown={() => setIsGrabbing(true)}
+            onPointerMove={onPointerMove(handleTranslateUpdate)}
+            onPointerDown={onPointerDown}
+            onPointerUp={onPointerUp}
+            onMouseLeave={onMouseLeave}
         >
             <div
                 data-testid='zoom-transform'
                 className={classes.wrapperInternal}
                 style={{
                     transformOrigin: '0 0',
+                    transition: zoom.hasAnimation ? 'transform 0.2s ease' : 'none',
                     transform: `translate(${zoom.translate.x}px, ${zoom.translate.y}px) scale(${zoom.scale})`,
                 }}
             >

@@ -3,14 +3,24 @@
 
 from collections.abc import Sequence
 from datetime import UTC, datetime
+from sqlite3 import IntegrityError as SQLIntegrityError
 from typing import Generic, TypeVar
 
 from sqlalchemy import delete, exists, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.db.schema import BaseID
 
 ModelType = TypeVar("ModelType", bound=BaseID)
+
+
+class PrimaryKeyIntegrityError(Exception):
+    pass
+
+
+class UniqueConstraintIntegrityError(Exception):
+    pass
 
 
 class BaseRepository(Generic[ModelType]):
@@ -33,13 +43,19 @@ class BaseRepository(Generic[ModelType]):
     def save(self, item: ModelType) -> ModelType:
         item.updated_at = datetime.now(UTC)
         self.db.add(item)
-        self.db.flush()
+        try:
+            self.db.flush()
+        except IntegrityError as e:
+            BaseRepository._handle_integrity_error(e)
         return item
 
     def update(self, item: ModelType) -> ModelType:
         item.updated_at = datetime.now(UTC)
         updated = self.db.merge(item)
-        self.db.flush()
+        try:
+            self.db.flush()
+        except IntegrityError as e:
+            BaseRepository._handle_integrity_error(e)
         self.db.refresh(updated)
         return updated
 
@@ -53,7 +69,10 @@ class BaseRepository(Generic[ModelType]):
         for item in items:
             item.updated_at = now
         self.db.add_all(items)
-        self.db.flush()
+        try:
+            self.db.flush()
+        except IntegrityError as e:
+            BaseRepository._handle_integrity_error(e)
         return items
 
     def update_batch(self, updates: list[ModelType]) -> None:
@@ -61,9 +80,24 @@ class BaseRepository(Generic[ModelType]):
         for update in updates:
             update.updated_at = now
             self.db.merge(update)
-        self.db.flush()
+        try:
+            self.db.flush()
+        except IntegrityError as e:
+            BaseRepository._handle_integrity_error(e)
 
     def delete_batch(self, obj_ids: list[str]) -> int:
         stmt = delete(self.model).where(self.model.id.in_(obj_ids))
         result = self.db.execute(stmt)
         return result.rowcount  # type: ignore[union-attr]
+
+    @staticmethod
+    def _handle_integrity_error(error: IntegrityError) -> None:
+        if error.orig is None or not isinstance(error.orig, SQLIntegrityError):
+            raise error
+        match error.orig.sqlite_errorname:
+            case "SQLITE_CONSTRAINT_PRIMARYKEY":
+                raise PrimaryKeyIntegrityError from error
+            case "SQLITE_CONSTRAINT_UNIQUE":
+                raise UniqueConstraintIntegrityError from error
+            case _:
+                raise error

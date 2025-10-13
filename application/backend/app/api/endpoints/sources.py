@@ -17,7 +17,13 @@ from pydantic import ValidationError
 from app.api.dependencies import get_configuration_service, get_source_id
 from app.schemas import Source, SourceCreate
 from app.schemas.source import SourceCreateAdapter
-from app.services import ConfigurationService, ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError
+from app.services import (
+    ConfigurationService,
+    ResourceInUseError,
+    ResourceNotFoundError,
+    ResourceWithIdAlreadyExistsError,
+    ResourceWithNameAlreadyExistsError,
+)
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/sources", tags=["Sources"])
@@ -108,7 +114,7 @@ def create_source(
     """Create and configure a new source"""
     try:
         return configuration_service.create_source(source_create)
-    except ResourceAlreadyExistsError as e:
+    except (ResourceWithNameAlreadyExistsError, ResourceWithIdAlreadyExistsError) as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 
@@ -150,6 +156,7 @@ def get_source(
         status.HTTP_200_OK: {"description": "Source successfully updated", "model": Source},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid source ID or request body"},
         status.HTTP_404_NOT_FOUND: {"description": "Source not found"},
+        status.HTTP_409_CONFLICT: {"description": "Source already exists"},
     },
 )
 def update_source(
@@ -170,6 +177,8 @@ def update_source(
         return configuration_service.update_source(source_id, source_config)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except ResourceWithNameAlreadyExistsError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 
 @router.post(
@@ -226,7 +235,7 @@ def import_source(
         return configuration_service.create_source(source_create)
     except yaml.YAMLError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid YAML format: {str(e)}")
-    except ResourceAlreadyExistsError as e:
+    except (ResourceWithNameAlreadyExistsError, ResourceWithIdAlreadyExistsError) as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))

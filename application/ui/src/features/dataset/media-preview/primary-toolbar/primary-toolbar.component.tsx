@@ -3,12 +3,12 @@
 
 import { Flex, Grid } from '@geti/ui';
 
-import { Hotkeys } from '../../../components/tool-selection-bar/hotkeys/hotkeys.component';
-import { Settings } from '../../../components/tool-selection-bar/settings/settings.component';
-import { UndoRedo } from '../../../components/tool-selection-bar/undo-redo/undo-redo.component';
-import { AnnotatorTools } from './annotator-tools.component';
+import { AnnotatorTools } from '../../../annotator/tools/annotator-tools.component';
+import { Hotkeys } from './hotkeys/hotkeys.component';
+import { Settings } from './settings/settings.component';
+import { UndoRedo } from './undo-redo/undo-redo.component';
 
-import classes from './tool-selection-bar.module.scss';
+import classes from './primary-toolbar.module.scss';
 
 export const ToolSelectionBar = () => {
     return (

@@ -11,12 +11,13 @@ from sqlalchemy.orm import Session
 from app.repositories import PipelineRepository
 from app.schemas import PipelineStatus, PipelineView
 from app.schemas.metrics import InferenceMetrics, LatencyMetrics, PipelineMetrics, ThroughputMetrics, TimeWindow
-from app.services import ActivePipelineService
-from app.services.base import ResourceNotFoundError, ResourceType
-from app.services.data_collect import DataCollector
-from app.services.mappers import PipelineMapper
-from app.services.metrics_service import MetricsService
-from app.services.parent_process_guard import parent_process_only
+
+from .active_pipeline_service import ActivePipelineService
+from .base import ResourceNotFoundError, ResourceType
+from .data_collect import DataCollector
+from .mappers import PipelineMapper
+from .metrics_service import MetricsService
+from .parent_process_guard import parent_process_only
 
 MSG_ERR_DELETE_RUNNING_PIPELINE = "Cannot delete a running pipeline."
 
