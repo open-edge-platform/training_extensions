@@ -1,5 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+from uuid import uuid4
 
 import pytest
 
@@ -30,9 +31,11 @@ class TestLabelMapper:
 
     @pytest.mark.parametrize("schema_instance,expected_db", SUPPORTED_LABEL_MAPPING.copy())
     def test_from_schema(self, schema_instance, expected_db):
+        project_id = uuid4()
         expected_db.id = str(schema_instance.id)
-        actual_db = LabelMapper.from_schema(schema_instance)
+        actual_db = LabelMapper.from_schema(project_id=project_id, label=schema_instance)
         assert actual_db.id == expected_db.id
+        assert actual_db.project_id == str(project_id)
         assert actual_db.name == expected_db.name
         assert actual_db.color == expected_db.color
         assert actual_db.hotkey == expected_db.hotkey

@@ -3,6 +3,7 @@
 import logging
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 import cv2
@@ -13,8 +14,11 @@ from app.entities.stream_data import InferenceData
 from app.schemas import ProjectView
 from app.schemas.dataset_item import DatasetItemFormat
 from app.schemas.pipeline import FixedRateDataCollectionPolicy
-from app.services import ActivePipelineService, DatasetService
-from app.services.data_collect.prediction_converter import convert_prediction
+
+from .prediction_converter import convert_prediction
+
+if TYPE_CHECKING:
+    from app.services import ActivePipelineService
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +63,7 @@ class FixedRatePolicyChecker(PolicyChecker):
 
 
 class DataCollector:
-    def __init__(self, data_dir: Path, active_pipeline_service: ActivePipelineService) -> None:
+    def __init__(self, data_dir: Path, active_pipeline_service: "ActivePipelineService") -> None:
         self.should_collect_next_frame = False
         self.data_dir = data_dir
         self.active_pipeline_service = active_pipeline_service
@@ -96,6 +100,8 @@ class DataCollector:
             should_collect_next_frame flag is set. Timestamp is formatted to string
             with 4 decimal places for use as dataset item name.
         """
+        from app.services import DatasetService, LabelService, ProjectService
+
         should_collect = (
             any(checker.should_collect(timestamp) for checker in self.policy_checkers) or self.should_collect_next_frame
         )
@@ -106,7 +112,11 @@ class DataCollector:
             labels=project.task.labels, frame_data=frame_data, prediction=inference_data.prediction
         )
         with get_db_session() as session:
-            dataset_service = DatasetService(self.data_dir, session)
+            label_service = LabelService(db_session=session)
+            project_service = ProjectService(data_dir=self.data_dir, db_session=session, label_service=label_service)
+            dataset_service = DatasetService(
+                data_dir=self.data_dir, db_session=session, project_service=project_service, label_service=label_service
+            )
             dataset_service.create_dataset_item(
                 project_id=project.id,
                 name=f"{timestamp:.4f}".replace(".", "_"),

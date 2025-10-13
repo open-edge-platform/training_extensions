@@ -4,6 +4,7 @@
 import logging
 import os
 import os.path
+from collections.abc import Sequence
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
@@ -15,20 +16,24 @@ import numpy as np
 from PIL import Image, UnidentifiedImageError
 from sqlalchemy.orm import Session
 
-from app.db.schema import DatasetItemDB, ProjectDB
-from app.repositories import DatasetItemRepository, ProjectRepository
+from app.db.schema import DatasetItemDB
+from app.repositories import DatasetItemRepository
+from app.schemas import Label
 from app.schemas.dataset_item import (
     DatasetItem,
     DatasetItemAnnotation,
     DatasetItemAnnotationsWithSource,
     DatasetItemSubset,
 )
-from app.schemas.project import TaskType
+from app.schemas.project import ProjectBase, TaskType
 from app.schemas.shape import FullImage, Polygon, Rectangle
-from app.services.base import ResourceNotFoundError, ResourceType
 from app.services.datumaro_converter import convert_dataset
-from app.services.mappers.dataset_item_mapper import DatasetItemMapper
 from app.utils.images import crop_to_thumbnail
+
+from .base import ResourceNotFoundError, ResourceType
+from .label_service import LabelService
+from .mappers.dataset_item_mapper import DatasetItemMapper
+from .project_service import ProjectService
 
 logger = logging.getLogger(__name__)
 
@@ -51,10 +56,14 @@ class InvalidImageError(Exception):
 
 
 class DatasetService:
-    def __init__(self, data_dir: Path, db_session: Session) -> None:
+    def __init__(
+        self, data_dir: Path, db_session: Session, project_service: ProjectService, label_service: LabelService
+    ) -> None:
         self.mapper = DatasetItemMapper()
         self.projects_dir = data_dir / "projects"
         self._db_session = db_session
+        self._project_service = project_service
+        self._label_service = label_service
 
     @staticmethod
     def _read_image_from_ndarray(data: np.ndarray) -> Image.Image:
@@ -122,12 +131,9 @@ class DatasetService:
             prediction_model_id=str(prediction_model_id) if prediction_model_id is not None else None,
         )
 
-        project_repo = ProjectRepository(db=self._db_session)
-        project = project_repo.get_by_id(str(project_id))
-        if project is None:
-            raise ResourceNotFoundError(ResourceType.PROJECT, str(project_id))
+        project = self._project_service.get_project_by_id(project_id)
 
-        DatasetService._validate_annotations_labels(annotations=annotations, project=project)
+        DatasetService._validate_annotations_labels(annotations=annotations, labels=project.task.labels)
         DatasetService._validate_annotations(annotations=annotations, project=project)
         DatasetService._validate_annotations_coordinates(annotations=annotations, dataset_item=dataset_item)
 
@@ -164,7 +170,8 @@ class DatasetService:
 
     def get_dataset_item_by_id(self, project_id: UUID, dataset_item_id: UUID) -> DatasetItem:
         """Get a dataset item by its ID"""
-        repo = DatasetItemRepository(project_id=str(project_id), db=self._db_session)
+        project = self._project_service.get_project_by_id(project_id)
+        repo = DatasetItemRepository(project_id=str(project.id), db=self._db_session)
         dataset_item = repo.get_by_id(str(dataset_item_id))
         if not dataset_item:
             raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
@@ -176,28 +183,31 @@ class DatasetService:
 
     def get_dataset_item_binary_path_by_id(self, project_id: UUID, dataset_item_id: UUID) -> Path | str:
         """Get a dataset item binary content by its ID"""
-        repo = DatasetItemRepository(project_id=str(project_id), db=self._db_session)
+        project = self._project_service.get_project_by_id(project_id)
+        repo = DatasetItemRepository(project_id=str(project.id), db=self._db_session)
         dataset_item = repo.get_by_id(str(dataset_item_id))
         if not dataset_item:
             raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
-        return self.get_dataset_item_binary_path(project_id=project_id, dataset_item=dataset_item)
+        return self.get_dataset_item_binary_path(project_id=project.id, dataset_item=dataset_item)
 
     def get_dataset_item_thumbnail_path_by_id(self, project_id: UUID, dataset_item_id: UUID) -> Path | str:
         """Get a dataset item thumbnail binary content by its ID"""
-        repo = DatasetItemRepository(project_id=str(project_id), db=self._db_session)
+        project = self._project_service.get_project_by_id(project_id)
+        repo = DatasetItemRepository(project_id=str(project.id), db=self._db_session)
         dataset_item = repo.get_by_id(str(dataset_item_id))
         if not dataset_item:
             raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
-        return self.projects_dir / f"{project_id}/dataset/{dataset_item.id}-thumb.jpg"
+        return self.projects_dir / f"{project.id}/dataset/{dataset_item.id}-thumb.jpg"
 
     def delete_dataset_item(self, project_id: UUID, dataset_item_id: UUID) -> None:
         """Delete a dataset item by its ID"""
-        repo = DatasetItemRepository(project_id=str(project_id), db=self._db_session)
+        project = self._project_service.get_project_by_id(project_id)
+        repo = DatasetItemRepository(project_id=str(project.id), db=self._db_session)
         dataset_item = repo.get_by_id(str(dataset_item_id))
         if not dataset_item:
             raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
 
-        dataset_dir = self.projects_dir / f"{project_id}/dataset"
+        dataset_dir = self.projects_dir / f"{project.id}/dataset"
         try:
             os.remove(dataset_dir / f"{dataset_item.id}.{dataset_item.format}")
         except FileNotFoundError:
@@ -212,23 +222,23 @@ class DatasetService:
             raise ResourceNotFoundError(ResourceType.DATASET_ITEM, dataset_item.id)
 
     @staticmethod
-    def _validate_annotations_labels(annotations: list[DatasetItemAnnotation], project: ProjectDB) -> None:
+    def _validate_annotations_labels(annotations: list[DatasetItemAnnotation], labels: Sequence[Label]) -> None:
         for annotation in annotations:
             for annotation_label in annotation.labels:
-                project_label = next((label for label in project.labels if label.id == str(annotation_label.id)), None)
+                project_label = next((label for label in labels if label.id == annotation_label.id), None)
                 if project_label is None:
                     raise AnnotationValidationError(f"Label {str(annotation_label.id)} is not found in the project.")
 
     @staticmethod
-    def _validate_annotations(annotations: list[DatasetItemAnnotation], project: ProjectDB) -> None:  # noqa: C901
-        match project.task_type:
+    def _validate_annotations(annotations: list[DatasetItemAnnotation], project: ProjectBase) -> None:  # noqa: C901
+        match project.task.task_type:
             case TaskType.CLASSIFICATION:
                 if len(annotations) > 1:
                     raise AnnotationValidationError("Classification project doesn't allow more than one annotation.")
                 annotation = annotations[0]
                 if not isinstance(annotation.shape, FullImage):
                     raise AnnotationValidationError("Classification project supports only full_image shapes.")
-                if project.exclusive_labels and len(annotation.labels) > 1:
+                if project.task.exclusive_labels and len(annotation.labels) > 1:
                     raise AnnotationValidationError(
                         "Multiclass classification project doesn't allow more than one label per annotation."
                     )
@@ -270,11 +280,9 @@ class DatasetService:
         self, project_id: UUID, dataset_item_id: UUID, annotations: list[DatasetItemAnnotation]
     ) -> DatasetItemAnnotationsWithSource:
         """Set dataset item annotations"""
-        project_repo = ProjectRepository(db=self._db_session)
-        project = project_repo.get_by_id(str(project_id))
-        if project is None:
-            raise ResourceNotFoundError(ResourceType.PROJECT, str(project_id))
-        DatasetService._validate_annotations_labels(annotations=annotations, project=project)
+        project = self._project_service.get_project_by_id(project_id)
+
+        DatasetService._validate_annotations_labels(annotations=annotations, labels=project.task.labels)
         DatasetService._validate_annotations(annotations=annotations, project=project)
 
         repo = DatasetItemRepository(project_id=str(project_id), db=self._db_session)
@@ -298,7 +306,8 @@ class DatasetService:
 
     def get_dataset_item_annotations(self, project_id: UUID, dataset_item_id: UUID) -> DatasetItemAnnotationsWithSource:
         """Get the dataset item annotations"""
-        repo = DatasetItemRepository(project_id=str(project_id), db=self._db_session)
+        project = self._project_service.get_project_by_id(project_id)
+        repo = DatasetItemRepository(project_id=str(project.id), db=self._db_session)
         dataset_item = repo.get_by_id(str(dataset_item_id))
         if not dataset_item:
             raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
@@ -312,7 +321,8 @@ class DatasetService:
 
     def delete_dataset_item_annotations(self, project_id: UUID, dataset_item_id: UUID) -> None:
         """Delete the dataset item annotations"""
-        repo = DatasetItemRepository(project_id=str(project_id), db=self._db_session)
+        project = self._project_service.get_project_by_id(project_id)
+        repo = DatasetItemRepository(project_id=str(project.id), db=self._db_session)
         updated = repo.set_annotation_data(obj_id=str(dataset_item_id), annotation_data=[])
         if not updated:
             raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
@@ -326,9 +336,8 @@ class DatasetService:
         def _get_image_path(item: DatasetItemDB) -> str:
             return str(self.get_dataset_item_binary_path(project_id=project_id, dataset_item=item))
 
-        project_repo = ProjectRepository(db=self._db_session)
-        project = project_repo.get_by_id(str(project_id))
-        if project is None:
-            raise ResourceNotFoundError(ResourceType.PROJECT, str(project_id))
-
-        return convert_dataset(project=project, get_dataset_items=_get_dataset_items, get_image_path=_get_image_path)
+        project = self._project_service.get_project_by_id(project_id=project_id)
+        labels = self._label_service.list_all(project_id=project_id)
+        return convert_dataset(
+            project=project, labels=labels, get_dataset_items=_get_dataset_items, get_image_path=_get_image_path
+        )

@@ -1,5 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+from uuid import UUID
 
 from app.db.schema import LabelDB
 from app.schemas.label import Label
@@ -15,7 +16,9 @@ class LabelMapper:
         return Label.model_validate(label_db, from_attributes=True)
 
     @staticmethod
-    def from_schema(label: Label) -> LabelDB:
+    def from_schema(project_id: UUID, label: Label) -> LabelDB:
         """Convert Label schema to db model."""
 
-        return LabelDB(**label.model_dump(mode="json"))
+        label_db = LabelDB(**label.model_dump(mode="json"))
+        label_db.project_id = str(project_id)
+        return label_db

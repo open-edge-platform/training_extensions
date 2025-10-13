@@ -11,9 +11,10 @@ from datumaro.experimental import Dataset, Sample, bbox_field, image_path_field,
 from datumaro.experimental.categories import LabelCategories
 from datumaro.experimental.fields import polygon_field
 
-from app.db.schema import DatasetItemDB, LabelDB, ProjectDB
+from app.db.schema import DatasetItemDB
+from app.schemas import Label
 from app.schemas.dataset_item import DatasetItemAnnotation
-from app.schemas.project import TaskType
+from app.schemas.project import ProjectBase, TaskType
 from app.schemas.shape import Polygon, Rectangle
 
 logger = logging.getLogger(__name__)
@@ -74,7 +75,7 @@ S = TypeVar("S", bound=Sample)  # Sample type e.g. DetectionSample, Classificati
 
 def _convert_dataset(
     sample_type: type[S],
-    project_labels: list[LabelDB],
+    project_labels: list[Label],
     get_dataset_items: Callable[[int, int], list[DatasetItemDB]],
     get_image_path: Callable[[DatasetItemDB], str],
     convert_sample: Callable[[DatasetItemDB, str, list[UUID]], S | None],
@@ -82,7 +83,7 @@ def _convert_dataset(
     dataset: Dataset[S] = Dataset(
         sample_type, categories={"label": LabelCategories(labels=tuple([label.name for label in project_labels]))}
     )
-    project_labels_ids = [UUID(label.id) for label in project_labels]
+    project_labels_ids = [label.id for label in project_labels]
     offset = 0
     dataset_items: list[DatasetItemDB] = get_dataset_items(offset, CONVERSION_BATCH_SIZE)
     while len(dataset_items) > 0:
@@ -97,7 +98,7 @@ def _convert_dataset(
 
 
 def convert_detection_dataset(
-    project_labels: list[LabelDB],
+    project_labels: list[Label],
     get_dataset_items: Callable[[int, int], list[DatasetItemDB]],
     get_image_path: Callable[[DatasetItemDB], str],
 ) -> Dataset[DetectionSample]:
@@ -147,7 +148,7 @@ def convert_detection_dataset(
 
 
 def convert_classification_dataset(
-    project_labels: list[LabelDB],
+    project_labels: list[Label],
     get_dataset_items: Callable[[int, int], list[DatasetItemDB]],
     get_image_path: Callable[[DatasetItemDB], str],
 ) -> Dataset[ClassificationSample]:
@@ -185,7 +186,7 @@ def convert_classification_dataset(
 
 
 def convert_multiclass_classification_dataset(
-    project_labels: list[LabelDB],
+    project_labels: list[Label],
     get_dataset_items: Callable[[int, int], list[DatasetItemDB]],
     get_image_path: Callable[[DatasetItemDB], str],
 ) -> Dataset[MultilabelClassificationSample]:
@@ -224,7 +225,7 @@ def convert_multiclass_classification_dataset(
 
 
 def convert_instance_segmentation_dataset(
-    project_labels: list[LabelDB],
+    project_labels: list[Label],
     get_dataset_items: Callable[[int, int], list[DatasetItemDB]],
     get_image_path: Callable[[DatasetItemDB], str],
 ) -> Dataset[InstanceSegmentationSample]:
@@ -270,7 +271,8 @@ def convert_instance_segmentation_dataset(
 
 
 def convert_dataset(
-    project: ProjectDB,
+    project: ProjectBase,
+    labels: list[Label],
     get_dataset_items: Callable[[int, int], list[DatasetItemDB]],
     get_image_path: Callable[[DatasetItemDB], str],
 ) -> Dataset:
@@ -279,28 +281,29 @@ def convert_dataset(
 
     Args:
         project: Project to perform conversion for
+        labels: Project labels
         get_dataset_items: Function to get a batch of dataset items
         get_image_path: Function to get image path for a dataset item
 
     Returns:
         Dataset: Datumaro dataset
     """
-    match project.task_type:
+    match project.task.task_type:
         case TaskType.DETECTION:
             return convert_detection_dataset(
-                project_labels=project.labels, get_dataset_items=get_dataset_items, get_image_path=get_image_path
+                project_labels=labels, get_dataset_items=get_dataset_items, get_image_path=get_image_path
             )
         case TaskType.CLASSIFICATION:
-            if project.exclusive_labels:
+            if project.task.exclusive_labels:
                 return convert_classification_dataset(
-                    project_labels=project.labels, get_dataset_items=get_dataset_items, get_image_path=get_image_path
+                    project_labels=labels, get_dataset_items=get_dataset_items, get_image_path=get_image_path
                 )
             return convert_multiclass_classification_dataset(
-                project_labels=project.labels, get_dataset_items=get_dataset_items, get_image_path=get_image_path
+                project_labels=labels, get_dataset_items=get_dataset_items, get_image_path=get_image_path
             )
         case TaskType.INSTANCE_SEGMENTATION:
             return convert_instance_segmentation_dataset(
-                project_labels=project.labels, get_dataset_items=get_dataset_items, get_image_path=get_image_path
+                project_labels=labels, get_dataset_items=get_dataset_items, get_image_path=get_image_path
             )
         case _:
             raise Exception
