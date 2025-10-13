@@ -34,7 +34,6 @@ class TestOTXDataset:
 
         return MockOTXDataset(
             dm_subset=dm_subset,
-            task_type="",
             transforms=None,
         )
 
