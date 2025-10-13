@@ -5,6 +5,7 @@ import logging
 import multiprocessing as mp
 from multiprocessing.synchronize import Condition as ConditionClass
 from threading import Thread
+from uuid import UUID
 
 from app.db import get_db_session
 from app.repositories import PipelineRepository
@@ -17,7 +18,9 @@ from app.schemas import (
     Source,
 )
 from app.schemas.pipeline import DataCollectionPolicyAdapter
-from app.services.mappers import ProjectMapper, SinkMapper, SourceMapper
+
+from .label_service import LabelService
+from .mappers import ProjectMapper, SinkMapper, SourceMapper
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +85,7 @@ class ActivePipelineService:
 
             project = pipeline.project
             if project is not None:
-                self._project = ProjectMapper.to_schema(project)
+                self._project = ProjectMapper.to_schema(project, LabelService(db).list_all(UUID(project.id)))
             self._data_collection_policies = [
                 policy
                 for policy in [

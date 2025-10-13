@@ -18,9 +18,9 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { AnnotationActionsProvider } from 'src/features/annotator/annotation-actions-provider.component';
 import { AnnotatorProvider } from 'src/features/annotator/annotator-provider.component';
 
+import { CheckboxInput } from '../../../components/checkbox-input/checkbox-input.component';
 import { useSelectedData } from '../../../routes/dataset/provider';
 import { DatasetItem } from '../../annotator/types';
-import { CheckboxInput } from '../checkbox-input.component';
 import { MediaPreview } from '../media-preview/media-preview.component';
 import { AnnotationStateIcon } from './annotation-state-icon.component';
 import { DeleteMediaItem } from './delete-media-item/delete-media-item.component';

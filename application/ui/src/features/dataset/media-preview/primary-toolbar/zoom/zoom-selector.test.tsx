@@ -4,12 +4,12 @@
 import { fireEvent, render, screen } from 'test-utils/render';
 import { describe, expect, it, vi } from 'vitest';
 
-import { useZoom } from '../../../components/zoom/zoom.provider';
+import { useZoom } from '../../../../../components/zoom/zoom.provider';
 import { ZoomSelector } from './zoom-selector.component';
 
 const mockedOnZoomChange = vi.fn();
 
-vi.mock(import('../../../components/zoom/zoom.provider'), async (importOriginal) => {
+vi.mock(import('../../../../../components/zoom/zoom.provider'), async (importOriginal) => {
     const actual = await importOriginal();
     return {
         ...actual,

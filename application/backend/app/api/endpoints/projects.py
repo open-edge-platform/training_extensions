@@ -17,11 +17,12 @@ from app.schemas import Label, PatchLabels, ProjectCreate, ProjectUpdateName, Pr
 from app.services import (
     LabelService,
     ProjectService,
-    ResourceAlreadyExistsError,
     ResourceInUseError,
     ResourceNotFoundError,
+    ResourceWithIdAlreadyExistsError,
 )
 from app.services.data_collect import DataCollector
+from app.services.label_service import DuplicateLabelsError
 from app.supported_models.hyperparameters import Hyperparameters
 
 logger = logging.getLogger(__name__)
@@ -78,7 +79,7 @@ CREATE_PROJECT_BODY_EXAMPLES = {
     response_model=ProjectView,
     responses={
         status.HTTP_201_CREATED: {"description": "Project successfully created"},
-        status.HTTP_409_CONFLICT: {"description": "Project already exists"},
+        status.HTTP_409_CONFLICT: {"description": "Project already exists or labels have duplicated names or hotkeys"},
         status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Invalid request body"},
     },
 )
@@ -91,7 +92,7 @@ def create_project(
     """Create and configure a new project"""
     try:
         return project_service.create_project(project_config)
-    except ResourceAlreadyExistsError as e:
+    except (ResourceWithIdAlreadyExistsError, DuplicateLabelsError) as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 
@@ -180,7 +181,7 @@ def delete_project(
         status.HTTP_200_OK: {"description": "Labels updated successfully"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID or request body"},
         status.HTTP_404_NOT_FOUND: {"description": "Project or label not found"},
-        status.HTTP_409_CONFLICT: {"description": "Label(s) already exists"},
+        status.HTTP_409_CONFLICT: {"description": "Label(s) already exists or have duplicated names or hotkeys"},
     },
 )
 def update_labels(
@@ -219,7 +220,7 @@ def update_labels(
         return label_service.update_labels_in_project(project_id, labels_to_add, labels_to_edit, label_ids_to_remove)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    except ResourceAlreadyExistsError as e:
+    except (ResourceWithIdAlreadyExistsError, DuplicateLabelsError) as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 

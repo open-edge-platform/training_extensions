@@ -9,9 +9,10 @@ from sqlalchemy.orm import Session
 
 from app.repositories import ModelRevisionRepository, ProjectRepository
 from app.schemas.model import Model as ModelSchema
-from app.services.base import ResourceInUseError, ResourceNotFoundError, ResourceType
-from app.services.mappers.model_revision_mapper import ModelRevisionMapper
-from app.services.parent_process_guard import parent_process_only
+
+from .base import ResourceInUseError, ResourceNotFoundError, ResourceType
+from .mappers.model_revision_mapper import ModelRevisionMapper
+from .parent_process_guard import parent_process_only
 
 logger = logging.getLogger(__name__)
 

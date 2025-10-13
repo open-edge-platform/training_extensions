@@ -4,7 +4,7 @@
 import { ActionButton } from '@geti/ui';
 import { FitScreen } from '@geti/ui/icons';
 
-import { useSetZoom } from '../../zoom/zoom.provider';
+import { useSetZoom } from '../../../../../components/zoom/zoom.provider';
 import { IconWrapper } from '../icon-wrapper.component';
 
 export const ZoomFitScreen = () => {

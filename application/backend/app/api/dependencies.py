@@ -184,28 +184,35 @@ def get_model_service(
     return ModelService(db_session=db)
 
 
-def get_dataset_service(
-    data_dir: Annotated[Path, Depends(get_data_dir)], db: Annotated[Session, Depends(get_db)]
-) -> DatasetService:
-    """Provides a DatasetService instance."""
-    return DatasetService(data_dir=data_dir, db_session=db)
-
-
 def get_webrtc_manager(request: Request) -> WebRTCManager:
     """Provides the global WebRTCManager instance from FastAPI application's state."""
     return request.app.state.webrtc_manager
 
 
-def get_project_service(
-    data_dir: Annotated[Path, Depends(get_data_dir)], db: Annotated[Session, Depends(get_db)]
-) -> ProjectService:
-    """Provides a ProjectService instance for managing projects."""
-    return ProjectService(data_dir=data_dir, db_session=db)
-
-
 def get_label_service(db: Annotated[Session, Depends(get_db)]) -> LabelService:
     """Provides a LabelService instance for managing labels."""
     return LabelService(db_session=db)
+
+
+def get_project_service(
+    data_dir: Annotated[Path, Depends(get_data_dir)],
+    db: Annotated[Session, Depends(get_db)],
+    label_service: Annotated[LabelService, Depends(get_label_service)],
+) -> ProjectService:
+    """Provides a ProjectService instance for managing projects."""
+    return ProjectService(data_dir=data_dir, db_session=db, label_service=label_service)
+
+
+def get_dataset_service(
+    data_dir: Annotated[Path, Depends(get_data_dir)],
+    db: Annotated[Session, Depends(get_db)],
+    project_service: Annotated[ProjectService, Depends(get_project_service)],
+    label_service: Annotated[LabelService, Depends(get_label_service)],
+) -> DatasetService:
+    """Provides a DatasetService instance."""
+    return DatasetService(
+        data_dir=data_dir, db_session=db, project_service=project_service, label_service=label_service
+    )
 
 
 def get_base_weights_service(data_dir: Annotated[Path, Depends(get_data_dir)]) -> BaseWeightsService:

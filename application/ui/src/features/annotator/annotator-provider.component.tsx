@@ -3,7 +3,7 @@
 
 import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useState } from 'react';
 
-import { ToolType } from '../../components/tool-selection-bar/tools/interface';
+import { ToolType } from '../dataset/media-preview/primary-toolbar/tools/interface';
 import { useLoadImageQuery } from './hooks/use-load-image-query.hook';
 import { DatasetItem, RegionOfInterest } from './types';
 

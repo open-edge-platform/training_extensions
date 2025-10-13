@@ -7,9 +7,9 @@ from uuid import UUID, uuid4
 import numpy as np
 import pytest
 
-from app.db.schema import DatasetItemDB, LabelDB
+from app.db.schema import DatasetItemDB
 from app.schemas.dataset_item import DatasetItemAnnotation, DatasetItemSubset
-from app.schemas.label import LabelReference
+from app.schemas.label import Label, LabelReference
 from app.schemas.shape import FullImage, Point, Polygon, Rectangle, Shape
 from app.services.datumaro_converter import (
     ClassificationSample,
@@ -28,8 +28,8 @@ from app.services.datumaro_converter import (
 @pytest.fixture
 def fxt_project_labels():
     return [
-        LabelDB(id=str(uuid4()), name="cat", color="#00FF00", hotkey="c"),
-        LabelDB(id=str(uuid4()), name="dog", color="#FF0000", hotkey="d"),
+        Label(id=uuid4(), name="cat", color="#00FF00", hotkey="c"),
+        Label(id=uuid4(), name="dog", color="#FF0000", hotkey="d"),
     ]
 
 
@@ -142,8 +142,8 @@ def test_convert_polygon() -> None:
 
 def test_convert_detection_dataset(fxt_project_labels, fxt_detection_dataset_item) -> None:
     project_id = str(uuid4())
-    dataset_item_1 = fxt_detection_dataset_item(project_id, "cat", fxt_project_labels[0].id, 4, 5, 10, 10)
-    dataset_item_2 = fxt_detection_dataset_item(project_id, "dog", fxt_project_labels[1].id, 14, 35, 10, 10)
+    dataset_item_1 = fxt_detection_dataset_item(project_id, "cat", str(fxt_project_labels[0].id), 4, 5, 10, 10)
+    dataset_item_2 = fxt_detection_dataset_item(project_id, "dog", str(fxt_project_labels[1].id), 14, 35, 10, 10)
     get_dataset_items = MagicMock(side_effect=[[dataset_item_1, dataset_item_2], []])
     get_image_path = MagicMock(side_effect=["path1", "path2"])
 
@@ -173,8 +173,8 @@ def test_convert_detection_dataset(fxt_project_labels, fxt_detection_dataset_ite
 
 def test_convert_classification_dataset(fxt_project_labels, fxt_classification_dataset_item) -> None:
     project_id = str(uuid4())
-    dataset_item_1 = fxt_classification_dataset_item(project_id, "cat", fxt_project_labels[0].id)
-    dataset_item_2 = fxt_classification_dataset_item(project_id, "dog", fxt_project_labels[1].id)
+    dataset_item_1 = fxt_classification_dataset_item(project_id, "cat", str(fxt_project_labels[0].id))
+    dataset_item_2 = fxt_classification_dataset_item(project_id, "dog", str(fxt_project_labels[1].id))
     get_dataset_items = MagicMock(side_effect=[[dataset_item_1, dataset_item_2], []])
     get_image_path = MagicMock(side_effect=["path1", "path2"])
 
@@ -199,7 +199,7 @@ def test_convert_multiclass_classification_dataset_item(
 ) -> None:
     project_id = str(uuid4())
     dataset_item = fxt_multiclass_classification_dataset_item(
-        project_id, "1", [fxt_project_labels[0].id, fxt_project_labels[1].id]
+        project_id, "1", [str(fxt_project_labels[0].id), str(fxt_project_labels[1].id)]
     )
     get_dataset_items = MagicMock(side_effect=[[dataset_item], []])
     get_image_path = MagicMock(side_effect=["path1"])
@@ -223,16 +223,16 @@ def test_convert_instance_segmentation_dataset(fxt_project_labels, fxt_instance_
         project_id,
         "cat",
         [
-            (fxt_project_labels[0].id, [[0, 0], [10, 0], [10, 10], [0, 10]]),
-            (fxt_project_labels[0].id, [[20, 20], [30, 20], [30, 30], [20, 30]]),
+            (str(fxt_project_labels[0].id), [[0, 0], [10, 0], [10, 10], [0, 10]]),
+            (str(fxt_project_labels[0].id), [[20, 20], [30, 20], [30, 30], [20, 30]]),
         ],
     )
     dataset_item_2 = fxt_instance_segmentation_dataset_item(
         project_id,
         "dog",
         [
-            (fxt_project_labels[1].id, [[4, 6], [14, 6], [14, 16], [4, 16]]),
-            (fxt_project_labels[1].id, [[49, 20], [59, 20], [49, 30], [59, 30]]),
+            (str(fxt_project_labels[1].id), [[4, 6], [14, 6], [14, 16], [4, 16]]),
+            (str(fxt_project_labels[1].id), [[49, 20], [59, 20], [49, 30], [59, 30]]),
         ],
     )
     get_dataset_items = MagicMock(side_effect=[[dataset_item_1, dataset_item_2], []])
