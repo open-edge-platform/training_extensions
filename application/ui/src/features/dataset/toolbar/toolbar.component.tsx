@@ -6,9 +6,9 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { $api } from '../../../api/client';
 import { AddMediaButton } from '../../../components/add-media-button/add-media-button.component';
+import { CheckboxInput } from '../../../components/checkbox-input/checkbox-input.component';
 import { useSelectedData } from '../../../routes/dataset/provider';
 import { DatasetItem } from '../../annotator/types';
-import { CheckboxInput } from '../checkbox-input.component';
 import { DeleteMediaItem } from '../gallery/delete-media-item/delete-media-item.component';
 import { toggleMultipleSelection, updateSelectedKeysTo } from './util';
 
