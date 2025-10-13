@@ -11,6 +11,7 @@ import { SelectAnnotationProvider } from '../../annotator/select-annotation-prov
 import { DatasetItem } from '../../annotator/types';
 import { AnnotatorButtons } from './annotator-buttons.component';
 import { ToolSelectionBar } from './primary-toolbar/primary-toolbar.component';
+import { LabelSelection } from './secondary-toolbar/label-selection.component';
 import { SecondaryToolbar } from './secondary-toolbar/secondary-toolbar.component';
 
 type MediaPreviewProps = {
@@ -37,7 +38,6 @@ export const MediaPreview = ({ mediaItem, close }: MediaPreviewProps) => {
                     height={'100%'}
                     columns={'100px 1fr 100px'}
                     rows={'auto 1fr auto'}
-                    gap={'size-0'}
                 >
                     <Suspense fallback={<div>Loading...</div>}>
                         <ZoomProvider>
@@ -46,7 +46,10 @@ export const MediaPreview = ({ mediaItem, close }: MediaPreviewProps) => {
                             </View>
 
                             <View gridArea={'header'}>
-                                <SecondaryToolbar />
+                                <SecondaryToolbar
+                                    isHidden={false}
+                                    content={<LabelSelection labels={[]} onSelect={() => console.log('selected')} />}
+                                />
                             </View>
 
                             <View gridArea={'canvas'} overflow={'hidden'}>

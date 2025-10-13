@@ -8,23 +8,23 @@ import { Hotkeys } from './hotkeys/hotkeys.component';
 import { Settings } from './settings/settings.component';
 import { UndoRedo } from './undo-redo/undo-redo.component';
 
-import classes from './primary-toolbar.module.scss';
+import classes from '../media-preview.module.scss';
 
 export const ToolSelectionBar = () => {
     return (
         <Flex height={'100%'} alignItems={'center'} justifyContent={'center'}>
-            <Grid UNSAFE_className={classes.grid}>
-                <Flex UNSAFE_className={classes.section}>
+            <Grid UNSAFE_className={classes.toolbarGrid}>
+                <Flex UNSAFE_className={classes.toolbarSection} direction={'column'}>
                     <AnnotatorTools />
 
                     <UndoRedo />
                 </Flex>
 
-                <Flex UNSAFE_className={classes.section}>
+                <Flex UNSAFE_className={classes.toolbarSection} direction={'column'}>
                     <Settings />
                 </Flex>
 
-                <Flex UNSAFE_className={classes.section}>
+                <Flex UNSAFE_className={classes.toolbarSection} direction={'column'}>
                     <Hotkeys />
                 </Flex>
             </Grid>

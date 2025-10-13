@@ -5,12 +5,17 @@ import { ReactNode } from 'react';
 
 import { Flex, Grid } from '@geti/ui';
 
-export const SecondaryToolbar = ({ content }: { content: ReactNode }) => {
+import classes from '../media-preview.module.scss';
+
+type SecondaryToolbarProps = {
+    content: ReactNode;
+    isHidden: boolean;
+};
+export const SecondaryToolbar = ({ content, isHidden }: SecondaryToolbarProps) => {
     return (
-        <Flex height={'100%'} alignItems={'center'} justifyContent={'center'} margin={'size-100'}>
-            <Grid>
-                <Flex>Something</Flex>
-                <Flex>{content}</Flex>
+        <Flex height={'100%'} alignItems={'center'} isHidden={isHidden} margin={'size-100'}>
+            <Grid UNSAFE_className={classes.toolbarGrid}>
+                <Flex UNSAFE_className={classes.toolbarSection}>{content}</Flex>
             </Grid>
         </Flex>
     );
