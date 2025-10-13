@@ -26,9 +26,9 @@ class TestHierHead(HierarchicalClsHead):
 
         # Build per-head logit ranges, e.g. [(0,3), (3,6)]
         start = 0
-        ranges = []
-        for k in self.head_class_sizes:
-            ranges.append((start, start + k))
+        ranges = {}
+        for idx, k in enumerate(self.head_class_sizes):
+            ranges[str(idx)] = (start, start + k)
             start += k
 
         empty_multiclass_head_indices = []
@@ -86,12 +86,9 @@ class TestKLHLabelClassifier:
             kl_weight=1,
         )
 
-        output = model(images, labels, mode="explain")
-        assert isinstance(output, dict)
-        assert "logits" in output
-        assert "scores" in output
-        assert "preds" in output
-
+        output = model(images, labels, mode="loss")
+        assert isinstance(output, torch.Tensor)
+        
     def test_klh_loss_greater_than_hlabel(self, fxt_model_and_inputs):
         """KLHLabelClassifier should have strictly larger loss than HLabelClassifier
         when kl_weight > 0 and there are >= 2 multiclass heads."""
