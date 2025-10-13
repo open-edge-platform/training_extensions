@@ -9,7 +9,10 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from app.core.jobs.control_plane import JobController, JobQueue, ProcessRunnerFactory
+from app.core.run import RunnableFactory
 from app.core.scheduler import Scheduler
+from app.core.trainers import DummyTrainer
 from app.db import MigrationManager
 from app.services import ActivePipelineService
 from app.services.data_collect import DataCollector
@@ -17,6 +20,28 @@ from app.settings import get_settings
 from app.webrtc.manager import WebRTCManager
 
 logger = logging.getLogger(__name__)
+
+
+def setup_job_controller(max_parallel_jobs: int) -> tuple[JobQueue, JobController]:
+    """
+    Set up job controller with queue and processing infrastructure.
+
+    Creates a job queue and controller with configured parallel job limits and training infrastructure
+    for job execution.
+
+    Args:
+        max_parallel_jobs (int): Maximum number of jobs that can run concurrently.
+
+    Returns:
+        tuple[JobQueue, JobController]: A tuple containing the job queue instance and the configured job controller.
+    """
+    q = JobQueue()
+    trainer_factory = RunnableFactory(DummyTrainer)
+    process_runner_factory = ProcessRunnerFactory(trainer_factory)
+    job_controller = JobController(
+        jobs_queue=q, runner_factory=process_runner_factory, max_parallel_jobs=max_parallel_jobs
+    )
+    return q, job_controller
 
 
 @asynccontextmanager
@@ -48,8 +73,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     app.state.webrtc_manager = webrtc_manager
     logger.info("Application startup completed")
 
+    job_queue, job_controller = setup_job_controller(max_parallel_jobs=settings.gpu_slots)
+    app.state.job_queue = job_queue
+
+    await job_controller.start()
+
     yield
 
+    await job_controller.stop()
     # Shutdown
     logger.info("Shutting down %s application...", settings.app_name)
     await webrtc_manager.cleanup()

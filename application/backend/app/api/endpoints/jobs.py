@@ -4,13 +4,15 @@
 import asyncio
 from collections.abc import AsyncGenerator
 from typing import Annotated
-from uuid import uuid4
 
-from fastapi import APIRouter, Body, HTTPException, Request, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Request, status
 from starlette.responses import StreamingResponse
 
+from app.api.dependencies import get_job_queue
 from app.api.validators import JobID
-from app.schemas import JobRequest, JobResponse
+from app.core.jobs.control_plane import CancellationResult, JobQueue
+from app.core.jobs.models import Job, JobStatus
+from app.schemas import JobRequest, JobView
 from app.services import ResourceNotFoundError
 
 router = APIRouter(prefix="/api/jobs", tags=["Jobs"])
@@ -18,7 +20,7 @@ router = APIRouter(prefix="/api/jobs", tags=["Jobs"])
 
 @router.post(
     "",
-    response_model=JobResponse,
+    response_model=JobView,
     status_code=status.HTTP_202_ACCEPTED,
     responses={
         status.HTTP_202_ACCEPTED: {"description": "Job successfully created"},
@@ -26,21 +28,23 @@ router = APIRouter(prefix="/api/jobs", tags=["Jobs"])
     },
 )
 async def submit_job(
-    job_request: Annotated[JobRequest, Body()],
-) -> JobResponse:
+    job_request: Annotated[JobRequest, Body()], job_queue: Annotated[JobQueue, Depends(get_job_queue)]
+) -> JobView:
     """
     Create a new job for the project.
 
     Args:
         job_request (JobRequest): The Job request payload.
+        job_queue (JobQueue): The job queue instance responsible for managing job submissions and tracking job statuses.
 
     Returns:
-        JobResponse: The response containing the job ID.
+        JobView: The response containing the job ID.
     """
     try:
-        # TODO: Request job scheduling using Jobs Control Plane (TBD)
         _ = job_request
-        return JobResponse(job_id=uuid4())
+        job = Job.new()
+        await job_queue.submit(job)
+        return JobView.of(job)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ValueError as e:
@@ -49,32 +53,36 @@ async def submit_job(
 
 @router.get(
     "",
-    response_model=list[JobResponse],
+    response_model=list[JobView],
     responses={
         status.HTTP_200_OK: {"description": "List all jobs"},
     },
 )
-async def list_jobs() -> list[JobResponse]:
+async def list_jobs(job_queue: Annotated[JobQueue, Depends(get_job_queue)]) -> list[JobView]:
     """
     Retrieve a list of all jobs.
 
     This endpoint returns a list of all jobs that have been registered
     during the active server session.
 
+    Args:
+        job_queue (JobQueue): The job queue instance responsible for managing job submissions and tracking job statuses.
+
     Returns:
-        list[JobResponse]: A list of job responses.
+        list[JobView]: A list of job responses.
     """
-    return [JobResponse(job_id=uuid4())]
+    return [JobView.of(job) for job in job_queue.list_all()]
 
 
 @router.get(
     "/{job_id}",
-    response_model=JobResponse,
+    response_model=JobView,
     responses={
         status.HTTP_200_OK: {"description": "Job found"},
+        status.HTTP_404_NOT_FOUND: {"description": "Job with ID not found"},
     },
 )
-async def get_job(job_id: JobID) -> JobResponse:
+async def get_job(job_id: JobID, job_queue: Annotated[JobQueue, Depends(get_job_queue)]) -> JobView:
     """
     Retrieve details of a specific job.
 
@@ -82,24 +90,28 @@ async def get_job(job_id: JobID) -> JobResponse:
 
     Args:
         job_id (JobID): The unique identifier of the job.
+        job_queue (JobQueue): The job queue instance responsible for managing job submissions and tracking job statuses.
 
     Returns:
-        JobResponse: The response containing the job details.
+        JobView: The response containing the job details.
     """
-    return JobResponse(job_id=job_id)
+    job = job_queue.get(job_id)
+    if not job:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
+    return JobView.of(job)
 
 
 @router.post(
     "/{job_id}:cancel",
     status_code=status.HTTP_202_ACCEPTED,
-    response_model=JobResponse,
+    response_model=JobView,
     responses={
         status.HTTP_202_ACCEPTED: {"description": "Job cancel successfully requested"},
         status.HTTP_404_NOT_FOUND: {"description": "Job with ID not found"},
         status.HTTP_409_CONFLICT: {"description": "Job cannot be canceled in its current state"},
     },
 )
-async def cancel_job(job_id: JobID) -> JobResponse:
+async def cancel_job(job_id: JobID, job_queue: Annotated[JobQueue, Depends(get_job_queue)]) -> JobView:
     """
     Request cancellation of a specific job.
 
@@ -108,18 +120,33 @@ async def cancel_job(job_id: JobID) -> JobResponse:
 
     Args:
         job_id (JobID): The unique identifier of the job to be canceled.
+        job_queue (JobQueue): The job queue instance responsible for managing job submissions and tracking job statuses.
 
     Returns:
-        JobResponse: The response containing the job ID of the canceled job.
+        JobView: The response containing the job ID of the canceled job.
 
     Raises:
         HTTPException: If the job is not found (404) or the cancellation fails (409).
     """
-    return JobResponse(job_id=job_id)
+    try:
+        job, result = job_queue.cancel(job_id)
+        match result:
+            case CancellationResult.NOT_FOUND:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
+            case CancellationResult.IGNORE_CANCEL:
+                raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Job already completed or cancelled")
+            case CancellationResult.PENDING_CANCELLED | CancellationResult.RUNNING_CANCELLING:
+                if job:
+                    return JobView.of(job)
+                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Job not found")
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Unable to cancel job")
 
 
 @router.get("/{job_id}/status")
-async def stream_job_status(job_id: JobID, request: Request) -> StreamingResponse:
+async def stream_job_status(
+    job_id: JobID, request: Request, job_queue: Annotated[JobQueue, Depends(get_job_queue)]
+) -> StreamingResponse:
     """
     Stream real-time status updates for a specific job.
 
@@ -129,20 +156,31 @@ async def stream_job_status(job_id: JobID, request: Request) -> StreamingRespons
 
     Args:
         job_id (JobID): The unique identifier of the job.
-        request (Request): The HTTP request object to monitor client
-        connection status.
+        request (Request): The HTTP request object to monitor client connection status.
+        job_queue (JobQueue): The job queue instance responsible for managing job submissions and tracking job statuses.
 
     Returns:
         StreamingResponse: A streaming response with job status updates.
     """
+    if not job_queue.get(job_id):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
 
     async def gen_job_updates() -> AsyncGenerator[str]:
         """Generate job status updates."""
-        for _ in range(20):
+        last = None
+        while True:
             if await request.is_disconnected():
                 break
-            yield f"Hey there from {job_id}\n"
-            await asyncio.sleep(0.5)
+            j = job_queue.get(job_id)
+            if not j:
+                break
+            snap = JobView.of(j).model_dump_json()
+            if snap != last:
+                yield f"data: {snap}\n\n"
+                last = snap
+            if j.status >= JobStatus.DONE:
+                break
+            await asyncio.sleep(0.1)
 
     return StreamingResponse(
         gen_job_updates(),
