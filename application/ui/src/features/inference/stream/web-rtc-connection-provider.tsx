@@ -12,7 +12,7 @@ type WebRTCConnectionState = null | {
     webRTCConnectionRef: RefObject<WebRTCConnection | null>;
 };
 
-export const WebRTCConnectionContext = createContext<WebRTCConnectionState>(null);
+const WebRTCConnectionContext = createContext<WebRTCConnectionState>(null);
 
 const useWebRTCConnectionState = () => {
     const webRTCConnectionRef = useRef<WebRTCConnection | null>(null);

@@ -64,7 +64,6 @@ class FixedRatePolicyChecker(PolicyChecker):
 
 class DataCollector:
     def __init__(self, data_dir: Path, active_pipeline_service: "ActivePipelineService") -> None:
-        super().__init__()
         self.should_collect_next_frame = False
         self.data_dir = data_dir
         self.active_pipeline_service = active_pipeline_service
@@ -116,7 +115,7 @@ class DataCollector:
             label_service = LabelService(db_session=session)
             project_service = ProjectService(data_dir=self.data_dir, db_session=session, label_service=label_service)
             dataset_service = DatasetService(
-                data_dir=self.data_dir, db_session=session, project_service=project_service
+                data_dir=self.data_dir, db_session=session, project_service=project_service, label_service=label_service
             )
             dataset_service.create_dataset_item(
                 project_id=project.id,

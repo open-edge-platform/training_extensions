@@ -48,10 +48,15 @@ def fxt_project_service(fxt_projects_dir: Path, db_session: Session, fxt_label_s
 
 @pytest.fixture
 def fxt_dataset_service(
-    fxt_projects_dir: Path, db_session: Session, fxt_project_service: ProjectService
+    fxt_projects_dir: Path, db_session: Session, fxt_project_service: ProjectService, fxt_label_service: LabelService
 ) -> DatasetService:
     """Fixture to create a DatasetService instance."""
-    return DatasetService(fxt_projects_dir.parent, db_session=db_session, project_service=fxt_project_service)
+    return DatasetService(
+        fxt_projects_dir.parent,
+        db_session=db_session,
+        project_service=fxt_project_service,
+        label_service=fxt_label_service,
+    )
 
 
 @pytest.fixture

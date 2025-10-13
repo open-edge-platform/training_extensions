@@ -207,9 +207,12 @@ def get_dataset_service(
     data_dir: Annotated[Path, Depends(get_data_dir)],
     db: Annotated[Session, Depends(get_db)],
     project_service: Annotated[ProjectService, Depends(get_project_service)],
+    label_service: Annotated[LabelService, Depends(get_label_service)],
 ) -> DatasetService:
     """Provides a DatasetService instance."""
-    return DatasetService(data_dir=data_dir, db_session=db, project_service=project_service)
+    return DatasetService(
+        data_dir=data_dir, db_session=db, project_service=project_service, label_service=label_service
+    )
 
 
 def get_base_weights_service(data_dir: Annotated[Path, Depends(get_data_dir)]) -> BaseWeightsService:

@@ -21,5 +21,5 @@ export const usePanning = () => {
         }
     });
 
-    return isPanning;
+    return { isPanning, setIsPanning };
 };

@@ -13,8 +13,8 @@ type HttpMethod = 'get';
 type PathsWithMethod<M extends HttpMethod> = {
     [P in keyof paths]: M extends keyof paths[P] ? P : never;
 }[keyof paths];
-export type QueryKey = [HttpMethod, PathsWithMethod<HttpMethod>];
-export type MutationMeta = {
+type QueryKey = [HttpMethod, PathsWithMethod<HttpMethod>];
+type MutationMeta = {
     invalidateQueries?: QueryKey[];
 };
 
@@ -33,7 +33,7 @@ export const queryClient = new QueryClient({
     },
     mutationCache: new MutationCache({
         onSuccess: (_data, _variables, _context, mutation) => {
-            const meta = mutation.meta as MutationMeta | undefined;
+            const meta = mutation.meta;
             const invalidateQueries = meta?.invalidateQueries;
 
             if (invalidateQueries) {
