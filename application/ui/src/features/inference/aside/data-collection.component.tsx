@@ -5,7 +5,10 @@ import { useEffect, useState } from 'react';
 
 import { Divider, Flex, Heading, Slider, Switch, Text } from '@geti/ui';
 import { $api } from 'src/api/client';
+import { components } from 'src/api/openapi-spec';
 import { useProjectIdentifier } from 'src/hooks/use-project-identifier.hook';
+
+type FixedRateDataCollectionPolicy = components['schemas']['FixedRateDataCollectionPolicy'];
 
 export const DataCollection = () => {
     const projectId = useProjectIdentifier();
@@ -22,9 +25,11 @@ export const DataCollection = () => {
 
     const isAutoCapturingEnabled = pipelineQuery.data?.data_collection_policies[0]?.enabled ?? false;
     const defaultRate = 12;
-    const serverRate = pipelineQuery.data?.data_collection_policies[0]?.rate ?? defaultRate;
+    const serverRate =
+        (pipelineQuery.data?.data_collection_policies[0] as FixedRateDataCollectionPolicy)?.rate ?? defaultRate;
 
-    // Local state for the slider value while dragging
+    // TODO: add confidence_threshold slider
+
     const [localRate, setLocalRate] = useState(serverRate);
 
     useEffect(() => {
