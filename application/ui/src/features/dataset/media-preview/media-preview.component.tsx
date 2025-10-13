@@ -13,6 +13,7 @@ import { SelectAnnotationProvider } from '../../annotator/select-annotation-prov
 import { DatasetItem } from '../../annotator/types';
 import { AnnotatorButtons } from './annotator-buttons.component';
 import { ToolSelectionBar } from './primary-toolbar/primary-toolbar.component';
+import { LabelSelection } from './secondary-toolbar/label-selection.component';
 import { SecondaryToolbar } from './secondary-toolbar/secondary-toolbar.component';
 import { SidebarItems } from './sidebar-items.component';
 
@@ -64,7 +65,15 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                                         </View>
 
                                         <View gridArea={'header'}>
-                                            <SecondaryToolbar />
+                                            <SecondaryToolbar
+                                                isHidden={false}
+                                                content={
+                                                    <LabelSelection
+                                                        labels={[]}
+                                                        onSelect={() => console.log('selected')}
+                                                    />
+                                                }
+                                            />
                                         </View>
                                         <View gridArea={'canvas'} overflow={'hidden'}>
                                             <AnnotatorCanvas mediaItem={mediaItem} isFocussed={isFocussed} />
