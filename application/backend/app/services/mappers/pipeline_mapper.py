@@ -4,7 +4,8 @@
 from uuid import UUID
 
 from app.db.schema import PipelineDB
-from app.schemas import DataCollectionPolicy, PipelineStatus, PipelineView
+from app.schemas import PipelineStatus, PipelineView
+from app.schemas.pipeline import DataCollectionPolicyAdapter
 
 
 class PipelineMapper:
@@ -25,7 +26,7 @@ class PipelineMapper:
             source_id=UUID(pipeline_db.source_id) if pipeline_db.source_id else None,
             status=PipelineStatus.from_bool(pipeline_db.is_running),
             data_collection_policies=[
-                DataCollectionPolicy.model_validate(policy) for policy in pipeline_db.data_collection_policies
+                DataCollectionPolicyAdapter.validate_python(policy) for policy in pipeline_db.data_collection_policies
             ],
         )
 

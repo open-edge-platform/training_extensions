@@ -80,6 +80,27 @@ def _convert_segmentation_prediction(
     return result
 
 
+def get_confidence_scores(prediction: Result) -> list[float]:
+    """
+    Gets model prediction confidence scores depending on the
+    specific type of prediction result (segmentation, detection, or classification).
+
+    Args:
+        prediction: Prediction result object containing model outputs, which can
+                   be one of: InstanceSegmentationResult, DetectionResult, or
+                   ClassificationResult.
+
+    Returns:
+        list[float]: List of confidence scores.
+    """
+    match prediction:
+        case InstanceSegmentationResult() | DetectionResult():
+            return prediction.scores.tolist()
+        case ClassificationResult():
+            return [label.confidence for label in prediction.top_labels]
+    return []
+
+
 def convert_prediction(labels: list[Label], frame_data: np.ndarray, prediction: Result) -> list[DatasetItemAnnotation]:
     """
     Converts model predictions to dataset annotations based on prediction type.

@@ -13,9 +13,8 @@ from fastapi.openapi.models import Example
 from pydantic import ValidationError
 
 from app.api.dependencies import get_pipeline_service, get_project_id
-from app.schemas import DataCollectionPolicy
 from app.schemas.metrics import PipelineMetrics
-from app.schemas.pipeline import PipelineStatus, PipelineView
+from app.schemas.pipeline import DataCollectionPolicyAdapter, PipelineStatus, PipelineView
 from app.services import PipelineService, ResourceNotFoundError
 
 logger = logging.getLogger(__name__)
@@ -110,7 +109,8 @@ def update_pipeline(
     try:
         if "data_collection_policies" in pipeline_config:
             pipeline_config["data_collection_policies"] = [
-                DataCollectionPolicy.model_validate(policy) for policy in pipeline_config["data_collection_policies"]
+                DataCollectionPolicyAdapter.validate_python(policy)
+                for policy in pipeline_config["data_collection_policies"]
             ]
         return pipeline_service.update_pipeline(project_id, pipeline_config)
     except ResourceNotFoundError as e:

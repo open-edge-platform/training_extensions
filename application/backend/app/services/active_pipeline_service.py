@@ -8,8 +8,15 @@ from threading import Thread
 
 from app.db import get_db_session
 from app.repositories import PipelineRepository
-from app.schemas import DisconnectedSinkConfig, DisconnectedSourceConfig, ProjectView, Sink, Source
-from app.schemas.pipeline import DataCollectionPolicy
+from app.schemas import (
+    DataCollectionPolicy,
+    DisconnectedSinkConfig,
+    DisconnectedSourceConfig,
+    ProjectView,
+    Sink,
+    Source,
+)
+from app.schemas.pipeline import DataCollectionPolicyAdapter
 from app.services.mappers import ProjectMapper, SinkMapper, SourceMapper
 
 logger = logging.getLogger(__name__)
@@ -79,7 +86,7 @@ class ActivePipelineService:
             self._data_collection_policies = [
                 policy
                 for policy in [
-                    DataCollectionPolicy.model_validate(policy) for policy in pipeline.data_collection_policies
+                    DataCollectionPolicyAdapter.validate_python(policy) for policy in pipeline.data_collection_policies
                 ]
                 if policy.enabled
             ]
