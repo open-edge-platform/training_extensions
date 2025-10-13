@@ -142,7 +142,7 @@ BASE_DATA_DIR/
 ├─ model_manifests/
 │  ├─ classification/
 │  │  ├─ efficientnet_b0.yaml
-│  │─ detection/
+│  ├─ detection/
 │  │  ├─ yolox_s.yaml
 │  │  ├─ rtdetr_101.yaml
 │  ├─ instance_segmentation/
