@@ -52,11 +52,11 @@ class ActiveModelService:
                 available_models=[UUID(m.id) for m in available_models],
             )
 
-    def _get_model_xml_path(self, project_id: UUID, model_id: UUID) -> Path:
-        return self.projects_dir / f"{project_id}/models/{model_id}/model.xml"
-
-    def _get_model_bin_path(self, project_id: UUID, model_id: UUID) -> Path:
-        return self.projects_dir / f"{project_id}/models/{model_id}/model.bin"
+    def _get_model_file_path(self, project_id: UUID, model_id: UUID, extension: str = "xml") -> Path:
+        file_path = self.projects_dir / f"{project_id}/models/{model_id}/model.{extension}"
+        if not file_path.is_file():
+            raise FileNotFoundError(f"Model file not found: {file_path}")
+        return file_path
 
     def get_loaded_inference_model(self, force_reload: bool = False) -> LoadedModel | None:
         """
@@ -66,7 +66,7 @@ class ActiveModelService:
             force_reload: If True, reload the state and the model from disk. This option can be useful
             to bypass the cache after the state has been modified externally.
 
-        Returns: Model for inference or None if no model is active
+        Returns: Model for inference or None if no model is active, or if the model can't be loaded.
         """
         if force_reload:
             self._model_activation_state = self._load_state()
@@ -79,13 +79,21 @@ class ActiveModelService:
         active_model_id = self._model_activation_state.active_model_id
         if self._loaded_model is None or self._loaded_model.id != active_model_id:
             logger.info("Loading model with ID '%s'", active_model_id)
-            model_path = self._get_model_xml_path(project_id, active_model_id)
-            self._loaded_model = LoadedModel(
-                id=self._model_activation_state.active_model_id,
-                model=Model.create_model(
-                    model=str(model_path),
+            try:
+                # Ensure all necessary model files exist before loading the model
+                model_xml_path = self._get_model_file_path(project_id, active_model_id, "xml")
+                _ = self._get_model_file_path(project_id, active_model_id, "bin")
+                mapi_model = Model.create_model(
+                    model=str(model_xml_path),
                     device=MODELAPI_DEVICE,
                     nstreams=MODELAPI_NSTREAMS,
-                ),
+                )
+            except FileNotFoundError:
+                logger.exception("Failed to load model with ID '%s'", active_model_id)
+                return None
+
+            self._loaded_model = LoadedModel(
+                id=self._model_activation_state.active_model_id,
+                model=mapi_model,
             )
         return self._loaded_model
