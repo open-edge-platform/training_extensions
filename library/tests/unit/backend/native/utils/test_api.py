@@ -36,9 +36,6 @@ def test_list_models_pattern() -> None:
         "tv_efficientnet_b3",
         "tv_efficientnet_v2_l",
     ]
-    print(sorted(models))
-    print('--------------')
-    print(sorted(target))
     assert sorted(models) == sorted(target)
 
 
