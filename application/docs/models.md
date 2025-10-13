@@ -42,7 +42,7 @@ The lifecycle of a model revision in Geti Tune consists of several key stages:
 
 3. **Training**: The selected model is fine-tuned using OTX (OpenVINO Training Extensions), the open-source framework
    which implements the actual model and relative training pipeline in PyTorch. During training, the model learns from
-   the dataset annotations to to predict the specific classes of the project. The training process produces a bunch of
+   the dataset annotations to predict the specific classes of the project. The training process produces a bunch of
    artifacts, including the trained weights, logs, and metrics.
 
 4. **Model conversion**: After training, the model weights are converted from PyTorch format to OpenVINO Intermediate
@@ -177,9 +177,10 @@ After training, the resulting PyTorch weights are converted to OpenVINO IR forma
 Finally, the training job updates the model revision record in the database with the training status, timestamps,
 and other relevant metadata.
 
-The final step is the evaluation of the trained model on the testing subset, using standard metrics such as accuracy
-for classification. The results are stored in the `evaluations` table in the database, linked to the corresponding
-model revision. The metrics help users assess the model's performance and decide whether to enable it in the inference
+The final step is the evaluation of the trained model on the testing subset, with all the metrics supported by the
+specific task (e.g. mAP for object detection, see [Evaluation Metrics](#evaluation-metrics) for the complete list).
+The results are stored in the `evaluations` table in the database, linked to the corresponding model revision.
+The metrics help users assess the model's performance and decide whether to enable it in the inference
 pipeline. Implementation-wise, the evaluation step relies on ModelAPI to generate the predictions which are then
 compared to the ground truth annotations to compute the metrics.
 
@@ -190,6 +191,18 @@ compared to the ground truth annotations to compute the metrics.
 > However, persisting it to disk is still necessary if, at a later time, the user wants to re-train another model
 > on the same dataset revision, or to simply inspect the dataset contents. For this reason, it is recommended to
 > store the dataset in a format like Parquet that allows efficient loading and querying, with or without Datumaro.
+
+### Evaluation metrics
+
+The following table lists the evaluation metrics supported by Geti Tune for each task type.
+Most of the metrics commonly used in research and industry are included.
+
+| Task Type                 | Metrics                                                   |
+| ------------------------- | --------------------------------------------------------- |
+| Multiclass Classification | Accuracy, Precision, Recall, F1                           |
+| Multilabel Classification | Subset Accuracy, Hamming Loss, Precision, Recall, F1, mAP |
+| Object Detection          | mAP@0.5-0.95 (and single mAP at the various thresholds)   |
+| Instance Segmentation     | mAP@0.5-0.95 (and single mAP at the various thresholds)   |
 
 ## Model deletion
 
