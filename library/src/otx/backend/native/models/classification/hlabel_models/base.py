@@ -47,6 +47,7 @@ class OTXHlabelClsModel(OTXModel):
         Defaults to DefaultSchedulerCallable.
         metric (MetricCallable, optional): Callable for the metric. Defaults to HLabelClsMetricCallable.
         torch_compile (bool, optional): Flag to indicate whether to use torch.compile. Defaults to False.
+        kl_weight: The weight of tree-path KL divergence loss. Defaults to zero, use CrossEntropy only.
     """
 
     label_info: HLabelInfo
@@ -61,9 +62,9 @@ class OTXHlabelClsModel(OTXModel):
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = HLabelClsMetricCallable,
         torch_compile: bool = False,
-        **kwargs,
+        kl_weight: float = 0.0,
     ) -> None:
-        self.kl_weight = kwargs.get("kl_weight", 0.0)
+        self.kl_weight = kl_weight
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
