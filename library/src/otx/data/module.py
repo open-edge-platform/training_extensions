@@ -167,7 +167,7 @@ class OTXDataModule(LightningDataModule):
                 log.warning(f"{name} is not available. Skip it")
                 continue
 
-            dataset = OTXDatasetFactory.create(
+            otx_dataset = OTXDatasetFactory.create(
                 task=self.task,
                 dm_subset=dm_subset.as_dataset(),
                 cfg_subset=config_mapping[name],
@@ -178,11 +178,11 @@ class OTXDataModule(LightningDataModule):
             )
 
             if self.tile_config.enable_tiler:
-                dataset = OTXTileDatasetFactory.create(
-                    dataset=dataset,
+                otx_dataset = OTXTileDatasetFactory.create(
+                    dataset=otx_dataset,
                     tile_config=self.tile_config,
                 )
-            self.subsets[name] = dataset
+            self.subsets[name] = otx_dataset
             label_infos += [self.subsets[name].label_info]
             log.info(f"Add name: {name}, self.subsets: {self.subsets}")
 
@@ -359,7 +359,7 @@ class OTXDataModule(LightningDataModule):
 
         # Save hyperparameters
         instance.save_hyperparameters(
-            ignore=["datasets", "input_size"],
+            ignore=["subsets", "input_size"],
             logger=False,
         )
 

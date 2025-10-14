@@ -44,7 +44,7 @@ The following code snippet demonstrates how to do that:
 
     from otx.engine import Engine
 
-    engine = Engine(data_root="data/wgisd", model="src/otx/recipe/detection/atss_mobilenetv2.yaml")
+    engine = Engine(data="data/wgisd", model="src/otx/recipe/detection/atss_mobilenetv2.yaml")
     engine.train()
 
 
@@ -60,7 +60,7 @@ The following code snippet demonstrates how to do that:
 
         model = ATSS(label_info=5, model_name="mobilenetv2", data_input_params=DataInputParams(input_size=(512, 512), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375)))
         datamodule = OTXDataModule(task="DETECTION", data_root="data/wgisd")
-        engine = Engine(data_root=datamodule, model=model)
+        engine = Engine(data=datamodule, model=model)
 
 **********************************
 Check Available Model Recipes
@@ -162,22 +162,7 @@ Engine
 
 The ``otx.engine.Engine`` class is the main entry point for using OpenVINO™ Training Extensions APIs.
 
-1. Setting ``task``
-
-Specify ``task``. This is the task type for that ``Engine`` usage.
-You can set the task by referencing the ``OTXTaskType`` in ``otx.types.task``.
-If no task is specified, the task is detected and used via ``datamodule`` or ``data_root``.
-
-.. code-block:: python
-
-    from otx.types.task import OTXTaskType
-    from otx.engine import Engine
-
-    engine = Engine(task=OTXTaskType.DETECTION)
-    # or
-    engine = Engine(task="DETECTION")
-
-2. Setting ``work_dir``
+1. Setting ``work_dir``
 
 Specify ``work_dir``. This is the workspace for that ``Engine``, and where output is stored.
 The default value is currently ``./otx-workspace``.
@@ -189,7 +174,7 @@ The default value is currently ``./otx-workspace``.
     engine = Engine(work_dir="work_dir")
 
 
-3. Setting device
+2. Setting device
 
 You can set the device by referencing the ``DeviceType`` in ``otx.types.device``.
 The current default setting is ``auto``.
@@ -207,7 +192,7 @@ The current default setting is ``auto``.
 In addition, the ``Engine`` constructor can be associated with the Trainer's constructor arguments to control the Trainer's functionality.
 Refer `lightning.Trainer <https://lightning.ai/docs/pytorch/stable/common/trainer.html>`_.
 
-4. Using the OpenVINO™ Training Extension configuration we can configure the Engine.
+3. Using the OpenVINO™ Training Extension configuration we can configure the Engine.
 
 .. code-block:: python
 
@@ -244,7 +229,7 @@ Create an output model and start actual training:
 
     config = "src/otx/recipe/detection/atss_mobilenetv2.yaml"
 
-    engine = Engine.from_config(model=config, data_root="data/wgisd")
+    engine = Engine.from_config(config_path=config, data_root="data/wgisd")
     engine.train()
 
 .. note::
@@ -315,7 +300,7 @@ The datamodule used by the Engine is of type ``otx.data.module.OTXDataModule``.
     # default data module for the task
     datamodule = OTXDataModule(data_root="data/wgisd", task="DETECTION")
 
-    engine = Engine(datamodule=datamodule)
+    engine = Engine(data=datamodule, nodel=...)
     engine.train()
 
 The command above will create a default ``DataModule``. You can modify parameters for dataset constructing using ``SubsetConfig``:
