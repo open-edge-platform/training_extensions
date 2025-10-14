@@ -373,7 +373,7 @@ You can also create ``OTXDataset`` independently and then call  ``from_otx_datas
         ])
 
     # setup Datumaro dataset
-    dm_dataset = DmDataset.import_from(self.data_root, format=self.data_format)
+    dm_dataset = DmDataset.import_from(data_root="data/wgisd")
     train_dm_subset = dm_dataset.subsets()["train"]
     val_dm_subset = dm_dataset.subsets()["val"]
     test_dm_subset = dm_dataset.subsets()["test"]
@@ -387,7 +387,7 @@ You can also create ``OTXDataset`` independently and then call  ``from_otx_datas
         val_dm_subset,
         transforms
     )
-    val_dataset = OTXDetectionDataset(
+    test_dataset = OTXDetectionDataset(
         test_dm_subset,
         transforms
     )
@@ -397,9 +397,9 @@ You can also create ``OTXDataset`` independently and then call  ``from_otx_datas
         train_dataset = train_dataset,
         val_dataset = val_dataset,
         test_dataset = test_dataset,
-        train_subset = train_subset,
-        val_subset = val_subset,
-        test_subset = val_subset
+        train_subset = train_subset_config,
+        val_subset = val_subset_config,
+        test_subset = val_subset_config
     )
 
 5. You can use train-specific arguments with ``train()`` function.
