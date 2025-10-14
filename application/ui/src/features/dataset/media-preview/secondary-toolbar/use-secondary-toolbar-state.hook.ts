@@ -18,8 +18,8 @@ export const useSecondaryToolbarState = () => {
 
     const annotationsToUpdate = annotations.filter((annotation) => selectedAnnotations.has(annotation.id));
 
-    const addLabels = (labelId: Key | null) => {
-        const selectedLabel = projectLabels.find((label) => label.id === labelId);
+    const toggleLabel = (labelId: Key | null) => {
+        const selectedLabel = projectLabels.find((label) => label.id === labelId) || projectLabels[0];
 
         if (!selectedLabel) {
             return;
@@ -48,24 +48,6 @@ export const useSecondaryToolbarState = () => {
         }));
 
         updateAnnotations(updatedAnnotations);
-    };
-
-    const toggleLabel = (labelId: Key | null) => {
-        const selectedLabel = projectLabels.find((label) => label.id === labelId);
-
-        if (!selectedLabel) {
-            return;
-        }
-
-        const labelIsAssignedToEveryAnnotation = annotationsToUpdate.every((annotation) =>
-            annotation.labels?.some((label) => label.id === labelId)
-        );
-
-        if (labelIsAssignedToEveryAnnotation) {
-            removeLabels(labelId);
-        } else {
-            addLabels(labelId);
-        }
     };
 
     return {
