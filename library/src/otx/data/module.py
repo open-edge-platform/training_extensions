@@ -83,13 +83,11 @@ class OTXDataModule(LightningDataModule):
         if input_size is not None and not isinstance(input_size, (tuple, list)):
             msg = f"input_size should be a tuple or list of ints, but got {input_size!r}"
             raise ValueError(msg)
-        self.train_subset = (
-            train_subset if train_subset is not None else self.get_default_subset_config("train", input_size)
-        )
-        self.val_subset = val_subset if val_subset is not None else self.get_default_subset_config("val", input_size)
-        self.test_subset = (
-            test_subset if test_subset is not None else self.get_default_subset_config("test", input_size)
-        )
+
+        subset_configs = self.get_default_subset_configs(input_size)
+        self.train_subset = train_subset if train_subset is not None else subset_configs["train_subset"]
+        self.val_subset = val_subset if val_subset is not None else subset_configs["val_subset"]
+        self.test_subset = test_subset if test_subset is not None else subset_configs["test_subset"]
         self.tile_config = tile_config
 
         self.image_color_channel = image_color_channel
@@ -301,7 +299,7 @@ class OTXDataModule(LightningDataModule):
         LightningDataModule.__init__(instance)
 
         # Set basic attributes
-        instance.task = train_dataset.task
+        instance.task = train_dataset.task_type
         instance.data_format = train_dataset.data_format
         instance.data_root = ""
         instance.tile_config = (
@@ -315,7 +313,6 @@ class OTXDataModule(LightningDataModule):
         instance.device = device
 
         # Store datasets and label info
-        instance.subsets = {"train": train_dataset, "val": val_dataset, "test": test_dataset}
         instance.label_info = train_dataset.label_info
 
         # derive image_size from dataset
@@ -327,35 +324,28 @@ class OTXDataModule(LightningDataModule):
             raise ValueError(msg) from None
         input_size = example_item.img_info["img_shape"]
         instance.input_size = input_size
-        instance.train_subset = (
-            train_subset if train_subset is not None else instance.get_default_subset_config("train", input_size)
-        )
-        instance.val_subset = (
-            val_subset if val_subset is not None else instance.get_default_subset_config("val", input_size)
-        )
-        instance.test_subset = (
-            test_subset if test_subset is not None else instance.get_default_subset_config("test", input_size)
-        )
-
-        # Extract normalization parameters from train dataset transforms if available
-        transforms_to_extract = None
-
-        if hasattr(train_dataset, "transforms") and train_dataset.transforms is not None:
-            transforms_list = train_dataset.transforms
-            # Try to extract transforms list from Compose object
-            if hasattr(transforms_list, "transforms") and isinstance(
-                getattr(transforms_list, "transforms", None), list
-            ):
-                transforms_to_extract = transforms_list.transforms  # type: ignore[union-attr]
-            elif isinstance(transforms_list, list):
-                transforms_to_extract = transforms_list
-
-        instance.input_mean, instance.input_std = instance.extract_normalization_params(transforms_to_extract)
 
         # override transforms in subset_config based on provided datasets
+        train_dataset.transforms = train_subset.transforms if train_subset is not None else train_dataset.transforms  # type: ignore[assignment]
+        val_dataset.transforms = val_subset.transforms if val_subset is not None else val_dataset.transforms  # type: ignore[assignment]
+        test_dataset.transforms = test_subset.transforms if test_subset is not None else test_dataset.transforms  # type: ignore[assignment]
+
+        # get default subset configs
+        subset_configs = instance.get_default_subset_configs(input_size)
+        instance.train_subset = train_subset if train_subset is not None else subset_configs["train_subset"]
+        instance.val_subset = val_subset if val_subset is not None else subset_configs["val_subset"]
+        instance.test_subset = test_subset if test_subset is not None else subset_configs["test_subset"]
+
+        # add subsets
+        instance.subsets = {"train": train_dataset, "val": val_dataset, "test": test_dataset}
         instance.train_subset.transforms = train_dataset.transforms  # type: ignore[assignment]
         instance.val_subset.transforms = val_dataset.transforms  # type: ignore[assignment]
         instance.test_subset.transforms = test_dataset.transforms  # type: ignore[assignment]
+
+        # Extract normalization parameters from train dataset transforms if available
+        instance.input_mean, instance.input_std = instance.extract_normalization_params(
+            instance.train_subset.transforms
+        )
 
         # Save hyperparameters
         instance.save_hyperparameters(
@@ -365,17 +355,17 @@ class OTXDataModule(LightningDataModule):
 
         return instance
 
-    def get_default_subset_config(self, subset_name: str, input_size: tuple[int, int] | None = None) -> SubsetConfig:
+    def get_default_subset_configs(self, input_size: tuple[int, int] | None = None) -> dict[str, SubsetConfig]:
         """Create a default SubsetConfig for a given subset when not provided.
 
         This method loads the configuration from the base YAML files in
         otx/recipe/_base_/data based on the task type.
 
         Args:
-            subset_name: Name of the subset ('train', 'val', or 'test').
+            input_size: input size of the image to set in subset configs.
 
         Returns:
-            SubsetConfig: Default configuration for the subset loaded from base config.
+            dict[str, SubsetConfig]: Default configuration for the subsets loaded from base config.
         """
         # Map task type to config file name
         task_to_data_config_file = {
@@ -408,30 +398,31 @@ class OTXDataModule(LightningDataModule):
         config_dict = OmegaConf.load(base_path)
 
         # Get the subset configuration
-        subset_key = f"{subset_name}_subset"
-        if subset_key not in config_dict:
-            msg = f"Subset '{subset_key}' not found in config file {config_file}"
-            raise ValueError(msg)
+        subset_dicts = {}
+        for subset_key in ["train_subset", "val_subset", "test_subset"]:
+            if subset_key not in config_dict:
+                msg = f"Subset '{subset_key}' not found in config file {config_file}"
+                raise ValueError(msg)
 
-        # Extract subset config and convert to container (dict)
-        subset_config_dict = OmegaConf.to_container(config_dict[subset_key], resolve=True)  # type: ignore[index]
-        subset_input_size = subset_config_dict.get("input_size")
-        if subset_input_size is None and input_size is not None:
-            subset_config_dict["input_size"] = input_size
-        elif subset_input_size is None and input_size is None:
-            subset_config_dict["input_size"] = config_dict.get("input_size")
+            # Extract subset config and convert to container (dict)
+            subset_config_dict = OmegaConf.to_container(config_dict[subset_key], resolve=True)  # type: ignore[index]
+            subset_input_size = subset_config_dict.get("input_size")
+            if subset_input_size is None and input_size is not None:
+                subset_config_dict["input_size"] = input_size
+            elif subset_input_size is None and input_size is None:
+                subset_config_dict["input_size"] = config_dict.get("input_size")
 
-        if subset_config_dict["input_size"] is None:
-            msg = "input size is not specified in both the config file and the DataModule constructor."
-            raise ValueError(msg)
-        # Create structured config from dict
-        config = OmegaConf.structured(SubsetConfig)
-        config = OmegaConf.merge(config, subset_config_dict)
+            if subset_config_dict["input_size"] is None:
+                msg = "input size is not specified in both the config file and the DataModule constructor."
+                raise ValueError(msg)
+            # Create structured config from dict
+            config = OmegaConf.structured(SubsetConfig)
+            config = OmegaConf.merge(config, subset_config_dict)
 
-        # Convert to Python object
-        subset_config: SubsetConfig = OmegaConf.to_object(config)  # type: ignore[assignment]
-
-        return subset_config
+            # Convert to Python object
+            subset_config: SubsetConfig = OmegaConf.to_object(config)  # type: ignore[assignment]
+            subset_dicts[subset_key] = subset_config
+        return subset_dicts
 
     def _is_meta_info_valid(self, label_infos: list[LabelInfo]) -> bool:
         """Check whether there are mismatches in the metainfo for the all subsets."""
