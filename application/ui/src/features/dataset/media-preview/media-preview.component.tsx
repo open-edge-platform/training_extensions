@@ -6,7 +6,6 @@ import { Suspense, useState } from 'react';
 import { Content, Dialog, dimensionValue, Divider, Flex, Grid, Heading, Loading, View } from '@geti/ui';
 import { AnnotationActionsProvider } from 'src/features/annotator/annotation-actions-provider.component';
 import { AnnotatorProvider } from 'src/features/annotator/annotator-provider.component';
-import { LabelSelection } from 'src/features/project/label-selection/label-selection.component';
 
 import { ZoomProvider } from '../../../components/zoom/zoom.provider';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas';
@@ -65,15 +64,7 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                                         </View>
 
                                         <View gridArea={'header'}>
-                                            <SecondaryToolbar
-                                                isHidden={false}
-                                                content={
-                                                    <LabelSelection
-                                                        labels={[]}
-                                                        onSelect={() => console.log('selected')}
-                                                    />
-                                                }
-                                            />
+                                            <SecondaryToolbar />
                                         </View>
                                         <View gridArea={'canvas'} overflow={'hidden'}>
                                             <AnnotatorCanvas mediaItem={mediaItem} isFocussed={isFocussed} />
