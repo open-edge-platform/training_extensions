@@ -4,19 +4,16 @@
 import { Key } from 'react';
 
 import { useAnnotationActions } from 'src/features/annotator/annotation-actions-provider.component';
-import { useAnnotator } from 'src/features/annotator/annotator-provider.component';
 import { useProjectLabels } from 'src/features/annotator/hooks/use-project-labels.hook';
 import { useSelectedAnnotations } from 'src/features/annotator/select-annotation-provider.component';
 import { Label } from 'src/features/annotator/types';
 
 export const useSecondaryToolbarState = () => {
-    const { activeTool } = useAnnotator();
     const { selectedAnnotations } = useSelectedAnnotations();
     const { annotations, updateAnnotation } = useAnnotationActions();
-
     const projectLabels = useProjectLabels();
 
-    const isHidden = selectedAnnotations.size === 0 && activeTool === 'selection';
+    const isHidden = selectedAnnotations.size === 0;
 
     const annotationsToUpdate = annotations.filter((annotation) => selectedAnnotations.has(annotation.id));
 
@@ -64,8 +61,11 @@ export const useSecondaryToolbarState = () => {
 
     return {
         isHidden,
+
         projectLabels,
         toggleLabel,
+        removeLabels,
+
         annotationsToUpdate,
     };
 };

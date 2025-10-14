@@ -100,7 +100,7 @@ export const AnnotationActionsProvider = ({ children, mediaItem }: AnnotationAct
             {
                 shape,
                 id: uuid(),
-                labels: [{ id: uuid(), name: 'Default label', color: 'var(--annotation-fill)', isPrediction: false }],
+                labels: [{ id: uuid(), name: 'No label', color: 'var(--annotation-fill)', isPrediction: false }],
             },
         ]);
         isDirty.current = true;

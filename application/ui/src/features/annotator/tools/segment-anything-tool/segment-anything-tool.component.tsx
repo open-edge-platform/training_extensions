@@ -6,7 +6,7 @@ import { PointerEvent, useEffect, useRef, useState } from 'react';
 import { clampPointBetweenImage } from '@geti/smart-tools/utils';
 
 import { useZoom } from '../../../../components/zoom/zoom.provider';
-import { AnnotationShape } from '../../annotations/annotation-shape.component';
+import { AnnotationShapeWithLabels } from '../../annotations/annotation-shape-with-labels.component';
 import { MaskAnnotations } from '../../annotations/mask-annotations.component';
 import { AnnotatorLoading } from '../../annotator-loading.component';
 import { useAnnotator } from '../../annotator-provider.component';
@@ -136,7 +136,7 @@ export const SegmentAnythingTool = () => {
                         fillOpacity={0.0}
                         className={classes.stroke}
                     >
-                        <AnnotationShape
+                        <AnnotationShapeWithLabels
                             annotation={{
                                 shape,
                                 id: '',
