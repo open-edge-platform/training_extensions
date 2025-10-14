@@ -30,7 +30,7 @@ export const TestProviders = ({ children }: { children: ReactNode }) => {
 
 const customRender = (
     ui: ReactNode,
-    options: Options = { route: paths.project.details({ projectId: '1' }), path: paths.project.index.pattern }
+    options: Options = { route: paths.project.index({}), path: paths.project.index.pattern }
 ) => {
     const router = createMemoryRouter(
         [

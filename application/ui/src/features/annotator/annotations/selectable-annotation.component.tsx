@@ -70,9 +70,7 @@ export const SelectableAnnotation = ({ children }: { children: ReactNode }) => {
                 ...(isSelected
                     ? {
                           fillOpacity: 0.7,
-                          ['--annotation-fill']: annotation.labels.length
-                              ? annotation.labels[0].color
-                              : 'var(--energy-blue-light)',
+                          ['--annotation-fill']: annotation.labels[0]?.color ?? 'var(--energy-blue-light)',
                           stroke: 'var(--energy-blue-light)',
                           strokeWidth: 'calc(2px / var(--zoom-scale))',
                       }
