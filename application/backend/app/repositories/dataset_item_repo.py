@@ -100,3 +100,28 @@ class DatasetItemRepository:
         result = self.db.execute(stmt)
         row = result.mappings().first()
         return UpdateDatasetItemAnnotation(**row) if row else None
+
+    def get_subset(self, obj_id: str) -> str | None:
+        stmt = (
+            select(DatasetItemDB.subset)
+            .select_from(DatasetItemDB)
+            .where(
+                DatasetItemDB.project_id == self.project_id,
+                DatasetItemDB.id == obj_id,
+            )
+        )
+        return self.db.scalar(stmt)
+
+    def set_subset(self, obj_id: str, subset: str) -> None:
+        stmt = (
+            update(DatasetItemDB)
+            .where(
+                DatasetItemDB.project_id == self.project_id,
+                DatasetItemDB.id == obj_id,
+            )
+            .values(
+                subset=subset,
+                updated_at=datetime.now(UTC),
+            )
+        )
+        self.db.execute(stmt)
