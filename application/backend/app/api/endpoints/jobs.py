@@ -136,9 +136,9 @@ async def cancel_job(job_id: JobID, job_queue: Annotated[JobQueue, Depends(get_j
             case CancellationResult.IGNORE_CANCEL:
                 raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Job already completed or cancelled")
             case CancellationResult.PENDING_CANCELLED | CancellationResult.RUNNING_CANCELLING:
-                if job:
-                    return JobView.of(job)
-                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Job not found")
+                if not job:
+                    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Job not found")
+                return JobView.of(job)
     except ValueError:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Unable to cancel job")
 
@@ -176,7 +176,7 @@ async def stream_job_status(
                 break
             snap = JobView.of(j).model_dump_json()
             if snap != last:
-                yield f"data: {snap}\n\n"
+                yield f"{snap}\n"
                 last = snap
             if j.status >= JobStatus.DONE:
                 break

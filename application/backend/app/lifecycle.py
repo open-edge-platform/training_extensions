@@ -9,11 +9,11 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from app.core.jobs.control_plane import JobController, JobQueue, ProcessRunnerFactory
+from app.core.jobs import JobController, JobQueue, ProcessRunnerFactory
 from app.core.run import RunnableFactory
-from app.core.scheduler import Scheduler
 from app.core.trainers import DummyTrainer
 from app.db import MigrationManager
+from app.scheduler import Scheduler
 from app.services import ActivePipelineService
 from app.services.data_collect import DataCollector
 from app.settings import get_settings

@@ -9,9 +9,9 @@ from uuid import UUID
 from fastapi import Depends, HTTPException, Request, UploadFile, status
 from sqlalchemy.orm import Session
 
-from app.core import Scheduler
 from app.core.jobs.control_plane import JobQueue
 from app.db import get_db_session
+from app.scheduler import Scheduler
 from app.services import (
     ActivePipelineService,
     ConfigurationService,
