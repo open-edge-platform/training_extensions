@@ -8,7 +8,7 @@ import pytest
 from starlette import status
 
 from app.api.dependencies import get_job_queue
-from app.core.jobs import Job, JobQueue, JobStatus, now_utc_ts
+from app.core.jobs import Job, JobQueue, JobStatus
 from app.core.jobs.control_plane import CancellationResult
 from app.main import app
 from app.schemas.job import JobRequest, JobType, JobView, TrainingRequest
@@ -28,7 +28,6 @@ def fxt_job() -> Callable[[UUID | None, JobStatus, float], Job]:
     ) -> Job:
         return Job(
             id=job_id or uuid4(),
-            submitted_at=now_utc_ts(),
             status=job_status,
             progress=100.0 if job_status >= JobStatus.DONE else progress,
         )

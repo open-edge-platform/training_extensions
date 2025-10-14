@@ -129,7 +129,7 @@ class JobController:
                 case Started():
                     job.start()
                 case Progress(value=v):
-                    job.advance(v)
+                    job.advance(percent=v)
                 case Done():
                     job.finish()
                     break

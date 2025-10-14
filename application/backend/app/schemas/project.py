@@ -6,7 +6,7 @@ from typing import Generic, TypeVar
 
 from pydantic import BaseModel, Field
 
-from app.schemas.base import HasID, RequiresID
+from app.core.models import HasID, RequiresID
 from app.schemas.label import LabelCreate, LabelView
 
 

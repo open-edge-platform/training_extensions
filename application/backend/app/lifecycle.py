@@ -11,7 +11,7 @@ from fastapi import FastAPI
 
 from app.core.jobs import JobController, JobQueue, ProcessRunnerFactory
 from app.core.run import RunnableFactory
-from app.core.trainers import DummyTrainer
+from app.core.trainers import OTXTrainer
 from app.db import MigrationManager
 from app.scheduler import Scheduler
 from app.services import ActivePipelineService
@@ -36,7 +36,7 @@ def setup_job_controller(max_parallel_jobs: int) -> tuple[JobQueue, JobControlle
         tuple[JobQueue, JobController]: A tuple containing the job queue instance and the configured job controller.
     """
     q = JobQueue()
-    trainer_factory = RunnableFactory(DummyTrainer)
+    trainer_factory = RunnableFactory(OTXTrainer)
     process_runner_factory = ProcessRunnerFactory(trainer_factory)
     job_controller = JobController(
         jobs_queue=q, runner_factory=process_runner_factory, max_parallel_jobs=max_parallel_jobs

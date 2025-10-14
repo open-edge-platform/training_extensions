@@ -42,7 +42,7 @@ async def submit_job(
     """
     try:
         _ = job_request
-        job = Job.new()
+        job = Job()
         await job_queue.submit(job)
         return JobView.of(job)
     except ResourceNotFoundError as e:

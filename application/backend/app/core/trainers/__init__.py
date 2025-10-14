@@ -2,6 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from .base import Trainer, TrainerContext
-from .dummy import DummyTrainer
+from .otx import OTXTrainer
 
-__all__ = ["DummyTrainer", "Trainer", "TrainerContext"]
+__all__ = ["OTXTrainer", "Trainer", "TrainerContext"]
