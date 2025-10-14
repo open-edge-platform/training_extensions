@@ -17,8 +17,7 @@ export const SecondaryToolbar = () => {
             <Grid UNSAFE_className={classes.toolbarGrid} isHidden={isHidden}>
                 <Flex UNSAFE_className={classes.toolbarSection}>
                     <LabelPicker
-                        // TODO: Improve the coloring
-                        selectedLabel={get(annotationsToUpdate[0], 'labels[0]', null)}
+                        selectedLabel={get(annotationsToUpdate, '[0].labels[0]', null)}
                         labels={projectLabels}
                         onSelect={toggleLabel}
                     />
