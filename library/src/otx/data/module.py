@@ -241,26 +241,19 @@ class OTXDataModule(LightningDataModule):
         data_format, or other data loading parameters.
 
         Args:
-            task (OTXTaskType): The type of task (e.g., classification, detection).
-            datasets (dict[str, OTXDataset]): Pre-constructed OTX datasets.
-                Keys should be subset names ('train', 'val', 'test').
-                Values should be OTXDataset instances.
+            train_dataset (OTXDataset): Pre-constructed training dataset.
+            val_dataset (OTXDataset): Pre-constructed validation dataset.
+            test_dataset (OTXDataset | None, optional): Pre-constructed test dataset. Defaults to None.
             train_subset (SubsetConfig | None, optional): Configuration for the training dataloader.
                 If None, default configuration will be used. Defaults to None.
             val_subset (SubsetConfig | None, optional): Configuration for the validation dataloader.
                 If None, default configuration will be used. Defaults to None.
             test_subset (SubsetConfig | None, optional): Configuration for the test dataloader.
                 If None, default configuration will be used. Defaults to None.
-            tile_config (TileConfig, optional): Configuration for tiling.
-                Defaults to TileConfig(enable_tiler=False).
-            image_color_channel (ImageColorChannel, optional): Color channel configuration for images.
-                Defaults to ImageColorChannel.RGB.
             auto_num_workers (bool, optional): Whether to automatically determine the number of workers.
                 Defaults to False.
             device (DeviceType, optional): Device type to use (e.g., 'cpu', 'gpu').
                 Defaults to DeviceType.auto.
-            input_size (tuple[int, int] | str, optional): Final image or video shape after transformation.
-                Can be "auto" to determine size automatically. Defaults to "auto".
 
         Returns:
             OTXDataModule: Configured data module with the provided datasets.
@@ -273,15 +266,10 @@ class OTXDataModule(LightningDataModule):
             >>> from otx.types.task import OTXTaskType
             >>>
             >>> # Create datamodule with minimal configuration
-            >>> datasets = {
-            ...     "train": my_train_dataset,
-            ...     "val": my_val_dataset,
-            ...     "test": my_test_dataset,
-            ... }
             >>> datamodule = OTXDataModule.from_otx_datasets(
-            ...     task=OTXTaskType.DETECTION,
-            ...     datasets=datasets,
-            ...     input_size=(640, 640),
+            ...     train_dataset=my_train_dataset,
+            ...     val_dataset=my_val_dataset,
+            ...     test_dataset=my_test_dataset,
             ... )
             >>>
             >>> # Create datamodule with custom subset configurations
@@ -292,10 +280,10 @@ class OTXDataModule(LightningDataModule):
             ...     num_workers=8,
             ... )
             >>> datamodule = OTXDataModule.from_otx_datasets(
-            ...     task=OTXTaskType.DETECTION,
-            ...     datasets=datasets,
+            ...     train_dataset=my_train_dataset,
+            ...     val_dataset=my_val_dataset,
+            ...     test_dataset=my_test_dataset,
             ...     train_subset=train_config,
-            ...     input_size=(640, 640),
             ... )
         """
         # Validate label info consistency across datasets
