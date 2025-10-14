@@ -11,7 +11,64 @@ from app.schemas import Label
 from app.schemas.dataset_item import DatasetItemAnnotation
 from app.schemas.label import LabelReference
 from app.schemas.shape import FullImage, Point, Polygon, Rectangle
-from app.services.data_collect.prediction_converter import convert_prediction
+from app.services.data_collect.prediction_converter import convert_prediction, get_confidence_scores
+
+
+def test_get_confidence_scores_classification() -> None:
+    # Arrange
+    raw_prediction = ClassificationResult(
+        top_labels=[
+            model_api.models.result.Label(id=1, name="cat", confidence=0.81),
+            model_api.models.result.Label(id=2, name="dog", confidence=0.63),
+        ],
+        raw_scores=[0.19, 0.81],
+        saliency_map=None,
+        feature_vector=None,
+    )
+
+    # Act
+    confidence_scores = get_confidence_scores(prediction=raw_prediction)
+
+    # Assert
+    assert confidence_scores == [0.81, 0.63]
+
+
+def test_get_confidence_scores_detection() -> None:
+    # Arrange
+    raw_prediction = DetectionResult(
+        bboxes=np.array([]),
+        labels=np.array([1, 2]),
+        scores=np.array([0.86, 0.62]),
+        label_names=["cat", "dog"],
+        saliency_map=None,
+        feature_vector=None,
+    )
+
+    # Act
+    confidence_scores = get_confidence_scores(prediction=raw_prediction)
+
+    # Assert
+    assert confidence_scores == [0.86, 0.62]
+
+
+def test_get_confidence_scores_segmentation() -> None:
+    # Arrange
+
+    raw_prediction = InstanceSegmentationResult(
+        bboxes=np.array([]),
+        labels=np.array([1, 2]),
+        masks=np.array([]),
+        scores=np.array([0.32, 0.58]),
+        label_names=["cat", "dog"],
+        saliency_map=None,
+        feature_vector=None,
+    )
+
+    # Act
+    confidence_scores = get_confidence_scores(prediction=raw_prediction)
+
+    # Assert
+    assert confidence_scores == [0.32, 0.58]
 
 
 def test_convert_prediction_classification() -> None:

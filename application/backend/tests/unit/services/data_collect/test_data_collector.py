@@ -11,10 +11,14 @@ import time_machine
 
 from app.schemas.dataset_item import DatasetItemAnnotation, DatasetItemFormat
 from app.schemas.label import LabelReference
-from app.schemas.pipeline import FixedRateDataCollectionPolicy
+from app.schemas.pipeline import ConfidenceThresholdDataCollectionPolicy, FixedRateDataCollectionPolicy
 from app.schemas.shape import FullImage
 from app.services import DatasetService
-from app.services.data_collect.data_collector import DataCollector, FixedRatePolicyChecker
+from app.services.data_collect.data_collector import (
+    ConfidenceThresholdPolicyChecker,
+    DataCollector,
+    FixedRatePolicyChecker,
+)
 
 
 class TestFixedRatePolicyCheckerUnit:
@@ -25,7 +29,7 @@ class TestFixedRatePolicyCheckerUnit:
         policy = FixedRateDataCollectionPolicy(rate=0.1)
 
         # Act
-        should_collect = FixedRatePolicyChecker(policy).should_collect(100)
+        should_collect = FixedRatePolicyChecker(policy).should_collect(100, [50.0])
 
         # Assert
         assert should_collect is True
@@ -35,7 +39,41 @@ class TestFixedRatePolicyCheckerUnit:
         policy = FixedRateDataCollectionPolicy(rate=0.1)
 
         # Act
-        should_collect = FixedRatePolicyChecker(policy).should_collect(9)
+        should_collect = FixedRatePolicyChecker(policy).should_collect(9, [50.0])
+
+        # Assert
+        assert should_collect is False
+
+
+class TestConfidenceThresholdDataCollectionPolicyUnit:
+    """Unit tests for ConfidenceThresholdDataCollectionPolicy."""
+
+    def test_should_collect_true(self):
+        # Arrange
+        policy = ConfidenceThresholdDataCollectionPolicy(confidence_threshold=30.0, min_sampling_interval=5)
+
+        # Act
+        should_collect = ConfidenceThresholdPolicyChecker(policy).should_collect(6, [25.0])
+
+        # Assert
+        assert should_collect is True
+
+    def test_should_collect_high_confidence(self):
+        # Arrange
+        policy = ConfidenceThresholdDataCollectionPolicy(confidence_threshold=30.0, min_sampling_interval=5)
+
+        # Act
+        should_collect = ConfidenceThresholdPolicyChecker(policy).should_collect(6, [35.0])
+
+        # Assert
+        assert should_collect is False
+
+    def test_should_collect_sampling_interval(self):
+        # Arrange
+        policy = ConfidenceThresholdDataCollectionPolicy(confidence_threshold=30.0, min_sampling_interval=5)
+
+        # Act
+        should_collect = ConfidenceThresholdPolicyChecker(policy).should_collect(3, [25.0])
 
         # Assert
         assert should_collect is False

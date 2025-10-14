@@ -5,7 +5,7 @@ from enum import StrEnum
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, TypeAdapter, model_validator
 
 from app.schemas.model import Model
 from app.schemas.sink import Sink
@@ -35,7 +35,16 @@ class FixedRateDataCollectionPolicy(DataCollectionPolicyBase):
     rate: float
 
 
-DataCollectionPolicy = Annotated[FixedRateDataCollectionPolicy, Field(discriminator="type")]
+class ConfidenceThresholdDataCollectionPolicy(DataCollectionPolicyBase):
+    type: Literal["confidence_threshold"] = "confidence_threshold"
+    confidence_threshold: float
+    min_sampling_interval: float
+
+
+DataCollectionPolicy = Annotated[
+    FixedRateDataCollectionPolicy | ConfidenceThresholdDataCollectionPolicy, Field(discriminator="type")
+]
+DataCollectionPolicyAdapter: TypeAdapter[DataCollectionPolicy] = TypeAdapter(DataCollectionPolicy)
 
 
 class PipelineView(BaseModel):
@@ -91,7 +100,13 @@ class PipelineView(BaseModel):
                         "type": "fixed_rate",
                         "enabled": "true",
                         "rate": 0.02,
-                    }
+                    },
+                    {
+                        "type": "confidence_threshold",
+                        "enabled": "true",
+                        "confidence_threshold": 0.2,
+                        "min_sampling_interval": 2.5,
+                    },
                 ],
             }
         }
