@@ -37,7 +37,7 @@ describe('ZoomSelector', () => {
         });
 
         render(<ZoomSelector />);
-        expect(screen.getByText('21.0%')).toBeVisible();
+        expect(screen.getByText('21%')).toBeVisible();
     });
 
     it('calls onZoomChange when zoom in button is clicked', () => {

@@ -11,7 +11,6 @@ import { SelectAnnotationProvider } from '../../annotator/select-annotation-prov
 import { DatasetItem } from '../../annotator/types';
 import { AnnotatorButtons } from './annotator-buttons.component';
 import { ToolSelectionBar } from './primary-toolbar/primary-toolbar.component';
-import { LabelSelection } from './secondary-toolbar/label-selection.component';
 import { SecondaryToolbar } from './secondary-toolbar/secondary-toolbar.component';
 
 type MediaPreviewProps = {
@@ -41,22 +40,18 @@ export const MediaPreview = ({ mediaItem, close }: MediaPreviewProps) => {
                 >
                     <Suspense fallback={<div>Loading...</div>}>
                         <ZoomProvider>
-                            <View gridArea={'toolbar'}>
-                                <ToolSelectionBar />
-                            </View>
+                            <SelectAnnotationProvider>
+                                <View gridArea={'toolbar'}>
+                                    <ToolSelectionBar />
+                                </View>
 
-                            <View gridArea={'header'}>
-                                <SecondaryToolbar
-                                    isHidden={false}
-                                    content={<LabelSelection labels={[]} onSelect={() => console.log('selected')} />}
-                                />
-                            </View>
-
-                            <View gridArea={'canvas'} overflow={'hidden'}>
-                                <SelectAnnotationProvider>
+                                <View gridArea={'header'}>
+                                    <SecondaryToolbar />
+                                </View>
+                                <View gridArea={'canvas'} overflow={'hidden'}>
                                     <AnnotatorCanvas mediaItem={mediaItem} isFocussed={isFocussed} />
-                                </SelectAnnotationProvider>
-                            </View>
+                                </View>
+                            </SelectAnnotationProvider>
 
                             <View gridArea={'aside'}>
                                 <div>Aside</div>
