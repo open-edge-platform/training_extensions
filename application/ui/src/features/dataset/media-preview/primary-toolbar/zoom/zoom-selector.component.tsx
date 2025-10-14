@@ -24,9 +24,9 @@ export const ZoomSelector = () => {
                 </IconWrapper>
             </ActionButton>
 
-            <Flex>
+            <Flex justifyContent={'center'}>
                 <Text UNSAFE_style={{ fontSize: 'var(--spectrum-global-dimension-font-size-25)' }}>
-                    {(zoom.scale * 100).toFixed(1)}%
+                    {(zoom.scale * 100).toFixed(0)}%
                 </Text>
             </Flex>
 
