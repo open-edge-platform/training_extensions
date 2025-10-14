@@ -10,17 +10,16 @@ import { useSecondaryToolbarState } from './use-secondary-toolbar-state.hook';
 import classes from '../media-preview.module.scss';
 
 export const SecondaryToolbar = () => {
-    const { isHidden, projectLabels, assignLabel, annotationsToUpdate } = useSecondaryToolbarState();
+    const { isHidden, projectLabels, toggleLabel, annotationsToUpdate } = useSecondaryToolbarState();
 
     return (
         <Flex height={'100%'} alignItems={'center'} margin={'size-100'} minHeight={'size-1200'}>
             <Grid UNSAFE_className={classes.toolbarGrid} isHidden={isHidden}>
                 <Flex UNSAFE_className={classes.toolbarSection}>
                     <LabelPicker
-                        // TODO: Improve the coloring
-                        selectedLabel={get(annotationsToUpdate[0], 'labels[0]', null)}
+                        selectedLabel={get(annotationsToUpdate, '[0].labels[0]', null)}
                         labels={projectLabels}
-                        onSelect={assignLabel}
+                        onSelect={toggleLabel}
                     />
                 </Flex>
             </Grid>
