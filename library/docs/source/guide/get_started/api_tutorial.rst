@@ -300,7 +300,7 @@ The datamodule used by the Engine is of type ``otx.data.module.OTXDataModule``.
     # default data module for the task
     datamodule = OTXDataModule(data_root="data/wgisd", task="DETECTION")
 
-    engine = Engine(data=datamodule, nodel=...)
+    engine = Engine(data=datamodule, model=...)
     engine.train()
 
 The command above will create a default ``DataModule``. You can modify parameters for dataset constructing using ``SubsetConfig``:
