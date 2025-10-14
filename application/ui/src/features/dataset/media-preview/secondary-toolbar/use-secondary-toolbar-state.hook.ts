@@ -20,28 +20,34 @@ export const useSecondaryToolbarState = () => {
 
     const annotationsToUpdate = annotations.filter((annotation) => selectedAnnotations.has(annotation.id));
 
-    const assignLabel = (labelId: Key | null) => {
-        const selectedLabel = projectLabels.find((label) => label.id === labelId) || projectLabels[0];
+    const toggleLabel = (labelId: Key | null) => {
+        const selectedLabel = projectLabels.find((label) => label.id === labelId);
+
+        if (!selectedLabel) {
+            return;
+        }
 
         annotationsToUpdate.forEach((annotation) => {
-            updateAnnotation({ ...annotation, labels: [selectedLabel as Label] });
-        });
-    };
+            const hasLabel = annotation.labels?.some((label) => label.id === labelId);
 
-    const unAssignLabel = (labelId: Key | null) => {
-        annotationsToUpdate.forEach((annotation) => {
-            updateAnnotation({
-                ...annotation,
-                labels: annotation.labels?.filter((label) => label.id !== labelId) as Label[],
-            });
+            if (hasLabel) {
+                updateAnnotation({
+                    ...annotation,
+                    labels: annotation.labels?.filter((label) => label.id !== labelId) as Label[],
+                });
+            } else {
+                updateAnnotation({
+                    ...annotation,
+                    labels: [...(annotation.labels || []), selectedLabel as Label],
+                });
+            }
         });
     };
 
     return {
         isHidden,
         projectLabels,
-        assignLabel,
-        unAssignLabel,
+        toggleLabel,
         annotationsToUpdate,
     };
 };
