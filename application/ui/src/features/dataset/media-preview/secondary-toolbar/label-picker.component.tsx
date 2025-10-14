@@ -13,7 +13,7 @@ type LabelPickerProps = {
 };
 export const LabelPicker = ({ labels, onSelect, selectedLabel }: LabelPickerProps) => {
     return (
-        <Picker selectedKey={selectedLabel?.id} label='Choose a label' onSelectionChange={onSelect}>
+        <Picker selectedKey={selectedLabel?.id} placeholder={'Select label'} onSelectionChange={onSelect}>
             {labels.map((label) => {
                 return <Item key={label.id}>{label.name}</Item>;
             })}

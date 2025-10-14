@@ -20,6 +20,30 @@ export const useSecondaryToolbarState = () => {
 
     const annotationsToUpdate = annotations.filter((annotation) => selectedAnnotations.has(annotation.id));
 
+    const addLabels = (labelId: Key | null) => {
+        const selectedLabel = projectLabels.find((label) => label.id === labelId);
+
+        annotationsToUpdate.forEach((annotation) => {
+            const hasLabel = annotation.labels?.some((label) => label.id === labelId);
+
+            if (!hasLabel) {
+                updateAnnotation({
+                    ...annotation,
+                    labels: [...(annotation.labels || []), selectedLabel as Label],
+                });
+            }
+        });
+    };
+
+    const removeLabels = (labelId: Key | null) => {
+        annotationsToUpdate.forEach((annotation) => {
+            updateAnnotation({
+                ...annotation,
+                labels: annotation.labels?.filter((label) => label.id !== labelId) as Label[],
+            });
+        });
+    };
+
     const toggleLabel = (labelId: Key | null) => {
         const selectedLabel = projectLabels.find((label) => label.id === labelId);
 
@@ -27,21 +51,15 @@ export const useSecondaryToolbarState = () => {
             return;
         }
 
-        annotationsToUpdate.forEach((annotation) => {
-            const hasLabel = annotation.labels?.some((label) => label.id === labelId);
+        const labelIsAssignedToEveryAnnotation = annotationsToUpdate.every((annotation) =>
+            annotation.labels?.some((label) => label.id === labelId)
+        );
 
-            if (hasLabel) {
-                updateAnnotation({
-                    ...annotation,
-                    labels: annotation.labels?.filter((label) => label.id !== labelId) as Label[],
-                });
-            } else {
-                updateAnnotation({
-                    ...annotation,
-                    labels: [...(annotation.labels || []), selectedLabel as Label],
-                });
-            }
-        });
+        if (labelIsAssignedToEveryAnnotation) {
+            removeLabels(labelId);
+        } else {
+            addLabels(labelId);
+        }
     };
 
     return {
