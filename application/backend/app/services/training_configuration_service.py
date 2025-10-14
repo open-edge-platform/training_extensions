@@ -95,10 +95,17 @@ class TrainingConfigurationService:
             project_id=project_id,
             model_architecture_id=model_architecture_id,
         )
-        current_data = current_config.model_dump()
-        self._deep_update_dict(base_dict=current_data, updates=training_config_update)
 
-        updated_config = TrainingConfiguration.model_validate(current_data)
+        validated_update_config = TrainingConfiguration.from_model(training_config_update)
+        updated_config = current_config.model_copy(
+            update={
+                "dataset_preparation": validated_update_config.dataset_preparation,
+                "training": validated_update_config.training,
+                "evaluation": validated_update_config.evaluation,
+            },
+            deep=True,
+        )
+
         self._training_config_repo.create_or_update(
             project_id=str(project_id),
             model_architecture_id=model_architecture_id,
@@ -106,11 +113,3 @@ class TrainingConfigurationService:
         )
 
         return updated_config
-
-    def _deep_update_dict(self, base_dict: dict, updates: dict) -> None:
-        """Recursively update nested dictionary."""
-        for key, value in updates.items():
-            if key in base_dict and isinstance(base_dict[key], dict) and isinstance(value, dict):
-                self._deep_update_dict(base_dict[key], value)
-            else:
-                base_dict[key] = value

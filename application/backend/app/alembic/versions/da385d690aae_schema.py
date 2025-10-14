@@ -142,7 +142,7 @@ def upgrade() -> None:
         "training_configurations",
         sa.Column("id", sa.Text(), nullable=False),
         sa.Column("project_id", sa.Text(), nullable=False),
-        sa.Column("model_architecture_id", sa.String(length=100), nullable=True),
+        sa.Column("model_architecture_id", sa.String(length=255), nullable=True),
         sa.Column("configuration_data", sa.JSON(), nullable=False),
         sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.Column("updated_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
@@ -164,6 +164,6 @@ def downgrade() -> None:
     op.drop_table("dataset_revisions")
     op.drop_table("sources")
     op.drop_table("sinks")
-    op.drop_table("projects")
     op.drop_table("training_configurations")
+    op.drop_table("projects")
     # ### end Alembic commands ###

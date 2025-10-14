@@ -55,6 +55,7 @@ class TestTrainingConfigurationService:
             files_deleted=False,
         )
         db_session.add(model)
+        db_session.flush()
 
         training_configuration = fxt_training_configuration_service.get_training_configuration(
             project_id=UUID(project.id), model_revision_id=UUID(model.id)
@@ -85,7 +86,8 @@ class TestTrainingConfigurationService:
             configuration_data=fxt_training_configuration.model_dump(),
         )
         db_session.add(training_configuration)
-        db_session.commit()
+        db_session.flush()
+
         training_configuration = fxt_training_configuration_service.get_training_configuration(
             project_id=UUID(project.id), model_architecture_id="Custom_Object_Detection_YOLOX"
         )
@@ -113,6 +115,8 @@ class TestTrainingConfigurationService:
             exclusive_labels=False,
         )
         db_session.add(project)
+        db_session.flush()
+
         training_configuration = fxt_training_configuration_service.get_training_configuration(
             project_id=UUID(project.id), model_architecture_id=None
         )
@@ -139,6 +143,7 @@ class TestTrainingConfigurationService:
             exclusive_labels=False,
         )
         db_session.add(project)
+        db_session.flush()
 
         training_config_update = {
             "dataset_preparation": {"augmentation": {"topdown_affine": {"enable": True, "probability": 0.5}}},
@@ -174,7 +179,7 @@ class TestTrainingConfigurationService:
             configuration_data=fxt_training_configuration.model_dump(),
         )
         db_session.add(training_configuration)
-        db_session.commit()
+        db_session.flush()
 
         training_config_update = {
             "dataset_preparation": {"augmentation": {"topdown_affine": {"enable": True, "probability": 0.5}}},

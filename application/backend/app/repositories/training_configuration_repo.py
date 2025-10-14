@@ -1,7 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
-
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.schema import TrainingConfigurationDB
@@ -24,14 +23,11 @@ class TrainingConfigurationRepository(BaseRepository[TrainingConfigurationDB]):
             project_id (str): The ID of the project.
             model_architecture_id (str | None): The ID of the model architecture.
         """
-        return (
-            self.db.query(TrainingConfigurationDB)
-            .filter(
-                TrainingConfigurationDB.project_id == project_id,
-                TrainingConfigurationDB.model_architecture_id == model_architecture_id,
-            )
-            .first()
+        stmt = select(TrainingConfigurationDB).where(
+            TrainingConfigurationDB.project_id == project_id,
+            TrainingConfigurationDB.model_architecture_id == model_architecture_id,
         )
+        return self.db.execute(stmt).scalar_one_or_none()
 
     def create_or_update(
         self,
@@ -53,7 +49,10 @@ class TrainingConfigurationRepository(BaseRepository[TrainingConfigurationDB]):
         Returns:
             TrainingConfigurationDB: The created or updated training configuration.
         """
-        existing = self.get_by_project_and_model_architecture(project_id, model_architecture_id)
+        existing = self.get_by_project_and_model_architecture(
+            project_id=project_id,
+            model_architecture_id=model_architecture_id,
+        )
 
         if existing:
             existing.configuration_data = configuration_data
