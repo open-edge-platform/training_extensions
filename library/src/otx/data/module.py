@@ -333,7 +333,7 @@ class OTXDataModule(LightningDataModule):
             test_subset if test_subset is not None else instance.get_default_subset_config("test", input_size)
         )
 
-        # Extract normalization parameters from first dataset's transforms if available
+        # Extract normalization parameters from train dataset transforms if available
         transforms_to_extract = None
 
         if hasattr(train_dataset, "transforms") and train_dataset.transforms is not None:
@@ -411,11 +411,15 @@ class OTXDataModule(LightningDataModule):
 
         # Extract subset config and convert to container (dict)
         subset_config_dict = OmegaConf.to_container(config_dict[subset_key], resolve=True)  # type: ignore[index]
-        if subset_config_dict["input_size"] is None and input_size is not None:
+        subset_input_size = subset_config_dict.get("input_size")
+        if subset_input_size is None and input_size is not None:
             subset_config_dict["input_size"] = input_size
-        elif subset_config_dict["input_size"] is None and input_size is None:
-            subset_config_dict["input_size"] = config_dict["input_size"]
+        elif subset_input_size is None and input_size is None:
+            subset_config_dict["input_size"] = config_dict.get("input_size")
 
+        if subset_config_dict["input_size"] is None:
+            msg = "input size is not specified in both the config file and the DataModule constructor."
+            raise ValueError(msg)
         # Create structured config from dict
         config = OmegaConf.structured(SubsetConfig)
         config = OmegaConf.merge(config, subset_config_dict)

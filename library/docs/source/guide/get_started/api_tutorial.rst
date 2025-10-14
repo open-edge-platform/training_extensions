@@ -318,7 +318,7 @@ The datamodule used by the Engine is of type ``otx.data.module.OTXDataModule``.
     engine = Engine(datamodule=datamodule)
     engine.train()
 
-You can modify parameters for dataset constructing using SubsetConfig
+The command above will create a default ``DataModule``. You can modify parameters for dataset constructing using ``SubsetConfig``:
 
 .. code-block:: python
 
@@ -345,6 +345,8 @@ You can modify parameters for dataset constructing using SubsetConfig
         train_subset=train_subset_config
     )
 
+Similarly, you can modify ``val_subset_config`` and ``test_subset_config``:
+
 .. tip::
 
     You can get DataModule more easily using AutoConfigurator.
@@ -358,6 +360,62 @@ You can modify parameters for dataset constructing using SubsetConfig
 
         # default for the task
         datamodule = AutoConfigurator(data_root="data/wgisd").get_datamodule()
+
+You can also create ``OTXDataset`` independently and then call  ``from_otx_datasets`` method to construct  ``OTXDataModule``:
+
+.. code-block:: python
+
+    import torchvision.transforms.v2 as v2
+
+    from otx.data.module import OTXDataModule
+    from otx.config.data import SubsetConfig
+    from otx.data.dataset import OTXDetectionDataset
+
+    train_subset_config = SubsetConfig(
+        batch_size=64,
+        num_workers=4,
+    )
+
+    val_subset_config = SubsetConfig(
+        batch_size=64,
+    )
+
+    transforms=v2.Compose([
+            v2.RandomResizedCrop(size=(224, 224), antialias=True),
+            v2.RandomHorizontalFlip(p=0.5),
+            v2.ToDtype(torch.float32, scale=True),
+            v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ])
+
+    # setup Datumaro dataset
+    dm_dataset = DmDataset.import_from(self.data_root, format=self.data_format)
+    train_dm_subset = dm_dataset.subsets()["train"]
+    val_dm_subset = dm_dataset.subsets()["val"]
+    test_dm_subset = dm_dataset.subsets()["test"]
+
+    # setup OTX dataset
+    train_dataset = OTXDetectionDataset(
+        train_dm_subset,
+        transforms
+    )
+    val_dataset = OTXDetectionDataset(
+        val_dm_subset,
+        transforms
+    )
+    val_dataset = OTXDetectionDataset(
+        test_dm_subset,
+        transforms
+    )
+
+    # create OTXDataModule
+    datamodule = OTXDataModule.from_otx_datasets(
+        train_dataset = train_dataset,
+        val_dataset = val_dataset,
+        test_dataset = test_dataset,
+        train_subset = train_subset,
+        val_subset = val_subset,
+        test_subset = val_subset
+    )
 
 5. You can use train-specific arguments with ``train()`` function.
 
