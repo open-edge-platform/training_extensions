@@ -3,13 +3,14 @@
 
 from multiprocessing.synchronize import Condition
 from unittest.mock import MagicMock
+from uuid import uuid4
 
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.db.schema import Base, DatasetItemDB, LabelDB, ModelRevisionDB, PipelineDB, ProjectDB, SinkDB, SourceDB
+from app.db.schema import Base, LabelDB, ModelRevisionDB, PipelineDB, ProjectDB, SinkDB, SourceDB
 from app.schemas import OutputFormat, SinkType, SourceType
 from app.schemas.model import TrainingStatus
 from app.schemas.project import TaskType
@@ -121,16 +122,19 @@ def fxt_db_projects() -> list[ProjectDB]:
     """Fixture to create multiple projects in the database."""
     configs = [
         {
+            "id": str(uuid4()),
             "name": "Test Detection Project",
             "task_type": TaskType.DETECTION,
             "exclusive_labels": False,
         },
         {
+            "id": str(uuid4()),
             "name": "Test Classification Project",
             "task_type": TaskType.CLASSIFICATION,
             "exclusive_labels": True,
         },
         {
+            "id": str(uuid4()),
             "name": "Test Instance Segmentation Project",
             "task_type": TaskType.INSTANCE_SEGMENTATION,
             "exclusive_labels": True,
@@ -139,39 +143,18 @@ def fxt_db_projects() -> list[ProjectDB]:
     db_projects = []
     for config in configs:
         project = ProjectDB(**config)
-        project.pipeline = PipelineDB(
-            project_id=project.id,
-        )
-        project.labels = [
-            LabelDB(name="cat", color="#00FF00", hotkey="c"),
-            LabelDB(name="dog", color="#FF0000", hotkey="d"),
-        ]
+        project.pipeline = PipelineDB(project_id=project.id)
         db_projects.append(project)
     return db_projects
 
 
 @pytest.fixture
-def fxt_db_dataset_items(fxt_db_projects) -> list[DatasetItemDB]:
-    """Fixture to create multiple dataset items in the database."""
-    configs = [
-        {"name": "test1", "format": "jpg", "size": 1024, "width": 1024, "height": 768, "subset": "unassigned"},
-        {
-            "name": "test2",
-            "format": "jpg",
-            "size": 1024,
-            "width": 1024,
-            "height": 768,
-            "subset": "unassigned",
-            "annotation_data": [{"labels": [{"id": fxt_db_projects[0].labels[0].id}], "shape": {"type": "full_image"}}],
-        },
-        {"name": "test3", "format": "jpg", "size": 1024, "width": 1024, "height": 768, "subset": "unassigned"},
+def fxt_db_labels() -> list[LabelDB]:
+    """Fixture to create multiple labels in the database."""
+    return [
+        LabelDB(name="cat", color="#00FF00", hotkey="c"),
+        LabelDB(name="dog", color="#FF0000", hotkey="d"),
     ]
-
-    db_dataset_items = []
-    for config in configs:
-        dataset_item = DatasetItemDB(**config)
-        db_dataset_items.append(dataset_item)
-    return db_dataset_items
 
 
 @pytest.fixture

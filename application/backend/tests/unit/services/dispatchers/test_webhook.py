@@ -7,7 +7,7 @@ from uuid import uuid4
 import numpy as np
 import pytest
 import requests
-from freezegun import freeze_time
+import time_machine
 
 from app.schemas import OutputFormat, SinkType
 from app.schemas.sink import WebhookSinkConfig
@@ -76,7 +76,7 @@ class TestWebhookDispatcher:
             ),
         ],
     )
-    @freeze_time("2025-01-01T12:00:00")
+    @time_machine.travel("2025-01-01 12:00:00 +0000", tick=False)
     def test_dispatch_sends_payload(self, output_formats, fxt_webhook_config, fxt_sample_image, fxt_sample_predictions):
         """Test that the _dispatch method sends the correct payload to the webhook."""
         fxt_webhook_config.output_formats = output_formats

@@ -68,7 +68,14 @@ class ImagesFolderStream(VideoStream):
     def _init_watchdog(self, folder_path: str) -> None:
         """
         Initialize the watchdog to monitor images folder events.
-        :param folder_path: path to the folder with images
+
+        Args:
+            folder_path: Path to the folder with images to monitor.
+
+        Note:
+            This method starts an observer that recursively watches the specified
+            folder for file system events and triggers appropriate callbacks
+            when files are added or deleted.
         """
         event_handler = ImagesFolderEventHandler(
             lambda added_file: self.file_added(added_file),

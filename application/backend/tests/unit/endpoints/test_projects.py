@@ -14,12 +14,13 @@ from app.schemas.label import LabelToAdd, LabelToEdit, LabelToRemove
 from app.schemas.project import Task, TaskType
 from app.services import (
     ProjectService,
-    ResourceAlreadyExistsError,
     ResourceInUseError,
     ResourceNotFoundError,
     ResourceType,
+    ResourceWithIdAlreadyExistsError,
 )
 from app.services.data_collect import DataCollector
+from app.services.label_service import DuplicateLabelsError
 
 
 @pytest.fixture
@@ -100,8 +101,8 @@ class TestProjectEndpoints:
 
     @pytest.mark.parametrize("exclude_attrs", [{}, {"id"}])
     def test_create_project_exists(self, exclude_attrs, fxt_project_service, fxt_project, fxt_client):
-        fxt_project_service.create_project.side_effect = ResourceAlreadyExistsError(
-            resource_type=ResourceType.PROJECT, resource_name="New Project"
+        fxt_project_service.create_project.side_effect = ResourceWithIdAlreadyExistsError(
+            resource_type=ResourceType.PROJECT, resource_id="new_id"
         )
         response = fxt_client.post("/api/projects", json=fxt_project.model_dump(mode="json", exclude=exclude_attrs))
 
@@ -186,16 +187,14 @@ class TestProjectEndpoints:
         patch_labels = PatchLabels(labels_to_add=labels_to_add)
 
         fxt_project_service.get_project_by_id.return_value = fxt_project
-        fxt_label_service.update_labels_in_project.side_effect = ResourceAlreadyExistsError(
-            ResourceType.LABEL, "", message="Label with the same name or hotkey or color already exists"
-        )
+        fxt_label_service.update_labels_in_project.side_effect = DuplicateLabelsError
 
         response = fxt_client.patch(
             f"/api/projects/{str(fxt_project.id)}/labels", json=patch_labels.model_dump(mode="json")
         )
 
         assert response.status_code == status.HTTP_409_CONFLICT
-        assert "already exists" in response.json()["detail"]
+        assert response.json()["detail"] == "Either label names or hotkeys have duplicates"
 
     @pytest.mark.parametrize(
         "patch_labels",

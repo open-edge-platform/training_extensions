@@ -3,20 +3,23 @@
 #######
 # Backend base
 #######
-FROM python:3.13-slim@sha256:58c30f5bfaa718b5803a53393190b9c68bd517c44c6c94c1b6c8c172bcfad040 AS backend-base
+FROM python:3.13-slim@sha256:58c30f5bfaa718b5803a53393190b9c68bd517c44c6c94c1b6c8c172bcfad040 AS backend-build
 COPY --from=docker.io/astral/uv:0.8.8@sha256:67b2bcccdc103d608727d1b577e58008ef810f751ed324715eb60b3f0c040d30 /uv /uvx /bin/
 
 # Set working directory
 WORKDIR /app
 
-ENV PYTHONPATH=/app
-
-# Install system dependencies required for OpenCV
+# Install required build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgl1=1.7.0-1+b2 \
-    libglx-mesa0=25.0.7-2 \
+    git=1:2.47.3-0+deb13u1 \
+    build-essential=12.12 \
+    curl=8.14.1-2 \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
+
+# Install Rust compiler
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
 
 # Install dependencies
 RUN --mount=type=cache,target=/root/.cache/uv \
@@ -75,16 +78,23 @@ RUN npm run build
 #############
 # Server
 #############
-FROM backend-base AS geti-tune
+FROM python:3.13-slim@sha256:58c30f5bfaa718b5803a53393190b9c68bd517c44c6c94c1b6c8c172bcfad040 AS geti-tune
 
-# Install nginx
+WORKDIR /app
+ENV PYTHONPATH=/app
+
+# Install nginx & OpenCV required libraries
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgl1=1.7.0-1+b2 \
+    libglx-mesa0=25.0.7-2 \
     nginx=1.26.* \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=web_ui /home/app/web_ui/dist/ /usr/share/nginx/html
+COPY --from=backend-build /app /app
+COPY --from=backend-build /bin/uv /bin/uv
 
 EXPOSE 80
 

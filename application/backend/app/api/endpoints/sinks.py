@@ -17,7 +17,13 @@ from pydantic import ValidationError
 from app.api.dependencies import get_configuration_service, get_sink_id
 from app.schemas import Sink, SinkCreate
 from app.schemas.sink import SinkCreateAdapter
-from app.services import ConfigurationService, ResourceAlreadyExistsError, ResourceInUseError, ResourceNotFoundError
+from app.services import (
+    ConfigurationService,
+    ResourceInUseError,
+    ResourceNotFoundError,
+    ResourceWithIdAlreadyExistsError,
+    ResourceWithNameAlreadyExistsError,
+)
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/sinks", tags=["Sinks"])
@@ -93,7 +99,7 @@ def create_sink(
     """Create and configure a new sink"""
     try:
         return configuration_service.create_sink(sink_create)
-    except ResourceAlreadyExistsError as e:
+    except (ResourceWithNameAlreadyExistsError, ResourceWithIdAlreadyExistsError) as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 
@@ -135,6 +141,7 @@ def get_sink(
         status.HTTP_200_OK: {"description": "Sink successfully updated", "model": Sink},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid sink ID or request body"},
         status.HTTP_404_NOT_FOUND: {"description": "Sink not found"},
+        status.HTTP_409_CONFLICT: {"description": "Sink already exists"},
     },
 )
 def update_sink(
@@ -155,6 +162,8 @@ def update_sink(
         return configuration_service.update_sink(sink_id, sink_config)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except ResourceWithNameAlreadyExistsError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 
 @router.post(
@@ -214,7 +223,7 @@ def import_sink(
         return configuration_service.create_sink(sink_create)
     except yaml.YAMLError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid YAML format: {str(e)}")
-    except ResourceAlreadyExistsError as e:
+    except (ResourceWithNameAlreadyExistsError, ResourceWithIdAlreadyExistsError) as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))

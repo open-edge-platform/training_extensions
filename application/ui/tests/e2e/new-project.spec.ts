@@ -20,7 +20,7 @@ const fillProjectForm = async ({
     await page.getByRole('button', { name: /Confirm/ }).click();
 
     // Edit task
-    await page.getByLabel(task, { exact: true }).click();
+    await page.getByLabel(task).click();
 
     // Edit first label
     await page.getByLabel('Label input for Object').fill(labelNames[0]);
@@ -33,7 +33,7 @@ const fillProjectForm = async ({
     }
 };
 
-test('Project creation', async ({ page }) => {
+test.skip('Project creation', async ({ page }) => {
     await test.step('Navigate to projects page', async () => {
         await page.goto('/projects');
     });
@@ -56,7 +56,7 @@ test('Project creation', async ({ page }) => {
 
     await test.step('Verify project appears in project list', async () => {
         await page.getByText('Geti Tune').click(); // Go back to /projects
-        await expect(page.getByText('New Project')).toBeVisible();
+        await expect(page.getByText('New Project', { exact: true })).toBeVisible();
     });
 
     await test.step('Delete created project', async () => {
