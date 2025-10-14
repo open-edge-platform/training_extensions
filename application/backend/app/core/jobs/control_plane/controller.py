@@ -64,8 +64,6 @@ class JobController:
         while self._running:
             try:
                 job = await self._jobs_q.next_runnable()
-                if not job:
-                    continue
                 logger.info("Starting job with ID: %s", job.id)
                 self._start_job(job)
             except Exception:
