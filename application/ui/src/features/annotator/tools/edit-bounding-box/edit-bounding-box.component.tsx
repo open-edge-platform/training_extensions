@@ -19,12 +19,12 @@ interface EditBoundingBoxProps {
 export const EditBoundingBox = ({ annotation, zoom }: EditBoundingBoxProps) => {
     const [shape, setShape] = useState(annotation.shape);
     const { mediaItem } = useAnnotator();
-    const { updateAnnotation } = useAnnotationActions();
+    const { updateAnnotations } = useAnnotationActions();
 
     const roi = { x: 0, y: 0, width: mediaItem.width, height: mediaItem.height };
 
     const onComplete = () => {
-        updateAnnotation({ ...annotation, shape });
+        updateAnnotations([{ ...annotation, shape }]);
     };
 
     const translate = (point: Point) => {

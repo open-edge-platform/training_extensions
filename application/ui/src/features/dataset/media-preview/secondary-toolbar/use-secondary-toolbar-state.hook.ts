@@ -10,7 +10,8 @@ import { Label } from 'src/features/annotator/types';
 
 export const useSecondaryToolbarState = () => {
     const { selectedAnnotations } = useSelectedAnnotations();
-    const { annotations, updateAnnotation } = useAnnotationActions();
+    const { annotations, updateAnnotations } = useAnnotationActions();
+
     const projectLabels = useProjectLabels();
 
     const isHidden = selectedAnnotations.size === 0;
@@ -20,25 +21,33 @@ export const useSecondaryToolbarState = () => {
     const addLabels = (labelId: Key | null) => {
         const selectedLabel = projectLabels.find((label) => label.id === labelId);
 
-        annotationsToUpdate.forEach((annotation) => {
+        if (!selectedLabel) {
+            return;
+        }
+
+        const updatedAnnotations = annotationsToUpdate.map((annotation) => {
             const hasLabel = annotation.labels?.some((label) => label.id === labelId);
 
-            if (!hasLabel) {
-                updateAnnotation({
-                    ...annotation,
-                    labels: [...(annotation.labels || []), selectedLabel as Label],
-                });
+            if (hasLabel) {
+                return annotation;
             }
+
+            return {
+                ...annotation,
+                labels: [...(annotation.labels || []), selectedLabel as Label],
+            };
         });
+
+        updateAnnotations(updatedAnnotations);
     };
 
     const removeLabels = (labelId: Key | null) => {
-        annotationsToUpdate.forEach((annotation) => {
-            updateAnnotation({
-                ...annotation,
-                labels: annotation.labels?.filter((label) => label.id !== labelId) as Label[],
-            });
-        });
+        const updatedAnnotations = annotationsToUpdate.map((annotation) => ({
+            ...annotation,
+            labels: annotation.labels?.filter((label) => label.id !== labelId) as Label[],
+        }));
+
+        updateAnnotations(updatedAnnotations);
     };
 
     const toggleLabel = (labelId: Key | null) => {

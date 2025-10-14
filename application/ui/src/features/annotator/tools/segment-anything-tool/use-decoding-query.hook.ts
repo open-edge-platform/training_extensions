@@ -49,7 +49,7 @@ export const useDecodingQuery = (
 
 export const useDecodingMutation = (queryFn: (points: InteractiveAnnotationPoint[]) => Promise<Shape[]>) => {
     const { roi } = useAnnotator();
-    const { addAnnotation } = useAnnotationActions();
+    const { addAnnotations } = useAnnotationActions();
 
     return useMutation({
         mutationFn: async (points: InteractiveAnnotationPoint[]) => {
@@ -61,7 +61,7 @@ export const useDecodingMutation = (queryFn: (points: InteractiveAnnotationPoint
                 return removeOffLimitPoints(shape, roi);
             });
 
-            shapes.map((shape) => addAnnotation(shape));
+            addAnnotations(shapes);
         },
     });
 };

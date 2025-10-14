@@ -51,9 +51,9 @@ const mapLocalAnnotationsToServer = (localAnnotations: Annotation[]): ServerAnno
 
 interface AnnotationsContextValue {
     annotations: Annotation[];
-    addAnnotation: (shape: Shape) => void;
-    deleteAnnotation: (annotationId: string) => void;
-    updateAnnotation: (updatedAnnotation: Annotation) => void;
+    addAnnotations: (shapes: Shape[]) => void;
+    deleteAnnotations: (annotationIds: string[]) => void;
+    updateAnnotations: (updatedAnnotations: Annotation[]) => void;
     submitAnnotations: () => Promise<void>;
     isSaving: boolean;
 }
@@ -85,30 +85,30 @@ export const AnnotationActionsProvider = ({ children, mediaItem }: AnnotationAct
     const [localAnnotations, setLocalAnnotations] = useState<Annotation[]>([]);
     const isDirty = useRef<boolean>(false);
 
-    const updateAnnotation = (updatedAnnotation: Annotation) => {
-        const { id } = updatedAnnotation;
+    const updateAnnotations = (updatedAnnotations: Annotation[]) => {
+        const updatedMap = new Map(updatedAnnotations.map((ann) => [ann.id, ann]));
 
         setLocalAnnotations((prevAnnotations) =>
-            prevAnnotations.map((annotation) => (annotation.id === id ? updatedAnnotation : annotation))
+            prevAnnotations.map((annotation) => updatedMap.get(annotation.id) ?? annotation)
         );
         isDirty.current = true;
     };
 
-    const addAnnotation = (shape: Shape) => {
+    const addAnnotations = (shapes: Shape[]) => {
         setLocalAnnotations((prevAnnotations) => [
             ...prevAnnotations,
-            {
+            ...shapes.map((shape) => ({
                 shape,
                 id: uuid(),
                 labels: [{ id: uuid(), name: 'No label', color: 'var(--annotation-fill)', isPrediction: false }],
-            },
+            })),
         ]);
         isDirty.current = true;
     };
 
-    const deleteAnnotation = (annotationId: string) => {
+    const deleteAnnotations = (annotationIds: string[]) => {
         setLocalAnnotations((prevAnnotations) =>
-            prevAnnotations.filter((annotation) => annotation.id !== annotationId)
+            prevAnnotations.filter((annotation) => !annotationIds.includes(annotation.id))
         );
         isDirty.current = true;
     };
@@ -146,9 +146,9 @@ export const AnnotationActionsProvider = ({ children, mediaItem }: AnnotationAct
                 annotations: localAnnotations,
 
                 // Local
-                addAnnotation,
-                updateAnnotation,
-                deleteAnnotation,
+                addAnnotations,
+                updateAnnotations,
+                deleteAnnotations,
 
                 // Remote
                 submitAnnotations,
