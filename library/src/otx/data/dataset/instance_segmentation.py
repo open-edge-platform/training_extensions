@@ -49,7 +49,7 @@ class OTXInstanceSegDataset(OTXDataset):
     def __init__(
         self,
         dm_subset: DmDataset,
-        transforms: Transforms,
+        transforms: Transforms | None = None,
         task_type: OTXTaskType = OTXTaskType.INSTANCE_SEGMENTATION,
         max_refetch: int = 1000,
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,

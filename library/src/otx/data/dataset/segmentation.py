@@ -186,7 +186,7 @@ class OTXSegmentationDataset(OTXDataset):
     def __init__(
         self,
         dm_subset: DatasetSubset,
-        transforms: Transforms,
+        transforms: Transforms | None = None,
         max_refetch: int = 1000,
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
         to_tv_image: bool = True,

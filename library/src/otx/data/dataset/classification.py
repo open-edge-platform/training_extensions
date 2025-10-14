@@ -56,7 +56,7 @@ class OTXMulticlassClsDataset(OTXDataset):
     def __init__(
         self,
         dm_subset: DmDataset,
-        transforms: Transforms,
+        transforms: Transforms | None = None,
         max_refetch: int = 1000,
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
         stack_images: bool = True,
@@ -162,7 +162,7 @@ class OTXMultilabelClsDataset(OTXDataset):
     def __init__(
         self,
         dm_subset: DmDataset,
-        transforms: Transforms,
+        transforms: Transforms | None = None,
         max_refetch: int = 1000,
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
         stack_images: bool = True,
@@ -294,7 +294,7 @@ class OTXHlabelClsDataset(OTXDataset):
     def __init__(
         self,
         dm_subset: DmDataset,
-        transforms: Transforms,
+        transforms: Transforms | None = None,
         max_refetch: int = 1000,
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
         stack_images: bool = True,

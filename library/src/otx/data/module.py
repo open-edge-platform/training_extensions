@@ -18,6 +18,7 @@ from torchvision.transforms.v2 import Normalize
 from otx.config.data import SubsetConfig, TileConfig
 from otx.data.dataset.tile import OTXTileDatasetFactory
 from otx.data.factory import OTXDatasetFactory
+from otx.data.transform_libs.torchvision import TorchVisionTransformLib
 from otx.data.utils import adapt_tile_config, get_adaptive_num_workers, instantiate_sampler
 from otx.data.utils.pre_filtering import pre_filtering
 from otx.types.device import DeviceType
@@ -297,9 +298,9 @@ class OTXDataModule(LightningDataModule):
         # Create instance
         instance = cls.__new__(cls)
         LightningDataModule.__init__(instance)
-
         # Set basic attributes
-        instance.task = train_dataset.task_type
+        instance.subsets = {"train": train_dataset, "val": val_dataset, "test": test_dataset}
+        instance.task = train_dataset.task_type  # type: ignore[assignment]
         instance.data_format = train_dataset.data_format
         instance.data_root = ""
         instance.tile_config = (
@@ -324,23 +325,22 @@ class OTXDataModule(LightningDataModule):
             raise ValueError(msg) from None
         input_size = example_item.img_info.img_shape
         instance.input_size = input_size
+        default_subset_configs = instance.get_default_subset_configs(input_size)
 
-        # override transforms in subset_config based on provided datasets
-        train_dataset.transforms = train_subset.transforms if train_subset is not None else train_dataset.transforms  # type: ignore[assignment]
-        val_dataset.transforms = val_subset.transforms if val_subset is not None else val_dataset.transforms  # type: ignore[assignment]
-        test_dataset.transforms = test_subset.transforms if test_subset is not None else test_dataset.transforms  # type: ignore[assignment]
+        # merge default configs with provided subsets
+        for name, subset in zip(["train", "val", "test"], [train_subset, val_subset, test_subset]):
+            if subset is not None:
+                # Use provided subset config
+                subset_to_assign = subset
+            else:
+                # Use default config but get transforms from the dataset
+                subset_to_assign = default_subset_configs[f"{name}_subset"]
+                # Override transforms with the ones from the pre-constructed dataset
+                subset_to_assign.transforms = instance.subsets[name].transforms  # type: ignore[assignment]
 
-        # get default subset configs
-        subset_configs = instance.get_default_subset_configs(input_size)
-        instance.train_subset = train_subset if train_subset is not None else subset_configs["train_subset"]
-        instance.val_subset = val_subset if val_subset is not None else subset_configs["val_subset"]
-        instance.test_subset = test_subset if test_subset is not None else subset_configs["test_subset"]
-
-        # add subsets
-        instance.subsets = {"train": train_dataset, "val": val_dataset, "test": test_dataset}
-        instance.train_subset.transforms = train_dataset.transforms  # type: ignore[assignment]
-        instance.val_subset.transforms = val_dataset.transforms  # type: ignore[assignment]
-        instance.test_subset.transforms = test_dataset.transforms  # type: ignore[assignment]
+            # Assign subset config and transforms to subset dataset
+            setattr(instance, f"{name}_subset", subset_to_assign)
+            instance.subsets[name].transforms = subset_to_assign.transforms  # type: ignore[assignment]
 
         # Extract normalization parameters from train dataset transforms if available
         instance.input_mean, instance.input_std = instance.extract_normalization_params(
@@ -415,13 +415,9 @@ class OTXDataModule(LightningDataModule):
             if subset_config_dict["input_size"] is None:
                 msg = "input size is not specified in both the config file and the DataModule constructor."
                 raise ValueError(msg)
-            # Create structured config from dict
-            config = OmegaConf.structured(SubsetConfig)
-            config = OmegaConf.merge(config, subset_config_dict)
-
-            # Convert to Python object
-            subset_config: SubsetConfig = OmegaConf.to_object(config)  # type: ignore[assignment]
-            subset_dicts[subset_key] = subset_config
+            subset_config_dict = SubsetConfig(**subset_config_dict)
+            subset_config_dict.transforms = TorchVisionTransformLib.generate(subset_config_dict)
+            subset_dicts[subset_key] = subset_config_dict
         return subset_dicts
 
     def _is_meta_info_valid(self, label_infos: list[LabelInfo]) -> bool:

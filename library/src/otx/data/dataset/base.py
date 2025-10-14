@@ -78,7 +78,7 @@ class OTXDataset(Dataset):
     def __init__(
         self,
         dm_subset: DmDataset,
-        transforms: Transforms,
+        transforms: Transforms | None = None,
         max_refetch: int = 1000,
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
         stack_images: bool = True,
@@ -107,6 +107,8 @@ class OTXDataset(Dataset):
         return np.random.default_rng().integers(0, len(self))
 
     def _apply_transforms(self, entity: OTXDataItem) -> OTXDataItem | None:
+        if self.transforms is None:
+            return entity
         if isinstance(self.transforms, Compose):
             if self.to_tv_image:
                 entity = entity.to_tv_image()

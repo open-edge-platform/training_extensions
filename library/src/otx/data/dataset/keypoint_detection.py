@@ -56,7 +56,7 @@ class OTXKeypointDetectionDataset(OTXDataset):
     def __init__(
         self,
         dm_subset: DatasetSubset,
-        transforms: Transforms,
+        transforms: Transforms | None = None,
         max_refetch: int = 1000,
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
         stack_images: bool = True,
