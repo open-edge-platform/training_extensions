@@ -20,22 +20,15 @@ export const useSecondaryToolbarState = () => {
 
     const annotationsToUpdate = annotations.filter((annotation) => selectedAnnotations.has(annotation.id));
 
-    const addLabels = (labelId: Key | null) => {
-        const selectedLabel = projectLabels.find((label) => label.id === labelId);
+    const assignLabel = (labelId: Key | null) => {
+        const selectedLabel = projectLabels.find((label) => label.id === labelId) || projectLabels[0];
 
         annotationsToUpdate.forEach((annotation) => {
-            const hasLabel = annotation.labels?.some((label) => label.id === labelId);
-
-            if (!hasLabel) {
-                updateAnnotation({
-                    ...annotation,
-                    labels: [...(annotation.labels || []), selectedLabel as Label],
-                });
-            }
+            updateAnnotation({ ...annotation, labels: [selectedLabel as Label] });
         });
     };
 
-    const removeLabels = (labelId: Key | null) => {
+    const unAssignLabel = (labelId: Key | null) => {
         annotationsToUpdate.forEach((annotation) => {
             updateAnnotation({
                 ...annotation,
@@ -44,28 +37,11 @@ export const useSecondaryToolbarState = () => {
         });
     };
 
-    const toggleLabel = (labelId: Key | null) => {
-        const selectedLabel = projectLabels.find((label) => label.id === labelId);
-
-        if (!selectedLabel) {
-            return;
-        }
-
-        const labelIsAssignedToEveryAnnotation = annotationsToUpdate.every((annotation) =>
-            annotation.labels?.some((label) => label.id === labelId)
-        );
-
-        if (labelIsAssignedToEveryAnnotation) {
-            removeLabels(labelId);
-        } else {
-            addLabels(labelId);
-        }
-    };
-
     return {
         isHidden,
         projectLabels,
-        toggleLabel,
+        assignLabel,
+        unAssignLabel,
         annotationsToUpdate,
     };
 };

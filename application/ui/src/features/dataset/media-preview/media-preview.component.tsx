@@ -6,6 +6,7 @@ import { Suspense, useState } from 'react';
 import { Content, Dialog, dimensionValue, Divider, Flex, Grid, Heading, Loading, View } from '@geti/ui';
 import { AnnotationActionsProvider } from 'src/features/annotator/annotation-actions-provider.component';
 import { AnnotatorProvider } from 'src/features/annotator/annotator-provider.component';
+import { LabelSelection } from 'src/features/project/label-selection/label-selection.component';
 
 import { ZoomProvider } from '../../../components/zoom/zoom.provider';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas';
@@ -13,7 +14,6 @@ import { SelectAnnotationProvider } from '../../annotator/select-annotation-prov
 import { DatasetItem } from '../../annotator/types';
 import { AnnotatorButtons } from './annotator-buttons.component';
 import { ToolSelectionBar } from './primary-toolbar/primary-toolbar.component';
-import { LabelSelection } from './secondary-toolbar/label-selection.component';
 import { SecondaryToolbar } from './secondary-toolbar/secondary-toolbar.component';
 import { SidebarItems } from './sidebar-items.component';
 
