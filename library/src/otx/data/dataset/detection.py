@@ -32,13 +32,13 @@ class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):  # type: ignore[misc]
     OTXDataItem format suitable for object detection training and inference.
 
     Args:
-        dm_subset (): Datumaro dataset subset containing the data items.
-        transforms: Transform operations to apply to the data items.
-        max_refetch: Maximum number of retries when fetching a data item fails.
-        image_color_channel: Color channel format for images (RGB, BGR, etc.).
-        stack_images: Whether to stack images in batch processing.
-        to_tv_image: Whether to convert images to torchvision format.
-        data_format: Format of the source data (e.g., "coco", "pascal_voc").
+        dm_subset (DmDataset): Datumaro dataset subset containing the data items.
+        transforms (Transforms | None, optional): Transform operations to apply to the data items.
+        max_refetch (int): Maximum number of retries when fetching a data item fails.
+        image_color_channel (ImageColorChannel): Color channel format for images (RGB, BGR, etc.).
+        stack_images (bool): Whether to stack images in batch processing.
+        to_tv_image (bool): Whether to convert images to torchvision format.
+        data_format (str): Format of the source data (e.g., "coco", "pascal_voc").
 
     Example:
         >>> from otx.data.dataset.detection import OTXDetectionDataset

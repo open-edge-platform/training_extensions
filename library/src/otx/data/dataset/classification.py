@@ -33,7 +33,7 @@ class OTXMulticlassClsDataset(OTXDataset):
 
     Args:
         dm_subset (DmDataset): Datumaro dataset subset containing the data items.
-        transforms (Transforms): Transform operations to apply to the data items.
+        transforms (Transforms, optional): Transformations to apply to the data.
         max_refetch (int): Maximum number of retries when fetching a data item fails.
         image_color_channel (ImageColorChannel): Color channel format for images (RGB, BGR, etc.).
         stack_images (bool): Whether to stack images in batch processing.
@@ -139,7 +139,7 @@ class OTXMultilabelClsDataset(OTXDataset):
 
     Args:
         dm_subset (DmDataset): Datumaro dataset subset containing the data items.
-        transforms (Transforms): Transform operations to apply to the data items.
+        transforms (Transforms, optional): Transform operations to apply to the data items.
         max_refetch (int): Maximum number of retries when fetching a data item fails.
         image_color_channel (ImageColorChannel): Color channel format for images (RGB, BGR, etc.).
         stack_images (bool): Whether to stack images in batch processing.
@@ -265,7 +265,7 @@ class OTXHlabelClsDataset(OTXDataset):
 
     Args:
         dm_subset (DmDataset): Datumaro dataset subset containing the data items.
-        transforms (Transforms): Transform operations to apply to the data items.
+        transforms (Transforms, optional): Transform operations to apply to the data items.
         max_refetch (int): Maximum number of retries when fetching a data item fails.
         image_color_channel (ImageColorChannel): Color channel format for images (RGB, BGR, etc.).
         stack_images (bool): Whether to stack images in batch processing.

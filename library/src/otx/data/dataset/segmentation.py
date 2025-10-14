@@ -23,7 +23,8 @@ from otx.types.label import SegLabelInfo
 from .base import OTXDataset
 
 if TYPE_CHECKING:
-    from datumaro import DatasetItem, DatasetSubset
+    from datumaro import Dataset as DmDataset
+    from datumaro import DatasetItem
 
     from otx.data.dataset.base import Transforms
 
@@ -185,7 +186,7 @@ class OTXSegmentationDataset(OTXDataset):
 
     def __init__(
         self,
-        dm_subset: DatasetSubset,
+        dm_subset: DmDataset,
         transforms: Transforms | None = None,
         max_refetch: int = 1000,
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,

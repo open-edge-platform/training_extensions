@@ -45,7 +45,7 @@ class OTXAnomalyDataset(OTXDataset):
     Args:
         task_type (OTXTaskType): The type of anomaly task (e.g., classification, detection).
         dm_subset (DmDataset): Datumaro dataset subset containing the data.
-        transforms (Transforms): Transformations to apply to the data.
+        transforms (Transforms, optional): Transformations to apply to the data.
         max_refetch (int, optional): Maximum number of times to refetch data if needed. Defaults to 1000.
         image_color_channel (ImageColorChannel, optional): Color channel format for images. Defaults to RGB.
         stack_images (bool, optional): Whether to stack images. Defaults to True.

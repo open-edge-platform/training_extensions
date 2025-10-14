@@ -64,7 +64,7 @@ class OTXDataset(Dataset):
 
     Args:
         dm_subset (DmDataset): Datumaro subset of a dataset.
-        transforms (Transforms): Transforms to apply on images.
+        transforms (Transforms, optional): Transformations to apply to the data.
         max_refetch (int, optional): Maximum number of times to attempt fetching a valid image. Defaults to 1000.
         image_color_channel (ImageColorChannel, optional): Color channel format of images (e.g., RGB or BGR).
             Defaults to ImageColorChannel.RGB.

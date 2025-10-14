@@ -10,7 +10,8 @@ from typing import Callable, List, Union
 
 import numpy as np
 import torch
-from datumaro import AnnotationType, Bbox, Dataset, DatasetSubset, Image, Points
+from datumaro import AnnotationType, Bbox, Image, Points
+from datumaro import Dataset as DmDataset
 from torchvision import tv_tensors
 from torchvision.transforms.v2.functional import to_dtype, to_image
 
@@ -35,13 +36,13 @@ class OTXKeypointDetectionDataset(OTXDataset):
     and inference.
 
     Args:
-        dm_subset: Datumaro dataset subset containing the data items.
-        transforms: Transform operations to apply to the data items.
-        max_refetch: Maximum number of retries when fetching a data item fails.
-        image_color_channel: Color channel format for images (RGB, BGR, etc.).
-        stack_images: Whether to stack images in batch processing.
-        to_tv_image: Whether to convert images to torchvision format.
-        data_format: Format of the source data (e.g., "coco", "arrow").
+        dm_subset (DmDataset): Datumaro dataset subset containing the data items.
+        transforms (Transforms | None, optional): Transform operations to apply to the data items.
+        max_refetch (int, optional): Maximum number of retries when fetching a data item fails.
+        image_color_channel (ImageColorChannel, optional): Color channel format for images (RGB, BGR, etc.).
+        stack_images (bool, optional): Whether to stack images in batch processing.
+        to_tv_image (bool, optional): Whether to convert images to torchvision format.
+        data_format (str, optional): Format of the source data (e.g., "coco", "arrow").
 
     Example:
         >>> from otx.data.dataset.keypoint_detection import OTXKeypointDetectionDataset
@@ -55,7 +56,7 @@ class OTXKeypointDetectionDataset(OTXDataset):
 
     def __init__(
         self,
-        dm_subset: DatasetSubset,
+        dm_subset: DmDataset,
         transforms: Transforms | None = None,
         max_refetch: int = 1000,
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
@@ -84,7 +85,7 @@ class OTXKeypointDetectionDataset(OTXDataset):
                 label_ids=[str(i) for i in range(len(kp_labels))],
             )
 
-    def _get_single_bbox_dataset(self, dm_subset: DatasetSubset) -> Dataset:
+    def _get_single_bbox_dataset(self, dm_subset: DmDataset) -> DmDataset:
         """Method for splitting dataset items into multiple items for each bbox/keypoint."""
         dm_items = []
         for item in dm_subset:
@@ -106,7 +107,7 @@ class OTXKeypointDetectionDataset(OTXDataset):
         if len(dm_items) == 0:
             msg = "No keypoints found in the dataset. Please, check dataset annotations."
             raise ValueError(msg)
-        return Dataset.from_iterable(dm_items, categories=self.dm_subset.categories())
+        return DmDataset.from_iterable(dm_items, categories=self.dm_subset.categories())
 
     def _get_item_impl(self, index: int) -> OTXDataItem | None:
         """Get a single data item from the dataset.

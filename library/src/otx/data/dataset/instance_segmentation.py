@@ -35,7 +35,7 @@ class OTXInstanceSegDataset(OTXDataset):
 
     Args:
         dm_subset (DmDataset): The subset of the dataset to use.
-        transforms (Transforms): Data transformations to be applied.
+        transforms (Transforms, optional): Data transformations to be applied.
         task_type (OTXTaskType, optional): The task type. Defaults to INSTANCE_SEGMENTATION.
         max_refetch (int, optional): Maximum number of times to refetch data. Defaults to 1000.
         image_color_channel (ImageColorChannel, optional): Image color channel format. Defaults to RGB.
