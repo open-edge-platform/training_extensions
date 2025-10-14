@@ -150,6 +150,6 @@ class OTXInstanceSegDataset(OTXDataset):
         """OTX Task Type for the dataset.
 
         Returns:
-            OTXTaskType: The semantic segmentation task type.
+            OTXTaskType: The instance segmentation task type.
         """
         return self._task_type
