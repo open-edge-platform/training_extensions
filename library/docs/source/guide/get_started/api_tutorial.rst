@@ -339,7 +339,7 @@ You can modify parameters for dataset constructing using SubsetConfig
         num_workers=4,
     )
 
-    datamodule = OTXDatamodule(
+    datamodule = OTXDataModule(
         task="DETECTION",
         data_root="data/wgisd",
         train_subset=train_subset_config
