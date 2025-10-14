@@ -41,10 +41,6 @@ class JobQueue:
         """Get the next non-canceled job from the queue (FIFO order)."""
         while True:
             job = await self._queue.get()
-            if job is None:
-                logger.debug("Received None from job queue, skipping")
-                await asyncio.sleep(0.5)
-                continue
             if job.status == JobStatus.CANCELLED:
                 logger.info("Skipping cancelled job with ID: %s", job.id)
                 continue
