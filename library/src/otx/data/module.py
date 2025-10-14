@@ -323,7 +323,8 @@ class OTXDataModule(LightningDataModule):
         try:
             example_item = next(iter(train_dataset))
         except StopIteration:
-            raise ValueError("train_dataset is empty; cannot infer input_size")
+            msg = "train_dataset is empty; cannot infer input_size"
+            raise ValueError(msg) from None
         input_size = example_item.img_info["img_shape"]
         instance.input_size = input_size
         instance.train_subset = (
