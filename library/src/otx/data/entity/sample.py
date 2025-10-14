@@ -106,6 +106,13 @@ class ClassificationMultiLabelSample(OTXSample):
     label: np.ndarray | torch.Tensor = label_field(pl.Int32(), multi_label=True)
 
 
+class ClassificationHierarchicalSample(OTXSample):
+    """ClassificationHierarchicalSample is a base class for OTX hierarchical classification items."""
+
+    image: np.ndarray | tv_tensors.Image = image_field(dtype=pl.UInt8)
+    label: np.ndarray | torch.Tensor = label_field(pl.Int32(), is_list=True)
+
+
 class DetectionSample(OTXSample):
     """DetectionSample is a base class for OTX detection items."""
 

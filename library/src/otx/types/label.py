@@ -11,6 +11,7 @@ from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING, Any
 
 from datumaro.components.annotation import GroupType
+from datumaro.experimental.categories import HierarchicalLabelCategory
 
 if TYPE_CHECKING:
     from datumaro import Label, LabelCategories
@@ -363,13 +364,20 @@ class HLabelInfo(LabelInfo):
         empty_label_id = None
         label_names = []
         for item in dm_label_categories.items:
-            for attr in item.attributes:
-                if attr.startswith("__name__"):
-                    name = attr[len("__name__") :]
-                    if name == empty_label_name:
-                        empty_label_id = item.name
-                    label_names.append(name)
-                    break
+            if not isinstance(item, HierarchicalLabelCategory):  # TODO (albert): Remove old datumaro logic
+                for attr in item.attributes:
+                    if attr.startswith("__name__"):
+                        name = attr[len("__name__") :]
+                        if name == empty_label_name:
+                            empty_label_id = item.name
+                        label_names.append(name)
+                        break
+            else:
+                name = item.label_semantics["name"]
+
+                if name == empty_label_name:
+                    empty_label_id = item.name
+                label_names.append(name)
 
         if len(label_names) != len(dm_label_categories.items):
             msg = "Wrong arrow file: can not extract label names from attributes"
