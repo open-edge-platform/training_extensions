@@ -353,7 +353,7 @@ You can modify parameters for dataset constructing using SubsetConfig
 
         from otx.tools.auto_configuration import AutoConfigurator
 
-        # speicific data pipeline for the model
+        # specific data pipeline for the model
         datamodule = AutoConfigurator(data_root="data/wgisd", model_config="src/otx/recipe/detection/atss_mobilenetv2.yaml").get_datamodule()
 
         # default for the task
