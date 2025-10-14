@@ -320,7 +320,10 @@ class OTXDataModule(LightningDataModule):
 
         # derive image_size from dataset
         # assume that data uses fixed size during transforms
-        example_item = next(iter(train_dataset))
+        try:
+            example_item = next(iter(train_dataset))
+        except StopIteration:
+            raise ValueError("train_dataset is empty; cannot infer input_size")
         input_size = example_item.img_info["img_shape"]
         instance.input_size = input_size
         instance.train_subset = (
