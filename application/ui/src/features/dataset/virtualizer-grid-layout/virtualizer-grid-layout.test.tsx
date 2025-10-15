@@ -2,23 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { render, screen } from '@testing-library/react';
+import { getMultipleMockedMediaItems } from 'mocks/mock-media-item';
 import { Size } from 'react-aria-components';
-import { components } from 'src/api/openapi-spec';
 import { MediaState } from 'src/routes/dataset/provider';
 import { describe, expect, it } from 'vitest';
 
 import { VirtualizerGridLayout } from './virtualizer-grid-layout.component';
-
-const mockedItem = (item: Partial<components['schemas']['DatasetItem']>): components['schemas']['DatasetItem'] => ({
-    id: '123',
-    name: 'test-1',
-    format: 'jpg',
-    width: 0,
-    height: 0,
-    size: 0,
-    subset: 'unassigned',
-    ...item,
-});
 
 // required configuration; otherwise, the list renders empty
 const mockedLayoutOptions = {
@@ -28,7 +17,7 @@ const mockedLayoutOptions = {
 };
 
 describe('VirtualizerGridLayout', () => {
-    const mockedItems = [mockedItem({ id: '111', name: 'test-1' }), mockedItem({ id: '222', name: 'test-2' })];
+    const mockedItems = getMultipleMockedMediaItems(2, 'test');
 
     it('renders all items as visible options', () => {
         const mockedLoadingMore = vi.fn();

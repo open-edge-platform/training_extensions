@@ -3,7 +3,7 @@
 
 import { Suspense, useState } from 'react';
 
-import { Content, Dialog, Divider, Flex, Grid, Heading, Loading, View } from '@geti/ui';
+import { Content, Dialog, dimensionValue, Divider, Flex, Grid, Heading, Loading, View } from '@geti/ui';
 import { AnnotationActionsProvider } from 'src/features/annotator/annotation-actions-provider.component';
 import { AnnotatorProvider } from 'src/features/annotator/annotator-provider.component';
 
@@ -43,11 +43,16 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                 }}
             >
                 <Grid
-                    areas={['toolbar header aside', 'toolbar canvas aside', 'toolbar footer aside']}
-                    width={'100%'}
+                    gap='size-125'
+                    width='100%'
                     height='100%'
-                    columns={'100px calc(100% - 318px) 218px'}
-                    rows={'auto 1fr auto'}
+                    rows='auto 1fr auto'
+                    columns='auto 1fr 218px'
+                    UNSAFE_style={{
+                        // Matches grid gap (size-125) to align with the leftmost element
+                        paddingLeft: dimensionValue('size-125'),
+                    }}
+                    areas={['toolbar header aside', 'toolbar canvas aside', 'toolbar footer aside']}
                 >
                     <AnnotationActionsProvider mediaItem={mediaItem}>
                         <ZoomProvider>

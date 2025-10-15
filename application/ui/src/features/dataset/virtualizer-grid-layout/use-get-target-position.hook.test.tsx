@@ -73,7 +73,7 @@ describe('useGetTargetPosition', () => {
         expect(mockCallback).toHaveBeenCalledWith(expectedScrollPos);
     });
 
-    it('return zero when container has no children', () => {
+    it('returns zero when container has no children', () => {
         const container = document.createElement('div');
         const firstChild = document.createElement('div');
         Object.defineProperty(firstChild, 'clientWidth', { value: 1000 });
