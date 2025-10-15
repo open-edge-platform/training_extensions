@@ -38,11 +38,11 @@ export const useGetTargetPosition = ({ gap, delay = 500, ref, scrollToIndex, cal
 
             callback(scrollTo);
             // we don't want to scroll immediately
-            // in case of changed view mode we have to scroll once view is rendered
         }, delay);
 
         return () => {
             timeoutId && clearTimeout(timeoutId);
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [scrollToIndex]);
 };

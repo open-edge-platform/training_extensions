@@ -28,7 +28,7 @@ interface VirtualizerGridLayoutProps extends Pick<AriaComponentsListBoxProps, 's
     contentItem: (item: Item) => ReactNode;
 }
 
-const MIN_SPACE = 18; // it the default values on GridLayoutOptions
+const MIN_SPACE = 18; // default value for GridLayoutOptions.minSpace.height
 
 export const VirtualizerGridLayout = ({
     items,
@@ -49,7 +49,7 @@ export const VirtualizerGridLayout = ({
 
     useGetTargetPosition({
         ref,
-        delay: 100,
+        delay: 40,
         gap: layoutOptions.minSpace?.height ?? MIN_SPACE,
         scrollToIndex,
         callback: (top) => {
