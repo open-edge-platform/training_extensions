@@ -1,16 +1,24 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { RefObject } from 'react';
+
 import { useEventListener } from 'hooks/event-listener.hook';
 import { DatasetItem } from 'src/features/annotator/types';
 
 type useKeyboardNavigationProps = {
+    ref: RefObject<HTMLElement | null>;
     items: DatasetItem[];
     selectedIndex: number;
     onSelectedMediaItem: (item: DatasetItem) => void;
 };
 
-export const useKeyboardNavigation = ({ items, selectedIndex, onSelectedMediaItem }: useKeyboardNavigationProps) => {
+export const useKeyboardNavigation = ({
+    ref,
+    items,
+    selectedIndex,
+    onSelectedMediaItem,
+}: useKeyboardNavigationProps) => {
     const getNewIndex = (key: 'ArrowUp' | 'ArrowDown') => {
         if (key === 'ArrowUp') {
             return Math.max(0, selectedIndex - 1);
@@ -22,13 +30,15 @@ export const useKeyboardNavigation = ({ items, selectedIndex, onSelectedMediaIte
         return selectedIndex;
     };
 
-    useEventListener('keydown', (event) => {
-        if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
-            event.preventDefault();
+    useEventListener(
+        'keydown',
+        (event) => {
+            if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+                const newIndex = getNewIndex(event.key);
 
-            const newIndex = getNewIndex(event.key);
-
-            items[newIndex] && onSelectedMediaItem(items[newIndex]);
-        }
-    });
+                items[newIndex] && onSelectedMediaItem(items[newIndex]);
+            }
+        },
+        ref
+    );
 };

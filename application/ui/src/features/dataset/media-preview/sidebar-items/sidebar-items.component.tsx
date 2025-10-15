@@ -1,9 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
-import { Selection, Size } from '@geti/ui';
+import { Selection, Size, useUnwrapDOMRef, View } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { DatasetItem } from 'src/features/annotator/types';
 import { useSelectedData } from 'src/routes/dataset/provider';
@@ -29,6 +29,8 @@ type SidebarItemsProps = {
 };
 
 export const SidebarItems = ({ mediaItem, onSelectedMediaItem }: SidebarItemsProps) => {
+    const ref = useRef(null);
+    const unwrapRef = useUnwrapDOMRef(ref);
     const project_id = useProjectIdentifier();
     const { mediaState } = useSelectedData();
     const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set([String(mediaItem.id)]));
@@ -37,6 +39,7 @@ export const SidebarItems = ({ mediaItem, onSelectedMediaItem }: SidebarItemsPro
     const selectedIndex = items.findIndex((item) => item.id === mediaItem.id);
 
     useKeyboardNavigation({
+        ref: unwrapRef,
         items,
         selectedIndex,
         onSelectedMediaItem: (item) => {
@@ -46,28 +49,30 @@ export const SidebarItems = ({ mediaItem, onSelectedMediaItem }: SidebarItemsPro
     });
 
     return (
-        <VirtualizerGridLayout
-            items={items}
-            ariaLabel='sidebar-items'
-            selectionMode='single'
-            mediaState={mediaState}
-            selectedKeys={selectedKeys}
-            layoutOptions={layoutOptions}
-            isLoadingMore={isFetchingNextPage}
-            scrollToIndex={selectedIndex}
-            onLoadMore={() => hasNextPage && fetchNextPage()}
-            onSelectionChange={setSelectedKeys}
-            contentItem={(item) => (
-                <MediaItem
-                    contentElement={() => (
-                        <MediaThumbnail
-                            alt={item.name}
-                            url={getThumbnailUrl(project_id, String(item.id))}
-                            onClick={() => onSelectedMediaItem(item)}
-                        />
-                    )}
-                />
-            )}
-        />
+        <View ref={ref} width={'100%'} height={'100%'}>
+            <VirtualizerGridLayout
+                items={items}
+                ariaLabel='sidebar-items'
+                selectionMode='single'
+                mediaState={mediaState}
+                selectedKeys={selectedKeys}
+                layoutOptions={layoutOptions}
+                isLoadingMore={isFetchingNextPage}
+                scrollToIndex={selectedIndex}
+                onLoadMore={() => hasNextPage && fetchNextPage()}
+                onSelectionChange={setSelectedKeys}
+                contentItem={(item) => (
+                    <MediaItem
+                        contentElement={() => (
+                            <MediaThumbnail
+                                alt={item.name}
+                                url={getThumbnailUrl(project_id, String(item.id))}
+                                onClick={() => onSelectedMediaItem(item)}
+                            />
+                        )}
+                    />
+                )}
+            />
+        </View>
     );
 };
