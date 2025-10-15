@@ -55,16 +55,24 @@ export const Toolbar = ({ items }: ToolbarProps) => {
             });
         });
 
-        try {
-            await Promise.all(uploadPromises);
+        const promises = await Promise.allSettled(uploadPromises);
 
-            await queryClient.invalidateQueries({
-                queryKey: ['get', '/api/projects/{project_id}/dataset/items'],
+        const succeeded = promises.filter((result) => result.status === 'fulfilled').length;
+        const failed = promises.filter((result) => result.status === 'rejected').length;
+
+        await queryClient.invalidateQueries({
+            queryKey: ['get', '/api/projects/{project_id}/dataset/items'],
+        });
+
+        if (failed === 0) {
+            toast({ type: 'success', message: `Uploaded ${succeeded} item(s)` });
+        } else if (succeeded === 0) {
+            toast({ type: 'error', message: `Failed to upload ${failed} item(s)` });
+        } else {
+            toast({
+                type: 'warning',
+                message: `Uploaded ${succeeded} item(s), ${failed} failed`,
             });
-
-            toast({ type: 'success', message: `Uploaded ${files.length} item(s)` });
-        } catch (_error) {
-            toast({ type: 'error', message: 'Error uploading files' });
         }
     };
 
