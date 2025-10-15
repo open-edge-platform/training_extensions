@@ -16,6 +16,7 @@ from app.schemas import DatasetItem
 from app.schemas.dataset_item import (
     DatasetItemAnnotation,
     DatasetItemAnnotationsWithSource,
+    DatasetItemAssignSubset,
     DatasetItemFormat,
     DatasetItemSubset,
     SetDatasetItemAnnotations,
@@ -23,7 +24,7 @@ from app.schemas.dataset_item import (
 from app.schemas.label import LabelReference
 from app.schemas.shape import Rectangle
 from app.services import DatasetService, ResourceNotFoundError, ResourceType
-from app.services.dataset_service import AnnotationValidationError, NotAnnotatedError
+from app.services.dataset_service import AnnotationValidationError, NotAnnotatedError, SubsetAlreadyAssignedError
 
 
 @pytest.fixture
@@ -425,3 +426,72 @@ class TestDatasetItemEndpoints:
             project_id=project_id,
             dataset_item_id=dataset_item_id,
         )
+
+    def test_assign_dataset_item_subset(self, fxt_dataset_service, fxt_dataset_item, fxt_client):
+        project_id = uuid4()
+        dataset_item_id = uuid4()
+
+        fxt_dataset_service.assign_dataset_item_subset.return_value = fxt_dataset_item
+
+        response = fxt_client.patch(
+            f"/api/projects/{str(project_id)}/dataset/items/{str(dataset_item_id)}/subset",
+            json=DatasetItemAssignSubset(subset=DatasetItemSubset.TRAINING).model_dump(mode="json"),
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        fxt_dataset_service.assign_dataset_item_subset.assert_called_once_with(
+            project_id=project_id,
+            dataset_item_id=dataset_item_id,
+            subset=DatasetItemSubset.TRAINING,
+        )
+
+    def test_assign_dataset_item_subset_not_found(self, fxt_dataset_service, fxt_client):
+        project_id = uuid4()
+        dataset_item_id = uuid4()
+
+        fxt_dataset_service.assign_dataset_item_subset.side_effect = ResourceNotFoundError(
+            ResourceType.DATASET_ITEM, str(dataset_item_id)
+        )
+
+        response = fxt_client.patch(
+            f"/api/projects/{str(project_id)}/dataset/items/{str(dataset_item_id)}/subset",
+            json=DatasetItemAssignSubset(subset=DatasetItemSubset.TRAINING).model_dump(mode="json"),
+        )
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        fxt_dataset_service.assign_dataset_item_subset.assert_called_once_with(
+            project_id=project_id,
+            dataset_item_id=dataset_item_id,
+            subset=DatasetItemSubset.TRAINING,
+        )
+
+    def test_assign_dataset_item_subset_already_assigned(self, fxt_dataset_service, fxt_client):
+        project_id = uuid4()
+        dataset_item_id = uuid4()
+
+        fxt_dataset_service.assign_dataset_item_subset.side_effect = SubsetAlreadyAssignedError
+
+        response = fxt_client.patch(
+            f"/api/projects/{str(project_id)}/dataset/items/{str(dataset_item_id)}/subset",
+            json=DatasetItemAssignSubset(subset=DatasetItemSubset.TRAINING).model_dump(mode="json"),
+        )
+
+        assert response.status_code == status.HTTP_409_CONFLICT
+        fxt_dataset_service.assign_dataset_item_subset.assert_called_once_with(
+            project_id=project_id,
+            dataset_item_id=dataset_item_id,
+            subset=DatasetItemSubset.TRAINING,
+        )
+
+    @pytest.mark.parametrize("subset", ["unassigned", "foobar"])
+    def test_assign_dataset_item_subset_invalid_subset(self, fxt_dataset_service, fxt_client, subset):
+        project_id = uuid4()
+        dataset_item_id = uuid4()
+
+        response = fxt_client.patch(
+            f"/api/projects/{str(project_id)}/dataset/items/{str(dataset_item_id)}/subset",
+            json='{"subset": "' + subset + '"}',
+        )
+
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        fxt_dataset_service.assign_dataset_item_subset.assert_not_called()

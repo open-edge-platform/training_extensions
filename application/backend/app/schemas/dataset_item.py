@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from enum import StrEnum
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -121,3 +122,11 @@ class DatasetItemsWithPagination(BaseModel):
 
     items: list[DatasetItem]
     pagination: Pagination
+
+
+class DatasetItemAssignSubset(BaseModel):
+    """Schema for assigning a subset to dataset item"""
+
+    subset: Literal[DatasetItemSubset.TESTING, DatasetItemSubset.TRAINING, DatasetItemSubset.VALIDATION]
+
+    model_config = {"json_schema_extra": {"example": {"subset": "training"}}}

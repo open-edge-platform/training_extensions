@@ -63,6 +63,14 @@ class NotAnnotatedError(Exception):
         super().__init__(msg)
 
 
+class SubsetAlreadyAssignedError(Exception):
+    """Exception raised when subset is being assigned to a dataset item, which already has one assigned."""
+
+    def __init__(self, message: str | None = None):
+        msg = message or "Dataset item has already a subset assigned."
+        super().__init__(msg)
+
+
 class DatasetService:
     def __init__(
         self, data_dir: Path, db_session: Session, project_service: ProjectService, label_service: LabelService
@@ -337,6 +345,20 @@ class DatasetService:
         updated = repo.delete_annotation_data(obj_id=str(dataset_item_id))
         if not updated:
             raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
+
+    def assign_dataset_item_subset(
+        self, project_id: UUID, dataset_item_id: UUID, subset: DatasetItemSubset
+    ) -> DatasetItem:
+        """Assign dataset item subset"""
+        project = self._project_service.get_project_by_id(project_id)
+        repo = DatasetItemRepository(project_id=str(project.id), db=self._db_session)
+        db_subset = repo.get_subset(str(dataset_item_id))
+        if db_subset is None:
+            raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
+        if db_subset != DatasetItemSubset.UNASSIGNED:
+            raise SubsetAlreadyAssignedError
+        repo.set_subset(obj_id=str(dataset_item_id), subset=subset)
+        return self.get_dataset_item_by_id(project_id=project_id, dataset_item_id=dataset_item_id)
 
     def get_dm_dataset(self, project_id: UUID) -> dm.Dataset:
         repo = DatasetItemRepository(project_id=str(project_id), db=self._db_session)
