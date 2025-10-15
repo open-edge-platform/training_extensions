@@ -73,9 +73,8 @@ def register_pytree_node(cls: type[Sample]) -> type[Sample]:
 class OTXSample(Sample):
     """Base class for OTX data samples."""
 
-    subset: Subset = subset_field()
-
     image: np.ndarray | torch.Tensor | tv_tensors.Image | Any
+    subset: Subset = subset_field()
 
     @property
     def masks(self) -> Mask | None:
