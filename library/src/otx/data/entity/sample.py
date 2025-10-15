@@ -169,7 +169,6 @@ class SegmentationSample(OTXSample):
     """OTXDataItemSample is a base class for OTX data items."""
 
     subset: Subset = subset_field()
-
     image: tv_tensors.Image = image_field(dtype=pl.UInt8, channels_first=True)
     masks: tv_tensors.Mask = mask_field(dtype=pl.UInt8, channels_first=True, has_channels_dim=True)
     dm_image_info: DmImageInfo = image_info_field()
@@ -188,11 +187,9 @@ class AnomalySample(OTXSample):
     """ClassificationSample is a base class for OTX classification items."""
 
     subset: Subset = subset_field()
-
     image: np.ndarray | tv_tensors.Image = image_field(dtype=pl.UInt8)
     label: torch.Tensor = label_field(pl.Int32())
     dm_image_info: DmImageInfo = image_info_field()
-
     masks: np.ndarray | tv_tensors.Image | None = mask_field(
         dtype=pl.UInt8, semantic=Semantic.Anomaly, channels_first=True, has_channels_dim=True
     )
@@ -212,7 +209,6 @@ class InstanceSegmentationSample(OTXSample):
     """OTXSample for instance segmentation tasks."""
 
     subset: Subset = subset_field()
-
     image: tv_tensors.Image = image_field(dtype=pl.UInt8, channels_first=True)
     bboxes: np.ndarray | tv_tensors.BoundingBoxes = bbox_field(dtype=pl.Float32)
     label: torch.Tensor = label_field(is_list=True)
@@ -243,7 +239,6 @@ class InstanceSegmentationSampleWithMask(OTXSample):
     """OTXSample for instance segmentation tasks."""
 
     subset: Subset = subset_field()
-
     image: tv_tensors.Image = image_field(dtype=pl.UInt8, channels_first=True)
     bboxes: np.ndarray | tv_tensors.BoundingBoxes = bbox_field(dtype=pl.Float32)
     masks: tv_tensors.Mask = instance_mask_field(dtype=pl.UInt8)
@@ -275,7 +270,6 @@ class KeypointSample(OTXSample):
     """KeypointSample is a base class for OTX keypoint detection items."""
 
     subset: Subset = subset_field()
-
     image: np.ndarray | tv_tensors.Image = image_field(dtype=pl.UInt8)
     label: torch.Tensor = label_field(pl.Int32(), is_list=True)
     keypoints: torch.Tensor = keypoints_field()
