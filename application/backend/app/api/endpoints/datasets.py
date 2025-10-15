@@ -11,9 +11,9 @@ from starlette.responses import FileResponse
 from app.api.dependencies import get_dataset_item_id, get_dataset_service, get_file_name_and_extension, get_project_id
 from app.schemas import DatasetItem, DatasetItemsWithPagination
 from app.schemas.base import Pagination
-from app.schemas.dataset_item import DatasetItemAnnotation, DatasetItemAnnotations, DatasetItemAnnotationsWithSource
+from app.schemas.dataset_item import DatasetItemAnnotation, DatasetItemAnnotationsWithSource, SetDatasetItemAnnotations
 from app.services import DatasetService, ResourceNotFoundError
-from app.services.dataset_service import AnnotationValidationError, InvalidImageError
+from app.services.dataset_service import AnnotationValidationError, InvalidImageError, NotAnnotatedError
 
 router = APIRouter(prefix="/api/projects/{project_id}/dataset/items", tags=["Datasets"])
 
@@ -217,7 +217,7 @@ def set_dataset_item_annotations(
     project_id: Annotated[UUID, Depends(get_project_id)],
     dataset_item_id: Annotated[UUID, Depends(get_dataset_item_id)],
     dataset_item_annotations: Annotated[
-        DatasetItemAnnotations, Body(openapi_examples=SET_DATASET_ITEM_ANNOTATIONS_BODY_EXAMPLES)
+        SetDatasetItemAnnotations, Body(openapi_examples=SET_DATASET_ITEM_ANNOTATIONS_BODY_EXAMPLES)
     ],
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
 ) -> DatasetItemAnnotationsWithSource:
@@ -238,7 +238,9 @@ def set_dataset_item_annotations(
     responses={
         status.HTTP_200_OK: {"description": "Dataset item found", "model": DatasetItemAnnotationsWithSource},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid dataset item ID or project ID"},
-        status.HTTP_404_NOT_FOUND: {"description": "Dataset item or project not found"},
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Dataset item or project not found or dataset item is not annotated"
+        },
     },
 )
 def get_dataset_item_annotations(
@@ -249,7 +251,7 @@ def get_dataset_item_annotations(
     """Get the dataset item annotations"""
     try:
         return dataset_service.get_dataset_item_annotations(project_id=project_id, dataset_item_id=dataset_item_id)
-    except ResourceNotFoundError as e:
+    except (ResourceNotFoundError, NotAnnotatedError) as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 

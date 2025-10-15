@@ -19,7 +19,7 @@ from app.schemas.label import LabelReference
 from app.schemas.shape import FullImage, Rectangle
 from app.services import LabelService, ProjectService
 from app.services.base import ResourceNotFoundError, ResourceType
-from app.services.dataset_service import DatasetService, InvalidImageError
+from app.services.dataset_service import DatasetService, InvalidImageError, NotAnnotatedError
 
 logger = logging.getLogger(__name__)
 
@@ -164,7 +164,7 @@ class TestDatasetServiceIntegration:
             and dataset_item.format == format
             and dataset_item.width == 1024
             and dataset_item.height == 768
-            and dataset_item.annotation_data == []
+            and dataset_item.annotation_data is None
             and dataset_item.user_reviewed == user_reviewed
             and dataset_item.subset == DatasetItemSubset.UNASSIGNED
             and dataset_item.subset_assigned_at is None
@@ -573,14 +573,11 @@ class TestDatasetServiceIntegration:
         """Test getting a dataset item annotation and it's missing."""
         db_project, db_labels, db_dataset_items = fxt_project_with_dataset_items
 
-        annotations = fxt_dataset_service.get_dataset_item_annotations(
-            project_id=UUID(db_project.id),
-            dataset_item_id=UUID(db_dataset_items[0].id),
-        )
-
-        assert annotations == DatasetItemAnnotationsWithSource(
-            annotations=[], user_reviewed=False, prediction_model_id=None
-        )
+        with pytest.raises(NotAnnotatedError):
+            fxt_dataset_service.get_dataset_item_annotations(
+                project_id=UUID(db_project.id),
+                dataset_item_id=UUID(db_dataset_items[0].id),
+            )
 
     def test_get_dataset_item_annotations(
         self,
@@ -658,7 +655,7 @@ class TestDatasetServiceIntegration:
 
         dataset_item = db_session.get(DatasetItemDB, db_dataset_items[1].id)
         assert dataset_item is not None
-        assert dataset_item.annotation_data == []
+        assert dataset_item.annotation_data is None
 
     def test_delete_dataset_item_annotations_not_found(
         self,

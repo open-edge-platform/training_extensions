@@ -15,15 +15,15 @@ from app.main import app
 from app.schemas import DatasetItem
 from app.schemas.dataset_item import (
     DatasetItemAnnotation,
-    DatasetItemAnnotations,
     DatasetItemAnnotationsWithSource,
     DatasetItemFormat,
     DatasetItemSubset,
+    SetDatasetItemAnnotations,
 )
 from app.schemas.label import LabelReference
 from app.schemas.shape import Rectangle
 from app.services import DatasetService, ResourceNotFoundError, ResourceType
-from app.services.dataset_service import AnnotationValidationError
+from app.services.dataset_service import AnnotationValidationError, NotAnnotatedError
 
 
 @pytest.fixture
@@ -284,7 +284,7 @@ class TestDatasetItemEndpoints:
 
         response = fxt_client.post(
             f"/api/projects/{str(project_id)}/dataset/items/{str(dataset_item_id)}/annotations",
-            json=DatasetItemAnnotations(annotations=annotations).model_dump(mode="json"),
+            json=SetDatasetItemAnnotations(annotations=annotations).model_dump(mode="json"),
         )
 
         assert response.status_code == status.HTTP_201_CREATED
@@ -308,7 +308,7 @@ class TestDatasetItemEndpoints:
 
         response = fxt_client.post(
             f"/api/projects/{str(project_id)}/dataset/items/{str(dataset_item_id)}/annotations",
-            json=DatasetItemAnnotations(annotations=annotations).model_dump(mode="json"),
+            json=SetDatasetItemAnnotations(annotations=annotations).model_dump(mode="json"),
         )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -334,7 +334,7 @@ class TestDatasetItemEndpoints:
 
         response = fxt_client.post(
             f"/api/projects/{str(project_id)}/dataset/items/{str(dataset_item_id)}/annotations",
-            json=DatasetItemAnnotations(annotations=annotations).model_dump(mode="json"),
+            json=SetDatasetItemAnnotations(annotations=annotations).model_dump(mode="json"),
         )
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -373,6 +373,19 @@ class TestDatasetItemEndpoints:
         fxt_dataset_service.get_dataset_item_annotations.side_effect = ResourceNotFoundError(
             ResourceType.DATASET_ITEM, str(dataset_item_id)
         )
+
+        response = fxt_client.get(f"/api/projects/{str(project_id)}/dataset/items/{str(dataset_item_id)}/annotations")
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        fxt_dataset_service.get_dataset_item_annotations.assert_called_once_with(
+            project_id=project_id,
+            dataset_item_id=dataset_item_id,
+        )
+
+    def test_get_dataset_item_annotations_not_annotated(self, fxt_dataset_service, fxt_client):
+        project_id = uuid4()
+        dataset_item_id = uuid4()
+        fxt_dataset_service.get_dataset_item_annotations.side_effect = NotAnnotatedError
 
         response = fxt_client.get(f"/api/projects/{str(project_id)}/dataset/items/{str(dataset_item_id)}/annotations")
 

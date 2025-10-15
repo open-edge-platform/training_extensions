@@ -55,6 +55,14 @@ class InvalidImageError(Exception):
         super().__init__(msg)
 
 
+class NotAnnotatedError(Exception):
+    """Exception raised when unannotated dataset item annotations are requested."""
+
+    def __init__(self, message: str | None = None):
+        msg = message or "Dataset item has not been annotated yet."
+        super().__init__(msg)
+
+
 class DatasetService:
     def __init__(
         self, data_dir: Path, db_session: Session, project_service: ProjectService, label_service: LabelService
@@ -98,7 +106,7 @@ class DatasetService:
         user_reviewed: bool,
         source_id: UUID | None = None,
         prediction_model_id: UUID | None = None,
-        annotations: list[DatasetItemAnnotation] = [],
+        annotations: list[DatasetItemAnnotation] | None = None,
     ) -> DatasetItem:
         """Creates a new dataset item"""
         dataset_item_id = uuid4()
@@ -133,11 +141,12 @@ class DatasetService:
 
         project = self._project_service.get_project_by_id(project_id)
 
-        DatasetService._validate_annotations_labels(annotations=annotations, labels=project.task.labels)
-        DatasetService._validate_annotations(annotations=annotations, project=project)
-        DatasetService._validate_annotations_coordinates(annotations=annotations, dataset_item=dataset_item)
+        if annotations is not None:
+            DatasetService._validate_annotations_labels(annotations=annotations, labels=project.task.labels)
+            DatasetService._validate_annotations(annotations=annotations, project=project)
+            DatasetService._validate_annotations_coordinates(annotations=annotations, dataset_item=dataset_item)
 
-        dataset_item.annotation_data = [annotation.model_dump(mode="json") for annotation in annotations]
+            dataset_item.annotation_data = [annotation.model_dump(mode="json") for annotation in annotations]
 
         repo = DatasetItemRepository(project_id=str(project_id), db=self._db_session)
         dataset_item = repo.save(dataset_item)
@@ -311,6 +320,8 @@ class DatasetService:
         dataset_item = repo.get_by_id(str(dataset_item_id))
         if not dataset_item:
             raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
+        if not dataset_item.annotation_data:
+            raise NotAnnotatedError
         return DatasetItemAnnotationsWithSource(
             annotations=[
                 DatasetItemAnnotation.model_validate(annotation) for annotation in dataset_item.annotation_data
@@ -323,7 +334,7 @@ class DatasetService:
         """Delete the dataset item annotations"""
         project = self._project_service.get_project_by_id(project_id)
         repo = DatasetItemRepository(project_id=str(project.id), db=self._db_session)
-        updated = repo.set_annotation_data(obj_id=str(dataset_item_id), annotation_data=[])
+        updated = repo.delete_annotation_data(obj_id=str(dataset_item_id))
         if not updated:
             raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
 

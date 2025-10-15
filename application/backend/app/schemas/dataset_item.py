@@ -70,10 +70,8 @@ class DatasetItemAnnotation(BaseModel):
     }
 
 
-class DatasetItemAnnotations(BaseModel):
-    """
-    Dataset item annotations
-    """
+class SetDatasetItemAnnotations(BaseModel):
+    """Schema for setting dataset item annotations"""
 
     annotations: list[DatasetItemAnnotation]
 
@@ -91,11 +89,12 @@ class DatasetItemAnnotations(BaseModel):
     }
 
 
-class DatasetItemAnnotationsWithSource(DatasetItemAnnotations):
+class DatasetItemAnnotationsWithSource(BaseModel):
     """
     Dataset item annotations with information about source
     """
 
+    annotations: list[DatasetItemAnnotation]
     user_reviewed: bool
     prediction_model_id: str | None = None
 
