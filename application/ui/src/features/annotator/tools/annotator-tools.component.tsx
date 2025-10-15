@@ -15,7 +15,7 @@ const TASK_TOOL_CONFIG: Record<string, ToolConfig[]> = {
         { type: 'selection', icon: Selector },
         { type: 'bounding-box', icon: BoundingBox },
     ],
-    segmentation: [
+    instance_segmentation: [
         { type: 'selection', icon: Selector },
         { type: 'sam', icon: SegmentAnythingIcon },
         // TODO: Add 'polygon' tool later
@@ -25,6 +25,7 @@ const TASK_TOOL_CONFIG: Record<string, ToolConfig[]> = {
 export const AnnotatorTools = () => {
     const projectTask = useProjectTask();
     const { activeTool, setActiveTool } = useAnnotator();
+
     const availableTools = TASK_TOOL_CONFIG[projectTask] || [];
 
     return (

@@ -70,7 +70,7 @@ export const DataCollection = () => {
                     Toggle auto capturing
                 </Switch>
 
-                <Text>Some description about this stuff</Text>
+                <Text>Capture frames while the stream is running</Text>
 
                 <Divider marginY={'size-400'} size={'S'} />
 

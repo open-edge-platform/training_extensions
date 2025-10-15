@@ -69,7 +69,11 @@ export const router = createBrowserRouter([
             },
             {
                 path: paths.project.details.pattern,
-                element: <Layout />,
+                element: (
+                    <WebRTCConnectionProvider>
+                        <Layout />
+                    </WebRTCConnectionProvider>
+                ),
                 children: [
                     {
                         index: true,
@@ -77,11 +81,7 @@ export const router = createBrowserRouter([
                     },
                     {
                         path: paths.project.inference.pattern,
-                        element: (
-                            <WebRTCConnectionProvider>
-                                <Inference />
-                            </WebRTCConnectionProvider>
-                        ),
+                        element: <Inference />,
                     },
                     {
                         path: paths.project.dataset.pattern,
