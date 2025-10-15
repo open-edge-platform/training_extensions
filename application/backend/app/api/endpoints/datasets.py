@@ -18,7 +18,7 @@ from app.schemas.dataset_item import (
     DatasetItemAssignSubset,
 )
 from app.services import DatasetService, ResourceNotFoundError
-from app.services.dataset_service import AnnotationValidationError, HasAssignedSubsetError, InvalidImageError
+from app.services.dataset_service import AnnotationValidationError, InvalidImageError, SubsetAlreadyAssignedError
 
 router = APIRouter(prefix="/api/projects/{project_id}/dataset/items", tags=["Datasets"])
 
@@ -286,8 +286,8 @@ def delete_dataset_item_annotation(
         status.HTTP_200_OK: {"description": "Dataset item subset is assigned"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid dataset item ID or project ID"},
         status.HTTP_404_NOT_FOUND: {"description": "Dataset item or project not found"},
-        status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Invalid subset"},
         status.HTTP_409_CONFLICT: {"description": "Dataset item already has a subset assigned"},
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Invalid subset"},
     },
 )
 def assign_dataset_item_subset(
@@ -303,5 +303,5 @@ def assign_dataset_item_subset(
         )
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    except HasAssignedSubsetError as e:
+    except SubsetAlreadyAssignedError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))

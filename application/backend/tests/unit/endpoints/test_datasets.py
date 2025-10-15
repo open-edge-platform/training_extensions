@@ -24,7 +24,7 @@ from app.schemas.dataset_item import (
 from app.schemas.label import LabelReference
 from app.schemas.shape import Rectangle
 from app.services import DatasetService, ResourceNotFoundError, ResourceType
-from app.services.dataset_service import AnnotationValidationError, HasAssignedSubsetError
+from app.services.dataset_service import AnnotationValidationError, SubsetAlreadyAssignedError
 
 
 @pytest.fixture
@@ -456,7 +456,7 @@ class TestDatasetItemEndpoints:
         project_id = uuid4()
         dataset_item_id = uuid4()
 
-        fxt_dataset_service.assign_dataset_item_subset.side_effect = HasAssignedSubsetError
+        fxt_dataset_service.assign_dataset_item_subset.side_effect = SubsetAlreadyAssignedError
 
         response = fxt_client.patch(
             f"/api/projects/{str(project_id)}/dataset/items/{str(dataset_item_id)}/subset",

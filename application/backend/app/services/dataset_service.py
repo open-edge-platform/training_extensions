@@ -55,7 +55,7 @@ class InvalidImageError(Exception):
         super().__init__(msg)
 
 
-class HasAssignedSubsetError(Exception):
+class SubsetAlreadyAssignedError(Exception):
     """Exception raised when subset is being assigned to a dataset item, which already has one assigned."""
 
     def __init__(self, message: str | None = None):
@@ -345,7 +345,7 @@ class DatasetService:
         if db_subset is None:
             raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
         if db_subset != DatasetItemSubset.UNASSIGNED:
-            raise HasAssignedSubsetError
+            raise SubsetAlreadyAssignedError
         repo.set_subset(obj_id=str(dataset_item_id), subset=subset)
         return self.get_dataset_item_by_id(project_id=project_id, dataset_item_id=dataset_item_id)
 

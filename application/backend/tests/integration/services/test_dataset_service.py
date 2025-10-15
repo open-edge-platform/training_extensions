@@ -19,7 +19,7 @@ from app.schemas.label import LabelReference
 from app.schemas.shape import FullImage, Rectangle
 from app.services import LabelService, ProjectService
 from app.services.base import ResourceNotFoundError, ResourceType
-from app.services.dataset_service import DatasetService, HasAssignedSubsetError, InvalidImageError
+from app.services.dataset_service import DatasetService, InvalidImageError, SubsetAlreadyAssignedError
 
 logger = logging.getLogger(__name__)
 
@@ -746,7 +746,7 @@ class TestDatasetServiceIntegration:
         """Test assigning a subset to a dataset item."""
         db_project, _, db_dataset_items = fxt_project_with_dataset_items
 
-        with pytest.raises(HasAssignedSubsetError):
+        with pytest.raises(SubsetAlreadyAssignedError):
             fxt_dataset_service.assign_dataset_item_subset(
                 project_id=UUID(db_project.id),
                 dataset_item_id=UUID(db_dataset_items[2].id),
