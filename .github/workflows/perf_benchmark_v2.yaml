@@ -34,12 +34,8 @@ on:
         description: Overrides default per-model number of epoch setting. If 0, use default from template.
         default: 0
       eval-upto:
-        type: choice
-        description: The last operation to evaluate. 'optimize' means all.
-        options:
-          - train
-          - export
-          - optimize
+        type: string
+        description: The last operation to evaluate. 'optimize' means all. [train, export, optimize]
         default: optimize
       data-root:
         type: string
