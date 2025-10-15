@@ -31,7 +31,7 @@ describe('DeleteMediaItem', () => {
         render(<DeleteMediaItem itemsIds={[itemId]} onDeleted={mockedOnDeleted} />);
 
         fireEvent.click(screen.getByLabelText(/delete media item/i));
-        await screen.findByText(/Are you sure you want to delete the next items?/i);
+        await screen.findByText(/Are you sure you want to delete 1 item(s)?/i);
 
         fireEvent.click(screen.getByRole('button', { name: /confirm/i }));
 
@@ -59,7 +59,7 @@ describe('DeleteMediaItem', () => {
         render(<DeleteMediaItem itemsIds={[itemToFail, itemToDelete]} onDeleted={mockedOnDeleted} />);
 
         fireEvent.click(screen.getByLabelText(/delete media item/i));
-        await screen.findByText(/Are you sure you want to delete the next items?/i);
+        await screen.findByText(/Are you sure you want to delete 2 item(s)?/i);
 
         fireEvent.click(screen.getByRole('button', { name: /confirm/i }));
 

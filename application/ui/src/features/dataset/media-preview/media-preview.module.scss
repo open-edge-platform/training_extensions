@@ -1,0 +1,13 @@
+.toolbarGrid {
+    gap: var(--spectrum-global-dimension-size-50);
+    background-color: var(--spectrum-global-color-gray-200);
+    border-radius: var(--spectrum-global-dimension-size-100);
+    padding: var(--spectrum-global-dimension-size-50);
+}
+
+.toolbarSection {
+    background-color: var(--spectrum-global-color-gray-50);
+    padding: var(--spectrum-global-dimension-size-100);
+    border-radius: var(--spectrum-global-dimension-size-50);
+    gap: var(--spectrum-global-dimension-size-50);
+}

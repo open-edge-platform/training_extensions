@@ -1,34 +1,19 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from unittest.mock import patch
 from uuid import uuid4
 
 import pytest
 
 from app.db.schema import SinkDB, SourceDB
 from app.services import ConfigurationService, ResourceInUseError, ResourceNotFoundError, ResourceType
-from app.services.base import ResourceAlreadyExistsError
-
-
-@pytest.fixture(autouse=True)
-def mock_get_db_session(db_session):
-    """Mock the get_db_session to use test database."""
-    with (
-        patch("app.services.configuration_service.get_db_session") as mock,
-        patch("app.services.base.get_db_session") as mock_base,
-    ):
-        mock.return_value.__enter__.return_value = db_session
-        mock.return_value.__exit__.return_value = None
-        mock_base.return_value.__enter__.return_value = db_session
-        mock_base.return_value.__exit__.return_value = None
-        yield
+from app.services.base import ResourceWithIdAlreadyExistsError, ResourceWithNameAlreadyExistsError
 
 
 @pytest.fixture
-def fxt_config_service(fxt_active_pipeline_service, fxt_condition) -> ConfigurationService:
+def fxt_config_service(fxt_active_pipeline_service, fxt_condition, db_session) -> ConfigurationService:
     """Fixture to provide a ConfigurationService instance with mocked dependencies."""
-    return ConfigurationService(fxt_active_pipeline_service, fxt_condition)
+    return ConfigurationService(fxt_active_pipeline_service, db_session, fxt_condition)
 
 
 class TestConfigurationServiceIntegration:
@@ -82,11 +67,43 @@ class TestConfigurationServiceIntegration:
         config = request.getfixturevalue(fixture_name)
         config.name = db_resources[0].name  # Set the same name as existing resource
 
-        with pytest.raises(ResourceAlreadyExistsError) as excinfo:
+        with pytest.raises(ResourceWithNameAlreadyExistsError) as excinfo:
             getattr(fxt_config_service, create_method)(config)
 
         assert excinfo.value.resource_type == resource_type
         assert excinfo.value.resource_id == config.name
+
+    @pytest.mark.parametrize(
+        "resource_type,db_fixture_name,fixture_name,db_model,create_method",
+        [
+            (ResourceType.SOURCE, "fxt_db_sources", "fxt_webcam_source", SourceDB, "create_source"),
+            (ResourceType.SINK, "fxt_db_sinks", "fxt_mqtt_sink", SinkDB, "create_sink"),
+        ],
+    )
+    def test_create_config_duplicating_id(
+        self,
+        resource_type,
+        db_fixture_name,
+        fixture_name,
+        db_model,
+        create_method,
+        fxt_config_service,
+        request,
+        db_session,
+    ):
+        """Test creating a new configuration with ID that already exists."""
+        db_resources = request.getfixturevalue(db_fixture_name)
+        db_session.add(db_resources[0])
+        db_session.flush()
+
+        config = request.getfixturevalue(fixture_name)
+        config.id = db_resources[0].id  # Set the same ID as existing resource
+
+        with pytest.raises(ResourceWithIdAlreadyExistsError) as excinfo:
+            getattr(fxt_config_service, create_method)(config)
+
+        assert excinfo.value.resource_type == resource_type
+        assert excinfo.value.resource_id == config.id
 
     @pytest.mark.parametrize(
         "fixture_name,db_model,list_method",
@@ -169,6 +186,28 @@ class TestConfigurationServiceIntegration:
             assert db_resource.config_data["video_path"] == update_data["video_path"]
         else:
             assert db_resource.config_data["folder_path"] == update_data["folder_path"]
+
+    @pytest.mark.parametrize(
+        "resource_type,fixture_name,db_model,update_method",
+        [
+            (ResourceType.SOURCE, "fxt_db_sources", SourceDB, "update_source"),
+            (ResourceType.SINK, "fxt_db_sinks", SinkDB, "update_sink"),
+        ],
+    )
+    def test_update_resource_non_unique(
+        self, resource_type, fixture_name, db_model, update_method, fxt_config_service, request, db_session
+    ):
+        """Test updating a configuration with the name that already exists."""
+        db_resources = request.getfixturevalue(fixture_name)
+        db_resource = db_resources[0]
+        db_session.add_all(db_resources[:2])
+        db_session.flush()
+
+        with pytest.raises(ResourceWithNameAlreadyExistsError) as excinfo:
+            getattr(fxt_config_service, update_method)(db_resource.id, {"name": db_resources[1].name})
+
+        assert excinfo.value.resource_type == resource_type
+        assert excinfo.value.resource_id == db_resources[1].name
 
     @pytest.mark.parametrize(
         "resource_type,fixture_name,db_model,update_method,update_data",

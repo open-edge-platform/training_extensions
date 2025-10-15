@@ -9,10 +9,12 @@ from app.db.schema import SinkDB
 from app.schemas.sink import FolderSinkConfig, MqttSinkConfig, OutputFormat, SinkType, WebhookSinkConfig
 from app.services.mappers.sink_mapper import SinkMapper
 
+SINK_ID = uuid4()
 SUPPORTED_SINKS_MAPPING = [
     (
         FolderSinkConfig(
             sink_type=SinkType.FOLDER,
+            id=SINK_ID,
             name="Test Folder Sink",
             rate_limit=0.2,
             output_formats=[
@@ -24,6 +26,7 @@ SUPPORTED_SINKS_MAPPING = [
         ),
         SinkDB(
             sink_type=SinkType.FOLDER,
+            id=str(SINK_ID),
             name="Test Folder Sink",
             rate_limit=0.2,
             output_formats=[
@@ -37,6 +40,7 @@ SUPPORTED_SINKS_MAPPING = [
     (
         MqttSinkConfig(
             sink_type=SinkType.MQTT,
+            id=SINK_ID,
             name="Test Mqtt Sink",
             rate_limit=0.2,
             output_formats=[
@@ -51,6 +55,7 @@ SUPPORTED_SINKS_MAPPING = [
         ),
         SinkDB(
             sink_type=SinkType.MQTT,
+            id=str(SINK_ID),
             name="Test Mqtt Sink",
             rate_limit=0.2,
             output_formats=[
@@ -64,6 +69,7 @@ SUPPORTED_SINKS_MAPPING = [
     (
         WebhookSinkConfig(
             sink_type=SinkType.WEBHOOK,
+            id=SINK_ID,
             name="Test Webhook Sink",
             rate_limit=0.2,
             output_formats=[
@@ -78,6 +84,7 @@ SUPPORTED_SINKS_MAPPING = [
         ),
         SinkDB(
             sink_type=SinkType.WEBHOOK,
+            id=str(SINK_ID),
             name="Test Webhook Sink",
             rate_limit=0.2,
             output_formats=[
@@ -102,12 +109,10 @@ class TestSinkMapper:
     @pytest.mark.parametrize("schema_instance,expected_model", SUPPORTED_SINKS_MAPPING.copy())
     def test_from_schema_valid_sink_types(self, schema_instance, expected_model):
         """Test from_schema with valid sink types."""
-        sink_id = uuid4()
-        schema_instance.id = sink_id
         result = SinkMapper.from_schema(schema_instance)
 
         assert isinstance(result, SinkDB)
-        assert result.id == str(sink_id)
+        assert result.id == expected_model.id
         assert result.name == expected_model.name
         assert result.sink_type == expected_model.sink_type
         assert result.rate_limit == expected_model.rate_limit
@@ -122,11 +127,9 @@ class TestSinkMapper:
     @pytest.mark.parametrize("db_instance,expected_schema", [(v, k) for (k, v) in SUPPORTED_SINKS_MAPPING.copy()])
     def test_to_schema_valid_sink_types(self, db_instance, expected_schema):
         """Test to_schema with valid sink types."""
-        sink_id = uuid4()
-        db_instance.id = str(sink_id)
         result = SinkMapper.to_schema(db_instance)
 
-        assert result.id == sink_id
+        assert result.id == expected_schema.id
         assert result.name == expected_schema.name
         assert result.sink_type == expected_schema.sink_type
         assert result.rate_limit == expected_schema.rate_limit

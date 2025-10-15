@@ -23,10 +23,15 @@ class SupportedModels:
         """
         Retrieve a specific model manifest by its ID.
 
-        :param model_manifest_id: The ID of the model manifest to retrieve.
+        Args:
+            model_manifest_id: The unique identifier of the model manifest to retrieve.
 
-        :return: The ModelManifest object corresponding to the given ID.
-        :raises ManifestNotFoundException: If the model manifest with the given ID does not exist.
+        Returns:
+            ModelManifest: The ModelManifest object corresponding to the given ID.
+
+        Raises:
+            ManifestNotFoundException: If the model manifest with the given ID does not exist
+                                    in the available model manifests.
         """
         model_manifests = cls.get_model_manifests()
         if model_manifest_id not in model_manifests:
@@ -39,12 +44,19 @@ class SupportedModels:
         """
         Find and load all model manifest files in the manifests directory.
 
-        Structure:
-        - manifests/base.yaml: Base configuration for all models
-        - manifests/task/base.yaml: Base configuration for specific task type
-        - manifests/task/model.yaml: Model-specific configuration
+        Scans the manifests directory hierarchy and loads YAML configuration files
+        following a structured format where base configurations are inherited and
+        overridden by more specific configurations.
 
-        :return: A dictionary mapping model manifest IDs to their corresponding ModelManifest objects.
+        Returns:
+            dict[str, ModelManifest]: A dictionary mapping model manifest IDs to their
+            corresponding ModelManifest objects.
+
+        Note:
+            Directory structure follows:
+            - manifests/base.yaml: Base configuration for all models
+            - manifests/task/base.yaml: Base configuration for specific task types
+            - manifests/task/model.yaml: Model-specific configurations
         """
         # Get the manifests directory path
         manifests_dir = resources.files(manifests)

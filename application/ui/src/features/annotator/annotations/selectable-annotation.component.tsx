@@ -3,13 +3,13 @@
 
 import { KeyboardEvent, MouseEvent, ReactNode, useEffect, useRef } from 'react';
 
-import { useAnnotator } from '../annotator-provider.component';
+import { useAnnotationActions } from '../annotation-actions-provider.component';
 import { useSelectedAnnotations } from '../select-annotation-provider.component';
 import { useAnnotation } from './annotation-context';
 
 export const SelectableAnnotation = ({ children }: { children: ReactNode }) => {
     const annotation = useAnnotation();
-    const { deleteAnnotation } = useAnnotator();
+    const { deleteAnnotation } = useAnnotationActions();
     const { setSelectedAnnotations, selectedAnnotations } = useSelectedAnnotations();
     const elementRef = useRef<SVGGElement>(null);
 
@@ -72,15 +72,13 @@ export const SelectableAnnotation = ({ children }: { children: ReactNode }) => {
                 ...(isSelected
                     ? {
                           fillOpacity: 0.7,
-                          ['--annotation-fill']: annotation.labels[0].color,
+                          ['--annotation-fill']: annotation.labels.length
+                              ? annotation.labels[0].color
+                              : 'var(--energy-blue-light)',
                           stroke: 'var(--energy-blue-light)',
                           strokeWidth: 'calc(2px / var(--zoom-scale))',
                       }
                     : {}),
-                transitionProperty: 'fill-opacity',
-                transitionTimingFunction: 'ease-in-out',
-                transitionDuration: '0.1s',
-                transitionDelay: isSelected ? '0s' : '0.25s',
                 position: 'relative',
                 zIndex: 999,
                 pointerEvents: 'auto',

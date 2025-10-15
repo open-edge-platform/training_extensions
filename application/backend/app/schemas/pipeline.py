@@ -5,7 +5,7 @@ from enum import StrEnum
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, TypeAdapter, model_validator
 
 from app.schemas.model import Model
 from app.schemas.sink import Sink
@@ -35,10 +35,19 @@ class FixedRateDataCollectionPolicy(DataCollectionPolicyBase):
     rate: float
 
 
-DataCollectionPolicy = Annotated[FixedRateDataCollectionPolicy, Field(discriminator="type")]
+class ConfidenceThresholdDataCollectionPolicy(DataCollectionPolicyBase):
+    type: Literal["confidence_threshold"] = "confidence_threshold"
+    confidence_threshold: float
+    min_sampling_interval: float
 
 
-class Pipeline(BaseModel):
+DataCollectionPolicy = Annotated[
+    FixedRateDataCollectionPolicy | ConfidenceThresholdDataCollectionPolicy, Field(discriminator="type")
+]
+DataCollectionPolicyAdapter: TypeAdapter[DataCollectionPolicy] = TypeAdapter(DataCollectionPolicy)
+
+
+class PipelineView(BaseModel):
     project_id: UUID  # ID of the project this pipeline belongs to
     source: Source | None = None  # None if disconnected
     sink: Sink | None = None  # None if disconnected
@@ -91,7 +100,13 @@ class Pipeline(BaseModel):
                         "type": "fixed_rate",
                         "enabled": "true",
                         "rate": 0.02,
-                    }
+                    },
+                    {
+                        "type": "confidence_threshold",
+                        "enabled": "true",
+                        "confidence_threshold": 0.2,
+                        "min_sampling_interval": 2.5,
+                    },
                 ],
             }
         }
@@ -107,7 +122,7 @@ class Pipeline(BaseModel):
         return data
 
     @model_validator(mode="after")
-    def validate_running_status(self) -> "Pipeline":
+    def validate_running_status(self) -> "PipelineView":
         if self.status == PipelineStatus.RUNNING and any(
             x is None for x in (self.source_id, self.sink_id, self.model_id)
         ):

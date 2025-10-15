@@ -5,11 +5,11 @@ import { PointerEvent, useEffect, useRef, useState } from 'react';
 
 import { clampPointBetweenImage } from '@geti/smart-tools/utils';
 
-import { useZoom } from '../../../../components/zoom/zoom';
+import { useZoom } from '../../../../components/zoom/zoom.provider';
 import { AnnotationShape } from '../../annotations/annotation-shape.component';
 import { MaskAnnotations } from '../../annotations/mask-annotations.component';
+import { AnnotatorLoading } from '../../annotator-loading.component';
 import { useAnnotator } from '../../annotator-provider.component';
-import { AnnotatorLoading } from '../../loading.component';
 import { Annotation, Shape } from '../../types';
 import { SvgToolCanvas } from '../svg-tool-canvas.component';
 import { getRelativePoint, removeOffLimitPoints } from '../utils';

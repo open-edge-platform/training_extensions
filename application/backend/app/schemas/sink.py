@@ -4,10 +4,11 @@
 from enum import StrEnum
 from os import getenv
 from typing import Annotated, Literal
+from uuid import UUID
 
 from pydantic import Field, TypeAdapter
 
-from app.schemas.base import BaseIDNameModel
+from app.schemas.base import BaseRequiredIDNameModel, HasID
 
 MQTT_USERNAME = "MQTT_USERNAME"
 MQTT_PASSWORD = "MQTT_PASSWORD"  # noqa: S105
@@ -27,13 +28,14 @@ class OutputFormat(StrEnum):
     PREDICTIONS = "predictions"
 
 
-class BaseSinkConfig(BaseIDNameModel):
+class BaseSinkConfig(BaseRequiredIDNameModel):
     output_formats: list[OutputFormat]
     rate_limit: float | None = None  # Rate limit in Hz, None means no limit
 
 
 class DisconnectedSinkConfig(BaseSinkConfig):
     sink_type: Literal[SinkType.DISCONNECTED] = SinkType.DISCONNECTED
+    id: UUID = UUID("00000000-0000-0000-0000-000000000000")
     name: str = "No Sink"
     output_formats: list[OutputFormat] = []
 
@@ -151,3 +153,33 @@ Sink = Annotated[
 ]
 
 SinkAdapter: TypeAdapter[Sink] = TypeAdapter(Sink)
+
+# ---------------------------------
+# Creation Schemas (POST requests)
+# ---------------------------------
+# These schemas inherit from HasID first to override the required ID field with an auto-generated one (if absent) via
+# MRO (Method Resolution Order).
+
+
+class FolderSinkConfigCreate(HasID, FolderSinkConfig):
+    pass
+
+
+class MqttSinkConfigCreate(HasID, MqttSinkConfig):
+    pass
+
+
+class RosSinkConfigCreate(HasID, RosSinkConfig):
+    pass
+
+
+class WebhookSinkConfigCreate(HasID, WebhookSinkConfig):
+    pass
+
+
+SinkCreate = Annotated[
+    FolderSinkConfigCreate | MqttSinkConfigCreate | RosSinkConfigCreate | WebhookSinkConfigCreate,
+    Field(discriminator="sink_type"),
+]
+
+SinkCreateAdapter: TypeAdapter[SinkCreate] = TypeAdapter(SinkCreate)

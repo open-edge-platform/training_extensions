@@ -23,7 +23,11 @@ export const CreateProjectForm = () => {
     const [name, setName] = useState<string>('Project #1');
 
     const navigate = useNavigate();
-    const createProjectMutation = $api.useMutation('post', '/api/projects');
+    const createProjectMutation = $api.useMutation('post', '/api/projects', {
+        meta: {
+            invalidateQueries: [['get', '/api/projects']],
+        },
+    });
 
     const createProject = (e: FormEvent) => {
         e.preventDefault();

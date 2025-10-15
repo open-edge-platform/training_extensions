@@ -34,7 +34,7 @@ def set_sqlite_pragma(dbapi_connection: Connection, _: Any) -> None:
     cursor.close()
 
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=db_engine)
+SessionLocal = sessionmaker(bind=db_engine)
 Base = declarative_base()
 
 
@@ -47,5 +47,7 @@ def get_db_session() -> Iterator[Session]:
     except Exception:
         db.rollback()
         raise
+    else:
+        db.commit()
     finally:
         db.close()
