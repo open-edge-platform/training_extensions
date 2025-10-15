@@ -117,6 +117,8 @@ def convert_detection_dataset(
     def _convert_sample(
         dataset_item: DatasetItemDB, image_path: str, project_labels_ids: list[UUID]
     ) -> DetectionSample | None:
+        if dataset_item.annotation_data is None:
+            return None
         annotations = [DatasetItemAnnotation.model_validate(annotation) for annotation in dataset_item.annotation_data]
         coords = [
             convert_rectangle(annotation.shape)
@@ -167,6 +169,8 @@ def convert_classification_dataset(
     def _convert_sample(
         dataset_item: DatasetItemDB, image_path: str, project_labels_ids: list[UUID]
     ) -> ClassificationSample | None:
+        if dataset_item.annotation_data is None:
+            return None
         annotation = next(
             DatasetItemAnnotation.model_validate(annotation) for annotation in dataset_item.annotation_data
         )
@@ -205,6 +209,8 @@ def convert_multiclass_classification_dataset(
     def _convert_sample(
         dataset_item: DatasetItemDB, image_path: str, project_labels_ids: list[UUID]
     ) -> MultilabelClassificationSample | None:
+        if dataset_item.annotation_data is None:
+            return None
         annotation = next(
             DatasetItemAnnotation.model_validate(annotation) for annotation in dataset_item.annotation_data
         )
@@ -244,6 +250,8 @@ def convert_instance_segmentation_dataset(
     def _convert_sample(
         dataset_item: DatasetItemDB, image_path: str, project_labels_ids: list[UUID]
     ) -> InstanceSegmentationSample | None:
+        if dataset_item.annotation_data is None:
+            return None
         annotations = [DatasetItemAnnotation.model_validate(annotation) for annotation in dataset_item.annotation_data]
         polygons = [
             convert_polygon(annotation.shape) for annotation in annotations if (isinstance(annotation.shape, Polygon))
