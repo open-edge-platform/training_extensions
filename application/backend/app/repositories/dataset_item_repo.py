@@ -101,6 +101,21 @@ class DatasetItemRepository:
         row = result.mappings().first()
         return UpdateDatasetItemAnnotation(**row) if row else None
 
+    def delete_annotation_data(self, obj_id: str) -> bool:
+        stmt = (
+            update(DatasetItemDB)
+            .where(
+                DatasetItemDB.project_id == self.project_id,
+                DatasetItemDB.id == obj_id,
+            )
+            .values(
+                annotation_data=None,
+                updated_at=datetime.now(UTC),
+            )
+        )
+        result = self.db.execute(stmt)
+        return result.rowcount > 0  # type: ignore[union-attr]
+
     def get_subset(self, obj_id: str) -> str | None:
         stmt = (
             select(DatasetItemDB.subset)

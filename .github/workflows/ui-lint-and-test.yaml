@@ -75,7 +75,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install uv
-        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        uses: astral-sh/setup-uv@3259c6206f993105e3a61b142c2d97bf4b9ef83d # v7.1.0
         with:
           version: "0.8.8"
           enable-cache: false
@@ -115,7 +115,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
         id: setup-node
         with:
           node-version-file: application/ui/.nvmrc
@@ -152,7 +152,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
         id: setup-node
         with:
           node-version-file: application/ui/.nvmrc
@@ -203,7 +203,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
         id: setup-node
         with:
           node-version-file: application/ui/.nvmrc
@@ -313,7 +313,7 @@ jobs:
           persist-credentials: false
           ref: ${{ inputs.ref || '' }}
 
-      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
         id: setup-node
         with:
           node-version-file: application/ui/.nvmrc
