@@ -28,22 +28,26 @@
 
 ## Projects
 
-| Method   | Path                        | Payload            | Return           | Description                 |
-| -------- | --------------------------- | ------------------ | ---------------- | --------------------------- |
-| `POST`   | `/api/projects`             | name, task, labels | project info     | Create a new project        |
-| `GET`    | `/api/projects`             | -                  | list of projects | List the available projects |
-| `GET`    | `/api/projects/<id>`        | -                  | project info     | Get info about a project    |
-| `DELETE` | `/api/projects/<id>`        | -                  | -                | Delete a project            |
-| `PATCH`  | `/api/projects/<id>/labels` | labels to change   | task and labels  | Add, remove or edit labels  |
+| Method   | Path                                        | Payload            | Return           | Description                       |
+| -------- | ------------------------------------------- | ------------------ | ---------------- | --------------------------------- |
+| `POST`   | `/api/projects`                             | name, task, labels | project info     | Create a new project              |
+| `GET`    | `/api/projects`                             | -                  | list of projects | List the available projects       |
+| `GET`    | `/api/projects/<id>`                        | -                  | project info     | Get info about a project          |
+| `PATCH`  | `/api/projects/<id>`                        | name               | project info     | Rename a project                  |
+| `DELETE` | `/api/projects/<id>`                        | -                  | -                | Delete a project                  |
+| `PATCH`  | `/api/projects/<id>/labels`                 | labels to change   | task and labels  | Add, remove or edit labels        |
+| `GET`    | `/api/projects/<id>/training_configuration` | -                  | training config  | Get the training configuration    |
+| `PATCH`  | `/api/projects/<id>/training_configuration` | training config    | -                | Update the training configuration |
 
 ### Pipelines
 
-| Method  | Path                                  | Payload                    | Return        | Description                         |
-| ------- | ------------------------------------- | -------------------------- | ------------- | ----------------------------------- |
-| `GET`   | `/api/projects/<id>/pipeline`         | -                          | pipeline info | Get info about a project's pipeline |
-| `PATCH` | `/api/projects/<id>/pipeline`         | ids of source, sink, model | pipeline info | Reconfigure the project's pipeline  |
-| `POST`  | `/api/projects/<id>/pipeline:enable`  | -                          | pipeline info | Activate a project's pipeline       |
-| `POST`  | `/api/projects/<id>/pipeline:disable` | -                          | pipeline info | Deactivate a project's pipeline     |
+| Method  | Path                                  | Payload                    | Return        | Description                           |
+| ------- | ------------------------------------- | -------------------------- | ------------- | ------------------------------------- |
+| `GET`   | `/api/projects/<id>/pipeline`         | -                          | pipeline info | Get info about a project's pipeline   |
+| `PATCH` | `/api/projects/<id>/pipeline`         | ids of source, sink, model | pipeline info | Reconfigure the project's pipeline    |
+| `POST`  | `/api/projects/<id>/pipeline:enable`  | -                          | pipeline info | Activate a project's pipeline         |
+| `POST`  | `/api/projects/<id>/pipeline:disable` | -                          | pipeline info | Deactivate a project's pipeline       |
+| `POST`  | `/api/projects/<id>/pipeline:capture` | -                          | -             | Collect the next frame to the dataset |
 
 #### Inference metrics
 
@@ -92,13 +96,12 @@
 
 ## Models
 
-| Method   | Path                                          | Payload                         | Return             | Description                              |
-| -------- | --------------------------------------------- | ------------------------------- | ------------------ | ---------------------------------------- |
-| `POST`   | `/api/projects/<id>/models:train`             | arch, hyperparams, parent model | model and job info | Create and start fine-tuning a new model |
-| `GET`    | `/api/projects/<id>/models`                   | -                               | list of models     | List all the models in a project         |
-| `GET`    | `/api/projects/<id>/models/<model_id>`        | -                               | model info         | Get info about a specific model          |
-| `GET`    | `/api/projects/<id>/models/<model_id>/labels` | -                               | labels             | Get the labels used to train the model   |
-| `DELETE` | `/api/projects/<id>/models/<model_id>`        | -                               | -                  | Delete a model (option 'weights_only')   |
+| Method   | Path                                          | Payload | Return         | Description                            |
+| -------- | --------------------------------------------- | ------- | -------------- | -------------------------------------- |
+| `GET`    | `/api/projects/<id>/models`                   | -       | list of models | List all the models in a project       |
+| `GET`    | `/api/projects/<id>/models/<model_id>`        | -       | model info     | Get info about a specific model        |
+| `GET`    | `/api/projects/<id>/models/<model_id>/labels` | -       | labels         | Get the labels used to train the model |
+| `DELETE` | `/api/projects/<id>/models/<model_id>`        | -       | -              | Delete a model (option 'weights_only') |
 
 ### Dataset revisions (training datasets, etc...)
 
@@ -112,8 +115,9 @@
 
 ## Jobs
 
-| Method   | Path                           | Payload | Return       | Description                                       |
-| -------- | ------------------------------ | ------- | ------------ | ------------------------------------------------- |
-| `GET`    | `/api/projects/<id>/jobs`      | -       | list of jobs | List the jobs in a project (scheduled or running) |
-| `GET`    | `/api/projects/<id>/jobs/<id>` | -       | job info     | Get info about a specific job                     |
-| `DELETE` | `/api/projects/<id>/jobs/<id>` | -       | -            | Cancel a job                                      |
+| Method   | Path                           | Payload             | Return       | Description                                       |
+| -------- | ------------------------------ | ------------------- | ------------ | ------------------------------------------------- |
+| `POST`   | `/api/projects/<id>/jobs`      | job type and params | job id       | Create and submit a new job                       |
+| `GET`    | `/api/projects/<id>/jobs`      | -                   | list of jobs | List the jobs in a project (scheduled or running) |
+| `GET`    | `/api/projects/<id>/jobs/<id>` | -                   | job info     | Get info about a specific job                     |
+| `DELETE` | `/api/projects/<id>/jobs/<id>` | -                   | -            | Cancel a job                                      |
