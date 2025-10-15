@@ -89,6 +89,7 @@ class JobController:
                 cancel_task.cancel()
                 with contextlib.suppress(asyncio.CancelledError):
                     await cancel_task
+                self._jobs_q.cleanup_cancellation_event(job.id)
 
             logger.info("Job completed, job_id: %s", job.id)
 
@@ -103,11 +104,9 @@ class JobController:
 
         async def _cancel() -> None:
             """Watch for job cancellation requests and trigger graceful shutdown."""
-            while True:
-                if self._jobs_q.is_cancelling(job.id):
-                    await job_run.stop()
-                    return
-                await asyncio.sleep(0.2)
+            event = self._jobs_q.get_cancellation_event(job.id)
+            await event.wait()
+            await job_run.stop()
 
         threading.Thread(target=_pump, daemon=True).start()
         cancel_task = asyncio.create_task(_cancel())

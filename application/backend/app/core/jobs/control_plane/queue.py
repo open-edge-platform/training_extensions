@@ -28,6 +28,7 @@ class JobQueue:
         self._by_id: dict[UUID, Job] = {}
         self._order: list[UUID] = []  # preserve submit order for listing
         self._lock = asyncio.Lock()
+        self._cancellation_events: dict[UUID, asyncio.Event] = {}  # Events for cancellation notifications
 
     async def submit(self, job: Job) -> None:
         """Submit a new job to the queue."""
@@ -82,11 +83,27 @@ class JobQueue:
         if job.status == JobStatus.RUNNING:
             job.cancelling()
             logger.info("Marked running job for cancellation, ID: %s", job_id)
+            # Notify any waiting cancellation monitors
+            if job_id in self._cancellation_events:
+                self._cancellation_events[job_id].set()
             return job, CancellationResult.RUNNING_CANCELLING
 
         raise ValueError(f"Unexpected job status: {job.status}")
 
-    def is_cancelling(self, job_id: UUID) -> bool:
+    def __is_cancelling(self, job_id: UUID) -> bool:
         """Check if a job is marked as being cancelled."""
         job = self._by_id.get(job_id)
         return job is not None and job.status == JobStatus.CANCELLING
+
+    def get_cancellation_event(self, job_id: UUID) -> asyncio.Event:
+        """Get or create a cancellation event for the specified job."""
+        if job_id not in self._cancellation_events:
+            self._cancellation_events[job_id] = asyncio.Event()
+            # If the job is already in cancelling state, set the event immediately
+            if self.__is_cancelling(job_id):
+                self._cancellation_events[job_id].set()
+        return self._cancellation_events[job_id]
+
+    def cleanup_cancellation_event(self, job_id: UUID) -> None:
+        """Clean up the cancellation event for a job."""
+        self._cancellation_events.pop(job_id, None)

@@ -19,6 +19,7 @@ class TestJobQueue:
         assert isinstance(queue._queue, asyncio.Queue)
         assert queue._by_id == {}
         assert queue._order == []
+        assert queue._cancellation_events == {}
         assert isinstance(queue._lock, asyncio.Lock)
 
     @pytest.mark.asyncio
@@ -159,15 +160,94 @@ class TestJobQueue:
         assert result == CancellationResult.NOT_FOUND
         assert result_job is None
 
-    @pytest.mark.parametrize(
-        "initial_status, expected",
-        [(status, status == JobStatus.CANCELLING) for status in JobStatus],
-    )
-    def test_is_cancelling(self, initial_status, expected):
-        """Test is_cancelling returns True for cancelling job."""
+    def test_get_cancellation_event_creates_new_event(self):
+        """Test that get_cancellation_event creates a new event for unknown job."""
         queue = JobQueue()
         job = Job()
-        job.status = initial_status
         queue._by_id[job.id] = job
 
-        assert queue.is_cancelling(job.id) is expected
+        event = queue.get_cancellation_event(job.id)
+
+        assert isinstance(event, asyncio.Event)
+        assert job.id in queue._cancellation_events
+        assert queue._cancellation_events[job.id] is event
+        assert not event.is_set()
+
+    def test_get_cancellation_event_returns_existing_event(self):
+        """Test that get_cancellation_event returns existing event."""
+        queue = JobQueue()
+        job = Job()
+        queue._by_id[job.id] = job
+
+        # Get event first time
+        event1 = queue.get_cancellation_event(job.id)
+        # Get event second time
+        event2 = queue.get_cancellation_event(job.id)
+
+        assert event1 is event2
+        assert len(queue._cancellation_events) == 1
+
+    def test_get_cancellation_event_sets_event_if_already_cancelling(self):
+        """Test that get_cancellation_event sets event immediately if job is already cancelling."""
+        queue = JobQueue()
+        job = Job()
+        job.status = JobStatus.CANCELLING
+        queue._by_id[job.id] = job
+
+        event = queue.get_cancellation_event(job.id)
+
+        assert event.is_set()
+
+    def test_cleanup_cancellation_event_removes_event(self):
+        """Test that cleanup_cancellation_event removes the event."""
+        queue = JobQueue()
+        job = Job()
+        queue._by_id[job.id] = job
+
+        # Create event
+        queue.get_cancellation_event(job.id)
+        assert job.id in queue._cancellation_events
+
+        # Clean up event
+        queue.cleanup_cancellation_event(job.id)
+        assert job.id not in queue._cancellation_events
+
+    def test_cleanup_cancellation_event_handles_nonexistent_job(self):
+        """Test that cleanup_cancellation_event handles non-existent job gracefully."""
+        queue = JobQueue()
+        fake_id = uuid4()
+
+        # Should not raise exception
+        queue.cleanup_cancellation_event(fake_id)
+        assert fake_id not in queue._cancellation_events
+
+    def test_cancel_running_job_sets_cancellation_event(self):
+        """Test that cancelling a running job sets the cancellation event."""
+        queue = JobQueue()
+        job = Job()
+        job.start()
+        queue._by_id[job.id] = job
+
+        # Create cancellation event first
+        event = queue.get_cancellation_event(job.id)
+        assert not event.is_set()
+
+        # Cancel the job
+        queue.cancel(job.id)
+
+        assert job.status == JobStatus.CANCELLING
+        assert event.is_set()
+
+    def test_cancel_running_job_without_existing_event(self):
+        """Test that cancelling a running job works even without pre-existing event."""
+        queue = JobQueue()
+        job = Job()
+        job.start()
+        queue._by_id[job.id] = job
+
+        # Cancel the job without creating event first
+        queue.cancel(job.id)
+
+        assert job.status == JobStatus.CANCELLING
+        # Event should not be created if it didn't exist
+        assert job.id not in queue._cancellation_events
