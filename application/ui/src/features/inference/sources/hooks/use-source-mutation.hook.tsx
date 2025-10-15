@@ -2,17 +2,34 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { omit } from 'lodash-es';
+import { v4 as uuid } from 'uuid';
 
 import { $api } from '../../../../api/client';
 import { SourceConfig } from '../util';
 
 export const useSourceMutation = (isNewSource: boolean) => {
-    const addSource = $api.useMutation('post', '/api/sources');
-    const updateSource = $api.useMutation('patch', '/api/sources/{source_id}');
+    const addSource = $api.useMutation('post', '/api/sources', {
+        meta: {
+            invalidateQueries: [['get', '/api/sources']],
+        },
+    });
+    const updateSource = $api.useMutation('patch', '/api/sources/{source_id}', {
+        meta: {
+            invalidateQueries: [
+                ['get', '/api/sources'],
+                ['get', '/api/sources/{source_id}'],
+            ],
+        },
+    });
 
     return async (body: SourceConfig) => {
         if (isNewSource) {
-            const response = await addSource.mutateAsync({ body: omit(body, 'id') as SourceConfig });
+            const sourcePayload = {
+                ...body,
+                id: uuid(),
+            };
+
+            const response = await addSource.mutateAsync({ body: sourcePayload });
 
             return String(response.id);
         }

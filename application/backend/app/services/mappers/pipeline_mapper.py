@@ -4,18 +4,19 @@
 from uuid import UUID
 
 from app.db.schema import PipelineDB
-from app.schemas import DataCollectionPolicy, Pipeline, PipelineStatus
+from app.schemas import PipelineStatus, PipelineView
+from app.schemas.pipeline import DataCollectionPolicyAdapter
 
 
 class PipelineMapper:
     """Mapper for Pipeline schema entity <-> DB entity conversions."""
 
     @staticmethod
-    def to_schema(pipeline_db: PipelineDB) -> Pipeline:
+    def to_schema(pipeline_db: PipelineDB) -> PipelineView:
         """Convert Pipeline db entity to schema."""
         from app.services.mappers import ModelRevisionMapper, SinkMapper, SourceMapper
 
-        return Pipeline(
+        return PipelineView(
             project_id=UUID(pipeline_db.project_id),
             source=SourceMapper.to_schema(pipeline_db.source) if pipeline_db.source else None,
             sink=SinkMapper.to_schema(pipeline_db.sink) if pipeline_db.sink else None,
@@ -25,12 +26,12 @@ class PipelineMapper:
             source_id=UUID(pipeline_db.source_id) if pipeline_db.source_id else None,
             status=PipelineStatus.from_bool(pipeline_db.is_running),
             data_collection_policies=[
-                DataCollectionPolicy.model_validate(policy) for policy in pipeline_db.data_collection_policies
+                DataCollectionPolicyAdapter.validate_python(policy) for policy in pipeline_db.data_collection_policies
             ],
         )
 
     @staticmethod
-    def from_schema(pipeline: Pipeline) -> PipelineDB:
+    def from_schema(pipeline: PipelineView) -> PipelineDB:
         """Convert Pipeline schema to db model."""
 
         return PipelineDB(

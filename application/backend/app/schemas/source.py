@@ -5,10 +5,11 @@ from enum import StrEnum
 from os import getenv
 from typing import Annotated, Literal
 from urllib.parse import urlparse, urlunparse
+from uuid import UUID
 
 from pydantic import Field, TypeAdapter
 
-from app.schemas.base import BaseIDNameModel
+from app.schemas.base import BaseRequiredIDNameModel, HasID
 
 IP_CAMERA_USERNAME = "IP_CAMERA_USERNAME"
 IP_CAMERA_PASSWORD = "IP_CAMERA_PASSWORD"  # noqa: S105
@@ -22,12 +23,13 @@ class SourceType(StrEnum):
     IMAGES_FOLDER = "images_folder"
 
 
-class DisconnectedSourceConfig(BaseIDNameModel):
+class DisconnectedSourceConfig(BaseRequiredIDNameModel):
     source_type: Literal[SourceType.DISCONNECTED] = SourceType.DISCONNECTED
+    id: UUID = UUID("00000000-0000-0000-0000-000000000000")
     name: str = "No Source"
 
 
-class WebcamSourceConfig(BaseIDNameModel):
+class WebcamSourceConfig(BaseRequiredIDNameModel):
     source_type: Literal[SourceType.WEBCAM]
     device_id: int
 
@@ -43,7 +45,7 @@ class WebcamSourceConfig(BaseIDNameModel):
     }
 
 
-class IPCameraSourceConfig(BaseIDNameModel):
+class IPCameraSourceConfig(BaseRequiredIDNameModel):
     source_type: Literal[SourceType.IP_CAMERA]
     stream_url: str
     auth_required: bool = False
@@ -77,7 +79,7 @@ class IPCameraSourceConfig(BaseIDNameModel):
         return urlunparse((uri.scheme, netloc, uri.path, uri.params, uri.query, uri.fragment))
 
 
-class VideoFileSourceConfig(BaseIDNameModel):
+class VideoFileSourceConfig(BaseRequiredIDNameModel):
     source_type: Literal[SourceType.VIDEO_FILE]
     video_path: str
 
@@ -93,7 +95,7 @@ class VideoFileSourceConfig(BaseIDNameModel):
     }
 
 
-class ImagesFolderSourceConfig(BaseIDNameModel):
+class ImagesFolderSourceConfig(BaseRequiredIDNameModel):
     source_type: Literal[SourceType.IMAGES_FOLDER]
     images_folder_path: str
     ignore_existing_images: bool
@@ -121,3 +123,36 @@ Source = Annotated[
 ]
 
 SourceAdapter: TypeAdapter[Source] = TypeAdapter(Source)
+
+# ---------------------------------
+# Creation Schemas (POST requests)
+# ---------------------------------
+# These schemas inherit from HasID first to override the required ID field with an auto-generated one (if absent) via
+# MRO (Method Resolution Order).
+
+
+class WebcamSourceConfigCreate(HasID, WebcamSourceConfig):
+    pass
+
+
+class IPCameraSourceConfigCreate(HasID, IPCameraSourceConfig):
+    pass
+
+
+class VideoFileSourceConfigCreate(HasID, VideoFileSourceConfig):
+    pass
+
+
+class ImagesFolderSourceConfigCreate(HasID, ImagesFolderSourceConfig):
+    pass
+
+
+SourceCreate = Annotated[
+    WebcamSourceConfigCreate
+    | IPCameraSourceConfigCreate
+    | VideoFileSourceConfigCreate
+    | ImagesFolderSourceConfigCreate,
+    Field(discriminator="source_type"),
+]
+
+SourceCreateAdapter: TypeAdapter[SourceCreate] = TypeAdapter(SourceCreate)

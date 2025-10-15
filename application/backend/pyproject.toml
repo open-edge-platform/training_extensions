@@ -21,6 +21,7 @@ dependencies = [
     "aiofiles==24.1.0",
     "pydantic-settings~=2.10.1",
     "aiortc~=1.13.0",
+    "datumaro[experimental] @ git+https://github.com/open-edge-platform/datumaro.git@develop"
 ]
 
 [project.optional-dependencies]
@@ -34,7 +35,7 @@ dev = [
     "pytest~=8.4",
     "pytest-asyncio~=1.1.0",
     "types-aiofiles==24.1.0.20240626",
-    "freezegun~=1.5.5",
+    "time-machine~=2.19.0",
 ]
 lint = [
     "ruff==0.9.3",

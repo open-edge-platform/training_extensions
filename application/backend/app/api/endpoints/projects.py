@@ -7,21 +7,23 @@ import logging
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Body, Depends, status
+from fastapi import APIRouter, Body, Depends, Query, status
 from fastapi.exceptions import HTTPException
 from fastapi.openapi.models import Example
 from starlette.responses import FileResponse
 
 from app.api.dependencies import get_data_collector, get_label_service, get_project_id, get_project_service
-from app.schemas import Label, PatchLabels, Project, ProjectUpdateName
+from app.schemas import Label, PatchLabels, ProjectCreate, ProjectUpdateName, ProjectView, TrainingConfiguration
 from app.services import (
     LabelService,
     ProjectService,
-    ResourceAlreadyExistsError,
     ResourceInUseError,
     ResourceNotFoundError,
+    ResourceWithIdAlreadyExistsError,
 )
 from app.services.data_collect import DataCollector
+from app.services.label_service import DuplicateLabelsError
+from app.supported_models.hyperparameters import Hyperparameters
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/projects", tags=["Projects"])
@@ -74,41 +76,41 @@ CREATE_PROJECT_BODY_EXAMPLES = {
 @router.post(
     "",
     status_code=status.HTTP_201_CREATED,
-    response_model=Project,
+    response_model=ProjectView,
     responses={
         status.HTTP_201_CREATED: {"description": "Project successfully created"},
-        status.HTTP_409_CONFLICT: {"description": "Project already exists"},
+        status.HTTP_409_CONFLICT: {"description": "Project already exists or labels have duplicated names or hotkeys"},
         status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Invalid request body"},
     },
 )
 def create_project(
     project_config: Annotated[
-        Project, Body(description=CREATE_PROJECT_BODY_DESCRIPTION, openapi_examples=CREATE_PROJECT_BODY_EXAMPLES)
+        ProjectCreate, Body(description=CREATE_PROJECT_BODY_DESCRIPTION, openapi_examples=CREATE_PROJECT_BODY_EXAMPLES)
     ],
     project_service: Annotated[ProjectService, Depends(get_project_service)],
-) -> Project:
+) -> ProjectView:
     """Create and configure a new project"""
     try:
         return project_service.create_project(project_config)
-    except ResourceAlreadyExistsError as e:
+    except (ResourceWithIdAlreadyExistsError, DuplicateLabelsError) as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 
 @router.get(
     "",
-    response_model=list[Project],
+    response_model=list[ProjectView],
     responses={
         status.HTTP_200_OK: {"description": "List of available projects"},
     },
 )
-def list_projects(project_service: Annotated[ProjectService, Depends(get_project_service)]) -> list[Project]:
+def list_projects(project_service: Annotated[ProjectService, Depends(get_project_service)]) -> list[ProjectView]:
     """List the available projects"""
     return project_service.list_projects()
 
 
 @router.get(
     "/{project_id}",
-    response_model=Project,
+    response_model=ProjectView,
     responses={
         status.HTTP_200_OK: {"description": "Project found"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID"},
@@ -118,7 +120,7 @@ def list_projects(project_service: Annotated[ProjectService, Depends(get_project
 def get_project(
     project_id: Annotated[UUID, Depends(get_project_id)],
     project_service: Annotated[ProjectService, Depends(get_project_service)],
-) -> Project:
+) -> ProjectView:
     """Get info about a given project"""
     try:
         return project_service.get_project_by_id(project_id)
@@ -128,7 +130,7 @@ def get_project(
 
 @router.patch(
     "/{project_id}",
-    response_model=Project,
+    response_model=ProjectView,
     responses={
         status.HTTP_200_OK: {"description": "Project name updated successfully"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID or request body"},
@@ -139,7 +141,7 @@ def rename_project(
     project_id: Annotated[UUID, Depends(get_project_id)],
     project_update_name: Annotated[ProjectUpdateName, Body(description="Updated project name")],
     project_service: Annotated[ProjectService, Depends(get_project_service)],
-) -> Project:
+) -> ProjectView:
     """Rename a project"""
     try:
         return project_service.update_project_name(project_id, project_update_name.name)
@@ -179,7 +181,7 @@ def delete_project(
         status.HTTP_200_OK: {"description": "Labels updated successfully"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID or request body"},
         status.HTTP_404_NOT_FOUND: {"description": "Project or label not found"},
-        status.HTTP_409_CONFLICT: {"description": "Label(s) already exists"},
+        status.HTTP_409_CONFLICT: {"description": "Label(s) already exists or have duplicated names or hotkeys"},
     },
 )
 def update_labels(
@@ -218,7 +220,7 @@ def update_labels(
         return label_service.update_labels_in_project(project_id, labels_to_add, labels_to_edit, label_ids_to_remove)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    except ResourceAlreadyExistsError as e:
+    except (ResourceWithIdAlreadyExistsError, DuplicateLabelsError) as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 
@@ -264,3 +266,82 @@ def capture_next_pipeline_frame(
         data_collector.collect_next_frame()
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.get(
+    "/{project_id}/training_configuration",
+    response_model=TrainingConfiguration,
+    responses={
+        status.HTTP_200_OK: {"description": "Training configuration found"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID or query parameters"},
+        status.HTTP_404_NOT_FOUND: {"description": "Project not found"},
+    },
+)
+def get_training_configuration(
+    project_id: Annotated[UUID, Depends(get_project_id)],
+    project_service: Annotated[ProjectService, Depends(get_project_service)],
+    model_architecture_id: Annotated[str | None, Query()] = None,
+    model_revision_id: Annotated[UUID | None, Query()] = None,
+) -> TrainingConfiguration:
+    """
+    Get the training configuration for a project.
+
+    - If model_architecture_id is provided, returns configuration for that specific model architecture.
+    - If model_revision_id is provided, returns configuration for a specific trained model.
+    - If neither is provided, returns only general task-related configuration.
+    Note: model_architecture_id and model_revision_id cannot be used together.
+
+    Args:
+        project_id (UUID): The unique identifier of the project.
+        project_service (ProjectService): The project service
+        model_architecture_id (Optional[str]): The model architecture ID for specific configuration retrieval.
+        model_revision_id (Optional[UUID]): The model revision ID for specific configuration retrieval.
+
+    Returns:
+        TrainingConfiguration: The training configuration details.
+    """
+    try:
+        # TODO: Implement actual training configuration retrieval logic
+        _ = project_id, project_service, model_architecture_id, model_revision_id
+        return TrainingConfiguration.from_hyperparameters(hyperparameters=Hyperparameters())
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.patch(
+    "/{project_id}/training_configuration",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={
+        status.HTTP_204_NO_CONTENT: {"description": "Training configuration updated successfully"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID, query parameters, or request body"},
+        status.HTTP_404_NOT_FOUND: {"description": "Project not found"},
+    },
+)
+def update_training_configuration(
+    project_id: Annotated[UUID, Depends(get_project_id)],
+    training_config_update: Annotated[TrainingConfiguration, Body(description="Training configuration updates")],
+    project_service: Annotated[ProjectService, Depends(get_project_service)],
+    model_architecture_id: Annotated[str | None, Query()] = None,
+) -> None:
+    """
+    Update the training configuration for a project.
+
+    - If model_architecture_id is provided, updates configuration for that specific model architecture.
+    - If not provided, updates the general task-related configuration.
+    Note: model_architecture_id cannot be used with model_revision_id for updates.
+
+    Args:
+        project_id (UUID): The unique identifier of the project.
+        training_config_update (TrainingConfiguration): The training configuration updates.
+        project_service (ProjectService): The project service
+        model_architecture_id (Optional[str]): The model architecture ID for specific configuration update.
+    """
+    try:
+        # TODO: Implement actual training configuration update logic
+        _ = project_id, training_config_update, project_service, model_architecture_id
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

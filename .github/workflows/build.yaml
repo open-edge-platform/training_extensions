@@ -215,7 +215,7 @@ jobs:
         with:
           name: docker-images
           path: |
-            docker/geti-tune-*.tar
+            application/docker/geti-tune-*.tar
           retention-days: 7
 
   required_check:

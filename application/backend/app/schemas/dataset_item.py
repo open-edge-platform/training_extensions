@@ -6,7 +6,7 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from app.schemas.base import BaseIDNameModel, Pagination
+from app.schemas.base import BaseRequiredIDNameModel, Pagination
 from app.schemas.label import LabelReference
 from app.schemas.shape import Shape
 
@@ -23,7 +23,7 @@ class DatasetItemSubset(StrEnum):
     TESTING = "testing"
 
 
-class DatasetItem(BaseIDNameModel):
+class DatasetItem(BaseRequiredIDNameModel):
     """
     Dataset item
     """

@@ -1,13 +1,16 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import os
-from functools import lru_cache
+from collections.abc import Generator
+from pathlib import Path
 from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends, HTTPException, Request, UploadFile, status
+from sqlalchemy.orm import Session
 
 from app.core import Scheduler
+from app.db import get_db_session
 from app.services import (
     ActivePipelineService,
     ConfigurationService,
@@ -21,18 +24,28 @@ from app.services import (
 from app.services.base_weights_service import BaseWeightsService
 from app.services.data_collect import DataCollector
 from app.services.label_service import LabelService
-from app.settings import get_settings
 from app.webrtc.manager import WebRTCManager
-
-settings = get_settings()
 
 
 def is_valid_uuid(identifier: str) -> bool:
     """
-    Check if a given string identifier is formatted as a valid UUID
+    Check if a given string identifier is formatted as a valid UUID.
 
-    :param identifier: String to check
-    :return: True if valid UUID, False otherwise
+    Args:
+        identifier: String to check for UUID validity.
+
+    Returns:
+        bool: True if the string is a valid UUID, False otherwise.
+
+    Example:
+        >>> is_valid_uuid("550e8400-e29b-41d4-a716-446655440000")
+        True
+        >>> is_valid_uuid("invalid-uuid")
+        False
+
+    Note:
+        This function only validates the UUID format, not whether the UUID
+        actually exists in any system or database.
     """
     try:
         UUID(identifier)
@@ -98,6 +111,22 @@ def get_dataset_item_id(dataset_item_id: str) -> UUID:
     return UUID(dataset_item_id)
 
 
+def get_db() -> Generator[Session]:
+    """Provides a database session."""
+    with get_db_session() as session:
+        yield session
+
+
+def get_scheduler(request: Request) -> Scheduler:
+    """Provides the global Scheduler instance."""
+    return request.app.state.scheduler
+
+
+def get_data_dir(request: Request) -> Path:
+    """Provides the data directory path from settings."""
+    return request.app.state.settings.data_dir
+
+
 def get_active_pipeline_service(request: Request) -> ActivePipelineService:
     """Provides an ActivePipelineService instance for managing the active pipeline."""
     return request.app.state.active_pipeline_service
@@ -108,35 +137,30 @@ def get_data_collector(request: Request) -> DataCollector:
     return request.app.state.data_collector
 
 
-def get_scheduler(request: Request) -> Scheduler:
-    """Provides the global Scheduler instance."""
-    return request.app.state.scheduler
-
-
-@lru_cache
 def get_metrics_service(scheduler: Annotated[Scheduler, Depends(get_scheduler)]) -> MetricsService:
     """Provides a MetricsService instance for collecting and retrieving metrics."""
     return MetricsService(scheduler.shm_metrics.name, scheduler.shm_metrics_lock)
 
 
-@lru_cache
 def get_configuration_service(
     active_pipeline_service: Annotated[ActivePipelineService, Depends(get_active_pipeline_service)],
     scheduler: Annotated[Scheduler, Depends(get_scheduler)],
+    db: Annotated[Session, Depends(get_db)],
 ) -> ConfigurationService:
     """Provides a ConfigurationService instance with the active pipeline service and config changed condition."""
     return ConfigurationService(
         active_pipeline_service=active_pipeline_service,
+        db_session=db,
         config_changed_condition=scheduler.mp_config_changed_condition,
     )
 
 
-@lru_cache
 def get_pipeline_service(
     active_pipeline_service: Annotated[ActivePipelineService, Depends(get_active_pipeline_service)],
     data_collector: Annotated[DataCollector, Depends(get_data_collector)],
     metrics_service: Annotated[MetricsService, Depends(get_metrics_service)],
     scheduler: Annotated[Scheduler, Depends(get_scheduler)],
+    db: Annotated[Session, Depends(get_db)],
 ) -> PipelineService:
     """Provides a PipelineService instance with the active pipeline service and config changed condition."""
     return PipelineService(
@@ -144,28 +168,20 @@ def get_pipeline_service(
         data_collector=data_collector,
         metrics_service=metrics_service,
         config_changed_condition=scheduler.mp_config_changed_condition,
+        db_session=db,
     )
 
 
-@lru_cache
 def get_system_service() -> SystemService:
     """Provides a SystemService instance for system-level operations."""
     return SystemService()
 
 
-@lru_cache
-def get_model_service(scheduler: Annotated[Scheduler, Depends(get_scheduler)]) -> ModelService:
+def get_model_service(
+    db: Annotated[Session, Depends(get_db)],
+) -> ModelService:
     """Provides a ModelService instance with the model reload event from the scheduler."""
-    return ModelService(
-        data_dir=settings.data_dir,
-        mp_model_reload_event=scheduler.mp_model_reload_event,
-    )
-
-
-@lru_cache
-def get_dataset_service() -> DatasetService:
-    """Provides a DatasetService instance."""
-    return DatasetService(settings.data_dir)
+    return ModelService(db_session=db)
 
 
 def get_webrtc_manager(request: Request) -> WebRTCManager:
@@ -173,18 +189,32 @@ def get_webrtc_manager(request: Request) -> WebRTCManager:
     return request.app.state.webrtc_manager
 
 
-@lru_cache
-def get_project_service() -> ProjectService:
-    """Provides a ProjectService instance for managing projects."""
-    return ProjectService(settings.data_dir)
-
-
-def get_label_service() -> type[LabelService]:
+def get_label_service(db: Annotated[Session, Depends(get_db)]) -> LabelService:
     """Provides a LabelService instance for managing labels."""
-    return LabelService
+    return LabelService(db_session=db)
 
 
-@lru_cache
-def get_base_weights_service() -> BaseWeightsService:
+def get_project_service(
+    data_dir: Annotated[Path, Depends(get_data_dir)],
+    db: Annotated[Session, Depends(get_db)],
+    label_service: Annotated[LabelService, Depends(get_label_service)],
+) -> ProjectService:
+    """Provides a ProjectService instance for managing projects."""
+    return ProjectService(data_dir=data_dir, db_session=db, label_service=label_service)
+
+
+def get_dataset_service(
+    data_dir: Annotated[Path, Depends(get_data_dir)],
+    db: Annotated[Session, Depends(get_db)],
+    project_service: Annotated[ProjectService, Depends(get_project_service)],
+    label_service: Annotated[LabelService, Depends(get_label_service)],
+) -> DatasetService:
+    """Provides a DatasetService instance."""
+    return DatasetService(
+        data_dir=data_dir, db_session=db, project_service=project_service, label_service=label_service
+    )
+
+
+def get_base_weights_service(data_dir: Annotated[Path, Depends(get_data_dir)]) -> BaseWeightsService:
     """Provides a BaseWeightsService instance for managing base weights."""
-    return BaseWeightsService(settings.data_dir)
+    return BaseWeightsService(data_dir)

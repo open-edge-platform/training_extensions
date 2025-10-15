@@ -51,6 +51,7 @@ const test = testBase.extend<Fixtures>({
                             exclusive_labels: false,
                             labels: [],
                         },
+                        active_pipeline: false,
                     },
                 ]);
             }),

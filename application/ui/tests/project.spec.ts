@@ -124,6 +124,7 @@ test.describe('Project', () => {
         await page.getByRole('button', { name: /Create project/ }).click();
 
         // Correctly navigated to inference page
+        await page.waitForURL(/inference/);
         expect(page.url()).toContain('/inference');
 
         // Go back to project list and confirm the project was created
@@ -157,7 +158,7 @@ test.describe('Project', () => {
 
         await expect(page.getByText('Project deleted successfully')).toBeVisible();
 
-        await expect(page.getByText('Project 3')).not.toBeVisible();
+        await expect(page.getByText('Project 3')).toBeHidden();
         await expect(page.getByText('Project 1')).toBeVisible();
         await expect(page.getByText('Project 2')).toBeVisible();
     });

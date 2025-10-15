@@ -12,6 +12,7 @@ type IpCameraProps = {
 };
 
 const initConfig: IPCameraSourceConfig = {
+    id: '',
     name: '',
     source_type: 'ip_camera',
     stream_url: '',

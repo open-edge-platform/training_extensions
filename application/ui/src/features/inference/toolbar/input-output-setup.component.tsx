@@ -12,21 +12,19 @@ import { SourceOptions } from '../sources/source-options';
 export const InputOutputSetup = () => {
     return (
         <DialogTrigger type='popover'>
-            <Button width={'size-2000'} variant={'secondary'}>
+            <Button width={'size-3000'} variant={'secondary'}>
                 <Camera fill='white' />
-                <Text width={'auto'} marginStart={'size-100'}>
-                    Input source
-                </Text>
+                <Text>Pipeline configuration</Text>
             </Button>
             <Dialog minWidth={'size-6000'}>
                 <Content>
                     <Tabs aria-label='Dataset import tabs' height={'100%'}>
                         <TabList>
                             <Item key='sources' textValue='FoR'>
-                                <Text>Input setup</Text>
+                                <Text>Input</Text>
                             </Item>
                             <Item key='sinks' textValue='MaR'>
-                                <Text>Output setup</Text>
+                                <Text>Output</Text>
                             </Item>
                         </TabList>
                         <TabPanels>

@@ -3,7 +3,7 @@
 
 import { Label } from 'src/features/annotator/types';
 
-export const getMockedLabel = (label?: Partial<Label>): Label => {
+export const getMockedLabel = (label?: Partial<Label>): Label & { isPrediction: boolean } => {
     return {
         color: '#ffff00',
         id: 'label-1',

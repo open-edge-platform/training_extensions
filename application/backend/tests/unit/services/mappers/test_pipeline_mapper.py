@@ -7,7 +7,7 @@ import pytest
 from pydantic_core._pydantic_core import ValidationError
 
 from app.db.schema import PipelineDB
-from app.schemas import Pipeline, PipelineStatus
+from app.schemas import PipelineStatus, PipelineView
 from app.services.mappers import PipelineMapper
 
 UUID0 = uuid4()
@@ -17,7 +17,7 @@ UUID3 = uuid4()
 
 SUPPORTED_PIPELINE_MAPPING = [
     (
-        Pipeline(
+        PipelineView(
             project_id=UUID0,
             status=PipelineStatus.IDLE,
             data_collection_policies=[],
@@ -29,7 +29,7 @@ SUPPORTED_PIPELINE_MAPPING = [
         ),
     ),
     (
-        Pipeline(
+        PipelineView(
             project_id=UUID0,
             status=PipelineStatus.RUNNING,
             source_id=UUID1,
@@ -71,4 +71,4 @@ class TestPipelineMapper:
             PipelineMapper.to_schema(PipelineDB(project_id=str(UUID0), is_running=True, data_collection_policies=[]))
 
         with pytest.raises(ValidationError):
-            Pipeline(project_id=UUID1, status=PipelineStatus.RUNNING)
+            PipelineView(project_id=UUID1, status=PipelineStatus.RUNNING)

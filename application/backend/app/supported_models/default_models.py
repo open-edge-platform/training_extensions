@@ -57,15 +57,21 @@ class DefaultModels:
         """
         Retrieve a recommended model architecture for a specific task and optimization preference.
 
-        :param task_type: The computer vision task category
-        :param default_type: The optimization preference (accuracy, speed, or balance)
-        :return: The name of the recommended model architecture, or None if no model is available
-        :raises ValueError: If the task_type or default_type is not supported
+        Args:
+            task_type: The computer vision task category as a string (e.g., 'DETECTION', 'CLASSIFICATION').
+            default_type: The optimization preference indicating whether to prioritize accuracy,
+                        speed, or balanced performance.
+
+        Returns:
+            str | None: The name of the recommended model architecture, or None if no model
+                    is available for the given task type (e.g., VISUAL_PROMPTING).
+
+        Raises:
+            ValueError: If the task_type is not a supported TaskType value or if the default_type
+                    is not available for the given task type.
         """
         try:
             task_type_str = task_type.upper()
-            if task_type_str == "VISUAL_PROMPTING":
-                return None
             _task_type = TaskType[task_type_str]
         except KeyError:
             raise ValueError(f"Unknown task type: `{task_type}`")
@@ -78,9 +84,19 @@ class DefaultModels:
         """
         Gets the default model architecture for a specific computer vision task.
 
-        :param task_type: The computer vision task category
-        :return: The name of the default model architecture, or None if not available
-        :raises ValueError: If the task_type is not supported
+        This is a convenience method that retrieves the default (balanced) model
+        recommendation for the given task type by delegating to get_model_by_type.
+
+        Args:
+            task_type: The computer vision task category as a string
+                    (e.g., 'DETECTION', 'CLASSIFICATION').
+
+        Returns:
+            str | None: The name of the default model architecture, or None if no
+                    default model is available for the given task type.
+
+        Raises:
+            ValueError: If the task_type is not a supported TaskType value.
         """
         return cls.get_model_by_type(task_type, DefaultCategory.DEFAULT)
 
@@ -89,9 +105,19 @@ class DefaultModels:
         """
         Gets the model architecture that prioritizes prediction quality over inference speed.
 
-        :param task_type: The computer vision task category
-        :return: The name of the accuracy-optimized model architecture, or None if not available
-        :raises ValueError: If the task_type is not supported
+        This method retrieves the accuracy-optimized model recommendation for the given
+        task type by delegating to get_model_by_type with the ACCURACY preference.
+
+        Args:
+            task_type: The computer vision task category as a string
+                    (e.g., 'DETECTION', 'CLASSIFICATION').
+
+        Returns:
+            str | None: The name of the accuracy-optimized model architecture, or None
+                    if no accuracy model is available for the given task type.
+
+        Raises:
+            ValueError: If the task_type is not a supported TaskType value.
         """
         return cls.get_model_by_type(task_type, DefaultCategory.ACCURACY)
 
@@ -100,9 +126,19 @@ class DefaultModels:
         """
         Gets the model architecture that prioritizes inference speed over prediction quality.
 
-        :param task_type: The computer vision task category
-        :return: The name of the speed-optimized model architecture, or None if not available
-        :raises ValueError: If the task_type is not supported
+        This method retrieves the speed-optimized model recommendation for the given
+        task type by delegating to get_model_by_type with the SPEED preference.
+
+        Args:
+            task_type: The computer vision task category as a string
+                    (e.g., 'DETECTION', 'CLASSIFICATION').
+
+        Returns:
+            str | None: The name of the speed-optimized model architecture, or None
+                    if no speed model is available for the given task type.
+
+        Raises:
+            ValueError: If the task_type is not a supported TaskType value.
         """
         return cls.get_model_by_type(task_type, DefaultCategory.SPEED)
 
@@ -111,9 +147,19 @@ class DefaultModels:
         """
         Gets the model architecture that offers a compromise between accuracy and speed.
 
-        :param task_type: The computer vision task category
-        :return: The name of the balanced model architecture, or None if not available
-        :raises ValueError: If the task_type is not supported
+        This method retrieves the balanced model recommendation for the given task type
+        by delegating to get_model_by_type with the BALANCE preference.
+
+        Args:
+            task_type: The computer vision task category as a string
+                    (e.g., 'DETECTION', 'CLASSIFICATION').
+
+        Returns:
+            str | None: The name of the balanced model architecture, or None
+                    if no balanced model is available for the given task type.
+
+        Raises:
+            ValueError: If the task_type is not a supported TaskType value.
         """
         return cls.get_model_by_type(task_type, DefaultCategory.BALANCE)
 
@@ -122,6 +168,18 @@ class DefaultModels:
         """
         Gets the default model for each task type.
 
-        :return: A dictionary mapping task types to their default model names
+        Returns:
+            dict[str, str | None]: A dictionary mapping task type names (in lowercase)
+            to their default model names. Returns None as value for task types that
+            don't have a default model.
+
+        Example:
+            >>> get_default_models_per_task()
+            {
+                'detection': 'yolox',
+                'classification': 'efficientnet_b0',
+                'segmentation': 'segformer',
+                'visual_prompting': None
+            }
         """
         return {task_type.name.lower(): cls.get_default_model(task_type.name.lower()) for task_type in TaskType}

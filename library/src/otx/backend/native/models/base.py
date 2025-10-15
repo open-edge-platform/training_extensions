@@ -210,11 +210,22 @@ class OTXModel(LightningModule):
         raise TypeError(train_loss)
 
     def validation_step(self, batch: OTXDataBatch, batch_idx: int) -> OTXPredBatch:
-        """Perform a single validation step on a batch of data from the validation set.
+        """Perform a single test step on a batch of data from the test set.
 
-        :param batch: A batch of data (a tuple) containing the input tensor of images and target
-            labels.
-        :param batch_idx: The index of the current batch.
+        Args:
+            batch: A batch of data containing the input tensor of images and target labels.
+            batch_idx: The index of the current batch.
+
+        Returns:
+            OTXPredBatch: The prediction results for the batch.
+
+        Raises:
+            TypeError: If predictions are of type OTXBatchLossEntity or if metric inputs
+                    have an unsupported type.
+
+        Note:
+            Updates test metrics based on the prediction results and batch data.
+            Handles both single dictionary and list of dictionaries for metric inputs.
         """
         preds = self.forward(inputs=batch)
 
@@ -235,11 +246,17 @@ class OTXModel(LightningModule):
         raise TypeError(metric_inputs)
 
     def test_step(self, batch: OTXDataBatch, batch_idx: int) -> OTXPredBatch:
-        """Perform a single test step on a batch of data from the test set.
+        """Lightning hook called at the beginning of fit, validate, test, or predict stages.
 
-        :param batch: A batch of data (a tuple) containing the input tensor of images and target
-            labels.
-        :param batch_idx: The index of the current batch.
+        This hook is used for dynamic model building or model adjustments. It is called
+        on every process when using Distributed Data Parallel (DDP).
+
+        Args:
+            stage: The current stage, either "fit", "validate", "test", or "predict".
+
+        Note:
+            When torch_compile is enabled and stage is "fit", compiles the model for
+            optimized performance with appropriate logging level adjustments.
         """
         preds = self.forward(inputs=batch)
 
@@ -301,12 +318,17 @@ class OTXModel(LightningModule):
         self._log_metrics(self.metric, "test")
 
     def setup(self, stage: str) -> None:
-        """Lightning hook that is called at the beginning of fit (train + validate), validate, test, or predict.
+        """Lightning hook called at the beginning of fit, validate, test, or predict stages.
 
-        This is a good hook when you need to build models dynamically or adjust something about
-        them. This hook is called on every process when using DDP.
+        This hook is used for dynamic model building or model adjustments. It is called
+        on every process when using Distributed Data Parallel (DDP).
 
-        :param stage: Either `"fit"`, `"validate"`, `"test"`, or `"predict"`.
+        Args:
+            stage: The current stage, either "fit", "validate", "test", or "predict".
+
+        Note:
+            When torch_compile is enabled and stage is "fit", compiles the model for
+            optimized performance with appropriate logging level adjustments.
         """
         if self.torch_compile and stage == "fit":
             # Set the log_level of this to error due to the numerous warning messages from compile.

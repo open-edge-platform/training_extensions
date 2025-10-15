@@ -3,15 +3,16 @@
 import shutil
 from collections.abc import Generator
 from pathlib import Path
-from unittest.mock import patch
 from uuid import UUID, uuid4
 
 import pytest
 from sqlalchemy.orm import Session
 
 from app.db.schema import DatasetItemDB, LabelDB, PipelineDB, ProjectDB
-from app.schemas.project import Label, Project, Task, TaskType
+from app.schemas.project import Label, ProjectCreate, Task, TaskType
+from app.services import LabelService, ResourceWithIdAlreadyExistsError
 from app.services.base import ResourceInUseError, ResourceNotFoundError, ResourceType
+from app.services.label_service import DuplicateLabelsError
 from app.services.project_service import ProjectService
 
 
@@ -25,24 +26,16 @@ def fxt_projects_dir() -> Generator[Path]:
     shutil.rmtree(projects_dir)
 
 
-@pytest.fixture(autouse=True)
-def mock_get_db_session(db_session):
-    """Mock the get_db_session to use test database."""
-    with (
-        patch("app.services.project_service.get_db_session") as mock,
-        patch("app.services.base.get_db_session") as mock_base,
-    ):
-        mock.return_value.__enter__.return_value = db_session
-        mock.return_value.__exit__.return_value = None
-        mock_base.return_value.__enter__.return_value = db_session
-        mock_base.return_value.__exit__.return_value = None
-        yield
+@pytest.fixture
+def fxt_label_service(db_session: Session) -> LabelService:
+    """Fixture to create a LabelService instance."""
+    return LabelService(db_session=db_session)
 
 
 @pytest.fixture
-def fxt_project_service(fxt_projects_dir: Path) -> ProjectService:
+def fxt_project_service(fxt_projects_dir: Path, db_session: Session, fxt_label_service: LabelService) -> ProjectService:
     """Fixture to create a ProjectService instance."""
-    return ProjectService(fxt_projects_dir.parent)
+    return ProjectService(data_dir=fxt_projects_dir.parent, db_session=db_session, label_service=fxt_label_service)
 
 
 class TestProjectServiceIntegration:
@@ -54,7 +47,7 @@ class TestProjectServiceIntegration:
             Label(name="cat", color="#00FF00", hotkey="c"),
             Label(name="dog", color="#FF0000", hotkey="d"),
         ]
-        new_project = Project(
+        new_project = ProjectCreate(
             name="Test Project",
             task=Task(
                 task_type=TaskType.CLASSIFICATION,
@@ -76,23 +69,86 @@ class TestProjectServiceIntegration:
         assert len(db_labels) == 2
         assert {label.name for label in db_labels} == {"cat", "dog"}
 
+    def test_create_project_duplicate_labels(self, fxt_project_service: ProjectService, db_session: Session):
+        """Test creating a project with duplicated labels."""
+        project_id = uuid4()
+        labels = [
+            Label(name="cat", color="#00FF00", hotkey="c"),
+            Label(name="cat", color="#FF0000", hotkey="d"),
+        ]
+        new_project = ProjectCreate(
+            id=project_id,
+            name="Test Project",
+            task=Task(
+                task_type=TaskType.CLASSIFICATION,
+                exclusive_labels=True,
+                labels=labels,
+            ),
+        )
+        with pytest.raises(DuplicateLabelsError):
+            fxt_project_service.create_project(new_project)
+        # Ensure the transaction is rolled back
+        assert not db_session.is_active
+
+    def test_create_project_duplicate_id(self, fxt_project_service: ProjectService, db_session: Session):
+        """Test creating a project with duplicated ID."""
+        db_project = ProjectDB(name="existing_project", task_type=TaskType.CLASSIFICATION, exclusive_labels=False)
+        db_session.add(db_project)
+        db_session.flush()
+
+        project_id = db_project.id
+        labels = [
+            Label(name="cat", color="#00FF00", hotkey="c"),
+            Label(name="dog", color="#FF0000", hotkey="d"),
+        ]
+        new_project = ProjectCreate(
+            id=UUID(project_id),
+            name="Test Project",
+            task=Task(
+                task_type=TaskType.CLASSIFICATION,
+                exclusive_labels=True,
+                labels=labels,
+            ),
+        )
+        with pytest.raises(ResourceWithIdAlreadyExistsError) as exc_info:
+            fxt_project_service.create_project(new_project)
+
+        assert exc_info.value.resource_type == ResourceType.PROJECT
+        assert exc_info.value.resource_id == project_id
+
     def test_list_projects(
         self, fxt_project_service: ProjectService, fxt_db_projects: list[ProjectDB], db_session: Session
     ):
         """Test listing projects."""
         # Create projects first
+        label_config = [
+            {"name": "cat", "color": "#00FF00", "hotkey": "c"},
+            {"name": "dog", "color": "#FF0000", "hotkey": "d"},
+        ]
         for db_project in fxt_db_projects:
             db_session.add(db_project)
-        db_session.flush()
+            db_session.flush()
+
+            for config in label_config:
+                label = LabelDB(**config)
+                label.project_id = db_project.id
+                db_session.add(label)
+            db_session.flush()
 
         projects = fxt_project_service.list_projects()
         assert len(projects) == 3
         for i in range(3):
             assert projects[i].name == fxt_db_projects[i].name
             assert projects[i].task.task_type == fxt_db_projects[i].task_type
-            assert {label.name for label in projects[i].task.labels} == {
-                label.name for label in fxt_db_projects[i].labels
-            }
+            assert len(projects[i].task.labels) == len(label_config)
+            for j in range(len(label_config)):
+                project_label = projects[i].task.labels[j]
+                config = label_config[j]
+                assert (
+                    project_label.name == config["name"]
+                    and project_label.color == config["color"]
+                    and project_label.hotkey == config["hotkey"]
+                )
 
     def test_get_project_by_id(
         self, fxt_project_service: ProjectService, fxt_db_projects: list[ProjectDB], db_session: Session
@@ -140,7 +196,7 @@ class TestProjectServiceIntegration:
         fetched_thumbnail_path = fxt_project_service.get_project_thumbnail_path(UUID(db_project.id))
         assert (
             fetched_thumbnail_path
-            == fxt_project_service.projects_dir / f"{db_project.id}/dataset/{db_dataset_item.id}-thumb.jpg"
+            == fxt_project_service._projects_dir / f"{db_project.id}/dataset/{db_dataset_item.id}-thumb.jpg"
         )
 
     def test_get_project_by_id_not_found(self, fxt_project_service: ProjectService):
@@ -161,10 +217,11 @@ class TestProjectServiceIntegration:
         db_session.flush()
 
         fxt_project_service.delete_project_by_id(UUID(db_project.id))
+        db_session.expire_all()  # Clear the session cache
 
         assert db_session.get(ProjectDB, db_project.id) is None
         # Ensure the associated pipeline is deleted
-        assert db_session.get(PipelineDB, str(db_project.id)) is None
+        assert db_session.get(PipelineDB, db_project.id) is None
 
     def test_delete_active_project(
         self,
