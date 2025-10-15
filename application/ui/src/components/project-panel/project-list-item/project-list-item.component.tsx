@@ -15,9 +15,9 @@ import {
     type TextFieldRef,
 } from '@geti/ui';
 import { useNavigate } from 'react-router';
+import { SchemaProjectView } from 'src/api/openapi-spec';
 
-import { Project } from '../../../features/project/types';
-import { paths } from '../../../router';
+import { paths } from '../../../constants/paths';
 
 import styles from './project-list-item.module.scss';
 
@@ -101,7 +101,7 @@ const ProjectActions = ({ onAction }: ProjectActionsProps) => {
 };
 
 interface ProjectListItemProps {
-    project: Project;
+    project: SchemaProjectView;
     isInEditMode: boolean;
     onBlur: (projectId: string, newName: string) => void;
     onRename: (projectId: string) => void;
@@ -114,7 +114,7 @@ export const ProjectListItem = ({ project, isInEditMode, onBlur, onRename, onDel
 
     const handleAction = (key: Key) => {
         if (key === PROJECT_ACTIONS.RENAME) {
-            onRename(project.id || '');
+            onRename(project.id);
         } else if (key === PROJECT_ACTIONS.DELETE) {
             setIsDeleteDialogOpen(true);
         }
@@ -125,11 +125,11 @@ export const ProjectListItem = ({ project, isInEditMode, onBlur, onRename, onDel
     };
 
     const handleDelete = () => {
-        onDelete(project.id || '');
+        onDelete(project.id);
     };
 
     const handleNavigateToProject = () => {
-        navigate(paths.project.details({ projectId: project.id || '' }));
+        navigate(paths.project.details({ projectId: project.id }));
     };
 
     return (
@@ -137,10 +137,15 @@ export const ProjectListItem = ({ project, isInEditMode, onBlur, onRename, onDel
             <li className={styles.projectListItem} onClick={isInEditMode ? undefined : handleNavigateToProject}>
                 <Flex justifyContent='space-between' alignItems='center' marginX={'size-200'}>
                     {isInEditMode ? (
-                        <ProjectEdition name={project.name} onBlur={handleBlur(project.id || '')} />
+                        <ProjectEdition name={project.name} onBlur={handleBlur(project.id)} />
                     ) : (
                         <Flex alignItems={'center'} gap={'size-100'}>
-                            <PhotoPlaceholder name={project.name} email='' height={'size-300'} width={'size-300'} />
+                            <PhotoPlaceholder
+                                name={project.name}
+                                indicator={project.id ?? project.name}
+                                height={'size-300'}
+                                width={'size-300'}
+                            />
                             <Text>{project.name}</Text>
                         </Flex>
                     )}

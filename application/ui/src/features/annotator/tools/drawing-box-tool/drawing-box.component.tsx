@@ -9,7 +9,7 @@ import { type KeyboardEvent as ReactKeyboardEvent } from '@geti/ui';
 import selectionCursor from '../../../../assets/icons/selection.svg?url';
 import { Rectangle } from '../../shapes/rectangle.component';
 import { Point, Rect as RectInterface, RegionOfInterest } from '../../types';
-import { DEFAULT_ANNOTATION_STYLES, isEraserButton, isLeftButton } from '../../utils';
+import { DEFAULT_ANNOTATION_STYLES, isLeftButton } from '../../utils';
 import { SvgToolCanvas } from '../svg-tool-canvas.component';
 import { getRelativePoint } from '../utils';
 import { Crosshair } from './crosshair/crosshair.component';
@@ -32,7 +32,6 @@ interface DrawingBoxInterface {
 export const DrawingBox = ({ roi, zoom, image, onComplete }: DrawingBoxInterface) => {
     const [startPoint, setStartPoint] = useState<Point | null>(null);
     const [boundingBox, setBoundingBox] = useState<RectInterface | null>(null);
-    const [hasCrossHair, setHasCrossHair] = useState<boolean>(true);
 
     const ref = useRef<SVGRectElement>(null);
 
@@ -46,26 +45,13 @@ export const DrawingBox = ({ roi, zoom, image, onComplete }: DrawingBoxInterface
             return;
         }
 
-        const button = {
-            button: event.button,
-            buttons: event.buttons,
-        };
-
-        if (event.pointerType === PointerType.Pen && isEraserButton(button)) {
-            setHasCrossHair(false);
-
-            return;
-        } else {
-            setHasCrossHair(true);
-        }
-
         if (startPoint === null || !event.currentTarget.hasPointerCapture(event.pointerId)) {
             return;
         }
 
         const endPoint = clampPoint(getRelativePoint(ref.current, { x: event.clientX, y: event.clientY }, zoom));
 
-        setBoundingBox({ shapeType: 'rect', ...clampBox(pointsToRect(startPoint, endPoint), roi) });
+        setBoundingBox({ type: 'rectangle', ...clampBox(pointsToRect(startPoint, endPoint), roi) });
     };
 
     const onPointerDown = (event: PointerEvent<SVGSVGElement>): void => {
@@ -87,7 +73,7 @@ export const DrawingBox = ({ roi, zoom, image, onComplete }: DrawingBoxInterface
         event.currentTarget.setPointerCapture(event.pointerId);
 
         setStartPoint(mouse);
-        setBoundingBox({ shapeType: 'rect', x: mouse.x, y: mouse.y, width: 0, height: 0 });
+        setBoundingBox({ type: 'rectangle', x: mouse.x, y: mouse.y, width: 0, height: 0 });
     };
 
     const onPointerUp = (event: PointerEvent<SVGSVGElement>): void => {
@@ -144,7 +130,7 @@ export const DrawingBox = ({ roi, zoom, image, onComplete }: DrawingBoxInterface
                     styles={{ role: 'application', ...DEFAULT_ANNOTATION_STYLES }}
                 />
             ) : null}
-            {hasCrossHair && <Crosshair location={crosshair.location} zoom={zoom} />}
+            <Crosshair location={crosshair.location} zoom={zoom} />
         </SvgToolCanvas>
     );
 };

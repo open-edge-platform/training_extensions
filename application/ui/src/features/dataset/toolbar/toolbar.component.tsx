@@ -2,13 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, Divider, Flex, Heading, Text, toast } from '@geti/ui';
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { $api } from '../../../api/client';
 import { AddMediaButton } from '../../../components/add-media-button/add-media-button.component';
-import { useProjectIdentifier } from '../../../hooks/use-project-identifier.hook';
+import { CheckboxInput } from '../../../components/checkbox-input/checkbox-input.component';
 import { useSelectedData } from '../../../routes/dataset/provider';
 import { DatasetItem } from '../../annotator/types';
-import { CheckboxInput } from '../checkbox-input.component';
 import { DeleteMediaItem } from '../gallery/delete-media-item/delete-media-item.component';
 import { toggleMultipleSelection, updateSelectedKeysTo } from './util';
 
@@ -20,7 +20,11 @@ export const Toolbar = ({ items }: ToolbarProps) => {
     const projectId = useProjectIdentifier();
     const { selectedKeys, setSelectedKeys, setMediaState, toggleSelectedKeys } = useSelectedData();
 
-    const addItemMutation = $api.useMutation('post', '/api/projects/{project_id}/dataset/items');
+    const addItemMutation = $api.useMutation('post', '/api/projects/{project_id}/dataset/items', {
+        meta: {
+            invalidateQueries: [['get', '/api/projects/{project_id}/dataset/items']],
+        },
+    });
 
     const totalSelectedElements = selectedKeys instanceof Set ? selectedKeys.size : 0;
     const hasSelectedElements = totalSelectedElements > 0;

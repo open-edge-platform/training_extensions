@@ -1,10 +1,10 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen } from '@testing-library/react';
+import { getMockedAnnotation } from 'mocks/mock-annotation';
+import { render, screen } from 'test-utils/render';
 import { describe, expect, it } from 'vitest';
 
-import { getMockedAnnotation } from '../../../test-utils/mocked-annotation';
 import { Annotation, Polygon, Rect } from '../types';
 import { AnnotationShape } from './annotation-shape.component';
 
@@ -31,7 +31,7 @@ describe('AnnotationShape', () => {
             { x: 3, y: 4 },
             { x: 5, y: 6 },
         ];
-        const annotation = getMockedAnnotation({ shape: { shapeType: 'polygon', points } }) as AnnotationPolygon;
+        const annotation = getMockedAnnotation({ shape: { type: 'polygon', points } }) as AnnotationPolygon;
 
         render(<AnnotationShape annotation={annotation} />);
         const polygon = screen.getByLabelText('annotation polygon');

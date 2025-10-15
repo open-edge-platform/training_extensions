@@ -1,17 +1,20 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen } from '@testing-library/react';
 import { HttpResponse } from 'msw';
+import { render, screen } from 'test-utils/render';
 
 import { http } from '../../../api/utils';
 import { server } from '../../../msw-node-setup';
-import { TestProviders } from '../../../providers';
 import { ProjectDetails } from './project-details.component';
 
-vi.mock('react-router', () => ({
-    useParams: vi.fn(() => ({ projectId: '123' })),
-}));
+vi.mock('react-router', async (importOriginal) => {
+    const actual = await importOriginal<typeof import('react-router')>();
+    return {
+        ...actual,
+        useParams: vi.fn(() => ({ projectId: '123' })),
+    };
+});
 
 describe('ProjectDetails', () => {
     it('renders the correct values for each resource', async () => {
@@ -25,6 +28,7 @@ describe('ProjectDetails', () => {
                         exclusive_labels: false,
                         labels: [{ name: 'person' }, { name: 'car' }],
                     },
+                    active_pipeline: true,
                 });
             }),
             http.get('/api/projects/{project_id}/pipeline', () => {
@@ -33,6 +37,7 @@ describe('ProjectDetails', () => {
                     status: 'running' as const,
                     data_collection_policies: [],
                     source: {
+                        id: 'source-id',
                         name: 'source',
                         source_type: 'video_file' as const,
                         video_path: 'video.mp4',
@@ -48,6 +53,7 @@ describe('ProjectDetails', () => {
                         files_deleted: false,
                     },
                     sink: {
+                        id: 'sink-id',
                         name: 'sink',
                         folder_path: 'data/sink',
                         output_formats: ['image_original', 'image_with_predictions', 'predictions'] as Array<
@@ -60,11 +66,7 @@ describe('ProjectDetails', () => {
             })
         );
 
-        render(
-            <TestProviders>
-                <ProjectDetails />
-            </TestProviders>
-        );
+        render(<ProjectDetails />);
 
         // Wait for the component to load and render the Project heading
         expect(await screen.findByRole('heading', { name: 'Project' })).toBeInTheDocument();
@@ -79,9 +81,9 @@ describe('ProjectDetails', () => {
 
         // Pipeline section headers
         expect(await screen.findByRole('heading', { name: 'Pipeline' })).toBeInTheDocument();
-        expect(screen.getByRole('heading', { name: 'Source(s)' })).toBeInTheDocument();
-        expect(screen.getByRole('heading', { name: 'Model(s)' })).toBeInTheDocument();
-        expect(screen.getByRole('heading', { name: 'Sink(s)' })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: 'Source' })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: 'Model' })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: 'Sink' })).toBeInTheDocument();
 
         // Pipeline content
         expect(screen.getByText('video_file')).toBeInTheDocument();

@@ -5,7 +5,7 @@ import { Text } from '@geti/ui';
 import { AddCircle } from '@geti/ui/icons';
 import { Link } from 'react-router-dom';
 
-import { paths } from '../../../router';
+import { paths } from '../../../constants/paths';
 
 import classes from './new-project-link.module.scss';
 
@@ -13,7 +13,7 @@ export const NewProjectLink = () => {
     return (
         <Link to={paths.project.new.pattern} className={classes.link}>
             <AddCircle />
-            <Text>Add project</Text>
+            <Text>Create project</Text>
         </Link>
     );
 };

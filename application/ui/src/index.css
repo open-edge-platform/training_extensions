@@ -80,3 +80,7 @@ a {
 button {
     cursor: pointer !important;
 }
+
+svg {
+    fill: currentColor;
+}

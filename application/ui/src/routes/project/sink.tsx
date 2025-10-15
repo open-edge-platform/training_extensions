@@ -16,7 +16,7 @@ import {
     TextField,
     View,
 } from '@geti/ui';
-import { useNavigate } from 'react-router';
+import { v4 as uuid } from 'uuid';
 
 import { $api } from '../../api/client';
 import {
@@ -27,8 +27,6 @@ import {
     SchemaWebhookSinkConfig,
 } from '../../api/openapi-spec';
 import { RadioDisclosure } from '../../components/radio-disclosure-group/radio-disclosure-group';
-import { useProjectIdentifier } from '../../hooks/use-project-identifier.hook';
-import { paths } from '../../router';
 import { ReactComponent as IconFolder } from './../../assets/icons/folder-arrow-right.svg';
 import { ReactComponent as IconMQTT } from './../../assets/icons/mqtt.svg';
 import { ReactComponent as IconRos } from './../../assets/icons/ros.svg';
@@ -49,17 +47,20 @@ type SinkFormRecord = {
 };
 const DEFAULT_SINK_FORMS: SinkFormRecord = {
     disconnected: {
+        id: 'disconnected-id',
         sink_type: 'disconnected',
         name: 'Disconnected',
         output_formats: [],
     },
     folder: {
+        id: 'folder-id',
         sink_type: 'folder',
         name: 'Folder',
         folder_path: '',
         output_formats: [],
     },
     mqtt: {
+        id: 'mqtt-id',
         sink_type: 'mqtt',
         auth_required: false,
         name: 'MQTT',
@@ -69,12 +70,14 @@ const DEFAULT_SINK_FORMS: SinkFormRecord = {
         output_formats: [],
     },
     ros: {
+        id: 'ros-id',
         name: 'Ros',
         sink_type: 'ros',
         topic: '',
         output_formats: [],
     },
     webhook: {
+        id: 'webhook-id',
         name: 'Webhook',
         sink_type: 'webhook',
         webhook_url: '',
@@ -240,9 +243,6 @@ const SINK_ITEMS = [
 ] satisfies Array<{ sink_type: SinkType; name: string; icon: ReactNode }>;
 
 export const Sink = () => {
-    const navigate = useNavigate();
-    const projectId = useProjectIdentifier();
-
     const sinks = $api.useSuspenseQuery('get', '/api/sinks');
     const sinkMutation = $api.useMutation('post', '/api/sinks');
     const currentSinks: SinkConfig[] = sinks.data;
@@ -262,11 +262,19 @@ export const Sink = () => {
     const onSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        sinkMutation.mutateAsync({
-            body: forms[selectedSinkType],
-        });
+        if (selectedSinkType === 'disconnected') {
+            return;
+        }
 
-        navigate(paths.project.inference({ projectId }));
+        const sinkData = forms[selectedSinkType];
+        const sinkPayload = {
+            ...sinkData,
+            id: sinkData.id || uuid(),
+        };
+
+        sinkMutation.mutateAsync({
+            body: sinkPayload,
+        });
     };
 
     return (

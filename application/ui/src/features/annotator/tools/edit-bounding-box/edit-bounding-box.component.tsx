@@ -3,23 +3,23 @@
 
 import { useState } from 'react';
 
+import { useAnnotationActions } from '../../annotation-actions-provider.component';
 import { AnnotationShape } from '../../annotations/annotation-shape.component';
 import { useAnnotator } from '../../annotator-provider.component';
 import { Annotation, Point } from '../../types';
 import { getBoundingBoxInRoi, getBoundingBoxResizePoints, getClampedBoundingBox } from '../utils';
-import { ResizeAnchor } from './resize-anchor.component';
+import { ANCHOR_SIZE, ResizeAnchor } from './resize-anchor.component';
 import { TranslateShape } from './translate-shape.component';
 
 interface EditBoundingBoxProps {
-    annotation: Annotation & { shape: { shapeType: 'rect' } };
+    annotation: Annotation & { shape: { type: 'rectangle' } };
     zoom: number;
 }
 
-const ANCHOR_SIZE = 8;
-
 export const EditBoundingBox = ({ annotation, zoom }: EditBoundingBoxProps) => {
     const [shape, setShape] = useState(annotation.shape);
-    const { mediaItem, updateAnnotation } = useAnnotator();
+    const { mediaItem } = useAnnotator();
+    const { updateAnnotation } = useAnnotationActions();
 
     const roi = { x: 0, y: 0, width: mediaItem.width, height: mediaItem.height };
 

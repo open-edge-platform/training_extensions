@@ -8,24 +8,26 @@ import { useNavigate } from 'react-router';
 import { v4 as uuid } from 'uuid';
 
 import { $api } from '../../../api/client';
-import { paths } from '../../../router';
-import { LabelItemProps } from '../label-selection/interface';
+import { paths } from '../../../constants/paths';
+import { Label } from '../../annotator/types';
 import { LabelSelection } from '../label-selection/label-selection.component';
 import { TaskType } from '../task-selection/interface';
 import { TaskSelection } from '../task-selection/task-selection.component';
-import { ProjectName } from './project-name';
+import { ProjectName } from './project-name.component';
 
 import classes from './create-project-form.module.scss';
 
 export const CreateProjectForm = () => {
     const [selectedTask, setSelectedTask] = useState<TaskType>('detection');
-    const [labels, setLabels] = useState<Omit<LabelItemProps, 'onDelete'>[]>([
-        { id: uuid(), colorValue: '#F20004', nameValue: 'Car' },
-    ]);
+    const [labels, setLabels] = useState<Label[]>([{ id: uuid(), color: '#F20004', name: 'Object' }]);
     const [name, setName] = useState<string>('Project #1');
 
     const navigate = useNavigate();
-    const createProjectMutation = $api.useMutation('post', '/api/projects');
+    const createProjectMutation = $api.useMutation('post', '/api/projects', {
+        meta: {
+            invalidateQueries: [['get', '/api/projects']],
+        },
+    });
 
     const createProject = (e: FormEvent) => {
         e.preventDefault();
@@ -39,7 +41,7 @@ export const CreateProjectForm = () => {
                     task: {
                         task_type: selectedTask,
                         exclusive_labels: selectedTask === 'classification',
-                        labels: labels.map((label) => ({ name: label.nameValue })),
+                        labels: labels.map((label) => ({ name: label.name })),
                     },
                     name,
                 },

@@ -6,12 +6,15 @@ import { MoreMenu } from '@geti/ui/icons';
 import { useNavigate } from 'react-router';
 
 import { $api } from '../../../api/client';
-import { paths } from '../../../router';
+import { paths } from '../../../constants/paths';
 
 export const MenuActions = ({ projectId }: { projectId: string }) => {
     const navigate = useNavigate();
 
     const deleteMutation = $api.useMutation('delete', '/api/projects/{project_id}', {
+        meta: {
+            invalidateQueries: [['get', '/api/projects']],
+        },
         onSuccess: () => {
             toast({ type: 'success', message: 'Project deleted successfully' });
         },
@@ -22,9 +25,6 @@ export const MenuActions = ({ projectId }: { projectId: string }) => {
 
     const handleMenuAction = (key: Key) => {
         switch (key) {
-            case 'export':
-                // Handle export action
-                break;
             case 'edit':
                 navigate(paths.project.details({ projectId }));
                 break;
@@ -38,12 +38,15 @@ export const MenuActions = ({ projectId }: { projectId: string }) => {
 
     return (
         <MenuTrigger>
-            <ActionButton isQuiet UNSAFE_style={{ fill: 'var(--spectrum-gray-900)' }}>
+            <ActionButton
+                isQuiet
+                UNSAFE_style={{ fill: 'var(--spectrum-gray-900)' }}
+                aria-label={'open project options'}
+                data-testid={projectId}
+            >
                 <MoreMenu />
             </ActionButton>
             <Menu onAction={handleMenuAction}>
-                {/* TODO: unsupported for now. Uncomment if we ever support this */}
-                {/* <Item key={'export'}>Export</Item> */}
                 <Item key={'edit'}>Edit</Item>
                 <Item key={'delete'}>Delete</Item>
             </Menu>

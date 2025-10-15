@@ -1,8 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+
 import { $api } from '../../../api/client';
-import { useProjectIdentifier } from '../../../hooks/use-project-identifier.hook';
 
 const datasetItemsLimit = 20;
 

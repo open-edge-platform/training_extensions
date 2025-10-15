@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Divider, Flex, Grid, Heading, repeat, Text, View } from '@geti/ui';
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { capitalize, startsWith } from 'lodash-es';
 import { Fragment } from 'react/jsx-runtime';
 
 import { $api } from '../../../api/client';
-import { useProjectIdentifier } from '../../../hooks/use-project-identifier.hook';
 import Background from './../../../assets/background.png';
 
 type FieldProps = {
@@ -56,6 +56,9 @@ export const ProjectDetails = () => {
         params: { path: { project_id: projectId } },
     });
 
+    const { name, task } = project.data;
+    const { task_type, labels = [] } = task;
+
     return (
         <View
             backgroundColor={'gray-100'}
@@ -83,9 +86,9 @@ export const ProjectDetails = () => {
                                 <Heading level={2}>Task type</Heading>
                                 <Heading level={2}>Labels</Heading>
 
-                                <Text>{project.data.name}</Text>
-                                <Text>{project.data.task.task_type}</Text>
-                                <Text>{project.data.task.labels.map((label) => label.name).join(', ')}</Text>
+                                <Text>{name}</Text>
+                                <Text>{task_type}</Text>
+                                <Text>{labels.map((label) => label.name).join(', ')}</Text>
                             </Grid>
                         </Flex>
 
@@ -99,7 +102,7 @@ export const ProjectDetails = () => {
                             <Grid columns={repeat(3, '1fr')} rows={repeat(5, 'auto')} gap='size-300' flex='1'>
                                 <View>
                                     <Heading level={2} marginBottom={'size-300'}>
-                                        Source(s)
+                                        Source
                                     </Heading>
                                     <Flex direction={'column'} gap={'size-300'}>
                                         {Object.entries(pipeline.data.source || {}).map(
@@ -114,7 +117,7 @@ export const ProjectDetails = () => {
                                 </View>
                                 <View>
                                     <Heading level={2} marginBottom={'size-300'}>
-                                        Model(s)
+                                        Model
                                     </Heading>
                                     <Flex direction={'column'} gap={'size-300'}>
                                         {Object.entries(pipeline.data.model || {}).map(
@@ -136,7 +139,7 @@ export const ProjectDetails = () => {
                                 </View>
                                 <View>
                                     <Heading level={2} marginBottom={'size-300'}>
-                                        Sink(s)
+                                        Sink
                                     </Heading>
                                     <Flex direction={'column'} gap={'size-300'}>
                                         {Object.entries(pipeline.data.sink || {}).map(

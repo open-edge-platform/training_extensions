@@ -1,35 +1,62 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { toast } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
+import { SchemaProjectView } from 'src/api/openapi-spec';
 
 import { $api } from '../../api/client';
-import { Project } from '../../features/project/types';
 import { ProjectListItem } from './project-list-item/project-list-item.component';
 
 import styles from './projects-list.module.scss';
 
 interface ProjectListProps {
-    projects: Project[];
+    projects: SchemaProjectView[];
     projectIdInEdition: string | null;
     setProjectInEdition: (projectId: string | null) => void;
 }
 
 export const ProjectsList = ({ projects, setProjectInEdition, projectIdInEdition }: ProjectListProps) => {
-    const deleteProjectMutation = $api.useMutation('delete', '/api/projects/{project_id}');
+    const deleteProjectMutation = $api.useMutation('delete', '/api/projects/{project_id}', {
+        meta: {
+            invalidateQueries: [['get', '/api/projects']],
+        },
+    });
+    const patchProjectMutation = $api.useMutation('patch', '/api/projects/{project_id}', {
+        meta: {
+            invalidateQueries: [['get', '/api/projects']],
+        },
+    });
 
-    const updateProjectName = (_id: string, _name: string): void => {
-        // TODO: To be implemented
+    const updateProjectName = (id: string, name: string): void => {
+        patchProjectMutation.mutate(
+            {
+                params: { path: { project_id: id } },
+                body: { name },
+            },
+            {
+                onSuccess: () => {
+                    toast({ type: 'success', message: 'Project updated successfully' });
+                },
+            }
+        );
     };
 
     const deleteProject = (id: string): void => {
-        deleteProjectMutation.mutate({
-            params: {
-                path: {
-                    project_id: id,
+        deleteProjectMutation.mutate(
+            {
+                params: {
+                    path: {
+                        project_id: id,
+                    },
                 },
             },
-        });
+            {
+                onSuccess: () => {
+                    toast({ type: 'success', message: 'Project deleted successfully' });
+                },
+            }
+        );
     };
 
     const isInEditionMode = (projectId: string) => {
@@ -60,7 +87,7 @@ export const ProjectsList = ({ projects, setProjectInEdition, projectIdInEdition
                     onRename={handleRename}
                     onDelete={deleteProject}
                     onBlur={handleBlur}
-                    isInEditMode={isInEditionMode(project.id || '')}
+                    isInEditMode={isInEditionMode(project.id)}
                 />
             ))}
         </ul>
