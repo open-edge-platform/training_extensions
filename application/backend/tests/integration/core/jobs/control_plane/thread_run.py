@@ -1,0 +1,121 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+import asyncio
+import threading
+import time
+from collections.abc import Iterator
+from queue import Empty, Queue
+
+from app.core.jobs.models import Cancelled, Done, ExecutionEvent, Failed, Job, Progress, Started
+from app.core.run import ExecutionContext, RunnableFactory, Runner
+
+
+class ThreadRunner(Runner[Job, ExecutionEvent]):
+    """
+    Thread-based runner for testing job execution without process overhead.
+
+    This runner executes jobs in a separate thread and communicates events through a thread-safe queue, mimicking the
+    behavior of ProcessRunner but without the overhead of process creation. Designed specifically for integration
+    testing where fast execution and easy debugging are prioritized over process isolation.
+
+    Note: This implementation sacrifices process isolation for performance and debuggability.
+    Use ProcessRunner for production scenarios requiring fault isolation between jobs.
+    """
+
+    def __init__(self, get_runnable: RunnableFactory, job: Job):
+        self.get_runnable = get_runnable
+        self.job = job
+        self._event_queue: Queue[ExecutionEvent | None] = Queue()
+        self._cancel_event = threading.Event()
+        self._execution_thread: threading.Thread | None = None
+        self._started = False
+
+    def start(self) -> "ThreadRunner":
+        """Start the runner in a separate thread."""
+        if self._started:
+            return self
+
+        self._started = True
+        self._execution_thread = threading.Thread(target=self._execute_job, name=f"mock-job-{self.job.id}", daemon=True)
+        self._execution_thread.start()
+        return self
+
+    def events(self) -> Iterator[ExecutionEvent]:
+        """Yield events from the job execution."""
+        while True:
+            try:
+                # Non-blocking get with timeout to allow for graceful shutdown
+                event = self._event_queue.get(timeout=0.1)
+                if event is None:  # Sentinel value indicating end of events
+                    break
+                yield event
+            except Empty:
+                # Continue polling if no events available
+                continue
+
+    async def stop(self, graceful_timeout: float = 6.0, term_timeout: float = 3.0, kill_timeout: float = 1.0) -> None:
+        """Stop the runner by setting the cancellation event."""
+        self._cancel_event.set()
+
+        if self._execution_thread and self._execution_thread.is_alive():
+            # Wait for graceful shutdown
+            await asyncio.to_thread(self._execution_thread.join, timeout=graceful_timeout)
+
+    def _execute_job(self):
+        """Execute the job in a separate thread."""
+        try:
+            # Always emit Started event first
+            self._event_queue.put(Started())
+
+            # Create execution context
+            ctx = self._create_execution_context()
+
+            # Execute the runnable
+            self.get_runnable().run(ctx)
+
+            # If we get here without cancellation, job succeeded
+            if not self._cancel_event.is_set():
+                self._event_queue.put(Done())
+
+        except MockCancelledException:
+            self._event_queue.put(Cancelled())
+        except Exception as e:
+            self._event_queue.put(Failed(str(e)))
+        finally:
+            # Send sentinel to indicate end of events
+            self._event_queue.put(None)
+
+    def _create_execution_context(self) -> ExecutionContext:
+        """Create execution context for the runnable."""
+
+        class MockExecutionContext(ExecutionContext[Job]):
+            def __init__(self, runner: "ThreadRunner"):
+                self.runner = runner
+
+            def report_progress(self, progress: float):
+                if not self.runner._cancel_event.is_set():
+                    self.runner._event_queue.put(Progress(progress))
+
+            def heartbeat(self):
+                if self.runner._cancel_event.is_set():
+                    raise MockCancelledException("Job cancelled")
+                # Small sleep to simulate work and allow for responsive cancellation
+                time.sleep(0.01)
+
+        return MockExecutionContext(self)
+
+
+class MockCancelledException(Exception):
+    """Exception raised when job is cancelled."""
+
+
+class ThreadRunnerFactory:
+    """Factory that creates ThreadRunner instances."""
+
+    def __init__(self, runnable_factory: RunnableFactory):
+        self.runnable_factory = runnable_factory
+
+    def for_job(self, job: Job) -> Runner[Job, ExecutionEvent]:
+        """Create a ThreadRunner instance for the given job."""
+        return ThreadRunner(self.runnable_factory, job)

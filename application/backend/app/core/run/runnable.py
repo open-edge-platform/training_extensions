@@ -10,7 +10,7 @@ HeartbeatFn = Callable[[], None]
 T = TypeVar("T")
 
 
-@dataclass(frozen=True, kw_only=True, slots=True)
+@dataclass(kw_only=True)
 class ExecutionContext[T]:
     task: T
     report_progress: ReportFn

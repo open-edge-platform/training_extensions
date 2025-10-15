@@ -8,7 +8,7 @@ from app.core.jobs.models import Job
 from app.core.run import ExecutionContext
 
 
-@dataclass(frozen=True, kw_only=True, slots=True)
+@dataclass(kw_only=True)
 class TrainerContext(ExecutionContext[Job]):
     pass
 
