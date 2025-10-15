@@ -8,16 +8,18 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { DatasetItem } from 'src/features/annotator/types';
 import { useSelectedData } from 'src/routes/dataset/provider';
 
-import { MediaItem } from '../gallery/media-item.component';
-import { MediaThumbnail } from '../gallery/media-thumbnail.component';
-import { useGetDatasetItems } from '../gallery/use-get-dataset-items.hook';
-import { getThumbnailUrl } from '../gallery/utils';
-import { VirtualizerGridLayout } from '../virtualizer-grid-layout/virtualizer-grid-layout.component';
+import { MediaItem } from '../../gallery/media-item.component';
+import { MediaThumbnail } from '../../gallery/media-thumbnail.component';
+import { useGetDatasetItems } from '../../gallery/use-get-dataset-items.hook';
+import { getThumbnailUrl } from '../../gallery/utils';
+import { VirtualizerGridLayout } from '../../virtualizer-grid-layout/virtualizer-grid-layout.component';
+import { useKeyboardNavigation } from './use-keyboard-navigation.hook';
 
 const layoutOptions = {
     maxColumns: 1,
     minSpace: new Size(8, 8),
-    minItemSize: new Size(180, 180),
+    minItemSize: new Size(120, 120),
+    maxItemSize: new Size(120, 120),
     preserveAspectRatio: true,
 };
 
@@ -33,6 +35,15 @@ export const SidebarItems = ({ mediaItem, onSelectedMediaItem }: SidebarItemsPro
     const { items, hasNextPage, isFetchingNextPage, fetchNextPage } = useGetDatasetItems();
 
     const selectedIndex = items.findIndex((item) => item.id === mediaItem.id);
+
+    useKeyboardNavigation({
+        items,
+        selectedIndex,
+        onSelectedMediaItem: (item) => {
+            onSelectedMediaItem(item);
+            setSelectedKeys(new Set([item.id]));
+        },
+    });
 
     return (
         <VirtualizerGridLayout
