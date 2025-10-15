@@ -94,7 +94,7 @@ class DatasetItemAnnotationsWithSource(BaseModel):
     Dataset item annotations with information about source
     """
 
-    annotations: list[DatasetItemAnnotation] | None
+    annotations: list[DatasetItemAnnotation]
     user_reviewed: bool
     prediction_model_id: str | None = None
 
