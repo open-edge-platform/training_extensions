@@ -1,0 +1,73 @@
+task: detection
+capabilities:
+  tiling: true # by default, all detection models support tiling (unless specified otherwise)
+
+hyperparameters:
+  dataset_preparation:
+    augmentation:
+      tiling:
+        enable: false
+        adaptive_tiling: true
+        tile_size: 400
+        tile_overlap: 0.2
+      iou_random_crop:
+        enable: true
+      random_affine:
+        enable: false
+        max_rotate_degree: 10.0
+        max_translate_ratio: 0.1
+        scaling_ratio_range:
+          - 0.5
+          - 1.5
+        max_shear_degree: 2.0
+      random_horizontal_flip:
+        enable: true
+        probability: 0.5
+      random_vertical_flip:
+        enable: false
+        probability: 0.5
+      gaussian_blur:
+        enable: false
+        kernel_size: 5
+        sigma:
+          - 0.1
+          - 2.0
+        probability: 0.5
+      color_jitter:
+        enable: false
+        brightness:
+          - 0.875
+          - 1.125
+        contrast:
+          - 0.5
+          - 1.5
+        saturation:
+          - 0.5
+          - 1.5
+        hue:
+          - -0.05
+          - 0.05
+        probability: 0.5
+      gaussian_noise:
+        enable: false
+        mean: 0.0
+        sigma: 0.1
+        probability: 0.5
+  evaluation:
+    metric: f_measure
+  training:
+    max_epochs: 200
+    early_stopping:
+      enable: true
+      patience: 10
+    allowed_values_input_size:
+      - 128
+      - 256
+      - 384
+      - 512
+      - 640
+      - 800
+      - 992
+      - 1024
+    input_size_width: 992
+    input_size_height: 800

@@ -1,0 +1,51 @@
+x-proxies: &proxies
+  args:
+    - HTTP_PROXY=${HTTP_PROXY}
+    - HTTPS_PROXY=${HTTPS_PROXY}
+    - NO_PROXY=${NO_PROXY}
+    - http_proxy=${http_proxy}
+    - https_proxy=${https_proxy}
+    - no_proxy=${no_proxy}
+
+services:
+  geti-tune:
+    image: geti-tune:${TAG:-latest}
+    restart: unless-stopped
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      <<: *proxies
+    working_dir: /app
+    volumes:
+      - ../backend/data/:/app/data/
+    ports:
+      - "80:80"
+
+  mosquitto:
+    profiles:
+      - mqtt
+    image: eclipse-mosquitto:2.0@sha256:d219d3a72847f3aed6a1d66975972d3b17f86e39e8f6f6b86b4088b879c1a2d6
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ../backend/data/mosquitto/config:/mosquitto/config
+      - ../backend/data/mosquitto/data:/mosquitto/data
+      - ../backend/data/mosquitto/log:/mosquitto/log
+    environment:
+      - MOSQUITTO_USERNAME=testuser
+      - MOSQUITTO_PASSWORD=testpass
+
+  mqtt-web-ui:
+    profiles:
+      - mqtt
+    image: emqx/mqttx-web@sha256:0ed144681abc73235a01f13b47643ce970bf1e7d4884a19a83b76da36d8a8f5c
+    restart: unless-stopped
+    environment:
+      - MQTT_BROKER_HOST=mosquitto
+      - MQTT_BROKER_PORT=9001
+    depends_on:
+      - mosquitto
+    ports:
+      - "8081:80"

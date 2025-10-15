@@ -1,0 +1,205 @@
+@startuml "Complete-Storage-schema"
+!define table(x) class x << (T,#FFAAAA) >>
+!define pk(x) <u>x</u>
+!define fk(x) <i>x</i>
+
+title
+<size:16><b>Geti Tune - Complete Storage Diagram</b></size>
+<size:12>DB Tables and Objects</size>
+end title
+
+'Tables
+
+table(sources) {
+  pk(id) : UUID
+  name : TEXT NOT NULL
+  type : TEXT NOT NULL
+  config : JSON NOT NULL
+}
+
+table(sinks) {
+  pk(id) : UUID
+  name : TEXT NOT NULL
+  type : TEXT NOT NULL
+  config : JSON NOT NULL
+}
+
+table(projects) {
+  pk(id) : UUID
+  name : TEXT NOT NULL
+  created_at : TIMESTAMP NOT NULL
+  updated_at : TIMESTAMP NOT NULL
+  --
+  'Task-related details
+  task_type : TEXT NOT NULL
+  exclusive_labels : BOOLEAN NOT NULL
+}
+
+table(pipelines) {
+  fk(project_id) : UUID
+  fk(source_id) : UUID
+  fk(model_id) : UUID
+  fk(sink_id) : UUID
+  --
+  ' Data collection policies
+  data_collection_policies: JSON
+  --
+  ' Status
+  running : BOOLEAN NOT NULL
+}
+
+table(labels) {
+  pk(id) : UUID
+  name : TEXT NOT NULL
+  fk(project_id) : UUID NOT NULL
+  created_at : TIMESTAMP NOT NULL
+  updated_at : TIMESTAMP NOT NULL
+  ---
+  'UI/UX properties
+  color : TEXT
+  hotkey : TEXT
+}
+
+table(dataset_items) {
+  pk(id) : UUID
+  fk(project_id) : UUID NOT NULL
+  --
+  'Media-related details
+  name : TEXT NOT NULL
+  format : TEXT NOT NULL
+  width : INTEGER NOT NULL
+  height : INTEGER NOT NULL
+  size : INTEGER NOT NULL
+  --
+  'Annotation details
+  annotation_data : JSON
+  user_reviewed : BOOLEAN NOT NULL
+  prediction_model_id : UUID
+  --
+  ' Source details
+  source_id : UUID
+  --
+  'ML details
+  subset : TEXT NOT NULL
+  subset_assigned_at : TIMESTAMP NOT NULL
+}
+
+table(dataset_items_tags) {
+  fk(dataset_item_id) : UUID NOT NULL
+  tag : TEXT NOT NULL
+}
+
+table(dataset_views) {
+  pk(id) : UUID
+  name : TEXT NOT NULL
+}
+
+table(dataset_views_items) {
+  fk(dataset_view_id) : UUID NOT NULL
+  fk(dataset_item_id) : UUID NOT NULL
+}
+
+table(dataset_revisions) {
+  fk(project_id) : UUID NOT NULL
+  --
+  ' Status of binary files
+  files_deleted : BOOLEAN NOT NULL
+}
+
+table(model_revisions) {
+  pk(id) : UUID
+  fk(project_id) : UUID NOT NULL
+  architecture : TEXT NOT NULL
+  --
+  ' Lineage details
+  parent_revision : UUID
+  --
+  ' Training details
+  training_status : TEXT NOT NULL
+  fk(training_dataset_id) : UUID
+  label_schema_revision : JSON
+  --
+  ' Status of binary files
+  files_deleted : BOOLEAN NOT NULL
+}
+
+table(evaluations) {
+  pk(id) : UUID
+  fk(model_revision_id) : UUID NOT NULL
+  fk(dataset_revision_id) : UUID NOT NULL
+  subset : TEXT
+}
+
+table(metric_scores) {
+  fk(evaluation_id) : UUID
+  metric : TEXT NOT NULL
+  score : REAL NOT NULL
+}
+
+' Objects
+
+object MediaBinary {
+  <i>format</i> : jpg / png
+  <i>prefix</i> : projects/{project_id}/dataset/
+  <i>filename</i> : {dataset_item_id}.{format}
+}
+
+object MediaThumbnail {
+  <i>format</i> : jpg
+  <i>prefix</i> : projects/{project_id}/dataset/
+  <i>filename</i> : {dataset_item_id}-thumb.jpg
+}
+
+object ModelBinary {
+  <i>format</i> : pt, xml, bin
+  <i>prefix</i> : projects/{project_id}/models/{model_revision_id}/
+  <i>filename</i> : model.{format}
+}
+
+object DatasetRevision {
+  <i>format</i> : arrow
+  <i>prefix</i> : projects/{project_id}/dataset_revisions/{revision_id}/
+  <i>filename</i> : <shard_idx>.arrow
+}
+
+object ModelTrainingLog {
+  <i>format</i> : log
+  <i>prefix</i> : projects/{project_id}/models/{model_revision_id}/
+  <i>filename</i> : training.log
+}
+
+object ModelTrainingMetrics {
+  <i>format</i> : npz
+  <i>prefix</i> : projects/{project_id}/models/{model_revision_id}/
+  <i>filename</i> : training_metrics.json
+}
+
+' Relationships
+projects ||---|{ labels
+projects ||---o{ dataset_items
+projects ||---o{ dataset_views
+projects ||---o{ dataset_revisions
+projects ||---|| pipelines
+projects ||---o{ model_revisions
+
+pipelines }o---|| sources
+pipelines }o---|| sinks
+pipelines |o---|| model_revisions
+
+dataset_items ||---o{ dataset_items_tags
+dataset_views ||---o{ dataset_views_items
+dataset_views_items }o---|| dataset_items
+
+model_revisions |o---|| dataset_revisions
+model_revisions ||---o{ evaluations
+evaluations ||---|{ metric_scores
+evaluations |o---|| dataset_revisions
+
+dataset_items ||---|| MediaBinary
+dataset_items ||---|| MediaThumbnail
+dataset_revisions ||---|| DatasetRevision
+model_revisions ||---o| ModelBinary
+model_revisions ||---o| ModelTrainingLog
+model_revisions ||---o| ModelTrainingMetrics
+
+@enduml
