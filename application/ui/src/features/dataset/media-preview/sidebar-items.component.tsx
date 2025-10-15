@@ -23,9 +23,10 @@ const layoutOptions = {
 
 type SidebarItemsProps = {
     mediaItem: DatasetItem;
+    onSelectedMediaItem: (item: DatasetItem) => void;
 };
 
-export const SidebarItems = ({ mediaItem }: SidebarItemsProps) => {
+export const SidebarItems = ({ mediaItem, onSelectedMediaItem }: SidebarItemsProps) => {
     const project_id = useProjectIdentifier();
     const { mediaState } = useSelectedData();
     const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set([String(mediaItem.id)]));
@@ -48,7 +49,11 @@ export const SidebarItems = ({ mediaItem }: SidebarItemsProps) => {
             contentItem={(item) => (
                 <MediaItem
                     contentElement={() => (
-                        <MediaThumbnail alt={item.name} url={getThumbnailUrl(project_id, String(item.id))} />
+                        <MediaThumbnail
+                            alt={item.name}
+                            url={getThumbnailUrl(project_id, String(item.id))}
+                            onClick={() => onSelectedMediaItem(item)}
+                        />
                     )}
                 />
             )}

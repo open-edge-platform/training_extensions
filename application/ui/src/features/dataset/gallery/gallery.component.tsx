@@ -1,12 +1,10 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Suspense, useState } from 'react';
+import { useState } from 'react';
 
-import { DialogContainer, Loading, Size } from '@geti/ui';
+import { DialogContainer, Size } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-import { AnnotationActionsProvider } from 'src/features/annotator/annotation-actions-provider.component';
-import { AnnotatorProvider } from 'src/features/annotator/annotator-provider.component';
 
 import { CheckboxInput } from '../../../components/checkbox-input/checkbox-input.component';
 import { useSelectedData } from '../../../routes/dataset/provider';
@@ -78,13 +76,11 @@ export const Gallery = ({ items, hasNextPage, isFetchingNextPage, fetchNextPage 
 
             <DialogContainer onDismiss={() => setSelectedMediaItem(null)}>
                 {selectedMediaItem !== null && (
-                    <Suspense fallback={<Loading size='L' />}>
-                        <AnnotatorProvider mediaItem={selectedMediaItem}>
-                            <AnnotationActionsProvider>
-                                <MediaPreview mediaItem={selectedMediaItem} close={() => setSelectedMediaItem(null)} />
-                            </AnnotationActionsProvider>
-                        </AnnotatorProvider>
-                    </Suspense>
+                    <MediaPreview
+                        mediaItem={selectedMediaItem}
+                        close={() => setSelectedMediaItem(null)}
+                        onSelectedMediaItem={setSelectedMediaItem}
+                    />
                 )}
             </DialogContainer>
         </>

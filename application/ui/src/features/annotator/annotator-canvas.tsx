@@ -1,6 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { View } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { ZoomTransform } from '../../components/zoom/zoom-transform';
@@ -30,8 +31,9 @@ export const AnnotatorCanvas = ({ mediaItem, isFocussed }: AnnotatorCanvasProps)
 
     return (
         <ZoomTransform target={size}>
-            <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+            <View position={'relative'} width={'100%'} height={'100%'}>
                 <img src={getImageUrl(project_id, String(mediaItem.id))} alt='Collected data' />
+
                 <Annotations
                     annotations={orderedAnnotations}
                     width={size.width}
@@ -39,7 +41,7 @@ export const AnnotatorCanvas = ({ mediaItem, isFocussed }: AnnotatorCanvasProps)
                     isFocussed={isFocussed}
                 />
                 <ToolManager />
-            </div>
+            </View>
         </ZoomTransform>
     );
 };
