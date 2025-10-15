@@ -31,7 +31,7 @@ export const AnnotationLabels = ({ labels, onRemove }: AnnotationLabelsProps) =>
         const xOffset = index * (scaledWidth + gap);
 
         return (
-            <g key={label.id} fill='none' stroke='none'>
+            <g key={label.id} fill='none' stroke='none' fillOpacity={1}>
                 <rect
                     x={xOffset}
                     y={yOffset}
