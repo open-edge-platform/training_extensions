@@ -92,13 +92,16 @@ export const ProjectsListPanel = () => {
                         </Heading>
                     </Flex>
                 </Header>
+
                 <Content>
                     <Divider size={'S'} marginY={'size-200'} />
+
                     <ProjectsList
                         projects={data}
                         projectIdInEdition={projectInEdition}
                         setProjectInEdition={setProjectInEdition}
                     />
+
                     <Divider size={'S'} marginY={'size-200'} />
                 </Content>
 

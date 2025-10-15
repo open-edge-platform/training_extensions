@@ -17,10 +17,10 @@ import { ProjectName } from './project-name.component';
 
 import classes from './create-project-form.module.scss';
 
-export const CreateProjectForm = () => {
+export const CreateProjectForm = ({ numberOfProjects }: { numberOfProjects: number }) => {
     const [selectedTask, setSelectedTask] = useState<TaskType>('detection');
     const [labels, setLabels] = useState<Label[]>([{ id: uuid(), color: '#F20004', name: 'Object' }]);
-    const [name, setName] = useState<string>('Project #1');
+    const [name, setName] = useState<string>(`Project #${numberOfProjects + 1}`);
 
     const navigate = useNavigate();
     const createProjectMutation = $api.useMutation('post', '/api/projects');
