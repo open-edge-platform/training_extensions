@@ -408,7 +408,7 @@ class DFINETransformerModule(nn.Module):
         num_denoising (int, optional): Number of denoising samples. Defaults to 100.
         label_noise_ratio (float, optional): Ratio of label noise. Defaults to 0.5.
         box_noise_scale (float, optional): Scale of box noise. Defaults to 1.0.
-        eval_spatial_size (list[int], optional): Spatial size for evaluation. Defaults to [640, 640].
+        eval_spatial_size (tuple[int, int], optional): Spatial size for evaluation. Defaults to (640, 640).
         eval_idx (int, optional): Evaluation index. Defaults to -1.
         reg_scale (float, optional): The weight curvature. Defaults to 4.0.
         reg_max (int, optional): The number of bins for box regression. Defaults to 32.
