@@ -61,7 +61,7 @@ class OTXTileDatasetFactory:
             OTXTileDataset: Tile dataset.
         """
         subset = dataset.dm_subset[0].subset
-        if subset == Subset.Training:
+        if subset == Subset.TRAINING:
             dm_dataset = dataset.dm_subset
             dm_dataset = dm_dataset.transform(
                 create_tiling_transform(
@@ -161,7 +161,7 @@ class OTXTileDataset(OTXDataset):
             dtype=parent_slice_ds.dtype,
         )
 
-        if self._subset == Subset.Validation:
+        if self._subset == Subset.VALIDATION:
             # NOTE: filter validation tiles with annotations only to avoid evaluation on empty tiles.
             tile_ds = tile_ds.transform(create_filtering_transform(), dtype=parent_slice_ds.dtype)
 
