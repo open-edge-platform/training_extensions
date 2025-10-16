@@ -101,6 +101,7 @@ export const AnnotationLabels = ({ labels, onRemove }: AnnotationLabelsProps) =>
 
         return (
             <g key={label.id} fill='none' stroke='none' fillOpacity={1}>
+                {/* Label name */}
                 <rect
                     x={xOffset}
                     y={yOffset}
@@ -114,6 +115,7 @@ export const AnnotationLabels = ({ labels, onRemove }: AnnotationLabelsProps) =>
                     {label.name}
                 </text>
 
+                {/* Close button */}
                 <g style={{ cursor: 'pointer', pointerEvents: 'auto' }} onPointerDown={onDeleteLabel(label.id)}>
                     <rect
                         x={xOffset + labelWidth - closeButtonWidth}

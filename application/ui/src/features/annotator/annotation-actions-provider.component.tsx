@@ -81,7 +81,7 @@ export const AnnotationActionsProvider = ({ children, mediaItem }: AnnotationAct
             ...shapes.map((shape) => ({
                 shape,
                 id: uuid(),
-                labels: [{ id: uuid(), name: 'No label', color: 'var(--annotation-fill)', isPrediction: false }],
+                labels: [],
             })),
         ]);
         isDirty.current = true;
