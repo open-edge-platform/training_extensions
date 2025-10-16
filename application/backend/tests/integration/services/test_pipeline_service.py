@@ -35,7 +35,6 @@ def fxt_project_with_pipeline(
     ) -> tuple[ProjectDB, PipelineDB]:
         db_project = fxt_db_projects[0]
         db_session.add(db_project)
-        db_session.flush()
         db_pipeline = db_project.pipeline
         db_pipeline.is_running = is_running
         db_pipeline.source = fxt_db_sources[0]
@@ -101,7 +100,7 @@ class TestPipelineServiceIntegration:
         else:
             item_id = fxt_db_sources[1].id
 
-        updated = fxt_pipeline_service.update_pipeline(db_pipeline.project_id, {str(pipeline_attr): item_id})
+        updated = fxt_pipeline_service.update_pipeline(db_pipeline.project_id, {pipeline_attr: item_id})
 
         if pipeline_attr == PipelineField.SINK_ID:
             fxt_active_pipeline_service.reload.assert_called_once()
@@ -135,6 +134,18 @@ class TestPipelineServiceIntegration:
             assert db_updated.is_running
         else:
             assert not db_updated.is_running
+
+    @pytest.mark.parametrize("config", ["sink", "source", "model_revision"])
+    def test_enable_misconfigured_pipeline(self, config, fxt_project_with_pipeline, fxt_pipeline_service, db_session):
+        """Test enabling a misconfigured pipeline raises error."""
+        _, db_pipeline = fxt_project_with_pipeline(is_running=False)
+        setattr(db_pipeline, config, None)  # Misconfigure the pipeline
+        db_session.flush()
+
+        with pytest.raises(ValueError, match="Pipeline cannot be in 'running' state"):
+            fxt_pipeline_service.update_pipeline(db_pipeline.project_id, {"status": PipelineStatus.RUNNING})
+
+        assert not db_session.get(PipelineDB, db_pipeline.project_id).is_running
 
     def test_reconfigure_non_existent_pipeline(self, fxt_pipeline_service):
         """Test updating a non-existent pipeline raises error."""
