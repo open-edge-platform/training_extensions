@@ -41,13 +41,11 @@ export const AnnotationLabels = ({ labels, onRemove }: AnnotationLabelsProps) =>
                     stroke='none'
                     rx={4 / scale}
                 />
-                <text x={xOffset + 8 / scale} y={yOffset + 16 / scale} fontSize={fontSize} fill='white'>
+                <text x={xOffset + 8 / scale} y={yOffset + 16 / scale} fontSize={fontSize} fill='#fff'>
                     {label.name}
                 </text>
 
-                {/* Close button with transparent clickable area */}
                 <g style={{ cursor: 'pointer', pointerEvents: 'auto' }} onPointerDown={onDeleteLabel(label.id)}>
-                    {/* Invisible larger hit area */}
                     <rect
                         x={xOffset + scaledWidth - 20 / scale}
                         y={yOffset}
@@ -55,12 +53,11 @@ export const AnnotationLabels = ({ labels, onRemove }: AnnotationLabelsProps) =>
                         height={scaledHeight}
                         fill='transparent'
                     />
-                    {/* Visible X icon */}
                     <text
                         x={xOffset + scaledWidth - 12 / scale}
                         y={yOffset + 16 / scale}
                         fontSize={fontSize}
-                        fill='white'
+                        fill='#fff'
                     >
                         x
                     </text>
