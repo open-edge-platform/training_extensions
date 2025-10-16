@@ -33,6 +33,8 @@ jobs:
       - name: Build-Docs
         working-directory: library
         run: |
+          uv venv .otx
+          source .otx/bin/activate
           uv pip install .[docs]
           cd docs
           make clean
