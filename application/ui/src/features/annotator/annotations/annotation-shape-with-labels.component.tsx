@@ -27,7 +27,7 @@ export const AnnotationShapeWithLabels = ({ annotation }: AnnotationShapeProps) 
 
     const polygonPoints = (shape as Polygon).points;
     const polygonCoords = [polygonPoints.map((point) => [point.x, point.y])];
-    const [labelX, labelY] = polylabel(polygonCoords, 1.0);
+    const [labelX, labelY] = polylabel(polygonCoords);
 
     return (
         <g transform={`translate(${labelX}, ${labelY})`}>
