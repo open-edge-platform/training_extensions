@@ -1,6 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { PointerEvent } from 'react';
+
 import { useZoom } from 'src/components/zoom/zoom.provider';
 import { v4 as uuid } from 'uuid';
 
@@ -39,25 +41,25 @@ const labelStyles = (scale: number) => {
     };
 };
 
+const placeholderLabel = { id: uuid(), name: 'No label', color: 'var(--annotation-fill)', isPrediction: false };
+
 interface AnnotationLabelsProps {
     labels: Label[];
     onRemove: (labelId: string) => void;
 }
-
 export const AnnotationLabels = ({ labels, onRemove }: AnnotationLabelsProps) => {
     const { scale } = useZoom();
 
     const styles = labelStyles(scale);
     const { height, padding, gap, closeButtonWidth, fontSize, yOffset, charWidth } = styles;
 
-    const placeholderLabel = { id: uuid(), name: 'No label', color: 'var(--annotation-fill)', isPrediction: false };
-
     const calculateLabelWidth = (text: string) => {
         const textWidth = text.length * charWidth;
         return textWidth + padding * 2;
     };
 
-    const onDeleteLabel = (labelId: string) => (event: React.PointerEvent) => {
+    const onDeleteLabel = (labelId: string) => (event: PointerEvent) => {
+        // To avoid triggering onPointerDown of the parent svg
         event.preventDefault();
         event.stopPropagation();
 
