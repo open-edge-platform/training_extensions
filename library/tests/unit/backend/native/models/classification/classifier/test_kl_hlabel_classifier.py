@@ -88,7 +88,7 @@ class TestKLHLabelClassifier:
 
         output = model(images, labels, mode="loss")
         assert isinstance(output, torch.Tensor)
-        
+
     def test_klh_loss_greater_than_hlabel(self, fxt_model_and_inputs):
         """KLHLabelClassifier should have strictly larger loss than HLabelClassifier
         when kl_weight > 0 and there are >= 2 multiclass heads."""

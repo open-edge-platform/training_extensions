@@ -13,7 +13,7 @@ from torch import nn
 
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.backend.native.models.classification.backbones.timm import TimmBackbone
-from otx.backend.native.models.classification.classifier import HLabelClassifier, KLHLabelClassifier
+from otx.backend.native.models.classification.classifier import HLabelClassifier
 from otx.backend.native.models.classification.heads import HierarchicalLinearClsHead
 from otx.backend.native.models.classification.hlabel_models.base import OTXHlabelClsModel
 from otx.backend.native.models.classification.losses.asymmetric_angular_loss_with_ignore import (
@@ -92,4 +92,3 @@ class TimmModelHLabelCls(OTXHlabelClsModel):
     def load_from_otx_v1_ckpt(self, state_dict: dict, add_prefix: str = "model.") -> dict:
         """Load the previous OTX ckpt according to OTX2.0."""
         return OTXv1Helper.load_cls_effnet_v2_ckpt(state_dict, "hlabel", add_prefix)
-
