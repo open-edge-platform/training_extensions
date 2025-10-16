@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { PointerEvent } from 'react';
+import { PointerEvent, useCallback } from 'react';
 
 import { useZoom } from 'src/components/zoom/zoom.provider';
 import { v4 as uuid } from 'uuid';
@@ -58,13 +58,16 @@ export const AnnotationLabels = ({ labels, onRemove }: AnnotationLabelsProps) =>
         return textWidth + padding * 2;
     };
 
-    const onDeleteLabel = (labelId: string) => (event: PointerEvent) => {
-        // To avoid triggering onPointerDown of the parent svg
-        event.preventDefault();
-        event.stopPropagation();
+    const onDeleteLabel = useCallback(
+        (labelId: string) => (event: PointerEvent) => {
+            // To avoid triggering onPointerDown of the parent svg
+            event.preventDefault();
+            event.stopPropagation();
 
-        onRemove(labelId);
-    };
+            onRemove(labelId);
+        },
+        [onRemove]
+    );
 
     let fullLengthOfAllLabels = 0;
 

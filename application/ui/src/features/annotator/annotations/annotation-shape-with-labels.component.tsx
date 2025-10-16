@@ -3,17 +3,13 @@
 
 import { useSecondaryToolbarState } from 'src/features/dataset/media-preview/secondary-toolbar/use-secondary-toolbar-state.hook';
 
-import { Annotation, Point, Polygon } from '../types';
+import { Annotation, Polygon } from '../types';
 import { AnnotationLabels } from './annotation-labels.component';
+import { getFormattedPoints } from './utils';
 
 type AnnotationShapeProps = {
     annotation: Annotation;
 };
-
-const getFormattedPoints = (points: Point[]): string => {
-    return points.map(({ x, y }) => `${x},${y}`).join(' ');
-};
-
 export const AnnotationShapeWithLabels = ({ annotation }: AnnotationShapeProps) => {
     const { shape, labels } = annotation;
     const color = labels.length ? labels[0].color : '--annotation-fill';

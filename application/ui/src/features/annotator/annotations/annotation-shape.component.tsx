@@ -1,14 +1,11 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Annotation, Point, Polygon } from '../types';
+import { Annotation, Polygon } from '../types';
+import { getFormattedPoints } from './utils';
 
 type AnnotationShapeProps = {
     annotation: Annotation;
-};
-
-const getFormattedPoints = (points: Point[]): string => {
-    return points.map(({ x, y }) => `${x},${y}`).join(' ');
 };
 
 export const AnnotationShape = ({ annotation }: AnnotationShapeProps) => {
