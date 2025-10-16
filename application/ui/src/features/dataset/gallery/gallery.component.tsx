@@ -11,7 +11,7 @@ import { useSelectedData } from '../../../routes/dataset/provider';
 import { DatasetItem } from '../../annotator/types';
 import { MediaPreview } from '../media-preview/media-preview.component';
 import { VirtualizerGridLayout } from '../virtualizer-grid-layout/virtualizer-grid-layout.component';
-import { AnnotationStateIcon } from './annotation-state-icon.component';
+import { AnnotationStatusIcon } from './annotation-state-icon.component';
 import { DeleteMediaItem } from './delete-media-item/delete-media-item.component';
 import { MediaItem } from './media-item.component';
 import { MediaThumbnail } from './media-thumbnail.component';
@@ -69,7 +69,7 @@ export const Gallery = ({ items, hasNextPage, isFetchingNextPage, fetchNextPage 
                         topRightElement={() => (
                             <DeleteMediaItem itemsIds={[String(item.id)]} onDeleted={toggleSelectedKeys} />
                         )}
-                        bottomRightElement={() => <AnnotationStateIcon state={mediaState.get(String(item.id))} />}
+                        bottomRightElement={() => <AnnotationStatusIcon state={mediaState.get(String(item.id))} />}
                     />
                 )}
             />
