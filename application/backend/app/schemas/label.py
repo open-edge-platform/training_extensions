@@ -6,16 +6,16 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, StringConstraints
 
-from app.schemas.base import BaseIDModel, BaseRequiredIDModel
+from app.schemas.base import BaseIDModel, BaseRequiredIDModel, RequiresID
 
 COLOR_REGEX = r"^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
 
 
-class LabelToEdit(BaseModel):
+class LabelEdit(BaseModel):
     id: UUID = Field(..., description="UUID of the label to edit")
-    new_name: str = Field(..., min_length=1, max_length=50, description="New label name")
-    new_color: Annotated[str, StringConstraints(pattern=COLOR_REGEX)] = Field(
-        ..., description="New hex color code, e.g. #RRGGBB or #RGB"
+    new_name: str | None = Field(None, min_length=1, max_length=50, description="New label name")
+    new_color: Annotated[str | None, StringConstraints(pattern=COLOR_REGEX)] = Field(
+        None, description="New hex color code, e.g. #RRGGBB or #RGB"
     )
     new_hotkey: str | None = Field(None, description="New hotkey")
 
@@ -31,7 +31,7 @@ class LabelToEdit(BaseModel):
     }
 
 
-class LabelToRemove(BaseModel):
+class LabelRemove(BaseModel):
     id: UUID = Field(..., description="UUID of the label to remove")
 
     model_config = {"json_schema_extra": {"example": {"id": "123e4567-e89b-12d3-a456-426614174000"}}}
@@ -42,7 +42,7 @@ class LabelBase(BaseIDModel):
     hotkey: str | None = Field(None, description="Hotkey assigned to the label")
 
 
-class LabelView(LabelBase):
+class LabelView(RequiresID, LabelBase):
     color: Annotated[str, StringConstraints(pattern=COLOR_REGEX)] = Field(
         ..., description="Hex color code, e.g. #RRGGBB or #RGB"
     )
@@ -84,9 +84,9 @@ class LabelReference(BaseRequiredIDModel):
 
 
 class PatchLabels(BaseModel):
-    labels_to_edit: list[LabelToEdit] = Field(default_factory=list, description="List of labels to edit")
+    labels_to_edit: list[LabelEdit] = Field(default_factory=list, description="List of labels to edit")
     labels_to_add: list[LabelCreate] = Field(default_factory=list, description="List of labels to add")
-    labels_to_remove: list[LabelToRemove] = Field(default_factory=list, description="List of labels to remove")
+    labels_to_remove: list[LabelRemove] = Field(default_factory=list, description="List of labels to remove")
 
     model_config = {
         "json_schema_extra": {

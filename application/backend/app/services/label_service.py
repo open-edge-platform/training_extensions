@@ -9,7 +9,7 @@ from app.db.schema import LabelDB
 from app.repositories import LabelRepository
 from app.repositories.base import PrimaryKeyIntegrityError, UniqueConstraintIntegrityError
 from app.schemas import LabelCreate, LabelView
-from app.schemas.label import LabelToEdit, LabelToRemove
+from app.schemas.label import LabelEdit, LabelRemove
 from app.utils.color import random_color
 
 from .base import ResourceType, ResourceWithIdAlreadyExistsError
@@ -54,8 +54,8 @@ class LabelService:
         self,
         project_id: UUID,
         labels_to_add: list[LabelCreate] | None,
-        labels_to_update: list[LabelToEdit] | None,
-        labels_to_remove: list[LabelToRemove] | None,
+        labels_to_update: list[LabelEdit] | None,
+        labels_to_remove: list[LabelRemove] | None,
     ) -> list[LabelView]:
         """
         Add, update, and remove labels in a project transactionally.

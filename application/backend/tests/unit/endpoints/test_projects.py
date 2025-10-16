@@ -10,7 +10,7 @@ from fastapi import status
 from app.api.dependencies import get_data_collector, get_label_service, get_project_service
 from app.main import app
 from app.schemas import LabelView, PatchLabels, ProjectView
-from app.schemas.label import LabelCreate, LabelToEdit, LabelToRemove
+from app.schemas.label import LabelCreate, LabelEdit, LabelRemove
 from app.schemas.project import TaskType, TaskView
 from app.services import (
     ProjectService,
@@ -33,8 +33,8 @@ def fxt_project() -> ProjectView:
             task_type=TaskType.CLASSIFICATION,
             exclusive_labels=True,
             labels=[
-                LabelView(name="cat", color="#11AA22", hotkey="s"),
-                LabelView(name="dog", color="#AA2233", hotkey="d"),
+                LabelView(id=uuid4(), name="cat", color="#11AA22", hotkey="s"),
+                LabelView(id=uuid4(), name="dog", color="#AA2233", hotkey="d"),
             ],
         ),
     )
@@ -146,8 +146,10 @@ class TestProjectEndpoints:
         """Test successful label update with add, edit, and remove operations."""
         # Setup
         labels_to_add = [LabelCreate(name="mouse", color="#0000FF", hotkey="m")]
-        labels_to_edit = [LabelToEdit(id=fxt_project.task.labels[0].id, new_name="updated_cat", new_color="#121212")]  # type: ignore[call-arg]
-        labels_to_remove = [LabelToRemove(id=fxt_project.task.labels[1].id)]
+        labels_to_edit = [
+            LabelEdit(id=fxt_project.task.labels[0].id, new_name="updated_cat", new_color="#121212", new_hotkey=None)
+        ]
+        labels_to_remove = [LabelRemove(id=fxt_project.task.labels[1].id)]
 
         patch_labels = PatchLabels(
             labels_to_add=labels_to_add, labels_to_edit=labels_to_edit, labels_to_remove=labels_to_remove
@@ -202,8 +204,10 @@ class TestProjectEndpoints:
     @pytest.mark.parametrize(
         "patch_labels",
         [
-            PatchLabels(labels_to_remove=[LabelToRemove(id=uuid4())]),  # Non-existent label to remove
-            PatchLabels(labels_to_edit=[LabelToEdit(id=uuid4(), new_name="updated", new_color="#121212")]),  # type: ignore[call-arg] # Non-existent label to edit
+            PatchLabels(labels_to_remove=[LabelRemove(id=uuid4())]),  # Non-existent label to remove
+            PatchLabels(
+                labels_to_edit=[LabelEdit(id=uuid4(), new_name="updated", new_color="#121212", new_hotkey=None)]
+            ),  # Non-existent label to edit
         ],
     )
     def test_update_labels_remove_edit_nonexistent(

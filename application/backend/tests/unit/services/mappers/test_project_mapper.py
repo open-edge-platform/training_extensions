@@ -17,7 +17,10 @@ CREATE_PROJECT_TO_DB_MAPPING = [
             task=TaskCreate(
                 task_type=TaskType.CLASSIFICATION,
                 exclusive_labels=True,
-                labels=[LabelCreate(name="label1", color="#FF0000"), LabelCreate(name="label2", color="#00FF00")],  # type: ignore[call-arg]
+                labels=[
+                    LabelCreate(name="label1", color="#FF0000", hotkey=None),
+                    LabelCreate(name="label2", color="#00FF00", hotkey=None),
+                ],
             ),
         ),
         ProjectDB(name="Test Project", task_type=TaskType.CLASSIFICATION, exclusive_labels=True),
@@ -31,6 +34,8 @@ CREATE_PROJECT_TO_DB_MAPPING = [
 ]
 
 PROJECT_ID = uuid4()
+LABEL1_ID = uuid4()
+LABEL2_ID = uuid4()
 DB_TO_VIEW_PROJECT_MAPPING = [
     (
         ProjectDB(id=str(PROJECT_ID), name="Test Project", task_type=TaskType.CLASSIFICATION, exclusive_labels=True),
@@ -41,10 +46,16 @@ DB_TO_VIEW_PROJECT_MAPPING = [
             task=TaskView(
                 task_type=TaskType.CLASSIFICATION,
                 exclusive_labels=True,
-                labels=[LabelView(name="label1", color="#FF0000"), LabelView(name="label2", color="#00FF00")],  # type: ignore[call-arg]
+                labels=[
+                    LabelView(id=LABEL1_ID, name="label1", color="#FF0000", hotkey=None),
+                    LabelView(id=LABEL2_ID, name="label2", color="#00FF00", hotkey=None),
+                ],
             ),
         ),
-        [LabelView(name="label1", color="#FF0000"), LabelView(name="label2", color="#00FF00")],  # type: ignore[call-arg]
+        [
+            LabelView(id=LABEL1_ID, name="label1", color="#FF0000", hotkey=None),
+            LabelView(id=LABEL2_ID, name="label2", color="#00FF00", hotkey=None),
+        ],
     ),
     (
         ProjectDB(id=str(PROJECT_ID), name="Test Project", task_type=TaskType.DETECTION, exclusive_labels=False),

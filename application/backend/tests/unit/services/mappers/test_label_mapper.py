@@ -1,5 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+from uuid import UUID
 
 import pytest
 
@@ -10,18 +11,21 @@ from app.services.mappers import LabelMapper
 SUPPORTED_LABEL_MAPPING = [
     (
         LabelView(
+            id=UUID("f54d4fdc-4c28-4456-806e-e03083a4448f"),
             name="cat",
             color="#FF5733",
             hotkey="C",
         ),
-        LabelDB(name="cat", color="#FF5733", hotkey="C"),
+        LabelDB(id="f54d4fdc-4c28-4456-806e-e03083a4448f", name="cat", color="#FF5733", hotkey="C"),
     ),
     (
         LabelView(
+            id=UUID("c170114c-8e94-4e5f-b571-a256050bd922"),
             name="dog",
             color="#FF5766",
-        ),  # type: ignore[call-arg]
-        LabelDB(name="dog", color="#FF5766"),
+            hotkey=None,
+        ),
+        LabelDB(id="c170114c-8e94-4e5f-b571-a256050bd922", name="dog", color="#FF5766"),
     ),
 ]
 
