@@ -38,8 +38,15 @@ const Redirect = () => {
             path = paths.project.new({});
         }
     } else {
-        // More than 1 project -> Load index page (/projects)
-        path = paths.project.index({});
+        // More than 1 project -> Redirect the active one
+        // And if none are active, redirect to /projects
+        const projectWithActivePipeline = projects.find((project) => Boolean(project.active_pipeline));
+
+        if (projectWithActivePipeline) {
+            path = paths.project.inference({ projectId: projectWithActivePipeline.id });
+        } else {
+            path = paths.project.index({});
+        }
     }
 
     return <Navigate to={path} replace />;
