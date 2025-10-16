@@ -14,7 +14,7 @@ import { DatasetItem } from '../../annotator/types';
 import { AnnotatorButtons } from './annotator-buttons.component';
 import { ToolSelectionBar } from './primary-toolbar/primary-toolbar.component';
 import { SecondaryToolbar } from './secondary-toolbar/secondary-toolbar.component';
-import { SidebarItems } from './sidebar-items.component';
+import { SidebarItems } from './sidebar-items/sidebar-items.component';
 
 type MediaPreviewProps = {
     mediaItem: DatasetItem;
@@ -47,7 +47,7 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                     width='100%'
                     height='100%'
                     rows='auto 1fr auto'
-                    columns='auto 1fr 218px'
+                    columns='auto 1fr 140px'
                     UNSAFE_style={{
                         // Matches grid gap (size-125) to align with the leftmost element
                         paddingLeft: dimensionValue('size-125'),
