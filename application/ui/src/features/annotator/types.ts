@@ -21,13 +21,13 @@ export type Label = components['schemas']['LabelView'];
 export type Annotation = components['schemas']['DatasetItemAnnotation-Input'] & {
     id: string;
     labels: Label[];
-};
+} & AnnotationState;
 
 export type AnnotationState = {
-    isHovered: boolean;
-    isSelected: boolean;
-    isHidden: boolean;
-    isLocked: boolean;
+    isHovered?: boolean;
+    isSelected?: boolean;
+    isHidden?: boolean;
+    isLocked?: boolean;
 };
 
 // Circle is only used for visual purposes on segment-anything tool
