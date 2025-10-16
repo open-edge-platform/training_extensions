@@ -64,8 +64,6 @@ class ProcessRun:
 
         # Request graceful shutdown
         self._cancel.set()
-
-        # Try graceful shutdown
         await asyncio.to_thread(self._proc.join, timeout=graceful_timeout)
         if not self._proc.is_alive():
             logger.debug("Process %s stopped gracefully", self._proc.name)
