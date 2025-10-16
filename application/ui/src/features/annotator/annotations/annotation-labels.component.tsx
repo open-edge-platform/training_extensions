@@ -2,8 +2,42 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useZoom } from 'src/components/zoom/zoom.provider';
+import { v4 as uuid } from 'uuid';
 
 import { Label } from '../types';
+
+const labelStyles = (scale: number) => {
+    // We need the actual values for calculations:
+    // spectrum-global-dimension-size-50 = 4px
+    // spectrum-global-dimension-size-100 = 8px
+    // spectrum-global-dimension-size-175 = 14px
+    // spectrum-global-dimension-size-250 = 20px
+    // spectrum-global-dimension-size-300 = 24px
+
+    const height = 24 / scale;
+    const padding = 8 / scale;
+    const gap = 2 / scale; // Gap between labels
+    const closeButtonWidth = 20 / scale;
+    const fontSize = 14 / scale;
+    const yOffset = -height;
+    const charWidth = fontSize * 0.6;
+    const borderRadius = 4 / scale;
+    const textYOffset = 16 / scale; // Vertical centering offset for text
+    const closeButtonXOffset = 12 / scale; // X offset for close button text
+
+    return {
+        height,
+        padding,
+        gap,
+        closeButtonWidth,
+        fontSize,
+        yOffset,
+        charWidth,
+        borderRadius,
+        textYOffset,
+        closeButtonXOffset,
+    };
+};
 
 interface AnnotationLabelsProps {
     labels: Label[];
@@ -11,20 +45,16 @@ interface AnnotationLabelsProps {
 }
 
 export const AnnotationLabels = ({ labels, onRemove }: AnnotationLabelsProps) => {
-    const height = 24; // spectrum-global-dimension-size-300
     const { scale } = useZoom();
 
-    const scaledHeight = height / scale;
-    const yOffset = -scaledHeight;
-    const fontSize = 14 / scale;
-    const gap = 4 / scale; // Gap between labels
-    const padding = 8 / scale; // Horizontal padding inside label
-    const closeButtonWidth = 20 / scale; // Width of close button area
-    const charWidth = fontSize * 0.6; // ~60% of font size for typical monospace-ish rendering
+    const styles = labelStyles(scale);
+    const { height, padding, gap, closeButtonWidth, fontSize, yOffset, charWidth } = styles;
+
+    const placeholderLabel = { id: uuid(), name: 'No label', color: 'var(--annotation-fill)', isPrediction: false };
 
     const calculateLabelWidth = (text: string) => {
         const textWidth = text.length * charWidth;
-        return textWidth + padding * 2 + closeButtonWidth;
+        return textWidth + padding * 2;
     };
 
     const onDeleteLabel = (labelId: string) => (event: React.PointerEvent) => {
@@ -36,38 +66,62 @@ export const AnnotationLabels = ({ labels, onRemove }: AnnotationLabelsProps) =>
 
     let fullLengthOfAllLabels = 0;
 
+    if (!labels.length) {
+        const placeholderLabelWidth = calculateLabelWidth(placeholderLabel.name);
+
+        return (
+            <g key={placeholderLabel.id} fill='none' stroke='none' fillOpacity={1}>
+                {/* Label name */}
+                <rect
+                    x={0}
+                    y={yOffset}
+                    width={placeholderLabelWidth}
+                    height={height}
+                    fill={placeholderLabel.color}
+                    stroke='none'
+                    rx={styles.borderRadius}
+                />
+                <text x={padding} y={yOffset + styles.textYOffset} fontSize={fontSize} fill='#fff'>
+                    {placeholderLabel.name}
+                </text>
+            </g>
+        );
+    }
+
     return labels.map((label) => {
-        const labelWidth = calculateLabelWidth(label.name);
+        const labelWidth = calculateLabelWidth(label.name) + closeButtonWidth;
         const xOffset = fullLengthOfAllLabels;
 
         fullLengthOfAllLabels += labelWidth + gap;
 
         return (
             <g key={label.id} fill='none' stroke='none' fillOpacity={1}>
+                {/* Label name */}
                 <rect
                     x={xOffset}
                     y={yOffset}
                     width={labelWidth}
-                    height={scaledHeight}
+                    height={height}
                     fill={label.color}
                     stroke='none'
-                    rx={4 / scale}
+                    rx={styles.borderRadius}
                 />
-                <text x={xOffset + padding} y={yOffset + 16 / scale} fontSize={fontSize} fill='#fff'>
+                <text x={xOffset + padding} y={yOffset + styles.textYOffset} fontSize={fontSize} fill='#fff'>
                     {label.name}
                 </text>
 
+                {/* Close button */}
                 <g style={{ cursor: 'pointer', pointerEvents: 'auto' }} onPointerDown={onDeleteLabel(label.id)}>
                     <rect
                         x={xOffset + labelWidth - closeButtonWidth}
                         y={yOffset}
                         width={closeButtonWidth}
-                        height={scaledHeight}
+                        height={height}
                         fill='transparent'
                     />
                     <text
-                        x={xOffset + labelWidth - 12 / scale}
-                        y={yOffset + 16 / scale}
+                        x={xOffset + labelWidth - styles.closeButtonXOffset}
+                        y={yOffset + styles.textYOffset}
                         fontSize={fontSize}
                         fill='#fff'
                     >

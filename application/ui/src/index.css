@@ -25,7 +25,7 @@
     --brand-daisy-tint: #ffe17a;
     --brand-rust: #e96115;
 
-    --annotation-fill: var(--daisy-shade);
+    --annotation-fill: var(--energy-blue);
     --annotation-stroke: var(--energy-blue-light, #7bdeff);
 
     --moss-tint-1: #b1d272;
