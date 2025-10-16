@@ -6,18 +6,23 @@ import { createContext, ReactNode, useContext, useState } from 'react';
 interface AnnotationVisibilityState {
     isVisible: boolean;
     toggleVisibility: () => void;
+    isFocussed: boolean;
+    toggleFocus: () => void;
 }
 
 const VisibilityContext = createContext<AnnotationVisibilityState | null>(null);
 
 export const AnnotationVisibilityProvider = ({ children }: { children: ReactNode }) => {
     const [isVisible, setIsVisible] = useState(true);
+    const [isFocussed, setIsFocussed] = useState(false);
 
     return (
         <VisibilityContext.Provider
             value={{
                 isVisible,
                 toggleVisibility: () => setIsVisible((prev) => !prev),
+                isFocussed,
+                toggleFocus: () => setIsFocussed((prev) => !prev),
             }}
         >
             {children}

@@ -7,6 +7,7 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { ZoomTransform } from '../../components/zoom/zoom-transform';
 import { getImageUrl } from '../dataset/gallery/utils';
 import { useAnnotationActions } from './annotation-actions-provider.component';
+import { useAnnotationVisibility } from './annotation-visibility-provider.component';
 import { Annotations } from './annotations/annotations.component';
 import { useSelectedAnnotations } from './select-annotation-provider.component';
 import { ToolManager } from './tools/tool-manager.component';
@@ -14,12 +15,13 @@ import { DatasetItem } from './types';
 
 type AnnotatorCanvasProps = {
     mediaItem: DatasetItem;
-    isFocussed: boolean;
 };
-export const AnnotatorCanvas = ({ mediaItem, isFocussed }: AnnotatorCanvasProps) => {
+
+export const AnnotatorCanvas = ({ mediaItem }: AnnotatorCanvasProps) => {
     const project_id = useProjectIdentifier();
     const { annotations } = useAnnotationActions();
     const { selectedAnnotations } = useSelectedAnnotations();
+    const { isFocussed } = useAnnotationVisibility();
 
     // Order annotations by selection. Selected annotation should always be on top.
     const orderedAnnotations = [
