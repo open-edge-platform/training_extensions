@@ -1,6 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import polylabel from 'polylabel';
 import { useSecondaryToolbarState } from 'src/features/dataset/media-preview/secondary-toolbar/use-secondary-toolbar-state.hook';
 
 import { Annotation, Polygon } from '../types';
@@ -24,17 +25,18 @@ export const AnnotationShapeWithLabels = ({ annotation }: AnnotationShapeProps) 
         );
     }
 
-    // For polygon, find the top-left point to use as the group's origin
     const polygonPoints = (shape as Polygon).points;
-    const minX = Math.min(...polygonPoints.map((point) => point.x));
-    const minY = Math.min(...polygonPoints.map((point) => point.y));
-
-    // Adjust polygon points to be relative to the group's origin
-    const relativePoints = polygonPoints.map((point) => ({ x: point.x - minX, y: point.y - minY }));
+    const polygonCoords = [polygonPoints.map((point) => [point.x, point.y])];
+    const [labelX, labelY] = polylabel(polygonCoords, 1.0);
 
     return (
-        <g transform={`translate(${minX}, ${minY})`}>
-            <polygon aria-label='annotation polygon' points={getFormattedPoints(relativePoints)} fill={color} />
+        <g transform={`translate(${labelX}, ${labelY})`}>
+            <polygon
+                aria-label='annotation polygon'
+                points={getFormattedPoints(polygonPoints)}
+                fill={color}
+                transform={`translate(${-labelX}, ${-labelY})`}
+            />
             <AnnotationLabels labels={labels} onRemove={removeLabels} />
         </g>
     );
