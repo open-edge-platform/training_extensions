@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 
 import { Divider, Flex, Heading, Slider, Switch, Text } from '@geti/ui';
-import { useCanEditPipeline } from 'hooks/use-can-edit-pipeline.hook';
+import { useIsPipelineConfigured } from 'hooks/use-is-pipeline-configured.hook';
 import { $api } from 'src/api/client';
 import { components } from 'src/api/openapi-spec';
 import { useProjectIdentifier } from 'src/hooks/use-project-identifier.hook';
@@ -18,7 +18,7 @@ export const DataCollection = () => {
         params: { path: { project_id: projectId } },
     });
 
-    const canEditPipeline = useCanEditPipeline(pipelineQuery.data);
+    const canEditPipeline = useIsPipelineConfigured(pipelineQuery.data);
 
     const patchPipelineMutation = $api.useMutation('patch', '/api/projects/{project_id}/pipeline', {
         meta: {
