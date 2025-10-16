@@ -69,10 +69,10 @@ export const VirtualizerGridLayout = ({
                     selectionMode={selectionMode}
                     onSelectionChange={onSelectionChange}
                 >
-                    {items.map((item) => (
+                    {items.map((item, index) => (
                         <ListBoxItem
                             id={item.id}
-                            key={`${ariaLabel}-${item.id}`}
+                            key={`${ariaLabel}-${item.id}-${index}`}
                             textValue={item.id}
                             className={classes.mediaItem}
                             data-accepted={mediaState.get(String(item.id)) === 'accepted'}

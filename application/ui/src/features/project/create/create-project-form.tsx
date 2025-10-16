@@ -37,7 +37,7 @@ export const CreateProjectForm = ({ numberOfProjects }: { numberOfProjects: numb
                     task: {
                         task_type: selectedTask,
                         exclusive_labels: selectedTask === 'classification',
-                        labels: labels.map((label) => ({ name: label.name })),
+                        labels,
                     },
                     name,
                 },
