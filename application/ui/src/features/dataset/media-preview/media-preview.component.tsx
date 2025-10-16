@@ -5,6 +5,7 @@ import { Suspense, useState } from 'react';
 
 import { Content, Dialog, dimensionValue, Divider, Flex, Grid, Heading, Loading, View } from '@geti/ui';
 import { AnnotationActionsProvider } from 'src/features/annotator/annotation-actions-provider.component';
+import { AnnotationVisibilityProvider } from 'src/features/annotator/annotation-visibility-provider.component';
 import { AnnotatorProvider } from 'src/features/annotator/annotator-provider.component';
 
 import { ZoomProvider } from '../../../components/zoom/zoom.provider';
@@ -58,18 +59,20 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                         <ZoomProvider>
                             <Suspense fallback={<CanvasAreaLoading />}>
                                 <SelectAnnotationProvider>
-                                    <AnnotatorProvider mediaItem={mediaItem}>
-                                        <View gridArea={'toolbar'}>
-                                            <ToolSelectionBar />
-                                        </View>
+                                    <AnnotationVisibilityProvider>
+                                        <AnnotatorProvider mediaItem={mediaItem}>
+                                            <View gridArea={'toolbar'}>
+                                                <ToolSelectionBar />
+                                            </View>
 
-                                        <View gridArea={'header'}>
-                                            <SecondaryToolbar />
-                                        </View>
-                                        <View gridArea={'canvas'} overflow={'hidden'}>
-                                            <AnnotatorCanvas mediaItem={mediaItem} isFocussed={isFocussed} />
-                                        </View>
-                                    </AnnotatorProvider>
+                                            <View gridArea={'header'}>
+                                                <SecondaryToolbar />
+                                            </View>
+                                            <View gridArea={'canvas'} overflow={'hidden'}>
+                                                <AnnotatorCanvas mediaItem={mediaItem} isFocussed={isFocussed} />
+                                            </View>
+                                        </AnnotatorProvider>
+                                    </AnnotationVisibilityProvider>
                                 </SelectAnnotationProvider>
                             </Suspense>
 
