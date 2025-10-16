@@ -15,10 +15,17 @@ export const AnnotationLabels = ({ labels, onRemove }: AnnotationLabelsProps) =>
     const { scale } = useZoom();
 
     const scaledHeight = height / scale;
-    const scaledWidth = 100 / scale;
     const yOffset = -scaledHeight;
     const fontSize = 14 / scale;
     const gap = 4 / scale; // Gap between labels
+    const padding = 8 / scale; // Horizontal padding inside label
+    const closeButtonWidth = 20 / scale; // Width of close button area
+    const charWidth = fontSize * 0.6; // ~60% of font size for typical monospace-ish rendering
+
+    const calculateLabelWidth = (text: string) => {
+        const textWidth = text.length * charWidth;
+        return textWidth + padding * 2 + closeButtonWidth;
+    };
 
     const onDeleteLabel = (labelId: string) => (event: React.PointerEvent) => {
         event.preventDefault();
@@ -27,34 +34,39 @@ export const AnnotationLabels = ({ labels, onRemove }: AnnotationLabelsProps) =>
         onRemove(labelId);
     };
 
-    return labels.map((label, index) => {
-        const xOffset = index * (scaledWidth + gap);
+    let fullLengthOfAllLabels = 0;
+
+    return labels.map((label) => {
+        const labelWidth = calculateLabelWidth(label.name);
+        const xOffset = fullLengthOfAllLabels;
+
+        fullLengthOfAllLabels += labelWidth + gap;
 
         return (
             <g key={label.id} fill='none' stroke='none' fillOpacity={1}>
                 <rect
                     x={xOffset}
                     y={yOffset}
-                    width={scaledWidth}
+                    width={labelWidth}
                     height={scaledHeight}
                     fill={label.color}
                     stroke='none'
                     rx={4 / scale}
                 />
-                <text x={xOffset + 8 / scale} y={yOffset + 16 / scale} fontSize={fontSize} fill='#fff'>
+                <text x={xOffset + padding} y={yOffset + 16 / scale} fontSize={fontSize} fill='#fff'>
                     {label.name}
                 </text>
 
                 <g style={{ cursor: 'pointer', pointerEvents: 'auto' }} onPointerDown={onDeleteLabel(label.id)}>
                     <rect
-                        x={xOffset + scaledWidth - 20 / scale}
+                        x={xOffset + labelWidth - closeButtonWidth}
                         y={yOffset}
-                        width={20 / scale}
+                        width={closeButtonWidth}
                         height={scaledHeight}
                         fill='transparent'
                     />
                     <text
-                        x={xOffset + scaledWidth - 12 / scale}
+                        x={xOffset + labelWidth - 12 / scale}
                         y={yOffset + 16 / scale}
                         fontSize={fontSize}
                         fill='#fff'
