@@ -1,0 +1,32 @@
+otx.backend.native
+==================
+
+.. automodule:: otx.backend.native
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   otx.backend.native.accelerators
+   otx.backend.native.strategies
+

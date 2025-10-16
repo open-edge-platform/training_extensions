@@ -1,0 +1,33 @@
+otx.types
+=========
+
+.. automodule:: otx.types
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      LabelInfo
+      HLabelInfo
+      SegLabelInfo
+      NullLabelInfo
+      OTXTaskType
+   
+   
+
+   
+   
+   
+
+
+

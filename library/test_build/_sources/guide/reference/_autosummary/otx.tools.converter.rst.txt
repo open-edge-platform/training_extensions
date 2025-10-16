@@ -1,0 +1,41 @@
+otx.tools.converter
+===================
+
+.. automodule:: otx.tools.converter
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      update_augmentations
+      update_early_stopping
+      update_input_size
+      update_learning_rate
+      update_num_iters
+      update_tiling
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      GetiConfigConverter
+      ModelStatus
+   
+   
+
+   
+   
+   
+
+
+

@@ -1,0 +1,29 @@
+otx.backend.openvino.engine
+===========================
+
+.. automodule:: otx.backend.openvino.engine
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      OVEngine
+   
+   
+
+   
+   
+   
+
+
+

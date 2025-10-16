@@ -1,0 +1,29 @@
+otx.backend.native.accelerators
+===============================
+
+.. automodule:: otx.backend.native.accelerators
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      XPUAccelerator
+   
+   
+
+   
+   
+   
+
+
+
