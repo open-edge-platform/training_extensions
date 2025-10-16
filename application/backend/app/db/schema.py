@@ -98,7 +98,7 @@ class DatasetItemDB(BaseID):
     width: Mapped[int] = mapped_column(Integer, nullable=False)
     height: Mapped[int] = mapped_column(Integer, nullable=False)
     size: Mapped[int] = mapped_column(Integer, nullable=False)
-    annotation_data: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    annotation_data: Mapped[list | None] = mapped_column(JSON, nullable=True, default=None)
     user_reviewed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     prediction_model_id: Mapped[str | None] = mapped_column(
         Text, ForeignKey("model_revisions.id", ondelete="SET NULL"), nullable=True

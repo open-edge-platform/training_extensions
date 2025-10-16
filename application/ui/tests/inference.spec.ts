@@ -1,6 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { getMockedPipeline } from 'mocks/mock-pipeline';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 
@@ -13,14 +14,7 @@ test.describe('Inference', () => {
                 return HttpResponse.json(getMockedProject({ id: 'id-1' }));
             }),
             http.get('/api/projects/{project_id}/pipeline', ({ response }) => {
-                return response(200).json({
-                    project_id: 'id-1',
-                    status: 'running',
-                    source: null,
-                    sink: null,
-                    model: null,
-                    data_collection_policies: [],
-                });
+                return response(200).json(getMockedPipeline({ status: 'running' }));
             }),
             http.get('/api/sources', () => {
                 return HttpResponse.json([]);
@@ -76,14 +70,7 @@ test.describe('Inference', () => {
 
         network.use(
             http.get('/api/projects/{project_id}/pipeline', ({ response }) => {
-                return response(200).json({
-                    project_id: 'id-1',
-                    status: 'idle',
-                    source: null,
-                    sink: null,
-                    model: null,
-                    data_collection_policies: [],
-                });
+                return response(200).json(getMockedPipeline({ status: 'idle' }));
             })
         );
 
@@ -93,25 +80,6 @@ test.describe('Inference', () => {
     });
 
     test('updates data collection policy', async ({ page, network }) => {
-        network.use(
-            http.get('/api/projects/{project_id}/pipeline', ({ response }) => {
-                return response(200).json({
-                    project_id: 'id-1',
-                    status: 'idle',
-                    source: null,
-                    sink: null,
-                    model: null,
-                    data_collection_policies: [
-                        {
-                            type: 'fixed_rate',
-                            enabled: false,
-                            rate: 12,
-                        },
-                    ],
-                });
-            })
-        );
-
         await page.goto('/projects/id-1/inference');
 
         // Open both tabs just to make sure everything works
@@ -129,20 +97,17 @@ test.describe('Inference', () => {
                 return HttpResponse.json({});
             }),
             http.get('/api/projects/{project_id}/pipeline', ({ response }) => {
-                return response(200).json({
-                    project_id: 'id-1',
-                    status: 'idle',
-                    source: null,
-                    sink: null,
-                    model: null,
-                    data_collection_policies: [
-                        {
-                            type: 'fixed_rate',
-                            enabled: true,
-                            rate: 12,
-                        },
-                    ],
-                });
+                return response(200).json(
+                    getMockedPipeline({
+                        data_collection_policies: [
+                            {
+                                type: 'fixed_rate',
+                                enabled: true,
+                                rate: 12,
+                            },
+                        ],
+                    })
+                );
             })
         );
 
@@ -178,6 +143,9 @@ test.describe('Inference', () => {
 
     test('updates input and output source', async ({ page, network }) => {
         network.use(
+            http.get('/api/projects/{project_id}/pipeline', ({ response }) => {
+                return response(200).json(getMockedPipeline({ source: null, sink: null }));
+            }),
             http.patch('/api/sources/{source_id}', () => {
                 return HttpResponse.json({});
             }),

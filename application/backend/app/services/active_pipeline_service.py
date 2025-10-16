@@ -9,8 +9,15 @@ from uuid import UUID
 
 from app.db import get_db_session
 from app.repositories import PipelineRepository
-from app.schemas import DisconnectedSinkConfig, DisconnectedSourceConfig, ProjectView, Sink, Source
-from app.schemas.pipeline import DataCollectionPolicy
+from app.schemas import (
+    DataCollectionPolicy,
+    DisconnectedSinkConfig,
+    DisconnectedSourceConfig,
+    ProjectView,
+    Sink,
+    Source,
+)
+from app.schemas.pipeline import DataCollectionPolicyAdapter
 
 from .label_service import LabelService
 from .mappers import ProjectMapper, SinkMapper, SourceMapper
@@ -82,7 +89,7 @@ class ActivePipelineService:
             self._data_collection_policies = [
                 policy
                 for policy in [
-                    DataCollectionPolicy.model_validate(policy) for policy in pipeline.data_collection_policies
+                    DataCollectionPolicyAdapter.validate_python(policy) for policy in pipeline.data_collection_policies
                 ]
                 if policy.enabled
             ]

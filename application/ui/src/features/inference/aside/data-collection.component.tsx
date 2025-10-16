@@ -4,8 +4,12 @@
 import { useEffect, useState } from 'react';
 
 import { Divider, Flex, Heading, Slider, Switch, Text } from '@geti/ui';
+import { useIsPipelineConfigured } from 'hooks/use-is-pipeline-configured.hook';
 import { $api } from 'src/api/client';
+import { components } from 'src/api/openapi-spec';
 import { useProjectIdentifier } from 'src/hooks/use-project-identifier.hook';
+
+type FixedRateDataCollectionPolicy = components['schemas']['FixedRateDataCollectionPolicy'];
 
 export const DataCollection = () => {
     const projectId = useProjectIdentifier();
@@ -13,6 +17,8 @@ export const DataCollection = () => {
     const pipelineQuery = $api.useSuspenseQuery('get', '/api/projects/{project_id}/pipeline', {
         params: { path: { project_id: projectId } },
     });
+
+    const canEditPipeline = useIsPipelineConfigured(pipelineQuery.data);
 
     const patchPipelineMutation = $api.useMutation('patch', '/api/projects/{project_id}/pipeline', {
         meta: {
@@ -22,9 +28,11 @@ export const DataCollection = () => {
 
     const isAutoCapturingEnabled = pipelineQuery.data?.data_collection_policies[0]?.enabled ?? false;
     const defaultRate = 12;
-    const serverRate = pipelineQuery.data?.data_collection_policies[0]?.rate ?? defaultRate;
+    const serverRate =
+        (pipelineQuery.data?.data_collection_policies[0] as FixedRateDataCollectionPolicy)?.rate ?? defaultRate;
 
-    // Local state for the slider value while dragging
+    // TODO: add confidence_threshold slider
+
     const [localRate, setLocalRate] = useState(serverRate);
 
     useEffect(() => {
@@ -59,13 +67,13 @@ export const DataCollection = () => {
                 <Switch
                     isSelected={isAutoCapturingEnabled}
                     onChange={toggleAutoCapturing}
-                    isDisabled={patchPipelineMutation.isPending}
+                    isDisabled={patchPipelineMutation.isPending || !canEditPipeline}
                     marginBottom={'size-200'}
                 >
                     Toggle auto capturing
                 </Switch>
 
-                <Text>Some description about this stuff</Text>
+                <Text>Capture frames while the stream is running</Text>
 
                 <Divider marginY={'size-400'} size={'S'} />
 
@@ -82,7 +90,7 @@ export const DataCollection = () => {
                     onChangeEnd={updateRate}
                     marginY={'size-200'}
                     label='Rate'
-                    isDisabled={patchPipelineMutation.isPending}
+                    isDisabled={patchPipelineMutation.isPending || !canEditPipeline}
                 />
             </Flex>
         </Flex>

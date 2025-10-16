@@ -116,8 +116,11 @@ table(model_revisions) {
   --
   ' Training details
   training_status : TEXT NOT NULL
-  fk(training_dataset_id) : UUID
-  label_schema_revision : JSON
+  training_configuration: JSON NOT NULL
+  fk(training_dataset_id) : UUID NOT NULL
+  label_schema_revision : JSON NOT NULL
+  training_started_at : TIMESTAMP
+  training_finished_at : TIMESTAMP
   --
   ' Status of binary files
   files_deleted : BOOLEAN NOT NULL
