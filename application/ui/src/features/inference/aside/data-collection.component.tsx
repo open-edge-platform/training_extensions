@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 
 import { Divider, Flex, Heading, Slider, Switch, Text } from '@geti/ui';
+import { useIsPipelineConfigured } from 'hooks/use-is-pipeline-configured.hook';
 import { $api } from 'src/api/client';
 import { components } from 'src/api/openapi-spec';
 import { useProjectIdentifier } from 'src/hooks/use-project-identifier.hook';
@@ -16,6 +17,8 @@ export const DataCollection = () => {
     const pipelineQuery = $api.useSuspenseQuery('get', '/api/projects/{project_id}/pipeline', {
         params: { path: { project_id: projectId } },
     });
+
+    const canEditPipeline = useIsPipelineConfigured(pipelineQuery.data);
 
     const patchPipelineMutation = $api.useMutation('patch', '/api/projects/{project_id}/pipeline', {
         meta: {
@@ -64,7 +67,7 @@ export const DataCollection = () => {
                 <Switch
                     isSelected={isAutoCapturingEnabled}
                     onChange={toggleAutoCapturing}
-                    isDisabled={patchPipelineMutation.isPending}
+                    isDisabled={patchPipelineMutation.isPending || !canEditPipeline}
                     marginBottom={'size-200'}
                 >
                     Toggle auto capturing
@@ -87,7 +90,7 @@ export const DataCollection = () => {
                     onChangeEnd={updateRate}
                     marginY={'size-200'}
                     label='Rate'
-                    isDisabled={patchPipelineMutation.isPending}
+                    isDisabled={patchPipelineMutation.isPending || !canEditPipeline}
                 />
             </Flex>
         </Flex>
