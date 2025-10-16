@@ -6,7 +6,7 @@ import { RefObject } from 'react';
 import { useEventListener } from 'hooks/event-listener.hook';
 import { DatasetItem } from 'src/features/annotator/types';
 
-type useKeyboardNavigationProps = {
+export type UseKeyboardNavigationProps = {
     ref: RefObject<HTMLElement | null>;
     items: DatasetItem[];
     selectedIndex: number;
@@ -18,7 +18,7 @@ export const useKeyboardNavigation = ({
     items,
     selectedIndex,
     onSelectedMediaItem,
-}: useKeyboardNavigationProps) => {
+}: UseKeyboardNavigationProps) => {
     const getNewIndex = (key: 'ArrowUp' | 'ArrowDown') => {
         if (key === 'ArrowUp') {
             return Math.max(0, selectedIndex - 1);
