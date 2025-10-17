@@ -12,6 +12,7 @@ import { ZoomProvider } from '../../../components/zoom/zoom.provider';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas';
 import { SelectAnnotationProvider } from '../../annotator/select-annotation-provider.component';
 import { DatasetItem } from '../../annotator/types';
+import { useGetDatasetItems } from '../gallery/use-get-dataset-items.hook';
 import { ToolSelectionBar } from './primary-toolbar/primary-toolbar.component';
 import { SecondaryToolbar } from './secondary-toolbar/secondary-toolbar.component';
 import { SidebarItems } from './sidebar-items/sidebar-items.component';
@@ -29,6 +30,8 @@ const CanvasAreaLoading = () => (
 );
 
 export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPreviewProps) => {
+    const { items, hasNextPage, isFetchingNextPage, fetchNextPage } = useGetDatasetItems();
+
     return (
         <Dialog UNSAFE_style={{ width: '95vw', height: '95vh' }}>
             <Heading>Preview</Heading>
@@ -63,7 +66,12 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                                             </View>
 
                                             <View gridArea={'header'}>
-                                                <SecondaryToolbar onClose={close} />
+                                                <SecondaryToolbar
+                                                    items={items}
+                                                    onClose={close}
+                                                    mediaItem={mediaItem}
+                                                    onSelectedMediaItem={onSelectedMediaItem}
+                                                />
                                             </View>
                                             <View gridArea={'canvas'} overflow={'hidden'}>
                                                 <AnnotatorCanvas mediaItem={mediaItem} />
@@ -74,7 +82,14 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                             </Suspense>
 
                             <View gridArea={'aside'}>
-                                <SidebarItems mediaItem={mediaItem} onSelectedMediaItem={onSelectedMediaItem} />
+                                <SidebarItems
+                                    items={items}
+                                    mediaItem={mediaItem}
+                                    hasNextPage={hasNextPage}
+                                    isFetchingNextPage={isFetchingNextPage}
+                                    fetchNextPage={fetchNextPage}
+                                    onSelectedMediaItem={onSelectedMediaItem}
+                                />
                             </View>
                         </ZoomProvider>
                     </AnnotationActionsProvider>
