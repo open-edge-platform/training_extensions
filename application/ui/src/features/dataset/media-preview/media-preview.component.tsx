@@ -12,7 +12,6 @@ import { ZoomProvider } from '../../../components/zoom/zoom.provider';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas';
 import { SelectAnnotationProvider } from '../../annotator/select-annotation-provider.component';
 import { DatasetItem } from '../../annotator/types';
-import { AnnotatorButtons } from './annotator-buttons.component';
 import { ToolSelectionBar } from './primary-toolbar/primary-toolbar.component';
 import { SecondaryToolbar } from './secondary-toolbar/secondary-toolbar.component';
 import { SidebarItems } from './sidebar-items/sidebar-items.component';
@@ -64,7 +63,7 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                                             </View>
 
                                             <View gridArea={'header'}>
-                                                <SecondaryToolbar />
+                                                <SecondaryToolbar onClose={close} />
                                             </View>
                                             <View gridArea={'canvas'} overflow={'hidden'}>
                                                 <AnnotatorCanvas mediaItem={mediaItem} />
@@ -76,10 +75,6 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
 
                             <View gridArea={'aside'}>
                                 <SidebarItems mediaItem={mediaItem} onSelectedMediaItem={onSelectedMediaItem} />
-                            </View>
-
-                            <View gridArea={'footer'} padding={'size-100'} UNSAFE_style={{ textAlign: 'right' }}>
-                                <AnnotatorButtons onClose={close} />
                             </View>
                         </ZoomProvider>
                     </AnnotationActionsProvider>

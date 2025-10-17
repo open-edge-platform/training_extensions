@@ -4,15 +4,12 @@
 import { useRef, useState } from 'react';
 
 import { Selection, Size, useUnwrapDOMRef, View } from '@geti/ui';
-import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { DatasetItem } from 'src/features/annotator/types';
 import { useSelectedData } from 'src/routes/dataset/provider';
 
-import { MediaItem } from '../../gallery/media-item.component';
-import { MediaThumbnail } from '../../gallery/media-thumbnail.component';
 import { useGetDatasetItems } from '../../gallery/use-get-dataset-items.hook';
-import { getThumbnailUrl } from '../../gallery/utils';
 import { VirtualizerGridLayout } from '../../virtualizer-grid-layout/virtualizer-grid-layout.component';
+import { SidebarMediaItem } from './sidebar-media-item.component';
 import { useKeyboardNavigation } from './use-keyboard-navigation.hook';
 
 const layoutOptions = {
@@ -31,7 +28,6 @@ type SidebarItemsProps = {
 export const SidebarItems = ({ mediaItem, onSelectedMediaItem }: SidebarItemsProps) => {
     const ref = useRef(null);
     const unwrapRef = useUnwrapDOMRef(ref);
-    const project_id = useProjectIdentifier();
     const { mediaState } = useSelectedData();
     const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set([String(mediaItem.id)]));
     const { items, hasNextPage, isFetchingNextPage, fetchNextPage } = useGetDatasetItems();
@@ -62,14 +58,10 @@ export const SidebarItems = ({ mediaItem, onSelectedMediaItem }: SidebarItemsPro
                 onLoadMore={() => hasNextPage && fetchNextPage()}
                 onSelectionChange={setSelectedKeys}
                 contentItem={(item) => (
-                    <MediaItem
-                        contentElement={() => (
-                            <MediaThumbnail
-                                alt={item.name}
-                                url={getThumbnailUrl(project_id, String(item.id))}
-                                onClick={() => onSelectedMediaItem(item)}
-                            />
-                        )}
+                    <SidebarMediaItem
+                        item={item}
+                        isSelected={mediaItem.id === item.id}
+                        onSelectedMediaItem={onSelectedMediaItem}
                     />
                 )}
             />

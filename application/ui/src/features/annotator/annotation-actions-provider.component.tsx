@@ -36,6 +36,7 @@ interface AnnotationsContextValue {
     deleteAnnotations: (annotationIds: string[]) => void;
     updateAnnotations: (updatedAnnotations: Annotation[]) => void;
     submitAnnotations: () => Promise<void>;
+    isUserReviewed: boolean;
     isSaving: boolean;
 }
 
@@ -52,13 +53,16 @@ export const AnnotationActionsProvider = ({ children, mediaItem }: AnnotationAct
         'post',
         '/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations'
     );
-    const { data: serverAnnotations } = $api.useQuery(
+
+    const { data: serverAnnotations, error: serverAnnotationsError } = $api.useQuery(
         'get',
         '/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations',
         {
             params: { path: { project_id: projectId, dataset_item_id: mediaItem.id || '' } },
         }
     );
+    /* console.log('serverAnnotationsError', mediaItem.id, serverAnnotationsError); */
+
     const { data: project } = $api.useQuery('get', '/api/projects/{project_id}', {
         params: { path: { project_id: projectId } },
     });
@@ -107,6 +111,7 @@ export const AnnotationActionsProvider = ({ children, mediaItem }: AnnotationAct
         isDirty.current = false;
     };
 
+    console.log('---> serverAnnotations', serverAnnotations);
     useEffect(() => {
         if (!project || !serverAnnotations) return;
 
@@ -123,6 +128,7 @@ export const AnnotationActionsProvider = ({ children, mediaItem }: AnnotationAct
     return (
         <AnnotationsContext.Provider
             value={{
+                isUserReviewed: get(serverAnnotations, 'user_reviewed', false),
                 annotations: localAnnotations,
 
                 // Local
