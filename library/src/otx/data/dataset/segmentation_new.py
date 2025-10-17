@@ -23,7 +23,7 @@ class OTXSegmentationDataset(OTXDataset):
         dm_subset = dm_subset.convert_to_schema(sample_type)
         super().__init__(dm_subset=dm_subset, sample_type=sample_type, **kwargs)
 
-        labels = dm_subset.schema.attributes["masks"].categories.labels
+        labels = list(dm_subset.schema.attributes["masks"].categories.labels)
         self.label_info = SegLabelInfo(
             label_names=labels,
             label_groups=[labels],

@@ -10,10 +10,11 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 import polars as pl
 import torch
-from datumaro import Mask
+import torch.utils._pytree as pytree
 from datumaro.experimental.dataset import Sample
 from datumaro.experimental.fields import ImageInfo as DmImageInfo
 from datumaro.experimental.fields import (
+    Subset,
     bbox_field,
     image_field,
     image_info_field,
@@ -22,6 +23,7 @@ from datumaro.experimental.fields import (
     label_field,
     mask_field,
     polygon_field,
+    subset_field,
 )
 from datumaro.experimental.schema import Semantic
 from torchvision import tv_tensors
@@ -32,20 +34,47 @@ if TYPE_CHECKING:
     from torchvision.tv_tensors import BoundingBoxes, Mask
 
 
+def register_pytree_node(cls: type[Sample]) -> type[Sample]:
+    """Decorator to register an OTX data entity with PyTorch's PyTree.
+
+    This decorator should be applied to every OTX data entity, as TorchVision V2 transforms
+    use the PyTree to flatten and unflatten the data entity during runtime.
+
+    Example:
+        `MulticlassClsDataEntity` example ::
+
+            @register_pytree_node
+            @dataclass
+            class MulticlassClsDataEntity(OTXDataEntity):
+                ...
+    """
+
+    def flatten_fn(obj: object) -> tuple[list[Any], list[str]]:
+        obj_dict = dict(obj.__dict__)
+
+        missing_keys = set(obj.__class__.__annotations__.keys()) - set(obj_dict.keys())
+        for key in missing_keys:
+            obj_dict[key] = getattr(obj, key)
+
+        return (list(obj_dict.values()), list(obj_dict.keys()))
+
+    def unflatten_fn(values: list[Any], context: list[str]) -> object:
+        return cls(**dict(zip(context, values)))
+
+    pytree.register_pytree_node(
+        cls,
+        flatten_fn=flatten_fn,
+        unflatten_fn=unflatten_fn,
+    )
+    return cls
+
+
+@register_pytree_node
 class OTXSample(Sample):
     """Base class for OTX data samples."""
 
     image: np.ndarray | torch.Tensor | tv_tensors.Image | Any
-
-    def as_tv_image(self) -> None:
-        """Convert image to torchvision tv_tensors Image format."""
-        if isinstance(self.image, tv_tensors.Image):
-            return
-        if isinstance(self.image, (np.ndarray, torch.Tensor)):
-            self.image = tv_tensors.Image(self.image)
-            return
-        msg = "OTXSample must have an image"
-        raise ValueError(msg)
+    subset: Subset = subset_field()
 
     @property
     def masks(self) -> Mask | None:
@@ -73,19 +102,11 @@ class OTXSample(Sample):
         return None
 
     @property
-    def img_info(self) -> ImageInfo | None:
+    def img_info(self) -> ImageInfo:
         """Get image information for the sample."""
-        if getattr(self, "_img_info", None) is None:
-            image = getattr(self, "image", None)
-            if image is not None and hasattr(image, "shape") and len(image.shape) == 3:
-                img_shape = image.shape[:2]
-            else:
-                return None
-            self._img_info = ImageInfo(
-                img_idx=0,
-                img_shape=img_shape,
-                ori_shape=img_shape,
-            )
+        if self._img_info is None:
+            err_msg = "img_info is not set."
+            raise ValueError(err_msg)
         return self._img_info
 
     @img_info.setter
@@ -93,13 +114,27 @@ class OTXSample(Sample):
         self._img_info = value
 
 
+@register_pytree_node
 class ClassificationSample(OTXSample):
     """ClassificationSample is a base class for OTX classification items."""
 
+    subset: Subset = subset_field()
+
     image: np.ndarray | tv_tensors.Image = image_field(dtype=pl.UInt8)
     label: torch.Tensor = label_field(pl.Int32())
+    dm_image_info: DmImageInfo = image_info_field()
+
+    def __post_init__(self) -> None:
+        shape = (self.dm_image_info.height, self.dm_image_info.width)
+
+        self.img_info = ImageInfo(
+            img_idx=0,
+            img_shape=shape,
+            ori_shape=shape,
+        )
 
 
+@register_pytree_node
 class ClassificationMultiLabelSample(OTXSample):
     """ClassificationMultiLabelSample is a base class for OTX multi label classification items."""
 
@@ -107,6 +142,7 @@ class ClassificationMultiLabelSample(OTXSample):
     label: np.ndarray | torch.Tensor = label_field(pl.Int32(), multi_label=True)
 
 
+@register_pytree_node
 class ClassificationHierarchicalSample(OTXSample):
     """ClassificationHierarchicalSample is a base class for OTX hierarchical classification items."""
 
@@ -114,15 +150,19 @@ class ClassificationHierarchicalSample(OTXSample):
     label: np.ndarray | torch.Tensor = label_field(pl.Int32(), is_list=True)
 
 
+@register_pytree_node
 class DetectionSample(OTXSample):
     """DetectionSample is a base class for OTX detection items."""
 
-    image: np.ndarray | tv_tensors.Image = image_field(dtype=pl.UInt8)
-    label: np.ndarray | torch.Tensor = label_field(pl.Int32(), is_list=True)
+    subset: Subset = subset_field()
+
+    image: tv_tensors.Image = image_field(dtype=pl.UInt8, channels_first=True)
+    label: torch.Tensor = label_field(pl.Int32(), is_list=True)
     bboxes: np.ndarray | tv_tensors.BoundingBoxes = bbox_field(dtype=pl.Float32)
+    dm_image_info: DmImageInfo = image_info_field()
 
     def __post_init__(self) -> None:
-        shape = self.image.shape[:2]
+        shape = (self.dm_image_info.height, self.dm_image_info.width)
 
         # Convert bboxes to tv_tensors format
         if isinstance(self.bboxes, np.ndarray):
@@ -133,14 +173,6 @@ class DetectionSample(OTXSample):
                 dtype=torch.float32,
             )
 
-        # Convert image to tv_tensors format
-        if isinstance(self.image, np.ndarray):
-            self.image = tv_tensors.Image(self.image.transpose(2, 0, 1))
-
-        # Convert labels to tensor
-        if isinstance(self.label, np.ndarray):
-            self.label = torch.as_tensor(self.label, dtype=torch.long)
-
         self.img_info = ImageInfo(
             img_idx=0,
             img_shape=shape,
@@ -148,17 +180,17 @@ class DetectionSample(OTXSample):
         )
 
 
+@register_pytree_node
 class SegmentationSample(OTXSample):
     """OTXDataItemSample is a base class for OTX data items."""
 
-    image: np.ndarray | tv_tensors.Image = image_field(dtype=pl.UInt8)
-    masks: np.ndarray | tv_tensors.Mask = mask_field(dtype=pl.UInt8)
+    subset: Subset = subset_field()
+    image: tv_tensors.Image = image_field(dtype=pl.UInt8, channels_first=True)
+    masks: tv_tensors.Mask = mask_field(dtype=pl.UInt8, channels_first=True, has_channels_dim=True)
     dm_image_info: DmImageInfo = image_info_field()
 
     def __post_init__(self) -> None:
         shape = (self.dm_image_info.height, self.dm_image_info.width)
-        self.image = tv_tensors.Image(self.image.transpose(2, 0, 1))
-        self.masks = tv_tensors.Mask(self.masks[np.newaxis, ...])
         self.img_info = ImageInfo(
             img_idx=0,
             img_shape=shape,
@@ -166,29 +198,20 @@ class SegmentationSample(OTXSample):
         )
 
 
+@register_pytree_node
 class AnomalySample(OTXSample):
     """ClassificationSample is a base class for OTX classification items."""
 
+    subset: Subset = subset_field()
     image: np.ndarray | tv_tensors.Image = image_field(dtype=pl.UInt8)
     label: torch.Tensor = label_field(pl.Int32())
     dm_image_info: DmImageInfo = image_info_field()
-
-    masks: np.ndarray | tv_tensors.Image | None = mask_field(dtype=pl.UInt8, semantic=Semantic.Anomaly)
+    masks: np.ndarray | tv_tensors.Image | None = mask_field(
+        dtype=pl.UInt8, semantic=Semantic.Anomaly, channels_first=True, has_channels_dim=True
+    )
 
     def __post_init__(self) -> None:
         shape = (self.dm_image_info.height, self.dm_image_info.width)
-
-        # Convert image to tv_tensors format
-        if isinstance(self.image, np.ndarray):
-            self.image = tv_tensors.Image(self.image.transpose(2, 0, 1))
-
-        # Convert masks to tv_tensors format
-        if isinstance(self.masks, np.ndarray):
-            self.masks = tv_tensors.Mask(self.masks, dtype=torch.uint8)
-
-        # Convert labels to tensor
-        if isinstance(self.label, np.ndarray):
-            self.label = torch.as_tensor(self.label, dtype=torch.long)
 
         self.img_info = ImageInfo(
             img_idx=0,
@@ -197,12 +220,14 @@ class AnomalySample(OTXSample):
         )
 
 
+@register_pytree_node
 class InstanceSegmentationSample(OTXSample):
     """OTXSample for instance segmentation tasks."""
 
-    image: np.ndarray | tv_tensors.Image = image_field(dtype=pl.UInt8)
+    subset: Subset = subset_field()
+    image: tv_tensors.Image = image_field(dtype=pl.UInt8, channels_first=True)
     bboxes: np.ndarray | tv_tensors.BoundingBoxes = bbox_field(dtype=pl.Float32)
-    label: np.ndarray | torch.Tensor = label_field(is_list=True)
+    label: torch.Tensor = label_field(is_list=True)
     polygons: np.ndarray = polygon_field(dtype=pl.Float32)  # Ragged array of (Npoly, 2) arrays
     dm_image_info: DmImageInfo = image_info_field()
 
@@ -218,14 +243,6 @@ class InstanceSegmentationSample(OTXSample):
                 dtype=torch.float32,
             )
 
-        # Convert image to tv_tensors format
-        if isinstance(self.image, np.ndarray):
-            self.image = tv_tensors.Image(self.image.transpose(2, 0, 1))
-
-        # Convert labels to tensor
-        if isinstance(self.label, np.ndarray):
-            self.label = torch.as_tensor(self.label, dtype=torch.long)
-
         self.img_info = ImageInfo(
             img_idx=0,
             img_shape=shape,
@@ -233,13 +250,15 @@ class InstanceSegmentationSample(OTXSample):
         )
 
 
+@register_pytree_node
 class InstanceSegmentationSampleWithMask(OTXSample):
     """OTXSample for instance segmentation tasks."""
 
-    image: np.ndarray | tv_tensors.Image = image_field(dtype=pl.UInt8)
+    subset: Subset = subset_field()
+    image: tv_tensors.Image = image_field(dtype=pl.UInt8, channels_first=True)
     bboxes: np.ndarray | tv_tensors.BoundingBoxes = bbox_field(dtype=pl.Float32)
-    masks: np.ndarray | tv_tensors.Mask = instance_mask_field(dtype=pl.UInt8)
-    label: np.ndarray | torch.Tensor = label_field(is_list=True)
+    masks: tv_tensors.Mask = instance_mask_field(dtype=pl.UInt8)
+    label: torch.Tensor = label_field(is_list=True)
     polygons: np.ndarray = polygon_field(dtype=pl.Float32)  # Ragged array of (Npoly, 2) arrays
     dm_image_info: DmImageInfo = image_info_field()
 
@@ -255,18 +274,6 @@ class InstanceSegmentationSampleWithMask(OTXSample):
                 dtype=torch.float32,
             )
 
-        # Convert image to tv_tensors format
-        if isinstance(self.image, np.ndarray):
-            self.image = tv_tensors.Image(self.image.transpose(2, 0, 1))
-
-        # Convert masks to tv_tensors format
-        if isinstance(self.masks, np.ndarray):
-            self.masks = tv_tensors.Mask(self.masks, dtype=torch.uint8)
-
-        # Convert labels to tensor
-        if isinstance(self.label, np.ndarray):
-            self.label = torch.as_tensor(self.label, dtype=torch.long)
-
         self.img_info = ImageInfo(
             img_idx=0,
             img_shape=shape,
@@ -274,9 +281,21 @@ class InstanceSegmentationSampleWithMask(OTXSample):
         )
 
 
+@register_pytree_node
 class KeypointSample(OTXSample):
     """KeypointSample is a base class for OTX keypoint detection items."""
 
+    subset: Subset = subset_field()
     image: np.ndarray | tv_tensors.Image = image_field(dtype=pl.UInt8)
     label: torch.Tensor = label_field(pl.Int32(), is_list=True)
     keypoints: torch.Tensor = keypoints_field()
+    dm_image_info: DmImageInfo = image_info_field()
+
+    def __post_init__(self) -> None:
+        shape = (self.dm_image_info.height, self.dm_image_info.width)
+
+        self.img_info = ImageInfo(
+            img_idx=0,
+            img_shape=shape,
+            ori_shape=shape,
+        )
