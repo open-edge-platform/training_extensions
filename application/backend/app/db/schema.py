@@ -117,5 +117,5 @@ class LabelDB(BaseID):
 
     project_id: Mapped[str] = mapped_column(Text, ForeignKey("projects.id", ondelete="CASCADE"))
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    color: Mapped[str | None] = mapped_column(String(7), nullable=True)
+    color: Mapped[str] = mapped_column(String(7), nullable=False)
     hotkey: Mapped[str | None] = mapped_column(String(10), nullable=True)

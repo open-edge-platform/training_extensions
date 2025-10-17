@@ -2,14 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Item, Key, Picker } from '@geti/ui';
-import { components } from 'src/api/openapi-spec';
-
-type ServerLabel = components['schemas']['Label'];
+import { Label } from 'src/features/annotator/types';
 
 type LabelPickerProps = {
-    labels: ServerLabel[];
+    labels: Label[];
     onSelect: (value: Key | null) => void;
-    selectedLabel: ServerLabel | null;
+    selectedLabel: Label | null;
 };
 export const LabelPicker = ({ labels, onSelect, selectedLabel }: LabelPickerProps) => {
     return (

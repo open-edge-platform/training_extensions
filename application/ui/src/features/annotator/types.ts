@@ -16,11 +16,7 @@ export type Polygon = components['schemas']['Polygon'];
 
 export type Shape = Rect | Polygon;
 
-export type Label = components['schemas']['Label'] & {
-    id: string;
-    name: string;
-    color: string;
-};
+export type Label = components['schemas']['LabelView'];
 
 export type Annotation = components['schemas']['DatasetItemAnnotation-Input'] & {
     id: string;

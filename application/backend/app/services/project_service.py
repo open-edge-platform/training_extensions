@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.repositories import DatasetItemRepository, PipelineRepository, ProjectRepository
 from app.repositories.base import PrimaryKeyIntegrityError
-from app.schemas import Label, ProjectCreate, ProjectView
+from app.schemas import LabelView, ProjectCreate, ProjectView
 
 from .base import ResourceInUseError, ResourceNotFoundError, ResourceType, ResourceWithIdAlreadyExistsError
 from .label_service import LabelService
@@ -31,7 +31,7 @@ class ProjectService:
             project_db = project_repo.save(ProjectMapper.from_schema(project))
         except PrimaryKeyIntegrityError:
             raise ResourceWithIdAlreadyExistsError(ResourceType.PROJECT, str(project.id))
-        labels: list[Label] = []
+        labels: list[LabelView] = []
         for label in project.task.labels:
             labels.append(self._label_service.create_label(project_id=UUID(project_db.id), label=label))
         return ProjectMapper.to_schema(project_db, labels)

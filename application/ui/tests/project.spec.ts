@@ -86,7 +86,10 @@ test.describe('Project', () => {
                         task: {
                             task_type: 'instance_segmentation',
                             exclusive_labels: false,
-                            labels: [{ name: 'Person' }, { name: 'Animal' }],
+                            labels: [
+                                { id: '1', color: 'red', name: 'Person' },
+                                { id: '2', color: 'blue', name: 'Animal' },
+                            ],
                         },
                     })
                 );
@@ -114,7 +117,10 @@ test.describe('Project', () => {
                         task: {
                             task_type: 'instance_segmentation',
                             exclusive_labels: false,
-                            labels: [{ name: 'Person' }, { name: 'Animal' }],
+                            labels: [
+                                { id: '1', color: 'red', name: 'Person' },
+                                { id: '2', color: 'blue', name: 'Animal' },
+                            ],
                         },
                     }),
                 ]);

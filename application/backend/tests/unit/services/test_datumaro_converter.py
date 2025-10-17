@@ -9,7 +9,7 @@ import pytest
 
 from app.db.schema import DatasetItemDB
 from app.schemas.dataset_item import DatasetItemAnnotation, DatasetItemSubset
-from app.schemas.label import Label, LabelReference
+from app.schemas.label import LabelReference, LabelView
 from app.schemas.shape import FullImage, Point, Polygon, Rectangle, Shape
 from app.services.datumaro_converter import (
     ClassificationSample,
@@ -28,8 +28,8 @@ from app.services.datumaro_converter import (
 @pytest.fixture
 def fxt_project_labels():
     return [
-        Label(id=uuid4(), name="cat", color="#00FF00", hotkey="c"),
-        Label(id=uuid4(), name="dog", color="#FF0000", hotkey="d"),
+        LabelView(id=uuid4(), name="cat", color="#00FF00", hotkey="c"),
+        LabelView(id=uuid4(), name="dog", color="#FF0000", hotkey="d"),
     ]
 
 
