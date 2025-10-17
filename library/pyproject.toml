@@ -48,6 +48,7 @@ dependencies = [
     "openvino==2025.2",
     "openvino-model-api==0.3.0.2",
     "onnx==1.17.0",
+    "onnxscript==0.5.3",
     "onnxconverter-common==1.14.0",
     "nncf==2.17.0",
     "anomalib[core]==1.1.3",
