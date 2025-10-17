@@ -50,7 +50,8 @@
         "react-router-dom": "~6.30.1",
         "recharts": "~2.15.3",
         "static-path": "~0.0.4",
-        "uuid": "~11.1.0"
+        "uuid": "~11.1.0",
+        "zustand": "~5.0.8"
     },
     "devDependencies": {
         "@eslint/compat": "~1.2.8",
