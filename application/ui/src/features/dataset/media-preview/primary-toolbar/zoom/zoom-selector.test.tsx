@@ -18,6 +18,7 @@ vi.mock(import('src/components/zoom/zoom.store'), async (importOriginal) => {
             fitToScreen: vi.fn(),
             onZoomChange: mockedOnZoomChange,
             resetZoom: vi.fn(),
+            zoomToCursor: vi.fn(),
         }),
         useZoom: vi.fn(),
     };
