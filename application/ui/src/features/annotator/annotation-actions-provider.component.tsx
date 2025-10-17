@@ -9,8 +9,7 @@ import { $api } from 'src/api/client';
 import { components } from 'src/api/openapi-spec';
 import { v4 as uuid } from 'uuid';
 
-import { useAnnotator } from './annotator-provider.component';
-import { Annotation, Shape } from './types';
+import { Annotation, DatasetItem, Shape } from './types';
 
 type ServerAnnotation = components['schemas']['DatasetItemAnnotation-Input'];
 
@@ -42,8 +41,12 @@ interface AnnotationsContextValue {
 
 const AnnotationsContext = createContext<AnnotationsContextValue | null>(null);
 
-export const AnnotationActionsProvider = ({ children }: { children: ReactNode }) => {
-    const { mediaItem } = useAnnotator();
+type AnnotationActionsProviderProps = {
+    children: ReactNode;
+    mediaItem: DatasetItem;
+};
+
+export const AnnotationActionsProvider = ({ children, mediaItem }: AnnotationActionsProviderProps) => {
     const projectId = useProjectIdentifier();
     const saveMutation = $api.useMutation(
         'post',

@@ -126,5 +126,5 @@ class PipelineView(BaseModel):
         if self.status == PipelineStatus.RUNNING and any(
             x is None for x in (self.source_id, self.sink_id, self.model_id)
         ):
-            raise ValueError("Pipeline cannot be in 'running' status when source, sink, or model is not configured.")
+            raise ValueError("Pipeline cannot be in 'running' state when source, sink, or model is not configured.")
         return self
