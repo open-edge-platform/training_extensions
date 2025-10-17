@@ -9,7 +9,6 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Sequence
 
 import torch
-from datumaro.experimental.fields import TileInfo
 from torchvision import tv_tensors
 
 from otx.data.entity.sample import OTXSample
@@ -21,6 +20,7 @@ from .base import ImageInfo
 
 if TYPE_CHECKING:
     from datumaro import Polygon
+    from datumaro.experimental.fields import TileInfo
     from torch import LongTensor
 
 

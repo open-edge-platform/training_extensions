@@ -14,7 +14,6 @@ from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Callable, Iterator, Literal, Sequence
 
 import torch
-from datumaro.experimental.fields import TileInfo
 from torch import Tensor
 from torchmetrics import Metric, MetricCollection
 from torchvision import tv_tensors
@@ -41,6 +40,7 @@ from otx.types.label import LabelInfoTypes
 from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
+    from datumaro.experimental.fields import TileInfo
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from torch import nn
 
