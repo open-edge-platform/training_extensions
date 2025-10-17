@@ -172,7 +172,7 @@ class OTXTileDataset(OTXDataset):
         tile_entities: list[OTXSample] = []
         for tile in tile_ds:
             # apply the same transforms as the original dataset
-            tile.tile.source_sample_idx = parent_idx
+            object.__setattr__(tile.tile, "source_sample_idx", parent_idx)
             transformed_tile = self._apply_transforms(tile)
             if transformed_tile is None:
                 msg = "Transformed tile is None"
