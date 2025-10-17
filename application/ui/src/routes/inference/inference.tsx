@@ -3,7 +3,6 @@
 
 import { Grid } from '@geti/ui';
 
-import { ZoomProvider } from '../../components/zoom/zoom.provider';
 import { Sidebar } from '../../features/inference/aside/sidebar-tabs.component';
 import { StreamContainer } from '../../features/inference/stream/stream-container';
 import { Toolbar } from '../../features/inference/toolbar/toolbar.component';
@@ -21,9 +20,7 @@ export const Inference = () => {
             }}
         >
             <Toolbar />
-            <ZoomProvider>
-                <StreamContainer />
-            </ZoomProvider>
+            <StreamContainer />
             <Sidebar />
         </Grid>
     );

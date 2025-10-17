@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ReactNode, useRef } from 'react';
+import { ReactNode, useCallback, useRef } from 'react';
 
 import { clampBetween } from '@geti/smart-tools/utils';
 import { createUseGesture, dragAction, pinchAction, wheelAction } from '@use-gesture/react';
@@ -12,7 +12,7 @@ import { usePanning } from './use-panning.hook';
 import { Size, useSyncZoom } from './use-sync-zoom.hook';
 import { useWheelPanning } from './use-wheel-panning.hook';
 import { getZoomState } from './util';
-import { useSetZoom, useZoom } from './zoom.provider';
+import { useSetZoom, useZoom, zoomStore } from './zoom.store';
 
 import classes from './zoom.module.scss';
 
@@ -37,17 +37,30 @@ export const ZoomTransform = ({ children, target, zoomInMultiplier = 10, zoomOut
 
     const cursorIcon = isPanning && isGrabbing ? 'grabbing' : isPanning ? 'grab' : 'default';
 
+    const handleTranslateUpdate = useCallback(
+        ({ x, y }: Point) => {
+            setZoom((prev) => ({
+                ...prev,
+                hasAnimation: false,
+                translate: { x: prev.translate.x + x, y: prev.translate.y + y },
+            }));
+        },
+        [setZoom]
+    );
+
     useGesture(
         {
             onPinch: ({ origin, offset: [deltaDistance] }) => {
                 const rect = containerRef.current?.getBoundingClientRect();
                 if (!rect) return;
 
+                // Get fresh zoom state from store
+                const currentZoom = zoomStore.getState();
                 const factor = 1 + deltaDistance / 200;
                 const newScale = clampBetween(
-                    zoom.initialCoordinates.scale,
-                    zoom.initialCoordinates.scale * factor,
-                    zoom.maxZoomIn
+                    currentZoom.initialCoordinates.scale,
+                    currentZoom.initialCoordinates.scale * factor,
+                    currentZoom.maxZoomIn
                 );
                 const relativeCursor = { x: origin[0] - rect.left, y: origin[1] - rect.top };
 
@@ -56,7 +69,7 @@ export const ZoomTransform = ({ children, target, zoomInMultiplier = 10, zoomOut
                         newScale,
                         cursorX: relativeCursor.x,
                         cursorY: relativeCursor.y,
-                        initialCoordinates: zoom.initialCoordinates,
+                        initialCoordinates: currentZoom.initialCoordinates,
                     })
                 );
             },
@@ -64,8 +77,14 @@ export const ZoomTransform = ({ children, target, zoomInMultiplier = 10, zoomOut
                 const rect = containerRef.current?.getBoundingClientRect();
                 if (!rect) return;
 
+                // Get fresh zoom state from store
+                const currentZoom = zoomStore.getState();
                 const factor = 1 - verticalScrollDelta / 500;
-                const newScale = clampBetween(zoom.initialCoordinates.scale, zoom.scale * factor, zoom.maxZoomIn);
+                const newScale = clampBetween(
+                    currentZoom.initialCoordinates.scale,
+                    currentZoom.scale * factor,
+                    currentZoom.maxZoomIn
+                );
                 const relativeCursor = { x: event.clientX - rect.left, y: event.clientY - rect.top };
 
                 setZoom(
@@ -73,7 +92,7 @@ export const ZoomTransform = ({ children, target, zoomInMultiplier = 10, zoomOut
                         newScale,
                         cursorX: relativeCursor.x,
                         cursorY: relativeCursor.y,
-                        initialCoordinates: zoom.initialCoordinates,
+                        initialCoordinates: currentZoom.initialCoordinates,
                     })
                 );
             },
@@ -87,14 +106,6 @@ export const ZoomTransform = ({ children, target, zoomInMultiplier = 10, zoomOut
             drag: { enabled: isPanning },
         }
     );
-
-    const handleTranslateUpdate = ({ x, y }: Point) => {
-        setZoom((prev) => ({
-            ...prev,
-            hasAnimation: false,
-            translate: { x: prev.translate.x + x, y: prev.translate.y + y },
-        }));
-    };
 
     return (
         <div

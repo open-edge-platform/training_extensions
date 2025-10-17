@@ -4,7 +4,7 @@
 import { useEffect, useMemo } from 'react';
 
 import { ZoomState } from './types';
-import { useSetZoom } from './zoom.provider';
+import { useSetZoom } from './zoom.store';
 
 export type Size = { width: number; height: number };
 

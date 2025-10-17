@@ -1,7 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useZoom } from '../../../../components/zoom/zoom.provider';
+import { useZoom } from 'src/components/zoom/zoom.store';
+
 import { useAnnotationActions } from '../../annotation-actions-provider.component';
 import { useAnnotator } from '../../annotator-provider.component';
 import { DrawingBox } from '../drawing-box-tool/drawing-box.component';

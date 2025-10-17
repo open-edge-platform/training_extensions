@@ -7,7 +7,6 @@ import { Content, Dialog, dimensionValue, Divider, Flex, Grid, Heading, Loading,
 import { AnnotationActionsProvider } from 'src/features/annotator/annotation-actions-provider.component';
 import { AnnotatorProvider } from 'src/features/annotator/annotator-provider.component';
 
-import { ZoomProvider } from '../../../components/zoom/zoom.provider';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas';
 import { SelectAnnotationProvider } from '../../annotator/select-annotation-provider.component';
 import { DatasetItem } from '../../annotator/types';
@@ -55,32 +54,30 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                     areas={['toolbar header aside', 'toolbar canvas aside', 'toolbar footer aside']}
                 >
                     <AnnotationActionsProvider mediaItem={mediaItem}>
-                        <ZoomProvider>
-                            <Suspense fallback={<CanvasAreaLoading />}>
-                                <SelectAnnotationProvider>
-                                    <AnnotatorProvider mediaItem={mediaItem}>
-                                        <View gridArea={'toolbar'}>
-                                            <ToolSelectionBar />
-                                        </View>
+                        <Suspense fallback={<CanvasAreaLoading />}>
+                            <SelectAnnotationProvider>
+                                <AnnotatorProvider mediaItem={mediaItem}>
+                                    <View gridArea={'toolbar'}>
+                                        <ToolSelectionBar />
+                                    </View>
 
-                                        <View gridArea={'header'}>
-                                            <SecondaryToolbar />
-                                        </View>
-                                        <View gridArea={'canvas'} overflow={'hidden'}>
-                                            <AnnotatorCanvas mediaItem={mediaItem} isFocussed={isFocussed} />
-                                        </View>
-                                    </AnnotatorProvider>
-                                </SelectAnnotationProvider>
-                            </Suspense>
+                                    <View gridArea={'header'}>
+                                        <SecondaryToolbar />
+                                    </View>
+                                    <View gridArea={'canvas'} overflow={'hidden'}>
+                                        <AnnotatorCanvas mediaItem={mediaItem} isFocussed={isFocussed} />
+                                    </View>
+                                </AnnotatorProvider>
+                            </SelectAnnotationProvider>
+                        </Suspense>
 
-                            <View gridArea={'aside'}>
-                                <SidebarItems mediaItem={mediaItem} onSelectedMediaItem={onSelectedMediaItem} />
-                            </View>
+                        <View gridArea={'aside'}>
+                            <SidebarItems mediaItem={mediaItem} onSelectedMediaItem={onSelectedMediaItem} />
+                        </View>
 
-                            <View gridArea={'footer'} padding={'size-100'} UNSAFE_style={{ textAlign: 'right' }}>
-                                <AnnotatorButtons onFocus={setIsFocussed} isFocussed={isFocussed} onClose={close} />
-                            </View>
-                        </ZoomProvider>
+                        <View gridArea={'footer'} padding={'size-100'} UNSAFE_style={{ textAlign: 'right' }}>
+                            <AnnotatorButtons onFocus={setIsFocussed} isFocussed={isFocussed} onClose={close} />
+                        </View>
                     </AnnotationActionsProvider>
                 </Grid>
             </Content>

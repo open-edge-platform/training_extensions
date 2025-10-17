@@ -3,22 +3,17 @@
 
 import { ActionButton, Flex, Text } from '@geti/ui';
 import { Add, Remove } from '@geti/ui/icons';
+import { useSetZoom, useZoom } from 'src/components/zoom/zoom.store';
 
-import { useSetZoom, useZoom } from '../../../../../components/zoom/zoom.provider';
 import { IconWrapper } from '../icon-wrapper.component';
 
 export const ZoomSelector = () => {
-    const zoom = useZoom();
+    const { scale, maxZoomIn, initialCoordinates } = useZoom();
     const { onZoomChange } = useSetZoom();
 
     return (
         <>
-            <ActionButton
-                isQuiet
-                aria-label='Zoom In'
-                onPress={() => onZoomChange(1)}
-                isDisabled={zoom.scale >= zoom.maxZoomIn}
-            >
+            <ActionButton isQuiet aria-label='Zoom In' onPress={() => onZoomChange(1)} isDisabled={scale >= maxZoomIn}>
                 <IconWrapper>
                     <Add />
                 </IconWrapper>
@@ -26,7 +21,7 @@ export const ZoomSelector = () => {
 
             <Flex justifyContent={'center'}>
                 <Text UNSAFE_style={{ fontSize: 'var(--spectrum-global-dimension-font-size-25)' }}>
-                    {(zoom.scale * 100).toFixed(0)}%
+                    {(scale * 100).toFixed(0)}%
                 </Text>
             </Flex>
 
@@ -34,7 +29,7 @@ export const ZoomSelector = () => {
                 isQuiet
                 aria-label='Zoom Out'
                 onPress={() => onZoomChange(-1)}
-                isDisabled={zoom.scale <= zoom.initialCoordinates.scale}
+                isDisabled={scale <= initialCoordinates.scale}
             >
                 <IconWrapper>
                     <Remove />
