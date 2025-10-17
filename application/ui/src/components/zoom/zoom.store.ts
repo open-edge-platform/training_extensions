@@ -12,6 +12,7 @@ interface ZoomStore extends ZoomState {
     setZoom: (zoom: Partial<ZoomState> | ((state: ZoomState) => Partial<ZoomState>)) => void;
     fitToScreen: () => void;
     onZoomChange: (factor: number, hasAnimation?: boolean) => void;
+    zoomToCursor: (newScale: number, cursorX: number, cursorY: number) => void;
     resetZoom: () => void;
 }
 
@@ -77,6 +78,22 @@ export const zoomStore = create<ZoomStore>()(
                     'onZoomChange'
                 ),
 
+            zoomToCursor: (newScale, cursorX, cursorY) =>
+                set(
+                    (state) => {
+                        const newState = getZoomState({
+                            newScale,
+                            cursorX,
+                            cursorY,
+                            initialCoordinates: state.initialCoordinates,
+                        })(state);
+
+                        return { ...newState, hasAnimation: false };
+                    },
+                    false,
+                    'zoomToCursor'
+                ),
+
             resetZoom: () =>
                 set(
                     {
@@ -104,7 +121,8 @@ export const useSetZoom = () => {
     const setZoom = zoomStore((state) => state.setZoom);
     const fitToScreen = zoomStore((state) => state.fitToScreen);
     const onZoomChange = zoomStore((state) => state.onZoomChange);
+    const zoomToCursor = zoomStore((state) => state.zoomToCursor);
     const resetZoom = zoomStore((state) => state.resetZoom);
 
-    return { setZoom, fitToScreen, onZoomChange, resetZoom };
+    return { setZoom, fitToScreen, onZoomChange, zoomToCursor, resetZoom };
 };

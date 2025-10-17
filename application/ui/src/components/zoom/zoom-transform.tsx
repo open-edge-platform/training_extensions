@@ -11,7 +11,6 @@ import { useContainerSize } from './use-container-size';
 import { usePanning } from './use-panning.hook';
 import { Size, useSyncZoom } from './use-sync-zoom.hook';
 import { useWheelPanning } from './use-wheel-panning.hook';
-import { getZoomState } from './util';
 import { useSetZoom, useZoom, zoomStore } from './zoom.store';
 
 import classes from './zoom.module.scss';
@@ -27,7 +26,7 @@ const useGesture = createUseGesture([wheelAction, pinchAction, dragAction]);
 
 export const ZoomTransform = ({ children, target, zoomInMultiplier = 10, zoomOutDivisor = 2 }: ZoomTransformProps) => {
     const zoom = useZoom();
-    const { setZoom } = useSetZoom();
+    const { setZoom, zoomToCursor } = useSetZoom();
     const { isPanning, setIsPanning } = usePanning();
     const containerRef = useRef<HTMLDivElement>(null);
     const containerSize = useContainerSize(containerRef);
@@ -39,11 +38,11 @@ export const ZoomTransform = ({ children, target, zoomInMultiplier = 10, zoomOut
 
     const handleTranslateUpdate = useCallback(
         ({ x, y }: Point) => {
-            setZoom((prev) => ({
-                ...prev,
+            const currentZoom = zoomStore.getState();
+            setZoom({
                 hasAnimation: false,
-                translate: { x: prev.translate.x + x, y: prev.translate.y + y },
-            }));
+                translate: { x: currentZoom.translate.x + x, y: currentZoom.translate.y + y },
+            });
         },
         [setZoom]
     );
@@ -54,7 +53,6 @@ export const ZoomTransform = ({ children, target, zoomInMultiplier = 10, zoomOut
                 const rect = containerRef.current?.getBoundingClientRect();
                 if (!rect) return;
 
-                // Get fresh zoom state from store
                 const currentZoom = zoomStore.getState();
                 const factor = 1 + deltaDistance / 200;
                 const newScale = clampBetween(
@@ -64,20 +62,12 @@ export const ZoomTransform = ({ children, target, zoomInMultiplier = 10, zoomOut
                 );
                 const relativeCursor = { x: origin[0] - rect.left, y: origin[1] - rect.top };
 
-                setZoom(
-                    getZoomState({
-                        newScale,
-                        cursorX: relativeCursor.x,
-                        cursorY: relativeCursor.y,
-                        initialCoordinates: currentZoom.initialCoordinates,
-                    })
-                );
+                zoomToCursor(newScale, relativeCursor.x, relativeCursor.y);
             },
             onWheel: ({ event, delta: [, verticalScrollDelta] }) => {
                 const rect = containerRef.current?.getBoundingClientRect();
                 if (!rect) return;
 
-                // Get fresh zoom state from store
                 const currentZoom = zoomStore.getState();
                 const factor = 1 - verticalScrollDelta / 500;
                 const newScale = clampBetween(
@@ -87,14 +77,7 @@ export const ZoomTransform = ({ children, target, zoomInMultiplier = 10, zoomOut
                 );
                 const relativeCursor = { x: event.clientX - rect.left, y: event.clientY - rect.top };
 
-                setZoom(
-                    getZoomState({
-                        newScale,
-                        cursorX: relativeCursor.x,
-                        cursorY: relativeCursor.y,
-                        initialCoordinates: currentZoom.initialCoordinates,
-                    })
-                );
+                zoomToCursor(newScale, relativeCursor.x, relativeCursor.y);
             },
             onDrag: ({ delta: [x, y] }) => handleTranslateUpdate({ x, y }),
         },
