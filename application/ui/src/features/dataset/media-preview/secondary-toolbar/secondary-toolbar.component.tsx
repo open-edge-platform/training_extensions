@@ -7,6 +7,7 @@ import { isEmpty } from 'lodash-es';
 import { useAnnotationActions } from 'src/features/annotator/annotation-actions-provider.component';
 import { DatasetItem } from 'src/features/annotator/types';
 
+import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
 import { LabelPicker } from './label-picker.component';
 import { useSecondaryToolbarState } from './use-secondary-toolbar-state.hook';
 
@@ -49,6 +50,13 @@ export const SecondaryToolbar = ({ items, mediaItem, onClose, onSelectedMediaIte
         isLastItem && invalidateMediaItemAnnotations(queryClient);
     };
 
+    const handleDeleteItem = ([deletedItem]: string[]) => {
+        const deletedIndex = items.findIndex((item) => item.id === deletedItem);
+        const nextItem = getNextItem(items.length - 2, deletedIndex);
+
+        onSelectedMediaItem(items[nextItem]);
+    };
+
     return (
         <Flex
             height={'100%'}
@@ -57,13 +65,16 @@ export const SecondaryToolbar = ({ items, mediaItem, onClose, onSelectedMediaIte
             UNSAFE_style={{ paddingTop: dimensionValue('size-125') }}
         >
             <Grid width={'100%'} UNSAFE_className={classes.toolbarGrid} isHidden={isHidden}>
-                <Flex UNSAFE_className={classes.toolbarSection} justifyContent={'space-between'}>
+                <Flex width={'100%'} UNSAFE_className={classes.toolbarSection} justifyContent={'space-between'}>
                     <LabelPicker selectedLabel={selectedLabel} labels={projectLabels} onSelect={toggleLabels} />
+
                     <ButtonGroup>
+                        <DeleteMediaItem itemsIds={[String(mediaItem.id)]} onDeleted={handleDeleteItem} />
                         <Button
                             variant='accent'
                             onPress={handleSubmit}
                             isPending={isSaving}
+                            marginStart={'size-200'}
                             isDisabled={!hasAnnotations || isSaving}
                         >
                             {isUserReviewed ? 'Submit' : 'Approve'}

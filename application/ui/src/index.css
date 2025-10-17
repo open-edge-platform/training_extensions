@@ -94,3 +94,8 @@ button {
 svg {
     fill: currentColor;
 }
+
+/* Increase the modal’s opaque background when a modal is opened inside another modal. */
+[data-testid='underlay'] {
+    z-index: 2 !important;
+}

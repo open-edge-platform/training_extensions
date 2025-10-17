@@ -44,7 +44,7 @@ export const DeleteMediaItem = ({ itemsIds = [], onDeleted }: DeleteMediaItemPro
         toast({ id: 'deleting-notification', type: 'info', message: `Deleting items...` });
 
         const deleteItemPromises = itemsIds.map(async (dataset_item_id) => {
-            await removeMutation.mutateAsync({ params: { path: { project_id, dataset_item_id } } });
+            await removeMutation.mutateAsync({ params: { path: { project_id, dataset_item_id: '123' } } });
 
             return { itemId: dataset_item_id };
         });
