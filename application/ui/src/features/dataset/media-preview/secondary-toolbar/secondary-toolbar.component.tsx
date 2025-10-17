@@ -11,7 +11,8 @@ import classes from '../media-preview.module.scss';
 export const SecondaryToolbar = () => {
     const { isHidden, projectLabels, toggleLabel, annotationsToUpdate } = useSecondaryToolbarState();
 
-    const selectedLabel = annotationsToUpdate.at(0)?.labels?.at(0) ?? null;
+    const annotationLabelId = annotationsToUpdate.at(0)?.labels?.at(0)?.id;
+    const selectedLabel = projectLabels.find((label) => label.id === annotationLabelId) ?? null;
 
     return (
         <Flex height={'100%'} alignItems={'center'} margin={'size-100'} minHeight={'size-1200'}>

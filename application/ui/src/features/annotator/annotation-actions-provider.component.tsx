@@ -10,41 +10,22 @@ import { components } from 'src/api/openapi-spec';
 import { v4 as uuid } from 'uuid';
 
 import { useAnnotator } from './annotator-provider.component';
-import { Annotation, Label, Shape } from './types';
+import { Annotation, Shape } from './types';
 
 type ServerAnnotation = components['schemas']['DatasetItemAnnotation-Input'];
-type LabelReference = components['schemas']['LabelReference'];
-type ProjectLabel = components['schemas']['Label'];
 
-const mapServerAnnotationsToLocal = (
-    serverAnnotations: ServerAnnotation[],
-    projectLabels: ProjectLabel[]
-): Annotation[] => {
+const mapServerAnnotationsToLocal = (serverAnnotations: ServerAnnotation[]): Annotation[] => {
     return serverAnnotations.map((annotation) => {
-        const labels: Label[] = annotation.labels
-            .map((labelRef) => {
-                const projectLabel = projectLabels.find((label) => label.id === labelRef.id);
-                if (!projectLabel) return null;
-
-                return {
-                    id: projectLabel.id || uuid(),
-                    name: projectLabel.name || 'Unknown',
-                    color: projectLabel.color || '#888888',
-                } as Label;
-            })
-            .filter((label): label is Label => label !== null);
-
         return {
             ...annotation,
             id: uuid(),
-            labels,
         } as Annotation;
     });
 };
 
 const mapLocalAnnotationsToServer = (localAnnotations: Annotation[]): ServerAnnotation[] => {
     return localAnnotations.map((annotation) => ({
-        labels: annotation.labels.map((label): LabelReference => ({ id: label.id })),
+        labels: annotation.labels,
         shape: annotation.shape,
         ...(annotation.confidence !== undefined && { confidence: annotation.confidence }),
     }));
@@ -126,11 +107,10 @@ export const AnnotationActionsProvider = ({ children }: { children: ReactNode })
     useEffect(() => {
         if (!project || !serverAnnotations) return;
 
-        const projectLabels = project.task?.labels || [];
         const annotations = get(serverAnnotations, 'annotations', []);
 
         if (annotations.length > 0) {
-            const localFormattedAnnotations = mapServerAnnotationsToLocal(annotations, projectLabels);
+            const localFormattedAnnotations = mapServerAnnotationsToLocal(annotations);
 
             setLocalAnnotations(localFormattedAnnotations);
             isDirty.current = false;
