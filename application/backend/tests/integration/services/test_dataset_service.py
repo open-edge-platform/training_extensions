@@ -19,7 +19,12 @@ from app.schemas.label import LabelReference
 from app.schemas.shape import FullImage, Rectangle
 from app.services import LabelService, ProjectService
 from app.services.base import ResourceNotFoundError, ResourceType
-from app.services.dataset_service import DatasetService, InvalidImageError, NotAnnotatedError
+from app.services.dataset_service import (
+    DatasetService,
+    InvalidImageError,
+    NotAnnotatedError,
+    SubsetAlreadyAssignedError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +88,7 @@ def fxt_project_with_dataset_items(
             "subset": "unassigned",
             "annotation_data": [{"labels": [{"id": fxt_db_labels[0].id}], "shape": {"type": "full_image"}}],
         },
-        {"name": "test3", "format": "jpg", "size": 1024, "width": 1024, "height": 768, "subset": "unassigned"},
+        {"name": "test3", "format": "jpg", "size": 1024, "width": 1024, "height": 768, "subset": "training"},
     ]
 
     db_dataset_items = []
@@ -692,3 +697,80 @@ class TestDatasetServiceIntegration:
 
         assert excinfo.value.resource_type == ResourceType.PROJECT
         assert excinfo.value.resource_id == str(wrong_project_id)
+
+    def test_assign_dataset_item_subset_not_found(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_project_with_dataset_items: tuple[ProjectDB, list[LabelDB], list[DatasetItemDB]],
+    ):
+        """Test assigning a subset to a dataset item."""
+        db_project, _, db_dataset_items = fxt_project_with_dataset_items
+        non_existent_id = uuid4()
+
+        with pytest.raises(ResourceNotFoundError) as excinfo:
+            fxt_dataset_service.assign_dataset_item_subset(
+                project_id=UUID(db_project.id),
+                dataset_item_id=non_existent_id,
+                subset=DatasetItemSubset.TRAINING,
+            )
+
+        assert excinfo.value.resource_type == ResourceType.DATASET_ITEM
+        assert excinfo.value.resource_id == str(non_existent_id)
+
+    def test_assign_dataset_item_subset_wrong_project_id(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_project_with_dataset_items: tuple[ProjectDB, list[LabelDB], list[DatasetItemDB]],
+    ):
+        """Test assigning a subset to a dataset item."""
+        _, _, db_dataset_items = fxt_project_with_dataset_items
+        wrong_project_id = uuid4()
+
+        with pytest.raises(ResourceNotFoundError) as excinfo:
+            fxt_dataset_service.assign_dataset_item_subset(
+                project_id=wrong_project_id,
+                dataset_item_id=UUID(db_dataset_items[0].id),
+                subset=DatasetItemSubset.TRAINING,
+            )
+
+        assert excinfo.value.resource_type == ResourceType.PROJECT
+        assert excinfo.value.resource_id == str(wrong_project_id)
+
+    @pytest.mark.parametrize(
+        "subset", [DatasetItemSubset.TRAINING, DatasetItemSubset.TESTING, DatasetItemSubset.VALIDATION]
+    )
+    def test_assign_dataset_item_subset_already_assigned(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_project_with_dataset_items: tuple[ProjectDB, list[LabelDB], list[DatasetItemDB]],
+        subset,
+    ):
+        """Test assigning a subset to a dataset item."""
+        db_project, _, db_dataset_items = fxt_project_with_dataset_items
+
+        with pytest.raises(SubsetAlreadyAssignedError):
+            fxt_dataset_service.assign_dataset_item_subset(
+                project_id=UUID(db_project.id),
+                dataset_item_id=UUID(db_dataset_items[2].id),
+                subset=subset,
+            )
+
+    @pytest.mark.parametrize(
+        "subset", [DatasetItemSubset.TRAINING, DatasetItemSubset.TESTING, DatasetItemSubset.VALIDATION]
+    )
+    def test_assign_dataset_item(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_project_with_dataset_items: tuple[ProjectDB, list[LabelDB], list[DatasetItemDB]],
+        subset,
+    ):
+        """Test assigning a subset to a dataset item."""
+        db_project, _, db_dataset_items = fxt_project_with_dataset_items
+
+        returned_dataset_item = fxt_dataset_service.assign_dataset_item_subset(
+            project_id=UUID(db_project.id),
+            dataset_item_id=UUID(db_dataset_items[0].id),
+            subset=subset,
+        )
+
+        assert str(returned_dataset_item.id) == db_dataset_items[0].id and returned_dataset_item.subset == subset

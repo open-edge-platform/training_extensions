@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, Divider, Flex, Heading, Text, toast } from '@geti/ui';
+import { useQueryClient } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { $api } from '../../../api/client';
@@ -18,13 +19,10 @@ type ToolbarProps = {
 
 export const Toolbar = ({ items }: ToolbarProps) => {
     const projectId = useProjectIdentifier();
+    const queryClient = useQueryClient();
     const { selectedKeys, setSelectedKeys, setMediaState, toggleSelectedKeys } = useSelectedData();
 
-    const addItemMutation = $api.useMutation('post', '/api/projects/{project_id}/dataset/items', {
-        meta: {
-            invalidateQueries: [['get', '/api/projects/{project_id}/dataset/items']],
-        },
-    });
+    const addItemMutation = $api.useMutation('post', '/api/projects/{project_id}/dataset/items');
 
     const totalSelectedElements = selectedKeys instanceof Set ? selectedKeys.size : 0;
     const hasSelectedElements = totalSelectedElements > 0;
@@ -45,24 +43,37 @@ export const Toolbar = ({ items }: ToolbarProps) => {
         setMediaState(updateSelectedKeysTo(selectedKeys, 'rejected'));
     };
 
-    const handleAddMediaItem = (files: File[]) => {
-        files.forEach((file) => {
+    const handleAddMediaItem = async (files: File[]) => {
+        const uploadPromises = files.map((file) => {
             const formData = new FormData();
             formData.append('file', file);
 
-            addItemMutation.mutate(
-                {
-                    params: { path: { project_id: projectId } },
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    body: formData as any,
-                },
-                {
-                    onSuccess: () => {
-                        toast({ type: 'success', message: `Uploaded ${files.length} item(s)` });
-                    },
-                }
-            );
+            return addItemMutation.mutateAsync({
+                params: { path: { project_id: projectId } },
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                body: formData as any,
+            });
         });
+
+        const promises = await Promise.allSettled(uploadPromises);
+
+        const succeeded = promises.filter((result) => result.status === 'fulfilled').length;
+        const failed = promises.filter((result) => result.status === 'rejected').length;
+
+        await queryClient.invalidateQueries({
+            queryKey: ['get', '/api/projects/{project_id}/dataset/items'],
+        });
+
+        if (failed === 0) {
+            toast({ type: 'success', message: `Uploaded ${succeeded} item(s)` });
+        } else if (succeeded === 0) {
+            toast({ type: 'error', message: `Failed to upload ${failed} item(s)` });
+        } else {
+            toast({
+                type: 'warning',
+                message: `Uploaded ${succeeded} item(s), ${failed} failed`,
+            });
+        }
     };
 
     return (

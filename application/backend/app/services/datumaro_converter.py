@@ -1,7 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import logging
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from typing import Any, TypeVar
 from uuid import UUID
 
@@ -12,8 +12,8 @@ from datumaro.experimental.categories import LabelCategories
 from datumaro.experimental.fields import polygon_field
 
 from app.db.schema import DatasetItemDB
-from app.schemas import Label
 from app.schemas.dataset_item import DatasetItemAnnotation
+from app.schemas.label import LabelBase
 from app.schemas.project import ProjectBase, TaskType
 from app.schemas.shape import Polygon, Rectangle
 
@@ -75,7 +75,7 @@ S = TypeVar("S", bound=Sample)  # Sample type e.g. DetectionSample, Classificati
 
 def _convert_dataset(
     sample_type: type[S],
-    project_labels: list[Label],
+    project_labels: Sequence[LabelBase],
     get_dataset_items: Callable[[int, int], list[DatasetItemDB]],
     get_image_path: Callable[[DatasetItemDB], str],
     convert_sample: Callable[[DatasetItemDB, str, list[UUID]], S | None],
@@ -98,7 +98,7 @@ def _convert_dataset(
 
 
 def convert_detection_dataset(
-    project_labels: list[Label],
+    project_labels: Sequence[LabelBase],
     get_dataset_items: Callable[[int, int], list[DatasetItemDB]],
     get_image_path: Callable[[DatasetItemDB], str],
 ) -> Dataset[DetectionSample]:
@@ -150,7 +150,7 @@ def convert_detection_dataset(
 
 
 def convert_classification_dataset(
-    project_labels: list[Label],
+    project_labels: Sequence[LabelBase],
     get_dataset_items: Callable[[int, int], list[DatasetItemDB]],
     get_image_path: Callable[[DatasetItemDB], str],
 ) -> Dataset[ClassificationSample]:
@@ -190,7 +190,7 @@ def convert_classification_dataset(
 
 
 def convert_multiclass_classification_dataset(
-    project_labels: list[Label],
+    project_labels: Sequence[LabelBase],
     get_dataset_items: Callable[[int, int], list[DatasetItemDB]],
     get_image_path: Callable[[DatasetItemDB], str],
 ) -> Dataset[MultilabelClassificationSample]:
@@ -231,7 +231,7 @@ def convert_multiclass_classification_dataset(
 
 
 def convert_instance_segmentation_dataset(
-    project_labels: list[Label],
+    project_labels: Sequence[LabelBase],
     get_dataset_items: Callable[[int, int], list[DatasetItemDB]],
     get_image_path: Callable[[DatasetItemDB], str],
 ) -> Dataset[InstanceSegmentationSample]:
@@ -280,7 +280,7 @@ def convert_instance_segmentation_dataset(
 
 def convert_dataset(
     project: ProjectBase,
-    labels: list[Label],
+    labels: Sequence[LabelBase],
     get_dataset_items: Callable[[int, int], list[DatasetItemDB]],
     get_image_path: Callable[[DatasetItemDB], str],
 ) -> Dataset:

@@ -7,7 +7,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.db.schema import LabelDB, ProjectDB
-from app.schemas.label import Label
+from app.schemas.label import LabelCreate, LabelEdit, LabelRemove
 from app.services import ResourceType, ResourceWithIdAlreadyExistsError
 from app.services.label_service import DuplicateLabelsError, LabelService
 
@@ -48,7 +48,7 @@ class TestLabelServiceIntegration:
         - A new label can be created for the existing project
         """
         db_project, _ = fxt_stored_project_with_labels
-        label = Label(name="bird", color="#4500FF", hotkey="b")
+        label = LabelCreate(name="bird", color="#4500FF", hotkey="b")
 
         created_label = fxt_label_service.create_label(project_id=UUID(db_project.id), label=label)
 
@@ -73,7 +73,7 @@ class TestLabelServiceIntegration:
 
         with pytest.raises(DuplicateLabelsError):
             fxt_label_service.create_label(
-                project_id=UUID(db_project.id), label=Label(name="cat", color="#4500FF", hotkey="b")
+                project_id=UUID(db_project.id), label=LabelCreate(name="cat", color="#4500FF", hotkey="b")
             )
 
     def test_create_label_duplicate_hotkey(
@@ -91,7 +91,7 @@ class TestLabelServiceIntegration:
 
         with pytest.raises(DuplicateLabelsError):
             fxt_label_service.create_label(
-                project_id=UUID(db_project.id), label=Label(name="bird", color="#4500FF", hotkey="c")
+                project_id=UUID(db_project.id), label=LabelCreate(name="bird", color="#4500FF", hotkey="c")
             )
 
     def test_create_label_duplicate_id(
@@ -111,7 +111,7 @@ class TestLabelServiceIntegration:
         with pytest.raises(ResourceWithIdAlreadyExistsError) as exc_info:
             fxt_label_service.create_label(
                 project_id=UUID(db_project.id),
-                label=Label(id=UUID(existing_label_id), name="bird", color="#4500FF", hotkey="b"),
+                label=LabelCreate(id=UUID(existing_label_id), name="bird", color="#4500FF", hotkey="b"),
             )
 
         assert exc_info.value.resource_type == ResourceType.LABEL
@@ -181,14 +181,14 @@ class TestLabelServiceIntegration:
         db_project, _ = fxt_stored_project_with_labels
 
         new_labels = [
-            Label(name="mouse", color="#0000FF", hotkey="r"),
-            Label(name="bird", color="#FFFF00", hotkey="b"),
+            LabelCreate(name="mouse", color="#0000FF", hotkey="r"),
+            LabelCreate(name="bird", color="#FFFF00", hotkey="b"),
         ]
         labels = fxt_label_service.update_labels_in_project(UUID(db_project.id), new_labels, None, None)
 
         assert len(labels) == 4
-        assert new_labels[0] in labels
-        assert new_labels[1] in labels
+        assert new_labels[0].name in [label.name for label in labels]
+        assert new_labels[1].name in [label.name for label in labels]
 
     @pytest.mark.parametrize("new_label_attrs", [{"name": "cat"}, {"hotkey": "c"}])
     def test_add_existing_label_to_project(
@@ -209,7 +209,7 @@ class TestLabelServiceIntegration:
         """
         db_project, _ = fxt_stored_project_with_labels
 
-        new_label = Label(name="mouse", color="#0000FF", hotkey="r")
+        new_label = LabelCreate(name="mouse", color="#0000FF", hotkey="r")
         new_label = new_label.model_copy(update=new_label_attrs)
         with pytest.raises(DuplicateLabelsError):
             fxt_label_service.update_labels_in_project(UUID(db_project.id), [new_label], None, None)
@@ -231,7 +231,7 @@ class TestLabelServiceIntegration:
         db_project, db_labels = fxt_stored_project_with_labels
 
         labels = fxt_label_service.update_labels_in_project(
-            UUID(db_project.id), None, None, [UUID(label.id) for label in db_labels]
+            UUID(db_project.id), None, None, [LabelRemove(id=UUID(label.id)) for label in db_labels]
         )
 
         assert len(labels) == 0
@@ -253,16 +253,19 @@ class TestLabelServiceIntegration:
         db_project, db_labels = fxt_stored_project_with_labels
 
         labels_to_edit = [
-            Label(
+            LabelEdit(
                 id=UUID(db_label.id),
-                name=f"edited_{db_label.name}",
-            )  # type: ignore[call-arg]
+                new_name=f"edited_{db_label.name}",
+                new_color="#FF0000",
+                new_hotkey=None,
+            )
             for db_label in db_labels
         ]
         labels = fxt_label_service.update_labels_in_project(UUID(db_project.id), None, labels_to_edit, None)
 
         assert len(labels) == 2
-        assert {label.name for label in labels} == {labels_to_edit.name for labels_to_edit in labels_to_edit}
+        assert {label.name for label in labels} == {labels_to_edit.new_name for labels_to_edit in labels_to_edit}
+        assert {label.color for label in labels} == {labels_to_edit.new_color for labels_to_edit in labels_to_edit}
 
     def test_update_and_add_existing_label_in_project(
         self,
@@ -281,8 +284,8 @@ class TestLabelServiceIntegration:
         with pytest.raises(DuplicateLabelsError):
             fxt_label_service.update_labels_in_project(
                 UUID(db_project.id),
-                [Label(name="mouse", color="#0000FF", hotkey="r")],
-                [Label(id=UUID(db_labels[0].id), name="mouse")],  # type: ignore[call-arg]
+                [LabelCreate(name="mouse", color="#0000FF", hotkey="r")],
+                [LabelEdit(id=UUID(db_labels[0].id), new_name="mouse", new_color="#FF0000", new_hotkey=None)],
                 None,
             )
 
@@ -301,18 +304,20 @@ class TestLabelServiceIntegration:
         db_project, db_labels = fxt_stored_project_with_labels
 
         # Remove one label, update another, add a new one
-        label_to_remove_id = UUID(db_labels[0].id)
-        label_to_update = Label(id=UUID(db_labels[1].id), name="updated_name")  # type: ignore[call-arg]
-        new_label = Label(name="new_label", color="#123456", hotkey="x")
+        label_to_remove = LabelRemove(id=UUID(db_labels[0].id))
+        label_to_update = LabelEdit(
+            id=UUID(db_labels[1].id), new_name="updated_name", new_color="#FF0000", new_hotkey=None
+        )
+        new_label = LabelCreate(name="new_label", color="#123456", hotkey="x")
 
         labels = fxt_label_service.update_labels_in_project(
-            UUID(db_project.id), [new_label], [label_to_update], [label_to_remove_id]
+            UUID(db_project.id), [new_label], [label_to_update], [label_to_remove]
         )
 
         assert len(labels) == 2
         assert any(label.name == "updated_name" for label in labels)
         assert any(label.name == "new_label" for label in labels)
-        assert not any(label.id == label_to_remove_id for label in labels)
+        assert not any(label.id == label_to_remove.id for label in labels)
 
     def test_remove_update_same_label_operation(
         self,
@@ -328,16 +333,18 @@ class TestLabelServiceIntegration:
         db_project, db_labels = fxt_stored_project_with_labels
 
         # Update the label and then remove it
-        label_to_update = Label(id=UUID(db_labels[0].id), name="updated_name")  # type: ignore[call-arg]
-        label_to_remove_id = UUID(db_labels[0].id)
+        label_to_update = LabelEdit(
+            id=UUID(db_labels[0].id), new_name="updated_name", new_color="#FF0000", new_hotkey=None
+        )
+        label_to_remove = LabelRemove(id=UUID(db_labels[0].id))
 
         labels = fxt_label_service.update_labels_in_project(
-            UUID(db_project.id), None, [label_to_update], [label_to_remove_id]
+            UUID(db_project.id), None, [label_to_update], [label_to_remove]
         )
 
         assert len(labels) == 1
         assert labels[0].name != "updated_name"
-        assert not any(label.id == label_to_remove_id for label in labels)
+        assert not any(label.id == label_to_remove.id for label in labels)
 
     def test_empty_operations(
         self,

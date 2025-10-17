@@ -1,5 +1,14 @@
+@font-face {
+    font-family: intelOne;
+    src: url(./assets/fonts/intelone-text-regular.woff);
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
 * {
     box-sizing: border-box;
+    font-family: intelOne;
 }
 
 :root {

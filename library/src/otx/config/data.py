@@ -15,24 +15,38 @@ from otx.types.transformer_libs import TransformLibType
 
 
 @dataclass
+class SamplerConfig:
+    """Configuration class for defining the sampler used in the data loading process.
+
+    This is passed in the form of a dataclass, which is instantiated when the dataloader is created.
+
+    [TODO]: Need to replace this with a proper Sampler class.
+    Currently, SamplerConfig, which belongs to the sampler of SubsetConfig,
+    belongs to the nested dataclass of dataclass, which is not easy to instantiate from the CLI.
+    So currently replace sampler with a corresponding dataclass that resembles the configuration of another object,
+    providing limited functionality.
+    """
+
+    class_path: str = "torch.utils.data.RandomSampler"
+    init_args: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
 class SubsetConfig:
     """DTO for dataset subset configuration.
 
     Attributes:
-        batch_size (int): Batch size produced.
+        batch_size (int): Batch size produced by the dataloader.
         subset_name (str): Datumaro Dataset's subset name for this subset config.
-            It can differ from the actual usage (e.g., 'val' for the validation subset config).
-        transforms (list[dict[str, Any] | Transform] | Compose): List of actually used transforms.
-            It accepts a list of `torchvision.transforms.v2.*` Python objects
-            or `torchvision.transforms.v2.Compose` for `TransformLibType.TORCHVISION`.
-            Otherwise, it takes a Python dictionary that fits the configuration style used in mmcv
-            (`TransformLibType.MMCV`, `TransformLibType.MMPRETRAIN`, ...).
-        transform_lib_type (TransformLibType): Transform library type used by this subset.
-        num_workers (int): Number of workers for the dataloader of this subset.
-        sampler (SamplerConfig | None): Sampler configuration for the dataloader of this subset.
-        to_tv_image (bool): Whether to convert image to torch tensor.
-        input_size (int | tuple[int, int] | None) :
-            input size model expects. If $(input_size) exists in transforms, it will be replaced with this value.
+        transforms (list[dict[str, Any]] | Compose): List of transforms to apply.
+            For `TransformLibType.TORCHVISION`, accepts a list of `torchvision.transforms.v2.*` objects
+            or a `torchvision.transforms.v2.Compose` object.
+        transform_lib_type (TransformLibType): Specifies the transform library type used.
+        num_workers (int): Number of worker processes for the dataloader.
+        sampler (SamplerConfig): Sampler configuration for the dataloader.
+        to_tv_image (bool): Whether to convert images to torch tensors.
+        input_size (tuple[int, int] | None): Input size expected by the model.
+            If `$(input_size)` is present in transforms, it will be replaced with this value.
 
     Example:
         ```python
@@ -46,22 +60,19 @@ class SubsetConfig:
                     v2.ToDtype(torch.float32, scale=True),
                     v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
                 ],
-            )
+            ),
             transform_lib_type=TransformLibType.TORCHVISION,
             num_workers=2,
         )
         ```
     """
 
-    batch_size: int
-    subset_name: str
-
-    # TODO (vinnamki): Revisit data configuration objects to support a union type in structured config
-    # Omegaconf does not allow to have a union type, https://github.com/omry/omegaconf/issues/144
-    transforms: list[dict[str, Any]]
+    batch_size: int = 6
+    subset_name: str = "train"
+    transforms: list[dict[str, Any]] = field(default_factory=list)
     transform_lib_type: TransformLibType = TransformLibType.TORCHVISION
     num_workers: int = 2
-    sampler: SamplerConfig = field(default_factory=lambda: SamplerConfig())
+    sampler: SamplerConfig = field(default_factory=SamplerConfig)
     to_tv_image: bool = True
     input_size: tuple[int, int] | None = None
 
@@ -83,20 +94,3 @@ class TileConfig:
     def clone(self) -> TileConfig:
         """Return a deep copied one of this instance."""
         return deepcopy(self)
-
-
-@dataclass
-class SamplerConfig:
-    """Configuration class for defining the sampler used in the data loading process.
-
-    This is passed in the form of a dataclass, which is instantiated when the dataloader is created.
-
-    [TODO]: Need to replace this with a proper Sampler class.
-    Currently, SamplerConfig, which belongs to the sampler of SubsetConfig,
-    belongs to the nested dataclass of dataclass, which is not easy to instantiate from the CLI.
-    So currently replace sampler with a corresponding dataclass that resembles the configuration of another object,
-    providing limited functionality.
-    """
-
-    class_path: str = "torch.utils.data.RandomSampler"
-    init_args: dict[str, Any] = field(default_factory=dict)

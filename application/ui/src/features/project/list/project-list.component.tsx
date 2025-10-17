@@ -27,13 +27,7 @@ export const ProjectList = () => {
                 backgroundSize: 'cover',
             }}
         >
-            <Content
-                height={'100%'}
-                maxHeight={'90vh'}
-                maxWidth={'1052px'}
-                margin={'0 auto'}
-                UNSAFE_style={{ overflow: 'auto' }}
-            >
+            <Content height={'100%'} maxHeight={'90vh'} maxWidth={'1052px'} margin={'0 auto'}>
                 <Heading
                     level={1}
                     marginBottom={'size-250'}
@@ -56,9 +50,10 @@ export const ProjectList = () => {
                     marginX={'auto'}
                     justifyContent={'center'}
                     columns={isEmpty(projects.data) ? ['size-3600'] : ['1fr', '1fr']}
+                    UNSAFE_style={{ overflow: 'auto' }}
+                    maxHeight={'75vh'}
                 >
                     <NewProjectLink />
-
                     {projects.data.map((item) => (
                         <ProjectCard key={item.id} item={item} />
                     ))}
