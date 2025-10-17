@@ -2,6 +2,14 @@
 
 Modern React application for AI model training and inference, built with Rsbuild and TypeScript.
 
+The Geti Edge applications aim to provide a user experience and design language consistent with the main [Geti application](https://github.com/open-edge-platform/geti). To achieve this, we reuse many architectural decisions from Geti.
+
+## Goals
+
+- **Developer Experience**: Setting up a developer environment for both the UI and server should take only seconds.
+- **API Adaptability**: Adapting the UI to REST API changes should require minimal effort.
+- **Consistency**: Maintain a unified look, feel, and user experience across the whole Geti ecosystem through shared design language, architectural patterns, and reusable components.
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -32,26 +40,40 @@ npm run preview      # Preview production build
 ## 📁 Project Structure
 
 ```
-src/
-├── api/              # API client (openapi-fetch) & type definitions
-├── features/         # Feature modules (domain-driven)
-│   ├── annotator/    # Annotation tools, canvas, providers
-│   ├── dataset/      # Data collection, gallery, media preview
-│   ├── inference/    # Live inference, WebRTC streaming
-│   └── project/      # Project creation, configuration
-├── routes/           # Page-level components
-├── components/       # Shared UI components (zoom, etc.)
-├── hooks/            # Custom React hooks
-├── constants/        # App-wide constants (paths, config)
-└── providers.tsx     # Global context providers
+.
+├── packages/
+│   ├── config           # Shared configuration (`@geti/config`)
+│   ├── smart-tools      # AI algorithms and tools (`@geti/smart-tools`)
+│   └── ui               # Shared UI library (`@geti/ui`)
+├── src/
+│   ├── api/             # OpenAPI client and query hooks
+│   ├── assets/          # Images, illustrations, icons
+│   ├── components/      # Reusable UI components
+│   ├── features/        # Application-specific feature modules
+│   │   ├── annotator/   # Annotation tools, canvas, providers
+│   │   ├── dataset/     # Data collection, gallery, media preview
+│   │   ├── inference/   # Live inference, WebRTC streaming
+│   │   └── project/     # Project creation, configuration
+│   ├── hooks/           # Common hooks not necessarily related to a feature
+│   ├── routes/          # Route elements and loaders
+│   ├── constants/       # App-wide constants (paths, config)
+│   ├── providers.tsx    # Global providers (QueryClient, Theme, Router, etc.)
+│   └── router.tsx       # Application entrypoint (routing setup)
+├── src-tauri/           # Tauri configuration
+└── tests/               # Component and E2E tests
 ```
 
 ### Key Directories
 
+**`api/`** - OpenAPI client and tanstack/query hooks, auto-generated TypeScript types from OpenAPI spec  
+**`components/`** - Locally reusable UI primitives; promote mature components to `@geti/ui` (use `.component.tsx` suffix)  
 **`features/`** - Domain-driven modules with their own components, hooks, and providers  
-**`api/`** - Auto-generated TypeScript types from OpenAPI spec  
-**`components/`** - Reusable UI primitives (not feature-specific)  
-**`packages/`** - Shared UI library from [Geti](https://github.com/open-edge-platform/geti)
+**`routes/`** & **`router.tsx`** - Routing setup; keep route files minimal—extract complex routes into feature modules  
+**`providers.tsx`** - Global application providers (e.g., `QueryClientProvider`, `ThemeProvider`, `RouterProvider`)  
+**`packages/`** - Shared libraries from Geti ecosystem
+
+> **Note:**  
+> Currently, `@geti/ui`, `@geti/config`, and `@geti/smart-tools` are installed via [Degit](https://github.com/Rich-Harris/degit) to avoid npm publishing. These will be published to npm as the Geti Edge ecosystem matures.
 
 ## 🔧 Common Tasks
 
@@ -80,6 +102,46 @@ npm run cyclic-deps-check  # Detect circular dependencies
 ```
 
 ## 🏗️ Architecture Patterns
+
+### Core Pillars
+
+The application is built on four main pillars:
+
+1. **Build System**: Modern web tooling for React-based applications
+2. **Application Architecture**: Type-safe API integration with minimal effort
+3. **Testing & CI/CD**: Robust testing setup that works locally and in CI
+4. **AI Algorithms**: Interactive AI with low-latency algorithms
+
+#### Build System
+
+- **React** - Component-based UI architecture
+- **TypeScript** - Static typing for reliability and maintainability
+- **Rsbuild** - Fast and robust build toolchain for bundling, optimization, and environment targeting
+- **Tauri** - Cross-platform desktop app packaging
+- **ESLint & Prettier** - Enforced via `@geti/config` for code consistency and best practices
+
+#### Application Architecture
+
+- **React Router** - Single-page application navigation with dynamic routing
+- **Tanstack Query** & [`openapi-react-query`](https://openapi-ts.dev/openapi-react-query/) - Server state management and type-safe API consumption
+- **@geti/ui** - Shared visual components for consistent UX
+- **React Context & Local State** - Local state via `useState`, shared state via `createContext`
+
+#### Testing & CI/CD
+
+- **Vitest** - Fast unit and integration testing
+- **Playwright** - Component and end-to-end testing with shared MSW configuration for auto-mocking REST endpoints
+- **Testing Library** - User-centric React component testing; follow [guiding principles](https://testing-library.com/docs/guiding-principles) for accessibility
+- **MSW + OpenAPI** - Mock Service Worker with OpenAPI specs to simulate API responses in tests
+- **GitHub Actions** - Automated CI/CD pipelines for building, testing, and deploying
+
+#### Algorithms & AI
+
+- **@geti/smart-tools** - Suite of intelligent tools for advanced functionality and optimization
+- **WebRTC API** - Live video feeds with prediction overlays
+- **WebAssembly** - High-performance, browser-executed code for compute-intensive tasks
+- **OpenCV** - Image processing and computer vision
+- **ONNXRuntime** - In-browser machine learning model execution for predictive analytics
 
 ### Feature Structure
 
