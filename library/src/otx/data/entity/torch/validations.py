@@ -6,16 +6,12 @@
 from __future__ import annotations
 
 from dataclasses import fields
-from typing import TYPE_CHECKING
 
 import numpy as np
 import torch
 from torchvision.tv_tensors import BoundingBoxes, Mask
 
 from otx.data.entity.base import ImageInfo
-
-if TYPE_CHECKING:
-    from datumaro import Polygon
 
 
 class ValidateItemMixin:
@@ -391,7 +387,7 @@ class ValidateBatchMixin:
         return batch_size
 
     @staticmethod
-    def _polygons_validator(polygons_batch: list[list[Polygon] | None]) -> list[list[Polygon] | None]:
+    def _polygons_validator(polygons_batch: list[np.ndarray | None]) -> list[np.ndarray | None]:
         """Validate the polygons batch."""
         if all(polygon is None for polygon in polygons_batch):
             return []

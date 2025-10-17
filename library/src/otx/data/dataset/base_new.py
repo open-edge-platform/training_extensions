@@ -107,8 +107,6 @@ class OTXDataset(TorchDataset):
 
     def _apply_transforms(self, entity: OTXSample) -> OTXSample | None:
         if isinstance(self.transforms, Compose):
-            if self.to_tv_image:
-                entity.as_tv_image()
             return self.transforms(entity)
         if isinstance(self.transforms, Iterable):
             return self._iterable_transforms(entity)
