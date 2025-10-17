@@ -6,7 +6,6 @@ import { vi } from 'vitest';
 
 import { useContainerSize } from './use-container-size';
 import { ZoomTransform } from './zoom-transform';
-import { ZoomProvider } from './zoom.provider';
 
 vi.mock('./use-container-size', () => ({
     useContainerSize: vi.fn(),
@@ -20,11 +19,7 @@ describe('Zoom', () => {
 
         vi.mocked(useContainerSize).mockImplementation(() => screenSize);
 
-        render(
-            <ZoomProvider>
-                <ZoomTransform target={contentSize}>Content</ZoomTransform>
-            </ZoomProvider>
-        );
+        render(<ZoomTransform target={contentSize}>Content</ZoomTransform>);
 
         const transform = screen.getByTestId('zoom-transform');
 
