@@ -78,6 +78,7 @@ train_subset:
         std: [58.395, 57.12, 57.375]
   sampler:
     class_path: otx.data.samplers.balanced_sampler.BalancedSampler
+    init_args: null
 
 val_subset:
   subset_name: val
@@ -99,6 +100,7 @@ val_subset:
         std: [58.395, 57.12, 57.375]
   sampler:
     class_path: torch.utils.data.RandomSampler
+    init_args: null
 
 test_subset:
   subset_name: test
@@ -120,3 +122,4 @@ test_subset:
         std: [58.395, 57.12, 57.375]
   sampler:
     class_path: torch.utils.data.RandomSampler
+    init_args: null

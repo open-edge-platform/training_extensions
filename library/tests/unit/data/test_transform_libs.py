@@ -55,7 +55,6 @@ class TestTorchVisionTransformLib:
         if request.param == "from_obj":
             return SubsetConfig(
                 batch_size=1,
-                subset_name="dummy",
                 transforms=[instantiate_class(args=(), init=transform) for transform in created.transforms],
             )
         return created

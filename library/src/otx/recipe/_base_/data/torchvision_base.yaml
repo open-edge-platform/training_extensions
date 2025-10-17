@@ -12,6 +12,7 @@ train_subset:
   num_workers: 2
   sampler:
     class_path: torch.utils.data.RandomSampler
+    init_args: null
 
 val_subset:
   subset_name: val
@@ -23,6 +24,7 @@ val_subset:
   num_workers: 2
   sampler:
     class_path: torch.utils.data.RandomSampler
+    init_args: null
 
 test_subset:
   subset_name: test
@@ -34,3 +36,4 @@ test_subset:
   num_workers: 2
   sampler:
     class_path: torch.utils.data.RandomSampler
+    init_args: null

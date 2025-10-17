@@ -19,11 +19,13 @@ from torch.utils.data import Dataset
 
 from otx.data.entity.torch import OTXDataItem
 from otx.data.transform_libs.torchvision import Compose
+from otx.types import OTXTaskType
 from otx.types.image import ImageColorChannel
 from otx.types.label import LabelInfo, NullLabelInfo
 
 if TYPE_CHECKING:
-    from datumaro import DatasetSubset, Image
+    from datumaro import Dataset as DmDataset
+    from datumaro import Image
 
 
 Transforms = Union[Compose, Callable, List[Callable], dict[str, Compose | Callable | List[Callable]]]
@@ -57,22 +59,26 @@ def image_decode_context() -> Iterator[None]:
 class OTXDataset(Dataset):
     """Base OTXDataset.
 
-    Defines basic logic for OTX datasets.
+    This class defines the basic logic and interface for OTX datasets, providing
+    functionality for data transformation, image decoding, and label handling.
 
     Args:
-        dm_subset: Datumaro subset of a dataset
-        transforms: Transforms to apply on images
-        max_refetch: Maximum number of images to fetch in cache
-        image_color_channel: Color channel of images
-        stack_images: Whether or not to stack images in collate function in OTXBatchData entity.
-        data_format: Source data format, which was originally passed to datumaro (could be arrow for instance).
+        dm_subset (DmDataset): Datumaro subset of a dataset.
+        transforms (Transforms, optional): Transformations to apply to the data.
+        max_refetch (int, optional): Maximum number of times to attempt fetching a valid image. Defaults to 1000.
+        image_color_channel (ImageColorChannel, optional): Color channel format of images (e.g., RGB or BGR).
+            Defaults to ImageColorChannel.RGB.
+        stack_images (bool, optional): Whether to stack images in the collate function in OTXBatchData entity.
+            Defaults to True.
+        to_tv_image (bool, optional): Whether to convert images to TorchVision format. Defaults to True.
+        data_format (str, optional): Source data format originally passed to Datumaro (e.g., "arrow"). Defaults to "".
 
     """
 
     def __init__(
         self,
-        dm_subset: DatasetSubset,
-        transforms: Transforms,
+        dm_subset: DmDataset,
+        transforms: Transforms | None = None,
         max_refetch: int = 1000,
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
         stack_images: bool = True,
@@ -101,6 +107,8 @@ class OTXDataset(Dataset):
         return np.random.default_rng().integers(0, len(self))
 
     def _apply_transforms(self, entity: OTXDataItem) -> OTXDataItem | None:
+        if self.transforms is None:
+            return entity
         if isinstance(self.transforms, Compose):
             if self.to_tv_image:
                 entity = entity.to_tv_image()
@@ -196,3 +204,8 @@ class OTXDataset(Dataset):
     def collate_fn(self) -> Callable:
         """Collection function to collect KeypointDetDataEntity into KeypointDetBatchDataEntity in data loader."""
         return OTXDataItem.collate_fn
+
+    @property
+    def task_type(self) -> OTXTaskType | None:
+        """OTX Task Type for the dataset. Can be None if no task is defined."""
+        return None

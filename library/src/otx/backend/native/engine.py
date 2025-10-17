@@ -127,6 +127,12 @@ class OTXEngine(Engine):
             get_model_args: dict[str, Any] = {}
             get_model_args["label_info"] = self._datamodule.label_info
             input_size = self._datamodule.input_size
+            if input_size is None:
+                msg = (
+                    "Input size is not specified in the datamodule. "
+                    "Ensure that the datamodule has a valid input size."
+                )
+                raise ValueError(msg)
             get_model_args["data_input_params"] = DataInputParams(
                 input_size=input_size,
                 mean=self._datamodule.input_mean,
