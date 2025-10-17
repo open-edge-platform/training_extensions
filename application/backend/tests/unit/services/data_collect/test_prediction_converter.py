@@ -7,7 +7,7 @@ import model_api.models.result
 import numpy as np
 from model_api.models import ClassificationResult, DetectionResult, InstanceSegmentationResult
 
-from app.schemas import Label
+from app.schemas import LabelView
 from app.schemas.dataset_item import DatasetItemAnnotation
 from app.schemas.label import LabelReference
 from app.schemas.shape import FullImage, Point, Polygon, Rectangle
@@ -74,7 +74,7 @@ def test_get_confidence_scores_segmentation() -> None:
 def test_convert_prediction_classification() -> None:
     # Arrange
     frame_data = np.random.rand(100, 100, 3)
-    label = Label(id=uuid4(), name="cat", color="#ff0000", hotkey="c")
+    label = LabelView(id=uuid4(), name="cat", color="#ff0000", hotkey="c")
     raw_prediction = ClassificationResult(
         top_labels=[model_api.models.result.Label(id=1, name=label.name, confidence=0.81)],
         raw_scores=[0.19, 0.81],
@@ -98,7 +98,7 @@ def test_convert_prediction_classification() -> None:
 def test_convert_prediction_detection() -> None:
     # Arrange
     frame_data = np.random.rand(100, 100, 3)
-    label = Label(id=uuid4(), name="cat", color="#ff0000", hotkey="c")
+    label = LabelView(id=uuid4(), name="cat", color="#ff0000", hotkey="c")
     coords = [12, 41, 30, 65]  # x1, y1, x2, y2
     raw_prediction = DetectionResult(
         bboxes=np.array([coords]),
@@ -128,7 +128,7 @@ def test_convert_prediction_segmentation() -> None:
     mask = np.zeros((100, 200), dtype=np.uint8)
     cv2.rectangle(mask, (0, 0), (100, 100), 255, -1)
 
-    label = Label(id=uuid4(), name="cat", color="#ff0000", hotkey="c")
+    label = LabelView(id=uuid4(), name="cat", color="#ff0000", hotkey="c")
     coords = [12, 41, 12, 46]
     raw_prediction = InstanceSegmentationResult(
         bboxes=np.array([coords]),

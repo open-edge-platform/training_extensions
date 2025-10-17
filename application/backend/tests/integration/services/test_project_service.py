@@ -9,7 +9,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.db.schema import DatasetItemDB, LabelDB, PipelineDB, ProjectDB
-from app.schemas.project import Label, ProjectCreate, Task, TaskType
+from app.schemas.project import LabelCreate, ProjectCreate, TaskCreate, TaskType
 from app.services import LabelService, ResourceWithIdAlreadyExistsError
 from app.services.base import ResourceInUseError, ResourceNotFoundError, ResourceType
 from app.services.label_service import DuplicateLabelsError
@@ -44,12 +44,12 @@ class TestProjectServiceIntegration:
     def test_create_project(self, fxt_project_service: ProjectService, db_session: Session):
         """Test creating a project."""
         labels = [
-            Label(name="cat", color="#00FF00", hotkey="c"),
-            Label(name="dog", color="#FF0000", hotkey="d"),
+            LabelCreate(name="cat", color="#00FF00", hotkey="c"),
+            LabelCreate(name="dog", color="#FF0000", hotkey="d"),
         ]
         new_project = ProjectCreate(
             name="Test Project",
-            task=Task(
+            task=TaskCreate(
                 task_type=TaskType.CLASSIFICATION,
                 exclusive_labels=True,
                 labels=labels,
@@ -59,7 +59,10 @@ class TestProjectServiceIntegration:
         assert created_project.id is not None
         assert created_project.name == new_project.name
         assert created_project.task.task_type == new_project.task.task_type
-        assert created_project.task.labels == new_project.task.labels
+        assert len(created_project.task.labels) == 2
+        assert {label.name for label in created_project.task.labels} == {"cat", "dog"}
+        assert {label.color for label in created_project.task.labels} == {"#00FF00", "#FF0000"}
+        assert {label.hotkey for label in created_project.task.labels} == {"c", "d"}
         # Ensure the associated pipeline is created
         db_pipeline = db_session.get(PipelineDB, str(created_project.id))
         assert db_pipeline is not None
@@ -73,13 +76,13 @@ class TestProjectServiceIntegration:
         """Test creating a project with duplicated labels."""
         project_id = uuid4()
         labels = [
-            Label(name="cat", color="#00FF00", hotkey="c"),
-            Label(name="cat", color="#FF0000", hotkey="d"),
+            LabelCreate(name="cat", color="#00FF00", hotkey="c"),
+            LabelCreate(name="cat", color="#FF0000", hotkey="d"),
         ]
         new_project = ProjectCreate(
             id=project_id,
             name="Test Project",
-            task=Task(
+            task=TaskCreate(
                 task_type=TaskType.CLASSIFICATION,
                 exclusive_labels=True,
                 labels=labels,
@@ -98,13 +101,13 @@ class TestProjectServiceIntegration:
 
         project_id = db_project.id
         labels = [
-            Label(name="cat", color="#00FF00", hotkey="c"),
-            Label(name="dog", color="#FF0000", hotkey="d"),
+            LabelCreate(name="cat", color="#00FF00", hotkey="c"),
+            LabelCreate(name="dog", color="#FF0000", hotkey="d"),
         ]
         new_project = ProjectCreate(
             id=UUID(project_id),
             name="Test Project",
-            task=Task(
+            task=TaskCreate(
                 task_type=TaskType.CLASSIFICATION,
                 exclusive_labels=True,
                 labels=labels,
