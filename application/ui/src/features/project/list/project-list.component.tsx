@@ -52,6 +52,8 @@ export const ProjectList = () => {
                     columns={isEmpty(projects.data) ? ['size-3600'] : ['1fr', '1fr']}
                     UNSAFE_style={{ overflow: 'auto' }}
                     maxHeight={'75vh'}
+                    height={'100%'}
+                    autoRows={'size-2400'}
                 >
                     <NewProjectLink />
                     {projects.data.map((item) => (

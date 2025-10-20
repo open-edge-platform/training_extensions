@@ -77,6 +77,7 @@ export const Gallery = ({ items, hasNextPage, isFetchingNextPage, fetchNextPage 
             <DialogContainer onDismiss={() => setSelectedMediaItem(null)}>
                 {selectedMediaItem !== null && (
                     <MediaPreview
+                        key={selectedMediaItem.id}
                         mediaItem={selectedMediaItem}
                         close={() => setSelectedMediaItem(null)}
                         onSelectedMediaItem={setSelectedMediaItem}

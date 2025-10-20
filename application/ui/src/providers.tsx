@@ -29,6 +29,7 @@ export const queryClient = new QueryClient({
         queries: {
             gcTime: 30 * 60 * 1000,
             staleTime: 5 * 60 * 1000,
+            retry: 0,
         },
     },
     mutationCache: new MutationCache({
