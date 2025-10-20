@@ -140,6 +140,16 @@ class ClassificationMultiLabelSample(OTXSample):
 
     image: np.ndarray | tv_tensors.Image = image_field(dtype=pl.UInt8)
     label: np.ndarray | torch.Tensor = label_field(pl.Int32(), multi_label=True)
+    dm_image_info: DmImageInfo = image_info_field()
+
+    def __post_init__(self) -> None:
+        shape = (self.dm_image_info.height, self.dm_image_info.width)
+
+        self.img_info = ImageInfo(
+            img_idx=0,
+            img_shape=shape,
+            ori_shape=shape,
+        )
 
 
 @register_pytree_node
@@ -148,6 +158,16 @@ class ClassificationHierarchicalSample(OTXSample):
 
     image: np.ndarray | tv_tensors.Image = image_field(dtype=pl.UInt8)
     label: np.ndarray | torch.Tensor = label_field(pl.Int32(), is_list=True)
+    dm_image_info: DmImageInfo = image_info_field()
+
+    def __post_init__(self) -> None:
+        shape = (self.dm_image_info.height, self.dm_image_info.width)
+
+        self.img_info = ImageInfo(
+            img_idx=0,
+            img_shape=shape,
+            ori_shape=shape,
+        )
 
 
 @register_pytree_node
