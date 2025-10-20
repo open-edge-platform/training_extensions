@@ -27,10 +27,9 @@ export const AnnotationShapeWithLabels = ({ annotation }: AnnotationShapeProps) 
         );
     }
 
-    // For polygon, use polylabel to find the optimal label position
     const polygonPoints = (shape as Polygon).points;
     const polygonCoords = [polygonPoints.map((point) => [point.x, point.y])];
-    const [labelX, labelY] = polylabel(polygonCoords, 1.0);
+    const [labelX, labelY] = polylabel(polygonCoords);
 
     return (
         <g transform={`translate(${labelX}, ${labelY})`} display={isVisible ? 'block' : 'none'}>
