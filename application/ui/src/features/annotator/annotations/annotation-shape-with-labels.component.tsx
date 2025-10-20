@@ -4,22 +4,24 @@
 import polylabel from 'polylabel';
 import { useSecondaryToolbarState } from 'src/features/dataset/media-preview/secondary-toolbar/use-secondary-toolbar-state.hook';
 
+import { useAnnotationVisibility } from '../annotation-visibility-provider.component';
 import { Annotation, Polygon } from '../types';
 import { AnnotationLabels } from './annotation-labels.component';
-import { getFormattedPoints } from './utils';
+import { AnnotationShape } from './annotation-shape.component';
 
 type AnnotationShapeProps = {
     annotation: Annotation;
 };
+
 export const AnnotationShapeWithLabels = ({ annotation }: AnnotationShapeProps) => {
     const { shape, labels } = annotation;
-    const color = labels.length ? labels[0].color : '--annotation-fill';
     const { removeLabels } = useSecondaryToolbarState();
+    const { isVisible } = useAnnotationVisibility();
 
     if (shape.type === 'rectangle') {
         return (
-            <g transform={`translate(${shape.x}, ${shape.y})`}>
-                <rect aria-label='annotation rect' x={0} y={0} width={shape.width} height={shape.height} fill={color} />
+            <g transform={`translate(${shape.x}, ${shape.y})`} display={isVisible ? 'block' : 'none'}>
+                <AnnotationShape annotation={{ ...annotation, shape: { ...shape, x: 0, y: 0 } }} />
                 <AnnotationLabels labels={labels} onRemove={removeLabels} />
             </g>
         );
@@ -30,13 +32,10 @@ export const AnnotationShapeWithLabels = ({ annotation }: AnnotationShapeProps) 
     const [labelX, labelY] = polylabel(polygonCoords);
 
     return (
-        <g transform={`translate(${labelX}, ${labelY})`}>
-            <polygon
-                aria-label='annotation polygon'
-                points={getFormattedPoints(polygonPoints)}
-                fill={color}
-                transform={`translate(${-labelX}, ${-labelY})`}
-            />
+        <g transform={`translate(${labelX}, ${labelY})`} display={isVisible ? 'block' : 'none'}>
+            <g transform={`translate(${-labelX}, ${-labelY})`}>
+                <AnnotationShape annotation={annotation} />
+            </g>
             <AnnotationLabels labels={labels} onRemove={removeLabels} />
         </g>
     );

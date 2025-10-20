@@ -50,7 +50,7 @@ export const useSecondaryToolbarState = () => {
         updateAnnotations(updatedAnnotations);
     };
 
-    const toggleLabel = (labelId: Key | null) => {
+    const toggleLabels = (labelId: Key | null) => {
         const selectedLabel = projectLabels.find((label) => label.id === labelId);
 
         if (!selectedLabel) {
@@ -72,7 +72,8 @@ export const useSecondaryToolbarState = () => {
         isHidden,
 
         projectLabels,
-        toggleLabel,
+        toggleLabels,
+        addLabels,
         removeLabels,
 
         annotationsToUpdate,
