@@ -161,7 +161,7 @@ class TestProcessRun:
         with patch("asyncio.to_thread") as mock_to_thread:
             mock_to_thread.return_value = None
 
-            with patch("app.core.jobs.control_plane.process_run.logger") as mock_logger:
+            with patch("app.core.jobs.exec.process_run.logger") as mock_logger:
                 await fxt_process_run.stop(graceful_timeout=0.01, term_timeout=0.01, kill_timeout=0.01)
 
                 # Should call both terminate and kill
@@ -181,7 +181,7 @@ class TestProcessRun:
         with patch("asyncio.to_thread") as mock_to_thread:
             mock_to_thread.return_value = None
 
-            with patch("app.core.jobs.control_plane.process_run.logger") as mock_logger:
+            with patch("app.core.jobs.exec.process_run.logger") as mock_logger:
                 await fxt_process_run.stop(graceful_timeout=0.01, term_timeout=0.01, kill_timeout=0.01)
 
                 # Should log error about unkillable process
