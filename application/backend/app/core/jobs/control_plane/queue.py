@@ -12,7 +12,15 @@ logger = logging.getLogger(__name__)
 
 
 class CancellationResult(StrEnum):
-    """Outcome of a job cancellation request."""
+    """
+    Outcome of a job cancellation request.
+
+    Values:
+        PENDING_CANCELLED: The job was pending and is now marked as cancelled.
+        RUNNING_CANCELLING: The job was running and is now marked for cancellation.
+        IGNORE_CANCEL: The job was already in a terminal or cancelling state; cancellation is ignored.
+        NOT_FOUND: No job with the specified ID was found.
+    """
 
     PENDING_CANCELLED = "pending_cancelled"
     RUNNING_CANCELLING = "running_cancelling"
@@ -61,15 +69,7 @@ class JobQueue:
         return [job for job in self._by_id.values() if job.status < JobStatus.DONE]
 
     def cancel(self, job_id: UUID) -> tuple[Job | None, CancellationResult]:
-        """
-        Attempt to cancel a job by its ID.
-
-        This method handles job cancellation based on the current job status:
-        - PENDING jobs are marked as cancelled (CANCELLED state)
-        - RUNNING jobs are marked for cancellation (CANCELLING state)
-        - Jobs already in CANCELLING or terminal states are ignored
-        - Non-existent jobs return NOT_FOUND
-        """
+        """Attempt to cancel a job by its ID."""
         job = self._by_id.get(job_id)
         if not job:
             return None, CancellationResult.NOT_FOUND

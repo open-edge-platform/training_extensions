@@ -1,6 +1,20 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+"""
+Process-based job runner for executing jobs in isolated child processes.
+
+This module provides the `ProcessRun` class, which manages the lifecycle of a child process
+for job execution, including inter-process communication (IPC) and event translation.
+It also includes a factory for creating process runners and the process entrypoint logic.
+
+Classes:
+    ProcessRun: Manages a child process for job execution and event streaming.
+    ProcessRunnerFactory: Factory for creating `ProcessRun` instances.
+Functions:
+    _entrypoint: Entrypoint for the child process, executes the job and sends events.
+"""
+
 import asyncio
 import contextlib
 import logging
@@ -14,11 +28,21 @@ from pathlib import Path
 from app.core.jobs.models import Done, ExecutionEvent, Failed, Job, JobType, Started
 from app.core.run import ExecutionContext, RunnableFactory, Runner
 
+from .exceptions import CancelledExc
+
 logger = logging.getLogger(__name__)
 
 
 class ProcessRun:
-    """Owns the child Process+IPC and translates to domain events."""
+    """
+    Manages a child process for job execution and streams domain events to the caller.
+
+    Args:
+        ctx (mp.context.SpawnContext): Multiprocessing context for process & IPC.
+        data_dir (Path): Directory for job data.
+        runnable_factory (RunnableFactory): Factory to create runnable job instances.
+        job (Job): Job specification.
+    """
 
     def __init__(self, ctx: mp.context.SpawnContext, data_dir: Path, runnable_factory: RunnableFactory, job: Job):
         self._ctx = ctx
@@ -96,12 +120,22 @@ class ProcessRun:
 def _entrypoint(
     get_runnable: RunnableFactory, data_dir: Path, job_type: str, payload: str, conn: Connection, cancel_event: Event
 ) -> None:
+    """
+    Entrypoint for the child process.
+
+    Executes the job, sends execution events to the parent process, and handles cancellation.
+
+    Args:
+        get_runnable (RunnableFactory): Factory to create runnable job instance.
+        data_dir (Path): Directory for job data.
+        job_type (str): Type of job to execute.
+        payload (str): Serialized job parameters.
+        conn (Connection): IPC connection to parent process.
+        cancel_event (Event): Event to signal cancellation.
+    """
     import traceback
 
     from app.core.jobs.models import Cancelled, Done, Failed, Progress
-
-    class CancelledExc(Exception):
-        pass
 
     def report(msg: str, p: float) -> None:
         conn.send(Progress(message=msg, value=p))
@@ -128,7 +162,16 @@ def _entrypoint(
 
 
 class ProcessRunnerFactory:
-    """Process-based infra with spawned context"""
+    """
+    Factory for creating process-based job runners.
+
+    Args:
+        data_dir (Path): Directory for job data.
+        runnable_factory (RunnableFactory): Factory to create runnable job instances.
+
+    Methods:
+        for_job(job: Job) -> Runner[Job, ExecutionEvent]: Create a ProcessRun instance for the given job.
+    """
 
     def __init__(self, data_dir: Path, runnable_factory: RunnableFactory) -> None:
         # consider using native context for python 3.14 due to upgrade to 'fork_server' model
@@ -137,4 +180,13 @@ class ProcessRunnerFactory:
         self._runnable_factory = runnable_factory
 
     def for_job(self, job: Job) -> Runner[Job, ExecutionEvent]:
+        """
+        Create a ProcessRun instance for the given job.
+
+        Args:
+            job (Job): Job specification.
+
+        Returns:
+            Runner[Job, ExecutionEvent]: Process-based job runner.
+        """
         return ProcessRun(self._ctx, self._data_dir, self._runnable_factory, job)

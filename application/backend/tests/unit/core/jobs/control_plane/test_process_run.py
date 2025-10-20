@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from app.core.jobs.control_plane.process_run import ProcessRun
+from app.core.jobs.exec import ProcessRun
 from app.core.jobs.models import Job, Progress
 from app.core.jobs.models.events import Done, Failed, Started
 from app.core.run import RunnableFactory

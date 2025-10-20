@@ -7,11 +7,11 @@ from unittest.mock import Mock
 import pytest
 
 from app.core.jobs.control_plane import CancellationResult, JobController, JobQueue
+from app.core.jobs.exec import ThreadRunnerFactory
 from app.core.jobs.models import Job, JobStatus
 from app.core.run import ExecutionContext, RunnableFactory
 
 from .mock_runnable import MockRunnable, RunnableBehaviour
-from .thread_run import ThreadRunnerFactory
 
 
 class TestJobControlPlaneIntegration:

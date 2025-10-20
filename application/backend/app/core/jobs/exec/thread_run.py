@@ -4,26 +4,34 @@
 import asyncio
 import threading
 import time
+import warnings
 from collections.abc import Iterator
 from queue import Empty, Queue
 
 from app.core.jobs.models import Cancelled, Done, ExecutionEvent, Failed, Job, Progress, Started
 from app.core.run import ExecutionContext, RunnableFactory, Runner
 
+from .exceptions import CancelledExc
 
-class ThreadRunner(Runner[Job, ExecutionEvent]):
+
+class ThreadRun(Runner[Job, ExecutionEvent]):
     """
     Thread-based runner for testing job execution without process overhead.
 
+    Experimental: This class is experimental and intended for development and testing only.
+
     This runner executes jobs in a separate thread and communicates events through a thread-safe queue, mimicking the
-    behavior of ProcessRunner but without the overhead of process creation. Designed specifically for integration
+    behavior of ProcessRun but without the overhead of process creation. Designed specifically for integration
     testing where fast execution and easy debugging are prioritized over process isolation.
 
     Note: This implementation sacrifices process isolation for performance and debuggability.
-    Use ProcessRunner for production scenarios requiring fault isolation between jobs.
+    Use ProcessRun for production scenarios requiring fault isolation between jobs.
     """
 
     def __init__(self, get_runnable: RunnableFactory, job: Job):
+        warnings.warn(
+            "ThreadRun is experimental and intended for development and testing only.", UserWarning, stacklevel=2
+        )
         self.get_runnable = get_runnable
         self.job = job
         self._event_queue: Queue[ExecutionEvent | None] = Queue()
@@ -31,13 +39,13 @@ class ThreadRunner(Runner[Job, ExecutionEvent]):
         self._execution_thread: threading.Thread | None = None
         self._started = False
 
-    def start(self) -> "ThreadRunner":
+    def start(self) -> "ThreadRun":
         """Start the runner in a separate thread."""
         if self._started:
             return self
 
         self._started = True
-        self._execution_thread = threading.Thread(target=self._execute_job, name=f"mock-job-{self.job.id}", daemon=True)
+        self._execution_thread = threading.Thread(target=self._execute_job, name=f"job-{self.job.id}", daemon=True)
         self._execution_thread.start()
         return self
 
@@ -54,7 +62,7 @@ class ThreadRunner(Runner[Job, ExecutionEvent]):
                 # Continue polling if no events available
                 continue
 
-    async def stop(self, graceful_timeout: float = 6.0, term_timeout: float = 3.0, kill_timeout: float = 1.0) -> None:
+    async def stop(self, graceful_timeout: float = 6.0, _term_timeout: float = 3.0, _kill_timeout: float = 1.0) -> None:
         """Stop the runner by setting the cancellation event."""
         self._cancel_event.set()
 
@@ -72,13 +80,13 @@ class ThreadRunner(Runner[Job, ExecutionEvent]):
             ctx = self._create_execution_context()
 
             # Execute the runnable
-            self.get_runnable("mock").run(ctx)
+            self.get_runnable(self.job.job_type).run(ctx)
 
             # If we get here without cancellation, job succeeded
             if not self._cancel_event.is_set():
                 self._event_queue.put(Done())
 
-        except MockCancelledException:
+        except CancelledExc:
             self._event_queue.put(Cancelled())
         except Exception as e:
             self._event_queue.put(Failed(str(e)))
@@ -87,10 +95,10 @@ class ThreadRunner(Runner[Job, ExecutionEvent]):
             self._event_queue.put(None)
 
     def _create_execution_context(self) -> ExecutionContext:
-        """Create execution context for the runnable."""
+        """Create execution context for the thread runnable."""
 
-        class MockExecutionContext(ExecutionContext):
-            def __init__(self, runner: "ThreadRunner"):
+        class ThreadAwareExecutionContext(ExecutionContext):
+            def __init__(self, runner: "ThreadRun"):
                 self.runner = runner
 
             def report_progress(self, message: str = "training", progress: float = 0.0):
@@ -99,23 +107,19 @@ class ThreadRunner(Runner[Job, ExecutionEvent]):
 
             def heartbeat(self):
                 if self.runner._cancel_event.is_set():
-                    raise MockCancelledException("Job cancelled")
+                    raise CancelledExc("Job cancelled")
                 # Small sleep to simulate work and allow for responsive cancellation
                 time.sleep(0.01)
 
-        return MockExecutionContext(self)
-
-
-class MockCancelledException(Exception):
-    """Exception raised when job is cancelled."""
+        return ThreadAwareExecutionContext(self)
 
 
 class ThreadRunnerFactory:
-    """Factory that creates ThreadRunner instances."""
+    """Factory for creating thread-based job runners."""
 
     def __init__(self, runnable_factory: RunnableFactory):
         self.runnable_factory = runnable_factory
 
     def for_job(self, job: Job) -> Runner[Job, ExecutionEvent]:
-        """Create a ThreadRunner instance for the given job."""
-        return ThreadRunner(self.runnable_factory, job)
+        """Create a ThreadRun instance for the given job."""
+        return ThreadRun(self.runnable_factory, job)

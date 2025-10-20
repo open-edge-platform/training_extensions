@@ -1,6 +1,19 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+"""
+Runnable protocol and factory definitions.
+
+This module defines the generic interface for activities (Runnables) that can be executed by runners, along with a
+factory for registering and instantiating Runnable implementations. Runnables encapsulate the logic to be executed with
+a given execution context, supporting progress reporting and heartbeats.
+
+Classes:
+    ExecutionContext: Carries execution parameters, progress reporting, and heartbeat callbacks.
+    Runnable: Protocol for executable activities.
+    RunnableFactory: Factory for registering and creating Runnable instances by type.
+"""
+
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path

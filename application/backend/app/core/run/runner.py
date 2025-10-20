@@ -1,6 +1,19 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+"""
+Task runner protocol definitions.
+
+This module defines generic protocols for task runners and runner factories, enabling the implementation of pluggable,
+type-safe execution engines for isolated workloads.
+Runners are responsible for starting, stopping, and monitoring tasks, while factories produce runner instances for
+specific task types.
+
+Classes:
+    Runner: Protocol for a task runner, supporting start, stop, and event streaming.
+    RunnerFactory: Protocol for creating Runner instances for given tasks.
+"""
+
 from collections.abc import Iterator
 from typing import Protocol, TypeVar
 
