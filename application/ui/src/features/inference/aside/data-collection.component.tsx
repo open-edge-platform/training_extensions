@@ -6,11 +6,7 @@ import { useEffect, useState } from 'react';
 import { Divider, Flex, Heading, Slider, Switch, Text } from '@geti/ui';
 import { useIsPipelineConfigured } from 'hooks/use-is-pipeline-configured.hook';
 import { $api } from 'src/api/client';
-import { components } from 'src/api/openapi-spec';
 import { useProjectIdentifier } from 'src/hooks/use-project-identifier.hook';
-
-type FixedRatePolicy = components['schemas']['FixedRateDataCollectionPolicy'];
-type ConfidenceThresholdPolicy = components['schemas']['ConfidenceThresholdDataCollectionPolicy'];
 
 const DEFAULTS = {
     RATE: 12,
@@ -34,8 +30,8 @@ export const DataCollection = () => {
     });
 
     const policies = pipelineQuery.data?.data_collection_policies ?? [];
-    const ratePolicy = policies[0] as FixedRatePolicy | undefined;
-    const confidencePolicy = policies[1] as ConfidenceThresholdPolicy | undefined;
+    const ratePolicy = policies.find((policy) => policy.type === 'fixed_rate');
+    const confidencePolicy = policies.find((policy) => policy.type === 'confidence_threshold');
 
     const serverRate = ratePolicy?.rate ?? DEFAULTS.RATE;
     const serverConfidenceThreshold = confidencePolicy?.confidence_threshold ?? DEFAULTS.CONFIDENCE_THRESHOLD;
