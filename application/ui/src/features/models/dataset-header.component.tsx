@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { ActionButton, Flex, Grid, Heading, Item, Menu, MenuTrigger, RangeSlider, Text } from '@geti/ui';
-import { Fps, Image, MoreMenu, Tag } from 'packages/ui/icons';
+import { Image, MoreMenu, Tag } from 'packages/ui/icons';
 
 import classes from './models.module.scss';
 
@@ -23,9 +23,8 @@ export const DatasetHeader = () => {
                         <MoreMenu />
                     </ActionButton>
                     <Menu>
-                        <Item key='1'>One</Item>
-                        <Item key='2'>Two</Item>
-                        <Item key='3'>Three</Item>
+                        <Item key='rename'>Rename</Item>
+                        <Item key='delete'>Delete</Item>
                     </Menu>
                 </MenuTrigger>
             </Flex>
@@ -43,9 +42,6 @@ export const DatasetHeader = () => {
                 </Flex>
                 <Flex UNSAFE_className={classes.tag}>
                     <Image /> 3,600
-                </Flex>
-                <Flex UNSAFE_className={classes.tag}>
-                    <Fps /> 25
                 </Flex>
             </Flex>
 
