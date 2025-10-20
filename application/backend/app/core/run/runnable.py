@@ -49,12 +49,12 @@ class RunnableFactory(Generic[K, R]):
     """Factory protocol for creating Runnable instances."""
 
     def __init__(self) -> None:
-        self._registry: dict[K, type[R]] = {}
+        self._registry: dict[K, Callable[[], R]] = {}
 
     def __call__(self, cls_type: K) -> R:
         if cls_type not in self._registry:
             raise ValueError(f"No runnable registered for class type: {cls_type}")
         return self._registry[cls_type]()
 
-    def register(self, class_type: K, runnable_cls: type[R]) -> None:
+    def register(self, class_type: K, runnable_cls: Callable[[], R]) -> None:
         self._registry[class_type] = runnable_cls
