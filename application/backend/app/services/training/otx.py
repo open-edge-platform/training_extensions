@@ -44,6 +44,8 @@ class OTXTrainer(Trainer):
         weights_path = self._build_model_weights_path(
             data_dir, training_params.project_id, training_params.parent_model_revision_id
         )
+        if not weights_path.exists():
+            raise FileNotFoundError(f"Parent model weights not found at {weights_path}")
         report_fn("Parent model weights preparation completed")
         return weights_path
 
