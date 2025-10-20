@@ -14,7 +14,9 @@ logger = logging.getLogger(__name__)
 
 
 class OTXTrainer(Trainer):
-    def _prepare_weights(self, data_dir: Path, training_params: TrainingParams, report_fn: Callable) -> Path:
+    def _prepare_weights(
+        self, data_dir: Path, training_params: TrainingParams, report_fn: Callable[[str], None]
+    ) -> Path:
         """
         Prepare weights for training based on training parameters.
 
@@ -55,7 +57,7 @@ class OTXTrainer(Trainer):
         training_params = self._get_training_params(ctx)
         logger.info("Training job started with params: %s", training_params)
         self._prepare_weights(ctx.data_dir, training_params, ctx.report_progress)
-        ctx.report_progress("Training job started")
+        ctx.report_progress("Started model training")
         job_id = training_params.job_id
         # Simulate training with progress reporting
         step_count = 20
