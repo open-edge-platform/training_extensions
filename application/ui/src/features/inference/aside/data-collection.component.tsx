@@ -10,6 +10,7 @@ import { components } from 'src/api/openapi-spec';
 import { useProjectIdentifier } from 'src/hooks/use-project-identifier.hook';
 
 type FixedRateDataCollectionPolicy = components['schemas']['FixedRateDataCollectionPolicy'];
+type ConfidenceThresholdDataCollectionPolicy = components['schemas']['ConfidenceThresholdDataCollectionPolicy'];
 
 export const DataCollection = () => {
     const projectId = useProjectIdentifier();
@@ -31,25 +32,103 @@ export const DataCollection = () => {
     const serverRate =
         (pipelineQuery.data?.data_collection_policies[0] as FixedRateDataCollectionPolicy)?.rate ?? defaultRate;
 
-    // TODO: add confidence_threshold slider
+    const confidencePolicy = pipelineQuery.data?.data_collection_policies[1] as
+        | ConfidenceThresholdDataCollectionPolicy
+        | undefined;
+    const isConfidenceThresholdEnabled = confidencePolicy?.enabled ?? false;
+    const defaultConfidenceThreshold = 0.5;
+    const serverConfidenceThreshold = confidencePolicy?.confidence_threshold ?? defaultConfidenceThreshold;
+    const defaultMinSamplingInterval = 2.5;
+    const serverMinSamplingInterval = confidencePolicy?.min_sampling_interval ?? defaultMinSamplingInterval;
 
     const [localRate, setLocalRate] = useState(serverRate);
+    const [localConfidenceThreshold, setLocalConfidenceThreshold] = useState(serverConfidenceThreshold);
 
     useEffect(() => {
         setLocalRate(serverRate);
     }, [serverRate]);
 
+    useEffect(() => {
+        setLocalConfidenceThreshold(serverConfidenceThreshold);
+    }, [serverConfidenceThreshold]);
+
     const toggleAutoCapturing = (isEnabled: boolean) => {
+        const confidencePolicyBody = confidencePolicy
+            ? [
+                  {
+                      type: 'confidence_threshold' as const,
+                      confidence_threshold: confidencePolicy.confidence_threshold,
+                      min_sampling_interval: confidencePolicy.min_sampling_interval,
+                      enabled: confidencePolicy.enabled,
+                  },
+              ]
+            : [];
+
         patchPipelineMutation.mutate({
             params: { path: { project_id: projectId } },
-            body: { data_collection_policies: [{ rate: defaultRate, enabled: isEnabled }] },
+            body: {
+                data_collection_policies: [
+                    { type: 'fixed_rate' as const, rate: defaultRate, enabled: isEnabled },
+                    ...confidencePolicyBody,
+                ],
+            },
         });
     };
 
     const updateRate = (value: number) => {
+        const confidencePolicyBody = confidencePolicy
+            ? [
+                  {
+                      type: 'confidence_threshold' as const,
+                      confidence_threshold: confidencePolicy.confidence_threshold,
+                      min_sampling_interval: confidencePolicy.min_sampling_interval,
+                      enabled: confidencePolicy.enabled,
+                  },
+              ]
+            : [];
+
         patchPipelineMutation.mutate({
             params: { path: { project_id: projectId } },
-            body: { data_collection_policies: [{ rate: value, enabled: isAutoCapturingEnabled }] },
+            body: {
+                data_collection_policies: [
+                    { type: 'fixed_rate' as const, rate: value, enabled: isAutoCapturingEnabled },
+                    ...confidencePolicyBody,
+                ],
+            },
+        });
+    };
+
+    const toggleConfidenceThreshold = (isEnabled: boolean) => {
+        patchPipelineMutation.mutate({
+            params: { path: { project_id: projectId } },
+            body: {
+                data_collection_policies: [
+                    { type: 'fixed_rate' as const, rate: serverRate, enabled: isAutoCapturingEnabled },
+                    {
+                        type: 'confidence_threshold' as const,
+                        confidence_threshold: serverConfidenceThreshold,
+                        min_sampling_interval: serverMinSamplingInterval,
+                        enabled: isEnabled,
+                    },
+                ],
+            },
+        });
+    };
+
+    const updateConfidenceThreshold = (value: number) => {
+        patchPipelineMutation.mutate({
+            params: { path: { project_id: projectId } },
+            body: {
+                data_collection_policies: [
+                    { type: 'fixed_rate' as const, rate: serverRate, enabled: isAutoCapturingEnabled },
+                    {
+                        type: 'confidence_threshold' as const,
+                        confidence_threshold: value,
+                        min_sampling_interval: serverMinSamplingInterval,
+                        enabled: isConfidenceThresholdEnabled,
+                    },
+                ],
+            },
         });
     };
 
@@ -64,6 +143,12 @@ export const DataCollection = () => {
                 <Heading level={4}>Data collection</Heading>
             </Flex>
             <Flex direction={'column'} UNSAFE_style={{ overflow: 'hidden auto' }}>
+                <Heading level={3} margin={0}>
+                    Capture rate
+                </Heading>
+
+                <Text marginY={'size-100'}>Capture frames while the stream is running</Text>
+
                 <Switch
                     isSelected={isAutoCapturingEnabled}
                     onChange={toggleAutoCapturing}
@@ -73,14 +158,6 @@ export const DataCollection = () => {
                     Toggle auto capturing
                 </Switch>
 
-                <Text>Capture frames while the stream is running</Text>
-
-                <Divider marginY={'size-400'} size={'S'} />
-
-                <Heading level={4} margin={0}>
-                    Capture rate
-                </Heading>
-
                 <Slider
                     step={0.1}
                     minValue={0}
@@ -88,9 +165,36 @@ export const DataCollection = () => {
                     value={localRate}
                     onChange={setLocalRate}
                     onChangeEnd={updateRate}
-                    marginY={'size-200'}
                     label='Rate'
+                    isDisabled={patchPipelineMutation.isPending || !canEditPipeline || !isAutoCapturingEnabled}
+                />
+
+                <Divider marginY={'size-400'} size={'S'} />
+
+                <Heading level={3} margin={0}>
+                    Confidence threshold
+                </Heading>
+
+                <Text marginY={'size-100'}>Capture frames when confidence is below threshold</Text>
+
+                <Switch
+                    isSelected={isConfidenceThresholdEnabled}
+                    onChange={toggleConfidenceThreshold}
                     isDisabled={patchPipelineMutation.isPending || !canEditPipeline}
+                >
+                    Confidence threshold
+                </Switch>
+
+                <Slider
+                    step={0.01}
+                    minValue={0}
+                    maxValue={1}
+                    value={localConfidenceThreshold}
+                    onChange={setLocalConfidenceThreshold}
+                    onChangeEnd={updateConfidenceThreshold}
+                    marginY={'size-200'}
+                    label='Threshold'
+                    isDisabled={patchPipelineMutation.isPending || !canEditPipeline || !isConfidenceThresholdEnabled}
                 />
             </Flex>
         </Flex>
