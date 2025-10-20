@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, Grid, Item, Picker, SearchField, Text } from '@geti/ui';
+import { Flex, Grid, Item, Picker, Text } from '@geti/ui';
 
 export const ModelsHeader = () => {
     return (
@@ -18,7 +18,6 @@ export const ModelsHeader = () => {
                     <Item key='architecture'>Sort: Architecture</Item>
                 </Picker>
             </Flex>
-            <SearchField marginStart={'auto'} />
         </Grid>
     );
 };
