@@ -9,6 +9,7 @@ from app.core.models import TaskType
 
 class TrainingParams(JobParams):
     job_id: UUID | None = None
+    project_id: UUID | None = None
     model_architecture_id: str
     parent_model_revision_id: UUID | None = None
     task_type: TaskType
@@ -24,3 +25,4 @@ class TrainingJob(ProjectJob):
 
     def model_post_init(self, _: Any) -> None:
         self.params.job_id = self.id
+        self.params.project_id = self.project_id

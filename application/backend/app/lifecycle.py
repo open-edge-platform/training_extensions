@@ -6,6 +6,7 @@
 import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from functools import partial
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -16,6 +17,7 @@ from app.db import MigrationManager
 from app.scheduler import Scheduler
 from app.schemas.job import JobType
 from app.services import ActivePipelineService
+from app.services.base_weights_service import BaseWeightsService
 from app.services.data_collect import DataCollector
 from app.services.training import OTXTrainer
 from app.settings import get_settings
@@ -40,7 +42,8 @@ def setup_job_controller(data_dir: Path, max_parallel_jobs: int) -> tuple[JobQue
     """
     q = JobQueue()
     job_runnable_factory = RunnableFactory[JobType, Runnable]()
-    job_runnable_factory.register(JobType.TRAIN, OTXTrainer)
+    base_weights_service = BaseWeightsService(data_dir=data_dir)
+    job_runnable_factory.register(JobType.TRAIN, partial(OTXTrainer, base_weights_service=base_weights_service))
     process_runner_factory = ProcessRunnerFactory(data_dir, job_runnable_factory)
     job_controller = JobController(
         jobs_queue=q, runner_factory=process_runner_factory, max_parallel_jobs=max_parallel_jobs
