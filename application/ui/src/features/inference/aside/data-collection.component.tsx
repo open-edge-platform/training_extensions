@@ -9,8 +9,14 @@ import { $api } from 'src/api/client';
 import { components } from 'src/api/openapi-spec';
 import { useProjectIdentifier } from 'src/hooks/use-project-identifier.hook';
 
-type FixedRateDataCollectionPolicy = components['schemas']['FixedRateDataCollectionPolicy'];
-type ConfidenceThresholdDataCollectionPolicy = components['schemas']['ConfidenceThresholdDataCollectionPolicy'];
+type FixedRatePolicy = components['schemas']['FixedRateDataCollectionPolicy'];
+type ConfidenceThresholdPolicy = components['schemas']['ConfidenceThresholdDataCollectionPolicy'];
+
+const DEFAULTS = {
+    RATE: 12,
+    CONFIDENCE_THRESHOLD: 0.5,
+    MIN_SAMPLING_INTERVAL: 2.5,
+} as const;
 
 export const DataCollection = () => {
     const projectId = useProjectIdentifier();
@@ -27,110 +33,46 @@ export const DataCollection = () => {
         },
     });
 
-    const isAutoCapturingEnabled = pipelineQuery.data?.data_collection_policies[0]?.enabled ?? false;
-    const defaultRate = 12;
-    const serverRate =
-        (pipelineQuery.data?.data_collection_policies[0] as FixedRateDataCollectionPolicy)?.rate ?? defaultRate;
+    const policies = pipelineQuery.data?.data_collection_policies ?? [];
+    const ratePolicy = policies[0] as FixedRatePolicy | undefined;
+    const confidencePolicy = policies[1] as ConfidenceThresholdPolicy | undefined;
 
-    const confidencePolicy = pipelineQuery.data?.data_collection_policies[1] as
-        | ConfidenceThresholdDataCollectionPolicy
-        | undefined;
-    const isConfidenceThresholdEnabled = confidencePolicy?.enabled ?? false;
-    const defaultConfidenceThreshold = 0.5;
-    const serverConfidenceThreshold = confidencePolicy?.confidence_threshold ?? defaultConfidenceThreshold;
-    const defaultMinSamplingInterval = 2.5;
-    const serverMinSamplingInterval = confidencePolicy?.min_sampling_interval ?? defaultMinSamplingInterval;
+    const serverRate = ratePolicy?.rate ?? DEFAULTS.RATE;
+    const serverConfidenceThreshold = confidencePolicy?.confidence_threshold ?? DEFAULTS.CONFIDENCE_THRESHOLD;
 
     const [localRate, setLocalRate] = useState(serverRate);
     const [localConfidenceThreshold, setLocalConfidenceThreshold] = useState(serverConfidenceThreshold);
 
-    useEffect(() => {
-        setLocalRate(serverRate);
-    }, [serverRate]);
+    useEffect(() => setLocalRate(serverRate), [serverRate]);
+    useEffect(() => setLocalConfidenceThreshold(serverConfidenceThreshold), [serverConfidenceThreshold]);
 
-    useEffect(() => {
-        setLocalConfidenceThreshold(serverConfidenceThreshold);
-    }, [serverConfidenceThreshold]);
-
-    const toggleAutoCapturing = (isEnabled: boolean) => {
-        const confidencePolicyBody = confidencePolicy
-            ? [
-                  {
-                      type: 'confidence_threshold' as const,
-                      confidence_threshold: confidencePolicy.confidence_threshold,
-                      min_sampling_interval: confidencePolicy.min_sampling_interval,
-                      enabled: confidencePolicy.enabled,
-                  },
-              ]
-            : [];
+    const updatePolicies = (updates: {
+        rateEnabled?: boolean;
+        rate?: number;
+        confidenceEnabled?: boolean;
+        confidenceThreshold?: number;
+    }) => {
+        const newPolicies = [
+            {
+                type: 'fixed_rate' as const,
+                rate: updates.rate ?? serverRate,
+                enabled: updates.rateEnabled ?? ratePolicy?.enabled ?? false,
+            },
+            {
+                type: 'confidence_threshold' as const,
+                confidence_threshold: updates.confidenceThreshold ?? serverConfidenceThreshold,
+                min_sampling_interval: confidencePolicy?.min_sampling_interval ?? DEFAULTS.MIN_SAMPLING_INTERVAL,
+                enabled: updates.confidenceEnabled ?? confidencePolicy?.enabled ?? false,
+            },
+        ];
 
         patchPipelineMutation.mutate({
             params: { path: { project_id: projectId } },
-            body: {
-                data_collection_policies: [
-                    { type: 'fixed_rate' as const, rate: defaultRate, enabled: isEnabled },
-                    ...confidencePolicyBody,
-                ],
-            },
+            body: { data_collection_policies: newPolicies },
         });
     };
 
-    const updateRate = (value: number) => {
-        const confidencePolicyBody = confidencePolicy
-            ? [
-                  {
-                      type: 'confidence_threshold' as const,
-                      confidence_threshold: confidencePolicy.confidence_threshold,
-                      min_sampling_interval: confidencePolicy.min_sampling_interval,
-                      enabled: confidencePolicy.enabled,
-                  },
-              ]
-            : [];
-
-        patchPipelineMutation.mutate({
-            params: { path: { project_id: projectId } },
-            body: {
-                data_collection_policies: [
-                    { type: 'fixed_rate' as const, rate: value, enabled: isAutoCapturingEnabled },
-                    ...confidencePolicyBody,
-                ],
-            },
-        });
-    };
-
-    const toggleConfidenceThreshold = (isEnabled: boolean) => {
-        patchPipelineMutation.mutate({
-            params: { path: { project_id: projectId } },
-            body: {
-                data_collection_policies: [
-                    { type: 'fixed_rate' as const, rate: serverRate, enabled: isAutoCapturingEnabled },
-                    {
-                        type: 'confidence_threshold' as const,
-                        confidence_threshold: serverConfidenceThreshold,
-                        min_sampling_interval: serverMinSamplingInterval,
-                        enabled: isEnabled,
-                    },
-                ],
-            },
-        });
-    };
-
-    const updateConfidenceThreshold = (value: number) => {
-        patchPipelineMutation.mutate({
-            params: { path: { project_id: projectId } },
-            body: {
-                data_collection_policies: [
-                    { type: 'fixed_rate' as const, rate: serverRate, enabled: isAutoCapturingEnabled },
-                    {
-                        type: 'confidence_threshold' as const,
-                        confidence_threshold: value,
-                        min_sampling_interval: serverMinSamplingInterval,
-                        enabled: isConfidenceThresholdEnabled,
-                    },
-                ],
-            },
-        });
-    };
+    const isDisabled = patchPipelineMutation.isPending || !canEditPipeline;
 
     return (
         <Flex
@@ -150,9 +92,9 @@ export const DataCollection = () => {
                 <Text marginY={'size-100'}>Capture frames while the stream is running</Text>
 
                 <Switch
-                    isSelected={isAutoCapturingEnabled}
-                    onChange={toggleAutoCapturing}
-                    isDisabled={patchPipelineMutation.isPending || !canEditPipeline}
+                    isSelected={ratePolicy?.enabled ?? false}
+                    onChange={(enabled) => updatePolicies({ rateEnabled: enabled })}
+                    isDisabled={isDisabled}
                     marginBottom={'size-200'}
                 >
                     Toggle auto capturing
@@ -164,9 +106,9 @@ export const DataCollection = () => {
                     maxValue={60}
                     value={localRate}
                     onChange={setLocalRate}
-                    onChangeEnd={updateRate}
+                    onChangeEnd={(rate) => updatePolicies({ rate })}
                     label='Rate'
-                    isDisabled={patchPipelineMutation.isPending || !canEditPipeline || !isAutoCapturingEnabled}
+                    isDisabled={isDisabled || !ratePolicy?.enabled}
                 />
 
                 <Divider marginY={'size-400'} size={'S'} />
@@ -178,9 +120,9 @@ export const DataCollection = () => {
                 <Text marginY={'size-100'}>Capture frames when confidence is below threshold</Text>
 
                 <Switch
-                    isSelected={isConfidenceThresholdEnabled}
-                    onChange={toggleConfidenceThreshold}
-                    isDisabled={patchPipelineMutation.isPending || !canEditPipeline}
+                    isSelected={confidencePolicy?.enabled ?? false}
+                    onChange={(enabled) => updatePolicies({ confidenceEnabled: enabled })}
+                    isDisabled={isDisabled}
                 >
                     Confidence threshold
                 </Switch>
@@ -191,10 +133,10 @@ export const DataCollection = () => {
                     maxValue={1}
                     value={localConfidenceThreshold}
                     onChange={setLocalConfidenceThreshold}
-                    onChangeEnd={updateConfidenceThreshold}
+                    onChangeEnd={(confidenceThreshold) => updatePolicies({ confidenceThreshold })}
                     marginY={'size-200'}
                     label='Threshold'
-                    isDisabled={patchPipelineMutation.isPending || !canEditPipeline || !isConfidenceThresholdEnabled}
+                    isDisabled={isDisabled || !confidencePolicy?.enabled}
                 />
             </Flex>
         </Flex>
