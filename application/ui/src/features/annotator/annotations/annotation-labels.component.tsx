@@ -94,7 +94,7 @@ export const AnnotationLabels = ({ labels, onRemove }: AnnotationLabelsProps) =>
     }
 
     return labels.map((label) => {
-        const labelWidth = calculateLabelWidth(label.name) + closeButtonWidth;
+        const labelWidth = label.name ? calculateLabelWidth(label.name) + closeButtonWidth : 0;
         const xOffset = fullLengthOfAllLabels;
 
         fullLengthOfAllLabels += labelWidth + gap;
