@@ -32,7 +32,7 @@ const invalidateMediaItemAnnotations = (queryClient: QueryClient) => {
 
 export const SecondaryToolbar = ({ items, mediaItem, onClose, onSelectedMediaItem }: SecondaryToolbarProps) => {
     const queryClient = useQueryClient();
-    const { annotations, isSaving, isUserReviewed, submitAnnotations } = useAnnotationActions();
+    const { annotations, isSaving, submitAnnotations } = useAnnotationActions();
     const { isHidden, projectLabels, toggleLabels, annotationsToUpdate } = useSecondaryToolbarState();
 
     const annotationLabelId = annotationsToUpdate.at(0)?.labels?.at(0)?.id;
@@ -50,9 +50,9 @@ export const SecondaryToolbar = ({ items, mediaItem, onClose, onSelectedMediaIte
         isLastItem && invalidateMediaItemAnnotations(queryClient);
     };
 
-    const handleDeleteItem = ([deletedItem]: string[]) => {
+    const handleDeleteItem = ([deletedItem]: string[], totalItems: number) => {
         const deletedIndex = items.findIndex((item) => item.id === deletedItem);
-        const nextItem = getNextItem(items.length - 2, deletedIndex);
+        const nextItem = getNextItem(totalItems - 1, deletedIndex);
 
         onSelectedMediaItem(items[nextItem]);
     };
@@ -69,7 +69,10 @@ export const SecondaryToolbar = ({ items, mediaItem, onClose, onSelectedMediaIte
                     <LabelPicker selectedLabel={selectedLabel} labels={projectLabels} onSelect={toggleLabels} />
 
                     <ButtonGroup>
-                        <DeleteMediaItem itemsIds={[String(mediaItem.id)]} onDeleted={handleDeleteItem} />
+                        <DeleteMediaItem
+                            itemsIds={[String(mediaItem.id)]}
+                            onDeleted={([deletedItem]: string[]) => handleDeleteItem([deletedItem], items.length - 1)}
+                        />
                         <Button
                             variant='accent'
                             onPress={handleSubmit}
@@ -77,7 +80,7 @@ export const SecondaryToolbar = ({ items, mediaItem, onClose, onSelectedMediaIte
                             marginStart={'size-200'}
                             isDisabled={!hasAnnotations || isSaving}
                         >
-                            {isUserReviewed ? 'Submit' : 'Approve'}
+                            Submit
                         </Button>
 
                         <Button variant='secondary' onPress={onClose} isDisabled={isSaving}>

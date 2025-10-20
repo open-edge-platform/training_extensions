@@ -4,7 +4,7 @@
 import { createContext, ReactNode, useContext, useEffect, useRef, useState } from 'react';
 
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-import { get, isObject } from 'lodash-es';
+import { get, isEmpty, isObject } from 'lodash-es';
 import { $api } from 'src/api/client';
 import { components } from 'src/api/openapi-spec';
 import { v4 as uuid } from 'uuid';
@@ -60,7 +60,7 @@ export const AnnotationActionsProvider = ({ children, mediaItem }: AnnotationAct
         '/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations'
     );
 
-    const { data: serverAnnotations } = $api.useQuery(
+    const { data: serverAnnotations, error: fetchError } = $api.useQuery(
         'get',
         '/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations',
         {
@@ -131,6 +131,12 @@ export const AnnotationActionsProvider = ({ children, mediaItem }: AnnotationAct
             isDirty.current = false;
         }
     }, [serverAnnotations, project]);
+
+    useEffect(() => {
+        if (!isEmpty(fetchError)) {
+            setLocalAnnotations([]);
+        }
+    }, [fetchError]);
 
     return (
         <AnnotationsContext.Provider
