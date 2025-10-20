@@ -22,7 +22,6 @@ from .validations import (
 
 if TYPE_CHECKING:
     import numpy as np
-    from datumaro import Polygon
     from torchvision.tv_tensors import BoundingBoxes, Mask
 
     from otx.data.entity.base import ImageInfo
@@ -41,7 +40,7 @@ class OTXDataItem(ValidateItemMixin, Mapping):
         masks (Mask | None): The masks, optional.
         bboxes (BoundingBoxes | None): The bounding boxes, optional.
         keypoints (torch.Tensor | None): The keypoints, optional.
-        polygons (list[Polygon] | None): The polygons, optional.
+        polygons (np.ndarray | None): The polygons, optional.
         img_info (ImageInfo | None): Additional image information, optional.
     """
 
@@ -125,7 +124,7 @@ class OTXDataBatch(ValidateBatchMixin):
     masks: list[Mask] | None = None
     bboxes: list[BoundingBoxes] | None = None
     keypoints: list[torch.Tensor] | None = None
-    polygons: list[list[Polygon]] | None = None
+    polygons: list[np.ndarray] | None = None
     imgs_info: Sequence[ImageInfo | None] | None = None  # TODO(ashwinvaidya17): revisit
 
     def pin_memory(self) -> OTXDataBatch:

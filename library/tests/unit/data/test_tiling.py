@@ -9,10 +9,7 @@ from unittest.mock import MagicMock, create_autospec
 
 import numpy as np
 import pytest
-import shapely.geometry as sg
 import torch
-from datumaro import Dataset as DmDataset
-from datumaro import Polygon
 from model_api.models import Model
 from model_api.models.result import ImageResultWithSoftPrediction
 from model_api.tilers import SemanticSegmentationTiler
@@ -28,7 +25,6 @@ from otx.config.data import (
     SubsetConfig,
     TileConfig,
 )
-from otx.data.dataset.tile import OTXTileTransform
 from otx.data.entity.tile import TileBatchDetDataEntity, TileBatchInstSegDataEntity, TileBatchSegDataEntity
 from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
 from otx.data.module import OTXDataModule
@@ -235,74 +231,6 @@ class TestOTXTiling:
 
         return pred_entity
 
-    @pytest.mark.parametrize(
-        "task",
-        [OTXTaskType.DETECTION, OTXTaskType.INSTANCE_SEGMENTATION, OTXTaskType.SEMANTIC_SEGMENTATION],
-    )
-    def test_tile_transform(self, task, fxt_data_roots):
-        if task in (OTXTaskType.INSTANCE_SEGMENTATION, OTXTaskType.DETECTION):
-            dataset_format = "coco_instances"
-        elif task == OTXTaskType.SEMANTIC_SEGMENTATION:
-            dataset_format = "common_semantic_segmentation_with_subset_dirs"
-        else:
-            pytest.skip("Task not supported")
-
-        data_root = str(fxt_data_roots[task])
-        dataset = DmDataset.import_from(data_root, format=dataset_format)
-
-        rng = np.random.default_rng()
-        tile_size = rng.integers(low=50, high=128, size=(2,))
-        overlap = rng.random(2)
-        overlap = overlap.clip(0, 0.9)
-        threshold_drop_ann = rng.random()
-        tiled_dataset = DmDataset.import_from(data_root, format=dataset_format)
-        tiled_dataset.transform(
-            OTXTileTransform,
-            tile_size=tile_size,
-            overlap=overlap,
-            threshold_drop_ann=threshold_drop_ann,
-            with_full_img=True,
-        )
-
-        h_stride = max(int((1 - overlap[0]) * tile_size[0]), 1)
-        w_stride = max(int((1 - overlap[1]) * tile_size[1]), 1)
-
-        num_tiles = 0
-        for dataset_item in dataset:
-            height, width = dataset_item.media.data.shape[:2]
-            for _ in range(0, height, h_stride):
-                for _ in range(0, width, w_stride):
-                    num_tiles += 1
-
-        assert len(tiled_dataset) == num_tiles + len(dataset), "Incorrect number of tiles"
-
-        tiled_dataset = DmDataset.import_from(data_root, format=dataset_format)
-        tiled_dataset.transform(
-            OTXTileTransform,
-            tile_size=tile_size,
-            overlap=overlap,
-            threshold_drop_ann=threshold_drop_ann,
-            with_full_img=False,
-        )
-        assert len(tiled_dataset) == num_tiles, "Incorrect number of tiles"
-
-    def test_tile_polygon_func(self):
-        points = np.array([(1, 2), (3, 5), (4, 2), (4, 6), (1, 6)])
-        polygon = Polygon(points=points.flatten().tolist())
-        roi = sg.Polygon([(0, 0), (5, 0), (5, 5), (0, 5)])
-
-        inter_polygon = OTXTileTransform._tile_polygon(polygon, roi, threshold_drop_ann=0.0)
-        assert isinstance(inter_polygon, Polygon), "Intersection should be a Polygon"
-        assert inter_polygon.get_area() > 0, "Intersection area should be greater than 0"
-
-        assert (
-            OTXTileTransform._tile_polygon(polygon, roi, threshold_drop_ann=1.0) is None
-        ), "Intersection should be None"
-
-        invalid_polygon = Polygon(points=[0, 0, 5, 0, 5, 5, 5, 0])
-        assert OTXTileTransform._tile_polygon(invalid_polygon, roi) is None, "Invalid polygon should be None"
-
-    @pytest.mark.xfail(reason="Tiling not yet implemented with new dataset")
     def test_adaptive_tiling(self, fxt_data_config):
         for task, data_config in fxt_data_config.items():
             # Enable tile adapter

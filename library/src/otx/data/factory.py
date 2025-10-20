@@ -89,13 +89,17 @@ class OTXDatasetFactory:
             return OTXMulticlassClsDataset(**common_kwargs)
 
         if task == OTXTaskType.MULTI_LABEL_CLS:
-            from .dataset.classification import OTXMultilabelClsDataset
+            from .dataset.classification_new import OTXMultilabelClsDataset
 
+            dataset = convert_from_legacy(dm_subset)
+            common_kwargs["dm_subset"] = dataset
             return OTXMultilabelClsDataset(**common_kwargs)
 
         if task == OTXTaskType.H_LABEL_CLS:
-            from .dataset.classification import OTXHlabelClsDataset
+            from .dataset.classification_new import OTXHlabelClsDataset
 
+            dataset = convert_from_legacy(dm_subset)
+            common_kwargs["dm_subset"] = dataset
             return OTXHlabelClsDataset(**common_kwargs)
 
         if task == OTXTaskType.DETECTION:
