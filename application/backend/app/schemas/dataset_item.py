@@ -7,7 +7,7 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from app.schemas.base import BaseRequiredIDNameModel, Pagination
+from app.core.models import BaseRequiredIDNameModel, Pagination
 from app.schemas.label import LabelReference
 from app.schemas.shape import Shape
 

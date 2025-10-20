@@ -6,7 +6,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, StringConstraints
 
-from app.schemas.base import BaseIDModel, BaseRequiredIDModel, RequiresID
+from app.core.models import BaseIDModel, BaseRequiredIDModel, RequiresID
 
 COLOR_REGEX = r"^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
 

@@ -9,7 +9,7 @@ from uuid import UUID
 
 from pydantic import Field, TypeAdapter
 
-from app.schemas.base import BaseRequiredIDNameModel, HasID
+from app.core.models import BaseRequiredIDNameModel, HasID
 
 IP_CAMERA_USERNAME = "IP_CAMERA_USERNAME"
 IP_CAMERA_PASSWORD = "IP_CAMERA_PASSWORD"  # noqa: S105

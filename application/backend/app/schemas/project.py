@@ -1,19 +1,12 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from enum import StrEnum
 from typing import Generic, TypeVar
 
 from pydantic import BaseModel, Field
 
-from app.schemas.base import HasID, RequiresID
+from app.core.models import HasID, RequiresID, TaskType
 from app.schemas.label import LabelCreate, LabelView
-
-
-class TaskType(StrEnum):
-    CLASSIFICATION = "classification"
-    DETECTION = "detection"
-    INSTANCE_SEGMENTATION = "instance_segmentation"
 
 
 class TaskBase(BaseModel):

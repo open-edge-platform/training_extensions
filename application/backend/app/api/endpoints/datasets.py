@@ -9,8 +9,8 @@ from fastapi.openapi.models import Example
 from starlette.responses import FileResponse
 
 from app.api.dependencies import get_dataset_item_id, get_dataset_service, get_file_name_and_extension, get_project_id
+from app.core.models import Pagination
 from app.schemas import DatasetItem, DatasetItemsWithPagination
-from app.schemas.base import Pagination
 from app.schemas.dataset_item import (
     DatasetItemAnnotation,
     DatasetItemAnnotationsWithSource,

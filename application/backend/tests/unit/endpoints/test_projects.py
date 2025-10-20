@@ -1,26 +1,20 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import tempfile
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 from uuid import uuid4
 
 import pytest
 from fastapi import status
 
-from app.api.dependencies import get_data_collector, get_label_service, get_project_service
+from app.api.dependencies import get_data_collector, get_label_service
 from app.main import app
 from app.schemas import LabelView, PatchLabels, ProjectView
 from app.schemas.label import LabelCreate, LabelEdit, LabelRemove
 from app.schemas.project import TaskType, TaskView
-from app.services import (
-    ProjectService,
-    ResourceInUseError,
-    ResourceNotFoundError,
-    ResourceType,
-    ResourceWithIdAlreadyExistsError,
-)
+from app.services import ResourceInUseError, ResourceNotFoundError, ResourceType, ResourceWithIdAlreadyExistsError
 from app.services.data_collect import DataCollector
-from app.services.label_service import DuplicateLabelsError
+from app.services.label_service import DuplicateLabelsError, LabelService
 
 
 @pytest.fixture
@@ -41,13 +35,6 @@ def fxt_project() -> ProjectView:
 
 
 @pytest.fixture
-def fxt_project_service() -> MagicMock:
-    project_service = MagicMock(spec=ProjectService)
-    app.dependency_overrides[get_project_service] = lambda: project_service
-    return project_service
-
-
-@pytest.fixture
 def fxt_data_collector() -> MagicMock:
     data_collector = MagicMock(spec=DataCollector)
     app.dependency_overrides[get_data_collector] = lambda: data_collector
@@ -56,10 +43,9 @@ def fxt_data_collector() -> MagicMock:
 
 @pytest.fixture
 def fxt_label_service():
-    with patch("app.services.LabelService") as MockLabelService:
-        mock_service = MockLabelService.return_value
-        app.dependency_overrides[get_label_service] = lambda: mock_service
-        return mock_service
+    label_service = MagicMock(spec=LabelService)
+    app.dependency_overrides[get_label_service] = lambda: label_service
+    return label_service
 
 
 class TestProjectEndpoints:

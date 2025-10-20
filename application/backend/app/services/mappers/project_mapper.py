@@ -2,9 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 from uuid import UUID
 
+from app.core.models.task_type import TaskType
 from app.db.schema import ProjectDB
 from app.schemas import LabelView, ProjectCreate, ProjectView
-from app.schemas.project import TaskType, TaskView
+from app.schemas.project import TaskView
 
 
 class ProjectMapper:

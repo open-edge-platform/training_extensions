@@ -9,12 +9,12 @@ from datetime import datetime, timedelta
 
 import click
 
+from app.core.models.task_type import TaskType
 from app.db import MigrationManager, get_db_session
 from app.db.schema import DatasetItemDB, LabelDB, ModelRevisionDB, PipelineDB, ProjectDB, SinkDB, SourceDB
 from app.schemas import DisconnectedSinkConfig, DisconnectedSourceConfig, OutputFormat, SinkType, SourceType
 from app.schemas.model import TrainingStatus
 from app.schemas.pipeline import FixedRateDataCollectionPolicy
-from app.schemas.project import TaskType
 from app.settings import get_settings
 
 logging.basicConfig(level=logging.INFO)

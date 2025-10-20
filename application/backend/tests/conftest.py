@@ -1,10 +1,11 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
+from collections.abc import Callable
 from uuid import uuid4
 
 import pytest
 
+from app.core.jobs import Job, JobParams, JobType
 from app.schemas import Model, OutputFormat, PipelineStatus, PipelineView, SinkType, SourceType
 from app.schemas.model import TrainingInfo, TrainingStatus
 from app.schemas.sink import MqttSinkConfig
@@ -63,3 +64,11 @@ def fxt_running_pipeline(fxt_webcam_source, fxt_mqtt_sink, fxt_model) -> Pipelin
         model_id=fxt_model.id,
         status=PipelineStatus.RUNNING,
     )
+
+
+@pytest.fixture
+def fxt_job(job_type: JobType = JobType.TRAIN, params: JobParams | None = None) -> Callable[[], Job]:
+    def _factory():
+        return Job(job_type=job_type, params=JobParams() if params is None else params)
+
+    return _factory
