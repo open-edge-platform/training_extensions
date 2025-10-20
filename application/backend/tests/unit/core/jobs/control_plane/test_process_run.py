@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import multiprocessing as mp
+from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
@@ -30,20 +31,17 @@ class TestProcessRun:
         return Mock(spec=RunnableFactory)
 
     @pytest.fixture
-    def fxt_job(self):
-        return Job()
-
-    @pytest.fixture
     def fxt_process_run(self, fxt_context, fxt_runnable_factory, fxt_job):
-        return ProcessRun(fxt_context, fxt_runnable_factory, fxt_job)
+        return ProcessRun(fxt_context, Path("tmp"), fxt_runnable_factory, fxt_job())
 
     def test_init(self, fxt_context, fxt_runnable_factory, fxt_job):
         """Test ProcessRun initialization."""
-        process_run = ProcessRun(fxt_context, fxt_runnable_factory, fxt_job)
+        process_run = ProcessRun(fxt_context, Path("tmp"), fxt_runnable_factory, fxt_job())
 
         assert process_run._ctx == fxt_context
+        assert process_run._data_dir == Path("tmp")
         assert process_run._runnable_factory == fxt_runnable_factory
-        assert process_run._job == fxt_job
+        assert isinstance(process_run._job, Job)
         assert process_run._proc is None
 
         # Verify pipe and event creation
@@ -65,7 +63,7 @@ class TestProcessRun:
     def test_events_yields_messages_from_parent_connection(self, fxt_process_run):
         """Test events method yields messages from parent connection."""
         # Mock messages from parent connection
-        messages = [Started(), Progress(50.0)]
+        messages = [Started(), Progress("training in progress", 50.0)]
         fxt_process_run._parent.recv.side_effect = [*messages, EOFError()]
 
         # Mock process with successful exit

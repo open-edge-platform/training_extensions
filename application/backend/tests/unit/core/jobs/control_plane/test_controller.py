@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from app.core.jobs.control_plane import JobController, JobQueue
-from app.core.jobs.models import Cancelled, Done, ExecutionEvent, Failed, Job, JobStatus, Progress, Started
+from app.core.jobs.models import Cancelled, Done, ExecutionEvent, Failed, JobStatus, Progress, Started
 from app.core.run import RunnerFactory
 
 
@@ -16,7 +16,7 @@ class MockRunner:
     """Mock runner for testing purposes."""
 
     def __init__(self, events=None):
-        self.events_to_yield = events or [Started(), Progress(50.0), Done()]
+        self.events_to_yield = events or [Started(), Progress("progress", 50.0), Done()]
         self.started = False
         self.stopped = False
         self.stop_called = asyncio.Event()
@@ -95,9 +95,9 @@ class TestJobController:
         assert fxt_job_controller._supervisor_task.cancelled()
 
     @pytest.mark.asyncio
-    async def test_supervise_loop_processes_jobs(self, fxt_job_controller, fxt_job_queue, fxt_runner_factory):
+    async def test_supervise_loop_processes_jobs(self, fxt_job_controller, fxt_job_queue, fxt_runner_factory, fxt_job):
         """Test supervisor loop processes jobs from queue."""
-        job = Job()
+        job = fxt_job()
         fxt_job_queue.next_runnable.side_effect = [job, asyncio.CancelledError()]
 
         mock_runner = MockRunner()
@@ -126,9 +126,9 @@ class TestJobController:
             mock_logger.exception.assert_called_with("Exception during supervise loop")
 
     @pytest.mark.asyncio
-    async def test_handle_job_events_unknown_event(self, fxt_job_controller):
+    async def test_handle_job_events_unknown_event(self, fxt_job_controller, fxt_job):
         """Test handling unknown job events logs warning."""
-        job = Job()
+        job = fxt_job()
         event_queue = asyncio.Queue()
 
         # Add unknown event type
@@ -147,17 +147,17 @@ class TestJobController:
         "events,expected_status,expected_progress",
         [
             ([Started(), None], JobStatus.RUNNING, 0.0),
-            ([Started(), Progress(10.0), Progress(20.0), None], JobStatus.RUNNING, 20.0),
-            ([Started(), Progress(50.0), Done()], JobStatus.DONE, 100.0),
-            ([Started(), Progress(50.0), Failed("error")], JobStatus.FAILED, 50.0),
-            ([Started(), Progress(50.0), Cancelled()], JobStatus.CANCELLED, 50.0),
+            ([Started(), Progress("Mock", 10.0), Progress("Mock", 20.0), None], JobStatus.RUNNING, 20.0),
+            ([Started(), Progress("Mock", 50.0), Done()], JobStatus.DONE, 100.0),
+            ([Started(), Progress("Mock", 50.0), Failed("error")], JobStatus.FAILED, 50.0),
+            ([Started(), Progress("Mock", 50.0), Cancelled()], JobStatus.CANCELLED, 50.0),
         ],
     )
     async def test_handle_job_events_progress_updates(
-        self, events, expected_status, expected_progress, fxt_job_controller
+        self, events, expected_status, expected_progress, fxt_job_controller, fxt_job
     ):
         """Test progress events update job properly."""
-        job = Job()
+        job = fxt_job()
         event_queue = asyncio.Queue()
 
         for event in events:
@@ -169,9 +169,11 @@ class TestJobController:
         assert job.progress == expected_progress
 
     @pytest.mark.asyncio
-    async def test_setup_job_execution_creates_thread_and_cancel_task(self, fxt_job_controller, fxt_runner_factory):
+    async def test_setup_job_execution_creates_thread_and_cancel_task(
+        self, fxt_job_controller, fxt_runner_factory, fxt_job
+    ):
         """Test _setup_job_execution creates proper thread and cancel task."""
-        job = Job()
+        job = fxt_job()
         event_queue = asyncio.Queue()
 
         mock_runner = MockRunner([Done()])
@@ -195,9 +197,9 @@ class TestJobController:
             await asyncio.sleep(0.01)
 
     @pytest.mark.asyncio
-    async def test_start_job_creates_task(self, fxt_job_controller):
+    async def test_start_job_creates_task(self, fxt_job_controller, fxt_job):
         """Test _start_job creates and tracks task properly."""
-        job = Job()
+        job = fxt_job()
 
         with patch.object(fxt_job_controller, "_run_job") as mock_run_job:
             initial_task_count = len(fxt_job_controller._tasks)

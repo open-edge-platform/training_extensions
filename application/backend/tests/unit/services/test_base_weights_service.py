@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 import pytest
 
-from app.schemas.project import TaskType
+from app.core.models.task_type import TaskType
 from app.services.base_weights_service import BaseWeightsService
 from app.supported_models.supported_models import ManifestNotFoundException
 

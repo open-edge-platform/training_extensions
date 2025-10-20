@@ -8,7 +8,7 @@ import pytest
 
 from app.core.jobs.control_plane import CancellationResult, JobController, JobQueue
 from app.core.jobs.models import Job, JobStatus
-from app.core.run import RunnableFactory
+from app.core.run import ExecutionContext, RunnableFactory
 
 from .mock_runnable import MockRunnable, RunnableBehaviour
 from .thread_run import ThreadRunnerFactory
@@ -36,13 +36,13 @@ class TestJobControlPlaneIntegration:
         return JobController(fxt_job_queue, fxt_runner_factory, max_parallel_jobs=2)
 
     @pytest.mark.asyncio
-    async def test_successful_job_execution(self, fxt_job_queue, fxt_job_controller, fxt_runnable_factory):
+    async def test_successful_job_execution(self, fxt_job_queue, fxt_job_controller, fxt_runnable_factory, fxt_job):
         """Test complete job lifecycle from submission to successful completion."""
         # Set up successful runnable
-        fxt_runnable_factory.return_value = MockRunnable(RunnableBehaviour.SUCCESS)
+        fxt_runnable_factory.return_value = MockRunnable(behavior=RunnableBehaviour.SUCCESS)
 
         # Create and submit job
-        job = Job()
+        job = fxt_job()
         await fxt_job_queue.submit(job)
 
         # Start controller
@@ -62,12 +62,12 @@ class TestJobControlPlaneIntegration:
             await fxt_job_controller.stop()
 
     @pytest.mark.asyncio
-    async def test_job_failure_handling(self, fxt_job_queue, fxt_job_controller, fxt_runnable_factory):
+    async def test_job_failure_handling(self, fxt_job_queue, fxt_job_controller, fxt_runnable_factory, fxt_job):
         """Test job failure is properly handled and propagated."""
         # Set up failing runnable
-        fxt_runnable_factory.return_value = MockRunnable(RunnableBehaviour.FAILURE)
+        fxt_runnable_factory.return_value = MockRunnable(behavior=RunnableBehaviour.FAILURE)
 
-        job = Job()
+        job = fxt_job()
         await fxt_job_queue.submit(job)
 
         await fxt_job_controller.start()
@@ -85,12 +85,14 @@ class TestJobControlPlaneIntegration:
             await fxt_job_controller.stop()
 
     @pytest.mark.asyncio
-    async def test_job_cancellation_during_execution(self, fxt_job_queue, fxt_job_controller, fxt_runnable_factory):
+    async def test_job_cancellation_during_execution(
+        self, fxt_job_queue, fxt_job_controller, fxt_runnable_factory, fxt_job
+    ):
         """Test job cancellation during active execution."""
         # Use slow runnable for cancellation testing
-        fxt_runnable_factory.return_value = MockRunnable(RunnableBehaviour.SLOW, execution_time=0.05)
+        fxt_runnable_factory.return_value = MockRunnable(behavior=RunnableBehaviour.SLOW, execution_time=0.05)
 
-        job = Job()
+        job = fxt_job()
         await fxt_job_queue.submit(job)
 
         await fxt_job_controller.start()
@@ -113,17 +115,19 @@ class TestJobControlPlaneIntegration:
             await fxt_job_controller.stop()
 
     @pytest.mark.asyncio
-    async def test_multiple_jobs_concurrent_execution(self, fxt_job_queue, fxt_job_controller, fxt_runnable_factory):
+    async def test_multiple_jobs_concurrent_execution(
+        self, fxt_job_queue, fxt_job_controller, fxt_runnable_factory, fxt_job
+    ):
         """Test multiple jobs can execute concurrently within capacity limits."""
         # Create jobs with fast execution
         jobs = []
         for i in range(3):
-            job = Job()
+            job = fxt_job()
             jobs.append(job)
             await fxt_job_queue.submit(job)
 
         # Mock factory to return fast success runnables
-        fxt_runnable_factory.return_value = MockRunnable(RunnableBehaviour.INSTANT)
+        fxt_runnable_factory.return_value = MockRunnable(behavior=RunnableBehaviour.INSTANT)
 
         await fxt_job_controller.start()
 
@@ -141,7 +145,7 @@ class TestJobControlPlaneIntegration:
             await fxt_job_controller.stop()
 
     @pytest.mark.asyncio
-    async def test_capacity_management_limits_concurrency(self, fxt_runnable_factory):
+    async def test_capacity_management_limits_concurrency(self, fxt_runnable_factory, fxt_job):
         """Test that capacity management properly limits concurrent execution."""
         job_queue = JobQueue()
         runner_factory = ThreadRunnerFactory(fxt_runnable_factory)
@@ -154,7 +158,7 @@ class TestJobControlPlaneIntegration:
         max_concurrent = 0
 
         class ConcurrencyTrackingRunnable(MockRunnable):
-            def run(self, ctx):
+            def run(self, ctx: ExecutionContext):
                 nonlocal concurrent_count, max_concurrent
                 concurrent_count += 1
                 max_concurrent = max(max_concurrent, concurrent_count)
@@ -162,7 +166,7 @@ class TestJobControlPlaneIntegration:
                 try:
                     # Simulate some work
                     for progress in [50.0, 100.0]:
-                        ctx.report_progress(progress)
+                        ctx.report_progress(progress=progress)
                         ctx.heartbeat()
                         # Small delay to ensure overlap if running concurrently
                         import time
@@ -174,7 +178,7 @@ class TestJobControlPlaneIntegration:
         # Create multiple jobs
         jobs = []
         for i in range(3):
-            job = Job()
+            job = fxt_job()
             jobs.append(job)
             await job_queue.submit(job)
 
@@ -198,11 +202,13 @@ class TestJobControlPlaneIntegration:
             await job_controller.stop()
 
     @pytest.mark.asyncio
-    async def test_progress_updates_propagation(self, fxt_job_queue, fxt_job_controller, fxt_runnable_factory):
+    async def test_progress_updates_propagation(self, fxt_job_queue, fxt_job_controller, fxt_runnable_factory, fxt_job):
         """Test that progress updates are properly propagated to job state."""
-        fxt_runnable_factory.return_value = MockRunnable(RunnableBehaviour.SUCCESS, [30.0, 70.0])
+        fxt_runnable_factory.return_value = MockRunnable(
+            behavior=RunnableBehaviour.SUCCESS, progress_steps=[30.0, 70.0]
+        )
 
-        job = Job()
+        job = fxt_job()
         await fxt_job_queue.submit(job)
 
         await fxt_job_controller.start()
@@ -229,14 +235,16 @@ class TestJobControlPlaneIntegration:
             await fxt_job_controller.stop()
 
     @pytest.mark.asyncio
-    async def test_multiple_job_types_mixed_execution(self, fxt_job_queue, fxt_job_controller, fxt_runnable_factory):
+    async def test_multiple_job_types_mixed_execution(
+        self, fxt_job_queue, fxt_job_controller, fxt_runnable_factory, fxt_job
+    ):
         """Test execution of jobs with different behaviors (success, failure, cancellation)."""
         jobs = []
 
         # Create different types of jobs
-        success_job = Job()
-        failure_job = Job()
-        slow_job = Job()
+        success_job = fxt_job()
+        failure_job = fxt_job()
+        slow_job = fxt_job()
 
         jobs.extend([success_job, failure_job, slow_job])
 
@@ -245,14 +253,14 @@ class TestJobControlPlaneIntegration:
 
         call_count = 0
 
-        def mock_factory():
+        def mock_factory(_: str):
             nonlocal call_count
             call_count += 1
             if call_count == 1:
-                return MockRunnable(RunnableBehaviour.SUCCESS)
+                return MockRunnable(behavior=RunnableBehaviour.SUCCESS)
             if call_count == 2:
-                return MockRunnable(RunnableBehaviour.FAILURE)
-            return MockRunnable(RunnableBehaviour.SLOW, execution_time=0.02)
+                return MockRunnable(behavior=RunnableBehaviour.FAILURE)
+            return MockRunnable(behavior=RunnableBehaviour.SLOW, execution_time=0.02)
 
         fxt_runnable_factory.side_effect = mock_factory
 
@@ -277,7 +285,7 @@ class TestJobControlPlaneIntegration:
             await fxt_job_controller.stop()
 
     @pytest.mark.asyncio
-    async def test_supervisor_loop_error_recovery(self, fxt_job_queue, fxt_runner_factory):
+    async def test_supervisor_loop_error_recovery(self, fxt_job_queue, fxt_runner_factory, fxt_job):
         """Test that supervisor loop handles various errors gracefully and continues operating."""
         job_controller = JobController(fxt_job_queue, fxt_runner_factory, max_parallel_jobs=1)
 
@@ -285,8 +293,8 @@ class TestJobControlPlaneIntegration:
         error_count = 0
 
         # Create jobs for testing recovery
-        recovery_job = Job()
-        post_error_job = Job()
+        recovery_job = fxt_job()
+        post_error_job = fxt_job()
 
         # Mock runner factory that can simulate runner creation errors
         original_for_job = fxt_runner_factory.for_job
@@ -325,15 +333,15 @@ class TestJobControlPlaneIntegration:
 
     @pytest.mark.asyncio
     async def test_supervisor_loop_continuous_operation_after_errors(
-        self, fxt_job_queue, fxt_runner_factory, fxt_runnable_factory
+        self, fxt_job_queue, fxt_runner_factory, fxt_runnable_factory, fxt_job
     ):
         """Test that supervisor continues processing jobs normally after handling errors."""
         job_controller = JobController(fxt_job_queue, fxt_runner_factory, max_parallel_jobs=1)
 
         # Create multiple jobs
-        jobs_before_error = [Job() for _ in range(2)]
-        error_job = Job()
-        jobs_after_error = [Job() for _ in range(2)]
+        jobs_before_error = [fxt_job() for _ in range(2)]
+        error_job = fxt_job()
+        jobs_after_error = [fxt_job() for _ in range(2)]
 
         all_jobs = [*jobs_before_error, error_job, *jobs_after_error]
 
@@ -344,12 +352,12 @@ class TestJobControlPlaneIntegration:
         # Mock factory that causes error for specific job
         call_count = 0
 
-        def selective_factory():
+        def selective_factory(_: str):
             nonlocal call_count
             call_count += 1
             if call_count == 3:  # Third job (error_job) will fail
-                return MockRunnable(RunnableBehaviour.FAILURE)
-            return MockRunnable(RunnableBehaviour.SUCCESS)
+                return MockRunnable(behavior=RunnableBehaviour.FAILURE)
+            return MockRunnable(behavior=RunnableBehaviour.SUCCESS)
 
         fxt_runnable_factory.side_effect = selective_factory
 

@@ -9,8 +9,9 @@ from collections.abc import Iterator
 from multiprocessing.connection import Connection
 from multiprocessing.context import SpawnProcess
 from multiprocessing.synchronize import Event
+from pathlib import Path
 
-from app.core.jobs.models import Done, ExecutionEvent, Failed, Job, Started
+from app.core.jobs.models import Done, ExecutionEvent, Failed, Job, JobType, Started
 from app.core.run import ExecutionContext, RunnableFactory, Runner
 
 logger = logging.getLogger(__name__)
@@ -19,8 +20,9 @@ logger = logging.getLogger(__name__)
 class ProcessRun:
     """Owns the child Process+IPC and translates to domain events."""
 
-    def __init__(self, ctx: mp.context.SpawnContext, runnable_factory: RunnableFactory, job: Job):
+    def __init__(self, ctx: mp.context.SpawnContext, data_dir: Path, runnable_factory: RunnableFactory, job: Job):
         self._ctx = ctx
+        self._data_dir = data_dir
         self._runnable_factory = runnable_factory
         self._job = job
         self._parent, self._child = ctx.Pipe(duplex=False)
@@ -30,7 +32,14 @@ class ProcessRun:
     def start(self) -> "ProcessRun":
         self._proc = self._ctx.Process(
             target=_entrypoint,
-            args=(self._runnable_factory, self._job.model_dump_json(), self._child, self._cancel),
+            args=(
+                self._runnable_factory,
+                self._data_dir,
+                self._job.job_type,
+                self._job.params.model_dump_json(),
+                self._child,
+                self._cancel,
+            ),
             name=f"trainer-{self._job.id}",
         )
         self._proc.start()
@@ -84,7 +93,9 @@ class ProcessRun:
             logger.error("Process %s doesn't respond to SIGKILL", self._proc.name)
 
 
-def _entrypoint(get_runnable: RunnableFactory, job_payload: str, conn: Connection, cancel_event: Event) -> None:
+def _entrypoint(
+    get_runnable: RunnableFactory, data_dir: Path, job_type: str, payload: str, conn: Connection, cancel_event: Event
+) -> None:
     import traceback
 
     from app.core.jobs.models import Cancelled, Done, Failed, Progress
@@ -92,11 +103,8 @@ def _entrypoint(get_runnable: RunnableFactory, job_payload: str, conn: Connectio
     class CancelledExc(Exception):
         pass
 
-    runnable = get_runnable()
-    job = Job.model_validate_json(job_payload)
-
-    def report(p: float):
-        conn.send(Progress(float(p)))
+    def report(msg: str, p: float) -> None:
+        conn.send(Progress(message=msg, value=p))
 
     # alt: another possible solution is to run the heartbeat in a separate daemon thread at a set interval, so it is not
     # coupled to the training process.
@@ -104,9 +112,11 @@ def _entrypoint(get_runnable: RunnableFactory, job_payload: str, conn: Connectio
         if cancel_event.is_set():
             raise CancelledExc
 
+    runnable = get_runnable(JobType(job_type))
+
     try:
         conn.send(Started())
-        runnable.run(ExecutionContext(task=job, report_progress=report, heartbeat=heartbeat))
+        runnable.run(ExecutionContext(payload=payload, data_dir=data_dir, report=report, heartbeat=heartbeat))
         conn.send(Done())
     except CancelledExc:
         conn.send(Cancelled())
@@ -120,10 +130,11 @@ def _entrypoint(get_runnable: RunnableFactory, job_payload: str, conn: Connectio
 class ProcessRunnerFactory:
     """Process-based infra with spawned context"""
 
-    def __init__(self, runnable_factory: RunnableFactory) -> None:
+    def __init__(self, data_dir: Path, runnable_factory: RunnableFactory) -> None:
         # consider using native context for python 3.14 due to upgrade to 'fork_server' model
         self._ctx = mp.get_context("spawn")
+        self._data_dir = data_dir
         self._runnable_factory = runnable_factory
 
     def for_job(self, job: Job) -> Runner[Job, ExecutionEvent]:
-        return ProcessRun(self._ctx, self._runnable_factory, job)
+        return ProcessRun(self._ctx, self._data_dir, self._runnable_factory, job)

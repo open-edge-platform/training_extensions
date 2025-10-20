@@ -8,10 +8,13 @@ import pytest
 from starlette import status
 
 from app.api.dependencies import get_job_queue
-from app.core.jobs import Job, JobQueue, JobStatus
+from app.core.jobs import Job, JobParams, JobQueue, JobStatus
 from app.core.jobs.control_plane import CancellationResult
+from app.core.models import TaskType
 from app.main import app
-from app.schemas.job import JobRequest, JobType, JobView, TrainingRequest
+from app.schemas import ProjectView
+from app.schemas.job import JobRequest, JobType, JobView, TrainingRequestParams
+from app.schemas.project import TaskView
 
 
 @pytest.fixture
@@ -30,17 +33,23 @@ def fxt_job() -> Callable[[UUID | None, JobStatus, float], Job]:
             id=job_id or uuid4(),
             status=job_status,
             progress=100.0 if job_status >= JobStatus.DONE else progress,
+            job_type=JobType.TRAIN,
+            params=JobParams(),
         )
 
     return job_factory
 
 
 class TestJobEndpoints:
-    def test_submit_train_job(self, fxt_client, fxt_jobs_queue):
+    def test_submit_train_job(self, fxt_client, fxt_jobs_queue, fxt_project_service):
+        project = Mock(spec=ProjectView)
+        project.task = Mock(spec=TaskView)
+        project.task.task_type = TaskType.CLASSIFICATION
+        fxt_project_service.get_project_by_id.return_value = project
         job_request = JobRequest(
             project_id=uuid4(),
             job_type=JobType.TRAIN,
-            parameters=TrainingRequest(
+            parameters=TrainingRequestParams(
                 model_architecture_id="YOLOv8",
                 parent_model_revision_id=uuid4(),
             ),
@@ -50,7 +59,10 @@ class TestJobEndpoints:
 
         assert response.status_code == status.HTTP_202_ACCEPTED
         assert response.json()["job_id"]
+        fxt_project_service.get_project_by_id.assert_called_once_with(job_request.project_id)
         fxt_jobs_queue.submit.assert_called_once()
+        assert fxt_jobs_queue.submit.call_args[0][0].params.model_architecture_id == "YOLOv8"
+        assert fxt_jobs_queue.submit.call_args[0][0].params.task_type == TaskType.CLASSIFICATION
 
     def test_list_jobs(self, fxt_client, fxt_jobs_queue, fxt_job):
         fxt_jobs_queue.list_all.return_value = [fxt_job(), fxt_job()]

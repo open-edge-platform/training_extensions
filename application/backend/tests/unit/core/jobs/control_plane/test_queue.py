@@ -7,7 +7,7 @@ from uuid import uuid4
 import pytest
 
 from app.core.jobs.control_plane.queue import CancellationResult, JobQueue
-from app.core.jobs.models import Job, JobStatus
+from app.core.jobs.models import JobStatus
 
 
 class TestJobQueue:
@@ -23,10 +23,10 @@ class TestJobQueue:
         assert isinstance(queue._lock, asyncio.Lock)
 
     @pytest.mark.asyncio
-    async def test_submit_job(self):
+    async def test_submit_job(self, fxt_job):
         """Test job submission to queue."""
         queue = JobQueue()
-        job = Job()
+        job = fxt_job()
 
         await queue.submit(job)
 
@@ -35,10 +35,10 @@ class TestJobQueue:
         assert queue._queue.qsize() == 1
 
     @pytest.mark.asyncio
-    async def test_submit_multiple_jobs_preserves_order(self):
+    async def test_submit_multiple_jobs_preserves_order(self, fxt_job):
         """Test that multiple jobs maintain FIFO order."""
         queue = JobQueue()
-        jobs = [Job() for _ in range(3)]
+        jobs = [fxt_job() for _ in range(3)]
 
         for job in jobs:
             await queue.submit(job)
@@ -46,10 +46,10 @@ class TestJobQueue:
         assert queue._order == [job.id for job in jobs]
 
     @pytest.mark.asyncio
-    async def test_next_runnable_returns_pending_job(self):
+    async def test_next_runnable_returns_pending_job(self, fxt_job):
         """Test getting next runnable job from queue."""
         queue = JobQueue()
-        job = Job()
+        job = fxt_job()
 
         await queue.submit(job)
         next_job = await asyncio.wait_for(queue.next_runnable(), timeout=1.0)
@@ -58,12 +58,12 @@ class TestJobQueue:
         assert next_job.status == JobStatus.PENDING
 
     @pytest.mark.asyncio
-    async def test_next_runnable_skips_cancelled_jobs(self):
+    async def test_next_runnable_skips_cancelled_jobs(self, fxt_job):
         """Test that next_runnable skips cancelled jobs."""
         queue = JobQueue()
-        cancelled_job = Job()
+        cancelled_job = fxt_job()
         cancelled_job.cancel()
-        valid_job = Job()
+        valid_job = fxt_job()
 
         await queue.submit(cancelled_job)
         await queue.submit(valid_job)
@@ -71,10 +71,10 @@ class TestJobQueue:
         next_job = await asyncio.wait_for(queue.next_runnable(), timeout=1.0)
         assert next_job == valid_job
 
-    def test_get_existing_job(self):
+    def test_get_existing_job(self, fxt_job):
         """Test retrieving existing job by ID."""
         queue = JobQueue()
-        job = Job()
+        job = fxt_job()
         queue._by_id[job.id] = job
 
         result = queue.get(job.id)
@@ -88,10 +88,10 @@ class TestJobQueue:
         result = queue.get(fake_id)
         assert result is None
 
-    def test_list_all_jobs(self):
+    def test_list_all_jobs(self, fxt_job):
         """Test listing all jobs in submission order."""
         queue = JobQueue()
-        jobs = [Job() for _ in range(3)]
+        jobs = [fxt_job() for _ in range(3)]
 
         for job in jobs:
             queue._by_id[job.id] = job
@@ -100,18 +100,18 @@ class TestJobQueue:
         result = queue.list_all()
         assert result == jobs
 
-    def test_list_non_completed_jobs(self):
+    def test_list_non_completed_jobs(self, fxt_job):
         """Test listing only non-completed jobs."""
         queue = JobQueue()
 
-        pending_job = Job()
-        running_job = Job()
+        pending_job = fxt_job()
+        running_job = fxt_job()
         running_job.start()
-        done_job = Job()
+        done_job = fxt_job()
         done_job.finish()
-        failed_job = Job()
+        failed_job = fxt_job()
         failed_job.fail("error")
-        cancelled_job = Job()
+        cancelled_job = fxt_job()
         cancelled_job.cancel()
 
         jobs = [pending_job, running_job, done_job, failed_job, cancelled_job]
@@ -134,10 +134,10 @@ class TestJobQueue:
             (JobStatus.FAILED, CancellationResult.IGNORE_CANCEL, JobStatus.FAILED),
         ],
     )
-    def test_cancel_pending_job(self, initial_status, expected_result, expected_status):
+    def test_cancel_pending_job(self, initial_status, expected_result, expected_status, fxt_job):
         """Test cancelling a pending job."""
         queue = JobQueue()
-        job = Job()
+        job = fxt_job()
         job.status = initial_status
         queue._by_id[job.id] = job
 
@@ -160,10 +160,10 @@ class TestJobQueue:
         assert result == CancellationResult.NOT_FOUND
         assert result_job is None
 
-    def test_get_cancellation_event_creates_new_event(self):
+    def test_get_cancellation_event_creates_new_event(self, fxt_job):
         """Test that get_cancellation_event creates a new event for unknown job."""
         queue = JobQueue()
-        job = Job()
+        job = fxt_job()
         queue._by_id[job.id] = job
 
         event = queue.get_cancellation_event(job.id)
@@ -173,10 +173,10 @@ class TestJobQueue:
         assert queue._cancellation_events[job.id] is event
         assert not event.is_set()
 
-    def test_get_cancellation_event_returns_existing_event(self):
+    def test_get_cancellation_event_returns_existing_event(self, fxt_job):
         """Test that get_cancellation_event returns existing event."""
         queue = JobQueue()
-        job = Job()
+        job = fxt_job()
         queue._by_id[job.id] = job
 
         # Get event first time
@@ -187,10 +187,10 @@ class TestJobQueue:
         assert event1 is event2
         assert len(queue._cancellation_events) == 1
 
-    def test_get_cancellation_event_sets_event_if_already_cancelling(self):
+    def test_get_cancellation_event_sets_event_if_already_cancelling(self, fxt_job):
         """Test that get_cancellation_event sets event immediately if job is already cancelling."""
         queue = JobQueue()
-        job = Job()
+        job = fxt_job()
         job.status = JobStatus.CANCELLING
         queue._by_id[job.id] = job
 
@@ -198,10 +198,10 @@ class TestJobQueue:
 
         assert event.is_set()
 
-    def test_cleanup_cancellation_event_removes_event(self):
+    def test_cleanup_cancellation_event_removes_event(self, fxt_job):
         """Test that cleanup_cancellation_event removes the event."""
         queue = JobQueue()
-        job = Job()
+        job = fxt_job()
         queue._by_id[job.id] = job
 
         # Create event
@@ -221,10 +221,10 @@ class TestJobQueue:
         queue.cleanup_cancellation_event(fake_id)
         assert fake_id not in queue._cancellation_events
 
-    def test_cancel_running_job_sets_cancellation_event(self):
+    def test_cancel_running_job_sets_cancellation_event(self, fxt_job):
         """Test that cancelling a running job sets the cancellation event."""
         queue = JobQueue()
-        job = Job()
+        job = fxt_job()
         job.start()
         queue._by_id[job.id] = job
 
@@ -238,10 +238,10 @@ class TestJobQueue:
         assert job.status == JobStatus.CANCELLING
         assert event.is_set()
 
-    def test_cancel_running_job_without_existing_event(self):
+    def test_cancel_running_job_without_existing_event(self, fxt_job):
         """Test that cancelling a running job works even without pre-existing event."""
         queue = JobQueue()
-        job = Job()
+        job = fxt_job()
         job.start()
         queue._by_id[job.id] = job
 

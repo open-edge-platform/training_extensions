@@ -3,35 +3,45 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Generic, Protocol, TypeVar
 
-ReportFn = Callable[[float], None]
+ReportFn = Callable[[str, float], None]
 HeartbeatFn = Callable[[], None]
-T = TypeVar("T")
 
 
 @dataclass(kw_only=True)
-class ExecutionContext[T]:
-    task: T
-    report_progress: ReportFn
+class ExecutionContext:
+    payload: str
+    data_dir: Path
+    report: ReportFn
     heartbeat: HeartbeatFn
 
+    def report_progress(self, msg: str = "", progress: float = 0.0) -> None:
+        """Report progress of the execution."""
+        self.report(msg, progress)
 
-TContext = TypeVar("TContext", bound=ExecutionContext)
-TContext_contra = TypeVar("TContext_contra", contravariant=True, bound=ExecutionContext)
 
-
-class Runnable(Protocol[TContext_contra]):  # ignore
+class Runnable(Protocol):  # ignore
     """Generic interface for activities executed by runners."""
 
-    def run(self, ctx: TContext_contra) -> None: ...
+    def run(self, ctx: ExecutionContext) -> None: ...
 
 
-class RunnableFactory(Generic[TContext]):
+R = TypeVar("R", bound=Runnable)
+K = TypeVar("K")
+
+
+class RunnableFactory(Generic[K, R]):
     """Factory protocol for creating Runnable instances."""
 
-    def __init__(self, runnable_cls: type[Runnable[TContext]]) -> None:
-        self._runnable_cls = runnable_cls
+    def __init__(self) -> None:
+        self._registry: dict[K, type[R]] = {}
 
-    def __call__(self) -> Runnable[TContext]:
-        return self._runnable_cls()
+    def __call__(self, cls_type: K) -> R:
+        if cls_type not in self._registry:
+            raise ValueError(f"No runnable registered for class type: {cls_type}")
+        return self._registry[cls_type]()
+
+    def register(self, class_type: K, runnable_cls: type[R]) -> None:
+        self._registry[class_type] = runnable_cls

@@ -2,15 +2,15 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from datetime import UTC, datetime
-from enum import StrEnum
+from typing import Annotated, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from app.core.jobs.models import Job, JobStatus
+from app.core.jobs.models import Job, JobStatus, JobType
 
 
-class TrainingRequest(BaseModel):
+class TrainingRequestParams(BaseModel):
     """Request schema for training a new model."""
 
     model_architecture_id: str = Field(..., description="Model architecture identifier")
@@ -28,14 +28,14 @@ class TrainingRequest(BaseModel):
     }
 
 
-class JobType(StrEnum):
-    TRAIN = "train"
-
-
-class JobRequest(BaseModel):
+class BaseJobRequest(BaseModel):
     job_type: JobType = Field(..., description="Type of the job to be created")
     project_id: UUID = Field(..., description="ID of the project associated with the job")
-    parameters: TrainingRequest = Field(..., description="Parameters required for the job")
+
+
+class TrainingRequest(BaseJobRequest):
+    job_type: Literal[JobType.TRAIN]
+    parameters: TrainingRequestParams = Field(..., description="Parameters required for the job")
 
     model_config = {
         "json_schema_extra": {
@@ -49,6 +49,9 @@ class JobRequest(BaseModel):
             }
         }
     }
+
+
+JobRequest = Annotated[TrainingRequest, Field(discriminator="job_type")]
 
 
 class JobView(BaseModel):

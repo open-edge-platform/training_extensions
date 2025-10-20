@@ -2,14 +2,16 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from .control_plane import CancellationResult, JobController, JobQueue, ProcessRunnerFactory
-from .models import Job, JobStatus, now_utc_ts
+from .models import Job, JobParams, JobStatus, JobType, now_utc_ts
 
 __all__ = [
     "CancellationResult",
     "Job",
     "JobController",
+    "JobParams",
     "JobQueue",
     "JobStatus",
+    "JobType",
     "ProcessRunnerFactory",
     "now_utc_ts",
 ]

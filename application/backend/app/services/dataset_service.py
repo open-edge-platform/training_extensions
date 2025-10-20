@@ -16,6 +16,7 @@ import numpy as np
 from PIL import Image, UnidentifiedImageError
 from sqlalchemy.orm import Session
 
+from app.core.models import TaskType
 from app.db.schema import DatasetItemDB
 from app.repositories import DatasetItemRepository
 from app.schemas.dataset_item import (
@@ -25,7 +26,7 @@ from app.schemas.dataset_item import (
     DatasetItemSubset,
 )
 from app.schemas.label import LabelBase
-from app.schemas.project import ProjectBase, TaskType
+from app.schemas.project import ProjectBase
 from app.schemas.shape import FullImage, Polygon, Rectangle
 from app.services.datumaro_converter import convert_dataset
 from app.utils.images import crop_to_thumbnail

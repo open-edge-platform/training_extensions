@@ -2,7 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from datetime import UTC, datetime
-from enum import IntEnum
+from enum import IntEnum, StrEnum
+
+from pydantic import BaseModel
 
 from app.core.models import BaseIDModel
 
@@ -18,12 +20,22 @@ class JobStatus(IntEnum):
     CANCELLED = 12
 
 
+class JobType(StrEnum):
+    TRAIN = "train"
+
+
 def now_utc_ts() -> float:
     """Get the current UTC timestamp as a float."""
     return datetime.now(tz=UTC).timestamp()
 
 
+class JobParams(BaseModel):
+    pass
+
+
 class Job(BaseIDModel):
+    job_type: JobType
+    params: JobParams  # parameters of the job to be serialized and send to a runnable context
     status: JobStatus = JobStatus.PENDING
     submitted_at: float = now_utc_ts()
     updated_at: float = now_utc_ts()

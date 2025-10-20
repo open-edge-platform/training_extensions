@@ -72,7 +72,7 @@ class ThreadRunner(Runner[Job, ExecutionEvent]):
             ctx = self._create_execution_context()
 
             # Execute the runnable
-            self.get_runnable().run(ctx)
+            self.get_runnable("mock").run(ctx)
 
             # If we get here without cancellation, job succeeded
             if not self._cancel_event.is_set():
@@ -89,13 +89,13 @@ class ThreadRunner(Runner[Job, ExecutionEvent]):
     def _create_execution_context(self) -> ExecutionContext:
         """Create execution context for the runnable."""
 
-        class MockExecutionContext(ExecutionContext[Job]):
+        class MockExecutionContext(ExecutionContext):
             def __init__(self, runner: "ThreadRunner"):
                 self.runner = runner
 
-            def report_progress(self, progress: float):
+            def report_progress(self, message: str = "training", progress: float = 0.0):
                 if not self.runner._cancel_event.is_set():
-                    self.runner._event_queue.put(Progress(progress))
+                    self.runner._event_queue.put(Progress(message, progress))
 
             def heartbeat(self):
                 if self.runner._cancel_event.is_set():
