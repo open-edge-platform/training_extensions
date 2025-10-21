@@ -134,8 +134,6 @@ jobs:
     runs-on: [self-hosted, linux, x64, dev, dmount]
     permissions:
       contents: read
-      # The id-token permission is required by Codecov to use OIDC
-      id-token: write
     needs:
       - Unit-Test
       - check_paths
@@ -179,14 +177,7 @@ jobs:
 
       - name: Integration testing
         working-directory: library
-        run: uv run pytest tests/integration/${{ matrix.task }} --cov --cov-report=xml
-
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5.5.1
-        with:
-          directory: library
-          flags: coverage_integration-test-${{ matrix.task }}_Python-${{ matrix.python-version }}
-          use_oidc: true
+        run: uv run pytest tests/integration -ra --showlocals --csv=${{ matrix.task }}_Python-${{ matrix.python-version }}.csv --task ${{ matrix.task }} --open-subprocess --run-category-only
 
   required_check:
     name: Required Check lib-lint-and-test
