@@ -8,7 +8,7 @@ from uuid import UUID
 
 from pydantic import Field, TypeAdapter
 
-from app.schemas.base import BaseRequiredIDNameModel, HasID
+from app.core.models import BaseRequiredIDNameModel, HasID
 
 MQTT_USERNAME = "MQTT_USERNAME"
 MQTT_PASSWORD = "MQTT_PASSWORD"  # noqa: S105

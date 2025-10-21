@@ -1,18 +1,14 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 
-import { Selection, Size, useUnwrapDOMRef, View } from '@geti/ui';
-import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import { Size, useUnwrapDOMRef, View } from '@geti/ui';
 import { DatasetItem } from 'src/features/annotator/types';
 import { useSelectedData } from 'src/routes/dataset/provider';
 
-import { MediaItem } from '../../gallery/media-item.component';
-import { MediaThumbnail } from '../../gallery/media-thumbnail.component';
-import { useGetDatasetItems } from '../../gallery/use-get-dataset-items.hook';
-import { getThumbnailUrl } from '../../gallery/utils';
 import { VirtualizerGridLayout } from '../../virtualizer-grid-layout/virtualizer-grid-layout.component';
+import { SidebarMediaItem } from './sidebar-media-item.component';
 import { useKeyboardNavigation } from './use-keyboard-navigation.hook';
 
 const layoutOptions = {
@@ -24,17 +20,25 @@ const layoutOptions = {
 };
 
 type SidebarItemsProps = {
+    items: DatasetItem[];
+    hasNextPage: boolean;
+    isFetchingNextPage: boolean;
     mediaItem: DatasetItem;
+    fetchNextPage: () => void;
     onSelectedMediaItem: (item: DatasetItem) => void;
 };
 
-export const SidebarItems = ({ mediaItem, onSelectedMediaItem }: SidebarItemsProps) => {
+export const SidebarItems = ({
+    mediaItem,
+    items,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+    onSelectedMediaItem,
+}: SidebarItemsProps) => {
     const ref = useRef(null);
     const unwrapRef = useUnwrapDOMRef(ref);
-    const project_id = useProjectIdentifier();
     const { mediaState } = useSelectedData();
-    const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set([String(mediaItem.id)]));
-    const { items, hasNextPage, isFetchingNextPage, fetchNextPage } = useGetDatasetItems();
 
     const selectedIndex = items.findIndex((item) => item.id === mediaItem.id);
 
@@ -42,10 +46,7 @@ export const SidebarItems = ({ mediaItem, onSelectedMediaItem }: SidebarItemsPro
         ref: unwrapRef,
         items,
         selectedIndex,
-        onSelectedMediaItem: (item) => {
-            onSelectedMediaItem(item);
-            setSelectedKeys(new Set([item.id]));
-        },
+        onSelectedMediaItem,
     });
 
     return (
@@ -55,21 +56,16 @@ export const SidebarItems = ({ mediaItem, onSelectedMediaItem }: SidebarItemsPro
                 ariaLabel='sidebar-items'
                 selectionMode='single'
                 mediaState={mediaState}
-                selectedKeys={selectedKeys}
+                selectedKeys={new Set([String(mediaItem.id)])}
                 layoutOptions={layoutOptions}
                 isLoadingMore={isFetchingNextPage}
                 scrollToIndex={selectedIndex}
                 onLoadMore={() => hasNextPage && fetchNextPage()}
-                onSelectionChange={setSelectedKeys}
                 contentItem={(item) => (
-                    <MediaItem
-                        contentElement={() => (
-                            <MediaThumbnail
-                                alt={item.name}
-                                url={getThumbnailUrl(project_id, String(item.id))}
-                                onClick={() => onSelectedMediaItem(item)}
-                            />
-                        )}
+                    <SidebarMediaItem
+                        item={item}
+                        isSelected={mediaItem.id === item.id}
+                        onSelectedMediaItem={onSelectedMediaItem}
                     />
                 )}
             />

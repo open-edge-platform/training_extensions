@@ -52,5 +52,5 @@ class Pagination(ABC, BaseModel):
 
     offset: int  # index of the first item returned (0-based)
     limit: int  # number of items requested per page
-    count: int  # number of items actually returned (may be less than limit if at the end)
+    count: int  # number of items actually returned (can be less than the limit if at the end)
     total: int  # total number of items available

@@ -5,8 +5,8 @@ import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useStat
 
 import { Selection } from '@geti/ui';
 
-export type AnnotationState = 'rejected' | 'accepted';
-export type MediaState = Map<string, AnnotationState>;
+export type AnnotationStatus = 'rejected' | 'accepted';
+export type MediaState = Map<string, AnnotationStatus>;
 
 type SelectedDataState = null | {
     selectedKeys: Selection;

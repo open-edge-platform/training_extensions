@@ -235,6 +235,12 @@ class AutoConfigurator:
             model_config["init_args"]["data_input_params"] = data_input_params.as_dict()
         elif (datamodule := self.get_datamodule()) is not None:
             # get data_input_params info from datamodule
+            if datamodule.input_size is None:
+                msg = (
+                    "Input size is not specified in the datamodule. "
+                    "Ensure that the datamodule has a valid input size."
+                )
+                raise ValueError(msg)
             model_config["init_args"]["data_input_params"] = DataInputParams(
                 input_size=datamodule.input_size,
                 mean=datamodule.input_mean,

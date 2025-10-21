@@ -16,16 +16,17 @@ import numpy as np
 from PIL import Image, UnidentifiedImageError
 from sqlalchemy.orm import Session
 
+from app.core.models import TaskType
 from app.db.schema import DatasetItemDB
 from app.repositories import DatasetItemRepository
-from app.schemas import Label
 from app.schemas.dataset_item import (
     DatasetItem,
     DatasetItemAnnotation,
     DatasetItemAnnotationsWithSource,
     DatasetItemSubset,
 )
-from app.schemas.project import ProjectBase, TaskType
+from app.schemas.label import LabelBase
+from app.schemas.project import ProjectBase
 from app.schemas.shape import FullImage, Polygon, Rectangle
 from app.services.datumaro_converter import convert_dataset
 from app.utils.images import crop_to_thumbnail
@@ -239,7 +240,7 @@ class DatasetService:
             raise ResourceNotFoundError(ResourceType.DATASET_ITEM, dataset_item.id)
 
     @staticmethod
-    def _validate_annotations_labels(annotations: list[DatasetItemAnnotation], labels: Sequence[Label]) -> None:
+    def _validate_annotations_labels(annotations: list[DatasetItemAnnotation], labels: Sequence[LabelBase]) -> None:
         for annotation in annotations:
             for annotation_label in annotation.labels:
                 project_label = next((label for label in labels if label.id == annotation_label.id), None)

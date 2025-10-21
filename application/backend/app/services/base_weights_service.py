@@ -8,8 +8,8 @@ from pathlib import Path
 
 import requests
 
+from app.core.models import TaskType
 from app.supported_models import ModelManifest
-from app.supported_models.default_models import TaskType
 from app.supported_models.supported_models import SupportedModels
 
 logger = logging.getLogger(__name__)
@@ -40,7 +40,7 @@ class BaseWeightsService:
 
     def get_local_weights_path(self, task: TaskType, model_manifest_id: str, allow_download: bool = True) -> Path:
         """
-        Return the location of the weights (.pt file) in local storage.
+        Return the location of the weights (.pt file).
 
         If not already present and allow_download is enabled, downloads the weights from remote.
 

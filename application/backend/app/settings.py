@@ -45,6 +45,8 @@ class Settings(BaseSettings):
     # Proxy settings
     no_proxy: str = Field(default="localhost,127.0.0.1,::1", alias="no_proxy")
 
+    gpu_slots: int = Field(default=1, alias="GPU_SLOTS", description="Number of GPU slots available for model tuning")
+
     @property
     def database_url(self) -> str:
         """Get database URL"""

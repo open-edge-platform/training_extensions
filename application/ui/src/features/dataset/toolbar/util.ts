@@ -3,7 +3,7 @@
 
 import { Key, Selection } from '@geti/ui';
 
-import { AnnotationState, MediaState } from '../../../routes/dataset/provider';
+import { AnnotationStatus, MediaState } from '../../../routes/dataset/provider';
 
 export const toggleMultipleSelection =
     (items: Key[]) =>
@@ -23,7 +23,7 @@ export const toggleMultipleSelection =
     };
 
 export const updateSelectedKeysTo =
-    (selectedKeys: Selection, annotationState: AnnotationState) => (map: MediaState) => {
+    (selectedKeys: Selection, annotationState: AnnotationStatus) => (map: MediaState) => {
         const newMap = new Map(map.entries());
 
         if (selectedKeys === 'all') {

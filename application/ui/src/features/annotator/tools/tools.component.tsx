@@ -3,7 +3,7 @@
 
 import { Fragment } from 'react/jsx-runtime';
 
-import { IconWrapper } from '../icon-wrapper.component';
+import { IconWrapper } from '../../../components/icon-wrapper/icon-wrapper.component';
 import { ToolConfig, ToolType } from './interface';
 
 interface ToolsProps {

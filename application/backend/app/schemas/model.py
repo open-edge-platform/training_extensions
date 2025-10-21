@@ -7,7 +7,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from app.schemas.base import BaseIDModel
+from app.core.models import BaseIDModel
 
 
 class ModelFormat(StrEnum):

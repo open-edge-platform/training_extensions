@@ -9,8 +9,9 @@ from uuid import UUID
 from fastapi import Depends, HTTPException, Request, UploadFile, status
 from sqlalchemy.orm import Session
 
-from app.core import Scheduler
+from app.core.jobs.control_plane import JobQueue
 from app.db import get_db_session
+from app.scheduler import Scheduler
 from app.services import (
     ActivePipelineService,
     ConfigurationService,
@@ -218,3 +219,8 @@ def get_dataset_service(
 def get_base_weights_service(data_dir: Annotated[Path, Depends(get_data_dir)]) -> BaseWeightsService:
     """Provides a BaseWeightsService instance for managing base weights."""
     return BaseWeightsService(data_dir)
+
+
+def get_job_queue(request: Request) -> JobQueue:
+    """Provides the global JobQueue instance from FastAPI application's state."""
+    return request.app.state.job_queue

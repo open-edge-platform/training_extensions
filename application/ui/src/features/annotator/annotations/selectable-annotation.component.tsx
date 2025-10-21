@@ -9,7 +9,7 @@ import { useAnnotation } from './annotation-context';
 
 export const SelectableAnnotation = ({ children }: { children: ReactNode }) => {
     const annotation = useAnnotation();
-    const { deleteAnnotation } = useAnnotationActions();
+    const { deleteAnnotations } = useAnnotationActions();
     const { setSelectedAnnotations, selectedAnnotations } = useSelectedAnnotations();
     const elementRef = useRef<SVGGElement>(null);
 
@@ -56,9 +56,7 @@ export const SelectableAnnotation = ({ children }: { children: ReactNode }) => {
 
             setSelectedAnnotations(new Set());
 
-            annotationsToDelete.forEach((annotationId) => {
-                deleteAnnotation(annotationId);
-            });
+            deleteAnnotations(annotationsToDelete);
         }
     };
 

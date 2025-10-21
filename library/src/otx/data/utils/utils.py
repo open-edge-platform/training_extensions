@@ -183,72 +183,6 @@ def compute_robust_dataset_statistics(
     return stat
 
 
-_MIN_RECOGNIZABLE_OBJECT_SIZE = 32  # Minimum object size recognizable by NNs: typically 16 ~ 32
-# meaning NxN input pixels being downscaled to 1x1 on feature map
-_MIN_DETECTION_INPUT_SIZE = 256  # Minimum input size for object detection
-
-
-def adapt_input_size_to_dataset(
-    dataset: Dataset,
-    task: OTXTaskType = OTXTaskType.DETECTION,
-    input_size_multiplier: int | None = None,
-) -> tuple[int, int]:
-    """Compute appropriate model input size w.r.t. dataset statistics.
-
-    Args:
-        dataset (Dataset): Datumaro dataset including all subsets.
-        task (OTXTaskType, optional): Task type of the model. Defaults to OTXTaskType.DETECTION.
-        downscale_only (bool, optional) : Whether to allow only smaller size than default setting. Defaults to True.
-        input_size_multiplier (int | None, optional):
-            Multiplier for input size. If it's set, return the input size which can be divisible by the value.
-            Defaults to None.
-
-    Returns:
-        tuple[int, int]: Recommended input size based on dataset statistics.
-    """
-    if (train_dataset := dataset.subsets().get("train")) is None:
-        msg = "Dataset does not have 'train' subset. Cannot compute dataset statistics."
-        raise ValueError(msg)
-
-    logger.info("Adapting model input size based on dataset stat")
-    stat = compute_robust_dataset_statistics(train_dataset, task)
-    max_image_size: list[int] = [
-        stat["image"].get("height", {}).get("robust_max", 0),
-        stat["image"].get("width", {}).get("robust_max", 0),
-    ]
-    min_object_size = None
-
-    image_size = max_image_size
-    logger.info(f"-> Based on typical large image size: {image_size}")
-
-    # Refine using annotation shape size stat
-    # Fit to typical small object size (conservative)
-    # -> "avg" size might be preferrable for efficiency
-    min_object_size = stat.get("annotation", {}).get("size_of_shape", {}).get("robust_min", None)
-    if min_object_size is not None and min_object_size > 0:
-        image_size = [round(val * _MIN_RECOGNIZABLE_OBJECT_SIZE / min_object_size) for val in image_size]
-        logger.info(f"-> Based on typical small object size {min_object_size}: {image_size}")
-        if image_size[0] > max_image_size[0]:
-            image_size = max_image_size
-            logger.info(f"-> Restrict to max image size: {image_size}")
-        if image_size[0] < _MIN_DETECTION_INPUT_SIZE or image_size[1] < _MIN_DETECTION_INPUT_SIZE:
-            big_val_idx = 0 if image_size[0] > image_size[1] else 1
-            small_val_idx = 1 - big_val_idx
-            image_size[big_val_idx] = image_size[big_val_idx] * _MIN_DETECTION_INPUT_SIZE // image_size[small_val_idx]
-            image_size[small_val_idx] = _MIN_DETECTION_INPUT_SIZE
-            logger.info(f"-> Based on minimum object detection input size: {image_size}")
-
-    if input_size_multiplier is not None:
-        for i, val in enumerate(image_size):
-            if val % input_size_multiplier != 0:
-                image_size[i] = (val // input_size_multiplier + 1) * input_size_multiplier
-
-    image_size = tuple(int(val) for val in image_size)  # type: ignore[assignment]
-
-    logger.info(f"-> Adapted input size: {image_size}")
-    return image_size  # type: ignore[return-value]
-
-
 def adapt_tile_config(tile_config: TileConfig, dataset: Dataset, task: OTXTaskType) -> None:
     """Config tile parameters.
 
@@ -310,7 +244,6 @@ def instantiate_sampler(sampler_config: SamplerConfig, dataset: Dataset, **kwarg
     if "batch_size" not in init_signature:
         kwargs.pop("batch_size", None)
     sampler_kwargs = {**sampler_config.init_args, **kwargs}
-
     return sampler_class(dataset, **sampler_kwargs)
 
 

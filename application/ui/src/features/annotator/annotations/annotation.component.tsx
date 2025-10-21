@@ -3,7 +3,7 @@
 
 import { Annotation as AnnotationType } from '../types';
 import { AnnotationContext } from './annotation-context';
-import { AnnotationShape } from './annotation-shape.component';
+import { AnnotationShapeWithLabels } from './annotation-shape-with-labels.component';
 import { EditableAnnotation } from './editable-annotation.component';
 import { SelectableAnnotation } from './selectable-annotation.component';
 
@@ -15,7 +15,7 @@ export const Annotation = ({ annotation }: AnnotationProps) => {
         <AnnotationContext.Provider value={annotation}>
             <SelectableAnnotation>
                 <EditableAnnotation>
-                    <AnnotationShape annotation={annotation} />
+                    <AnnotationShapeWithLabels annotation={annotation} />
                 </EditableAnnotation>
             </SelectableAnnotation>
         </AnnotationContext.Provider>

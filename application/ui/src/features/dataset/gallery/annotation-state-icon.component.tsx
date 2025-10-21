@@ -3,15 +3,15 @@
 
 import { CanceledIcon, CheckCircleOutlined } from '@geti/ui/icons';
 
-import { AnnotationState } from '../../../routes/dataset/provider';
+import { AnnotationStatus } from '../../../routes/dataset/provider';
 
 import classes from './annotation-state-icon.module.scss';
 
-type AnnotationStateIconProps = {
-    state: AnnotationState | undefined;
+type AnnotationStatusIconProps = {
+    state: AnnotationStatus | undefined;
 };
 
-export const AnnotationStateIcon = ({ state }: AnnotationStateIconProps) => {
+export const AnnotationStatusIcon = ({ state }: AnnotationStatusIconProps) => {
     if (state === 'accepted') {
         return <CheckCircleOutlined className={classes.accepted} />;
     }

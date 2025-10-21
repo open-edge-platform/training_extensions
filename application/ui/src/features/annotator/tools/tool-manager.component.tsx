@@ -16,5 +16,9 @@ export const ToolManager = () => {
         return <SegmentAnythingTool />;
     }
 
+    if (activeTool === 'polygon') {
+        return <div>Polygon Tool</div>;
+    }
+
     return null;
 };
