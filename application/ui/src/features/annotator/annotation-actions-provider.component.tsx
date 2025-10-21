@@ -3,7 +3,7 @@
 
 import { createContext, ReactNode, useContext, useEffect, useRef, useState } from 'react';
 
-import { useProjects } from 'hooks/api/project.hook';
+import { useProject } from 'hooks/api/project.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { get, isEmpty, isObject } from 'lodash-es';
 import { $api } from 'src/api/client';
@@ -72,7 +72,7 @@ export const AnnotationActionsProvider = ({ children, mediaItem }: AnnotationAct
         }
     );
 
-    const { data: project } = useProjects();
+    const { data: project } = useProject();
 
     const [localAnnotations, setLocalAnnotations] = useState<Annotation[]>([]);
     const isDirty = useRef<boolean>(false);
