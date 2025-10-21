@@ -17,6 +17,7 @@
     --background: #313236;
     --background-inverse: #3c3e42;
     --coral: #ff5662;
+    --coral-shade-1: #c81326;
     --energy-blue-light: #7bdeff;
     --energy-blue: rgb(0, 199, 253);
 
@@ -92,4 +93,9 @@ button {
 
 svg {
     fill: currentColor;
+}
+
+/* Increase the modal’s opaque background when a modal is opened inside another modal. */
+[data-testid='underlay'] {
+    z-index: 2 !important;
 }

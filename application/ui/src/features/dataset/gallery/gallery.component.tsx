@@ -17,6 +17,8 @@ import { MediaItem } from './media-item.component';
 import { MediaThumbnail } from './media-thumbnail.component';
 import { getThumbnailUrl } from './utils';
 
+import classes from './gallery.module.scss';
+
 type GalleryProps = {
     items: DatasetItem[];
     fetchNextPage: () => void;
@@ -52,6 +54,7 @@ export const Gallery = ({ items, hasNextPage, isFetchingNextPage, fetchNextPage 
                 onSelectionChange={setSelectedKeys}
                 contentItem={(item) => (
                     <MediaItem
+                        className={classes.mediaItem}
                         contentElement={() => (
                             <MediaThumbnail
                                 alt={item.name}
@@ -77,7 +80,6 @@ export const Gallery = ({ items, hasNextPage, isFetchingNextPage, fetchNextPage 
             <DialogContainer onDismiss={() => setSelectedMediaItem(null)}>
                 {selectedMediaItem !== null && (
                     <MediaPreview
-                        key={selectedMediaItem.id}
                         mediaItem={selectedMediaItem}
                         close={() => setSelectedMediaItem(null)}
                         onSelectedMediaItem={setSelectedMediaItem}

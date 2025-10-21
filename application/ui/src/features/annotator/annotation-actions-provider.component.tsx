@@ -4,7 +4,7 @@
 import { createContext, ReactNode, useContext, useEffect, useRef, useState } from 'react';
 
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-import { get } from 'lodash-es';
+import { get, isEmpty, isObject } from 'lodash-es';
 import { $api } from 'src/api/client';
 import { components } from 'src/api/openapi-spec';
 import { v4 as uuid } from 'uuid';
@@ -36,6 +36,7 @@ interface AnnotationsContextValue {
     deleteAnnotations: (annotationIds: string[]) => void;
     updateAnnotations: (updatedAnnotations: Annotation[]) => void;
     submitAnnotations: () => Promise<void>;
+    isUserReviewed: boolean;
     isSaving: boolean;
 }
 
@@ -46,19 +47,30 @@ type AnnotationActionsProviderProps = {
     mediaItem: DatasetItem;
 };
 
+const isUnannotatedError = (error: unknown): boolean => {
+    return (
+        isObject(error) && 'detail' in error && /Dataset item has not been annotated yet/i.test(String(error.detail))
+    );
+};
+
 export const AnnotationActionsProvider = ({ children, mediaItem }: AnnotationActionsProviderProps) => {
     const projectId = useProjectIdentifier();
     const saveMutation = $api.useMutation(
         'post',
         '/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations'
     );
-    const { data: serverAnnotations } = $api.useQuery(
+
+    const { data: serverAnnotations, error: fetchError } = $api.useQuery(
         'get',
         '/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations',
         {
             params: { path: { project_id: projectId, dataset_item_id: mediaItem.id || '' } },
+        },
+        {
+            retry: (_failureCount, error: unknown) => !isUnannotatedError(error),
         }
     );
+
     const { data: project } = $api.useQuery('get', '/api/projects/{project_id}', {
         params: { path: { project_id: projectId } },
     });
@@ -120,9 +132,16 @@ export const AnnotationActionsProvider = ({ children, mediaItem }: AnnotationAct
         }
     }, [serverAnnotations, project]);
 
+    useEffect(() => {
+        if (!isEmpty(fetchError)) {
+            setLocalAnnotations([]);
+        }
+    }, [fetchError]);
+
     return (
         <AnnotationsContext.Provider
             value={{
+                isUserReviewed: get(serverAnnotations, 'user_reviewed', false),
                 annotations: localAnnotations,
 
                 // Local
