@@ -177,6 +177,8 @@ jobs:
 
       - name: Integration testing
         working-directory: library
+        env:
+          CUBLAS_WORKSPACE_CONFIG: ":4096:8"
         run: uv run pytest tests/integration -ra --showlocals --csv=${{ matrix.task }}_Python-${{ matrix.python-version }}.csv --task ${{ matrix.task }} --open-subprocess --run-category-only
 
   required_check:
