@@ -12,7 +12,7 @@ name = "otx"
 dynamic = ["version"]
 description = "OpenVINO™ Training Extensions: Train, Evaluate, Optimize, Deploy Computer Vision Models via OpenVINO™"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.10,<=3.12"
 license = {file = "LICENSE"}
 authors = [
     { name = "OpenVINO™ Training Extensions Contributors" },
@@ -194,7 +194,7 @@ show_error_codes = true
 line-length = 120
 
 # minimum target version
-target-version = "py310"
+target-version = "py38"
 
 # Enumerate all fixed violations.
 show-fixes = true
