@@ -84,7 +84,7 @@ test.describe('Inference', () => {
 
         // Open both tabs just to make sure everything works
         await page.getByRole('button', { name: 'Toggle Model statistics tab' }).click();
-        await expect(page.getByText('Model statistics')).toBeVisible();
+        await expect(page.getByText('Model statistics', { exact: true })).toBeVisible();
 
         await page.getByRole('button', { name: 'Toggle Data collection policy' }).click();
         await expect(page.getByRole('heading', { name: 'Data collection' })).toBeVisible();

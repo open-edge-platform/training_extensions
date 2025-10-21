@@ -3,7 +3,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-import { Flex, Grid, Heading, View } from '@geti/ui';
+import { Content, Flex, Grid, Heading, IllustratedMessage, View } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { CartesianGrid, Label, Line, LineChart, ReferenceLine, XAxis, YAxis } from 'recharts';
 
@@ -29,7 +29,8 @@ const useMetricsData = (projectId: string) => {
             params: { path: { project_id: projectId } },
         },
         {
-            refetchInterval: POLLING_INTERVAL,
+            refetchInterval: (query) => (query.state.status === 'success' ? POLLING_INTERVAL : false),
+            retry: false,
         }
     );
 
@@ -116,7 +117,9 @@ const Graph = ({ label, data }: { label: string; data: DataPoint[] }) => {
 
 export const Graphs = () => {
     const projectId = useProjectIdentifier();
-    const { latencyData, throughputData } = useMetricsData(projectId);
+    const { latencyData, throughputData, metrics } = useMetricsData(projectId);
+
+    const hasData = latencyData.length > 0 || throughputData.length > 0;
 
     return (
         <Grid
@@ -132,18 +135,30 @@ export const Graphs = () => {
                 <Heading level={4}>Model statistics</Heading>
             </Flex>
             <View gridArea={'graphs'} UNSAFE_style={{ overflow: 'hidden auto' }}>
-                <View paddingY='size-200'>
-                    <Heading level={4} marginBottom={'size-300'}>
-                        Throughput
-                    </Heading>
-                    <Graph label='requests/sec' data={throughputData} />
-                </View>
-                <View paddingY='size-200'>
-                    <Heading level={4} marginBottom={'size-300'}>
-                        Latency
-                    </Heading>
-                    <Graph label='ms' data={latencyData} />
-                </View>
+                {!hasData && !metrics ? (
+                    <IllustratedMessage>
+                        <Heading>No statistics available</Heading>
+                        <Content>
+                            Model statistics will appear here once the pipeline starts running and starts processing
+                            data.
+                        </Content>
+                    </IllustratedMessage>
+                ) : (
+                    <>
+                        <View paddingY='size-200'>
+                            <Heading level={4} marginBottom={'size-300'}>
+                                Throughput
+                            </Heading>
+                            <Graph label='requests/sec' data={throughputData} />
+                        </View>
+                        <View paddingY='size-200'>
+                            <Heading level={4} marginBottom={'size-300'}>
+                                Latency
+                            </Heading>
+                            <Graph label='ms' data={latencyData} />
+                        </View>
+                    </>
+                )}
             </View>
         </Grid>
     );
