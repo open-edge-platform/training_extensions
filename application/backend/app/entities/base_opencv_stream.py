@@ -37,7 +37,7 @@ class BaseOpenCVStream(VideoStream, ABC):
             raise RuntimeError(f"Could not open video source: {self.source}")
 
         # Set MJPEG codec for cross-platform compatibility
-        self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
+        self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc("M", "J", "P", "G"))  # type: ignore[attr-defined]
 
     def _read_frame(self) -> np.ndarray:
         """Read a frame from the capture device."""
