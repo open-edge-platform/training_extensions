@@ -68,6 +68,7 @@ dev = [
     "pytest-csv",
     "pytest-cov",
     "onnxruntime==1.21.1",
+    "wandb",
 ]
 
 cuda = ["torch==2.8.0",
