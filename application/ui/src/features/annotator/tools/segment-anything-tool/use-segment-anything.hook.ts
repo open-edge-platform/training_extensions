@@ -6,9 +6,9 @@ import { useEffect, useRef, useState } from 'react';
 import { EncodingOutput, SegmentAnythingModel } from '@geti/smart-tools/segment-anything';
 import { useQuery } from '@tanstack/react-query';
 import { Remote, wrap } from 'comlink';
+import { DatasetItem } from 'src/constants/shared-types';
 
 import { useAnnotator } from '../../annotator-provider.component';
-import { DatasetItem } from '../../types';
 import { convertToolShapeToGetiShape } from '../utils';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';
 

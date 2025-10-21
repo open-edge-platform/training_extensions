@@ -4,6 +4,7 @@
 import { View } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { API_BASE_URL } from 'src/api/client';
+import { DatasetItem } from 'src/constants/shared-types';
 
 import { ZoomTransform } from '../../components/zoom/zoom-transform';
 import { useAnnotationActions } from './annotation-actions-provider.component';
@@ -11,7 +12,6 @@ import { useAnnotationVisibility } from './annotation-visibility-provider.compon
 import { Annotations } from './annotations/annotations.component';
 import { useSelectedAnnotations } from './select-annotation-provider.component';
 import { ToolManager } from './tools/tool-manager.component';
-import { DatasetItem } from './types';
 
 const getImageUrl = (projectId: string, itemId: string) => {
     return `${API_BASE_URL}/api/projects/${projectId}/dataset/items/${itemId}/binary`;

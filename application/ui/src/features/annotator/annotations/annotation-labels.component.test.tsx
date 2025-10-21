@@ -4,7 +4,6 @@
 import { getMockedLabel } from 'mocks/mock-labels';
 import { Label } from 'src/constants/shared-types';
 import { fireEvent, render, screen } from 'test-utils/render';
-import { describe, expect, it, vi } from 'vitest';
 
 import { AnnotationLabels } from './annotation-labels.component';
 

@@ -4,3 +4,4 @@
 import { components } from 'src/api/openapi-spec';
 
 export type Label = components['schemas']['LabelView'];
+export type DatasetItem = components['schemas']['DatasetItem'];

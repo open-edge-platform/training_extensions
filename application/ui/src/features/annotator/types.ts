@@ -33,4 +33,3 @@ export type ClipperPoint = {
     X: number;
     Y: number;
 };
-export type DatasetItem = components['schemas']['DatasetItem'];

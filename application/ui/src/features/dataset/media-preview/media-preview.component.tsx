@@ -4,6 +4,7 @@
 import { Suspense } from 'react';
 
 import { Content, Dialog, dimensionValue, Divider, Flex, Grid, Heading, Loading, View } from '@geti/ui';
+import { DatasetItem } from 'src/constants/shared-types';
 import { AnnotationActionsProvider } from 'src/features/annotator/annotation-actions-provider.component';
 import { AnnotationVisibilityProvider } from 'src/features/annotator/annotation-visibility-provider.component';
 import { AnnotatorProvider } from 'src/features/annotator/annotator-provider.component';
@@ -11,7 +12,6 @@ import { AnnotatorProvider } from 'src/features/annotator/annotator-provider.com
 import { ZoomProvider } from '../../../components/zoom/zoom.provider';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas';
 import { SelectAnnotationProvider } from '../../annotator/select-annotation-provider.component';
-import { DatasetItem } from '../../annotator/types';
 import { useGetDatasetItems } from '../gallery/use-get-dataset-items.hook';
 import { ToolSelectionBar } from './primary-toolbar/primary-toolbar.component';
 import { SecondaryToolbar } from './secondary-toolbar/secondary-toolbar.component';

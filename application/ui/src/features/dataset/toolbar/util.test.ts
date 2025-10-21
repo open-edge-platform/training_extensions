@@ -1,9 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { describe, expect, it } from 'vitest';
-
-import { MediaState } from '../../../routes/dataset/provider';
+import { MediaState } from '../selected-data-provider.component';
 import { toggleMultipleSelection, updateSelectedKeysTo } from './util';
 
 describe('toggleMultipleSelection', () => {

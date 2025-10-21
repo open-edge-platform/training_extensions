@@ -8,9 +8,10 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { get, isEmpty, isObject } from 'lodash-es';
 import { $api } from 'src/api/client';
 import { components } from 'src/api/openapi-spec';
+import { DatasetItem } from 'src/constants/shared-types';
 import { v4 as uuid } from 'uuid';
 
-import { Annotation, DatasetItem, Shape } from './types';
+import { Annotation, Shape } from './types';
 
 type ServerAnnotation = components['schemas']['DatasetItemAnnotation-Input'];
 

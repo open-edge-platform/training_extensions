@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { renderHook } from 'test-utils/render';
-import { vi } from 'vitest';
 
 import { useGetTargetPosition } from './use-get-target-position.hook';
 

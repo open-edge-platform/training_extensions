@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { render, screen } from 'test-utils/render';
-import { vi } from 'vitest';
 
 import { useContainerSize } from './use-container-size';
 import { ZoomTransform } from './zoom-transform';
