@@ -5,7 +5,7 @@ import { Divider } from '@geti/ui';
 import { Adjustments, Invisible, LabelGroup, Visible } from '@geti/ui/icons';
 import { useAnnotationVisibility } from 'src/features/annotator/annotation-visibility-provider.component';
 
-import { IconWrapper } from '../icon-wrapper.component';
+import { IconWrapper } from '../../../../../components/icon-wrapper/icon-wrapper.component';
 import { ZoomFitScreen } from '../zoom/zoom-fit-screen.component';
 import { ZoomSelector } from '../zoom/zoom-selector.component';
 

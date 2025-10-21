@@ -1,11 +1,13 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import polylabel from 'polylabel';
-import { useSecondaryToolbarState } from 'src/features/dataset/media-preview/secondary-toolbar/use-secondary-toolbar-state.hook';
+import { Key } from 'react';
 
+import polylabel from 'polylabel';
+
+import { useAnnotationActions } from '../annotation-actions-provider.component';
 import { useAnnotationVisibility } from '../annotation-visibility-provider.component';
-import { Annotation, Polygon } from '../types';
+import { Annotation, Label, Polygon } from '../types';
 import { AnnotationLabels } from './annotation-labels.component';
 import { AnnotationShape } from './annotation-shape.component';
 
@@ -15,8 +17,17 @@ type AnnotationShapeProps = {
 
 export const AnnotationShapeWithLabels = ({ annotation }: AnnotationShapeProps) => {
     const { shape, labels } = annotation;
-    const { removeLabels } = useSecondaryToolbarState();
     const { isVisible } = useAnnotationVisibility();
+    const { updateAnnotations } = useAnnotationActions();
+
+    const removeLabels = (labelId: Key | null) => {
+        const updatedAnnotation = {
+            ...annotation,
+            labels: annotation.labels.filter((label) => label.id !== labelId) as Label[],
+        };
+
+        updateAnnotations([updatedAnnotation]);
+    };
 
     if (shape.type === 'rectangle') {
         return (

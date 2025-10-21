@@ -3,8 +3,8 @@
 
 import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useState } from 'react';
 
-import { ToolType } from '../dataset/media-preview/primary-toolbar/tools/interface';
 import { useLoadImageQuery } from './hooks/use-load-image-query.hook';
+import { ToolType } from './tools/interface';
 import { DatasetItem, RegionOfInterest } from './types';
 
 type AnnotatorContext = {
