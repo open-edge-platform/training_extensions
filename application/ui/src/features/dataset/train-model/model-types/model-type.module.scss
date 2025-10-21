@@ -1,0 +1,28 @@
+.trainTemplateName {
+    color: var(--spectrum-global-color-gray-900);
+    margin: 0;
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.radioGroup {
+    & label {
+        margin: 0;
+
+        & span[class*='spectrum-Radio-label'] {
+            min-width: 0;
+        }
+    }
+}
+
+.selected {
+    color: var(--energy-blue);
+}
+
+.attributeTitle {
+    font-weight: 400;
+    color: var(--spectrum-global-color-gray-700);
+    font-size: var(--spectrum-global-dimension-font-size-50);
+}

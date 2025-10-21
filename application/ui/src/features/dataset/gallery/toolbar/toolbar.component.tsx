@@ -11,6 +11,7 @@ import { AddMediaButton } from '../../../../components/add-media-button/add-medi
 import { CheckboxInput } from '../../../../components/checkbox-input/checkbox-input.component';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
 import { useSelectedData } from '../../selected-data-provider.component';
+import { TrainModel } from '../../train-model/train-model';
 import { toggleMultipleSelection, updateSelectedKeysTo } from './util';
 
 type ToolbarProps = {
@@ -81,6 +82,7 @@ export const Toolbar = ({ items }: ToolbarProps) => {
             <Flex alignItems={'center'} justifyContent={'space-between'}>
                 <Heading level={1}>Data collection</Heading>
                 <AddMediaButton onFilesSelected={handleAddMediaItem} />
+                <TrainModel />
             </Flex>
 
             <Divider size='S' />
