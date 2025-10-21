@@ -4,15 +4,15 @@
 import { Content, Grid, Heading, Text, View } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 
-import { $api } from '../../../api/client';
 import Background from '../../../assets/background.png';
+import { useProjects } from '../../../hooks/api/project.hook';
 import { NewProjectLink } from './new-project-link.component';
 import { ProjectCard } from './project-card.component';
 
 import classes from './project-list.module.scss';
 
 export const ProjectList = () => {
-    const projects = $api.useSuspenseQuery('get', '/api/projects');
+    const projects = useProjects();
 
     return (
         <View

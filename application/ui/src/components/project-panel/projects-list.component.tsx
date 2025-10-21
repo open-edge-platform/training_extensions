@@ -5,7 +5,7 @@ import { toast } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 import { SchemaProjectView } from 'src/api/openapi-spec';
 
-import { $api } from '../../api/client';
+import { useDeleteProject, usePatchProject } from '../../hooks/api/project.hook';
 import { ProjectListItem } from './project-list-item/project-list-item.component';
 
 import styles from './projects-list.module.scss';
@@ -17,16 +17,8 @@ interface ProjectListProps {
 }
 
 export const ProjectsList = ({ projects, setProjectInEdition, projectIdInEdition }: ProjectListProps) => {
-    const deleteProjectMutation = $api.useMutation('delete', '/api/projects/{project_id}', {
-        meta: {
-            invalidateQueries: [['get', '/api/projects']],
-        },
-    });
-    const patchProjectMutation = $api.useMutation('patch', '/api/projects/{project_id}', {
-        meta: {
-            invalidateQueries: [['get', '/api/projects']],
-        },
-    });
+    const deleteProjectMutation = useDeleteProject();
+    const patchProjectMutation = usePatchProject();
 
     const updateProjectName = (id: string, name: string): void => {
         patchProjectMutation.mutate(

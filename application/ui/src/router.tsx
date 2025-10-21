@@ -6,10 +6,10 @@ import { Suspense } from 'react';
 import { Loading } from '@geti/ui';
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 
-import { $api } from './api/client';
 import { paths } from './constants/paths';
 import { WebRTCConnectionProvider } from './features/inference/stream/web-rtc-connection-provider';
 import { ProjectList } from './features/project/list/project-list.component';
+import { useProjects } from './hooks/api/project.hook';
 import { Layout } from './layout';
 import { Dataset } from './routes/dataset/dataset.component';
 import { SelectedDataProvider } from './routes/dataset/provider';
@@ -22,7 +22,7 @@ import { ViewProject } from './routes/project/view-project';
 const Redirect = () => {
     let path = paths.project.index({});
 
-    const { data: projects } = $api.useSuspenseQuery('get', '/api/projects');
+    const { data: projects } = useProjects();
 
     // No projects -> Go to create project
     if (!projects || projects.length === 0) {

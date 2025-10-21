@@ -192,18 +192,52 @@ feature-name/
 
 ## 🔗 API Integration
 
-The app uses `openapi-fetch` with auto-generated types:
+The app uses `openapi-fetch` with auto-generated types and custom hooks for common endpoints.
+
+### Direct API Usage (for one-off calls)
 
 ```tsx
 import { $api } from '@/api/client';
 
 // Query
-const { data } = $api.useQuery('get', '/api/projects');
+const { data } = $api.useQuery('get', '/api/sources');
 
 // Mutation
-const mutation = $api.useMutation('post', '/api/projects');
-mutation.mutate({ body: { name: 'Project' } });
+const mutation = $api.useMutation('post', '/api/sources');
+mutation.mutate({
+    body: {
+        /* ... */
+    },
+});
 ```
+
+### Custom Hooks (recommended for reusable endpoints)
+
+For commonly used endpoints, we provide custom hooks that prevent memory leaks and improve type completion:
+
+```tsx
+import { usePatchPipeline, usePipeline } from '@/hooks/api/pipeline.hook';
+import { useCreateProject, useProjects } from '@/hooks/api/project.hook';
+
+// Query with full type inference
+const { data: projects } = useProjects();
+
+// Mutation with automatic cache invalidation
+const createProject = useCreateProject();
+createProject.mutate({
+    body: {
+        name: 'My Project',
+        task: {
+            /* ... */
+        },
+    },
+});
+```
+
+**Available hooks:**
+
+- `src/hooks/api/project.hook.ts` - Project CRUD operations
+- `src/hooks/api/pipeline.hook.ts` - Pipeline management
 
 ## 🖥️ Desktop App (WIP)
 

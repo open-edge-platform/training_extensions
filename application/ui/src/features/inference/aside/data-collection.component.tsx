@@ -4,8 +4,8 @@
 import { useEffect, useState } from 'react';
 
 import { Divider, Flex, Heading, Slider, Switch, Text } from '@geti/ui';
+import { usePatchPipeline, usePipeline } from 'hooks/api/pipeline.hook';
 import { useIsPipelineConfigured } from 'hooks/use-is-pipeline-configured.hook';
-import { $api } from 'src/api/client';
 import { useProjectIdentifier } from 'src/hooks/use-project-identifier.hook';
 
 const DEFAULTS = {
@@ -16,18 +16,9 @@ const DEFAULTS = {
 
 export const DataCollection = () => {
     const projectId = useProjectIdentifier();
-
-    const pipelineQuery = $api.useSuspenseQuery('get', '/api/projects/{project_id}/pipeline', {
-        params: { path: { project_id: projectId } },
-    });
-
+    const pipelineQuery = usePipeline();
     const canEditPipeline = useIsPipelineConfigured(pipelineQuery.data);
-
-    const patchPipelineMutation = $api.useMutation('patch', '/api/projects/{project_id}/pipeline', {
-        meta: {
-            invalidateQueries: [['get', '/api/projects/{project_id}/pipeline']],
-        },
-    });
+    const patchPipelineMutation = usePatchPipeline();
 
     const policies = pipelineQuery.data?.data_collection_policies ?? [];
     const ratePolicy = policies.find((policy) => policy.type === 'fixed_rate');

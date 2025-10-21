@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Grid } from '@geti/ui';
-import { $api } from 'src/api/client';
+import { useProjectsQuery } from 'src/hooks/api/project.hook';
 
 import { CreateProjectForm } from '../../features/project/create/create-project-form';
 import Background from './../../assets/background.png';
@@ -10,7 +10,7 @@ import Background from './../../assets/background.png';
 import classes from './project.module.scss';
 
 export const CreateProject = () => {
-    const { data: projects = [] } = $api.useQuery('get', '/api/projects');
+    const { data: projects = [] } = useProjectsQuery();
     const numberOfProjects = projects.length;
 
     return (
