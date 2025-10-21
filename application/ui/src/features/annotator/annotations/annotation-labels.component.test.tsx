@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { getMockedLabel } from 'mocks/mock-labels';
-import { render } from 'test-utils/render';
+import { fireEvent, render, screen } from 'test-utils/render';
 import { describe, expect, it, vi } from 'vitest';
 
 import { Label } from '../types';
@@ -22,30 +22,27 @@ describe('AnnotationLabels', () => {
     });
 
     it('renders placeholder when no labels provided', () => {
-        const { container } = render(
+        render(
             <svg>
                 <AnnotationLabels labels={[]} onRemove={mockOnRemove} />
             </svg>
         );
 
-        const text = container.querySelector('text');
-        expect(text).toBeInTheDocument();
-        expect(text?.textContent).toBe('No label');
+        expect(screen.getByText('No label')).toBeInTheDocument();
     });
 
     it('renders single label with name and color', () => {
         const label = getMockedLabel({ name: 'Person', color: '#FF0000' });
 
-        const { container } = render(
+        render(
             <svg>
                 <AnnotationLabels labels={[label]} onRemove={mockOnRemove} />
             </svg>
         );
 
-        const text = container.querySelector('text');
-        expect(text?.textContent).toBe('Person');
+        expect(screen.getByText('Person')).toBeInTheDocument();
 
-        const rect = container.querySelector('rect');
+        const rect = screen.getByLabelText('label Person background');
         expect(rect).toHaveAttribute('fill', '#FF0000');
     });
 
@@ -55,37 +52,27 @@ describe('AnnotationLabels', () => {
             getMockedLabel({ id: '2', name: 'Car', color: '#00FF00' }),
         ];
 
-        const { container } = render(
+        render(
             <svg>
                 <AnnotationLabels labels={labels} onRemove={mockOnRemove} />
             </svg>
         );
 
-        const texts = container.querySelectorAll('text');
-        expect(texts).toHaveLength(4); // 2 labels + 2 close buttons (x)
-
-        // Check label names
-        expect(texts[0]?.textContent).toBe('Person');
-        expect(texts[2]?.textContent).toBe('Car');
-
-        // Check close buttons
-        expect(texts[1]?.textContent).toBe('x');
-        expect(texts[3]?.textContent).toBe('x');
+        expect(screen.getByText('Person')).toBeInTheDocument();
+        expect(screen.getByText('Car')).toBeInTheDocument();
     });
 
     it('calls onRemove when close button clicked', () => {
         const label = getMockedLabel({ id: 'label-1', name: 'Person' });
 
-        const { container } = render(
+        render(
             <svg>
                 <AnnotationLabels labels={[label]} onRemove={mockOnRemove} />
             </svg>
         );
 
-        const closeButtonGroup = container.querySelector('g[style*="pointer"]');
-        expect(closeButtonGroup).toBeInTheDocument();
-
-        closeButtonGroup?.dispatchEvent(new Event('pointerdown', { bubbles: true, cancelable: true }));
+        const closeButton = screen.getByLabelText('Remove Person');
+        fireEvent.pointerDown(closeButton);
 
         expect(mockOnRemove).toHaveBeenCalledTimes(1);
         expect(mockOnRemove).toHaveBeenCalledWith('label-1');
@@ -95,33 +82,30 @@ describe('AnnotationLabels', () => {
         mockZoom.scale = 2;
         const label = getMockedLabel({ name: 'Person' });
 
-        const { container } = render(
+        render(
             <svg>
                 <AnnotationLabels labels={[label]} onRemove={mockOnRemove} />
             </svg>
         );
 
-        const text = container.querySelector('text');
-        const fontSize = text?.getAttribute('font-size');
+        const text = screen.getByLabelText('label Person');
 
         // Font size should be 14 / 2 = 7
-        expect(fontSize).toBe('7');
+        expect(text).toHaveAttribute('font-size', '7');
     });
 
     it('prevents event propagation on close button click', () => {
-        const label = getMockedLabel({ id: 'label-1' });
+        const label = getMockedLabel({ id: 'label-1', name: 'Person' });
         const mockParentHandler = vi.fn();
 
-        const { container } = render(
+        render(
             <svg onPointerDown={mockParentHandler}>
                 <AnnotationLabels labels={[label]} onRemove={mockOnRemove} />
             </svg>
         );
 
-        const closeButtonGroup = container.querySelector('g[style*="pointer"]');
-        const event = new Event('pointerdown', { bubbles: true, cancelable: true });
-
-        closeButtonGroup?.dispatchEvent(event);
+        const closeButton = screen.getByLabelText('Remove Person');
+        fireEvent.pointerDown(closeButton);
 
         expect(mockOnRemove).toHaveBeenCalled();
         // Parent handler should not be called due to stopPropagation
@@ -134,15 +118,17 @@ describe('AnnotationLabels', () => {
             getMockedLabel({ id: '2', name: 'B', color: '#00FF00' }),
         ];
 
-        const { container } = render(
+        render(
             <svg>
                 <AnnotationLabels labels={labels} onRemove={mockOnRemove} />
             </svg>
         );
 
-        const rects = container.querySelectorAll('rect');
-        const firstX = parseFloat(rects[0]?.getAttribute('x') || '0');
-        const secondX = parseFloat(rects[2]?.getAttribute('x') || '0');
+        const firstRect = screen.getByLabelText('label A background');
+        const secondRect = screen.getByLabelText('label B background');
+
+        const firstX = parseFloat(firstRect.getAttribute('x') || '0');
+        const secondX = parseFloat(secondRect.getAttribute('x') || '0');
 
         // Second label should be positioned after the first
         expect(secondX).toBeGreaterThan(firstX);
