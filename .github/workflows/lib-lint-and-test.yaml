@@ -78,13 +78,6 @@ jobs:
         working-directory: library
         run: uv sync --locked --all-extras --no-extra xpu --dev
 
-      - name: Install pre-commit
-        working-directory: library
-        run: |
-          python -m pip install --upgrade pip
-          # TODO: update pre-commit version when possible
-          pip install pre-commit==2.20.0
-
       - name: Run pre-commit checks
         working-directory: library
         run: pre-commit run --all-files
@@ -93,6 +86,8 @@ jobs:
     runs-on: [self-hosted, linux, x64, dev, dmount]
     permissions:
       contents: read
+      # The id-token permission is required by Codecov to use OIDC
+      id-token: write
     needs:
       - Code-Quality-Checks
       - check_paths
@@ -127,6 +122,7 @@ jobs:
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5.5.1
         with:
+          directory: library
           flags: coverage_unit-test_Python-${{ matrix.python-version }}
           use_oidc: true
 
@@ -138,6 +134,8 @@ jobs:
     runs-on: [self-hosted, linux, x64, dev, dmount]
     permissions:
       contents: read
+      # The id-token permission is required by Codecov to use OIDC
+      id-token: write
     needs:
       - Unit-Test
       - check_paths
@@ -186,6 +184,7 @@ jobs:
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5.5.1
         with:
+          directory: library
           flags: coverage_integration-test-${{ matrix.task }}_Python-${{ matrix.python-version }}
           use_oidc: true
 
