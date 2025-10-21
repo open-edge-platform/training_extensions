@@ -75,6 +75,7 @@ jobs:
           version: "0.8.15"
 
       - name: Installing dependencies
+        working-directory: library
         run: uv sync --locked --all-extras --no-extra xpu --dev
 
       - name: Install pre-commit
@@ -116,9 +117,11 @@ jobs:
           version: "0.8.15"
 
       - name: Installing dependencies
+        working-directory: library
         run: uv sync --locked --all-extras --no-extra xpu --dev
 
       - name: Unit testing
+        working-directory: library
         run: uv run pytest tests/unit --cov --cov-report=xml
 
       - name: Upload coverage reports to Codecov
@@ -173,9 +176,11 @@ jobs:
           version: "0.8.15"
 
       - name: Installing dependencies
+        working-directory: library
         run: uv sync --locked --all-extras --no-extra xpu --dev
 
       - name: Integration testing
+        working-directory: library
         run: uv run pytest tests/integration/${{ matrix.task }} --cov --cov-report=xml
 
       - name: Upload coverage reports to Codecov
