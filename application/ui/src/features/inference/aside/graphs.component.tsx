@@ -3,64 +3,71 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-import { Flex, Grid, Heading, View } from '@geti/ui';
+import { Content, Flex, Grid, Heading, IllustratedMessage, View } from '@geti/ui';
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { CartesianGrid, Label, Line, LineChart, ReferenceLine, XAxis, YAxis } from 'recharts';
 
-const generateData = (n: number) => {
-    const result = new Array(n);
-    result[0] = 100;
+import { $api } from '../../../api/client';
 
-    for (let idx = 1; idx < n; idx++) {
-        const dx = 1 + Math.random() * 0.3 - 0.15;
-        result[idx] = Math.max(0, Math.min(100, result[idx - 1] * dx));
-    }
+interface DataPoint {
+    name: string;
+    value: number;
+}
 
-    return result;
-};
+const POLLING_INTERVAL = 5000;
+const MAX_DATA_POINTS = 60; // Keep last 60 data points
 
-const useData = () => {
-    const [data, setData] = useState(
-        generateData(60).map((value, idx) => {
-            return { name: `${idx}`, value };
-        })
+const useMetricsData = (projectId: string) => {
+    const [latencyData, setLatencyData] = useState<DataPoint[]>([]);
+    const [throughputData, setThroughputData] = useState<DataPoint[]>([]);
+    const counterRef = useRef(0);
+
+    const { data: metrics } = $api.useQuery(
+        'get',
+        '/api/projects/{project_id}/pipeline/metrics',
+        {
+            params: { path: { project_id: projectId } },
+        },
+        {
+            refetchInterval: (query) => (query.state.status === 'success' ? POLLING_INTERVAL : false),
+            retry: false,
+        }
     );
 
-    const timeout = useRef<ReturnType<typeof setTimeout>>(undefined);
-
     useEffect(() => {
-        timeout.current = setTimeout(
-            () => {
-                const newData = data.slice(1);
-                const previous = newData.at(-1);
+        if (!metrics) return;
 
-                if (!previous) {
-                    return;
-                }
+        const dataPointName = `${counterRef.current++}`;
 
-                const dx = 1 + Math.random() * 0.3 - 0.15;
-                newData.push({
-                    name: `${Number(previous.name) + 1}`,
-                    value: Math.max(0, Math.min(100, previous.value * dx)),
-                });
+        setLatencyData((prev) => {
+            const newData = [
+                ...prev,
+                {
+                    name: dataPointName,
+                    value: metrics.inference.latency.avg_ms ?? 0,
+                },
+            ];
 
-                setData(newData);
-            },
-            Math.random() * 100 + 250
-        );
+            // Keep only last MAX_DATA_POINTS
+            return newData.slice(-MAX_DATA_POINTS);
+        });
 
-        return () => {
-            if (timeout.current) {
-                clearTimeout(timeout.current);
-            }
-        };
-    });
+        setThroughputData((prev) => {
+            const newData = [
+                ...prev,
+                {
+                    name: dataPointName,
+                    value: metrics.inference.throughput.avg_requests_per_second ?? 0,
+                },
+            ];
+            return newData.slice(-MAX_DATA_POINTS);
+        });
+    }, [metrics]);
 
-    return data;
+    return { latencyData, throughputData, metrics };
 };
 
-const Graph = ({ label }: { label: string }) => {
-    const data = useData();
-
+const Graph = ({ label, data }: { label: string; data: DataPoint[] }) => {
     return (
         <View padding={{ top: 'size-250', left: 'size-200', right: 'size-200', bottom: 'size-125' }}>
             <LineChart width={500} height={200} data={data}>
@@ -70,16 +77,8 @@ const Graph = ({ label }: { label: string }) => {
                     dataKey='name'
                     tickLine={false}
                     tickMargin={8}
-                    // tickFormatter={(value) => {
-                    //     const date = new Date(value);
-                    //     return date.toLocaleDateString('en-US', {
-                    //         month: 'short',
-                    //         day: 'numeric',
-                    //     });
-                    // }}
                 />
                 <YAxis
-                    // ...
                     tickLine={false}
                     stroke='var(--spectrum-global-color-gray-900)'
                     dataKey='value'
@@ -88,7 +87,6 @@ const Graph = ({ label }: { label: string }) => {
                     }}
                 >
                     <Label
-                        // ...
                         angle={-90}
                         value={label}
                         position='insideLeft'
@@ -100,14 +98,10 @@ const Graph = ({ label }: { label: string }) => {
                         }}
                     />
                 </YAxis>
-                {/* <CartesianAxis stroke='var(--spectrum-global-color-gray-800)' /> */}
                 <CartesianGrid stroke='var(--spectrum-global-color-gray-400)' />
-                <ReferenceLine
-                    x={data[0].name}
-                    // ...
-                    stroke='var(--spectrum-global-color-gray-600)'
-                    strokeWidth={2}
-                />
+                {data.length > 0 && (
+                    <ReferenceLine x={data[0].name} stroke='var(--spectrum-global-color-gray-600)' strokeWidth={2} />
+                )}
                 <Line
                     type='linear'
                     dataKey='value'
@@ -122,6 +116,11 @@ const Graph = ({ label }: { label: string }) => {
 };
 
 export const Graphs = () => {
+    const projectId = useProjectIdentifier();
+    const { latencyData, throughputData, metrics } = useMetricsData(projectId);
+
+    const hasData = latencyData.length > 0 || throughputData.length > 0;
+
     return (
         <Grid
             gridArea={'aside'}
@@ -136,31 +135,30 @@ export const Graphs = () => {
                 <Heading level={4}>Model statistics</Heading>
             </Flex>
             <View gridArea={'graphs'} UNSAFE_style={{ overflow: 'hidden auto' }}>
-                {/* TODO: Extract these into a shared component */}
-                <View paddingY='size-200'>
-                    <Heading level={4} marginBottom={'size-300'}>
-                        Throughput
-                    </Heading>
-                    <Graph label='fps' />
-                </View>
-                <View paddingY='size-200'>
-                    <Heading level={4} marginBottom={'size-300'}>
-                        Latency per frame
-                    </Heading>
-                    <Graph label='ms per frame' />
-                </View>
-                <View paddingY='size-200'>
-                    <Heading level={4} marginBottom={'size-300'}>
-                        Model confidence
-                    </Heading>
-                    <Graph label='Score' />
-                </View>
-                <View paddingY='size-200'>
-                    <Heading level={4} marginBottom={'size-300'}>
-                        Resource utilization
-                    </Heading>
-                    <Graph label='CPU' />
-                </View>
+                {!hasData && !metrics ? (
+                    <IllustratedMessage>
+                        <Heading>No statistics available</Heading>
+                        <Content>
+                            Model statistics will appear here once the pipeline starts running and starts processing
+                            data.
+                        </Content>
+                    </IllustratedMessage>
+                ) : (
+                    <>
+                        <View paddingY='size-200'>
+                            <Heading level={4} marginBottom={'size-300'}>
+                                Throughput
+                            </Heading>
+                            <Graph label='requests/sec' data={throughputData} />
+                        </View>
+                        <View paddingY='size-200'>
+                            <Heading level={4} marginBottom={'size-300'}>
+                                Latency
+                            </Heading>
+                            <Graph label='ms' data={latencyData} />
+                        </View>
+                    </>
+                )}
             </View>
         </Grid>
     );
