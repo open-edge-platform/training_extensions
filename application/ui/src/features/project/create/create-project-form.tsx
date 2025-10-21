@@ -7,8 +7,8 @@ import { Button, ButtonGroup, Divider, Flex, Form, Text } from '@geti/ui';
 import { useNavigate } from 'react-router';
 import { v4 as uuid } from 'uuid';
 
-import { $api } from '../../../api/client';
 import { paths } from '../../../constants/paths';
+import { useCreateProject } from '../../../hooks/api/project.hook';
 import { Label } from '../../annotator/types';
 import { LabelSelection } from '../label-selection/label-selection.component';
 import { TaskType } from '../task-selection/interface';
@@ -23,7 +23,7 @@ export const CreateProjectForm = ({ numberOfProjects }: { numberOfProjects: numb
     const [name, setName] = useState<string>(`Project #${numberOfProjects + 1}`);
 
     const navigate = useNavigate();
-    const createProjectMutation = $api.useMutation('post', '/api/projects');
+    const createProjectMutation = useCreateProject();
 
     const createProject = (e: FormEvent) => {
         e.preventDefault();

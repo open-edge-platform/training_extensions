@@ -3,11 +3,10 @@
 
 import { Divider, Flex, Grid, Heading, repeat, Text, View } from '@geti/ui';
 import { usePipeline } from 'hooks/api/pipeline.hook';
-import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import { useProject } from 'hooks/api/project.hook';
 import { capitalize, startsWith } from 'lodash-es';
 import { Fragment } from 'react/jsx-runtime';
 
-import { $api } from '../../../api/client';
 import Background from './../../../assets/background.png';
 
 type FieldProps = {
@@ -48,12 +47,8 @@ const VerticalHeader = ({ text }: { text: string }) => {
 };
 
 export const ProjectDetails = () => {
-    const projectId = useProjectIdentifier();
-
     const pipeline = usePipeline();
-    const project = $api.useSuspenseQuery('get', '/api/projects/{project_id}', {
-        params: { path: { project_id: projectId } },
-    });
+    const project = useProject();
 
     const { name, task } = project.data;
     const { task_type, labels = [] } = task;
