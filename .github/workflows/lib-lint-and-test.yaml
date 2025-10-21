@@ -80,7 +80,7 @@ jobs:
 
       - name: Run pre-commit checks
         working-directory: library
-        run: pre-commit run --all-files
+        run: uv run pre-commit run --all-files
 
   Unit-Test:
     runs-on: [self-hosted, linux, x64, dev, dmount]
