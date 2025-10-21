@@ -1,5 +1,9 @@
-.grid {
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
+.projectBackground {
     background-color: var(--spectrum-global-color-gray-100);
+    background-image: url('./../../assets/background.png');
     background-blend-mode: luminosity;
     background-position: center;
     background-repeat: no-repeat;

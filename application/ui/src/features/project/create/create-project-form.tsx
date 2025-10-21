@@ -3,7 +3,7 @@
 
 import { FormEvent, useState } from 'react';
 
-import { Button, ButtonGroup, Divider, Flex, Form, Text } from '@geti/ui';
+import { Button, ButtonGroup, Flex, Form, Text } from '@geti/ui';
 import { useNavigate } from 'react-router';
 import { v4 as uuid } from 'uuid';
 
@@ -73,8 +73,6 @@ export const CreateProjectForm = ({ numberOfProjects }: { numberOfProjects: numb
 
             <Flex direction='column' gap='size-300' UNSAFE_style={{ overflow: 'auto', margin: '0 auto' }}>
                 <TaskSelection selectedTask={selectedTask} setSelectedTask={setSelectedTask} />
-
-                <Divider size='S' />
 
                 <LabelSelection labels={labels} setLabels={setLabels} />
             </Flex>
