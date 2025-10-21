@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Divider, Flex, Heading, Text, toast } from '@geti/ui';
+import { Button, ButtonGroup, Divider, Flex, Heading, Text, toast } from '@geti/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { DatasetItem } from 'src/constants/shared-types';
@@ -81,8 +81,10 @@ export const Toolbar = ({ items }: ToolbarProps) => {
         <Flex direction={'column'} gridArea={'toolbar'} gap={'size-200'} marginBottom={'size-200'}>
             <Flex alignItems={'center'} justifyContent={'space-between'}>
                 <Heading level={1}>Data collection</Heading>
-                <AddMediaButton onFilesSelected={handleAddMediaItem} />
-                <TrainModel />
+                <ButtonGroup>
+                    <AddMediaButton onFilesSelected={handleAddMediaItem} />
+                    <TrainModel />
+                </ButtonGroup>
             </Flex>
 
             <Divider size='S' />

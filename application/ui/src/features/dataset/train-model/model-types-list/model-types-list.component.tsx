@@ -1,7 +1,5 @@
-// Copyright (C) 2022-2025 Intel Corporation
-// LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE
-
-import { useState } from 'react';
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
 
 import { Grid, minmax, repeat } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
@@ -9,11 +7,18 @@ import { $api } from 'src/api/client';
 
 import { ModelType } from './model-type.component';
 
-export const ModelTypesList = () => {
-    const projectId = useProjectIdentifier();
-    const [selectedModelArchitectureId, setSelectedModelArchitectureId] = useState<string | null>(null);
+interface ModelTypesListProps {
+    selectedModelArchitectureId: string | null;
+    setSelectedModelArchitectureId: (modelTemplateId: string | null) => void;
+}
+export const ModelTypesList = ({
+    selectedModelArchitectureId,
+    setSelectedModelArchitectureId,
+}: ModelTypesListProps) => {
+    const project_id = useProjectIdentifier();
+
     const { data: projectData } = $api.useSuspenseQuery('get', '/api/projects/{project_id}', {
-        params: { path: { project_id: projectId } },
+        params: { path: { project_id } },
     });
 
     const { data: modelArchitecturesResponse } = $api.useSuspenseQuery('get', '/api/model_architectures', {
@@ -25,7 +30,6 @@ export const ModelTypesList = () => {
             {modelArchitecturesResponse.model_architectures.map((architecture) => (
                 <ModelType
                     key={architecture.id}
-                    activeModelTemplateId={null}
                     modelArchitecture={architecture}
                     selectedModelArchitectureId={selectedModelArchitectureId}
                     onChangeSelectedTemplateId={setSelectedModelArchitectureId}

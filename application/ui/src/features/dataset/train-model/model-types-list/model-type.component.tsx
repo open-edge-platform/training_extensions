@@ -1,5 +1,5 @@
-// Copyright (C) 2022-2025 Intel Corporation
-// LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
 
 import { Divider, Flex, Heading, Radio, RadioGroup, Tooltip, TooltipTrigger, View } from '@geti/ui';
 import { clsx } from 'clsx';
@@ -17,7 +17,6 @@ import classes from './model-type.module.scss';
 
 interface ModelTypeProps {
     selectedModelArchitectureId: string | null;
-    activeModelTemplateId: string | null;
     modelArchitecture: SchemaModelArchitecture;
     onChangeSelectedTemplateId: (modelTemplateId: string | null) => void;
 }
@@ -31,7 +30,6 @@ const RATING_MAP: Record<number, Ratings> = {
 export const ModelType = ({
     modelArchitecture,
     selectedModelArchitectureId,
-    activeModelTemplateId,
     onChangeSelectedTemplateId,
 }: ModelTypeProps) => {
     const { id, name, description, support_status, stats } = modelArchitecture;
@@ -39,8 +37,6 @@ export const ModelType = ({
     const isActive = support_status === 'active';
     const isObsolete = support_status === 'obsolete';
     const isDeprecated = support_status === 'deprecated';
-    console.log('modelArchitecture', modelArchitecture);
-    stats.performance_ratings;
 
     const handlePress = () => {
         onChangeSelectedTemplateId(isSelected ? null : id);

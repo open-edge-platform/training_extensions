@@ -1,5 +1,5 @@
-// Copyright (C) 2022-2025 Intel Corporation
-// LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
 
 import { Tag } from '@geti/ui';
 
@@ -12,18 +12,19 @@ interface TemplateTagProps {
     isDeprecated?: boolean;
 }
 
-export const ModelTag = ({ name, isActive = false, isObsolete = false, isDeprecated = false }: TemplateTagProps) => {
+const getClassName = ({ isActive, isObsolete, isDeprecated }: Omit<TemplateTagProps, 'name'>) => {
     if (isActive) {
-        return <Tag text={name} withDot={false} className={classes.activeModelTag} />;
+        return classes.activeModelTag;
     }
-
     if (isObsolete) {
-        return <Tag text={name} withDot={false} className={classes.obsoleteModel} />;
+        return classes.obsoleteModel;
     }
-
     if (isDeprecated) {
-        return <Tag text={name} withDot={false} className={classes.deprecatedModelTag} />;
+        return classes.deprecatedModelTag;
     }
+    return classes.templateNameTag;
+};
 
-    return <Tag text={name} withDot={false} className={classes.templateNameTag} />;
+export const ModelTag = ({ name, isActive = false, isObsolete = false, isDeprecated = false }: TemplateTagProps) => {
+    return <Tag text={name} withDot={false} className={getClassName({ isActive, isObsolete, isDeprecated })} />;
 };

@@ -1,9 +1,10 @@
-// Copyright (C) 2022-2025 Intel Corporation
-// LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
 
 import { ReactNode } from 'react';
 
 import { Flex, View, type DimensionValue, type Responsive } from '@geti/ui';
+import { clsx } from 'clsx';
 import { usePress } from 'react-aria';
 
 import classes from './selectable-card.module.scss';
@@ -25,11 +26,7 @@ export const SelectableCard = ({
     descriptionContent,
     handleOnPress,
 }: SelectableCardProps) => {
-    const { pressProps } = usePress({
-        onPress: () => {
-            handleOnPress();
-        },
-    });
+    const { pressProps } = usePress({ onPress: handleOnPress });
 
     return (
         <div
@@ -63,10 +60,9 @@ export const SelectableCard = ({
                 borderBottomStartRadius={'regular'}
                 borderBottomColor={'gray-100'}
                 minHeight={'size-1000'}
-                UNSAFE_className={[
-                    classes.selectableCardDescription,
-                    isSelected ? classes.selectedDescription : '',
-                ].join(' ')}
+                UNSAFE_className={clsx(classes.selectableCardDescription, {
+                    [classes.selectedDescription]: isSelected,
+                })}
             >
                 {descriptionContent}
             </View>

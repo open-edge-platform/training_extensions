@@ -1,5 +1,5 @@
-// Copyright (C) 2022-2025 Intel Corporation
-// LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
 
 import { Grid, Heading, repeat } from '@geti/ui';
 
@@ -21,12 +21,7 @@ const ModelAttribute = ({ title, value, gridArea }: ModelAttributeProps) => {
             <Heading margin={0} UNSAFE_className={classes.attributeTitle} gridArea={`${gridArea}-title`}>
                 {title}
             </Heading>
-            <span
-                aria-label={title}
-                style={{
-                    gridArea: `${gridArea}-attribute`,
-                }}
-            >
+            <span aria-label={title} style={{ gridArea: `${gridArea}-attribute` }}>
                 {value}
             </span>
         </>
