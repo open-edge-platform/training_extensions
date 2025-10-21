@@ -3,6 +3,7 @@
 
 import { PointerEvent, useCallback } from 'react';
 
+import { isEmpty } from 'lodash-es';
 import { useZoom } from 'src/components/zoom/zoom.provider';
 import { v4 as uuid } from 'uuid';
 
@@ -85,8 +86,15 @@ export const AnnotationLabels = ({ labels, onRemove }: AnnotationLabelsProps) =>
                     fill={placeholderLabel.color}
                     stroke='none'
                     rx={styles.borderRadius}
+                    aria-label={`label ${placeholderLabel.name} background`}
                 />
-                <text x={padding} y={yOffset + styles.textYOffset} fontSize={fontSize} fill='#fff'>
+                <text
+                    x={padding}
+                    y={yOffset + styles.textYOffset}
+                    fontSize={fontSize}
+                    fill='#fff'
+                    aria-label={`label ${placeholderLabel.name}`}
+                >
                     {placeholderLabel.name}
                 </text>
             </g>
@@ -94,7 +102,7 @@ export const AnnotationLabels = ({ labels, onRemove }: AnnotationLabelsProps) =>
     }
 
     return labels.map((label) => {
-        const labelWidth = calculateLabelWidth(label.name) + closeButtonWidth;
+        const labelWidth = !isEmpty(label.name) ? calculateLabelWidth(label.name) + closeButtonWidth : 0;
         const xOffset = fullLengthOfAllLabels;
 
         fullLengthOfAllLabels += labelWidth + gap;
@@ -110,12 +118,19 @@ export const AnnotationLabels = ({ labels, onRemove }: AnnotationLabelsProps) =>
                     fill={label.color}
                     stroke='none'
                     rx={styles.borderRadius}
+                    aria-label={`label ${label.name} background`}
                 />
-                <text x={xOffset + padding} y={yOffset + styles.textYOffset} fontSize={fontSize} fill='#fff'>
+                <text
+                    x={xOffset + padding}
+                    y={yOffset + styles.textYOffset}
+                    fontSize={fontSize}
+                    fill='#fff'
+                    aria-label={`label ${label.name}`}
+                >
                     {label.name}
                 </text>
 
-                {/* Close button */}
+                {/* Remove button */}
                 <g style={{ cursor: 'pointer', pointerEvents: 'auto' }} onPointerDown={onDeleteLabel(label.id)}>
                     <rect
                         x={xOffset + labelWidth - closeButtonWidth}
@@ -129,6 +144,7 @@ export const AnnotationLabels = ({ labels, onRemove }: AnnotationLabelsProps) =>
                         y={yOffset + styles.textYOffset}
                         fontSize={fontSize}
                         fill='#fff'
+                        aria-label={`Remove ${label.name}`}
                     >
                         x
                     </text>
