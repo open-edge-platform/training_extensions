@@ -556,6 +556,9 @@ class GetiConfigConverter:
         # Update num_classes & Instantiate Model
         model_config = config.pop("model")
         model_config["init_args"]["label_info"] = datamodule.label_info
+        if datamodule.input_size is None:
+            msg = "Input size is not defined in the datamodule."
+            raise ValueError(msg)
         model_config["init_args"]["data_input_params"] = DataInputParams(
             input_size=datamodule.input_size,
             mean=datamodule.input_mean,

@@ -1,0 +1,14 @@
+div:has(> .iconAccept),
+div:has(> .iconSearch) {
+    border-radius: var(--spectrum-global-dimension-size-200);
+    padding: var(--spectrum-global-dimension-size-100) var(--spectrum-global-dimension-size-200);
+}
+
+div:has(> .iconAccept) {
+    background: var(--moss-tint-1);
+    color: var(--spectrum-global-color-gray-50);
+}
+
+div:has(> .iconSearch) {
+    background: var(--coral-shade-1);
+}

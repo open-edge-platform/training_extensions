@@ -10,8 +10,14 @@ export const ToolManager = () => {
 
     if (activeTool === 'bounding-box') {
         return <BoundingBoxTool />;
-    } else if (activeTool === 'sam') {
+    }
+
+    if (activeTool === 'sam') {
         return <SegmentAnythingTool />;
+    }
+
+    if (activeTool === 'polygon') {
+        return <div>Polygon Tool</div>;
     }
 
     return null;

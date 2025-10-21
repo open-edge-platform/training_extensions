@@ -1,6 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import logging
+from collections.abc import Sequence
 
 import cv2
 import numpy as np
@@ -8,13 +9,15 @@ from model_api.models import ClassificationResult, DetectionResult, InstanceSegm
 from model_api.models.result import Result
 
 from app.schemas.dataset_item import DatasetItemAnnotation
-from app.schemas.label import Label, LabelReference
+from app.schemas.label import LabelBase, LabelReference
 from app.schemas.shape import FullImage, Point, Polygon, Rectangle
 
 logger = logging.getLogger(__name__)
 
 
-def _convert_detection_prediction(labels: list[Label], prediction: DetectionResult) -> list[DatasetItemAnnotation]:
+def _convert_detection_prediction(
+    labels: Sequence[LabelBase], prediction: DetectionResult
+) -> list[DatasetItemAnnotation]:
     result = []
     for idx, box in enumerate(prediction.bboxes):
         label_name = prediction.label_names[idx]
@@ -34,7 +37,7 @@ def _convert_detection_prediction(labels: list[Label], prediction: DetectionResu
 
 
 def _convert_classification_prediction(
-    labels: list[Label], prediction: ClassificationResult
+    labels: Sequence[LabelBase], prediction: ClassificationResult
 ) -> list[DatasetItemAnnotation]:
     annotation_labels: list[LabelReference] = []
     confidence = 0
@@ -50,7 +53,7 @@ def _convert_classification_prediction(
 
 
 def _convert_segmentation_prediction(
-    labels: list[Label],
+    labels: Sequence[LabelBase],
     frame_data: np.ndarray,
     prediction: InstanceSegmentationResult,
 ) -> list[DatasetItemAnnotation]:
@@ -80,13 +83,59 @@ def _convert_segmentation_prediction(
     return result
 
 
-def convert_prediction(labels: list[Label], frame_data: np.ndarray, prediction: Result) -> list[DatasetItemAnnotation]:
+def get_confidence_scores(prediction: Result) -> list[float]:
     """
-    Converts an image prediction to dataset item annotations depending on the prediction type.
-    :param labels: project labels list
-    :param frame_data: image binary data
-    :param prediction: prediction result
-    :return: list of dataset item annotations
+    Gets model prediction confidence scores depending on the
+    specific type of prediction result (segmentation, detection, or classification).
+
+    Args:
+        prediction: Prediction result object containing model outputs, which can
+                   be one of: InstanceSegmentationResult, DetectionResult, or
+                   ClassificationResult.
+
+    Returns:
+        list[float]: List of confidence scores.
+    """
+    match prediction:
+        case InstanceSegmentationResult() | DetectionResult():
+            return prediction.scores.tolist()
+        case ClassificationResult():
+            return [label.confidence for label in prediction.top_labels]
+    return []
+
+
+def convert_prediction(
+    labels: Sequence[LabelBase], frame_data: np.ndarray, prediction: Result
+) -> list[DatasetItemAnnotation]:
+    """
+    Converts model predictions to dataset annotations based on prediction type.
+
+    Routes the conversion process to appropriate handlers depending on the
+    specific type of prediction result (segmentation, detection, or classification).
+
+    Args:
+        labels: List of Label objects available in the project for annotation.
+        frame_data: Image data in numpy ndarray format, used for segmentation
+                   annotations that may require image dimensions.
+        prediction: Prediction result object containing model outputs, which can
+                   be one of: InstanceSegmentationResult, DetectionResult, or
+                   ClassificationResult.
+
+    Returns:
+        list[DatasetItemAnnotation]: List of annotations converted from the
+        prediction results. Returns empty list if prediction type is not recognized.
+
+    Note:
+        The function uses pattern matching to dispatch to appropriate conversion
+        methods based on the prediction type. Each prediction type has its own
+        specialized conversion logic.
+
+    Example:
+        >>> annotations = convert_prediction(
+        ...     labels=project_labels,
+        ...     frame_data=image_array,
+        ...     prediction=detection_result
+        ... )
     """
     match prediction:
         case InstanceSegmentationResult():

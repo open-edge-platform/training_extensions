@@ -3,36 +3,60 @@
 
 from uuid import UUID
 
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.db.schema import LabelDB
 from app.repositories import LabelRepository
-from app.schemas import Label
-from app.services import ResourceAlreadyExistsError, ResourceType
-from app.services.mappers.label_mapper import LabelMapper
+from app.repositories.base import PrimaryKeyIntegrityError, UniqueConstraintIntegrityError
+from app.schemas import LabelCreate, LabelView
+from app.schemas.label import LabelEdit, LabelRemove
+from app.utils.color import random_color
+
+from .base import ResourceType, ResourceWithIdAlreadyExistsError
+from .mappers.label_mapper import LabelMapper
 
 
-def _convert_labels_to_db(labels: list[Label], project_id: UUID) -> list[LabelDB]:
-    db_labels: list[LabelDB] = []
-    for label in labels:
-        db_label = LabelMapper.from_schema(label)
-        db_label.project_id = str(project_id)
-        db_labels.append(db_label)
-    return db_labels
+class DuplicateLabelsError(Exception):
+    """Exception raised when label with duplicated names or hotkeys are being stored."""
+
+    def __init__(self):
+        super().__init__("Either label names or hotkeys have duplicates")
 
 
 class LabelService:
     def __init__(self, db_session: Session):
         self._db_session = db_session
 
+    def create_label(self, project_id: UUID, label: LabelCreate) -> LabelView:
+        label_repo = LabelRepository(str(project_id), self._db_session)
+        try:
+            saved = label_repo.save(
+                LabelDB(
+                    id=str(label.id) if label.id is not None else None,
+                    project_id=str(project_id),
+                    name=label.name,
+                    color=label.color if label.color is not None else random_color(),
+                    hotkey=label.hotkey,
+                )
+            )
+            return LabelMapper.to_schema(saved)
+        except UniqueConstraintIntegrityError:
+            raise DuplicateLabelsError
+        except PrimaryKeyIntegrityError:
+            raise ResourceWithIdAlreadyExistsError(ResourceType.LABEL, str(label.id))
+
+    def list_all(self, project_id: UUID) -> list[LabelView]:
+        label_repo = LabelRepository(str(project_id), self._db_session)
+        labels = label_repo.list_all()
+        return [LabelMapper.to_schema(label) for label in labels]
+
     def update_labels_in_project(
         self,
         project_id: UUID,
-        labels_to_add: list[Label] | None,
-        labels_to_update: list[Label] | None,
-        label_ids_to_remove: list[UUID] | None,
-    ) -> list[Label]:
+        labels_to_add: list[LabelCreate] | None,
+        labels_to_update: list[LabelEdit] | None,
+        labels_to_remove: list[LabelRemove] | None,
+    ) -> list[LabelView]:
         """
         Add, update, and remove labels in a project transactionally.
 
@@ -51,16 +75,15 @@ class LabelService:
             labels_to_update: List of existing Label objects with updated properties.
                              Labels must exist in the project and maintain uniqueness
                              constraints after modification.
-            label_ids_to_remove: List of label UUIDs to delete from the project.
+            labels_to_remove: List of labels to delete from the project.
 
         Returns:
-            list[Label]: The complete list of all labels in the project after all
+            list[LabelView]: The complete list of all labels in the project after all
                         operations have been applied, in the order returned by
                         the database.
 
         Raises:
-            ResourceAlreadyExistsError: If any label to be added or updated would
-                                       violate uniqueness constraints (same name,
+            DuplicateLabelsError: If any label to be added or updated would violate uniqueness constraints (same name,
                                        or hotkey as an existing label in the project).
             IntegrityError: For other database integrity violations.
             DatabaseError: For general database operation failures.
@@ -69,7 +92,7 @@ class LabelService:
             >>> # Remove some labels, update others, and add new ones
             >>> updated_labels = update_labels_in_project(
             ...     project_id=project_uuid,
-            ...     label_ids_to_remove=[uuid1, uuid2],
+            ...     labels_to_remove=[deleted_label1, deleted_label2],
             ...     labels_to_update=[updated_label1, updated_label2],
             ...     labels_to_add=[new_label1, new_label2]
             ... )
@@ -81,18 +104,31 @@ class LabelService:
         try:
             label_repo = LabelRepository(project_id=str(project_id), db=self._db_session)
             if labels_to_update:
-                label_repo.update_batch(_convert_labels_to_db(labels_to_update, project_id))
-            if label_ids_to_remove:
-                label_repo.delete_batch([str(lid) for lid in label_ids_to_remove])
+                batch = [
+                    LabelDB(
+                        id=str(label.id),
+                        project_id=str(project_id),
+                        name=label.new_name,
+                        color=label.new_color,
+                        hotkey=label.new_hotkey,
+                    )
+                    for label in labels_to_update
+                ]
+                label_repo.update_batch(batch)
+            if labels_to_remove:
+                label_repo.delete_batch([str(label.id) for label in labels_to_remove])
             if labels_to_add:
-                label_repo.save_batch(_convert_labels_to_db(labels_to_add, project_id))
+                batch = [
+                    LabelDB(
+                        project_id=str(project_id),
+                        name=label.name,
+                        color=label.color if label.color is not None else random_color(),
+                        hotkey=label.hotkey,
+                    )
+                    for label in labels_to_add
+                ]
+                label_repo.save_batch(batch)
             label_dbs = label_repo.list_all()
             return [LabelMapper.to_schema(label_db) for label_db in label_dbs]
-        except IntegrityError as e:
-            if "unique constraint failed" in str(e).lower():
-                raise ResourceAlreadyExistsError(
-                    ResourceType.LABEL,
-                    "",
-                    message="Label with the same name or hotkey already exists in this project.",
-                )
-            raise
+        except UniqueConstraintIntegrityError:
+            raise DuplicateLabelsError

@@ -2,11 +2,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from enum import StrEnum
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel
 
-from app.schemas.base import BaseRequiredIDNameModel, Pagination
+from app.core.models import BaseRequiredIDNameModel, Pagination
 from app.schemas.label import LabelReference
 from app.schemas.shape import Shape
 
@@ -70,10 +71,8 @@ class DatasetItemAnnotation(BaseModel):
     }
 
 
-class DatasetItemAnnotations(BaseModel):
-    """
-    Dataset item annotations
-    """
+class SetDatasetItemAnnotations(BaseModel):
+    """Schema for setting dataset item annotations"""
 
     annotations: list[DatasetItemAnnotation]
 
@@ -91,11 +90,12 @@ class DatasetItemAnnotations(BaseModel):
     }
 
 
-class DatasetItemAnnotationsWithSource(DatasetItemAnnotations):
+class DatasetItemAnnotationsWithSource(BaseModel):
     """
     Dataset item annotations with information about source
     """
 
+    annotations: list[DatasetItemAnnotation]
     user_reviewed: bool
     prediction_model_id: str | None = None
 
@@ -122,3 +122,11 @@ class DatasetItemsWithPagination(BaseModel):
 
     items: list[DatasetItem]
     pagination: Pagination
+
+
+class DatasetItemAssignSubset(BaseModel):
+    """Schema for assigning a subset to dataset item"""
+
+    subset: Literal[DatasetItemSubset.TESTING, DatasetItemSubset.TRAINING, DatasetItemSubset.VALIDATION]
+
+    model_config = {"json_schema_extra": {"example": {"subset": "training"}}}

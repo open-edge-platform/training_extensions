@@ -21,8 +21,8 @@ import { AddCircle } from '@geti/ui/icons';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { useNavigate } from 'react-router';
 
-import { $api } from '../../api/client';
 import { paths } from '../../constants/paths';
+import { useProjects } from '../../hooks/api/project.hook';
 import { ProjectsList } from './projects-list.component';
 
 import styles from './projects-list.module.scss';
@@ -67,7 +67,7 @@ const AddProjectButton = () => {
 
 export const ProjectsListPanel = () => {
     const projectId = useProjectIdentifier();
-    const { data } = $api.useSuspenseQuery('get', '/api/projects');
+    const { data } = useProjects();
 
     const [projectInEdition, setProjectInEdition] = useState<string | null>(null);
 
@@ -92,13 +92,16 @@ export const ProjectsListPanel = () => {
                         </Heading>
                     </Flex>
                 </Header>
+
                 <Content>
                     <Divider size={'S'} marginY={'size-200'} />
+
                     <ProjectsList
                         projects={data}
                         projectIdInEdition={projectInEdition}
                         setProjectInEdition={setProjectInEdition}
                     />
+
                     <Divider size={'S'} marginY={'size-200'} />
                 </Content>
 

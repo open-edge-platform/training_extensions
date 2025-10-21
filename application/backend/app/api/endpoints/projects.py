@@ -13,15 +13,16 @@ from fastapi.openapi.models import Example
 from starlette.responses import FileResponse
 
 from app.api.dependencies import get_data_collector, get_label_service, get_project_id, get_project_service
-from app.schemas import Label, PatchLabels, ProjectCreate, ProjectUpdateName, ProjectView
+from app.schemas import LabelView, PatchLabels, ProjectCreate, ProjectUpdateName, ProjectView
 from app.services import (
     LabelService,
     ProjectService,
-    ResourceAlreadyExistsError,
     ResourceInUseError,
     ResourceNotFoundError,
+    ResourceWithIdAlreadyExistsError,
 )
 from app.services.data_collect import DataCollector
+from app.services.label_service import DuplicateLabelsError
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/projects", tags=["Projects"])
@@ -56,13 +57,13 @@ CREATE_PROJECT_BODY_EXAMPLES = {
             },
         },
     ),
-    "segmentation": Example(
-        summary="Segmentation project with exclusive labels",
-        description="Configuration for a segmentation project that have 2 labels: car and person",
+    "instance_segmentation": Example(
+        summary="Instance segmentation project with exclusive labels",
+        description="Configuration for an instance segmentation project that have 2 labels: car and person",
         value={
             "name": "traffic",
             "task": {
-                "task_type": "segmentation",
+                "task_type": "instance_segmentation",
                 "exclusive_labels": True,
                 "labels": [{"name": "car"}, {"name": "person"}],
             },
@@ -77,7 +78,7 @@ CREATE_PROJECT_BODY_EXAMPLES = {
     response_model=ProjectView,
     responses={
         status.HTTP_201_CREATED: {"description": "Project successfully created"},
-        status.HTTP_409_CONFLICT: {"description": "Project already exists"},
+        status.HTTP_409_CONFLICT: {"description": "Project already exists or labels have duplicated names or hotkeys"},
         status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Invalid request body"},
     },
 )
@@ -90,7 +91,7 @@ def create_project(
     """Create and configure a new project"""
     try:
         return project_service.create_project(project_config)
-    except ResourceAlreadyExistsError as e:
+    except (ResourceWithIdAlreadyExistsError, DuplicateLabelsError) as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 
@@ -174,12 +175,12 @@ def delete_project(
 
 @router.patch(
     "/{project_id}/labels",
-    response_model=list[Label],
+    response_model=list[LabelView],
     responses={
         status.HTTP_200_OK: {"description": "Labels updated successfully"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID or request body"},
         status.HTTP_404_NOT_FOUND: {"description": "Project or label not found"},
-        status.HTTP_409_CONFLICT: {"description": "Label(s) already exists"},
+        status.HTTP_409_CONFLICT: {"description": "Label(s) already exists or have duplicated names or hotkeys"},
     },
 )
 def update_labels(
@@ -192,17 +193,14 @@ def update_labels(
     ],
     project_service: Annotated[ProjectService, Depends(get_project_service)],
     label_service: Annotated[LabelService, Depends(get_label_service)],
-) -> list[Label]:
+) -> list[LabelView]:
     """Update labels for a given project"""
     try:
         project = project_service.get_project_by_id(project_id)
         label_ids = {label.id for label in project.task.labels}
-        labels_to_add = [label_to_add.to_label() for label_to_add in labels.labels_to_add]
-        labels_to_edit = []
-        label_ids_to_remove = []
         if labels.labels_to_remove:
-            label_ids_to_remove = [label.id for label in labels.labels_to_remove]
-            if not all(label_id in label_ids for label_id in label_ids_to_remove):
+            ids_to_remove = [label.id for label in labels.labels_to_remove]
+            if not all(label_id in label_ids for label_id in ids_to_remove):
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail="One or more labels to remove do not exist in the project",
@@ -214,11 +212,12 @@ def update_labels(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail="One or more labels to edit do not exist in the project",
                 )
-            labels_to_edit = [label_to_edit.to_label() for label_to_edit in labels.labels_to_edit]
-        return label_service.update_labels_in_project(project_id, labels_to_add, labels_to_edit, label_ids_to_remove)
+        return label_service.update_labels_in_project(
+            project_id, labels.labels_to_add, labels.labels_to_edit, labels.labels_to_remove
+        )
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    except ResourceAlreadyExistsError as e:
+    except (ResourceWithIdAlreadyExistsError, DuplicateLabelsError) as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 

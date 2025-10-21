@@ -35,7 +35,6 @@ class ProjectDB(BaseID):
     exclusive_labels: Mapped[bool] = mapped_column(Boolean, default=False)
 
     pipeline = relationship("PipelineDB", back_populates="project", uselist=False)
-    labels = relationship("LabelDB", back_populates="project")
     model_revisions = relationship("ModelRevisionDB", back_populates="project")
 
 
@@ -99,7 +98,7 @@ class DatasetItemDB(BaseID):
     width: Mapped[int] = mapped_column(Integer, nullable=False)
     height: Mapped[int] = mapped_column(Integer, nullable=False)
     size: Mapped[int] = mapped_column(Integer, nullable=False)
-    annotation_data: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    annotation_data: Mapped[list | None] = mapped_column(JSON, nullable=True, default=None)
     user_reviewed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     prediction_model_id: Mapped[str | None] = mapped_column(
         Text, ForeignKey("model_revisions.id", ondelete="SET NULL"), nullable=True
@@ -118,10 +117,8 @@ class LabelDB(BaseID):
 
     project_id: Mapped[str] = mapped_column(Text, ForeignKey("projects.id", ondelete="CASCADE"))
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    color: Mapped[str | None] = mapped_column(String(7), nullable=True)
+    color: Mapped[str] = mapped_column(String(7), nullable=False)
     hotkey: Mapped[str | None] = mapped_column(String(10), nullable=True)
-
-    project = relationship("ProjectDB", back_populates="labels")
 
 
 class TrainingConfigurationDB(BaseID):

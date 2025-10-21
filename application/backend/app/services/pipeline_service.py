@@ -11,12 +11,13 @@ from sqlalchemy.orm import Session
 from app.repositories import PipelineRepository
 from app.schemas import PipelineStatus, PipelineView
 from app.schemas.metrics import InferenceMetrics, LatencyMetrics, PipelineMetrics, ThroughputMetrics, TimeWindow
-from app.services import ActivePipelineService
-from app.services.base import ResourceNotFoundError, ResourceType
-from app.services.data_collect import DataCollector
-from app.services.mappers import PipelineMapper
-from app.services.metrics_service import MetricsService
-from app.services.parent_process_guard import parent_process_only
+
+from .active_pipeline_service import ActivePipelineService
+from .base import ResourceNotFoundError, ResourceType
+from .data_collect import DataCollector
+from .mappers import PipelineMapper
+from .metrics_service import MetricsService
+from .parent_process_guard import parent_process_only
 
 MSG_ERR_DELETE_RUNNING_PIPELINE = "Cannot delete a running pipeline."
 
@@ -60,7 +61,7 @@ class PipelineService:
     def update_pipeline(self, project_id: UUID, partial_config: dict) -> PipelineView:
         """Update an existing pipeline."""
         pipeline = self.get_pipeline_by_id(project_id)
-        to_update = pipeline.model_copy(update=partial_config)
+        to_update = type(pipeline).model_validate(pipeline.model_copy(update=partial_config))
         pipeline_repo = PipelineRepository(self._db_session)
         updated = PipelineMapper.to_schema(pipeline_repo.update(PipelineMapper.from_schema(to_update)))
         if pipeline.status == PipelineStatus.RUNNING and updated.status == PipelineStatus.RUNNING:

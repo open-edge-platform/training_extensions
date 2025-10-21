@@ -1,7 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, Grid, Item, TabList, TabPanels, Tabs, View } from '@geti/ui';
+import { Suspense } from 'react';
+
+import { Flex, Grid, Item, Loading, TabList, Tabs, View } from '@geti/ui';
 import { Outlet, useLocation } from 'react-router';
 import { Link } from 'react-router-dom';
 
@@ -73,7 +75,9 @@ const Header = () => {
                     </Item>
                 </TabList>
 
-                <ProjectsListPanel />
+                <Suspense fallback={<Loading />}>
+                    <ProjectsListPanel />
+                </Suspense>
             </Grid>
         </View>
     );
@@ -99,21 +103,10 @@ export const Layout = () => {
             >
                 <Header />
 
-                <View backgroundColor={'gray-50'} gridArea={'content'}>
-                    <TabPanels height={'100%'} UNSAFE_style={{ border: 'none' }}>
-                        <Item textValue='index' key={'index'}>
-                            <Outlet />
-                        </Item>
-                        <Item textValue='inference' key={'inference'}>
-                            <Outlet />
-                        </Item>
-                        <Item textValue='dataset' key={'dataset'}>
-                            <Outlet />
-                        </Item>
-                        <Item textValue='models' key={'models'}>
-                            <Outlet />
-                        </Item>
-                    </TabPanels>
+                <View backgroundColor={'gray-50'} gridArea={'content'} position={'relative'}>
+                    <Suspense fallback={<Loading />}>
+                        <Outlet />
+                    </Suspense>
                 </View>
             </Grid>
         </Tabs>

@@ -7,14 +7,18 @@ from uuid import uuid4
 
 import numpy as np
 import pytest
-from freezegun import freeze_time
+import time_machine
 
 from app.schemas.dataset_item import DatasetItemAnnotation, DatasetItemFormat
 from app.schemas.label import LabelReference
-from app.schemas.pipeline import FixedRateDataCollectionPolicy
+from app.schemas.pipeline import ConfidenceThresholdDataCollectionPolicy, FixedRateDataCollectionPolicy
 from app.schemas.shape import FullImage
 from app.services import DatasetService
-from app.services.data_collect.data_collector import DataCollector, FixedRatePolicyChecker
+from app.services.data_collect.data_collector import (
+    ConfidenceThresholdPolicyChecker,
+    DataCollector,
+    FixedRatePolicyChecker,
+)
 
 
 class TestFixedRatePolicyCheckerUnit:
@@ -25,7 +29,7 @@ class TestFixedRatePolicyCheckerUnit:
         policy = FixedRateDataCollectionPolicy(rate=0.1)
 
         # Act
-        should_collect = FixedRatePolicyChecker(policy).should_collect(100)
+        should_collect = FixedRatePolicyChecker(policy).should_collect(100, [50.0])
 
         # Assert
         assert should_collect is True
@@ -35,7 +39,41 @@ class TestFixedRatePolicyCheckerUnit:
         policy = FixedRateDataCollectionPolicy(rate=0.1)
 
         # Act
-        should_collect = FixedRatePolicyChecker(policy).should_collect(9)
+        should_collect = FixedRatePolicyChecker(policy).should_collect(9, [50.0])
+
+        # Assert
+        assert should_collect is False
+
+
+class TestConfidenceThresholdDataCollectionPolicyUnit:
+    """Unit tests for ConfidenceThresholdDataCollectionPolicy."""
+
+    def test_should_collect_true(self):
+        # Arrange
+        policy = ConfidenceThresholdDataCollectionPolicy(confidence_threshold=30.0, min_sampling_interval=5)
+
+        # Act
+        should_collect = ConfidenceThresholdPolicyChecker(policy).should_collect(6, [25.0])
+
+        # Assert
+        assert should_collect is True
+
+    def test_should_collect_high_confidence(self):
+        # Arrange
+        policy = ConfidenceThresholdDataCollectionPolicy(confidence_threshold=30.0, min_sampling_interval=5)
+
+        # Act
+        should_collect = ConfidenceThresholdPolicyChecker(policy).should_collect(6, [35.0])
+
+        # Assert
+        assert should_collect is False
+
+    def test_should_collect_sampling_interval(self):
+        # Arrange
+        policy = ConfidenceThresholdDataCollectionPolicy(confidence_threshold=30.0, min_sampling_interval=5)
+
+        # Act
+        should_collect = ConfidenceThresholdPolicyChecker(policy).should_collect(3, [25.0])
 
         # Assert
         assert should_collect is False
@@ -83,7 +121,7 @@ class TestDataCollectorUnit:
         mock_convert_prediction.assert_not_called()
         mock_create_dataset_item.assert_not_called()
 
-    @freeze_time("2025-01-01 00:00:01")
+    @time_machine.travel("2025-01-01 00:00:01 +0000", tick=False)
     def test_collect_by_flag(self, fxt_data_collector):
         """
         Image should be collected if should_collect_next_frame flag has been set
@@ -133,7 +171,7 @@ class TestDataCollectorUnit:
             annotations=annotations,
         )
 
-    @freeze_time("2025-01-01 00:00:01")
+    @time_machine.travel("2025-01-01 00:00:01 +0000", tick=False)
     def test_collect(self, fxt_data_collector):
         """
         Image should be collected if policy conditions are met

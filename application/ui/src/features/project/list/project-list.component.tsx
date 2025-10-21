@@ -4,15 +4,15 @@
 import { Content, Grid, Heading, Text, View } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 
-import { $api } from '../../../api/client';
 import Background from '../../../assets/background.png';
+import { useProjects } from '../../../hooks/api/project.hook';
 import { NewProjectLink } from './new-project-link.component';
 import { ProjectCard } from './project-card.component';
 
 import classes from './project-list.module.scss';
 
 export const ProjectList = () => {
-    const projects = $api.useSuspenseQuery('get', '/api/projects');
+    const projects = useProjects();
 
     return (
         <View
@@ -27,13 +27,7 @@ export const ProjectList = () => {
                 backgroundSize: 'cover',
             }}
         >
-            <Content
-                height={'100%'}
-                maxHeight={'90vh'}
-                maxWidth={'1052px'}
-                margin={'0 auto'}
-                UNSAFE_style={{ overflow: 'auto' }}
-            >
+            <Content height={'100%'} maxHeight={'90vh'} maxWidth={'1052px'} margin={'0 auto'}>
                 <Heading
                     level={1}
                     marginBottom={'size-250'}
@@ -56,9 +50,12 @@ export const ProjectList = () => {
                     marginX={'auto'}
                     justifyContent={'center'}
                     columns={isEmpty(projects.data) ? ['size-3600'] : ['1fr', '1fr']}
+                    UNSAFE_style={{ overflow: 'auto' }}
+                    maxHeight={'75vh'}
+                    height={'100%'}
+                    autoRows={'size-2400'}
                 >
                     <NewProjectLink />
-
                     {projects.data.map((item) => (
                         <ProjectCard key={item.id} item={item} />
                     ))}

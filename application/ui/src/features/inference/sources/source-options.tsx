@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import { usePipeline } from 'hooks/api/pipeline.hook';
 
 import { $api } from '../../../api/client';
 import { ReactComponent as GenICam } from '../../../assets/icons/genicam.svg';
@@ -17,12 +17,8 @@ import { VideoFile } from './video-file/video-file.component';
 import { Webcam } from './webcam/webcam.component';
 
 export const SourceOptions = () => {
-    const projectId = useProjectIdentifier();
-
     const sourcesQuery = $api.useSuspenseQuery('get', '/api/sources');
-    const pipeline = $api.useSuspenseQuery('get', '/api/projects/{project_id}/pipeline', {
-        params: { path: { project_id: projectId } },
-    });
+    const pipeline = usePipeline();
     const sources = sourcesQuery.data ?? [];
 
     return (

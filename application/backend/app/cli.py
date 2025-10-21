@@ -9,12 +9,12 @@ from datetime import datetime, timedelta
 
 import click
 
+from app.core.models.task_type import TaskType
 from app.db import MigrationManager, get_db_session
 from app.db.schema import DatasetItemDB, LabelDB, ModelRevisionDB, PipelineDB, ProjectDB, SinkDB, SourceDB
 from app.schemas import DisconnectedSinkConfig, DisconnectedSourceConfig, OutputFormat, SinkType, SourceType
 from app.schemas.model import TrainingStatus
 from app.schemas.pipeline import FixedRateDataCollectionPolicy
-from app.schemas.project import TaskType
 from app.settings import get_settings
 
 logging.basicConfig(level=logging.INFO)
@@ -85,21 +85,24 @@ def seed(with_model: bool) -> None:
     # If the app is running, it needs to be restarted since it doesn't track direct DB changes
     # Fixed IDs are used to ensure consistency in tests
     click.echo("Seeding database with test data...")
+    project_id = "9d6af8e8-6017-4ebe-9126-33aae739c5fa"
     with get_db_session() as db:
         project = ProjectDB(
-            id="9d6af8e8-6017-4ebe-9126-33aae739c5fa",
+            id=project_id,
             name="Test Project",
             task_type=TaskType.DETECTION,
             exclusive_labels=True,
         )
-        project.labels = [
-            LabelDB(name="Clubs", color="#2d6311", hotkey="c"),
-            LabelDB(name="Diamonds", color="#baa3b3", hotkey="d"),
-            LabelDB(name="Spades", color="#000702", hotkey="s"),
-            LabelDB(name="Hearts", color="#1f016b", hotkey="h"),
-            LabelDB(name="No_object", color="#565a84", hotkey="n"),
-        ]
         db.add(project)
+        db.flush()
+        labels = [
+            LabelDB(project_id=project_id, name="Clubs", color="#2d6311", hotkey="c"),
+            LabelDB(project_id=project_id, name="Diamonds", color="#baa3b3", hotkey="d"),
+            LabelDB(project_id=project_id, name="Spades", color="#000702", hotkey="s"),
+            LabelDB(project_id=project_id, name="Hearts", color="#1f016b", hotkey="h"),
+            LabelDB(project_id=project_id, name="No_object", color="#565a84", hotkey="n"),
+        ]
+        db.add_all(labels)
         db.flush()
 
         # Create default disconnected source and sink

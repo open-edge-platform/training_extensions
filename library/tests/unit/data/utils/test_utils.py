@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from unittest.mock import MagicMock
 
 import cv2
 import numpy as np
@@ -18,7 +17,6 @@ from datumaro.components.media import Image
 
 from otx.data.utils import utils as target_file
 from otx.data.utils.utils import (
-    adapt_input_size_to_dataset,
     compute_robust_dataset_statistics,
     compute_robust_scale_statistics,
     compute_robust_statistics,
@@ -125,70 +123,6 @@ def test_compute_robuste_dataset_statistics(mock_dataset):
     assert np.isclose(stat["image"]["width"]["avg"], 100)
     assert np.isclose(stat["annotation"]["num_per_image"]["avg"], 1.0)
     assert np.isclose(stat["annotation"]["size_of_shape"]["avg"], 10.0)
-
-
-def test_adapt_input_size_to_dataset(mocker):
-    mock_stat = mocker.patch.object(target_file, "compute_robust_dataset_statistics")
-
-    mock_stat.return_value = {"image": {}, "annotation": {}}
-    mock_dataset = MagicMock()
-    mock_dataset.subsets.return_value = {}
-    with pytest.raises(ValueError, match="Dataset does not have 'train' subset. Cannot compute dataset statistics."):
-        input_size = adapt_input_size_to_dataset(dataset=mock_dataset)
-
-    mock_stat.return_value = {"image": {}, "annotation": {}}
-    input_size = adapt_input_size_to_dataset(dataset=MagicMock())
-    assert input_size == (0, 0)
-
-    mock_stat.return_value = {
-        "image": {
-            "height": {"robust_max": 150},
-            "width": {"robust_max": 200},
-        },
-        "annotation": {},
-    }
-    input_size = adapt_input_size_to_dataset(dataset=MagicMock())
-    assert input_size == (150, 200)
-
-    mock_stat.return_value = {
-        "image": {
-            "height": {"robust_max": 150},
-            "width": {"robust_max": 200},
-        },
-        "annotation": {},
-    }
-    input_size = adapt_input_size_to_dataset(dataset=MagicMock(), input_size_multiplier=32)
-    assert input_size == (160, 224)
-
-    mock_stat.return_value = {
-        "image": {
-            "height": {"robust_max": 224},
-            "width": {"robust_max": 240},
-        },
-        "annotation": {"size_of_shape": {"robust_min": 64}},
-    }
-    input_size = adapt_input_size_to_dataset(dataset=MagicMock())
-    assert input_size == (256, 274)
-
-    mock_stat.return_value = {
-        "image": {
-            "height": {"robust_max": 1024},
-            "width": {"robust_max": 1200},
-        },
-        "annotation": {"size_of_shape": {"robust_min": 64}},
-    }
-    input_size = adapt_input_size_to_dataset(dataset=MagicMock())
-    assert input_size == (512, 600)
-
-    mock_stat.return_value = {
-        "image": {
-            "height": {"robust_max": 2045},
-            "width": {"robust_max": 2045},
-        },
-        "annotation": {"size_of_shape": {"robust_min": 64}},
-    }
-    input_size = adapt_input_size_to_dataset(dataset=MagicMock())
-    assert input_size == (1022, 1022)
 
 
 @pytest.mark.parametrize("num_dataloader", [1, 2, 4])

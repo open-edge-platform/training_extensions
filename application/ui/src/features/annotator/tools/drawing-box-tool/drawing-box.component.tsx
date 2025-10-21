@@ -23,7 +23,7 @@ enum PointerType {
 
 const CURSOR_OFFSET = '7 8';
 interface DrawingBoxInterface {
-    onComplete: (shapes: RectInterface) => void;
+    onComplete: (shapes: RectInterface[]) => void;
     roi: RegionOfInterest;
     image: ImageData;
     zoom: number;
@@ -87,7 +87,7 @@ export const DrawingBox = ({ roi, zoom, image, onComplete }: DrawingBoxInterface
 
         // Don't make empty annotations
         if (boundingBox.width > 1 && boundingBox.height > 1) {
-            onComplete(boundingBox);
+            onComplete([boundingBox]);
         }
 
         setCleanState();

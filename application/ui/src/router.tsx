@@ -6,11 +6,10 @@ import { Suspense } from 'react';
 import { Loading } from '@geti/ui';
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 
-import { $api } from './api/client';
-import { ZoomProvider } from './components/zoom/zoom';
 import { paths } from './constants/paths';
 import { WebRTCConnectionProvider } from './features/inference/stream/web-rtc-connection-provider';
 import { ProjectList } from './features/project/list/project-list.component';
+import { useProjects } from './hooks/api/project.hook';
 import { Layout } from './layout';
 import { Dataset } from './routes/dataset/dataset.component';
 import { SelectedDataProvider } from './routes/dataset/provider';
@@ -23,7 +22,7 @@ import { ViewProject } from './routes/project/view-project';
 const Redirect = () => {
     let path = paths.project.index({});
 
-    const { data: projects } = $api.useSuspenseQuery('get', '/api/projects');
+    const { data: projects } = useProjects();
 
     // No projects -> Go to create project
     if (!projects || projects.length === 0) {
@@ -39,8 +38,15 @@ const Redirect = () => {
             path = paths.project.new({});
         }
     } else {
-        // More than 1 project -> Load index page (/projects)
-        path = paths.project.index({});
+        // More than 1 project -> Redirect the active one
+        // And if none are active, redirect to /projects
+        const projectWithActivePipeline = projects.find((project) => Boolean(project.active_pipeline));
+
+        if (projectWithActivePipeline) {
+            path = paths.project.inference({ projectId: projectWithActivePipeline.id });
+        } else {
+            path = paths.project.index({});
+        }
     }
 
     return <Navigate to={path} replace />;
@@ -70,7 +76,11 @@ export const router = createBrowserRouter([
             },
             {
                 path: paths.project.details.pattern,
-                element: <Layout />,
+                element: (
+                    <WebRTCConnectionProvider>
+                        <Layout />
+                    </WebRTCConnectionProvider>
+                ),
                 children: [
                     {
                         index: true,
@@ -78,22 +88,14 @@ export const router = createBrowserRouter([
                     },
                     {
                         path: paths.project.inference.pattern,
-                        element: (
-                            <WebRTCConnectionProvider>
-                                <ZoomProvider>
-                                    <Inference />
-                                </ZoomProvider>
-                            </WebRTCConnectionProvider>
-                        ),
+                        element: <Inference />,
                     },
                     {
                         path: paths.project.dataset.pattern,
                         element: (
-                            <ZoomProvider>
-                                <SelectedDataProvider>
-                                    <Dataset />
-                                </SelectedDataProvider>
-                            </ZoomProvider>
+                            <SelectedDataProvider>
+                                <Dataset />
+                            </SelectedDataProvider>
                         ),
                     },
                     {

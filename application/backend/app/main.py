@@ -18,7 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
 from app.api import endpoints
-from app.core import lifespan
+from app.lifecycle import lifespan
 from app.settings import get_settings
 
 settings = get_settings()

@@ -1,25 +1,20 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import tempfile
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 from uuid import uuid4
 
 import pytest
 from fastapi import status
 
-from app.api.dependencies import get_data_collector, get_label_service, get_project_service
+from app.api.dependencies import get_data_collector, get_label_service
 from app.main import app
-from app.schemas import Label, PatchLabels, ProjectView
-from app.schemas.label import LabelToAdd, LabelToEdit, LabelToRemove
-from app.schemas.project import Task, TaskType
-from app.services import (
-    ProjectService,
-    ResourceAlreadyExistsError,
-    ResourceInUseError,
-    ResourceNotFoundError,
-    ResourceType,
-)
+from app.schemas import LabelView, PatchLabels, ProjectView
+from app.schemas.label import LabelCreate, LabelEdit, LabelRemove
+from app.schemas.project import TaskType, TaskView
+from app.services import ResourceInUseError, ResourceNotFoundError, ResourceType, ResourceWithIdAlreadyExistsError
 from app.services.data_collect import DataCollector
+from app.services.label_service import DuplicateLabelsError, LabelService
 
 
 @pytest.fixture
@@ -28,19 +23,15 @@ def fxt_project() -> ProjectView:
         id=uuid4(),
         name="Test Project",
         active_pipeline=False,
-        task=Task(
+        task=TaskView(
             task_type=TaskType.CLASSIFICATION,
             exclusive_labels=True,
-            labels=[Label(name="cat", color="#11AA22", hotkey="s"), Label(name="dog", color="#AA2233", hotkey="d")],
+            labels=[
+                LabelView(id=uuid4(), name="cat", color="#11AA22", hotkey="s"),
+                LabelView(id=uuid4(), name="dog", color="#AA2233", hotkey="d"),
+            ],
         ),
     )
-
-
-@pytest.fixture
-def fxt_project_service() -> MagicMock:
-    project_service = MagicMock(spec=ProjectService)
-    app.dependency_overrides[get_project_service] = lambda: project_service
-    return project_service
 
 
 @pytest.fixture
@@ -52,10 +43,9 @@ def fxt_data_collector() -> MagicMock:
 
 @pytest.fixture
 def fxt_label_service():
-    with patch("app.services.LabelService") as MockLabelService:
-        mock_service = MockLabelService.return_value
-        app.dependency_overrides[get_label_service] = lambda: mock_service
-        return mock_service
+    label_service = MagicMock(spec=LabelService)
+    app.dependency_overrides[get_label_service] = lambda: label_service
+    return label_service
 
 
 class TestProjectEndpoints:
@@ -100,8 +90,8 @@ class TestProjectEndpoints:
 
     @pytest.mark.parametrize("exclude_attrs", [{}, {"id"}])
     def test_create_project_exists(self, exclude_attrs, fxt_project_service, fxt_project, fxt_client):
-        fxt_project_service.create_project.side_effect = ResourceAlreadyExistsError(
-            resource_type=ResourceType.PROJECT, resource_name="New Project"
+        fxt_project_service.create_project.side_effect = ResourceWithIdAlreadyExistsError(
+            resource_type=ResourceType.PROJECT, resource_id="new_id"
         )
         response = fxt_client.post("/api/projects", json=fxt_project.model_dump(mode="json", exclude=exclude_attrs))
 
@@ -141,17 +131,19 @@ class TestProjectEndpoints:
     def test_update_labels_success(self, fxt_project, fxt_project_service, fxt_label_service, fxt_client):
         """Test successful label update with add, edit, and remove operations."""
         # Setup
-        labels_to_add = [LabelToAdd(name="mouse", color="#0000FF", hotkey="m")]
-        labels_to_edit = [LabelToEdit(id=fxt_project.task.labels[0].id, new_name="updated_cat")]  # type: ignore[call-arg]
-        labels_to_remove = [LabelToRemove(id=fxt_project.task.labels[1].id)]
+        labels_to_add = [LabelCreate(name="mouse", color="#0000FF", hotkey="m")]
+        labels_to_edit = [
+            LabelEdit(id=fxt_project.task.labels[0].id, new_name="updated_cat", new_color="#121212", new_hotkey=None)
+        ]
+        labels_to_remove = [LabelRemove(id=fxt_project.task.labels[1].id)]
 
         patch_labels = PatchLabels(
             labels_to_add=labels_to_add, labels_to_edit=labels_to_edit, labels_to_remove=labels_to_remove
         )
 
         expected_labels = [
-            Label(id=fxt_project.task.labels[0].id, name="updated_cat"),
-            Label(id=uuid4(), name="mouse", color="#0000FF", hotkey="m"),
+            LabelView(id=fxt_project.task.labels[0].id, name="updated_cat", color="#121212"),
+            LabelView(id=uuid4(), name="mouse", color="#0000FF", hotkey="m"),
         ]
 
         fxt_project_service.get_project_by_id.return_value = fxt_project
@@ -182,26 +174,26 @@ class TestProjectEndpoints:
 
     def test_update_labels_conflict(self, fxt_project, fxt_project_service, fxt_label_service, fxt_client):
         """Test label update with duplicate attributes returns 409."""
-        labels_to_add = [LabelToAdd(name="cat", color="#FF0000", hotkey="c")]
+        labels_to_add = [LabelCreate(name="cat", color="#FF0000", hotkey="c")]
         patch_labels = PatchLabels(labels_to_add=labels_to_add)
 
         fxt_project_service.get_project_by_id.return_value = fxt_project
-        fxt_label_service.update_labels_in_project.side_effect = ResourceAlreadyExistsError(
-            ResourceType.LABEL, "", message="Label with the same name or hotkey or color already exists"
-        )
+        fxt_label_service.update_labels_in_project.side_effect = DuplicateLabelsError
 
         response = fxt_client.patch(
             f"/api/projects/{str(fxt_project.id)}/labels", json=patch_labels.model_dump(mode="json")
         )
 
         assert response.status_code == status.HTTP_409_CONFLICT
-        assert "already exists" in response.json()["detail"]
+        assert response.json()["detail"] == "Either label names or hotkeys have duplicates"
 
     @pytest.mark.parametrize(
         "patch_labels",
         [
-            PatchLabels(labels_to_remove=[LabelToRemove(id=uuid4())]),  # Non-existent label to remove
-            PatchLabels(labels_to_edit=[LabelToEdit(id=uuid4(), new_name="updated")]),  # type: ignore[call-arg] # Non-existent label to edit
+            PatchLabels(labels_to_remove=[LabelRemove(id=uuid4())]),  # Non-existent label to remove
+            PatchLabels(
+                labels_to_edit=[LabelEdit(id=uuid4(), new_name="updated", new_color="#121212", new_hotkey=None)]
+            ),  # Non-existent label to edit
         ],
     )
     def test_update_labels_remove_edit_nonexistent(

@@ -81,18 +81,14 @@ jobs:
           BENCHMARK_RESULTS_CLEAR: ${{ vars.BENCHMARK_RESULTS_CLEAR }}
           GH_CTX_REF_NAME: ${{ github.ref_name }}
           GH_CTX_SHA: ${{ github.sha }}
-          INPUTS.DATA-ROOT: ${{ inputs.data-root }}
-          INPUTS.NUM-REPEAT: ${{ inputs.num-repeat }}
-          INPUTS.NUM-EPOCH: ${{ inputs.num-epoch }}
-          INPUTS.EVAL-UPTO: ${{ inputs.eval-upto }}
+          TASK: ${{ matrix.task }}
+          DATA_ROOT: ${{ inputs.data-root }}
+          NUM_REPEAT: ${{ inputs.num-repeat }}
+          NUM_EPOCH: ${{ inputs.num-epoch }}
+          EVAL_UPTO: ${{ inputs.eval-upto }}
           TRIGGERING_ACTOR: ${{ github.triggering_actor }}
         run: |
           rm -rf .tox
-          export TASK="${{ matrix.task }}"
-          export DATA_ROOT="$INPUTS.DATA-ROOT"
-          export NUM_REPEAT="$INPUTS.NUM-REPEAT"
-          export NUM_EPOCH="$INPUTS.NUM-EPOCH"
-          export EVAL_UPTO="$INPUTS.EVAL-UPTO"
           export GITHUB_ACTOR="$TRIGGERING_ACTOR"
           export DEVICE="gpu"
           export SUMMARY_FILE_ROOT=".tox"

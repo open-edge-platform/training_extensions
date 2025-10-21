@@ -35,30 +35,47 @@ class AnomalyLabel(Enum):
 
 
 class OTXAnomalyDataset(OTXDataset):
-    """OTXDataset class for anomaly classification task."""
+    """Dataset class for anomaly classification tasks in OTX.
+
+    Handles loading images and corresponding masks for anomaly detection/classification,
+    supporting both file-based and in-memory (bytes) images. Provides label mapping,
+    mask extraction (from file, polygons, ellipses, or bounding boxes), and applies
+    transformations as needed for model training or inference.
+
+    Args:
+        task_type (OTXTaskType): The type of anomaly task (e.g., classification, detection).
+        dm_subset (DmDataset): Datumaro dataset subset containing the data.
+        transforms (Transforms, optional): Transformations to apply to the data.
+        max_refetch (int, optional): Maximum number of times to refetch data if needed. Defaults to 1000.
+        image_color_channel (ImageColorChannel, optional): Color channel format for images. Defaults to RGB.
+        stack_images (bool, optional): Whether to stack images. Defaults to True.
+        to_tv_image (bool, optional): Whether to convert images to TorchVision format. Defaults to True.
+        data_format (str, optional): Data format string. Defaults to "".
+    """
 
     def __init__(
         self,
         task_type: OTXTaskType,
         dm_subset: DmDataset,
-        transforms: Transforms,
+        transforms: Transforms | None = None,
         max_refetch: int = 1000,
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
         stack_images: bool = True,
         to_tv_image: bool = True,
         data_format: str = "",
     ) -> None:
-        self.task_type = task_type
         super().__init__(
-            dm_subset,
-            transforms,
-            max_refetch,
-            image_color_channel,
-            stack_images,
-            to_tv_image,
+            dm_subset=dm_subset,
+            transforms=transforms,
+            max_refetch=max_refetch,
+            image_color_channel=image_color_channel,
+            stack_images=stack_images,
+            to_tv_image=to_tv_image,
+            data_format=data_format,
         )
         self.label_info = AnomalyLabelInfo()
         self._label_mapping = self._map_id_to_label()
+        self._task_type = task_type
 
     def _get_item_impl(
         self,
@@ -167,3 +184,8 @@ class OTXAnomalyDataset(OTXDataset):
         # Note: This is a workaround to handle the case where mask is not available otherwise the tests fail.
         # This is problematic because it assigns empty masks to an Anomalous image.
         return torch.zeros(1, *img_shape).to(torch.uint8)
+
+    @property
+    def task_type(self) -> OTXTaskType | None:
+        """OTX Task Type for the dataset. Can be None if no task is defined."""
+        return self._task_type

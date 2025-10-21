@@ -5,7 +5,7 @@ import { useActionState } from 'react';
 
 import { toast } from '@geti/ui';
 
-import { $api } from '../../../../api/client';
+import { usePatchPipeline } from '../../../../hooks/api/pipeline.hook';
 import { useProjectIdentifier } from '../../../../hooks/use-project-identifier.hook';
 import { SourceConfig } from '../util';
 import { useSourceMutation } from './use-source-mutation.hook';
@@ -22,7 +22,7 @@ export const useSourceAction = <T extends SourceConfig>({
     bodyFormatter,
 }: useSourceActionProps<T>) => {
     const projectId = useProjectIdentifier();
-    const pipeline = $api.useMutation('patch', '/api/projects/{project_id}/pipeline');
+    const pipeline = usePatchPipeline();
     const addOrUpdateSource = useSourceMutation(isNewSource);
 
     return useActionState<T, FormData>(async (_prevState: T, formData: FormData) => {

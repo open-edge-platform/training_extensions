@@ -4,29 +4,37 @@
 import logging
 import os
 import os.path
+from collections.abc import Sequence
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
 from typing import BinaryIO
 from uuid import UUID, uuid4
 
+import datumaro.experimental as dm
 import numpy as np
 from PIL import Image, UnidentifiedImageError
 from sqlalchemy.orm import Session
 
-from app.db.schema import DatasetItemDB, ProjectDB
-from app.repositories import DatasetItemRepository, ProjectRepository
+from app.core.models import TaskType
+from app.db.schema import DatasetItemDB
+from app.repositories import DatasetItemRepository
 from app.schemas.dataset_item import (
     DatasetItem,
     DatasetItemAnnotation,
     DatasetItemAnnotationsWithSource,
     DatasetItemSubset,
 )
-from app.schemas.project import TaskType
+from app.schemas.label import LabelBase
+from app.schemas.project import ProjectBase
 from app.schemas.shape import FullImage, Polygon, Rectangle
-from app.services.base import ResourceNotFoundError, ResourceType
-from app.services.mappers.dataset_item_mapper import DatasetItemMapper
+from app.services.datumaro_converter import convert_dataset
 from app.utils.images import crop_to_thumbnail
+
+from .base import ResourceNotFoundError, ResourceType
+from .label_service import LabelService
+from .mappers.dataset_item_mapper import DatasetItemMapper
+from .project_service import ProjectService
 
 logger = logging.getLogger(__name__)
 
@@ -48,11 +56,31 @@ class InvalidImageError(Exception):
         super().__init__(msg)
 
 
+class NotAnnotatedError(Exception):
+    """Exception raised when unannotated dataset item annotations are requested."""
+
+    def __init__(self, message: str | None = None):
+        msg = message or "Dataset item has not been annotated yet."
+        super().__init__(msg)
+
+
+class SubsetAlreadyAssignedError(Exception):
+    """Exception raised when subset is being assigned to a dataset item, which already has one assigned."""
+
+    def __init__(self, message: str | None = None):
+        msg = message or "Dataset item has already a subset assigned."
+        super().__init__(msg)
+
+
 class DatasetService:
-    def __init__(self, data_dir: Path, db_session: Session) -> None:
+    def __init__(
+        self, data_dir: Path, db_session: Session, project_service: ProjectService, label_service: LabelService
+    ) -> None:
         self.mapper = DatasetItemMapper()
         self.projects_dir = data_dir / "projects"
         self._db_session = db_session
+        self._project_service = project_service
+        self._label_service = label_service
 
     @staticmethod
     def _read_image_from_ndarray(data: np.ndarray) -> Image.Image:
@@ -87,7 +115,7 @@ class DatasetService:
         user_reviewed: bool,
         source_id: UUID | None = None,
         prediction_model_id: UUID | None = None,
-        annotations: list[DatasetItemAnnotation] = [],
+        annotations: list[DatasetItemAnnotation] | None = None,
     ) -> DatasetItem:
         """Creates a new dataset item"""
         dataset_item_id = uuid4()
@@ -120,16 +148,14 @@ class DatasetService:
             prediction_model_id=str(prediction_model_id) if prediction_model_id is not None else None,
         )
 
-        project_repo = ProjectRepository(db=self._db_session)
-        project = project_repo.get_by_id(str(project_id))
-        if project is None:
-            raise ResourceNotFoundError(ResourceType.PROJECT, str(project_id))
+        project = self._project_service.get_project_by_id(project_id)
 
-        DatasetService._validate_annotations_labels(annotations=annotations, project=project)
-        DatasetService._validate_annotations(annotations=annotations, project=project)
-        DatasetService._validate_annotations_coordinates(annotations=annotations, dataset_item=dataset_item)
+        if annotations is not None:
+            DatasetService._validate_annotations_labels(annotations=annotations, labels=project.task.labels)
+            DatasetService._validate_annotations(annotations=annotations, project=project)
+            DatasetService._validate_annotations_coordinates(annotations=annotations, dataset_item=dataset_item)
 
-        dataset_item.annotation_data = [annotation.model_dump(mode="json") for annotation in annotations]
+            dataset_item.annotation_data = [annotation.model_dump(mode="json") for annotation in annotations]
 
         repo = DatasetItemRepository(project_id=str(project_id), db=self._db_session)
         dataset_item = repo.save(dataset_item)
@@ -162,36 +188,44 @@ class DatasetService:
 
     def get_dataset_item_by_id(self, project_id: UUID, dataset_item_id: UUID) -> DatasetItem:
         """Get a dataset item by its ID"""
-        repo = DatasetItemRepository(project_id=str(project_id), db=self._db_session)
+        project = self._project_service.get_project_by_id(project_id)
+        repo = DatasetItemRepository(project_id=str(project.id), db=self._db_session)
         dataset_item = repo.get_by_id(str(dataset_item_id))
         if not dataset_item:
             raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
         return self.mapper.to_schema(dataset_item)
 
+    def get_dataset_item_binary_path(self, project_id: UUID, dataset_item: DatasetItemDB) -> Path:
+        dataset_dir = self.projects_dir / f"{project_id}/dataset"
+        return dataset_dir / f"{dataset_item.id}.{dataset_item.format}"
+
     def get_dataset_item_binary_path_by_id(self, project_id: UUID, dataset_item_id: UUID) -> Path | str:
         """Get a dataset item binary content by its ID"""
-        repo = DatasetItemRepository(project_id=str(project_id), db=self._db_session)
+        project = self._project_service.get_project_by_id(project_id)
+        repo = DatasetItemRepository(project_id=str(project.id), db=self._db_session)
         dataset_item = repo.get_by_id(str(dataset_item_id))
         if not dataset_item:
             raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
-        return self.projects_dir / f"{project_id}/dataset/{dataset_item.id}.{dataset_item.format}"
+        return self.get_dataset_item_binary_path(project_id=project.id, dataset_item=dataset_item)
 
     def get_dataset_item_thumbnail_path_by_id(self, project_id: UUID, dataset_item_id: UUID) -> Path | str:
         """Get a dataset item thumbnail binary content by its ID"""
-        repo = DatasetItemRepository(project_id=str(project_id), db=self._db_session)
+        project = self._project_service.get_project_by_id(project_id)
+        repo = DatasetItemRepository(project_id=str(project.id), db=self._db_session)
         dataset_item = repo.get_by_id(str(dataset_item_id))
         if not dataset_item:
             raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
-        return self.projects_dir / f"{project_id}/dataset/{dataset_item.id}-thumb.jpg"
+        return self.projects_dir / f"{project.id}/dataset/{dataset_item.id}-thumb.jpg"
 
     def delete_dataset_item(self, project_id: UUID, dataset_item_id: UUID) -> None:
         """Delete a dataset item by its ID"""
-        repo = DatasetItemRepository(project_id=str(project_id), db=self._db_session)
+        project = self._project_service.get_project_by_id(project_id)
+        repo = DatasetItemRepository(project_id=str(project.id), db=self._db_session)
         dataset_item = repo.get_by_id(str(dataset_item_id))
         if not dataset_item:
             raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
 
-        dataset_dir = self.projects_dir / f"{project_id}/dataset"
+        dataset_dir = self.projects_dir / f"{project.id}/dataset"
         try:
             os.remove(dataset_dir / f"{dataset_item.id}.{dataset_item.format}")
         except FileNotFoundError:
@@ -206,23 +240,23 @@ class DatasetService:
             raise ResourceNotFoundError(ResourceType.DATASET_ITEM, dataset_item.id)
 
     @staticmethod
-    def _validate_annotations_labels(annotations: list[DatasetItemAnnotation], project: ProjectDB) -> None:
+    def _validate_annotations_labels(annotations: list[DatasetItemAnnotation], labels: Sequence[LabelBase]) -> None:
         for annotation in annotations:
             for annotation_label in annotation.labels:
-                project_label = next((label for label in project.labels if label.id == str(annotation_label.id)), None)
+                project_label = next((label for label in labels if label.id == annotation_label.id), None)
                 if project_label is None:
                     raise AnnotationValidationError(f"Label {str(annotation_label.id)} is not found in the project.")
 
     @staticmethod
-    def _validate_annotations(annotations: list[DatasetItemAnnotation], project: ProjectDB) -> None:  # noqa: C901
-        match project.task_type:
+    def _validate_annotations(annotations: list[DatasetItemAnnotation], project: ProjectBase) -> None:  # noqa: C901
+        match project.task.task_type:
             case TaskType.CLASSIFICATION:
                 if len(annotations) > 1:
                     raise AnnotationValidationError("Classification project doesn't allow more than one annotation.")
                 annotation = annotations[0]
                 if not isinstance(annotation.shape, FullImage):
                     raise AnnotationValidationError("Classification project supports only full_image shapes.")
-                if project.exclusive_labels and len(annotation.labels) > 1:
+                if project.task.exclusive_labels and len(annotation.labels) > 1:
                     raise AnnotationValidationError(
                         "Multiclass classification project doesn't allow more than one label per annotation."
                     )
@@ -264,11 +298,9 @@ class DatasetService:
         self, project_id: UUID, dataset_item_id: UUID, annotations: list[DatasetItemAnnotation]
     ) -> DatasetItemAnnotationsWithSource:
         """Set dataset item annotations"""
-        project_repo = ProjectRepository(db=self._db_session)
-        project = project_repo.get_by_id(str(project_id))
-        if project is None:
-            raise ResourceNotFoundError(ResourceType.PROJECT, str(project_id))
-        DatasetService._validate_annotations_labels(annotations=annotations, project=project)
+        project = self._project_service.get_project_by_id(project_id)
+
+        DatasetService._validate_annotations_labels(annotations=annotations, labels=project.task.labels)
         DatasetService._validate_annotations(annotations=annotations, project=project)
 
         repo = DatasetItemRepository(project_id=str(project_id), db=self._db_session)
@@ -292,10 +324,13 @@ class DatasetService:
 
     def get_dataset_item_annotations(self, project_id: UUID, dataset_item_id: UUID) -> DatasetItemAnnotationsWithSource:
         """Get the dataset item annotations"""
-        repo = DatasetItemRepository(project_id=str(project_id), db=self._db_session)
+        project = self._project_service.get_project_by_id(project_id)
+        repo = DatasetItemRepository(project_id=str(project.id), db=self._db_session)
         dataset_item = repo.get_by_id(str(dataset_item_id))
         if not dataset_item:
             raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
+        if not dataset_item.annotation_data:
+            raise NotAnnotatedError
         return DatasetItemAnnotationsWithSource(
             annotations=[
                 DatasetItemAnnotation.model_validate(annotation) for annotation in dataset_item.annotation_data
@@ -306,7 +341,37 @@ class DatasetService:
 
     def delete_dataset_item_annotations(self, project_id: UUID, dataset_item_id: UUID) -> None:
         """Delete the dataset item annotations"""
-        repo = DatasetItemRepository(project_id=str(project_id), db=self._db_session)
-        updated = repo.set_annotation_data(obj_id=str(dataset_item_id), annotation_data=[])
+        project = self._project_service.get_project_by_id(project_id)
+        repo = DatasetItemRepository(project_id=str(project.id), db=self._db_session)
+        updated = repo.delete_annotation_data(obj_id=str(dataset_item_id))
         if not updated:
             raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
+
+    def assign_dataset_item_subset(
+        self, project_id: UUID, dataset_item_id: UUID, subset: DatasetItemSubset
+    ) -> DatasetItem:
+        """Assign dataset item subset"""
+        project = self._project_service.get_project_by_id(project_id)
+        repo = DatasetItemRepository(project_id=str(project.id), db=self._db_session)
+        db_subset = repo.get_subset(str(dataset_item_id))
+        if db_subset is None:
+            raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
+        if db_subset != DatasetItemSubset.UNASSIGNED:
+            raise SubsetAlreadyAssignedError
+        repo.set_subset(obj_id=str(dataset_item_id), subset=subset)
+        return self.get_dataset_item_by_id(project_id=project_id, dataset_item_id=dataset_item_id)
+
+    def get_dm_dataset(self, project_id: UUID) -> dm.Dataset:
+        repo = DatasetItemRepository(project_id=str(project_id), db=self._db_session)
+
+        def _get_dataset_items(offset: int, limit: int) -> list[DatasetItemDB]:
+            return repo.list_items(limit=limit, offset=offset)
+
+        def _get_image_path(item: DatasetItemDB) -> str:
+            return str(self.get_dataset_item_binary_path(project_id=project_id, dataset_item=item))
+
+        project = self._project_service.get_project_by_id(project_id=project_id)
+        labels = self._label_service.list_all(project_id=project_id)
+        return convert_dataset(
+            project=project, labels=labels, get_dataset_items=_get_dataset_items, get_image_path=_get_image_path
+        )

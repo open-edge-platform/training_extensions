@@ -10,6 +10,7 @@ import { isFunction } from 'lodash-es';
 import classes from './media-item.module.scss';
 
 interface MediaItemProps {
+    className?: string;
     contentElement: () => ReactNode;
     topLeftElement?: () => ReactNode;
     topRightElement?: () => ReactNode;
@@ -18,6 +19,7 @@ interface MediaItemProps {
 }
 
 export const MediaItem = ({
+    className,
     contentElement,
     topLeftElement,
     topRightElement,
@@ -25,29 +27,41 @@ export const MediaItem = ({
     bottomRightElement,
 }: MediaItemProps) => {
     return (
-        <View width={'100%'}>
+        <View width={'100%'} UNSAFE_className={className}>
             {contentElement()}
 
             {isFunction(topLeftElement) && (
-                <View UNSAFE_className={clsx(classes.leftTopElement, classes.floatingContainer)}>
+                <View
+                    data-floating-container
+                    UNSAFE_className={clsx(classes.leftTopElement, classes.floatingContainer)}
+                >
                     {topLeftElement()}
                 </View>
             )}
 
             {isFunction(topRightElement) && (
-                <View UNSAFE_className={clsx(classes.rightTopElement, classes.floatingContainer)}>
+                <View
+                    data-floating-container
+                    UNSAFE_className={clsx(classes.rightTopElement, classes.floatingContainer)}
+                >
                     {topRightElement()}
                 </View>
             )}
 
             {isFunction(bottomLeftElement) && (
-                <View UNSAFE_className={clsx(classes.bottomLeftElement, classes.floatingContainer)}>
+                <View
+                    data-floating-container
+                    UNSAFE_className={clsx(classes.bottomLeftElement, classes.floatingContainer)}
+                >
                     {bottomLeftElement()}
                 </View>
             )}
 
             {isFunction(bottomRightElement) && (
-                <View UNSAFE_className={clsx(classes.bottomRightElement, classes.floatingContainer)}>
+                <View
+                    data-floating-container
+                    UNSAFE_className={clsx(classes.bottomRightElement, classes.floatingContainer)}
+                >
                     {bottomRightElement()}
                 </View>
             )}

@@ -7,7 +7,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.api.dependencies import get_model_id, get_model_service, get_project_id
-from app.schemas import Label, Model
+from app.schemas import LabelView, Model
 from app.services import ModelService, ResourceInUseError, ResourceNotFoundError
 
 router = APIRouter(prefix="/api/projects/{project_id}/models", tags=["Models"])
@@ -66,7 +66,7 @@ def get_model_labels(
     project_id: Annotated[UUID, Depends(get_project_id)],
     model_id: Annotated[UUID, Depends(get_model_id)],
     model_service: Annotated[ModelService, Depends(get_model_service)],
-) -> list[Label]:
+) -> list[LabelView]:
     """Get labels for a specific model."""
     _ = project_id, model_id, model_service
     raise NotImplementedError("Model labels endpoint is not implemented yet")

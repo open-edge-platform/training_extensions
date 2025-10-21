@@ -5,30 +5,37 @@ from uuid import uuid4
 
 import pytest
 
-from app.db.schema import LabelDB, PipelineDB, ProjectDB
-from app.schemas import ProjectCreate
-from app.schemas.project import Label, ProjectView, Task, TaskType
-from app.services.mappers import LabelMapper, ProjectMapper
+from app.db.schema import PipelineDB, ProjectDB
+from app.schemas.label import LabelCreate, LabelView
+from app.schemas.project import ProjectCreate, ProjectView, TaskCreate, TaskType, TaskView
+from app.services.mappers import ProjectMapper
 
 CREATE_PROJECT_TO_DB_MAPPING = [
     (
         ProjectCreate(
             name="Test Project",
-            task=Task(
+            task=TaskCreate(
                 task_type=TaskType.CLASSIFICATION,
                 exclusive_labels=True,
-                labels=[Label(name="label1"), Label(name="label2")],  # type: ignore[call-arg]
+                labels=[
+                    LabelCreate(name="label1", color="#FF0000", hotkey=None),
+                    LabelCreate(name="label2", color="#00FF00", hotkey=None),
+                ],
             ),
         ),
         ProjectDB(name="Test Project", task_type=TaskType.CLASSIFICATION, exclusive_labels=True),
     ),
     (
-        ProjectCreate(name="Test Project", task=Task(task_type=TaskType.DETECTION, exclusive_labels=False, labels=[])),
+        ProjectCreate(
+            name="Test Project", task=TaskCreate(task_type=TaskType.DETECTION, exclusive_labels=False, labels=[])
+        ),
         ProjectDB(name="Test Project", task_type=TaskType.DETECTION, exclusive_labels=False),
     ),
 ]
 
 PROJECT_ID = uuid4()
+LABEL1_ID = uuid4()
+LABEL2_ID = uuid4()
 DB_TO_VIEW_PROJECT_MAPPING = [
     (
         ProjectDB(id=str(PROJECT_ID), name="Test Project", task_type=TaskType.CLASSIFICATION, exclusive_labels=True),
@@ -36,12 +43,19 @@ DB_TO_VIEW_PROJECT_MAPPING = [
             id=PROJECT_ID,
             name="Test Project",
             active_pipeline=True,
-            task=Task(
+            task=TaskView(
                 task_type=TaskType.CLASSIFICATION,
                 exclusive_labels=True,
-                labels=[Label(name="label1"), Label(name="label2")],  # type: ignore[call-arg]
+                labels=[
+                    LabelView(id=LABEL1_ID, name="label1", color="#FF0000", hotkey=None),
+                    LabelView(id=LABEL2_ID, name="label2", color="#00FF00", hotkey=None),
+                ],
             ),
         ),
+        [
+            LabelView(id=LABEL1_ID, name="label1", color="#FF0000", hotkey=None),
+            LabelView(id=LABEL2_ID, name="label2", color="#00FF00", hotkey=None),
+        ],
     ),
     (
         ProjectDB(id=str(PROJECT_ID), name="Test Project", task_type=TaskType.DETECTION, exclusive_labels=False),
@@ -49,8 +63,9 @@ DB_TO_VIEW_PROJECT_MAPPING = [
             id=PROJECT_ID,
             name="Test Project",
             active_pipeline=False,
-            task=Task(task_type=TaskType.DETECTION, exclusive_labels=False, labels=[]),
+            task=TaskView(task_type=TaskType.DETECTION, exclusive_labels=False, labels=[]),
         ),
+        [],
     ),
 ]
 
@@ -60,22 +75,17 @@ class TestProjectMapper:
 
     @pytest.mark.parametrize("schema_instance,expected_db", CREATE_PROJECT_TO_DB_MAPPING.copy())
     def test_from_schema(self, schema_instance: ProjectCreate, expected_db: ProjectDB) -> None:
-        expected_db.id = str(schema_instance.id)
-        expected_db.labels = [LabelMapper.from_schema(schema_label) for schema_label in schema_instance.task.labels]
         actual_db = ProjectMapper.from_schema(schema_instance)
-        assert actual_db.id == expected_db.id
+        assert actual_db.id == str(schema_instance.id)
         assert actual_db.name == expected_db.name
         assert actual_db.task_type == expected_db.task_type
         assert actual_db.exclusive_labels == expected_db.exclusive_labels
-        assert {label.name for label in actual_db.labels} == {label.name for label in expected_db.labels}
 
-    @pytest.mark.parametrize("db_instance,expected_schema", DB_TO_VIEW_PROJECT_MAPPING.copy())
-    def test_to_schema(self, db_instance: ProjectDB, expected_schema: ProjectView) -> None:
-        db_instance.labels = [
-            LabelDB(id=str(schema_label.id), name=schema_label.name) for schema_label in expected_schema.task.labels
-        ]
+    @pytest.mark.parametrize("db_instance,expected_schema, labels", DB_TO_VIEW_PROJECT_MAPPING.copy())
+    def test_to_schema(self, db_instance: ProjectDB, expected_schema: ProjectView, labels: list[LabelView]) -> None:
+        db_instance.id = str(expected_schema.id)
         db_instance.pipeline = PipelineDB(is_running=expected_schema.active_pipeline or False)
-        actual_schema = ProjectMapper.to_schema(db_instance)
+        actual_schema = ProjectMapper.to_schema(db_instance, labels)
         assert actual_schema.name == expected_schema.name
         assert actual_schema.task.task_type == expected_schema.task.task_type
         assert actual_schema.task.exclusive_labels == expected_schema.task.exclusive_labels
