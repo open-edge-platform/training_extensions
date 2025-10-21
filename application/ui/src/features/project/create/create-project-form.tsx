@@ -5,11 +5,11 @@ import { FormEvent, useState } from 'react';
 
 import { Button, ButtonGroup, Flex, Form, Text } from '@geti/ui';
 import { useNavigate } from 'react-router';
+import { Label } from 'src/constants/shared-types';
 import { v4 as uuid } from 'uuid';
 
 import { paths } from '../../../constants/paths';
 import { useCreateProject } from '../../../hooks/api/project.hook';
-import { Label } from '../../annotator/types';
 import { LabelSelection } from '../label-selection/label-selection.component';
 import { TaskType } from '../task-selection/interface';
 import { TaskSelection } from '../task-selection/task-selection.component';

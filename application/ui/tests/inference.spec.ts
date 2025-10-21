@@ -59,7 +59,6 @@ test.describe('Inference', () => {
 
         await page.getByLabel('Start stream').click();
 
-        // TODO: fix the stream mock and update this to "Connected"
         await expect(page.getByLabel('Connecting')).toBeVisible();
     });
 

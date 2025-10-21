@@ -5,9 +5,8 @@ import { PointerEvent, useCallback } from 'react';
 
 import { isEmpty } from 'lodash-es';
 import { useZoom } from 'src/components/zoom/zoom.provider';
+import { Label } from 'src/constants/shared-types';
 import { v4 as uuid } from 'uuid';
-
-import { Label } from '../types';
 
 const labelStyles = (scale: number) => {
     // We need the actual values for calculations:
