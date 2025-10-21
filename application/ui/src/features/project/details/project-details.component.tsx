@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Divider, Flex, Grid, Heading, repeat, Text, View } from '@geti/ui';
+import { usePipeline } from 'hooks/api/pipeline.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { capitalize, startsWith } from 'lodash-es';
 import { Fragment } from 'react/jsx-runtime';
@@ -49,9 +50,7 @@ const VerticalHeader = ({ text }: { text: string }) => {
 export const ProjectDetails = () => {
     const projectId = useProjectIdentifier();
 
-    const pipeline = $api.useSuspenseQuery('get', '/api/projects/{project_id}/pipeline', {
-        params: { path: { project_id: projectId } },
-    });
+    const pipeline = usePipeline();
     const project = $api.useSuspenseQuery('get', '/api/projects/{project_id}', {
         params: { path: { project_id: projectId } },
     });

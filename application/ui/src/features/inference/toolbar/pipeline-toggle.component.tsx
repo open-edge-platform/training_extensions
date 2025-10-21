@@ -4,9 +4,9 @@
 import { useRef } from 'react';
 
 import { Switch, toast } from '@geti/ui';
+import { useDisablePipeline, useEnablePipeline, usePipeline } from 'hooks/api/pipeline.hook';
 import { useIsPipelineConfigured } from 'hooks/use-is-pipeline-configured.hook';
 import { throttle } from 'lodash-es';
-import { $api } from 'src/api/client';
 import { useProjectIdentifier } from 'src/hooks/use-project-identifier.hook';
 
 const DELAY = 2000;
@@ -14,14 +14,11 @@ const DELAY = 2000;
 const useTogglePipeline = () => {
     const projectId = useProjectIdentifier();
 
-    const pipelineQuery = $api.useSuspenseQuery('get', '/api/projects/{project_id}/pipeline', {
-        params: { path: { project_id: projectId } },
-    });
-
+    const pipelineQuery = usePipeline();
     const canEditPipeline = useIsPipelineConfigured(pipelineQuery.data);
 
-    const enablePipelineMutation = $api.useMutation('post', '/api/projects/{project_id}/pipeline:enable');
-    const disablePipelineMutation = $api.useMutation('post', '/api/projects/{project_id}/pipeline:disable');
+    const enablePipelineMutation = useEnablePipeline();
+    const disablePipelineMutation = useDisablePipeline();
 
     const isPipelineEnabled = pipelineQuery.data?.status === 'running';
 
