@@ -17,7 +17,7 @@ class TestModelArchitecturesEndpoint:
 
         data = response.json()
         assert "model_architectures" in data
-        assert len(data["model_architectures"]) == 27
+        assert len(data["model_architectures"]) == 20
 
         # Verify structure of first detection model
         detection_model = next(
@@ -50,9 +50,9 @@ class TestModelArchitecturesEndpoint:
     @pytest.mark.parametrize(
         "task_filter, total_models",
         [
-            ("Detection", 15),
-            ("Instance_Segmentation", 5),
-            ("Classification", 7),
+            ("Detection", 11),
+            ("Instance_Segmentation", 4),
+            ("Classification", 5),
         ],
     )
     def test_get_model_architectures_various_tasks(self, fxt_client: TestClient, task_filter, total_models):
