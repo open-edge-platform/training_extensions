@@ -22,3 +22,6 @@ application/docker/ @open-edge-platform/training_extensions-backend-write
 
 # Application documentation
 application/docs/ @leoll2 @jpggvilaca
+
+# Model manifests
+application/backend/app/supported_models/manifests/ @leoll2 @kprokofi
