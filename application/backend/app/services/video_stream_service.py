@@ -22,7 +22,7 @@ class VideoStreamService:
             case SourceType.DISCONNECTED:
                 video_stream = None
             case SourceType.WEBCAM:
-                video_stream = WebcamStream(device_id=input_config.device_id)
+                video_stream = WebcamStream(device_id=input_config.device_id, codec=input_config.codec)
             case SourceType.IP_CAMERA:
                 video_stream = IPCameraStream(config=input_config)
             case SourceType.VIDEO_FILE:

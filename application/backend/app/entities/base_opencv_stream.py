@@ -16,16 +16,18 @@ from app.schemas import SourceType
 class BaseOpenCVStream(VideoStream, ABC):
     """Base class for OpenCV-based video streams with common functionality."""
 
-    def __init__(self, source: str | int, source_type: SourceType, **metadata) -> None:
+    def __init__(self, source: str | int, source_type: SourceType, codec: str | None = None, **metadata) -> None:
         """Initialize OpenCV stream.
 
         Args:
             source: Video source (device ID, file path, or URL)
             source_type: Type of the video source
+            codec: Video codec
             **metadata: Additional metadata for the stream
         """
         self.source = source
         self.source_type = source_type
+        self.codec = codec
         self.metadata = metadata
         self.cap: cv2.VideoCapture
         self._initialize_capture()
@@ -35,6 +37,8 @@ class BaseOpenCVStream(VideoStream, ABC):
         self.cap = cv2.VideoCapture(self.source)
         if not self.cap.isOpened():
             raise RuntimeError(f"Could not open video source: {self.source}")
+        if self.codec:
+            self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*self.codec))  # type: ignore[attr-defined]
 
     def _read_frame(self) -> np.ndarray:
         """Read a frame from the capture device."""

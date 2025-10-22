@@ -43,7 +43,9 @@ def fxt_folder_sink() -> FolderSinkConfig:
 
 @pytest.fixture
 def fxt_webcam_source() -> WebcamSourceConfig:
-    return WebcamSourceConfig(id=uuid4(), source_type=SourceType.WEBCAM, name="Test Webcam Source", device_id=1)
+    return WebcamSourceConfig(
+        id=uuid4(), source_type=SourceType.WEBCAM, name="Test Webcam Source", device_id=1, codec="YUY2"
+    )
 
 
 @pytest.fixture
@@ -338,7 +340,7 @@ class TestSourceAndSinkEndpoints:
                 "fxt_webcam_source",
                 ConfigApiPath.SOURCES,
                 "get_source_by_id",
-                "device_id: 1\nname: Test Webcam Source\nsource_type: webcam\n",
+                "codec: YUY2\ndevice_id: 1\nname: Test Webcam Source\nsource_type: webcam\n",
             ),
             (
                 "fxt_folder_sink",

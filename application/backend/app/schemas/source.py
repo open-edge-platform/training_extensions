@@ -7,7 +7,7 @@ from typing import Annotated, Literal
 from urllib.parse import urlparse, urlunparse
 from uuid import UUID
 
-from pydantic import Field, TypeAdapter
+from pydantic import Field, StringConstraints, TypeAdapter
 
 from app.core.models import BaseRequiredIDNameModel, HasID
 
@@ -32,6 +32,9 @@ class DisconnectedSourceConfig(BaseRequiredIDNameModel):
 class WebcamSourceConfig(BaseRequiredIDNameModel):
     source_type: Literal[SourceType.WEBCAM]
     device_id: int
+    codec: Annotated[str | None, StringConstraints(min_length=4, max_length=4, to_upper=True)] = Field(
+        None, description="Video codec fourcc"
+    )
 
     model_config = {
         "json_schema_extra": {
@@ -40,6 +43,7 @@ class WebcamSourceConfig(BaseRequiredIDNameModel):
                 "name": "Webcam 0",
                 "id": "f9e0ae4f-d96c-4304-baab-2ab845362d03",
                 "device_id": 0,
+                "codec": "YUY2",
             }
         }
     }
