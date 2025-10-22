@@ -9,9 +9,9 @@ import { DatasetItem } from 'src/constants/shared-types';
 import { $api } from '../../../../api/client';
 import { AddMediaButton } from '../../../../components/add-media-button/add-media-button.component';
 import { CheckboxInput } from '../../../../components/checkbox-input/checkbox-input.component';
+import { TrainModel } from '../../../models/train-model/train-model';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
 import { useSelectedData } from '../../selected-data-provider.component';
-import { TrainModel } from '../../train-model/train-model';
 import { toggleMultipleSelection, updateSelectedKeysTo } from './util';
 
 type ToolbarProps = {
