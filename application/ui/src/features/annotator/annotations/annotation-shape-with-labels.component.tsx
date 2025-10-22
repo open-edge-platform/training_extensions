@@ -6,8 +6,8 @@ import { Key } from 'react';
 import polylabel from 'polylabel';
 import { Label } from 'src/constants/shared-types';
 
-import { useAnnotationActions } from '../annotation-actions-provider.component';
-import { useAnnotationVisibility } from '../annotation-visibility-provider.component';
+import { useAnnotationActions } from '../../../shared/annotator/annotation-actions-provider.component';
+import { useAnnotationVisibility } from '../../../shared/annotator/annotation-visibility-provider.component';
 import { Annotation, Polygon } from '../types';
 import { AnnotationLabels } from './annotation-labels.component';
 import { AnnotationShape } from './annotation-shape.component';

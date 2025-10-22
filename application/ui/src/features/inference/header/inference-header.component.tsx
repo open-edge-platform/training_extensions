@@ -95,7 +95,7 @@ const WebRTCConnectionStatus = () => {
     }
 };
 
-export const Toolbar = () => {
+export const Header = () => {
     return (
         <View
             backgroundColor={'gray-100'}

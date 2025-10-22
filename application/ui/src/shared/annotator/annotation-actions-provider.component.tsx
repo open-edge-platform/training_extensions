@@ -11,7 +11,7 @@ import { components } from 'src/api/openapi-spec';
 import { DatasetItem } from 'src/constants/shared-types';
 import { v4 as uuid } from 'uuid';
 
-import { Annotation, Shape } from './types';
+import { Annotation, Shape } from '../../features/annotator/types';
 
 type ServerAnnotation = components['schemas']['DatasetItemAnnotation-Input'];
 

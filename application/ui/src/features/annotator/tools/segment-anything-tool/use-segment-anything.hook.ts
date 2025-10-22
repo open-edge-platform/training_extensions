@@ -8,7 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Remote, wrap } from 'comlink';
 import { DatasetItem } from 'src/constants/shared-types';
 
-import { useAnnotator } from '../../annotator-provider.component';
+import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
 import { convertToolShapeToGetiShape } from '../utils';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';
 
