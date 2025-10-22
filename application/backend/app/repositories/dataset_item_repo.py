@@ -142,14 +142,13 @@ class DatasetItemRepository:
         )
         self.db.execute(stmt)
 
-    def save_labels(self, dataset_item_id: str, label_ids: set[str]) -> None:
-        values = [{"dataset_item_id": dataset_item_id, "label_id": label_id} for label_id in label_ids]
-        stmt = (
-            insert(DatasetItemLabelDB)
-            .values(values)
-            .on_conflict_do_nothing(index_elements=["dataset_item_id", "label_id"])
-        )
-        self.db.execute(stmt)
+    def set_labels(self, dataset_item_id: str, label_ids: set[str]) -> None:
+        self.delete_labels(dataset_item_id)
+
+        if label_ids:
+            values = [{"dataset_item_id": dataset_item_id, "label_id": label_id} for label_id in label_ids]
+            stmt = insert(DatasetItemLabelDB).values(values)
+            self.db.execute(stmt)
 
     def delete_labels(self, dataset_item_id: str) -> None:
         stmt = delete(DatasetItemLabelDB).where(DatasetItemLabelDB.dataset_item_id == dataset_item_id)

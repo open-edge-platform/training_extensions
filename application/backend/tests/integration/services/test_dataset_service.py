@@ -514,18 +514,17 @@ class TestDatasetServiceIntegration:
         assert excinfo.value.resource_id == str(wrong_project_id)
 
     @pytest.mark.parametrize(
-        "item_idx, label_idx, expected_label_count",
+        "item_idx, label_idx",
         [
-            (0, 0, 1),  # Add annotation with new label to unannotated item
-            (1, 0, 1),  # Test updating annotation with existing label on already annotated item
-            (1, 1, 2),  # Add annotation with new label to already annotated item
+            (0, 0),  # Set annotation with new label to unannotated item
+            (1, 0),  # Set annotation with existing label on already annotated item
+            (1, 1),  # Set annotation with new label to already annotated item
         ],
     )
     def test_set_dataset_item_annotations(
         self,
         item_idx: int,
         label_idx: int,
-        expected_label_count: int,
         fxt_dataset_service: DatasetService,
         fxt_project_with_dataset_items: tuple[ProjectDB, list[LabelDB], list[DatasetItemDB]],
         fxt_annotations: Callable[[str], list[DatasetItemAnnotation]],
@@ -554,7 +553,7 @@ class TestDatasetServiceIntegration:
                 .select_from(DatasetItemLabelDB)
                 .where(DatasetItemLabelDB.dataset_item_id == dataset_item_id)
             )
-            == expected_label_count
+            == 1
         )
         assert db_session.get(DatasetItemLabelDB, (dataset_item_id, label_id)) is not None
 

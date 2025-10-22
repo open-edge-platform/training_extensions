@@ -160,7 +160,7 @@ class DatasetService:
         repo = DatasetItemRepository(project_id=str(project_id), db=self._db_session)
         dataset_item = repo.save(dataset_item)
         if annotations is not None:
-            repo.save_labels(
+            repo.set_labels(
                 dataset_item_id=str(dataset_item_id),
                 label_ids={str(label.id) for annotation in annotations for label in annotation.labels},
             )
@@ -321,7 +321,7 @@ class DatasetService:
         if not result:
             raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
 
-        repo.save_labels(
+        repo.set_labels(
             dataset_item_id=str(dataset_item_id),
             label_ids={str(label.id) for annotation in annotations for label in annotation.labels},
         )
