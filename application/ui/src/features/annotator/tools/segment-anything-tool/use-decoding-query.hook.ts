@@ -5,7 +5,7 @@ import { queryOptions, useMutation, useQuery } from '@tanstack/react-query';
 
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
-import { Shape } from '../../types';
+import type { Shape } from '../../types';
 import { removeOffLimitPoints } from '../utils';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';
 

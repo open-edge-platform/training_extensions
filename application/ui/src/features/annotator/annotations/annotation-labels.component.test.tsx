@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { getMockedLabel } from 'mocks/mock-labels';
-import { Label } from 'src/constants/shared-types';
+import type { Label } from 'src/constants/shared-types';
 import { fireEvent, render, screen } from 'test-utils/render';
 
 import { AnnotationLabels } from './annotation-labels.component';

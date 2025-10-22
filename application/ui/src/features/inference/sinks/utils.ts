@@ -3,7 +3,7 @@
 
 import { isEmpty } from 'lodash-es';
 
-import { components } from '../../../api/openapi-spec';
+import type { components } from '../../../api/openapi-spec';
 
 export type LocalFolderSinkConfig = components['schemas']['FolderSinkConfig'];
 export type MqttSinkConfig = components['schemas']['MqttSinkConfig'];

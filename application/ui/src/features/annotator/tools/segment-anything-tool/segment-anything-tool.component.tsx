@@ -10,7 +10,7 @@ import { useAnnotator } from '../../../../shared/annotator/annotator-provider.co
 import { AnnotationShapeWithLabels } from '../../annotations/annotation-shape-with-labels.component';
 import { MaskAnnotations } from '../../annotations/mask-annotations.component';
 import { AnnotatorLoading } from '../../annotator-loading.component';
-import { Annotation, Shape } from '../../types';
+import type { Annotation, Shape } from '../../types';
 import { SvgToolCanvas } from '../svg-tool-canvas.component';
 import { getRelativePoint, removeOffLimitPoints } from '../utils';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';

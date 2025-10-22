@@ -3,7 +3,7 @@
 
 import { ReactNode, useId } from 'react';
 
-import { Annotation } from '../types';
+import type { Annotation } from '../types';
 import { AnnotationShapeWithLabels } from './annotation-shape-with-labels.component';
 
 type MaskAnnotationsProps = {

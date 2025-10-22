@@ -4,7 +4,7 @@
 import { Fragment } from 'react/jsx-runtime';
 
 import { IconWrapper } from '../../../components/icon-wrapper/icon-wrapper.component';
-import { ToolConfig, ToolType } from './interface';
+import type { ToolConfig, ToolType } from './interface';
 
 interface ToolsProps {
     tools: ToolConfig[];

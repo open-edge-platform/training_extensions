@@ -4,7 +4,7 @@
 import { Suspense } from 'react';
 
 import { Content, Dialog, dimensionValue, Divider, Flex, Grid, Heading, Loading, View } from '@geti/ui';
-import { DatasetItem } from 'src/constants/shared-types';
+import type { DatasetItem } from 'src/constants/shared-types';
 import { AnnotationActionsProvider } from 'src/shared/annotator/annotation-actions-provider.component';
 import { AnnotationVisibilityProvider } from 'src/shared/annotator/annotation-visibility-provider.component';
 import { AnnotatorProvider } from 'src/shared/annotator/annotator-provider.component';

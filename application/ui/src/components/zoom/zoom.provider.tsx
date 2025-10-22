@@ -1,11 +1,11 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useState } from 'react';
+import { createContext, ReactNode, useContext, useState, type Dispatch, type SetStateAction } from 'react';
 
 import { clampBetween } from '@geti/smart-tools/utils';
 
-import { ZoomState } from './types';
+import type { ZoomState } from './types';
 import { getZoomState, ZOOM_STEP_DIVISOR } from './util';
 
 const Zoom = createContext<ZoomState>({

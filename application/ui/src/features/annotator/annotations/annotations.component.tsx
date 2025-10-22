@@ -6,7 +6,7 @@ import { MouseEvent } from 'react';
 import { isEmpty } from 'lodash-es';
 
 import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
-import { Annotation as AnnotationType } from '../types';
+import type { Annotation as AnnotationType } from '../types';
 import { DEFAULT_ANNOTATION_STYLES } from '../utils';
 import { Annotation } from './annotation.component';
 import { MaskAnnotations } from './mask-annotations.component';

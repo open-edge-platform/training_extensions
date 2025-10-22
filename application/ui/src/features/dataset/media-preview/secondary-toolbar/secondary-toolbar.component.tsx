@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, ButtonGroup, dimensionValue, Flex, Grid } from '@geti/ui';
-import { QueryClient, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { isEmpty } from 'lodash-es';
-import { DatasetItem } from 'src/constants/shared-types';
+import type { DatasetItem } from 'src/constants/shared-types';
 import { useAnnotationActions } from 'src/shared/annotator/annotation-actions-provider.component';
 
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';

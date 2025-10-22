@@ -4,7 +4,7 @@
 import { getMockedAnnotation } from 'mocks/mock-annotation';
 import { render, screen } from 'test-utils/render';
 
-import { Annotation, Polygon, Rect } from '../types';
+import type { Annotation, Polygon, Rect } from '../types';
 import { AnnotationShape } from './annotation-shape.component';
 
 type AnnotationRect = Annotation & { shape: Rect };

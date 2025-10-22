@@ -1,9 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { PointerEvent, RefObject, useState } from 'react';
+import { useState, type PointerEvent, type RefObject } from 'react';
 
-import { Point } from '../../../types';
+import type { Point } from '../../../types';
 import { getRelativePoint } from './utils';
 
 interface UseCrosshair {

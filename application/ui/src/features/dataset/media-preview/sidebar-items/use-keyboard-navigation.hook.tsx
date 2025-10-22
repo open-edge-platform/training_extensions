@@ -1,10 +1,10 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { RefObject } from 'react';
+import type { RefObject } from 'react';
 
 import { useEventListener } from 'hooks/event-listener.hook';
-import { DatasetItem } from 'src/constants/shared-types';
+import type { DatasetItem } from 'src/constants/shared-types';
 
 export type UseKeyboardNavigationProps = {
     ref: RefObject<HTMLElement | null>;
