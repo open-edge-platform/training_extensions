@@ -7,14 +7,14 @@ from uuid import uuid4
 import pytest
 
 from app.api.dependencies import get_training_configuration_service
-from app.main import app
-from app.schemas import TrainingConfiguration
-from app.services.training_configuration_service import TrainingConfigurationService
-from app.supported_models.hyperparameters import (
+from app.configuration_tools.hyperparameters import (
     DatasetPreparationParameters,
     EvaluationParameters,
     TrainingHyperParameters,
 )
+from app.configuration_tools.training_configuration import TrainingConfiguration
+from app.main import app
+from app.services.training_configuration_service import TrainingConfigurationService
 
 
 @pytest.fixture

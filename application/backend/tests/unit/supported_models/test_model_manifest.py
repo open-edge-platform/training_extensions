@@ -9,8 +9,7 @@ from unittest.mock import patch
 import hiyapyco
 import pytest
 
-from app.supported_models import manifests
-from app.supported_models.hyperparameters import (
+from app.configuration_tools.hyperparameters import (
     AugmentationParameters,
     DatasetPreparationParameters,
     EarlyStopping,
@@ -18,6 +17,7 @@ from app.supported_models.hyperparameters import (
     Hyperparameters,
     TrainingHyperParameters,
 )
+from app.supported_models import manifests
 from app.supported_models.model_manifest import (
     Capabilities,
     GPUMaker,

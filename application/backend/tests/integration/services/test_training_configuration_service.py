@@ -6,16 +6,16 @@ from uuid import UUID, uuid4
 import pytest
 from sqlalchemy.orm import Session
 
-from app.db.schema import ModelRevisionDB, ProjectDB, TrainingConfigurationDB
-from app.schemas import TrainingConfiguration
-from app.schemas.project import TaskType
-from app.services import ResourceNotFoundError
-from app.services.training_configuration_service import TrainingConfigurationService
-from app.supported_models.hyperparameters import (
+from app.configuration_tools.hyperparameters import (
     DatasetPreparationParameters,
     EvaluationParameters,
     TrainingHyperParameters,
 )
+from app.configuration_tools.training_configuration import TrainingConfiguration
+from app.db.schema import ModelRevisionDB, ProjectDB, TrainingConfigurationDB
+from app.schemas.project import TaskType
+from app.services import ResourceNotFoundError
+from app.services.training_configuration_service import TrainingConfigurationService
 
 
 @pytest.fixture

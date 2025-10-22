@@ -4,9 +4,9 @@ from uuid import UUID
 
 from sqlalchemy.orm import Session
 
+from app.configuration_tools.training_configuration import TrainingConfiguration
 from app.repositories import ModelRevisionRepository, ProjectRepository
 from app.repositories.training_configuration_repo import TrainingConfigurationRepository
-from app.schemas import TrainingConfiguration
 from app.services import ResourceNotFoundError, ResourceType
 from app.supported_models import SupportedModels
 from app.supported_models.default_models import DefaultModels
@@ -42,23 +42,63 @@ class TrainingConfigurationService:
             raise ValueError("Only one of model_architecture_id or model_revision_id should be provided.")
 
         if model_revision_id:
-            model = ModelRevisionRepository(self._db_session).get_by_id(str(model_revision_id))
-            if not model:
-                raise ResourceNotFoundError(ResourceType.MODEL, str(model_revision_id))
-            return TrainingConfiguration.from_model(model_config=model.training_configuration)
+            return self._get_by_model_revision_id(model_revision_id=model_revision_id)
 
         if model_architecture_id:
-            stored_config = TrainingConfigurationRepository(self._db_session).get_by_project_and_model_architecture(
-                project_id=str(project_id),
-                model_architecture_id=model_architecture_id,
+            return self._get_by_model_architecture_id(
+                project_id=project_id, model_architecture_id=model_architecture_id
             )
-            if stored_config:
-                return TrainingConfiguration.model_validate(stored_config.configuration_data)
 
-            model_manifest = SupportedModels.get_model_manifest_by_id(model_architecture_id)
-            return TrainingConfiguration.from_hyperparameters(hyperparameters=model_manifest.hyperparameters)
+        return self._get_default_configuration(project_id=project_id)
 
-        # Load default configuration based on the project's task type
+    def _get_by_model_revision_id(self, model_revision_id: UUID) -> TrainingConfiguration:
+        """
+        Retrieves training configuration from a specific model revision.
+
+        Args:
+            model_revision_id (UUID): Identifier for the model revision.
+
+        Returns:
+            TrainingConfiguration: The training configuration object.
+        """
+        model = ModelRevisionRepository(self._db_session).get_by_id(str(model_revision_id))
+        if not model:
+            raise ResourceNotFoundError(ResourceType.MODEL, str(model_revision_id))
+        return TrainingConfiguration.model_validate(model.training_configuration)
+
+    def _get_by_model_architecture_id(self, project_id: UUID, model_architecture_id: str) -> TrainingConfiguration:
+        """
+        Retrieves training configuration for a specific model architecture.
+
+        Args:
+            project_id (UUID): Identifier for the project.
+            model_architecture_id (str): ID of the model architecture.
+
+        Returns:
+            TrainingConfiguration: The training configuration object.
+        """
+        stored_config = TrainingConfigurationRepository(self._db_session).get_by_project_and_model_architecture(
+            project_id=str(project_id),
+            model_architecture_id=model_architecture_id,
+        )
+        if stored_config:
+            return TrainingConfiguration.model_validate(stored_config.configuration_data)
+
+        model_manifest = SupportedModels.get_model_manifest_by_id(model_manifest_id=model_architecture_id)
+        return TrainingConfiguration.from_manifest(
+            model_architecture_id=model_architecture_id, hyperparameters=model_manifest.hyperparameters
+        )
+
+    def _get_default_configuration(self, project_id: UUID) -> TrainingConfiguration:
+        """
+        Retrieves the default training configuration based on the project's task type.
+
+        Args:
+            project_id (UUID): Identifier for the project.
+
+        Returns:
+            TrainingConfiguration: The default training configuration object.
+        """
         project = ProjectRepository(self._db_session).get_by_id(str(project_id))
         if not project:
             raise ResourceNotFoundError(ResourceType.PROJECT, str(project_id))
@@ -68,7 +108,10 @@ class TrainingConfigurationService:
             raise ValueError(f"No default model found for task type {project.task_type}")
         default_model_manifest = SupportedModels.get_model_manifest_by_id(model_manifest_id=default_model_id)
 
-        return TrainingConfiguration.from_hyperparameters(hyperparameters=default_model_manifest.hyperparameters)
+        return TrainingConfiguration.from_manifest(
+            model_architecture_id=default_model_id,
+            hyperparameters=default_model_manifest.hyperparameters,
+        )
 
     def update_training_configuration(
         self,

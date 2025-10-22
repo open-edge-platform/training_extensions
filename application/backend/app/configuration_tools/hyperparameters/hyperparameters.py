@@ -3,9 +3,10 @@
 
 from pydantic import Field, model_validator
 
+from app.configuration_tools.utils import partial_model
+
 from .augmentation import AugmentationParameters
 from .base_model_no_extra import BaseModelNoExtra
-from .utils import partial_model
 
 
 class DatasetPreparationParameters(BaseModelNoExtra):
