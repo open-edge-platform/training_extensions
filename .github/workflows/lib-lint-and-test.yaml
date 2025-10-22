@@ -113,11 +113,11 @@ jobs:
 
       - name: Installing dependencies
         working-directory: library
-        run: uv sync --locked --all-extras --no-extra xpu --dev
+        run: uv sync --locked --extra cuda --no-extra xpu --dev
 
       - name: Unit testing
         working-directory: library
-        run: uv run pytest tests/unit --cov --cov-report=xml
+        run: uv run --frozen --extra cuda --no-extra xpu pytest tests/unit --cov --cov-report=xml
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5.5.1
@@ -173,13 +173,13 @@ jobs:
 
       - name: Installing dependencies
         working-directory: library
-        run: uv sync --locked --all-extras --no-extra xpu --dev
+        run: uv sync --locked --extra cuda --no-extra xpu --dev
 
       - name: Integration testing
         working-directory: library
         env:
           CUBLAS_WORKSPACE_CONFIG: ":4096:8"
-        run: uv run pytest tests/integration -ra --showlocals --csv=${{ matrix.task }}_Python-${{ matrix.python-version }}.csv --task ${{ matrix.task }} --open-subprocess --run-category-only
+        run: uv run --frozen --extra cuda --no-extra xpu pytest tests/integration -ra --showlocals --csv=${{ matrix.task }}_Python-${{ matrix.python-version }}.csv --task ${{ matrix.task }} --open-subprocess --run-category-only
 
   required_check:
     name: Required Check lib-lint-and-test
