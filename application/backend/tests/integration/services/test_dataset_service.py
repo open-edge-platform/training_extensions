@@ -2,8 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import logging
 import os.path
-import shutil
-from collections.abc import Callable, Generator
+from collections.abc import Callable
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
@@ -13,7 +12,7 @@ import pytest
 from PIL import Image
 from sqlalchemy.orm import Session
 
-from app.db.schema import DatasetItemDB, LabelDB, ModelRevisionDB, ProjectDB, SourceDB
+from app.db.schema import DatasetItemDB, DatasetItemLabelDB, LabelDB, ModelRevisionDB, ProjectDB, SourceDB
 from app.schemas.dataset_item import DatasetItemAnnotation, DatasetItemAnnotationsWithSource, DatasetItemSubset
 from app.schemas.label import LabelReference
 from app.schemas.shape import FullImage, Rectangle
@@ -27,16 +26,6 @@ from app.services.dataset_service import (
 )
 
 logger = logging.getLogger(__name__)
-
-
-@pytest.fixture()
-def fxt_projects_dir() -> Generator[Path]:
-    """Setup a temporary data directory for tests."""
-    projects_dir = Path("data/projects")
-    if not projects_dir.exists():
-        projects_dir.mkdir(parents=True)
-    yield projects_dir
-    shutil.rmtree(projects_dir)
 
 
 @pytest.fixture
@@ -99,12 +88,15 @@ def fxt_project_with_dataset_items(
         db_dataset_items.append(dataset_item)
     db_session.add_all(db_dataset_items)
     db_session.flush()
+    # Link label to dataset item with annotation
+    db_session.add(DatasetItemLabelDB(dataset_item_id=db_dataset_items[1].id, label_id=fxt_db_labels[0].id))
+    db_session.flush()
 
     return db_project, fxt_db_labels, db_dataset_items
 
 
 @pytest.fixture
-def fxt_annotations():
+def fxt_annotations() -> Callable[[str], list[DatasetItemAnnotation]]:
     def _create_annotations(label_id: str) -> list[DatasetItemAnnotation]:
         return [
             DatasetItemAnnotation(
@@ -129,6 +121,8 @@ class TestDatasetServiceIntegration:
         fxt_db_models: list[ModelRevisionDB],
         fxt_db_sources: list[SourceDB],
         fxt_db_projects: list[ProjectDB],
+        fxt_db_labels: list[LabelDB],
+        fxt_annotations: Callable[[str], list[DatasetItemAnnotation]],
         db_session: Session,
         format: DatasetItemSubset,
         user_reviewed: bool,
@@ -144,10 +138,12 @@ class TestDatasetServiceIntegration:
         project_id = db_project.id
 
         fxt_db_models[0].project_id = project_id
-        db_session.add_all([fxt_db_sources[0], fxt_db_models[0]])
+        fxt_db_labels[0].project_id = project_id
+        db_session.add_all([fxt_db_sources[0], fxt_db_models[0], fxt_db_labels[0]])
         db_session.flush()
         stored_source_id = fxt_db_sources[0].id
         model_revision_id = fxt_db_models[0].id
+        label_id = fxt_db_labels[0].id
 
         created_dataset_item = fxt_dataset_service.create_dataset_item(
             project_id=UUID(project_id),
@@ -157,6 +153,7 @@ class TestDatasetServiceIntegration:
             user_reviewed=user_reviewed,
             source_id=UUID(stored_source_id) if use_pipeline_source else None,
             prediction_model_id=UUID(model_revision_id) if use_pipeline_model else None,
+            annotations=fxt_annotations(label_id) if not user_reviewed else None,
         )
         logger.info(f"Created dataset item: {created_dataset_item}")
 
@@ -169,7 +166,6 @@ class TestDatasetServiceIntegration:
             and dataset_item.format == format
             and dataset_item.width == 1024
             and dataset_item.height == 768
-            and dataset_item.annotation_data is None
             and dataset_item.user_reviewed == user_reviewed
             and dataset_item.subset == DatasetItemSubset.UNASSIGNED
             and dataset_item.subset_assigned_at is None
@@ -182,6 +178,17 @@ class TestDatasetServiceIntegration:
             assert dataset_item.prediction_model_id == model_revision_id
         else:
             assert dataset_item.prediction_model_id is None
+        if not user_reviewed:
+            assert dataset_item.annotation_data == [
+                {
+                    "labels": [{"id": label_id}],
+                    "shape": {"type": "rectangle", "x": 0, "y": 0, "width": 10, "height": 10},
+                    "confidence": None,
+                }
+            ]
+            assert db_session.get(DatasetItemLabelDB, (str(created_dataset_item.id), fxt_db_labels[0].id)) is not None
+        else:
+            assert dataset_item.annotation_data is None
 
         binary_file_path = Path(f"data/projects/{project_id}/dataset/{created_dataset_item.id}.{format}")
         assert os.path.exists(binary_file_path)
@@ -527,6 +534,7 @@ class TestDatasetServiceIntegration:
         assert [
             DatasetItemAnnotation.model_validate(annotation) for annotation in dataset_item.annotation_data
         ] == annotations
+        assert db_session.get(DatasetItemLabelDB, (db_dataset_items[0].id, db_labels[0].id)) is not None
 
     def test_set_dataset_item_annotations_not_found(
         self,
@@ -648,10 +656,13 @@ class TestDatasetServiceIntegration:
         self,
         fxt_dataset_service: DatasetService,
         fxt_project_with_dataset_items: tuple[ProjectDB, list[LabelDB], list[DatasetItemDB]],
+        fxt_db_labels: list[LabelDB],
         db_session: Session,
     ):
         """Test deleting a dataset item annotation."""
         db_project, _, db_dataset_items = fxt_project_with_dataset_items
+        item_label_id = (db_dataset_items[1].id, fxt_db_labels[0].id)
+        assert db_session.get(DatasetItemLabelDB, item_label_id) is not None
 
         fxt_dataset_service.delete_dataset_item_annotations(
             project_id=UUID(db_project.id),
@@ -661,6 +672,7 @@ class TestDatasetServiceIntegration:
         dataset_item = db_session.get(DatasetItemDB, db_dataset_items[1].id)
         assert dataset_item is not None
         assert dataset_item.annotation_data is None
+        assert db_session.get(DatasetItemLabelDB, item_label_id) is None
 
     def test_delete_dataset_item_annotations_not_found(
         self,
