@@ -37,6 +37,7 @@ SUPPORTED_SOURCES_MAPPING = [
             id=SOURCE_ID,
             name="Test Webcam Source",
             device_id=1,
+            codec=None,
         ),
         SourceDB(
             source_type=SourceType.WEBCAM,
