@@ -76,11 +76,11 @@ jobs:
 
       - name: Installing dependencies
         working-directory: library
-        run: uv sync --locked --all-extras --no-extra xpu --dev
+        run: uv sync --locked --extra dev --extra cuda --no-extra xpu
 
       - name: Run pre-commit checks
         working-directory: library
-        run: uv run pre-commit run --all-files
+        run: uv run --frozen --extra dev --extra cuda --no-extra xpu pre-commit run --all-files
 
   Unit-Test:
     runs-on: [self-hosted, linux, x64, dev, dmount]
@@ -113,11 +113,11 @@ jobs:
 
       - name: Installing dependencies
         working-directory: library
-        run: uv sync --locked --extra cuda --no-extra xpu --dev
+        run: uv sync --locked --extra dev --extra cuda --no-extra xpu
 
       - name: Unit testing
         working-directory: library
-        run: uv run --frozen --extra cuda --no-extra xpu pytest tests/unit --cov --cov-report=xml
+        run: uv run --frozen --extra dev --extra cuda --no-extra xpu pytest tests/unit --cov --cov-report=xml
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5.5.1
