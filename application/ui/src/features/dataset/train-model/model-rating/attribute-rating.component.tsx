@@ -16,11 +16,12 @@ const RateColorPalette = {
     EMPTY: 'var(--spectrum-global-color-gray-500)',
 };
 
-const RateColors = {
+const RateColors: Record<Ratings, string[]> = {
     LOW: [RateColorPalette.LOW, RateColorPalette.EMPTY, RateColorPalette.EMPTY],
     MEDIUM: [RateColorPalette.LOW, RateColorPalette.MEDIUM, RateColorPalette.EMPTY],
     HIGH: [RateColorPalette.LOW, RateColorPalette.MEDIUM, RateColorPalette.HIGH],
 };
+const rateLabels = Object.keys(RateColors);
 
 interface AttributeRatingProps {
     name: string;
@@ -36,7 +37,11 @@ export const AttributeRating: FC<AttributeRatingProps> = ({ name, rating }) => {
                 </Heading>
                 <Flex alignItems={'center'} gap={'size-100'}>
                     {RateColors[rating].map((color, idx) => (
-                        <View key={idx} UNSAFE_className={classes.rate} UNSAFE_style={{ backgroundColor: color }} />
+                        <View
+                            key={`rate-${rateLabels[idx]}`}
+                            UNSAFE_className={classes.rate}
+                            UNSAFE_style={{ backgroundColor: color }}
+                        />
                     ))}
                 </Flex>
             </Flex>

@@ -22,8 +22,8 @@ export const TrainModelDialog = ({ isOpen, onClose }: TrainModelDialogProps) => 
     const [selectedModelArchitectureId, setSelectedModelArchitectureId] = useState<string | null>(null);
     const jobMutation = $api.useMutation('post', '/api/jobs');
 
-    const handleSubmit = () => {
-        jobMutation.mutateAsync({
+    const handleSubmit = async () => {
+        await jobMutation.mutateAsync({
             body: {
                 job_type: 'train',
                 project_id,

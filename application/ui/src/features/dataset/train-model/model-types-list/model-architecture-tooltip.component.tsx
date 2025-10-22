@@ -27,7 +27,7 @@ export const ModelArchitectureTooltipText = ({
             {isDeprecated && (
                 <>
                     <Divider marginY={'size-150'} height={'size-10'} />
-                    <p>deprecated model tag</p>
+                    <Text>Deprecated model tag</Text>
                     <Text marginTop={'size-50'} UNSAFE_style={{ display: 'block' }}>
                         {DEPRECATED_MODEL_EXPLANATION}
                     </Text>
@@ -36,7 +36,7 @@ export const ModelArchitectureTooltipText = ({
             {isObsolete && (
                 <>
                     <Divider marginY={'size-150'} height={'size-10'} />
-                    <p>obsolete model tag</p>
+                    <Text>Obsolete model tag</Text>
                     <Text marginTop={'size-50'} UNSAFE_style={{ display: 'block' }}>
                         {OBSOLETE_MODEL_EXPLANATION}
                     </Text>

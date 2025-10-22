@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Divider, Flex, Heading, Radio, RadioGroup, Tooltip, TooltipTrigger, View } from '@geti/ui';
+import { Divider, Flex, Heading, Radio, Tooltip, TooltipTrigger, View } from '@geti/ui';
 import { clsx } from 'clsx';
 import { SchemaModelArchitecture } from 'src/api/openapi-spec';
 import { InfoTooltip } from 'src/components/info-tooltip/info-tooltip.component';
@@ -10,7 +10,6 @@ import { ModelAttributes } from '../model-attributes/model-attributes.component'
 import { Ratings } from '../model-rating/attribute-rating.component';
 import { TemplateRating } from '../model-rating/model-rating.component';
 import { ModelTag } from '../model-tag/model-tag.component';
-import { SelectableCard } from '../selectable-card/selectable-card.component';
 import { ModelArchitectureTooltipText } from './model-architecture-tooltip.component';
 
 import classes from './model-type.module.scss';
@@ -18,7 +17,6 @@ import classes from './model-type.module.scss';
 interface ModelTypeProps {
     selectedModelArchitectureId: string | null;
     modelArchitecture: SchemaModelArchitecture;
-    onChangeSelectedTemplateId: (modelTemplateId: string | null) => void;
 }
 
 const RATING_MAP: Record<number, Ratings> = {
@@ -27,63 +25,65 @@ const RATING_MAP: Record<number, Ratings> = {
     3: 'HIGH',
 };
 
-export const ModelType = ({
-    modelArchitecture,
-    selectedModelArchitectureId,
-    onChangeSelectedTemplateId,
-}: ModelTypeProps) => {
+export const ModelType = ({ modelArchitecture, selectedModelArchitectureId }: ModelTypeProps) => {
     const { id, name, description, support_status, stats } = modelArchitecture;
     const isSelected = selectedModelArchitectureId === modelArchitecture.id;
     const isActive = support_status === 'active';
     const isObsolete = support_status === 'obsolete';
     const isDeprecated = support_status === 'deprecated';
 
-    const handlePress = () => {
-        onChangeSelectedTemplateId(isSelected ? null : id);
-    };
-
     return (
-        <SelectableCard
-            isSelected={isSelected}
-            handleOnPress={handlePress}
-            headerContent={
-                <>
+        <label
+            htmlFor={`${id}-radio`}
+            aria-label={`model ${name}`}
+            className={clsx(classes.selectableItem, { [classes.selectableItemSelected]: isSelected })}
+        >
+            <View
+                position={'relative'}
+                paddingX={'size-175'}
+                paddingY={'size-125'}
+                borderTopWidth={'thin'}
+                borderTopEndRadius={'regular'}
+                borderTopStartRadius={'regular'}
+                borderTopColor={'gray-200'}
+                backgroundColor={'gray-200'}
+                UNSAFE_style={{ boxSizing: 'border-box' }}
+                UNSAFE_className={clsx({ [classes.selectedHeader]: isSelected })}
+            >
+                <Flex direction={'column'} width={'100%'} height={'100%'} justifyContent={'center'}>
                     <View marginBottom={'size-50'}>
-                        <RadioGroup
-                            isEmphasized
-                            minWidth={0}
-                            aria-label={`Select ${name}`}
-                            onChange={handlePress}
-                            value={selectedModelArchitectureId}
-                            UNSAFE_className={classes.radioGroup}
-                        >
-                            <Flex alignItems={'center'} gap={'size-50'}>
-                                <View minWidth={0}>
-                                    <TooltipTrigger placement={'bottom'}>
-                                        <Radio value={id} aria-label={name}>
-                                            <Heading
-                                                UNSAFE_className={clsx(classes.trainTemplateName, {
-                                                    [classes.selected]: isSelected,
-                                                })}
-                                            >
-                                                {name}
-                                            </Heading>
-                                        </Radio>
-                                        <Tooltip>{name}</Tooltip>
-                                    </TooltipTrigger>
-                                </View>
-                                <InfoTooltip
-                                    id={`${name.toLocaleLowerCase()}-summary-id`}
-                                    iconColor={isSelected ? 'var(--energy-blue)' : undefined}
-                                    tooltipText={
-                                        <ModelArchitectureTooltipText
-                                            description={description}
-                                            isDeprecated={isDeprecated}
-                                        />
-                                    }
-                                />
-                            </Flex>
-                        </RadioGroup>
+                        <Flex alignItems={'center'} gap={'size-50'}>
+                            <View minWidth={0}>
+                                <TooltipTrigger placement={'bottom'}>
+                                    <Radio
+                                        id={`${id}-radio`}
+                                        value={id}
+                                        aria-label={name}
+                                        UNSAFE_className={classes.radioItem}
+                                    >
+                                        <Heading
+                                            UNSAFE_className={clsx(classes.trainTemplateName, {
+                                                [classes.selected]: isSelected,
+                                            })}
+                                        >
+                                            {name}
+                                        </Heading>
+                                    </Radio>
+
+                                    <Tooltip>{name}</Tooltip>
+                                </TooltipTrigger>
+                            </View>
+                            <InfoTooltip
+                                id={`${name.toLocaleLowerCase()}-summary-id`}
+                                iconColor={isSelected ? 'var(--energy-blue)' : undefined}
+                                tooltipText={
+                                    <ModelArchitectureTooltipText
+                                        description={description}
+                                        isDeprecated={isDeprecated}
+                                    />
+                                }
+                            />
+                        </Flex>
                     </View>
                     <Flex alignItems={'center'} gap={'size-100'}>
                         {isActive && <ModelTag name={'Active'} isActive />}
@@ -93,9 +93,22 @@ export const ModelType = ({
                         {isObsolete && <ModelTag name={'Obsolete'} isObsolete />}
                         {isDeprecated && <ModelTag name={'Deprecated'} isDeprecated />}
                     </Flex>
-                </>
-            }
-            descriptionContent={
+                </Flex>
+            </View>
+
+            <View
+                flex={1}
+                paddingX={'size-250'}
+                paddingY={'size-225'}
+                borderBottomWidth={'thin'}
+                borderBottomEndRadius={'regular'}
+                borderBottomStartRadius={'regular'}
+                borderBottomColor={'gray-100'}
+                minHeight={'size-1000'}
+                UNSAFE_className={clsx(classes.selectableItemDescription, {
+                    [classes.selectedDescription]: isSelected,
+                })}
+            >
                 <Flex direction={'column'} gap={'size-200'}>
                     <TemplateRating
                         accuracy={RATING_MAP[stats.performance_ratings.accuracy]}
@@ -105,7 +118,7 @@ export const ModelType = ({
                     <Divider size={'S'} />
                     <ModelAttributes gigaflops={stats.gigaflops} trainableParameters={stats.trainable_parameters} />
                 </Flex>
-            }
-        />
+            </View>
+        </label>
     );
 };

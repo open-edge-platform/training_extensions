@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Grid, minmax, repeat } from '@geti/ui';
+import { Grid, minmax, RadioGroup, repeat } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { $api } from 'src/api/client';
 
@@ -26,15 +26,16 @@ export const ModelTypesList = ({
     });
 
     return (
-        <Grid columns={repeat('auto-fit', minmax('size-3400', '1fr'))} gap={'size-250'}>
-            {modelArchitecturesResponse.model_architectures.map((architecture) => (
-                <ModelType
-                    key={architecture.id}
-                    modelArchitecture={architecture}
-                    selectedModelArchitectureId={selectedModelArchitectureId}
-                    onChangeSelectedTemplateId={setSelectedModelArchitectureId}
-                />
-            ))}
-        </Grid>
+        <RadioGroup width={'100%'} aria-label='model type' onChange={setSelectedModelArchitectureId}>
+            <Grid columns={repeat('auto-fit', minmax('size-3400', '1fr'))} gap={'size-250'}>
+                {modelArchitecturesResponse.model_architectures.map((architecture) => (
+                    <ModelType
+                        key={architecture.id}
+                        modelArchitecture={architecture}
+                        selectedModelArchitectureId={selectedModelArchitectureId}
+                    />
+                ))}
+            </Grid>
+        </RadioGroup>
     );
 };
