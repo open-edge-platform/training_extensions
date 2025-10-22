@@ -3,7 +3,7 @@
 
 import { useSuspenseQuery, UseSuspenseQueryResult } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-import { DatasetItem } from 'src/constants/shared-types';
+import type { DatasetItem } from 'src/constants/shared-types';
 
 import { API_BASE_URL } from '../../../api/client';
 import { getImageData, loadImage } from '../tools/utils';

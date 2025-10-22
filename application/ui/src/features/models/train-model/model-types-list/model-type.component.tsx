@@ -3,7 +3,7 @@
 
 import { Divider, Flex, Heading, Radio, Tooltip, TooltipTrigger, View } from '@geti/ui';
 import { clsx } from 'clsx';
-import { SchemaModelArchitecture } from 'src/api/openapi-spec';
+import type { SchemaModelArchitecture } from 'src/api/openapi-spec';
 import { InfoTooltip } from 'src/components/info-tooltip/info-tooltip.component';
 
 import { ModelAttributes } from '../model-attributes/model-attributes.component';

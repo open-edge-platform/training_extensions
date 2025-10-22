@@ -5,7 +5,7 @@ import { useState } from 'react';
 
 import { DialogContainer, Size } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-import { DatasetItem } from 'src/constants/shared-types';
+import type { DatasetItem } from 'src/constants/shared-types';
 
 import { CheckboxInput } from '../../../components/checkbox-input/checkbox-input.component';
 import { MediaPreview } from '../media-preview/media-preview.component';

@@ -5,7 +5,7 @@ import { Flex, Heading, Tag, Text, View } from '@geti/ui';
 import { clsx } from 'clsx';
 import { NavLink } from 'react-router-dom';
 
-import { SchemaProjectView } from '../../../api/openapi-spec';
+import type { SchemaProjectView } from '../../../api/openapi-spec';
 // TODO: replace mock thumbnail once /api/projects/{project_id}/thumbnail is finished
 import thumbnailUrl from '../../../assets/mocked-project-thumbnail.png';
 import { paths } from '../../../constants/paths';

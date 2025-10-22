@@ -4,7 +4,7 @@
 import { useRef } from 'react';
 
 import { Size, useUnwrapDOMRef, View } from '@geti/ui';
-import { DatasetItem } from 'src/constants/shared-types';
+import type { DatasetItem } from 'src/constants/shared-types';
 
 import { useSelectedData } from '../../selected-data-provider.component';
 import { VirtualizerGridLayout } from '../../virtualizer-grid-layout/virtualizer-grid-layout.component';

@@ -4,7 +4,7 @@
 import { ReactNode } from 'react';
 
 import { useTranslate } from '../../hooks/use-translate.hook';
-import { Annotation as AnnotationType } from '../../types';
+import type { Annotation as AnnotationType } from '../../types';
 import { allowPanning } from '../../utils';
 
 const STROKE_WIDTH = 2;

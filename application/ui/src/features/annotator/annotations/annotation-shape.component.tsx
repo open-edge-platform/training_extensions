@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Annotation, Polygon } from '../types';
+import type { Annotation, Polygon } from '../types';
 import { getFormattedPoints } from './utils';
 
 type AnnotationShapeProps = {

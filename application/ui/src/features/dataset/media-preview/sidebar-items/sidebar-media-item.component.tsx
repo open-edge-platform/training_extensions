@@ -4,7 +4,7 @@
 import { Accept, Search } from '@geti/ui/icons';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { View } from 'packages/ui';
-import { DatasetItem } from 'src/constants/shared-types';
+import type { DatasetItem } from 'src/constants/shared-types';
 import { useAnnotationActions } from 'src/shared/annotator/annotation-actions-provider.component';
 
 import { MediaItem } from '../../gallery/media-item.component';

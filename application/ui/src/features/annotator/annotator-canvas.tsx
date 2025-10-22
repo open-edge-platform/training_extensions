@@ -4,7 +4,7 @@
 import { View } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { API_BASE_URL } from 'src/api/client';
-import { DatasetItem } from 'src/constants/shared-types';
+import type { DatasetItem } from 'src/constants/shared-types';
 
 import { ZoomTransform } from '../../components/zoom/zoom-transform';
 import { useAnnotationActions } from '../../shared/annotator/annotation-actions-provider.component';

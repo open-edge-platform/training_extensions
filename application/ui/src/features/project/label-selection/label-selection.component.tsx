@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Dispatch, SetStateAction } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 
 import {
     ActionButton,
@@ -19,8 +19,8 @@ import {
 import { Add, Delete } from '@geti/ui/icons';
 import { v4 as uuid } from 'uuid';
 
-import { Label } from '../../../constants/shared-types';
-import { LabelItemProps } from './interface';
+import type { Label } from '../../../constants/shared-types';
+import type { LabelItemProps } from './interface';
 
 import classes from './label-selection.module.scss';
 
