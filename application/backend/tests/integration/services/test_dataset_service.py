@@ -10,6 +10,7 @@ from uuid import UUID, uuid4
 
 import pytest
 from PIL import Image
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.db.schema import DatasetItemDB, DatasetItemLabelDB, LabelDB, ModelRevisionDB, ProjectDB, SourceDB
@@ -512,8 +513,19 @@ class TestDatasetServiceIntegration:
         assert excinfo.value.resource_type == ResourceType.PROJECT
         assert excinfo.value.resource_id == str(wrong_project_id)
 
+    @pytest.mark.parametrize(
+        "item_idx, label_idx, expected_label_count",
+        [
+            (0, 0, 1),  # Add annotation with new label to unannotated item
+            (1, 0, 1),  # Test updating annotation with existing label on already annotated item
+            (1, 1, 2),  # Add annotation with new label to already annotated item
+        ],
+    )
     def test_set_dataset_item_annotations(
         self,
+        item_idx: int,
+        label_idx: int,
+        expected_label_count: int,
         fxt_dataset_service: DatasetService,
         fxt_project_with_dataset_items: tuple[ProjectDB, list[LabelDB], list[DatasetItemDB]],
         fxt_annotations: Callable[[str], list[DatasetItemAnnotation]],
@@ -521,20 +533,30 @@ class TestDatasetServiceIntegration:
     ):
         """Test setting a dataset item annotation."""
         db_project, db_labels, db_dataset_items = fxt_project_with_dataset_items
-        annotations = fxt_annotations(db_labels[0].id)
+        label_id = db_labels[label_idx].id
+        dataset_item_id = db_dataset_items[item_idx].id
+        annotations = fxt_annotations(label_id)
         fxt_dataset_service.set_dataset_item_annotations(
             project_id=UUID(db_project.id),
-            dataset_item_id=UUID(db_dataset_items[0].id),
+            dataset_item_id=UUID(dataset_item_id),
             annotations=annotations,
         )
 
-        dataset_item = db_session.get(DatasetItemDB, db_dataset_items[0].id)
+        dataset_item = db_session.get(DatasetItemDB, dataset_item_id)
         assert dataset_item is not None
         assert dataset_item.annotation_data is not None
         assert [
             DatasetItemAnnotation.model_validate(annotation) for annotation in dataset_item.annotation_data
         ] == annotations
-        assert db_session.get(DatasetItemLabelDB, (db_dataset_items[0].id, db_labels[0].id)) is not None
+        assert (
+            db_session.scalar(
+                select(func.count())
+                .select_from(DatasetItemLabelDB)
+                .where(DatasetItemLabelDB.dataset_item_id == dataset_item_id)
+            )
+            == expected_label_count
+        )
+        assert db_session.get(DatasetItemLabelDB, (dataset_item_id, label_id)) is not None
 
     def test_set_dataset_item_annotations_not_found(
         self,
