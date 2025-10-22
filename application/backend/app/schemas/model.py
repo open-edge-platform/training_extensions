@@ -52,7 +52,18 @@ class Model(BaseIDModel):
                     "start_time": "2021-06-29T16:24:30.928000+00:00",
                     "end_time": "2021-06-29T16:24:30.928000+00:00",
                     "dataset_revision_id": "3c6c6d38-1cd8-4458-b759-b9880c048b78",
-                    "label_schema_revision": {},
+                    "label_schema_revision": {
+                        "labels": [
+                            {
+                                "id": "a22d82ba-afa9-4d6e-bbc1-8c8e4002ec29",
+                                "name": "cat",
+                            },
+                            {
+                                "id": "8aa85368-11ba-4507-88f2-6a6704d78ef5",
+                                "name": "dog",
+                            },
+                        ]
+                    },
                     "configuration": {},
                 },
                 "files_deleted": False,
