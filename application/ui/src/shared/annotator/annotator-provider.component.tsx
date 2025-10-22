@@ -1,11 +1,13 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useState } from 'react';
+import { createContext, ReactNode, useContext, useState, type Dispatch, type SetStateAction } from 'react';
 
-import { useLoadImageQuery } from './hooks/use-load-image-query.hook';
-import { ToolType } from './tools/interface';
-import { DatasetItem, RegionOfInterest } from './types';
+import type { DatasetItem } from 'src/constants/shared-types';
+
+import { useLoadImageQuery } from '../../features/annotator/hooks/use-load-image-query.hook';
+import type { ToolType } from '../../features/annotator/tools/interface';
+import type { RegionOfInterest } from '../../features/annotator/types';
 
 type AnnotatorContext = {
     // Tools

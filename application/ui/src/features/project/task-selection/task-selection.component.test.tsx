@@ -3,7 +3,7 @@
 
 import { fireEvent, render, screen } from 'test-utils/render';
 
-import { TaskType } from './interface';
+import type { TaskType } from './interface';
 import { TaskSelection } from './task-selection.component';
 
 describe('TaskSelection', () => {

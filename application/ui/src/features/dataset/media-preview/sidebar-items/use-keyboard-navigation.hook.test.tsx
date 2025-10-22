@@ -6,9 +6,8 @@ import { useRef } from 'react';
 import { fireEvent } from '@testing-library/react';
 import { getMultipleMockedMediaItems } from 'mocks/mock-media-item';
 import { render, screen } from 'test-utils/render';
-import { vi } from 'vitest';
 
-import { useKeyboardNavigation, UseKeyboardNavigationProps } from './use-keyboard-navigation.hook';
+import { useKeyboardNavigation, type UseKeyboardNavigationProps } from './use-keyboard-navigation.hook';
 
 const App = ({ ...options }: Omit<UseKeyboardNavigationProps, 'ref'>) => {
     const ref = useRef(null);

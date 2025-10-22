@@ -15,7 +15,7 @@ from app.schemas.source import WebcamSourceConfig
 @pytest.fixture
 def fxt_webcam_source() -> WebcamSourceConfig:
     """Sample source configuration data."""
-    return WebcamSourceConfig(id=uuid4(), source_type=SourceType.WEBCAM, name="Test Source", device_id=1)
+    return WebcamSourceConfig(id=uuid4(), source_type=SourceType.WEBCAM, name="Test Source", device_id=1, codec=None)
 
 
 @pytest.fixture

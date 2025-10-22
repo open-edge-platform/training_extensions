@@ -3,13 +3,15 @@
 
 import { createContext, ReactNode, useContext, useEffect, useRef, useState } from 'react';
 
+import { useProject } from 'hooks/api/project.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { get, isEmpty, isObject } from 'lodash-es';
 import { $api } from 'src/api/client';
-import { components } from 'src/api/openapi-spec';
+import type { components } from 'src/api/openapi-spec';
+import type { DatasetItem } from 'src/constants/shared-types';
 import { v4 as uuid } from 'uuid';
 
-import { Annotation, DatasetItem, Shape } from './types';
+import type { Annotation, Shape } from '../../features/annotator/types';
 
 type ServerAnnotation = components['schemas']['DatasetItemAnnotation-Input'];
 
@@ -71,9 +73,7 @@ export const AnnotationActionsProvider = ({ children, mediaItem }: AnnotationAct
         }
     );
 
-    const { data: project } = $api.useQuery('get', '/api/projects/{project_id}', {
-        params: { path: { project_id: projectId } },
-    });
+    const { data: project } = useProject();
 
     const [localAnnotations, setLocalAnnotations] = useState<Annotation[]>([]);
     const isDirty = useRef<boolean>(false);

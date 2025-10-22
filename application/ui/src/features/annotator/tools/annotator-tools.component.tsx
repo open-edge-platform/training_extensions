@@ -5,7 +5,7 @@ import { Divider } from '@geti/ui';
 import { BoundingBox, Polygon, SegmentAnythingIcon, Selector } from '@geti/ui/icons';
 import { useProjectTask } from 'hooks/use-project-task.hook';
 
-import { useAnnotator } from '../annotator-provider.component';
+import { useAnnotator } from '../../../shared/annotator/annotator-provider.component';
 import { ToolConfig } from './interface';
 import { Tools } from './tools.component';
 

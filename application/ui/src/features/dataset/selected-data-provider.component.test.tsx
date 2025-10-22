@@ -3,7 +3,7 @@
 
 import { render, screen, waitForElementToBeRemoved } from 'test-utils/render';
 
-import { SelectedDataProvider, useSelectedData } from './provider';
+import { SelectedDataProvider, useSelectedData } from './selected-data-provider.component';
 
 describe('SelectedDataProvider', () => {
     it('toggles a selected key and displays it', async () => {

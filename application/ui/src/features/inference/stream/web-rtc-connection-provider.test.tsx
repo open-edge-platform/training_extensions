@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { fireEvent, render } from 'test-utils/render';
-import { vi } from 'vitest';
 
 import { Listener, WebRTCConnection, WebRTCConnectionStatus } from './web-rtc-connection';
 import { useWebRTCConnection, WebRTCConnectionProvider } from './web-rtc-connection-provider';

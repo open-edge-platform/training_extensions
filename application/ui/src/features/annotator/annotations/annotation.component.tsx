@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Annotation as AnnotationType } from '../types';
+import type { Annotation as AnnotationType } from '../types';
 import { AnnotationContext } from './annotation-context';
 import { AnnotationShapeWithLabels } from './annotation-shape-with-labels.component';
 import { EditableAnnotation } from './editable-annotation.component';

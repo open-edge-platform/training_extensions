@@ -360,6 +360,15 @@
       // Global client instance
       const client = new WebRTCClient();
 
+      async function requestMedia() {
+        try {
+          await navigator.mediaDevices.getUserMedia({ video: true });
+          console.log("Camera access granted.");
+        } catch (err) {
+          console.error("Access denied or error occurred:", err);
+        }
+      }
+
       function startStream() {
         client.startStream();
       }
@@ -379,6 +388,7 @@
         .addEventListener("input", (e) => {
           document.getElementById("confValue").textContent = e.target.value;
         });
+      requestMedia();
 
       // Add some initial logs
       client.log("Page loaded. Ready to connect.", "info");

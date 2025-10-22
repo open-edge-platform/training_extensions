@@ -10,7 +10,7 @@ import { UndoRedo } from './undo-redo/undo-redo.component';
 
 import classes from '../media-preview.module.scss';
 
-export const ToolSelectionBar = () => {
+export const PrimaryToolbar = () => {
     return (
         <Flex height={'100%'} alignItems={'center'} justifyContent={'center'}>
             <Grid UNSAFE_className={classes.toolbarGrid}>

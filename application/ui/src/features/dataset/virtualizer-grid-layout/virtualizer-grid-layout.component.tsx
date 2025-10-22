@@ -6,9 +6,9 @@ import { ComponentProps, ReactNode, useRef } from 'react';
 import { AriaComponentsListBox, GridLayout, ListBoxItem, Loading, View, Virtualizer } from '@geti/ui';
 import { useLoadMore } from '@react-aria/utils';
 import { GridLayoutOptions } from 'react-aria-components';
-import { components } from 'src/api/openapi-spec';
-import { MediaState } from 'src/routes/dataset/provider';
+import type { components } from 'src/api/openapi-spec';
 
+import { MediaState } from '../selected-data-provider.component';
 import { useGetTargetPosition } from './use-get-target-position.hook';
 
 import classes from './virtualizer-grid-layout.module.scss';

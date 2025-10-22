@@ -3,8 +3,8 @@
 
 import { KeyboardEvent, MouseEvent, ReactNode, useEffect, useRef } from 'react';
 
-import { useAnnotationActions } from '../annotation-actions-provider.component';
-import { useSelectedAnnotations } from '../select-annotation-provider.component';
+import { useAnnotationActions } from '../../../shared/annotator/annotation-actions-provider.component';
+import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
 import { useAnnotation } from './annotation-context';
 
 export const SelectableAnnotation = ({ children }: { children: ReactNode }) => {

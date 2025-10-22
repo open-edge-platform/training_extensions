@@ -3,7 +3,7 @@
 
 import { useEffect, useMemo } from 'react';
 
-import { ZoomState } from './types';
+import type { ZoomState } from './types';
 import { useSetZoom } from './zoom.provider';
 
 export type Size = { width: number; height: number };
