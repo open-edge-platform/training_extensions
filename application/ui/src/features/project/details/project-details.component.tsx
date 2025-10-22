@@ -7,7 +7,7 @@ import { useProject } from 'hooks/api/project.hook';
 import { capitalize, startsWith } from 'lodash-es';
 import { Fragment } from 'react/jsx-runtime';
 
-import Background from './../../../assets/background.png';
+import styles from '../project-background.module.scss';
 
 type FieldProps = {
     field: string;
@@ -54,19 +54,7 @@ export const ProjectDetails = () => {
     const { task_type, labels = [] } = task;
 
     return (
-        <View
-            backgroundColor={'gray-100'}
-            UNSAFE_style={{
-                backgroundImage: `url(${Background})`,
-                backgroundBlendMode: 'luminosity',
-                backgroundPosition: 'center',
-                backgroundRepeat: 'no-repeat',
-                backgroundSize: 'cover',
-            }}
-            gridArea={'content'}
-            height='100%'
-            width='100%'
-        >
+        <View UNSAFE_className={styles.projectBackground} gridArea={'content'} height='100%' width='100%'>
             <View maxWidth={'1048px'} marginX='auto' paddingY='size-800'>
                 <View>
                     <Flex direction='column' gap='size-600'>

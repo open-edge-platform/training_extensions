@@ -5,11 +5,11 @@ import { useState } from 'react';
 
 import { DialogContainer, Size } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import { DatasetItem } from 'src/constants/shared-types';
 
 import { CheckboxInput } from '../../../components/checkbox-input/checkbox-input.component';
-import { useSelectedData } from '../../../routes/dataset/provider';
-import { DatasetItem } from '../../annotator/types';
 import { MediaPreview } from '../media-preview/media-preview.component';
+import { useSelectedData } from '../selected-data-provider.component';
 import { VirtualizerGridLayout } from '../virtualizer-grid-layout/virtualizer-grid-layout.component';
 import { AnnotationStatusIcon } from './annotation-state-icon.component';
 import { DeleteMediaItem } from './delete-media-item/delete-media-item.component';

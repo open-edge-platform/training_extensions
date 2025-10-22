@@ -19,7 +19,7 @@ import {
 import { Add, Delete } from '@geti/ui/icons';
 import { v4 as uuid } from 'uuid';
 
-import { Label } from '../../annotator/types';
+import { Label } from '../../../constants/shared-types';
 import { LabelItemProps } from './interface';
 
 import classes from './label-selection.module.scss';

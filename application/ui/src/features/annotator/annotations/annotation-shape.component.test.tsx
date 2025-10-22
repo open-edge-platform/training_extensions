@@ -3,7 +3,6 @@
 
 import { getMockedAnnotation } from 'mocks/mock-annotation';
 import { render, screen } from 'test-utils/render';
-import { describe, expect, it } from 'vitest';
 
 import { Annotation, Polygon, Rect } from '../types';
 import { AnnotationShape } from './annotation-shape.component';

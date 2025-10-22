@@ -2,8 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useProject } from 'hooks/api/project.hook';
-
-import { Label } from '../types';
+import { Label } from 'src/constants/shared-types';
 
 export const useProjectLabels = (): Label[] => {
     const { data: project } = useProject();

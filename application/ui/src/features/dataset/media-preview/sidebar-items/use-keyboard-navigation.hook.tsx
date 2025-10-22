@@ -4,7 +4,7 @@
 import { RefObject } from 'react';
 
 import { useEventListener } from 'hooks/event-listener.hook';
-import { DatasetItem } from 'src/features/annotator/types';
+import { DatasetItem } from 'src/constants/shared-types';
 
 export type UseKeyboardNavigationProps = {
     ref: RefObject<HTMLElement | null>;

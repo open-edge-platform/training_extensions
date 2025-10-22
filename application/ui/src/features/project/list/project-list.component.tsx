@@ -4,29 +4,18 @@
 import { Content, Grid, Heading, Text, View } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 
-import Background from '../../../assets/background.png';
 import { useProjects } from '../../../hooks/api/project.hook';
 import { NewProjectLink } from './new-project-link.component';
 import { ProjectCard } from './project-card.component';
 
+import backgroundStyles from '../project-background.module.scss';
 import classes from './project-list.module.scss';
 
 export const ProjectList = () => {
     const projects = useProjects();
 
     return (
-        <View
-            paddingTop={'size-1000'}
-            height={'100%'}
-            backgroundColor={'gray-100'}
-            UNSAFE_style={{
-                backgroundImage: `url(${Background})`,
-                backgroundBlendMode: 'luminosity',
-                backgroundPosition: 'center',
-                backgroundRepeat: 'no-repeat',
-                backgroundSize: 'cover',
-            }}
-        >
+        <View UNSAFE_className={backgroundStyles.projectBackground} paddingTop={'size-1000'} height={'100%'}>
             <Content height={'100%'} maxHeight={'90vh'} maxWidth={'1052px'} margin={'0 auto'}>
                 <Heading
                     level={1}

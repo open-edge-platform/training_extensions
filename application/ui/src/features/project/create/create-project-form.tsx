@@ -3,13 +3,13 @@
 
 import { FormEvent, useState } from 'react';
 
-import { Button, ButtonGroup, Divider, Flex, Form, Text } from '@geti/ui';
+import { Button, ButtonGroup, Flex, Form, Text } from '@geti/ui';
 import { useNavigate } from 'react-router';
+import { Label } from 'src/constants/shared-types';
 import { v4 as uuid } from 'uuid';
 
 import { paths } from '../../../constants/paths';
 import { useCreateProject } from '../../../hooks/api/project.hook';
-import { Label } from '../../annotator/types';
 import { LabelSelection } from '../label-selection/label-selection.component';
 import { TaskType } from '../task-selection/interface';
 import { TaskSelection } from '../task-selection/task-selection.component';
@@ -73,8 +73,6 @@ export const CreateProjectForm = ({ numberOfProjects }: { numberOfProjects: numb
 
             <Flex direction='column' gap='size-300' UNSAFE_style={{ overflow: 'auto', margin: '0 auto' }}>
                 <TaskSelection selectedTask={selectedTask} setSelectedTask={setSelectedTask} />
-
-                <Divider size='S' />
 
                 <LabelSelection labels={labels} setLabels={setLabels} />
             </Flex>

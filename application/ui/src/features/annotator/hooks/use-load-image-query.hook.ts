@@ -3,10 +3,10 @@
 
 import { useSuspenseQuery, UseSuspenseQueryResult } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import { DatasetItem } from 'src/constants/shared-types';
 
 import { API_BASE_URL } from '../../../api/client';
 import { getImageData, loadImage } from '../tools/utils';
-import { DatasetItem } from '../types';
 
 export const useLoadImageQuery = (mediaItem: DatasetItem | undefined): UseSuspenseQueryResult<ImageData, unknown> => {
     const projectId = useProjectIdentifier();

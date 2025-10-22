@@ -16,11 +16,9 @@ export type Polygon = components['schemas']['Polygon'];
 
 export type Shape = Rect | Polygon;
 
-export type Label = components['schemas']['LabelView'];
-
 export type Annotation = components['schemas']['DatasetItemAnnotation-Input'] & {
     id: string;
-    labels: Label[];
+    labels: components['schemas']['LabelView'][];
 };
 
 // Circle is only used for visual purposes on segment-anything tool
@@ -35,4 +33,3 @@ export type ClipperPoint = {
     X: number;
     Y: number;
 };
-export type DatasetItem = components['schemas']['DatasetItem'];
