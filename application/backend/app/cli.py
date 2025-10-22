@@ -148,7 +148,7 @@ def seed(with_model: bool) -> None:
                 training_started_at=datetime.now() - timedelta(hours=24),
                 training_finished_at=datetime.now() - timedelta(hours=23),
                 training_configuration={},
-                label_schema_revision={},
+                label_schema_revision={"labels": [{"id": str(label.id), "name": label.name} for label in labels]},
             )
             pipeline.is_running = True
         db.add(pipeline)
