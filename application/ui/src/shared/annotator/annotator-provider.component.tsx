@@ -5,9 +5,9 @@ import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useStat
 
 import { DatasetItem } from 'src/constants/shared-types';
 
-import { useLoadImageQuery } from './hooks/use-load-image-query.hook';
-import { ToolType } from './tools/interface';
-import { RegionOfInterest } from './types';
+import { useLoadImageQuery } from '../../features/annotator/hooks/use-load-image-query.hook';
+import { ToolType } from '../../features/annotator/tools/interface';
+import { RegionOfInterest } from '../../features/annotator/types';
 
 type AnnotatorContext = {
     // Tools

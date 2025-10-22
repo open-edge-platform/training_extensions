@@ -3,9 +3,9 @@
 
 import { useState } from 'react';
 
-import { useAnnotationActions } from '../../annotation-actions-provider.component';
+import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
+import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
 import { AnnotationShapeWithLabels } from '../../annotations/annotation-shape-with-labels.component';
-import { useAnnotator } from '../../annotator-provider.component';
 import { Annotation, Point } from '../../types';
 import { getBoundingBoxInRoi, getBoundingBoxResizePoints, getClampedBoundingBox } from '../utils';
 import { ANCHOR_SIZE, ResizeAnchor } from './resize-anchor.component';

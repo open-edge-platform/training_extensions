@@ -5,15 +5,15 @@ import { Suspense } from 'react';
 
 import { Content, Dialog, dimensionValue, Divider, Flex, Grid, Heading, Loading, View } from '@geti/ui';
 import { DatasetItem } from 'src/constants/shared-types';
-import { AnnotationActionsProvider } from 'src/features/annotator/annotation-actions-provider.component';
-import { AnnotationVisibilityProvider } from 'src/features/annotator/annotation-visibility-provider.component';
-import { AnnotatorProvider } from 'src/features/annotator/annotator-provider.component';
+import { AnnotationActionsProvider } from 'src/shared/annotator/annotation-actions-provider.component';
+import { AnnotationVisibilityProvider } from 'src/shared/annotator/annotation-visibility-provider.component';
+import { AnnotatorProvider } from 'src/shared/annotator/annotator-provider.component';
 
 import { ZoomProvider } from '../../../components/zoom/zoom.provider';
+import { SelectAnnotationProvider } from '../../../shared/annotator/select-annotation-provider.component';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas';
-import { SelectAnnotationProvider } from '../../annotator/select-annotation-provider.component';
 import { useGetDatasetItems } from '../gallery/use-get-dataset-items.hook';
-import { ToolSelectionBar } from './primary-toolbar/primary-toolbar.component';
+import { PrimaryToolbar } from './primary-toolbar/primary-toolbar.component';
 import { SecondaryToolbar } from './secondary-toolbar/secondary-toolbar.component';
 import { SidebarItems } from './sidebar-items/sidebar-items.component';
 
@@ -62,7 +62,7 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                                     <AnnotationVisibilityProvider>
                                         <AnnotatorProvider mediaItem={mediaItem}>
                                             <View gridArea={'toolbar'}>
-                                                <ToolSelectionBar />
+                                                <PrimaryToolbar />
                                             </View>
 
                                             <View gridArea={'header'}>
@@ -80,18 +80,18 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                                     </AnnotationVisibilityProvider>
                                 </SelectAnnotationProvider>
                             </Suspense>
-
-                            <View gridArea={'aside'}>
-                                <SidebarItems
-                                    items={items}
-                                    mediaItem={mediaItem}
-                                    hasNextPage={hasNextPage}
-                                    isFetchingNextPage={isFetchingNextPage}
-                                    fetchNextPage={fetchNextPage}
-                                    onSelectedMediaItem={onSelectedMediaItem}
-                                />
-                            </View>
                         </ZoomProvider>
+
+                        <View gridArea={'aside'}>
+                            <SidebarItems
+                                items={items}
+                                mediaItem={mediaItem}
+                                hasNextPage={hasNextPage}
+                                isFetchingNextPage={isFetchingNextPage}
+                                fetchNextPage={fetchNextPage}
+                                onSelectedMediaItem={onSelectedMediaItem}
+                            />
+                        </View>
                     </AnnotationActionsProvider>
                 </Grid>
             </Content>

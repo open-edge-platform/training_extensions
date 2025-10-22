@@ -6,8 +6,8 @@ import { useRef } from 'react';
 import { Switch, toast } from '@geti/ui';
 import { useDisablePipeline, useEnablePipeline, usePipeline } from 'hooks/api/pipeline.hook';
 import { useIsPipelineConfigured } from 'hooks/use-is-pipeline-configured.hook';
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { throttle } from 'lodash-es';
-import { useProjectIdentifier } from 'src/hooks/use-project-identifier.hook';
 
 const DELAY = 2000;
 
