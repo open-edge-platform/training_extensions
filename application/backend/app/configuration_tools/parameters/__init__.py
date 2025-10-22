@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-from .augmentation import (
-    AugmentationParameters,
+from .dataset_augmentation_parameters import (
     ColorJitter,
+    DatasetAugmentationParameters,
     GaussianBlur,
     GaussianNoise,
     HSVRandomAug,
@@ -20,8 +20,8 @@ from .augmentation import (
     Tiling,
     TopdownAffine,
 )
+from .global_parameters import Filtering, GlobalParameters, SubsetSplit
 from .hyperparameters import (
-    DatasetPreparationParameters,
     EarlyStopping,
     EvaluationParameters,
     Hyperparameters,
@@ -30,13 +30,14 @@ from .hyperparameters import (
 )
 
 __all__ = [
-    "AugmentationParameters",
+    "DatasetAugmentationParameters",
     "ColorJitter",
-    "DatasetPreparationParameters",
     "EarlyStopping",
     "EvaluationParameters",
+    "Filtering",
     "GaussianBlur",
     "GaussianNoise",
+    "GlobalParameters",
     "HSVRandomAug",
     "Hyperparameters",
     "Mixup",
@@ -49,6 +50,7 @@ __all__ = [
     "RandomResizeCrop",
     "RandomVerticalFlip",
     "RandomZoomOut",
+    "SubsetSplit",
     "Tiling",
     "TopdownAffine",
     "TrainingHyperParameters",

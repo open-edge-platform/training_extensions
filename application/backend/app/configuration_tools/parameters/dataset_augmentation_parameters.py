@@ -2,12 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-from pydantic import Field, model_validator
-
-from .base_model_no_extra import BaseModelNoExtra
+from pydantic import BaseModel, Field, model_validator
 
 
-class RandomResizeCrop(BaseModelNoExtra):
+class RandomResizeCrop(BaseModel):
     enable: bool = Field(
         default=False,
         title="Enable random resize crop",
@@ -59,7 +57,7 @@ class RandomResizeCrop(BaseModelNoExtra):
         return self
 
 
-class RandomAffine(BaseModelNoExtra):
+class RandomAffine(BaseModel):
     enable: bool = Field(
         default=False,
         title="Enable random affine",
@@ -117,7 +115,7 @@ class RandomAffine(BaseModelNoExtra):
         return self
 
 
-class RandomHorizontalFlip(BaseModelNoExtra):
+class RandomHorizontalFlip(BaseModel):
     enable: bool = Field(
         default=False,
         title="Enable random horizontal flip",
@@ -135,7 +133,7 @@ class RandomHorizontalFlip(BaseModelNoExtra):
     )
 
 
-class RandomVerticalFlip(BaseModelNoExtra):
+class RandomVerticalFlip(BaseModel):
     enable: bool = Field(
         default=False,
         title="Enable random vertical flip",
@@ -153,7 +151,7 @@ class RandomVerticalFlip(BaseModelNoExtra):
     )
 
 
-class RandomIOUCrop(BaseModelNoExtra):
+class RandomIOUCrop(BaseModel):
     enable: bool = Field(
         default=False,
         title="Enable random IoU crop",
@@ -165,7 +163,7 @@ class RandomIOUCrop(BaseModelNoExtra):
     )
 
 
-class TopdownAffine(BaseModelNoExtra):
+class TopdownAffine(BaseModel):
     enable: bool = Field(
         default=False,
         title="Enable topdown affine",
@@ -183,7 +181,7 @@ class TopdownAffine(BaseModelNoExtra):
     )
 
 
-class GaussianBlur(BaseModelNoExtra):
+class GaussianBlur(BaseModel):
     enable: bool = Field(
         default=False,
         title="Enable Gaussian blur",
@@ -237,7 +235,7 @@ class GaussianBlur(BaseModelNoExtra):
         return self
 
 
-class ColorJitter(BaseModelNoExtra):
+class ColorJitter(BaseModel):
     enable: bool = Field(
         default=False,
         title="Enable color jitter",
@@ -337,7 +335,7 @@ class ColorJitter(BaseModelNoExtra):
         return self
 
 
-class GaussianNoise(BaseModelNoExtra):
+class GaussianNoise(BaseModel):
     enable: bool = Field(
         default=False,
         title="Enable Gaussian noise",
@@ -370,7 +368,7 @@ class GaussianNoise(BaseModelNoExtra):
     )
 
 
-class PhotometricDistort(BaseModelNoExtra):
+class PhotometricDistort(BaseModel):
     enable: bool = Field(
         default=False,
         title="Enable photometric distort",
@@ -451,7 +449,7 @@ class PhotometricDistort(BaseModelNoExtra):
         return self
 
 
-class Tiling(BaseModelNoExtra):
+class Tiling(BaseModel):
     enable: bool = Field(
         default=False,
         title="Enable tiling",
@@ -481,7 +479,7 @@ class Tiling(BaseModelNoExtra):
     )
 
 
-class Mosaic(BaseModelNoExtra):
+class Mosaic(BaseModel):
     enable: bool = Field(
         default=False,
         title="Enable mosaic",
@@ -489,7 +487,7 @@ class Mosaic(BaseModelNoExtra):
     )
 
 
-class Mixup(BaseModelNoExtra):
+class Mixup(BaseModel):
     enable: bool = Field(
         default=False,
         title="Enable mixup",
@@ -504,7 +502,7 @@ class Mixup(BaseModelNoExtra):
     )
 
 
-class HSVRandomAug(BaseModelNoExtra):
+class HSVRandomAug(BaseModel):
     enable: bool = Field(
         default=False,
         title="Enable HSV random augmentation",
@@ -530,7 +528,7 @@ class HSVRandomAug(BaseModelNoExtra):
     )
 
 
-class RandomZoomOut(BaseModelNoExtra):
+class RandomZoomOut(BaseModel):
     enable: bool = Field(
         default=False,
         title="Enable random zoom out",
@@ -548,7 +546,7 @@ class RandomZoomOut(BaseModelNoExtra):
     )
 
 
-class AugmentationParameters(BaseModelNoExtra):
+class DatasetAugmentationParameters(BaseModel):
     """Configuration parameters for data augmentation during training."""
 
     topdown_affine: TopdownAffine | None = Field(

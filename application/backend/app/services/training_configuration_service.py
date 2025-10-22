@@ -142,7 +142,7 @@ class TrainingConfigurationService:
         validated_update_config = TrainingConfiguration.from_model(training_config_update)
         updated_config = current_config.model_copy(
             update={
-                "dataset_preparation": validated_update_config.dataset_preparation,
+                "dataset_augmentation_parameters": validated_update_config.dataset_augmentation_parameters,
                 "training": validated_update_config.training,
                 "evaluation": validated_update_config.evaluation,
             },

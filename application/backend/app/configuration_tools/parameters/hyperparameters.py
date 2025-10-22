@@ -1,25 +1,14 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from pydantic import Field, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from app.configuration_tools.utils import partial_model
 
-from .augmentation import AugmentationParameters
-from .base_model_no_extra import BaseModelNoExtra
+from .dataset_augmentation_parameters import DatasetAugmentationParameters
 
 
-class DatasetPreparationParameters(BaseModelNoExtra):
-    """Parameters for dataset preparation before training."""
-
-    augmentation: AugmentationParameters = Field(
-        default_factory=AugmentationParameters,
-        title="Data augmentation",
-        description="Configuration for data augmentation techniques applied to the dataset",
-    )
-
-
-class EarlyStopping(BaseModelNoExtra):
+class EarlyStopping(BaseModel):
     enable: bool = Field(
         default=False,
         title="Enable early stopping",
@@ -33,7 +22,7 @@ class EarlyStopping(BaseModelNoExtra):
     )
 
 
-class TrainingHyperParameters(BaseModelNoExtra):
+class TrainingHyperParameters(BaseModel):
     """Hyperparameters for model training process."""
 
     max_epochs: int | None = Field(
@@ -116,7 +105,7 @@ class TrainingHyperParameters(BaseModelNoExtra):
         return self
 
 
-class EvaluationParameters(BaseModelNoExtra):
+class EvaluationParameters(BaseModel):
     """Parameters for model evaluation."""
 
     metric: str | None = Field(
@@ -124,13 +113,13 @@ class EvaluationParameters(BaseModelNoExtra):
     )
 
 
-class Hyperparameters(BaseModelNoExtra):
+class Hyperparameters(BaseModel):
     """Complete set of configurable parameters for model training and evaluation."""
 
-    dataset_preparation: DatasetPreparationParameters = Field(
-        default_factory=DatasetPreparationParameters,
-        title="Dataset preparation",
-        description="Parameters for preparing the dataset before training",
+    dataset_augmentation_parameters: DatasetAugmentationParameters = Field(
+        default_factory=DatasetAugmentationParameters,
+        title="Data augmentation",
+        description="Configuration for data augmentation techniques applied to the dataset",
     )
     training: TrainingHyperParameters | None = Field(
         default=None,

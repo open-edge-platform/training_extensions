@@ -7,11 +7,7 @@ from uuid import uuid4
 import pytest
 
 from app.api.dependencies import get_training_configuration_service
-from app.configuration_tools.hyperparameters import (
-    DatasetPreparationParameters,
-    EvaluationParameters,
-    TrainingHyperParameters,
-)
+from app.configuration_tools.parameters import GlobalParameters, Hyperparameters
 from app.configuration_tools.training_configuration import TrainingConfiguration
 from app.main import app
 from app.services.training_configuration_service import TrainingConfigurationService
@@ -21,9 +17,9 @@ from app.services.training_configuration_service import TrainingConfigurationSer
 def fxt_training_configuration() -> TrainingConfiguration:
     """Create a mock training configuration."""
     return TrainingConfiguration(
-        dataset_preparation=DatasetPreparationParameters(),
-        training=TrainingHyperParameters(),
-        evaluation=EvaluationParameters(),
+        model_manifest_id="Custom_Image_Classification_EfficientNet-B0",
+        global_parameters=GlobalParameters(),
+        hyperparameters=Hyperparameters(),
     )
 
 
@@ -46,6 +42,6 @@ class TestTrainingConfigurationEndpoints:
 
         assert response.status_code == 200
         data = response.json()
-        assert "dataset_preparation" in data
+        assert "dataset_augmentation_parameters" in data
         assert "training" in data
         assert "evaluation" in data

@@ -6,11 +6,7 @@ from uuid import UUID, uuid4
 import pytest
 from sqlalchemy.orm import Session
 
-from app.configuration_tools.hyperparameters import (
-    DatasetPreparationParameters,
-    EvaluationParameters,
-    TrainingHyperParameters,
-)
+from app.configuration_tools.parameters import GlobalParameters, Hyperparameters
 from app.configuration_tools.training_configuration import TrainingConfiguration
 from app.db.schema import ModelRevisionDB, ProjectDB, TrainingConfigurationDB
 from app.schemas.project import TaskType
@@ -22,9 +18,9 @@ from app.services.training_configuration_service import TrainingConfigurationSer
 def fxt_training_configuration() -> TrainingConfiguration:
     """Create a mock training configuration."""
     return TrainingConfiguration(
-        dataset_preparation=DatasetPreparationParameters(),
-        training=TrainingHyperParameters(),
-        evaluation=EvaluationParameters(),
+        model_manifest_id="Custom_Image_Classification_EfficientNet-B0",
+        global_parameters=GlobalParameters(),
+        hyperparameters=Hyperparameters(),
     )
 
 
@@ -146,7 +142,9 @@ class TestTrainingConfigurationService:
         db_session.flush()
 
         training_config_update = {
-            "dataset_preparation": {"augmentation": {"topdown_affine": {"enable": True, "probability": 0.5}}},
+            "dataset_augmentation_parameters": {
+                "augmentation": {"topdown_affine": {"enable": True, "probability": 0.5}}
+            },
             "training": {"max_epochs": 999},
             "evaluation": {"metric": "new_metric"},
         }
@@ -182,7 +180,9 @@ class TestTrainingConfigurationService:
         db_session.flush()
 
         training_config_update = {
-            "dataset_preparation": {"augmentation": {"topdown_affine": {"enable": True, "probability": 0.5}}},
+            "dataset_augmentation_parameters": {
+                "augmentation": {"topdown_affine": {"enable": True, "probability": 0.5}}
+            },
             "training": {"max_epochs": 999},
             "evaluation": {"metric": "new_metric"},
         }

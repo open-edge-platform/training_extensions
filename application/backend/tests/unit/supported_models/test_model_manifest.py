@@ -9,9 +9,8 @@ from unittest.mock import patch
 import hiyapyco
 import pytest
 
-from app.configuration_tools.hyperparameters import (
-    AugmentationParameters,
-    DatasetPreparationParameters,
+from app.configuration_tools.parameters import (
+    DatasetAugmentationParameters,
     EarlyStopping,
     EvaluationParameters,
     Hyperparameters,
@@ -64,7 +63,7 @@ def fxt_dummy_supported_gpu():
 @pytest.fixture
 def fxt_dummy_hyperparameters():
     yield Hyperparameters(
-        dataset_preparation=DatasetPreparationParameters(augmentation=AugmentationParameters()),
+        dataset_augmentation_parameters=DatasetAugmentationParameters(),
         training=TrainingHyperParameters(max_epochs=101, learning_rate=0.05, early_stopping=EarlyStopping(patience=5)),
         evaluation=EvaluationParameters(metric=None),
     )
@@ -125,8 +124,8 @@ class TestModelManifest:
             },
             "support_status": "active",
             "supported_gpus": {"intel": True},
-            "hyperparameters": {
-                "dataset_preparation": {
+            "parameters": {
+                "dataset_augmentation_parameters": {
                     "augmentation": {
                         "gaussian_blur": {"kernel_size": 5},
                         "tiling": {"adaptive_tiling": True, "tile_size": 100, "tile_overlap": 0.3},

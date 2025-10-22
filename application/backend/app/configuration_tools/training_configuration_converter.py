@@ -185,7 +185,7 @@ def convert_rest_to_training_configuration(rest_data: dict[str, Any]) -> dict[st
             if section_dict:  # Only add if not empty
                 result[section_key] = section_dict
         elif isinstance(section_value, dict):
-            # Handle nested dictionary structures (e.g., dataset_preparation)
+            # Handle nested dictionary structures
             converted_dict = _convert_dict_recursively(section_value)
             if converted_dict:  # Only add if not empty
                 result[section_key] = converted_dict

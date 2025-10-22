@@ -74,7 +74,7 @@ def update_training_configuration(
     Request body should contain elements of the configuration hierarchy to update:
     ```json
     {
-      "dataset_preparation": {...},
+      "dataset_augmentation_parameters": {...},
       "training": {...},
       "evaluation": {...}
     }
