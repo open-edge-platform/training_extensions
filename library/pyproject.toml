@@ -58,17 +58,21 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "uv",
-    "tox-uv==1.26.0",
     "pre-commit==4.2.0",
-    "pylint",
-    "pytest",
+    "ruff",
+]
+
+test = [
+    "pytest>=5.3.5",
+    "pytest-cov>=4.0.0",
+    "pytest-stress",
+    "pytest-html",
     "coverage",
+    "pytest-csv",
     "pytest-timeout",
     "pytest-mock",
-    "pytest-csv",
-    "pytest-cov",
-    "onnxruntime==1.21.1",
+    "dill",
+    "tifffile",
     "wandb",
 ]
 
