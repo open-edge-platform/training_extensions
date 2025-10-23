@@ -100,7 +100,6 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["project_id"], ["projects.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["training_dataset_id"], ["dataset_revisions.id"]),
         sa.PrimaryKeyConstraint("id"),
-        sa.Index("idx_model_revisions_project", "project_id"),
         sa.Index("idx_model_revisions_status", "training_status"),
         sa.Index("idx_model_revisions_project_status", "project_id", "training_status"),
         sa.Index("idx_model_revisions_architecture", "architecture"),
@@ -126,8 +125,6 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["project_id"], ["projects.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["source_id"], ["sources.id"], ondelete="SET NULL"),
         sa.PrimaryKeyConstraint("id"),
-        sa.Index("idx_dataset_items_project_created_at", "project_id", "created_at"),
-        sa.Index("idx_dataset_items_subset", "project_id", "subset"),
         sa.Index("idx_dataset_items_user_reviewed", "project_id", "user_reviewed"),
         sa.Index("idx_dataset_items_source", "source_id"),
     )
