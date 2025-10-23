@@ -159,6 +159,11 @@ class DatasetService:
 
         repo = DatasetItemRepository(project_id=str(project_id), db=self._db_session)
         dataset_item = repo.save(dataset_item)
+        if annotations is not None:
+            repo.set_labels(
+                dataset_item_id=str(dataset_item_id),
+                label_ids={str(label.id) for annotation in annotations for label in annotation.labels},
+            )
         return self.mapper.to_schema(dataset_item)
 
     def count_dataset_items(
@@ -316,6 +321,11 @@ class DatasetService:
         if not result:
             raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
 
+        repo.set_labels(
+            dataset_item_id=str(dataset_item_id),
+            label_ids={str(label.id) for annotation in annotations for label in annotation.labels},
+        )
+
         return DatasetItemAnnotationsWithSource(
             annotations=[DatasetItemAnnotation.model_validate(annotation) for annotation in result.annotation_data],
             user_reviewed=result.user_reviewed,
@@ -346,6 +356,7 @@ class DatasetService:
         updated = repo.delete_annotation_data(obj_id=str(dataset_item_id))
         if not updated:
             raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
+        repo.delete_labels(dataset_item_id=str(dataset_item_id))
 
     def assign_dataset_item_subset(
         self, project_id: UUID, dataset_item_id: UUID, subset: DatasetItemSubset

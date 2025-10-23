@@ -4,7 +4,7 @@
 from datetime import datetime
 from uuid import uuid4
 
-from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -91,6 +91,7 @@ class DatasetRevisionDB(BaseID):
 
 class DatasetItemDB(BaseID):
     __tablename__ = "dataset_items"
+    __table_args__ = (Index("idx_dataset_items_project_created_at", "project_id", "created_at"),)
 
     project_id: Mapped[str] = mapped_column(Text, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -119,3 +120,12 @@ class LabelDB(BaseID):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     color: Mapped[str] = mapped_column(String(7), nullable=False)
     hotkey: Mapped[str | None] = mapped_column(String(10), nullable=True)
+
+
+class DatasetItemLabelDB(Base):
+    __tablename__ = "dataset_items_labels"
+
+    dataset_item_id: Mapped[str] = mapped_column(
+        Text, ForeignKey("dataset_items.id", ondelete="CASCADE"), primary_key=True
+    )
+    label_id: Mapped[str] = mapped_column(Text, ForeignKey("labels.id", ondelete="CASCADE"), primary_key=True)
