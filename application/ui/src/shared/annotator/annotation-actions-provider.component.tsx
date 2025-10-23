@@ -8,25 +8,34 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { get, isEmpty, isObject } from 'lodash-es';
 import { $api } from 'src/api/client';
 import type { components } from 'src/api/openapi-spec';
-import type { DatasetItem } from 'src/constants/shared-types';
+import type { DatasetItem, Label } from 'src/constants/shared-types';
 import { v4 as uuid } from 'uuid';
 
 import type { Annotation, Shape } from '../../features/annotator/types';
 
 type ServerAnnotation = components['schemas']['DatasetItemAnnotation-Input'];
 
-const mapServerAnnotationsToLocal = (serverAnnotations: ServerAnnotation[]): Annotation[] => {
+const mapServerAnnotationsToLocal = (serverAnnotations: ServerAnnotation[], projectLabels: Label[]): Annotation[] => {
+    const labelMap = new Map(projectLabels.map((label) => [label.id, label]));
+
     return serverAnnotations.map((annotation) => {
+        // We only get the ids of the labels
+        const labels = annotation.labels
+            .map((labelRef) => labelMap.get(labelRef.id))
+            .filter((label): label is Label => label !== undefined);
+
         return {
             ...annotation,
             id: uuid(),
+            labels,
         } as Annotation;
     });
 };
 
 const mapLocalAnnotationsToServer = (localAnnotations: Annotation[]): ServerAnnotation[] => {
     return localAnnotations.map((annotation) => ({
-        labels: annotation.labels,
+        // We only want to send the ids of the labels
+        labels: annotation.labels.map((label) => ({ id: label.id })),
         shape: annotation.shape,
         ...(annotation.confidence !== undefined && { confidence: annotation.confidence }),
     }));
@@ -123,9 +132,10 @@ export const AnnotationActionsProvider = ({ children, mediaItem }: AnnotationAct
         if (!project || !serverAnnotations) return;
 
         const annotations = get(serverAnnotations, 'annotations', []);
+        const projectLabels = project.task?.labels || [];
 
         if (annotations.length > 0) {
-            const localFormattedAnnotations = mapServerAnnotationsToLocal(annotations);
+            const localFormattedAnnotations = mapServerAnnotationsToLocal(annotations, projectLabels);
 
             setLocalAnnotations(localFormattedAnnotations);
             isDirty.current = false;
