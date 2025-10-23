@@ -22,7 +22,7 @@ const mapServerAnnotationsToLocal = (serverAnnotations: ServerAnnotation[], proj
         // We only get the ids of the labels
         const labels = annotation.labels
             .map((labelRef) => labelMap.get(labelRef.id))
-            .filter((label) => label !== undefined);
+            .filter((label): label is Label => label !== undefined);
 
         return {
             ...annotation,
