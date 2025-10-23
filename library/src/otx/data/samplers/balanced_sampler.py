@@ -13,7 +13,7 @@ from torch.utils.data import Sampler
 
 if TYPE_CHECKING:
     from otx.data.dataset.base import OTXDataset
-    from otx.data.dataset.base_new import OTXDataset as OTXDatasetNew
+    from otx.data.dataset.base import OTXDataset as OTXDatasetNew
 
 
 class BalancedSampler(Sampler):

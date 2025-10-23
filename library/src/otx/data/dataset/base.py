@@ -1,119 +1,120 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2023-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Base class for OTXDataset."""
+"""Base class for OTXDataset using new Datumaro experimental Dataset."""
 
 from __future__ import annotations
 
-from abc import abstractmethod
-from collections import defaultdict
-from collections.abc import Iterable
-from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Callable, Iterator, List, Union
+import abc
+from typing import TYPE_CHECKING, Callable, Iterable, List, Union
 
-import cv2
 import numpy as np
-from datumaro.components.annotation import AnnotationType, LabelCategories
-from datumaro.util.image import IMAGE_BACKEND, IMAGE_COLOR_CHANNEL, ImageBackend
-from datumaro.util.image import ImageColorChannel as DatumaroImageColorChannel
-from torch.utils.data import Dataset
+import torch
+from torch.utils.data import Dataset as TorchDataset
 
-from otx.data.entity.torch import OTXDataItem
-from otx.data.transform_libs.torchvision import Compose
-from otx.types.image import ImageColorChannel
-from otx.types.label import LabelInfo, NullLabelInfo
+from otx import LabelInfo, NullLabelInfo
 
 if TYPE_CHECKING:
-    from datumaro import DatasetSubset, Image
+    from datumaro.experimental import Dataset
 
+from otx.data.entity.sample import OTXSample
+from otx.data.entity.torch.torch import OTXDataBatch
+from otx.data.transform_libs.torchvision import Compose
+from otx.types.image import ImageColorChannel
 
 Transforms = Union[Compose, Callable, List[Callable], dict[str, Compose | Callable | List[Callable]]]
 
 
-@contextmanager
-def image_decode_context() -> Iterator[None]:
-    """Change Datumaro image decode context.
+def _default_collate_fn(items: list[OTXSample]) -> OTXDataBatch:
+    """Collate OTXSample items into an OTXDataBatch.
 
-    Use PIL Image decode because of performance issues.
-    With this context, `dm.Image.data` will return BGR numpy image tensor.
+    Args:
+        items: List of OTXSample items to batch
+    Returns:
+        Batched OTXSample items with stacked tensors
     """
-    ori_image_backend = IMAGE_BACKEND.get()
-    ori_image_color_scale = IMAGE_COLOR_CHANNEL.get()
+    # Convert images to float32 tensors before stacking
+    image_tensors = []
+    for item in items:
+        img = item.image
+        if isinstance(img, torch.Tensor):
+            # Convert to float32 if not already
+            if img.dtype != torch.float32:
+                img = img.float()
+        else:
+            # Convert numpy array to float32 tensor
+            img = torch.from_numpy(img).float()
+        image_tensors.append(img)
 
-    IMAGE_BACKEND.set(ImageBackend.PIL)
-    # TODO(vinnamki): This should be changed to
-    # if to_rgb:
-    #     IMAGE_COLOR_CHANNEL.set(DatumaroImageColorChannel.COLOR_RGB)
-    # else:
-    #     IMAGE_COLOR_CHANNEL.set(DatumaroImageColorChannel.COLOR_BGR)
-    # after merging https://github.com/openvinotoolkit/datumaro/pull/1501
-    IMAGE_COLOR_CHANNEL.set(DatumaroImageColorChannel.COLOR_RGB)
+    # Try to stack images if they have the same shape
+    if len(image_tensors) > 0 and all(t.shape == image_tensors[0].shape for t in image_tensors):
+        images = torch.stack(image_tensors)
+    else:
+        images = image_tensors
 
-    yield
+    return OTXDataBatch(
+        batch_size=len(items),
+        images=images,
+        labels=[item.label for item in items] if items[0].label is not None else None,
+        masks=[item.masks for item in items] if any(item.masks is not None for item in items) else None,
+        bboxes=[item.bboxes for item in items] if any(item.bboxes is not None for item in items) else None,
+        keypoints=[item.keypoints for item in items] if any(item.keypoints is not None for item in items) else None,
+        polygons=[item.polygons for item in items if item.polygons is not None]
+        if any(item.polygons is not None for item in items)
+        else None,
+        imgs_info=[item.img_info for item in items] if any(item.img_info is not None for item in items) else None,
+    )
 
-    IMAGE_BACKEND.set(ori_image_backend)
-    IMAGE_COLOR_CHANNEL.set(ori_image_color_scale)
 
-
-class OTXDataset(Dataset):
-    """Base OTXDataset.
+class OTXDataset(TorchDataset):
+    """Base OTXDataset using new Datumaro experimental Dataset.
 
     Defines basic logic for OTX datasets.
 
     Args:
-        dm_subset: Datumaro subset of a dataset
         transforms: Transforms to apply on images
-        max_refetch: Maximum number of images to fetch in cache
         image_color_channel: Color channel of images
         stack_images: Whether or not to stack images in collate function in OTXBatchData entity.
-        data_format: Source data format, which was originally passed to datumaro (could be arrow for instance).
-
+        sample_type: Type of sample to use for this dataset
     """
 
     def __init__(
         self,
-        dm_subset: DatasetSubset,
+        dm_subset: Dataset,
         transforms: Transforms,
         max_refetch: int = 1000,
         image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
         stack_images: bool = True,
         to_tv_image: bool = True,
         data_format: str = "",
+        sample_type: type[OTXSample] = OTXSample,
     ) -> None:
-        self.dm_subset = dm_subset
         self.transforms = transforms
-        self.max_refetch = max_refetch
         self.image_color_channel = image_color_channel
         self.stack_images = stack_images
         self.to_tv_image = to_tv_image
+        self.sample_type = sample_type
+        self.max_refetch = max_refetch
         self.data_format = data_format
-
-        if self.dm_subset.categories() and data_format == "arrow":
-            self.label_info = LabelInfo.from_dm_label_groups_arrow(self.dm_subset.categories()[AnnotationType.label])
-        elif self.dm_subset.categories():
-            self.label_info = LabelInfo.from_dm_label_groups(self.dm_subset.categories()[AnnotationType.label])
-        else:
-            self.label_info = NullLabelInfo()
+        self.label_info: LabelInfo = NullLabelInfo()
+        self.dm_subset = dm_subset
 
     def __len__(self) -> int:
         return len(self.dm_subset)
 
     def _sample_another_idx(self) -> int:
-        return np.random.default_rng().integers(0, len(self))
+        return np.random.randint(0, len(self))
 
-    def _apply_transforms(self, entity: OTXDataItem) -> OTXDataItem | None:
+    def _apply_transforms(self, entity: OTXSample) -> OTXSample | None:
         if isinstance(self.transforms, Compose):
-            if self.to_tv_image:
-                entity = entity.to_tv_image()
             return self.transforms(entity)
         if isinstance(self.transforms, Iterable):
             return self._iterable_transforms(entity)
         if callable(self.transforms):
             return self.transforms(entity)
+        return None
 
-        raise TypeError(self.transforms)
-
-    def _iterable_transforms(self, item: OTXDataItem) -> OTXDataItem | None:
+    def _iterable_transforms(self, item: OTXSample) -> OTXSample | None:
         if not isinstance(self.transforms, list):
             raise TypeError(item)
 
@@ -127,7 +128,7 @@ class OTXDataset(Dataset):
 
         return results
 
-    def __getitem__(self, index: int) -> OTXDataItem:
+    def __getitem__(self, index: int) -> OTXSample:
         for _ in range(self.max_refetch):
             results = self._get_item_impl(index)
 
@@ -139,81 +140,15 @@ class OTXDataset(Dataset):
         msg = f"Reach the maximum refetch number ({self.max_refetch})"
         raise RuntimeError(msg)
 
-    def _get_img_data_and_shape(
-        self,
-        img: Image,
-        roi: dict[str, Any] | None = None,
-    ) -> tuple[np.ndarray, tuple[int, int], dict[str, Any] | None]:
-        """Get image data and shape.
-
-        This method is used to get image data and shape from Datumaro image object.
-        If ROI is provided, the image data is extracted from the ROI.
-
-        Args:
-            img (Image): Image object from Datumaro.
-            roi (dict[str, Any] | None, Optional): Region of interest.
-                Represented by dict with coordinates and some meta information.
-
-        Returns:
-                The image data, shape, and ROI meta information
-        """
-        roi_meta = None
-
-        with image_decode_context():
-            img_data = (
-                img.data
-                if self.image_color_channel == ImageColorChannel.RGB
-                else cv2.cvtColor(img.data, cv2.COLOR_RGB2BGR)
-            )
-
-        if img_data is None:
-            msg = "Cannot get image data"
-            raise RuntimeError(msg)
-
-        if roi and isinstance(roi, dict):
-            # extract ROI from image
-            shape = roi["shape"]
-            h, w = img_data.shape[:2]
-            x1, y1, x2, y2 = (
-                int(np.clip(np.trunc(shape["x1"] * w), 0, w)),
-                int(np.clip(np.trunc(shape["y1"] * h), 0, h)),
-                int(np.clip(np.ceil(shape["x2"] * w), 0, w)),
-                int(np.clip(np.ceil(shape["y2"] * h), 0, h)),
-            )
-            if (x2 - x1) * (y2 - y1) <= 0:
-                msg = f"ROI has zero or negative area. ROI coordinates: {x1}, {y1}, {x2}, {y2}"
-                raise ValueError(msg)
-
-            img_data = img_data[y1:y2, x1:x2]
-            roi_meta = {"x1": x1, "y1": y1, "x2": x2, "y2": y2, "orig_image_shape": (h, w)}
-
-        return img_data, img_data.shape[:2], roi_meta
-
-    @abstractmethod
-    def _get_item_impl(self, idx: int) -> OTXDataItem | None:
-        pass
+    def _get_item_impl(self, index: int) -> OTXSample | None:
+        dm_item = self.dm_subset[index]
+        return self._apply_transforms(dm_item)
 
     @property
     def collate_fn(self) -> Callable:
-        """Collection function to collect KeypointDetDataEntity into KeypointDetBatchDataEntity in data loader."""
-        return OTXDataItem.collate_fn
+        """Collection function to collect samples into a batch in data loader."""
+        return _default_collate_fn
 
-    def get_idx_list_per_classes(self, use_string_label: bool = False) -> dict[int | str, list[int]]:
-        """Get a dictionary mapping class labels (string or int) to lists of samples.
-
-        Args:
-            use_string_label (bool): If True, use string class labels as keys.
-                If False, use integer indices as keys.
-        """
-        stats: dict[int | str, list[int]] = defaultdict(list)
-        for item_idx, item in enumerate(self.dm_subset):
-            for ann in item.annotations:
-                if use_string_label:
-                    labels = self.dm_subset.categories().get(AnnotationType.label, LabelCategories())
-                    stats[labels.items[ann.label].name].append(item_idx)
-                else:
-                    stats[ann.label].append(item_idx)
-        # Remove duplicates in label stats idx: O(n)
-        for k in stats:
-            stats[k] = list(dict.fromkeys(stats[k]))
-        return stats
+    @abc.abstractmethod
+    def get_idx_list_per_classes(self, use_string_label: bool = False) -> dict[int, list[int]]:
+        """Get a dictionary with class labels as keys and lists of corresponding sample indices as values."""

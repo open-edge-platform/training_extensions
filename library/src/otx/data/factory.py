@@ -17,7 +17,7 @@ from otx.types.task import OTXTaskType
 from otx.types.transformer_libs import TransformLibType
 
 from .dataset.base import OTXDataset, Transforms
-from .dataset.base_new import OTXDataset as OTXDatasetNew
+from .dataset.base import OTXDataset as OTXDatasetNew
 
 if TYPE_CHECKING:
     from datumaro.components.dataset import Dataset as DmDataset
@@ -74,7 +74,7 @@ class OTXDatasetFactory:
             OTXTaskType.ANOMALY_DETECTION,
             OTXTaskType.ANOMALY_SEGMENTATION,
         ):
-            from .dataset.anomaly_new import OTXAnomalyDataset
+            from .dataset.anomaly import OTXAnomalyDataset
 
             dataset = convert_from_legacy(dm_subset)
             common_kwargs["dm_subset"] = dataset
@@ -82,49 +82,49 @@ class OTXDatasetFactory:
             return OTXAnomalyDataset(task_type=task, **common_kwargs)
 
         if task == OTXTaskType.MULTI_CLASS_CLS:
-            from .dataset.classification_new import OTXMulticlassClsDataset
+            from .dataset.classification import OTXMulticlassClsDataset
 
             dataset = convert_from_legacy(dm_subset)
             common_kwargs["dm_subset"] = dataset
             return OTXMulticlassClsDataset(**common_kwargs)
 
         if task == OTXTaskType.MULTI_LABEL_CLS:
-            from .dataset.classification_new import OTXMultilabelClsDataset
+            from .dataset.classification import OTXMultilabelClsDataset
 
             dataset = convert_from_legacy(dm_subset)
             common_kwargs["dm_subset"] = dataset
             return OTXMultilabelClsDataset(**common_kwargs)
 
         if task == OTXTaskType.H_LABEL_CLS:
-            from .dataset.classification_new import OTXHlabelClsDataset
+            from .dataset.classification import OTXHlabelClsDataset
 
             dataset = convert_from_legacy(dm_subset)
             common_kwargs["dm_subset"] = dataset
             return OTXHlabelClsDataset(**common_kwargs)
 
         if task == OTXTaskType.DETECTION:
-            from .dataset.detection_new import OTXDetectionDataset
+            from .dataset.detection import OTXDetectionDataset
 
             dataset = convert_from_legacy(dm_subset)
             common_kwargs["dm_subset"] = dataset
             return OTXDetectionDataset(**common_kwargs)
 
         if task in [OTXTaskType.ROTATED_DETECTION, OTXTaskType.INSTANCE_SEGMENTATION]:
-            from .dataset.instance_segmentation_new import OTXInstanceSegDataset
+            from .dataset.instance_segmentation import OTXInstanceSegDataset
 
             dataset = convert_from_legacy(dm_subset)
             common_kwargs["dm_subset"] = dataset
             return OTXInstanceSegDataset(include_polygons=include_polygons, **common_kwargs)
 
         if task == OTXTaskType.SEMANTIC_SEGMENTATION:
-            from .dataset.segmentation_new import OTXSegmentationDataset
+            from .dataset.segmentation import OTXSegmentationDataset
 
             dataset = convert_from_legacy(dm_subset)
             common_kwargs["dm_subset"] = dataset
             return OTXSegmentationDataset(**common_kwargs)
 
         if task == OTXTaskType.KEYPOINT_DETECTION:
-            from .dataset.keypoint_detection_new import OTXKeypointDetectionDataset
+            from .dataset.keypoint_detection import OTXKeypointDetectionDataset
 
             dataset = convert_from_legacy(dm_subset)
             common_kwargs["dm_subset"] = dataset

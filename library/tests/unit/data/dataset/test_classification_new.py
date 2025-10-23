@@ -9,7 +9,7 @@ from unittest.mock import Mock
 
 from datumaro.experimental import Dataset
 
-from otx.data.dataset.classification_new import OTXMulticlassClsDataset
+from otx.data.dataset.classification import OTXMulticlassClsDataset
 from otx.data.entity.sample import ClassificationSample
 
 

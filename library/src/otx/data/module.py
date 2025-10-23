@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader, RandomSampler
 from torchvision.transforms.v2 import Normalize
 
 from otx.config.data import TileConfig
-from otx.data.dataset.tile_new import OTXTileDatasetFactory
+from otx.data.dataset.tile import OTXTileDatasetFactory
 from otx.data.factory import OTXDatasetFactory
 from otx.data.utils import adapt_input_size_to_dataset, adapt_tile_config, get_adaptive_num_workers, instantiate_sampler
 from otx.data.utils.pre_filtering import pre_filtering

@@ -5,54 +5,52 @@
 
 from __future__ import annotations
 
-import numpy as np
-import torch
-from datumaro import Bbox, Image
-from torchvision import tv_tensors
+from typing import TYPE_CHECKING
 
-from otx.data.entity.base import ImageInfo
-from otx.data.entity.torch import OTXDataItem
+from otx.data.entity.sample import DetectionSample
+from otx.types.label import LabelInfo
 
 from .base import OTXDataset
-from .mixins import DataAugSwitchMixin
+
+if TYPE_CHECKING:
+    from datumaro.experimental import Dataset
 
 
-class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):  # type: ignore[misc]
-    """OTXDataset class for detection task."""
+class OTXDetectionDataset(OTXDataset):
+    """OTXDataset class for detection task using new Datumaro experimental Dataset."""
 
-    def _get_item_impl(self, index: int) -> OTXDataItem | None:
-        item = self.dm_subset[index]
-        img = item.media_as(Image)
-        ignored_labels: list[int] = []  # This should be assigned form item
-        img_data, img_shape, _ = self._get_img_data_and_shape(img)
+    def __init__(self, dm_subset: Dataset, **kwargs) -> None:
+        """Initialize _OTXDetectionDataset.
 
-        bbox_anns = [ann for ann in item.annotations if isinstance(ann, Bbox)]
+        Args:
+            **kwargs: Keyword arguments to pass to OTXDataset
+        """
+        sample_type = DetectionSample
+        dm_subset = dm_subset.convert_to_schema(sample_type)
+        super().__init__(dm_subset=dm_subset, sample_type=sample_type, **kwargs)
 
-        bboxes = (
-            np.stack([ann.points for ann in bbox_anns], axis=0).astype(np.float32)
-            if len(bbox_anns) > 0
-            else np.zeros((0, 4), dtype=np.float32)
+        labels = list(dm_subset.schema.attributes["label"].categories.labels)
+        self.label_info = LabelInfo(
+            label_names=labels,
+            label_groups=[labels],
+            label_ids=[str(i) for i in range(len(labels))],
         )
 
-        entity = OTXDataItem(
-            image=img_data,
-            img_info=ImageInfo(
-                img_idx=index,
-                img_shape=img_shape,
-                ori_shape=img_shape,
-                image_color_channel=self.image_color_channel,
-                ignored_labels=ignored_labels,
-            ),
-            bboxes=tv_tensors.BoundingBoxes(
-                bboxes,
-                format=tv_tensors.BoundingBoxFormat.XYXY,
-                canvas_size=img_shape,
-                dtype=torch.float32,
-            ),
-            label=torch.as_tensor([ann.label for ann in bbox_anns], dtype=torch.long),
-        )
-        # Apply augmentation switch if available
-        if self.has_dynamic_augmentation:
-            self._apply_augmentation_switch()
+    def get_idx_list_per_classes(self, use_string_label: bool = False) -> dict[int, list[int]]:
+        """Get a dictionary mapping class labels (string or int) to lists of samples.
 
-        return self._apply_transforms(entity)
+        Args:
+            use_string_label (bool): If True, use string class labels as keys.
+                If False, use integer indices as keys.
+        """
+        idx_list_per_classes: dict[int, list[int]] = {}
+        for idx in range(len(self)):
+            item = self.dm_subset[idx]
+            labels = item.label.tolist()
+            if use_string_label:
+                labels = [self.label_info.label_names[label] for label in labels]
+            for label in labels:
+                if label not in idx_list_per_classes:
+                    idx_list_per_classes[label] = []
+                idx_list_per_classes[label].append(idx)
+        return idx_list_per_classes

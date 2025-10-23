@@ -1,7 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Unit tests for detection_new dataset."""
+"""Unit tests for detection dataset."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from unittest.mock import Mock
 
 from datumaro.experimental import Dataset
 
-from otx.data.dataset.detection_new import OTXDetectionDataset
+from otx.data.dataset.detection import OTXDetectionDataset
 from otx.data.entity.sample import DetectionSample
 
 

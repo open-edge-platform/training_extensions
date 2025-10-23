@@ -9,7 +9,7 @@ from .detection import OTXDetectionDataset
 from .instance_segmentation import OTXInstanceSegDataset
 from .keypoint_detection import OTXKeypointDetectionDataset
 from .segmentation import OTXSegmentationDataset
-from .tile_new import OTXTileDatasetFactory
+from .tile import OTXTileDatasetFactory
 
 __all__ = [
     "OTXAnomalyDataset",

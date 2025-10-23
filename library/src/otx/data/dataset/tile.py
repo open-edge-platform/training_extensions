@@ -23,7 +23,7 @@ from otx.data.entity.tile import (
 )
 from otx.types.task import OTXTaskType
 
-from .base_new import OTXDataset
+from .base import OTXDataset
 
 if TYPE_CHECKING:
     from otx.config.data import TileConfig

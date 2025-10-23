@@ -6,16 +6,16 @@
 import pytest
 
 from otx.config.data import SubsetConfig
-from otx.data.dataset.anomaly_new import OTXAnomalyDataset
+from otx.data.dataset.anomaly import OTXAnomalyDataset
 from otx.data.dataset.classification import (
     HLabelInfo,
     OTXHlabelClsDataset,
+    OTXMulticlassClsDataset,
     OTXMultilabelClsDataset,
 )
-from otx.data.dataset.classification_new import OTXMulticlassClsDataset
-from otx.data.dataset.detection_new import OTXDetectionDataset
-from otx.data.dataset.instance_segmentation_new import OTXInstanceSegDataset
-from otx.data.dataset.segmentation_new import OTXSegmentationDataset
+from otx.data.dataset.detection import OTXDetectionDataset
+from otx.data.dataset.instance_segmentation import OTXInstanceSegDataset
+from otx.data.dataset.segmentation import OTXSegmentationDataset
 from otx.data.factory import OTXDatasetFactory, TransformLibFactory
 from otx.data.transform_libs.torchvision import TorchVisionTransformLib
 from otx.types.image import ImageColorChannel
@@ -69,6 +69,7 @@ class TestOTXDatasetFactory:
         cfg_subset = mocker.MagicMock(spec=SubsetConfig)
         image_color_channel = ImageColorChannel.BGR
         mocker.patch.object(HLabelInfo, "from_dm_label_groups", return_value=fxt_mock_hlabelinfo)
+
         assert isinstance(
             OTXDatasetFactory.create(
                 task=task_type,
