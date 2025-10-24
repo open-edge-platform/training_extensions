@@ -92,7 +92,7 @@ class LabelInfo:
     @classmethod
     def from_dm_label_groups_arrow(cls, dm_label_categories: HierarchicalLabelCategories) -> LabelInfo:
         """Overload to support datumaro's arrow format."""
-        label_names = [item.label_semantics["name"] for item in dm_label_categories.items]
+        label_names = [item.name for item in dm_label_categories.items]
 
         if len(label_names) != len(dm_label_categories.items):
             msg = "Wrong arrow format: can not extract label names from attributes"
@@ -345,7 +345,7 @@ class HLabelInfo(LabelInfo):
         empty_label_id = None
         label_names = []
         for item in dm_label_categories.items:
-            name = item.label_semantics["name"]
+            name = item.name
 
             if name == empty_label_name:
                 empty_label_id = item.name

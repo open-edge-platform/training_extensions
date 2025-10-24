@@ -2,8 +2,12 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
-from datumaro import LabelCategories
 from datumaro.components.annotation import GroupType
+from datumaro.experimental.categories import (
+    HierarchicalLabelCategories,
+    HierarchicalLabelCategory,
+    LabelGroup,
+)
 
 from otx.types.label import HLabelInfo, LabelInfo, NullLabelInfo, SegLabelInfo
 
@@ -15,22 +19,22 @@ def test_as_json(fxt_label_info):
 
 
 def test_label_info_from_arrow():
-    labels = [
-        LabelCategories.Category(name="car", attributes={"__name__car"}),
-        LabelCategories.Category(name="truck", attributes={"__name__truck"}),
-    ]
-    label_groups = [
-        LabelCategories.LabelGroup(
+    labels = (
+        HierarchicalLabelCategory(name="car", parent="vehicle"),
+        HierarchicalLabelCategory(name="truck", parent="vehicle"),
+        HierarchicalLabelCategory(name="vehicle"),
+    )
+    label_groups = (
+        LabelGroup(
             name="Detection labels___vehicle",
-            labels=["car", "truck"],
+            labels=("car", "truck"),
             group_type=GroupType.EXCLUSIVE,
         ),
-    ]
-    dm_label_categories = LabelCategories(items=labels, label_groups=label_groups)
+    )
+    dm_label_categories = HierarchicalLabelCategories(items=labels, label_groups=label_groups)
 
     label_info = LabelInfo.from_dm_label_groups_arrow(dm_label_categories)
-    assert len(label_info.label_names) == 2
-    assert len(label_info.label_names) == 2
+    assert len(label_info.label_names) == 3
     assert len(label_info.label_groups[0]) == 2
     assert "car" in label_info.label_names
     assert "truck" in label_info.label_names
@@ -52,26 +56,27 @@ def test_seg_label_info():
 
 
 def test_hlabel_info():
-    labels = [
-        LabelCategories.Category(name="car", parent="vehicle"),
-        LabelCategories.Category(name="truck", parent="vehicle"),
-        LabelCategories.Category(name="plush toy", parent="plush toy"),
-        LabelCategories.Category(name="No class"),
-    ]
-    label_groups = [
-        LabelCategories.LabelGroup(
+    labels = (
+        HierarchicalLabelCategory(name="car", parent="vehicle"),
+        HierarchicalLabelCategory(name="truck", parent="vehicle"),
+        HierarchicalLabelCategory(name="vehicle"),
+        HierarchicalLabelCategory(name="plush toy", parent="plush toy"),
+        HierarchicalLabelCategory(name="No class"),
+    )
+    label_groups = (
+        LabelGroup(
             name="Detection labels___vehicle",
-            labels=["car", "truck"],
+            labels=("car", "truck"),
             group_type=GroupType.EXCLUSIVE,
         ),
-        LabelCategories.LabelGroup(
+        LabelGroup(
             name="Detection labels___plush toy",
-            labels=["plush toy"],
+            labels=("plush toy",),
             group_type=GroupType.EXCLUSIVE,
         ),
-        LabelCategories.LabelGroup(name="No class", labels=["No class"], group_type=GroupType.RESTRICTED),
-    ]
-    dm_label_categories = LabelCategories(items=labels, label_groups=label_groups)
+        LabelGroup(name="No class", labels=("No class",), group_type=GroupType.RESTRICTED),
+    )
+    dm_label_categories = HierarchicalLabelCategories(items=labels, label_groups=label_groups)
 
     hlabel_info = HLabelInfo.from_dm_label_groups(dm_label_categories)
 
@@ -87,26 +92,27 @@ def test_hlabel_info():
 
 
 def test_hlabel_info_arrow():
-    labels = [
-        LabelCategories.Category(name="car", parent="vehicle", attributes={"__name__car"}),
-        LabelCategories.Category(name="truck", parent="vehicle", attributes={"__name__truck"}),
-        LabelCategories.Category(name="plush_toy", parent="plush toy", attributes={"__name__plush toy"}),
-        LabelCategories.Category(name="No class", attributes={"__name__No class"}),
-    ]
-    label_groups = [
-        LabelCategories.LabelGroup(
+    labels = (
+        HierarchicalLabelCategory(name="car", parent="vehicle", label_semantics={"name": "car"}),
+        HierarchicalLabelCategory(name="truck", parent="vehicle", label_semantics={"name": "truck"}),
+        HierarchicalLabelCategory(name="vehicle"),
+        HierarchicalLabelCategory(name="plush toy", parent="plush toy", label_semantics={"name": "plush toy"}),
+        HierarchicalLabelCategory(name="No class", label_semantics={"name": "No class"}),
+    )
+    label_groups = (
+        LabelGroup(
             name="Detection labels___vehicle",
-            labels=["car", "truck"],
+            labels=("car", "truck"),
             group_type=GroupType.EXCLUSIVE,
         ),
-        LabelCategories.LabelGroup(
+        LabelGroup(
             name="Detection labels___plush toy",
-            labels=["plush toy"],
+            labels=("plush toy",),
             group_type=GroupType.EXCLUSIVE,
         ),
-        LabelCategories.LabelGroup(name="No class", labels=["No class"], group_type=GroupType.RESTRICTED),
-    ]
-    dm_label_categories = LabelCategories(items=labels, label_groups=label_groups)
+        LabelGroup(name="No class", labels=("No class",), group_type=GroupType.RESTRICTED),
+    )
+    dm_label_categories = HierarchicalLabelCategories(items=labels, label_groups=label_groups)
 
     hlabel_info = HLabelInfo.from_dm_label_groups_arrow(dm_label_categories)
 
@@ -115,7 +121,7 @@ def test_hlabel_info_arrow():
         hlabel_info.label_to_idx.keys(),
     ), "class_to_group_idx and label_to_idx keys do not match"
 
-    assert len(hlabel_info.label_names) == 3
+    assert len(hlabel_info.label_names) == 4
     assert "No class" not in hlabel_info.label_names
-    for label in ["car", "truck", "plush toy"]:
+    for label in ["car", "truck", "plush toy", "vehicle"]:
         assert label in hlabel_info.label_names

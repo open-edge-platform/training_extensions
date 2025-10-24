@@ -121,10 +121,11 @@ class OTXHlabelClsDataset(OTXDataset):
         sample_type = ClassificationHierarchicalSample
         dm_subset = dm_subset.convert_to_schema(sample_type)
         super().__init__(dm_subset=dm_subset, sample_type=sample_type, **kwargs)
-        if self.data_format != "arrow":
-            raise ValueError("The data format should be arrow.")  # noqa: EM101, TRY003
         self.dm_categories = self.dm_subset.schema.attributes["label"].categories
-        self.label_info = HLabelInfo.from_dm_label_groups_arrow(self.dm_categories)
+        if self.data_format == "arrow":
+            self.label_info = HLabelInfo.from_dm_label_groups_arrow(self.dm_categories)
+        else:
+            self.label_info = HLabelInfo.from_dm_label_groups(self.dm_categories)
 
         self.id_to_name_mapping = dict(zip(self.label_info.label_ids, self.label_info.label_names))
         self.id_to_name_mapping[""] = ""
