@@ -14,24 +14,26 @@ Classes:
     RunnableFactory: Factory for registering and creating Runnable instances by type.
 """
 
+import logging
 from collections.abc import Callable
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Generic, Protocol, TypeVar
 
 ReportFn = Callable[[str, float], None]
 HeartbeatFn = Callable[[], None]
 
+logger = logging.getLogger(__name__)
+
 
 @dataclass(kw_only=True)
 class ExecutionContext:
     payload: str
-    data_dir: Path
     report: ReportFn
     heartbeat: HeartbeatFn
 
     def report_progress(self, msg: str = "", progress: float = 0.0) -> None:
         """Report progress of the execution."""
+        logger.info(msg)
         self.report(msg, progress)
 
 

@@ -12,6 +12,7 @@ from .base import (
     RequiresID,
     RequiresName,
 )
+from .dataset_item import DatasetItemFormat, DatasetItemSubset
 from .task_type import TaskType
 
 __all__ = [
@@ -19,6 +20,8 @@ __all__ = [
     "BaseModel",
     "BaseRequiredIDModel",
     "BaseRequiredIDNameModel",
+    "DatasetItemFormat",
+    "DatasetItemSubset",
     "HasID",
     "HasName",
     "Pagination",

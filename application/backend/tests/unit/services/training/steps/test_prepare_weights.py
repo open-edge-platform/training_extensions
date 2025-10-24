@@ -2,15 +2,17 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from pathlib import Path
-from unittest.mock import Mock, call
+from unittest.mock import Mock
 from uuid import uuid4
 
 import pytest
 
 from app.core.models import TaskType
+from app.core.run import ExecutionContext
 from app.services.base_weights_service import BaseWeightsService
+from app.services.training.base import PipelineContext
 from app.services.training.models import TrainingParams
-from app.services.training.otx import OTXTrainer
+from app.services.training.steps.prepare_weights import MODEL_WEIGHTS_PATH, PrepareWeightsStep
 
 
 @pytest.fixture
@@ -20,16 +22,33 @@ def fxt_base_weights_service() -> Mock:
 
 
 @pytest.fixture
-def fxt_otx_trainer(fxt_base_weights_service: Mock) -> OTXTrainer:
+def fxt_execution_ctx() -> Mock:
+    """Mock ExecutionContext for testing."""
+    return Mock(spec=ExecutionContext)
+
+
+@pytest.fixture
+def fxt_pipeline_ctx() -> PipelineContext:
+    """Mock PipelineContext for testing."""
+    return PipelineContext()
+
+
+@pytest.fixture
+def fxt_prepare_weights_step(fxt_base_weights_service: Mock, tmp_path: Path) -> PrepareWeightsStep:
     """Create an OTXTrainer instance for testing."""
-    return OTXTrainer(fxt_base_weights_service)
+    return PrepareWeightsStep(fxt_base_weights_service, tmp_path)
 
 
-class TestOTXTrainerPrepareWeights:
-    """Test cases for the _prepare_weights method."""
+class TestPrepareWeightsStep:
+    """Test cases for the prepare weights step."""
 
     def test_prepare_weights_without_parent_model(
-        self, fxt_otx_trainer: OTXTrainer, fxt_base_weights_service: Mock, tmp_path: Path
+        self,
+        fxt_prepare_weights_step: PrepareWeightsStep,
+        fxt_execution_ctx: Mock,
+        fxt_pipeline_ctx: PipelineContext,
+        fxt_base_weights_service: Mock,
+        tmp_path: Path,
     ):
         """Test preparing weights when no parent model revision ID is provided."""
         # Arrange
@@ -40,19 +59,24 @@ class TestOTXTrainerPrepareWeights:
         )
         expected_weights_path = tmp_path / "model.pth"
         fxt_base_weights_service.get_local_weights_path.return_value = expected_weights_path
-        report_fn = Mock()
 
         # Act
-        result = fxt_otx_trainer._prepare_weights(tmp_path, training_params, report_fn)
+        fxt_prepare_weights_step.execute(fxt_execution_ctx, training_params, fxt_pipeline_ctx)
 
         # Assert
-        assert result == expected_weights_path
+        assert fxt_pipeline_ctx.get(MODEL_WEIGHTS_PATH) == expected_weights_path
         fxt_base_weights_service.get_local_weights_path.assert_called_once_with(
             task=TaskType.DETECTION, model_manifest_id="Object_Detection_YOLOX_S"
         )
-        report_fn.assert_has_calls([call("Preparing weights for training"), call("Base weights preparation completed")])
 
-    def test_prepare_weights_with_parent_model(self, fxt_otx_trainer: OTXTrainer, tmp_path: Path):
+    def test_prepare_weights_with_parent_model(
+        self,
+        fxt_prepare_weights_step: PrepareWeightsStep,
+        fxt_execution_ctx: Mock,
+        fxt_pipeline_ctx: PipelineContext,
+        fxt_base_weights_service: Mock,
+        tmp_path: Path,
+    ):
         """Test preparing weights when parent model revision ID is provided."""
         # Arrange
         project_id = uuid4()
@@ -63,7 +87,6 @@ class TestOTXTrainerPrepareWeights:
             task_type=TaskType.DETECTION,
             parent_model_revision_id=parent_model_revision_id,
         )
-        report_fn = Mock()
         expected_weights_path = (
             tmp_path / "projects" / str(project_id) / "models" / str(parent_model_revision_id) / "model.pth"
         )
@@ -71,15 +94,19 @@ class TestOTXTrainerPrepareWeights:
         expected_weights_path.touch()
 
         # Act
-        result = fxt_otx_trainer._prepare_weights(tmp_path, training_params, report_fn)
+        fxt_prepare_weights_step.execute(fxt_execution_ctx, training_params, fxt_pipeline_ctx)
 
         # Assert
-        assert result == expected_weights_path
-        report_fn.assert_has_calls(
-            [call("Preparing weights for training"), call("Parent model weights preparation completed")]
-        )
+        assert fxt_pipeline_ctx.get(MODEL_WEIGHTS_PATH) == expected_weights_path
 
-    def test_prepare_weights_with_parent_model_no_file_raises_error(self, fxt_otx_trainer: OTXTrainer, tmp_path: Path):
+    def test_prepare_weights_with_parent_model_no_file_raises_error(
+        self,
+        fxt_prepare_weights_step: PrepareWeightsStep,
+        fxt_execution_ctx: Mock,
+        fxt_pipeline_ctx: PipelineContext,
+        fxt_base_weights_service: Mock,
+        tmp_path: Path,
+    ):
         """Test that FileNotFoundError is raised when parent model weights file is missing."""
         # Arrange
         project_id = uuid4()
@@ -90,20 +117,21 @@ class TestOTXTrainerPrepareWeights:
             task_type=TaskType.DETECTION,
             parent_model_revision_id=parent_model_revision_id,
         )
-        report_fn = Mock()
         expected_weights_path = (
             tmp_path / "projects" / str(project_id) / "models" / str(parent_model_revision_id) / "model.pth"
         )
 
         # Act
         with pytest.raises(FileNotFoundError, match=f"Parent model weights not found at {expected_weights_path}"):
-            fxt_otx_trainer._prepare_weights(tmp_path, training_params, report_fn)
-
-        # Assert
-        report_fn.assert_called_once_with("Preparing weights for training")
+            fxt_prepare_weights_step.execute(fxt_execution_ctx, training_params, fxt_pipeline_ctx)
 
     def test_prepare_weights_with_parent_model_no_project_id_raises_error(
-        self, fxt_otx_trainer: OTXTrainer, tmp_path: Path
+        self,
+        fxt_prepare_weights_step: PrepareWeightsStep,
+        fxt_execution_ctx: Mock,
+        fxt_pipeline_ctx: PipelineContext,
+        fxt_base_weights_service: Mock,
+        tmp_path: Path,
     ):
         """Test that ValueError is raised when parent model revision ID is provided without project ID."""
         # Arrange
@@ -113,8 +141,7 @@ class TestOTXTrainerPrepareWeights:
             parent_model_revision_id=uuid4(),
             project_id=None,
         )
-        report_fn = Mock()
 
         # Act & Assert
         with pytest.raises(ValueError, match="Project ID must be provided for parent model weights preparation"):
-            fxt_otx_trainer._prepare_weights(tmp_path, training_params, report_fn)
+            fxt_prepare_weights_step.execute(fxt_execution_ctx, training_params, fxt_pipeline_ctx)

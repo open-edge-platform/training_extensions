@@ -15,13 +15,14 @@ from fastapi import FastAPI
 
 from app.core.jobs import JobController, JobQueue, ProcessRunnerFactory
 from app.core.run import Runnable, RunnableFactory
-from app.db import MigrationManager
+from app.db import MigrationManager, get_db_session
 from app.scheduler import Scheduler
 from app.schemas.job import JobType
 from app.services.base_weights_service import BaseWeightsService
 from app.services.data_collect import DataCollector
 from app.services.event.event_bus import EventBus
 from app.services.training import OTXTrainer
+from app.services.training.steps.subset_assignment import SubsetService
 from app.settings import get_settings
 from app.webrtc.manager import WebRTCManager
 
@@ -45,8 +46,18 @@ def setup_job_controller(data_dir: Path, max_parallel_jobs: int) -> tuple[JobQue
     q = JobQueue()
     job_runnable_factory = RunnableFactory[JobType, Runnable]()
     base_weights_service = BaseWeightsService(data_dir=data_dir)
-    job_runnable_factory.register(JobType.TRAIN, partial(OTXTrainer, base_weights_service=base_weights_service))
-    process_runner_factory = ProcessRunnerFactory(data_dir, job_runnable_factory)
+    subset_service = SubsetService()
+    job_runnable_factory.register(
+        JobType.TRAIN,
+        partial(
+            OTXTrainer,
+            base_weights_service=base_weights_service,
+            subset_service=subset_service,
+            data_dir=data_dir,
+            db_session_factory=get_db_session,
+        ),
+    )
+    process_runner_factory = ProcessRunnerFactory(job_runnable_factory)
     job_controller = JobController(
         jobs_queue=q, runner_factory=process_runner_factory, max_parallel_jobs=max_parallel_jobs
     )
