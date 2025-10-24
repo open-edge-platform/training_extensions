@@ -1,7 +1,5 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-import shutil
-from collections.abc import Generator
 from pathlib import Path
 from uuid import UUID, uuid4
 
@@ -14,16 +12,6 @@ from app.services import LabelService, ResourceWithIdAlreadyExistsError
 from app.services.base import ResourceInUseError, ResourceNotFoundError, ResourceType
 from app.services.label_service import DuplicateLabelsError
 from app.services.project_service import ProjectService
-
-
-@pytest.fixture()
-def fxt_projects_dir() -> Generator[Path]:
-    """Setup a temporary data directory for tests."""
-    projects_dir = Path("data/projects")
-    if not projects_dir.exists():
-        projects_dir.mkdir(parents=True)
-    yield projects_dir
-    shutil.rmtree(projects_dir)
 
 
 @pytest.fixture

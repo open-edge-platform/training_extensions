@@ -128,3 +128,12 @@ class LabelDB(BaseID):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     color: Mapped[str] = mapped_column(String(7), nullable=False)
     hotkey: Mapped[str | None] = mapped_column(String(10), nullable=True)
+
+
+class DatasetItemLabelDB(Base):
+    __tablename__ = "dataset_items_labels"
+
+    dataset_item_id: Mapped[str] = mapped_column(
+        Text, ForeignKey("dataset_items.id", ondelete="CASCADE"), primary_key=True
+    )
+    label_id: Mapped[str] = mapped_column(Text, ForeignKey("labels.id", ondelete="CASCADE"), primary_key=True)
