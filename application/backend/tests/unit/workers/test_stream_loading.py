@@ -37,8 +37,8 @@ def stop_event():
 
 
 @pytest.fixture
-def config_changed_condition():
-    """Configuration changed condition fixture"""
+def source_changed_condition():
+    """Source changed condition fixture"""
     return mp.Condition()
 
 
@@ -76,20 +76,15 @@ def mock_video_stream(mock_stream_data):
 @pytest.fixture
 def mock_services(mock_config, mock_video_stream):
     with (
-        patch("app.workers.stream_loading.ActivePipelineService") as mock_active_pipeline_service,
+        patch("app.workers.stream_loading.SourceService") as mock_source_service,
         patch("app.workers.stream_loading.VideoStreamService") as mock_video_service,
     ):
         # Set up the mocks
-        mock_config_instance = Mock()
-        mock_config_instance.get_input_config.return_value = mock_config
-        mock_active_pipeline_service.return_value = mock_config_instance
-
+        mock_source_service.get_active_source.return_value = mock_config
         mock_video_service.get_video_stream.return_value = mock_video_stream
 
         yield {
-            "active_pipeline_service": mock_active_pipeline_service,
             "video_service": mock_video_service,
-            "config_instance": mock_config_instance,
             "video_stream": mock_video_stream,
         }
 
@@ -105,7 +100,7 @@ class TestStreamLoader:
         # method creates isolated child processes that don't inherit mocked state.
         mp.set_start_method("fork", force=True)
 
-    def test_queue_full(self, frame_queue, mock_stream_data, stop_event, config_changed_condition, mock_services):
+    def test_queue_full(self, frame_queue, mock_stream_data, stop_event, source_changed_condition, mock_services):
         """Test that stream frames are not acquired when queue is full"""
 
         data1, data2 = mock_stream_data(), mock_stream_data()
@@ -113,7 +108,7 @@ class TestStreamLoader:
         frame_queue.put(data2)
 
         # Start the process
-        process = StreamLoader(frame_queue, stop_event, config_changed_condition)
+        process = StreamLoader(frame_queue, stop_event, source_changed_condition)
         process.start()
 
         # Let it run for a short time to attempt frame acquisition
@@ -135,11 +130,11 @@ class TestStreamLoader:
         assert all(np.array_equal(el1.frame_data, el2.frame_data) for el1, el2 in zip(queue_contents, [data1, data2]))
         assert not process.is_alive(), "Process should terminate cleanly"
 
-    def test_queue_empty(self, frame_queue, stop_event, config_changed_condition, mock_services):
+    def test_queue_empty(self, frame_queue, stop_event, source_changed_condition, mock_services):
         """Test that stream frames are acquired when queue is empty"""
 
         # Start the process
-        process = StreamLoader(frame_queue, stop_event, config_changed_condition)
+        process = StreamLoader(frame_queue, stop_event, source_changed_condition)
         process.start()
 
         time.sleep(1)

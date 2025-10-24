@@ -8,10 +8,23 @@ from sqlalchemy.orm import Session
 
 from app.db.schema import DatasetItemDB, LabelDB, PipelineDB, ProjectDB
 from app.schemas.project import LabelCreate, ProjectCreate, TaskCreate, TaskType
-from app.services import LabelService, ResourceWithIdAlreadyExistsError
+from app.services import LabelService, PipelineService, ResourceWithIdAlreadyExistsError
 from app.services.base import ResourceInUseError, ResourceNotFoundError, ResourceType
+from app.services.event.event_bus import EventBus
 from app.services.label_service import DuplicateLabelsError
 from app.services.project_service import ProjectService
+
+
+@pytest.fixture
+def fxt_event_bus() -> EventBus:
+    """Fixture to create a EventBus instance."""
+    return EventBus()
+
+
+@pytest.fixture
+def fxt_pipeline_service(fxt_event_bus: EventBus, db_session: Session) -> PipelineService:
+    """Fixture to create a PipelineService instance."""
+    return PipelineService(event_bus=fxt_event_bus, db_session=db_session)
 
 
 @pytest.fixture
@@ -21,9 +34,16 @@ def fxt_label_service(db_session: Session) -> LabelService:
 
 
 @pytest.fixture
-def fxt_project_service(fxt_projects_dir: Path, db_session: Session, fxt_label_service: LabelService) -> ProjectService:
+def fxt_project_service(
+    fxt_projects_dir: Path, db_session: Session, fxt_pipeline_service: PipelineService, fxt_label_service: LabelService
+) -> ProjectService:
     """Fixture to create a ProjectService instance."""
-    return ProjectService(data_dir=fxt_projects_dir.parent, db_session=db_session, label_service=fxt_label_service)
+    return ProjectService(
+        data_dir=fxt_projects_dir.parent,
+        db_session=db_session,
+        pipeline_service=fxt_pipeline_service,
+        label_service=fxt_label_service,
+    )
 
 
 class TestProjectServiceIntegration:
@@ -222,9 +242,11 @@ class TestProjectServiceIntegration:
     ):
         """Test deleting a project which has a running pipeline."""
         db_project = fxt_db_projects[0]
-        db_pipeline = db_project.pipeline
+        db_pipeline = PipelineDB(project_id=db_project.id)
         db_pipeline.is_running = True
         db_session.add(db_project)
+        db_session.flush()
+        db_session.add(db_pipeline)
         db_session.flush()
 
         with pytest.raises(ResourceInUseError) as excinfo:
