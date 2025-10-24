@@ -7,9 +7,9 @@ from uuid import UUID
 
 import numpy as np
 import polars as pl
-from datumaro.experimental import Dataset, Sample, bbox_field, image_path_field, label_field
+from datumaro.experimental import Dataset, Sample, bbox_field, image_info_field, image_path_field, label_field
 from datumaro.experimental.categories import LabelCategories
-from datumaro.experimental.fields import polygon_field
+from datumaro.experimental.fields import ImageInfo, polygon_field
 
 from app.core.models.task_type import TaskType
 from app.db.schema import DatasetItemDB
@@ -25,22 +25,26 @@ CONVERSION_BATCH_SIZE = 50
 
 class DetectionSample(Sample):
     image: str = image_path_field()
+    image_info: ImageInfo = image_info_field()
     bboxes: np.ndarray[Any, Any] = bbox_field(dtype=pl.Int32)
     label: np.ndarray[Any, Any] = label_field(dtype=pl.Int32, is_list=True)
 
 
 class ClassificationSample(Sample):
     image: str = image_path_field()
+    image_info: ImageInfo = image_info_field()
     label: int = label_field(dtype=pl.Int32, is_list=False)
 
 
 class MultilabelClassificationSample(Sample):
     image: str = image_path_field()
-    label: np.ndarray[Any, Any] = label_field(dtype=pl.Int32, is_list=True)
+    image_info: ImageInfo = image_info_field()
+    label: np.ndarray[Any, Any] = label_field(dtype=pl.Int32, multi_label=True)
 
 
 class InstanceSegmentationSample(Sample):
     image: str = image_path_field()
+    image_info: ImageInfo = image_info_field()
     polygons: np.ndarray[Any, Any] = polygon_field(dtype=pl.Float32)
     label: np.ndarray[Any, Any] = label_field(dtype=pl.Int32, is_list=True)
 
@@ -137,6 +141,7 @@ def convert_detection_dataset(
             return None
         return DetectionSample(
             image=image_path,
+            image_info=ImageInfo(width=dataset_item.width, height=dataset_item.height),
             bboxes=np.array(coords),
             label=np.array(labels_indexes),
         )
@@ -176,7 +181,11 @@ def convert_classification_dataset(
             DatasetItemAnnotation.model_validate(annotation) for annotation in dataset_item.annotation_data
         )
         try:
-            return ClassificationSample(image=image_path, label=project_labels_ids.index(annotation.labels[0].id))
+            return ClassificationSample(
+                image=image_path,
+                image_info=ImageInfo(width=dataset_item.width, height=dataset_item.height),
+                label=project_labels_ids.index(annotation.labels[0].id),
+            )
         except ValueError:
             logger.error("Unable to find one of dataset item %s labels in project", dataset_item.id)
             return None
@@ -220,7 +229,11 @@ def convert_multiclass_classification_dataset(
         except ValueError:
             logger.error("Unable to find one of dataset item %s labels in project", dataset_item.id)
             return None
-        return MultilabelClassificationSample(image=image_path, label=np.array(labels_indexes))
+        return MultilabelClassificationSample(
+            image=image_path,
+            image_info=ImageInfo(width=dataset_item.width, height=dataset_item.height),
+            label=np.array(labels_indexes),
+        )
 
     return _convert_dataset(
         sample_type=MultilabelClassificationSample,
@@ -267,7 +280,10 @@ def convert_instance_segmentation_dataset(
             logger.error("Unable to find one of dataset item %s labels in project", dataset_item.id)
             return None
         return InstanceSegmentationSample(
-            image=image_path, polygons=np.array(polygons, dtype=np.float32), label=np.array(labels_indexes)
+            image=image_path,
+            image_info=ImageInfo(width=dataset_item.width, height=dataset_item.height),
+            polygons=np.array(polygons, dtype=np.float32),
+            label=np.array(labels_indexes),
         )
 
     return _convert_dataset(
