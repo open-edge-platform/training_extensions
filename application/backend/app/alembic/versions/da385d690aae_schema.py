@@ -100,7 +100,7 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["project_id"], ["projects.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["training_dataset_id"], ["dataset_revisions.id"]),
         sa.PrimaryKeyConstraint("id"),
-        sa.Index("idx_model_revisions_status", "training_status"),
+        sa.Index("idx_model_revisions_project", "project_id"),
         sa.Index("idx_model_revisions_project_status", "project_id", "training_status"),
         sa.Index("idx_model_revisions_architecture", "architecture"),
     )
@@ -126,7 +126,6 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["source_id"], ["sources.id"], ondelete="SET NULL"),
         sa.PrimaryKeyConstraint("id"),
         sa.Index("idx_dataset_items_user_reviewed", "project_id", "user_reviewed"),
-        sa.Index("idx_dataset_items_source", "source_id"),
     )
     op.create_table(
         "pipelines",
@@ -144,7 +143,6 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["source_id"], ["sources.id"], ondelete="RESTRICT"),
         sa.PrimaryKeyConstraint("project_id"),
         sa.Index("idx_pipelines_is_running", "is_running"),
-        sa.Index("idx_pipelines_model_revision", "model_revision_id"),
     )
     # ### end Alembic commands ###
 

@@ -4,7 +4,7 @@
 from datetime import datetime
 from uuid import uuid4
 
-from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -29,6 +29,7 @@ class SourceDB(BaseID):
 
 class ProjectDB(BaseID):
     __tablename__ = "projects"
+    __table_args__ = (Index("idx_projects_name", "name"),)
 
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     task_type: Mapped[str] = mapped_column(String(50), nullable=False)
@@ -40,6 +41,7 @@ class ProjectDB(BaseID):
 
 class PipelineDB(Base):
     __tablename__ = "pipelines"
+    __table_args__ = (Index("idx_pipelines_is_running", "is_running"),)
 
     project_id: Mapped[str] = mapped_column(Text, ForeignKey("projects.id", ondelete="CASCADE"), primary_key=True)
     source_id: Mapped[str | None] = mapped_column(Text, ForeignKey("sources.id", ondelete="RESTRICT"))
@@ -67,6 +69,11 @@ class SinkDB(BaseID):
 
 class ModelRevisionDB(BaseID):
     __tablename__ = "model_revisions"
+    __table_args__ = (
+        Index("idx_model_revisions_project", "project_id"),
+        Index("idx_model_revisions_project_status", "project_id", "training_status"),
+        Index("idx_model_revisions_architecture", "architecture"),
+    )
 
     project_id: Mapped[str] = mapped_column(Text, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
     architecture: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -84,6 +91,7 @@ class ModelRevisionDB(BaseID):
 
 class DatasetRevisionDB(BaseID):
     __tablename__ = "dataset_revisions"
+    __table_args__ = (Index("idx_dataset_revisions_project", "project_id"),)
 
     project_id: Mapped[str] = mapped_column(Text, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
     files_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -91,6 +99,7 @@ class DatasetRevisionDB(BaseID):
 
 class DatasetItemDB(BaseID):
     __tablename__ = "dataset_items"
+    __table_args__ = (Index("idx_dataset_items_user_reviewed", "project_id", "user_reviewed"),)
 
     project_id: Mapped[str] = mapped_column(Text, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
