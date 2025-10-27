@@ -248,8 +248,8 @@ class MultiLabelClassificationEvaluator(AccuracyEvaluator):
     def _build_label_arrays(self) -> tuple[NDArray[np.int_], NDArray[np.int_]]:
         # Convert list of labels to binary indicator arrays
         mlb = MultiLabelBinarizer()
-        gt_labels_list = [sample.label for sample in self.predictions_dataset]  # list of list, eg [[0,2], [1], [0,1,2]]
-        pred_labels_list = [sample.label for sample in self.ground_truth_dataset]
+        gt_labels_list = [s.label for s in self.ground_truth_dataset]  # list of list, eg [[0,2], [1], [0,1,2]]
+        pred_labels_list = [s.label for s in self.predictions_dataset]
         gt_labels = mlb.fit_transform(gt_labels_list)  # binary matrix, eg [[1,0,1],[0,1,0],[1,1,1]]
         pred_labels = mlb.transform(pred_labels_list)
         return gt_labels, pred_labels
