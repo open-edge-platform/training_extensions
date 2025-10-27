@@ -37,6 +37,14 @@ class EventBus:
         self._source_changed_condition = source_changed_condition
         self._sink_changed_condition = sink_changed_condition
 
+    @property
+    def source_changed_condition(self) -> Condition | None:
+        return self._source_changed_condition
+
+    @property
+    def sink_changed_condition(self) -> Condition | None:
+        return self._sink_changed_condition
+
     def subscribe(self, listener: Listener) -> None:
         self._listeners.append(listener)
 

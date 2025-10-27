@@ -24,7 +24,9 @@ class StreamLoader(BaseProcessWorker):
 
     ROLE = "StreamLoader"
 
-    def __init__(self, frame_queue: mp.Queue, stop_event: EventClass, source_changed_condition: Condition) -> None:
+    def __init__(
+        self, frame_queue: mp.Queue, stop_event: EventClass, source_changed_condition: Condition | None
+    ) -> None:
         super().__init__(stop_event=stop_event, queues_to_cancel=[frame_queue])
         self._frame_queue = frame_queue
         self._source_changed_condition = source_changed_condition
@@ -40,10 +42,12 @@ class StreamLoader(BaseProcessWorker):
         self._reset_stream()
 
     def _reload_source_loop(self) -> None:
+        if self._source_changed_condition is None:
+            return
         while True:
             with self._source_changed_condition:
                 notified = self._source_changed_condition.wait(timeout=3)
-                if not notified:  # awakened before of timeout
+                if not notified:  # awakened because of timeout
                     continue
                 self._load_source()
 

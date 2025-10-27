@@ -77,11 +77,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     app.state.data_collector = data_collector
 
     # Initialize Scheduler
-    app_scheduler = Scheduler(
-        source_changed_condition=source_changed_condition,
-        event_bus=event_bus,
-        data_collector=data_collector,
-    )
+    app_scheduler = Scheduler(event_bus=event_bus, data_collector=data_collector)
     app_scheduler.start_workers()
     app.state.scheduler = app_scheduler
 

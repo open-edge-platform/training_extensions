@@ -7,7 +7,6 @@ import os
 import queue
 import threading
 from multiprocessing.shared_memory import SharedMemory
-from multiprocessing.synchronize import Condition
 
 import psutil
 
@@ -25,13 +24,7 @@ class Scheduler:
     FRAME_QUEUE_SIZE = 5
     PREDICTION_QUEUE_SIZE = 5
 
-    def __init__(
-        self,
-        source_changed_condition: Condition,
-        event_bus: EventBus,
-        data_collector: DataCollector,
-    ) -> None:
-        self._source_changed_condition = source_changed_condition
+    def __init__(self, event_bus: EventBus, data_collector: DataCollector) -> None:
         self._event_bus = event_bus
         self._data_collector = data_collector
 
@@ -60,7 +53,9 @@ class Scheduler:
         logger.info("Starting worker processes...")
 
         # Create and start processes
-        stream_loader_proc = StreamLoader(self.frame_queue, self.mp_stop_event, self._source_changed_condition)
+        stream_loader_proc = StreamLoader(
+            self.frame_queue, self.mp_stop_event, self._event_bus.source_changed_condition
+        )
 
         inference_server_proc = InferenceWorker(
             frame_queue=self.frame_queue,

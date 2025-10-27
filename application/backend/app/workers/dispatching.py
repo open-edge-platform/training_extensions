@@ -8,7 +8,7 @@ from multiprocessing.synchronize import Event as EventClass
 
 from app.db import get_db_session
 from app.entities.stream_data import StreamData
-from app.schemas import DisconnectedSinkConfig, SinkType
+from app.schemas import DisconnectedSinkConfig, Sink, SinkType
 from app.services import DispatchService
 from app.services.configuration_service import SinkService
 from app.services.data_collect import DataCollector
@@ -41,23 +41,26 @@ class DispatchingWorker(BaseThreadWorker, Listener):
 
         self._data_collector = data_collector
 
-        self._load_sink()
-        event_bus.subscribe(self)
-
+        self._sink: Sink
         self._destinations: list[Dispatcher] = []
+
+        self._sink, self._destinations = self._load_sink()
+        logger.info(f"Active sink set to {self._sink}")
+        event_bus.subscribe(self)
 
     def setup(self) -> None:
         pass
 
-    def _load_sink(self):
+    def _load_sink(self) -> tuple[Sink, list[Dispatcher]]:
         with get_db_session() as db:
-            sink = SinkService(db).get_active_sink()
-        self._sink = sink if sink is not None else DisconnectedSinkConfig()
-        logger.info(f"Active sink set to {self._sink}")
-        self._destinations = DispatchService.get_destinations(output_configs=[self._sink])
+            active_sink = SinkService(db).get_active_sink()
+        sink = active_sink if active_sink is not None else DisconnectedSinkConfig()
+        destinations = DispatchService.get_destinations(output_configs=[sink])
+        return sink, destinations
 
     def on_sink_changed(self) -> None:
-        self._load_sink()
+        self._sink, self._destinations = self._load_sink()
+        logger.info(f"Active sink set to {self._sink}")
 
     def run_loop(self) -> None:
         while not self.should_stop():
