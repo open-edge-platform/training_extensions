@@ -1,5 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+from collections import defaultdict
 from collections.abc import Callable, Sequence
 from enum import StrEnum
 from multiprocessing.synchronize import Condition
@@ -17,7 +18,7 @@ class EventBus:
     def __init__(
         self, source_changed_condition: Condition | None = None, sink_changed_condition: Condition | None = None
     ) -> None:
-        self._event_handlers: dict[EventType, list[Callable]] = {}
+        self._event_handlers: dict[EventType, list[Callable]] = defaultdict(list)
         self._source_changed_condition = source_changed_condition
         self._sink_changed_condition = sink_changed_condition
 
@@ -34,11 +35,11 @@ class EventBus:
     def subscribe(self, event_types: Sequence[EventType], handler: Callable) -> None:
         with self._lock:
             for event_type in event_types:
-                self._event_handlers.setdefault(event_type, []).append(handler)
+                self._event_handlers[event_type].append(handler)
 
     def emit_event(self, event_type: EventType) -> None:
         with self._lock:
-            for handler in self._event_handlers.get(event_type, []):
+            for handler in self._event_handlers[event_type]:
                 handler()
         if (
             event_type in (EventType.SOURCE_CHANGED, EventType.PIPELINE_STATUS_CHANGED)
