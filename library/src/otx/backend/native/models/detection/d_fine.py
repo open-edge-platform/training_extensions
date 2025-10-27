@@ -92,6 +92,7 @@ class DFine(RTDETR):
         decoder = DFINETransformer(
             model_name=self.model_name,
             num_classes=num_classes,
+            eval_spatial_size=self.data_input_params.input_size,
         )
         criterion = DFINECriterion(
             weight_dict={
@@ -157,3 +158,17 @@ class DFine(RTDETR):
                 },
             },
         }
+
+    def load_state_dict(self, ckpt: dict[str, Any], *args, **kwargs) -> None:
+        """Load state dictionary from checkpoint state dictionary.
+
+        If a RuntimeError occurs due to size mismatch, non-trainable anchors and valid_mask
+        are removed from the checkpoint before loading.
+        """
+        try:
+            return super().load_state_dict(ckpt, *args, **kwargs)
+        except RuntimeError:
+            # Remove non-trainable anchors and valid_mask from the checkpoint to avoid size mismatch
+            ckpt.pop("model.decoder.anchors")
+            ckpt.pop("model.decoder.valid_mask")
+            return super().load_state_dict(ckpt, *args, strict=False, **kwargs)

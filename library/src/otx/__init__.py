@@ -3,7 +3,7 @@
 
 """OpenVINO Training Extensions."""
 
-__version__ = "2.6.0dev"
+__version__ = "2.7.0dev"
 
 import os
 from pathlib import Path
