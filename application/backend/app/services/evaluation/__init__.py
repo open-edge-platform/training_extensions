@@ -12,11 +12,11 @@ from .evaluators import (
 from .factory import EvaluatorFactory
 
 __all__ = [
+    "AveragingMethod",
+    "DetectionEvaluator",
     "Evaluator",
     "EvaluatorFactory",
+    "InstanceSegmentationEvaluator",
     "MultiClassClassificationEvaluator",
     "MultiLabelClassificationEvaluator",
-    "DetectionEvaluator",
-    "InstanceSegmentationEvaluator",
-    "AveragingMethod",
 ]
