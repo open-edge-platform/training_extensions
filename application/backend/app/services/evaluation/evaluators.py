@@ -11,15 +11,9 @@ from numpy.typing import NDArray
 from sklearn.metrics import accuracy_score, confusion_matrix, f1_score, precision_score, recall_score
 from sklearn.preprocessing import MultiLabelBinarizer
 
-from app.services.datumaro_converter import (
-    ClassificationSample,
-    DetectionSample,
-    InstanceSegmentationSample,
-    MultilabelClassificationSample,
-)
+from app.services.datumaro_converter import DetectionSample
 
 
-# TODO remove this function after Datumaro supports conversion to COCO format
 def datumaro_dataset_to_coco(dataset: Dataset) -> dict:
     """
     Convert Datumaro Dataset to COCO format.
@@ -66,7 +60,7 @@ def datumaro_dataset_to_coco(dataset: Dataset) -> dict:
                         "image_id": image_id,
                         "category_id": int(label_idx),
                         "bbox": [float(x1), float(y1), float(width), float(height)],
-                        "score": 1.0,  # TODO replace with actual confidence score when the samples have a ScoreField
+                        "score": 1.0,
                     }
                 )
                 annotation_id += 1
@@ -88,7 +82,7 @@ def datumaro_dataset_to_coco(dataset: Dataset) -> dict:
                         "category_id": int(label_idx),
                         "segmentation": [flattened_polygon],
                         "bbox": [float(x_min), float(y_min), float(width), float(height)],
-                        "score": 1.0,  # TODO replace with actual confidence score when the samples have a ScoreField
+                        "score": 1.0,
                     }
                 )
                 annotation_id += 1
@@ -116,26 +110,21 @@ class EvaluatorWithLabelArrays(EvaluatorBase):
 
     def __init__(self, predictions_dataset: Dataset, ground_truth_dataset: Dataset):
         super().__init__(predictions_dataset=predictions_dataset, ground_truth_dataset=ground_truth_dataset)
-
-        # Labels are extracted from the dataset lazily, so the evaluator can be instantiated quickly
         self.__pred_labels: NDArray[np.int_] | None = None
         self.__gt_labels: NDArray[np.int_] | None = None
 
-    # Implementation of this method depends on the annotation type
     @abstractmethod
     def _build_label_arrays(self) -> tuple[NDArray[np.int_], NDArray[np.int_]]:
         """Set up the prediction and ground truth label arrays."""
 
     @property
     def _pred_labels(self) -> NDArray[np.int_]:
-        """Return the labels (indexes) of the items in the predictions dataset as a numpy array."""
         if self.__pred_labels is None:
             self.__gt_labels, self.__pred_labels = self._build_label_arrays()
         return self.__pred_labels
 
     @property
     def _gt_labels(self) -> NDArray[np.int_]:
-        """Return the labels (indexes) of the items in the ground truth dataset as a numpy array."""
         if self.__gt_labels is None:
             self.__gt_labels, self.__pred_labels = self._build_label_arrays()
         return self.__gt_labels
@@ -176,21 +165,17 @@ class MeanAveragePrecisionEvaluator(EvaluatorBase):
 
     def __init__(self, predictions_dataset: Dataset, ground_truth_dataset: Dataset):
         super().__init__(predictions_dataset=predictions_dataset, ground_truth_dataset=ground_truth_dataset)
-
-        # COCO formatted data are generated lazily, so the evaluator can be instantiated quickly
         self.__gt_coco_dict: dict | None = None
         self.__pred_coco_dict: dict | None = None
 
     @property
     def _gt_coco_dict(self) -> dict:
-        """Return the ground truth dataset in COCO format as a dictionary."""
         if self.__gt_coco_dict is None:
             self.__gt_coco_dict = datumaro_dataset_to_coco(self.ground_truth_dataset)
         return self.__gt_coco_dict
 
     @property
     def _pred_coco_dict(self) -> dict:
-        """Return the predictions dataset in COCO format as a dictionary."""
         if self.__pred_coco_dict is None:
             self.__pred_coco_dict = datumaro_dataset_to_coco(self.predictions_dataset)
         return self.__pred_coco_dict
@@ -198,7 +183,6 @@ class MeanAveragePrecisionEvaluator(EvaluatorBase):
     def mean_average_precision(self) -> dict:
         gt_coco = COCO(self._gt_coco_dict)
         pred_coco = gt_coco.loadRes(self._pred_coco_dict["annotations"])
-
         coco_evaluator = COCOeval_faster(
             cocoGt=gt_coco,
             cocoDt=pred_coco,
@@ -246,11 +230,10 @@ class MultiLabelClassificationEvaluator(AccuracyEvaluator):
         )
 
     def _build_label_arrays(self) -> tuple[NDArray[np.int_], NDArray[np.int_]]:
-        # Convert list of labels to binary indicator arrays
         mlb = MultiLabelBinarizer()
-        gt_labels_list = [s.label for s in self.ground_truth_dataset]  # list of list, eg [[0,2], [1], [0,1,2]]
+        gt_labels_list = [s.label for s in self.ground_truth_dataset]
         pred_labels_list = [s.label for s in self.predictions_dataset]
-        gt_labels = mlb.fit_transform(gt_labels_list)  # binary matrix, eg [[1,0,1],[0,1,0],[1,1,1]]
+        gt_labels = mlb.fit_transform(gt_labels_list)
         pred_labels = mlb.transform(pred_labels_list)
         return gt_labels, pred_labels
 
@@ -263,36 +246,9 @@ class InstanceSegmentationEvaluator(MeanAveragePrecisionEvaluator):
     """Evaluator for instance segmentation tasks."""
 
 
-EvaluatorT = (
+Evaluator = (
     MultiClassClassificationEvaluator
     | MultiLabelClassificationEvaluator
     | DetectionEvaluator
     | InstanceSegmentationEvaluator
 )
-
-
-class EvaluationService:
-    """Service to compute evaluation metrics"""
-
-    @staticmethod
-    def get_evaluator(predictions_dataset: Dataset, ground_truth_dataset: Dataset) -> EvaluatorT:
-        if predictions_dataset.dtype != ground_truth_dataset.dtype:
-            raise ValueError("Predictions and ground truth datasets must have the same dtype")
-
-        if predictions_dataset.dtype is ClassificationSample:
-            return MultiClassClassificationEvaluator(
-                predictions_dataset=predictions_dataset, ground_truth_dataset=ground_truth_dataset
-            )
-        if predictions_dataset.dtype is MultilabelClassificationSample:
-            return MultiLabelClassificationEvaluator(
-                predictions_dataset=predictions_dataset, ground_truth_dataset=ground_truth_dataset
-            )
-        if predictions_dataset.dtype is DetectionSample:
-            return DetectionEvaluator(
-                predictions_dataset=predictions_dataset, ground_truth_dataset=ground_truth_dataset
-            )
-        if predictions_dataset.dtype is InstanceSegmentationSample:
-            return InstanceSegmentationEvaluator(
-                predictions_dataset=predictions_dataset, ground_truth_dataset=ground_truth_dataset
-            )
-        raise NotImplementedError(f"Evaluator for dataset type {predictions_dataset.dtype} is not implemented")
