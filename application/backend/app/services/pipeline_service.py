@@ -8,11 +8,10 @@ from sqlalchemy.orm import Session
 from app.db.schema import PipelineDB
 from app.repositories import PipelineRepository
 from app.schemas import PipelineStatus, PipelineView
-
-from .base import ResourceNotFoundError, ResourceType
-from .event.event_bus import EventBus
-from .mappers import PipelineMapper
-from .parent_process_guard import parent_process_only
+from app.services.base import ResourceNotFoundError, ResourceType
+from app.services.event.event_bus import EventBus, EventType
+from app.services.mappers import PipelineMapper
+from app.services.parent_process_guard import parent_process_only
 
 MSG_ERR_DELETE_RUNNING_PIPELINE = "Cannot delete a running pipeline."
 
@@ -58,12 +57,12 @@ class PipelineService:
         if pipeline.status == PipelineStatus.RUNNING and updated.status == PipelineStatus.RUNNING:
             # If the pipeline source_id or sink_id is being updated while running
             if pipeline.source.id != updated.source.id:  # type: ignore[union-attr] # source is always there for running pipeline
-                self._event_bus.source_changed()
+                self._event_bus.emit_event(EventType.SOURCE_CHANGED)
             if pipeline.sink.id != updated.sink.id:  # type: ignore[union-attr] # sink is always there for running pipeline
-                self._event_bus.sink_changed()
+                self._event_bus.emit_event(EventType.SINK_CHANGED)
             if pipeline.data_collection_policies != updated.data_collection_policies:
-                self._event_bus.pipeline_dataset_collection_policies_changed()
+                self._event_bus.emit_event(EventType.PIPELINE_DATASET_COLLECTION_POLICIES_CHANGED)
         elif pipeline.status != updated.status:
             # If the pipeline is being activated or stopped
-            self._event_bus.pipeline_status_changed()
+            self._event_bus.emit_event(EventType.PIPELINE_STATUS_CHANGED)
         return updated

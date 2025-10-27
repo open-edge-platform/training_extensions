@@ -11,6 +11,7 @@ from app.schemas import PipelineStatus
 from app.schemas.pipeline import FixedRateDataCollectionPolicy
 from app.services import PipelineService, ResourceNotFoundError, ResourceType
 from app.services.configuration_service import PipelineField
+from app.services.event.event_bus import EventType
 
 
 @pytest.fixture
@@ -128,9 +129,9 @@ class TestPipelineServiceIntegration:
         updated = fxt_pipeline_service.update_pipeline(db_pipeline.project_id, {pipeline_attr: item_id})
 
         if pipeline_attr == PipelineField.SINK_ID:
-            fxt_event_bus.sink_changed.assert_called_once()
+            fxt_event_bus.emit_event.assert_called_once_with(EventType.SINK_CHANGED)
         else:
-            fxt_event_bus.source_changed.assert_called_once()
+            fxt_event_bus.emit_event.assert_called_once_with(EventType.SOURCE_CHANGED)
         db_updated = db_session.get(PipelineDB, db_pipeline.project_id)
         assert str(getattr(updated, pipeline_attr)) == item_id
         assert str(getattr(updated, pipeline_attr)) == getattr(db_updated, pipeline_attr)
@@ -149,7 +150,7 @@ class TestPipelineServiceIntegration:
 
         fxt_pipeline_service.update_pipeline(db_pipeline.project_id, {"status": pipeline_status})
 
-        fxt_event_bus.pipeline_status_changed.assert_called_once()
+        fxt_event_bus.emit_event.assert_called_once_with(EventType.PIPELINE_STATUS_CHANGED)
         db_updated = db_session.get(PipelineDB, db_pipeline.project_id)
         if pipeline_status == PipelineStatus.RUNNING:
             assert db_updated.is_running

@@ -18,7 +18,7 @@ from .base import (
     ResourceWithNameAlreadyExistsError,
     ServiceConfig,
 )
-from .event.event_bus import EventBus
+from .event.event_bus import EventBus, EventType
 from .mappers import SinkMapper, SourceMapper
 from .parent_process_guard import parent_process_only
 
@@ -121,7 +121,7 @@ class ConfigurationService:
         updated = self._source_service.update(source, partial_config)
         active_source = self._source_service.get_active_source()
         if active_source and active_source.id == updated.id:
-            self._event_bus.source_changed()
+            self._event_bus.emit_event(EventType.SOURCE_CHANGED)
         return updated
 
     @parent_process_only
@@ -130,7 +130,7 @@ class ConfigurationService:
         updated = self._sink_service.update(sink, partial_config)
         active_sink = self._sink_service.get_active_sink()
         if active_sink and active_sink.id == updated.id:
-            self._event_bus.sink_changed()
+            self._event_bus.emit_event(EventType.SINK_CHANGED)
         return updated
 
     @parent_process_only

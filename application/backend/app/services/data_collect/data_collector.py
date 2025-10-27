@@ -13,7 +13,7 @@ from app.schemas import ProjectView
 from app.schemas.dataset_item import DatasetItemFormat
 from app.schemas.pipeline import ConfidenceThresholdDataCollectionPolicy, FixedRateDataCollectionPolicy, PipelineView
 from app.services.data_collect.prediction_converter import convert_prediction, get_confidence_scores
-from app.services.event.event_bus import EventBus, Listener
+from app.services.event.event_bus import EventBus, EventType
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +83,7 @@ class ConfidenceThresholdPolicyChecker(PolicyChecker):
         return True
 
 
-class DataCollector(Listener):
+class DataCollector:
     def __init__(self, data_dir: Path, event_bus: EventBus) -> None:
         self.should_collect_next_frame = False
         self.data_dir = data_dir
@@ -92,7 +92,14 @@ class DataCollector(Listener):
         self.policy_checkers: list[PolicyChecker] = []
 
         self._load_pipeline()
-        event_bus.subscribe(self)
+        event_bus.subscribe(
+            [
+                EventType.PIPELINE_STATUS_CHANGED,
+                EventType.PIPELINE_DATASET_COLLECTION_POLICIES_CHANGED,
+                EventType.SOURCE_CHANGED,
+            ],
+            self._load_pipeline,
+        )
 
     def _load_pipeline(self) -> None:
         from app.services import LabelService, PipelineService, ProjectService
@@ -129,15 +136,6 @@ class DataCollector(Listener):
                         checker = ConfidenceThresholdPolicyChecker(policy)
                 if checker is not None:
                     self.policy_checkers.append(checker)
-
-    def on_pipeline_dataset_collection_policies_changed(self) -> None:
-        self._load_pipeline()
-
-    def on_pipeline_status_changed(self) -> None:
-        self._load_pipeline()
-
-    def on_source_changed(self) -> None:
-        self._load_pipeline()
 
     def collect(
         self,

@@ -13,13 +13,13 @@ from app.services import DispatchService
 from app.services.configuration_service import SinkService
 from app.services.data_collect import DataCollector
 from app.services.dispatchers import Dispatcher
-from app.services.event.event_bus import EventBus, Listener
+from app.services.event.event_bus import EventBus, EventType
 from app.workers.base import BaseThreadWorker
 
 logger = logging.getLogger(__name__)
 
 
-class DispatchingWorker(BaseThreadWorker, Listener):
+class DispatchingWorker(BaseThreadWorker):
     """
     A thread that pulls predictions from the queue and dispatches them to the configured outputs
     and WebRTC visualization stream.
@@ -46,7 +46,7 @@ class DispatchingWorker(BaseThreadWorker, Listener):
 
         self._sink, self._destinations = self._load_sink()
         logger.info(f"Active sink set to {self._sink}")
-        event_bus.subscribe(self)
+        event_bus.subscribe([EventType.SINK_CHANGED], self._reload_sink)
 
     def setup(self) -> None:
         pass
@@ -58,7 +58,7 @@ class DispatchingWorker(BaseThreadWorker, Listener):
         destinations = DispatchService.get_destinations(output_configs=[sink])
         return sink, destinations
 
-    def on_sink_changed(self) -> None:
+    def _reload_sink(self) -> None:
         self._sink, self._destinations = self._load_sink()
         logger.info(f"Active sink set to {self._sink}")
 

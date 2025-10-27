@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from app.services.event.event_bus import EventBus, Listener
+from app.services.event.event_bus import EventBus, EventType
 
 
 @pytest.fixture
@@ -24,39 +24,42 @@ def fxt_event_bus() -> Callable[[Condition | None, Condition | None], EventBus]:
 class TestEventBus:
     """Unit tests for TestEventBus."""
 
-    def test_subscribe(self, fxt_event_bus: Callable[[Condition | None, Condition | None], EventBus]) -> None:
+    @pytest.mark.parametrize("event_type", EventType)
+    def test_subscribe(
+        self, event_type: EventType, fxt_event_bus: Callable[[Condition | None, Condition | None], EventBus]
+    ) -> None:
         """Test subscription"""
-        listener = MagicMock(spec=Listener)
+        handler = MagicMock(spec=Callable)
         event_bus = fxt_event_bus(None, None)
 
-        event_bus.subscribe(listener)
+        event_bus.subscribe(event_types=[event_type], handler=handler)
 
-        assert event_bus._listeners == [listener]
+        assert event_bus._event_handlers == {event_type: [handler]}
 
     def test_source_changed(self, fxt_event_bus: Callable[[Condition | None, Condition | None], EventBus]) -> None:
         """Test source changed"""
-        listener = MagicMock(spec=Listener)
+        handler = MagicMock(spec=Callable)
         source_changed_condition = mp.Condition()
         event_bus = fxt_event_bus(source_changed_condition, None)
-        event_bus.subscribe(listener)
+        event_bus.subscribe(event_types=[EventType.SOURCE_CHANGED], handler=handler)
 
-        event_bus.source_changed()
+        event_bus.emit_event(EventType.SOURCE_CHANGED)
 
-        listener.on_source_changed.assert_called_once_with()
+        handler.assert_called_once_with()
         with source_changed_condition:
             notified = source_changed_condition.acquire()
         assert notified
 
     def test_sink_changed(self, fxt_event_bus: Callable[[Condition | None, Condition | None], EventBus]) -> None:
         """Test sink changed"""
-        listener = MagicMock(spec=Listener)
+        handler = MagicMock(spec=Callable)
         sink_changed_condition = mp.Condition()
         event_bus = fxt_event_bus(None, sink_changed_condition)
-        event_bus.subscribe(listener)
+        event_bus.subscribe(event_types=[EventType.SINK_CHANGED], handler=handler)
 
-        event_bus.sink_changed()
+        event_bus.emit_event(EventType.SINK_CHANGED)
 
-        listener.on_sink_changed.assert_called_once_with()
+        handler.assert_called_once_with()
         with sink_changed_condition:
             notified = sink_changed_condition.acquire()
         assert notified
@@ -65,27 +68,27 @@ class TestEventBus:
         self, fxt_event_bus: Callable[[Condition | None, Condition | None], EventBus]
     ) -> None:
         """Test pipeline dataset collection policies changed"""
-        listener = MagicMock(spec=Listener)
+        handler = MagicMock(spec=Callable)
         event_bus = fxt_event_bus(None, None)
-        event_bus.subscribe(listener)
+        event_bus.subscribe(event_types=[EventType.PIPELINE_DATASET_COLLECTION_POLICIES_CHANGED], handler=handler)
 
-        event_bus.pipeline_dataset_collection_policies_changed()
+        event_bus.emit_event(EventType.PIPELINE_DATASET_COLLECTION_POLICIES_CHANGED)
 
-        listener.on_pipeline_dataset_collection_policies_changed.assert_called_once_with()
+        handler.assert_called_once_with()
 
     def test_pipeline_status_changed(
         self, fxt_event_bus: Callable[[Condition | None, Condition | None], EventBus]
     ) -> None:
         """Test pipeline status changed"""
-        listener = MagicMock(spec=Listener)
+        handler = MagicMock(spec=Callable)
         source_changed_condition = mp.Condition()
         sink_changed_condition = mp.Condition()
         event_bus = fxt_event_bus(source_changed_condition, sink_changed_condition)
-        event_bus.subscribe(listener)
+        event_bus.subscribe(event_types=[EventType.PIPELINE_STATUS_CHANGED], handler=handler)
 
-        event_bus.pipeline_status_changed()
+        event_bus.emit_event(EventType.PIPELINE_STATUS_CHANGED)
 
-        listener.on_pipeline_status_changed.assert_called_once_with()
+        handler.assert_called_once_with()
         with source_changed_condition:
             notified = source_changed_condition.acquire()
         assert notified

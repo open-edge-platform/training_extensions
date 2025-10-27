@@ -8,6 +8,7 @@ import pytest
 from app.db.schema import PipelineDB, SinkDB, SourceDB
 from app.services import ConfigurationService, ResourceInUseError, ResourceNotFoundError, ResourceType
 from app.services.base import ResourceWithIdAlreadyExistsError, ResourceWithNameAlreadyExistsError
+from app.services.event.event_bus import EventType
 
 
 @pytest.fixture
@@ -299,10 +300,10 @@ class TestConfigurationServiceIntegration:
         assert db_resource.name == update_data["name"]
         if resource_type == ResourceType.SOURCE:
             assert db_resource.config_data["video_path"] == update_data["video_path"]
-            fxt_event_bus.source_changed.assert_called_once()
+            fxt_event_bus.emit_event.assert_called_once_with(EventType.SOURCE_CHANGED)
         else:
             assert db_resource.config_data["folder_path"] == update_data["folder_path"]
-            fxt_event_bus.sink_changed.assert_called_once()
+            fxt_event_bus.emit_event.assert_called_once_with(EventType.SINK_CHANGED)
 
     @pytest.mark.parametrize(
         "resource_type,db_model,update_method",
