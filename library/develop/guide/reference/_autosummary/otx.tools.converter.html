@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>otx.tools.converter &#8212; OpenVINO™ Training Extensions 2.6.0dev documentation</title>
+    <title>otx.tools.converter &#8212; OpenVINO™ Training Extensions 2.7.0dev documentation</title>
   
   
   
@@ -34,7 +34,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94">
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94">
 
-    <script src="../../../_static/documentation_options.js?v=477152fe"></script>
+    <script src="../../../_static/documentation_options.js?v=ba016db8"></script>
     <script src="../../../_static/doctools.js?v=888ff710"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -398,19 +398,22 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="#otx.tools.converter.update_augmentations" title="otx.tools.converter.update_augmentations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_augmentations</span></code></a>(augmentation_params, config)</p></td>
 <td><p>Update augmentations in the config.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#otx.tools.converter.update_early_stopping" title="otx.tools.converter.update_early_stopping"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_early_stopping</span></code></a>(early_stopping_cfg, config)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#otx.tools.converter.update_batch_size" title="otx.tools.converter.update_batch_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_batch_size</span></code></a>(param_value, config)</p></td>
+<td><p>Update batch size in the config.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#otx.tools.converter.update_early_stopping" title="otx.tools.converter.update_early_stopping"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_early_stopping</span></code></a>(early_stopping_cfg, config)</p></td>
 <td><p>Update early stopping parameters in the config.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#otx.tools.converter.update_input_size" title="otx.tools.converter.update_input_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_input_size</span></code></a>(height, width, config)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#otx.tools.converter.update_input_size" title="otx.tools.converter.update_input_size"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_input_size</span></code></a>(height, width, config)</p></td>
 <td><p>Update input size in the config.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#otx.tools.converter.update_learning_rate" title="otx.tools.converter.update_learning_rate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_learning_rate</span></code></a>(param_value, config)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#otx.tools.converter.update_learning_rate" title="otx.tools.converter.update_learning_rate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_learning_rate</span></code></a>(param_value, config)</p></td>
 <td><p>Update learning rate in the config.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#otx.tools.converter.update_num_iters" title="otx.tools.converter.update_num_iters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_num_iters</span></code></a>(param_value, config)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#otx.tools.converter.update_num_iters" title="otx.tools.converter.update_num_iters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_num_iters</span></code></a>(param_value, config)</p></td>
 <td><p>Update max_epochs in the config.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#otx.tools.converter.update_tiling" title="otx.tools.converter.update_tiling"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_tiling</span></code></a>(tiling_dict, config)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#otx.tools.converter.update_tiling" title="otx.tools.converter.update_tiling"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_tiling</span></code></a>(tiling_dict, config)</p></td>
 <td><p>Update tiling parameters in the config.</p></td>
 </tr>
 </tbody>
@@ -533,6 +536,12 @@ gaussian_blur = {</p>
 </dd>
 </dl>
 <p>}</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="otx.tools.converter.update_batch_size">
+<span class="sig-prename descclassname"><span class="pre">otx.tools.converter.</span></span><span class="sig-name descname"><span class="pre">update_batch_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><span class="pre">dict</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../../../_modules/otx/tools/converter.html#update_batch_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#otx.tools.converter.update_batch_size" title="Link to this definition">#</a></dt>
+<dd><p>Update batch size in the config.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -666,6 +675,15 @@ gaussian_blur = {</p>
    <code class="docutils literal notranslate">
     <span class="pre">
      update_augmentations()
+    </span>
+   </code>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#otx.tools.converter.update_batch_size">
+   <code class="docutils literal notranslate">
+    <span class="pre">
+     update_batch_size()
     </span>
    </code>
   </a>
