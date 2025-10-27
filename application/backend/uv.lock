@@ -388,7 +388,7 @@ requires-dist = [
     { name = "fastapi", extras = ["standard"], specifier = "~=0.115.12" },
     { name = "hiyapyco", specifier = "==0.7.0" },
     { name = "openvino", specifier = "==2025.2.0" },
-    { name = "openvino-model-api", specifier = "~=0.3.0.2" },
+    { name = "openvino-model-api", specifier = "~=0.3.0.4" },
     { name = "paho-mqtt", marker = "extra == 'mqtt'", specifier = "~=2.1.0" },
     { name = "pillow", specifier = "~=11.2" },
     { name = "psutil", specifier = "~=7.0.0" },
@@ -797,7 +797,7 @@ wheels = [
 
 [[package]]
 name = "openvino-model-api"
-version = "0.3.0.3"
+version = "0.3.0.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy" },
@@ -806,9 +806,9 @@ dependencies = [
     { name = "pillow" },
     { name = "scipy" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c4/d2/880c2221576145bb6d5699b9b2ec77cb1407a6cbfa7debce00eaa8880f7a/openvino_model_api-0.3.0.3.tar.gz", hash = "sha256:99bc3f1cb22b21e85f46592e71616628f176cf8278b976d382d0cbb899ef57c9", size = 86390, upload-time = "2025-07-01T12:56:22.771Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f1/43/c55daad9d732f8461244a9a60722ebf911f405ec4a56ce787f261580b13d/openvino_model_api-0.3.0.4.tar.gz", hash = "sha256:c562b9bdd34b717ae258e0e9d218a419479c42844b661562036026e5b774a670", size = 86871, upload-time = "2025-08-07T10:35:14.231Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/1f/3b/16b69093ef76b5168b5cce3d4cc111fa28d946801e88f1d6305de261bb01/openvino_model_api-0.3.0.3-py3-none-any.whl", hash = "sha256:147a7e7825bcf213bd4fdf01962352dd1e8a2e435e0e20c5087dfca95755d395", size = 114475, upload-time = "2025-07-01T12:56:21.249Z" },
+    { url = "https://files.pythonhosted.org/packages/20/fb/92c3a865a8987b215179ab7d23a0b97600b32ef54bad301c37ac2fcdc174/openvino_model_api-0.3.0.4-py3-none-any.whl", hash = "sha256:bd132f68fa6f4affc2420bbea80c3b0af2e9b11657058ffab46d6c46915badb3", size = 115036, upload-time = "2025-08-07T10:35:12.659Z" },
 ]
 
 [[package]]
