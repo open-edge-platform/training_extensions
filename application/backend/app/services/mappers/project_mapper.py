@@ -12,11 +12,11 @@ class ProjectMapper:
     """Mapper for Project schema entity <-> DB entity conversions."""
 
     @staticmethod
-    def to_schema(project_db: ProjectDB, labels: list[LabelView]) -> ProjectView:
+    def to_schema(project_db: ProjectDB, active_pipeline: bool, labels: list[LabelView]) -> ProjectView:
         """Convert Project db entity to schema."""
         return ProjectView(
             id=UUID(project_db.id),
-            active_pipeline=project_db.pipeline.is_running,
+            active_pipeline=active_pipeline,
             name=project_db.name,
             task=TaskView(
                 task_type=TaskType(project_db.task_type),

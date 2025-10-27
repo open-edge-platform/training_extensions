@@ -1,17 +1,19 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import copy
 import logging
 import multiprocessing as mp
 import queue
 from multiprocessing.synchronize import Event as EventClass
 
+from app.db import get_db_session
 from app.entities.stream_data import StreamData
-from app.schemas import Sink, SinkType
-from app.services import ActivePipelineService, DispatchService
+from app.schemas import DisconnectedSinkConfig, Sink, SinkType
+from app.services import DispatchService
+from app.services.configuration_service import SinkService
 from app.services.data_collect import DataCollector
 from app.services.dispatchers import Dispatcher
+from app.services.event.event_bus import EventBus, EventType
 from app.workers.base import BaseThreadWorker
 
 logger = logging.getLogger(__name__)
@@ -27,47 +29,45 @@ class DispatchingWorker(BaseThreadWorker):
 
     def __init__(
         self,
+        event_bus: EventBus,
         pred_queue: mp.Queue,
         rtc_stream_queue: queue.Queue,
         stop_event: EventClass,
-        active_pipeline_service: ActivePipelineService,
         data_collector: DataCollector,
     ) -> None:
         super().__init__(stop_event=stop_event)
         self._pred_queue = pred_queue
         self._rtc_stream_queue = rtc_stream_queue
 
-        self._active_pipeline_service = active_pipeline_service
         self._data_collector = data_collector
 
-        self._prev_sink_config: Sink | None = None
+        self._sink: Sink
         self._destinations: list[Dispatcher] = []
+
+        self._sink, self._destinations = self._load_sink()
+        logger.info(f"Active sink set to {self._sink}")
+        event_bus.subscribe([EventType.SINK_CHANGED], self._reload_sink)
 
     def setup(self) -> None:
         pass
 
-    def _reset_sink_if_needed(self, sink_config: Sink) -> None:
-        if not self._prev_sink_config or sink_config != self._prev_sink_config:
-            logger.debug("Sink config changed from %s to %s", self._prev_sink_config, sink_config)
-            self._destinations = DispatchService.get_destinations(output_configs=[sink_config])
-            self._prev_sink_config = copy.deepcopy(sink_config)
+    def _load_sink(self) -> tuple[Sink, list[Dispatcher]]:
+        with get_db_session() as db:
+            active_sink = SinkService(db).get_active_sink()
+        sink = active_sink if active_sink is not None else DisconnectedSinkConfig()
+        destinations = DispatchService.get_destinations(output_configs=[sink])
+        return sink, destinations
+
+    def _reload_sink(self) -> None:
+        self._sink, self._destinations = self._load_sink()
+        logger.info(f"Active sink set to {self._sink}")
 
     def run_loop(self) -> None:
         while not self.should_stop():
-            sink_config = self._active_pipeline_service.get_sink_config()
-            project = self._active_pipeline_service.get_project()
-
-            if sink_config.sink_type == SinkType.DISCONNECTED:
+            if self._sink.sink_type == SinkType.DISCONNECTED:
                 logger.debug("No sink available... retrying in 1 second")
                 self.stop_aware_sleep(1)
                 continue
-
-            if project is None:
-                logger.debug("No project available... retrying in 1 second")
-                self.stop_aware_sleep(1)
-                continue
-
-            self._reset_sink_if_needed(sink_config)
 
             # Read from the queue
             try:
@@ -102,10 +102,7 @@ class DispatchingWorker(BaseThreadWorker):
                 logger.debug("Visualization queue is full; skipping")
 
             # Collect the image to project dataset if needed
-            source_config = self._active_pipeline_service.get_source_config()
             self._data_collector.collect(
-                source_id=source_config.id,
-                project=project,
                 timestamp=stream_data.timestamp,
                 frame_data=stream_data.frame_data,
                 inference_data=inference_data,

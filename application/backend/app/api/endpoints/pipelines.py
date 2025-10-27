@@ -12,10 +12,10 @@ from fastapi.exceptions import HTTPException
 from fastapi.openapi.models import Example
 from pydantic import ValidationError
 
-from app.api.dependencies import get_pipeline_service, get_project_id
+from app.api.dependencies import get_pipeline_metrics_service, get_pipeline_service, get_project_id
 from app.schemas.metrics import PipelineMetrics
 from app.schemas.pipeline import DataCollectionPolicyAdapter, PipelineStatus, PipelineView
-from app.services import PipelineService, ResourceNotFoundError
+from app.services import PipelineMetricsService, PipelineService, ResourceNotFoundError
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/projects/{project_id}/pipeline", tags=["Pipelines"])
@@ -176,7 +176,7 @@ def disable_pipeline(
 )
 def get_project_metrics(
     project_id: Annotated[UUID, Depends(get_project_id)],
-    pipeline_service: Annotated[PipelineService, Depends(get_pipeline_service)],
+    pipeline_metrics_service: Annotated[PipelineMetricsService, Depends(get_pipeline_metrics_service)],
     time_window: int = 60,
 ) -> PipelineMetrics:
     """
@@ -191,7 +191,7 @@ def get_project_metrics(
         )
 
     try:
-        return pipeline_service.get_pipeline_metrics(project_id, time_window)
+        return pipeline_metrics_service.get_pipeline_metrics(project_id, time_window)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ValueError as e:

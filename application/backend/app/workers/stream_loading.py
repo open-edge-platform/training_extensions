@@ -1,17 +1,19 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import copy
 import logging
 import multiprocessing as mp
 import queue
-from multiprocessing.synchronize import Condition as ConditionClass
+from multiprocessing.synchronize import Condition
 from multiprocessing.synchronize import Event as EventClass
+from threading import Thread
 
+from app.db import get_db_session
 from app.entities.stream_data import StreamData
 from app.entities.video_stream import VideoStream
-from app.schemas import Source, SourceType
-from app.services import ActivePipelineService, VideoStreamService
+from app.schemas import DisconnectedSourceConfig, Source, SourceType
+from app.services import VideoStreamService
+from app.services.configuration_service import SourceService
 from app.workers.base import BaseProcessWorker
 
 logger = logging.getLogger(__name__)
@@ -22,36 +24,48 @@ class StreamLoader(BaseProcessWorker):
 
     ROLE = "StreamLoader"
 
-    def __init__(self, frame_queue: mp.Queue, stop_event: EventClass, config_changed_condition: ConditionClass) -> None:
+    def __init__(
+        self, frame_queue: mp.Queue, stop_event: EventClass, source_changed_condition: Condition | None
+    ) -> None:
         super().__init__(stop_event=stop_event, queues_to_cancel=[frame_queue])
         self._frame_queue = frame_queue
-        self._config_changed_condition = config_changed_condition
+        self._source_changed_condition = source_changed_condition
 
-        self._active_pipeline_service: ActivePipelineService | None = None
-        self._prev_source_config: Source | None = None
+        self._source: Source = DisconnectedSourceConfig()
         self._video_stream: VideoStream | None = None
 
-    def setup(self) -> None:
-        self._active_pipeline_service = ActivePipelineService(config_changed_condition=self._config_changed_condition)
+    def _load_source(self) -> None:
+        with get_db_session() as db:
+            source = SourceService(db).get_active_source()
+        self._source = source if source is not None else DisconnectedSourceConfig()
+        logger.info(f"Active source set to {self._source}. Process: %s", mp.current_process().name)
+        self._reset_stream()
 
-    def _reset_stream_if_needed(self, source_config: Source) -> None:
-        if self._prev_source_config is None or source_config != self._prev_source_config:
-            logger.debug(f"Source configuration changed from {self._prev_source_config} to {source_config}")
-            if self._video_stream is not None:
-                self._video_stream.release()
-            self._video_stream = VideoStreamService.get_video_stream(input_config=source_config)
-            self._prev_source_config = copy.deepcopy(source_config)
+    def _reload_source_loop(self) -> None:
+        if self._source_changed_condition is None:
+            return
+        while True:
+            with self._source_changed_condition:
+                notified = self._source_changed_condition.wait(timeout=3)
+                if not notified:  # awakened because of timeout
+                    continue
+                self._load_source()
+
+    def setup(self) -> None:
+        self._load_source()
+        Thread(target=self._reload_source_loop, name="Source reloader", daemon=True).start()
+
+    def _reset_stream(self) -> None:
+        if self._video_stream is not None:
+            self._video_stream.release()
+        self._video_stream = VideoStreamService.get_video_stream(input_config=self._source)
 
     def run_loop(self) -> None:
         while not self.should_stop():
-            source_config = self._active_pipeline_service.get_source_config()  # type: ignore
-
-            if source_config.source_type == SourceType.DISCONNECTED:
+            if self._source.source_type == SourceType.DISCONNECTED:
                 logger.debug("No source available... retrying in 1 second")
                 self.stop_aware_sleep(1)
                 continue
-
-            self._reset_stream_if_needed(source_config)
 
             if self._video_stream is None:
                 logger.debug("No video stream available, retrying in 1 second...")

@@ -34,7 +34,6 @@ class ProjectDB(BaseID):
     task_type: Mapped[str] = mapped_column(String(50), nullable=False)
     exclusive_labels: Mapped[bool] = mapped_column(Boolean, default=False)
 
-    pipeline = relationship("PipelineDB", back_populates="project", uselist=False)
     model_revisions = relationship("ModelRevisionDB", back_populates="project")
 
 
@@ -48,7 +47,6 @@ class PipelineDB(Base):
     is_running: Mapped[bool] = mapped_column(Boolean, default=False)
     data_collection_policies: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
 
-    project = relationship("ProjectDB", back_populates="pipeline")
     sink = relationship("SinkDB", uselist=False)
     source = relationship("SourceDB", uselist=False)
     model_revision = relationship("ModelRevisionDB", uselist=False)

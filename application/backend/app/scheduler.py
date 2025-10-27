@@ -10,8 +10,8 @@ from multiprocessing.shared_memory import SharedMemory
 
 import psutil
 
-from app.services import ActivePipelineService
 from app.services.data_collect import DataCollector
+from app.services.event.event_bus import EventBus
 from app.services.metrics_service import SIZE
 from app.workers import DispatchingWorker, InferenceWorker, StreamLoader
 
@@ -24,8 +24,8 @@ class Scheduler:
     FRAME_QUEUE_SIZE = 5
     PREDICTION_QUEUE_SIZE = 5
 
-    def __init__(self, active_pipeline_service: ActivePipelineService, data_collector: DataCollector) -> None:
-        self._active_pipeline_service = active_pipeline_service
+    def __init__(self, event_bus: EventBus, data_collector: DataCollector) -> None:
+        self._event_bus = event_bus
         self._data_collector = data_collector
 
         logger.info("Initializing Scheduler...")
@@ -39,8 +39,6 @@ class Scheduler:
         self.mp_stop_event = mp.Event()
         # Event to signal that the model has to be reloaded
         self.mp_model_reload_event = mp.Event()
-        # Condition variable to notify processes about configuration updates
-        self.mp_config_changed_condition = mp.Condition()
 
         # Shared memory for metrics collector
         self.shm_metrics = SharedMemory(create=True, size=SIZE)
@@ -55,7 +53,9 @@ class Scheduler:
         logger.info("Starting worker processes...")
 
         # Create and start processes
-        stream_loader_proc = StreamLoader(self.frame_queue, self.mp_stop_event, self.mp_config_changed_condition)
+        stream_loader_proc = StreamLoader(
+            self.frame_queue, self.mp_stop_event, self._event_bus.source_changed_condition
+        )
 
         inference_server_proc = InferenceWorker(
             frame_queue=self.frame_queue,
@@ -67,10 +67,10 @@ class Scheduler:
         )
 
         dispatching_thread = DispatchingWorker(
+            event_bus=self._event_bus,
             pred_queue=self.pred_queue,
             rtc_stream_queue=self.rtc_stream_queue,
             stop_event=self.mp_stop_event,
-            active_pipeline_service=self._active_pipeline_service,
             data_collector=self._data_collector,
         )
 

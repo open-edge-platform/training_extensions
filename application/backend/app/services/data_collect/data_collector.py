@@ -3,8 +3,6 @@
 import logging
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
-from typing import TYPE_CHECKING
-from uuid import UUID
 
 import cv2
 import numpy as np
@@ -13,12 +11,9 @@ from app.db import get_db_session
 from app.entities.stream_data import InferenceData
 from app.schemas import ProjectView
 from app.schemas.dataset_item import DatasetItemFormat
-from app.schemas.pipeline import ConfidenceThresholdDataCollectionPolicy, FixedRateDataCollectionPolicy
-
-from .prediction_converter import convert_prediction, get_confidence_scores
-
-if TYPE_CHECKING:
-    from app.services import ActivePipelineService
+from app.schemas.pipeline import ConfidenceThresholdDataCollectionPolicy, FixedRateDataCollectionPolicy, PipelineView
+from app.services.data_collect.prediction_converter import convert_prediction, get_confidence_scores
+from app.services.event.event_bus import EventBus, EventType
 
 logger = logging.getLogger(__name__)
 
@@ -89,17 +84,61 @@ class ConfidenceThresholdPolicyChecker(PolicyChecker):
 
 
 class DataCollector:
-    def __init__(self, data_dir: Path, active_pipeline_service: "ActivePipelineService") -> None:
+    def __init__(self, data_dir: Path, event_bus: EventBus) -> None:
         self.should_collect_next_frame = False
         self.data_dir = data_dir
-        self.active_pipeline_service = active_pipeline_service
+        self.event_bus = event_bus
+        self.active_pipeline_data: tuple[PipelineView, ProjectView] | None = None
         self.policy_checkers: list[PolicyChecker] = []
-        self.reload_policies()
+
+        self._load_pipeline()
+        event_bus.subscribe(
+            [
+                EventType.PIPELINE_STATUS_CHANGED,
+                EventType.PIPELINE_DATASET_COLLECTION_POLICIES_CHANGED,
+                EventType.SOURCE_CHANGED,
+            ],
+            self._load_pipeline,
+        )
+
+    def _load_pipeline(self) -> None:
+        from app.services import LabelService, PipelineService, ProjectService
+
+        with get_db_session() as db:
+            label_service = LabelService(db_session=db)
+            pipeline_service = PipelineService(event_bus=self.event_bus, db_session=db)
+            pipeline = pipeline_service.get_active_pipeline()
+            if pipeline is None:
+                logger.info("No active pipeline found, disabling data collection")
+                self.active_pipeline_data = None
+                self.policy_checkers = []
+                return
+
+            project_service = ProjectService(
+                data_dir=self.data_dir, db_session=db, label_service=label_service, pipeline_service=pipeline_service
+            )
+            project = project_service.get_project_by_id(pipeline.project_id)
+
+            self.active_pipeline_data = pipeline, project
+            logger.info(
+                f"Dataset collection policies set to {pipeline.data_collection_policies}, source: %s",
+                pipeline.source_id,
+            )
+
+            policies = [policy for policy in pipeline.data_collection_policies if policy.enabled]
+            self.policy_checkers = []
+            for policy in policies:
+                checker: PolicyChecker | None = None
+                match policy:
+                    case FixedRateDataCollectionPolicy():
+                        checker = FixedRatePolicyChecker(policy)
+                    case ConfidenceThresholdDataCollectionPolicy():
+                        checker = ConfidenceThresholdPolicyChecker(policy)
+                if checker is not None:
+                    self.policy_checkers.append(checker)
 
     def collect(
         self,
-        source_id: UUID,
-        project: ProjectView,
         timestamp: float,
         frame_data: np.ndarray,
         inference_data: InferenceData,
@@ -112,8 +151,6 @@ class DataCollector:
         creates a dataset item with annotations.
 
         Args:
-            source_id: UUID identifying the pipeline source that generated the image.
-            project: Project object representing the target project for dataset collection.
             timestamp: Floating-point timestamp of the captured image, used for item naming.
             confidence: Floating-point confidence of the captured image, used for item naming.
             frame_data: Image data in numpy ndarray format (expected in BGR color space).
@@ -127,7 +164,10 @@ class DataCollector:
             should_collect_next_frame flag is set. Timestamp is formatted to string
             with 4 decimal places for use as dataset item name.
         """
-        from app.services import DatasetService, LabelService, ProjectService
+        if self.active_pipeline_data is None:
+            return
+        pipeline, project = self.active_pipeline_data
+        from app.services import DatasetService
 
         confidence_scores = get_confidence_scores(prediction=inference_data.prediction)
         should_collect = (
@@ -140,22 +180,18 @@ class DataCollector:
         if not should_collect:
             return
         frame_data = cv2.cvtColor(frame_data, cv2.COLOR_BGR2RGB)  # Convert BGR to RGB
-        annotations = convert_prediction(
-            labels=project.task.labels, frame_data=frame_data, prediction=inference_data.prediction
-        )
         with get_db_session() as session:
-            label_service = LabelService(db_session=session)
-            project_service = ProjectService(data_dir=self.data_dir, db_session=session, label_service=label_service)
-            dataset_service = DatasetService(
-                data_dir=self.data_dir, db_session=session, project_service=project_service, label_service=label_service
+            dataset_service = DatasetService(data_dir=self.data_dir, db_session=session)
+            annotations = convert_prediction(
+                labels=project.task.labels, frame_data=frame_data, prediction=inference_data.prediction
             )
             dataset_service.create_dataset_item(
-                project_id=project.id,
+                project=project,
                 name=f"{timestamp:.4f}".replace(".", "_"),
                 format=DatasetItemFormat.JPG,
                 data=frame_data,
                 user_reviewed=False,
-                source_id=source_id,
+                source_id=pipeline.source_id,
                 prediction_model_id=inference_data.model_id,
                 annotations=annotations,
             )
@@ -166,19 +202,3 @@ class DataCollector:
         Sets flag to collect the next available frame. This flag will be reset to False upon successful collection.
         """
         self.should_collect_next_frame = True
-
-    def reload_policies(self) -> None:
-        """
-        Reloads data collection policies from active pipeline and re-initialize policy checkers.
-        """
-        policies = [policy for policy in self.active_pipeline_service.get_data_collection_policies() if policy.enabled]
-        self.policy_checkers = []
-        for policy in policies:
-            checker: PolicyChecker | None = None
-            match policy:
-                case FixedRateDataCollectionPolicy():
-                    checker = FixedRatePolicyChecker(policy)
-                case ConfidenceThresholdDataCollectionPolicy():
-                    checker = ConfidenceThresholdPolicyChecker(policy)
-            if checker is not None:
-                self.policy_checkers.append(checker)

@@ -5,7 +5,7 @@ from uuid import uuid4
 
 import pytest
 
-from app.db.schema import PipelineDB, ProjectDB
+from app.db.schema import ProjectDB
 from app.schemas.label import LabelCreate, LabelView
 from app.schemas.project import ProjectCreate, ProjectView, TaskCreate, TaskType, TaskView
 from app.services.mappers import ProjectMapper
@@ -82,13 +82,16 @@ class TestProjectMapper:
         assert actual_db.exclusive_labels == expected_db.exclusive_labels
 
     @pytest.mark.parametrize("db_instance,expected_schema, labels", DB_TO_VIEW_PROJECT_MAPPING.copy())
-    def test_to_schema(self, db_instance: ProjectDB, expected_schema: ProjectView, labels: list[LabelView]) -> None:
+    @pytest.mark.parametrize("active_pipeline", [True, False])
+    def test_to_schema(
+        self, db_instance: ProjectDB, expected_schema: ProjectView, labels: list[LabelView], active_pipeline
+    ) -> None:
         db_instance.id = str(expected_schema.id)
-        db_instance.pipeline = PipelineDB(is_running=expected_schema.active_pipeline or False)
-        actual_schema = ProjectMapper.to_schema(db_instance, labels)
+        actual_schema = ProjectMapper.to_schema(db_instance, active_pipeline, labels)
         assert actual_schema.name == expected_schema.name
         assert actual_schema.task.task_type == expected_schema.task.task_type
         assert actual_schema.task.exclusive_labels == expected_schema.task.exclusive_labels
+        assert actual_schema.active_pipeline == active_pipeline
         assert {label.name for label in actual_schema.task.labels} == {
             label.name for label in expected_schema.task.labels
         }
