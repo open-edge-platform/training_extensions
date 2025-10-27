@@ -8,7 +8,7 @@ requires-python = ">=3.13"
 dependencies = [
     "fastapi[standard]~=0.115.12",
     "hiyapyco==0.7.0",
-    "openvino-model-api~=0.3.0.2",
+    "openvino-model-api~=0.3.0.4",
     "pillow~=11.2",
     "python-multipart~=0.0.20",
     "uvicorn~=0.34.3",
