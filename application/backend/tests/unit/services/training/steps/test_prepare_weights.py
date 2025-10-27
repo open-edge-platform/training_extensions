@@ -8,7 +8,6 @@ from uuid import uuid4
 import pytest
 
 from app.core.models import TaskType
-from app.core.run import ExecutionContext
 from app.services.base_weights_service import BaseWeightsService
 from app.services.training.base import PipelineContext
 from app.services.training.models import TrainingParams
@@ -19,18 +18,6 @@ from app.services.training.steps.prepare_weights import MODEL_WEIGHTS_PATH, Prep
 def fxt_base_weights_service() -> Mock:
     """Mock BaseWeightsService for testing."""
     return Mock(spec=BaseWeightsService)
-
-
-@pytest.fixture
-def fxt_execution_ctx() -> Mock:
-    """Mock ExecutionContext for testing."""
-    return Mock(spec=ExecutionContext)
-
-
-@pytest.fixture
-def fxt_pipeline_ctx() -> PipelineContext:
-    """Mock PipelineContext for testing."""
-    return PipelineContext()
 
 
 @pytest.fixture
@@ -145,3 +132,7 @@ class TestPrepareWeightsStep:
         # Act & Assert
         with pytest.raises(ValueError, match="Project ID must be provided for parent model weights preparation"):
             fxt_prepare_weights_step.execute(fxt_execution_ctx, training_params, fxt_pipeline_ctx)
+
+    def test_get_name(self, fxt_prepare_weights_step: PrepareWeightsStep):
+        """Test that the step returns the correct name."""
+        assert fxt_prepare_weights_step.get_name() == "Prepare Model Weights"

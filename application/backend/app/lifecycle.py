@@ -31,17 +31,18 @@ logger = logging.getLogger(__name__)
 
 def setup_job_controller(data_dir: Path, max_parallel_jobs: int) -> tuple[JobQueue, JobController]:
     """
-    Set up job controller with queue and processing infrastructure.
+    Initializes and configures the job queue and job controller for managing parallel job execution.
 
-    Creates a job queue and controller with configured parallel job limits and training infrastructure
-    for job execution.
+    Sets up the infrastructure to run jobs concurrently and registers classes that comply with the Runnable protocol,
+    each associated with a job type and its required dependencies. These classes are executed in a context defined
+    by the runner factory.
 
     Args:
-        data_dir: Path to the data directory.
+        data_dir: Path to the directory containing data required for job execution.
         max_parallel_jobs (int): Maximum number of jobs that can run concurrently.
 
     Returns:
-        tuple[JobQueue, JobController]: A tuple containing the job queue instance and the configured job controller.
+        tuple[JobQueue, JobController]: The job queue and the configured job controller.
     """
     q = JobQueue()
     job_runnable_factory = RunnableFactory[JobType, Runnable]()
