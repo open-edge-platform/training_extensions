@@ -96,19 +96,12 @@ def upgrade() -> None:
         sa.Column("id", sa.Text(), nullable=False),
         sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.Column("updated_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["parent_revision"],
-            ["model_revisions.id"],
-        ),
+        sa.ForeignKeyConstraint(["parent_revision"], ["model_revisions.id"]),
         sa.ForeignKeyConstraint(["project_id"], ["projects.id"], ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(
-            ["training_dataset_id"],
-            ["dataset_revisions.id"],
-        ),
+        sa.ForeignKeyConstraint(["training_dataset_id"], ["dataset_revisions.id"]),
         sa.PrimaryKeyConstraint("id"),
-        sa.Index("idx_model_revisions_project", "project_id"),
         sa.Index("idx_model_revisions_project_status", "project_id", "training_status"),
-        sa.Index("idx_model_revisions_architecture", "architecture"),
+        sa.Index("idx_model_revisions_architecture", "project_id", "architecture"),
     )
     op.create_table(
         "dataset_items",

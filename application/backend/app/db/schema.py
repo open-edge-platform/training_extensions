@@ -70,9 +70,8 @@ class SinkDB(BaseID):
 class ModelRevisionDB(BaseID):
     __tablename__ = "model_revisions"
     __table_args__ = (
-        Index("idx_model_revisions_project", "project_id"),
         Index("idx_model_revisions_project_status", "project_id", "training_status"),
-        Index("idx_model_revisions_architecture", "architecture"),
+        Index("idx_model_revisions_architecture", "project_id", "architecture"),
     )
 
     project_id: Mapped[str] = mapped_column(Text, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
