@@ -4,6 +4,7 @@
 """Test Factory classes for dataset and transforms."""
 
 import pytest
+from datumaro.experimental import Dataset
 
 from otx.config.data import SubsetConfig
 from otx.data.dataset.anomaly import OTXAnomalyDataset
@@ -18,7 +19,6 @@ from otx.data.dataset.instance_segmentation import OTXInstanceSegDataset
 from otx.data.dataset.segmentation import OTXSegmentationDataset
 from otx.data.factory import OTXDatasetFactory, TransformLibFactory
 from otx.data.transform_libs.torchvision import TorchVisionTransformLib
-from otx.types.image import ImageColorChannel
 from otx.types.task import OTXTaskType
 from otx.types.transformer_libs import TransformLibType
 
@@ -66,16 +66,20 @@ class TestOTXDatasetFactory:
     ) -> None:
         mocker.patch.object(TransformLibFactory, "generate", return_value=None)
         dm_subset = request.getfixturevalue(dm_subset_fxt_name)
+        mock_schema = mocker.MagicMock()
+        mock_label = mocker.MagicMock()
+        mock_label.categories.labels = []
+        mock_schema.attributes = {"label": mock_label, "masks": mock_label}
+        dm_subset.schema = mock_schema
         cfg_subset = mocker.MagicMock(spec=SubsetConfig)
-        image_color_channel = ImageColorChannel.BGR
         mocker.patch.object(HLabelInfo, "from_dm_label_groups", return_value=fxt_mock_hlabelinfo)
+        mocker.patch.object(Dataset, "convert_to_schema", return_value=dm_subset)
 
         assert isinstance(
             OTXDatasetFactory.create(
                 task=task_type,
                 dm_subset=dm_subset,
                 cfg_subset=cfg_subset,
-                image_color_channel=image_color_channel,
                 data_format="",
             ),
             dataset_cls,

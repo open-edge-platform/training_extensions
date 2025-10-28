@@ -178,7 +178,6 @@ class OTXDataModule(LightningDataModule):
                 dm_subset=dm_subset.as_dataset(),
                 cfg_subset=config_mapping[name],
                 data_format=self.data_format,
-                image_color_channel=image_color_channel,
                 include_polygons=include_polygons,
                 ignore_index=ignore_index,
             )

@@ -20,7 +20,6 @@ if TYPE_CHECKING:
 from otx.data.entity.sample import OTXSample
 from otx.data.entity.torch.torch import OTXDataBatch
 from otx.data.transform_libs.torchvision import Compose
-from otx.types.image import ImageColorChannel
 
 Transforms = Union[Compose, Callable, List[Callable], dict[str, Compose | Callable | List[Callable]]]
 
@@ -73,7 +72,6 @@ class OTXDataset(TorchDataset):
 
     Args:
         transforms: Transforms to apply on images
-        image_color_channel: Color channel of images
         stack_images: Whether or not to stack images in collate function in OTXBatchData entity.
         sample_type: Type of sample to use for this dataset
     """
@@ -83,14 +81,12 @@ class OTXDataset(TorchDataset):
         dm_subset: Dataset,
         transforms: Transforms,
         max_refetch: int = 1000,
-        image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
         stack_images: bool = True,
         to_tv_image: bool = True,
         data_format: str = "",
         sample_type: type[OTXSample] = OTXSample,
     ) -> None:
         self.transforms = transforms
-        self.image_color_channel = image_color_channel
         self.stack_images = stack_images
         self.to_tv_image = to_tv_image
         self.sample_type = sample_type

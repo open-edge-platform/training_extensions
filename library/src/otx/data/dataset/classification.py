@@ -121,7 +121,7 @@ class OTXHlabelClsDataset(OTXDataset):
         sample_type = ClassificationHierarchicalSample
         dm_subset = dm_subset.convert_to_schema(sample_type)
         super().__init__(dm_subset=dm_subset, sample_type=sample_type, **kwargs)
-        self.dm_categories = self.dm_subset.schema.attributes["label"].categories
+        self.dm_categories = dm_subset.schema.attributes["label"].categories
         if self.data_format == "arrow":
             self.label_info = HLabelInfo.from_dm_label_groups_arrow(self.dm_categories)
         else:

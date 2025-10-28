@@ -12,7 +12,6 @@ from datumaro.experimental.categories import LabelCategories
 from datumaro.experimental.legacy import convert_from_legacy
 
 from otx import LabelInfo, NullLabelInfo
-from otx.types.image import ImageColorChannel
 from otx.types.task import OTXTaskType
 from otx.types.transformer_libs import TransformLibType
 
@@ -53,7 +52,6 @@ class OTXDatasetFactory:
         dm_subset: DmDataset | DatasetNew,
         cfg_subset: SubsetConfig,
         data_format: str,
-        image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
         include_polygons: bool = False,
         # TODO(gdlg): Add support for ignore_index again
         ignore_index: int = 255,  # noqa: ARG003
@@ -64,7 +62,6 @@ class OTXDatasetFactory:
             "dm_subset": dm_subset,
             "transforms": transforms,
             "data_format": data_format,
-            "image_color_channel": image_color_channel,
             "to_tv_image": cfg_subset.to_tv_image,
         }
 

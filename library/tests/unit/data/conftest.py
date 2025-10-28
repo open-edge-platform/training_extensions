@@ -168,6 +168,7 @@ def fxt_mock_dm_subset(mocker: MockerFixture, fxt_dm_item: DatasetItem) -> Magic
         AnnotationType.mask,
         AnnotationType.polygon,
     ]
+    mock_dm_subset.convert_to_schema = MagicMock(return_value=mock_dm_subset)
     return mock_dm_subset
 
 

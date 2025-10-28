@@ -103,7 +103,6 @@ class OTXTileDataset(OTXDataset):
             dataset.dm_subset,
             dataset.transforms,
             dataset.max_refetch,
-            dataset.image_color_channel,
             dataset.stack_images,
             dataset.to_tv_image,
         )

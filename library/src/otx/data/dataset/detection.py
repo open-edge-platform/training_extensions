@@ -11,12 +11,13 @@ from otx.data.entity.sample import DetectionSample
 from otx.types.label import LabelInfo
 
 from .base import OTXDataset
+from .mixins import DataAugSwitchMixin
 
 if TYPE_CHECKING:
     from datumaro.experimental import Dataset
 
 
-class OTXDetectionDataset(OTXDataset):
+class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):
     """OTXDataset class for detection task using new Datumaro experimental Dataset."""
 
     def __init__(self, dm_subset: Dataset, **kwargs) -> None:

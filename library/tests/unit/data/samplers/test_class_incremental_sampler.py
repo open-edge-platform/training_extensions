@@ -3,11 +3,15 @@
 #
 """Unit tests of incremental sampler."""
 
+import numpy as np
 import pytest
+from datumaro import Image
 from datumaro.components.annotation import Label
 from datumaro.components.dataset import Dataset as DmDataset
 from datumaro.components.dataset_base import DatasetItem
+from datumaro.experimental.legacy import convert_from_legacy
 
+from otx.data.dataset import OTXMulticlassClsDataset
 from otx.data.dataset.base import OTXDataset
 from otx.data.samplers.class_incremental_sampler import ClassIncrementalSampler
 
@@ -19,7 +23,7 @@ def fxt_old_new_dataset() -> OTXDataset:
             DatasetItem(
                 id=f"item00{i}_0",
                 subset="train",
-                media=None,
+                media=Image.from_numpy(data=np.zeros((10, 10, 3), dtype=np.uint8)),
                 annotations=[
                     Label(label=0),
                 ],
@@ -30,7 +34,7 @@ def fxt_old_new_dataset() -> OTXDataset:
             DatasetItem(
                 id=f"item00{i}_1",
                 subset="train",
-                media=None,
+                media=Image.from_numpy(data=np.zeros((10, 10, 3), dtype=np.uint8)),
                 annotations=[
                     Label(label=1),
                 ],
@@ -41,7 +45,7 @@ def fxt_old_new_dataset() -> OTXDataset:
             DatasetItem(
                 id=f"item00{i}_2",
                 subset="train",
-                media=None,
+                media=Image.from_numpy(data=np.zeros((10, 10, 3), dtype=np.uint8)),
                 annotations=[
                     Label(label=2),
                 ],
@@ -51,8 +55,8 @@ def fxt_old_new_dataset() -> OTXDataset:
     )
 
     dm_dataset = DmDataset.from_iterable(dataset_items, categories=["0", "1", "2"])
-    return OTXDataset(
-        dm_subset=dm_dataset.get_subset("train"),
+    return OTXMulticlassClsDataset(
+        dm_subset=convert_from_legacy(dm_dataset.get_subset("train")),
         transforms=[],
     )
 
