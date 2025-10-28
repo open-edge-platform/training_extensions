@@ -229,7 +229,7 @@ For those who would like to contribute to the library, see [CONTRIBUTING.md](CON
 Thank you! we appreciate your support!
 
 <a href="https://github.com/open-edge-platform/training_extensions/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=open-edge-platform/training_extensions" />
+  <img src="https://contrib.rocks/image?repo=open-edge-platform/training_extensions" alt="Contributors" />
 </a>
 
 ---
