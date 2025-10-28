@@ -41,7 +41,7 @@ from otx.types.device import DeviceType
 from otx.types.export import OTXExportFormatType
 from otx.types.precision import OTXPrecisionType
 from otx.types.task import OTXTaskType
-from otx.utils.device import is_xpu_available
+from otx.utils.device import get_available_device, is_xpu_available
 from otx.utils.utils import measure_flops
 
 if TYPE_CHECKING:
@@ -127,6 +127,12 @@ class OTXEngine(Engine):
             get_model_args: dict[str, Any] = {}
             get_model_args["label_info"] = self._datamodule.label_info
             input_size = self._datamodule.input_size
+            if input_size is None:
+                msg = (
+                    "Input size is not specified in the datamodule. "
+                    "Ensure that the datamodule has a valid input size."
+                )
+                raise ValueError(msg)
             get_model_args["data_input_params"] = DataInputParams(
                 input_size=input_size,
                 mean=self._datamodule.input_mean,
@@ -909,6 +915,8 @@ class OTXEngine(Engine):
                     ],
                 )
                 self._cache.args["precision"] = None
+        elif (self._device.accelerator == DeviceType.cpu) or (get_available_device() == "cpu"):
+            self._cache.args["precision"] = "32"
 
     def configure_loggers(self, logger: Logger | Iterable[Logger] | bool | None = None) -> Logger | Iterable[Logger]:
         """Sets up the loggers for the trainer.

@@ -1,7 +1,5 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-import shutil
-from collections.abc import Generator
 from pathlib import Path
 from uuid import UUID, uuid4
 
@@ -9,21 +7,24 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.db.schema import DatasetItemDB, LabelDB, PipelineDB, ProjectDB
-from app.schemas.project import Label, ProjectCreate, Task, TaskType
-from app.services import LabelService, ResourceWithIdAlreadyExistsError
+from app.schemas.project import LabelCreate, ProjectCreate, TaskCreate, TaskType
+from app.services import LabelService, PipelineService, ResourceWithIdAlreadyExistsError
 from app.services.base import ResourceInUseError, ResourceNotFoundError, ResourceType
+from app.services.event.event_bus import EventBus
 from app.services.label_service import DuplicateLabelsError
 from app.services.project_service import ProjectService
 
 
-@pytest.fixture()
-def fxt_projects_dir() -> Generator[Path]:
-    """Setup a temporary data directory for tests."""
-    projects_dir = Path("data/projects")
-    if not projects_dir.exists():
-        projects_dir.mkdir(parents=True)
-    yield projects_dir
-    shutil.rmtree(projects_dir)
+@pytest.fixture
+def fxt_event_bus() -> EventBus:
+    """Fixture to create a EventBus instance."""
+    return EventBus()
+
+
+@pytest.fixture
+def fxt_pipeline_service(fxt_event_bus: EventBus, db_session: Session) -> PipelineService:
+    """Fixture to create a PipelineService instance."""
+    return PipelineService(event_bus=fxt_event_bus, db_session=db_session)
 
 
 @pytest.fixture
@@ -33,9 +34,16 @@ def fxt_label_service(db_session: Session) -> LabelService:
 
 
 @pytest.fixture
-def fxt_project_service(fxt_projects_dir: Path, db_session: Session, fxt_label_service: LabelService) -> ProjectService:
+def fxt_project_service(
+    fxt_projects_dir: Path, db_session: Session, fxt_pipeline_service: PipelineService, fxt_label_service: LabelService
+) -> ProjectService:
     """Fixture to create a ProjectService instance."""
-    return ProjectService(data_dir=fxt_projects_dir.parent, db_session=db_session, label_service=fxt_label_service)
+    return ProjectService(
+        data_dir=fxt_projects_dir.parent,
+        db_session=db_session,
+        pipeline_service=fxt_pipeline_service,
+        label_service=fxt_label_service,
+    )
 
 
 class TestProjectServiceIntegration:
@@ -44,12 +52,12 @@ class TestProjectServiceIntegration:
     def test_create_project(self, fxt_project_service: ProjectService, db_session: Session):
         """Test creating a project."""
         labels = [
-            Label(name="cat", color="#00FF00", hotkey="c"),
-            Label(name="dog", color="#FF0000", hotkey="d"),
+            LabelCreate(name="cat", color="#00FF00", hotkey="c"),
+            LabelCreate(name="dog", color="#FF0000", hotkey="d"),
         ]
         new_project = ProjectCreate(
             name="Test Project",
-            task=Task(
+            task=TaskCreate(
                 task_type=TaskType.CLASSIFICATION,
                 exclusive_labels=True,
                 labels=labels,
@@ -59,7 +67,10 @@ class TestProjectServiceIntegration:
         assert created_project.id is not None
         assert created_project.name == new_project.name
         assert created_project.task.task_type == new_project.task.task_type
-        assert created_project.task.labels == new_project.task.labels
+        assert len(created_project.task.labels) == 2
+        assert {label.name for label in created_project.task.labels} == {"cat", "dog"}
+        assert {label.color for label in created_project.task.labels} == {"#00FF00", "#FF0000"}
+        assert {label.hotkey for label in created_project.task.labels} == {"c", "d"}
         # Ensure the associated pipeline is created
         db_pipeline = db_session.get(PipelineDB, str(created_project.id))
         assert db_pipeline is not None
@@ -73,13 +84,13 @@ class TestProjectServiceIntegration:
         """Test creating a project with duplicated labels."""
         project_id = uuid4()
         labels = [
-            Label(name="cat", color="#00FF00", hotkey="c"),
-            Label(name="cat", color="#FF0000", hotkey="d"),
+            LabelCreate(name="cat", color="#00FF00", hotkey="c"),
+            LabelCreate(name="cat", color="#FF0000", hotkey="d"),
         ]
         new_project = ProjectCreate(
             id=project_id,
             name="Test Project",
-            task=Task(
+            task=TaskCreate(
                 task_type=TaskType.CLASSIFICATION,
                 exclusive_labels=True,
                 labels=labels,
@@ -98,13 +109,13 @@ class TestProjectServiceIntegration:
 
         project_id = db_project.id
         labels = [
-            Label(name="cat", color="#00FF00", hotkey="c"),
-            Label(name="dog", color="#FF0000", hotkey="d"),
+            LabelCreate(name="cat", color="#00FF00", hotkey="c"),
+            LabelCreate(name="dog", color="#FF0000", hotkey="d"),
         ]
         new_project = ProjectCreate(
             id=UUID(project_id),
             name="Test Project",
-            task=Task(
+            task=TaskCreate(
                 task_type=TaskType.CLASSIFICATION,
                 exclusive_labels=True,
                 labels=labels,
@@ -231,9 +242,11 @@ class TestProjectServiceIntegration:
     ):
         """Test deleting a project which has a running pipeline."""
         db_project = fxt_db_projects[0]
-        db_pipeline = db_project.pipeline
+        db_pipeline = PipelineDB(project_id=db_project.id)
         db_pipeline.is_running = True
         db_session.add(db_project)
+        db_session.flush()
+        db_session.add(db_pipeline)
         db_session.flush()
 
         with pytest.raises(ResourceInUseError) as excinfo:

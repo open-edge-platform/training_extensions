@@ -1,17 +1,11 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-import { $api } from 'src/api/client';
-import { components } from 'src/api/openapi-spec';
+import { useProject } from 'hooks/api/project.hook';
+import type { Label } from 'src/constants/shared-types';
 
-type ServerLabel = components['schemas']['Label'];
-
-export const useProjectLabels = (): ServerLabel[] => {
-    const projectId = useProjectIdentifier();
-    const { data: project } = $api.useSuspenseQuery('get', '/api/projects/{project_id}', {
-        params: { path: { project_id: projectId } },
-    });
+export const useProjectLabels = (): Label[] => {
+    const { data: project } = useProject();
 
     return project.task.labels || [];
 };

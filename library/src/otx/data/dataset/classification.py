@@ -12,29 +12,65 @@ from torch.nn import functional
 from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from otx import HLabelInfo, LabelInfo
-from otx.data.dataset.base import OTXDataset
+from otx.data.dataset.base import OTXDataset, Transforms
 from otx.data.entity.sample import (
     ClassificationHierarchicalSample,
     ClassificationMultiLabelSample,
     ClassificationSample,
 )
+from otx.types import OTXTaskType
 
 if TYPE_CHECKING:
     from datumaro.experimental import Dataset
 
 
 class OTXMulticlassClsDataset(OTXDataset):
-    """OTXDataset class for multi-class classification task using new Datumaro experimental Dataset."""
+    """OTX Dataset for multi-class classification tasks.
 
-    def __init__(self, dm_subset: Dataset, **kwargs) -> None:
-        """Initialize OTXMulticlassClsDataset.
+    This dataset handles single-label classification where each image belongs to exactly one class.
+    It processes Datumaro dataset items and converts them into OTXDataItem format suitable for
+    multi-class classification training and inference.
 
-        Args:
-            **kwargs: Keyword arguments to pass to OTXDataset
-        """
+    Args:
+        dm_subset (DmDataset): Datumaro dataset subset containing the data items.
+        transforms (Transforms, optional): Transformations to apply to the data.
+        max_refetch (int): Maximum number of retries when fetching a data item fails.
+        stack_images (bool): Whether to stack images in batch processing.
+        to_tv_image (bool): Whether to convert images to torchvision format.
+        data_format (str): Format of the source data (e.g., "arrow", "coco").
+
+    Raises:
+        ValueError: If an image has multiple labels (multi-label case).
+
+    Example:
+        >>> from otx.data.dataset.classification import OTXMulticlassClsDataset
+        >>> dataset = OTXMulticlassClsDataset(
+        ...     dm_subset=my_dm_subset,
+        ...     transforms=my_transforms,
+        ... )
+        >>> item = dataset[0]  # Get first item
+    """
+
+    def __init__(
+        self,
+        dm_subset: Dataset,
+        transforms: Transforms | None = None,
+        max_refetch: int = 1000,
+        stack_images: bool = True,
+        to_tv_image: bool = True,
+        data_format: str = "",
+    ) -> None:
         sample_type = ClassificationSample
         dm_subset = dm_subset.convert_to_schema(sample_type)
-        super().__init__(dm_subset=dm_subset, sample_type=sample_type, **kwargs)
+        super().__init__(
+            dm_subset=dm_subset,
+            sample_type=sample_type,
+            transforms=transforms,
+            max_refetch=max_refetch,
+            stack_images=stack_images,
+            to_tv_image=to_tv_image,
+            data_format=data_format,
+        )
 
         labels = dm_subset.schema.attributes["label"].categories.labels
         self.label_info = LabelInfo(
@@ -63,12 +99,51 @@ class OTXMulticlassClsDataset(OTXDataset):
 
 
 class OTXMultilabelClsDataset(OTXDataset):
-    """OTXDataset class for multi-label classification task."""
+    """OTX Dataset for multi-label classification tasks.
 
-    def __init__(self, dm_subset: Dataset, **kwargs) -> None:
+    This dataset handles multi-label classification where each image can belong to multiple classes
+    simultaneously. It processes Datumaro dataset items and converts them into OTXDataItem format
+    with one-hot encoded labels suitable for multi-label classification training and inference.
+
+    Args:
+        dm_subset (DmDataset): Datumaro dataset subset containing the data items.
+        transforms (Transforms, optional): Transform operations to apply to the data items.
+        max_refetch (int): Maximum number of retries when fetching a data item fails.
+        stack_images (bool): Whether to stack images in batch processing.
+        to_tv_image (bool): Whether to convert images to torchvision format.
+        data_format (str): Format of the source data (e.g., "arrow", "coco").
+
+    Attributes:
+        num_classes (int): Number of classes in the dataset.
+
+    Example:
+        >>> from otx.data.dataset.classification import OTXMultilabelClsDataset
+        >>> dataset = OTXMultilabelClsDataset(
+        ...     dm_subset=my_dm_subset,
+        ...     transforms=my_transforms,
+        ... )
+        >>> item = dataset[0]  # Get first item with one-hot encoded labels
+    """
+
+    def __init__(
+        self,
+        dm_subset: Dataset,
+        transforms: Transforms | None = None,
+        max_refetch: int = 1000,
+        stack_images: bool = True,
+        to_tv_image: bool = True,
+        data_format: str = "",
+    ) -> None:
         sample_type = ClassificationMultiLabelSample
         dm_subset = dm_subset.convert_to_schema(sample_type)
-        super().__init__(dm_subset=dm_subset, sample_type=sample_type, **kwargs)
+        super().__init__(
+            dm_subset=dm_subset,
+            transforms=transforms,
+            max_refetch=max_refetch,
+            stack_images=stack_images,
+            to_tv_image=to_tv_image,
+            data_format=data_format,
+        )
 
         labels = dm_subset.schema.attributes["label"].categories.labels
         self.label_info = LabelInfo(
@@ -85,7 +160,15 @@ class OTXMultilabelClsDataset(OTXDataset):
         return self._apply_transforms(item)
 
     def _convert_to_onehot(self, labels: torch.tensor, ignored_labels: list[int]) -> torch.tensor:
-        """Convert label to one-hot vector format."""
+        """Convert label to one-hot vector format.
+
+        Args:
+            labels: Input label tensor to convert.
+            ignored_labels: List of label indices to ignore.
+
+        Returns:
+            torch.tensor: One-hot encoded label tensor where ignored labels are set to -1.
+        """
         # Torch's one_hot() expects the input to be of type long
         # However, when labels are empty, they are of type float32
         onehot = functional.one_hot(labels.long(), self.num_classes).sum(0).clamp_max_(1)
@@ -113,14 +196,72 @@ class OTXMultilabelClsDataset(OTXDataset):
                 idx_list_per_classes[label].append(idx)
         return idx_list_per_classes
 
+    @property
+    def task_type(self) -> OTXTaskType:
+        """OTX Task Type for the dataset.
+
+        Returns:
+            OTXTaskType: The multi-label classification task type.
+        """
+        return OTXTaskType.MULTI_LABEL_CLS
+
 
 class OTXHlabelClsDataset(OTXDataset):
-    """OTXDataset class for H-label classification task."""
+    """OTX Dataset for hierarchical label classification tasks.
 
-    def __init__(self, dm_subset: Dataset, **kwargs) -> None:
+    This dataset handles hierarchical classification where labels are organized in a tree structure
+    with multiple classification heads. It supports both multiclass heads (where one class per head
+    is selected) and multilabel heads (where multiple classes can be selected simultaneously).
+
+    The dataset processes Datumaro dataset items and converts them into OTXDataItem format with
+    hierarchical label encoding suitable for H-label classification training and inference.
+
+    Args:
+        dm_subset (DmDataset): Datumaro dataset subset containing the data items.
+        transforms (Transforms, optional): Transform operations to apply to the data items.
+        max_refetch (int): Maximum number of retries when fetching a data item fails.
+        stack_images (bool): Whether to stack images in batch processing.
+        to_tv_image (bool): Whether to convert images to torchvision format.
+        data_format (str): Format of the source data (e.g., "arrow", "coco").
+
+    Attributes:
+        dm_categories (datumaro.components.annotation.LabelCategories): Datumaro label categories for the dataset.
+        label_info (HLabelInfo): HLabelInfo containing hierarchical label structure information.
+        id_to_name_mapping (dict[str, str]): Mapping from label IDs to label names.
+
+    Raises:
+        ValueError: If the number of multiclass heads is 0.
+        TypeError: If label_info is not of type HLabelInfo.
+
+    Example:
+        >>> from otx.data.dataset.classification import OTXHlabelClsDataset
+        >>> dataset = OTXHlabelClsDataset(
+        ...     dm_subset=my_dm_subset,
+        ...     transforms=my_transforms,
+        ... )
+        >>> item = dataset[0]  # Get first item with hierarchical labels
+    """
+
+    def __init__(
+        self,
+        dm_subset: Dataset,
+        transforms: Transforms | None = None,
+        max_refetch: int = 1000,
+        stack_images: bool = True,
+        to_tv_image: bool = True,
+        data_format: str = "",
+    ) -> None:
         sample_type = ClassificationHierarchicalSample
         dm_subset = dm_subset.convert_to_schema(sample_type)
-        super().__init__(dm_subset=dm_subset, sample_type=sample_type, **kwargs)
+        super().__init__(
+            dm_subset=dm_subset,
+            sample_type=sample_type,
+            transforms=transforms,
+            max_refetch=max_refetch,
+            stack_images=stack_images,
+            to_tv_image=to_tv_image,
+            data_format=data_format,
+        )
         self.dm_categories = dm_subset.schema.attributes["label"].categories
         if self.data_format == "arrow":
             self.label_info = HLabelInfo.from_dm_label_groups_arrow(self.dm_categories)
@@ -160,6 +301,17 @@ class OTXHlabelClsDataset(OTXDataset):
 
         [Multilabel Head]
         2, 3 indices = [1, 0] -> ["Lion"(O), "Panda"(X)]
+
+        Args:
+            label_anns: List of label annotations to convert.
+            ignored_labels: List of label indices to ignore.
+
+        Returns:
+            list[int]: H-label formatted list where first N indices are multiclass heads
+                and remaining indices are multilabel classes.
+
+        Raises:
+            TypeError: If label_info is not of type HLabelInfo.
         """
         if not isinstance(self.label_info, HLabelInfo):
             msg = f"The type of label_info should be HLabelInfo, got {type(self.label_info)}."
@@ -209,3 +361,12 @@ class OTXHlabelClsDataset(OTXDataset):
                     idx_list_per_classes[label] = []
                 idx_list_per_classes[label].append(idx)
         return idx_list_per_classes
+
+    @property
+    def task_type(self) -> OTXTaskType:
+        """OTX Task Type for the dataset.
+
+        Returns:
+            OTXTaskType: The hierarchical label classification task type.
+        """
+        return OTXTaskType.H_LABEL_CLS

@@ -27,6 +27,7 @@
     border: var(--spectrum-global-dimension-size-25) solid var(--spectrum-global-color-gray-200);
     border-radius: var(--spectrum-global-dimension-size-50);
     background-color: var(--spectrum-global-color-gray-50);
+    height: 100%;
     transition:
         background-color,
         border 0.2s ease-in-out;

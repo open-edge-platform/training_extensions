@@ -3,7 +3,7 @@
 
 import { PointerEvent, useRef } from 'react';
 
-import { Point } from '../types';
+import type { Point } from '../types';
 import { isLeftButton } from '../utils';
 
 type UseTranslateProps = {

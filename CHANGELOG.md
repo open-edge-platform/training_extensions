@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## \[Unreleased\]
+## \[2.6.0\]
 
 ### New features
 
@@ -12,6 +12,29 @@ All notable changes to this project will be documented in this file.
   (<https://github.com/open-edge-platform/training_extensions/pull/4577>)
 - Add DEIM-DFine model for Object Detection
   (<https://github.com/open-edge-platform/training_extensions/pull/4446>)
+
+### Bug fixes
+
+- Fix overriding train parameters
+  (<https://github.com/open-edge-platform/training_extensions/pull/4496>)
+- Fix adaptive batch size to run on CPU
+  (<https://github.com/open-edge-platform/training_extensions/pull/4499>)
+- Workaround for batch size search on XPU devices
+  (<https://github.com/open-edge-platform/training_extensions/pull/4513>)
+- Fix UFLow configuration
+  (<https://github.com/open-edge-platform/training_extensions/pull/4504>)
+- Fix cache args
+  (<https://github.com/open-edge-platform/training_extensions/pull/4522>)
+- Fix finding task type in IR
+  (<https://github.com/open-edge-platform/training_extensions/pull/4576>)
+- Fix loading checkpoint after 1st round of training for DFine-X model
+  (<https://github.com/open-edge-platform/training_extensions/pull/4738>)
+- Fix input size configuration during validation for DFine model
+  (<https://github.com/open-edge-platform/training_extensions/pull/4666>)
+- Fix training on CPU
+  (https://github.com/open-edge-platform/training_extensions/pull/4788)
+- Fix OOM bug on XPU
+  (<https://github.com/open-edge-platform/training_extensions/pull/4872>)
 
 ## \[2.5.0\]
 

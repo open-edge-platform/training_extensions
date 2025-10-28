@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Dispatch, SetStateAction } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 
 import {
     ActionButton,
@@ -19,10 +19,16 @@ import {
 import { Add, Delete } from '@geti/ui/icons';
 import { v4 as uuid } from 'uuid';
 
-import { Label } from '../../annotator/types';
-import { LabelItemProps } from './interface';
+import type { Label } from '../../../constants/shared-types';
+import type { LabelItemProps } from './interface';
 
 import classes from './label-selection.module.scss';
+
+const PRESET_COLORS = ['#E91E63', '#9C27B0', '#2196F3', '#4CAF50', '#FFEB3B', '#FF9800', '#000000'];
+
+const getRandomColor = () => {
+    return PRESET_COLORS[Math.floor(Math.random() * PRESET_COLORS.length)];
+};
 
 const ColorPicker = ({ onChange, value }: SpectrumColorPickerProps) => {
     return (
@@ -30,13 +36,9 @@ const ColorPicker = ({ onChange, value }: SpectrumColorPickerProps) => {
             <Flex direction='column' gap='size-300'>
                 <ColorEditor />
                 <ColorSwatchPicker>
-                    <ColorSwatch color='#E91E63' />
-                    <ColorSwatch color='#9C27B0' />
-                    <ColorSwatch color='#2196F3' />
-                    <ColorSwatch color='#4CAF50' />
-                    <ColorSwatch color='#FFEB3B' />
-                    <ColorSwatch color='#FF9800' />
-                    <ColorSwatch color='#000000' />
+                    {PRESET_COLORS.map((color) => {
+                        return <ColorSwatch color={color} key={color} />;
+                    })}
                 </ColorSwatchPicker>
             </Flex>
         </SpectrumColorPicker>
@@ -104,7 +106,7 @@ export const LabelSelection = ({ labels, setLabels }: LabelSelectionProps) => {
             ...labels,
             {
                 id: uuid(),
-                color: '',
+                color: getRandomColor(),
                 name: 'Object',
             },
         ]);

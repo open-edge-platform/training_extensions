@@ -8,13 +8,13 @@ from unittest.mock import patch
 
 import pytest
 
-from app.schemas.project import TaskType
+from app.core.models.task_type import TaskType
 from app.services.base_weights_service import BaseWeightsService
 from app.supported_models.supported_models import ManifestNotFoundException
 
 DETECTION_MODEL_MANIFEST_ID = "Custom_Object_Detection_Gen3_SSD"
 DETECTION_WEIGHTS_FILENAME = "mobilenet_v2-2s_ssd-992x736.pth"
-CLASSIFICATION_MODEL_MANIFEST_ID = "Custom_Image_Classification_MobileNet-V3-small"
+CLASSIFICATION_MODEL_MANIFEST_ID = "Custom_Image_Classification_DeiT-Tiny"
 
 
 @pytest.fixture()

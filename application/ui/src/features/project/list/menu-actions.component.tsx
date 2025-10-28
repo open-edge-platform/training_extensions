@@ -5,23 +5,13 @@ import { ActionButton, Item, Key, Menu, MenuTrigger, toast } from '@geti/ui';
 import { MoreMenu } from '@geti/ui/icons';
 import { useNavigate } from 'react-router';
 
-import { $api } from '../../../api/client';
 import { paths } from '../../../constants/paths';
+import { useDeleteProject } from '../../../hooks/api/project.hook';
 
 export const MenuActions = ({ projectId }: { projectId: string }) => {
     const navigate = useNavigate();
 
-    const deleteMutation = $api.useMutation('delete', '/api/projects/{project_id}', {
-        meta: {
-            invalidateQueries: [['get', '/api/projects']],
-        },
-        onSuccess: () => {
-            toast({ type: 'success', message: 'Project deleted successfully' });
-        },
-        onError: () => {
-            toast({ type: 'error', message: 'Failed to delete project' });
-        },
-    });
+    const deleteMutation = useDeleteProject();
 
     const handleMenuAction = (key: Key) => {
         switch (key) {
@@ -29,7 +19,17 @@ export const MenuActions = ({ projectId }: { projectId: string }) => {
                 navigate(paths.project.details({ projectId }));
                 break;
             case 'delete':
-                deleteMutation.mutate({ params: { path: { project_id: projectId } } });
+                deleteMutation.mutate(
+                    { params: { path: { project_id: projectId } } },
+                    {
+                        onSuccess: () => {
+                            toast({ type: 'success', message: 'Project deleted successfully' });
+                        },
+                        onError: () => {
+                            toast({ type: 'error', message: 'Failed to delete project' });
+                        },
+                    }
+                );
                 break;
             default:
                 break;

@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { dimensionValue, Flex } from '@geti/ui';
+import { Toolbar } from 'src/features/dataset/gallery/toolbar/toolbar.component';
 
 import { Gallery } from '../../features/dataset/gallery/gallery.component';
 import { useGetDatasetItems } from '../../features/dataset/gallery/use-get-dataset-items.hook';
-import { Toolbar } from '../../features/dataset/toolbar/toolbar.component';
 
 export const Dataset = () => {
     const { items, hasNextPage, isFetchingNextPage, fetchNextPage } = useGetDatasetItems();

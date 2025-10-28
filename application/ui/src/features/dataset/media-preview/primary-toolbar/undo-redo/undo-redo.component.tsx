@@ -3,7 +3,7 @@
 
 import { Redo, Undo } from '@geti/ui/icons';
 
-import { IconWrapper } from '../icon-wrapper.component';
+import { IconWrapper } from '../../../../../components/icon-wrapper/icon-wrapper.component';
 
 export const UndoRedo = () => {
     return (

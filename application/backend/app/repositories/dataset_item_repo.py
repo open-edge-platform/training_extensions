@@ -4,9 +4,10 @@ from datetime import UTC, datetime
 from typing import NamedTuple
 
 from sqlalchemy import Select, delete, func, select, update
+from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.orm import Session
 
-from app.db.schema import DatasetItemDB
+from app.db.schema import DatasetItemDB, DatasetItemLabelDB
 
 
 class UpdateDatasetItemAnnotation(NamedTuple):
@@ -100,3 +101,55 @@ class DatasetItemRepository:
         result = self.db.execute(stmt)
         row = result.mappings().first()
         return UpdateDatasetItemAnnotation(**row) if row else None
+
+    def delete_annotation_data(self, obj_id: str) -> bool:
+        stmt = (
+            update(DatasetItemDB)
+            .where(
+                DatasetItemDB.project_id == self.project_id,
+                DatasetItemDB.id == obj_id,
+            )
+            .values(
+                annotation_data=None,
+                updated_at=datetime.now(UTC),
+            )
+        )
+        result = self.db.execute(stmt)
+        return result.rowcount > 0  # type: ignore[union-attr]
+
+    def get_subset(self, obj_id: str) -> str | None:
+        stmt = (
+            select(DatasetItemDB.subset)
+            .select_from(DatasetItemDB)
+            .where(
+                DatasetItemDB.project_id == self.project_id,
+                DatasetItemDB.id == obj_id,
+            )
+        )
+        return self.db.scalar(stmt)
+
+    def set_subset(self, obj_id: str, subset: str) -> None:
+        stmt = (
+            update(DatasetItemDB)
+            .where(
+                DatasetItemDB.project_id == self.project_id,
+                DatasetItemDB.id == obj_id,
+            )
+            .values(
+                subset=subset,
+                updated_at=datetime.now(UTC),
+            )
+        )
+        self.db.execute(stmt)
+
+    def set_labels(self, dataset_item_id: str, label_ids: set[str]) -> None:
+        self.delete_labels(dataset_item_id)
+
+        if label_ids:
+            values = [{"dataset_item_id": dataset_item_id, "label_id": label_id} for label_id in label_ids]
+            stmt = insert(DatasetItemLabelDB).values(values)
+            self.db.execute(stmt)
+
+    def delete_labels(self, dataset_item_id: str) -> None:
+        stmt = delete(DatasetItemLabelDB).where(DatasetItemLabelDB.dataset_item_id == dataset_item_id)
+        self.db.execute(stmt)

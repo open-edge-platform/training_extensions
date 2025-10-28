@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { CSSProperties, PointerEvent, SVGProps } from 'react';
+import type { CSSProperties, PointerEvent, SVGProps } from 'react';
 
 const BUTTON_LEFT = {
     button: 0,

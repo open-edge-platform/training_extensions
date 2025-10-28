@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { components } from '../../../api/openapi-spec';
+import type { components } from '../../../api/openapi-spec';
 
 export type ImagesFolderSourceConfig = components['schemas']['ImagesFolderSourceConfig'];
 export type IPCameraSourceConfig = components['schemas']['IPCameraSourceConfig'];

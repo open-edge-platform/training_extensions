@@ -4,7 +4,7 @@
 from datetime import datetime
 from uuid import uuid4
 
-from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -29,17 +29,18 @@ class SourceDB(BaseID):
 
 class ProjectDB(BaseID):
     __tablename__ = "projects"
+    __table_args__ = (Index("idx_projects_name", "name"),)
 
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     task_type: Mapped[str] = mapped_column(String(50), nullable=False)
     exclusive_labels: Mapped[bool] = mapped_column(Boolean, default=False)
 
-    pipeline = relationship("PipelineDB", back_populates="project", uselist=False)
     model_revisions = relationship("ModelRevisionDB", back_populates="project")
 
 
 class PipelineDB(Base):
     __tablename__ = "pipelines"
+    __table_args__ = (Index("idx_pipelines_is_running", "is_running"),)
 
     project_id: Mapped[str] = mapped_column(Text, ForeignKey("projects.id", ondelete="CASCADE"), primary_key=True)
     source_id: Mapped[str | None] = mapped_column(Text, ForeignKey("sources.id", ondelete="RESTRICT"))
@@ -48,7 +49,6 @@ class PipelineDB(Base):
     is_running: Mapped[bool] = mapped_column(Boolean, default=False)
     data_collection_policies: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
 
-    project = relationship("ProjectDB", back_populates="pipeline")
     sink = relationship("SinkDB", uselist=False)
     source = relationship("SourceDB", uselist=False)
     model_revision = relationship("ModelRevisionDB", uselist=False)
@@ -67,6 +67,10 @@ class SinkDB(BaseID):
 
 class ModelRevisionDB(BaseID):
     __tablename__ = "model_revisions"
+    __table_args__ = (
+        Index("idx_model_revisions_project_status", "project_id", "training_status"),
+        Index("idx_model_revisions_architecture", "project_id", "architecture"),
+    )
 
     project_id: Mapped[str] = mapped_column(Text, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
     architecture: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -84,6 +88,7 @@ class ModelRevisionDB(BaseID):
 
 class DatasetRevisionDB(BaseID):
     __tablename__ = "dataset_revisions"
+    __table_args__ = (Index("idx_dataset_revisions_project", "project_id"),)
 
     project_id: Mapped[str] = mapped_column(Text, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
     files_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -91,6 +96,7 @@ class DatasetRevisionDB(BaseID):
 
 class DatasetItemDB(BaseID):
     __tablename__ = "dataset_items"
+    __table_args__ = (Index("idx_dataset_items_user_reviewed", "project_id", "user_reviewed"),)
 
     project_id: Mapped[str] = mapped_column(Text, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -98,7 +104,7 @@ class DatasetItemDB(BaseID):
     width: Mapped[int] = mapped_column(Integer, nullable=False)
     height: Mapped[int] = mapped_column(Integer, nullable=False)
     size: Mapped[int] = mapped_column(Integer, nullable=False)
-    annotation_data: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    annotation_data: Mapped[list | None] = mapped_column(JSON, nullable=True, default=None)
     user_reviewed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     prediction_model_id: Mapped[str | None] = mapped_column(
         Text, ForeignKey("model_revisions.id", ondelete="SET NULL"), nullable=True
@@ -117,5 +123,14 @@ class LabelDB(BaseID):
 
     project_id: Mapped[str] = mapped_column(Text, ForeignKey("projects.id", ondelete="CASCADE"))
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    color: Mapped[str | None] = mapped_column(String(7), nullable=True)
+    color: Mapped[str] = mapped_column(String(7), nullable=False)
     hotkey: Mapped[str | None] = mapped_column(String(10), nullable=True)
+
+
+class DatasetItemLabelDB(Base):
+    __tablename__ = "dataset_items_labels"
+
+    dataset_item_id: Mapped[str] = mapped_column(
+        Text, ForeignKey("dataset_items.id", ondelete="CASCADE"), primary_key=True
+    )
+    label_id: Mapped[str] = mapped_column(Text, ForeignKey("labels.id", ondelete="CASCADE"), primary_key=True)

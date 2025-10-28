@@ -4,7 +4,7 @@
 import { fromOpenApi } from '@mswjs/source/open-api';
 import { createOpenApiHttp, OpenApiHttpHandlers } from 'openapi-msw';
 
-import { paths } from './openapi-spec';
+import type { paths } from './openapi-spec';
 import spec from './openapi-spec.json' with { type: 'json' };
 
 const handlers = await fromOpenApi(JSON.stringify(spec).replace(/}:/g, '}//:'));

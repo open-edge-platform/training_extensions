@@ -1,0 +1,11 @@
+.rate {
+    width: var(--spectrum-global-dimension-size-100);
+    height: var(--spectrum-global-dimension-size-100);
+    border-radius: 50%;
+}
+
+.attributeRatingTitle {
+    font-weight: 400;
+    color: var(--spectrum-global-color-gray-700);
+    font-size: var(--spectrum-global-dimension-font-size-50);
+}

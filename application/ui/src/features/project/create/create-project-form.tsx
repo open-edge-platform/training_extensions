@@ -3,31 +3,27 @@
 
 import { FormEvent, useState } from 'react';
 
-import { Button, ButtonGroup, Divider, Flex, Form, Text } from '@geti/ui';
+import { Button, ButtonGroup, Flex, Form, Text } from '@geti/ui';
 import { useNavigate } from 'react-router';
+import type { Label } from 'src/constants/shared-types';
 import { v4 as uuid } from 'uuid';
 
-import { $api } from '../../../api/client';
 import { paths } from '../../../constants/paths';
-import { Label } from '../../annotator/types';
+import { useCreateProject } from '../../../hooks/api/project.hook';
 import { LabelSelection } from '../label-selection/label-selection.component';
-import { TaskType } from '../task-selection/interface';
+import type { TaskType } from '../task-selection/interface';
 import { TaskSelection } from '../task-selection/task-selection.component';
 import { ProjectName } from './project-name.component';
 
 import classes from './create-project-form.module.scss';
 
-export const CreateProjectForm = () => {
+export const CreateProjectForm = ({ numberOfProjects }: { numberOfProjects: number }) => {
     const [selectedTask, setSelectedTask] = useState<TaskType>('detection');
     const [labels, setLabels] = useState<Label[]>([{ id: uuid(), color: '#F20004', name: 'Object' }]);
-    const [name, setName] = useState<string>('Project #1');
+    const [name, setName] = useState<string>(`Project #${numberOfProjects + 1}`);
 
     const navigate = useNavigate();
-    const createProjectMutation = $api.useMutation('post', '/api/projects', {
-        meta: {
-            invalidateQueries: [['get', '/api/projects']],
-        },
-    });
+    const createProjectMutation = useCreateProject();
 
     const createProject = (e: FormEvent) => {
         e.preventDefault();
@@ -41,7 +37,7 @@ export const CreateProjectForm = () => {
                     task: {
                         task_type: selectedTask,
                         exclusive_labels: selectedTask === 'classification',
-                        labels: labels.map((label) => ({ name: label.name })),
+                        labels,
                     },
                     name,
                 },
@@ -77,8 +73,6 @@ export const CreateProjectForm = () => {
 
             <Flex direction='column' gap='size-300' UNSAFE_style={{ overflow: 'auto', margin: '0 auto' }}>
                 <TaskSelection selectedTask={selectedTask} setSelectedTask={setSelectedTask} />
-
-                <Divider size='S' />
 
                 <LabelSelection labels={labels} setLabels={setLabels} />
             </Flex>

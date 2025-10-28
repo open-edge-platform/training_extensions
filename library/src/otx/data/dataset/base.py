@@ -20,6 +20,7 @@ if TYPE_CHECKING:
 from otx.data.entity.sample import OTXSample
 from otx.data.entity.torch.torch import OTXDataBatch
 from otx.data.transform_libs.torchvision import Compose
+from otx.types import OTXTaskType
 
 Transforms = Union[Compose, Callable, List[Callable], dict[str, Compose | Callable | List[Callable]]]
 
@@ -68,18 +69,24 @@ def _default_collate_fn(items: list[OTXSample]) -> OTXDataBatch:
 class OTXDataset(TorchDataset):
     """Base OTXDataset using new Datumaro experimental Dataset.
 
-    Defines basic logic for OTX datasets.
+    This class defines the basic logic and interface for OTX datasets, providing
+    functionality for data transformation, image decoding, and label handling.
 
     Args:
-        transforms: Transforms to apply on images
-        stack_images: Whether or not to stack images in collate function in OTXBatchData entity.
-        sample_type: Type of sample to use for this dataset
+        dm_subset (DmDataset): Datumaro subset of a dataset.
+        transforms (Transforms, optional): Transformations to apply to the data.
+        max_refetch (int, optional): Maximum number of times to attempt fetching a valid image. Defaults to 1000.
+        stack_images (bool, optional): Whether to stack images in the collate function in OTXBatchData entity.
+            Defaults to True.
+        to_tv_image (bool, optional): Whether to convert images to TorchVision format. Defaults to True.
+        data_format (str, optional): Source data format originally passed to Datumaro (e.g., "arrow"). Defaults to "".
+
     """
 
     def __init__(
         self,
         dm_subset: Dataset,
-        transforms: Transforms,
+        transforms: Transforms | None = None,
         max_refetch: int = 1000,
         stack_images: bool = True,
         to_tv_image: bool = True,
@@ -102,6 +109,8 @@ class OTXDataset(TorchDataset):
         return np.random.randint(0, len(self))
 
     def _apply_transforms(self, entity: OTXSample) -> OTXSample | None:
+        if self.transforms is None:
+            return entity
         if isinstance(self.transforms, Compose):
             return self.transforms(entity)
         if isinstance(self.transforms, Iterable):
@@ -148,3 +157,8 @@ class OTXDataset(TorchDataset):
     @abc.abstractmethod
     def get_idx_list_per_classes(self, use_string_label: bool = False) -> dict[int, list[int]]:
         """Get a dictionary with class labels as keys and lists of corresponding sample indices as values."""
+
+    @property
+    def task_type(self) -> OTXTaskType | None:
+        """OTX Task Type for the dataset. Can be None if no task is defined."""
+        return None

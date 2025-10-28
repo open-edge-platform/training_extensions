@@ -3,11 +3,11 @@
 
 import type ClipperShape from '@doodle3d/clipper-js';
 import Clipper from '@doodle3d/clipper-js';
-import { Shape as SmartToolsShape, Polygon as ToolPolygon, Rect as ToolRect } from '@geti/smart-tools/types';
+import type { Shape as SmartToolsShape, Polygon as ToolPolygon, Rect as ToolRect } from '@geti/smart-tools/types';
 import { BoundingBox } from '@geti/smart-tools/utils';
 import { isEmpty } from 'lodash-es';
 
-import { ClipperPoint, Point, Polygon, Rect, RegionOfInterest, Shape } from '../types';
+import type { ClipperPoint, Point, Polygon, Rect, RegionOfInterest, Shape } from '../types';
 
 // @ts-expect-error `default` actually exists in the module
 const ClipperJS = Clipper.default || Clipper;

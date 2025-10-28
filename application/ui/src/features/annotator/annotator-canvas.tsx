@@ -1,24 +1,31 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { View } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import { API_BASE_URL } from 'src/api/client';
+import type { DatasetItem } from 'src/constants/shared-types';
 
 import { ZoomTransform } from '../../components/zoom/zoom-transform';
-import { getImageUrl } from '../dataset/gallery/utils';
-import { useAnnotationActions } from './annotation-actions-provider.component';
+import { useAnnotationActions } from '../../shared/annotator/annotation-actions-provider.component';
+import { useAnnotationVisibility } from '../../shared/annotator/annotation-visibility-provider.component';
+import { useSelectedAnnotations } from '../../shared/annotator/select-annotation-provider.component';
 import { Annotations } from './annotations/annotations.component';
-import { useSelectedAnnotations } from './select-annotation-provider.component';
 import { ToolManager } from './tools/tool-manager.component';
-import { DatasetItem } from './types';
+
+const getImageUrl = (projectId: string, itemId: string) => {
+    return `${API_BASE_URL}/api/projects/${projectId}/dataset/items/${itemId}/binary`;
+};
 
 type AnnotatorCanvasProps = {
     mediaItem: DatasetItem;
-    isFocussed: boolean;
 };
-export const AnnotatorCanvas = ({ mediaItem, isFocussed }: AnnotatorCanvasProps) => {
+
+export const AnnotatorCanvas = ({ mediaItem }: AnnotatorCanvasProps) => {
     const project_id = useProjectIdentifier();
     const { annotations } = useAnnotationActions();
     const { selectedAnnotations } = useSelectedAnnotations();
+    const { isFocussed } = useAnnotationVisibility();
 
     // Order annotations by selection. Selected annotation should always be on top.
     const orderedAnnotations = [
@@ -30,8 +37,9 @@ export const AnnotatorCanvas = ({ mediaItem, isFocussed }: AnnotatorCanvasProps)
 
     return (
         <ZoomTransform target={size}>
-            <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+            <View position={'relative'} width={'100%'} height={'100%'}>
                 <img src={getImageUrl(project_id, String(mediaItem.id))} alt='Collected data' />
+
                 <Annotations
                     annotations={orderedAnnotations}
                     width={size.width}
@@ -39,7 +47,7 @@ export const AnnotatorCanvas = ({ mediaItem, isFocussed }: AnnotatorCanvasProps)
                     isFocussed={isFocussed}
                 />
                 <ToolManager />
-            </div>
+            </View>
         </ZoomTransform>
     );
 };

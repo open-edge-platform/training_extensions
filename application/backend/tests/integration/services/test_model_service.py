@@ -6,7 +6,7 @@ from uuid import UUID, uuid4
 import pytest
 from sqlalchemy.orm import Session
 
-from app.db.schema import ModelRevisionDB, ProjectDB
+from app.db.schema import ModelRevisionDB, PipelineDB, ProjectDB
 from app.schemas import Model
 from app.services import ModelService, ResourceNotFoundError, ResourceType
 
@@ -14,9 +14,11 @@ from app.services import ModelService, ResourceNotFoundError, ResourceType
 @pytest.fixture(autouse=True)
 def setup_project(fxt_db_projects: list[ProjectDB], db_session: Session) -> None:
     db_project = fxt_db_projects[0]
-    db_pipeline = db_project.pipeline
+    db_pipeline = PipelineDB(project_id=db_project.id)
     db_pipeline.is_running = True
     db_session.add(db_project)
+    db_session.flush()
+    db_session.add(db_pipeline)
     db_session.flush()
 
 

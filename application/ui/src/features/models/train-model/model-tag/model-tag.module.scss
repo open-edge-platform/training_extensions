@@ -1,0 +1,33 @@
+.modelTag {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    width: max-content;
+    border-radius: var(--spectrum-global-dimension-size-50);
+    color: var(--text-dark-default);
+    font-size: var(--spectrum-global-dimension-static-font-size-50);
+}
+
+.activeModelTag {
+    @extend .modelTag;
+    background-color: var(--energy-blue) !important;
+}
+
+.templateNameTag {
+    @extend .modelTag;
+    color: var(--spectrum-global-color-gray-900) !important;
+    background-color: var(--spectrum-global-color-gray-400) !important;
+}
+
+.obsoleteModel {
+    @extend .modelTag;
+    background: var(--spectrum-global-color-gray-200);
+    color: var(--spectrum-global-color-gray-900);
+    padding: 0 var(--spectrum-global-dimension-static-size-50);
+}
+
+.deprecatedModelTag {
+    @extend .modelTag;
+
+    background-color: var(--spectrum-global-color-orange-400) !important;
+    color: var(--spectrum-global-color-gray-900) !important;
+}

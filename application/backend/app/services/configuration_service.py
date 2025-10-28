@@ -2,18 +2,15 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
-from collections.abc import Callable
 from enum import StrEnum
-from multiprocessing.synchronize import Condition
 from uuid import UUID
 
 from sqlalchemy.orm import Session
 
-from app.repositories import PipelineRepository, SinkRepository, SourceRepository
+from app.repositories import SinkRepository, SourceRepository
 from app.repositories.base import UniqueConstraintIntegrityError
 from app.schemas import Sink, Source
 
-from .active_pipeline_service import ActivePipelineService
 from .base import (
     GenericPersistenceService,
     ResourceNotFoundError,
@@ -21,6 +18,7 @@ from .base import (
     ResourceWithNameAlreadyExistsError,
     ServiceConfig,
 )
+from .event.event_bus import EventBus, EventType
 from .mappers import SinkMapper, SourceMapper
 from .parent_process_guard import parent_process_only
 
@@ -50,6 +48,11 @@ class SourceService(GenericPersistenceService[Source, SourceRepository]):
         except UniqueConstraintIntegrityError:
             raise ResourceWithNameAlreadyExistsError(ResourceType.SOURCE, partial_config["name"])
 
+    def get_active_source(self) -> Source | None:
+        with self._get_repo() as repo:
+            item_db = repo.get_active_source()
+            return self.config.mapper_class.to_schema(item_db) if item_db else None
+
 
 class SinkService(GenericPersistenceService[Sink, SinkRepository]):
     def __init__(self, db_session: Session):
@@ -67,31 +70,18 @@ class SinkService(GenericPersistenceService[Sink, SinkRepository]):
         except UniqueConstraintIntegrityError:
             raise ResourceWithNameAlreadyExistsError(ResourceType.SINK, partial_config["name"])
 
+    def get_active_sink(self) -> Sink | None:
+        with self._get_repo() as repo:
+            item_db = repo.get_active_sink()
+            return self.config.mapper_class.to_schema(item_db) if item_db else None
+
 
 class ConfigurationService:
-    def __init__(
-        self, active_pipeline_service: ActivePipelineService, db_session: Session, config_changed_condition: Condition
-    ) -> None:
+    def __init__(self, event_bus: EventBus, db_session: Session) -> None:
+        self._event_bus: EventBus = event_bus
         self._source_service: SourceService = SourceService(db_session)
         self._sink_service: SinkService = SinkService(db_session)
         self._db_session = db_session
-        self._active_pipeline_service: ActivePipelineService = active_pipeline_service
-        self._config_changed_condition: Condition = config_changed_condition
-
-    def _notify_sink_changed(self) -> None:
-        self._active_pipeline_service.reload()
-
-    def _notify_source_changed(self) -> None:
-        with self._config_changed_condition:
-            self._config_changed_condition.notify_all()
-
-    def _on_config_changed(self, config_id: UUID, field: PipelineField, notify_fn: Callable[[], None]) -> None:
-        """Notify threads or child processes that the configuration has changed.
-        Notification triggered only when the configuration is used by the active pipeline."""
-        pipeline_repo = PipelineRepository(self._db_session)
-        active_pipeline = pipeline_repo.get_active_pipeline()
-        if active_pipeline and getattr(active_pipeline, field) == str(config_id):
-            notify_fn()
 
     def list_sources(self) -> list[Source]:
         return self._source_service.list_all()
@@ -111,6 +101,12 @@ class ConfigurationService:
             raise ResourceNotFoundError(ResourceType.SINK, str(sink_id))
         return sink
 
+    def get_active_source(self) -> Source | None:
+        return self._source_service.get_active_source()
+
+    def get_active_sink(self) -> Sink | None:
+        return self._sink_service.get_active_sink()
+
     @parent_process_only
     def create_source(self, source: Source) -> Source:
         return self._source_service.create(source)
@@ -123,14 +119,18 @@ class ConfigurationService:
     def update_source(self, source_id: UUID, partial_config: dict) -> Source:
         source = self.get_source_by_id(source_id)
         updated = self._source_service.update(source, partial_config)
-        self._on_config_changed(updated.id, PipelineField.SOURCE_ID, self._notify_source_changed)
+        active_source = self._source_service.get_active_source()
+        if active_source and active_source.id == updated.id:
+            self._event_bus.emit_event(EventType.SOURCE_CHANGED)
         return updated
 
     @parent_process_only
     def update_sink(self, sink_id: UUID, partial_config: dict) -> Sink:
         sink = self.get_sink_by_id(sink_id)
         updated = self._sink_service.update(sink, partial_config)
-        self._on_config_changed(updated.id, PipelineField.SINK_ID, self._notify_sink_changed)
+        active_sink = self._sink_service.get_active_sink()
+        if active_sink and active_sink.id == updated.id:
+            self._event_bus.emit_event(EventType.SINK_CHANGED)
         return updated
 
     @parent_process_only

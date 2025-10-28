@@ -1,20 +1,21 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import logging
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from typing import Any, TypeVar
 from uuid import UUID
 
 import numpy as np
 import polars as pl
-from datumaro.experimental import Dataset, Sample, bbox_field, image_path_field, label_field
+from datumaro.experimental import Dataset, Sample, bbox_field, image_info_field, image_path_field, label_field
 from datumaro.experimental.categories import LabelCategories
-from datumaro.experimental.fields import polygon_field
+from datumaro.experimental.fields import ImageInfo, polygon_field
 
+from app.core.models.task_type import TaskType
 from app.db.schema import DatasetItemDB
-from app.schemas import Label
 from app.schemas.dataset_item import DatasetItemAnnotation
-from app.schemas.project import ProjectBase, TaskType
+from app.schemas.label import LabelBase
+from app.schemas.project import ProjectBase
 from app.schemas.shape import Polygon, Rectangle
 
 logger = logging.getLogger(__name__)
@@ -24,22 +25,26 @@ CONVERSION_BATCH_SIZE = 50
 
 class DetectionSample(Sample):
     image: str = image_path_field()
+    image_info: ImageInfo = image_info_field()
     bboxes: np.ndarray[Any, Any] = bbox_field(dtype=pl.Int32)
     label: np.ndarray[Any, Any] = label_field(dtype=pl.Int32, is_list=True)
 
 
 class ClassificationSample(Sample):
     image: str = image_path_field()
+    image_info: ImageInfo = image_info_field()
     label: int = label_field(dtype=pl.Int32, is_list=False)
 
 
 class MultilabelClassificationSample(Sample):
     image: str = image_path_field()
-    label: np.ndarray[Any, Any] = label_field(dtype=pl.Int32, is_list=True)
+    image_info: ImageInfo = image_info_field()
+    label: np.ndarray[Any, Any] = label_field(dtype=pl.Int32, multi_label=True)
 
 
 class InstanceSegmentationSample(Sample):
     image: str = image_path_field()
+    image_info: ImageInfo = image_info_field()
     polygons: np.ndarray[Any, Any] = polygon_field(dtype=pl.Float32)
     label: np.ndarray[Any, Any] = label_field(dtype=pl.Int32, is_list=True)
 
@@ -75,7 +80,7 @@ S = TypeVar("S", bound=Sample)  # Sample type e.g. DetectionSample, Classificati
 
 def _convert_dataset(
     sample_type: type[S],
-    project_labels: list[Label],
+    project_labels: Sequence[LabelBase],
     get_dataset_items: Callable[[int, int], list[DatasetItemDB]],
     get_image_path: Callable[[DatasetItemDB], str],
     convert_sample: Callable[[DatasetItemDB, str, list[UUID]], S | None],
@@ -98,7 +103,7 @@ def _convert_dataset(
 
 
 def convert_detection_dataset(
-    project_labels: list[Label],
+    project_labels: Sequence[LabelBase],
     get_dataset_items: Callable[[int, int], list[DatasetItemDB]],
     get_image_path: Callable[[DatasetItemDB], str],
 ) -> Dataset[DetectionSample]:
@@ -117,6 +122,8 @@ def convert_detection_dataset(
     def _convert_sample(
         dataset_item: DatasetItemDB, image_path: str, project_labels_ids: list[UUID]
     ) -> DetectionSample | None:
+        if dataset_item.annotation_data is None:
+            return None
         annotations = [DatasetItemAnnotation.model_validate(annotation) for annotation in dataset_item.annotation_data]
         coords = [
             convert_rectangle(annotation.shape)
@@ -134,6 +141,7 @@ def convert_detection_dataset(
             return None
         return DetectionSample(
             image=image_path,
+            image_info=ImageInfo(width=dataset_item.width, height=dataset_item.height),
             bboxes=np.array(coords),
             label=np.array(labels_indexes),
         )
@@ -148,7 +156,7 @@ def convert_detection_dataset(
 
 
 def convert_classification_dataset(
-    project_labels: list[Label],
+    project_labels: Sequence[LabelBase],
     get_dataset_items: Callable[[int, int], list[DatasetItemDB]],
     get_image_path: Callable[[DatasetItemDB], str],
 ) -> Dataset[ClassificationSample]:
@@ -167,11 +175,17 @@ def convert_classification_dataset(
     def _convert_sample(
         dataset_item: DatasetItemDB, image_path: str, project_labels_ids: list[UUID]
     ) -> ClassificationSample | None:
+        if dataset_item.annotation_data is None:
+            return None
         annotation = next(
             DatasetItemAnnotation.model_validate(annotation) for annotation in dataset_item.annotation_data
         )
         try:
-            return ClassificationSample(image=image_path, label=project_labels_ids.index(annotation.labels[0].id))
+            return ClassificationSample(
+                image=image_path,
+                image_info=ImageInfo(width=dataset_item.width, height=dataset_item.height),
+                label=project_labels_ids.index(annotation.labels[0].id),
+            )
         except ValueError:
             logger.error("Unable to find one of dataset item %s labels in project", dataset_item.id)
             return None
@@ -186,7 +200,7 @@ def convert_classification_dataset(
 
 
 def convert_multiclass_classification_dataset(
-    project_labels: list[Label],
+    project_labels: Sequence[LabelBase],
     get_dataset_items: Callable[[int, int], list[DatasetItemDB]],
     get_image_path: Callable[[DatasetItemDB], str],
 ) -> Dataset[MultilabelClassificationSample]:
@@ -205,6 +219,8 @@ def convert_multiclass_classification_dataset(
     def _convert_sample(
         dataset_item: DatasetItemDB, image_path: str, project_labels_ids: list[UUID]
     ) -> MultilabelClassificationSample | None:
+        if dataset_item.annotation_data is None:
+            return None
         annotation = next(
             DatasetItemAnnotation.model_validate(annotation) for annotation in dataset_item.annotation_data
         )
@@ -213,7 +229,11 @@ def convert_multiclass_classification_dataset(
         except ValueError:
             logger.error("Unable to find one of dataset item %s labels in project", dataset_item.id)
             return None
-        return MultilabelClassificationSample(image=image_path, label=np.array(labels_indexes))
+        return MultilabelClassificationSample(
+            image=image_path,
+            image_info=ImageInfo(width=dataset_item.width, height=dataset_item.height),
+            label=np.array(labels_indexes),
+        )
 
     return _convert_dataset(
         sample_type=MultilabelClassificationSample,
@@ -225,7 +245,7 @@ def convert_multiclass_classification_dataset(
 
 
 def convert_instance_segmentation_dataset(
-    project_labels: list[Label],
+    project_labels: Sequence[LabelBase],
     get_dataset_items: Callable[[int, int], list[DatasetItemDB]],
     get_image_path: Callable[[DatasetItemDB], str],
 ) -> Dataset[InstanceSegmentationSample]:
@@ -244,6 +264,8 @@ def convert_instance_segmentation_dataset(
     def _convert_sample(
         dataset_item: DatasetItemDB, image_path: str, project_labels_ids: list[UUID]
     ) -> InstanceSegmentationSample | None:
+        if dataset_item.annotation_data is None:
+            return None
         annotations = [DatasetItemAnnotation.model_validate(annotation) for annotation in dataset_item.annotation_data]
         polygons = [
             convert_polygon(annotation.shape) for annotation in annotations if (isinstance(annotation.shape, Polygon))
@@ -258,7 +280,10 @@ def convert_instance_segmentation_dataset(
             logger.error("Unable to find one of dataset item %s labels in project", dataset_item.id)
             return None
         return InstanceSegmentationSample(
-            image=image_path, polygons=np.array(polygons, dtype=np.float32), label=np.array(labels_indexes)
+            image=image_path,
+            image_info=ImageInfo(width=dataset_item.width, height=dataset_item.height),
+            polygons=np.array(polygons, dtype=np.float32),
+            label=np.array(labels_indexes),
         )
 
     return _convert_dataset(
@@ -272,7 +297,7 @@ def convert_instance_segmentation_dataset(
 
 def convert_dataset(
     project: ProjectBase,
-    labels: list[Label],
+    labels: Sequence[LabelBase],
     get_dataset_items: Callable[[int, int], list[DatasetItemDB]],
     get_image_path: Callable[[DatasetItemDB], str],
 ) -> Dataset:

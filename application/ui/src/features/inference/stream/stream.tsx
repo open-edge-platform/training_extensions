@@ -1,7 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Dispatch, RefObject, SetStateAction, useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, type Dispatch, type RefObject, type SetStateAction } from 'react';
+
+import { View } from '@geti/ui';
 
 import { ZoomTransform } from '../../../components/zoom/zoom-transform';
 import { useWebRTCConnection } from './web-rtc-connection-provider';
@@ -97,7 +99,7 @@ export const Stream = ({
 
     return (
         <ZoomTransform target={size}>
-            <div style={{ gridArea: 'innercanvas' }}>
+            <View gridArea={'innercanvas'}>
                 {status === 'connected' && (
                     // eslint-disable-next-line jsx-a11y/media-has-caption
                     <video
@@ -112,7 +114,7 @@ export const Stream = ({
                         }}
                     />
                 )}
-            </div>
+            </View>
         </ZoomTransform>
     );
 };

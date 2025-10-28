@@ -272,6 +272,15 @@ def update_num_iters(param_value: int | None, config: dict) -> None:
     config["max_epochs"] = param_value
 
 
+def update_batch_size(param_value: int | None, config: dict) -> None:
+    """Update batch size in the config."""
+    if param_value is None:
+        logging.info("Batch size is not provided, skipping update.")
+        return
+    config["data"]["train_subset"]["batch_size"] = param_value
+    config["data"]["val_subset"]["batch_size"] = param_value
+
+
 def update_early_stopping(early_stopping_cfg: dict | None, config: dict) -> None:
     """Update early stopping parameters in the config."""
     if early_stopping_cfg is None:
@@ -483,6 +492,7 @@ class GetiConfigConverter:
         update_tiling(tiling, config)
         update_augmentations(augmentation_params, config)
         update_learning_rate(training_parameters.get("learning_rate", None), config)
+        update_batch_size(training_parameters.get("batch_size", None), config)
         update_num_iters(training_parameters.get("max_epochs", None), config)
         update_early_stopping(training_parameters.get("early_stopping", None), config)
         update_input_size(
@@ -556,6 +566,9 @@ class GetiConfigConverter:
         # Update num_classes & Instantiate Model
         model_config = config.pop("model")
         model_config["init_args"]["label_info"] = datamodule.label_info
+        if datamodule.input_size is None:
+            msg = "Input size is not defined in the datamodule."
+            raise ValueError(msg)
         model_config["init_args"]["data_input_params"] = DataInputParams(
             input_size=datamodule.input_size,
             mean=datamodule.input_mean,

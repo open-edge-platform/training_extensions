@@ -8,12 +8,22 @@ from fastapi import APIRouter, Body, Depends, File, HTTPException, Query, Upload
 from fastapi.openapi.models import Example
 from starlette.responses import FileResponse
 
-from app.api.dependencies import get_dataset_item_id, get_dataset_service, get_file_name_and_extension, get_project_id
-from app.schemas import DatasetItem, DatasetItemsWithPagination
-from app.schemas.base import Pagination
-from app.schemas.dataset_item import DatasetItemAnnotation, DatasetItemAnnotations, DatasetItemAnnotationsWithSource
+from app.api.dependencies import get_dataset_item_id, get_dataset_service, get_file_name_and_extension, get_project
+from app.core.models import Pagination
+from app.schemas import DatasetItem, DatasetItemsWithPagination, ProjectView
+from app.schemas.dataset_item import (
+    DatasetItemAnnotation,
+    DatasetItemAnnotationsWithSource,
+    DatasetItemAssignSubset,
+    SetDatasetItemAnnotations,
+)
 from app.services import DatasetService, ResourceNotFoundError
-from app.services.dataset_service import AnnotationValidationError, InvalidImageError
+from app.services.dataset_service import (
+    AnnotationValidationError,
+    InvalidImageError,
+    NotAnnotatedError,
+    SubsetAlreadyAssignedError,
+)
 
 router = APIRouter(prefix="/api/projects/{project_id}/dataset/items", tags=["Datasets"])
 
@@ -64,7 +74,7 @@ SET_DATASET_ITEM_ANNOTATIONS_BODY_EXAMPLES = {
     },
 )
 def add_dataset_item(
-    project_id: Annotated[UUID, Depends(get_project_id)],
+    project: Annotated[ProjectView, Depends(get_project)],
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
     file_name_and_extension: Annotated[tuple[str, str], Depends(get_file_name_and_extension)],
     file: Annotated[UploadFile, File()],
@@ -73,7 +83,7 @@ def add_dataset_item(
     name, format = file_name_and_extension
     try:
         return dataset_service.create_dataset_item(
-            project_id=project_id,
+            project=project,
             data=file.file,
             name=name,
             format=format,
@@ -90,7 +100,7 @@ def add_dataset_item(
     },
 )
 def list_dataset_items(
-    project_id: Annotated[UUID, Depends(get_project_id)],
+    project: Annotated[ProjectView, Depends(get_project)],
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
     limit: Annotated[int, Query(ge=1, le=MAX_DATASET_ITEMS_NUMBER_RETURNED)] = DEFAULT_DATASET_ITEMS_NUMBER_RETURNED,
     offset: Annotated[int, Query(ge=0)] = 0,
@@ -102,9 +112,9 @@ def list_dataset_items(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Start date must be before end date."
         )
-    total = dataset_service.count_dataset_items(project_id=project_id, start_date=start_date, end_date=end_date)
+    total = dataset_service.count_dataset_items(project=project, start_date=start_date, end_date=end_date)
     dataset_items = dataset_service.list_dataset_items(
-        project_id=project_id, limit=limit, offset=offset, start_date=start_date, end_date=end_date
+        project=project, limit=limit, offset=offset, start_date=start_date, end_date=end_date
     )
     return DatasetItemsWithPagination(
         items=dataset_items,
@@ -126,13 +136,13 @@ def list_dataset_items(
     },
 )
 def get_dataset_item(
-    project_id: Annotated[UUID, Depends(get_project_id)],
+    project: Annotated[ProjectView, Depends(get_project)],
     dataset_item_id: Annotated[UUID, Depends(get_dataset_item_id)],
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
 ) -> DatasetItem:
     """Get information about a specific dataset item"""
     try:
-        return dataset_service.get_dataset_item_by_id(project_id=project_id, dataset_item_id=dataset_item_id)
+        return dataset_service.get_dataset_item_by_id(project=project, dataset_item_id=dataset_item_id)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -146,14 +156,14 @@ def get_dataset_item(
     },
 )
 def get_dataset_item_binary(
-    project_id: Annotated[UUID, Depends(get_project_id)],
+    project: Annotated[ProjectView, Depends(get_project)],
     dataset_item_id: Annotated[UUID, Depends(get_dataset_item_id)],
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
 ) -> FileResponse:
     """Get dataset item binary content"""
     try:
         binary_path = dataset_service.get_dataset_item_binary_path_by_id(
-            project_id=project_id, dataset_item_id=dataset_item_id
+            project=project, dataset_item_id=dataset_item_id
         )
         return FileResponse(path=binary_path)
     except ResourceNotFoundError as e:
@@ -169,14 +179,14 @@ def get_dataset_item_binary(
     },
 )
 def get_dataset_item_thumbnail(
-    project_id: Annotated[UUID, Depends(get_project_id)],
+    project: Annotated[ProjectView, Depends(get_project)],
     dataset_item_id: Annotated[UUID, Depends(get_dataset_item_id)],
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
 ) -> FileResponse:
     """Get dataset item thumbnail binary content"""
     try:
         thumbnail_path = dataset_service.get_dataset_item_thumbnail_path_by_id(
-            project_id=project_id, dataset_item_id=dataset_item_id
+            project=project, dataset_item_id=dataset_item_id
         )
         return FileResponse(path=thumbnail_path)
     except ResourceNotFoundError as e:
@@ -193,13 +203,13 @@ def get_dataset_item_thumbnail(
     },
 )
 def delete_dataset_item(
-    project_id: Annotated[UUID, Depends(get_project_id)],
+    project: Annotated[ProjectView, Depends(get_project)],
     dataset_item_id: Annotated[UUID, Depends(get_dataset_item_id)],
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
 ) -> None:
     """Delete an item from the dataset"""
     try:
-        dataset_service.delete_dataset_item(project_id=project_id, dataset_item_id=dataset_item_id)
+        dataset_service.delete_dataset_item(project=project, dataset_item_id=dataset_item_id)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -214,17 +224,17 @@ def delete_dataset_item(
     },
 )
 def set_dataset_item_annotations(
-    project_id: Annotated[UUID, Depends(get_project_id)],
+    project: Annotated[ProjectView, Depends(get_project)],
     dataset_item_id: Annotated[UUID, Depends(get_dataset_item_id)],
     dataset_item_annotations: Annotated[
-        DatasetItemAnnotations, Body(openapi_examples=SET_DATASET_ITEM_ANNOTATIONS_BODY_EXAMPLES)
+        SetDatasetItemAnnotations, Body(openapi_examples=SET_DATASET_ITEM_ANNOTATIONS_BODY_EXAMPLES)
     ],
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
 ) -> DatasetItemAnnotationsWithSource:
     """Set dataset item annotations"""
     try:
         return dataset_service.set_dataset_item_annotations(
-            project_id=project_id, dataset_item_id=dataset_item_id, annotations=dataset_item_annotations.annotations
+            project=project, dataset_item_id=dataset_item_id, annotations=dataset_item_annotations.annotations
         )
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
@@ -238,18 +248,20 @@ def set_dataset_item_annotations(
     responses={
         status.HTTP_200_OK: {"description": "Dataset item found", "model": DatasetItemAnnotationsWithSource},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid dataset item ID or project ID"},
-        status.HTTP_404_NOT_FOUND: {"description": "Dataset item or project not found"},
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Dataset item or project not found or dataset item is not annotated"
+        },
     },
 )
 def get_dataset_item_annotations(
-    project_id: Annotated[UUID, Depends(get_project_id)],
+    project: Annotated[ProjectView, Depends(get_project)],
     dataset_item_id: Annotated[UUID, Depends(get_dataset_item_id)],
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
 ) -> DatasetItemAnnotationsWithSource:
     """Get the dataset item annotations"""
     try:
-        return dataset_service.get_dataset_item_annotations(project_id=project_id, dataset_item_id=dataset_item_id)
-    except ResourceNotFoundError as e:
+        return dataset_service.get_dataset_item_annotations(project=project, dataset_item_id=dataset_item_id)
+    except (ResourceNotFoundError, NotAnnotatedError) as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
@@ -263,12 +275,40 @@ def get_dataset_item_annotations(
     },
 )
 def delete_dataset_item_annotation(
-    project_id: Annotated[UUID, Depends(get_project_id)],
+    project: Annotated[ProjectView, Depends(get_project)],
     dataset_item_id: Annotated[UUID, Depends(get_dataset_item_id)],
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
 ) -> None:
     """Delete dataset item annotations"""
     try:
-        dataset_service.delete_dataset_item_annotations(project_id=project_id, dataset_item_id=dataset_item_id)
+        dataset_service.delete_dataset_item_annotations(project=project, dataset_item_id=dataset_item_id)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.patch(
+    "/{dataset_item_id}/subset",
+    status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_200_OK: {"description": "Dataset item subset is assigned"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid dataset item ID or project ID"},
+        status.HTTP_404_NOT_FOUND: {"description": "Dataset item or project not found"},
+        status.HTTP_409_CONFLICT: {"description": "Dataset item already has a subset assigned"},
+        status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Invalid subset"},
+    },
+)
+def assign_dataset_item_subset(
+    project: Annotated[ProjectView, Depends(get_project)],
+    dataset_item_id: Annotated[UUID, Depends(get_dataset_item_id)],
+    dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
+    subset_config: Annotated[DatasetItemAssignSubset, Body()],
+) -> DatasetItem:
+    """Assign dataset item subset"""
+    try:
+        return dataset_service.assign_dataset_item_subset(
+            project=project, dataset_item_id=dataset_item_id, subset=subset_config.subset
+        )
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except SubsetAlreadyAssignedError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))

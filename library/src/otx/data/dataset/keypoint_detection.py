@@ -12,6 +12,7 @@ from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from otx.data.entity.sample import KeypointSample
 from otx.data.transform_libs.torchvision import Compose
+from otx.types import OTXTaskType
 from otx.types.label import LabelInfo
 
 from .base import OTXDataset
@@ -23,12 +24,52 @@ if TYPE_CHECKING:
 
 
 class OTXKeypointDetectionDataset(OTXDataset):
-    """OTXDataset class for keypoint detection task."""
+    """OTX Dataset for keypoint detection tasks.
 
-    def __init__(self, dm_subset: Dataset, **kwargs) -> None:
+    This dataset handles keypoint detection where specific key points (like body joints)
+    are detected and localized in images. It processes Datumaro dataset items and
+    converts them into OTXDataItem format suitable for keypoint detection training
+    and inference.
+
+    Args:
+        dm_subset (DmDataset): Datumaro dataset subset containing the data items.
+        transforms (Transforms | None, optional): Transform operations to apply to the data items.
+        max_refetch (int, optional): Maximum number of retries when fetching a data item fails.
+        image_color_channel (ImageColorChannel, optional): Color channel format for images (RGB, BGR, etc.).
+        stack_images (bool, optional): Whether to stack images in batch processing.
+        to_tv_image (bool, optional): Whether to convert images to torchvision format.
+        data_format (str, optional): Format of the source data (e.g., "coco", "arrow").
+
+    Example:
+        >>> from otx.data.dataset.keypoint_detection import OTXKeypointDetectionDataset
+        >>> dataset = OTXKeypointDetectionDataset(
+        ...     dm_subset=my_dm_subset,
+        ...     transforms=my_transforms,
+        ...     data_format="coco"
+        ... )
+        >>> item = dataset[0]  # Get first item with keypoints
+    """
+
+    def __init__(
+        self,
+        dm_subset: Dataset,
+        transforms: Transforms | None = None,
+        max_refetch: int = 1000,
+        stack_images: bool = True,
+        to_tv_image: bool = True,
+        data_format: str = "",
+    ) -> None:
         sample_type = KeypointSample
         dm_subset = dm_subset.convert_to_schema(sample_type)
-        super().__init__(dm_subset=dm_subset, sample_type=sample_type, **kwargs)
+        super().__init__(
+            dm_subset=dm_subset,
+            sample_type=sample_type,
+            transforms=transforms,
+            max_refetch=max_refetch,
+            stack_images=stack_images,
+            to_tv_image=to_tv_image,
+            data_format=data_format,
+        )
         labels = dm_subset.schema.attributes["label"].categories.labels
         self.label_info = LabelInfo(
             label_names=labels,
@@ -43,3 +84,12 @@ class OTXKeypointDetectionDataset(OTXDataset):
         item.keypoints = keypoints
         item.image = to_dtype(to_image(item.image), torch.float32)
         return self._apply_transforms(item)  # type: ignore[return-value]
+
+    @property
+    def task_type(self) -> OTXTaskType:
+        """OTX Task Type for the dataset.
+
+        Returns:
+            OTXTaskType: The keypoint detection task type.
+        """
+        return OTXTaskType.KEYPOINT_DETECTION

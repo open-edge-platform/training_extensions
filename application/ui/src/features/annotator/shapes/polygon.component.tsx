@@ -3,7 +3,7 @@
 
 import { useMemo } from 'react';
 
-import { Point, Polygon as PolygonInterface } from '../types';
+import type { Point, Polygon as PolygonInterface } from '../types';
 
 const getFormattedPoints = (points: Point[]): string => points.map(({ x, y }) => `${x},${y}`).join(' ');
 
