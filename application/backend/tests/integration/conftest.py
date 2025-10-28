@@ -148,8 +148,8 @@ def fxt_db_projects() -> list[ProjectDB]:
 def fxt_db_labels() -> list[LabelDB]:
     """Fixture to create multiple labels in the database."""
     return [
-        LabelDB(name="cat", color="#00FF00", hotkey="c"),
-        LabelDB(name="dog", color="#FF0000", hotkey="d"),
+        LabelDB(id=str(uuid4()), name="cat", color="#00FF00", hotkey="c"),
+        LabelDB(id=str(uuid4()), name="dog", color="#FF0000", hotkey="d"),
     ]
 
 

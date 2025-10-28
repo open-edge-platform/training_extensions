@@ -26,6 +26,9 @@ class SubsetAssigner:
     http://proceedings.mlr.press/v74/szyma%C5%84ski17a.html
     """
 
+    def __init__(self) -> None:
+        self._mlb = MultiLabelBinarizer()
+
     def assign(self, items: list[DatasetItemWithLabels], target_ratios: SplitRatios) -> list[SubsetAssignment]:
         """
         Assigns dataset items to subsets based on target ratios.
@@ -39,8 +42,7 @@ class SubsetAssigner:
         if not items:
             return []
 
-        mlb = MultiLabelBinarizer()
-        label_matrix = mlb.fit_transform([item.labels for item in items])
+        label_matrix = self._mlb.fit_transform([item.labels for item in items])
 
         stratifier = IterativeStratification(
             n_splits=3,
