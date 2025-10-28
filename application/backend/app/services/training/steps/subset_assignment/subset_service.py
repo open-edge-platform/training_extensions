@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.core.models import DatasetItemSubset
 from app.repositories import DatasetItemRepository
 
-from .distrubution import SubsetDistribution
+from .distribution import SubsetDistribution
 from .models import DatasetItemWithLabels, SubsetAssignment
 
 logger = logging.getLogger(__name__)

@@ -12,7 +12,7 @@ def fxt_otx_train_model_step() -> OTXTrainModelStep:
     return OTXTrainModelStep()
 
 
-# !TODO : Add tests for OTXTrainModelStep once implemented
+# TODO : Add tests for OTXTrainModelStep once implemented
 class TestOTXTrainModelStep:
     """Test cases for the OTXTrainModelStep."""
 

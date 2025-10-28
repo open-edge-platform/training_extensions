@@ -10,9 +10,13 @@ from app.core.models import DatasetItemSubset, TaskType
 from app.services.training.base import PipelineContext
 from app.services.training.models import TrainingParams
 from app.services.training.steps.assign_subsets import AssignSubsetsStep
-from app.services.training.steps.subset_assignment import SubsetAssigner, SubsetService
-from app.services.training.steps.subset_assignment.distrubution import SubsetDistribution
-from app.services.training.steps.subset_assignment.models import DatasetItemWithLabels, SubsetAssignment
+from app.services.training.steps.subset_assignment import (
+    DatasetItemWithLabels,
+    SubsetAssigner,
+    SubsetAssignment,
+    SubsetDistribution,
+    SubsetService,
+)
 
 
 @pytest.fixture
