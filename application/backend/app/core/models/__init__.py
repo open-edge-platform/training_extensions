@@ -12,6 +12,9 @@ from .base import (
     RequiresID,
     RequiresName,
 )
+from .dataset_item import DatasetItem, DatasetItemAnnotation, DatasetItemFormat, DatasetItemSubset
+from .label import LabelReference
+from .shape import FullImage, Point, Polygon, Rectangle, Shape
 from .task_type import TaskType
 
 __all__ = [
@@ -19,10 +22,20 @@ __all__ = [
     "BaseModel",
     "BaseRequiredIDModel",
     "BaseRequiredIDNameModel",
+    "DatasetItem",
+    "DatasetItemAnnotation",
+    "DatasetItemFormat",
+    "DatasetItemSubset",
+    "FullImage",
     "HasID",
     "HasName",
+    "LabelReference",
     "Pagination",
+    "Point",
+    "Polygon",
+    "Rectangle",
     "RequiresID",
     "RequiresName",
+    "Shape",
     "TaskType",
 ]

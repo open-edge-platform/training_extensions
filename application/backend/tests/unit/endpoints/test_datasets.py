@@ -12,7 +12,7 @@ import pytest
 from fastapi import status
 
 from app.api.dependencies import get_dataset_service, get_project
-from app.entities import DatasetItem, DatasetItemFormat, LabelReference, Rectangle
+from app.core.models import DatasetItem, DatasetItemFormat, LabelReference, Rectangle
 from app.main import app
 from app.schemas import ProjectView
 from app.schemas.dataset_item import (

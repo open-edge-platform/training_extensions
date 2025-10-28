@@ -16,9 +16,16 @@ import numpy as np
 from PIL import Image, UnidentifiedImageError
 from sqlalchemy.orm import Session
 
-from app.core.models import TaskType
+from app.core.models import (
+    DatasetItem,
+    DatasetItemAnnotation,
+    DatasetItemSubset,
+    FullImage,
+    Polygon,
+    Rectangle,
+    TaskType,
+)
 from app.db.schema import DatasetItemDB
-from app.entities import DatasetItem, DatasetItemAnnotation, DatasetItemSubset, FullImage, Polygon, Rectangle
 from app.repositories import DatasetItemRepository
 from app.schemas.label import LabelBase
 from app.schemas.project import ProjectBase, ProjectView
