@@ -1,7 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from .dataset_item_mapper import DatasetItemMapper
 from .label_mapper import LabelMapper
 from .model_revision_mapper import ModelRevisionMapper
 from .pipeline_mapper import PipelineMapper
@@ -10,7 +9,6 @@ from .sink_mapper import SinkMapper
 from .source_mapper import SourceMapper
 
 __all__ = [
-    "DatasetItemMapper",
     "LabelMapper",
     "ModelRevisionMapper",
     "PipelineMapper",

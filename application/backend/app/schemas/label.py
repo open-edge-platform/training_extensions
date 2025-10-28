@@ -6,7 +6,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, StringConstraints
 
-from app.core.models import BaseIDModel, BaseRequiredIDModel, RequiresID
+from app.core.models import BaseIDModel, RequiresID
 
 COLOR_REGEX = r"^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
 
@@ -68,16 +68,6 @@ class LabelCreate(LabelBase):
         "json_schema_extra": {
             "example": {
                 "name": "Sample Label",
-            }
-        }
-    }
-
-
-class LabelReference(BaseRequiredIDModel):
-    model_config = {
-        "json_schema_extra": {
-            "example": {
-                "id": "123e4567-e89b-12d3-a456-426614174000",
             }
         }
     }

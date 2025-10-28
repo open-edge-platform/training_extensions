@@ -1,8 +1,8 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from app.entities.base_opencv_stream import BaseOpenCVStream
 from app.schemas import SourceType
+from app.stream.base_opencv_stream import BaseOpenCVStream
 
 
 class WebcamStream(BaseOpenCVStream):

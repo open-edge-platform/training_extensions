@@ -10,7 +10,7 @@ from starlette.responses import FileResponse
 
 from app.api.dependencies import get_dataset_item_id, get_dataset_service, get_file_name_and_extension, get_project
 from app.core.models import Pagination
-from app.schemas import DatasetItem, DatasetItemsWithPagination, ProjectView
+from app.schemas import DatasetItemsWithPagination, DatasetItemView, ProjectView
 from app.schemas.dataset_item import (
     DatasetItemAnnotation,
     DatasetItemAnnotationsWithSource,
@@ -18,12 +18,7 @@ from app.schemas.dataset_item import (
     SetDatasetItemAnnotations,
 )
 from app.services import DatasetService, ResourceNotFoundError
-from app.services.dataset_service import (
-    AnnotationValidationError,
-    InvalidImageError,
-    NotAnnotatedError,
-    SubsetAlreadyAssignedError,
-)
+from app.services.dataset_service import AnnotationValidationError, InvalidImageError, SubsetAlreadyAssignedError
 
 router = APIRouter(prefix="/api/projects/{project_id}/dataset/items", tags=["Datasets"])
 
@@ -67,7 +62,7 @@ SET_DATASET_ITEM_ANNOTATIONS_BODY_EXAMPLES = {
 @router.post(
     "",
     status_code=status.HTTP_201_CREATED,
-    response_model=DatasetItem,
+    response_model=DatasetItemView,
     responses={
         status.HTTP_201_CREATED: {"description": "Dataset item created"},
         status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Invalid image has been uploaded"},
@@ -78,17 +73,18 @@ def add_dataset_item(
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
     file_name_and_extension: Annotated[tuple[str, str], Depends(get_file_name_and_extension)],
     file: Annotated[UploadFile, File()],
-) -> DatasetItem:
+) -> DatasetItemView:
     """Add a new item to the dataset by uploading an image"""
     name, format = file_name_and_extension
     try:
-        return dataset_service.create_dataset_item(
+        dataset_item = dataset_service.create_dataset_item(
             project=project,
             data=file.file,
             name=name,
             format=format,
             user_reviewed=True,
         )
+        return DatasetItemView.model_validate(dataset_item, from_attributes=True)
     except InvalidImageError:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid image has been uploaded.")
 
@@ -117,7 +113,7 @@ def list_dataset_items(
         project=project, limit=limit, offset=offset, start_date=start_date, end_date=end_date
     )
     return DatasetItemsWithPagination(
-        items=dataset_items,
+        items=[DatasetItemView.model_validate(dataset_item, from_attributes=True) for dataset_item in dataset_items],
         pagination=Pagination(
             limit=limit,
             offset=offset,
@@ -130,7 +126,7 @@ def list_dataset_items(
 @router.get(
     "/{dataset_item_id}",
     responses={
-        status.HTTP_200_OK: {"description": "Dataset item found", "model": DatasetItem},
+        status.HTTP_200_OK: {"description": "Dataset item found", "model": DatasetItemView},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid dataset item ID or project ID"},
         status.HTTP_404_NOT_FOUND: {"description": "Dataset item or project not found"},
     },
@@ -139,10 +135,11 @@ def get_dataset_item(
     project: Annotated[ProjectView, Depends(get_project)],
     dataset_item_id: Annotated[UUID, Depends(get_dataset_item_id)],
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
-) -> DatasetItem:
+) -> DatasetItemView:
     """Get information about a specific dataset item"""
     try:
-        return dataset_service.get_dataset_item_by_id(project=project, dataset_item_id=dataset_item_id)
+        dataset_item = dataset_service.get_dataset_item_by_id(project=project, dataset_item_id=dataset_item_id)
+        return DatasetItemView.model_validate(dataset_item, from_attributes=True)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -233,8 +230,13 @@ def set_dataset_item_annotations(
 ) -> DatasetItemAnnotationsWithSource:
     """Set dataset item annotations"""
     try:
-        return dataset_service.set_dataset_item_annotations(
+        dataset_item = dataset_service.set_dataset_item_annotations(
             project=project, dataset_item_id=dataset_item_id, annotations=dataset_item_annotations.annotations
+        )
+        return DatasetItemAnnotationsWithSource(
+            annotations=dataset_item.annotation_data,  # type: ignore[arg-type]
+            prediction_model_id=dataset_item.prediction_model_id,
+            user_reviewed=dataset_item.user_reviewed,
         )
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
@@ -260,8 +262,17 @@ def get_dataset_item_annotations(
 ) -> DatasetItemAnnotationsWithSource:
     """Get the dataset item annotations"""
     try:
-        return dataset_service.get_dataset_item_annotations(project=project, dataset_item_id=dataset_item_id)
-    except (ResourceNotFoundError, NotAnnotatedError) as e:
+        dataset_item = dataset_service.get_dataset_item_by_id(project=project, dataset_item_id=dataset_item_id)
+        if dataset_item.annotation_data is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Dataset item has not been annotated yet."
+            )
+        return DatasetItemAnnotationsWithSource(
+            annotations=dataset_item.annotation_data,
+            prediction_model_id=dataset_item.prediction_model_id,
+            user_reviewed=dataset_item.user_reviewed,
+        )
+    except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
@@ -302,12 +313,13 @@ def assign_dataset_item_subset(
     dataset_item_id: Annotated[UUID, Depends(get_dataset_item_id)],
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
     subset_config: Annotated[DatasetItemAssignSubset, Body()],
-) -> DatasetItem:
+) -> DatasetItemView:
     """Assign dataset item subset"""
     try:
-        return dataset_service.assign_dataset_item_subset(
+        dataset_item = dataset_service.assign_dataset_item_subset(
             project=project, dataset_item_id=dataset_item_id, subset=subset_config.subset
         )
+        return DatasetItemView.model_validate(dataset_item, from_attributes=True)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except SubsetAlreadyAssignedError as e:

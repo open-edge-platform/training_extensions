@@ -10,9 +10,9 @@ from unittest.mock import Mock, patch
 import numpy as np
 import pytest
 
-from app.entities.stream_data import StreamData
-from app.entities.video_stream import VideoStream
 from app.schemas import Source
+from app.stream.stream_data import StreamData
+from app.stream.video_stream import VideoStream
 from app.workers import StreamLoader
 
 

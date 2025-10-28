@@ -4,7 +4,7 @@
 import time
 from unittest.mock import MagicMock, call, patch
 
-from app.entities.images_folder_stream import ImagesFolderStream
+from app.stream.images_folder_stream import ImagesFolderStream
 
 
 class TestImagesFolderStream:
