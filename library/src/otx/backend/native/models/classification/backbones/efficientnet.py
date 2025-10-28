@@ -672,6 +672,6 @@ class EfficientNetBackbone:
 
         if pretrained:
             cache_dir = Path.home() / ".cache" / "torch" / "hub" / "checkpoints"
-            download_model(net=model, model_name=f"{model_name}", local_model_store_dir_path=str(cache_dir))
+            download_model(net=model, model_name=f"{model_name}c", local_model_store_dir_path=str(cache_dir))
             print(f"Download model weight in {cache_dir!s}")
         return model

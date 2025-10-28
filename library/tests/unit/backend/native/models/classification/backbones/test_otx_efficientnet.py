@@ -23,8 +23,9 @@ class TestOTXEfficientNet:
             "efficientnet_b8",
         ],
     )
-    def test_forward(self, model_name):
-        model = EfficientNetBackbone(model_name, pretrained=None)
+    @pytest.mark.parametrize("pretrained", [True, False])
+    def test_forward(self, model_name, pretrained):
+        model = EfficientNetBackbone(model_name, pretrained=pretrained)
         assert model(torch.randn(1, 3, 244, 244))[0].shape[-1] == 8
         assert model(torch.randn(1, 3, 244, 244))[0].shape[-2] == 8
 
