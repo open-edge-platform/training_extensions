@@ -3,11 +3,10 @@
 
 from .assigner import SubsetAssigner
 from .distribution import SubsetDistribution
-from .models import DatasetItemSubset, DatasetItemWithLabels, SplitRatios, SubsetAssignment
+from .models import DatasetItemWithLabels, SplitRatios, SubsetAssignment
 from .subset_service import SubsetService
 
 __all__ = [
-    "DatasetItemSubset",
     "DatasetItemWithLabels",
     "SplitRatios",
     "SubsetAssigner",
