@@ -13,7 +13,6 @@ from PIL import Image
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.core.models.dataset_item import DatasetItemSubset
 from app.db.schema import DatasetItemDB, DatasetItemLabelDB, PipelineDB
 from app.models import DatasetItemAnnotation, DatasetItemSubset, LabelReference, Rectangle
 from app.schemas import PipelineView, ProjectView

@@ -7,8 +7,8 @@ from sqlalchemy import Select, delete, func, select, update
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.orm import Session
 
-from app.core.models import DatasetItemSubset
 from app.db.schema import DatasetItemDB, DatasetItemLabelDB
+from app.models import DatasetItemSubset
 
 
 class UpdateDatasetItemAnnotation(NamedTuple):

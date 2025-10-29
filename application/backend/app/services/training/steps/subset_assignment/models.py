@@ -4,7 +4,7 @@
 from dataclasses import dataclass
 from uuid import UUID
 
-from app.core.models import DatasetItemSubset
+from app.models import DatasetItemSubset
 
 
 @dataclass(frozen=True)

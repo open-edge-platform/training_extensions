@@ -7,7 +7,6 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from app.core.models import DatasetItemFormat
 from app.db import get_db_session
 from app.models import DatasetItemFormat
 from app.schemas import ProjectView

@@ -417,7 +417,7 @@ requires-dist = [
     { name = "python-multipart", specifier = "~=0.0.20" },
     { name = "pyyaml", specifier = "~=6.0.2" },
     { name = "scikit-learn", specifier = "~=1.7.0" },
-    { name = "scikit-multilearn", specifier = ">=0.2.0" },
+    { name = "scikit-multilearn", specifier = "~=0.2.0" },
     { name = "sqlalchemy", specifier = "~=2.0.41" },
     { name = "uvicorn", specifier = "~=0.34.3" },
     { name = "watchdog", specifier = "==6.0.0" },

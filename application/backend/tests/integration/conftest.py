@@ -11,8 +11,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.core.models.task_type import TaskType
 from app.db.schema import Base, LabelDB, ModelRevisionDB, ProjectDB, SinkDB, SourceDB
+from app.models import TaskType
 from app.schemas import OutputFormat, SinkType, SourceType
 from app.schemas.model import TrainingStatus
 from app.services import MetricsService, ResourceType

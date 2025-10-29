@@ -5,7 +5,7 @@ import numpy as np
 from sklearn.preprocessing import MultiLabelBinarizer
 from skmultilearn.model_selection import IterativeStratification
 
-from app.core.models import DatasetItemSubset
+from app.models import DatasetItemSubset
 
 from .models import DatasetItemWithLabels, SplitRatios, SubsetAssignment
 

@@ -4,7 +4,7 @@ from typing import Any, Literal
 from uuid import UUID
 
 from app.core.jobs import Job, JobParams, JobType
-from app.core.models import TaskType
+from app.models import TaskType
 
 
 class TrainingParams(JobParams):

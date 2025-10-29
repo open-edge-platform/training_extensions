@@ -6,8 +6,8 @@ from uuid import uuid4
 
 from sqlalchemy.orm import Session
 
-from app.core.models import DatasetItemSubset
 from app.db.schema import DatasetItemDB, DatasetItemLabelDB, LabelDB, ModelRevisionDB, PipelineDB, ProjectDB
+from app.models import DatasetItemSubset
 
 
 class ProjectTestDataFactory:

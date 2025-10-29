@@ -6,7 +6,7 @@ from uuid import UUID
 
 from sqlalchemy.orm import Session
 
-from app.core.models import DatasetItemSubset
+from app.models import DatasetItemSubset
 from app.repositories import DatasetItemRepository
 
 from .distribution import SubsetDistribution

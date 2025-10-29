@@ -6,7 +6,7 @@ from uuid import uuid4
 
 import pytest
 
-from app.core.models import DatasetItemSubset, TaskType
+from app.models import DatasetItemSubset, TaskType
 from app.services.training.base import PipelineContext
 from app.services.training.models import TrainingParams
 from app.services.training.steps.assign_subsets import AssignSubsetsStep

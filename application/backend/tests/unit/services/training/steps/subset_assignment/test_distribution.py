@@ -3,7 +3,7 @@
 
 import pytest
 
-from app.core.models import DatasetItemSubset
+from app.models import DatasetItemSubset
 from app.services.training.steps.subset_assignment import SplitRatios, SubsetDistribution
 
 

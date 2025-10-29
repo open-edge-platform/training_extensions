@@ -1,7 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from app.core.models import DatasetItemSubset
+from app.models import DatasetItemSubset
 
 from .models import SplitRatios
 

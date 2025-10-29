@@ -7,7 +7,7 @@ from uuid import uuid4
 
 import pytest
 
-from app.core.models import TaskType
+from app.models import TaskType
 from app.services.base_weights_service import BaseWeightsService
 from app.services.training.base import PipelineContext
 from app.services.training.models import TrainingParams

@@ -7,8 +7,8 @@ import pytest
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.core.models import DatasetItemSubset
 from app.db.schema import DatasetItemDB, LabelDB, ProjectDB
+from app.models import DatasetItemSubset
 from app.services.training.steps.subset_assignment import SubsetService
 from app.services.training.steps.subset_assignment.models import SubsetAssignment
 from tests.integration.project_factory import ProjectTestDataFactory

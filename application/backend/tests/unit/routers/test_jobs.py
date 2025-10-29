@@ -10,8 +10,8 @@ from starlette import status
 from app.api.dependencies import get_job_queue
 from app.core.jobs import Job, JobParams, JobQueue, JobStatus
 from app.core.jobs.control_plane import CancellationResult
-from app.core.models import TaskType
 from app.main import app
+from app.models import TaskType
 from app.schemas import ProjectView
 from app.schemas.job import JobRequest, JobType, JobView, TrainingRequestParams
 from app.schemas.project import TaskView
