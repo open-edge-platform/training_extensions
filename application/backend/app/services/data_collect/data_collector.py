@@ -8,12 +8,12 @@ import cv2
 import numpy as np
 
 from app.db import get_db_session
-from app.entities.stream_data import InferenceData
+from app.models import DatasetItemFormat
 from app.schemas import ProjectView
-from app.schemas.dataset_item import DatasetItemFormat
 from app.schemas.pipeline import ConfidenceThresholdDataCollectionPolicy, FixedRateDataCollectionPolicy, PipelineView
 from app.services.data_collect.prediction_converter import convert_prediction, get_confidence_scores
 from app.services.event.event_bus import EventBus, EventType
+from app.stream.stream_data import InferenceData
 
 logger = logging.getLogger(__name__)
 

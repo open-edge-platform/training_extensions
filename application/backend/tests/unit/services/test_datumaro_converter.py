@@ -1,16 +1,24 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-from typing import Any
 from unittest.mock import MagicMock, call
 from uuid import UUID, uuid4
 
 import numpy as np
 import pytest
 
-from app.db.schema import DatasetItemDB
-from app.schemas.dataset_item import DatasetItemAnnotation, DatasetItemSubset
-from app.schemas.label import LabelReference, LabelView
-from app.schemas.shape import FullImage, Point, Polygon, Rectangle, Shape
+from app.models import (
+    DatasetItem,
+    DatasetItemAnnotation,
+    DatasetItemFormat,
+    DatasetItemSubset,
+    FullImage,
+    LabelReference,
+    Point,
+    Polygon,
+    Rectangle,
+    Shape,
+)
+from app.schemas.label import LabelView
 from app.services.datumaro_converter import (
     ClassificationSample,
     DetectionSample,
@@ -36,16 +44,16 @@ def fxt_project_labels():
 @pytest.fixture
 def fxt_dataset_item():
     def _create_dataset_item(
-        project_id: str,
+        project_id: UUID,
         name: str,
-        format: str = "jpg",
+        format: DatasetItemFormat = DatasetItemFormat.JPG,
         width: int = 200,
         height: int = 100,
         size: int = 300,
-        annotation_data: list[dict[str, Any]] = [],
-    ) -> DatasetItemDB:
-        return DatasetItemDB(
-            id=str(uuid4()),
+        annotation_data: list[DatasetItemAnnotation] = [],
+    ) -> DatasetItem:
+        return DatasetItem(
+            id=uuid4(),
             project_id=project_id,
             name=name,
             format=format,
@@ -54,6 +62,10 @@ def fxt_dataset_item():
             size=size,
             annotation_data=annotation_data,
             subset=DatasetItemSubset.UNASSIGNED,
+            subset_assigned_at=None,
+            user_reviewed=False,
+            source_id=None,
+            prediction_model_id=None,
         )
 
     return _create_dataset_item
@@ -61,10 +73,8 @@ def fxt_dataset_item():
 
 @pytest.fixture
 def fxt_dataset_item_annotation():
-    def _create_dataset_item_annotation(labels: list[str], shape: Shape) -> dict[str, Any]:
-        return DatasetItemAnnotation(
-            labels=[LabelReference(id=UUID(label)) for label in labels], shape=shape
-        ).model_dump(mode="json")
+    def _create_dataset_item_annotation(labels: list[str], shape: Shape) -> DatasetItemAnnotation:
+        return DatasetItemAnnotation(labels=[LabelReference(id=UUID(label)) for label in labels], shape=shape)
 
     return _create_dataset_item_annotation
 
@@ -72,8 +82,8 @@ def fxt_dataset_item_annotation():
 @pytest.fixture
 def fxt_detection_dataset_item(fxt_dataset_item, fxt_dataset_item_annotation):
     def _create_detection_dataset_item(
-        project_id: str, name: str, label: str, x: int, y: int, width: int, height: int
-    ) -> DatasetItemDB:
+        project_id: UUID, name: str, label: str, x: int, y: int, width: int, height: int
+    ) -> DatasetItem:
         return fxt_dataset_item(
             project_id=project_id,
             name=name,
@@ -87,7 +97,7 @@ def fxt_detection_dataset_item(fxt_dataset_item, fxt_dataset_item_annotation):
 
 @pytest.fixture
 def fxt_classification_dataset_item(fxt_dataset_item, fxt_dataset_item_annotation):
-    def _create_classification_dataset_item(project_id: str, name: str, label: str) -> DatasetItemDB:
+    def _create_classification_dataset_item(project_id: UUID, name: str, label: str) -> DatasetItem:
         return fxt_dataset_item(
             project_id=project_id,
             name=name,
@@ -99,7 +109,7 @@ def fxt_classification_dataset_item(fxt_dataset_item, fxt_dataset_item_annotatio
 
 @pytest.fixture
 def fxt_multiclass_classification_dataset_item(fxt_dataset_item, fxt_dataset_item_annotation):
-    def _create_classification_dataset_item(project_id: str, name: str, labels: list[str]) -> DatasetItemDB:
+    def _create_classification_dataset_item(project_id: UUID, name: str, labels: list[str]) -> DatasetItem:
         return fxt_dataset_item(
             project_id=project_id,
             name=name,
@@ -112,8 +122,8 @@ def fxt_multiclass_classification_dataset_item(fxt_dataset_item, fxt_dataset_ite
 @pytest.fixture
 def fxt_instance_segmentation_dataset_item(fxt_dataset_item, fxt_dataset_item_annotation):
     def _create_instance_segmentation_dataset_item(
-        project_id: str, name: str, annotations: list[tuple[str, list[list[int]]]]
-    ) -> DatasetItemDB:
+        project_id: UUID, name: str, annotations: list[tuple[str, list[list[int]]]]
+    ) -> DatasetItem:
         return fxt_dataset_item(
             project_id=project_id,
             name=name,
@@ -141,7 +151,7 @@ def test_convert_polygon() -> None:
 
 
 def test_convert_detection_dataset(fxt_project_labels, fxt_detection_dataset_item) -> None:
-    project_id = str(uuid4())
+    project_id = uuid4()
     dataset_item_1 = fxt_detection_dataset_item(project_id, "cat", str(fxt_project_labels[0].id), 4, 5, 10, 10)
     dataset_item_2 = fxt_detection_dataset_item(project_id, "dog", str(fxt_project_labels[1].id), 14, 35, 10, 10)
     get_dataset_items = MagicMock(side_effect=[[dataset_item_1, dataset_item_2], []])
@@ -176,7 +186,7 @@ def test_convert_detection_dataset(fxt_project_labels, fxt_detection_dataset_ite
 
 
 def test_convert_classification_dataset(fxt_project_labels, fxt_classification_dataset_item) -> None:
-    project_id = str(uuid4())
+    project_id = uuid4()
     dataset_item_1 = fxt_classification_dataset_item(project_id, "cat", str(fxt_project_labels[0].id))
     dataset_item_2 = fxt_classification_dataset_item(project_id, "dog", str(fxt_project_labels[1].id))
     get_dataset_items = MagicMock(side_effect=[[dataset_item_1, dataset_item_2], []])
@@ -213,7 +223,7 @@ def test_convert_classification_dataset(fxt_project_labels, fxt_classification_d
 def test_convert_multiclass_classification_dataset_item(
     fxt_project_labels, fxt_multiclass_classification_dataset_item
 ) -> None:
-    project_id = str(uuid4())
+    project_id = uuid4()
     dataset_item = fxt_multiclass_classification_dataset_item(
         project_id, "1", [str(fxt_project_labels[0].id), str(fxt_project_labels[1].id)]
     )
@@ -236,7 +246,7 @@ def test_convert_multiclass_classification_dataset_item(
 
 
 def test_convert_instance_segmentation_dataset(fxt_project_labels, fxt_instance_segmentation_dataset_item) -> None:
-    project_id = str(uuid4())
+    project_id = uuid4()
     dataset_item_1 = fxt_instance_segmentation_dataset_item(
         project_id,
         "cat",

@@ -12,33 +12,36 @@ import pytest
 from fastapi import status
 
 from app.api.dependencies import get_dataset_service, get_project
-from app.main import app
-from app.schemas import DatasetItem, ProjectView
-from app.schemas.dataset_item import (
+from app.api.schemas.dataset_item import (
     DatasetItemAnnotation,
-    DatasetItemAnnotationsWithSource,
     DatasetItemAssignSubset,
-    DatasetItemFormat,
     DatasetItemSubset,
+    DatasetItemView,
     SetDatasetItemAnnotations,
 )
-from app.schemas.label import LabelReference
-from app.schemas.shape import Rectangle
+from app.main import app
+from app.models import DatasetItem, DatasetItemFormat, LabelReference, Rectangle
+from app.schemas import ProjectView
 from app.services import DatasetService, ResourceNotFoundError, ResourceType
-from app.services.dataset_service import AnnotationValidationError, NotAnnotatedError, SubsetAlreadyAssignedError
+from app.services.dataset_service import AnnotationValidationError, SubsetAlreadyAssignedError
 
 
 @pytest.fixture
 def fxt_dataset_item():
     return DatasetItem(
         id=uuid4(),
+        project_id=uuid4(),
         name="test_dataset_item",
         format=DatasetItemFormat.JPG,
         width=1024,
         height=768,
         size=2048,
+        annotation_data=None,
+        prediction_model_id=uuid4(),
         source_id=uuid4(),
         subset=DatasetItemSubset.UNASSIGNED,
+        user_reviewed=False,
+        subset_assigned_at=None,
     )
 
 
@@ -55,6 +58,20 @@ def fxt_project() -> Generator[ProjectView]:
     app.dependency_overrides[get_project] = lambda: project
     yield project
     del app.dependency_overrides[get_project]
+
+
+def test_convert_dataset_item_to_view(fxt_dataset_item) -> None:
+    view = DatasetItemView.model_validate(fxt_dataset_item, from_attributes=True)
+    assert view == DatasetItemView(
+        id=fxt_dataset_item.id,
+        name=fxt_dataset_item.name,
+        format=fxt_dataset_item.format,
+        width=fxt_dataset_item.width,
+        height=fxt_dataset_item.height,
+        size=fxt_dataset_item.size,
+        source_id=fxt_dataset_item.source_id,
+        subset=DatasetItemSubset.UNASSIGNED,
+    )
 
 
 class TestDatasetItemEndpoints:
@@ -75,6 +92,16 @@ class TestDatasetItemEndpoints:
         )
 
         assert response.status_code == status.HTTP_201_CREATED
+        assert response.json() == {
+            "format": "jpg",
+            "height": 768,
+            "id": str(fxt_dataset_item.id),
+            "name": "test_dataset_item",
+            "size": 2048,
+            "source_id": str(fxt_dataset_item.source_id),
+            "subset": "unassigned",
+            "width": 1024,
+        }
         fxt_dataset_service.create_dataset_item.assert_called_once_with(
             project=fxt_project,
             data=ANY,
@@ -156,7 +183,7 @@ class TestDatasetItemEndpoints:
             ),
             ("delete", f"/api/projects/{uuid4()}/dataset/items/invalid-id", "delete_dataset_item"),
             ("post", f"/api/projects/{uuid4()}/dataset/items/invalid-id/annotations", "set_dataset_item_annotations"),
-            ("get", f"/api/projects/{uuid4()}/dataset/items/invalid-id/annotations", "get_dataset_item_annotations"),
+            ("get", f"/api/projects/{uuid4()}/dataset/items/invalid-id/annotations", "get_dataset_item_by_id"),
             (
                 "delete",
                 f"/api/projects/{uuid4()}/dataset/items/invalid-id/annotations",
@@ -190,6 +217,16 @@ class TestDatasetItemEndpoints:
         response = fxt_client.get(f"/api/projects/{str(uuid4())}/dataset/items/{str(fxt_dataset_item.id)}")
 
         assert response.status_code == status.HTTP_200_OK
+        assert response.json() == {
+            "format": "jpg",
+            "height": 768,
+            "id": str(fxt_dataset_item.id),
+            "name": "test_dataset_item",
+            "size": 2048,
+            "source_id": str(fxt_dataset_item.source_id),
+            "subset": "unassigned",
+            "width": 1024,
+        }
         fxt_dataset_service.get_dataset_item_by_id.assert_called_once_with(
             project=fxt_project, dataset_item_id=fxt_dataset_item.id
         )
@@ -276,11 +313,13 @@ class TestDatasetItemEndpoints:
                 shape=Rectangle(type="rectangle", x=0, y=0, width=10, height=10),
             )
         ]
-        fxt_dataset_service.set_dataset_item_annotations.return_value = DatasetItemAnnotationsWithSource(
-            annotations=annotations,
+        dataset_item = MagicMock(
+            spec=DatasetItem,
+            annotation_data=annotations,
             user_reviewed=True,
             prediction_model_id=None,
         )
+        fxt_dataset_service.set_dataset_item_annotations.return_value = dataset_item
 
         response = fxt_client.post(
             f"/api/projects/{str(uuid4())}/dataset/items/{str(dataset_item_id)}/annotations",
@@ -288,6 +327,17 @@ class TestDatasetItemEndpoints:
         )
 
         assert response.status_code == status.HTTP_201_CREATED
+        assert response.json() == {
+            "annotations": [
+                {
+                    "confidence": None,
+                    "labels": [{"id": str(label_id)}],
+                    "shape": {"height": 10, "type": "rectangle", "width": 10, "x": 0, "y": 0},
+                }
+            ],
+            "prediction_model_id": None,
+            "user_reviewed": True,
+        }
         fxt_dataset_service.set_dataset_item_annotations.assert_called_once_with(
             project=fxt_project,
             dataset_item_id=dataset_item_id,
@@ -345,8 +395,9 @@ class TestDatasetItemEndpoints:
     def test_get_dataset_item_annotations(self, fxt_project, fxt_dataset_service, fxt_client):
         label_id = uuid4()
         dataset_item_id = uuid4()
-        fxt_dataset_service.get_dataset_item_annotations.return_value = DatasetItemAnnotationsWithSource(
-            annotations=[
+        dataset_item = MagicMock(
+            spec=DatasetItem,
+            annotation_data=[
                 DatasetItemAnnotation(
                     labels=[LabelReference(id=label_id)],
                     shape=Rectangle(type="rectangle", x=0, y=0, width=10, height=10),
@@ -355,37 +406,50 @@ class TestDatasetItemEndpoints:
             user_reviewed=True,
             prediction_model_id=None,
         )
+        fxt_dataset_service.get_dataset_item_by_id.return_value = dataset_item
 
         response = fxt_client.get(f"/api/projects/{str(uuid4())}/dataset/items/{str(dataset_item_id)}/annotations")
 
         assert response.status_code == status.HTTP_200_OK
-        fxt_dataset_service.get_dataset_item_annotations.assert_called_once_with(
+        assert response.json() == {
+            "annotations": [
+                {
+                    "confidence": None,
+                    "labels": [{"id": str(label_id)}],
+                    "shape": {"height": 10, "type": "rectangle", "width": 10, "x": 0, "y": 0},
+                }
+            ],
+            "prediction_model_id": None,
+            "user_reviewed": True,
+        }
+        fxt_dataset_service.get_dataset_item_by_id.assert_called_once_with(
             project=fxt_project,
             dataset_item_id=dataset_item_id,
         )
 
     def test_get_dataset_item_annotations_not_found(self, fxt_project, fxt_dataset_service, fxt_client):
         dataset_item_id = uuid4()
-        fxt_dataset_service.get_dataset_item_annotations.side_effect = ResourceNotFoundError(
+        fxt_dataset_service.get_dataset_item_by_id.side_effect = ResourceNotFoundError(
             ResourceType.DATASET_ITEM, str(dataset_item_id)
         )
 
         response = fxt_client.get(f"/api/projects/{str(uuid4())}/dataset/items/{str(dataset_item_id)}/annotations")
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
-        fxt_dataset_service.get_dataset_item_annotations.assert_called_once_with(
+        fxt_dataset_service.get_dataset_item_by_id.assert_called_once_with(
             project=fxt_project,
             dataset_item_id=dataset_item_id,
         )
 
     def test_get_dataset_item_annotations_not_annotated(self, fxt_project, fxt_dataset_service, fxt_client):
         dataset_item_id = uuid4()
-        fxt_dataset_service.get_dataset_item_annotations.side_effect = NotAnnotatedError
+        dataset_item = MagicMock(spec=DatasetItem, annotation_data=None, user_reviewed=False, prediction_model_id=None)
+        fxt_dataset_service.get_dataset_item_by_id.return_value = dataset_item
 
         response = fxt_client.get(f"/api/projects/{str(uuid4())}/dataset/items/{str(dataset_item_id)}/annotations")
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
-        fxt_dataset_service.get_dataset_item_annotations.assert_called_once_with(
+        fxt_dataset_service.get_dataset_item_by_id.assert_called_once_with(
             project=fxt_project,
             dataset_item_id=dataset_item_id,
         )
@@ -426,6 +490,16 @@ class TestDatasetItemEndpoints:
         )
 
         assert response.status_code == status.HTTP_200_OK
+        assert response.json() == {
+            "format": "jpg",
+            "height": 768,
+            "id": str(fxt_dataset_item.id),
+            "name": "test_dataset_item",
+            "size": 2048,
+            "source_id": str(fxt_dataset_item.source_id),
+            "subset": "unassigned",
+            "width": 1024,
+        }
         fxt_dataset_service.assign_dataset_item_subset.assert_called_once_with(
             project=fxt_project,
             dataset_item_id=dataset_item_id,

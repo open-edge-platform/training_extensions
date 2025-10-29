@@ -9,10 +9,8 @@ import numpy as np
 import pytest
 import time_machine
 
-from app.schemas.dataset_item import DatasetItemAnnotation, DatasetItemFormat
-from app.schemas.label import LabelReference
+from app.models import DatasetItemAnnotation, DatasetItemFormat, FullImage, LabelReference
 from app.schemas.pipeline import ConfidenceThresholdDataCollectionPolicy, FixedRateDataCollectionPolicy
-from app.schemas.shape import FullImage
 from app.services import DatasetService
 from app.services.data_collect.data_collector import (
     ConfidenceThresholdPolicyChecker,

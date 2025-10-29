@@ -7,10 +7,8 @@ import model_api.models.result
 import numpy as np
 from model_api.models import ClassificationResult, DetectionResult, InstanceSegmentationResult
 
+from app.models import DatasetItemAnnotation, FullImage, LabelReference, Point, Polygon, Rectangle
 from app.schemas import LabelView
-from app.schemas.dataset_item import DatasetItemAnnotation
-from app.schemas.label import LabelReference
-from app.schemas.shape import FullImage, Point, Polygon, Rectangle
 from app.services.data_collect.prediction_converter import convert_prediction, get_confidence_scores
 
 

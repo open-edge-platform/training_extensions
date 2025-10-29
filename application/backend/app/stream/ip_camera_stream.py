@@ -7,8 +7,8 @@ import time
 import cv2
 import numpy as np
 
-from app.entities.base_opencv_stream import BaseOpenCVStream
 from app.schemas.source import IPCameraSourceConfig, SourceType
+from app.stream.base_opencv_stream import BaseOpenCVStream
 
 logger = logging.getLogger(__name__)
 

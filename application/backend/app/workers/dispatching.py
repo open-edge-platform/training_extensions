@@ -7,13 +7,13 @@ import queue
 from multiprocessing.synchronize import Event as EventClass
 
 from app.db import get_db_session
-from app.entities.stream_data import StreamData
 from app.schemas import DisconnectedSinkConfig, Sink, SinkType
 from app.services import DispatchService
 from app.services.configuration_service import SinkService
 from app.services.data_collect import DataCollector
 from app.services.dispatchers import Dispatcher
 from app.services.event.event_bus import EventBus, EventType
+from app.stream.stream_data import StreamData
 from app.workers.base import BaseThreadWorker
 
 logger = logging.getLogger(__name__)

@@ -4,7 +4,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
 
-from app.entities.stream_data import StreamData
+from app.stream.stream_data import StreamData
 
 
 class VideoStream(ABC):

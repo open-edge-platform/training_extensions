@@ -9,11 +9,11 @@ from multiprocessing.synchronize import Event as EventClass
 from threading import Thread
 
 from app.db import get_db_session
-from app.entities.stream_data import StreamData
-from app.entities.video_stream import VideoStream
 from app.schemas import DisconnectedSourceConfig, Source, SourceType
 from app.services import VideoStreamService
 from app.services.configuration_service import SourceService
+from app.stream.stream_data import StreamData
+from app.stream.video_stream import VideoStream
 from app.workers.base import BaseProcessWorker
 
 logger = logging.getLogger(__name__)

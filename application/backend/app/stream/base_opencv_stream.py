@@ -8,9 +8,9 @@ from typing import Any
 import cv2
 import numpy as np
 
-from app.entities.stream_data import StreamData
-from app.entities.video_stream import VideoStream
 from app.schemas import SourceType
+from app.stream.stream_data import StreamData
+from app.stream.video_stream import VideoStream
 
 
 class BaseOpenCVStream(VideoStream, ABC):

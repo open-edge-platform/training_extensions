@@ -4,8 +4,8 @@
 import cv2
 import numpy as np
 
-from app.entities.base_opencv_stream import BaseOpenCVStream
 from app.schemas import SourceType
+from app.stream.base_opencv_stream import BaseOpenCVStream
 
 
 class VideoFileStream(BaseOpenCVStream):

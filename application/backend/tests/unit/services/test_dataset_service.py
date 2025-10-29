@@ -5,10 +5,9 @@ from uuid import uuid4
 import pytest
 
 from app.db.schema import DatasetItemDB
-from app.schemas.dataset_item import DatasetItemAnnotation
-from app.schemas.label import LabelReference, LabelView
+from app.models import DatasetItemAnnotation, FullImage, LabelReference, Point, Polygon, Rectangle
+from app.schemas.label import LabelView
 from app.schemas.project import ProjectView, TaskType, TaskView
-from app.schemas.shape import FullImage, Point, Polygon, Rectangle
 from app.services import DatasetService
 from app.services.dataset_service import AnnotationValidationError
 
