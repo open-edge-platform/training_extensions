@@ -12,6 +12,7 @@ COLOR_REGEX = r"^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
 
 # TODO: move this module to app.api.schemas when project refactoring is done
 
+
 class LabelEdit(BaseModel):
     id: UUID = Field(..., description="UUID of the label to edit")
     new_name: str | None = Field(None, min_length=1, max_length=50, description="New label name")
