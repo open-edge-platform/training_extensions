@@ -1,90 +1,71 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import logging
 from abc import ABC, abstractmethod
+from collections.abc import Callable
+from functools import wraps
+from typing import Any, TypeVar
 
 from app.core.run import ExecutionContext, Runnable
 
 from .models import TrainingParams
 
-
-class PipelineContext:
-    """Context for the training pipeline execution."""
-
-    def __init__(self) -> None:
-        self.data: dict[str, object] = {}
-
-    def set(self, key: str, value: object) -> None:
-        self.data[key] = value
-
-    def get(self, key: str, default: object = None) -> object:
-        return self.data.get(key, default)
+logger = logging.getLogger(__name__)
+T = TypeVar("T")
 
 
-class TrainingStep(ABC):
-    """A single step in the training pipeline."""
+def step(name: str) -> Callable[[Callable[..., T]], Callable[..., T]]:
+    """
+    Decorator to mark a method as a training step.
 
-    @abstractmethod
-    def execute(self, ctx: ExecutionContext, params: TrainingParams, pipeline_ctx: PipelineContext) -> None:
-        """Execute this training step."""
+    Usage:
+        class MyTrainer(Trainer):
+            @step("Prepare Weights")
+            def prepare_weights(self, ...) -> None:
+                # implementation
+                pass
 
-    @abstractmethod
-    def get_name(self) -> str:
-        """Return human-readable step name."""
+    Args:
+        name: Human-readable name for the step (used in logging and progress reporting).
+    """
 
+    def decorator(func: Callable[..., T]) -> Callable[..., T]:
+        @wraps(func)
+        def wrapper(self: Any, *args: Any, **kwargs: Any) -> T:
+            self.report_progress(f"Starting: {name}")
+            result = func(self, *args, **kwargs)
+            self.report_progress(f"Completed: {name}")
+            return result
 
-class TrainingPipeline:
-    """Composable pipeline of training steps."""
+        return wrapper
 
-    def __init__(self, steps: list[TrainingStep]):
-        self._steps = steps
-
-    def execute(self, ctx: ExecutionContext, params: TrainingParams) -> None:
-        pipeline_ctx = PipelineContext()
-        for step in self._steps:
-            ctx.report_progress(f"Starting: {step.get_name()}")
-            step.execute(ctx, params, pipeline_ctx)
-            ctx.report_progress(f"Completed: {step.get_name()}")
-            ctx.heartbeat()
+    return decorator
 
 
 class Trainer(Runnable, ABC):
     """
     Abstract base class for model training workflows.
 
-    Subclasses should build a training pipeline by composing
-    appropriate training steps in the _build_pipeline method.
+    Subclasses should implement their training logic by defining methods decorated with @step.
     """
 
     def __init__(self) -> None:
-        self._pipeline: TrainingPipeline | None = None
+        self._ctx: ExecutionContext | None = None
+        self._training_params: TrainingParams | None = None
 
     @abstractmethod
-    def _build_pipeline(self) -> TrainingPipeline:
-        """
-        Build the training pipeline with all necessary steps.
-
-        Returns:
-            Configured training pipeline
-        """
-
-    def run(self, ctx: ExecutionContext) -> None:
-        """
-        Execute the training workflow.
-
-        Args:
-            ctx: Execution context with job parameters
-        """
-        params = self._get_training_params(ctx)
-        ctx.report_progress(f"Training job started: {params.job_id}")
-
-        if self._pipeline is None:
-            self._pipeline = self._build_pipeline()
-
-        self._pipeline.execute(ctx, params)
-
-        ctx.report_progress(f"Training job completed: {params.job_id}")
+    def run(self, ctx: ExecutionContext) -> None: ...
 
     @staticmethod
     def _get_training_params(ctx: ExecutionContext) -> TrainingParams:
         return TrainingParams.model_validate_json(ctx.payload)
+
+    def report_progress(self, msg: str = "", percent: float = 0.0) -> None:
+        if self._ctx is not None:
+            logger.info(msg)
+            self._ctx.report(msg, percent)
+
+    def heartbeat(self) -> None:
+        if self._ctx is not None:
+            self._ctx.heartbeat()

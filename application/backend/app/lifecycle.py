@@ -22,7 +22,7 @@ from app.services.base_weights_service import BaseWeightsService
 from app.services.data_collect import DataCollector
 from app.services.event.event_bus import EventBus
 from app.services.training import OTXTrainer
-from app.services.training.steps.subset_assignment import SubsetService
+from app.services.training.subset_assignment import SubsetAssigner, SubsetService
 from app.settings import get_settings
 from app.webrtc.manager import WebRTCManager
 
@@ -48,12 +48,14 @@ def setup_job_controller(data_dir: Path, max_parallel_jobs: int) -> tuple[JobQue
     job_runnable_factory = RunnableFactory[JobType, Runnable]()
     base_weights_service = BaseWeightsService(data_dir=data_dir)
     subset_service = SubsetService()
+    subset_assigner = SubsetAssigner()
     job_runnable_factory.register(
         JobType.TRAIN,
         partial(
             OTXTrainer,
             base_weights_service=base_weights_service,
             subset_service=subset_service,
+            subset_assigner=subset_assigner,
             data_dir=data_dir,
             db_session_factory=get_db_session,
         ),
