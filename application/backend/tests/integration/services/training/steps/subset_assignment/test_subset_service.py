@@ -11,7 +11,27 @@ from app.core.models import DatasetItemSubset
 from app.db.schema import DatasetItemDB, LabelDB, ProjectDB
 from app.services.training.steps.subset_assignment import SubsetService
 from app.services.training.steps.subset_assignment.models import SubsetAssignment
-from tests.integration.project_builder import ProjectBuilder
+from tests.integration.project_factory import ProjectTestDataFactory
+
+
+@pytest.fixture(autouse=True)
+def setup_project_with_dataset_items(
+    fxt_db_projects: list[ProjectDB],
+    fxt_db_labels: list[LabelDB],
+    fxt_default_distribution: dict[DatasetItemSubset, int],
+    db_session: Session,
+) -> None:
+    """Fixture to set up a project with dataset items in the database."""
+
+    db_label = fxt_db_labels[0]
+    (
+        ProjectTestDataFactory(db_session)
+        .with_project(fxt_db_projects[0])
+        .with_label(db_label)
+        .with_dataset_items(fxt_default_distribution)
+        .with_item_labels(db_label)
+        .build()
+    )
 
 
 @pytest.fixture
@@ -29,31 +49,6 @@ def fxt_default_distribution() -> dict[DatasetItemSubset, int]:
         DatasetItemSubset.TESTING: 10,
         DatasetItemSubset.UNASSIGNED: 50,
     }
-
-
-@pytest.fixture(autouse=True)
-def setup_project_with_dataset_items(
-    fxt_db_projects: list[ProjectDB],
-    fxt_db_labels: list[LabelDB],
-    fxt_default_distribution: dict[DatasetItemSubset, int],
-    db_session: Session,
-) -> None:
-    """Fixture to set up a project with dataset items in the database."""
-
-    db_label = fxt_db_labels[0]
-    (
-        ProjectBuilder(db_session)
-        .with_project(fxt_db_projects[0])
-        .with_label(db_label)
-        .with_dataset_items(fxt_default_distribution)
-        .with_item_labels(db_label)
-        .build()
-    )
-
-
-@pytest.fixture
-def fxt_project_id(fxt_db_projects: list[ProjectDB]) -> UUID:
-    return UUID(fxt_db_projects[0].id)
 
 
 class TestSubsetServiceIntegration:

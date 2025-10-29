@@ -7,25 +7,45 @@ from uuid import uuid4
 from sqlalchemy.orm import Session
 
 from app.core.models import DatasetItemSubset
-from app.db.schema import DatasetItemDB, DatasetItemLabelDB, LabelDB, ProjectDB
+from app.db.schema import DatasetItemDB, DatasetItemLabelDB, LabelDB, ModelRevisionDB, PipelineDB, ProjectDB
 
 
-class ProjectBuilder:
+class ProjectTestDataFactory:
     """Builder for creating test projects with related entities."""
 
     def __init__(self, db_session: Session):
         self.db_session = db_session
         self._project: ProjectDB | None = None
+        self._pipeline: PipelineDB | None = None
+        self._model_revisions: list[ModelRevisionDB] = []
         self._labels: list[LabelDB] = []
         self._dataset_items: list[DatasetItemDB] = []
         self._item_labels: list[DatasetItemLabelDB] = []
 
-    def with_project(self, project: ProjectDB) -> "ProjectBuilder":
+    def with_project(self, project: ProjectDB) -> "ProjectTestDataFactory":
         """Add a project to the builder."""
         self._project = project
         return self
 
-    def with_label(self, label: LabelDB) -> "ProjectBuilder":
+    def with_pipeline(self, is_running: bool = False) -> "ProjectTestDataFactory":
+        """Add a pipeline to the project."""
+        if not self._project:
+            raise ValueError("Project must be set before adding a pipeline")
+
+        self._pipeline = PipelineDB(project_id=self._project.id, is_running=is_running)
+        return self
+
+    def with_models(self, model_revisions: list[ModelRevisionDB]) -> "ProjectTestDataFactory":
+        """Add models to the project."""
+        if not self._project:
+            raise ValueError("Project must be set before adding models")
+
+        for model in model_revisions:
+            model.project_id = self._project.id
+        self._model_revisions.extend(model_revisions)
+        return self
+
+    def with_label(self, label: LabelDB) -> "ProjectTestDataFactory":
         """Add a label to the project."""
         if not self._project:
             raise ValueError("Project must be set before adding labels")
@@ -33,7 +53,7 @@ class ProjectBuilder:
         self._labels.append(label)
         return self
 
-    def with_dataset_items(self, subset_distribution: dict[DatasetItemSubset, int]) -> "ProjectBuilder":
+    def with_dataset_items(self, subset_distribution: dict[DatasetItemSubset, int]) -> "ProjectTestDataFactory":
         """Add dataset items with specified subset distribution."""
         if not self._project:
             raise ValueError("Project must be set before adding dataset items")
@@ -56,7 +76,7 @@ class ProjectBuilder:
         self._dataset_items.extend(items)
         return self
 
-    def with_item_labels(self, label: LabelDB) -> "ProjectBuilder":
+    def with_item_labels(self, label: LabelDB) -> "ProjectTestDataFactory":
         """Link all dataset items to a label."""
         if not self._dataset_items:
             raise ValueError("Dataset items must be added before linking labels")
@@ -72,6 +92,14 @@ class ProjectBuilder:
 
         self.db_session.add(self._project)
         self.db_session.flush()
+
+        if self._pipeline:
+            self.db_session.add(self._pipeline)
+            self.db_session.flush()
+
+        if self._model_revisions:
+            self.db_session.add_all(self._model_revisions)
+            self.db_session.flush()
 
         if self._labels:
             self.db_session.add_all(self._labels)
