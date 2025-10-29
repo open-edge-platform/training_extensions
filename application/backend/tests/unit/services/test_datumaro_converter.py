@@ -27,7 +27,7 @@ from app.services.datumaro_converter import (
     convert_classification_dataset,
     convert_detection_dataset,
     convert_instance_segmentation_dataset,
-    convert_multiclass_classification_dataset,
+    convert_multilabel_classification_dataset,
     convert_polygon,
     convert_rectangle,
 )
@@ -186,7 +186,7 @@ def test_convert_detection_dataset(fxt_project_labels, fxt_detection_dataset_ite
     )
 
 
-def test_convert_classification_dataset(fxt_project_labels, fxt_classification_dataset_item) -> None:
+def test_convert_multiclass_classification_dataset(fxt_project_labels, fxt_classification_dataset_item) -> None:
     project_id = uuid4()
     dataset_item_1 = fxt_classification_dataset_item(project_id, "cat", str(fxt_project_labels[0].id))
     dataset_item_2 = fxt_classification_dataset_item(project_id, "dog", str(fxt_project_labels[1].id))
@@ -221,7 +221,7 @@ def test_convert_classification_dataset(fxt_project_labels, fxt_classification_d
     )
 
 
-def test_convert_multiclass_classification_dataset_item(
+def test_convert_multilabel_classification_dataset_item(
     fxt_project_labels, fxt_multiclass_classification_dataset_item
 ) -> None:
     project_id = uuid4()
@@ -231,7 +231,7 @@ def test_convert_multiclass_classification_dataset_item(
     get_dataset_items = MagicMock(side_effect=[[dataset_item], []])
     get_image_path = MagicMock(side_effect=["path1"])
 
-    dataset = convert_multiclass_classification_dataset(
+    dataset = convert_multilabel_classification_dataset(
         project_labels=fxt_project_labels, get_dataset_items=get_dataset_items, get_image_path=get_image_path
     )
 
