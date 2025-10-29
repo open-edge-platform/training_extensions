@@ -11,7 +11,8 @@ from datumaro.experimental import Dataset, Sample, bbox_field, image_info_field,
 from datumaro.experimental.categories import LabelCategories
 from datumaro.experimental.fields import ImageInfo, polygon_field
 
-from app.core.models import DatasetItem, Polygon, Rectangle, TaskType
+from app.core.models.task_type import TaskType
+from app.entities import DatasetItem, Polygon, Rectangle
 from app.schemas.label import LabelBase
 from app.schemas.project import ProjectBase
 

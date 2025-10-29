@@ -4,8 +4,9 @@ from datetime import datetime
 from enum import StrEnum
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
+from .base import BaseEntity
 from .label import LabelReference
 from .shape import Shape
 
@@ -41,8 +42,7 @@ class DatasetItemAnnotation(BaseModel):
     }
 
 
-class DatasetItem(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+class DatasetItem(BaseEntity):
     id: UUID
     project_id: UUID
     name: str

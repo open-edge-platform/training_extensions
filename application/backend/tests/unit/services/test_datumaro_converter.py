@@ -6,7 +6,7 @@ from uuid import UUID, uuid4
 import numpy as np
 import pytest
 
-from app.core.models import (
+from app.entities import (
     DatasetItem,
     DatasetItemAnnotation,
     DatasetItemFormat,

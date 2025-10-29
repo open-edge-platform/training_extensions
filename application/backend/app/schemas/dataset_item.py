@@ -6,13 +6,9 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from app.core.models import (
-    BaseRequiredIDNameModel,
-    DatasetItemAnnotation,
-    DatasetItemFormat,
-    DatasetItemSubset,
-    Pagination,
-)
+from app.core.models import BaseRequiredIDNameModel, Pagination
+from app.entities import DatasetItemAnnotation, DatasetItemFormat
+from app.entities.dataset_item import DatasetItemSubset
 
 
 class DatasetItemView(BaseRequiredIDNameModel):

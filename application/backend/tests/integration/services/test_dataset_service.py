@@ -13,8 +13,8 @@ from PIL import Image
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.core.models import DatasetItemAnnotation, DatasetItemSubset, LabelReference, Rectangle
 from app.db.schema import DatasetItemDB, DatasetItemLabelDB, PipelineDB
+from app.entities import DatasetItemAnnotation, DatasetItemSubset, LabelReference, Rectangle
 from app.schemas import PipelineView, ProjectView
 from app.services import LabelService, PipelineService, ProjectService
 from app.services.base import ResourceNotFoundError, ResourceType

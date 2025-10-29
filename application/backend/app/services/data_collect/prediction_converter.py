@@ -8,7 +8,7 @@ import numpy as np
 from model_api.models import ClassificationResult, DetectionResult, InstanceSegmentationResult
 from model_api.models.result import Result
 
-from app.core.models import DatasetItemAnnotation, FullImage, LabelReference, Point, Polygon, Rectangle
+from app.entities import DatasetItemAnnotation, FullImage, LabelReference, Point, Polygon, Rectangle
 from app.schemas.label import LabelBase
 
 logger = logging.getLogger(__name__)
