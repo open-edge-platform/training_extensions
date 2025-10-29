@@ -509,7 +509,7 @@ wheels = [
 [[package]]
 name = "datumaro"
 version = "1.12.0"
-source = { git = "https://github.com/open-edge-platform/datumaro.git?rev=develop#04948e73d3e55a797d6bbeb6d964ff24e7bdf848" }
+source = { git = "https://github.com/open-edge-platform/datumaro.git?rev=develop#ed1e5944ffcdc4ec06dd4476c3efc62fe57dcf81" }
 dependencies = [
     { name = "attrs" },
     { name = "defusedxml" },
