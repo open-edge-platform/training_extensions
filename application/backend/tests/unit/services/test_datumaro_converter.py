@@ -35,9 +35,10 @@ from app.services.datumaro_converter import (
 
 @pytest.fixture
 def fxt_project_labels():
+    project_id = uuid4()
     return [
-        Label(id=uuid4(), project_id=uuid4(), name="cat", color="#00FF00", hotkey="c"),
-        Label(id=uuid4(), project_id=uuid4(), name="dog", color="#FF0000", hotkey="d"),
+        Label(id=uuid4(), project_id=project_id, name="cat", color="#00FF00", hotkey="c"),
+        Label(id=uuid4(), project_id=project_id, name="dog", color="#FF0000", hotkey="d"),
     ]
 
 
