@@ -11,7 +11,47 @@ from app.db.schema import DatasetItemDB, DatasetItemLabelDB, LabelDB, ModelRevis
 
 
 class ProjectTestDataFactory:
-    """Builder for creating test projects with related entities."""
+    """
+    Factory for creating test projects with related entities in the database.
+
+    This factory provides an interface for building complex test data scenarios involving projects and their related
+    entities (pipelines, models, labels, datasets). It handles proper relationship setup and database persistence.
+
+    The factory uses a builder pattern where you chain method calls to configure the project structure,
+    then call `build()` to persist everything to the database.
+
+    Usage:
+        Basic project:
+        >>> factory = ProjectTestDataFactory(db_session)
+        >>> project = factory.with_project(ProjectDB(name="Test")).build()
+
+        Project with pipeline and models:
+        >>> project = (
+        ...     ProjectTestDataFactory(db_session)
+        ...     .with_project(ProjectDB(name="Test"))
+        ...     .with_pipeline(is_running=True)
+        ...     .with_models([ModelRevisionDB(...)])
+        ...     .build()
+        ... )
+
+        Project with labeled dataset:
+        >>> label = LabelDB(name="cat")
+        >>> project = (
+        ...     ProjectTestDataFactory(db_session)
+        ...     .with_project(ProjectDB(name="Test"))
+        ...     .with_label(label)
+        ...     .with_dataset_items({DatasetItemSubset.TRAINING: 10})
+        ...     .with_item_labels(label)
+        ...     .build()
+        ... )
+
+    Args:
+        db_session: SQLAlchemy session for database operations.
+
+    Raises:
+        ValueError: If methods are called in invalid order (e.g., adding entities
+                   before setting a project, or linking labels before adding items).
+    """
 
     def __init__(self, db_session: Session):
         self.db_session = db_session
