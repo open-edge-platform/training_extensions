@@ -9,7 +9,7 @@ from fastapi.openapi.models import Example
 from starlette.responses import FileResponse
 
 from app.api.dependencies import get_dataset_item_id, get_dataset_service, get_file_name_and_extension, get_project
-from app.api.endpoints.schemas.dataset_item import (
+from app.api.schemas.dataset_item import (
     DatasetItemAnnotations,
     DatasetItemAssignSubset,
     DatasetItemsWithPagination,
