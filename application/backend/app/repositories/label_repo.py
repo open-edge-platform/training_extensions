@@ -21,6 +21,11 @@ class LabelRepository(BaseRepository[LabelDB]):
         stmt = select(LabelDB).where(LabelDB.project_id == self.project_id)
         return self.db.execute(stmt).scalars().all()
 
+    def list_ids(self) -> Sequence[str]:
+        """Get labels ID's by project ID."""
+        stmt = select(LabelDB.id).where(LabelDB.project_id == self.project_id)
+        return self.db.execute(stmt).scalars().all()
+
     def delete_batch(self, obj_ids: list[str]) -> int:
         """Delete labels by IDs within the project."""
         stmt = delete(self.model).where((self.model.id.in_(obj_ids)) & (self.model.project_id == self.project_id))

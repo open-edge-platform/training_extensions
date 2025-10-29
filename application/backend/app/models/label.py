@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class LabelReference(BaseModel):
@@ -14,3 +14,12 @@ class LabelReference(BaseModel):
             }
         }
     }
+
+
+class Label(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    project_id: UUID
+    name: str
+    color: str
+    hotkey: str | None
