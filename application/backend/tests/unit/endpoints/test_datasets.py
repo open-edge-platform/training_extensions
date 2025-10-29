@@ -12,16 +12,16 @@ import pytest
 from fastapi import status
 
 from app.api.dependencies import get_dataset_service, get_project
-from app.entities import DatasetItem, DatasetItemFormat, LabelReference, Rectangle
-from app.main import app
-from app.schemas import ProjectView
-from app.schemas.dataset_item import (
+from app.api.endpoints.schemas.dataset_item import (
     DatasetItemAnnotation,
     DatasetItemAssignSubset,
     DatasetItemSubset,
     DatasetItemView,
     SetDatasetItemAnnotations,
 )
+from app.main import app
+from app.models import DatasetItem, DatasetItemFormat, LabelReference, Rectangle
+from app.schemas import ProjectView
 from app.services import DatasetService, ResourceNotFoundError, ResourceType
 from app.services.dataset_service import AnnotationValidationError, SubsetAlreadyAssignedError
 

@@ -8,7 +8,7 @@ import cv2
 import numpy as np
 
 from app.db import get_db_session
-from app.entities import DatasetItemFormat
+from app.models import DatasetItemFormat
 from app.schemas import ProjectView
 from app.schemas.pipeline import ConfidenceThresholdDataCollectionPolicy, FixedRateDataCollectionPolicy, PipelineView
 from app.services.data_collect.prediction_converter import convert_prediction, get_confidence_scores

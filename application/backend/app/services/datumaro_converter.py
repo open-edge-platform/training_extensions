@@ -12,7 +12,7 @@ from datumaro.experimental.categories import LabelCategories
 from datumaro.experimental.fields import ImageInfo, polygon_field
 
 from app.core.models.task_type import TaskType
-from app.entities import DatasetItem, Polygon, Rectangle
+from app.models import DatasetItem, Polygon, Rectangle
 from app.schemas.label import LabelBase
 from app.schemas.project import ProjectBase
 

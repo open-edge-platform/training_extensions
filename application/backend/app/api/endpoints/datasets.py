@@ -9,14 +9,15 @@ from fastapi.openapi.models import Example
 from starlette.responses import FileResponse
 
 from app.api.dependencies import get_dataset_item_id, get_dataset_service, get_file_name_and_extension, get_project
-from app.core.models import Pagination
-from app.schemas import DatasetItemsWithPagination, DatasetItemView, ProjectView
-from app.schemas.dataset_item import (
-    DatasetItemAnnotation,
-    DatasetItemAnnotationsWithSource,
+from app.api.endpoints.schemas.dataset_item import (
+    DatasetItemAnnotations,
     DatasetItemAssignSubset,
+    DatasetItemsWithPagination,
+    DatasetItemView,
     SetDatasetItemAnnotations,
 )
+from app.core.models import Pagination
+from app.schemas import ProjectView
 from app.services import DatasetService, ResourceNotFoundError
 from app.services.dataset_service import AnnotationValidationError, InvalidImageError, SubsetAlreadyAssignedError
 
@@ -215,7 +216,7 @@ def delete_dataset_item(
     "/{dataset_item_id}/annotations",
     status_code=status.HTTP_201_CREATED,
     responses={
-        status.HTTP_201_CREATED: {"description": "Dataset item annotation created", "model": DatasetItemAnnotation},
+        status.HTTP_201_CREATED: {"description": "Dataset item annotation created", "model": DatasetItemAnnotations},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid dataset item ID or invalid annotation content"},
         status.HTTP_404_NOT_FOUND: {"description": "Dataset item or project not found"},
     },
@@ -227,13 +228,13 @@ def set_dataset_item_annotations(
         SetDatasetItemAnnotations, Body(openapi_examples=SET_DATASET_ITEM_ANNOTATIONS_BODY_EXAMPLES)
     ],
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
-) -> DatasetItemAnnotationsWithSource:
+) -> DatasetItemAnnotations:
     """Set dataset item annotations"""
     try:
         dataset_item = dataset_service.set_dataset_item_annotations(
             project=project, dataset_item_id=dataset_item_id, annotations=dataset_item_annotations.annotations
         )
-        return DatasetItemAnnotationsWithSource(
+        return DatasetItemAnnotations(
             annotations=dataset_item.annotation_data,  # type: ignore[arg-type]
             prediction_model_id=dataset_item.prediction_model_id,
             user_reviewed=dataset_item.user_reviewed,
@@ -248,7 +249,7 @@ def set_dataset_item_annotations(
     "/{dataset_item_id}/annotations",
     status_code=status.HTTP_200_OK,
     responses={
-        status.HTTP_200_OK: {"description": "Dataset item found", "model": DatasetItemAnnotationsWithSource},
+        status.HTTP_200_OK: {"description": "Dataset item found", "model": DatasetItemAnnotations},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid dataset item ID or project ID"},
         status.HTTP_404_NOT_FOUND: {
             "description": "Dataset item or project not found or dataset item is not annotated"
@@ -259,7 +260,7 @@ def get_dataset_item_annotations(
     project: Annotated[ProjectView, Depends(get_project)],
     dataset_item_id: Annotated[UUID, Depends(get_dataset_item_id)],
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
-) -> DatasetItemAnnotationsWithSource:
+) -> DatasetItemAnnotations:
     """Get the dataset item annotations"""
     try:
         dataset_item = dataset_service.get_dataset_item_by_id(project=project, dataset_item_id=dataset_item_id)
@@ -267,7 +268,7 @@ def get_dataset_item_annotations(
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Dataset item has not been annotated yet."
             )
-        return DatasetItemAnnotationsWithSource(
+        return DatasetItemAnnotations(
             annotations=dataset_item.annotation_data,
             prediction_model_id=dataset_item.prediction_model_id,
             user_reviewed=dataset_item.user_reviewed,
