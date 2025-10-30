@@ -93,7 +93,7 @@ class OTXDatasetFactory:
         if task in [OTXTaskType.ROTATED_DETECTION, OTXTaskType.INSTANCE_SEGMENTATION]:
             from .dataset.instance_segmentation import OTXInstanceSegDataset
 
-            return OTXInstanceSegDataset(include_polygons=include_polygons, **common_kwargs)
+            return OTXInstanceSegDataset(task_type=task, include_polygons=include_polygons, **common_kwargs)
 
         if task == OTXTaskType.SEMANTIC_SEGMENTATION:
             from .dataset.segmentation import OTXSegmentationDataset

@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { DependencyList, RefObject, useEffect } from 'react';
+import { useEffect, type DependencyList, type RefObject } from 'react';
 
 import { isNil } from 'lodash-es';
 

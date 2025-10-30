@@ -15,8 +15,8 @@ class TestGetiConfigConverter:
         config = GetiConfigConverter.convert(asdict(otx_config))
 
         assert config["data"]["input_size"] == (992, 800)
-        assert config["data"]["train_subset"]["batch_size"] == 8
-        assert config["data"]["val_subset"]["batch_size"] == 8
+        assert config["data"]["train_subset"]["batch_size"] == 4
+        assert config["data"]["val_subset"]["batch_size"] == 4
         assert config["data"]["test_subset"]["batch_size"] == 8
         assert config["model"]["init_args"]["optimizer"]["init_args"]["lr"] == 0.001
         assert config["max_epochs"] == 100
@@ -266,8 +266,8 @@ class TestGetiConfigConverter:
         assert engine.work_dir == tmp_path
 
         assert engine.datamodule.data_root == data_root
-        assert engine.datamodule.train_subset.batch_size == 8
-        assert engine.datamodule.val_subset.batch_size == 8
+        assert engine.datamodule.train_subset.batch_size == 4
+        assert engine.datamodule.val_subset.batch_size == 4
         assert engine.datamodule.test_subset.batch_size == 8
         assert engine.datamodule.train_subset.num_workers == 2
         assert engine.datamodule.val_subset.num_workers == 2

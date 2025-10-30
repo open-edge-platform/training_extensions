@@ -1,18 +1,19 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Suspense, useState } from 'react';
+import { Suspense } from 'react';
 
 import { Content, Dialog, dimensionValue, Divider, Flex, Grid, Heading, Loading, View } from '@geti/ui';
-import { AnnotationActionsProvider } from 'src/features/annotator/annotation-actions-provider.component';
-import { AnnotatorProvider } from 'src/features/annotator/annotator-provider.component';
+import type { DatasetItem } from 'src/constants/shared-types';
+import { AnnotationActionsProvider } from 'src/shared/annotator/annotation-actions-provider.component';
+import { AnnotationVisibilityProvider } from 'src/shared/annotator/annotation-visibility-provider.component';
+import { AnnotatorProvider } from 'src/shared/annotator/annotator-provider.component';
 
 import { ZoomProvider } from '../../../components/zoom/zoom.provider';
+import { SelectAnnotationProvider } from '../../../shared/annotator/select-annotation-provider.component';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas';
-import { SelectAnnotationProvider } from '../../annotator/select-annotation-provider.component';
-import { DatasetItem } from '../../annotator/types';
-import { AnnotatorButtons } from './annotator-buttons.component';
-import { ToolSelectionBar } from './primary-toolbar/primary-toolbar.component';
+import { useGetDatasetItems } from '../gallery/use-get-dataset-items.hook';
+import { PrimaryToolbar } from './primary-toolbar/primary-toolbar.component';
 import { SecondaryToolbar } from './secondary-toolbar/secondary-toolbar.component';
 import { SidebarItems } from './sidebar-items/sidebar-items.component';
 
@@ -29,7 +30,7 @@ const CanvasAreaLoading = () => (
 );
 
 export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPreviewProps) => {
-    const [isFocussed, setIsFocussed] = useState(false);
+    const { items, hasNextPage, isFetchingNextPage, fetchNextPage } = useGetDatasetItems();
 
     return (
         <Dialog UNSAFE_style={{ width: '95vw', height: '95vh' }}>
@@ -58,29 +59,39 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                         <ZoomProvider>
                             <Suspense fallback={<CanvasAreaLoading />}>
                                 <SelectAnnotationProvider>
-                                    <AnnotatorProvider mediaItem={mediaItem}>
-                                        <View gridArea={'toolbar'}>
-                                            <ToolSelectionBar />
-                                        </View>
+                                    <AnnotationVisibilityProvider>
+                                        <AnnotatorProvider mediaItem={mediaItem}>
+                                            <View gridArea={'toolbar'}>
+                                                <PrimaryToolbar />
+                                            </View>
 
-                                        <View gridArea={'header'}>
-                                            <SecondaryToolbar />
-                                        </View>
-                                        <View gridArea={'canvas'} overflow={'hidden'}>
-                                            <AnnotatorCanvas mediaItem={mediaItem} isFocussed={isFocussed} />
-                                        </View>
-                                    </AnnotatorProvider>
+                                            <View gridArea={'header'}>
+                                                <SecondaryToolbar
+                                                    items={items}
+                                                    onClose={close}
+                                                    mediaItem={mediaItem}
+                                                    onSelectedMediaItem={onSelectedMediaItem}
+                                                />
+                                            </View>
+                                            <View gridArea={'canvas'} overflow={'hidden'}>
+                                                <AnnotatorCanvas mediaItem={mediaItem} />
+                                            </View>
+                                        </AnnotatorProvider>
+                                    </AnnotationVisibilityProvider>
                                 </SelectAnnotationProvider>
                             </Suspense>
-
-                            <View gridArea={'aside'}>
-                                <SidebarItems mediaItem={mediaItem} onSelectedMediaItem={onSelectedMediaItem} />
-                            </View>
-
-                            <View gridArea={'footer'} padding={'size-100'} UNSAFE_style={{ textAlign: 'right' }}>
-                                <AnnotatorButtons onFocus={setIsFocussed} isFocussed={isFocussed} onClose={close} />
-                            </View>
                         </ZoomProvider>
+
+                        <View gridArea={'aside'}>
+                            <SidebarItems
+                                items={items}
+                                mediaItem={mediaItem}
+                                hasNextPage={hasNextPage}
+                                isFetchingNextPage={isFetchingNextPage}
+                                fetchNextPage={fetchNextPage}
+                                onSelectedMediaItem={onSelectedMediaItem}
+                            />
+                        </View>
                     </AnnotationActionsProvider>
                 </Grid>
             </Content>

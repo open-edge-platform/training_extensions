@@ -243,7 +243,6 @@ class OTXTileDatasetFactory:
     @classmethod
     def create(
         cls,
-        task: OTXTaskType,
         dataset: OTXDataset,
         tile_config: TileConfig,
     ) -> OTXTileDataset:
@@ -264,14 +263,14 @@ class OTXTileDatasetFactory:
         if dataset.dm_subset[0].subset in TRAIN_SUBSET_NAMES:
             return OTXTileTrainDataset(dataset, tile_config)
 
-        if task == OTXTaskType.DETECTION:
+        if dataset.task_type == OTXTaskType.DETECTION:
             return OTXTileDetTestDataset(dataset, tile_config)
-        if task in [OTXTaskType.ROTATED_DETECTION, OTXTaskType.INSTANCE_SEGMENTATION]:
+        if dataset.task_type in [OTXTaskType.ROTATED_DETECTION, OTXTaskType.INSTANCE_SEGMENTATION]:
             return OTXTileInstSegTestDataset(dataset, tile_config)
-        if task == OTXTaskType.SEMANTIC_SEGMENTATION:
+        if dataset.task_type == OTXTaskType.SEMANTIC_SEGMENTATION:
             return OTXTileSemanticSegTestDataset(dataset, tile_config)
 
-        msg = f"Unsupported task type: {task} for tiling"
+        msg = f"Unsupported task type: {dataset.task_type} for tiling"
         raise NotImplementedError(msg)
 
 

@@ -9,12 +9,12 @@ from datetime import datetime, timedelta
 
 import click
 
+from app.core.models.task_type import TaskType
 from app.db import MigrationManager, get_db_session
 from app.db.schema import DatasetItemDB, LabelDB, ModelRevisionDB, PipelineDB, ProjectDB, SinkDB, SourceDB
 from app.schemas import DisconnectedSinkConfig, DisconnectedSourceConfig, OutputFormat, SinkType, SourceType
 from app.schemas.model import TrainingStatus
 from app.schemas.pipeline import FixedRateDataCollectionPolicy
-from app.schemas.project import TaskType
 from app.settings import get_settings
 
 logging.basicConfig(level=logging.INFO)
@@ -148,7 +148,7 @@ def seed(with_model: bool) -> None:
                 training_started_at=datetime.now() - timedelta(hours=24),
                 training_finished_at=datetime.now() - timedelta(hours=23),
                 training_configuration={},
-                label_schema_revision={},
+                label_schema_revision={"labels": [{"id": str(label.id), "name": label.name} for label in labels]},
             )
             pipeline.is_running = True
         db.add(pipeline)

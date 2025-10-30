@@ -4,9 +4,8 @@
 import { render, screen } from '@testing-library/react';
 import { getMultipleMockedMediaItems } from 'mocks/mock-media-item';
 import { Size } from 'react-aria-components';
-import { MediaState } from 'src/routes/dataset/provider';
-import { describe, expect, it } from 'vitest';
 
+import { MediaState } from '../selected-data-provider.component';
 import { VirtualizerGridLayout } from './virtualizer-grid-layout.component';
 
 // required configuration; otherwise, the list renders empty

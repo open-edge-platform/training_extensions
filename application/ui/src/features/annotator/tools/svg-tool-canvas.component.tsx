@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { FC, PropsWithChildren, RefObject, SVGProps } from 'react';
+import type { FC, PropsWithChildren, RefObject, SVGProps } from 'react';
 
 import { roiFromImage } from '@geti/smart-tools/utils';
 

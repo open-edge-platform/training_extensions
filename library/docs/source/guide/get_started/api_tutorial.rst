@@ -33,39 +33,40 @@ be distinguished by OpenVINO™ Training Extensions Datumaro manager:
 
 Now it is all set to use this dataset inside OpenVINO™ Training Extensions
 
-************************************
-Quick Start with auto-configuration
-************************************
+************
+Quick Start
+************
 
-Once the dataset is ready, we can immediately start training with the model and data pipeline recommended by OpenVINO™ Training Extension through auto-configuration.
-The following code snippet demonstrates how to use the auto-configuration feature:
+Once the dataset is ready, we can immediately start training with the model and data pipeline. Simply pass the data root and model config path to the Engine class.
+The following code snippet demonstrates how to do that:
 
 .. code-block:: python
 
     from otx.engine import Engine
 
-    engine = Engine(data_root="data/wgisd")
+    engine = Engine(data="data/wgisd", model="src/otx/recipe/detection/atss_mobilenetv2.yaml")
     engine.train()
 
 
 .. note::
 
-    If dataset supports multiple Task types, this will default to the Task type detected by OpenVINO™ Training Extension.
-    If you want to specify a specific Task type, you need to specify it like below:
+    It is also possible to pass constructed data and model classes
 
     .. code-block:: python
 
         from otx.engine import Engine
+        from otx.backend.native.models.detection.atss import ATSS
+        from otx.data import OTXDataModule
 
-        engine = Engine(data_root="data/wgisd", task="INSTANCE_SEGMENTATION")
-        engine.train()
-
+        model = ATSS(label_info=5, model_name="mobilenetv2", data_input_params=DataInputParams(input_size=(512, 512), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375)))
+        datamodule = OTXDataModule(task="DETECTION", data_root="data/wgisd")
+        engine = Engine(data=datamodule, model=model)
 
 **********************************
 Check Available Model Recipes
 **********************************
 
-If you want to use other models offered by OpenVINO™ Training Extension besides the ones provided by Auto-Configuration, you can get a list of available models in OpenVINO™ Training Extension as shown below.
+If you want to use other models offered by OpenVINO™ Training Extension, you can get a list of available models as shown below.
 
 .. tab-set::
 
@@ -161,22 +162,7 @@ Engine
 
 The ``otx.engine.Engine`` class is the main entry point for using OpenVINO™ Training Extensions APIs.
 
-1. Setting ``task``
-
-Specify ``task``. This is the task type for that ``Engine`` usage.
-You can set the task by referencing the ``OTXTaskType`` in ``otx.types.task``.
-If no task is specified, the task is detected and used via ``datamodule`` or ``data_root``.
-
-.. code-block:: python
-
-    from otx.types.task import OTXTaskType
-    from otx.engine import Engine
-
-    engine = Engine(task=OTXTaskType.DETECTION)
-    # or
-    engine = Engine(task="DETECTION")
-
-2. Setting ``work_dir``
+1. Setting ``work_dir``
 
 Specify ``work_dir``. This is the workspace for that ``Engine``, and where output is stored.
 The default value is currently ``./otx-workspace``.
@@ -188,7 +174,7 @@ The default value is currently ``./otx-workspace``.
     engine = Engine(work_dir="work_dir")
 
 
-3. Setting device
+2. Setting device
 
 You can set the device by referencing the ``DeviceType`` in ``otx.types.device``.
 The current default setting is ``auto``.
@@ -206,7 +192,7 @@ The current default setting is ``auto``.
 In addition, the ``Engine`` constructor can be associated with the Trainer's constructor arguments to control the Trainer's functionality.
 Refer `lightning.Trainer <https://lightning.ai/docs/pytorch/stable/common/trainer.html>`_.
 
-4. Using the OpenVINO™ Training Extension configuration we can configure the Engine.
+3. Using the OpenVINO™ Training Extension configuration we can configure the Engine.
 
 .. code-block:: python
 
@@ -311,14 +297,40 @@ The datamodule used by the Engine is of type ``otx.data.module.OTXDataModule``.
     from otx.data.module import OTXDataModule
     from otx.engine import Engine
 
-    datamodule = OTXDataModule(data_root="data/wgisd", ...)
+    # default data module for the task
+    datamodule = OTXDataModule(data_root="data/wgisd", task="DETECTION")
 
-    engine = Engine(datamodule=datamodule)
+    engine = Engine(data=datamodule, model=...)
     engine.train()
 
-.. note::
+The command above will create a default ``DataModule``. You can modify parameters for dataset constructing using ``SubsetConfig``:
 
-    If both ``data_root`` and ``datamodule`` enter ``Engine`` as input, ``Engine`` uses datamodule as the base.
+.. code-block:: python
+
+    import torchvision.transforms.v2 as v2
+
+    from otx.data.module import OTXDataModule
+    from otx.config.data import SubsetConfig
+    from otx.engine import Engine
+
+    train_subset_config = SubsetConfig(
+        batch_size=64,
+        transforms=v2.Compose([
+            v2.RandomResizedCrop(size=(224, 224), antialias=True),
+            v2.RandomHorizontalFlip(p=0.5),
+            v2.ToDtype(torch.float32, scale=True),
+            v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ]),
+        num_workers=4,
+    )
+
+    datamodule = OTXDataModule(
+        task="DETECTION",
+        data_root="data/wgisd",
+        train_subset=train_subset_config
+    )
+
+Similarly, you can modify ``val_subset_config`` and ``test_subset_config``:
 
 .. tip::
 
@@ -328,7 +340,67 @@ The datamodule used by the Engine is of type ``otx.data.module.OTXDataModule``.
 
         from otx.tools.auto_configuration import AutoConfigurator
 
+        # specific data pipeline for the model
+        datamodule = AutoConfigurator(data_root="data/wgisd", model_config="src/otx/recipe/detection/atss_mobilenetv2.yaml").get_datamodule()
+
+        # default for the task
         datamodule = AutoConfigurator(data_root="data/wgisd").get_datamodule()
+
+You can also create ``OTXDataset`` independently and then call  ``from_otx_datasets`` method to construct  ``OTXDataModule``:
+
+.. code-block:: python
+
+    import torchvision.transforms.v2 as v2
+
+    from otx.data.module import OTXDataModule
+    from otx.config.data import SubsetConfig
+    from otx.data.dataset import OTXDetectionDataset
+
+    train_subset_config = SubsetConfig(
+        batch_size=64,
+        num_workers=4,
+    )
+
+    val_subset_config = SubsetConfig(
+        batch_size=64,
+    )
+
+    transforms=v2.Compose([
+            v2.RandomResizedCrop(size=(224, 224), antialias=True),
+            v2.RandomHorizontalFlip(p=0.5),
+            v2.ToDtype(torch.float32, scale=True),
+            v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ])
+
+    # setup Datumaro dataset
+    dm_dataset = DmDataset.import_from(data_root="data/wgisd")
+    train_dm_subset = dm_dataset.subsets()["train"]
+    val_dm_subset = dm_dataset.subsets()["val"]
+    test_dm_subset = dm_dataset.subsets()["test"]
+
+    # setup OTX dataset
+    train_dataset = OTXDetectionDataset(
+        train_dm_subset,
+        transforms
+    )
+    val_dataset = OTXDetectionDataset(
+        val_dm_subset,
+        transforms
+    )
+    test_dataset = OTXDetectionDataset(
+        test_dm_subset,
+        transforms
+    )
+
+    # create OTXDataModule
+    datamodule = OTXDataModule.from_otx_datasets(
+        train_dataset = train_dataset,
+        val_dataset = val_dataset,
+        test_dataset = test_dataset,
+        train_subset = train_subset_config,
+        val_subset = val_subset_config,
+        test_subset = val_subset_config
+    )
 
 5. You can use train-specific arguments with ``train()`` function.
 
@@ -505,7 +577,7 @@ To run the XAI with the OpenVINO™ IR model, we need to create an output model 
         .. code-block:: python
 
             from otx.config.explain import ExplainConfig
-            
+
             engine.predict(..., explain=True, explain_config=ExplainConfig(postprocess=True))
 
 

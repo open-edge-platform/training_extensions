@@ -3,7 +3,6 @@
 
 import { HttpResponse } from 'msw';
 import { fireEvent, render, screen } from 'test-utils/render';
-import { vi } from 'vitest';
 
 import { http } from '../../../../api/utils';
 import { server } from '../../../../msw-node-setup';

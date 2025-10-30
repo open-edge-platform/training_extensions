@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Point } from '../../../types';
+import type { Point } from '../../../types';
 
 type ElementType = SVGElement | HTMLDivElement;
 export const getRelativePoint = (element: ElementType, point: Point, zoom: number): Point => {

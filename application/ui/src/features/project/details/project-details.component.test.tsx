@@ -26,7 +26,10 @@ describe('ProjectDetails', () => {
                     task: {
                         task_type: 'detection',
                         exclusive_labels: false,
-                        labels: [{ name: 'person' }, { name: 'car' }],
+                        labels: [
+                            { id: '1', color: 'red', name: 'person' },
+                            { id: '2', color: 'blue', name: 'car' },
+                        ],
                     },
                     active_pipeline: true,
                 });

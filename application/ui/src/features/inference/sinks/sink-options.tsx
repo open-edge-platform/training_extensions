@@ -5,7 +5,7 @@ import { $api } from '../../../api/client';
 import { ReactComponent as FolderIcon } from '../../../assets/icons/folder.svg';
 import { ReactComponent as MqttIcon } from '../../../assets/icons/mqtt.svg';
 import { ReactComponent as WebhookIcon } from '../../../assets/icons/webhook.svg';
-import { useProjectIdentifier } from '../../../hooks/use-project-identifier.hook';
+import { usePipeline } from '../../../hooks/api/pipeline.hook';
 import { DisclosureGroup } from '../sources/disclosure-group.component';
 import { LocalFolder } from './local-folder/local-folder.component';
 import { Mqtt } from './mqtt/mqtt.component';
@@ -13,12 +13,8 @@ import { getLocalFolderData, getMqttData, getWebhookData } from './utils';
 import { Webhook } from './webhook/webhook.component';
 
 export const SinkOptions = () => {
-    const projectId = useProjectIdentifier();
-
     const sinksQuery = $api.useSuspenseQuery('get', '/api/sinks');
-    const pipeline = $api.useSuspenseQuery('get', '/api/projects/{project_id}/pipeline', {
-        params: { path: { project_id: projectId } },
-    });
+    const pipeline = usePipeline();
 
     const sinks = sinksQuery.data ?? [];
 

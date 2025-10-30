@@ -1,12 +1,12 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Dispatch, SetStateAction } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 
 import { Flex, Heading, Image, Radio, RadioGroup, Text, View } from '@geti/ui';
 
 import thumbnailUrl from '../../../assets/mocked-project-thumbnail.png';
-import { TaskOption, TaskType } from './interface';
+import type { TaskOption, TaskType } from './interface';
 
 import classes from './task-selection.module.scss';
 

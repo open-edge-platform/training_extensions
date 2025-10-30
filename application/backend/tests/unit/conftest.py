@@ -6,12 +6,13 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from app.services import ActivePipelineService, MetricsService
+from app.services import MetricsService
+from app.services.event.event_bus import EventBus
 
 
 @pytest.fixture
-def fxt_active_pipeline_service() -> MagicMock:
-    return MagicMock(spec=ActivePipelineService)
+def fxt_event_bus() -> MagicMock:
+    return MagicMock(spec=EventBus)
 
 
 @pytest.fixture

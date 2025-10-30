@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Divider, Flex, Grid, Heading, repeat, Text, View } from '@geti/ui';
-import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import { usePipeline } from 'hooks/api/pipeline.hook';
+import { useProject } from 'hooks/api/project.hook';
 import { capitalize, startsWith } from 'lodash-es';
 import { Fragment } from 'react/jsx-runtime';
 
-import { $api } from '../../../api/client';
-import Background from './../../../assets/background.png';
+import styles from '../project-background.module.scss';
 
 type FieldProps = {
     field: string;
@@ -47,32 +47,14 @@ const VerticalHeader = ({ text }: { text: string }) => {
 };
 
 export const ProjectDetails = () => {
-    const projectId = useProjectIdentifier();
-
-    const pipeline = $api.useSuspenseQuery('get', '/api/projects/{project_id}/pipeline', {
-        params: { path: { project_id: projectId } },
-    });
-    const project = $api.useSuspenseQuery('get', '/api/projects/{project_id}', {
-        params: { path: { project_id: projectId } },
-    });
+    const pipeline = usePipeline();
+    const project = useProject();
 
     const { name, task } = project.data;
     const { task_type, labels = [] } = task;
 
     return (
-        <View
-            backgroundColor={'gray-100'}
-            UNSAFE_style={{
-                backgroundImage: `url(${Background})`,
-                backgroundBlendMode: 'luminosity',
-                backgroundPosition: 'center',
-                backgroundRepeat: 'no-repeat',
-                backgroundSize: 'cover',
-            }}
-            gridArea={'content'}
-            height='100%'
-            width='100%'
-        >
+        <View UNSAFE_className={styles.projectBackground} gridArea={'content'} height='100%' width='100%'>
             <View maxWidth={'1048px'} marginX='auto' paddingY='size-800'>
                 <View>
                     <Flex direction='column' gap='size-600'>

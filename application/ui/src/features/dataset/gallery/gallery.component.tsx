@@ -5,17 +5,19 @@ import { useState } from 'react';
 
 import { DialogContainer, Size } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import type { DatasetItem } from 'src/constants/shared-types';
 
 import { CheckboxInput } from '../../../components/checkbox-input/checkbox-input.component';
-import { useSelectedData } from '../../../routes/dataset/provider';
-import { DatasetItem } from '../../annotator/types';
 import { MediaPreview } from '../media-preview/media-preview.component';
+import { useSelectedData } from '../selected-data-provider.component';
 import { VirtualizerGridLayout } from '../virtualizer-grid-layout/virtualizer-grid-layout.component';
-import { AnnotationStateIcon } from './annotation-state-icon.component';
+import { AnnotationStatusIcon } from './annotation-state-icon.component';
 import { DeleteMediaItem } from './delete-media-item/delete-media-item.component';
 import { MediaItem } from './media-item.component';
 import { MediaThumbnail } from './media-thumbnail.component';
 import { getThumbnailUrl } from './utils';
+
+import classes from './gallery.module.scss';
 
 type GalleryProps = {
     items: DatasetItem[];
@@ -52,6 +54,7 @@ export const Gallery = ({ items, hasNextPage, isFetchingNextPage, fetchNextPage 
                 onSelectionChange={setSelectedKeys}
                 contentItem={(item) => (
                     <MediaItem
+                        className={classes.mediaItem}
                         contentElement={() => (
                             <MediaThumbnail
                                 alt={item.name}
@@ -69,7 +72,7 @@ export const Gallery = ({ items, hasNextPage, isFetchingNextPage, fetchNextPage 
                         topRightElement={() => (
                             <DeleteMediaItem itemsIds={[String(item.id)]} onDeleted={toggleSelectedKeys} />
                         )}
-                        bottomRightElement={() => <AnnotationStateIcon state={mediaState.get(String(item.id))} />}
+                        bottomRightElement={() => <AnnotationStatusIcon state={mediaState.get(String(item.id))} />}
                     />
                 )}
             />

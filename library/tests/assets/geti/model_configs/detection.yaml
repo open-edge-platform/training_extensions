@@ -70,6 +70,7 @@ hyperparameters:
       enable: true
       patience: 10
     learning_rate: 0.001
+    batch_size: 4
     input_size_width: 800
     input_size_height: 992
   evaluation:
