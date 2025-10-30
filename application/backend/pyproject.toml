@@ -49,6 +49,7 @@ lint = [
 
 [tool.uv]
 default-groups = "all"
+required-version = "~=0.8.8"
 
 [tool.uv.build-backend]
 module-root = ""
