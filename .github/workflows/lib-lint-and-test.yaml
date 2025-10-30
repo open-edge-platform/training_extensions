@@ -115,7 +115,7 @@ jobs:
         working-directory: library
         run: |
           uv lock --check
-          uv sync --frozen --extra test
+          uv sync --frozen --extra dev
 
       - name: Unit testing
         working-directory: library
@@ -176,14 +176,15 @@ jobs:
       - name: Installing dependencies
         working-directory: library
         run: |
+          pip install '.[dev]'
           uv lock --check
-          uv sync --frozen --extra cuda --extra test
+          uv sync --frozen --extra cuda --no-extra xpu
 
       - name: Integration testing
         working-directory: library
         env:
           CUBLAS_WORKSPACE_CONFIG: ":4096:8"
-        run: uv run --frozen --extra cuda --extra test pytest tests/integration -ra --showlocals --csv=${{ matrix.task }}_Python-${{ matrix.python-version }}.csv --task ${{ matrix.task }} --open-subprocess --run-category-only
+        run: uv run --frozen --extra cuda --no-extra xpu pytest tests/integration -ra --showlocals --csv=${{ matrix.task }}_Python-${{ matrix.python-version }}.csv --task ${{ matrix.task }} --open-subprocess --run-category-only
 
   required_check:
     name: Required Check lib-lint-and-test
