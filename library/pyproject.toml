@@ -51,6 +51,7 @@ dependencies = [
     "onnxscript==0.5.3",
     "nncf==2.17.0",
     "anomalib[core]==1.1.3",
+    "imgaug==0.4.0",  # for anomalib
     "numpy>2.0",
     "tensorboardx==2.6.4"
 ]
@@ -114,6 +115,14 @@ otx = "otx.cli:main"
 Documentation = "https://open-edge-platform.github.io/training_extensions/"
 Repository = "https://github.com/open-edge-platform/training_extensions/"
 
+[tool.uv]
+conflicts = [
+    [
+        { extra = "xpu" },
+        { extra = "cuda" },
+    ],
+]
+
 [tool.uv.sources]
 torch = [
     { index = "torch-xpu", extra = "xpu"},
@@ -126,6 +135,10 @@ torchvision = [
     { index = "torch-xpu", extra = "xpu"},
     { index = "torch-cuda", extra = "cuda"},
 ]
+# Anomalib depends on imgaug, which is abandoned and depends on an old version of numpy.
+# To avoid dependency resolution issues, we install imgaug from a maintained fork.
+# For details: https://github.com/aleju/imgaug/issues/859
+imgaug = { git = "https://github.com/imaug/imaug/", rev = "a7ca1b04d44700d075a23f14a97f86285ba3b33f" }
 
 [[tool.uv.index]]
 name = "torch-cuda"
