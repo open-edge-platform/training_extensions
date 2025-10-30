@@ -180,8 +180,8 @@ class MinIoURandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
                 if new_h / new_w < 0.5 or new_h / new_w > 2:
                     continue
 
-                left = RNG.uniform(w - new_w)
-                top = RNG.uniform(h - new_h)
+                left = RNG.uniform(0, w - new_w)
+                top = RNG.uniform(0, h - new_h)
 
                 patch = np.array((int(left), int(top), int(left + new_w), int(top + new_h)))
                 # Line or point crop is not allowed
