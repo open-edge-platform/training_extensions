@@ -3,8 +3,7 @@
 from uuid import UUID
 
 from app.db.schema import ProjectDB
-from app.models import TaskType
-from app.models import Label
+from app.models import Label, TaskType
 from app.schemas import LabelView, ProjectCreate, ProjectView
 from app.schemas.project import TaskView
 
