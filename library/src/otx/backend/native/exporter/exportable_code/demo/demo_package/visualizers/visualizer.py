@@ -204,11 +204,12 @@ class SemanticSegmentationVisualizer(BaseVisualizer):
         self.color_map = self._create_color_map()
 
     def _create_color_map(self) -> np.ndarray:
+        rng = np.random.default_rng(42)
         classes = self.color_palette[:, ::-1]  # RGB to BGR
         color_map = np.zeros((256, 1, 3), dtype=np.uint8)
         classes_num = len(classes)
         color_map[:classes_num, 0, :] = classes
-        color_map[classes_num:, 0, :] = np.random.uniform(0, 255, size=(256 - classes_num, 3))
+        color_map[classes_num:, 0, :] = rng.uniform(0, 255, size=(256 - classes_num, 3))
         return color_map
 
     def _apply_color_map(self, input_2d_mask: np.ndarray) -> np.ndarray:

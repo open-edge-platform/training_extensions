@@ -36,6 +36,8 @@ from otx.data.transform_libs.torchvision import (
 )
 from otx.data.transform_libs.utils import overlap_bboxes
 
+RNG = np.random.default_rng(42)
+
 
 class MockFrame:
     data = np.ndarray([10, 10, 3], dtype=np.uint8)
@@ -1123,7 +1125,7 @@ class TestRandomCrop:
     @pytest.mark.parametrize("allow_negative_crop", [True, False])
     def test_forward_allow_negative_crop(self, det_entity, allow_negative_crop: bool) -> None:
         # test the crop does not contain any gt-bbox allow_negative_crop = False
-        det_entity.image = np.random.randint(0, 255, size=(10, 10), dtype=np.uint8)
+        det_entity.image = RNG.integers(0, 255, size=(10, 10), dtype=np.uint8)
         det_entity.bboxes = tv_tensors.wrap(torch.zeros((0, 4)), like=det_entity.bboxes)
         det_entity.label = torch.LongTensor()
         transform = RandomCrop(crop_size=(5, 3), allow_negative_crop=allow_negative_crop, is_numpy_to_tvtensor=False)
