@@ -12,8 +12,7 @@ from datumaro.experimental.categories import LabelCategories
 from datumaro.experimental.fields import ImageInfo, polygon_field
 
 from app.core.models.task_type import TaskType
-from app.models import DatasetItem, Polygon, Rectangle
-from app.schemas.label import LabelBase
+from app.models import DatasetItem, Label, Polygon, Rectangle
 from app.schemas.project import ProjectBase
 
 logger = logging.getLogger(__name__)
@@ -78,7 +77,7 @@ S = TypeVar("S", bound=Sample)  # Sample type e.g. DetectionSample, Classificati
 
 def _convert_dataset(
     sample_type: type[S],
-    project_labels: Sequence[LabelBase],
+    project_labels: Sequence[Label],
     get_dataset_items: Callable[[int, int], list[DatasetItem]],
     get_image_path: Callable[[DatasetItem], str],
     convert_sample: Callable[[DatasetItem, str, list[UUID]], S | None],
@@ -101,7 +100,7 @@ def _convert_dataset(
 
 
 def convert_detection_dataset(
-    project_labels: Sequence[LabelBase],
+    project_labels: Sequence[Label],
     get_dataset_items: Callable[[int, int], list[DatasetItem]],
     get_image_path: Callable[[DatasetItem], str],
 ) -> Dataset[DetectionSample]:
@@ -153,7 +152,7 @@ def convert_detection_dataset(
 
 
 def convert_classification_dataset(
-    project_labels: Sequence[LabelBase],
+    project_labels: Sequence[Label],
     get_dataset_items: Callable[[int, int], list[DatasetItem]],
     get_image_path: Callable[[DatasetItem], str],
 ) -> Dataset[ClassificationSample]:
@@ -194,7 +193,7 @@ def convert_classification_dataset(
 
 
 def convert_multiclass_classification_dataset(
-    project_labels: Sequence[LabelBase],
+    project_labels: Sequence[Label],
     get_dataset_items: Callable[[int, int], list[DatasetItem]],
     get_image_path: Callable[[DatasetItem], str],
 ) -> Dataset[MultilabelClassificationSample]:
@@ -236,7 +235,7 @@ def convert_multiclass_classification_dataset(
 
 
 def convert_instance_segmentation_dataset(
-    project_labels: Sequence[LabelBase],
+    project_labels: Sequence[Label],
     get_dataset_items: Callable[[int, int], list[DatasetItem]],
     get_image_path: Callable[[DatasetItem], str],
 ) -> Dataset[InstanceSegmentationSample]:
@@ -289,7 +288,7 @@ def convert_instance_segmentation_dataset(
 
 def convert_dataset(
     project: ProjectBase,
-    labels: Sequence[LabelBase],
+    labels: Sequence[Label],
     get_dataset_items: Callable[[int, int], list[DatasetItem]],
     get_image_path: Callable[[DatasetItem], str],
 ) -> Dataset:

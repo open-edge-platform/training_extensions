@@ -12,7 +12,7 @@ from fastapi.exceptions import HTTPException
 from fastapi.openapi.models import Example
 from starlette.responses import FileResponse
 
-from app.api.dependencies import get_data_collector, get_label_service, get_project_id, get_project_service
+from app.api.dependencies import get_data_collector, get_label_service, get_project, get_project_id, get_project_service
 from app.schemas import LabelView, PatchLabels, ProjectCreate, ProjectUpdateName, ProjectView, TrainingConfiguration
 from app.services import (
     LabelService,
@@ -117,7 +117,7 @@ def list_projects(project_service: Annotated[ProjectService, Depends(get_project
         status.HTTP_404_NOT_FOUND: {"description": "Project not found"},
     },
 )
-def get_project(
+def get_project_by_id(
     project_id: Annotated[UUID, Depends(get_project_id)],
     project_service: Annotated[ProjectService, Depends(get_project_service)],
 ) -> ProjectView:
@@ -185,37 +185,52 @@ def delete_project(
     },
 )
 def update_labels(
-    project_id: Annotated[UUID, Depends(get_project_id)],
+    project: Annotated[ProjectView, Depends(get_project)],
     labels: Annotated[
         PatchLabels,
         Body(
             description="Labels to add, remove or edit",
         ),
     ],
-    project_service: Annotated[ProjectService, Depends(get_project_service)],
     label_service: Annotated[LabelService, Depends(get_label_service)],
 ) -> list[LabelView]:
     """Update labels for a given project"""
     try:
-        project = project_service.get_project_by_id(project_id)
-        label_ids = {label.id for label in project.task.labels}
+        existing_ids = label_service.list_ids(project_id=project.id)
         if labels.labels_to_remove:
             ids_to_remove = [label.id for label in labels.labels_to_remove]
-            if not all(label_id in label_ids for label_id in ids_to_remove):
+            if not all(label_id in existing_ids for label_id in ids_to_remove):
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail="One or more labels to remove do not exist in the project",
                 )
         if labels.labels_to_edit:
             ids_to_edit = [label.id for label in labels.labels_to_edit]
-            if not all(label_id in label_ids for label_id in ids_to_edit):
+            if not all(label_id in existing_ids for label_id in ids_to_edit):
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail="One or more labels to edit do not exist in the project",
                 )
-        return label_service.update_labels_in_project(
-            project_id, labels.labels_to_add, labels.labels_to_edit, labels.labels_to_remove
-        )
+        for label_to_edit in labels.labels_to_edit:
+            label_service.update_label(
+                project_id=project.id,
+                label_id=label_to_edit.id,
+                new_name=label_to_edit.new_name,
+                new_color=label_to_edit.new_color,
+                new_hotkey=label_to_edit.new_hotkey,
+            )
+        for label_to_remove in labels.labels_to_remove:
+            label_service.delete_label(project_id=project.id, label_id=label_to_remove.id)
+        for label_to_add in labels.labels_to_add:
+            label_service.create_label(
+                project_id=project.id,
+                label_id=label_to_add.id,
+                name=label_to_add.name,
+                color=label_to_add.color,
+                hotkey=label_to_add.hotkey,
+            )
+        updated_labels = label_service.list_all(project_id=project.id)
+        return [LabelView.model_validate(label, from_attributes=True) for label in updated_labels]
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except (ResourceWithIdAlreadyExistsError, DuplicateLabelsError) as e:

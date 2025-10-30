@@ -4,6 +4,8 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from .base import BaseEntity
+
 
 class LabelReference(BaseModel):
     id: UUID
@@ -14,3 +16,11 @@ class LabelReference(BaseModel):
             }
         }
     }
+
+
+class Label(BaseEntity):
+    id: UUID
+    project_id: UUID
+    name: str
+    color: str
+    hotkey: str | None

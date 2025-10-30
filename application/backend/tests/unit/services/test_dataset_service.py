@@ -5,8 +5,7 @@ from uuid import uuid4
 import pytest
 
 from app.db.schema import DatasetItemDB
-from app.models import DatasetItemAnnotation, FullImage, LabelReference, Point, Polygon, Rectangle
-from app.schemas.label import LabelView
+from app.models import DatasetItemAnnotation, FullImage, Label, LabelReference, Point, Polygon, Rectangle
 from app.schemas.project import ProjectView, TaskType, TaskView
 from app.services import DatasetService
 from app.services.dataset_service import AnnotationValidationError
@@ -17,7 +16,7 @@ class TestDatasetServiceUnit:
 
     def test_validate_annotations_labels(self):
         label_id = uuid4()
-        labels = [LabelView(id=label_id, name="cat", color="#00FF00", hotkey="c")]
+        labels = [Label(id=label_id, project_id=uuid4(), name="cat", color="#00FF00", hotkey="c")]
         annotations = [
             DatasetItemAnnotation(
                 labels=[LabelReference(id=label_id)],
@@ -28,7 +27,7 @@ class TestDatasetServiceUnit:
 
     def test_validate_annotations_labels_not_found(self):
         label_id = uuid4()
-        labels = [LabelView(id=label_id, name="cat", color="#00FF00", hotkey="c")]
+        labels = [Label(id=label_id, project_id=uuid4(), name="cat", color="#00FF00", hotkey="c")]
         annotations = [
             DatasetItemAnnotation(
                 labels=[LabelReference(id=uuid4())],

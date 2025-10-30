@@ -12,13 +12,13 @@ from app.models import (
     DatasetItemFormat,
     DatasetItemSubset,
     FullImage,
+    Label,
     LabelReference,
     Point,
     Polygon,
     Rectangle,
     Shape,
 )
-from app.schemas.label import LabelView
 from app.services.datumaro_converter import (
     ClassificationSample,
     DetectionSample,
@@ -35,9 +35,10 @@ from app.services.datumaro_converter import (
 
 @pytest.fixture
 def fxt_project_labels():
+    project_id = uuid4()
     return [
-        LabelView(id=uuid4(), name="cat", color="#00FF00", hotkey="c"),
-        LabelView(id=uuid4(), name="dog", color="#FF0000", hotkey="d"),
+        Label(id=uuid4(), project_id=project_id, name="cat", color="#00FF00", hotkey="c"),
+        Label(id=uuid4(), project_id=project_id, name="dog", color="#FF0000", hotkey="d"),
     ]
 
 

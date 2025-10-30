@@ -18,9 +18,8 @@ from sqlalchemy.orm import Session
 
 from app.core.models import TaskType
 from app.db.schema import DatasetItemDB
-from app.models import DatasetItem, DatasetItemAnnotation, DatasetItemSubset, FullImage, Polygon, Rectangle
+from app.models import DatasetItem, DatasetItemAnnotation, DatasetItemSubset, FullImage, Label, Polygon, Rectangle
 from app.repositories import DatasetItemRepository
-from app.schemas.label import LabelBase
 from app.schemas.project import ProjectBase, ProjectView
 from app.services.datumaro_converter import convert_dataset
 from app.utils.images import crop_to_thumbnail
@@ -57,8 +56,11 @@ class SubsetAlreadyAssignedError(Exception):
 
 class DatasetService:
     def __init__(self, data_dir: Path, db_session: Session) -> None:
+        from app.services.label_service import LabelService
+
         self.projects_dir = data_dir / "projects"
         self._db_session = db_session
+        self._label_service = LabelService(db_session=db_session)
 
     @staticmethod
     def _read_image_from_ndarray(data: np.ndarray) -> Image.Image:
@@ -127,7 +129,8 @@ class DatasetService:
         )
 
         if annotations is not None:
-            DatasetService._validate_annotations_labels(annotations=annotations, labels=project.task.labels)
+            labels = self._label_service.list_all(project_id=project.id)
+            DatasetService._validate_annotations_labels(annotations=annotations, labels=labels)
             DatasetService._validate_annotations(annotations=annotations, project=project)
             DatasetService._validate_annotations_coordinates(annotations=annotations, dataset_item=dataset_item)
 
@@ -207,7 +210,7 @@ class DatasetService:
         repo.delete(obj_id=str(dataset_item.id))
 
     @staticmethod
-    def _validate_annotations_labels(annotations: list[DatasetItemAnnotation], labels: Sequence[LabelBase]) -> None:
+    def _validate_annotations_labels(annotations: list[DatasetItemAnnotation], labels: Sequence[Label]) -> None:
         for annotation in annotations:
             for annotation_label in annotation.labels:
                 project_label = next((label for label in labels if label.id == annotation_label.id), None)
@@ -265,7 +268,8 @@ class DatasetService:
         self, project: ProjectView, dataset_item_id: UUID, annotations: list[DatasetItemAnnotation]
     ) -> DatasetItem:
         """Set dataset item annotations"""
-        DatasetService._validate_annotations_labels(annotations=annotations, labels=project.task.labels)
+        labels = self._label_service.list_all(project_id=project.id)
+        DatasetService._validate_annotations_labels(annotations=annotations, labels=labels)
         DatasetService._validate_annotations(annotations=annotations, project=project)
 
         repo = DatasetItemRepository(project_id=str(project.id), db=self._db_session)
@@ -314,9 +318,10 @@ class DatasetService:
         def _get_image_path(item: DatasetItem) -> str:
             return str(self.get_dataset_item_binary_path(project=project, dataset_item=item))
 
+        labels = self._label_service.list_all(project_id=project.id)
         return convert_dataset(
             project=project,
-            labels=project.task.labels,
+            labels=labels,
             get_dataset_items=_get_dataset_items,
             get_image_path=_get_image_path,
         )

@@ -8,15 +8,12 @@ import numpy as np
 from model_api.models import ClassificationResult, DetectionResult, InstanceSegmentationResult
 from model_api.models.result import Result
 
-from app.models import DatasetItemAnnotation, FullImage, LabelReference, Point, Polygon, Rectangle
-from app.schemas.label import LabelBase
+from app.models import DatasetItemAnnotation, FullImage, Label, LabelReference, Point, Polygon, Rectangle
 
 logger = logging.getLogger(__name__)
 
 
-def _convert_detection_prediction(
-    labels: Sequence[LabelBase], prediction: DetectionResult
-) -> list[DatasetItemAnnotation]:
+def _convert_detection_prediction(labels: Sequence[Label], prediction: DetectionResult) -> list[DatasetItemAnnotation]:
     result = []
     for idx, box in enumerate(prediction.bboxes):
         label_name = prediction.label_names[idx]
@@ -36,7 +33,7 @@ def _convert_detection_prediction(
 
 
 def _convert_classification_prediction(
-    labels: Sequence[LabelBase], prediction: ClassificationResult
+    labels: Sequence[Label], prediction: ClassificationResult
 ) -> list[DatasetItemAnnotation]:
     annotation_labels: list[LabelReference] = []
     confidence = 0
@@ -52,7 +49,7 @@ def _convert_classification_prediction(
 
 
 def _convert_segmentation_prediction(
-    labels: Sequence[LabelBase],
+    labels: Sequence[Label],
     frame_data: np.ndarray,
     prediction: InstanceSegmentationResult,
 ) -> list[DatasetItemAnnotation]:
@@ -104,7 +101,7 @@ def get_confidence_scores(prediction: Result) -> list[float]:
 
 
 def convert_prediction(
-    labels: Sequence[LabelBase], frame_data: np.ndarray, prediction: Result
+    labels: Sequence[Label], frame_data: np.ndarray, prediction: Result
 ) -> list[DatasetItemAnnotation]:
     """
     Converts model predictions to dataset annotations based on prediction type.
