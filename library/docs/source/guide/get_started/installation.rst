@@ -86,7 +86,7 @@ then install the package.
 
             git clone https://github.com/open-edge-platform/training_extensions.git
             cd training_extensions/library
-            pip install .[gpu]
+            pip install .[cuda]
 
 
 **************
