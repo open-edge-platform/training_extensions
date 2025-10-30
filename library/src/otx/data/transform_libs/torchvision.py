@@ -2447,7 +2447,7 @@ class RandomResize(tvt_v2.Transform, NumpytoTVTensorMixin):
         assert len(scale) == 2  # noqa: S101
         min_ratio, max_ratio = ratio_range
         assert min_ratio <= max_ratio  # noqa: S101
-        ratio = RNG.randomom_sample() * (max_ratio - min_ratio) + min_ratio
+        ratio = RNG.random() * (max_ratio - min_ratio) + min_ratio
         return int(scale[0] * ratio), int(scale[1] * ratio)
 
     @cache_randomness
