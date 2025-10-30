@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from .dataset_item import DatasetItem, DatasetItemAnnotation, DatasetItemFormat, DatasetItemSubset
-from .label import LabelReference
+from .label import Label, LabelReference
 from .shape import FullImage, Point, Polygon, Rectangle, Shape
 
 __all__ = [
@@ -11,6 +11,7 @@ __all__ = [
     "DatasetItemFormat",
     "DatasetItemSubset",
     "FullImage",
+    "Label",
     "LabelReference",
     "Point",
     "Polygon",

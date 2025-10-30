@@ -6,6 +6,7 @@ from uuid import uuid4
 import pytest
 
 from app.db.schema import ProjectDB
+from app.models import Label
 from app.schemas.label import LabelCreate, LabelView
 from app.schemas.project import ProjectCreate, ProjectView, TaskCreate, TaskType, TaskView
 from app.services.mappers import ProjectMapper
@@ -53,8 +54,8 @@ DB_TO_VIEW_PROJECT_MAPPING = [
             ),
         ),
         [
-            LabelView(id=LABEL1_ID, name="label1", color="#FF0000", hotkey=None),
-            LabelView(id=LABEL2_ID, name="label2", color="#00FF00", hotkey=None),
+            Label(id=LABEL1_ID, project_id=PROJECT_ID, name="label1", color="#FF0000", hotkey=None),
+            Label(id=LABEL2_ID, project_id=PROJECT_ID, name="label2", color="#00FF00", hotkey=None),
         ],
     ),
     (
@@ -84,7 +85,7 @@ class TestProjectMapper:
     @pytest.mark.parametrize("db_instance,expected_schema, labels", DB_TO_VIEW_PROJECT_MAPPING.copy())
     @pytest.mark.parametrize("active_pipeline", [True, False])
     def test_to_schema(
-        self, db_instance: ProjectDB, expected_schema: ProjectView, labels: list[LabelView], active_pipeline
+        self, db_instance: ProjectDB, expected_schema: ProjectView, labels: list[Label], active_pipeline
     ) -> None:
         db_instance.id = str(expected_schema.id)
         actual_schema = ProjectMapper.to_schema(db_instance, active_pipeline, labels)

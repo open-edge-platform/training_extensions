@@ -167,7 +167,7 @@ class DataCollector:
         if self.active_pipeline_data is None:
             return
         pipeline, project = self.active_pipeline_data
-        from app.services import DatasetService
+        from app.services import DatasetService, LabelService
 
         confidence_scores = get_confidence_scores(prediction=inference_data.prediction)
         should_collect = (
@@ -181,10 +181,10 @@ class DataCollector:
             return
         frame_data = cv2.cvtColor(frame_data, cv2.COLOR_BGR2RGB)  # Convert BGR to RGB
         with get_db_session() as session:
+            labels = LabelService(db_session=session).list_all(project_id=project.id)
+            annotations = convert_prediction(labels=labels, frame_data=frame_data, prediction=inference_data.prediction)
+
             dataset_service = DatasetService(data_dir=self.data_dir, db_session=session)
-            annotations = convert_prediction(
-                labels=project.task.labels, frame_data=frame_data, prediction=inference_data.prediction
-            )
             dataset_service.create_dataset_item(
                 project=project,
                 name=f"{timestamp:.4f}".replace(".", "_"),

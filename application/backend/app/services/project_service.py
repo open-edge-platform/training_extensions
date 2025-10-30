@@ -6,9 +6,10 @@ from uuid import UUID
 
 from sqlalchemy.orm import Session
 
+from app.models import Label
 from app.repositories import DatasetItemRepository, ProjectRepository
 from app.repositories.base import PrimaryKeyIntegrityError
-from app.schemas import LabelView, PipelineStatus, ProjectCreate, ProjectView
+from app.schemas import PipelineStatus, ProjectCreate, ProjectView
 
 from .base import ResourceInUseError, ResourceNotFoundError, ResourceType, ResourceWithIdAlreadyExistsError
 from .label_service import LabelService
@@ -38,9 +39,17 @@ class ProjectService:
 
         pipeline = self._pipeline_service.create_pipeline(project_id=UUID(project_db.id))
 
-        labels: list[LabelView] = []
+        labels: list[Label] = []
         for label in project.task.labels:
-            labels.append(self._label_service.create_label(project_id=UUID(project_db.id), label=label))
+            labels.append(
+                self._label_service.create_label(
+                    project_id=UUID(project_db.id),
+                    name=label.name,
+                    color=label.color,
+                    hotkey=label.hotkey,
+                    label_id=label.id,
+                )
+            )
         return ProjectMapper.to_schema(project_db, pipeline.status == PipelineStatus.RUNNING, labels)
 
     def list_projects(self) -> list[ProjectView]:

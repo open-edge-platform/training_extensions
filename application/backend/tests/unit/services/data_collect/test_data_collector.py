@@ -9,9 +9,9 @@ import numpy as np
 import pytest
 import time_machine
 
-from app.models import DatasetItemAnnotation, DatasetItemFormat, FullImage, LabelReference
+from app.models import DatasetItemAnnotation, DatasetItemFormat, FullImage, Label, LabelReference
 from app.schemas.pipeline import ConfidenceThresholdDataCollectionPolicy, FixedRateDataCollectionPolicy
-from app.services import DatasetService
+from app.services import DatasetService, LabelService
 from app.services.data_collect.data_collector import (
     ConfidenceThresholdPolicyChecker,
     DataCollector,
@@ -124,6 +124,7 @@ class TestDataCollectorUnit:
         # Arrange
         pipeline = MagicMock()
         project = MagicMock()
+        label = MagicMock(spec=Label)
         frame_data = np.random.randint(low=0, high=255, size=(100, 100), dtype=np.uint8)
         inference_data = MagicMock()
 
@@ -140,6 +141,7 @@ class TestDataCollectorUnit:
         # Act
         with (
             patch.object(DatasetService, "create_dataset_item") as mock_create_dataset_item,
+            patch.object(LabelService, "list_all", return_value=[label]) as mock_list_all,
             patch(
                 "app.services.data_collect.data_collector.convert_prediction", return_value=annotations
             ) as mock_convert_prediction,
@@ -151,8 +153,9 @@ class TestDataCollectorUnit:
             )
 
         # Assert
+        mock_list_all.assert_called_once_with(project_id=project.id)
         mock_convert_prediction.assert_called_once_with(
-            labels=project.task.labels, frame_data=ANY, prediction=inference_data.prediction
+            labels=[label], frame_data=ANY, prediction=inference_data.prediction
         )
         mock_create_dataset_item.assert_called_once_with(
             project=project,
@@ -173,6 +176,7 @@ class TestDataCollectorUnit:
         # Arrange
         pipeline = MagicMock()
         project = MagicMock()
+        label = MagicMock(spec=Label)
         frame_data = np.random.randint(low=0, high=255, size=(100, 100), dtype=np.uint8)
         inference_data = MagicMock()
 
@@ -189,6 +193,7 @@ class TestDataCollectorUnit:
         # Act
         with (
             patch.object(DatasetService, "create_dataset_item") as mock_create_dataset_item,
+            patch.object(LabelService, "list_all", return_value=[label]) as mock_list_all,
             patch(
                 "app.services.data_collect.data_collector.convert_prediction", return_value=annotations
             ) as mock_convert_prediction,
@@ -200,8 +205,9 @@ class TestDataCollectorUnit:
             )
 
         # Assert
+        mock_list_all.assert_called_once_with(project_id=project.id)
         mock_convert_prediction.assert_called_once_with(
-            labels=project.task.labels, frame_data=ANY, prediction=inference_data.prediction
+            labels=[label], frame_data=ANY, prediction=inference_data.prediction
         )
         mock_create_dataset_item.assert_called_once_with(
             project=project,
