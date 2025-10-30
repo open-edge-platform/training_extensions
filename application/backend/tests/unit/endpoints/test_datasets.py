@@ -1,7 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import tempfile
-from collections.abc import Generator
 from datetime import datetime
 from io import BytesIO
 from unittest.mock import ANY, MagicMock
@@ -11,7 +10,7 @@ from zoneinfo import ZoneInfo
 import pytest
 from fastapi import status
 
-from app.api.dependencies import get_dataset_service, get_project
+from app.api.dependencies import get_dataset_service
 from app.api.schemas.dataset_item import (
     DatasetItemAnnotation,
     DatasetItemAssignSubset,
@@ -21,7 +20,6 @@ from app.api.schemas.dataset_item import (
 )
 from app.main import app
 from app.models import DatasetItem, DatasetItemFormat, LabelReference, Rectangle
-from app.schemas import ProjectView
 from app.services import DatasetService, ResourceNotFoundError, ResourceType
 from app.services.dataset_service import AnnotationValidationError, SubsetAlreadyAssignedError
 
@@ -50,14 +48,6 @@ def fxt_dataset_service() -> MagicMock:
     dataset_service = MagicMock(spec=DatasetService)
     app.dependency_overrides[get_dataset_service] = lambda: dataset_service
     return dataset_service
-
-
-@pytest.fixture
-def fxt_get_project() -> Generator[ProjectView]:
-    project = MagicMock(spec=ProjectView)
-    app.dependency_overrides[get_project] = lambda: project
-    yield project
-    del app.dependency_overrides[get_project]
 
 
 def test_convert_dataset_item_to_view(fxt_dataset_item) -> None:

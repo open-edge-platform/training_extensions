@@ -1,14 +1,13 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import tempfile
-from collections.abc import Generator
 from unittest.mock import MagicMock
 from uuid import uuid4
 
 import pytest
 from fastapi import status
 
-from app.api.dependencies import get_data_collector, get_label_service, get_project
+from app.api.dependencies import get_data_collector, get_label_service
 from app.main import app
 from app.models import Label
 from app.schemas import LabelView, PatchLabels, ProjectView
@@ -48,25 +47,6 @@ def fxt_label_service():
     label_service = MagicMock(spec=LabelService)
     app.dependency_overrides[get_label_service] = lambda: label_service
     return label_service
-
-
-@pytest.fixture
-def fxt_get_project() -> Generator[ProjectView]:
-    project = MagicMock(
-        spec=ProjectView,
-        id=uuid4(),
-        task=TaskView(
-            task_type=TaskType.CLASSIFICATION,
-            exclusive_labels=True,
-            labels=[
-                LabelView(id=uuid4(), name="cat", color="#11AA22", hotkey="s"),
-                LabelView(id=uuid4(), name="dog", color="#AA2233", hotkey="d"),
-            ],
-        ),
-    )
-    app.dependency_overrides[get_project] = lambda: project
-    yield project
-    del app.dependency_overrides[get_project]
 
 
 class TestProjectEndpoints:
