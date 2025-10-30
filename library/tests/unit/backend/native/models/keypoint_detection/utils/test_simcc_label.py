@@ -7,11 +7,13 @@ import pytest
 
 from otx.backend.native.models.keypoint_detection.utils.simcc_label import SimCCLabel
 
+RNG = np.random.default_rng(42)
+
 
 class TestSimCCLabel:
     @pytest.fixture()
     def fxt_keypoints(self):
-        return (0.1 + 0.8 * np.random.rand(1, 17, 2)) * [192, 256]
+        return (0.1 + 0.8 * RNG.random((1, 17, 2))) * [192, 256]
 
     @pytest.fixture()
     def fxt_keypoints_visible(self):
@@ -57,8 +59,8 @@ class TestSimCCLabel:
     )
     def test_decode(self, fxt_codec, request):
         codec = request.getfixturevalue(fxt_codec)
-        simcc_x = np.random.rand(1, 17, int(192 * codec.simcc_split_ratio))
-        simcc_y = np.random.rand(1, 17, int(256 * codec.simcc_split_ratio))
+        simcc_x = RNG.random((1, 17, int(192 * codec.simcc_split_ratio)))
+        simcc_y = RNG.random((1, 17, int(256 * codec.simcc_split_ratio)))
 
         keypoints, scores = codec.decode(simcc_x, simcc_y)
         assert keypoints.shape == (1, 17, 2)
@@ -66,8 +68,8 @@ class TestSimCCLabel:
 
         codec.decode_scores = True
 
-        simcc_x = np.random.rand(1, 17, int(192 * codec.simcc_split_ratio)) * 10
-        simcc_y = np.random.rand(1, 17, int(256 * codec.simcc_split_ratio)) * 10
+        simcc_x = RNG.random((1, 17, int(192 * codec.simcc_split_ratio))) * 10
+        simcc_y = RNG.random((1, 17, int(256 * codec.simcc_split_ratio))) * 10
         keypoints, scores = codec.decode(simcc_x, simcc_y)
 
         assert len(scores) == 1

@@ -10,13 +10,15 @@ import torch
 from otx.backend.native.models.common.utils.assigners.iou2d_calculator import BboxOverlaps2D
 from otx.backend.native.models.common.utils.bbox_overlaps import bbox_overlaps
 
+RNG = np.random.default_rng(42)
+
 
 def test_bbox_overlaps_2d(eps: float = 1e-7):
     def _construct_bbox(num_bbox: int | None = None) -> tuple[torch.Tensor, int]:
-        img_h = int(np.random.randint(3, 1000))
-        img_w = int(np.random.randint(3, 1000))
+        img_h = int(RNG.integers(3, 1000))
+        img_w = int(RNG.integers(3, 1000))
         if num_bbox is None:
-            num_bbox = np.random.randint(1, 10)
+            num_bbox = RNG.integers(1, 10)
         x1y1 = torch.rand((num_bbox, 2))
         x2y2 = torch.max(torch.rand((num_bbox, 2)), x1y1)
         bboxes = torch.cat((x1y1, x2y2), -1)

@@ -67,6 +67,7 @@ class DETR(BaseModule):
             )
         )
         self.optimizer_configuration = optimizer_configuration
+        self.rng = np.random.default_rng(42)
 
     def generate_scales(self, input_size: int, base_size_repeat: int = 3) -> list[int]:
         """Generates scales for multi-scale training."""
@@ -84,7 +85,7 @@ class DETR(BaseModule):
     def forward(self, images: Tensor, targets: dict[str, Any] | None = None) -> dict[str, Tensor] | Tensor:
         """Forward pass of the model."""
         if self.multi_scale and self.training:
-            sz = int(np.random.choice(self.multi_scale))
+            sz = int(self.rng.choice(self.multi_scale))
             images = nn.functional.interpolate(images, size=[sz, sz])
 
         output = self._forward_features(images, targets)

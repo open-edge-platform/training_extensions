@@ -9,12 +9,14 @@ from datumaro.components.media import Image
 
 from otx.data.dataset.base import OTXDataset
 
+RNG = np.random.default_rng(42)
+
 
 class TestOTXDataset:
     @pytest.fixture()
     def mock_image(self) -> Image:
         img = mock.Mock(spec=Image)
-        img.data = np.random.randint(0, 256, (10, 10, 3), dtype=np.uint8)
+        img.data = RNG.integers(0, 256, (10, 10, 3), dtype=np.uint8)
         img.path = "test_path"
         return img
 
