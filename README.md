@@ -73,37 +73,35 @@ If you want to make changes to the library, then a local installation is recomme
 
 <details>
 <summary>Install from PyPI</summary>
-Installing the library with uv tool is the easiest way to get started with otx.
+Installing the library with pip or uv is the easiest way to get started with otx.
 
 ```bash
-uv pip install otx[cuda]
-```
+# Without GPU support (CPU only)
+pip install otx[cpu]
 
-For Intel GPUs users:
+# With Intel GPU support (XPU)
+pip install otx[xpu]
 
-```bash
-uv pip install otx[xpu]
+# With NVIDIA GPU support (CUDA)
+pip install otx[cuda]
 ```
 
 </details>
 
 <details>
 <summary>Install from source</summary>
-To install from source, you need to clone the repository and install the library using uv pip via editable mode.
+To install from source, you need to clone the repository and install the library with pip or uv.
+It is recommended to use a virtual environment to avoid conflicts with other packages.
 
 ```bash
-# Create a new virtual environment using uv (Python 3.11)
-uv venv .otx --python 3.11
-source .otx/bin/activate
-
 # Clone the repository
 git clone https://github.com/open-edge-platform/training_extensions.git
 cd training_extensions
 
-# Install in editable mode
-uv pip install -e .[cuda]
-# For Intel GPUs users
-uv pip install -e .[xpu]
+# Install (optional: pass the '-e' flag for editable mode
+# If you have an Intel GPU, use 'xpu' to enable support.
+# If you have an NVIDIA GPU, use 'cuda' to enable support.
+pip install -e .[cpu]
 ```
 
 </details>
