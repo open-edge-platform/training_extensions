@@ -114,10 +114,6 @@ def _register_callback(callbacks: list[Callback] | Callback | None = None) -> li
 
 def _apply_new_batch_size(engine: OTXEngine, new_batch_size: int) -> None:
     origin_bs = engine.datamodule.train_subset.batch_size
-    if is_xpu_available() and new_batch_size != 1:
-        new_batch_size -= 1  # for safety reasons
-    if new_batch_size == origin_bs:
-        return
     engine.datamodule.train_subset.batch_size = new_batch_size
     engine.datamodule.val_subset.batch_size = new_batch_size
     engine.datamodule.test_subset.batch_size = new_batch_size

@@ -10,10 +10,10 @@ from typing import Any
 
 from model_api.models import DetectionResult, Model
 
-from app.entities.stream_data import InferenceData, StreamData
 from app.services import ActiveModelService, MetricsService
 from app.services.active_model_service import LoadedModel
 from app.settings import Settings, get_settings
+from app.stream.stream_data import InferenceData, StreamData
 from app.utils import Visualizer
 from app.workers.base import BaseProcessWorker
 

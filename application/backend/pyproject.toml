@@ -8,7 +8,7 @@ requires-python = ">=3.13"
 dependencies = [
     "fastapi[standard]~=0.115.12",
     "hiyapyco==0.7.0",
-    "openvino-model-api~=0.3.0.2",
+    "openvino-model-api~=0.3.0.4",
     "pillow~=11.2",
     "python-multipart~=0.0.20",
     "uvicorn~=0.34.3",
@@ -21,7 +21,9 @@ dependencies = [
     "aiofiles==24.1.0",
     "pydantic-settings~=2.10.1",
     "aiortc~=1.13.0",
-    "datumaro[experimental] @ git+https://github.com/open-edge-platform/datumaro.git@develop"
+    "datumaro[experimental] @ git+https://github.com/open-edge-platform/datumaro.git@develop",
+    "scikit-learn~=1.7.0",
+    "faster-coco-eval~=1.6.8",
 ]
 
 [project.optional-dependencies]

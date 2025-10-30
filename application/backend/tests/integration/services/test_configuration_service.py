@@ -5,15 +5,16 @@ from uuid import uuid4
 
 import pytest
 
-from app.db.schema import SinkDB, SourceDB
+from app.db.schema import PipelineDB, SinkDB, SourceDB
 from app.services import ConfigurationService, ResourceInUseError, ResourceNotFoundError, ResourceType
 from app.services.base import ResourceWithIdAlreadyExistsError, ResourceWithNameAlreadyExistsError
+from app.services.event.event_bus import EventType
 
 
 @pytest.fixture
-def fxt_config_service(fxt_active_pipeline_service, fxt_condition, db_session) -> ConfigurationService:
+def fxt_config_service(fxt_event_bus, fxt_condition, db_session) -> ConfigurationService:
     """Fixture to provide a ConfigurationService instance with mocked dependencies."""
-    return ConfigurationService(fxt_active_pipeline_service, db_session, fxt_condition)
+    return ConfigurationService(fxt_event_bus, db_session)
 
 
 class TestConfigurationServiceIntegration:
@@ -104,6 +105,42 @@ class TestConfigurationServiceIntegration:
 
         assert excinfo.value.resource_type == resource_type
         assert excinfo.value.resource_id == config.id
+
+    @pytest.mark.parametrize("is_running", [True, False])
+    def test_get_active_config(
+        self,
+        is_running,
+        fxt_db_projects,
+        fxt_db_sources,
+        fxt_db_sinks,
+        fxt_config_service,
+        db_session,
+    ):
+        """Test getting active configuration."""
+        db_project = fxt_db_projects[0]
+        db_session.add(db_project)
+        db_session.flush()
+
+        db_source = fxt_db_sources[0]
+        db_sink = fxt_db_sinks[0]
+        db_session.add_all([db_source, db_sink])
+        db_session.flush()
+
+        db_pipeline = PipelineDB(
+            project_id=db_project.id, source_id=db_source.id, sink_id=db_sink.id, is_running=is_running
+        )
+        db_session.add(db_pipeline)
+        db_session.flush()
+
+        active_sink = fxt_config_service.get_active_sink()
+        active_source = fxt_config_service.get_active_source()
+
+        if is_running:
+            assert active_sink is not None and str(active_sink.id) == db_sink.id
+            assert active_source is not None and str(active_source.id) == db_source.id
+        else:
+            assert active_sink is None
+            assert active_source is None
 
     @pytest.mark.parametrize(
         "fixture_name,db_model,list_method",
@@ -236,8 +273,7 @@ class TestConfigurationServiceIntegration:
         update_method,
         update_data,
         fxt_config_service,
-        fxt_condition,
-        fxt_active_pipeline_service,
+        fxt_event_bus,
         fxt_db_projects,
         request,
         db_session,
@@ -246,10 +282,12 @@ class TestConfigurationServiceIntegration:
         db_resources = request.getfixturevalue(fixture_name)
         db_config = db_resources[0]
         db_project = fxt_db_projects[0]
-        db_pipeline = db_project.pipeline
+        db_pipeline = PipelineDB(project_id=db_project.id)
         db_pipeline.is_running = True
         setattr(db_pipeline, resource_type.lower(), db_config)
         db_session.add(db_project)
+        db_session.flush()
+        db_session.add(db_pipeline)
         db_session.flush()
 
         updated = getattr(fxt_config_service, update_method)(db_config.id, update_data)
@@ -262,12 +300,10 @@ class TestConfigurationServiceIntegration:
         assert db_resource.name == update_data["name"]
         if resource_type == ResourceType.SOURCE:
             assert db_resource.config_data["video_path"] == update_data["video_path"]
-            fxt_condition.notify_all.assert_called_once()
-            fxt_active_pipeline_service.reload.assert_not_called()
+            fxt_event_bus.emit_event.assert_called_once_with(EventType.SOURCE_CHANGED)
         else:
             assert db_resource.config_data["folder_path"] == update_data["folder_path"]
-            fxt_condition.notify_all.assert_not_called()
-            fxt_active_pipeline_service.reload.assert_called_once()
+            fxt_event_bus.emit_event.assert_called_once_with(EventType.SINK_CHANGED)
 
     @pytest.mark.parametrize(
         "resource_type,db_model,update_method",
@@ -325,10 +361,12 @@ class TestConfigurationServiceIntegration:
         db_resources = request.getfixturevalue(fixture_name)
         db_config = db_resources[0]
         db_project = fxt_db_projects[0]
-        db_pipeline = db_project.pipeline
+        db_pipeline = PipelineDB(project_id=db_project.id)
         db_pipeline.is_running = True
         setattr(db_pipeline, resource_type.lower(), db_config)
         db_session.add(db_project)
+        db_session.flush()
+        db_session.add(db_pipeline)
         db_session.flush()
 
         with pytest.raises(ResourceInUseError) as exc_info:

@@ -12,18 +12,21 @@ from sqlalchemy.orm import Session
 from app.core.jobs.control_plane import JobQueue
 from app.db import get_db_session
 from app.scheduler import Scheduler
+from app.schemas import ProjectView
 from app.services import (
-    ActivePipelineService,
     ConfigurationService,
     DatasetService,
     MetricsService,
     ModelService,
+    PipelineMetricsService,
     PipelineService,
     ProjectService,
+    ResourceNotFoundError,
     SystemService,
 )
 from app.services.base_weights_service import BaseWeightsService
 from app.services.data_collect import DataCollector
+from app.services.event.event_bus import EventBus
 from app.services.label_service import LabelService
 from app.webrtc.manager import WebRTCManager
 
@@ -128,9 +131,9 @@ def get_data_dir(request: Request) -> Path:
     return request.app.state.settings.data_dir
 
 
-def get_active_pipeline_service(request: Request) -> ActivePipelineService:
-    """Provides an ActivePipelineService instance for managing the active pipeline."""
-    return request.app.state.active_pipeline_service
+def get_event_bus(request: Request) -> EventBus:
+    """Provides an EventBus instance."""
+    return request.app.state.event_bus
 
 
 def get_data_collector(request: Request) -> DataCollector:
@@ -144,32 +147,29 @@ def get_metrics_service(scheduler: Annotated[Scheduler, Depends(get_scheduler)])
 
 
 def get_configuration_service(
-    active_pipeline_service: Annotated[ActivePipelineService, Depends(get_active_pipeline_service)],
-    scheduler: Annotated[Scheduler, Depends(get_scheduler)],
+    event_bus: Annotated[EventBus, Depends(get_event_bus)],
     db: Annotated[Session, Depends(get_db)],
 ) -> ConfigurationService:
-    """Provides a ConfigurationService instance with the active pipeline service and config changed condition."""
-    return ConfigurationService(
-        active_pipeline_service=active_pipeline_service,
-        db_session=db,
-        config_changed_condition=scheduler.mp_config_changed_condition,
-    )
+    """Provides a ConfigurationService instance."""
+    return ConfigurationService(event_bus=event_bus, db_session=db)
 
 
 def get_pipeline_service(
-    active_pipeline_service: Annotated[ActivePipelineService, Depends(get_active_pipeline_service)],
-    data_collector: Annotated[DataCollector, Depends(get_data_collector)],
-    metrics_service: Annotated[MetricsService, Depends(get_metrics_service)],
-    scheduler: Annotated[Scheduler, Depends(get_scheduler)],
+    event_bus: Annotated[EventBus, Depends(get_event_bus)],
     db: Annotated[Session, Depends(get_db)],
 ) -> PipelineService:
-    """Provides a PipelineService instance with the active pipeline service and config changed condition."""
-    return PipelineService(
-        active_pipeline_service=active_pipeline_service,
-        data_collector=data_collector,
+    """Provides a PipelineService instance ."""
+    return PipelineService(event_bus=event_bus, db_session=db)
+
+
+def get_pipeline_metrics_service(
+    pipeline_service: Annotated[PipelineService, Depends(get_pipeline_service)],
+    metrics_service: Annotated[MetricsService, Depends(get_metrics_service)],
+) -> PipelineMetricsService:
+    """Provides a PipelineMetricsService instance."""
+    return PipelineMetricsService(
+        pipeline_service=pipeline_service,
         metrics_service=metrics_service,
-        config_changed_condition=scheduler.mp_config_changed_condition,
-        db_session=db,
     )
 
 
@@ -198,22 +198,31 @@ def get_label_service(db: Annotated[Session, Depends(get_db)]) -> LabelService:
 def get_project_service(
     data_dir: Annotated[Path, Depends(get_data_dir)],
     db: Annotated[Session, Depends(get_db)],
+    pipeline_service: Annotated[PipelineService, Depends(get_pipeline_service)],
     label_service: Annotated[LabelService, Depends(get_label_service)],
 ) -> ProjectService:
     """Provides a ProjectService instance for managing projects."""
-    return ProjectService(data_dir=data_dir, db_session=db, label_service=label_service)
+    return ProjectService(
+        data_dir=data_dir, db_session=db, label_service=label_service, pipeline_service=pipeline_service
+    )
 
 
 def get_dataset_service(
-    data_dir: Annotated[Path, Depends(get_data_dir)],
-    db: Annotated[Session, Depends(get_db)],
-    project_service: Annotated[ProjectService, Depends(get_project_service)],
-    label_service: Annotated[LabelService, Depends(get_label_service)],
+    data_dir: Annotated[Path, Depends(get_data_dir)], db: Annotated[Session, Depends(get_db)]
 ) -> DatasetService:
     """Provides a DatasetService instance."""
-    return DatasetService(
-        data_dir=data_dir, db_session=db, project_service=project_service, label_service=label_service
-    )
+    return DatasetService(data_dir=data_dir, db_session=db)
+
+
+def get_project(
+    project_id: Annotated[UUID, Depends(get_project_id)],
+    project_service: Annotated[ProjectService, Depends(get_project_service)],
+) -> ProjectView:
+    """Provides a ProjectView instance for request scoped project."""
+    try:
+        return project_service.get_project_by_id(project_id)
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 def get_base_weights_service(data_dir: Annotated[Path, Depends(get_data_dir)]) -> BaseWeightsService:

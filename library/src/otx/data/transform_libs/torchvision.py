@@ -1159,7 +1159,6 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
     ) -> None:
         super().__init__()
         self._validate_parameters(max_translate_ratio, scaling_ratio_range)
-
         self.max_rotate_degree = max_rotate_degree
         self.max_translate_ratio = max_translate_ratio
         self.scaling_ratio_range = scaling_ratio_range
@@ -1238,7 +1237,13 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
         homography_matrix = self._get_random_homography_matrix(height, width)
         output_shape = (height + self.border[0] * 2, width + self.border[1] * 2)
 
-        if hasattr(inputs, "bboxes") and inputs.bboxes is not None and len(inputs.bboxes) > 0:
+        transformed_img = self._warp_image(img, homography_matrix, output_shape)
+        inputs.image = transformed_img
+        inputs.img_info = _resize_image_info(inputs.img_info, transformed_img.shape[:2])
+        valid_index = None
+        valid_bboxes = hasattr(inputs, "bboxes") and inputs.bboxes is not None and len(inputs.bboxes) > 0
+
+        if valid_bboxes:
             # Test transform bboxes to see if any remain valid
             valid_index = self._transform_bboxes(inputs, homography_matrix, output_shape)
             # If no valid annotations will remain after transformation, skip entirely
@@ -1246,20 +1251,14 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
                 inputs.image = img
                 return self.convert(inputs)  # type: ignore[return-value]
 
-            # If we reach here, transformation will produce valid results, so proceed
-            # Transform image
-            transformed_img = self._warp_image(img, homography_matrix, output_shape)
-            inputs.image = transformed_img
-            inputs.img_info = _resize_image_info(inputs.img_info, transformed_img.shape[:2])
+        if hasattr(inputs, "masks") and inputs.masks is not None and len(inputs.masks) > 0:
+            self._transform_masks(inputs, homography_matrix, output_shape, valid_index)
 
-            if hasattr(inputs, "masks") and inputs.masks is not None and len(inputs.masks) > 0:
-                self._transform_masks(inputs, homography_matrix, output_shape, valid_index)
+        if hasattr(inputs, "polygons") and inputs.polygons is not None and len(inputs.polygons) > 0:
+            self._transform_polygons(inputs, homography_matrix, output_shape, valid_index)
 
-            if hasattr(inputs, "polygons") and inputs.polygons is not None and len(inputs.polygons) > 0:
-                self._transform_polygons(inputs, homography_matrix, output_shape, valid_index)
-
-            if self.recompute_bbox:
-                self._recompute_bboxes(inputs, output_shape)
+        if valid_bboxes and self.recompute_bbox:
+            self._recompute_bboxes(inputs, output_shape)
 
         return self.convert(inputs)  # type: ignore[return-value]
 
@@ -1321,7 +1320,7 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
         inputs: OTXDataItem,
         warp_matrix: np.ndarray,
         output_size: tuple[int, int],
-        valid_index: np.ndarray,
+        valid_index: np.ndarray | None = None,
     ) -> None:
         """Transform masks using the warp matrix.
 
@@ -1335,11 +1334,11 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
             return
 
         # Convert valid_index to numpy boolean array if it's a tensor
-        if hasattr(valid_index, "numpy"):
+        if valid_index is not None and hasattr(valid_index, "numpy"):
             valid_index = valid_index.numpy()
 
         # Filter masks using valid_index first
-        masks = inputs.masks[valid_index]
+        masks = inputs.masks[valid_index] if valid_index is not None else inputs.masks
         masks = masks.numpy() if not isinstance(masks, np.ndarray) else masks
 
         if masks.ndim == 3:
@@ -1378,15 +1377,20 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
             )
             return warped_mask > 127
 
-        msg = "Multi-class masks are not supported yet."
-        raise NotImplementedError(msg)
+        return cv2.warpPerspective(
+            mask.astype(np.uint8),
+            warp_matrix,
+            dsize=(width, height),
+            flags=cv2.INTER_NEAREST,
+            borderValue=0,
+        )
 
     def _transform_polygons(
         self,
         inputs: OTXDataItem,
         warp_matrix: np.ndarray,
         output_shape: tuple[int, int],
-        valid_index: np.ndarray,
+        valid_index: np.ndarray | None = None,
     ) -> None:
         """Transform polygons using the warp matrix.
 
@@ -1405,11 +1409,13 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
             return
 
         # Convert valid_index to numpy boolean array if it's a tensor
-        if hasattr(valid_index, "numpy"):
+        if valid_index is not None and hasattr(valid_index, "numpy"):
             valid_index = valid_index.numpy()
 
-        # Filter polygons using valid_index
-        filtered_polygons = [p for p, keep in zip(inputs.polygons, valid_index) if keep]
+        # Filter polygons using valid_index if available
+        filtered_polygons = (
+            [p for p, keep in zip(inputs.polygons, valid_index) if keep] if valid_index is not None else inputs.polygons
+        )
 
         if filtered_polygons:
             inputs.polygons = project_polygons(filtered_polygons, warp_matrix, output_shape)

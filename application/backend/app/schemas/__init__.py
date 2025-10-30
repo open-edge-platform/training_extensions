@@ -1,7 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from app.schemas.dataset_item import DatasetItem, DatasetItemsWithPagination
 from app.schemas.job import JobRequest, JobView
 from app.schemas.label import LabelCreate, LabelView, PatchLabels
 from app.schemas.metrics import InferenceMetrics, LatencyMetrics, PipelineMetrics, TimeWindow
@@ -15,8 +14,6 @@ from app.schemas.training_configuration import TrainingConfiguration
 
 __all__ = [
     "DataCollectionPolicy",
-    "DatasetItem",
-    "DatasetItemsWithPagination",
     "DisconnectedSinkConfig",
     "DisconnectedSourceConfig",
     "InferenceMetrics",

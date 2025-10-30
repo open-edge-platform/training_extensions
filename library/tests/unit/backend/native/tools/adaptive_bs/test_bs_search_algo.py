@@ -68,9 +68,9 @@ class TestBsSearchAlgo:
                 msg = "CUDA out of memory."
                 raise RuntimeError(msg)
             if batch_size > max_runnable_bs:
-                mem_usage = 8500 + 1500 * batch_size / (cuda_oom_bound - max_runnable_bs)
+                mem_usage = 9000 + 1500 * batch_size / (cuda_oom_bound - max_runnable_bs)
             else:
-                mem_usage = 8500 * batch_size / max_runnable_bs
+                mem_usage = 9000 * batch_size / max_runnable_bs
 
             self.mock_torch.cuda.max_memory_reserved.return_value = mem_usage
             return mem_usage
@@ -110,14 +110,14 @@ class TestBsSearchAlgo:
         mock_train_func = self.get_mock_train_func(cuda_oom_bound=1, max_runnable_bs=1)
 
         bs_search_algo = BsSearchAlgo(mock_train_func, 128, 1000)
-        assert bs_search_algo.auto_decrease_batch_size() == 2
+        assert bs_search_algo.auto_decrease_batch_size() == 1
 
     def test_auto_decrease_batch_size_bs2_not_oom_but_most_mem(self):
         """Batch size 2 doesn't make oom but use most of memory."""
         mock_train_func = self.get_mock_train_func(cuda_oom_bound=2, max_runnable_bs=1)
 
         bs_search_algo = BsSearchAlgo(mock_train_func, 128, 1000)
-        assert bs_search_algo.auto_decrease_batch_size() == 2
+        assert bs_search_algo.auto_decrease_batch_size() == 1
 
     @pytest.mark.parametrize(
         ("max_runnable_bs", "max_bs", "expected_bs"),
@@ -135,7 +135,7 @@ class TestBsSearchAlgo:
         adapted_bs = bs_search_algo.find_big_enough_batch_size()
 
         if expected_bs is None:
-            assert 7500 <= mock_train_func(adapted_bs) <= 8500
+            assert 7500 <= mock_train_func(adapted_bs) <= 9000
         else:
             assert adapted_bs == expected_bs
 
@@ -143,14 +143,14 @@ class TestBsSearchAlgo:
         mock_train_func = self.get_mock_train_func(cuda_oom_bound=1, max_runnable_bs=1)
 
         bs_search_algo = BsSearchAlgo(mock_train_func, 128, 1000)
-        assert bs_search_algo.find_big_enough_batch_size() == 2
+        assert bs_search_algo.find_big_enough_batch_size() == 1
 
     def test_find_big_enough_batch_size_bs2_not_oom_but_most_mem(self):
         """Batch size 2 doesn't make oom but use most of memory."""
         mock_train_func = self.get_mock_train_func(cuda_oom_bound=2, max_runnable_bs=1)
 
         bs_search_algo = BsSearchAlgo(mock_train_func, 2, 1000)
-        assert bs_search_algo.find_big_enough_batch_size() == 2
+        assert bs_search_algo.find_big_enough_batch_size() == 1
 
     def test_find_big_enough_batch_size_gradient_zero(self):
         def mock_train_func(batch_size) -> int:
@@ -167,7 +167,7 @@ class TestBsSearchAlgo:
         bs_search_algo = BsSearchAlgo(mock_train_func, 64, 1000)
         adapted_bs = bs_search_algo.find_big_enough_batch_size()
 
-        assert adapted_bs == 100
+        assert adapted_bs == 102
 
     def test_find_big_enough_batch_size_not_exceed_upper_bound(self):
         def mock_train_func(batch_size) -> int:
@@ -184,7 +184,7 @@ class TestBsSearchAlgo:
         bs_search_algo = BsSearchAlgo(mock_train_func, 64, 1000)
         adapted_bs = bs_search_algo.find_big_enough_batch_size()
 
-        assert mock_train_func(adapted_bs) <= 8500
+        assert mock_train_func(adapted_bs) <= 9000
 
     def test_find_big_enough_batch_size_drop_last(self):
         mock_train_func = self.get_mock_train_func(cuda_oom_bound=10000, max_runnable_bs=180)

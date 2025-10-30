@@ -11,10 +11,11 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.core.models.task_type import TaskType
-from app.db.schema import Base, LabelDB, ModelRevisionDB, PipelineDB, ProjectDB, SinkDB, SourceDB
+from app.db.schema import Base, LabelDB, ModelRevisionDB, ProjectDB, SinkDB, SourceDB
 from app.schemas import OutputFormat, SinkType, SourceType
 from app.schemas.model import TrainingStatus
-from app.services import ActivePipelineService, MetricsService
+from app.services import MetricsService
+from app.services.event.event_bus import EventBus
 
 
 @pytest.fixture(scope="session")
@@ -140,12 +141,7 @@ def fxt_db_projects() -> list[ProjectDB]:
             "exclusive_labels": True,
         },
     ]
-    db_projects = []
-    for config in configs:
-        project = ProjectDB(**config)
-        project.pipeline = PipelineDB(project_id=project.id)
-        db_projects.append(project)
-    return db_projects
+    return [ProjectDB(**config) for config in configs]
 
 
 @pytest.fixture
@@ -158,8 +154,8 @@ def fxt_db_labels() -> list[LabelDB]:
 
 
 @pytest.fixture
-def fxt_active_pipeline_service() -> MagicMock:
-    return MagicMock(spec=ActivePipelineService)
+def fxt_event_bus() -> MagicMock:
+    return MagicMock(spec=EventBus)
 
 
 @pytest.fixture

@@ -18,6 +18,15 @@ class PipelineRepository:
     def get_by_id(self, obj_id: str) -> PipelineDB | None:
         return self.db.get(PipelineDB, obj_id)
 
+    def save(self, item: PipelineDB) -> PipelineDB:
+        self.db.add(item)
+        self.db.flush()
+        return item
+
+    def is_running(self, obj_id: str) -> bool:
+        stmt = select(PipelineDB.is_running).select_from(PipelineDB).where(PipelineDB.project_id == obj_id)
+        return self.db.scalar(stmt) or False
+
     def update(self, item: PipelineDB) -> PipelineDB:
         item.updated_at = datetime.now(UTC)
         updated = self.db.merge(item)

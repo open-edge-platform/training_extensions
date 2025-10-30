@@ -4,9 +4,11 @@
 """Application lifecycle management"""
 
 import logging
+import multiprocessing as mp
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from functools import partial
+from multiprocessing.synchronize import Condition
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -16,9 +18,9 @@ from app.core.run import Runnable, RunnableFactory
 from app.db import MigrationManager
 from app.scheduler import Scheduler
 from app.schemas.job import JobType
-from app.services import ActivePipelineService
 from app.services.base_weights_service import BaseWeightsService
 from app.services.data_collect import DataCollector
+from app.services.event.event_bus import EventBus
 from app.services.training import OTXTrainer
 from app.settings import get_settings
 from app.webrtc.manager import WebRTCManager
@@ -65,14 +67,17 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         logger.error("Failed to initialize database. Application cannot start.")
         raise RuntimeError("Database initialization failed")
 
-    active_pipeline_service = ActivePipelineService()
-    app.state.active_pipeline_service = active_pipeline_service
+    # Condition to notify processes about source updates
+    source_changed_condition: Condition = mp.Condition()
 
-    data_collector = DataCollector(data_dir=settings.data_dir, active_pipeline_service=active_pipeline_service)
+    event_bus = EventBus(source_changed_condition=source_changed_condition)
+    app.state.event_bus = event_bus
+
+    data_collector = DataCollector(data_dir=settings.data_dir, event_bus=event_bus)
     app.state.data_collector = data_collector
 
     # Initialize Scheduler
-    app_scheduler = Scheduler(active_pipeline_service=active_pipeline_service, data_collector=data_collector)
+    app_scheduler = Scheduler(event_bus=event_bus, data_collector=data_collector)
     app_scheduler.start_workers()
     app.state.scheduler = app_scheduler
 

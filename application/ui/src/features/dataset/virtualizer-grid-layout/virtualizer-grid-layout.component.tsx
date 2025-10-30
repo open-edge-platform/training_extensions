@@ -13,7 +13,7 @@ import { useGetTargetPosition } from './use-get-target-position.hook';
 
 import classes from './virtualizer-grid-layout.module.scss';
 
-type Item = components['schemas']['DatasetItem'];
+type Item = components['schemas']['DatasetItemView'];
 type AriaComponentsListBoxProps = ComponentProps<typeof AriaComponentsListBox>;
 
 interface VirtualizerGridLayoutProps extends Pick<AriaComponentsListBoxProps, 'selectedKeys' | 'onSelectionChange'> {
