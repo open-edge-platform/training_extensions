@@ -15,9 +15,8 @@ from fastapi.responses import FileResponse, Response
 from pydantic import ValidationError
 
 from app.api.dependencies import get_configuration_service, get_sink_id
+from app.api.schemas.sink import SinkCreate, SinkCreateAdapter, SinkView, SinkViewAdapter
 from app.models import Sink
-from app.schemas import SinkCreate, SinkView
-from app.schemas.sink import SinkCreateAdapter, SinkViewAdapter
 from app.services import (
     ConfigurationService,
     ResourceInUseError,

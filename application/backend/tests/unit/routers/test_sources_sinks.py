@@ -11,11 +11,11 @@ import yaml
 from fastapi import status
 
 from app.api.dependencies import get_configuration_service
+from app.api.schemas.sink import FolderSinkConfigCreate, FolderSinkConfigView, MqttSinkConfigView
 from app.main import app
 from app.models import OutputFormat, SinkType
 from app.models.sink import FolderConfig, FolderSinkConfig, MqttConfig
 from app.schemas import SourceType
-from app.schemas.sink import FolderSinkConfigCreate, FolderSinkConfigView, MqttSinkConfigView
 from app.schemas.source import VideoFileSourceConfig, WebcamSourceConfig
 from app.services import (
     ConfigurationService,
