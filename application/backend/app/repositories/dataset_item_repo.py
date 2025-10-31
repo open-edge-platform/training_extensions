@@ -164,7 +164,6 @@ class DatasetItemRepository:
                 DatasetItemDB.project_id == self.project_id,
                 DatasetItemDB.subset == DatasetItemSubset.UNASSIGNED,
             )
-            .order_by(DatasetItemDB.created_at.asc())
         )
         return list(self.db.scalars(stmt).all())
 
