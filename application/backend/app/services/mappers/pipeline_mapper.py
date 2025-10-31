@@ -3,8 +3,8 @@
 
 from uuid import UUID
 
+from app.api.schemas.sink import SinkViewAdapter
 from app.db.schema import PipelineDB
-from app.models import SinkAdapter
 from app.schemas import PipelineStatus, PipelineView
 from app.schemas.pipeline import DataCollectionPolicyAdapter
 
@@ -20,7 +20,7 @@ class PipelineMapper:
         return PipelineView(
             project_id=UUID(pipeline_db.project_id),
             source=SourceMapper.to_schema(pipeline_db.source) if pipeline_db.source else None,
-            sink=SinkAdapter.validate_python(pipeline_db.sink, from_attributes=True) if pipeline_db.sink else None,
+            sink=SinkViewAdapter.validate_python(pipeline_db.sink, from_attributes=True) if pipeline_db.sink else None,
             model=ModelRevisionMapper.to_schema(pipeline_db.model_revision) if pipeline_db.model_revision else None,
             sink_id=UUID(pipeline_db.sink_id) if pipeline_db.sink_id else None,
             model_id=UUID(pipeline_db.model_revision_id) if pipeline_db.model_revision_id else None,
