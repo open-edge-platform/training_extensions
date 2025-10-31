@@ -5,12 +5,13 @@ import json
 import logging
 import threading
 import time
+from os import getenv
 from typing import Any
 
 import numpy as np
 from model_api.models.result import Result
 
-from app.schemas.sink import MqttSinkConfig
+from app.models import MqttSinkConfig
 
 from .base import BaseDispatcher
 
@@ -19,6 +20,8 @@ try:
 except ImportError:
     mqtt = None  # type: ignore[assignment]
 
+MQTT_USERNAME = "MQTT_USERNAME"
+MQTT_PASSWORD = "MQTT_PASSWORD"  # noqa: S105
 
 logger = logging.getLogger(__name__)
 MAX_RETRIES = 3
@@ -49,10 +52,10 @@ class MqttDispatcher(BaseDispatcher):
             raise ImportError("paho-mqtt is required for MQTT dispatcher.")
 
         super().__init__(output_config)
-        self.broker_host = output_config.broker_host
-        self.broker_port = output_config.broker_port
-        self.topic = output_config.topic
-        self.username, self.password = output_config.get_credentials()
+        self.broker_host = output_config.config_data.broker_host
+        self.broker_port = output_config.config_data.broker_port
+        self.topic = output_config.config_data.topic
+        self.username, self.password = MqttDispatcher._get_credentials(output_config.config_data.auth_required)
 
         self._connected = False
         self._connection_lock = threading.Lock()
@@ -62,6 +65,20 @@ class MqttDispatcher(BaseDispatcher):
 
         self.client = mqtt_client or self._create_default_client()
         self._connect()
+
+    @staticmethod
+    def _get_credentials(auth_required: bool) -> tuple[str | None, str | None]:
+        """Configure stream URL with authentication if required."""
+        if not auth_required:
+            return None, None
+
+        username = getenv(MQTT_USERNAME)
+        password = getenv(MQTT_PASSWORD)
+
+        if not username or not password:
+            raise RuntimeError("MQTT credentials not provided.")
+
+        return username, password
 
     def _create_default_client(self) -> "mqtt.Client":
         client_id = f"dispatcher_{int(time.time())}"

@@ -9,8 +9,8 @@ import pytest
 import requests
 import time_machine
 
-from app.schemas import OutputFormat, SinkType
-from app.schemas.sink import WebhookSinkConfig
+from app.models import OutputFormat, SinkType, WebhookSinkConfig
+from app.models.sink import WebhookConfig
 from app.services.dispatchers.base import DispatchError, numpy_to_base64
 from app.services.dispatchers.webhook import WebhookDispatcher
 
@@ -27,10 +27,12 @@ def fxt_webhook_config():
             OutputFormat.IMAGE_WITH_PREDICTIONS,
             OutputFormat.PREDICTIONS,
         ],
-        webhook_url="https://example.com/webhook",
-        http_method="PATCH",
-        headers={"Authorization": "Bearer token"},
-        timeout=5,
+        config_data=WebhookConfig(
+            webhook_url="https://example.com/webhook",
+            http_method="PATCH",
+            headers={"Authorization": "Bearer token"},
+            timeout=5,
+        ),
     )
 
 
@@ -55,10 +57,10 @@ class TestWebhookDispatcher:
         """Test that the WebhookDispatcher initializes with correct attributes."""
         dispatcher = WebhookDispatcher(fxt_webhook_config)
 
-        assert dispatcher.webhook_url == fxt_webhook_config.webhook_url
-        assert dispatcher.http_method == fxt_webhook_config.http_method
-        assert dispatcher.headers == fxt_webhook_config.headers
-        assert dispatcher.timeout == fxt_webhook_config.timeout
+        assert dispatcher.webhook_url == fxt_webhook_config.config_data.webhook_url
+        assert dispatcher.http_method == fxt_webhook_config.config_data.http_method
+        assert dispatcher.headers == fxt_webhook_config.config_data.headers
+        assert dispatcher.timeout == fxt_webhook_config.config_data.timeout
         assert dispatcher.session is not None
 
     @pytest.mark.parametrize(
@@ -97,14 +99,14 @@ class TestWebhookDispatcher:
                 expected_result[OutputFormat.IMAGE_WITH_PREDICTIONS] = numpy_to_base64(fxt_sample_image)
 
             mock_request.assert_called_once_with(
-                fxt_webhook_config.http_method,
-                fxt_webhook_config.webhook_url,
-                headers=fxt_webhook_config.headers,
+                fxt_webhook_config.config_data.http_method,
+                fxt_webhook_config.config_data.webhook_url,
+                headers=fxt_webhook_config.config_data.headers,
                 json={
                     "timestamp": "2025-01-01T12:00:00+00:00",
                     "result": expected_result,
                 },
-                timeout=fxt_webhook_config.timeout,
+                timeout=fxt_webhook_config.config_data.timeout,
             )
 
     def test_send_to_webhook_raises_http_error(self, fxt_webhook_config, fxt_sample_image, fxt_sample_predictions):

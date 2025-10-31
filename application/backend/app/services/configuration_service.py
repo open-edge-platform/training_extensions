@@ -1,25 +1,30 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 import logging
 from enum import StrEnum
 from uuid import UUID
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.db.schema import SinkDB
+from app.models import OutputFormat, Sink, SinkAdapter, SinkType
+from app.models.sink import SinkConfig
 from app.repositories import SinkRepository, SourceRepository
-from app.repositories.base import UniqueConstraintIntegrityError
-from app.schemas import Sink, Source
+from app.repositories.base import PrimaryKeyIntegrityError, UniqueConstraintIntegrityError
+from app.schemas import Source
 
 from .base import (
     GenericPersistenceService,
+    ResourceInUseError,
     ResourceNotFoundError,
     ResourceType,
+    ResourceWithIdAlreadyExistsError,
     ResourceWithNameAlreadyExistsError,
     ServiceConfig,
 )
 from .event.event_bus import EventBus, EventType
-from .mappers import SinkMapper, SourceMapper
+from .mappers import SourceMapper
 from .parent_process_guard import parent_process_only
 
 logger = logging.getLogger(__name__)
@@ -54,26 +59,89 @@ class SourceService(GenericPersistenceService[Source, SourceRepository]):
             return self.config.mapper_class.to_schema(item_db) if item_db else None
 
 
-class SinkService(GenericPersistenceService[Sink, SinkRepository]):
+class SinkService:
     def __init__(self, db_session: Session):
-        super().__init__(ServiceConfig(SinkRepository, SinkMapper, ResourceType.SINK), db_session)
+        self._db_session = db_session
 
-    def create(self, item: Sink) -> Sink:
+    def create_sink(
+        self,
+        name: str,
+        sink_type: SinkType,
+        rate_limit: float | None,
+        config_data: SinkConfig,
+        output_formats: list[OutputFormat],
+        sink_id: UUID | None = None,
+    ) -> Sink:
         try:
-            return super().create(item)
+            db_sink = SinkRepository(self._db_session).save(
+                SinkDB(
+                    id=str(sink_id) if sink_id is not None else None,
+                    name=name,
+                    sink_type=sink_type,
+                    rate_limit=rate_limit,
+                    config_data=config_data.model_dump(mode="json"),
+                    output_formats=output_formats,
+                )
+            )
+            return SinkAdapter.validate_python(db_sink, from_attributes=True)
+        except PrimaryKeyIntegrityError:
+            raise ResourceWithIdAlreadyExistsError(ResourceType.SINK, str(sink_id))
         except UniqueConstraintIntegrityError:
-            raise ResourceWithNameAlreadyExistsError(ResourceType.SINK, item.name)
+            raise ResourceWithNameAlreadyExistsError(ResourceType.SINK, name)
 
-    def update(self, item: Sink, partial_config: dict) -> Sink:
+    def update_sink(
+        self,
+        sink_id: UUID,
+        new_name: str,
+        new_rate_limit: float | None,
+        new_config_data: SinkConfig,
+        new_output_formats: list[OutputFormat],
+    ) -> Sink:
         try:
-            return super().update(item, partial_config)
+            sink_repo = SinkRepository(self._db_session)
+            db_sink = sink_repo.get_by_id(str(sink_id))
+            if db_sink is None:
+                raise ResourceNotFoundError(ResourceType.SINK, str(sink_id))
+            db_sink = sink_repo.update(
+                SinkDB(
+                    id=db_sink.id,
+                    name=new_name,
+                    rate_limit=new_rate_limit,
+                    config_data=new_config_data.model_dump(mode="json"),
+                    output_formats=new_output_formats,
+                )
+            )
+            return SinkAdapter.validate_python(db_sink, from_attributes=True)
         except UniqueConstraintIntegrityError:
-            raise ResourceWithNameAlreadyExistsError(ResourceType.SINK, partial_config["name"])
+            raise ResourceWithNameAlreadyExistsError(ResourceType.SINK, new_name)  # type: ignore[arg-type]
+
+    def get_by_id(self, sink_id: UUID) -> Sink:
+        db_sink = SinkRepository(self._db_session).get_by_id(str(sink_id))
+        if not db_sink:
+            raise ResourceNotFoundError(ResourceType.SINK, str(sink_id))
+        return SinkAdapter.validate_python(db_sink, from_attributes=True)
+
+    def list_all(self) -> list[Sink]:
+        return [
+            SinkAdapter.validate_python(db_sink, from_attributes=True)
+            for db_sink in SinkRepository(self._db_session).list_all()
+        ]
+
+    def delete_by_id(self, sink_id: UUID) -> None:
+        try:
+            deleted = SinkRepository(self._db_session).delete(str(sink_id))
+            if not deleted:
+                raise ResourceNotFoundError(ResourceType.SINK, str(sink_id))
+        except IntegrityError:
+            raise ResourceInUseError(ResourceType.SINK, str(sink_id))
 
     def get_active_sink(self) -> Sink | None:
-        with self._get_repo() as repo:
-            item_db = repo.get_active_sink()
-            return self.config.mapper_class.to_schema(item_db) if item_db else None
+        db_sink = SinkRepository(self._db_session).get_active_sink()
+        return SinkAdapter.validate_python(db_sink, from_attributes=True) if db_sink else None
+
+    def get_active_sink_id(self) -> UUID | None:
+        id = SinkRepository(self._db_session).get_active_sink_id()
+        return UUID(id) if id else None
 
 
 class ConfigurationService:
@@ -96,10 +164,7 @@ class ConfigurationService:
         return source
 
     def get_sink_by_id(self, sink_id: UUID) -> Sink:
-        sink = self._sink_service.get_by_id(sink_id)
-        if not sink:
-            raise ResourceNotFoundError(ResourceType.SINK, str(sink_id))
-        return sink
+        return self._sink_service.get_by_id(sink_id)
 
     def get_active_source(self) -> Source | None:
         return self._source_service.get_active_source()
@@ -107,13 +172,31 @@ class ConfigurationService:
     def get_active_sink(self) -> Sink | None:
         return self._sink_service.get_active_sink()
 
+    def get_active_sink_id(self) -> UUID | None:
+        return self._sink_service.get_active_sink_id()
+
     @parent_process_only
     def create_source(self, source: Source) -> Source:
         return self._source_service.create(source)
 
     @parent_process_only
-    def create_sink(self, sink: Sink) -> Sink:
-        return self._sink_service.create(sink)
+    def create_sink(
+        self,
+        name: str,
+        sink_type: SinkType,
+        rate_limit: float | None,
+        config_data: SinkConfig,
+        output_formats: list[OutputFormat],
+        sink_id: UUID | None = None,
+    ) -> Sink:
+        return self._sink_service.create_sink(
+            name=name,
+            sink_type=sink_type,
+            rate_limit=rate_limit,
+            config_data=config_data,
+            output_formats=output_formats,
+            sink_id=sink_id,
+        )
 
     @parent_process_only
     def update_source(self, source_id: UUID, partial_config: dict) -> Source:
@@ -125,11 +208,23 @@ class ConfigurationService:
         return updated
 
     @parent_process_only
-    def update_sink(self, sink_id: UUID, partial_config: dict) -> Sink:
-        sink = self.get_sink_by_id(sink_id)
-        updated = self._sink_service.update(sink, partial_config)
-        active_sink = self._sink_service.get_active_sink()
-        if active_sink and active_sink.id == updated.id:
+    def update_sink(
+        self,
+        sink_id: UUID,
+        new_name: str,
+        new_rate_limit: float | None,
+        new_config_data: SinkConfig,
+        new_output_formats: list[OutputFormat],
+    ) -> Sink:
+        updated = self._sink_service.update_sink(
+            sink_id=sink_id,
+            new_name=new_name,
+            new_rate_limit=new_rate_limit,
+            new_config_data=new_config_data,
+            new_output_formats=new_output_formats,
+        )
+        active_sink_id = self._sink_service.get_active_sink_id()
+        if active_sink_id == updated.id:
             self._event_bus.emit_event(EventType.SINK_CHANGED)
         return updated
 

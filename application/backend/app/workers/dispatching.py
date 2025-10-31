@@ -7,7 +7,7 @@ import queue
 from multiprocessing.synchronize import Event as EventClass
 
 from app.db import get_db_session
-from app.schemas import DisconnectedSinkConfig, Sink, SinkType
+from app.models import DisconnectedSinkConfig, Sink, SinkType
 from app.services import DispatchService
 from app.services.configuration_service import SinkService
 from app.services.data_collect import DataCollector

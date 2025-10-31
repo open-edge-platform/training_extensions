@@ -4,13 +4,11 @@
 from .model_revision_mapper import ModelRevisionMapper
 from .pipeline_mapper import PipelineMapper
 from .project_mapper import ProjectMapper
-from .sink_mapper import SinkMapper
 from .source_mapper import SourceMapper
 
 __all__ = [
     "ModelRevisionMapper",
     "PipelineMapper",
     "ProjectMapper",
-    "SinkMapper",
     "SourceMapper",
 ]

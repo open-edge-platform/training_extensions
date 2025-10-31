@@ -7,8 +7,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, TypeAdapter, model_validator
 
+from app.models import Sink
 from app.schemas.model import Model
-from app.schemas.sink import Sink
 from app.schemas.source import Source
 
 

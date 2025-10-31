@@ -15,8 +15,9 @@ from fastapi.responses import FileResponse, Response
 from pydantic import ValidationError
 
 from app.api.dependencies import get_configuration_service, get_sink_id
-from app.schemas import Sink, SinkCreate
-from app.schemas.sink import SinkCreateAdapter
+from app.models import Sink
+from app.schemas import SinkCreate, SinkView
+from app.schemas.sink import SinkCreateAdapter, SinkViewAdapter
 from app.services import (
     ConfigurationService,
     ResourceInUseError,
@@ -83,7 +84,7 @@ UPDATE_SINK_BODY_EXAMPLES = {
 @router.post(
     "",
     status_code=status.HTTP_201_CREATED,
-    response_model=Sink,
+    response_model=SinkView,
     responses={
         status.HTTP_201_CREATED: {"description": "Sink created"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid sink ID"},
@@ -95,10 +96,18 @@ def create_sink(
         SinkCreate, Body(description=CREATE_SINK_BODY_DESCRIPTION, openapi_examples=CREATE_SINK_BODY_EXAMPLES)
     ],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
-) -> Sink:
+) -> SinkView:
     """Create and configure a new sink"""
     try:
-        return configuration_service.create_sink(sink_create)
+        sink = configuration_service.create_sink(
+            name=sink_create.name,
+            sink_type=sink_create.sink_type,
+            rate_limit=sink_create.rate_limit,
+            config_data=sink_create.config_data,
+            output_formats=sink_create.output_formats,
+            sink_id=sink_create.id,
+        )
+        return SinkViewAdapter.validate_python(sink, from_attributes=True)
     except (ResourceWithNameAlreadyExistsError, ResourceWithIdAlreadyExistsError) as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
@@ -106,20 +115,21 @@ def create_sink(
 @router.get(
     "",
     responses={
-        status.HTTP_200_OK: {"description": "List of available sink configurations", "model": list[Sink]},
+        status.HTTP_200_OK: {"description": "List of available sink configurations", "model": list[SinkView]},
     },
 )
 def list_sinks(
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
-) -> list[Sink]:
+) -> list[SinkView]:
     """List the available sinks"""
-    return configuration_service.list_sinks()
+    sinks = configuration_service.list_sinks()
+    return [SinkViewAdapter.validate_python(sink, from_attributes=True) for sink in sinks]
 
 
 @router.get(
     "/{sink_id}",
     responses={
-        status.HTTP_200_OK: {"description": "Sink found", "model": Sink},
+        status.HTTP_200_OK: {"description": "Sink found", "model": SinkView},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid sink ID"},
         status.HTTP_404_NOT_FOUND: {"description": "Sink not found"},
     },
@@ -127,10 +137,11 @@ def list_sinks(
 def get_sink(
     sink_id: Annotated[UUID, Depends(get_sink_id)],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
-) -> Sink:
+) -> SinkView:
     """Get info about a sink"""
     try:
-        return configuration_service.get_sink_by_id(sink_id)
+        sink = configuration_service.get_sink_by_id(sink_id)
+        return SinkViewAdapter.validate_python(sink, from_attributes=True)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -138,7 +149,7 @@ def get_sink(
 @router.patch(
     "/{sink_id}",
     responses={
-        status.HTTP_200_OK: {"description": "Sink successfully updated", "model": Sink},
+        status.HTTP_200_OK: {"description": "Sink successfully updated", "model": SinkView},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid sink ID or request body"},
         status.HTTP_404_NOT_FOUND: {"description": "Sink not found"},
         status.HTTP_409_CONFLICT: {"description": "Sink already exists"},
@@ -154,12 +165,22 @@ def update_sink(
         ),
     ],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
-) -> Sink:
+) -> SinkView:
     """Reconfigure an existing sink"""
     if "sink_type" in sink_config:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The 'sink_type' field cannot be changed")
     try:
-        return configuration_service.update_sink(sink_id, sink_config)
+        sink = configuration_service.get_sink_by_id(sink_id)
+        updated_sink: Sink = sink.model_copy(update=sink_config)
+        updated_sink.config_data = updated_sink.config_data.model_copy(update=sink_config)
+        sink = configuration_service.update_sink(
+            sink_id=sink_id,
+            new_name=updated_sink.name,
+            new_rate_limit=updated_sink.rate_limit,
+            new_config_data=updated_sink.config_data,
+            new_output_formats=updated_sink.output_formats,
+        )
+        return SinkViewAdapter.validate_python(sink, from_attributes=True)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ResourceWithNameAlreadyExistsError as e:
@@ -205,7 +226,7 @@ def export_sink(
     ":import",
     status_code=status.HTTP_201_CREATED,
     responses={
-        status.HTTP_201_CREATED: {"description": "Sink imported successfully", "model": Sink},
+        status.HTTP_201_CREATED: {"description": "Sink imported successfully", "model": SinkView},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid YAML format"},
         status.HTTP_409_CONFLICT: {"description": "Sink already exists"},
         status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Validation error(s)"},
@@ -214,13 +235,21 @@ def export_sink(
 def import_sink(
     yaml_file: Annotated[UploadFile, File(description="YAML file containing the sink configuration")],
     configuration_service: Annotated[ConfigurationService, Depends(get_configuration_service)],
-) -> Sink:
+) -> SinkView:
     """Import a sink from file"""
     try:
         yaml_content = yaml_file.file.read()
         sink_data = yaml.safe_load(yaml_content)
         sink_create = SinkCreateAdapter.validate_python(sink_data)
-        return configuration_service.create_sink(sink_create)
+        sink = configuration_service.create_sink(
+            name=sink_create.name,
+            sink_type=sink_create.sink_type,
+            rate_limit=sink_create.rate_limit,
+            config_data=sink_create.config_data,
+            output_formats=sink_create.output_formats,
+            sink_id=sink_create.id,
+        )
+        return SinkViewAdapter.validate_python(sink, from_attributes=True)
     except yaml.YAMLError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid YAML format: {str(e)}")
     except (ResourceWithNameAlreadyExistsError, ResourceWithIdAlreadyExistsError) as e:

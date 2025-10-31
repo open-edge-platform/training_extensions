@@ -12,8 +12,10 @@ from fastapi import status
 
 from app.api.dependencies import get_configuration_service
 from app.main import app
-from app.schemas import OutputFormat, SinkType, SourceType
-from app.schemas.sink import FolderSinkConfig, MqttSinkConfig
+from app.models import OutputFormat, SinkType
+from app.models.sink import FolderConfig, FolderSinkConfig, MqttConfig
+from app.schemas import SourceType
+from app.schemas.sink import FolderSinkConfigCreate, FolderSinkConfigView, MqttSinkConfigView
 from app.schemas.source import VideoFileSourceConfig, WebcamSourceConfig
 from app.services import (
     ConfigurationService,
@@ -30,14 +32,26 @@ class ConfigApiPath(StrEnum):
 
 
 @pytest.fixture
-def fxt_folder_sink() -> FolderSinkConfig:
-    return FolderSinkConfig(
+def fxt_folder_sink_create() -> FolderSinkConfigCreate:
+    return FolderSinkConfigCreate(
         id=uuid4(),
         sink_type=SinkType.FOLDER,
         name="Test Folder Sink",
         rate_limit=0.1,
         output_formats=[OutputFormat.PREDICTIONS],
         folder_path="/test/path",
+    )
+
+
+@pytest.fixture
+def fxt_folder_sink_view() -> FolderSinkConfigView:
+    return FolderSinkConfigView(
+        id=uuid4(),
+        sink_type=SinkType.FOLDER,
+        name="Test Folder Sink",
+        rate_limit=0.1,
+        output_formats=[OutputFormat.PREDICTIONS],
+        config_data=FolderConfig(folder_path="/test/path"),
     )
 
 
@@ -59,16 +73,18 @@ def fxt_video_source() -> VideoFileSourceConfig:
 
 
 @pytest.fixture
-def fxt_mqtt_sink() -> MqttSinkConfig:
-    return MqttSinkConfig(
+def fxt_mqtt_sink_view() -> MqttSinkConfigView:
+    return MqttSinkConfigView(
         id=uuid4(),
         sink_type=SinkType.MQTT,
         name="Test MQTT Sink",
         rate_limit=0.2,
         output_formats=[OutputFormat.IMAGE_WITH_PREDICTIONS],
-        broker_host="localhost",
-        broker_port=1883,
-        topic="test_topic",
+        config_data=MqttConfig(
+            broker_host="localhost",
+            broker_port=1883,
+            topic="test_topic",
+        ),
     )
 
 
@@ -84,7 +100,7 @@ class TestSourceAndSinkEndpoints:
         "fixture_name, api_path, create_method",
         [
             ("fxt_webcam_source", ConfigApiPath.SOURCES, "create_source"),
-            ("fxt_folder_sink", ConfigApiPath.SINKS, "create_sink"),
+            ("fxt_folder_sink_create", ConfigApiPath.SINKS, "create_sink"),
         ],
     )
     def test_create_config_success(
@@ -137,7 +153,7 @@ class TestSourceAndSinkEndpoints:
         "resource_type, api_path, fixture_name, create_method",
         [
             (ResourceType.SOURCE, ConfigApiPath.SOURCES, "fxt_webcam_source", "create_source"),
-            (ResourceType.SINK, ConfigApiPath.SINKS, "fxt_folder_sink", "create_sink"),
+            (ResourceType.SINK, ConfigApiPath.SINKS, "fxt_folder_sink_create", "create_sink"),
         ],
     )
     def test_create_config_exists(
@@ -156,7 +172,7 @@ class TestSourceAndSinkEndpoints:
         "fixtures, api_path, list_method",
         [
             (["fxt_webcam_source", "fxt_video_source"], ConfigApiPath.SOURCES, "list_sources"),
-            (["fxt_folder_sink", "fxt_mqtt_sink"], ConfigApiPath.SINKS, "list_sinks"),
+            (["fxt_folder_sink_view", "fxt_mqtt_sink"], ConfigApiPath.SINKS, "list_sinks"),
         ],
     )
     def test_list_configs(self, fixtures, api_path, list_method, fxt_config_service, fxt_client, request):
@@ -173,7 +189,7 @@ class TestSourceAndSinkEndpoints:
         "fixture_name, api_path, get_method",
         [
             ("fxt_webcam_source", ConfigApiPath.SOURCES, "get_source_by_id"),
-            ("fxt_folder_sink", ConfigApiPath.SINKS, "get_sink_by_id"),
+            ("fxt_folder_sink_view", ConfigApiPath.SINKS, "get_sink_by_id"),
         ],
     )
     def test_get_config_success(self, fixture_name, api_path, get_method, fxt_config_service, fxt_client, request):
@@ -208,27 +224,49 @@ class TestSourceAndSinkEndpoints:
         response = fxt_client.get(f"/api/{api_path}/invalid-uuid")
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
-    @pytest.mark.parametrize(
-        "fixture_name, api_path, update_method, update_data",
-        [
-            ("fxt_webcam_source", ConfigApiPath.SOURCES, "update_source", {"device_id": 5}),
-            ("fxt_folder_sink", ConfigApiPath.SINKS, "update_sink", {"folder_path": "/new/path"}),
-        ],
-    )
-    def test_update_sink_success(
-        self, fixture_name, api_path, update_method, update_data, fxt_config_service, fxt_client, request
-    ):
-        fxt_config = request.getfixturevalue(fixture_name)
-        config_id = str(fxt_config.id)
-        updated_config = fxt_config.model_copy(update=update_data)
-        getattr(fxt_config_service, update_method).return_value = updated_config
+    def test_update_sink_success(self, fxt_folder_sink_create, fxt_config_service, fxt_client):
+        update_data = {"folder_path": "/new/path"}
+        config_id = str(fxt_folder_sink_create.id)
+        updated_config = fxt_folder_sink_create.model_copy(update=update_data)
+        fxt_config_service.get_sink_by_id.return_value = FolderSinkConfig(
+            id=uuid4(),
+            sink_type=SinkType.FOLDER,
+            name="Test Folder Sink",
+            rate_limit=0.1,
+            output_formats=[OutputFormat.PREDICTIONS],
+            config_data=FolderConfig(
+                folder_path="/test/path",
+            ),
+        )
+        fxt_config_service.update_sink.return_value = updated_config
 
-        response = fxt_client.patch(f"/api/{api_path}/{config_id}", json=update_data)
+        response = fxt_client.patch(f"/api/sinks/{config_id}", json=update_data)
 
         assert response.status_code == status.HTTP_200_OK
         key, value = next(iter(update_data.items()))
         assert response.json()[key] == value
-        getattr(fxt_config_service, update_method).assert_called_once_with(fxt_config.id, update_data)
+        fxt_config_service.update_sink.assert_called_once_with(
+            sink_id=fxt_folder_sink_create.id,
+            new_name="Test Folder Sink",
+            new_rate_limit=0.1,
+            new_config_data=FolderConfig(
+                folder_path="/new/path",
+            ),
+            new_output_formats=[OutputFormat.PREDICTIONS],
+        )
+
+    def test_update_source_success(self, fxt_webcam_source, fxt_config_service, fxt_client):
+        update_data = {"device_id": 5}
+        config_id = str(fxt_webcam_source.id)
+        updated_config = fxt_webcam_source.model_copy(update=update_data)
+        fxt_config_service.update_source.return_value = updated_config
+
+        response = fxt_client.patch(f"/api/sources/{config_id}", json=update_data)
+
+        assert response.status_code == status.HTTP_200_OK
+        key, value = next(iter(update_data.items()))
+        assert response.json()[key] == value
+        fxt_config_service.update_source.assert_called_once_with(fxt_webcam_source.id, update_data)
 
     @pytest.mark.parametrize(
         "api_path, update_method, resource_type",
@@ -249,7 +287,7 @@ class TestSourceAndSinkEndpoints:
         "fixture_name, api_path, update_method, update_data",
         [
             ("fxt_webcam_source", ConfigApiPath.SOURCES, "update_source", {"source_type": "folder"}),
-            ("fxt_folder_sink", ConfigApiPath.SINKS, "update_sink", {"sink_type": "mqtt"}),
+            ("fxt_folder_sink_create", ConfigApiPath.SINKS, "update_sink", {"sink_type": "mqtt"}),
         ],
     )
     def test_update_config_type_forbidden(
@@ -268,7 +306,7 @@ class TestSourceAndSinkEndpoints:
         "fixture_name, api_path, delete_method",
         [
             ("fxt_webcam_source", ConfigApiPath.SOURCES, "delete_source_by_id"),
-            ("fxt_folder_sink", ConfigApiPath.SINKS, "delete_sink_by_id"),
+            ("fxt_folder_sink_view", ConfigApiPath.SINKS, "delete_sink_by_id"),
         ],
     )
     def test_delete_config_success(
@@ -317,7 +355,7 @@ class TestSourceAndSinkEndpoints:
         "fixture_name, api_path, delete_method, resource_type",
         [
             ("fxt_webcam_source", ConfigApiPath.SOURCES, "delete_source_by_id", ResourceType.SOURCE),
-            ("fxt_folder_sink", ConfigApiPath.SINKS, "delete_sink_by_id", ResourceType.SINK),
+            ("fxt_folder_sink_view", ConfigApiPath.SINKS, "delete_sink_by_id", ResourceType.SINK),
         ],
     )
     def test_delete_config_in_use(
@@ -343,7 +381,7 @@ class TestSourceAndSinkEndpoints:
                 "codec: YUY2\ndevice_id: 1\nname: Test Webcam Source\nsource_type: webcam\n",
             ),
             (
-                "fxt_folder_sink",
+                "fxt_folder_sink_view",
                 ConfigApiPath.SINKS,
                 "get_sink_by_id",
                 "folder_path: /test/path\nname: Test Folder Sink\noutput_formats:\n- predictions"
@@ -370,7 +408,7 @@ class TestSourceAndSinkEndpoints:
         "fixture_name,api_path, create_method",
         [
             ("fxt_webcam_source", ConfigApiPath.SOURCES, "create_source"),
-            ("fxt_folder_sink", ConfigApiPath.SINKS, "create_sink"),
+            ("fxt_folder_sink_create", ConfigApiPath.SINKS, "create_sink"),
         ],
     )
     def test_import_config_success(
@@ -392,7 +430,7 @@ class TestSourceAndSinkEndpoints:
         "fixture_name, api_path, create_method",
         [
             ("fxt_webcam_source", ConfigApiPath.SOURCES, "create_source"),
-            ("fxt_folder_sink", ConfigApiPath.SINKS, "create_sink"),
+            ("fxt_folder_sink_create", ConfigApiPath.SINKS, "create_sink"),
         ],
     )
     def test_import_config_exists(self, fixture_name, api_path, create_method, fxt_config_service, fxt_client, request):

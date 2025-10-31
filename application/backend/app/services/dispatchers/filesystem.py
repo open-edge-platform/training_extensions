@@ -9,7 +9,7 @@ import cv2
 import numpy as np
 from model_api.models.result import Result
 
-from app.schemas.sink import FolderSinkConfig, OutputFormat
+from app.models import FolderSinkConfig, OutputFormat
 
 from .base import BaseDispatcher
 
@@ -26,7 +26,7 @@ class FolderDispatcher(BaseDispatcher):
             output_config: Configuration for the output destination
         """
         super().__init__(output_config=output_config)
-        self.output_folder = output_config.folder_path
+        self.output_folder = output_config.config_data.folder_path
         if not os.path.exists(self.output_folder):
             os.makedirs(self.output_folder, exist_ok=True)
 

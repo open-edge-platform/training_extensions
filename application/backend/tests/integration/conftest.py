@@ -10,9 +10,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.core.models.task_type import TaskType
+from app.core.models import TaskType
 from app.db.schema import Base, LabelDB, ModelRevisionDB, ProjectDB, SinkDB, SourceDB
-from app.schemas import OutputFormat, SinkType, SourceType
+from app.models import OutputFormat, SinkType
+from app.schemas import SourceType
 from app.schemas.model import TrainingStatus
 from app.services import MetricsService
 from app.services.event.event_bus import EventBus
