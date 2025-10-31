@@ -25,6 +25,8 @@ class SubsetDistribution:
 
         This method calculates how unassigned items should be distributed to achieve the overall target ratios.
         """
+        if unassigned_count < 0:
+            raise ValueError(f"Parameter 'unassigned_count' cannot be negative (got {unassigned_count})")
         if unassigned_count == 0:
             return target_ratios
 
@@ -37,11 +39,8 @@ class SubsetDistribution:
             if subset != DatasetItemSubset.UNASSIGNED
         }
 
-        total_needed = sum(needed.values())
-        if total_needed == 0:
-            return target_ratios
-
         # Normalize
+        total_needed = sum(needed.values())
         adjusted = {k: v / total_needed for k, v in needed.items()}
 
         return SplitRatios(

@@ -87,12 +87,18 @@ class TestSubsetServiceIntegration:
         )
 
     def test_update_subset_assignments(
-        self, fxt_project_id: UUID, fxt_subset_service: SubsetService, db_session: Session
+        self,
+        fxt_project_id: UUID,
+        fxt_subset_service: SubsetService,
+        fxt_default_distribution: dict[DatasetItemSubset, int],
+        db_session: Session,
     ):
         """Test updating subset assignments."""
         items = fxt_subset_service.get_unassigned_items_with_labels(fxt_project_id, db_session)
         assignments: list[SubsetAssignment] = [
-            SubsetAssignment(item_id=item.item_id, subset=DatasetItemSubset.TRAINING) for item in items
+            *[SubsetAssignment(item_id=item.item_id, subset=DatasetItemSubset.TRAINING) for item in items[:30]],
+            *[SubsetAssignment(item_id=item.item_id, subset=DatasetItemSubset.VALIDATION) for item in items[30:40]],
+            *[SubsetAssignment(item_id=item.item_id, subset=DatasetItemSubset.TESTING) for item in items[40:]],
         ]
 
         fxt_subset_service.update_subset_assignments(fxt_project_id, assignments, db_session)
@@ -107,12 +113,15 @@ class TestSubsetServiceIntegration:
             == 0
         )
 
-        # Verify that all items have been assigned to TRAINING subset
-        assert (
-            db_session.scalar(
-                select(func.count())
-                .select_from(DatasetItemDB)
-                .where(DatasetItemDB.subset == DatasetItemSubset.TRAINING)
+        # Verify that items have been assigned to corresponding subset using the current distribution values and
+        # the new assignments
+        distribute_counts = {
+            DatasetItemSubset.TRAINING: 30,
+            DatasetItemSubset.VALIDATION: 10,
+            DatasetItemSubset.TESTING: 10,
+        }
+        for subset, count in distribute_counts.items():
+            assert (
+                db_session.scalar(select(func.count()).select_from(DatasetItemDB).where(DatasetItemDB.subset == subset))
+                == fxt_default_distribution.get(subset, 0) + count
             )
-            == 120
-        )

@@ -54,14 +54,14 @@ class SubsetAssigner:
         y = label_matrix
 
         splits = list(stratifier.split(X, y))
-        train_idx = splits[0][1]
-        val_idx = splits[1][1]
-        test_idx = splits[2][1]
+        train_indices = splits[0][1]
+        val_indices = splits[1][1]
+        test_indices = splits[2][1]
 
-        indices_by_subset = {
-            DatasetItemSubset.TRAINING: train_idx,
-            DatasetItemSubset.VALIDATION: val_idx,
-            DatasetItemSubset.TESTING: test_idx,
+        indices_by_subset: dict[DatasetItemSubset, list[int]] = {
+            DatasetItemSubset.TRAINING: train_indices,
+            DatasetItemSubset.VALIDATION: val_indices,
+            DatasetItemSubset.TESTING: test_indices,
         }
 
         assignments = []

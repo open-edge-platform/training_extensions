@@ -1,5 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+import re
 
 import pytest
 
@@ -246,3 +247,17 @@ class TestComputeAdjustedRatios:
         assert result.train == pytest.approx(0.0)
         assert result.val == pytest.approx(0.0)
         assert result.test == pytest.approx(1.0)
+
+    def test_unassigned_item_negative_value(self):
+        """Test that negative unassigned_count raises ValueError"""
+        distribution = SubsetDistribution(
+            counts={
+                DatasetItemSubset.TRAINING: 70,
+                DatasetItemSubset.VALIDATION: 20,
+                DatasetItemSubset.TESTING: 10,
+            }
+        )
+        target_ratios = SplitRatios(train=0.7, val=0.2, test=0.1)
+
+        with pytest.raises(ValueError, match=re.escape("Parameter 'unassigned_count' cannot be negative (got -10)")):
+            distribution.compute_adjusted_ratios(target_ratios, unassigned_count=-10)
