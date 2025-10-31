@@ -19,6 +19,9 @@ def step(name: str) -> Callable[[Callable[..., T]], Callable[..., T]]:
     """
     Decorator to mark a method as a training step.
 
+    It expects the decorated method to be part of a Trainer subclass. The decorator adds progress reporting around the
+    execution of the step.
+
     Usage:
         class MyTrainer(Trainer):
             @step("Prepare Weights")
@@ -34,7 +37,11 @@ def step(name: str) -> Callable[[Callable[..., T]], Callable[..., T]]:
         @wraps(func)
         def wrapper(self: Any, *args: Any, **kwargs: Any) -> T:
             self.report_progress(f"Starting: {name}")
-            result = func(self, *args, **kwargs)
+            try:
+                result = func(self, *args, **kwargs)
+            except Exception:
+                self.report_progress(f"Failed: {name}")
+                raise
             self.report_progress(f"Completed: {name}")
             return result
 
