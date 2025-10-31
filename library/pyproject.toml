@@ -2,7 +2,7 @@
 # SETUP CONFIGURATION.                                                        #
 [build-system]
 requires = [
-    "setuptools>=61",
+    "setuptools>=77.0.0",
     "wheel",
 ]
 build-backend = "setuptools.build_meta"
@@ -13,13 +13,12 @@ dynamic = ["version"]
 description = "OpenVINO™ Training Extensions: Train, Evaluate, Optimize, Deploy Computer Vision Models via OpenVINO™"
 readme = "README.md"
 requires-python = ">=3.10"
-license = {file = "LICENSE"}
+license = "Apache-2.0"
 authors = [
     { name = "OpenVINO™ Training Extensions Contributors" },
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
-    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Cython",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
@@ -37,7 +36,6 @@ dependencies = [
     "docstring_parser==0.16", # CLI help-formatter
     "rich_argparse==1.7.0", # CLI help-formatter
     "einops==0.8.1",
-    "decord==0.6.0",
     "typeguard>=4.3,<4.5",
     "setuptools==78.1.1",
     "lightning==2.4.0",
@@ -45,14 +43,14 @@ dependencies = [
     "pytorchcv==0.0.67",
     "timm==1.0.3",
     "openvino==2025.2",
-    "openvino-model-api==0.3.0.2",
-    "onnx==1.17.0",
+    "openvino-model-api==0.3.0.4",
+    "onnx==1.19.1",
     "onnxconverter-common==1.16.0",
     "onnxscript==0.5.3",
     "nncf==2.17.0",
     "anomalib[core]==1.1.3",
     "imgaug==0.4.0",  # for anomalib
-    "numpy>2.0",
+    "numpy>=2.0",
     "tensorboardx==2.6.4"
 ]
 
@@ -71,8 +69,13 @@ dev = [
     "onnxruntime==1.21.1",
 ]
 
-cuda = ["torch==2.8.0",
-        "torchvision==0.23.0"
+cpu = [
+    "torch==2.8.0",
+    "torchvision==0.23.0"
+]
+cuda = [
+    "torch==2.8.0",
+    "torchvision==0.23.0"
 ]
 xpu = [
     "torch==2.8.0+xpu",
@@ -118,6 +121,7 @@ Repository = "https://github.com/open-edge-platform/training_extensions/"
 [tool.uv]
 conflicts = [
     [
+        { extra = "cpu" },
         { extra = "xpu" },
         { extra = "cuda" },
     ],
@@ -125,6 +129,7 @@ conflicts = [
 
 [tool.uv.sources]
 torch = [
+    { index = "torch-cpu", extra = "cpu"},
     { index = "torch-xpu", extra = "xpu"},
     { index = "torch-cuda", extra = "cuda"},
 ]
@@ -132,6 +137,7 @@ pytorch-triton-xpu = [
     { index = "torch-xpu", extra = "xpu"},
 ]
 torchvision = [
+    { index = "torch-cpu", extra = "cpu"},
     { index = "torch-xpu", extra = "xpu"},
     { index = "torch-cuda", extra = "cuda"},
 ]
@@ -139,6 +145,11 @@ torchvision = [
 # To avoid dependency resolution issues, we install imgaug from a maintained fork.
 # For details: https://github.com/aleju/imgaug/issues/859
 imgaug = { git = "https://github.com/imaug/imaug/", rev = "a7ca1b04d44700d075a23f14a97f86285ba3b33f" }
+
+[[tool.uv.index]]
+name = "torch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
 
 [[tool.uv.index]]
 name = "torch-cuda"
