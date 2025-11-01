@@ -17,6 +17,8 @@ ThreadedStreamer = None
 VideoStreamer = None
 get_streamer = None
 
+RNG = np.random.default_rng(42)
+
 
 @pytest.fixture(scope="module", autouse=True)
 def fxt_import_module():
@@ -133,7 +135,7 @@ def random_single_video(tmp_path, width: int = 480, height: int = 360, number_of
 
 
 def _write_random_image(width: int, height: int, filename: str) -> None:
-    img = np.uint8(np.random.random((height, width, 3)) * 255)
+    img = np.uint8(RNG.random((height, width, 3)) * 255)
     cv2.imwrite(filename, img)
 
 
@@ -143,7 +145,7 @@ def _write_random_video(width: int, height: int, number_of_frames: int, filename
     videowriter = cv2.VideoWriter(f, fourcc, 30, (width, height))
 
     for _ in range(number_of_frames):
-        img = np.uint8(np.random.random((height, width, 3)) * 255)
+        img = np.uint8(RNG.random((height, width, 3)) * 255)
         videowriter.write(img)
 
     videowriter.release()

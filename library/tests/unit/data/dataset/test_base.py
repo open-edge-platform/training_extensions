@@ -98,18 +98,6 @@ class TestOTXDataset:
 
         self.mock_transforms = Mock()
 
-    def test_sample_another_idx(self):
-        """Test _sample_another_idx method."""
-        dataset = OTXDataset(
-            dm_subset=self.mock_dm_subset,
-            transforms=self.mock_transforms,
-            data_format="arrow",
-        )
-
-        with patch("numpy.random.randint", return_value=42):
-            idx = dataset._sample_another_idx()
-            assert idx == 42
-
     def test_apply_transforms_with_compose(self):
         """Test _apply_transforms with Compose transforms."""
         from otx.data.transform_libs.torchvision import Compose

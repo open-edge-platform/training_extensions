@@ -12,8 +12,8 @@ import numpy as np
 import pytest
 from testcontainers.compose import DockerCompose
 
-from app.entities.ip_camera_stream import IPCameraStream
 from app.schemas.source import IPCameraSourceConfig, SourceType
+from app.stream.ip_camera_stream import IPCameraStream
 
 
 @pytest.fixture

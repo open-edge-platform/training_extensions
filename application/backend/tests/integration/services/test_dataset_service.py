@@ -14,18 +14,11 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.db.schema import DatasetItemDB, DatasetItemLabelDB, PipelineDB
+from app.models import DatasetItemAnnotation, DatasetItemSubset, LabelReference, Rectangle
 from app.schemas import PipelineView, ProjectView
-from app.schemas.dataset_item import DatasetItemAnnotation, DatasetItemAnnotationsWithSource, DatasetItemSubset
-from app.schemas.label import LabelReference
-from app.schemas.shape import FullImage, Rectangle
 from app.services import LabelService, PipelineService, ProjectService
 from app.services.base import ResourceNotFoundError, ResourceType
-from app.services.dataset_service import (
-    DatasetService,
-    InvalidImageError,
-    NotAnnotatedError,
-    SubsetAlreadyAssignedError,
-)
+from app.services.dataset_service import DatasetService, InvalidImageError, SubsetAlreadyAssignedError
 from app.services.event.event_bus import EventBus
 
 logger = logging.getLogger(__name__)
@@ -524,62 +517,6 @@ class TestDatasetServiceIntegration:
                 project=project,
                 dataset_item_id=non_existent_id,
                 annotations=annotations,
-            )
-
-        assert excinfo.value.resource_type == ResourceType.DATASET_ITEM
-        assert excinfo.value.resource_id == str(non_existent_id)
-
-    def test_get_dataset_item_annotations_none(
-        self,
-        fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[ProjectView, list[DatasetItemDB]],
-    ):
-        """Test getting a dataset item annotation and it's missing."""
-        project, db_dataset_items = fxt_project_with_dataset_items
-
-        with pytest.raises(NotAnnotatedError):
-            fxt_dataset_service.get_dataset_item_annotations(
-                project=project,
-                dataset_item_id=UUID(db_dataset_items[0].id),
-            )
-
-    def test_get_dataset_item_annotations(
-        self,
-        fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[ProjectView, list[DatasetItemDB]],
-    ):
-        """Test getting a dataset item annotation."""
-        project, db_dataset_items = fxt_project_with_dataset_items
-
-        annotations = fxt_dataset_service.get_dataset_item_annotations(
-            project=project,
-            dataset_item_id=UUID(db_dataset_items[1].id),
-        )
-
-        assert annotations == DatasetItemAnnotationsWithSource(
-            annotations=[
-                DatasetItemAnnotation(
-                    labels=[LabelReference(id=project.task.labels[0].id)],
-                    shape=FullImage(type="full_image"),
-                )
-            ],
-            user_reviewed=False,
-            prediction_model_id=None,
-        )
-
-    def test_get_dataset_item_annotations_not_found(
-        self,
-        fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[ProjectView, list[DatasetItemDB]],
-    ):
-        """Test getting a dataset item annotation."""
-        project, db_dataset_items = fxt_project_with_dataset_items
-        non_existent_id = uuid4()
-
-        with pytest.raises(ResourceNotFoundError) as excinfo:
-            fxt_dataset_service.get_dataset_item_annotations(
-                project=project,
-                dataset_item_id=non_existent_id,
             )
 
         assert excinfo.value.resource_type == ResourceType.DATASET_ITEM

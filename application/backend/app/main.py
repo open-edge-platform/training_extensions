@@ -17,7 +17,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
-from app.api import endpoints
+from app.api import routers
 from app.lifecycle import lifespan
 from app.settings import get_settings
 
@@ -49,10 +49,10 @@ app.add_middleware(  # TODO restrict settings in production
     allow_headers=["*"],
 )
 
-# Include all API routers from the endpoints package
-for module_info in pkgutil.iter_modules(endpoints.__path__):
-    module_name = module_info.name
-    module = importlib.import_module(f"app.api.endpoints.{module_name}")
+# Include all API routers from the routers package
+for router_info in pkgutil.iter_modules(routers.__path__):
+    router_name = router_info.name
+    module = importlib.import_module(f"app.api.routers.{router_name}")
     if hasattr(module, "router"):
         app.include_router(module.router)
 

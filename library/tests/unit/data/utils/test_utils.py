@@ -21,6 +21,8 @@ from otx.data.utils.utils import (
     get_adaptive_num_workers,
 )
 
+RNG = np.random.default_rng(42)
+
 
 def test_compute_robust_statistics():
     values = np.array([])
@@ -33,7 +35,7 @@ def test_compute_robust_statistics():
     assert np.isclose(stat["min"], 0.5)
     assert np.isclose(stat["max"], 1.5)
 
-    values = np.random.rand(10)
+    values = RNG.random(10)
     stat = compute_robust_statistics(values)
     assert np.isclose(stat["min"], np.min(values))
     assert np.isclose(stat["max"], np.max(values))
@@ -52,7 +54,7 @@ def test_compute_robust_scale_statistics():
     assert np.isclose(stat["min"], 0.5)
     assert np.isclose(stat["max"], 2.0)
 
-    scales = np.random.rand(10)
+    scales = RNG.random(10)
     stat = compute_robust_scale_statistics(scales)
     assert np.isclose(stat["min"], np.min(scales))
     assert np.isclose(stat["max"], np.max(scales))

@@ -32,6 +32,8 @@ from otx.types.task import OTXTaskType
 from otx.types.transformer_libs import TransformLibType
 from tests.test_helpers import generate_random_bboxes
 
+RNG = np.random.default_rng(42)
+
 
 class TestOTXTiling:
     @pytest.fixture()
@@ -278,8 +280,7 @@ class TestOTXTiling:
     @pytest.mark.xfail(reason="Tiling not yet implemented with new dataset")
     def test_tile_sampler(self, fxt_data_config):
         for task, data_config in fxt_data_config.items():
-            rng = np.random.default_rng()
-            sampling_ratio = rng.random()
+            sampling_ratio = RNG.random()
             data_config["tile_config"] = TileConfig(
                 enable_tiler=True,
                 enable_adaptive_tiling=False,
@@ -476,17 +477,16 @@ class TestOTXTiling:
             model.forward_tiles(batch)
 
     def test_seg_tiler(self, mocker):
-        rng = np.random.default_rng()
-        rnd_tile_size = rng.integers(low=100, high=500)
-        rnd_tile_overlap = rng.random() * 0.75
-        image_size = rng.integers(low=1000, high=5000)
+        rnd_tile_size = RNG.integers(low=100, high=500)
+        rnd_tile_overlap = RNG.random() * 0.75
+        image_size = RNG.integers(low=1000, high=5000)
         np_image = np.zeros((image_size, image_size, 3), dtype=np.uint8)
 
         mock_model = MagicMock(spec=Model)
         mocker.patch("model_api.tilers.tiler.Tiler.__init__", return_value=None)
         mocker.patch.multiple(SemanticSegmentationTiler, __abstractmethods__=set())
 
-        num_labels = rng.integers(low=1, high=10)
+        num_labels = RNG.integers(low=1, high=10)
 
         tiler = SemanticSegmentationTiler(model=mock_model)
         tiler.model = mock_model
@@ -501,7 +501,7 @@ class TestOTXTiling:
             h, w = y2 - y1, x2 - x1
             tile_predictions = ImageResultWithSoftPrediction(
                 resultImage=np.zeros((h, w), dtype=np.uint8),
-                soft_prediction=np.random.rand(h, w, num_labels),
+                soft_prediction=RNG.random((h, w, num_labels)),
                 feature_vector=np.array([]),
                 saliency_map=np.array([]),
             )

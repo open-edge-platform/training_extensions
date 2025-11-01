@@ -8,12 +8,12 @@ import cv2
 import numpy as np
 
 from app.db import get_db_session
-from app.entities.stream_data import InferenceData
+from app.models import DatasetItemFormat
 from app.schemas import ProjectView
-from app.schemas.dataset_item import DatasetItemFormat
 from app.schemas.pipeline import ConfidenceThresholdDataCollectionPolicy, FixedRateDataCollectionPolicy, PipelineView
 from app.services.data_collect.prediction_converter import convert_prediction, get_confidence_scores
 from app.services.event.event_bus import EventBus, EventType
+from app.stream.stream_data import InferenceData
 
 logger = logging.getLogger(__name__)
 
@@ -167,7 +167,7 @@ class DataCollector:
         if self.active_pipeline_data is None:
             return
         pipeline, project = self.active_pipeline_data
-        from app.services import DatasetService
+        from app.services import DatasetService, LabelService
 
         confidence_scores = get_confidence_scores(prediction=inference_data.prediction)
         should_collect = (
@@ -181,10 +181,10 @@ class DataCollector:
             return
         frame_data = cv2.cvtColor(frame_data, cv2.COLOR_BGR2RGB)  # Convert BGR to RGB
         with get_db_session() as session:
+            labels = LabelService(db_session=session).list_all(project_id=project.id)
+            annotations = convert_prediction(labels=labels, frame_data=frame_data, prediction=inference_data.prediction)
+
             dataset_service = DatasetService(data_dir=self.data_dir, db_session=session)
-            annotations = convert_prediction(
-                labels=project.task.labels, frame_data=frame_data, prediction=inference_data.prediction
-            )
             dataset_service.create_dataset_item(
                 project=project,
                 name=f"{timestamp:.4f}".replace(".", "_"),

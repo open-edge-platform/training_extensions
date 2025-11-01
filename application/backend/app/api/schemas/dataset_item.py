@@ -1,30 +1,16 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from enum import StrEnum
 from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel
 
 from app.core.models import BaseRequiredIDNameModel, Pagination
-from app.schemas.label import LabelReference
-from app.schemas.shape import Shape
+from app.models import DatasetItemAnnotation, DatasetItemFormat, DatasetItemSubset
 
 
-class DatasetItemFormat(StrEnum):
-    JPG = "jpg"
-    PNG = "png"
-
-
-class DatasetItemSubset(StrEnum):
-    UNASSIGNED = "unassigned"
-    TRAINING = "training"
-    VALIDATION = "validation"
-    TESTING = "testing"
-
-
-class DatasetItem(BaseRequiredIDNameModel):
+class DatasetItemView(BaseRequiredIDNameModel):
     """
     Dataset item
     """
@@ -52,25 +38,6 @@ class DatasetItem(BaseRequiredIDNameModel):
     }
 
 
-class DatasetItemAnnotation(BaseModel):
-    """
-    Dataset item annotation
-    """
-
-    labels: list[LabelReference]
-    shape: Shape
-    confidence: float | None = None
-
-    model_config = {
-        "json_schema_extra": {
-            "example": {
-                "labels": [{"id": "d476573e-d43c-42a6-9327-199a9aa75c33"}],
-                "shape": {"type": "rectangle", "x": 10, "y": 20, "width": 100, "height": 200},
-            }
-        }
-    }
-
-
 class SetDatasetItemAnnotations(BaseModel):
     """Schema for setting dataset item annotations"""
 
@@ -90,14 +57,14 @@ class SetDatasetItemAnnotations(BaseModel):
     }
 
 
-class DatasetItemAnnotationsWithSource(BaseModel):
+class DatasetItemAnnotations(BaseModel):
     """
     Dataset item annotations with information about source
     """
 
     annotations: list[DatasetItemAnnotation]
     user_reviewed: bool
-    prediction_model_id: str | None = None
+    prediction_model_id: UUID | None = None
 
     model_config = {
         "json_schema_extra": {
@@ -120,7 +87,7 @@ class DatasetItemsWithPagination(BaseModel):
     Dataset Items list with pagination info
     """
 
-    items: list[DatasetItem]
+    items: list[DatasetItemView]
     pagination: Pagination
 
 
