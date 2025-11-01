@@ -24,6 +24,8 @@ from otx.types import OTXTaskType
 
 Transforms = Union[Compose, Callable, List[Callable], dict[str, Compose | Callable | List[Callable]]]
 
+RNG = np.random.default_rng(42)
+
 
 def _default_collate_fn(items: list[OTXSample]) -> OTXDataBatch:
     """Collate OTXSample items into an OTXDataBatch.
@@ -105,9 +107,6 @@ class OTXDataset(TorchDataset):
     def __len__(self) -> int:
         return len(self.dm_subset)
 
-    def _sample_another_idx(self) -> int:
-        return np.random.randint(0, len(self))
-
     def _apply_transforms(self, entity: OTXSample) -> OTXSample | None:
         if self.transforms is None:
             return entity
@@ -140,7 +139,7 @@ class OTXDataset(TorchDataset):
             if results is not None:
                 return results
 
-            index = self._sample_another_idx()
+            index = RNG.integers(0, len(self))
 
         msg = f"Reach the maximum refetch number ({self.max_refetch})"
         raise RuntimeError(msg)
