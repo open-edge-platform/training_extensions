@@ -11,10 +11,10 @@ from sqlalchemy.orm import Session
 
 from app.core.jobs.control_plane import JobQueue
 from app.db import get_db_session
+from app.models import Sink
 from app.scheduler import Scheduler
 from app.schemas import ProjectView
 from app.services import (
-    ConfigurationService,
     DatasetService,
     MetricsService,
     ModelService,
@@ -22,6 +22,8 @@ from app.services import (
     PipelineService,
     ProjectService,
     ResourceNotFoundError,
+    SinkService,
+    SourceService,
     SystemService,
 )
 from app.services.base_weights_service import BaseWeightsService
@@ -146,12 +148,18 @@ def get_metrics_service(scheduler: Annotated[Scheduler, Depends(get_scheduler)])
     return MetricsService(scheduler.shm_metrics.name, scheduler.shm_metrics_lock)
 
 
-def get_configuration_service(
-    event_bus: Annotated[EventBus, Depends(get_event_bus)],
-    db: Annotated[Session, Depends(get_db)],
-) -> ConfigurationService:
-    """Provides a ConfigurationService instance."""
-    return ConfigurationService(event_bus=event_bus, db_session=db)
+def get_sink_service(
+    event_bus: Annotated[EventBus, Depends(get_event_bus)], db: Annotated[Session, Depends(get_db)]
+) -> SinkService:
+    """Provides a SinkService instance."""
+    return SinkService(event_bus=event_bus, db_session=db)
+
+
+def get_source_service(
+    event_bus: Annotated[EventBus, Depends(get_event_bus)], db: Annotated[Session, Depends(get_db)]
+) -> SourceService:
+    """Provides a SourceService instance."""
+    return SourceService(event_bus=event_bus, db_session=db)
 
 
 def get_pipeline_service(
@@ -221,6 +229,17 @@ def get_project(
     """Provides a ProjectView instance for request scoped project."""
     try:
         return project_service.get_project_by_id(project_id)
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+def get_sink(
+    sink_id: Annotated[UUID, Depends(get_sink_id)],
+    sink_service: Annotated[SinkService, Depends(get_sink_service)],
+) -> Sink:
+    """Provides a Sink instance for request scoped sink."""
+    try:
+        return sink_service.get_by_id(sink_id)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 

@@ -9,7 +9,6 @@ from .base import (
     ResourceWithIdAlreadyExistsError,
     ResourceWithNameAlreadyExistsError,
 )
-from .configuration_service import ConfigurationService
 from .dataset_service import DatasetService
 from .dispatch_service import DispatchService
 from .label_service import LabelService
@@ -18,12 +17,13 @@ from .model_service import ModelService
 from .pipeline_metrics_service import PipelineMetricsService
 from .pipeline_service import PipelineService
 from .project_service import ProjectService
+from .sink_service import SinkService
+from .source_service import SourceService
 from .system_service import SystemService
 from .video_stream_service import VideoStreamService
 
 __all__ = [
     "ActiveModelService",
-    "ConfigurationService",
     "DatasetService",
     "DispatchService",
     "LabelService",
@@ -37,6 +37,8 @@ __all__ = [
     "ResourceType",
     "ResourceWithIdAlreadyExistsError",
     "ResourceWithNameAlreadyExistsError",
+    "SinkService",
+    "SourceService",
     "SystemService",
     "VideoStreamService",
 ]
