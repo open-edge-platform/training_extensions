@@ -26,7 +26,7 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=backend/uv.lock,target=uv.lock \
     --mount=type=bind,source=backend/pyproject.toml,target=pyproject.toml \
-    uv sync --frozen --no-editable
+    uv sync --frozen --no-editable --extra cpu
 
 COPY backend/app ./app
 
