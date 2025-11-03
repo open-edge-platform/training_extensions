@@ -16,9 +16,17 @@ import numpy as np
 from PIL import Image, UnidentifiedImageError
 from sqlalchemy.orm import Session
 
-from app.core.models import TaskType
 from app.db.schema import DatasetItemDB
-from app.models import DatasetItem, DatasetItemAnnotation, DatasetItemSubset, FullImage, Label, Polygon, Rectangle
+from app.models import (
+    DatasetItem,
+    DatasetItemAnnotation,
+    DatasetItemSubset,
+    FullImage,
+    Label,
+    Polygon,
+    Rectangle,
+    TaskType,
+)
 from app.repositories import DatasetItemRepository
 from app.schemas.project import ProjectBase, ProjectView
 from app.services.datumaro_converter import convert_dataset
@@ -308,7 +316,7 @@ class DatasetService:
             raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
         if db_subset != DatasetItemSubset.UNASSIGNED:
             raise SubsetAlreadyAssignedError
-        repo.set_subset(obj_id=str(dataset_item_id), subset=subset)
+        repo.set_subset(obj_ids={str(dataset_item_id)}, subset=subset)
         return self.get_dataset_item_by_id(project=project, dataset_item_id=dataset_item_id)
 
     def get_dm_dataset(self, project: ProjectView) -> dm.Dataset:

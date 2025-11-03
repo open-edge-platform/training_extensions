@@ -5,7 +5,7 @@ from typing import Annotated, Literal
 
 from pydantic import Field, TypeAdapter, computed_field
 
-from app.core.models.base import BaseIDNameModel
+from app.core.models import BaseIDNameModel
 from app.models import (
     DisconnectedSinkConfig,
     FolderSinkConfig,

@@ -24,6 +24,7 @@ dependencies = [
     "datumaro[experimental] @ git+https://github.com/open-edge-platform/datumaro.git@develop",
     "scikit-learn~=1.7.0",
     "faster-coco-eval~=1.6.8",
+    "scikit-multilearn~=0.2.0",
 ]
 
 [project.optional-dependencies]
@@ -48,6 +49,7 @@ lint = [
 
 [tool.uv]
 default-groups = "all"
+required-version = "~=0.8.8"
 
 [tool.uv.build-backend]
 module-root = ""

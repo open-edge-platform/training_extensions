@@ -15,6 +15,7 @@ from .sink import (
     SinkType,
     WebhookSinkConfig,
 )
+from .task_type import TaskType
 
 __all__ = [
     "DatasetItem",
@@ -36,5 +37,6 @@ __all__ = [
     "Sink",
     "SinkAdapter",
     "SinkType",
+    "TaskType",
     "WebhookSinkConfig",
 ]

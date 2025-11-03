@@ -11,8 +11,7 @@ from datumaro.experimental import Dataset, Sample, bbox_field, image_info_field,
 from datumaro.experimental.categories import LabelCategories
 from datumaro.experimental.fields import ImageInfo, polygon_field
 
-from app.core.models.task_type import TaskType
-from app.models import DatasetItem, Label, Polygon, Rectangle
+from app.models import DatasetItem, Label, Polygon, Rectangle, TaskType
 from app.schemas.project import ProjectBase
 
 logger = logging.getLogger(__name__)
