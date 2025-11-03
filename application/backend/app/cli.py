@@ -11,8 +11,8 @@ import click
 
 from app.db import MigrationManager, get_db_session
 from app.db.schema import DatasetItemDB, LabelDB, ModelRevisionDB, PipelineDB, ProjectDB, SinkDB, SourceDB
-from app.models import TaskType
-from app.schemas import DisconnectedSinkConfig, DisconnectedSourceConfig, OutputFormat, SinkType, SourceType
+from app.models import DisconnectedSinkConfig, OutputFormat, SinkType, TaskType
+from app.schemas import DisconnectedSourceConfig, SourceType
 from app.schemas.model import TrainingStatus
 from app.schemas.pipeline import FixedRateDataCollectionPolicy
 from app.settings import get_settings
@@ -121,7 +121,16 @@ def seed(with_model: bool) -> None:
             output_formats=[],
             config_data={},
         )
-        db.add_all([disconnected_source, disconnected_sink])
+        folder_sink = SinkDB(
+            id="6ee0c080-c7d9-4438-a7d2-067fd395eecf",
+            name="Folder Sink",
+            sink_type=SinkType.FOLDER,
+            rate_limit=0.2,
+            output_formats=[OutputFormat.IMAGE_ORIGINAL, OutputFormat.IMAGE_WITH_PREDICTIONS, OutputFormat.PREDICTIONS],
+            config_data={"folder_path": "data/output"},
+        )
+        db.add_all([disconnected_source, disconnected_sink, folder_sink])
+        db.flush()
 
         pipeline = PipelineDB(project_id=project.id)
         pipeline.source = SourceDB(
@@ -130,14 +139,7 @@ def seed(with_model: bool) -> None:
             source_type=SourceType.VIDEO_FILE,
             config_data={"video_path": "data/media/video.mp4"},
         )
-        pipeline.sink = SinkDB(
-            id="6ee0c080-c7d9-4438-a7d2-067fd395eecf",
-            name="Folder Sink",
-            sink_type=SinkType.FOLDER,
-            rate_limit=0.2,
-            output_formats=[OutputFormat.IMAGE_ORIGINAL, OutputFormat.IMAGE_WITH_PREDICTIONS, OutputFormat.PREDICTIONS],
-            config_data={"folder_path": "data/output"},
-        )
+        pipeline.sink_id = folder_sink.id
         pipeline.data_collection_policies = [FixedRateDataCollectionPolicy(rate=0.1).model_dump(mode="json")]
         if with_model:
             pipeline.model_revision = ModelRevisionDB(

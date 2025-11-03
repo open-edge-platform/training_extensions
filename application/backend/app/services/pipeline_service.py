@@ -58,7 +58,7 @@ class PipelineService:
             # If the pipeline source_id or sink_id is being updated while running
             if pipeline.source.id != updated.source.id:  # type: ignore[union-attr] # source is always there for running pipeline
                 self._event_bus.emit_event(EventType.SOURCE_CHANGED)
-            if pipeline.sink.id != updated.sink.id:  # type: ignore[union-attr] # sink is always there for running pipeline
+            if pipeline.sink_id != updated.sink_id:  # type: ignore[union-attr] # sink is always there for running pipeline
                 self._event_bus.emit_event(EventType.SINK_CHANGED)
             if pipeline.data_collection_policies != updated.data_collection_policies:
                 self._event_bus.emit_event(EventType.PIPELINE_DATASET_COLLECTION_POLICIES_CHANGED)

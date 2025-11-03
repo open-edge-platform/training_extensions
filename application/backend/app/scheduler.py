@@ -54,7 +54,7 @@ class Scheduler:
 
         # Create and start processes
         stream_loader_proc = StreamLoader(
-            self.frame_queue, self.mp_stop_event, self._event_bus.source_changed_condition
+            self._event_bus, self.frame_queue, self.mp_stop_event, self._event_bus.source_changed_condition
         )
 
         inference_server_proc = InferenceWorker(
