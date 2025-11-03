@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import multiprocessing as mp
-from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
@@ -32,14 +31,12 @@ class TestProcessRun:
 
     @pytest.fixture
     def fxt_process_run(self, fxt_context, fxt_runnable_factory, fxt_job):
-        return ProcessRun(fxt_context, Path("tmp"), fxt_runnable_factory, fxt_job())
+        return ProcessRun(fxt_context, fxt_runnable_factory, fxt_job())
 
     def test_init(self, fxt_context, fxt_runnable_factory, fxt_job):
-        """Test ProcessRun initialization."""
-        process_run = ProcessRun(fxt_context, Path("tmp"), fxt_runnable_factory, fxt_job())
+        process_run = ProcessRun(fxt_context, fxt_runnable_factory, fxt_job())
 
         assert process_run._ctx == fxt_context
-        assert process_run._data_dir == Path("tmp")
         assert process_run._runnable_factory == fxt_runnable_factory
         assert isinstance(process_run._job, Job)
         assert process_run._proc is None

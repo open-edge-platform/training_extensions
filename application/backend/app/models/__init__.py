@@ -10,6 +10,7 @@ from .dataset_item import (
 )
 from .label import Label, LabelReference
 from .shape import FullImage, Point, Polygon, Rectangle, Shape
+from .task_type import TaskType
 
 __all__ = [
     "DatasetItem",
@@ -24,4 +25,5 @@ __all__ = [
     "Polygon",
     "Rectangle",
     "Shape",
+    "TaskType",
 ]
