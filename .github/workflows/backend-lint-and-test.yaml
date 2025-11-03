@@ -88,7 +88,7 @@ jobs:
         working-directory: application/backend
         run: |
           uv lock --check
-          uv sync --frozen --all-extras
+          uv sync --frozen --extra cpu
 
       - name: Check formatting with ruff
         working-directory: application/backend
