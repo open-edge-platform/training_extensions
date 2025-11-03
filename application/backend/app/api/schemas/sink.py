@@ -15,10 +15,19 @@ from app.models import (
     SinkType,
     WebhookSinkConfig,
 )
-from app.models.sink import FolderConfig, HttpHeaders, HttpMethod, MqttConfig, RosConfig, WebhookConfig
+from app.models.sink import (
+    DisconnectedConfig,
+    FolderConfig,
+    HttpHeaders,
+    HttpMethod,
+    MqttConfig,
+    RosConfig,
+    WebhookConfig,
+)
 
 
 class DisconnectedSinkConfigView(DisconnectedSinkConfig):
+    config_data: DisconnectedConfig = Field(exclude=True)
     model_config = {
         "json_schema_extra": {
             "example": {
