@@ -3,7 +3,7 @@
 
 from enum import Enum, auto
 
-from app.core.models.task_type import TaskType
+from app.models import TaskType
 
 
 class DefaultCategory(str, Enum):

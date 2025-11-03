@@ -8,6 +8,7 @@ from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.orm import Session
 
 from app.db.schema import DatasetItemDB, DatasetItemLabelDB
+from app.models import DatasetItemSubset
 
 
 class UpdateDatasetItemAnnotation(NamedTuple):
@@ -128,19 +129,20 @@ class DatasetItemRepository:
         )
         return self.db.scalar(stmt)
 
-    def set_subset(self, obj_id: str, subset: str) -> None:
+    def set_subset(self, obj_ids: set[str], subset: str) -> int:
         stmt = (
             update(DatasetItemDB)
             .where(
                 DatasetItemDB.project_id == self.project_id,
-                DatasetItemDB.id == obj_id,
+                DatasetItemDB.id.in_(obj_ids),
             )
             .values(
                 subset=subset,
                 updated_at=datetime.now(UTC),
             )
         )
-        self.db.execute(stmt)
+        result = self.db.execute(stmt)
+        return result.rowcount or 0
 
     def set_labels(self, dataset_item_id: str, label_ids: set[str]) -> None:
         self.delete_labels(dataset_item_id)
@@ -153,3 +155,23 @@ class DatasetItemRepository:
     def delete_labels(self, dataset_item_id: str) -> None:
         stmt = delete(DatasetItemLabelDB).where(DatasetItemLabelDB.dataset_item_id == dataset_item_id)
         self.db.execute(stmt)
+
+    def list_unassigned_items(self) -> list[DatasetItemLabelDB]:
+        stmt = (
+            select(DatasetItemLabelDB)
+            .join(DatasetItemDB)
+            .where(
+                DatasetItemDB.project_id == self.project_id,
+                DatasetItemDB.subset == DatasetItemSubset.UNASSIGNED,
+            )
+        )
+        return list(self.db.scalars(stmt).all())
+
+    def get_subset_distribution(self) -> dict[str, int]:
+        stmt = (
+            select(DatasetItemDB.subset, func.count(DatasetItemDB.id).label("count"))
+            .where(DatasetItemDB.project_id == self.project_id)
+            .group_by(DatasetItemDB.subset)
+        )
+        result = self.db.execute(stmt)
+        return {row.subset: row.count for row in result}  # type: ignore[misc]

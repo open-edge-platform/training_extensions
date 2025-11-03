@@ -15,13 +15,14 @@ from fastapi import FastAPI
 
 from app.core.jobs import JobController, JobQueue, ProcessRunnerFactory
 from app.core.run import Runnable, RunnableFactory
-from app.db import MigrationManager
+from app.db import MigrationManager, get_db_session
 from app.scheduler import Scheduler
 from app.schemas.job import JobType
 from app.services.base_weights_service import BaseWeightsService
 from app.services.data_collect import DataCollector
 from app.services.event.event_bus import EventBus
 from app.services.training import OTXTrainer
+from app.services.training.subset_assignment import SubsetAssigner, SubsetService
 from app.settings import get_settings
 from app.webrtc.manager import WebRTCManager
 
@@ -30,23 +31,36 @@ logger = logging.getLogger(__name__)
 
 def setup_job_controller(data_dir: Path, max_parallel_jobs: int) -> tuple[JobQueue, JobController]:
     """
-    Set up job controller with queue and processing infrastructure.
+    Initializes and configures the job queue and job controller for managing parallel job execution.
 
-    Creates a job queue and controller with configured parallel job limits and training infrastructure
-    for job execution.
+    Sets up the infrastructure to run jobs concurrently and registers classes that comply with the Runnable protocol,
+    each associated with a job type and its required dependencies. These classes are executed in a context defined
+    by the runner factory.
 
     Args:
-        data_dir: Path to the data directory.
+        data_dir: Path to the directory containing data required for job execution.
         max_parallel_jobs (int): Maximum number of jobs that can run concurrently.
 
     Returns:
-        tuple[JobQueue, JobController]: A tuple containing the job queue instance and the configured job controller.
+        tuple[JobQueue, JobController]: The job queue and the configured job controller.
     """
     q = JobQueue()
     job_runnable_factory = RunnableFactory[JobType, Runnable]()
     base_weights_service = BaseWeightsService(data_dir=data_dir)
-    job_runnable_factory.register(JobType.TRAIN, partial(OTXTrainer, base_weights_service=base_weights_service))
-    process_runner_factory = ProcessRunnerFactory(data_dir, job_runnable_factory)
+    subset_service = SubsetService()
+    subset_assigner = SubsetAssigner()
+    job_runnable_factory.register(
+        JobType.TRAIN,
+        partial(
+            OTXTrainer,
+            base_weights_service=base_weights_service,
+            subset_service=subset_service,
+            subset_assigner=subset_assigner,
+            data_dir=data_dir,
+            db_session_factory=get_db_session,
+        ),
+    )
+    process_runner_factory = ProcessRunnerFactory(job_runnable_factory)
     job_controller = JobController(
         jobs_queue=q, runner_factory=process_runner_factory, max_parallel_jobs=max_parallel_jobs
     )

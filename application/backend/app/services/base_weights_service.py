@@ -8,7 +8,7 @@ from pathlib import Path
 
 import requests
 
-from app.core.models import TaskType
+from app.models import TaskType
 from app.supported_models import ModelManifest
 from app.supported_models.supported_models import SupportedModels
 

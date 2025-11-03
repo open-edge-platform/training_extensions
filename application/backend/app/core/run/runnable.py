@@ -16,7 +16,6 @@ Classes:
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Generic, Protocol, TypeVar
 
 ReportFn = Callable[[str, float], None]
@@ -26,13 +25,8 @@ HeartbeatFn = Callable[[], None]
 @dataclass(kw_only=True)
 class ExecutionContext:
     payload: str
-    data_dir: Path
     report: ReportFn
     heartbeat: HeartbeatFn
-
-    def report_progress(self, msg: str = "", progress: float = 0.0) -> None:
-        """Report progress of the execution."""
-        self.report(msg, progress)
 
 
 class Runnable(Protocol):  # ignore
