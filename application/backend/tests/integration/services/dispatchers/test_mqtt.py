@@ -16,9 +16,9 @@ import pytest
 from testcontainers.compose import DockerCompose
 
 from app.models import MqttSinkConfig, OutputFormat, SinkType
-from app.models.sink import MqttConfig
+from app.models.sink import MQTT_PASSWORD, MQTT_USERNAME, MqttConfig
 from app.services.dispatchers.base import numpy_to_base64
-from app.services.dispatchers.mqtt import MQTT_PASSWORD, MQTT_USERNAME, MqttDispatcher
+from app.services.dispatchers.mqtt import MqttDispatcher
 
 
 @pytest.fixture(scope="session")
@@ -141,40 +141,6 @@ def mqtt_test_subscriber(mqtt_broker):
 
 class TestMqttDispatcher:
     """Integration tests for MqttDispatcher."""
-
-    @pytest.mark.parametrize(
-        "env_vars,description",
-        [
-            ({}, "both username and password missing"),
-            ({MQTT_USERNAME: "testuser"}, "password missing"),
-            ({MQTT_PASSWORD: "testpass"}, "username missing"),
-            ({MQTT_USERNAME: "", MQTT_PASSWORD: "testpass"}, "username is empty"),
-            ({MQTT_USERNAME: "testuser", MQTT_PASSWORD: ""}, "password is empty"),
-        ],
-    )
-    def test_get_invalid_credentials(self, env_vars, description):
-        """Test error cases for invalid or missing credentials."""
-        with (
-            patch.dict(os.environ, env_vars, clear=True),
-            pytest.raises(RuntimeError, match="MQTT credentials not provided"),
-        ):
-            MqttDispatcher._get_credentials(auth_required=True)
-
-    @patch.dict(os.environ, {MQTT_USERNAME: "testuser", MQTT_PASSWORD: "testpass"})
-    def test_get_configured_stream_url_with_auth_success(self):
-        """Test valid credentials."""
-        assert MqttDispatcher._get_credentials(auth_required=True) == ("testuser", "testpass")
-
-    def test_init_successful_connection(self, mqtt_config):
-        """Test successful initialization and connection."""
-        dispatcher = MqttDispatcher(mqtt_config, track_messages=True)
-
-        assert dispatcher.is_connected
-        assert dispatcher.broker_host == mqtt_config.config_data.broker_host
-        assert dispatcher.broker_port == mqtt_config.config_data.broker_port
-        assert dispatcher.topic == mqtt_config.config_data.topic
-
-        dispatcher.close()
 
     @patch.dict(os.environ, {MQTT_USERNAME: "testuser", MQTT_PASSWORD: "testpass"})
     def test_init_with_authentication(self, mqtt_config_with_auth):

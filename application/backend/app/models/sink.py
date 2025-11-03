@@ -1,6 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from enum import StrEnum
+from os import getenv
 from typing import Annotated, Literal
 from uuid import UUID
 
@@ -8,6 +9,9 @@ from pydantic import BaseModel, Field, TypeAdapter
 
 from app.core.models import BaseRequiredIDNameModel
 from app.models.base import BaseEntity
+
+MQTT_USERNAME = "MQTT_USERNAME"
+MQTT_PASSWORD = "MQTT_PASSWORD"  # noqa: S105
 
 
 class OutputFormat(StrEnum):
@@ -60,6 +64,19 @@ class MqttConfig(SinkConfig):
     broker_port: int
     topic: str
     auth_required: bool = False
+
+    def get_credentials(self) -> tuple[str | None, str | None]:
+        """Configure stream URL with authentication if required."""
+        if not self.auth_required:
+            return None, None
+
+        username = getenv(MQTT_USERNAME)
+        password = getenv(MQTT_PASSWORD)
+
+        if not username or not password:
+            raise RuntimeError("MQTT credentials not provided.")
+
+        return username, password
 
 
 class MqttSinkConfig(BaseSinkConfig):
