@@ -85,7 +85,7 @@ class VideoFileConfig(SourceConfig):
     video_path: str
 
 
-class VideoFileSourceConfig(BaseRequiredIDNameModel):
+class VideoFileSourceConfig(BaseSourceConfig):
     source_type: Literal[SourceType.VIDEO_FILE]
     config_data: VideoFileConfig
 
@@ -95,7 +95,7 @@ class ImagesFolderConfig(SourceConfig):
     ignore_existing_images: bool
 
 
-class ImagesFolderSourceConfig(BaseRequiredIDNameModel):
+class ImagesFolderSourceConfig(BaseSourceConfig):
     source_type: Literal[SourceType.IMAGES_FOLDER]
     config_data: ImagesFolderConfig
 

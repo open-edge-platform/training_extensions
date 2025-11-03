@@ -71,7 +71,7 @@ class SourceService:
                 self._event_bus.emit_event(EventType.SOURCE_CHANGED)
             return SourceAdapter.validate_python(db_source, from_attributes=True)
         except UniqueConstraintIntegrityError:
-            raise ResourceWithNameAlreadyExistsError(ResourceType.SOURCE, new_name)  # type: ignore[arg-type]
+            raise ResourceWithNameAlreadyExistsError(ResourceType.SOURCE, new_name)
 
     def get_by_id(self, source_id: UUID) -> Source:
         db_source = SourceRepository(self._db_session).get_by_id(str(source_id))
