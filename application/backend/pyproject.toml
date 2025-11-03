@@ -28,6 +28,14 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# Choose one of the following training backends:
+# - cpu: only CPU training (no GPU support)
+# - xpu: support training on compatible Intel GPUs
+# - cuda: support training on compatible NVIDIA GPUs
+cpu = ["otx[cpu]"]
+xpu = ["otx[xpu]"]
+cuda = ["otx[cuda]"]
+
 mqtt = [
     "paho-mqtt~=2.1.0",
 ]
@@ -42,18 +50,37 @@ dev = [
 ]
 lint = [
     "ruff==0.9.3",
-    "mypy~=1.17",
+    "mypy~=1.16.1",
     "types-PyYAML~=6.0.12",
     "types-requests~=2.32.4",
 ]
 
 [tool.uv]
-default-groups = "all"
-required-version = "~=0.8.8"
+default-groups = ["dev", "lint"]
+required-version = "~=0.9.7"
+conflicts = [
+    [
+        { extra = "cpu" },
+        { extra = "xpu" },
+        { extra = "cuda" },
+    ],
+    # redeclare library conflicts to workaround bug with uv dependency resolution
+    # For details, see: https://github.com/astral-sh/uv/issues/9942
+    [
+        { package = "otx", extra = "cpu" },
+        { package = "otx", extra = "xpu" },
+        { package = "otx", extra = "cuda" },
+    ],
+]
 
 [tool.uv.build-backend]
 module-root = ""
 module-name = "app"
+
+[tool.uv.sources]
+# TODO switch to local path after the 'feature/datumaro' branch is merged to develop
+# otx = { path = "../../library", editable = true }
+otx = { git = "https://github.com/open-edge-platform/training_extensions.git", branch = "feature/datumaro", subdirectory = "library" }
 
 [tool.ruff]
 target-version = "py313"
