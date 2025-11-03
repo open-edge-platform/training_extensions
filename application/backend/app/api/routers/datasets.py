@@ -17,6 +17,7 @@ from app.api.schemas.dataset_item import (
     SetDatasetItemAnnotations,
 )
 from app.core.models import Pagination
+from app.models import DatasetItemAnnotationStatus
 from app.schemas import ProjectView
 from app.services import DatasetService, ResourceNotFoundError
 from app.services.dataset_service import AnnotationValidationError, InvalidImageError, SubsetAlreadyAssignedError
@@ -103,15 +104,23 @@ def list_dataset_items(
     offset: Annotated[int, Query(ge=0)] = 0,
     start_date: Annotated[datetime | None, Query()] = None,
     end_date: Annotated[datetime | None, Query()] = None,
+    annotation_status: Annotated[DatasetItemAnnotationStatus | None, Query()] = None,
 ) -> DatasetItemsWithPagination:
     """List the available dataset items and their metadata. This endpoint supports pagination."""
     if start_date is not None and end_date is not None and start_date > end_date:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Start date must be before end date."
         )
-    total = dataset_service.count_dataset_items(project=project, start_date=start_date, end_date=end_date)
+    total = dataset_service.count_dataset_items(
+        project=project, start_date=start_date, end_date=end_date, annotation_status=annotation_status
+    )
     dataset_items = dataset_service.list_dataset_items(
-        project=project, limit=limit, offset=offset, start_date=start_date, end_date=end_date
+        project=project,
+        limit=limit,
+        offset=offset,
+        start_date=start_date,
+        end_date=end_date,
+        annotation_status=annotation_status,
     )
     return DatasetItemsWithPagination(
         items=[DatasetItemView.model_validate(dataset_item, from_attributes=True) for dataset_item in dataset_items],
