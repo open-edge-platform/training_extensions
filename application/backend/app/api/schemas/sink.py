@@ -42,7 +42,8 @@ class DisconnectedSinkConfigView(DisconnectedSinkConfig):
 class FolderSinkConfigView(FolderSinkConfig):
     config_data: FolderConfig = Field(exclude=True)
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
+    @property
     def folder_path(self) -> str:
         return self.config_data.folder_path
 
@@ -63,19 +64,23 @@ class FolderSinkConfigView(FolderSinkConfig):
 class MqttSinkConfigView(MqttSinkConfig):
     config_data: MqttConfig = Field(exclude=True)
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
+    @property
     def broker_host(self) -> str:
         return self.config_data.broker_host
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
+    @property
     def broker_port(self) -> int:
         return self.config_data.broker_port
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
+    @property
     def topic(self) -> str:
         return self.config_data.topic
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
+    @property
     def auth_required(self) -> bool:
         return self.config_data.auth_required
 
@@ -98,7 +103,8 @@ class MqttSinkConfigView(MqttSinkConfig):
 class RosSinkConfigView(RosSinkConfig):
     config_data: RosConfig = Field(exclude=True)
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
+    @property
     def topic(self) -> str:
         return self.config_data.topic
 
@@ -118,19 +124,23 @@ class RosSinkConfigView(RosSinkConfig):
 class WebhookSinkConfigView(WebhookSinkConfig):
     config_data: WebhookConfig = Field(exclude=True)
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
+    @property
     def webhook_url(self) -> str:
         return self.config_data.webhook_url
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
+    @property
     def http_method(self) -> HttpMethod:
         return self.config_data.http_method
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
+    @property
     def headers(self) -> HttpHeaders | None:
         return self.config_data.headers
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
+    @property
     def timeout(self) -> int:
         return self.config_data.timeout
 
