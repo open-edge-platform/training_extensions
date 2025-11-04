@@ -112,7 +112,7 @@ class OTXTrainer(Trainer):
         step_count = 20
         for i in range(step_count):
             time.sleep(1)
-            logger.info("Training step %d/%d for job {}", i + 1, step_count, job_id)
+            logger.info("Training step {}/{} for job {}", i + 1, step_count, job_id)
             self.report_progress("Model training is in progress", 5.0 * (i + 1))
             self.heartbeat()
 

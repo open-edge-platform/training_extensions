@@ -26,7 +26,7 @@ class Settings(BaseSettings):
         "including advanced features for inference, model monitoring and data collection."
     )
     openapi_url: str = "/api/openapi.json"
-    debug: bool = Field(default=False, alias="DEBUG")
+    log_level: str = Field(default="INFO", alias="LOG_LEVEL")
     environment: Literal["dev", "prod"] = "dev"
     data_dir: Path = Field(default=Path("data"), alias="DATA_DIR")
     log_dir: Path = Field(default=Path("logs"), alias="LOG_DIR")

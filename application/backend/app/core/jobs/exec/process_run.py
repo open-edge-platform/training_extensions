@@ -26,7 +26,9 @@ from multiprocessing.synchronize import Event
 from loguru import logger
 
 from app.core.jobs.models import Done, ExecutionEvent, Failed, Job, JobType, Started
+from app.core.logging import LogConfig, logging_ctx
 from app.core.run import ExecutionContext, RunnableFactory, Runner
+from app.settings import get_settings
 
 from .exceptions import CancelledExc
 
@@ -55,6 +57,7 @@ class ProcessRun:
             args=(
                 self._runnable_factory,
                 self._job.job_type,
+                self._job.id,
                 self._job.params.model_dump_json(),
                 self._child,
                 self._cancel,
@@ -113,7 +116,7 @@ class ProcessRun:
 
 
 def _entrypoint(
-    get_runnable: RunnableFactory, job_type: str, payload: str, conn: Connection, cancel_event: Event
+    get_runnable: RunnableFactory, job_type: str, job_id: str, payload: str, conn: Connection, cancel_event: Event
 ) -> None:
     """
     Entrypoint for the child process.
@@ -123,6 +126,7 @@ def _entrypoint(
     Args:
         get_runnable (RunnableFactory): Factory to create runnable job instance.
         job_type (str): Type of job to execute.
+        job_id (str): Unique identifier for the job.
         payload (str): Serialized job parameters.
         conn (Connection): IPC connection to parent process.
         cancel_event (Event): Event to signal cancellation.
@@ -144,7 +148,10 @@ def _entrypoint(
 
     try:
         conn.send(Started())
-        runnable.run(ExecutionContext(payload=payload, report=report, heartbeat=heartbeat))
+        with logging_ctx(
+            LogConfig(log_folder=str(get_settings().job_dir), log_file=f"{job_type.lower()}-{job_id}.log")
+        ):
+            runnable.run(ExecutionContext(payload=payload, report=report, heartbeat=heartbeat))
         conn.send(Done())
     except CancelledExc:
         conn.send(Cancelled())
