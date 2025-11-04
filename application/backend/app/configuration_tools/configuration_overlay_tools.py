@@ -12,8 +12,11 @@ class ConfigurationOverlayTools:
         """
         Remove None values recursively from dictionaries.
 
-        :param d: Dictionary to process
-        :return: Dictionary with None values removed
+        Args:
+            d (dict): Dictionary to process.
+
+        Returns:
+            dict: Dictionary with None values removed.
         """
         for key, value in list(d.items()):
             if isinstance(value, dict):
@@ -46,10 +49,14 @@ class ConfigurationOverlayTools:
             b = {'y': {'b': 3}, 'z': 4}
             result = {'x': 1, 'y': {'a': 2, 'b': 3}, 'z': 4}
 
-        :param a: Target dictionary to merge into (modified in-place)
-        :param b: Source dictionary whose values will be merged into 'a'
-        :param common_parameters_only: If True, only parameters present in both dictionaries will be updated
-        :return: The modified dictionary 'a' containing merged values from 'b'
+        Args:
+            a (dict): Target dictionary to merge into (modified in-place).
+            b (dict): Source dictionary whose values will be merged into 'a'.
+            common_parameters_only (bool): If True, only parameters present in both dictionaries
+                will be updated. Defaults to False.
+
+        Returns:
+            dict: The modified dictionary 'a' containing merged values from 'b'.
         """
         for key, val in b.items():
             if key in a:
@@ -76,14 +83,20 @@ class ConfigurationOverlayTools:
         on top of it, merging dictionaries deeply. The result can be validated as either
         a full or partial training configuration.
 
-        :param base_config: The base configuration to start with
-        :param overlaying_configs: Variable number of configurations to overlay on the base
-        :param validate_full_config: If True, validates result as a full TrainingConfiguration,
-                                     otherwise as a PartialTrainingConfiguration
-        :param common_hyperparameters_only: If True, only hyperparameters present in both the base and overlaying
-            configurations will be updated; parameters unique to the overlaying configs will be ignored.
-            If False, all parameters from overlaying configs are merged into the base.
-        :return: The merged configuration, either as TrainingConfiguration or PartialTrainingConfiguration
+        Args:
+            base_config (PartialTrainingConfiguration): The base configuration to start with.
+            *overlaying_configs (PartialTrainingConfiguration): Variable number of configurations
+                to overlay on the base.
+            validate_full_config (bool): If True, validates result as a full TrainingConfiguration,
+                otherwise as a PartialTrainingConfiguration. Defaults to True.
+            common_hyperparameters_only (bool): If True, only hyperparameters present in both the base
+                and overlaying configurations will be updated; parameters unique to the overlaying
+                configs will be ignored. If False, all parameters from overlaying configs are merged
+                into the base. Defaults to False.
+
+        Returns:
+            TrainingConfiguration | PartialTrainingConfiguration: The merged configuration, either as
+                TrainingConfiguration or PartialTrainingConfiguration.
         """
         base_config_dict = cls.delete_none_from_dict(base_config.model_dump())
 

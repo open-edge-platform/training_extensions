@@ -33,11 +33,15 @@ class ConfigurableParametersConverter:
         """
         Convert a single parameter to its REST representation.
 
-        :param key: The parameter name/key
-        :param rest_type: The parameter type (int, float, string, or boolean)
-        :param value: The parameter value (int, float, string, or boolean)
-        :param json_schema: The JSON schema for the parameter from the Pydantic model
-        :return: Dictionary containing the REST representation of the parameter
+        Args:
+            key (str): The parameter name/key.
+            rest_type (str): The parameter type (int, float, string, or boolean).
+            value (BasicType): The parameter value (int, float, string, or boolean).
+            json_schema (dict): The JSON schema for the parameter from the Pydantic model.
+            default_value_override (BasicType | None): Optional override for the default value.
+
+        Returns:
+            dict[str, Any]: Dictionary containing the REST representation of the parameter.
         """
         default = default_value_override if default_value_override is not None else json_schema.get("default_value")
         default_value = default if default is not None else json_schema.get("default")
@@ -90,10 +94,14 @@ class ConfigurableParametersConverter:
         - If only nested models exist: returns a dictionary mapping nested model names to their contents
         - If both exist: returns a list containing parameter dictionaries and nested model dictionary
 
-        :param configurable_parameters: Pydantic model containing configurable parameters
-        :param default_config: Optional default configuration to use for setting "default_value" in the REST view.
-        :return: REST representation as either a dictionary of nested models,
-            a list of parameter dictionaries, or a combined list of both
+        Args:
+            configurable_parameters (BaseModel): Pydantic model containing configurable parameters.
+            default_config (dict[str, Any] | None): Optional default configuration to use for setting
+                "default_value" in the REST view.
+
+        Returns:
+            dict[str, Any] | list[dict[str, Any]]: REST representation as either a dictionary of nested models,
+                a list of parameter dictionaries, or a combined list of both.
         """
         nested_params: dict[str, Any] = {}
         list_params: list[dict[str, Any]] = []
@@ -141,15 +149,22 @@ class ConfigurableParametersConverter:
         cls, configurable_parameters_rest: dict[str, Any] | list[dict[str, Any]]
     ) -> dict[str, Any]:
         """
-        Convert a REST representation back to a dictionary that can be used to create/update a Pydantic model.
+        Convert a REST representation back to a dictionary for Pydantic model creation.
 
         This method performs the reverse operation of configurable_parameters_to_rest:
         - For a list of parameter dictionaries, it extracts the key-value pairs
         - For a dictionary of nested models, it processes each nested model recursively
         - For a mixed list containing both, it handles both types
 
-        :param configurable_parameters_rest: REST representation as a dictionary or list
-        :return: Dictionary representation suitable for Pydantic model instantiation
+        Args:
+            configurable_parameters_rest (dict[str, Any] | list[dict[str, Any]]): REST representation
+                as a dictionary or list.
+
+        Returns:
+            dict[str, Any]: Dictionary representation suitable for Pydantic model instantiation.
+
+        Raises:
+            ValueError: If attempting to set reserved parameters starting with "allowed_values_".
         """
         # If the input is a list (of parameters or mixed)
         if isinstance(configurable_parameters_rest, list):

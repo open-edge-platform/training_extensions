@@ -37,6 +37,20 @@ class TrainingConfigurationConverter(ConfigurableParametersConverter):
         hyperparameters: Hyperparameters | None,
         default_config: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
+        """
+        Convert dataset preparation parameters to REST representation.
+
+        Combines global parameters and hyperparameters for dataset preparation
+        into a unified REST view.
+
+        Args:
+            global_parameters (GlobalParameters | None): Global configuration parameters.
+            hyperparameters (Hyperparameters | None): Training hyperparameters.
+            default_config (dict[str, Any] | None): Optional default configuration for reference.
+
+        Returns:
+            dict[str, Any]: Combined REST representation of dataset preparation parameters.
+        """
         # Return a combined view of global and hyperparameters for dataset preparation
         default_config = default_config or {}
         global_parameters_rest = (
@@ -62,10 +76,18 @@ class TrainingConfigurationConverter(ConfigurableParametersConverter):
     @classmethod
     def training_configuration_to_rest(cls, training_configuration: TrainingConfiguration) -> dict[str, Any]:
         """
-        Get the REST view of a training configuration. Also supports PartialTrainingConfiguration.
+        Convert a training configuration to its REST representation.
 
-        :param training_configuration: training configuration
-        :return: REST view of the training configuration
+        Also supports PartialTrainingConfiguration objects.
+
+        Args:
+            training_configuration (TrainingConfiguration): The training configuration to convert.
+
+        Returns:
+            dict[str, Any]: REST representation of the training configuration.
+
+        Raises:
+            ValueError: If model_manifest_id is not set in the training configuration.
         """
         if not training_configuration.model_manifest_id:
             raise ValueError("Model manifest ID is required to convert training configuration to REST view")
@@ -98,8 +120,14 @@ class TrainingConfigurationConverter(ConfigurableParametersConverter):
         """
         Convert REST input to a PartialTrainingConfiguration object.
 
-        :param rest_input: REST input dictionary
-        :return: TrainingConfiguration object
+        Parses REST API input and constructs a partial training configuration
+        by distributing parameters between global parameters and hyperparameters.
+
+        Args:
+            rest_input (dict[str, Any]): REST input dictionary containing configuration data.
+
+        Returns:
+            PartialTrainingConfiguration: Validated partial training configuration object.
         """
         dataset_preparation = cls.configurable_parameters_from_rest(rest_input.pop(DATASET_PREPARATION, {}))
         training = cls.configurable_parameters_from_rest(rest_input.pop(TRAINING, {}))
