@@ -88,7 +88,7 @@ class OTXTrainer(Trainer):
 
             # Get current distribution
             current_distribution = self._subset_service.get_subset_distribution(project_id, db)
-            logger.info("Current subset distribution: %s", current_distribution)
+            logger.info("Current subset distribution: {}", current_distribution)
 
             # Compute adjusted ratios
             # TODO: Infer target ratios from training params
@@ -114,7 +114,7 @@ class OTXTrainer(Trainer):
         step_count = 20
         for i in range(step_count):
             time.sleep(1)
-            logger.info("Training step %d/%d for job %s", i + 1, step_count, job_id)
+            logger.info("Training step %d/%d for job {}", i + 1, step_count, job_id)
             self.report_progress("Model training is in progress", 5.0 * (i + 1))
             self.heartbeat()
 

@@ -47,12 +47,12 @@ class WebhookDispatcher(BaseDispatcher):
         self.session.mount("https://", adapter)
 
     def __send_to_webhook(self, payload: dict[str, Any]) -> None:
-        logger.debug("Sending payload to webhook at %s", self.webhook_url)
+        logger.debug("Sending payload to webhook at {}", self.webhook_url)
         response = self.session.request(
             self.http_method, self.webhook_url, headers=self.headers, json=payload, timeout=self.timeout
         )
         response.raise_for_status()
-        logger.debug("Response from webhook: %s", response.text)
+        logger.debug("Response from webhook: {}", response.text)
 
     def _dispatch(
         self,

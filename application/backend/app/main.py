@@ -8,7 +8,8 @@
 #  - docker compose up
 
 import importlib
-import logging
+
+# import logging
 import pkgutil
 from pathlib import Path
 
@@ -16,6 +17,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from loguru import logger
 
 from app.api import routers
 from app.lifecycle import lifespan
@@ -23,11 +25,11 @@ from app.settings import get_settings
 
 settings = get_settings()
 
-logging.basicConfig(
-    level=logging.INFO if not settings.debug else logging.DEBUG,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-)
-logger = logging.getLogger(__name__)
+# logging.basicConfig(
+#     level=logging.INFO if not settings.debug else logging.DEBUG,
+#     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+# )
+# logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title=settings.app_name,

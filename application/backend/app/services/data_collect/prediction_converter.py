@@ -22,11 +22,11 @@ def _convert_classification_prediction(
         label_name = predicted_label.name
         label = next((label for label in labels if label.name == label_name), None)
         if not label:
-            logger.warning("Prediction label %s cannot be found in the project", label_name)
+            logger.warning("Prediction label {} cannot be found in the project", label_name)
             continue
         confidence = predicted_label.confidence
         if confidence is None:
-            logger.warning("The predicted label %s does not have a confidence score; assuming 1.0", label_name)
+            logger.warning("The predicted label {} does not have a confidence score; assuming 1.0", label_name)
             confidence = 1.0
         predicted_labels.append(LabelReference(id=label.id))
         predicted_confidences.append(confidence)
@@ -41,7 +41,7 @@ def _convert_detection_prediction(labels: Sequence[Label], prediction: Detection
         bbox_confidence = prediction_scores_list[idx]
         label = next((label for label in labels if label.name == label_name), None)
         if not label:
-            logger.warning("Prediction label %s cannot be found in the project", label_name)
+            logger.warning("Prediction label {} cannot be found in the project", label_name)
             continue
         x1, y1, x2, y2 = box.tolist()
         annotation = DatasetItemAnnotation(
@@ -66,7 +66,7 @@ def _convert_segmentation_prediction(
         polygon_confidence = prediction_scores_list[idx]
         label = next((label for label in labels if label.name == label_name), None)
         if not label:
-            logger.warning("Prediction label %s cannot be found in the project", label_name)
+            logger.warning("Prediction label {} cannot be found in the project", label_name)
             continue
         mask = prediction.masks[idx].astype(np.uint8)
         contours, hierarchies = cv2.findContours(mask, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)

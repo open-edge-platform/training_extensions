@@ -78,7 +78,7 @@ class ActiveModelService:
         project_id = self._model_activation_state.project_id
         active_model_id = self._model_activation_state.active_model_id
         if self._loaded_model is None or self._loaded_model.id != active_model_id:
-            logger.info("Loading model with ID '%s'", active_model_id)
+            logger.info("Loading model with ID '{}'", active_model_id)
             try:
                 # Ensure all necessary model files exist before loading the model
                 model_xml_path = self._get_model_file_path(project_id, active_model_id, "xml")
@@ -89,7 +89,7 @@ class ActiveModelService:
                     nstreams=MODELAPI_NSTREAMS,
                 )
             except FileNotFoundError:
-                logger.exception("Failed to load model with ID '%s'", active_model_id)
+                logger.exception("Failed to load model with ID '{}'", active_model_id)
                 return None
 
             self._loaded_model = LoadedModel(

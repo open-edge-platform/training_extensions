@@ -3,7 +3,6 @@
 
 """Endpoints for managing pipeline sinks"""
 
-import logging
 from typing import Annotated
 
 import yaml
@@ -24,7 +23,6 @@ from app.services import (
     SinkService,
 )
 
-logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/sinks", tags=["Sinks"])
 
 CREATE_SINK_BODY_DESCRIPTION = """

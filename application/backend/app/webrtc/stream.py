@@ -78,6 +78,6 @@ class InferenceVideoStreamTrack(VideoStreamTrack):
             frame.pts = pts
             frame.time_base = time_base
             return frame
-        except Exception as e:
-            logger.error("Error in recv: %s", e)
+        except Exception:
+            logger.exception("Error in recv")
             raise

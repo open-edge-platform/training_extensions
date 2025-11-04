@@ -3,17 +3,16 @@
 
 """WebRTC API Endpoints"""
 
-import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 from fastapi.exceptions import HTTPException
+from loguru import logger
 
 from app.api.dependencies import get_webrtc_manager as get_webrtc
 from app.schemas.webrtc import Answer, InputData, Offer
 from app.webrtc.manager import WebRTCManager
 
-logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/webrtc", tags=["WebRTC"])
 
 
@@ -30,7 +29,7 @@ async def create_webrtc_offer(offer: Offer, webrtc_manager: Annotated[WebRTCMana
     try:
         return await webrtc_manager.handle_offer(offer)
     except Exception as e:
-        logger.error("Error processing WebRTC offer: %s", e)
+        logger.exception("Error processing WebRTC offer")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 

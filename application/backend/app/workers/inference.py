@@ -1,13 +1,14 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
 import multiprocessing as mp
 import queue
 from multiprocessing.synchronize import Event as EventClass
 from multiprocessing.synchronize import Lock
 from typing import Any
 
+from loguru import logger
+from loguru._logger import Logger as LoguruLogger
 from model_api.models import DetectionResult, Model
 
 from app.services import ActiveModelService, MetricsService
@@ -17,8 +18,6 @@ from app.stream.stream_data import InferenceData, StreamData
 from app.utils import Visualizer
 from app.workers.base import BaseProcessWorker
 
-logger = logging.getLogger(__name__)
-
 
 class InferenceWorker(BaseProcessWorker):
     """A process that pulls frames from the frame queue, runs inference, and pushes results to the prediction queue."""
@@ -27,14 +26,16 @@ class InferenceWorker(BaseProcessWorker):
 
     def __init__(
         self,
-        frame_queue: mp.Queue,
-        pred_queue: mp.Queue,
-        stop_event: EventClass,
-        model_reload_event: EventClass,
+        queues: tuple[mp.Queue, mp.Queue],
+        events: tuple[EventClass, EventClass],
         shm_name: str,
         shm_lock: Lock,
+        logger_: LoguruLogger,
     ) -> None:
-        super().__init__(stop_event=stop_event, queues_to_cancel=[pred_queue])
+        frame_queue, pred_queue = queues
+        stop_event, model_reload_event = events
+
+        super().__init__(stop_event=stop_event, logger_=logger_, queues_to_cancel=[pred_queue])
         self._frame_queue = frame_queue
         self._pred_queue = pred_queue
         self._model_reload_event = model_reload_event
@@ -48,6 +49,7 @@ class InferenceWorker(BaseProcessWorker):
         self._last_model_obj_id = 0  # track the id of the Model object to install the callback only once
 
     def setup(self) -> None:
+        super().setup()
         self._metrics_service = MetricsService(self._shm_name, self._shm_lock)
         self._model_service = ActiveModelService(get_settings().data_dir, self._model_reload_event)
 
@@ -81,7 +83,7 @@ class InferenceWorker(BaseProcessWorker):
 
         model.set_callback(self._on_inference_completed)
         self._last_model_obj_id = obj_id
-        logger.debug("Installed inference callback for model object with id '%s'", self._last_model_obj_id)
+        logger.debug("Installed inference callback for model object with id '{}'", self._last_model_obj_id)
 
     def _refresh_loaded_model(self) -> LoadedModel | None:
         """

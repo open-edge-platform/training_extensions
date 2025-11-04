@@ -121,7 +121,8 @@ class DataCollector:
 
             self.active_pipeline_data = pipeline, project
             logger.info(
-                f"Dataset collection policies set to {pipeline.data_collection_policies}, source: %s",
+                "Dataset collection policies set to {}, source: {}",
+                pipeline.data_collection_policies,
                 pipeline.source_id,
             )
 

@@ -45,5 +45,5 @@ class SubsetService:
             assignments_by_subset[assignment.subset].add(str(assignment.item_id))
 
         for subset, item_ids in assignments_by_subset.items():
-            logger.info("Updating subset assignments for %s: %d items", subset, len(item_ids))
+            logger.info("Updating subset assignments for {}: {} items", subset, len(item_ids))
             repo.set_subset(obj_ids=item_ids, subset=subset)

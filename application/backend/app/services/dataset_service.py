@@ -91,8 +91,8 @@ class DatasetService:
             if thumbnail_image.mode in ("RGBA", "P"):
                 thumbnail_image = thumbnail_image.convert("RGB")
             thumbnail_image.save(path)
-        except Exception as e:
-            logger.exception("Failed to generate thumbnail image %s", e)
+        except Exception:
+            logger.exception("Failed to generate thumbnail image")
 
     def create_dataset_item(  # noqa: PLR0913
         self,

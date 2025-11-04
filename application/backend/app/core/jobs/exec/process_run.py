@@ -95,22 +95,22 @@ class ProcessRun:
         self._cancel.set()
         await asyncio.to_thread(self._proc.join, timeout=graceful_timeout)
         if not self._proc.is_alive():
-            logger.debug("Process %s stopped gracefully", self._proc.name)
+            logger.debug("Process {} stopped gracefully", self._proc.name)
             return
 
         # Try SIGTERM
         self._proc.terminate()
         await asyncio.to_thread(self._proc.join, timeout=term_timeout)
         if not self._proc.is_alive():
-            logger.debug("Process %s terminated gracefully", self._proc.name)
+            logger.debug("Process {} terminated gracefully", self._proc.name)
             return
 
         # Last resort: SIGKILL
-        logger.warning("Force killing process %s", self._proc.name)
+        logger.warning("Force killing process {}", self._proc.name)
         self._proc.kill()
         await asyncio.to_thread(self._proc.join, timeout=kill_timeout)
         if self._proc.is_alive():
-            logger.error("Process %s doesn't respond to SIGKILL", self._proc.name)
+            logger.error("Process {} doesn't respond to SIGKILL", self._proc.name)
 
 
 def _entrypoint(
