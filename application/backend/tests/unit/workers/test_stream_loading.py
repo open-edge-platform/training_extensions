@@ -11,7 +11,6 @@ import numpy as np
 import pytest
 
 from app.schemas import Source
-from app.services.event.event_bus import EventBus
 from app.stream.stream_data import StreamData
 from app.stream.video_stream import VideoStream
 from app.workers import StreamLoader
@@ -23,12 +22,6 @@ def mp_manager():
     manager = mp.Manager()
     yield manager
     manager.shutdown()
-
-
-@pytest.fixture
-def event_bus():
-    """Event bus fixture"""
-    return EventBus()
 
 
 @pytest.fixture
@@ -107,9 +100,7 @@ class TestStreamLoader:
         # method creates isolated child processes that don't inherit mocked state.
         mp.set_start_method("fork", force=True)
 
-    def test_queue_full(
-        self, event_bus, frame_queue, mock_stream_data, stop_event, source_changed_condition, mock_services
-    ):
+    def test_queue_full(self, frame_queue, mock_stream_data, stop_event, source_changed_condition, mock_services):
         """Test that stream frames are not acquired when queue is full"""
 
         data1, data2 = mock_stream_data(), mock_stream_data()
@@ -117,7 +108,7 @@ class TestStreamLoader:
         frame_queue.put(data2)
 
         # Start the process
-        process = StreamLoader(event_bus, frame_queue, stop_event, source_changed_condition)
+        process = StreamLoader(frame_queue, stop_event, source_changed_condition)
         process.start()
 
         # Let it run for a short time to attempt frame acquisition
@@ -139,11 +130,11 @@ class TestStreamLoader:
         assert all(np.array_equal(el1.frame_data, el2.frame_data) for el1, el2 in zip(queue_contents, [data1, data2]))
         assert not process.is_alive(), "Process should terminate cleanly"
 
-    def test_queue_empty(self, event_bus, frame_queue, stop_event, source_changed_condition, mock_services):
+    def test_queue_empty(self, frame_queue, stop_event, source_changed_condition, mock_services):
         """Test that stream frames are acquired when queue is empty"""
 
         # Start the process
-        process = StreamLoader(event_bus, frame_queue, stop_event, source_changed_condition)
+        process = StreamLoader(frame_queue, stop_event, source_changed_condition)
         process.start()
 
         time.sleep(1)
