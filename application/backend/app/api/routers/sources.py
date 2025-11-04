@@ -14,7 +14,7 @@ from fastapi.openapi.models import Example
 from fastapi.responses import FileResponse, Response
 from pydantic import ValidationError
 
-from app.api.dependencies import get_source_id, get_source_service
+from app.api.dependencies import get_source_id, get_source_update_service
 from app.schemas import Source, SourceCreate
 from app.schemas.source import SourceCreateAdapter
 from app.services import (
@@ -22,7 +22,7 @@ from app.services import (
     ResourceNotFoundError,
     ResourceWithIdAlreadyExistsError,
     ResourceWithNameAlreadyExistsError,
-    SourceService,
+    SourceUpdateService,
 )
 
 logger = logging.getLogger(__name__)
@@ -109,11 +109,11 @@ def create_source(
     source_create: Annotated[
         SourceCreate, Body(description=CREATE_SOURCE_BODY_DESCRIPTION, openapi_examples=CREATE_SOURCE_BODY_EXAMPLES)
     ],
-    source_service: Annotated[SourceService, Depends(get_source_service)],
+    source_update_service: Annotated[SourceUpdateService, Depends(get_source_update_service)],
 ) -> Source:
     """Create and configure a new source"""
     try:
-        return source_service.create(source_create)
+        return source_update_service.create(source_create)
     except (ResourceWithNameAlreadyExistsError, ResourceWithIdAlreadyExistsError) as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
@@ -125,10 +125,10 @@ def create_source(
     },
 )
 def list_sources(
-    source_service: Annotated[SourceService, Depends(get_source_service)],
+    source_update_service: Annotated[SourceUpdateService, Depends(get_source_update_service)],
 ) -> list[Source]:
     """List the available sources"""
-    return source_service.list_all()
+    return source_update_service.list_all()
 
 
 @router.get(
@@ -141,11 +141,11 @@ def list_sources(
 )
 def get_source(
     source_id: Annotated[UUID, Depends(get_source_id)],
-    source_service: Annotated[SourceService, Depends(get_source_service)],
+    source_update_service: Annotated[SourceUpdateService, Depends(get_source_update_service)],
 ) -> Source:
     """Get info about a source"""
     try:
-        return source_service.get_by_id(source_id)
+        return source_update_service.get_by_id(source_id)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -168,14 +168,14 @@ def update_source(
             openapi_examples=UPDATE_SOURCE_BODY_EXAMPLES,
         ),
     ],
-    source_service: Annotated[SourceService, Depends(get_source_service)],
+    source_update_service: Annotated[SourceUpdateService, Depends(get_source_update_service)],
 ) -> Source:
     """Reconfigure an existing source"""
     if "source_type" in source_config:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The 'source_type' field cannot be changed")
     try:
-        source = source_service.get_by_id(source_id)
-        return source_service.update(source, source_config)
+        source = source_update_service.get_by_id(source_id)
+        return source_update_service.update(source, source_config)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ResourceWithNameAlreadyExistsError as e:
@@ -198,10 +198,10 @@ def update_source(
 )
 def export_source(
     source_id: Annotated[UUID, Depends(get_source_id)],
-    source_service: Annotated[SourceService, Depends(get_source_service)],
+    source_update_service: Annotated[SourceUpdateService, Depends(get_source_update_service)],
 ) -> Response:
     """Export a source to file"""
-    source = source_service.get_by_id(source_id)
+    source = source_update_service.get_by_id(source_id)
     if not source:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Source with ID {source_id} not found")
 
@@ -226,14 +226,14 @@ def export_source(
 )
 def import_source(
     yaml_file: Annotated[UploadFile, File(description="YAML file containing the source configuration")],
-    source_service: Annotated[SourceService, Depends(get_source_service)],
+    source_update_service: Annotated[SourceUpdateService, Depends(get_source_update_service)],
 ) -> Source:
     """Import a source from file"""
     try:
         yaml_content = yaml_file.file.read()
         source_data = yaml.safe_load(yaml_content)
         source_create = SourceCreateAdapter.validate_python(source_data)
-        return source_service.create(source_create)
+        return source_update_service.create(source_create)
     except yaml.YAMLError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid YAML format: {str(e)}")
     except (ResourceWithNameAlreadyExistsError, ResourceWithIdAlreadyExistsError) as e:
@@ -256,11 +256,11 @@ def import_source(
 )
 def delete_source(
     source_id: Annotated[UUID, Depends(get_source_id)],
-    source_service: Annotated[SourceService, Depends(get_source_service)],
+    source_update_service: Annotated[SourceUpdateService, Depends(get_source_update_service)],
 ) -> None:
     """Remove a source"""
     try:
-        source_service.delete_by_id(source_id)
+        source_update_service.delete_by_id(source_id)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ResourceInUseError as e:
