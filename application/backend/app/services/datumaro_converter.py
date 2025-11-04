@@ -21,7 +21,6 @@ from datumaro.experimental.fields import ImageInfo, polygon_field
 
 from app.models import DatasetItem, Label, Polygon, Rectangle, TaskType
 from app.schemas.project import ProjectBase
-from app.utils.typing import NDArrayFloat32, NDArrayInt
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +28,16 @@ CONVERSION_BATCH_SIZE = 50
 
 
 class ClassificationSample(Sample):
+    """
+    Sample for multiclass classification datasets.
+
+    Attributes:
+        image: Path to the image
+        image_info: Image information (width, height)
+        label: Class label index (0-based)
+        confidence: Confidence score for the label. Only for model predictions.
+    """
+
     image: str = image_path_field()
     image_info: ImageInfo = image_info_field()
     label: int = label_field(dtype=pl.Int32, is_list=False)
@@ -36,26 +45,61 @@ class ClassificationSample(Sample):
 
 
 class MultilabelClassificationSample(Sample):
+    """
+    Sample for multilabel classification datasets.
+
+    Attributes:
+        image: Path to the image
+        image_info: Image information (width, height)
+        label: Array of class label indices (0-based)
+        confidences: Array of confidence scores for each label. Only for model predictions.
+    """
+
     image: str = image_path_field()
     image_info: ImageInfo = image_info_field()
-    label: NDArrayInt = label_field(dtype=pl.Int32, multi_label=True)
-    confidences: NDArrayFloat32 | None = score_field(dtype=pl.Float32, is_list=True)
+    # TODO: Use NDArrayFloat32 and NDArrayInt instead of np.ndarray after datumaro/issues/1949 is solved
+    label: np.ndarray = label_field(dtype=pl.Int32, multi_label=True)
+    confidences: np.ndarray | None = score_field(dtype=pl.Float32, is_list=True)
 
 
 class DetectionSample(Sample):
+    """
+    Sample for object detection datasets.
+
+    Attributes:
+        image: Path to the image
+        image_info: Image information (width, height)
+        bboxes: Array of bounding boxes in x1y1x2y2 format
+        label: Array of class label indices (0-based) for each bounding box
+        confidences: Array of confidence scores for each bounding box. Only for model predictions.
+    """
+
     image: str = image_path_field()
     image_info: ImageInfo = image_info_field()
-    bboxes: NDArrayInt = bbox_field(dtype=pl.Int32)
-    label: NDArrayInt = label_field(dtype=pl.Int32, is_list=True)
-    confidences: NDArrayFloat32 | None = score_field(dtype=pl.Float32, is_list=True)
+    # TODO: Use NDArrayFloat32 and NDArrayInt instead of np.ndarray after datumaro/issues/1949 is solved
+    bboxes: np.ndarray = bbox_field(dtype=pl.Int32)
+    label: np.ndarray = label_field(dtype=pl.Int32, is_list=True)
+    confidences: np.ndarray | None = score_field(dtype=pl.Float32, is_list=True)
 
 
 class InstanceSegmentationSample(Sample):
+    """
+    Sample for instance segmentation datasets.
+
+    Attributes:
+        image: Path to the image
+        image_info: Image information (width, height)
+        polygons: Array of polygons, each represented as a list of points in xy format
+        label: Array of class label indices (0-based) for each polygon
+        confidences: Array of confidence scores for each polygon. Only for model predictions.
+    """
+
     image: str = image_path_field()
     image_info: ImageInfo = image_info_field()
-    polygons: NDArrayFloat32 = polygon_field(dtype=pl.Float32)
-    label: NDArrayInt = label_field(dtype=pl.Int32, is_list=True)
-    confidences: NDArrayFloat32 | None = score_field(dtype=pl.Float32, is_list=True)
+    # TODO: Use NDArrayFloat32 and NDArrayInt instead of np.ndarray after datumaro/issues/1949 is solved
+    polygons: np.ndarray = polygon_field(dtype=pl.Float32)
+    label: np.ndarray = label_field(dtype=pl.Int32, is_list=True)
+    confidences: np.ndarray | None = score_field(dtype=pl.Float32, is_list=True)
 
 
 def convert_rectangle(r: Rectangle) -> list[int]:
@@ -111,68 +155,6 @@ def _convert_dataset(
     return dataset
 
 
-def convert_detection_dataset(
-    project_labels: Sequence[Label],
-    get_dataset_items: Callable[[int, int], list[DatasetItem]],
-    get_image_path: Callable[[DatasetItem], str],
-) -> Dataset[DetectionSample]:
-    """
-    Convert detection dataset to Datumaro format
-
-    Args:
-        project_labels: List of project labels
-        get_dataset_items: Function to get a batch of dataset items
-        get_image_path: Function to get image path for a dataset item
-
-    Returns:
-        Dataset[DetectionSample]: Datumaro dataset
-    """
-
-    def _convert_sample(
-        dataset_item: DatasetItem, image_path: str, project_labels_ids: list[UUID]
-    ) -> DetectionSample | None:
-        if dataset_item.annotation_data is None:
-            return None
-        coords = [
-            convert_rectangle(annotation.shape)
-            for annotation in dataset_item.annotation_data
-            if (isinstance(annotation.shape, Rectangle))
-        ]
-        try:
-            labels_indexes = [
-                project_labels_ids.index(annotation.labels[0].id)
-                for annotation in dataset_item.annotation_data
-                if len(annotation.labels) == 1
-            ]
-        except ValueError:
-            logger.error("Unable to find one of dataset item %s labels in project", dataset_item.id)
-            return None
-        # Every item must be either a model prediction (with confidence score) or a user annotation (without)
-        any_with_confidence = any(annotation.confidence is not None for annotation in annotations)
-        all_with_confidence = all(annotation.confidence is not None for annotation in annotations)
-        if any_with_confidence and not all_with_confidence:
-            logger.error(
-                f"Dataset item {dataset_item.id} contains shapes with and without confidence scores: {annotations}"
-            )
-            raise ValueError("Either all or none of the annotations must have confidence scores")
-        confidences = [annotation.confidence for annotation in annotations] if all_with_confidence else []
-        return DetectionSample(
-            image=image_path,
-            image_info=ImageInfo(width=dataset_item.width, height=dataset_item.height),
-            bboxes=np.array(coords),
-            label=np.array(labels_indexes),
-            confidences=np.array(confidences) if confidences else None,
-        )
-
-    return _convert_dataset(
-        sample_type=DetectionSample,
-        project_labels=project_labels,
-        get_dataset_items=get_dataset_items,
-        get_image_path=get_image_path,
-        convert_sample=_convert_sample,
-    )
-
-
 def convert_classification_dataset(
     project_labels: Sequence[Label],
     get_dataset_items: Callable[[int, int], list[DatasetItem]],
@@ -196,11 +178,12 @@ def convert_classification_dataset(
         if dataset_item.annotation_data is None:
             return None
         try:
+            annotation = dataset_item.annotation_data[0]  # classification -> only one shape (annotation)
             return ClassificationSample(
                 image=image_path,
                 image_info=ImageInfo(width=dataset_item.width, height=dataset_item.height),
-                label=project_labels_ids.index(dataset_item.annotation_data[0].labels[0].id),
-                confidence=dataset_item.annotation_data[0].confidence,
+                label=project_labels_ids.index(annotation.labels[0].id),  # multiclass -> only one label
+                confidence=annotation.confidences[0] if annotation.confidences else None,
             )
         except ValueError:
             logger.error("Unable to find one of dataset item %s labels in project", dataset_item.id)
@@ -238,7 +221,8 @@ def convert_multilabel_classification_dataset(
         if dataset_item.annotation_data is None:
             return None
         try:
-            labels_indexes = [project_labels_ids.index(label.id) for label in dataset_item.annotation_data[0].labels]
+            annotation = dataset_item.annotation_data[0]  # classification -> only one shape (annotation)
+            labels_indexes = [project_labels_ids.index(label.id) for label in annotation.labels]
         except ValueError:
             logger.error("Unable to find one of dataset item %s labels in project", dataset_item.id)
             return None
@@ -246,11 +230,81 @@ def convert_multilabel_classification_dataset(
             image=image_path,
             image_info=ImageInfo(width=dataset_item.width, height=dataset_item.height),
             label=np.array(labels_indexes),
-            confidences=None,  # TODO fix DatasetItemAnnotation definition to support confidences for multilabel
+            confidences=np.array(annotation.confidences) if annotation.confidences else None,
         )
 
     return _convert_dataset(
         sample_type=MultilabelClassificationSample,
+        project_labels=project_labels,
+        get_dataset_items=get_dataset_items,
+        get_image_path=get_image_path,
+        convert_sample=_convert_sample,
+    )
+
+
+def convert_detection_dataset(
+    project_labels: Sequence[Label],
+    get_dataset_items: Callable[[int, int], list[DatasetItem]],
+    get_image_path: Callable[[DatasetItem], str],
+) -> Dataset[DetectionSample]:
+    """
+    Convert detection dataset to Datumaro format
+
+    Args:
+        project_labels: List of project labels
+        get_dataset_items: Function to get a batch of dataset items
+        get_image_path: Function to get image path for a dataset item
+
+    Returns:
+        Dataset[DetectionSample]: Datumaro dataset
+    """
+
+    def _convert_sample(
+        dataset_item: DatasetItem, image_path: str, project_labels_ids: list[UUID]
+    ) -> DetectionSample | None:
+        if dataset_item.annotation_data is None:
+            return None
+        coords = [
+            convert_rectangle(annotation.shape)
+            for annotation in dataset_item.annotation_data
+            if (isinstance(annotation.shape, Rectangle))
+        ]
+        try:
+            labels_indexes = [
+                project_labels_ids.index(annotation.labels[0].id)
+                for annotation in dataset_item.annotation_data
+                if len(annotation.labels) == 1
+            ]
+        except ValueError:
+            logger.error("Unable to find one of dataset item %s labels in project", dataset_item.id)
+            return None
+        # Every item must be either a model prediction (with confidence score) or a user annotation (without)
+        any_with_confidence = any(annotation.confidences is not None for annotation in dataset_item.annotation_data)
+        all_with_confidence = all(annotation.confidences is not None for annotation in dataset_item.annotation_data)
+        if any_with_confidence and not all_with_confidence:
+            logger.error(
+                f"Dataset item {dataset_item.id} contains shapes with and without "
+                f"confidence scores: {dataset_item.annotation_data}"
+            )
+            raise ValueError("Either all or none of the annotations must have confidence scores")
+        confidences = (
+            [  # list of confidence scores, one per bbox
+                annotation.confidences[0]  # type: ignore[index]
+                for annotation in dataset_item.annotation_data
+            ]
+            if all_with_confidence
+            else []
+        )
+        return DetectionSample(
+            image=image_path,
+            image_info=ImageInfo(width=dataset_item.width, height=dataset_item.height),
+            bboxes=np.array(coords),
+            label=np.array(labels_indexes),
+            confidences=np.array(confidences) if confidences else None,
+        )
+
+    return _convert_dataset(
+        sample_type=DetectionSample,
         project_labels=project_labels,
         get_dataset_items=get_dataset_items,
         get_image_path=get_image_path,
@@ -295,14 +349,22 @@ def convert_instance_segmentation_dataset(
             logger.error("Unable to find one of dataset item %s labels in project", dataset_item.id)
             return None
         # Every item must be either a model prediction (with confidence score) or a user annotation (without)
-        any_with_confidence = any(annotation.confidence is not None for annotation in annotations)
-        all_with_confidence = all(annotation.confidence is not None for annotation in annotations)
+        any_with_confidence = any(annotation.confidences is not None for annotation in dataset_item.annotation_data)
+        all_with_confidence = all(annotation.confidences is not None for annotation in dataset_item.annotation_data)
         if any_with_confidence and not all_with_confidence:
             logger.error(
-                f"Dataset item {dataset_item.id} contains shapes with and without confidence scores: {annotations}"
+                f"Dataset item {dataset_item.id} contains shapes with and without "
+                f"confidence scores: {dataset_item.annotation_data}"
             )
             raise ValueError("Either all or none of the annotations must have confidence scores")
-        confidences = [annotation.confidence for annotation in annotations] if all_with_confidence else []
+        confidences = (
+            [  # list of confidence scores, one per polygon
+                annotation.confidences[0]  # type: ignore[index]
+                for annotation in dataset_item.annotation_data
+            ]
+            if all_with_confidence
+            else []
+        )
         return InstanceSegmentationSample(
             image=image_path,
             image_info=ImageInfo(width=dataset_item.width, height=dataset_item.height),
