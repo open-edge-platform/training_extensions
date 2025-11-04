@@ -40,27 +40,27 @@ class MockRunnable(Runnable):
         match self.behavior:
             case RunnableBehaviour.SUCCESS:
                 for progress in self.progress_steps:
-                    ctx.report_progress(progress=progress)
+                    ctx.report("", progress)
                     ctx.heartbeat()  # Check for cancellation
                     if progress < 100.0:  # Don't sleep after final progress
                         time.sleep(self.execution_time)
 
             case RunnableBehaviour.FAILURE:
-                ctx.report_progress(progress=10.0)
+                ctx.report("", 10.0)
                 time.sleep(self.execution_time)
                 raise ValueError("Mock failure")
 
             case RunnableBehaviour.SLOW:
                 for i in range(20):  # More steps for better cancellation testing
                     progress = i * 5  # 0, 5, 10, ... 95
-                    ctx.report_progress(progress=progress)
+                    ctx.report("", progress)
                     ctx.heartbeat()
                     time.sleep(self.execution_time)
 
             case RunnableBehaviour.INSTANT:
                 # Very fast execution
                 for progress in [50.0, 100.0]:
-                    ctx.report_progress(progress=progress)
+                    ctx.report("", progress)
                     ctx.heartbeat()
 
             case _:

@@ -6,16 +6,17 @@ from uuid import uuid4
 import pytest
 
 from app.core.jobs import Job, JobParams, JobType
-from app.schemas import Model, OutputFormat, PipelineStatus, PipelineView, SinkType, SourceType
+from app.models import MqttSinkConfig, OutputFormat, SinkType
+from app.models.sink import MqttConfig
+from app.schemas import Model, PipelineStatus, PipelineView, SourceType
 from app.schemas.model import TrainingInfo, TrainingStatus
-from app.schemas.sink import MqttSinkConfig
 from app.schemas.source import WebcamSourceConfig
 
 
 @pytest.fixture
 def fxt_webcam_source() -> WebcamSourceConfig:
     """Sample source configuration data."""
-    return WebcamSourceConfig(id=uuid4(), source_type=SourceType.WEBCAM, name="Test Source", device_id=1)
+    return WebcamSourceConfig(id=uuid4(), source_type=SourceType.WEBCAM, name="Test Source", device_id=1, codec=None)
 
 
 @pytest.fixture
@@ -27,9 +28,12 @@ def fxt_mqtt_sink() -> MqttSinkConfig:
         name="Test Sink",
         rate_limit=0.1,
         output_formats=[OutputFormat.IMAGE_WITH_PREDICTIONS],
-        broker_host="localhost",
-        broker_port=1883,
-        topic="topic",
+        config_data=MqttConfig(
+            broker_host="localhost",
+            broker_port=1883,
+            topic="topic",
+            auth_required=False,
+        ),
     )
 
 

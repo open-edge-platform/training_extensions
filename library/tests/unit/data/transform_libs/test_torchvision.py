@@ -36,6 +36,8 @@ from otx.data.transform_libs.torchvision import (
 )
 from otx.data.transform_libs.utils import overlap_bboxes
 
+RNG = np.random.default_rng(42)
+
 
 class MockFrame:
     data = np.ndarray([10, 10, 3], dtype=np.uint8)
@@ -49,6 +51,17 @@ class MockVideo:
 
     def close(self):
         return
+
+
+@pytest.fixture()
+def seg_data_entity() -> OTXDataItem:
+    masks = torch.randint(low=0, high=2, size=(1, 112, 224), dtype=torch.uint8)
+    return OTXDataItem(
+        image=tv_tensors.Image(torch.randint(low=0, high=256, size=(3, 112, 224), dtype=torch.uint8)),
+        img_info=ImageInfo(img_idx=0, img_shape=(112, 224), ori_shape=(112, 224)),
+        masks=tv_tensors.Mask(masks),
+        label=LongTensor([1]),
+    )
 
 
 @pytest.fixture()
@@ -358,6 +371,22 @@ class TestRandomAffine:
         assert results.label.dtype == torch.long
         assert results.bboxes.dtype == torch.float32
         assert results.img_info.img_shape == results.image.shape[:2]
+
+    def test_segmentation_transform(
+        self, random_affine_with_mask_transform: RandomAffine, seg_data_entity: OTXDataItem
+    ) -> None:
+        """Test forward for segmentation task."""
+        original_entity = deepcopy(seg_data_entity)
+        results = random_affine_with_mask_transform(original_entity)
+
+        assert hasattr(results, "masks")
+        assert results.masks is not None
+        assert results.masks.shape[0] > 0  # Should have masks
+        assert results.masks.shape[1:] == results.image.shape[:2]  # Same spatial dimensions as image
+
+        # Check that the number of masks matches the number of remaining bboxes and labels
+        assert results.masks.shape[0] == results.label.shape[0]
+        assert isinstance(results.masks, tv_tensors.Mask)
 
     def test_forward_with_masks_transform_enabled(
         self,
@@ -1096,7 +1125,7 @@ class TestRandomCrop:
     @pytest.mark.parametrize("allow_negative_crop", [True, False])
     def test_forward_allow_negative_crop(self, det_entity, allow_negative_crop: bool) -> None:
         # test the crop does not contain any gt-bbox allow_negative_crop = False
-        det_entity.image = np.random.randint(0, 255, size=(10, 10), dtype=np.uint8)
+        det_entity.image = RNG.integers(0, 255, size=(10, 10), dtype=np.uint8)
         det_entity.bboxes = tv_tensors.wrap(torch.zeros((0, 4)), like=det_entity.bboxes)
         det_entity.label = torch.LongTensor()
         transform = RandomCrop(crop_size=(5, 3), allow_negative_crop=allow_negative_crop, is_numpy_to_tvtensor=False)

@@ -6,7 +6,7 @@ import { ReactNode, useRef } from 'react';
 import { clampBetween } from '@geti/smart-tools/utils';
 import { createUseGesture, dragAction, pinchAction, wheelAction } from '@use-gesture/react';
 
-import { Point } from './types';
+import type { Point } from './types';
 import { useContainerSize } from './use-container-size';
 import { usePanning } from './use-panning.hook';
 import { Size, useSyncZoom } from './use-sync-zoom.hook';

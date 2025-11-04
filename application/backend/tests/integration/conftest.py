@@ -1,20 +1,22 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+from collections.abc import Callable
 from multiprocessing.synchronize import Condition
 from unittest.mock import MagicMock
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.core.models.task_type import TaskType
-from app.db.schema import Base, LabelDB, ModelRevisionDB, PipelineDB, ProjectDB, SinkDB, SourceDB
-from app.schemas import OutputFormat, SinkType, SourceType
+from app.db.schema import Base, LabelDB, ModelRevisionDB, ProjectDB, SinkDB, SourceDB
+from app.models import OutputFormat, SinkType, TaskType
+from app.schemas import SourceType
 from app.schemas.model import TrainingStatus
-from app.services import ActivePipelineService, MetricsService
+from app.services import MetricsService, ResourceType
+from app.services.event.event_bus import EventBus
 
 
 @pytest.fixture(scope="session")
@@ -47,12 +49,14 @@ def fxt_db_models() -> list[ModelRevisionDB]:
     """Fixture to create multiple models in the database."""
     return [
         ModelRevisionDB(
+            id=str(uuid4()),
             training_status=TrainingStatus.NOT_STARTED,
             architecture="Object_Detection_YOLOv5",
             training_configuration={},
             label_schema_revision={},
         ),
         ModelRevisionDB(
+            id=str(uuid4()),
             training_status=TrainingStatus.NOT_STARTED,
             architecture="Object_Detection_YOLOX",
             training_configuration={},
@@ -140,26 +144,21 @@ def fxt_db_projects() -> list[ProjectDB]:
             "exclusive_labels": True,
         },
     ]
-    db_projects = []
-    for config in configs:
-        project = ProjectDB(**config)
-        project.pipeline = PipelineDB(project_id=project.id)
-        db_projects.append(project)
-    return db_projects
+    return [ProjectDB(**config) for config in configs]
 
 
 @pytest.fixture
 def fxt_db_labels() -> list[LabelDB]:
     """Fixture to create multiple labels in the database."""
     return [
-        LabelDB(name="cat", color="#00FF00", hotkey="c"),
-        LabelDB(name="dog", color="#FF0000", hotkey="d"),
+        LabelDB(id=str(uuid4()), name="cat", color="#00FF00", hotkey="c"),
+        LabelDB(id=str(uuid4()), name="dog", color="#FF0000", hotkey="d"),
     ]
 
 
 @pytest.fixture
-def fxt_active_pipeline_service() -> MagicMock:
-    return MagicMock(spec=ActivePipelineService)
+def fxt_event_bus() -> MagicMock:
+    return MagicMock(spec=EventBus)
 
 
 @pytest.fixture
@@ -170,3 +169,33 @@ def fxt_metrics_service() -> MagicMock:
 @pytest.fixture
 def fxt_condition() -> MagicMock:
     return MagicMock(spec=Condition)
+
+
+@pytest.fixture
+def fxt_entity_id(fxt_db_projects, fxt_db_models) -> Callable[[ResourceType, int], UUID]:
+    """Fixture to get entity IDs by resource type and index."""
+
+    resource_type_to_db_model = {
+        ResourceType.PROJECT: fxt_db_projects,
+        ResourceType.MODEL: fxt_db_models,
+    }
+
+    def get_entity_id(resource: ResourceType, idx: int) -> UUID:
+        entities = resource_type_to_db_model.get(resource, [])
+        if 0 <= idx < len(entities):
+            return UUID(entities[idx].id)
+        raise IndexError(f"{resource.value} index out of range")
+
+    return get_entity_id
+
+
+@pytest.fixture
+def fxt_project_id(fxt_entity_id) -> UUID:
+    """Fixture to get the first project ID."""
+    return fxt_entity_id(ResourceType.PROJECT, 0)
+
+
+@pytest.fixture
+def fxt_model_id(fxt_entity_id) -> UUID:
+    """Fixture to get the first model ID."""
+    return fxt_entity_id(ResourceType.MODEL, 0)

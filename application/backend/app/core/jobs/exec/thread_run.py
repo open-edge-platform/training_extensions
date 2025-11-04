@@ -101,7 +101,7 @@ class ThreadRun(Runner[Job, ExecutionEvent]):
             def __init__(self, runner: "ThreadRun"):
                 self.runner = runner
 
-            def report_progress(self, message: str = "training", progress: float = 0.0):
+            def report(self, message: str = "training", progress: float = 0.0):
                 if not self.runner._cancel_event.is_set():
                     self.runner._event_queue.put(Progress(message, progress))
 

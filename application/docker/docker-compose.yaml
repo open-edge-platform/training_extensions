@@ -20,6 +20,10 @@ services:
       - ../backend/data/:/app/data/
     ports:
       - "80:80"
+    # Map all host devices to provide access to webcams and other attached devices
+    privileged: true
+    devices:
+      - /dev:/dev
 
   mosquitto:
     profiles:

@@ -41,7 +41,7 @@ from otx.types.device import DeviceType
 from otx.types.export import OTXExportFormatType
 from otx.types.precision import OTXPrecisionType
 from otx.types.task import OTXTaskType
-from otx.utils.device import is_xpu_available
+from otx.utils.device import get_available_device, is_xpu_available
 from otx.utils.utils import measure_flops
 
 if TYPE_CHECKING:
@@ -915,6 +915,8 @@ class OTXEngine(Engine):
                     ],
                 )
                 self._cache.args["precision"] = None
+        elif (self._device.accelerator == DeviceType.cpu) or (get_available_device() == "cpu"):
+            self._cache.args["precision"] = "32"
 
     def configure_loggers(self, logger: Logger | Iterable[Logger] | bool | None = None) -> Logger | Iterable[Logger]:
         """Sets up the loggers for the trainer.

@@ -7,12 +7,12 @@ import { Loading } from '@geti/ui';
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 
 import { paths } from './constants/paths';
+import { SelectedDataProvider } from './features/dataset/selected-data-provider.component';
 import { WebRTCConnectionProvider } from './features/inference/stream/web-rtc-connection-provider';
 import { ProjectList } from './features/project/list/project-list.component';
 import { useProjects } from './hooks/api/project.hook';
 import { Layout } from './layout';
 import { Dataset } from './routes/dataset/dataset.component';
-import { SelectedDataProvider } from './routes/dataset/provider';
 import { ErrorPage } from './routes/error-page/error-page';
 import { Inference } from './routes/inference/inference';
 import { Models } from './routes/models/models';

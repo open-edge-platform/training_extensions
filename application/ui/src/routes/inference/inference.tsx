@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Grid } from '@geti/ui';
+import { Header } from 'src/features/inference/header/inference-header.component';
 
 import { ZoomProvider } from '../../components/zoom/zoom.provider';
 import { Sidebar } from '../../features/inference/aside/sidebar-tabs.component';
 import { StreamContainer } from '../../features/inference/stream/stream-container';
-import { Toolbar } from '../../features/inference/toolbar/toolbar.component';
 
 export const Inference = () => {
     return (
@@ -20,7 +20,7 @@ export const Inference = () => {
                 gap: '1px',
             }}
         >
-            <Toolbar />
+            <Header />
             <ZoomProvider>
                 <StreamContainer />
             </ZoomProvider>

@@ -20,18 +20,20 @@ jobs:
         uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
         with:
           python-version: "3.12"
+      - name: Install build tools
+        run: python -m pip install build
       - name: Build sdist
-        run: python -m build --sdist
+        run: python -m build --sdist library/
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: artifact-sdist
-          path: dist/*.tar.gz
+          path: library/dist/*.tar.gz
       - name: Build wheel
-        run: python -m build --wheel
+        run: python -m build --wheel library/
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: artifact-wheel
-          path: dist/*.whl
+          path: library/dist/*.whl
 
   publish_package:
     name: Publish package
@@ -45,7 +47,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         with:
-          path: dist
+          path: library/dist
           pattern: artifact-*
           merge-multiple: true
       # to determine where to publish the package distribution to PyPI or TestPyPI
@@ -60,7 +62,7 @@ jobs:
         uses: svenstaro/upload-release-action@81c65b7cd4de9b2570615ce3aad67a41de5b1a13 # v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: dist/*
+          file: library/dist/*
           tag: ${{ github.ref }}
           overwrite: true
           file_glob: true
@@ -73,3 +75,4 @@ jobs:
         with:
           repository-url: https://test.pypi.org/legacy/
           verbose: true
+          packages-dir: library/dist

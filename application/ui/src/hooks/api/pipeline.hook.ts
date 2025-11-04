@@ -12,6 +12,23 @@ export const usePipeline = () => {
     });
 };
 
+const POLLING_INTERVAL = 5000;
+export const usePipelineMetrics = () => {
+    const projectId = useProjectIdentifier();
+
+    return $api.useQuery(
+        'get',
+        '/api/projects/{project_id}/pipeline/metrics',
+        {
+            params: { path: { project_id: projectId } },
+        },
+        {
+            refetchInterval: (query) => (query.state.status === 'success' ? POLLING_INTERVAL : false),
+            retry: false,
+        }
+    );
+};
+
 export const usePatchPipeline = () => {
     return $api.useMutation('patch', '/api/projects/{project_id}/pipeline', {
         meta: { invalidateQueries: [['get', '/api/projects/{project_id}/pipeline']] },

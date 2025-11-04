@@ -3,11 +3,11 @@
 
 import { isEmpty } from 'lodash-es';
 
-import { components } from '../../../api/openapi-spec';
+import type { components } from '../../../api/openapi-spec';
 
-export type LocalFolderSinkConfig = components['schemas']['FolderSinkConfig'];
-export type MqttSinkConfig = components['schemas']['MqttSinkConfig'];
-export type WebhookSinkConfig = components['schemas']['WebhookSinkConfig'];
+export type LocalFolderSinkConfig = components['schemas']['FolderSinkConfigView'];
+export type MqttSinkConfig = components['schemas']['MqttSinkConfigView'];
+export type WebhookSinkConfig = components['schemas']['WebhookSinkConfigView'];
 export type SinkOutputFormats = LocalFolderSinkConfig['output_formats'];
 
 export type SinkConfig = LocalFolderSinkConfig | MqttSinkConfig | WebhookSinkConfig;

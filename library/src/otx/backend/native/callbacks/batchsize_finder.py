@@ -27,7 +27,7 @@ class BatchSizeFinder(Callback):
 
     def __init__(
         self,
-        steps_per_trial: int = 3,
+        steps_per_trial: int = 5,
     ) -> None:
         self._steps_per_trial = steps_per_trial
 
@@ -52,11 +52,12 @@ def _try_loop_run(trainer: Trainer) -> None:
     loop.run()
 
 
-def _scale_batch_reset_params(trainer: Trainer, steps_per_trial: int) -> None:
+def _scale_batch_reset_params(trainer: Trainer, steps_per_trial: int, max_epochs: int = 1) -> None:
     trainer.logger = DummyLogger() if trainer.logger is not None else None
     trainer.callbacks = []
-    # For XPU devices 1 epoch sometimes is not enough to catch an error
-    max_epochs = 2 if is_xpu_available() else 1
+    # For XPU devices 1 epoch sometimes is not enough to catch an error.
+    # Emperically enlarge this to 15 iterations (steps_per_trial * epochs)
+    max_epochs = 3 if is_xpu_available() else 1
 
     loop = trainer._active_loop  # noqa: SLF001
     if loop is None:

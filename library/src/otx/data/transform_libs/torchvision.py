@@ -21,7 +21,6 @@ import torch
 import torchvision.transforms.v2 as tvt_v2
 import typeguard
 from lightning.pytorch.cli import instantiate_class
-from numpy import random
 from omegaconf import DictConfig
 from scipy.stats import truncnorm
 from torchvision import tv_tensors
@@ -72,6 +71,8 @@ if TYPE_CHECKING:
 
 
 # mypy: disable-error-code="attr-defined"
+
+RNG = np.random.default_rng(42)
 
 
 def custom_query_size(flat_inputs: list[Any]) -> tuple[int, int]:  # noqa: D103
@@ -151,7 +152,7 @@ class MinIoURandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
 
     @cache_randomness
     def _random_mode(self) -> int | float:
-        return random.choice(self.sample_mode)
+        return RNG.choice(self.sample_mode)
 
     def forward(self, *_inputs: OTXDataItem) -> OTXDataItem | None:
         """Forward for MinIoURandomCrop."""
@@ -172,15 +173,15 @@ class MinIoURandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
 
             min_iou = self.mode
             for _ in range(50):
-                new_w = random.uniform(self.min_crop_size * w, w)
-                new_h = random.uniform(self.min_crop_size * h, h)
+                new_w = RNG.uniform(self.min_crop_size * w, w)
+                new_h = RNG.uniform(self.min_crop_size * h, h)
 
                 # h / w in [0.5, 2]
                 if new_h / new_w < 0.5 or new_h / new_w > 2:
                     continue
 
-                left = random.uniform(w - new_w)
-                top = random.uniform(h - new_h)
+                left = RNG.uniform(0, w - new_w)
+                top = RNG.uniform(0, h - new_h)
 
                 patch = np.array((int(left), int(top), int(left + new_w), int(top + new_h)))
                 # Line or point crop is not allowed
@@ -484,15 +485,15 @@ class RandomResizedCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
         area = h * w
 
         for _ in range(self.max_attempts):
-            target_area = np.random.uniform(*self.crop_ratio_range) * area
+            target_area = RNG.uniform(*self.crop_ratio_range) * area
             log_ratio = (math.log(self.aspect_ratio_range[0]), math.log(self.aspect_ratio_range[1]))
-            aspect_ratio = math.exp(np.random.uniform(*log_ratio))
+            aspect_ratio = math.exp(RNG.uniform(*log_ratio))
             target_w = int(round(math.sqrt(target_area * aspect_ratio)))
             target_h = int(round(math.sqrt(target_area / aspect_ratio)))
 
             if 0 < target_w <= w and 0 < target_h <= h:
-                offset_h = np.random.randint(0, h - target_h + 1)
-                offset_w = np.random.randint(0, w - target_w + 1)
+                offset_h = RNG.integers(0, h - target_h + 1)
+                offset_w = RNG.integers(0, w - target_w + 1)
 
                 return offset_h, offset_w, target_h, target_w
 
@@ -725,7 +726,7 @@ class EfficientNetRandomCrop(RandomResizedCrop):
         max_target_area = self.crop_ratio_range[1] * area
 
         for _ in range(self.max_attempts):
-            aspect_ratio = np.random.uniform(*self.aspect_ratio_range)
+            aspect_ratio = RNG.uniform(*self.aspect_ratio_range)
             min_target_h = int(round(math.sqrt(min_target_area / aspect_ratio)))
             max_target_h = int(round(math.sqrt(max_target_area / aspect_ratio)))
 
@@ -738,7 +739,7 @@ class EfficientNetRandomCrop(RandomResizedCrop):
             min_target_h = min(max_target_h, min_target_h)
 
             # slightly differs from tf implementation
-            target_h = int(round(np.random.uniform(min_target_h, max_target_h)))
+            target_h = int(round(RNG.uniform(min_target_h, max_target_h)))
             target_w = int(round(target_h * aspect_ratio))
             target_area = target_h * target_w
 
@@ -753,8 +754,8 @@ class EfficientNetRandomCrop(RandomResizedCrop):
             ):
                 continue
 
-            offset_h = np.random.randint(0, h - target_h + 1)
-            offset_w = np.random.randint(0, w - target_w + 1)
+            offset_h = RNG.integers(0, h - target_h + 1)
+            offset_w = RNG.integers(0, w - target_w + 1)
 
             return offset_h, offset_w, target_h, target_w
 
@@ -865,7 +866,7 @@ class RandomFlip(tvt_v2.Transform, NumpytoTVTensorMixin):
             single_ratio = self.prob / (len(direction_list) - 1)
             prob_list = [single_ratio] * (len(direction_list) - 1) + [non_prob]
 
-        return np.random.choice(direction_list, p=prob_list)
+        return RNG.choice(direction_list, p=prob_list)
 
     def forward(self, *_inputs: OTXDataItem) -> OTXDataItem | None:
         """Flip images, bounding boxes, and semantic segmentation map."""
@@ -920,7 +921,7 @@ class RandomGaussianBlur(GaussianBlur):
 
     def transform(self, inpt: torch.Tensor, params: dict[str, Any]) -> torch.Tensor:
         """Main transform function."""
-        if self.prob >= np.random.rand():
+        if self.prob >= RNG.random():
             return super().transform(inpt, params)
         return inpt
 
@@ -943,7 +944,7 @@ class RandomGaussianNoise(GaussianNoise):
         """Main transform function."""
         assert len(_inputs) == 1, "[tmp] Multiple entity is not supported yet."  # noqa: S101
         inputs = _inputs[0]
-        if (img := getattr(inputs, "image", None)) is not None and self.prob >= np.random.rand():
+        if (img := getattr(inputs, "image", None)) is not None and self.prob >= RNG.random():
             scaled = self._is_scaled(img)
             sigma = self.sigma * 255 if not scaled else self.sigma
             mean = self.mean * 255 if not scaled else self.mean
@@ -1007,17 +1008,17 @@ class PhotoMetricDistortion(tvt_v2.Transform, NumpytoTVTensorMixin):
 
     @cache_randomness
     def _random_flags(self) -> Sequence[int | float]:
-        mode = random.rand() > self.prob
-        brightness_flag = random.rand() > self.prob
-        contrast_flag = random.rand() > self.prob
-        saturation_flag = random.rand() > self.prob
-        hue_flag = random.rand() > self.prob
-        swap_flag = random.rand() > self.prob
-        delta_value = random.uniform(-self.brightness_delta, self.brightness_delta)
-        alpha_value = random.uniform(self.contrast_lower, self.contrast_upper)
-        saturation_value = random.uniform(self.saturation_lower, self.saturation_upper)
-        hue_value = random.uniform(-self.hue_delta, self.hue_delta)
-        swap_value = random.permutation(3)
+        mode = RNG.random() > self.prob
+        brightness_flag = RNG.random() > self.prob
+        contrast_flag = RNG.random() > self.prob
+        saturation_flag = RNG.random() > self.prob
+        hue_flag = RNG.random() > self.prob
+        swap_flag = RNG.random() > self.prob
+        delta_value = RNG.uniform(-self.brightness_delta, self.brightness_delta)
+        alpha_value = RNG.uniform(self.contrast_lower, self.contrast_upper)
+        saturation_value = RNG.uniform(self.saturation_lower, self.saturation_upper)
+        hue_value = RNG.uniform(-self.hue_delta, self.hue_delta)
+        swap_value = RNG.permutation(3)
 
         return (
             mode,
@@ -1159,7 +1160,6 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
     ) -> None:
         super().__init__()
         self._validate_parameters(max_translate_ratio, scaling_ratio_range)
-
         self.max_rotate_degree = max_rotate_degree
         self.max_translate_ratio = max_translate_ratio
         self.scaling_ratio_range = scaling_ratio_range
@@ -1198,12 +1198,12 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
             np.ndarray: 3x3 homography matrix.
         """
         # Generate transformation parameters
-        rotation_degree = random.uniform(-self.max_rotate_degree, self.max_rotate_degree)
-        scaling_ratio = random.uniform(self.scaling_ratio_range[0], self.scaling_ratio_range[1])
-        x_shear_degree = random.uniform(-self.max_shear_degree, self.max_shear_degree)
-        y_shear_degree = random.uniform(-self.max_shear_degree, self.max_shear_degree)
-        trans_x = random.uniform(-self.max_translate_ratio, self.max_translate_ratio) * width
-        trans_y = random.uniform(-self.max_translate_ratio, self.max_translate_ratio) * height
+        rotation_degree = RNG.uniform(-self.max_rotate_degree, self.max_rotate_degree)
+        scaling_ratio = RNG.uniform(self.scaling_ratio_range[0], self.scaling_ratio_range[1])
+        x_shear_degree = RNG.uniform(-self.max_shear_degree, self.max_shear_degree)
+        y_shear_degree = RNG.uniform(-self.max_shear_degree, self.max_shear_degree)
+        trans_x = RNG.uniform(-self.max_translate_ratio, self.max_translate_ratio) * width
+        trans_y = RNG.uniform(-self.max_translate_ratio, self.max_translate_ratio) * height
 
         # Create transformation matrices
         rotation_matrix = self._get_rotation_matrix(rotation_degree)
@@ -1238,7 +1238,13 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
         homography_matrix = self._get_random_homography_matrix(height, width)
         output_shape = (height + self.border[0] * 2, width + self.border[1] * 2)
 
-        if hasattr(inputs, "bboxes") and inputs.bboxes is not None and len(inputs.bboxes) > 0:
+        transformed_img = self._warp_image(img, homography_matrix, output_shape)
+        inputs.image = transformed_img
+        inputs.img_info = _resize_image_info(inputs.img_info, transformed_img.shape[:2])
+        valid_index = None
+        valid_bboxes = hasattr(inputs, "bboxes") and inputs.bboxes is not None and len(inputs.bboxes) > 0
+
+        if valid_bboxes:
             # Test transform bboxes to see if any remain valid
             valid_index = self._transform_bboxes(inputs, homography_matrix, output_shape)
             # If no valid annotations will remain after transformation, skip entirely
@@ -1246,20 +1252,14 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
                 inputs.image = img
                 return self.convert(inputs)  # type: ignore[return-value]
 
-            # If we reach here, transformation will produce valid results, so proceed
-            # Transform image
-            transformed_img = self._warp_image(img, homography_matrix, output_shape)
-            inputs.image = transformed_img
-            inputs.img_info = _resize_image_info(inputs.img_info, transformed_img.shape[:2])
+        if hasattr(inputs, "masks") and inputs.masks is not None and len(inputs.masks) > 0:
+            self._transform_masks(inputs, homography_matrix, output_shape, valid_index)
 
-            if hasattr(inputs, "masks") and inputs.masks is not None and len(inputs.masks) > 0:
-                self._transform_masks(inputs, homography_matrix, output_shape, valid_index)
+        if hasattr(inputs, "polygons") and inputs.polygons is not None and len(inputs.polygons) > 0:
+            self._transform_polygons(inputs, homography_matrix, output_shape, valid_index)
 
-            if hasattr(inputs, "polygons") and inputs.polygons is not None and len(inputs.polygons) > 0:
-                self._transform_polygons(inputs, homography_matrix, output_shape, valid_index)
-
-            if self.recompute_bbox:
-                self._recompute_bboxes(inputs, output_shape)
+        if valid_bboxes and self.recompute_bbox:
+            self._recompute_bboxes(inputs, output_shape)
 
         return self.convert(inputs)  # type: ignore[return-value]
 
@@ -1321,7 +1321,7 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
         inputs: OTXDataItem,
         warp_matrix: np.ndarray,
         output_size: tuple[int, int],
-        valid_index: np.ndarray,
+        valid_index: np.ndarray | None = None,
     ) -> None:
         """Transform masks using the warp matrix.
 
@@ -1335,11 +1335,11 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
             return
 
         # Convert valid_index to numpy boolean array if it's a tensor
-        if hasattr(valid_index, "numpy"):
+        if valid_index is not None and hasattr(valid_index, "numpy"):
             valid_index = valid_index.numpy()
 
         # Filter masks using valid_index first
-        masks = inputs.masks[valid_index]
+        masks = inputs.masks[valid_index] if valid_index is not None else inputs.masks
         masks = masks.numpy() if not isinstance(masks, np.ndarray) else masks
 
         if masks.ndim == 3:
@@ -1378,15 +1378,20 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
             )
             return warped_mask > 127
 
-        msg = "Multi-class masks are not supported yet."
-        raise NotImplementedError(msg)
+        return cv2.warpPerspective(
+            mask.astype(np.uint8),
+            warp_matrix,
+            dsize=(width, height),
+            flags=cv2.INTER_NEAREST,
+            borderValue=0,
+        )
 
     def _transform_polygons(
         self,
         inputs: OTXDataItem,
         warp_matrix: np.ndarray,
         output_shape: tuple[int, int],
-        valid_index: np.ndarray,
+        valid_index: np.ndarray | None = None,
     ) -> None:
         """Transform polygons using the warp matrix.
 
@@ -1405,11 +1410,13 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
             return
 
         # Convert valid_index to numpy boolean array if it's a tensor
-        if hasattr(valid_index, "numpy"):
+        if valid_index is not None and hasattr(valid_index, "numpy"):
             valid_index = valid_index.numpy()
 
-        # Filter polygons using valid_index
-        filtered_polygons = [p for p, keep in zip(inputs.polygons, valid_index) if keep]
+        # Filter polygons using valid_index if available
+        filtered_polygons = (
+            [p for p, keep in zip(inputs.polygons, valid_index) if keep] if valid_index is not None else inputs.polygons
+        )
 
         if filtered_polygons:
             inputs.polygons = project_polygons(filtered_polygons, warp_matrix, output_shape)
@@ -1627,7 +1634,7 @@ class CachedMosaic(tvt_v2.Transform, NumpytoTVTensorMixin):
         Returns:
             list: indexes.
         """
-        return [random.randint(0, len(cache) - 1) for _ in range(3)]
+        return [RNG.integers(0, len(cache) - 1) for _ in range(3)]
 
     @typing.no_type_check  # TODO(ashwinvaidya17): temporary
     def forward(self, *_inputs: OTXDataItem) -> OTXDataItem | None:
@@ -1637,13 +1644,13 @@ class CachedMosaic(tvt_v2.Transform, NumpytoTVTensorMixin):
 
         self.results_cache.append(copy.deepcopy(inputs))
         if len(self.results_cache) > self.max_cached_images:
-            index = random.randint(0, len(self.results_cache) - 1) if self.random_pop else 0
+            index = RNG.integers(0, len(self.results_cache) - 1) if self.random_pop else 0
             self.results_cache.pop(index)
 
         if len(self.results_cache) <= 4:
             return self.convert(inputs)
 
-        if random.uniform(0, 1) > self.prob:
+        if RNG.uniform(0, 1) > self.prob:
             return self.convert(inputs)
 
         indices = self.get_indexes(self.results_cache)
@@ -1672,8 +1679,8 @@ class CachedMosaic(tvt_v2.Transform, NumpytoTVTensorMixin):
             )
 
         # mosaic center x, y
-        center_x = int(random.uniform(*self.center_ratio_range) * self.img_scale[1])
-        center_y = int(random.uniform(*self.center_ratio_range) * self.img_scale[0])
+        center_x = int(RNG.uniform(*self.center_ratio_range) * self.img_scale[1])
+        center_y = int(RNG.uniform(*self.center_ratio_range) * self.img_scale[0])
         center_position = (center_x, center_y)
 
         loc_strs = ("top_left", "top_right", "bottom_left", "bottom_right")
@@ -1935,7 +1942,7 @@ class CachedMixUp(tvt_v2.Transform, NumpytoTVTensorMixin):
             int: index.
         """
         for _ in range(self.max_iters):
-            index = random.randint(0, len(cache) - 1)
+            index = RNG.integers(0, len(cache) - 1)
             gt_bboxes_i = cache[index].bboxes
             if len(gt_bboxes_i) != 0:
                 break
@@ -1950,13 +1957,13 @@ class CachedMixUp(tvt_v2.Transform, NumpytoTVTensorMixin):
 
         self.results_cache.append(copy.deepcopy(inputs))
         if len(self.results_cache) > self.max_cached_images:
-            index = random.randint(0, len(self.results_cache) - 1) if self.random_pop else 0
+            index = RNG.integers(0, len(self.results_cache) - 1) if self.random_pop else 0
             self.results_cache.pop(index)
 
         if len(self.results_cache) <= 1:
             return self.convert(inputs)
 
-        if random.uniform(0, 1) > self.prob:
+        if RNG.uniform(0, 1) > self.prob:
             return self.convert(inputs)
 
         index = self.get_indexes(self.results_cache)
@@ -1971,8 +1978,8 @@ class CachedMixUp(tvt_v2.Transform, NumpytoTVTensorMixin):
         retrieve_img: np.ndarray = to_np_image(retrieve_results.image)
         with_mask = bool(hasattr(inputs, "masks") or hasattr(inputs, "polygons"))
 
-        jit_factor = random.uniform(*self.ratio_range)
-        is_flip = random.uniform(0, 1) > self.flip_ratio
+        jit_factor = RNG.uniform(*self.ratio_range)
+        is_flip = RNG.uniform(0, 1) > self.flip_ratio
 
         if len(retrieve_img.shape) == 3:
             out_img = (
@@ -2013,9 +2020,9 @@ class CachedMixUp(tvt_v2.Transform, NumpytoTVTensorMixin):
 
         x_offset, y_offset = 0, 0
         if padded_img.shape[0] > target_h:
-            y_offset = random.randint(0, padded_img.shape[0] - target_h)
+            y_offset = RNG.integers(0, padded_img.shape[0] - target_h)
         if padded_img.shape[1] > target_w:
-            x_offset = random.randint(0, padded_img.shape[1] - target_w)
+            x_offset = RNG.integers(0, padded_img.shape[1] - target_w)
         padded_cropped_img = padded_img[y_offset : y_offset + target_h, x_offset : x_offset + target_w]
 
         # 6. adjust bbox
@@ -2164,13 +2171,13 @@ class YOLOXHSVRandomAug(tvt_v2.Transform, NumpytoTVTensorMixin):
 
     @cache_randomness
     def _get_hsv_gains(self) -> np.ndarray:
-        hsv_gains = np.random.uniform(-1, 1, 3) * [
+        hsv_gains = RNG.uniform(-1, 1, 3) * [
             self.hue_delta,
             self.saturation_delta,
             self.value_delta,
         ]
         # random selection of h, s, v
-        hsv_gains *= random.randint(0, 2, 3)
+        hsv_gains *= RNG.integers(0, 2, 3)
         # prevent overflow
         return hsv_gains.astype(np.int16)
 
@@ -2416,8 +2423,8 @@ class RandomResize(tvt_v2.Transform, NumpytoTVTensorMixin):
         assert len(scales) == 2  # noqa: S101
         scale_0 = [scales[0][0], scales[1][0]]
         scale_1 = [scales[0][1], scales[1][1]]
-        edge_0 = np.random.randint(min(scale_0), max(scale_0) + 1)
-        edge_1 = np.random.randint(min(scale_1), max(scale_1) + 1)
+        edge_0 = RNG.integers(min(scale_0), max(scale_0) + 1)
+        edge_1 = RNG.integers(min(scale_1), max(scale_1) + 1)
         return (edge_0, edge_1)
 
     @staticmethod
@@ -2440,7 +2447,7 @@ class RandomResize(tvt_v2.Transform, NumpytoTVTensorMixin):
         assert len(scale) == 2  # noqa: S101
         min_ratio, max_ratio = ratio_range
         assert min_ratio <= max_ratio  # noqa: S101
-        ratio = np.random.random_sample() * (max_ratio - min_ratio) + min_ratio
+        ratio = RNG.random() * (max_ratio - min_ratio) + min_ratio
         return int(scale[0] * ratio), int(scale[1] * ratio)
 
     @cache_randomness
@@ -2658,8 +2665,8 @@ class RandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
             tuple[int, int]: The random offset for the crop.
         """
         margin_h, margin_w = margin
-        offset_h = np.random.randint(0, margin_h + 1)
-        offset_w = np.random.randint(0, margin_w + 1)
+        offset_h = RNG.integers(0, margin_h + 1)
+        offset_w = RNG.integers(0, margin_w + 1)
 
         return offset_h, offset_w
 
@@ -2679,8 +2686,8 @@ class RandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
 
         if self.crop_type == "absolute_range":
             # `self.crop_size` is used as range, not absolute value
-            crop_h = np.random.randint(min(h, self.crop_size[0]), min(h, self.crop_size[1]) + 1)
-            crop_w = np.random.randint(min(w, self.crop_size[0]), min(w, self.crop_size[1]) + 1)
+            crop_h = RNG.integers(min(h, self.crop_size[0]), min(h, self.crop_size[1]) + 1)
+            crop_w = RNG.integers(min(w, self.crop_size[0]), min(w, self.crop_size[1]) + 1)
             return crop_h, crop_w
 
         if self.crop_type == "relative":
@@ -2689,7 +2696,7 @@ class RandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
 
         # 'relative_range'
         crop_size = np.asarray(self.crop_size, dtype=np.float32)
-        crop_h, crop_w = crop_size + np.random.rand(2) * (1 - crop_size)
+        crop_h, crop_w = crop_size + RNG.random(2) * (1 - crop_size)
         return int(h * crop_h + 0.5), int(w * crop_w + 0.5)
 
     @typing.no_type_check  # TODO(ashwinvaidya17): temporary
@@ -2815,18 +2822,18 @@ class TopdownAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
 
         # Get shift parameters
         offset = offset_v * self.shift_factor
-        offset = np.where(np.random.rand(1) < self.shift_prob, offset, 0.0)
+        offset = np.where(RNG.random(1) < self.shift_prob, offset, 0.0)
 
         # Get scaling parameters
         scale_min, scale_max = self.scale_factor
         mu = (scale_max + scale_min) * 0.5
         sigma = (scale_max - scale_min) * 0.5
         scale = scale_v * sigma + mu
-        scale = np.where(np.random.rand(1) < self.scale_prob, scale, 1.0)
+        scale = np.where(RNG.random(1) < self.scale_prob, scale, 1.0)
 
         # Get rotation parameters
         rotate = rotate_v * self.rotate_factor
-        rotate = np.where(np.random.rand() < self.rotate_prob, rotate, 0.0)
+        rotate = np.where(RNG.random() < self.rotate_prob, rotate, 0.0)
 
         return offset, scale, rotate
 
@@ -2929,7 +2936,7 @@ class TopdownAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
 
         h, w = self.input_size
         warp_size = (int(w), int(h))
-        apply_transforms = np.random.rand()
+        apply_transforms = RNG.random()
         ori_img_shape = inputs.img_info.ori_shape
 
         if apply_transforms <= self.affine_transforms_prob:

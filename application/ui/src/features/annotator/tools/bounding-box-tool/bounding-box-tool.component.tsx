@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useZoom } from '../../../../components/zoom/zoom.provider';
-import { useAnnotationActions } from '../../annotation-actions-provider.component';
-import { useAnnotator } from '../../annotator-provider.component';
+import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
+import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
 import { DrawingBox } from '../drawing-box-tool/drawing-box.component';
 
 export const BoundingBoxTool = () => {

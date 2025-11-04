@@ -4,35 +4,22 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { Content, Flex, Grid, Heading, IllustratedMessage, View } from '@geti/ui';
-import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import { usePipelineMetrics } from 'hooks/api/pipeline.hook';
 import { CartesianGrid, Label, Line, LineChart, ReferenceLine, XAxis, YAxis } from 'recharts';
-
-import { $api } from '../../../api/client';
 
 interface DataPoint {
     name: string;
     value: number;
 }
 
-const POLLING_INTERVAL = 5000;
 const MAX_DATA_POINTS = 60; // Keep last 60 data points
 
-const useMetricsData = (projectId: string) => {
+const useMetricsData = () => {
     const [latencyData, setLatencyData] = useState<DataPoint[]>([]);
     const [throughputData, setThroughputData] = useState<DataPoint[]>([]);
     const counterRef = useRef(0);
 
-    const { data: metrics } = $api.useQuery(
-        'get',
-        '/api/projects/{project_id}/pipeline/metrics',
-        {
-            params: { path: { project_id: projectId } },
-        },
-        {
-            refetchInterval: (query) => (query.state.status === 'success' ? POLLING_INTERVAL : false),
-            retry: false,
-        }
-    );
+    const { data: metrics } = usePipelineMetrics();
 
     useEffect(() => {
         if (!metrics) return;
@@ -116,8 +103,7 @@ const Graph = ({ label, data }: { label: string; data: DataPoint[] }) => {
 };
 
 export const Graphs = () => {
-    const projectId = useProjectIdentifier();
-    const { latencyData, throughputData, metrics } = useMetricsData(projectId);
+    const { latencyData, throughputData, metrics } = useMetricsData();
 
     const hasData = latencyData.length > 0 || throughputData.length > 0;
 

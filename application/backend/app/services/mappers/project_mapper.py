@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 from uuid import UUID
 
-from app.core.models.task_type import TaskType
 from app.db.schema import ProjectDB
+from app.models import Label, TaskType
 from app.schemas import LabelView, ProjectCreate, ProjectView
 from app.schemas.project import TaskView
 
@@ -12,16 +12,16 @@ class ProjectMapper:
     """Mapper for Project schema entity <-> DB entity conversions."""
 
     @staticmethod
-    def to_schema(project_db: ProjectDB, labels: list[LabelView]) -> ProjectView:
+    def to_schema(project_db: ProjectDB, active_pipeline: bool, labels: list[Label]) -> ProjectView:
         """Convert Project db entity to schema."""
         return ProjectView(
             id=UUID(project_db.id),
-            active_pipeline=project_db.pipeline.is_running,
+            active_pipeline=active_pipeline,
             name=project_db.name,
             task=TaskView(
                 task_type=TaskType(project_db.task_type),
                 exclusive_labels=project_db.exclusive_labels,
-                labels=labels,
+                labels=[LabelView.model_validate(label, from_attributes=True) for label in labels],
             ),
         )
 

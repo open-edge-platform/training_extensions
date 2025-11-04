@@ -3,10 +3,10 @@
 
 import { Key } from 'react';
 
-import { useAnnotationActions } from 'src/features/annotator/annotation-actions-provider.component';
+import type { Label } from 'src/constants/shared-types';
 import { useProjectLabels } from 'src/features/annotator/hooks/use-project-labels.hook';
-import { useSelectedAnnotations } from 'src/features/annotator/select-annotation-provider.component';
-import { Label } from 'src/features/annotator/types';
+import { useAnnotationActions } from 'src/shared/annotator/annotation-actions-provider.component';
+import { useSelectedAnnotations } from 'src/shared/annotator/select-annotation-provider.component';
 
 export const useSecondaryToolbarState = () => {
     const { selectedAnnotations } = useSelectedAnnotations();
