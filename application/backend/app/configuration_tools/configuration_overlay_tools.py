@@ -113,8 +113,6 @@ class ConfigurationOverlayTools:
                 common_parameters_only=True,
             )
 
-        overlay_config_dict["id_"] = base_config.id_
-
         if validate_full_config:
             return TrainingConfiguration.model_validate(overlay_config_dict)
         return PartialTrainingConfiguration.model_validate(overlay_config_dict)
