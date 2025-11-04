@@ -7,7 +7,7 @@ from functools import cached_property
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field
 
-from app.configuration_tools.parameters import Hyperparameters
+from app.configuration_tools.hyperparameters import Hyperparameters
 from app.core.models import TaskType
 
 from .default_models import DefaultCategory, DefaultModels

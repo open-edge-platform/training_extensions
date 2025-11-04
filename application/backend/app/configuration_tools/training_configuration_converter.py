@@ -1,240 +1,143 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+
+from collections import defaultdict
 from typing import Any
 
-from pydantic import BaseModel
-from pydantic.fields import FieldInfo
+from app.configuration_tools.configurable_parameters_converter import ConfigurableParametersConverter
+from app.configuration_tools.hyperparameters import (
+    DatasetPreparationParameters,
+    EvaluationParameters,
+    Hyperparameters,
+    TrainingHyperParameters,
+)
+from app.configuration_tools.training_configuration import (
+    GlobalDatasetPreparationParameters,
+    GlobalParameters,
+    PartialTrainingConfiguration,
+    TrainingConfiguration,
+)
+from app.supported_models import SupportedModels
 
-from app.configuration_tools.training_configuration import TrainingConfiguration
+DATASET_PREPARATION = "dataset_preparation"
+TRAINING = "training"
+EVALUATION = "evaluation"
 
 
-def _get_field_metadata(field_info: FieldInfo, value: Any) -> dict[str, Any]:
+class TrainingConfigurationConverter(ConfigurableParametersConverter):
     """
-    Extract metadata from a Pydantic field.
-
-    Args:
-        field_info: Pydantic FieldInfo object
-        value: The actual value of the field
-
-    Returns:
-        Dictionary with metadata (type, description, default_value, constraints, etc.)
+    Converters between objects and their corresponding REST views
     """
-    # Basic metadata
-    metadata = {
-        "type": _infer_type(field_info, value),
-        "description": field_info.description or "",
-        "value": value,
-        "default_value": field_info.default
-        if field_info.default is not None
-        else field_info.default_factory()
-        if callable(field_info.default_factory)
-        else None,
-    }
 
-    # Extract constraints from field metadata
-    if hasattr(field_info, "metadata"):
-        for constraint in field_info.metadata:
-            if hasattr(constraint, "gt"):
-                metadata["min_value"] = (
-                    constraint.gt
-                    if constraint.gt is not None
-                    else (constraint.ge if hasattr(constraint, "ge") and constraint.ge is not None else None)
-                )
-                metadata["max_value"] = None
-            if hasattr(constraint, "lt"):
-                metadata["max_value"] = (
-                    constraint.lt
-                    if constraint.lt is not None
-                    else (constraint.le if hasattr(constraint, "le") and constraint.le is not None else None)
-                )
-                metadata["min_value"] = None
+    @classmethod
+    def _dataset_preparation_to_rest(
+        cls,
+        global_parameters: GlobalParameters | None,
+        hyperparameters: Hyperparameters | None,
+        default_config: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        # Return a combined view of global and hyperparameters for dataset preparation
+        default_config = default_config or {}
+        global_parameters_rest = (
+            cls.configurable_parameters_to_rest(
+                configurable_parameters=global_parameters.dataset_preparation,
+                default_config=default_config.get("dataset_preparation"),
+            )
+            if global_parameters and global_parameters.dataset_preparation
+            else {}
+        )
+        hyperparameters_rest = (
+            cls.configurable_parameters_to_rest(
+                configurable_parameters=hyperparameters.dataset_preparation,
+                default_config=default_config.get("dataset_preparation"),
+            )
+            if hyperparameters and hyperparameters.dataset_preparation
+            else {}
+        )
+        if not isinstance(global_parameters_rest, dict) or not isinstance(hyperparameters_rest, dict):
+            raise ValueError("Expected dictionary for global and hyperparameters REST views")
+        return global_parameters_rest | hyperparameters_rest
 
-    # Check for allowed_values in json_schema_extra
-    if field_info.json_schema_extra and isinstance(field_info.json_schema_extra, dict):
-        if "allowed_values" in field_info.json_schema_extra:
-            metadata["allowed_values"] = field_info.json_schema_extra["allowed_values"]
-            metadata["type"] = "enum"
-        if "default_value" in field_info.json_schema_extra:
-            metadata["default_value"] = field_info.json_schema_extra["default_value"]
+    @classmethod
+    def training_configuration_to_rest(cls, training_configuration: TrainingConfiguration) -> dict[str, Any]:
+        """
+        Get the REST view of a training configuration. Also supports PartialTrainingConfiguration.
 
-    return metadata
+        :param training_configuration: training configuration
+        :return: REST view of the training configuration
+        """
+        if not training_configuration.model_manifest_id:
+            raise ValueError("Model manifest ID is required to convert training configuration to REST view")
 
+        model_manifest = SupportedModels.get_model_manifest_by_id(training_configuration.model_manifest_id)
+        default_config = model_manifest.hyperparameters.model_dump()
 
-def _infer_type(field_info: FieldInfo, value: Any) -> str:
-    """Infer the type string from field annotation and value."""
-    annotation = field_info.annotation
+        training_params_rest = (
+            cls.configurable_parameters_to_rest(
+                configurable_parameters=training_configuration.hyperparameters.training,
+                default_config=default_config.get("training", {}),
+            )
+            if training_configuration.hyperparameters and training_configuration.hyperparameters.training
+            else []
+        )
 
-    # Handle Optional types
-    if hasattr(annotation, "__origin__"):
-        # Extract non-None type from Union
-        args = getattr(annotation, "__args__", ())
-        non_none_types = [arg for arg in args if arg is not type(None)]
-        if non_none_types:
-            annotation = non_none_types[0]
+        rest_view = {
+            "task_id": training_configuration.task_id,
+            DATASET_PREPARATION: cls._dataset_preparation_to_rest(
+                global_parameters=training_configuration.global_parameters,
+                hyperparameters=training_configuration.hyperparameters,
+                default_config=default_config,
+            ),
+            TRAINING: training_params_rest,
+            EVALUATION: [],  # Evaluation parameters are not yet available
+        }
 
-    # Map Python types to string representations
-    if annotation == bool or isinstance(value, bool):
-        return "bool"
-    if annotation == int or isinstance(value, int):
-        return "int"
-    if annotation == float or isinstance(value, float):
-        return "float"
-    if annotation == str or isinstance(value, str):
-        return "str"
-    if hasattr(annotation, "__origin__") and annotation.__origin__ == list:
-        return "list"
+        if training_configuration.model_manifest_id:
+            rest_view["model_manifest_id"] = training_configuration.model_manifest_id
+        return rest_view
 
-    return "str"
+    @classmethod
+    def training_configuration_from_rest(cls, rest_input: dict[str, Any]) -> PartialTrainingConfiguration:
+        """
+        Convert REST input to a PartialTrainingConfiguration object.
 
+        :param rest_input: REST input dictionary
+        :return: TrainingConfiguration object
+        """
+        dataset_preparation = cls.configurable_parameters_from_rest(rest_input.pop(DATASET_PREPARATION, {}))
+        training = cls.configurable_parameters_from_rest(rest_input.pop(TRAINING, {}))
+        evaluation = cls.configurable_parameters_from_rest(rest_input.pop(EVALUATION, {}))
 
-def _convert_nested_model(model: BaseModel) -> dict[str, Any]:
-    """Convert nested Pydantic models to the flattened parameter format."""
-    result: dict[str, Any] = {}
+        global_parameters: dict = defaultdict(dict)
+        hyperparameters: dict = defaultdict(dict)
 
-    for field_name, field_info in model.model_fields.items():
-        value = getattr(model, field_name)
+        for field, _ in GlobalDatasetPreparationParameters.model_fields.items():
+            global_parameters[DATASET_PREPARATION][field] = dataset_preparation.pop(field, None)
 
-        if value is None:
-            continue  # Skip fields with None value
+        for field, _ in DatasetPreparationParameters.model_fields.items():
+            hyperparameters[DATASET_PREPARATION][field] = dataset_preparation.pop(field, None)
 
-        # Handle nested BaseModel
-        if isinstance(value, BaseModel):
-            nested_result = _convert_nested_model(value)
-            result[field_name] = _flatten_to_list_format(nested_result)
-        else:
-            # Create parameter metadata
-            param = {
-                "key": field_name,
-                "name": field_info.title or field_name.replace("_", " ").title(),
-            }
-            param.update(_get_field_metadata(field_info, value))
-            result[field_name] = [param]
+        for field, _ in TrainingHyperParameters.model_fields.items():
+            hyperparameters[TRAINING][field] = training.pop(field, None)
 
-    return result
+        for field, _ in EvaluationParameters.model_fields.items():
+            hyperparameters[EVALUATION][field] = evaluation.pop(field, None)
 
+        # add remaining parameters for validation (extra parameters should not be present)
+        global_parameters[DATASET_PREPARATION].update(dataset_preparation)
+        hyperparameters[TRAINING].update(training)
+        hyperparameters[EVALUATION].update(evaluation)
 
-def _flatten_to_list_format(nested_dict: dict[str, Any]) -> list[Any]:
-    """Convert nested dictionary to list format with proper handling of sub-parameters."""
-    result = []
+        # Convert defaultdict to regular dicts for the model validation
+        global_parameters = dict(global_parameters)
+        hyperparameters = dict(hyperparameters)
+        global_parameters.pop("default_factory", None)
+        hyperparameters.pop("default_factory", None)
 
-    for key, value in nested_dict.items():
-        if isinstance(value, list):
-            # Already in parameter list format
-            result.extend(value)
-        elif isinstance(value, dict):
-            # Check if this is a nested group (all values are lists or dicts)
-            all_nested = all(isinstance(v, list | dict) for v in value.values())
-            if all_nested:
-                # Convert nested structure
-                nested_list = _flatten_to_list_format(value)
-                result.append({key: nested_list})
-            else:
-                result.append({key: value})
+        dict_model = {
+            "global_parameters": global_parameters,
+            "hyperparameters": hyperparameters,
+        }
 
-    return result
-
-
-def convert_training_configuration_to_rest(config: TrainingConfiguration) -> dict[str, Any]:
-    """
-    Convert TrainingConfiguration Pydantic model to REST API format.
-
-    Args:
-        config: TrainingConfiguration Pydantic model instance
-
-    Returns:
-        Dictionary in the format matching output.json
-    """
-    result: dict[str, Any] = {}
-
-    if config.model_manifest_id:
-        result["model_manifest_id"] = config.model_manifest_id
-
-    result["global_parameters"] = _convert_nested_model(config.global_parameters)
-    result["hyperparameters"] = _convert_nested_model(config.hyperparameters)
-
-    return result
-
-
-def convert_rest_to_training_configuration(rest_data: dict[str, Any]) -> dict[str, Any]:
-    """
-    Convert REST API format back to TrainingConfiguration format.
-
-    Args:
-        rest_data: Dictionary in output.json format with lists of parameter objects
-
-    Returns:
-        Dictionary suitable for TrainingConfiguration.model_validate()
-    """
-    result: dict[str, Any] = {}
-
-    for section_key, section_value in rest_data.items():
-        if section_key == "model_manifest_id":
-            continue
-
-        # Handle empty sections - but still include them for required fields
-        if not section_value:
-            # For required fields like evaluation, provide empty dict
-            if section_key == "evaluation":
-                result[section_key] = {}
-            continue
-
-        if isinstance(section_value, list):
-            # Convert list format back to nested dict
-            section_dict = _convert_list_to_nested_dict(section_value)
-            if section_dict:  # Only add if not empty
-                result[section_key] = section_dict
-        elif isinstance(section_value, dict):
-            # Handle nested dictionary structures
-            converted_dict = _convert_dict_recursively(section_value)
-            if converted_dict:  # Only add if not empty
-                result[section_key] = converted_dict
-        else:
-            result[section_key] = section_value
-
-    # Ensure required fields are present
-    if "evaluation" not in result:
-        result["evaluation"] = {}
-
-    return result
-
-
-def _convert_dict_recursively(data: dict[str, Any]) -> dict[str, Any]:
-    """Recursively convert nested dictionary structures that may contain REST format lists."""
-
-    result = {}
-    for key, value in data.items():
-        if isinstance(value, list):
-            # Convert list format back to nested dict
-            converted = _convert_list_to_nested_dict(value)
-            if converted:  # Only add if not empty
-                result[key] = converted
-        elif isinstance(value, dict):
-            # Recursively handle nested dicts
-            converted = _convert_dict_recursively(value)
-            if converted:  # Only add if not empty
-                result[key] = converted
-        else:
-            result[key] = value
-
-    return result
-
-
-def _convert_list_to_nested_dict(param_list: list[Any]) -> dict[str, Any]:
-    """Convert parameter list format back to nested dictionary."""
-    result = {}
-
-    for item in param_list:
-        if isinstance(item, dict):
-            # Check if this is a parameter object with 'key' and 'value'
-            if "key" in item and "value" in item:
-                result[item["key"]] = item["value"]
-            else:
-                # This is a nested group - should have one key with a list value
-                for group_key, group_value in item.items():
-                    if isinstance(group_value, list):
-                        result[group_key] = _convert_list_to_nested_dict(group_value)
-                    else:
-                        result[group_key] = group_value
-
-    return result
+        return PartialTrainingConfiguration.model_validate(dict_model | rest_input)

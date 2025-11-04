@@ -1,10 +1,9 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-
-from .dataset_augmentation_parameters import (
+from .augmentation import (
+    AugmentationParameters,
     ColorJitter,
-    DatasetAugmentationParameters,
     GaussianBlur,
     GaussianNoise,
     HSVRandomAug,
@@ -20,8 +19,8 @@ from .dataset_augmentation_parameters import (
     Tiling,
     TopdownAffine,
 )
-from .global_parameters import Filtering, GlobalParameters, SubsetSplit
 from .hyperparameters import (
+    DatasetPreparationParameters,
     EarlyStopping,
     EvaluationParameters,
     Hyperparameters,
@@ -30,14 +29,13 @@ from .hyperparameters import (
 )
 
 __all__ = [
-    "DatasetAugmentationParameters",
+    "AugmentationParameters",
     "ColorJitter",
+    "DatasetPreparationParameters",
     "EarlyStopping",
     "EvaluationParameters",
-    "Filtering",
     "GaussianBlur",
     "GaussianNoise",
-    "GlobalParameters",
     "HSVRandomAug",
     "Hyperparameters",
     "Mixup",
@@ -50,7 +48,6 @@ __all__ = [
     "RandomResizeCrop",
     "RandomVerticalFlip",
     "RandomZoomOut",
-    "SubsetSplit",
     "Tiling",
     "TopdownAffine",
     "TrainingHyperParameters",

@@ -8,7 +8,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.api.dependencies import get_training_configuration_service
-from app.configuration_tools.training_configuration_converter import convert_training_configuration_to_rest
+from app.configuration_tools.training_configuration_converter import TrainingConfigurationConverter
 from app.services import ResourceNotFoundError
 from app.services.training_configuration_service import TrainingConfigurationService
 
@@ -43,12 +43,12 @@ def get_training_configuration(
         TrainingConfiguration: The training configuration details.
     """
     try:
-        training_configuration = training_configuration_service.get_training_configuration(
+        training_config = training_configuration_service.get_training_configuration(
             project_id=project_id,
             model_architecture_id=model_architecture_id,
             model_revision_id=model_revision_id,
         )
-        return convert_training_configuration_to_rest(config=training_configuration)
+        return TrainingConfigurationConverter().training_configuration_to_rest(training_configuration=training_config)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ValueError as e:
