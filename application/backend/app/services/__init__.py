@@ -18,7 +18,7 @@ from .pipeline_metrics_service import PipelineMetricsService
 from .pipeline_service import PipelineService
 from .project_service import ProjectService
 from .sink_service import SinkService
-from .source_service import SourceService
+from .source_service import SourceService, SourceUpdateService
 from .system_service import SystemService
 from .video_stream_service import VideoStreamService
 
@@ -39,6 +39,7 @@ __all__ = [
     "ResourceWithNameAlreadyExistsError",
     "SinkService",
     "SourceService",
+    "SourceUpdateService",
     "SystemService",
     "VideoStreamService",
 ]

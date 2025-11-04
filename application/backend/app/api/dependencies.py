@@ -23,7 +23,7 @@ from app.services import (
     ProjectService,
     ResourceNotFoundError,
     SinkService,
-    SourceService,
+    SourceUpdateService,
     SystemService,
 )
 from app.services.base_weights_service import BaseWeightsService
@@ -155,11 +155,11 @@ def get_sink_service(
     return SinkService(event_bus=event_bus, db_session=db)
 
 
-def get_source_service(
+def get_source_update_service(
     event_bus: Annotated[EventBus, Depends(get_event_bus)], db: Annotated[Session, Depends(get_db)]
-) -> SourceService:
-    """Provides a SourceService instance."""
-    return SourceService(event_bus=event_bus, db_session=db)
+) -> SourceUpdateService:
+    """Provides a SourceUpdateService instance."""
+    return SourceUpdateService(event_bus=event_bus, db_session=db)
 
 
 def get_pipeline_service(
@@ -246,11 +246,11 @@ def get_sink(
 
 def get_source(
     source_id: Annotated[UUID, Depends(get_source_id)],
-    source_service: Annotated[SourceService, Depends(get_source_service)],
+    source_update_service: Annotated[SourceUpdateService, Depends(get_source_update_service)],
 ) -> Source:
     """Provides a Source instance for request scoped source."""
     try:
-        return source_service.get_by_id(source_id)
+        return source_update_service.get_by_id(source_id)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 

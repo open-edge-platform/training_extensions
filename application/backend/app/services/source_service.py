@@ -23,8 +23,7 @@ from .parent_process_guard import parent_process_only
 
 
 class SourceService:
-    def __init__(self, event_bus: EventBus, db_session: Session):
-        self._event_bus: EventBus = event_bus
+    def __init__(self, db_session: Session):
         self._db_session = db_session
 
     @parent_process_only
@@ -49,29 +48,6 @@ class SourceService:
             raise ResourceWithIdAlreadyExistsError(ResourceType.SOURCE, str(source_id))
         except UniqueConstraintIntegrityError:
             raise ResourceWithNameAlreadyExistsError(ResourceType.SOURCE, name)
-
-    @parent_process_only
-    def update_source(
-        self,
-        source: Source,
-        new_name: str,
-        new_config_data: SourceConfig,
-    ) -> Source:
-        try:
-            source_repo = SourceRepository(self._db_session)
-            db_source = source_repo.update(
-                SourceDB(
-                    id=str(source.id),
-                    name=new_name,
-                    config_data=new_config_data.model_dump(mode="json"),
-                )
-            )
-            active_source_id = self.get_active_source_id()
-            if active_source_id == UUID(db_source.id):
-                self._event_bus.emit_event(EventType.SOURCE_CHANGED)
-            return SourceAdapter.validate_python(db_source, from_attributes=True)
-        except UniqueConstraintIntegrityError:
-            raise ResourceWithNameAlreadyExistsError(ResourceType.SOURCE, new_name)
 
     def get_by_id(self, source_id: UUID) -> Source:
         db_source = SourceRepository(self._db_session).get_by_id(str(source_id))
@@ -101,3 +77,32 @@ class SourceService:
     def get_active_source_id(self) -> UUID | None:
         id = SourceRepository(self._db_session).get_active_source_id()
         return UUID(id) if id else None
+
+
+class SourceUpdateService(SourceService):
+    def __init__(self, event_bus: EventBus, db_session: Session):
+        self._event_bus: EventBus = event_bus
+        super().__init__(db_session)
+
+    @parent_process_only
+    def update_source(
+        self,
+        source: Source,
+        new_name: str,
+        new_config_data: SourceConfig,
+    ) -> Source:
+        try:
+            source_repo = SourceRepository(self._db_session)
+            db_source = source_repo.update(
+                SourceDB(
+                    id=str(source.id),
+                    name=new_name,
+                    config_data=new_config_data.model_dump(mode="json"),
+                )
+            )
+            active_source_id = self.get_active_source_id()
+            if active_source_id == UUID(db_source.id):
+                self._event_bus.emit_event(EventType.SOURCE_CHANGED)
+            return SourceAdapter.validate_python(db_source, from_attributes=True)
+        except UniqueConstraintIntegrityError:
+            raise ResourceWithNameAlreadyExistsError(ResourceType.SOURCE, new_name)

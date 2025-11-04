@@ -13,7 +13,7 @@ from fastapi.openapi.models import Example
 from fastapi.responses import FileResponse, Response
 from pydantic import ValidationError
 
-from app.api.dependencies import get_source, get_source_service
+from app.api.dependencies import get_source, get_source_update_service
 from app.api.schemas.source import SourceCreate, SourceCreateAdapter, SourceView, SourceViewAdapter
 from app.models import Source
 from app.services import (
@@ -21,7 +21,7 @@ from app.services import (
     ResourceNotFoundError,
     ResourceWithIdAlreadyExistsError,
     ResourceWithNameAlreadyExistsError,
-    SourceService,
+    SourceUpdateService,
 )
 
 logger = logging.getLogger(__name__)
@@ -108,11 +108,11 @@ def create_source(
     source_create: Annotated[
         SourceCreate, Body(description=CREATE_SOURCE_BODY_DESCRIPTION, openapi_examples=CREATE_SOURCE_BODY_EXAMPLES)
     ],
-    source_service: Annotated[SourceService, Depends(get_source_service)],
+    source_update_service: Annotated[SourceUpdateService, Depends(get_source_update_service)],
 ) -> SourceView:
     """Create and configure a new source"""
     try:
-        source = source_service.create_source(
+        source = source_update_service.create_source(
             name=source_create.name,
             source_type=source_create.source_type,
             config_data=source_create.config_data,
@@ -130,10 +130,10 @@ def create_source(
     },
 )
 def list_sources(
-    source_service: Annotated[SourceService, Depends(get_source_service)],
+    source_update_service: Annotated[SourceUpdateService, Depends(get_source_update_service)],
 ) -> list[SourceView]:
     """List the available sources"""
-    sources = source_service.list_all()
+    sources = source_update_service.list_all()
     return [SourceViewAdapter.validate_python(source, from_attributes=True) for source in sources]
 
 
@@ -168,7 +168,7 @@ def update_source(
             openapi_examples=UPDATE_SOURCE_BODY_EXAMPLES,
         ),
     ],
-    source_service: Annotated[SourceService, Depends(get_source_service)],
+    source_update_service: Annotated[SourceUpdateService, Depends(get_source_update_service)],
 ) -> SourceView:
     """Reconfigure an existing source"""
     if "source_type" in source_config:
@@ -177,7 +177,7 @@ def update_source(
     try:
         updated_source: Source = source.model_copy(update=source_config)
         updated_source.config_data = updated_source.config_data.model_copy(update=source_config)
-        source = source_service.update_source(
+        source = source_update_service.update_source(
             source=source,
             new_name=updated_source.name,
             new_config_data=updated_source.config_data,
@@ -226,14 +226,14 @@ def export_source(source: Annotated[Source, Depends(get_source)]) -> Response:
 )
 def import_source(
     yaml_file: Annotated[UploadFile, File(description="YAML file containing the source configuration")],
-    source_service: Annotated[SourceService, Depends(get_source_service)],
+    source_update_service: Annotated[SourceUpdateService, Depends(get_source_update_service)],
 ) -> SourceView:
     """Import a source from file"""
     try:
         yaml_content = yaml_file.file.read()
         source_data = yaml.safe_load(yaml_content)
         source_create = SourceCreateAdapter.validate_python(source_data)
-        source = source_service.create_source(
+        source = source_update_service.create_source(
             name=source_create.name,
             source_type=source_create.source_type,
             config_data=source_create.config_data,
@@ -262,11 +262,11 @@ def import_source(
 )
 def delete_source(
     source: Annotated[Source, Depends(get_source)],
-    source_service: Annotated[SourceService, Depends(get_source_service)],
+    source_update_service: Annotated[SourceUpdateService, Depends(get_source_update_service)],
 ) -> None:
     """Remove a source"""
     try:
-        source_service.delete_source(source)
+        source_update_service.delete_source(source)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ResourceInUseError as e:
