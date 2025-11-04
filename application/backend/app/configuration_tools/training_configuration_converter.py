@@ -82,8 +82,8 @@ class TrainingConfigurationConverter(ConfigurableParametersConverter):
             else []
         )
 
-        rest_view = {
-            "task_id": training_configuration.task_id,
+        return {
+            "model_manifest_id": training_configuration.model_manifest_id,
             DATASET_PREPARATION: cls._dataset_preparation_to_rest(
                 global_parameters=training_configuration.global_parameters,
                 hyperparameters=training_configuration.hyperparameters,
@@ -92,10 +92,6 @@ class TrainingConfigurationConverter(ConfigurableParametersConverter):
             TRAINING: training_params_rest,
             EVALUATION: [],  # Evaluation parameters are not yet available
         }
-
-        if training_configuration.model_manifest_id:
-            rest_view["model_manifest_id"] = training_configuration.model_manifest_id
-        return rest_view
 
     @classmethod
     def training_configuration_from_rest(cls, rest_input: dict[str, Any]) -> PartialTrainingConfiguration:
