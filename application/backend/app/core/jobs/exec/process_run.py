@@ -17,19 +17,18 @@ Functions:
 
 import asyncio
 import contextlib
-import logging
 import multiprocessing as mp
 from collections.abc import Iterator
 from multiprocessing.connection import Connection
 from multiprocessing.context import SpawnProcess
 from multiprocessing.synchronize import Event
 
+from loguru import logger
+
 from app.core.jobs.models import Done, ExecutionEvent, Failed, Job, JobType, Started
 from app.core.run import ExecutionContext, RunnableFactory, Runner
 
 from .exceptions import CancelledExc
-
-logger = logging.getLogger(__name__)
 
 
 class ProcessRun:

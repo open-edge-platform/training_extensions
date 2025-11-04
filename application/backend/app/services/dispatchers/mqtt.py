@@ -2,12 +2,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import json
-import logging
 import threading
 import time
 from typing import Any
 
 import numpy as np
+from loguru import logger
 from model_api.models.result import Result
 
 from app.models import MqttSinkConfig
@@ -19,7 +19,6 @@ try:
 except ImportError:
     mqtt = None  # type: ignore[assignment]
 
-logger = logging.getLogger(__name__)
 MAX_RETRIES = 3
 RETRY_DELAY = 1
 CONNECT_TIMEOUT = 10

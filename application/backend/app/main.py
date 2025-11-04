@@ -8,8 +8,6 @@
 #  - docker compose up
 
 import importlib
-
-# import logging
 import pkgutil
 from pathlib import Path
 
@@ -24,13 +22,6 @@ from app.lifecycle import lifespan
 from app.settings import get_settings
 
 settings = get_settings()
-
-# logging.basicConfig(
-#     level=logging.INFO if not settings.debug else logging.DEBUG,
-#     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-# )
-# logger = logging.getLogger(__name__)
-
 app = FastAPI(
     title=settings.app_name,
     version=settings.version,

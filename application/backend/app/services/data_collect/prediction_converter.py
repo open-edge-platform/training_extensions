@@ -1,16 +1,14 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-import logging
 from collections.abc import Sequence
 
 import cv2
 import numpy as np
+from loguru import logger
 from model_api.models import ClassificationResult, DetectionResult, InstanceSegmentationResult
 from model_api.models.result import Result
 
 from app.models import DatasetItemAnnotation, FullImage, Label, LabelReference, Point, Polygon, Rectangle
-
-logger = logging.getLogger(__name__)
 
 
 def _convert_classification_prediction(

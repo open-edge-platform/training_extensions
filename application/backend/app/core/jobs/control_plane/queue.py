@@ -2,13 +2,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import asyncio
-import logging
 from enum import StrEnum
 from uuid import UUID
 
-from app.core.jobs.models import Job, JobStatus
+from loguru import logger
 
-logger = logging.getLogger(__name__)
+from app.core.jobs.models import Job, JobStatus
 
 
 class CancellationResult(StrEnum):

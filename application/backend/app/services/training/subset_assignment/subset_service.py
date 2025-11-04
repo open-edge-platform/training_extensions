@@ -1,9 +1,9 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-import logging
 from collections import defaultdict
 from uuid import UUID
 
+from loguru import logger
 from sqlalchemy.orm import Session
 
 from app.models import DatasetItemSubset
@@ -11,8 +11,6 @@ from app.repositories import DatasetItemRepository
 
 from .distribution import SubsetDistribution
 from .models import DatasetItemWithLabels, SubsetAssignment
-
-logger = logging.getLogger(__name__)
 
 
 class SubsetService:

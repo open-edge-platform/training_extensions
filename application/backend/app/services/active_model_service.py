@@ -1,20 +1,18 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
 import os
 from dataclasses import dataclass
 from multiprocessing.synchronize import Event as EventClass
 from pathlib import Path
 from uuid import UUID
 
+from loguru import logger
 from model_api.models import Model
 
 from app.db.engine import get_db_session
 from app.repositories import ModelRevisionRepository
 from app.schemas.model_activation import ModelActivationState
-
-logger = logging.getLogger(__name__)
 
 MODELAPI_DEVICE = os.getenv("MODELAPI_DEVICE", "AUTO")
 MODELAPI_NSTREAMS = os.getenv("MODELAPI_NSTREAMS", "2")

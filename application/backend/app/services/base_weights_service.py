@@ -2,17 +2,15 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import hashlib
-import logging
 import shutil
 from pathlib import Path
 
 import requests
+from loguru import logger
 
 from app.models import TaskType
 from app.supported_models import ModelManifest
 from app.supported_models.supported_models import SupportedModels
-
-logger = logging.getLogger(__name__)
 
 
 class BaseWeightsService:

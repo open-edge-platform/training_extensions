@@ -1,10 +1,11 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
 import multiprocessing as mp
 import queue
 from multiprocessing.synchronize import Event as EventClass
+
+from loguru import logger
 
 from app.db import get_db_session
 from app.models import DisconnectedSinkConfig, Sink, SinkType
@@ -14,8 +15,6 @@ from app.services.dispatchers import Dispatcher
 from app.services.event.event_bus import EventBus, EventType
 from app.stream.stream_data import StreamData
 from app.workers.base import BaseThreadWorker
-
-logger = logging.getLogger(__name__)
 
 
 class DispatchingWorker(BaseThreadWorker):

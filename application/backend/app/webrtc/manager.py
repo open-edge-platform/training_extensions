@@ -2,16 +2,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import asyncio
-import logging
 import queue
 from typing import Any
 
 from aiortc import RTCPeerConnection, RTCSessionDescription
+from loguru import logger
 
 from app.schemas.webrtc import Answer, InputData, Offer
 from app.webrtc.stream import InferenceVideoStreamTrack
-
-logger = logging.getLogger(__name__)
 
 
 class WebRTCManager:

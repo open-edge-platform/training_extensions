@@ -1,6 +1,5 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-import logging
 from collections.abc import Callable, Sequence
 from typing import TypeVar
 from uuid import UUID
@@ -18,11 +17,10 @@ from datumaro.experimental import (
 )
 from datumaro.experimental.categories import LabelCategories
 from datumaro.experimental.fields import ImageInfo, polygon_field
+from loguru import logger
 
 from app.models import DatasetItem, Label, Polygon, Rectangle, TaskType
 from app.schemas.project import ProjectBase
-
-logger = logging.getLogger(__name__)
 
 CONVERSION_BATCH_SIZE = 50
 

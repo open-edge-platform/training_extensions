@@ -1,13 +1,13 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
 import time
 from collections.abc import Callable
 from contextlib import AbstractContextManager
 from pathlib import Path
 from uuid import UUID
 
+from loguru import logger
 from sqlalchemy.orm import Session
 
 from app.core.run import ExecutionContext
@@ -15,8 +15,6 @@ from app.services.base_weights_service import BaseWeightsService
 
 from .base import Trainer, step
 from .subset_assignment import SplitRatios, SubsetAssigner, SubsetService
-
-logger = logging.getLogger(__name__)
 
 MODEL_WEIGHTS_PATH = "model_weights_path"
 
