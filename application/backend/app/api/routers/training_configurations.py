@@ -7,7 +7,12 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.api.dependencies import get_training_configuration_service
+from app.api.dependencies import (
+    get_model_architecture_id,
+    get_model_revision_id,
+    get_project_id,
+    get_training_configuration_service,
+)
 from app.configuration_tools.training_configuration_converter import TrainingConfigurationConverter
 from app.services import ResourceNotFoundError
 from app.services.training_configuration_service import TrainingConfigurationService
@@ -21,9 +26,9 @@ def get_training_configuration(
     training_configuration_service: Annotated[
         TrainingConfigurationService, Depends(get_training_configuration_service)
     ],
-    project_id: UUID,
-    model_architecture_id: str | None = None,
-    model_revision_id: UUID | None = None,
+    project_id: Annotated[UUID, Depends(get_project_id)],
+    model_architecture_id: Annotated[str, Depends(get_model_architecture_id)],
+    model_revision_id: Annotated[UUID, Depends(get_model_revision_id)],
 ) -> dict:
     """
     Get the training configuration for a project.
@@ -32,15 +37,6 @@ def get_training_configuration(
     If model_revision_id is provided, returns configuration for a specific trained model.
     If neither is provided, returns only general task-related configuration.
     Note: model_architecture_id and model_revision_id cannot be used together.
-
-    Args:
-        training_configuration_service (TrainingConfigurationService): The training configuration service.
-        project_id (UUID): The unique identifier of the project.
-        model_architecture_id (Optional[str]): The model architecture ID for specific configuration retrieval.
-        model_revision_id (Optional[UUID]): The model revision ID for specific configuration retrieval.
-
-    Returns:
-        TrainingConfiguration: The training configuration details.
     """
     try:
         training_config = training_configuration_service.get_training_configuration(
@@ -60,9 +56,9 @@ def update_training_configuration(
     training_configuration_service: Annotated[
         TrainingConfigurationService, Depends(get_training_configuration_service)
     ],
-    project_id: UUID,
+    project_id: Annotated[UUID, Depends(get_project_id)],
+    model_architecture_id: Annotated[str, Depends(get_model_architecture_id)],
     training_config_update: dict,
-    model_architecture_id: str | None = None,
 ) -> None:
     """
     Update the training configuration for a project.
@@ -70,21 +66,6 @@ def update_training_configuration(
     - If model_architecture_id is provided, updates configuration for that specific model architecture.
     - If not provided, updates the general task-related configuration.
     Note: model_architecture_id cannot be used with model_revision_id for updates.
-
-    Request body should contain elements of the configuration hierarchy to update:
-    ```json
-    {
-      "dataset_augmentation_parameters": {...},
-      "training": {...},
-      "evaluation": {...}
-    }
-    ```
-
-    Args:
-        training_configuration_service (TrainingConfigurationService): The training configuration service.
-        project_id (UUID): The unique identifier of the project.
-        training_config_update (dict): The configuration updates to apply.
-        model_architecture_id (Optional[str]): The model architecture ID for specific configuration update.
     """
     try:
         training_configuration_service.update_training_configuration(

@@ -22,6 +22,7 @@ class TrainingConfigurationRepository(BaseRepository[TrainingConfigurationDB]):
         Args:
             project_id (str): The ID of the project.
             model_architecture_id (str | None): The ID of the model architecture.
+                If None, the operation targets the project-level configuration.
         """
         stmt = select(TrainingConfigurationDB).where(
             TrainingConfigurationDB.project_id == project_id,
