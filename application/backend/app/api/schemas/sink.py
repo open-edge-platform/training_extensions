@@ -15,10 +15,19 @@ from app.models import (
     SinkType,
     WebhookSinkConfig,
 )
-from app.models.sink import FolderConfig, HttpHeaders, HttpMethod, MqttConfig, RosConfig, WebhookConfig
+from app.models.sink import (
+    DisconnectedConfig,
+    FolderConfig,
+    HttpHeaders,
+    HttpMethod,
+    MqttConfig,
+    RosConfig,
+    WebhookConfig,
+)
 
 
 class DisconnectedSinkConfigView(DisconnectedSinkConfig):
+    config_data: DisconnectedConfig = Field(exclude=True)
     model_config = {
         "json_schema_extra": {
             "example": {
@@ -34,6 +43,7 @@ class FolderSinkConfigView(FolderSinkConfig):
     config_data: FolderConfig = Field(exclude=True)
 
     @computed_field
+    @property
     def folder_path(self) -> str:
         return self.config_data.folder_path
 
@@ -55,18 +65,22 @@ class MqttSinkConfigView(MqttSinkConfig):
     config_data: MqttConfig = Field(exclude=True)
 
     @computed_field
+    @property
     def broker_host(self) -> str:
         return self.config_data.broker_host
 
     @computed_field
+    @property
     def broker_port(self) -> int:
         return self.config_data.broker_port
 
     @computed_field
+    @property
     def topic(self) -> str:
         return self.config_data.topic
 
     @computed_field
+    @property
     def auth_required(self) -> bool:
         return self.config_data.auth_required
 
@@ -90,6 +104,7 @@ class RosSinkConfigView(RosSinkConfig):
     config_data: RosConfig = Field(exclude=True)
 
     @computed_field
+    @property
     def topic(self) -> str:
         return self.config_data.topic
 
@@ -110,18 +125,22 @@ class WebhookSinkConfigView(WebhookSinkConfig):
     config_data: WebhookConfig = Field(exclude=True)
 
     @computed_field
+    @property
     def webhook_url(self) -> str:
         return self.config_data.webhook_url
 
     @computed_field
+    @property
     def http_method(self) -> HttpMethod:
         return self.config_data.http_method
 
     @computed_field
+    @property
     def headers(self) -> HttpHeaders | None:
         return self.config_data.headers
 
     @computed_field
+    @property
     def timeout(self) -> int:
         return self.config_data.timeout
 

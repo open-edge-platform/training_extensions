@@ -1,15 +1,16 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 
 from app.db.schema import PipelineDB, SourceDB
-from app.services import ResourceInUseError, ResourceNotFoundError, ResourceType, SourceUpdateService
+from app.models import SourceAdapter
+from app.models.source import VideoFileConfig
+from app.services import ResourceInUseError, ResourceType, SourceUpdateService
 from app.services.base import ResourceWithIdAlreadyExistsError, ResourceWithNameAlreadyExistsError
 from app.services.event.event_bus import EventType
-from app.services.mappers import SourceMapper
 
 
 @pytest.fixture
@@ -23,7 +24,12 @@ class TestSourceUpdateServiceIntegration:
 
     def test_create_source(self, fxt_webcam_source, fxt_source_update_service, db_session):
         """Test creating a new configuration."""
-        fxt_source_update_service.create(fxt_webcam_source)
+        fxt_source_update_service.create_source(
+            name=fxt_webcam_source.name,
+            source_type=fxt_webcam_source.source_type,
+            config_data=fxt_webcam_source.config_data,
+            source_id=fxt_webcam_source.id,
+        )
 
         assert db_session.query(SourceDB).count() == 1
         created = db_session.query(SourceDB).one()
@@ -44,7 +50,12 @@ class TestSourceUpdateServiceIntegration:
         fxt_webcam_source.name = fxt_db_sources[0].name  # Set the same name as existing resource
 
         with pytest.raises(ResourceWithNameAlreadyExistsError) as excinfo:
-            fxt_source_update_service.create(fxt_webcam_source)
+            fxt_source_update_service.create_source(
+                name=fxt_webcam_source.name,
+                source_type=fxt_webcam_source.source_type,
+                config_data=fxt_webcam_source.config_data,
+                source_id=fxt_webcam_source.id,
+            )
 
         assert excinfo.value.resource_type == ResourceType.SOURCE
         assert excinfo.value.resource_id == fxt_webcam_source.name
@@ -63,7 +74,12 @@ class TestSourceUpdateServiceIntegration:
         fxt_webcam_source.id = UUID(fxt_db_sources[0].id)  # Set the same ID as existing resource
 
         with pytest.raises(ResourceWithIdAlreadyExistsError) as excinfo:
-            fxt_source_update_service.create(fxt_webcam_source)
+            fxt_source_update_service.create_source(
+                name=fxt_webcam_source.name,
+                source_type=fxt_webcam_source.source_type,
+                config_data=fxt_webcam_source.config_data,
+                source_id=fxt_webcam_source.id,
+            )
 
         assert excinfo.value.resource_type == ResourceType.SOURCE
         assert excinfo.value.resource_id == fxt_db_sources[0].id
@@ -127,9 +143,13 @@ class TestSourceUpdateServiceIntegration:
         db_session.add(db_source)
         db_session.flush()
 
-        source = SourceMapper.to_schema(db_source)
+        source = SourceAdapter.validate_python(db_source, from_attributes=True)
 
-        updated = fxt_source_update_service.update(source, update_data)
+        updated = fxt_source_update_service.update_source(
+            source=source,
+            new_name="Updated Source",
+            new_config_data=VideoFileConfig(video_path="/new/path"),
+        )
 
         assert updated.name == update_data["name"]
         assert str(updated.id) == db_source.id
@@ -145,10 +165,14 @@ class TestSourceUpdateServiceIntegration:
         db_session.add_all(fxt_db_sources[:2])
         db_session.flush()
 
-        source = SourceMapper.to_schema(db_source)
+        source = SourceAdapter.validate_python(db_source, from_attributes=True)
 
         with pytest.raises(ResourceWithNameAlreadyExistsError) as excinfo:
-            fxt_source_update_service.update(source, {"name": fxt_db_sources[1].name})
+            fxt_source_update_service.update_source(
+                source=source,
+                new_name=fxt_db_sources[1].name,
+                new_config_data=VideoFileConfig(video_path="/new/path"),
+            )
 
         assert excinfo.value.resource_type == ResourceType.SOURCE
         assert excinfo.value.resource_id == fxt_db_sources[1].name
@@ -162,7 +186,6 @@ class TestSourceUpdateServiceIntegration:
         db_session,
     ):
         """Test updating a source configuration that is a part of active pipeline."""
-        update_data = {"name": "Updated Source", "video_path": "/new/path"}
         db_project = fxt_db_projects[0]
         db_session.add(db_project)
         db_session.flush()
@@ -175,17 +198,21 @@ class TestSourceUpdateServiceIntegration:
         db_session.add(db_pipeline)
         db_session.flush()
 
-        source = SourceMapper.to_schema(db_source)
+        source = SourceAdapter.validate_python(db_source, from_attributes=True)
 
-        updated = fxt_source_update_service.update(source, update_data)
+        updated = fxt_source_update_service.update_source(
+            source=source,
+            new_name="Updated Source",
+            new_config_data=VideoFileConfig(video_path="/new/path"),
+        )
 
-        assert updated.name == update_data["name"]
+        assert updated.name == "Updated Source"
         assert str(updated.id) == db_source.id
 
         # Verify in DB
         db_source = db_session.get(SourceDB, db_source.id)
-        assert db_source.name == update_data["name"]
-        assert db_source.config_data["video_path"] == update_data["video_path"]
+        assert db_source.name == "Updated Source"
+        assert db_source.config_data["video_path"] == "/new/path"
         fxt_event_bus.emit_event.assert_called_once_with(EventType.SOURCE_CHANGED)
 
     def test_delete_source(self, fxt_db_sources, fxt_source_update_service, db_session):
@@ -194,7 +221,9 @@ class TestSourceUpdateServiceIntegration:
         db_session.add(db_source)
         db_session.flush()
 
-        fxt_source_update_service.delete_by_id(db_source.id)
+        source = SourceAdapter.validate_python(db_source, from_attributes=True)
+
+        fxt_source_update_service.delete_source(source)
 
         assert db_session.query(SourceDB).count() == 0
 
@@ -215,18 +244,11 @@ class TestSourceUpdateServiceIntegration:
         db_session.add(db_pipeline)
         db_session.flush()
 
+        source = SourceAdapter.validate_python(db_source, from_attributes=True)
+
         with pytest.raises(ResourceInUseError) as exc_info:
-            fxt_source_update_service.delete_by_id(db_source.id)
+            fxt_source_update_service.delete_source(source)
 
         assert exc_info.value.resource_type == ResourceType.SOURCE
         assert exc_info.value.resource_id == db_source.id
         assert db_session.query(SourceDB).count() == 1
-
-    def test_delete_non_existent_source(self, fxt_source_update_service):
-        """Test deleting a source that doesn't exist."""
-        with pytest.raises(ResourceNotFoundError) as exc_info:
-            source_id = uuid4()
-            fxt_source_update_service.delete_by_id(source_id)
-
-        assert exc_info.value.resource_type == ResourceType.SOURCE
-        assert exc_info.value.resource_id == str(source_id)

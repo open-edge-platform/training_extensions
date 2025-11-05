@@ -10,7 +10,7 @@ from unittest.mock import Mock, patch
 import numpy as np
 import pytest
 
-from app.schemas import Source
+from app.models import Source
 from app.stream.stream_data import StreamData
 from app.stream.video_stream import VideoStream
 from app.workers import StreamLoader

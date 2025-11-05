@@ -1,19 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from collections.abc import Generator
-from contextlib import contextmanager
-from dataclasses import dataclass
 from enum import StrEnum
-from typing import Generic, Protocol, TypeVar
-from uuid import UUID
-
-from pydantic import BaseModel
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
-
-from app.db.schema import Base
-from app.repositories.base import BaseRepository, PrimaryKeyIntegrityError
 
 
 class ResourceType(StrEnum):
@@ -67,73 +55,3 @@ class ResourceWithIdAlreadyExistsError(ResourceError):
     def __init__(self, resource_type: ResourceType, resource_id: str, message: str | None = None):
         msg = message or f"{resource_type} with ID '{resource_id}' already exists."
         super().__init__(resource_type, resource_id, msg)
-
-
-S = TypeVar("S", bound=BaseModel)  # Schema type e.g. Source or Sink
-D = TypeVar("D", bound=Base)  # DB model type e.g. SourceDB or SinkDB
-R = TypeVar("R", bound=BaseRepository)  # Repository type
-
-
-class MapperProtocol(Protocol[S, D]):
-    """Protocol for mapper classes."""
-
-    @staticmethod
-    def to_schema(db_model: D) -> S: ...
-
-    @staticmethod
-    def from_schema(schema: S) -> D: ...
-
-
-@dataclass(frozen=True)
-class ServiceConfig(Generic[R]):
-    repository_class: type[R]
-    mapper_class: MapperProtocol
-    resource_type: ResourceType
-
-
-class GenericPersistenceService(Generic[S, R]):
-    """Generic service for CRUD operations on a repository."""
-
-    def __init__(self, config: ServiceConfig[R], db: Session) -> None:
-        self.config = config
-        self.db = db
-
-    @contextmanager
-    def _get_repo(self) -> Generator[R]:
-        repo = self.config.repository_class(self.db)  # type: ignore[call-arg]
-        yield repo
-
-    def list_all(self) -> list[S]:
-        with self._get_repo() as repo:
-            return [self.config.mapper_class.to_schema(o) for o in repo.list_all()]
-
-    def get_by_id(self, item_id: UUID) -> S | None:
-        with self._get_repo() as repo:
-            item_db = repo.get_by_id(str(item_id))
-            return self.config.mapper_class.to_schema(item_db) if item_db else None
-
-    def create(self, item: S) -> S:
-        try:
-            with self._get_repo() as repo:
-                item_db = self.config.mapper_class.from_schema(item)
-                repo.save(item_db)
-                return self.config.mapper_class.to_schema(item_db)
-        except PrimaryKeyIntegrityError:
-            raise ResourceWithIdAlreadyExistsError(self.config.resource_type, str(item.id))  # type: ignore[attr-defined]
-
-    def update(self, item: S, partial_config: dict) -> S:
-        with self._get_repo() as repo:
-            to_update = item.model_copy(update=partial_config)
-            updated = repo.update(self.config.mapper_class.from_schema(to_update))
-            # Explicit early commit to ensure changes are visible to other transactions before the session is closed
-            self.db.commit()
-            return self.config.mapper_class.to_schema(updated)
-
-    def delete_by_id(self, item_id: UUID) -> None:
-        try:
-            with self._get_repo() as repo:
-                deleted = repo.delete(str(item_id))
-            if not deleted:
-                raise ResourceNotFoundError(self.config.resource_type, str(item_id))
-        except IntegrityError:
-            raise ResourceInUseError(self.config.resource_type, str(item_id))

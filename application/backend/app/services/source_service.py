@@ -2,49 +2,81 @@
 # SPDX-License-Identifier: Apache-2.0
 from uuid import UUID
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.db.schema import SourceDB
+from app.models import Source, SourceType
+from app.models.source import SourceAdapter, SourceConfig
 from app.repositories import SourceRepository
-from app.repositories.base import UniqueConstraintIntegrityError
-from app.schemas import Source
+from app.repositories.base import PrimaryKeyIntegrityError, UniqueConstraintIntegrityError
 
 from .base import (
-    GenericPersistenceService,
+    ResourceInUseError,
     ResourceNotFoundError,
     ResourceType,
+    ResourceWithIdAlreadyExistsError,
     ResourceWithNameAlreadyExistsError,
-    ServiceConfig,
 )
 from .event.event_bus import EventBus, EventType
-from .mappers import SourceMapper
 from .parent_process_guard import parent_process_only
 
 
-class SourceService(GenericPersistenceService[Source, SourceRepository]):
+class SourceService:
     def __init__(self, db_session: Session):
-        super().__init__(ServiceConfig(SourceRepository, SourceMapper, ResourceType.SOURCE), db_session)
-
-    def get_by_id(self, item_id: UUID) -> Source:
-        source = super().get_by_id(item_id)
-        if not source:
-            raise ResourceNotFoundError(ResourceType.SOURCE, str(item_id))
-        return source
+        self._db_session = db_session
 
     @parent_process_only
-    def create(self, item: Source) -> Source:
+    def create_source(
+        self,
+        name: str,
+        source_type: SourceType,
+        config_data: SourceConfig,
+        source_id: UUID | None = None,
+    ) -> Source:
         try:
-            return super().create(item)
+            db_source = SourceRepository(self._db_session).save(
+                SourceDB(
+                    id=str(source_id) if source_id is not None else None,
+                    name=name,
+                    source_type=source_type,
+                    config_data=config_data.model_dump(mode="json"),
+                )
+            )
+            return SourceAdapter.validate_python(db_source, from_attributes=True)
+        except PrimaryKeyIntegrityError:
+            raise ResourceWithIdAlreadyExistsError(ResourceType.SOURCE, str(source_id))
         except UniqueConstraintIntegrityError:
-            raise ResourceWithNameAlreadyExistsError(ResourceType.SOURCE, item.name)
+            raise ResourceWithNameAlreadyExistsError(ResourceType.SOURCE, name)
+
+    def get_by_id(self, source_id: UUID) -> Source:
+        db_source = SourceRepository(self._db_session).get_by_id(str(source_id))
+        if not db_source:
+            raise ResourceNotFoundError(ResourceType.SOURCE, str(source_id))
+        return SourceAdapter.validate_python(db_source, from_attributes=True)
+
+    def list_all(self) -> list[Source]:
+        return [
+            SourceAdapter.validate_python(db_source, from_attributes=True)
+            for db_source in SourceRepository(self._db_session).list_all()
+        ]
+
+    @parent_process_only
+    def delete_source(self, source: Source) -> None:
+        try:
+            deleted = SourceRepository(self._db_session).delete(str(source.id))
+            if not deleted:
+                raise ResourceNotFoundError(ResourceType.SOURCE, str(source.id))
+        except IntegrityError:
+            raise ResourceInUseError(ResourceType.SOURCE, str(source.id))
 
     def get_active_source(self) -> Source | None:
-        with self._get_repo() as repo:
-            item_db = repo.get_active_source()
-            return self.config.mapper_class.to_schema(item_db) if item_db else None
+        db_source = SourceRepository(self._db_session).get_active_source()
+        return SourceAdapter.validate_python(db_source, from_attributes=True) if db_source else None
 
-    @parent_process_only
-    def delete_by_id(self, item_id: UUID) -> None:
-        super().delete_by_id(item_id)
+    def get_active_source_id(self) -> UUID | None:
+        id = SourceRepository(self._db_session).get_active_source_id()
+        return UUID(id) if id else None
 
 
 class SourceUpdateService(SourceService):
@@ -53,12 +85,24 @@ class SourceUpdateService(SourceService):
         super().__init__(db_session)
 
     @parent_process_only
-    def update(self, source: Source, partial_config: dict) -> Source:
+    def update_source(
+        self,
+        source: Source,
+        new_name: str,
+        new_config_data: SourceConfig,
+    ) -> Source:
         try:
-            updated = super().update(source, partial_config)
-            active_source = self.get_active_source()
-            if active_source and active_source.id == updated.id:
+            source_repo = SourceRepository(self._db_session)
+            db_source = source_repo.update(
+                SourceDB(
+                    id=str(source.id),
+                    name=new_name,
+                    config_data=new_config_data.model_dump(mode="json"),
+                )
+            )
+            active_source_id = self.get_active_source_id()
+            if active_source_id == UUID(db_source.id):
                 self._event_bus.emit_event(EventType.SOURCE_CHANGED)
-            return updated
+            return SourceAdapter.validate_python(db_source, from_attributes=True)
         except UniqueConstraintIntegrityError:
-            raise ResourceWithNameAlreadyExistsError(ResourceType.SOURCE, partial_config["name"])
+            raise ResourceWithNameAlreadyExistsError(ResourceType.SOURCE, new_name)

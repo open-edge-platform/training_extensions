@@ -5,7 +5,6 @@
 
 import logging
 from typing import Annotated
-from uuid import UUID
 
 import yaml
 from fastapi import APIRouter, Body, Depends, File, UploadFile, status
@@ -14,9 +13,9 @@ from fastapi.openapi.models import Example
 from fastapi.responses import FileResponse, Response
 from pydantic import ValidationError
 
-from app.api.dependencies import get_source_id, get_source_update_service
-from app.schemas import Source, SourceCreate
-from app.schemas.source import SourceCreateAdapter
+from app.api.dependencies import get_source, get_source_update_service
+from app.api.schemas.source import SourceCreate, SourceCreateAdapter, SourceView, SourceViewAdapter
+from app.models import Source
 from app.services import (
     ResourceInUseError,
     ResourceNotFoundError,
@@ -98,7 +97,7 @@ UPDATE_SOURCE_BODY_EXAMPLES = {
 @router.post(
     "",
     status_code=status.HTTP_201_CREATED,
-    response_model=Source,
+    response_model=SourceView,
     responses={
         status.HTTP_201_CREATED: {"description": "Source created"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid source ID or request body"},
@@ -110,10 +109,16 @@ def create_source(
         SourceCreate, Body(description=CREATE_SOURCE_BODY_DESCRIPTION, openapi_examples=CREATE_SOURCE_BODY_EXAMPLES)
     ],
     source_update_service: Annotated[SourceUpdateService, Depends(get_source_update_service)],
-) -> Source:
+) -> SourceView:
     """Create and configure a new source"""
     try:
-        return source_update_service.create(source_create)
+        source = source_update_service.create_source(
+            name=source_create.name,
+            source_type=source_create.source_type,
+            config_data=source_create.config_data,
+            source_id=source_create.id,
+        )
+        return SourceViewAdapter.validate_python(source, from_attributes=True)
     except (ResourceWithNameAlreadyExistsError, ResourceWithIdAlreadyExistsError) as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
@@ -121,46 +126,41 @@ def create_source(
 @router.get(
     "",
     responses={
-        status.HTTP_200_OK: {"description": "List of available source configurations", "model": list[Source]},
+        status.HTTP_200_OK: {"description": "List of available source configurations", "model": list[SourceView]},
     },
 )
 def list_sources(
     source_update_service: Annotated[SourceUpdateService, Depends(get_source_update_service)],
-) -> list[Source]:
+) -> list[SourceView]:
     """List the available sources"""
-    return source_update_service.list_all()
+    sources = source_update_service.list_all()
+    return [SourceViewAdapter.validate_python(source, from_attributes=True) for source in sources]
 
 
 @router.get(
     "/{source_id}",
     responses={
-        status.HTTP_200_OK: {"description": "Source found", "model": Source},
+        status.HTTP_200_OK: {"description": "Source found", "model": SourceView},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid source ID"},
         status.HTTP_404_NOT_FOUND: {"description": "Source not found"},
     },
 )
-def get_source(
-    source_id: Annotated[UUID, Depends(get_source_id)],
-    source_update_service: Annotated[SourceUpdateService, Depends(get_source_update_service)],
-) -> Source:
+def get_source_view(source: Annotated[Source, Depends(get_source)]) -> SourceView:
     """Get info about a source"""
-    try:
-        return source_update_service.get_by_id(source_id)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    return SourceViewAdapter.validate_python(source, from_attributes=True)
 
 
 @router.patch(
     "/{source_id}",
     responses={
-        status.HTTP_200_OK: {"description": "Source successfully updated", "model": Source},
+        status.HTTP_200_OK: {"description": "Source successfully updated", "model": SourceView},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid source ID or request body"},
         status.HTTP_404_NOT_FOUND: {"description": "Source not found"},
         status.HTTP_409_CONFLICT: {"description": "Source already exists"},
     },
 )
 def update_source(
-    source_id: Annotated[UUID, Depends(get_source_id)],
+    source: Annotated[Source, Depends(get_source)],
     source_config: Annotated[
         dict,
         Body(
@@ -169,13 +169,20 @@ def update_source(
         ),
     ],
     source_update_service: Annotated[SourceUpdateService, Depends(get_source_update_service)],
-) -> Source:
+) -> SourceView:
     """Reconfigure an existing source"""
     if "source_type" in source_config:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The 'source_type' field cannot be changed")
+
     try:
-        source = source_update_service.get_by_id(source_id)
-        return source_update_service.update(source, source_config)
+        updated_source: Source = source.model_copy(update=source_config)
+        updated_source.config_data = updated_source.config_data.model_copy(update=source_config)
+        source = source_update_service.update_source(
+            source=source,
+            new_name=updated_source.name,
+            new_config_data=updated_source.config_data,
+        )
+        return SourceViewAdapter.validate_python(source, from_attributes=True)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ResourceWithNameAlreadyExistsError as e:
@@ -196,21 +203,14 @@ def update_source(
         status.HTTP_404_NOT_FOUND: {"description": "Source not found"},
     },
 )
-def export_source(
-    source_id: Annotated[UUID, Depends(get_source_id)],
-    source_update_service: Annotated[SourceUpdateService, Depends(get_source_update_service)],
-) -> Response:
+def export_source(source: Annotated[Source, Depends(get_source)]) -> Response:
     """Export a source to file"""
-    source = source_update_service.get_by_id(source_id)
-    if not source:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Source with ID {source_id} not found")
-
     yaml_content = yaml.safe_dump(source.model_dump(mode="json", exclude={"id"}))
 
     return Response(
         content=yaml_content.encode("utf8"),
         media_type="application/x-yaml",
-        headers={"Content-Disposition": f"attachment; filename=source_{source_id}.yaml"},
+        headers={"Content-Disposition": f"attachment; filename=source_{source.id}.yaml"},
     )
 
 
@@ -218,7 +218,7 @@ def export_source(
     ":import",
     status_code=status.HTTP_201_CREATED,
     responses={
-        status.HTTP_201_CREATED: {"description": "Source imported successfully", "model": Source},
+        status.HTTP_201_CREATED: {"description": "Source imported successfully", "model": SourceView},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid YAML format "},
         status.HTTP_409_CONFLICT: {"description": "Source already exists"},
         status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Validation error(s)"},
@@ -227,13 +227,19 @@ def export_source(
 def import_source(
     yaml_file: Annotated[UploadFile, File(description="YAML file containing the source configuration")],
     source_update_service: Annotated[SourceUpdateService, Depends(get_source_update_service)],
-) -> Source:
+) -> SourceView:
     """Import a source from file"""
     try:
         yaml_content = yaml_file.file.read()
         source_data = yaml.safe_load(yaml_content)
         source_create = SourceCreateAdapter.validate_python(source_data)
-        return source_update_service.create(source_create)
+        source = source_update_service.create_source(
+            name=source_create.name,
+            source_type=source_create.source_type,
+            config_data=source_create.config_data,
+            source_id=source_create.id,
+        )
+        return SourceViewAdapter.validate_python(source, from_attributes=True)
     except yaml.YAMLError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid YAML format: {str(e)}")
     except (ResourceWithNameAlreadyExistsError, ResourceWithIdAlreadyExistsError) as e:
@@ -255,12 +261,12 @@ def import_source(
     },
 )
 def delete_source(
-    source_id: Annotated[UUID, Depends(get_source_id)],
+    source: Annotated[Source, Depends(get_source)],
     source_update_service: Annotated[SourceUpdateService, Depends(get_source_update_service)],
 ) -> None:
     """Remove a source"""
     try:
-        source_update_service.delete_by_id(source_id)
+        source_update_service.delete_source(source)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ResourceInUseError as e:

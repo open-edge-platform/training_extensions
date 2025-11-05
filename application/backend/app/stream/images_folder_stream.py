@@ -10,7 +10,7 @@ import cv2
 from watchdog.events import DirCreatedEvent, DirDeletedEvent, FileCreatedEvent, FileDeletedEvent, FileSystemEventHandler
 from watchdog.observers import Observer
 
-from app.schemas.source import SourceType
+from app.models import SourceType
 from app.stream.stream_data import StreamData
 from app.stream.video_stream import VideoStream
 

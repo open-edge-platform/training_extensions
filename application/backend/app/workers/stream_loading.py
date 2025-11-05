@@ -9,7 +9,7 @@ from multiprocessing.synchronize import Event as EventClass
 from threading import Thread
 
 from app.db import get_db_session
-from app.schemas import DisconnectedSourceConfig, Source, SourceType
+from app.models import DisconnectedSourceConfig, Source, SourceType
 from app.services import SourceService, VideoStreamService
 from app.stream.stream_data import StreamData
 from app.stream.video_stream import VideoStream

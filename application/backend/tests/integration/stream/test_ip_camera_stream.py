@@ -12,7 +12,8 @@ import numpy as np
 import pytest
 from testcontainers.compose import DockerCompose
 
-from app.schemas.source import IPCameraSourceConfig, SourceType
+from app.models import IPCameraSourceConfig, SourceType
+from app.models.source import IPCameraConfig
 from app.stream.ip_camera_stream import IPCameraStream
 
 
@@ -49,7 +50,10 @@ class TestIPCameraStream:
     @pytest.fixture()
     def config(self, ip_camera: str) -> IPCameraSourceConfig:
         return IPCameraSourceConfig(
-            source_type=SourceType.IP_CAMERA, id=uuid4(), name="Test IP Camera", stream_url=ip_camera
+            source_type=SourceType.IP_CAMERA,
+            id=uuid4(),
+            name="Test IP Camera",
+            config_data=IPCameraConfig(stream_url=ip_camera),
         )
 
     @pytest.fixture()
@@ -81,7 +85,10 @@ class TestIPCameraStream:
         """Test that IPCameraStream handles invalid URLs with specific error."""
         invalid_url = "http://invalid-url:9999/stream"
         config = IPCameraSourceConfig(
-            source_type=SourceType.IP_CAMERA, id=uuid4(), name="Test IP Camera", stream_url=invalid_url
+            source_type=SourceType.IP_CAMERA,
+            id=uuid4(),
+            name="Test IP Camera",
+            config_data=IPCameraConfig(stream_url=invalid_url),
         )
 
         # Should raise exception during initialization

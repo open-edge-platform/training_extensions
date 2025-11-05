@@ -7,7 +7,7 @@ import time
 import cv2
 import numpy as np
 
-from app.schemas.source import IPCameraSourceConfig, SourceType
+from app.models import IPCameraSourceConfig, SourceType
 from app.stream.base_opencv_stream import BaseOpenCVStream
 
 logger = logging.getLogger(__name__)
@@ -22,9 +22,9 @@ class IPCameraStream(BaseOpenCVStream):
     def __init__(self, config: IPCameraSourceConfig) -> None:
         """Initialize IP camera stream."""
         super().__init__(
-            source=config.get_configured_stream_url(),
+            source=config.config_data.get_configured_stream_url(),
             source_type=SourceType.IP_CAMERA,
-            stream_url=config.stream_url,  # Original stream URL is kept for metadata
+            stream_url=config.config_data.stream_url,  # Original stream URL is kept for metadata
         )
         logger.info("IP camera stream initialized")
         self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)

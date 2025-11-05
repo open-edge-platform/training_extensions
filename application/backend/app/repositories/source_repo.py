@@ -18,3 +18,8 @@ class SourceRepository(BaseRepository[SourceDB]):
         """Retrieve a source of an active pipeline."""
         stmt = select(SourceDB).join(PipelineDB, SourceDB.id == PipelineDB.source_id).where(PipelineDB.is_running)
         return self.db.execute(stmt).scalar_one_or_none()
+
+    def get_active_source_id(self) -> str | None:
+        """Retrieve a source ID of an active pipeline."""
+        stmt = select(SourceDB.id).join(PipelineDB, SourceDB.id == PipelineDB.source_id).where(PipelineDB.is_running)
+        return self.db.execute(stmt).scalar_one_or_none()
