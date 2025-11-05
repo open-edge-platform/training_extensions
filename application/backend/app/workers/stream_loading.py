@@ -41,7 +41,7 @@ class StreamLoader(BaseProcessWorker):
         with get_db_session() as db:
             source = SourceService(db_session=db).get_active_source()
         self._source = source if source is not None else DisconnectedSourceConfig()
-        logger.info(f"Active source set to {self._source}. Process: %s", mp.current_process().name)
+        logger.info("Active source set to {}. Process: {}", self._source, mp.current_process().name)
         self._reset_stream()
 
     def _reload_source_loop(self) -> None:

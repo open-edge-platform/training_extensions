@@ -68,7 +68,7 @@ def setup_logging(config: LogConfig | None = None) -> None:
         logger.exception(f"Failed to add log sink for {log_path}")
 
 
-def setup_uvicorn_logging() -> None:
+def setup_uvicorn_logging(log_level: str) -> None:
     """Configure uvicorn logging to be handled by loguru.
 
     Intercepts all uvicorn log messages (from uvicorn.error, uvicorn.access, etc.)
@@ -85,14 +85,14 @@ def setup_uvicorn_logging() -> None:
     starting the uvicorn server.
 
     Example:
-        >>> setup_uvicorn_logging()
+        >>> setup_uvicorn_logging("INFO")
         # All uvicorn logs now flow through loguru
     """
     # Setup uvicorn logs to be handled by loguru
     # Configure the main uvicorn logger with InterceptHandler
     uvicorn_logger = logging.getLogger("uvicorn")
     uvicorn_logger.handlers = [InterceptHandler()]
-    uvicorn_logger.setLevel(logging.INFO)
+    uvicorn_logger.setLevel(log_level)
     uvicorn_logger.propagate = False  # Don't propagate to root to avoid duplicate logs
     # Clear handlers from child loggers and let them propagate to parent uvicorn logger
     for logger_name in ("uvicorn.access", "uvicorn.error"):

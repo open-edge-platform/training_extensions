@@ -57,7 +57,7 @@ class ProcessRun:
             args=(
                 self._runnable_factory,
                 self._job.job_type,
-                self._job.id,
+                self._job.log_file,
                 self._job.params.model_dump_json(),
                 self._child,
                 self._cancel,
@@ -116,7 +116,7 @@ class ProcessRun:
 
 
 def _entrypoint(
-    get_runnable: RunnableFactory, job_type: str, job_id: str, payload: str, conn: Connection, cancel_event: Event
+    get_runnable: RunnableFactory, job_type: str, log_file: str, payload: str, conn: Connection, cancel_event: Event
 ) -> None:
     """
     Entrypoint for the child process.
@@ -126,7 +126,7 @@ def _entrypoint(
     Args:
         get_runnable (RunnableFactory): Factory to create runnable job instance.
         job_type (str): Type of job to execute.
-        job_id (str): Unique identifier for the job.
+        log_file (str): Log file path for job logging.
         payload (str): Serialized job parameters.
         conn (Connection): IPC connection to parent process.
         cancel_event (Event): Event to signal cancellation.
@@ -148,9 +148,7 @@ def _entrypoint(
 
     try:
         conn.send(Started())
-        with logging_ctx(
-            LogConfig(log_folder=str(get_settings().job_dir), log_file=f"{job_type.lower()}-{job_id}.log")
-        ):
+        with logging_ctx(LogConfig(log_folder=str(get_settings().job_dir), log_file=log_file)):
             runnable.run(ExecutionContext(payload=payload, report=report, heartbeat=heartbeat))
         conn.send(Done())
     except CancelledExc:

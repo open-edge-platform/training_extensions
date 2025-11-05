@@ -45,6 +45,10 @@ class Job(BaseIDModel):
     result: dict | None = None  # result of the job, if completed
     error: str | None = None
 
+    @property
+    def log_file(self) -> str:
+        return f"{self.job_type.lower()}-{self.id}.log"
+
     def start(self) -> None:
         self.status = JobStatus.RUNNING
         self.started_at = now_utc_ts()

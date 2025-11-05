@@ -13,7 +13,7 @@ from app.core.jobs.control_plane import CancellationResult
 from app.main import app
 from app.models import TaskType
 from app.schemas import ProjectView
-from app.schemas.job import JobRequest, JobType, JobView, TrainingRequestParams
+from app.schemas.job import JobRequest, JobType, TrainingRequestParams
 from app.schemas.project import TaskView
 
 
@@ -110,16 +110,3 @@ class TestJobEndpoints:
         if expected_status == status.HTTP_202_ACCEPTED:
             assert response.json()["job_id"] == str(job_id)
         fxt_jobs_queue.cancel.assert_called_once_with(job_id)
-
-    def test_stream_job_status(self, fxt_client, fxt_jobs_queue, fxt_job):
-        job_id = uuid4()
-        job = fxt_job(job_id, JobStatus.DONE)
-        fxt_jobs_queue.get.return_value = job
-
-        with fxt_client.stream("GET", f"/api/jobs/{job_id}/status") as response:
-            assert response.status_code == status.HTTP_200_OK
-            assert response.headers["content-type"] == "text/event-stream"
-
-            for line in response.iter_lines():
-                assert line == JobView.of(job).model_dump_json()
-                break

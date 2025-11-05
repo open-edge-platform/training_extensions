@@ -58,8 +58,8 @@ def logging_ctx(config: LogConfig) -> Generator[str]:
         raise RuntimeError(f"Failed to add log sink for {log_path}: {e}") from e
 
     try:
-        logger.info(f"Started logging to {log_path}")
+        logger.debug("Started logging to {}", log_path)
         yield log_path
     finally:
-        logger.info(f"Stopped logging to {log_path}")
+        logger.debug("Stopped logging to {}", log_path)
         logger.remove(sink_id)

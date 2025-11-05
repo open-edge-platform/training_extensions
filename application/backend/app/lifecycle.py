@@ -77,7 +77,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
 
     # Setup logging
     setup_logging()
-    setup_uvicorn_logging()
+    setup_uvicorn_logging(settings.log_level)
 
     # Initialize database
     migration_manager = MigrationManager(settings)
