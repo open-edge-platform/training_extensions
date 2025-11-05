@@ -18,6 +18,7 @@ services:
     working_dir: /app
     volumes:
       - ../backend/data/:/app/data/
+      - ../backend/logs/:/app/logs/
     ports:
       - "80:80"
     # Map all host devices to provide access to webcams and other attached devices
