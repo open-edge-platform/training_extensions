@@ -4,6 +4,7 @@ from uuid import UUID
 
 from sqlalchemy.orm import Session
 
+from app.configuration_tools.configurable_parameters_converter import ConfigurableParametersConverter
 from app.configuration_tools.training_configuration import PartialTrainingConfiguration, TrainingConfiguration
 from app.repositories import ModelRevisionRepository, ProjectRepository
 from app.repositories.training_configuration_repo import TrainingConfigurationRepository
@@ -138,13 +139,11 @@ class TrainingConfigurationService:
             model_architecture_id=model_architecture_id,
         )
 
-        validated_update_config = TrainingConfiguration.from_model(training_config_update)
+        converter_config = ConfigurableParametersConverter.configurable_parameters_from_rest(training_config_update)
+
+        validated_update_config = PartialTrainingConfiguration(**converter_config)
         updated_config = current_config.model_copy(
-            update={
-                "dataset_augmentation_parameters": validated_update_config.dataset_augmentation_parameters,
-                "training": validated_update_config.training,
-                "evaluation": validated_update_config.evaluation,
-            },
+            update=validated_update_config.model_dump(),
             deep=True,
         )
 

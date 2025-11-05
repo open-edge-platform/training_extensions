@@ -59,7 +59,7 @@ def update_training_configuration(
     project_id: Annotated[UUID, Depends(get_project_id)],
     model_architecture_id: Annotated[str, Depends(get_model_architecture_id)],
     training_config_update: dict,
-) -> None:
+) -> dict:
     """
     Update the training configuration for a project.
 
@@ -68,11 +68,12 @@ def update_training_configuration(
     Note: model_architecture_id cannot be used with model_revision_id for updates.
     """
     try:
-        training_configuration_service.update_training_configuration(
+        updated_config = training_configuration_service.update_training_configuration(
             project_id=project_id,
             training_config_update=training_config_update,
             model_architecture_id=model_architecture_id,
         )
+        return TrainingConfigurationConverter().training_configuration_to_rest(updated_config)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ValueError as e:
