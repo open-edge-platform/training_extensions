@@ -108,6 +108,7 @@ max-args=7
 python_version = "3.13"
 ignore_missing_imports = true
 show_error_codes = true
+disable_error_code = ["prop-decorator"] # Ignore error due to https://github.com/python/mypy/issues/14461
 
 [tool.pytest.ini_options]
 pythonpath = [

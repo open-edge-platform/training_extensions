@@ -39,12 +39,12 @@ class DisconnectedSourceConfigView(DisconnectedSourceConfig):
 class WebcamSourceConfigView(WebcamSourceConfig):
     config_data: WebcamConfig = Field(exclude=True)
 
-    @computed_field  # type: ignore[prop-decorator]
+    @computed_field
     @property
     def device_id(self) -> int:
         return self.config_data.device_id
 
-    @computed_field  # type: ignore[prop-decorator]
+    @computed_field
     @property
     def codec(self) -> str | None:
         return self.config_data.codec
@@ -71,12 +71,12 @@ class WebcamSourceConfigView(WebcamSourceConfig):
 class IPCameraSourceConfigView(IPCameraSourceConfig):
     config_data: IPCameraConfig = Field(exclude=True)
 
-    @computed_field  # type: ignore[prop-decorator]
+    @computed_field
     @property
     def stream_url(self) -> str:
         return self.config_data.stream_url
 
-    @computed_field  # type: ignore[prop-decorator]
+    @computed_field
     @property
     def auth_required(self) -> bool:
         return self.config_data.auth_required
@@ -97,7 +97,7 @@ class IPCameraSourceConfigView(IPCameraSourceConfig):
 class VideoFileSourceConfigView(VideoFileSourceConfig):
     config_data: VideoFileConfig = Field(exclude=True)
 
-    @computed_field  # type: ignore[prop-decorator]
+    @computed_field
     @property
     def video_path(self) -> str:
         return self.config_data.video_path
@@ -117,12 +117,12 @@ class VideoFileSourceConfigView(VideoFileSourceConfig):
 class ImagesFolderSourceConfigView(ImagesFolderSourceConfig):
     config_data: ImagesFolderConfig = Field(exclude=True)
 
-    @computed_field  # type: ignore[prop-decorator]
+    @computed_field
     @property
     def images_folder_path(self) -> str:
         return self.config_data.images_folder_path
 
-    @computed_field  # type: ignore[prop-decorator]
+    @computed_field
     @property
     def ignore_existing_images(self) -> bool:
         return self.config_data.ignore_existing_images
