@@ -322,7 +322,7 @@ class TestDatasetItemEndpoints:
         assert response.json() == {
             "annotations": [
                 {
-                    "confidence": None,
+                    "confidences": None,
                     "labels": [{"id": str(label_id)}],
                     "shape": {"height": 10, "type": "rectangle", "width": 10, "x": 0, "y": 0},
                 }
@@ -406,7 +406,7 @@ class TestDatasetItemEndpoints:
         assert response.json() == {
             "annotations": [
                 {
-                    "confidence": None,
+                    "confidences": None,
                     "labels": [{"id": str(label_id)}],
                     "shape": {"height": 10, "type": "rectangle", "width": 10, "x": 0, "y": 0},
                 }
