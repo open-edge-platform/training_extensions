@@ -10,8 +10,7 @@ from threading import Thread
 
 from app.db import get_db_session
 from app.schemas import DisconnectedSourceConfig, Source, SourceType
-from app.services import VideoStreamService
-from app.services.configuration_service import SourceService
+from app.services import SourceService, VideoStreamService
 from app.stream.stream_data import StreamData
 from app.stream.video_stream import VideoStream
 from app.workers.base import BaseProcessWorker
@@ -25,7 +24,10 @@ class StreamLoader(BaseProcessWorker):
     ROLE = "StreamLoader"
 
     def __init__(
-        self, frame_queue: mp.Queue, stop_event: EventClass, source_changed_condition: Condition | None
+        self,
+        frame_queue: mp.Queue,
+        stop_event: EventClass,
+        source_changed_condition: Condition | None,
     ) -> None:
         super().__init__(stop_event=stop_event, queues_to_cancel=[frame_queue])
         self._frame_queue = frame_queue
@@ -36,7 +38,7 @@ class StreamLoader(BaseProcessWorker):
 
     def _load_source(self) -> None:
         with get_db_session() as db:
-            source = SourceService(db).get_active_source()
+            source = SourceService(db_session=db).get_active_source()
         self._source = source if source is not None else DisconnectedSourceConfig()
         logger.info(f"Active source set to {self._source}. Process: %s", mp.current_process().name)
         self._reset_stream()

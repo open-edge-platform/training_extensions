@@ -60,9 +60,12 @@ class LabelService:
     ) -> Label:
         label_repo = LabelRepository(str(project_id), self._db_session)
         try:
+            db_label = label_repo.get_by_id(str(label_id))
+            if db_label is None:
+                raise ResourceNotFoundError(ResourceType.LABEL, str(label_id))
             db_label = label_repo.update(
                 LabelDB(
-                    id=str(label_id),
+                    id=db_label.id,
                     project_id=str(project_id),
                     name=new_name,
                     color=new_color,

@@ -10,7 +10,7 @@ from typing import Any
 import numpy as np
 from model_api.models.result import Result
 
-from app.schemas.sink import MqttSinkConfig
+from app.models import MqttSinkConfig
 
 from .base import BaseDispatcher
 
@@ -18,7 +18,6 @@ try:
     import paho.mqtt.client as mqtt
 except ImportError:
     mqtt = None  # type: ignore[assignment]
-
 
 logger = logging.getLogger(__name__)
 MAX_RETRIES = 3
@@ -49,10 +48,10 @@ class MqttDispatcher(BaseDispatcher):
             raise ImportError("paho-mqtt is required for MQTT dispatcher.")
 
         super().__init__(output_config)
-        self.broker_host = output_config.broker_host
-        self.broker_port = output_config.broker_port
-        self.topic = output_config.topic
-        self.username, self.password = output_config.get_credentials()
+        self.broker_host = output_config.config_data.broker_host
+        self.broker_port = output_config.config_data.broker_port
+        self.topic = output_config.config_data.topic
+        self.username, self.password = output_config.config_data.get_credentials()
 
         self._connected = False
         self._connection_lock = threading.Lock()

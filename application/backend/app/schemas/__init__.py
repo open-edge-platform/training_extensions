@@ -8,13 +8,11 @@ from app.schemas.model import Model, ModelFormat
 from app.schemas.model_architecture import ModelArchitectures
 from app.schemas.pipeline import DataCollectionPolicy, PipelineStatus, PipelineView
 from app.schemas.project import ProjectCreate, ProjectUpdateName, ProjectView
-from app.schemas.sink import DisconnectedSinkConfig, OutputFormat, Sink, SinkCreate, SinkType
 from app.schemas.source import DisconnectedSourceConfig, Source, SourceCreate, SourceType
 from app.schemas.training_configuration import TrainingConfiguration
 
 __all__ = [
     "DataCollectionPolicy",
-    "DisconnectedSinkConfig",
     "DisconnectedSourceConfig",
     "InferenceMetrics",
     "JobRequest",
@@ -25,7 +23,6 @@ __all__ = [
     "Model",
     "ModelArchitectures",
     "ModelFormat",
-    "OutputFormat",
     "PatchLabels",
     "PipelineMetrics",
     "PipelineStatus",
@@ -33,9 +30,6 @@ __all__ = [
     "ProjectCreate",
     "ProjectUpdateName",
     "ProjectView",
-    "Sink",
-    "SinkCreate",
-    "SinkType",
     "Source",
     "SourceCreate",
     "SourceType",

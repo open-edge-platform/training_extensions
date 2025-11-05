@@ -9,8 +9,8 @@ from uuid import uuid4
 import pytest
 
 from app.api.dependencies import get_project
-from app.core.models import TaskType
 from app.main import app
+from app.models import TaskType
 from app.schemas import LabelView, ProjectView
 from app.schemas.project import TaskView
 from app.services import MetricsService

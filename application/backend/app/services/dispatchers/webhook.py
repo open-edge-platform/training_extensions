@@ -12,7 +12,7 @@ from model_api.models.result import Result
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from app.schemas.sink import WebhookSinkConfig
+from app.models import WebhookSinkConfig
 
 from .base import BaseDispatcher
 
@@ -31,10 +31,10 @@ class WebhookDispatcher(BaseDispatcher):
             output_config: Configuration for the webhook-based output destination
         """
         super().__init__(output_config=output_config)
-        self.webhook_url = output_config.webhook_url
-        self.http_method = output_config.http_method
-        self.headers = output_config.headers
-        self.timeout = output_config.timeout
+        self.webhook_url = output_config.config_data.webhook_url
+        self.http_method = output_config.config_data.http_method
+        self.headers = output_config.config_data.headers
+        self.timeout = output_config.config_data.timeout
         self.session = requests.Session()
         retries = Retry(
             total=MAX_RETRIES,

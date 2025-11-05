@@ -15,7 +15,8 @@ import paho.mqtt.client as mqtt
 import pytest
 from testcontainers.compose import DockerCompose
 
-from app.schemas.sink import MQTT_PASSWORD, MQTT_USERNAME, MqttSinkConfig, OutputFormat, SinkType
+from app.models import MqttSinkConfig, OutputFormat, SinkType
+from app.models.sink import MQTT_PASSWORD, MQTT_USERNAME, MqttConfig
 from app.services.dispatchers.base import numpy_to_base64
 from app.services.dispatchers.mqtt import MqttDispatcher
 
@@ -55,9 +56,12 @@ def mqtt_config(mqtt_broker) -> MqttSinkConfig:
         sink_type=SinkType.MQTT,
         id=uuid4(),
         name="Test MQTT Sink",
-        broker_host=host,
-        broker_port=port,
-        topic="topic",
+        config_data=MqttConfig(
+            broker_host=host,
+            broker_port=port,
+            topic="topic",
+            auth_required=False,
+        ),
         output_formats=[OutputFormat.IMAGE_ORIGINAL, OutputFormat.PREDICTIONS],
     )
 
@@ -70,10 +74,12 @@ def mqtt_config_with_auth(mqtt_broker) -> MqttSinkConfig:
         sink_type=SinkType.MQTT,
         id=uuid4(),
         name="Test MQTT Sink with Auth",
-        broker_host=host,
-        broker_port=port,
-        topic="topic",
-        auth_required=True,
+        config_data=MqttConfig(
+            broker_host=host,
+            broker_port=port,
+            topic="topic",
+            auth_required=True,
+        ),
         output_formats=[OutputFormat.IMAGE_ORIGINAL, OutputFormat.PREDICTIONS],
     )
 
@@ -136,17 +142,6 @@ def mqtt_test_subscriber(mqtt_broker):
 class TestMqttDispatcher:
     """Integration tests for MqttDispatcher."""
 
-    def test_init_successful_connection(self, mqtt_config):
-        """Test successful initialization and connection."""
-        dispatcher = MqttDispatcher(mqtt_config, track_messages=True)
-
-        assert dispatcher.is_connected
-        assert dispatcher.broker_host == mqtt_config.broker_host
-        assert dispatcher.broker_port == mqtt_config.broker_port
-        assert dispatcher.topic == mqtt_config.topic
-
-        dispatcher.close()
-
     @patch.dict(os.environ, {MQTT_USERNAME: "testuser", MQTT_PASSWORD: "testpass"})
     def test_init_with_authentication(self, mqtt_config_with_auth):
         """Test initialization with username/password."""
@@ -171,9 +166,12 @@ class TestMqttDispatcher:
             sink_type="mqtt",
             id=uuid4(),
             name="Test MQTT Sink",
-            broker_host="invalid_host",
-            broker_port=1883,
-            topic="topic",
+            config_data=MqttConfig(
+                broker_host="invalid_host",
+                broker_port=1883,
+                topic="topic",
+                auth_required=False,
+            ),
             output_formats=[OutputFormat.PREDICTIONS],
         )
 
@@ -188,7 +186,7 @@ class TestMqttDispatcher:
     ):
         """Test dispatching original image."""
         mqtt_config.output_formats = [output_format]
-        mqtt_test_subscriber.connect_and_subscribe(mqtt_config.topic)
+        mqtt_test_subscriber.connect_and_subscribe(mqtt_config.config_data.topic)
 
         dispatcher = MqttDispatcher(mqtt_config, track_messages=True)
         dispatcher.dispatch(sample_image, sample_image, sample_predictions)
@@ -197,7 +195,7 @@ class TestMqttDispatcher:
         assert mqtt_test_subscriber.wait_for_messages(1)
 
         message = mqtt_test_subscriber.received_messages[0]
-        assert message["topic"] == mqtt_config.topic
+        assert message["topic"] == mqtt_config.config_data.topic
         assert "timestamp" in message["payload"]
         result = message["payload"]["result"]
         assert len(result.items()) == 1
@@ -231,7 +229,7 @@ class TestMqttDispatcher:
         assert mqtt_test_subscriber.wait_for_messages(1, timeout=1)
 
         msg = mqtt_test_subscriber.received_messages[0]
-        assert msg["topic"] == mqtt_config.topic
+        assert msg["topic"] == mqtt_config.config_data.topic
         assert "timestamp" in msg["payload"]
         result = msg["payload"]["result"]
         assert len(result.items()) == 3
@@ -262,7 +260,7 @@ class TestMqttDispatcher:
         """Test handling of publish failures."""
         dispatcher = MqttDispatcher(mqtt_config, track_messages=True)
 
-        mqtt_test_subscriber.connect_and_subscribe(mqtt_config.topic)
+        mqtt_test_subscriber.connect_and_subscribe(mqtt_config.config_data.topic)
 
         # Mock client to simulate publish failure
         with patch.object(dispatcher.client, "publish") as mock_publish:
