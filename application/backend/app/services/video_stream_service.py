@@ -3,7 +3,7 @@
 
 import logging
 
-from app.schemas import Source, SourceType
+from app.models import Source, SourceType
 from app.stream.images_folder_stream import ImagesFolderStream
 from app.stream.ip_camera_stream import IPCameraStream
 from app.stream.video_file_stream import VideoFileStream
@@ -22,15 +22,17 @@ class VideoStreamService:
             case SourceType.DISCONNECTED:
                 video_stream = None
             case SourceType.WEBCAM:
-                video_stream = WebcamStream(device_id=input_config.device_id, codec=input_config.codec)
+                video_stream = WebcamStream(
+                    device_id=input_config.config_data.device_id, codec=input_config.config_data.codec
+                )
             case SourceType.IP_CAMERA:
                 video_stream = IPCameraStream(config=input_config)
             case SourceType.VIDEO_FILE:
-                video_stream = VideoFileStream(input_config.video_path)
+                video_stream = VideoFileStream(input_config.config_data.video_path)
             case SourceType.IMAGES_FOLDER:
                 video_stream = ImagesFolderStream(
-                    folder_path=input_config.images_folder_path,
-                    ignore_existing_images=input_config.ignore_existing_images,
+                    folder_path=input_config.config_data.images_folder_path,
+                    ignore_existing_images=input_config.config_data.ignore_existing_images,
                 )
             case _:
                 raise ValueError(f"Unrecognized source type: {input_config.source_type}")

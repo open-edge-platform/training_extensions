@@ -8,11 +8,9 @@ from app.schemas.model import Model, ModelFormat
 from app.schemas.model_architecture import ModelArchitectures
 from app.schemas.pipeline import DataCollectionPolicy, PipelineStatus, PipelineView
 from app.schemas.project import ProjectCreate, ProjectUpdateName, ProjectView
-from app.schemas.source import DisconnectedSourceConfig, Source, SourceCreate, SourceType
 
 __all__ = [
     "DataCollectionPolicy",
-    "DisconnectedSourceConfig",
     "InferenceMetrics",
     "JobRequest",
     "JobView",
@@ -29,8 +27,5 @@ __all__ = [
     "ProjectCreate",
     "ProjectUpdateName",
     "ProjectView",
-    "Source",
-    "SourceCreate",
-    "SourceType",
     "TimeWindow",
 ]

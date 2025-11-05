@@ -15,6 +15,16 @@ from .sink import (
     SinkType,
     WebhookSinkConfig,
 )
+from .source import (
+    DisconnectedSourceConfig,
+    ImagesFolderSourceConfig,
+    IPCameraSourceConfig,
+    Source,
+    SourceAdapter,
+    SourceType,
+    VideoFileSourceConfig,
+    WebcamSourceConfig,
+)
 from .task_type import TaskType
 
 __all__ = [
@@ -23,8 +33,11 @@ __all__ = [
     "DatasetItemFormat",
     "DatasetItemSubset",
     "DisconnectedSinkConfig",
+    "DisconnectedSourceConfig",
     "FolderSinkConfig",
     "FullImage",
+    "IPCameraSourceConfig",
+    "ImagesFolderSourceConfig",
     "Label",
     "LabelReference",
     "MqttSinkConfig",
@@ -37,6 +50,11 @@ __all__ = [
     "Sink",
     "SinkAdapter",
     "SinkType",
+    "Source",
+    "SourceAdapter",
+    "SourceType",
     "TaskType",
+    "VideoFileSourceConfig",
+    "WebcamSourceConfig",
     "WebhookSinkConfig",
 ]

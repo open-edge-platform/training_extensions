@@ -6,17 +6,19 @@ from uuid import uuid4
 import pytest
 
 from app.core.jobs import Job, JobParams, JobType
-from app.models import MqttSinkConfig, OutputFormat, SinkType
+from app.models import MqttSinkConfig, OutputFormat, SinkType, SourceType, WebcamSourceConfig
 from app.models.sink import MqttConfig
-from app.schemas import Model, PipelineStatus, PipelineView, SourceType
+from app.models.source import WebcamConfig
+from app.schemas import Model, PipelineStatus, PipelineView
 from app.schemas.model import TrainingInfo, TrainingStatus
-from app.schemas.source import WebcamSourceConfig
 
 
 @pytest.fixture
 def fxt_webcam_source() -> WebcamSourceConfig:
     """Sample source configuration data."""
-    return WebcamSourceConfig(id=uuid4(), source_type=SourceType.WEBCAM, name="Test Source", device_id=1, codec=None)
+    return WebcamSourceConfig(
+        id=uuid4(), source_type=SourceType.WEBCAM, name="Test Source", config_data=WebcamConfig(device_id=1, codec=None)
+    )
 
 
 @pytest.fixture
