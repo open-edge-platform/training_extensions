@@ -57,7 +57,7 @@ class MultilabelClassificationSample(Sample):
 
     image: str = image_path_field()
     image_info: ImageInfo = image_info_field()
-    # TODO: Use NDArrayFloat32 and NDArrayInt instead of np.ndarray after datumaro/issues/1949 is solved
+    # TODO: Use NDArrayFloat32 and NDArrayInt instead of np.ndarray after open-edge-platform/datumaro#1949 is solved
     label: np.ndarray = label_field(dtype=pl.Int32, multi_label=True)
     confidences: np.ndarray | None = score_field(dtype=pl.Float32, is_list=True)
 
@@ -76,7 +76,7 @@ class DetectionSample(Sample):
 
     image: str = image_path_field()
     image_info: ImageInfo = image_info_field()
-    # TODO: Use NDArrayFloat32 and NDArrayInt instead of np.ndarray after datumaro/issues/1949 is solved
+    # TODO: Use NDArrayFloat32 and NDArrayInt instead of np.ndarray after open-edge-platform/datumaro#1949 is solved
     bboxes: np.ndarray = bbox_field(dtype=pl.Int32)
     label: np.ndarray = label_field(dtype=pl.Int32, is_list=True)
     confidences: np.ndarray | None = score_field(dtype=pl.Float32, is_list=True)
@@ -96,7 +96,7 @@ class InstanceSegmentationSample(Sample):
 
     image: str = image_path_field()
     image_info: ImageInfo = image_info_field()
-    # TODO: Use NDArrayFloat32 and NDArrayInt instead of np.ndarray after datumaro/issues/1949 is solved
+    # TODO: Use NDArrayFloat32 and NDArrayInt instead of np.ndarray after open-edge-platform/datumaro#1949 is solved
     polygons: np.ndarray = polygon_field(dtype=pl.Float32)
     label: np.ndarray = label_field(dtype=pl.Int32, is_list=True)
     confidences: np.ndarray | None = score_field(dtype=pl.Float32, is_list=True)
