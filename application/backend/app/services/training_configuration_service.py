@@ -4,7 +4,7 @@ from uuid import UUID
 
 from sqlalchemy.orm import Session
 
-from app.configuration_tools.training_configuration import TrainingConfiguration
+from app.configuration_tools.training_configuration import PartialTrainingConfiguration, TrainingConfiguration
 from app.repositories import ModelRevisionRepository, ProjectRepository
 from app.repositories.training_configuration_repo import TrainingConfigurationRepository
 from app.services import ResourceNotFoundError, ResourceType
@@ -85,8 +85,8 @@ class TrainingConfigurationService:
             return TrainingConfiguration.model_validate(stored_config.configuration_data)
 
         model_manifest = SupportedModels.get_model_manifest_by_id(model_manifest_id=model_architecture_id)
-        return TrainingConfiguration.from_manifest(
-            model_architecture_id=model_architecture_id, hyperparameters=model_manifest.hyperparameters
+        return PartialTrainingConfiguration(
+            model_manifest_id=model_architecture_id, hyperparameters=model_manifest.hyperparameters
         )
 
     def _get_default_configuration(self, project_id: UUID) -> TrainingConfiguration:
@@ -108,9 +108,8 @@ class TrainingConfigurationService:
             raise ValueError(f"No default model found for task type {project.task_type}")
         default_model_manifest = SupportedModels.get_model_manifest_by_id(model_manifest_id=default_model_id)
 
-        return TrainingConfiguration.from_manifest(
-            model_architecture_id=default_model_id,
-            hyperparameters=default_model_manifest.hyperparameters,
+        return PartialTrainingConfiguration(
+            model_manifest_id=default_model_id, hyperparameters=default_model_manifest.hyperparameters
         )
 
     def update_training_configuration(
