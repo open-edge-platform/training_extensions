@@ -115,7 +115,8 @@ class MqttDispatcher(BaseDispatcher):
             result = self.client.publish(topic, json.dumps(payload))
             if result.rc == mqtt.MQTT_ERR_SUCCESS and self._track_messages:
                 self._published_messages.append({"topic": topic, "payload": payload})
-            logger.error("Publish failed: {}", mqtt.error_string(result.rc))
+            if result.rc != mqtt.MQTT_ERR_SUCCESS:
+                logger.error("Publish failed: {}", mqtt.error_string(result.rc))
         except ValueError:
             logger.exception("Invalid payload for MQTT publish")
 

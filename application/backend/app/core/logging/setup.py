@@ -65,7 +65,7 @@ def setup_logging(config: LogConfig | None = None) -> None:
             context=context,
         )
     except Exception:
-        logger.exception(f"Failed to add log sink for {log_path}")
+        logger.exception("Failed to add log sink for {}", log_path)
 
 
 def setup_uvicorn_logging(log_level: str) -> None:

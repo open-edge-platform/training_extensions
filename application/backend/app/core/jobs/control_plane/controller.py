@@ -90,7 +90,7 @@ class JobController:
                     await cancel_task
                 self._jobs_q.cleanup_cancellation_event(job.id)
 
-            logger.info("Job completed, job_id: {}", job.id)
+            logger.success("Job completed, job_id: {}", job.id)
 
     def _setup_job_execution(self, job: Job, job_run: Runner, event_q: asyncio.Queue) -> asyncio.Task:
         """Set up event pumping thread and cancellation monitoring task."""

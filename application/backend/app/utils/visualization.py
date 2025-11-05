@@ -126,7 +126,7 @@ class VisualizationDispatcher(metaclass=Singleton):
         creator = self._creator_map.get(type(predictions))
         if creator is not None:
             return creator.create_visualization(original_image, predictions)
-        logger.error("Visualization for {} is not suppported.", type(predictions))
+        logger.error("Visualization for {} is not supported.", type(predictions))
         return None
 
 
