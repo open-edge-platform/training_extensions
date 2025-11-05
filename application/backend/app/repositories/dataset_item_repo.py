@@ -44,16 +44,35 @@ class DatasetItemRepository:
         self.db.flush()
         return dataset_item_db
 
-    def count(self, start_date: datetime | None = None, end_date: datetime | None = None) -> int:
-        stmt = select(func.count()).select_from(DatasetItemDB).where(DatasetItemDB.project_id == self.project_id)
-        stmt = self._apply_date_filters(stmt, start_date, end_date)
+    def count(
+        self, start_date: datetime | None = None, end_date: datetime | None = None, label_ids: list[str] | None = None
+    ) -> int:
+        if label_ids:
+            # When filtering by labels, count distinct dataset_items to avoid duplicates
+            stmt = (
+                select(func.count(func.distinct(DatasetItemDB.id)))
+                .select_from(DatasetItemDB)
+                .where(DatasetItemDB.project_id == self.project_id)
+            )
+            stmt = self._apply_date_filters(stmt, start_date, end_date)
+            stmt = stmt.join(DatasetItemLabelDB).where(DatasetItemLabelDB.label_id.in_(label_ids))
+        else:
+            stmt = select(func.count()).select_from(DatasetItemDB).where(DatasetItemDB.project_id == self.project_id)
+            stmt = self._apply_date_filters(stmt, start_date, end_date)
         return self.db.scalar(stmt) or 0
 
     def list_items(
-        self, limit: int, offset: int, start_date: datetime | None = None, end_date: datetime | None = None
+        self,
+        limit: int,
+        offset: int,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+        label_ids: list[str] | None = None,
     ) -> list[DatasetItemDB]:
         stmt = self._base_select()
         stmt = self._apply_date_filters(stmt, start_date, end_date)
+        if label_ids:
+            stmt = stmt.join(DatasetItemLabelDB).where(DatasetItemLabelDB.label_id.in_(label_ids)).distinct()
         stmt = stmt.order_by(DatasetItemDB.created_at.desc()).offset(offset).limit(limit)
         return list(self.db.scalars(stmt).all())
 
