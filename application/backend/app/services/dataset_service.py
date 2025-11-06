@@ -168,7 +168,7 @@ class DatasetService:
             start_date=start_date, end_date=end_date, annotation_status=annotation_status, label_ids=label_ids_str
         )
 
-    def list_dataset_items(  # noqa: PLR0913
+    def list_dataset_items(
         self,
         project: ProjectView,
         limit: int = 20,
