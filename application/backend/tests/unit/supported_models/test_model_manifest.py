@@ -9,8 +9,8 @@ from unittest.mock import patch
 import hiyapyco
 import pytest
 
-from app.configuration_tools.parameters import (
-    DatasetAugmentationParameters,
+from app.configuration_tools.hyperparameters import (
+    DatasetPreparationParameters,
     EarlyStopping,
     EvaluationParameters,
     Hyperparameters,
@@ -63,7 +63,7 @@ def fxt_dummy_supported_gpu():
 @pytest.fixture
 def fxt_dummy_hyperparameters():
     yield Hyperparameters(
-        dataset_augmentation_parameters=DatasetAugmentationParameters(),
+        dataset_preparation=DatasetPreparationParameters(),
         training=TrainingHyperParameters(max_epochs=101, learning_rate=0.05, early_stopping=EarlyStopping(patience=5)),
         evaluation=EvaluationParameters(metric=None),
     )
@@ -78,7 +78,6 @@ def fxt_dummy_model_manifest(
         name="Dummy ModelManifest",
         pretrained_weights=fxt_dummy_pretrained_weights,
         description="Dummy manifest for test purposes only",
-        task="classification",
         stats=fxt_dummy_model_stats,
         support_status=ModelManifestDeprecationStatus.OBSOLETE,
         supported_gpus=fxt_dummy_supported_gpu,
