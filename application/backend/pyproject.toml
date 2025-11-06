@@ -87,6 +87,9 @@ target-version = "py313"
 line-length = 120
 exclude = [".venv*"]
 
+[tool.ruff.format]
+line-ending = "lf"
+
 [tool.ruff.lint]
 select = ["ARG", "E", "F", "I", "N", "UP", "YTT", "ASYNC", "S", "COM", "C4", "FA", "PIE", "PYI", "Q", "RSE", "RET", "SIM",
     "TID", "PL", "RUF", "C90", "D103", "ANN001", "ANN201", "ANN205"]
