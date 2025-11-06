@@ -63,20 +63,16 @@ class DatasetItemRepository:
         annotation_status: str | None = None,
         label_ids: list[str] | None = None,
     ) -> int:
+        # When the query involves a JOIN (e.g. when filtering by labels), count distinct items to avoid duplicates
         if label_ids:
-            # When filtering by labels, count distinct dataset_items to avoid duplicates
-            stmt = (
-                select(func.count(func.distinct(DatasetItemDB.id)))
-                .select_from(DatasetItemDB)
-                .where(DatasetItemDB.project_id == self.project_id)
-            )
-            stmt = self._apply_date_filters(stmt, start_date, end_date)
-            stmt = self._apply_annotation_status_filter(stmt, annotation_status)
-            stmt = stmt.join(DatasetItemLabelDB).where(DatasetItemLabelDB.label_id.in_(label_ids))
+            select_fn = func.count(func.distinct(DatasetItemDB.id))
         else:
-            stmt = select(func.count()).select_from(DatasetItemDB).where(DatasetItemDB.project_id == self.project_id)
-            stmt = self._apply_date_filters(stmt, start_date, end_date)
-            stmt = self._apply_annotation_status_filter(stmt, annotation_status)
+            select_fn = func.count()
+        stmt = select(select_fn).select_from(DatasetItemDB).where(DatasetItemDB.project_id == self.project_id)
+        stmt = self._apply_date_filters(stmt, start_date, end_date)
+        stmt = self._apply_annotation_status_filter(stmt, annotation_status)
+        if label_ids:
+            stmt = stmt.join(DatasetItemLabelDB).where(DatasetItemLabelDB.label_id.in_(label_ids))
         return self.db.scalar(stmt) or 0
 
     def list_items(
