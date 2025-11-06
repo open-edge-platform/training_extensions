@@ -10,7 +10,7 @@ import aiofiles
 from fastapi import APIRouter, Body, Depends, HTTPException, status
 from sse_starlette.sse import EventSourceResponse, ServerSentEvent
 
-from app.api.dependencies import get_job_dir, get_job_queue, get_project_service
+from app.api.dependencies import get_data_dir, get_job_dir, get_job_queue, get_project_service
 from app.api.validators import JobID
 from app.core.jobs.control_plane import CancellationResult, JobQueue
 from app.core.jobs.models import JobStatus
@@ -35,6 +35,8 @@ router = APIRouter(prefix="/api/jobs", tags=["Jobs"])
 async def submit_job(
     job_request: Annotated[JobRequest, Body()],
     job_queue: Annotated[JobQueue, Depends(get_job_queue)],
+    job_dir: Annotated[Path, Depends(get_job_dir)],
+    data_dir: Annotated[Path, Depends(get_data_dir)],
     project_service: Annotated[ProjectService, Depends(get_project_service)],
 ) -> JobView:
     """
@@ -43,6 +45,8 @@ async def submit_job(
     Args:
         job_request (JobRequest): The Job request payload.
         job_queue (JobQueue): The job queue instance responsible for managing job submissions and tracking job statuses.
+        job_dir (Path): The directory where job log files are stored.
+        data_dir (Path): The base directory for project data storage.
         project_service (ProjectService): The service to interact with project data.
 
     Returns:
@@ -55,6 +59,8 @@ async def submit_job(
             case JobType.TRAIN:
                 job = TrainingJob(
                     project_id=job_request.project_id,
+                    log_dir=job_dir,
+                    data_dir=data_dir,
                     params=TrainingParams(
                         model_architecture_id=job_request.parameters.model_architecture_id,
                         parent_model_revision_id=job_request.parameters.parent_model_revision_id,

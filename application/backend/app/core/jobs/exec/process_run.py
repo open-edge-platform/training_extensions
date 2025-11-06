@@ -62,7 +62,7 @@ class ProcessRun:
                 self._child,
                 self._cancel,
             ),
-            name=f"trainer-{self._job.id}",
+            name=f"job-{self._job.job_type}-{self._job.id}",
         )
         self._proc.start()
         self._child.close()

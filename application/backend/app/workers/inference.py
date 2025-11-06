@@ -3,6 +3,7 @@
 
 import multiprocessing as mp
 import queue
+from dataclasses import dataclass
 from multiprocessing.synchronize import Event as EventClass
 from multiprocessing.synchronize import Lock
 from typing import Any
@@ -19,6 +20,17 @@ from app.utils import Visualizer
 from app.workers.base import BaseProcessWorker
 
 
+@dataclass(frozen=True, kw_only=True)
+class InferenceWorkerConfig:
+    frame_queue: mp.Queue
+    pred_queue: mp.Queue
+    stop_event: EventClass
+    model_reload_event: EventClass
+    shm_name: str
+    shm_lock: Lock
+    logger_: LoguruLogger
+
+
 class InferenceWorker(BaseProcessWorker):
     """A process that pulls frames from the frame queue, runs inference, and pushes results to the prediction queue."""
 
@@ -26,21 +38,14 @@ class InferenceWorker(BaseProcessWorker):
 
     def __init__(
         self,
-        queues: tuple[mp.Queue, mp.Queue],
-        events: tuple[EventClass, EventClass],
-        shm_name: str,
-        shm_lock: Lock,
-        logger_: LoguruLogger,
+        config: InferenceWorkerConfig,
     ) -> None:
-        frame_queue, pred_queue = queues
-        stop_event, model_reload_event = events
-
-        super().__init__(stop_event=stop_event, logger_=logger_, queues_to_cancel=[pred_queue])
-        self._frame_queue = frame_queue
-        self._pred_queue = pred_queue
-        self._model_reload_event = model_reload_event
-        self._shm_name = shm_name
-        self._shm_lock = shm_lock
+        super().__init__(stop_event=config.stop_event, logger_=config.logger_, queues_to_cancel=[config.pred_queue])
+        self._frame_queue = config.frame_queue
+        self._pred_queue = config.pred_queue
+        self._model_reload_event = config.model_reload_event
+        self._shm_name = config.shm_name
+        self._shm_lock = config.shm_lock
 
         self._settings: Settings | None = None
         self._metrics_service: MetricsService | None = None

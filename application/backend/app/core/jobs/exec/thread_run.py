@@ -45,7 +45,9 @@ class ThreadRun(Runner[Job, ExecutionEvent]):
             return self
 
         self._started = True
-        self._execution_thread = threading.Thread(target=self._execute_job, name=f"job-{self.job.id}", daemon=True)
+        self._execution_thread = threading.Thread(
+            target=self._execute_job, name=f"job-{self.job.job_type}-{self.job.id}", daemon=True
+        )
         self._execution_thread.start()
         return self
 

@@ -7,7 +7,7 @@ from uuid import UUID, uuid4
 import pytest
 from starlette import status
 
-from app.api.dependencies import get_job_queue
+from app.api.dependencies import get_data_dir, get_job_dir, get_job_queue
 from app.core.jobs import Job, JobParams, JobQueue, JobStatus
 from app.core.jobs.control_plane import CancellationResult
 from app.main import app
@@ -41,7 +41,9 @@ def fxt_job() -> Callable[[UUID | None, JobStatus, float], Job]:
 
 
 class TestJobEndpoints:
-    def test_submit_train_job(self, fxt_client, fxt_jobs_queue, fxt_project_service):
+    def test_submit_train_job(self, tmp_path, fxt_client, fxt_jobs_queue, fxt_project_service):
+        app.dependency_overrides[get_job_dir] = lambda: tmp_path / "logs" / "jobs"
+        app.dependency_overrides[get_data_dir] = lambda: tmp_path / "data"
         project = Mock(spec=ProjectView)
         project.task = Mock(spec=TaskView)
         project.task.task_type = TaskType.CLASSIFICATION

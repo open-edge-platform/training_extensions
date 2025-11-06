@@ -13,7 +13,7 @@ from loguru import logger
 from app.services.data_collect import DataCollector
 from app.services.event.event_bus import EventBus
 from app.services.metrics_service import SIZE
-from app.workers import DispatchingWorker, InferenceWorker, StreamLoader
+from app.workers import DispatchingWorker, InferenceWorker, InferenceWorkerConfig, StreamLoader
 
 
 class Scheduler:
@@ -58,13 +58,16 @@ class Scheduler:
             logger_=logger,  # type: ignore
         )
 
-        inference_server_proc = InferenceWorker(
-            queues=(self.frame_queue, self.pred_queue),
-            events=(self.mp_stop_event, self.mp_model_reload_event),
+        inference_worker_config = InferenceWorkerConfig(
+            frame_queue=self.frame_queue,
+            pred_queue=self.pred_queue,
+            stop_event=self.mp_stop_event,
+            model_reload_event=self.mp_model_reload_event,
             shm_name=self.shm_metrics.name,
             shm_lock=self.shm_metrics_lock,
             logger_=logger,  # type: ignore
         )
+        inference_server_proc = InferenceWorker(inference_worker_config)
 
         dispatching_thread = DispatchingWorker(
             event_bus=self._event_bus,
