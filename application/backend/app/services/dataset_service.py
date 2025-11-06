@@ -158,10 +158,11 @@ class DatasetService:
         project: ProjectView,
         start_date: datetime | None = None,
         end_date: datetime | None = None,
+        annotation_status: str | None = None,
     ) -> int:
         """Get number of available dataset items (within date range if specified)"""
         repo = DatasetItemRepository(project_id=str(project.id), db=self._db_session)
-        return repo.count(start_date=start_date, end_date=end_date)
+        return repo.count(start_date=start_date, end_date=end_date, annotation_status=annotation_status)
 
     def list_dataset_items(
         self,
@@ -170,12 +171,19 @@ class DatasetService:
         offset: int = 0,
         start_date: datetime | None = None,
         end_date: datetime | None = None,
+        annotation_status: str | None = None,
     ) -> list[DatasetItem]:
         """Get information about available dataset items"""
         repo = DatasetItemRepository(project_id=str(project.id), db=self._db_session)
         return [
             DatasetItem.model_validate(db)
-            for db in repo.list_items(limit=limit, offset=offset, start_date=start_date, end_date=end_date)
+            for db in repo.list_items(
+                limit=limit,
+                offset=offset,
+                start_date=start_date,
+                end_date=end_date,
+                annotation_status=annotation_status,
+            )
         ]
 
     def get_dataset_item_by_id(self, project: ProjectView, dataset_item_id: UUID) -> DatasetItem:

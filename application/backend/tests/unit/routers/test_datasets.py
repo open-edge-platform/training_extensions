@@ -108,10 +108,10 @@ class TestDatasetItemEndpoints:
 
         assert response.status_code == status.HTTP_200_OK
         fxt_dataset_service.count_dataset_items.assert_called_once_with(
-            project=fxt_get_project, start_date=None, end_date=None
+            project=fxt_get_project, start_date=None, end_date=None, annotation_status=None
         )
         fxt_dataset_service.list_dataset_items.assert_called_once_with(
-            project=fxt_get_project, limit=10, offset=0, start_date=None, end_date=None
+            project=fxt_get_project, limit=10, offset=0, start_date=None, end_date=None, annotation_status=None
         )
 
     def test_list_dataset_items_filtering_and_pagination(
@@ -129,6 +129,7 @@ class TestDatasetItemEndpoints:
             project=fxt_get_project,
             start_date=datetime(2025, 1, 9, 0, 0, 0, tzinfo=ZoneInfo("UTC")),
             end_date=datetime(2025, 12, 31, 23, 59, 59, tzinfo=ZoneInfo("UTC")),
+            annotation_status=None,
         )
         fxt_dataset_service.list_dataset_items.assert_called_once_with(
             project=fxt_get_project,
@@ -136,6 +137,7 @@ class TestDatasetItemEndpoints:
             offset=2,
             start_date=datetime(2025, 1, 9, 0, 0, 0, tzinfo=ZoneInfo("UTC")),
             end_date=datetime(2025, 12, 31, 23, 59, 59, tzinfo=ZoneInfo("UTC")),
+            annotation_status=None,
         )
 
     @pytest.mark.parametrize("limit", [1000, 0, -20])
@@ -160,6 +162,28 @@ class TestDatasetItemEndpoints:
 
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
         fxt_dataset_service.list_dataset_items.assert_not_called()
+
+    @pytest.mark.parametrize("annotation_status", ["unannotated", "reviewed", "to_review"])
+    def test_list_dataset_items_with_annotation_status(
+        self, fxt_get_project, fxt_dataset_item, fxt_dataset_service, fxt_client, annotation_status
+    ):
+        fxt_dataset_service.count_dataset_items.return_value = 1
+        fxt_dataset_service.list_dataset_items.return_value = [fxt_dataset_item]
+
+        response = fxt_client.get(f"/api/projects/{str(uuid4())}/dataset/items?annotation_status={annotation_status}")
+
+        assert response.status_code == status.HTTP_200_OK
+        fxt_dataset_service.count_dataset_items.assert_called_once_with(
+            project=fxt_get_project, start_date=None, end_date=None, annotation_status=annotation_status
+        )
+        fxt_dataset_service.list_dataset_items.assert_called_once_with(
+            project=fxt_get_project,
+            limit=10,
+            offset=0,
+            start_date=None,
+            end_date=None,
+            annotation_status=annotation_status,
+        )
 
     @pytest.mark.parametrize(
         "http_method, http_path, service_method",
