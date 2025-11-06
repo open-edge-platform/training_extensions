@@ -17,6 +17,7 @@ from app.api.schemas.dataset_item import (
     SetDatasetItemAnnotations,
 )
 from app.core.models import Pagination
+from app.models import DatasetItemAnnotationStatus
 from app.schemas import ProjectView
 from app.services import DatasetService, ResourceNotFoundError
 from app.services.dataset_service import AnnotationValidationError, InvalidImageError, SubsetAlreadyAssignedError
@@ -96,13 +97,14 @@ def add_dataset_item(
         status.HTTP_200_OK: {"description": "List of available dataset items", "model": DatasetItemsWithPagination},
     },
 )
-def list_dataset_items(
+def list_dataset_items(  # noqa: PLR0913
     project: Annotated[ProjectView, Depends(get_project)],
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
     limit: Annotated[int, Query(ge=1, le=MAX_DATASET_ITEMS_NUMBER_RETURNED)] = DEFAULT_DATASET_ITEMS_NUMBER_RETURNED,
     offset: Annotated[int, Query(ge=0)] = 0,
     start_date: Annotated[datetime | None, Query()] = None,
     end_date: Annotated[datetime | None, Query()] = None,
+    annotation_status: Annotated[DatasetItemAnnotationStatus | None, Query()] = None,
     labels: Annotated[list[UUID] | None, Query()] = None,
 ) -> DatasetItemsWithPagination:
     """List the available dataset items and their metadata. This endpoint supports pagination."""
@@ -111,10 +113,16 @@ def list_dataset_items(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Start date must be before end date."
         )
     total = dataset_service.count_dataset_items(
-        project=project, start_date=start_date, end_date=end_date, label_ids=labels
+        project=project, start_date=start_date, end_date=end_date, annotation_status=annotation_status, label_ids=labels
     )
     dataset_items = dataset_service.list_dataset_items(
-        project=project, limit=limit, offset=offset, start_date=start_date, end_date=end_date, label_ids=labels
+        project=project,
+        limit=limit,
+        offset=offset,
+        start_date=start_date,
+        end_date=end_date,
+        annotation_status=annotation_status,
+        label_ids=labels,
     )
     return DatasetItemsWithPagination(
         items=[DatasetItemView.model_validate(dataset_item, from_attributes=True) for dataset_item in dataset_items],

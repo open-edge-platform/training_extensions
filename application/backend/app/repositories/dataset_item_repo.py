@@ -8,7 +8,7 @@ from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.orm import Session
 
 from app.db.schema import DatasetItemDB, DatasetItemLabelDB
-from app.models import DatasetItemSubset
+from app.models import DatasetItemAnnotationStatus, DatasetItemSubset
 
 
 class UpdateDatasetItemAnnotation(NamedTuple):
@@ -28,14 +28,26 @@ class DatasetItemRepository:
         """Create base select statement filtered by project_id."""
         return select(DatasetItemDB).where(DatasetItemDB.project_id == self.project_id)
 
+    @staticmethod
     def _apply_date_filters(
-        self, stmt: Select, start_date: datetime | None = None, end_date: datetime | None = None
+        stmt: Select, start_date: datetime | None = None, end_date: datetime | None = None
     ) -> Select:
         """Apply date range filters to a select statement."""
         if start_date:
             stmt = stmt.where(DatasetItemDB.created_at >= start_date)
         if end_date:
             stmt = stmt.where(DatasetItemDB.created_at < end_date)
+        return stmt
+
+    @staticmethod
+    def _apply_annotation_status_filter(stmt: Select, annotation_status: str | None = None) -> Select:
+        """Apply annotation status filter to a select statement."""
+        if annotation_status == DatasetItemAnnotationStatus.UNANNOTATED:
+            stmt = stmt.where(DatasetItemDB.annotation_data.is_(None))
+        elif annotation_status == DatasetItemAnnotationStatus.REVIEWED:
+            stmt = stmt.where(DatasetItemDB.annotation_data.is_not(None), DatasetItemDB.user_reviewed.is_(True))
+        elif annotation_status == DatasetItemAnnotationStatus.TO_REVIEW:
+            stmt = stmt.where(DatasetItemDB.annotation_data.is_not(None), DatasetItemDB.user_reviewed.is_(False))
         return stmt
 
     def save(self, dataset_item_db: DatasetItemDB) -> DatasetItemDB:
@@ -45,7 +57,11 @@ class DatasetItemRepository:
         return dataset_item_db
 
     def count(
-        self, start_date: datetime | None = None, end_date: datetime | None = None, label_ids: list[str] | None = None
+        self,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+        annotation_status: str | None = None,
+        label_ids: list[str] | None = None,
     ) -> int:
         if label_ids:
             # When filtering by labels, count distinct dataset_items to avoid duplicates
@@ -55,10 +71,12 @@ class DatasetItemRepository:
                 .where(DatasetItemDB.project_id == self.project_id)
             )
             stmt = self._apply_date_filters(stmt, start_date, end_date)
+            stmt = self._apply_annotation_status_filter(stmt, annotation_status)
             stmt = stmt.join(DatasetItemLabelDB).where(DatasetItemLabelDB.label_id.in_(label_ids))
         else:
             stmt = select(func.count()).select_from(DatasetItemDB).where(DatasetItemDB.project_id == self.project_id)
             stmt = self._apply_date_filters(stmt, start_date, end_date)
+            stmt = self._apply_annotation_status_filter(stmt, annotation_status)
         return self.db.scalar(stmt) or 0
 
     def list_items(
@@ -67,10 +85,12 @@ class DatasetItemRepository:
         offset: int,
         start_date: datetime | None = None,
         end_date: datetime | None = None,
+        annotation_status: str | None = None,
         label_ids: list[str] | None = None,
     ) -> list[DatasetItemDB]:
         stmt = self._base_select()
         stmt = self._apply_date_filters(stmt, start_date, end_date)
+        stmt = self._apply_annotation_status_filter(stmt, annotation_status)
         if label_ids:
             stmt = stmt.join(DatasetItemLabelDB).where(DatasetItemLabelDB.label_id.in_(label_ids)).distinct()
         stmt = stmt.order_by(DatasetItemDB.created_at.desc()).offset(offset).limit(limit)
