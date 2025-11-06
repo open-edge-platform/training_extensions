@@ -51,7 +51,7 @@ def get_training_configuration(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@router.patch("", status_code=status.HTTP_204_NO_CONTENT)
+@router.patch("", status_code=status.HTTP_200_OK)
 def update_training_configuration(
     training_configuration_service: Annotated[
         TrainingConfigurationService, Depends(get_training_configuration_service)
