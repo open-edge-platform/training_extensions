@@ -89,7 +89,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1=1.7.0-1+b2 \
     libglx-mesa0=25.0.7-2 \
     nginx=1.26.* \
-    libglib2.0-0=2.84.4-3~deb13u1 \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
