@@ -109,7 +109,7 @@ def fxt_classification_dataset_item(fxt_dataset_item, fxt_dataset_item_annotatio
 
 
 @pytest.fixture
-def fxt_multiclass_classification_dataset_item(fxt_dataset_item, fxt_dataset_item_annotation):
+def fxt_multilabel_classification_dataset_item(fxt_dataset_item, fxt_dataset_item_annotation):
     def _create_classification_dataset_item(project_id: UUID, name: str, labels: list[str]) -> DatasetItem:
         return fxt_dataset_item(
             project_id=project_id,
@@ -222,10 +222,10 @@ def test_convert_multiclass_classification_dataset(fxt_project_labels, fxt_class
 
 
 def test_convert_multilabel_classification_dataset_item(
-    fxt_project_labels, fxt_multiclass_classification_dataset_item
+    fxt_project_labels, fxt_multilabel_classification_dataset_item
 ) -> None:
     project_id = uuid4()
-    dataset_item = fxt_multiclass_classification_dataset_item(
+    dataset_item = fxt_multilabel_classification_dataset_item(
         project_id, "1", [str(fxt_project_labels[0].id), str(fxt_project_labels[1].id)]
     )
     get_dataset_items = MagicMock(side_effect=[[dataset_item], []])

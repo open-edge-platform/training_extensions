@@ -52,14 +52,14 @@ class MultilabelClassificationSample(Sample):
         image: Path to the image
         image_info: Image information (width, height)
         label: Array of class label indices (0-based)
-        confidences: Array of confidence scores for each label. Only for model predictions.
+        confidence: Array of confidence scores for each label. Only for model predictions.
     """
 
     image: str = image_path_field()
     image_info: ImageInfo = image_info_field()
     # TODO: Use NDArrayFloat32 and NDArrayInt instead of np.ndarray after open-edge-platform/datumaro#1949 is solved
     label: np.ndarray = label_field(dtype=pl.Int32, multi_label=True)
-    confidences: np.ndarray | None = score_field(dtype=pl.Float32, is_list=True)
+    confidence: np.ndarray | None = score_field(dtype=pl.Float32, is_list=True)
 
 
 class DetectionSample(Sample):
@@ -71,7 +71,7 @@ class DetectionSample(Sample):
         image_info: Image information (width, height)
         bboxes: Array of bounding boxes in x1y1x2y2 format
         label: Array of class label indices (0-based) for each bounding box
-        confidences: Array of confidence scores for each bounding box. Only for model predictions.
+        confidence: Array of confidence scores for each bounding box. Only for model predictions.
     """
 
     image: str = image_path_field()
@@ -79,7 +79,7 @@ class DetectionSample(Sample):
     # TODO: Use NDArrayFloat32 and NDArrayInt instead of np.ndarray after open-edge-platform/datumaro#1949 is solved
     bboxes: np.ndarray = bbox_field(dtype=pl.Int32)
     label: np.ndarray = label_field(dtype=pl.Int32, is_list=True)
-    confidences: np.ndarray | None = score_field(dtype=pl.Float32, is_list=True)
+    confidence: np.ndarray | None = score_field(dtype=pl.Float32, is_list=True)
 
 
 class InstanceSegmentationSample(Sample):
@@ -91,7 +91,7 @@ class InstanceSegmentationSample(Sample):
         image_info: Image information (width, height)
         polygons: Array of polygons, each represented as a list of points in xy format
         label: Array of class label indices (0-based) for each polygon
-        confidences: Array of confidence scores for each polygon. Only for model predictions.
+        confidence: Array of confidence scores for each polygon. Only for model predictions.
     """
 
     image: str = image_path_field()
@@ -99,7 +99,7 @@ class InstanceSegmentationSample(Sample):
     # TODO: Use NDArrayFloat32 and NDArrayInt instead of np.ndarray after open-edge-platform/datumaro#1949 is solved
     polygons: np.ndarray = polygon_field(dtype=pl.Float32)
     label: np.ndarray = label_field(dtype=pl.Int32, is_list=True)
-    confidences: np.ndarray | None = score_field(dtype=pl.Float32, is_list=True)
+    confidence: np.ndarray | None = score_field(dtype=pl.Float32, is_list=True)
 
 
 def convert_rectangle(r: Rectangle) -> list[int]:
@@ -230,7 +230,7 @@ def convert_multilabel_classification_dataset(
             image=image_path,
             image_info=ImageInfo(width=dataset_item.width, height=dataset_item.height),
             label=np.array(labels_indexes),
-            confidences=np.array(annotation.confidences) if annotation.confidences else None,
+            confidence=np.array(annotation.confidences) if annotation.confidences else None,
         )
 
     return _convert_dataset(
@@ -300,7 +300,7 @@ def convert_detection_dataset(
             image_info=ImageInfo(width=dataset_item.width, height=dataset_item.height),
             bboxes=np.array(coords),
             label=np.array(labels_indexes),
-            confidences=np.array(confidences) if confidences else None,
+            confidence=np.array(confidences) if confidences else None,
         )
 
     return _convert_dataset(
@@ -370,7 +370,7 @@ def convert_instance_segmentation_dataset(
             image_info=ImageInfo(width=dataset_item.width, height=dataset_item.height),
             polygons=np.array(polygons, dtype=np.float32),
             label=np.array(labels_indexes),
-            confidences=np.array(confidences) if confidences else None,
+            confidence=np.array(confidences) if confidences else None,
         )
 
     return _convert_dataset(

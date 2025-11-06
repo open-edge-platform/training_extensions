@@ -205,9 +205,9 @@ class TestDatasetServiceIntegration:
         if not user_reviewed:
             assert dataset_item.annotation_data == [
                 {
-                    "labels": [{"id": str(label_id)}],
                     "shape": {"type": "rectangle", "x": 0, "y": 0, "width": 10, "height": 10},
-                    "confidence": None,
+                    "labels": [{"id": str(label_id)}],
+                    "confidences": None,
                 }
             ]
             assert db_session.get(DatasetItemLabelDB, (str(created_dataset_item.id), str(label_id))) is not None

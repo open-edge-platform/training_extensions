@@ -50,7 +50,7 @@ def datumaro_dataset_to_coco(dataset: Dataset) -> dict:
 
         # Detection
         if hasattr(sample, "bboxes") and sample.bboxes is not None:
-            confidences = sample.confidences if sample.confidences is not None else [None] * len(sample.bboxes)
+            confidences = sample.confidence if sample.confidence is not None else [None] * len(sample.bboxes)
             for bbox, label_idx, confidence in zip(sample.bboxes, sample.label, confidences, strict=True):
                 x1, y1, x2, y2 = bbox
                 width = x2 - x1
@@ -68,7 +68,7 @@ def datumaro_dataset_to_coco(dataset: Dataset) -> dict:
 
         # Instance Segmentation
         if hasattr(sample, "polygons") and sample.polygons is not None:
-            confidences = sample.confidences if sample.confidences is not None else [None] * len(sample.polygons)
+            confidences = sample.confidence if sample.confidence is not None else [None] * len(sample.polygons)
             for polygon, label_idx, confidence in zip(sample.polygons, sample.label, confidences, strict=True):
                 flattened_polygon = [coord for point in polygon for coord in point]
                 x_coords = [point[0] for point in polygon]
