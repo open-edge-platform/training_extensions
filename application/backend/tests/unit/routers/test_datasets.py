@@ -186,7 +186,11 @@ class TestDatasetItemEndpoints:
 
         assert response.status_code == status.HTTP_200_OK
         fxt_dataset_service.count_dataset_items.assert_called_once_with(
-            project=fxt_get_project, start_date=None, end_date=None, annotation_status=annotation_status
+            project=fxt_get_project,
+            start_date=None,
+            end_date=None,
+            annotation_status=annotation_status,
+            label_ids=None,
         )
         fxt_dataset_service.list_dataset_items.assert_called_once_with(
             project=fxt_get_project,
@@ -195,6 +199,7 @@ class TestDatasetItemEndpoints:
             start_date=None,
             end_date=None,
             annotation_status=annotation_status,
+            label_ids=None,
         )
 
     @pytest.mark.parametrize(
