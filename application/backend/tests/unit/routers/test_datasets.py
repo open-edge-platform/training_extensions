@@ -108,10 +108,20 @@ class TestDatasetItemEndpoints:
 
         assert response.status_code == status.HTTP_200_OK
         fxt_dataset_service.count_dataset_items.assert_called_once_with(
-            project=fxt_get_project, start_date=None, end_date=None, annotation_status=None
+            project=fxt_get_project,
+            start_date=None,
+            end_date=None,
+            annotation_status=None,
+            label_ids=None,
         )
         fxt_dataset_service.list_dataset_items.assert_called_once_with(
-            project=fxt_get_project, limit=10, offset=0, start_date=None, end_date=None, annotation_status=None
+            project=fxt_get_project,
+            limit=10,
+            offset=0,
+            start_date=None,
+            end_date=None,
+            annotation_status=None,
+            label_ids=None,
         )
 
     def test_list_dataset_items_filtering_and_pagination(
@@ -130,6 +140,7 @@ class TestDatasetItemEndpoints:
             start_date=datetime(2025, 1, 9, 0, 0, 0, tzinfo=ZoneInfo("UTC")),
             end_date=datetime(2025, 12, 31, 23, 59, 59, tzinfo=ZoneInfo("UTC")),
             annotation_status=None,
+            label_ids=None,
         )
         fxt_dataset_service.list_dataset_items.assert_called_once_with(
             project=fxt_get_project,
@@ -138,6 +149,7 @@ class TestDatasetItemEndpoints:
             start_date=datetime(2025, 1, 9, 0, 0, 0, tzinfo=ZoneInfo("UTC")),
             end_date=datetime(2025, 12, 31, 23, 59, 59, tzinfo=ZoneInfo("UTC")),
             annotation_status=None,
+            label_ids=None,
         )
 
     @pytest.mark.parametrize("limit", [1000, 0, -20])
@@ -174,7 +186,11 @@ class TestDatasetItemEndpoints:
 
         assert response.status_code == status.HTTP_200_OK
         fxt_dataset_service.count_dataset_items.assert_called_once_with(
-            project=fxt_get_project, start_date=None, end_date=None, annotation_status=annotation_status
+            project=fxt_get_project,
+            start_date=None,
+            end_date=None,
+            annotation_status=annotation_status,
+            label_ids=None,
         )
         fxt_dataset_service.list_dataset_items.assert_called_once_with(
             project=fxt_get_project,
@@ -183,6 +199,7 @@ class TestDatasetItemEndpoints:
             start_date=None,
             end_date=None,
             annotation_status=annotation_status,
+            label_ids=None,
         )
 
     @pytest.mark.parametrize(

@@ -61,10 +61,18 @@ class DatasetItemRepository:
         start_date: datetime | None = None,
         end_date: datetime | None = None,
         annotation_status: str | None = None,
+        label_ids: list[str] | None = None,
     ) -> int:
-        stmt = select(func.count()).select_from(DatasetItemDB).where(DatasetItemDB.project_id == self.project_id)
+        # When the query involves a JOIN (e.g. when filtering by labels), count distinct items to avoid duplicates
+        if label_ids:
+            select_fn = func.count(func.distinct(DatasetItemDB.id))
+        else:
+            select_fn = func.count()
+        stmt = select(select_fn).select_from(DatasetItemDB).where(DatasetItemDB.project_id == self.project_id)
         stmt = self._apply_date_filters(stmt, start_date, end_date)
         stmt = self._apply_annotation_status_filter(stmt, annotation_status)
+        if label_ids:
+            stmt = stmt.join(DatasetItemLabelDB).where(DatasetItemLabelDB.label_id.in_(label_ids))
         return self.db.scalar(stmt) or 0
 
     def list_items(
@@ -74,10 +82,13 @@ class DatasetItemRepository:
         start_date: datetime | None = None,
         end_date: datetime | None = None,
         annotation_status: str | None = None,
+        label_ids: list[str] | None = None,
     ) -> list[DatasetItemDB]:
         stmt = self._base_select()
         stmt = self._apply_date_filters(stmt, start_date, end_date)
         stmt = self._apply_annotation_status_filter(stmt, annotation_status)
+        if label_ids:
+            stmt = stmt.join(DatasetItemLabelDB).where(DatasetItemLabelDB.label_id.in_(label_ids)).distinct()
         stmt = stmt.order_by(DatasetItemDB.created_at.desc()).offset(offset).limit(limit)
         return list(self.db.scalars(stmt).all())
 

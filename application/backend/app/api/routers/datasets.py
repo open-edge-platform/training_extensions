@@ -97,7 +97,7 @@ def add_dataset_item(
         status.HTTP_200_OK: {"description": "List of available dataset items", "model": DatasetItemsWithPagination},
     },
 )
-def list_dataset_items(
+def list_dataset_items(  # noqa: PLR0913
     project: Annotated[ProjectView, Depends(get_project)],
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
     limit: Annotated[int, Query(ge=1, le=MAX_DATASET_ITEMS_NUMBER_RETURNED)] = DEFAULT_DATASET_ITEMS_NUMBER_RETURNED,
@@ -105,6 +105,7 @@ def list_dataset_items(
     start_date: Annotated[datetime | None, Query()] = None,
     end_date: Annotated[datetime | None, Query()] = None,
     annotation_status: Annotated[DatasetItemAnnotationStatus | None, Query()] = None,
+    labels: Annotated[list[UUID] | None, Query()] = None,
 ) -> DatasetItemsWithPagination:
     """List the available dataset items and their metadata. This endpoint supports pagination."""
     if start_date is not None and end_date is not None and start_date > end_date:
@@ -112,7 +113,7 @@ def list_dataset_items(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Start date must be before end date."
         )
     total = dataset_service.count_dataset_items(
-        project=project, start_date=start_date, end_date=end_date, annotation_status=annotation_status
+        project=project, start_date=start_date, end_date=end_date, annotation_status=annotation_status, label_ids=labels
     )
     dataset_items = dataset_service.list_dataset_items(
         project=project,
@@ -121,6 +122,7 @@ def list_dataset_items(
         start_date=start_date,
         end_date=end_date,
         annotation_status=annotation_status,
+        label_ids=labels,
     )
     return DatasetItemsWithPagination(
         items=[DatasetItemView.model_validate(dataset_item, from_attributes=True) for dataset_item in dataset_items],
