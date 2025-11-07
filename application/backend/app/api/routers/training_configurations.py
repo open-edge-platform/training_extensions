@@ -13,7 +13,7 @@ from app.api.dependencies import (
     get_project_id,
     get_training_configuration_service,
 )
-from app.configuration_tools.training_configuration_converter import TrainingConfigurationConverter
+from app.api.serializers.training_configuration import TrainingConfigurationConverter
 from app.services import ResourceNotFoundError
 from app.services.training_configuration_service import TrainingConfigurationService
 
@@ -27,8 +27,8 @@ def get_training_configuration(
         TrainingConfigurationService, Depends(get_training_configuration_service)
     ],
     project_id: Annotated[UUID, Depends(get_project_id)],
-    model_architecture_id: Annotated[str, Depends(get_model_architecture_id)],
-    model_revision_id: Annotated[UUID, Depends(get_model_revision_id)],
+    model_architecture_id: Annotated[str | None, Depends(get_model_architecture_id)] = None,
+    model_revision_id: Annotated[UUID | None, Depends(get_model_revision_id)] = None,
 ) -> dict:
     """
     Get the training configuration for a project.
@@ -57,15 +57,14 @@ def update_training_configuration(
         TrainingConfigurationService, Depends(get_training_configuration_service)
     ],
     project_id: Annotated[UUID, Depends(get_project_id)],
-    model_architecture_id: Annotated[str, Depends(get_model_architecture_id)],
     training_config_update: dict,
+    model_architecture_id: Annotated[str | None, Depends(get_model_architecture_id)] = None,
 ) -> dict:
     """
     Update the training configuration for a project.
 
     - If model_architecture_id is provided, updates configuration for that specific model architecture.
     - If not provided, updates the general task-related configuration.
-    Note: model_architecture_id cannot be used with model_revision_id for updates.
     """
     try:
         updated_config = training_configuration_service.update_training_configuration(

@@ -7,13 +7,13 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.configuration_tools.hyperparameters import Hyperparameters
-from app.configuration_tools.training_configuration import (
+from app.db.schema import ModelRevisionDB, ProjectDB, TrainingConfigurationDB
+from app.models.training_configuration.configuration import (
     GlobalDatasetPreparationParameters,
     GlobalParameters,
     SubsetSplit,
     TrainingConfiguration,
 )
-from app.db.schema import ModelRevisionDB, ProjectDB, TrainingConfigurationDB
 from app.schemas.project import TaskType
 from app.services import ResourceNotFoundError
 from app.services.training_configuration_service import TrainingConfigurationService

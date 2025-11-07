@@ -13,7 +13,7 @@ from app.configuration_tools.hyperparameters import (
     RandomResizeCrop,
     TrainingHyperParameters,
 )
-from app.configuration_tools.training_configuration import (
+from app.models.training_configuration.configuration import (
     Filtering,
     GlobalDatasetPreparationParameters,
     GlobalParameters,

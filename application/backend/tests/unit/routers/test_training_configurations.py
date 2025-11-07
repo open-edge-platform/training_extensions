@@ -8,13 +8,13 @@ import pytest
 
 from app.api.dependencies import get_training_configuration_service
 from app.configuration_tools.hyperparameters import Hyperparameters
-from app.configuration_tools.training_configuration import (
+from app.main import app
+from app.models.training_configuration.configuration import (
     GlobalDatasetPreparationParameters,
     GlobalParameters,
     SubsetSplit,
     TrainingConfiguration,
 )
-from app.main import app
 from app.services.training_configuration_service import TrainingConfigurationService
 
 

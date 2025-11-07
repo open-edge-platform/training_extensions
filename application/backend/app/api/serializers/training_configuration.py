@@ -5,14 +5,14 @@
 from collections import defaultdict
 from typing import Any
 
-from app.configuration_tools.configurable_parameters_converter import ConfigurableParametersConverter
+from app.api.serializers.configurable_parameters import ConfigurableParametersConverter
 from app.configuration_tools.hyperparameters import (
     DatasetPreparationParameters,
     EvaluationParameters,
     Hyperparameters,
     TrainingHyperParameters,
 )
-from app.configuration_tools.training_configuration import (
+from app.models.training_configuration.configuration import (
     GlobalDatasetPreparationParameters,
     GlobalParameters,
     PartialTrainingConfiguration,

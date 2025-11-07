@@ -3,8 +3,8 @@
 
 from pydantic import BaseModel, Field, model_validator
 
-from .hyperparameters import Hyperparameters
-from .utils import partial_model
+from app.configuration_tools.hyperparameters import Hyperparameters
+from app.models.partial import partial_model
 
 
 class SubsetSplit(BaseModel):
@@ -53,7 +53,7 @@ class MinAnnotationPixels(BaseModel):
         title="Enable minimum annotation pixels filtering",
         description="Whether to apply minimum annotation pixels filtering",
     )
-    min_annotation_pixels: int = Field(
+    value: int = Field(
         gt=0,
         le=200000000,  # reasonable upper limit for pixel count to 200MP
         default=1,
@@ -70,7 +70,7 @@ class MaxAnnotationPixels(BaseModel):
         title="Enable maximum annotation pixels filtering",
         description="Whether to apply maximum annotation pixels filtering",
     )
-    max_annotation_pixels: int = Field(
+    value: int = Field(
         gt=0, default=10000, title="Maximum annotation pixels", description="Maximum number of pixels in an annotation"
     )
 
@@ -83,7 +83,7 @@ class MinAnnotationObjects(BaseModel):
         title="Enable minimum annotation objects filtering",
         description="Whether to apply minimum annotation objects filtering",
     )
-    min_annotation_objects: int = Field(
+    value: int = Field(
         gt=0,
         default=1,
         title="Minimum annotation objects",
@@ -99,7 +99,7 @@ class MaxAnnotationObjects(BaseModel):
         title="Enable maximum annotation objects filtering",
         description="Whether to apply maximum annotation objects filtering",
     )
-    max_annotation_objects: int = Field(
+    value: int = Field(
         gt=0,
         default=10000,
         title="Maximum annotation objects",

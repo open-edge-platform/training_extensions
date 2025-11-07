@@ -3,7 +3,7 @@
 
 from pydantic import Field, model_validator
 
-from .base_model_no_extra import BaseModelNoExtra
+from app.models.base import BaseModelNoExtra
 
 
 class RandomResizeCrop(BaseModelNoExtra):

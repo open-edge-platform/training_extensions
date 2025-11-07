@@ -4,8 +4,8 @@ from uuid import UUID
 
 from sqlalchemy.orm import Session
 
-from app.configuration_tools.configurable_parameters_converter import ConfigurableParametersConverter
-from app.configuration_tools.training_configuration import PartialTrainingConfiguration, TrainingConfiguration
+from app.api.serializers.configurable_parameters import ConfigurableParametersConverter
+from app.models.training_configuration.configuration import PartialTrainingConfiguration, TrainingConfiguration
 from app.repositories import ModelRevisionRepository, ProjectRepository
 from app.repositories.training_configuration_repo import TrainingConfigurationRepository
 from app.services import ResourceNotFoundError, ResourceType

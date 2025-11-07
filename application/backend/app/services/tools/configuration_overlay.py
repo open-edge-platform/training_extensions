@@ -3,7 +3,7 @@
 
 from copy import deepcopy
 
-from .training_configuration import PartialTrainingConfiguration, TrainingConfiguration
+from app.models.training_configuration.configuration import PartialTrainingConfiguration, TrainingConfiguration
 
 
 class ConfigurationOverlayTools:
