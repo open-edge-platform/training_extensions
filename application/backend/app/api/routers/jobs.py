@@ -5,6 +5,7 @@ import asyncio
 from collections.abc import AsyncGenerator
 from pathlib import Path
 from typing import Annotated
+from uuid import UUID
 
 import aiofiles
 from fastapi import APIRouter, Body, Depends, HTTPException, status
@@ -189,22 +190,7 @@ async def stream_job_status(
     if not job_queue.get(job_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
 
-    async def gen_job_updates() -> AsyncGenerator[ServerSentEvent]:
-        """Generate job status updates."""
-        last = None
-        while True:
-            j = job_queue.get(job_id)
-            if not j:
-                break
-            snap = JobView.of(j).model_dump_json()
-            if snap != last:
-                yield ServerSentEvent(data=snap)
-                last = snap
-            if j.status >= JobStatus.DONE:
-                break
-            await asyncio.sleep(0.1)
-
-    return EventSourceResponse(gen_job_updates())
+    return EventSourceResponse(__gen_job_updates(job_id, job_queue))
 
 
 @router.get("/{job_id}/logs")
@@ -248,22 +234,44 @@ async def stream_job_logs(
     if not log_path.exists():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Log file not found")
 
-    async def gen_log_stream() -> AsyncGenerator[ServerSentEvent]:
-        """Asynchronously follow a log file and yield new lines as SSE events."""
-        try:
-            async with aiofiles.open(log_path) as f:
-                async for line in f:
-                    yield ServerSentEvent(data=line.rstrip("\n"))
+    return EventSourceResponse(__gen_log_stream(job_id, log_path, job_queue))
 
-                while True:
-                    line = await f.readline()
-                    if not line:
-                        await asyncio.sleep(0.3)
-                        continue
-                    yield ServerSentEvent(data=line.rstrip("\n"))
-        except asyncio.CancelledError:
-            raise
-        except Exception as e:
-            yield ServerSentEvent(data=f"Error reading log file: {e}")
 
-    return EventSourceResponse(gen_log_stream())
+async def __gen_job_updates(job_id: UUID, job_queue: JobQueue) -> AsyncGenerator[ServerSentEvent]:
+    """Generate job status updates."""
+    last = None
+    while True:
+        j = job_queue.get(job_id)
+        if not j:
+            break
+        snap = JobView.of(j).model_dump_json()
+        if snap != last:
+            yield ServerSentEvent(data=snap)
+            last = snap
+        if j.status >= JobStatus.DONE:
+            break
+        await asyncio.sleep(0.1)
+
+
+async def __gen_log_stream(job_id: UUID, log_path: Path, job_queue: JobQueue) -> AsyncGenerator[ServerSentEvent]:
+    """Asynchronously follow a log file and yield new lines as SSE events."""
+    try:
+        async with aiofiles.open(log_path) as f:
+            async for line in f:
+                yield ServerSentEvent(data=line.rstrip("\n"))
+
+            while True:
+                j = job_queue.get(job_id)
+                if not j:
+                    break
+                line = await f.readline()
+                if not line:
+                    await asyncio.sleep(0.3)
+                    continue
+                yield ServerSentEvent(data=line.rstrip("\n"))
+                if j.status >= JobStatus.DONE:
+                    break
+    except asyncio.CancelledError:
+        raise
+    except Exception as e:
+        yield ServerSentEvent(data=f"Error reading log file: {e}")
