@@ -40,8 +40,8 @@ class ClassificationSample(Sample):
 
     image: str = image_path_field()
     image_info: ImageInfo = image_info_field()
-    label: int = label_field(dtype=pl.Int32, is_list=False)
-    confidence: float | None = score_field(dtype=pl.Float32)
+    label: int = label_field(dtype=pl.Int32(), is_list=False)
+    confidence: float | None = score_field(dtype=pl.Float32())
 
 
 class MultilabelClassificationSample(Sample):
@@ -58,8 +58,8 @@ class MultilabelClassificationSample(Sample):
     image: str = image_path_field()
     image_info: ImageInfo = image_info_field()
     # TODO: Use NDArrayFloat32 and NDArrayInt instead of np.ndarray after open-edge-platform/datumaro#1949 is solved
-    label: np.ndarray = label_field(dtype=pl.Int32, multi_label=True)
-    confidence: np.ndarray | None = score_field(dtype=pl.Float32, is_list=True)
+    label: np.ndarray = label_field(dtype=pl.Int32(), multi_label=True)
+    confidence: np.ndarray | None = score_field(dtype=pl.Float32(), is_list=True)
 
 
 class DetectionSample(Sample):
@@ -77,9 +77,9 @@ class DetectionSample(Sample):
     image: str = image_path_field()
     image_info: ImageInfo = image_info_field()
     # TODO: Use NDArrayFloat32 and NDArrayInt instead of np.ndarray after open-edge-platform/datumaro#1949 is solved
-    bboxes: np.ndarray = bbox_field(dtype=pl.Int32)
-    label: np.ndarray = label_field(dtype=pl.Int32, is_list=True)
-    confidence: np.ndarray | None = score_field(dtype=pl.Float32, is_list=True)
+    bboxes: np.ndarray = bbox_field(dtype=pl.Int32())
+    label: np.ndarray = label_field(dtype=pl.Int32(), is_list=True)
+    confidence: np.ndarray | None = score_field(dtype=pl.Float32(), is_list=True)
 
 
 class InstanceSegmentationSample(Sample):
@@ -97,9 +97,9 @@ class InstanceSegmentationSample(Sample):
     image: str = image_path_field()
     image_info: ImageInfo = image_info_field()
     # TODO: Use NDArrayFloat32 and NDArrayInt instead of np.ndarray after open-edge-platform/datumaro#1949 is solved
-    polygons: np.ndarray = polygon_field(dtype=pl.Float32)
-    label: np.ndarray = label_field(dtype=pl.Int32, is_list=True)
-    confidence: np.ndarray | None = score_field(dtype=pl.Float32, is_list=True)
+    polygons: np.ndarray = polygon_field(dtype=pl.Float32())
+    label: np.ndarray = label_field(dtype=pl.Int32(), is_list=True)
+    confidence: np.ndarray | None = score_field(dtype=pl.Float32(), is_list=True)
 
 
 def convert_rectangle(r: Rectangle) -> list[int]:
