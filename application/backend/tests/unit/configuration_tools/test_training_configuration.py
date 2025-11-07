@@ -4,7 +4,7 @@
 import pytest
 from pydantic import ValidationError
 
-from app.configuration_tools.hyperparameters import (
+from app.models.training_configuration import (
     AugmentationParameters,
     DatasetPreparationParameters,
     EarlyStopping,

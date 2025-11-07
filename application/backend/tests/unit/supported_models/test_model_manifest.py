@@ -9,7 +9,7 @@ from unittest.mock import patch
 import hiyapyco
 import pytest
 
-from app.configuration_tools.hyperparameters import (
+from app.models.training_configuration.hyperparameters import (
     DatasetPreparationParameters,
     EarlyStopping,
     EvaluationParameters,

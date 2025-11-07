@@ -6,17 +6,17 @@ from collections import defaultdict
 from typing import Any
 
 from app.api.serializers.configurable_parameters import ConfigurableParametersConverter
-from app.configuration_tools.hyperparameters import (
-    DatasetPreparationParameters,
-    EvaluationParameters,
-    Hyperparameters,
-    TrainingHyperParameters,
-)
 from app.models.training_configuration.configuration import (
     GlobalDatasetPreparationParameters,
     GlobalParameters,
     PartialTrainingConfiguration,
     TrainingConfiguration,
+)
+from app.models.training_configuration.hyperparameters import (
+    DatasetPreparationParameters,
+    EvaluationParameters,
+    Hyperparameters,
+    TrainingHyperParameters,
 )
 from app.supported_models import SupportedModels
 

@@ -3,8 +3,7 @@
 
 import pytest
 
-from app.configuration_tools import ConfigurationOverlayTools
-from app.configuration_tools.hyperparameters import (
+from app.models.training_configuration import (
     AugmentationParameters,
     DatasetPreparationParameters,
     EarlyStopping,
@@ -24,6 +23,7 @@ from app.models.training_configuration.configuration import (
     SubsetSplit,
     TrainingConfiguration,
 )
+from app.services.tools import ConfigurationOverlayTools
 
 
 @pytest.fixture

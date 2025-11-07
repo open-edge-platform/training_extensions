@@ -7,7 +7,6 @@ from uuid import uuid4
 import pytest
 
 from app.api.dependencies import get_training_configuration_service
-from app.configuration_tools.hyperparameters import Hyperparameters
 from app.main import app
 from app.models.training_configuration.configuration import (
     GlobalDatasetPreparationParameters,
@@ -15,6 +14,7 @@ from app.models.training_configuration.configuration import (
     SubsetSplit,
     TrainingConfiguration,
 )
+from app.models.training_configuration.hyperparameters import Hyperparameters
 from app.services.training_configuration_service import TrainingConfigurationService
 
 

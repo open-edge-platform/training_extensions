@@ -3,8 +3,8 @@
 
 from pydantic import BaseModel, Field, model_validator
 
-from app.configuration_tools.hyperparameters import Hyperparameters
 from app.models.partial import partial_model
+from app.models.training_configuration.hyperparameters import Hyperparameters
 
 
 class SubsetSplit(BaseModel):
