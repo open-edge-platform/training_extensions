@@ -1,7 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
+from loguru import logger
 
 from app.models import Source, SourceType
 from app.stream.images_folder_stream import ImagesFolderStream
@@ -9,8 +9,6 @@ from app.stream.ip_camera_stream import IPCameraStream
 from app.stream.video_file_stream import VideoFileStream
 from app.stream.video_stream import VideoStream
 from app.stream.webcam_stream import WebcamStream
-
-logger = logging.getLogger(__name__)
 
 
 class VideoStreamService:
@@ -38,7 +36,7 @@ class VideoStreamService:
                 raise ValueError(f"Unrecognized source type: {input_config.source_type}")
 
         if video_stream is not None:
-            logger.info(f"Initialized video stream for source type: {input_config.source_type}")
+            logger.info("Initialized video stream for source type: {}", input_config.source_type)
         else:
             logger.info("No video stream initialized")
 

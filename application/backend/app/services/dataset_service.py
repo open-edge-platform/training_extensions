@@ -1,7 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
 import os
 import os.path
 from collections.abc import Sequence
@@ -13,6 +12,7 @@ from uuid import UUID, uuid4
 
 import datumaro.experimental as dm
 import numpy as np
+from loguru import logger
 from PIL import Image, UnidentifiedImageError
 from sqlalchemy.orm import Session
 
@@ -33,8 +33,6 @@ from app.services.datumaro_converter import convert_dataset
 from app.utils.images import crop_to_thumbnail
 
 from .base import ResourceNotFoundError, ResourceType
-
-logger = logging.getLogger(__name__)
 
 DEFAULT_THUMBNAIL_SIZE = 256
 
@@ -91,8 +89,8 @@ class DatasetService:
             if thumbnail_image.mode in ("RGBA", "P"):
                 thumbnail_image = thumbnail_image.convert("RGB")
             thumbnail_image.save(path)
-        except Exception as e:
-            logger.exception("Failed to generate thumbnail image %s", e)
+        except Exception:
+            logger.exception("Failed to generate thumbnail image")
 
     def create_dataset_item(  # noqa: PLR0913
         self,
@@ -224,11 +222,11 @@ class DatasetService:
         try:
             os.remove(dataset_dir / f"{dataset_item.id}.{dataset_item.format}")
         except FileNotFoundError:
-            logger.warning(f"Dataset item {dataset_item_id} binary was not found during deletion")
+            logger.warning("Dataset item {} binary was not found during deletion", dataset_item_id)
         try:
             os.remove(dataset_dir / f"{dataset_item_id}-thumb.jpg")
         except FileNotFoundError:
-            logger.warning(f"Dataset item {dataset_item_id} thumbnail was not found during deletion")
+            logger.warning("Dataset item {} thumbnail was not found during deletion", dataset_item_id)
 
         repo.delete(obj_id=str(dataset_item.id))
 

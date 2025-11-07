@@ -1,20 +1,18 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
 import os
 import threading
 from collections.abc import Callable
 
 import cv2
+from loguru import logger
 from watchdog.events import DirCreatedEvent, DirDeletedEvent, FileCreatedEvent, FileDeletedEvent, FileSystemEventHandler
 from watchdog.observers import Observer
 
 from app.models import SourceType
 from app.stream.stream_data import StreamData
 from app.stream.video_stream import VideoStream
-
-logger = logging.getLogger(__name__)
 
 
 class ImagesFolderEventHandler(FileSystemEventHandler):
@@ -48,7 +46,7 @@ class ImagesFolderStream(VideoStream):
             should be ignored
         """
         self.folder_path = folder_path
-        logger.info(f"Using folder_path: {self.folder_path}")
+        logger.info("Using folder_path: {}", self.folder_path)
 
         self.files = []
         if not ignore_existing_images:
@@ -58,7 +56,7 @@ class ImagesFolderStream(VideoStream):
                 if os.path.isfile(os.path.join(folder_path, f))
             ]
             self.files.sort(key=os.path.getmtime)
-        logger.info(f"Folder contains {len(self.files)} files")
+        logger.info("Folder contains {} files", len(self.files))
 
         # Lock for thread-safe operations, required by watchdog thread(s)
         self.files_lock = threading.Lock()
@@ -87,13 +85,13 @@ class ImagesFolderStream(VideoStream):
         self.observer.start()
 
     def file_added(self, path: str) -> None:
-        logger.debug(f"Added file {path}")
+        logger.debug("Added file {}", path)
         if path not in self.files:
             with self.files_lock:
                 self.files.append(path)
 
     def file_deleted(self, path: str) -> None:
-        logger.debug(f"Deleted file {path}")
+        logger.debug("Deleted file {}", path)
         if path in self.files:
             with self.files_lock:
                 self.files.remove(path)

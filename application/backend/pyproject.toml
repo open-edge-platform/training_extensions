@@ -25,6 +25,8 @@ dependencies = [
     "scikit-learn~=1.7.0",
     "faster-coco-eval~=1.6.8",
     "scikit-multilearn~=0.2.0",
+    "loguru~=0.7.3",
+    "sse-starlette~=3.0.3",
 ]
 
 [project.optional-dependencies]
@@ -94,7 +96,7 @@ line-ending = "lf"
 select = ["ARG", "E", "F", "I", "N", "UP", "YTT", "ASYNC", "S", "COM", "C4", "FA", "PIE", "PYI", "Q", "RSE", "RET", "SIM",
     "TID", "PL", "RUF", "C90", "D103", "ANN001", "ANN201", "ANN205"]
 ignore = ["N801", "N805","N806","N807", "N818", "COM812", "RET503", "SIM108", "SIM105", "PLR2004",
-    "RUF010", "RUF012", "CPY001"]
+    "RUF010", "RUF012", "CPY001", "PLE1205"]
 fixable = ["ALL"]
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 

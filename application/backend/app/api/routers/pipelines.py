@@ -3,7 +3,6 @@
 
 """Endpoints for managing pipelines"""
 
-import logging
 from typing import Annotated
 from uuid import UUID
 
@@ -17,7 +16,6 @@ from app.schemas.metrics import PipelineMetrics
 from app.schemas.pipeline import DataCollectionPolicyAdapter, PipelineStatus, PipelineView
 from app.services import PipelineMetricsService, PipelineService, ResourceNotFoundError
 
-logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/projects/{project_id}/pipeline", tags=["Pipelines"])
 
 UPDATE_PIPELINE_BODY_DESCRIPTION = """

@@ -17,19 +17,20 @@ Functions:
 
 import asyncio
 import contextlib
-import logging
 import multiprocessing as mp
 from collections.abc import Iterator
 from multiprocessing.connection import Connection
 from multiprocessing.context import SpawnProcess
 from multiprocessing.synchronize import Event
 
+from loguru import logger
+
 from app.core.jobs.models import Done, ExecutionEvent, Failed, Job, JobType, Started
+from app.core.logging import LogConfig, logging_ctx
 from app.core.run import ExecutionContext, RunnableFactory, Runner
+from app.settings import get_settings
 
 from .exceptions import CancelledExc
-
-logger = logging.getLogger(__name__)
 
 
 class ProcessRun:
@@ -56,11 +57,12 @@ class ProcessRun:
             args=(
                 self._runnable_factory,
                 self._job.job_type,
+                self._job.log_file,
                 self._job.params.model_dump_json(),
                 self._child,
                 self._cancel,
             ),
-            name=f"trainer-{self._job.id}",
+            name=f"job-{self._job.job_type}-{self._job.id}",
         )
         self._proc.start()
         self._child.close()
@@ -95,26 +97,26 @@ class ProcessRun:
         self._cancel.set()
         await asyncio.to_thread(self._proc.join, timeout=graceful_timeout)
         if not self._proc.is_alive():
-            logger.debug("Process %s stopped gracefully", self._proc.name)
+            logger.debug("Process {} stopped gracefully", self._proc.name)
             return
 
         # Try SIGTERM
         self._proc.terminate()
         await asyncio.to_thread(self._proc.join, timeout=term_timeout)
         if not self._proc.is_alive():
-            logger.debug("Process %s terminated gracefully", self._proc.name)
+            logger.debug("Process {} terminated gracefully", self._proc.name)
             return
 
         # Last resort: SIGKILL
-        logger.warning("Force killing process %s", self._proc.name)
+        logger.warning("Force killing process {}", self._proc.name)
         self._proc.kill()
         await asyncio.to_thread(self._proc.join, timeout=kill_timeout)
         if self._proc.is_alive():
-            logger.error("Process %s doesn't respond to SIGKILL", self._proc.name)
+            logger.error("Process {} doesn't respond to SIGKILL", self._proc.name)
 
 
 def _entrypoint(
-    get_runnable: RunnableFactory, job_type: str, payload: str, conn: Connection, cancel_event: Event
+    get_runnable: RunnableFactory, job_type: str, log_file: str, payload: str, conn: Connection, cancel_event: Event
 ) -> None:
     """
     Entrypoint for the child process.
@@ -124,6 +126,7 @@ def _entrypoint(
     Args:
         get_runnable (RunnableFactory): Factory to create runnable job instance.
         job_type (str): Type of job to execute.
+        log_file (str): Log file path for job logging.
         payload (str): Serialized job parameters.
         conn (Connection): IPC connection to parent process.
         cancel_event (Event): Event to signal cancellation.
@@ -145,7 +148,8 @@ def _entrypoint(
 
     try:
         conn.send(Started())
-        runnable.run(ExecutionContext(payload=payload, report=report, heartbeat=heartbeat))
+        with logging_ctx(LogConfig(log_folder=str(get_settings().job_dir), log_file=log_file)):
+            runnable.run(ExecutionContext(payload=payload, report=report, heartbeat=heartbeat))
         conn.send(Done())
     except CancelledExc:
         conn.send(Cancelled())

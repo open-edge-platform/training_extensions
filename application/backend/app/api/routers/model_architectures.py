@@ -3,15 +3,12 @@
 
 """Endpoints for managing model architectures"""
 
-import logging
-
 from fastapi import APIRouter, status
 
 from app.schemas import ModelArchitectures
 from app.schemas.model_architecture import ModelArchitecture
 from app.supported_models import SupportedModels
 
-logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/model_architectures", tags=["Model Architectures"])
 
 

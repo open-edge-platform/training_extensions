@@ -1,6 +1,5 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-import logging
 from collections.abc import Callable, Sequence
 from typing import TypeVar
 from uuid import UUID
@@ -18,11 +17,10 @@ from datumaro.experimental import (
 )
 from datumaro.experimental.categories import LabelCategories
 from datumaro.experimental.fields import ImageInfo, polygon_field
+from loguru import logger
 
 from app.models import DatasetItem, Label, Polygon, Rectangle, TaskType
 from app.schemas.project import ProjectBase
-
-logger = logging.getLogger(__name__)
 
 CONVERSION_BATCH_SIZE = 50
 
@@ -186,7 +184,7 @@ def convert_classification_dataset(
                 confidence=annotation.confidences[0] if annotation.confidences else None,
             )
         except ValueError:
-            logger.error("Unable to find one of dataset item %s labels in project", dataset_item.id)
+            logger.error("Unable to find one of dataset item {} labels in project", dataset_item.id)
             return None
 
     return _convert_dataset(
@@ -224,7 +222,7 @@ def convert_multilabel_classification_dataset(
             annotation = dataset_item.annotation_data[0]  # classification -> only one shape (annotation)
             labels_indexes = [project_labels_ids.index(label.id) for label in annotation.labels]
         except ValueError:
-            logger.error("Unable to find one of dataset item %s labels in project", dataset_item.id)
+            logger.error("Unable to find one of dataset item {} labels in project", dataset_item.id)
             return None
         return MultilabelClassificationSample(
             image=image_path,
@@ -276,7 +274,7 @@ def convert_detection_dataset(
                 if len(annotation.labels) == 1
             ]
         except ValueError:
-            logger.error("Unable to find one of dataset item %s labels in project", dataset_item.id)
+            logger.error("Unable to find one of dataset item {} labels in project", dataset_item.id)
             return None
         # Every item must be either a model prediction (with confidence score) or a user annotation (without)
         any_with_confidence = any(annotation.confidences is not None for annotation in dataset_item.annotation_data)
@@ -346,7 +344,7 @@ def convert_instance_segmentation_dataset(
                 if len(annotation.labels) == 1
             ]
         except ValueError:
-            logger.error("Unable to find one of dataset item %s labels in project", dataset_item.id)
+            logger.error("Unable to find one of dataset item {} labels in project", dataset_item.id)
             return None
         # Every item must be either a model prediction (with confidence score) or a user annotation (without)
         any_with_confidence = any(annotation.confidences is not None for annotation in dataset_item.annotation_data)

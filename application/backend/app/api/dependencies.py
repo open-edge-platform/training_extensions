@@ -133,6 +133,11 @@ def get_data_dir(request: Request) -> Path:
     return request.app.state.settings.data_dir
 
 
+def get_job_dir(request: Request) -> Path:
+    """Provides the job log directory path from settings."""
+    return request.app.state.settings.job_dir
+
+
 def get_event_bus(request: Request) -> EventBus:
     """Provides an EventBus instance."""
     return request.app.state.event_bus

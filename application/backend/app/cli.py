@@ -3,7 +3,6 @@
 
 """Command line interface for interacting with the Geti Tune application."""
 
-import logging
 import sys
 from datetime import datetime, timedelta
 
@@ -16,8 +15,6 @@ from app.schemas.model import TrainingStatus
 from app.schemas.pipeline import FixedRateDataCollectionPolicy
 from app.settings import get_settings
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 settings = get_settings()
 migration_manager = MigrationManager(settings)
 
