@@ -88,7 +88,8 @@ class TrainingConfigurationService:
 
         model_manifest = SupportedModels.get_model_manifest_by_id(model_manifest_id=model_architecture_id)
         return PartialTrainingConfiguration(
-            model_manifest_id=model_architecture_id, hyperparameters=model_manifest.hyperparameters.model_dump()
+            model_manifest_id=model_architecture_id,
+            hyperparameters=model_manifest.hyperparameters.model_dump(),  # type: ignore[arg-type]
         )  # type: ignore[call-arg]
 
     def _get_default_configuration(self, project_id: UUID) -> TrainingConfiguration:
@@ -111,7 +112,8 @@ class TrainingConfigurationService:
         default_model_manifest = SupportedModels.get_model_manifest_by_id(model_manifest_id=default_model_id)
 
         return PartialTrainingConfiguration(
-            model_manifest_id=default_model_id, hyperparameters=default_model_manifest.hyperparameters.model_dump()
+            model_manifest_id=default_model_id,
+            hyperparameters=default_model_manifest.hyperparameters.model_dump(),  # type: ignore[arg-type]
         )  # type: ignore[call-arg]
 
     def update_training_configuration(
