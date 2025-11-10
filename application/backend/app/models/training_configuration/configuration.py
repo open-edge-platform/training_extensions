@@ -150,11 +150,6 @@ class GlobalParameters(BaseModel):
 class TrainingConfiguration(BaseModel):
     """Configuration for model training"""
 
-    model_manifest_id: str | None = Field(
-        default=None,
-        title="Model manifest ID",
-        description="ID for the model manifest that defines the supported parameters and capabilities for training",
-    )
     global_parameters: GlobalParameters = Field(
         title="Global parameters", description="Global configuration parameters for training"
     )
