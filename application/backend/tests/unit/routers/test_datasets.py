@@ -116,7 +116,7 @@ class TestDatasetItemEndpoints:
             subset=None,
         )
         fxt_dataset_service.list_dataset_items.assert_called_once_with(
-            project=fxt_get_project,
+            project_id=fxt_get_project.id,
             limit=10,
             offset=0,
             start_date=None,
@@ -146,7 +146,7 @@ class TestDatasetItemEndpoints:
             subset=None,
         )
         fxt_dataset_service.list_dataset_items.assert_called_once_with(
-            project=fxt_get_project,
+            project_id=fxt_get_project.id,
             limit=50,
             offset=2,
             start_date=datetime(2025, 1, 9, 0, 0, 0, tzinfo=ZoneInfo("UTC")),
@@ -198,7 +198,7 @@ class TestDatasetItemEndpoints:
             subset=None,
         )
         fxt_dataset_service.list_dataset_items.assert_called_once_with(
-            project=fxt_get_project,
+            project_id=fxt_get_project.id,
             limit=10,
             offset=0,
             start_date=None,
@@ -276,7 +276,7 @@ class TestDatasetItemEndpoints:
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
         fxt_dataset_service.get_dataset_item_by_id.assert_called_once_with(
-            project=fxt_get_project, dataset_item_id=dataset_item_id
+            project_id=fxt_get_project.id, dataset_item_id=dataset_item_id
         )
 
     def test_get_dataset_item_success(self, fxt_get_project, fxt_dataset_item, fxt_dataset_service, fxt_client):
@@ -296,7 +296,7 @@ class TestDatasetItemEndpoints:
             "width": 1024,
         }
         fxt_dataset_service.get_dataset_item_by_id.assert_called_once_with(
-            project=fxt_get_project, dataset_item_id=fxt_dataset_item.id
+            project_id=fxt_get_project.id, dataset_item_id=fxt_dataset_item.id
         )
 
     def test_get_dataset_item_binary_not_found(self, fxt_get_project, fxt_dataset_service, fxt_client):
@@ -309,7 +309,7 @@ class TestDatasetItemEndpoints:
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
         fxt_dataset_service.get_dataset_item_binary_path_by_id.assert_called_once_with(
-            project=fxt_get_project, dataset_item_id=dataset_item_id
+            project_id=fxt_get_project.id, dataset_item_id=dataset_item_id
         )
 
     def test_get_dataset_item_binary_success(self, fxt_get_project, fxt_dataset_service, fxt_client):
@@ -321,7 +321,7 @@ class TestDatasetItemEndpoints:
 
         assert response.status_code == status.HTTP_200_OK
         fxt_dataset_service.get_dataset_item_binary_path_by_id.assert_called_once_with(
-            project=fxt_get_project, dataset_item_id=dataset_item_id
+            project_id=fxt_get_project.id, dataset_item_id=dataset_item_id
         )
 
     def test_get_dataset_item_thumbnail_not_found(self, fxt_get_project, fxt_dataset_service, fxt_client):
@@ -491,7 +491,7 @@ class TestDatasetItemEndpoints:
             "user_reviewed": True,
         }
         fxt_dataset_service.get_dataset_item_by_id.assert_called_once_with(
-            project=fxt_get_project,
+            project_id=fxt_get_project.id,
             dataset_item_id=dataset_item_id,
         )
 
@@ -505,7 +505,7 @@ class TestDatasetItemEndpoints:
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
         fxt_dataset_service.get_dataset_item_by_id.assert_called_once_with(
-            project=fxt_get_project,
+            project_id=fxt_get_project.id,
             dataset_item_id=dataset_item_id,
         )
 
@@ -518,7 +518,7 @@ class TestDatasetItemEndpoints:
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
         fxt_dataset_service.get_dataset_item_by_id.assert_called_once_with(
-            project=fxt_get_project,
+            project_id=fxt_get_project.id,
             dataset_item_id=dataset_item_id,
         )
 
@@ -569,7 +569,7 @@ class TestDatasetItemEndpoints:
             "width": 1024,
         }
         fxt_dataset_service.assign_dataset_item_subset.assert_called_once_with(
-            project=fxt_get_project,
+            project_id=fxt_get_project.id,
             dataset_item_id=dataset_item_id,
             subset=DatasetItemSubset.TRAINING,
         )
@@ -588,7 +588,7 @@ class TestDatasetItemEndpoints:
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
         fxt_dataset_service.assign_dataset_item_subset.assert_called_once_with(
-            project=fxt_get_project,
+            project_id=fxt_get_project.id,
             dataset_item_id=dataset_item_id,
             subset=DatasetItemSubset.TRAINING,
         )
@@ -605,7 +605,7 @@ class TestDatasetItemEndpoints:
 
         assert response.status_code == status.HTTP_409_CONFLICT
         fxt_dataset_service.assign_dataset_item_subset.assert_called_once_with(
-            project=fxt_get_project,
+            project_id=fxt_get_project.id,
             dataset_item_id=dataset_item_id,
             subset=DatasetItemSubset.TRAINING,
         )

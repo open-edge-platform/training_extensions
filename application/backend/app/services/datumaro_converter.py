@@ -20,7 +20,6 @@ from datumaro.experimental.fields import ImageInfo, polygon_field
 from loguru import logger
 
 from app.models import DatasetItem, Label, Polygon, Rectangle, TaskType
-from app.schemas.project import ProjectBase
 
 CONVERSION_BATCH_SIZE = 50
 
@@ -381,7 +380,8 @@ def convert_instance_segmentation_dataset(
 
 
 def convert_dataset(
-    project: ProjectBase,
+    task_type: TaskType,
+    exclusive_labels: bool,
     labels: Sequence[Label],
     get_dataset_items: Callable[[int, int], list[DatasetItem]],
     get_image_path: Callable[[DatasetItem], str],
@@ -390,7 +390,8 @@ def convert_dataset(
     Convert project dataset to Datumaro format
 
     Args:
-        project: Project to perform conversion for
+        task_type: Task type
+        exclusive_labels: Flag to indicate whether labels are exclusive
         labels: Project labels
         get_dataset_items: Function to get a batch of dataset items
         get_image_path: Function to get image path for a dataset item
@@ -398,13 +399,13 @@ def convert_dataset(
     Returns:
         Dataset: Datumaro dataset
     """
-    match project.task.task_type:
+    match task_type:
         case TaskType.DETECTION:
             return convert_detection_dataset(
                 project_labels=labels, get_dataset_items=get_dataset_items, get_image_path=get_image_path
             )
         case TaskType.CLASSIFICATION:
-            if project.task.exclusive_labels:
+            if exclusive_labels:
                 return convert_classification_dataset(
                     project_labels=labels, get_dataset_items=get_dataset_items, get_image_path=get_image_path
                 )

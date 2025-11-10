@@ -217,15 +217,17 @@ def get_project_service(
 ) -> ProjectService:
     """Provides a ProjectService instance for managing projects."""
     return ProjectService(
-        data_dir=data_dir, db_session=db, label_service=label_service, pipeline_service=pipeline_service
+        data_dir=data_dir, label_service=label_service, pipeline_service=pipeline_service, db_session=db
     )
 
 
 def get_dataset_service(
-    data_dir: Annotated[Path, Depends(get_data_dir)], db: Annotated[Session, Depends(get_db)]
+    data_dir: Annotated[Path, Depends(get_data_dir)],
+    label_service: Annotated[LabelService, Depends(get_label_service)],
+    db: Annotated[Session, Depends(get_db)],
 ) -> DatasetService:
     """Provides a DatasetService instance."""
-    return DatasetService(data_dir=data_dir, db_session=db)
+    return DatasetService(data_dir=data_dir, label_service=label_service, db_session=db)
 
 
 def get_project(

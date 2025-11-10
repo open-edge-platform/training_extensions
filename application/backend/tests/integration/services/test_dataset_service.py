@@ -54,10 +54,12 @@ def fxt_project_service(
 
 @pytest.fixture
 def fxt_dataset_service(
-    fxt_projects_dir: Path, db_session: Session, fxt_project_service: ProjectService, fxt_label_service: LabelService
+    fxt_projects_dir: Path,
+    fxt_label_service: LabelService,
+    db_session: Session,
 ) -> DatasetService:
     """Fixture to create a DatasetService instance."""
-    return DatasetService(fxt_projects_dir.parent, db_session=db_session)
+    return DatasetService(fxt_projects_dir.parent, fxt_label_service, db_session=db_session)
 
 
 @pytest.fixture
@@ -608,7 +610,7 @@ class TestDatasetServiceIntegration:
         project, db_dataset_items = fxt_project_with_dataset_items
 
         dataset_items = fxt_dataset_service.list_dataset_items(
-            project=project,
+            project_id=project.id,
             limit=limit,
             offset=offset,
             start_date=start_date,
@@ -630,7 +632,7 @@ class TestDatasetServiceIntegration:
         project, db_dataset_items = fxt_project_with_dataset_items
 
         fetched_dataset_item = fxt_dataset_service.get_dataset_item_by_id(
-            project=project, dataset_item_id=UUID(db_dataset_items[0].id)
+            project_id=project.id, dataset_item_id=UUID(db_dataset_items[0].id)
         )
 
         assert (
@@ -648,7 +650,7 @@ class TestDatasetServiceIntegration:
         non_existent_id = uuid4()
 
         with pytest.raises(ResourceNotFoundError) as excinfo:
-            fxt_dataset_service.get_dataset_item_by_id(project=project, dataset_item_id=non_existent_id)
+            fxt_dataset_service.get_dataset_item_by_id(project_id=project.id, dataset_item_id=non_existent_id)
 
         assert excinfo.value.resource_type == ResourceType.DATASET_ITEM
         assert excinfo.value.resource_id == str(non_existent_id)
@@ -662,7 +664,7 @@ class TestDatasetServiceIntegration:
         project, db_dataset_items = fxt_project_with_dataset_items
 
         dataset_item_binary_path = fxt_dataset_service.get_dataset_item_binary_path_by_id(
-            project=project, dataset_item_id=UUID(db_dataset_items[0].id)
+            project_id=project.id, dataset_item_id=UUID(db_dataset_items[0].id)
         )
 
         assert dataset_item_binary_path == Path(
@@ -679,7 +681,9 @@ class TestDatasetServiceIntegration:
         non_existent_id = uuid4()
 
         with pytest.raises(ResourceNotFoundError) as excinfo:
-            fxt_dataset_service.get_dataset_item_binary_path_by_id(project=project, dataset_item_id=non_existent_id)
+            fxt_dataset_service.get_dataset_item_binary_path_by_id(
+                project_id=project.id, dataset_item_id=non_existent_id
+            )
 
         assert excinfo.value.resource_type == ResourceType.DATASET_ITEM
         assert excinfo.value.resource_id == str(non_existent_id)
@@ -873,7 +877,7 @@ class TestDatasetServiceIntegration:
 
         with pytest.raises(ResourceNotFoundError) as excinfo:
             fxt_dataset_service.assign_dataset_item_subset(
-                project=project,
+                project_id=project.id,
                 dataset_item_id=non_existent_id,
                 subset=DatasetItemSubset.TRAINING,
             )
@@ -895,7 +899,7 @@ class TestDatasetServiceIntegration:
 
         with pytest.raises(SubsetAlreadyAssignedError):
             fxt_dataset_service.assign_dataset_item_subset(
-                project=project,
+                project_id=project.id,
                 dataset_item_id=UUID(db_dataset_items[2].id),
                 subset=subset,
             )
@@ -913,7 +917,7 @@ class TestDatasetServiceIntegration:
         project, db_dataset_items = fxt_project_with_dataset_items
 
         returned_dataset_item = fxt_dataset_service.assign_dataset_item_subset(
-            project=project,
+            project_id=project.id,
             dataset_item_id=UUID(db_dataset_items[0].id),
             subset=subset,
         )
@@ -963,7 +967,7 @@ class TestDatasetServiceIntegration:
         project, db_dataset_items = fxt_project_with_annotation_status_items
 
         dataset_items = fxt_dataset_service.list_dataset_items(
-            project=project,
+            project_id=project.id,
             limit=20,
             offset=0,
             annotation_status=annotation_status,
@@ -997,7 +1001,7 @@ class TestDatasetServiceIntegration:
         project, db_dataset_items = fxt_project_with_annotation_status_items
 
         dataset_items = fxt_dataset_service.list_dataset_items(
-            project=project,
+            project_id=project.id,
             limit=limit,
             offset=offset,
             annotation_status=annotation_status,
@@ -1015,7 +1019,7 @@ class TestDatasetServiceIntegration:
 
         # All reviewed items within date range
         dataset_items = fxt_dataset_service.list_dataset_items(
-            project=project,
+            project_id=project.id,
             limit=20,
             offset=0,
             start_date=datetime.fromisoformat("2025-01-01T00:00:00Z"),
@@ -1028,7 +1032,7 @@ class TestDatasetServiceIntegration:
 
         # No items outside date range
         dataset_items = fxt_dataset_service.list_dataset_items(
-            project=project,
+            project_id=project.id,
             limit=20,
             offset=0,
             start_date=datetime.fromisoformat("2025-03-01T00:00:00Z"),
@@ -1047,7 +1051,7 @@ class TestDatasetServiceIntegration:
 
         # Unannotated items should have no annotation_data
         unannotated_items = fxt_dataset_service.list_dataset_items(
-            project=project,
+            project_id=project.id,
             limit=20,
             offset=0,
             annotation_status="unannotated",
@@ -1058,7 +1062,7 @@ class TestDatasetServiceIntegration:
 
         # Reviewed items should have annotation_data and user_reviewed=True
         reviewed_items = fxt_dataset_service.list_dataset_items(
-            project=project,
+            project_id=project.id,
             limit=20,
             offset=0,
             annotation_status="reviewed",
@@ -1070,7 +1074,7 @@ class TestDatasetServiceIntegration:
 
         # To review items should have annotation_data and user_reviewed=False
         to_review_items = fxt_dataset_service.list_dataset_items(
-            project=project,
+            project_id=project.id,
             limit=20,
             offset=0,
             annotation_status="to_review",
@@ -1091,7 +1095,7 @@ class TestDatasetServiceIntegration:
 
         # Filter by label_0 - should return items 1 and 3 (item_label_0 and item_both_labels)
         dataset_items = fxt_dataset_service.list_dataset_items(
-            project=project,
+            project_id=project.id,
             label_ids=[label_0_id],
         )
 
@@ -1111,7 +1115,7 @@ class TestDatasetServiceIntegration:
 
         # Filter by label_0 OR label_1 - should return items 1, 2, and 3
         dataset_items = fxt_dataset_service.list_dataset_items(
-            project=project,
+            project_id=project.id,
             label_ids=[label_0_id, label_1_id],
         )
 
@@ -1130,7 +1134,7 @@ class TestDatasetServiceIntegration:
 
         # Filter by nonexistent label - should return empty list
         dataset_items = fxt_dataset_service.list_dataset_items(
-            project=project,
+            project_id=project.id,
             label_ids=[nonexistent_label_id],
         )
 
@@ -1180,7 +1184,7 @@ class TestDatasetServiceIntegration:
         project, db_dataset_items = fxt_project_with_labeled_dataset_items
 
         # No filter - should return all 4 items
-        dataset_items = fxt_dataset_service.list_dataset_items(project=project)
+        dataset_items = fxt_dataset_service.list_dataset_items(project_id=project.id)
 
         assert len(dataset_items) == 4
         item_names = {item.name for item in dataset_items}

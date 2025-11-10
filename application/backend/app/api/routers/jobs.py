@@ -66,6 +66,7 @@ async def submit_job(
                         model_architecture_id=job_request.parameters.model_architecture_id,
                         parent_model_revision_id=job_request.parameters.parent_model_revision_id,
                         task_type=project.task.task_type,
+                        exclusive_labels=project.task.exclusive_labels,
                     ),
                 )
             case _:

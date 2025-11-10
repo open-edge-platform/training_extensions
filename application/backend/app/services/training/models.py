@@ -17,6 +17,7 @@ class TrainingParams(JobParams):
     model_architecture_id: str
     parent_model_revision_id: UUID | None = None
     task_type: TaskType
+    exclusive_labels: bool = False
     model_id: UUID = uuid4()  # Reserve the ID for the model to be created for this training job
 
 

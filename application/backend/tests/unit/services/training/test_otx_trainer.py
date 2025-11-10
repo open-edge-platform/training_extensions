@@ -10,6 +10,7 @@ import pytest
 
 from app.core.run import ExecutionContext
 from app.models import DatasetItemSubset, TaskType
+from app.services import DatasetService
 from app.services.base_weights_service import BaseWeightsService
 from app.services.training.models import TrainingParams
 from app.services.training.otx_trainer import OTXTrainer
@@ -41,11 +42,18 @@ def fxt_assigner() -> Mock:
 
 
 @pytest.fixture
+def fxt_dataset_service() -> Mock:
+    """Mock DatasetService for testing."""
+    return Mock(spec=DatasetService)
+
+
+@pytest.fixture
 def fxt_otx_trainer(
     tmp_path: Path,
     fxt_weights_service: Mock,
     fxt_subset_service: Mock,
     fxt_assigner: Mock,
+    fxt_dataset_service: Mock,
     fxt_db_session_factory: Callable,
 ) -> Callable[[TrainingParams], OTXTrainer]:
     """Create an OTXTrainer instance."""
@@ -56,6 +64,7 @@ def fxt_otx_trainer(
             base_weights_service=fxt_weights_service,
             subset_service=fxt_subset_service,
             subset_assigner=fxt_assigner,
+            dataset_service=fxt_dataset_service,
             db_session_factory=fxt_db_session_factory,
         )
         execution_ctx = Mock(spec=ExecutionContext)
@@ -176,7 +185,6 @@ class TestOTXTrainerAssignSubsets:
         fxt_otx_trainer: Callable[[TrainingParams], OTXTrainer],
         fxt_subset_service: Mock,
         fxt_assigner: Mock,
-        fxt_db_session: Mock,
     ):
         """Test assigning subsets when unassigned items exist."""
         # Arrange
@@ -218,19 +226,16 @@ class TestOTXTrainerAssignSubsets:
         otx_trainer.assign_subsets()
 
         # Assert
-        fxt_subset_service.get_unassigned_items_with_labels.assert_called_once_with(project_id, fxt_db_session)
-        fxt_subset_service.get_subset_distribution.assert_called_once_with(project_id, fxt_db_session)
+        fxt_subset_service.get_unassigned_items_with_labels.assert_called_once_with(project_id)
+        fxt_subset_service.get_subset_distribution.assert_called_once_with(project_id)
         fxt_assigner.assign.assert_called_once()
-        fxt_subset_service.update_subset_assignments.assert_called_once_with(
-            project_id, expected_assignments, fxt_db_session
-        )
+        fxt_subset_service.update_subset_assignments.assert_called_once_with(project_id, expected_assignments)
 
     def test_assign_subsets_with_no_unassigned_items(
         self,
         fxt_otx_trainer: Callable[[TrainingParams], OTXTrainer],
         fxt_subset_service: Mock,
         fxt_assigner: Mock,
-        fxt_db_session: Mock,
     ):
         """Test assigning subsets when no unassigned items exist."""
         # Arrange
@@ -247,7 +252,7 @@ class TestOTXTrainerAssignSubsets:
         otx_trainer.assign_subsets()
 
         # Assert
-        fxt_subset_service.get_unassigned_items_with_labels.assert_called_once_with(project_id, fxt_db_session)
+        fxt_subset_service.get_unassigned_items_with_labels.assert_called_once_with(project_id)
         fxt_subset_service.get_subset_distribution.assert_not_called()
         fxt_assigner.assign.assert_not_called()
         fxt_subset_service.update_subset_assignments.assert_not_called()

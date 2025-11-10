@@ -48,6 +48,7 @@ class TestJobEndpoints:
         project = Mock(spec=ProjectView)
         project.task = Mock(spec=TaskView)
         project.task.task_type = TaskType.CLASSIFICATION
+        project.task.exclusive_labels = True
         fxt_project_service.get_project_by_id.return_value = project
         job_request = JobRequest(
             project_id=uuid4(),

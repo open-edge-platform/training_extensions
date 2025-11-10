@@ -1,7 +1,11 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+from abc import ABC
+from collections.abc import Callable
 from enum import StrEnum
+
+from sqlalchemy.orm import Session
 
 
 class ResourceType(StrEnum):
@@ -55,3 +59,26 @@ class ResourceWithIdAlreadyExistsError(ResourceError):
     def __init__(self, resource_type: ResourceType, resource_id: str, message: str | None = None):
         msg = message or f"{resource_type} with ID '{resource_id}' already exists."
         super().__init__(resource_type, resource_id, msg)
+
+
+class BaseSessionManagedService(ABC):
+    """Base class for services that require a managed database session."""
+
+    def __init__(
+        self,
+        db_session: Session | None = None,
+        db_session_factory: Callable[[], Session] | None = None,
+    ):
+        self._db_session: Session | None = db_session
+        self._db_session_factory = db_session_factory
+
+    def set_db_session(self, db_session: Session) -> None:
+        """Set the database session for the service."""
+        self._db_session = db_session
+
+    def _get_session(self) -> Session:
+        if self._db_session is not None:
+            return self._db_session
+        if self._db_session_factory is not None:
+            return self._db_session_factory()
+        raise RuntimeError("No DB session available. Provide session or session factory.")
