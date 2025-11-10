@@ -60,10 +60,10 @@ def fxt_global_parameters():
                 remixing=False,
             ),
             filtering=Filtering(
-                min_annotation_pixels=MinAnnotationPixels(enable=True, min_annotation_pixels=10),
-                max_annotation_pixels=MaxAnnotationPixels(enable=True, max_annotation_pixels=1000),
-                min_annotation_objects=MinAnnotationObjects(enable=True, min_annotation_objects=5),
-                max_annotation_objects=MaxAnnotationObjects(enable=True, max_annotation_objects=100),
+                min_annotation_pixels=MinAnnotationPixels(enable=True, value=10),
+                max_annotation_pixels=MaxAnnotationPixels(enable=True, value=1000),
+                min_annotation_objects=MinAnnotationObjects(enable=True, value=5),
+                max_annotation_objects=MaxAnnotationObjects(enable=True, value=100),
             ),
         )
     )
@@ -123,7 +123,7 @@ class TestTrainingConfiguration:
                         filtering=Filtering(
                             min_annotation_pixels=MinAnnotationPixels(
                                 enable=True,
-                                min_annotation_pixels=0,  # Invalid: must be > 0
+                                value=0,  # Invalid: must be > 0
                             ),
                             max_annotation_pixels=MaxAnnotationPixels(),
                             min_annotation_objects=MinAnnotationObjects(),
@@ -143,7 +143,7 @@ class TestTrainingConfiguration:
                     "dataset_preparation": {
                         "filtering": {
                             "min_annotation_pixels": {
-                                "min_annotation_pixels": 42,
+                                "value": 42,
                             },
                         }
                     }
@@ -153,7 +153,7 @@ class TestTrainingConfiguration:
         global_parameters = partial_training_config_incomplete.global_parameters
         assert partial_training_config_incomplete.model_manifest_id == "test_manifest"
         assert global_parameters.dataset_preparation.filtering.min_annotation_pixels
-        assert global_parameters.dataset_preparation.filtering.min_annotation_pixels.min_annotation_pixels == 42
+        assert global_parameters.dataset_preparation.filtering.min_annotation_pixels.value == 42
         assert global_parameters.dataset_preparation.filtering.min_annotation_pixels.enable is None
         assert global_parameters.dataset_preparation.subset_split is None
 
