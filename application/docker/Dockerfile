@@ -7,7 +7,7 @@ FROM python:3.13-slim@sha256:58c30f5bfaa718b5803a53393190b9c68bd517c44c6c94c1b6c
 COPY --from=docker.io/astral/uv:0.9.7@sha256:ba4857bf2a068e9bc0e64eed8563b065908a4cd6bfb66b531a9c424c8e25e142 /uv /uvx /bin/
 
 # Set working directory
-WORKDIR /app
+WORKDIR /application
 
 # Install required build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -81,8 +81,8 @@ RUN npm run build
 #############
 FROM python:3.13-slim@sha256:58c30f5bfaa718b5803a53393190b9c68bd517c44c6c94c1b6c8c172bcfad040 AS geti-tune
 
-WORKDIR /app
-ENV PYTHONPATH=/app
+WORKDIR /application
+ENV PYTHONPATH=/application
 
 # Install nginx & OpenCV required libraries
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -95,7 +95,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=web_ui /home/app/web_ui/dist/ /usr/share/nginx/html
-COPY --from=backend-build /app /app
+COPY --from=backend-build /application /application
 COPY --from=backend-build /bin/uv /bin/uv
 
 EXPOSE 80
