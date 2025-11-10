@@ -7,7 +7,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -26,9 +26,12 @@ class Settings(BaseSettings):
         "including advanced features for inference, model monitoring and data collection."
     )
     openapi_url: str = "/api/openapi.json"
-    debug: bool = Field(default=False, alias="DEBUG")
+    log_level: str = Field(default="INFO", alias="LOG_LEVEL")
     environment: Literal["dev", "prod"] = "dev"
     data_dir: Path = Field(default=Path("data"), alias="DATA_DIR")
+    log_dir: Path = Field(default=Path("logs"), alias="LOG_DIR")
+    worker_dir: Path | None = None
+    job_dir: Path | None = None
 
     # Server
     host: str = Field(default="0.0.0.0", alias="HOST")  # noqa: S104
@@ -51,6 +54,22 @@ class Settings(BaseSettings):
     def database_url(self) -> str:
         """Get database URL"""
         return f"sqlite:///{self.data_dir / self.database_file}"
+
+    @model_validator(mode="after")
+    def set_default_dirs(self) -> "Settings":
+        """Set default directories based on log_dir"""
+        if self.worker_dir is None:
+            self.worker_dir = self.log_dir / "workers"
+        if self.job_dir is None:
+            self.job_dir = self.log_dir / "jobs"
+
+        return self
+
+    def ensure_dirs_exist(self) -> None:
+        """Create all directories if they don't exist."""
+        for d in [self.data_dir, self.log_dir, self.worker_dir, self.job_dir]:
+            if d:
+                d.mkdir(parents=True, exist_ok=True)
 
 
 @lru_cache

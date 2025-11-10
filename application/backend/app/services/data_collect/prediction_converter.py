@@ -1,16 +1,14 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-import logging
 from collections.abc import Sequence
 
 import cv2
 import numpy as np
+from loguru import logger
 from model_api.models import ClassificationResult, DetectionResult, InstanceSegmentationResult
 from model_api.models.result import Result
 
 from app.models import DatasetItemAnnotation, FullImage, Label, LabelReference, Point, Polygon, Rectangle
-
-logger = logging.getLogger(__name__)
 
 
 def _convert_classification_prediction(
@@ -22,11 +20,11 @@ def _convert_classification_prediction(
         label_name = predicted_label.name
         label = next((label for label in labels if label.name == label_name), None)
         if not label:
-            logger.warning("Prediction label %s cannot be found in the project", label_name)
+            logger.warning("Prediction label {} cannot be found in the project", label_name)
             continue
         confidence = predicted_label.confidence
         if confidence is None:
-            logger.warning("The predicted label %s does not have a confidence score; assuming 1.0", label_name)
+            logger.warning("The predicted label {} does not have a confidence score; assuming 1.0", label_name)
             confidence = 1.0
         predicted_labels.append(LabelReference(id=label.id))
         predicted_confidences.append(confidence)
@@ -41,7 +39,7 @@ def _convert_detection_prediction(labels: Sequence[Label], prediction: Detection
         bbox_confidence = prediction_scores_list[idx]
         label = next((label for label in labels if label.name == label_name), None)
         if not label:
-            logger.warning("Prediction label %s cannot be found in the project", label_name)
+            logger.warning("Prediction label {} cannot be found in the project", label_name)
             continue
         x1, y1, x2, y2 = box.tolist()
         annotation = DatasetItemAnnotation(
@@ -66,7 +64,7 @@ def _convert_segmentation_prediction(
         polygon_confidence = prediction_scores_list[idx]
         label = next((label for label in labels if label.name == label_name), None)
         if not label:
-            logger.warning("Prediction label %s cannot be found in the project", label_name)
+            logger.warning("Prediction label {} cannot be found in the project", label_name)
             continue
         mask = prediction.masks[idx].astype(np.uint8)
         contours, hierarchies = cv2.findContours(mask, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)

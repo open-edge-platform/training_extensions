@@ -3,7 +3,6 @@
 
 """Endpoints for managing pipeline sources"""
 
-import logging
 from typing import Annotated
 
 import yaml
@@ -24,7 +23,6 @@ from app.services import (
     SourceUpdateService,
 )
 
-logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/sources", tags=["Sources"])
 
 CREATE_SOURCE_BODY_DESCRIPTION = """

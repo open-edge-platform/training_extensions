@@ -133,6 +133,119 @@ def fxt_project_with_dataset_items(fxt_project_with_pipeline, db_session) -> tup
 
 
 @pytest.fixture
+def fxt_project_with_annotation_status_items(
+    fxt_project_with_pipeline, db_session
+) -> tuple[ProjectView, list[DatasetItemDB]]:
+    """Fixture with dataset items covering all annotation statuses."""
+    project, _ = fxt_project_with_pipeline
+
+    # Unannotated items (annotation_data is null) - don't set annotation_data at all
+    unannotated_items = [
+        DatasetItemDB(
+            name="unannotated1",
+            format="jpg",
+            size=1024,
+            width=1024,
+            height=768,
+            subset="unassigned",
+            user_reviewed=False,
+            project_id=str(project.id),
+            created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
+        ),
+        DatasetItemDB(
+            name="unannotated2",
+            format="jpg",
+            size=1024,
+            width=1024,
+            height=768,
+            subset="unassigned",
+            user_reviewed=False,
+            project_id=str(project.id),
+            created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
+        ),
+    ]
+
+    # Reviewed items (annotation_data is not null and user_reviewed is True)
+    reviewed_items = [
+        DatasetItemDB(
+            name="reviewed1",
+            format="jpg",
+            size=1024,
+            width=1024,
+            height=768,
+            subset="unassigned",
+            annotation_data=[{"labels": [{"id": str(project.task.labels[0].id)}], "shape": {"type": "full_image"}}],
+            user_reviewed=True,
+            project_id=str(project.id),
+            created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
+        ),
+        DatasetItemDB(
+            name="reviewed2",
+            format="jpg",
+            size=1024,
+            width=1024,
+            height=768,
+            subset="unassigned",
+            annotation_data=[{"labels": [{"id": str(project.task.labels[0].id)}], "shape": {"type": "full_image"}}],
+            user_reviewed=True,
+            project_id=str(project.id),
+            created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
+        ),
+        DatasetItemDB(
+            name="reviewed3",
+            format="jpg",
+            size=1024,
+            width=1024,
+            height=768,
+            subset="unassigned",
+            annotation_data=[{"labels": [{"id": str(project.task.labels[0].id)}], "shape": {"type": "full_image"}}],
+            user_reviewed=True,
+            project_id=str(project.id),
+            created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
+        ),
+    ]
+
+    # To review items (annotation_data is not null and user_reviewed is False)
+    to_review_items = [
+        DatasetItemDB(
+            name="to_review1",
+            format="jpg",
+            size=1024,
+            width=1024,
+            height=768,
+            subset="unassigned",
+            annotation_data=[{"labels": [{"id": str(project.task.labels[0].id)}], "shape": {"type": "full_image"}}],
+            user_reviewed=False,
+            project_id=str(project.id),
+            created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
+        ),
+        DatasetItemDB(
+            name="to_review2",
+            format="jpg",
+            size=1024,
+            width=1024,
+            height=768,
+            subset="unassigned",
+            annotation_data=[{"labels": [{"id": str(project.task.labels[0].id)}], "shape": {"type": "full_image"}}],
+            user_reviewed=False,
+            project_id=str(project.id),
+            created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
+        ),
+    ]
+
+    db_dataset_items = [*unannotated_items, *reviewed_items, *to_review_items]
+    db_session.add_all(db_dataset_items)
+    db_session.flush()
+
+    # Link labels to annotated dataset items
+    for item in [*reviewed_items, *to_review_items]:
+        db_session.add(DatasetItemLabelDB(dataset_item_id=item.id, label_id=str(project.task.labels[0].id)))
+    db_session.flush()
+
+    return project, db_dataset_items
+
+
+@pytest.fixture
 def fxt_annotations() -> Callable[[UUID], list[DatasetItemAnnotation]]:
     def _create_annotations(label_id: UUID) -> list[DatasetItemAnnotation]:
         return [
@@ -143,6 +256,82 @@ def fxt_annotations() -> Callable[[UUID], list[DatasetItemAnnotation]]:
         ]
 
     return _create_annotations
+
+
+@pytest.fixture
+def fxt_project_with_labeled_dataset_items(
+    fxt_project_with_pipeline, db_session
+) -> tuple[ProjectView, list[DatasetItemDB]]:
+    """Fixture to create a project with multiple labeled dataset items for testing label filtering."""
+    project, _ = fxt_project_with_pipeline
+
+    # Ensure we have at least 2 labels
+    assert len(project.task.labels) >= 2, "Project must have at least 2 labels for this fixture"
+
+    label_0_id = str(project.task.labels[0].id)
+    label_1_id = str(project.task.labels[1].id)
+
+    configs = [
+        # Item 0: No annotations
+        {"name": "item_no_labels", "format": "jpg", "size": 1024, "width": 1024, "height": 768, "subset": "unassigned"},
+        # Item 1: Has label_0
+        {
+            "name": "item_label_0",
+            "format": "jpg",
+            "size": 1024,
+            "width": 1024,
+            "height": 768,
+            "subset": "unassigned",
+            "annotation_data": [{"labels": [{"id": label_0_id}], "shape": {"type": "full_image"}}],
+        },
+        # Item 2: Has label_1
+        {
+            "name": "item_label_1",
+            "format": "jpg",
+            "size": 1024,
+            "width": 1024,
+            "height": 768,
+            "subset": "unassigned",
+            "annotation_data": [{"labels": [{"id": label_1_id}], "shape": {"type": "full_image"}}],
+        },
+        # Item 3: Has both label_0 and label_1
+        {
+            "name": "item_both_labels",
+            "format": "jpg",
+            "size": 1024,
+            "width": 1024,
+            "height": 768,
+            "subset": "unassigned",
+            "annotation_data": [
+                {
+                    "labels": [{"id": label_0_id}],
+                    "shape": {"type": "rectangle", "x": 0, "y": 0, "width": 10, "height": 10},
+                },
+                {
+                    "labels": [{"id": label_1_id}],
+                    "shape": {"type": "rectangle", "x": 20, "y": 20, "width": 10, "height": 10},
+                },
+            ],
+        },
+    ]
+
+    db_dataset_items = []
+    for config in configs:
+        dataset_item = DatasetItemDB(**config)
+        dataset_item.project_id = str(project.id)
+        dataset_item.created_at = datetime.fromisoformat("2025-02-01T00:00:00Z")
+        db_dataset_items.append(dataset_item)
+    db_session.add_all(db_dataset_items)
+    db_session.flush()
+
+    # Link labels to dataset items
+    db_session.add(DatasetItemLabelDB(dataset_item_id=db_dataset_items[1].id, label_id=label_0_id))
+    db_session.add(DatasetItemLabelDB(dataset_item_id=db_dataset_items[2].id, label_id=label_1_id))
+    db_session.add(DatasetItemLabelDB(dataset_item_id=db_dataset_items[3].id, label_id=label_0_id))
+    db_session.add(DatasetItemLabelDB(dataset_item_id=db_dataset_items[3].id, label_id=label_1_id))
+    db_session.flush()
+
+    return project, db_dataset_items
 
 
 class TestDatasetServiceIntegration:
@@ -618,3 +807,269 @@ class TestDatasetServiceIntegration:
         )
 
         assert str(returned_dataset_item.id) == db_dataset_items[0].id and returned_dataset_item.subset == subset
+
+    @pytest.mark.parametrize(
+        "annotation_status, expected_count",
+        [
+            (None, 7),  # All items
+            ("unannotated", 2),  # 2 unannotated items
+            ("reviewed", 3),  # 3 reviewed items
+            ("to_review", 2),  # 2 to_review items
+        ],
+    )
+    def test_count_dataset_items_with_annotation_status(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_project_with_annotation_status_items: tuple[ProjectView, list[DatasetItemDB]],
+        annotation_status: str | None,
+        expected_count: int,
+    ) -> None:
+        """Test counting dataset items with annotation_status filter."""
+        project, db_dataset_items = fxt_project_with_annotation_status_items
+
+        count = fxt_dataset_service.count_dataset_items(project=project, annotation_status=annotation_status)
+
+        assert count == expected_count
+
+    @pytest.mark.parametrize(
+        "annotation_status, expected_names",
+        [
+            (None, ["unannotated1", "unannotated2", "reviewed1", "reviewed2", "reviewed3", "to_review1", "to_review2"]),
+            ("unannotated", ["unannotated1", "unannotated2"]),
+            ("reviewed", ["reviewed1", "reviewed2", "reviewed3"]),
+            ("to_review", ["to_review1", "to_review2"]),
+        ],
+    )
+    def test_list_dataset_items_with_annotation_status(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_project_with_annotation_status_items: tuple[ProjectView, list[DatasetItemDB]],
+        annotation_status: str | None,
+        expected_names: list[str],
+    ) -> None:
+        """Test listing dataset items with annotation_status filter."""
+        project, db_dataset_items = fxt_project_with_annotation_status_items
+
+        dataset_items = fxt_dataset_service.list_dataset_items(
+            project=project,
+            limit=20,
+            offset=0,
+            annotation_status=annotation_status,
+        )
+
+        assert len(dataset_items) == len(expected_names)
+        actual_names = sorted([item.name for item in dataset_items])
+        assert actual_names == sorted(expected_names)
+
+    @pytest.mark.parametrize(
+        "annotation_status, limit, offset, expected_count",
+        [
+            ("unannotated", 1, 0, 1),  # First page of unannotated
+            ("unannotated", 1, 1, 1),  # Second page of unannotated
+            ("unannotated", 1, 2, 0),  # Beyond available unannotated items
+            ("reviewed", 2, 0, 2),  # First page of reviewed
+            ("reviewed", 2, 2, 1),  # Second page of reviewed (only 1 left)
+            ("to_review", 10, 0, 2),  # All to_review items
+        ],
+    )
+    def test_list_dataset_items_with_annotation_status_pagination(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_project_with_annotation_status_items: tuple[ProjectView, list[DatasetItemDB]],
+        annotation_status: str | None,
+        limit: int,
+        offset: int,
+        expected_count: int,
+    ) -> None:
+        """Test listing dataset items with annotation_status filter and pagination."""
+        project, db_dataset_items = fxt_project_with_annotation_status_items
+
+        dataset_items = fxt_dataset_service.list_dataset_items(
+            project=project,
+            limit=limit,
+            offset=offset,
+            annotation_status=annotation_status,
+        )
+
+        assert len(dataset_items) == expected_count
+
+    def test_list_dataset_items_annotation_status_combined_with_dates(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_project_with_annotation_status_items: tuple[ProjectView, list[DatasetItemDB]],
+    ) -> None:
+        """Test annotation_status filter combined with date filters."""
+        project, db_dataset_items = fxt_project_with_annotation_status_items
+
+        # All reviewed items within date range
+        dataset_items = fxt_dataset_service.list_dataset_items(
+            project=project,
+            limit=20,
+            offset=0,
+            start_date=datetime.fromisoformat("2025-01-01T00:00:00Z"),
+            end_date=datetime.fromisoformat("2025-02-02T00:00:00Z"),
+            annotation_status="reviewed",
+        )
+        assert len(dataset_items) == 3
+        assert all(item.user_reviewed for item in dataset_items)
+        assert all(item.annotation_data is not None for item in dataset_items)
+
+        # No items outside date range
+        dataset_items = fxt_dataset_service.list_dataset_items(
+            project=project,
+            limit=20,
+            offset=0,
+            start_date=datetime.fromisoformat("2025-03-01T00:00:00Z"),
+            end_date=datetime.fromisoformat("2025-03-31T00:00:00Z"),
+            annotation_status="unannotated",
+        )
+        assert len(dataset_items) == 0
+
+    def test_annotation_status_filter_verifies_data_correctness(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_project_with_annotation_status_items: tuple[ProjectView, list[DatasetItemDB]],
+    ) -> None:
+        """Test that annotation_status filter returns items with correct properties."""
+        project, db_dataset_items = fxt_project_with_annotation_status_items
+
+        # Unannotated items should have no annotation_data
+        unannotated_items = fxt_dataset_service.list_dataset_items(
+            project=project,
+            limit=20,
+            offset=0,
+            annotation_status="unannotated",
+        )
+        assert len(unannotated_items) == 2
+        for item in unannotated_items:
+            assert item.annotation_data is None
+
+        # Reviewed items should have annotation_data and user_reviewed=True
+        reviewed_items = fxt_dataset_service.list_dataset_items(
+            project=project,
+            limit=20,
+            offset=0,
+            annotation_status="reviewed",
+        )
+        assert len(reviewed_items) == 3
+        for item in reviewed_items:
+            assert item.annotation_data is not None
+            assert item.user_reviewed is True
+
+        # To review items should have annotation_data and user_reviewed=False
+        to_review_items = fxt_dataset_service.list_dataset_items(
+            project=project,
+            limit=20,
+            offset=0,
+            annotation_status="to_review",
+        )
+        assert len(to_review_items) == 2
+        for item in to_review_items:
+            assert item.annotation_data is not None
+            assert item.user_reviewed is False
+
+    def test_list_dataset_items_filter_by_single_label(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_project_with_labeled_dataset_items: tuple[ProjectView, list[DatasetItemDB]],
+    ):
+        """Test listing dataset items filtered by a single label."""
+        project, db_dataset_items = fxt_project_with_labeled_dataset_items
+        label_0_id = project.task.labels[0].id
+
+        # Filter by label_0 - should return items 1 and 3 (item_label_0 and item_both_labels)
+        dataset_items = fxt_dataset_service.list_dataset_items(
+            project=project,
+            label_ids=[label_0_id],
+        )
+
+        assert len(dataset_items) == 2
+        item_names = {item.name for item in dataset_items}
+        assert item_names == {"item_label_0", "item_both_labels"}
+
+    def test_list_dataset_items_filter_by_multiple_labels(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_project_with_labeled_dataset_items: tuple[ProjectView, list[DatasetItemDB]],
+    ):
+        """Test listing dataset items filtered by multiple labels (OR logic)."""
+        project, db_dataset_items = fxt_project_with_labeled_dataset_items
+        label_0_id = project.task.labels[0].id
+        label_1_id = project.task.labels[1].id
+
+        # Filter by label_0 OR label_1 - should return items 1, 2, and 3
+        dataset_items = fxt_dataset_service.list_dataset_items(
+            project=project,
+            label_ids=[label_0_id, label_1_id],
+        )
+
+        assert len(dataset_items) == 3
+        item_names = {item.name for item in dataset_items}
+        assert item_names == {"item_label_0", "item_label_1", "item_both_labels"}
+
+    def test_list_dataset_items_filter_by_nonexistent_label(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_project_with_labeled_dataset_items: tuple[ProjectView, list[DatasetItemDB]],
+    ):
+        """Test listing dataset items filtered by a nonexistent label."""
+        project, db_dataset_items = fxt_project_with_labeled_dataset_items
+        nonexistent_label_id = uuid4()
+
+        # Filter by nonexistent label - should return empty list
+        dataset_items = fxt_dataset_service.list_dataset_items(
+            project=project,
+            label_ids=[nonexistent_label_id],
+        )
+
+        assert len(dataset_items) == 0
+
+    def test_count_dataset_items_filter_by_single_label(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_project_with_labeled_dataset_items: tuple[ProjectView, list[DatasetItemDB]],
+    ):
+        """Test counting dataset items filtered by a single label."""
+        project, db_dataset_items = fxt_project_with_labeled_dataset_items
+        label_0_id = project.task.labels[0].id
+
+        # Count items with label_0 - should return 2
+        count = fxt_dataset_service.count_dataset_items(
+            project=project,
+            label_ids=[label_0_id],
+        )
+
+        assert count == 2
+
+    def test_count_dataset_items_filter_by_multiple_labels(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_project_with_labeled_dataset_items: tuple[ProjectView, list[DatasetItemDB]],
+    ):
+        """Test counting dataset items filtered by multiple labels (OR logic)."""
+        project, db_dataset_items = fxt_project_with_labeled_dataset_items
+        label_0_id = project.task.labels[0].id
+        label_1_id = project.task.labels[1].id
+
+        # Count items with label_0 OR label_1 - should return 3
+        count = fxt_dataset_service.count_dataset_items(
+            project=project,
+            label_ids=[label_0_id, label_1_id],
+        )
+
+        assert count == 3
+
+    def test_list_dataset_items_no_label_filter(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_project_with_labeled_dataset_items: tuple[ProjectView, list[DatasetItemDB]],
+    ):
+        """Test listing dataset items without label filter returns all items."""
+        project, db_dataset_items = fxt_project_with_labeled_dataset_items
+
+        # No filter - should return all 4 items
+        dataset_items = fxt_dataset_service.list_dataset_items(project=project)
+
+        assert len(dataset_items) == 4
+        item_names = {item.name for item in dataset_items}
+        assert item_names == {"item_no_labels", "item_label_0", "item_label_1", "item_both_labels"}

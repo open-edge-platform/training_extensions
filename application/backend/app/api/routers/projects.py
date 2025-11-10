@@ -3,7 +3,6 @@
 
 """Endpoints for managing projects"""
 
-import logging
 from typing import Annotated
 from uuid import UUID
 
@@ -24,7 +23,6 @@ from app.services import (
 from app.services.data_collect import DataCollector
 from app.services.label_service import DuplicateLabelsError
 
-logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/projects", tags=["Projects"])
 
 CREATE_PROJECT_BODY_DESCRIPTION = """

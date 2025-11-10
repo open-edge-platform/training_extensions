@@ -27,6 +27,12 @@ class DatasetItemSubset(StrEnum):
     TESTING = "testing"
 
 
+class DatasetItemAnnotationStatus(StrEnum):
+    UNANNOTATED = "unannotated"
+    REVIEWED = "reviewed"
+    TO_REVIEW = "to_review"
+
+
 class DatasetItemAnnotation(BaseModel):
     """
     DatasetItemAnnotation represents an individual annotation within a dataset item.

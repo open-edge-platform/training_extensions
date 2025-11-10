@@ -1,6 +1,5 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-import logging
 from uuid import UUID
 
 from sqlalchemy.exc import IntegrityError
@@ -21,8 +20,6 @@ from .base import (
 )
 from .event.event_bus import EventBus, EventType
 from .parent_process_guard import parent_process_only
-
-logger = logging.getLogger(__name__)
 
 
 class SinkService:

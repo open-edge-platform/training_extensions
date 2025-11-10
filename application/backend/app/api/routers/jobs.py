@@ -3,12 +3,15 @@
 
 import asyncio
 from collections.abc import AsyncGenerator
+from pathlib import Path
 from typing import Annotated
+from uuid import UUID
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Request, status
-from starlette.responses import StreamingResponse
+import aiofiles
+from fastapi import APIRouter, Body, Depends, HTTPException, status
+from sse_starlette.sse import EventSourceResponse, ServerSentEvent
 
-from app.api.dependencies import get_job_queue, get_project_service
+from app.api.dependencies import get_data_dir, get_job_dir, get_job_queue, get_project_service
 from app.api.validators import JobID
 from app.core.jobs.control_plane import CancellationResult, JobQueue
 from app.core.jobs.models import JobStatus
@@ -33,6 +36,8 @@ router = APIRouter(prefix="/api/jobs", tags=["Jobs"])
 async def submit_job(
     job_request: Annotated[JobRequest, Body()],
     job_queue: Annotated[JobQueue, Depends(get_job_queue)],
+    job_dir: Annotated[Path, Depends(get_job_dir)],
+    data_dir: Annotated[Path, Depends(get_data_dir)],
     project_service: Annotated[ProjectService, Depends(get_project_service)],
 ) -> JobView:
     """
@@ -41,6 +46,8 @@ async def submit_job(
     Args:
         job_request (JobRequest): The Job request payload.
         job_queue (JobQueue): The job queue instance responsible for managing job submissions and tracking job statuses.
+        job_dir (Path): The directory where job log files are stored.
+        data_dir (Path): The base directory for project data storage.
         project_service (ProjectService): The service to interact with project data.
 
     Returns:
@@ -53,6 +60,8 @@ async def submit_job(
             case JobType.TRAIN:
                 job = TrainingJob(
                     project_id=job_request.project_id,
+                    log_dir=job_dir,
+                    data_dir=data_dir,
                     params=TrainingParams(
                         model_architecture_id=job_request.parameters.model_architecture_id,
                         parent_model_revision_id=job_request.parameters.parent_model_revision_id,
@@ -163,49 +172,106 @@ async def cancel_job(job_id: JobID, job_queue: Annotated[JobQueue, Depends(get_j
 
 @router.get("/{job_id}/status")
 async def stream_job_status(
-    job_id: JobID, request: Request, job_queue: Annotated[JobQueue, Depends(get_job_queue)]
-) -> StreamingResponse:
+    job_id: JobID, job_queue: Annotated[JobQueue, Depends(get_job_queue)]
+) -> EventSourceResponse:
     """
     Stream real-time status updates for a specific job.
 
     This endpoint streams job status updates using Server-Sent Events (SSE).
-    It sends periodic updates until the client disconnects or the job reaches
-    terminal state.
+    It sends periodic updates until the job reaches terminal state.
 
     Args:
         job_id (JobID): The unique identifier of the job.
-        request (Request): The HTTP request object to monitor client connection status.
-        job_queue (JobQueue): The job queue instance responsible for managing job submissions and tracking job statuses.
+        job_queue (JobQueue): The job queue instance responsible for tracking job statuses.
 
     Returns:
-        StreamingResponse: A streaming response with job status updates.
+        EventSourceResponse: A streaming response with job status updates.
     """
     if not job_queue.get(job_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
 
-    async def gen_job_updates() -> AsyncGenerator[str]:
-        """Generate job status updates."""
-        last = None
-        while True:
-            if await request.is_disconnected():
-                break
-            j = job_queue.get(job_id)
-            if not j:
-                break
-            snap = JobView.of(j).model_dump_json()
-            if snap != last:
-                yield f"{snap}\n"
-                last = snap
-            if j.status >= JobStatus.DONE:
-                break
-            await asyncio.sleep(0.1)
+    return EventSourceResponse(__gen_job_updates(job_id, job_queue))
 
-    return StreamingResponse(
-        gen_job_updates(),
-        media_type="text/event-stream",
-        headers={
-            "Content-Type": "text/event-stream",
-            "Connection": "keep-alive",
-            "Cache-Control": "no-cache",
-        },
-    )
+
+@router.get("/{job_id}/logs")
+async def stream_job_logs(
+    job_id: JobID,
+    job_dir: Annotated[Path, Depends(get_job_dir)],
+    job_queue: Annotated[JobQueue, Depends(get_job_queue)],
+) -> EventSourceResponse:
+    """
+    Stream real-time log output for a specific job.
+
+    This endpoint streams job logs using Server-Sent Events (SSE). It reads
+    the job's log file and yields new lines as they are written, allowing clients
+    to follow the job's progress in real-time. The stream continues until the
+    client disconnects or an error occurs.
+
+    Args:
+        job_id (JobID): The unique identifier of the job.
+        job_dir (Path): The directory where job log files are stored.
+        job_queue (JobQueue): The job queue instance for tracking job statuses.
+
+    Returns:
+        EventSourceResponse: A streaming response with log entries sent as SSE events.
+
+    Raises:
+        HTTPException: If the job is not found (404), the log file doesn't exist (404),
+                       or the job has already completed (409).
+    """
+    job = job_queue.get(job_id)
+    if not job:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
+
+    if job.status >= JobStatus.DONE:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Job has already completed; logs are no longer available for streaming",
+        )
+
+    log_path = job_dir / job.log_file
+
+    if not log_path.exists():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Log file not found")
+
+    return EventSourceResponse(__gen_log_stream(job_id, log_path, job_queue))
+
+
+async def __gen_job_updates(job_id: UUID, job_queue: JobQueue) -> AsyncGenerator[ServerSentEvent]:
+    """Generate job status updates."""
+    last = None
+    while True:
+        j = job_queue.get(job_id)
+        if not j:
+            break
+        snap = JobView.of(j).model_dump_json()
+        if snap != last:
+            yield ServerSentEvent(data=snap)
+            last = snap
+        if j.status >= JobStatus.DONE:
+            break
+        await asyncio.sleep(0.1)
+
+
+async def __gen_log_stream(job_id: UUID, log_path: Path, job_queue: JobQueue) -> AsyncGenerator[ServerSentEvent]:
+    """Asynchronously follow a log file and yield new lines as SSE events."""
+    try:
+        async with aiofiles.open(log_path) as f:
+            async for line in f:
+                yield ServerSentEvent(data=line.rstrip("\n"))
+
+            while True:
+                j = job_queue.get(job_id)
+                if not j:
+                    break
+                line = await f.readline()
+                if not line:
+                    await asyncio.sleep(0.3)
+                    continue
+                yield ServerSentEvent(data=line.rstrip("\n"))
+                if j.status >= JobStatus.DONE:
+                    break
+    except asyncio.CancelledError:
+        raise
+    except Exception as e:
+        yield ServerSentEvent(data=f"Error reading log file: {e}")
