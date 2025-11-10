@@ -124,7 +124,7 @@ class TestModelManifest:
             "support_status": "active",
             "supported_gpus": {"intel": True},
             "parameters": {
-                "dataset_augmentation_parameters": {
+                "dataset_preparation": {
                     "augmentation": {
                         "gaussian_blur": {"kernel_size": 5},
                         "tiling": {"adaptive_tiling": True, "tile_size": 100, "tile_overlap": 0.3},
