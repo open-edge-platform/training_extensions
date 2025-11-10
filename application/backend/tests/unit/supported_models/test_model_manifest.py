@@ -9,6 +9,7 @@ from unittest.mock import patch
 import hiyapyco
 import pytest
 
+from app.models import TaskType
 from app.models.training_configuration.hyperparameters import (
     DatasetPreparationParameters,
     EarlyStopping,
@@ -83,6 +84,7 @@ def fxt_dummy_model_manifest(
         supported_gpus=fxt_dummy_supported_gpu,
         hyperparameters=fxt_dummy_hyperparameters,
         capabilities=Capabilities(xai=True, tiling=False),
+        task=TaskType.CLASSIFICATION,
     )
 
 
@@ -123,7 +125,7 @@ class TestModelManifest:
             },
             "support_status": "active",
             "supported_gpus": {"intel": True},
-            "parameters": {
+            "hyperparameters": {
                 "dataset_preparation": {
                     "augmentation": {
                         "gaussian_blur": {"kernel_size": 5},
