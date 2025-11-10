@@ -4,14 +4,9 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from app.api.dependencies import (
-    get_model_architecture_id,
-    get_model_revision_id,
-    get_project_id,
-    get_training_configuration_service,
-)
+from app.api.dependencies import get_project_id, get_training_configuration_service
 from app.api.serializers.training_configuration import TrainingConfigurationConverter
 from app.services import ResourceNotFoundError
 from app.services.training_configuration_service import TrainingConfigurationService
@@ -25,8 +20,8 @@ def get_training_configuration(
         TrainingConfigurationService, Depends(get_training_configuration_service)
     ],
     project_id: Annotated[UUID, Depends(get_project_id)],
-    model_architecture_id: Annotated[str | None, Depends(get_model_architecture_id)] = None,
-    model_revision_id: Annotated[UUID | None, Depends(get_model_revision_id)] = None,
+    model_architecture_id: Annotated[str | None, Query()] = None,
+    model_revision_id: Annotated[UUID | None, Query()] = None,
 ) -> dict:
     """
     Get the training configuration for a project.
@@ -56,7 +51,7 @@ def update_training_configuration(
     ],
     project_id: Annotated[UUID, Depends(get_project_id)],
     training_config_update: dict,
-    model_architecture_id: Annotated[str | None, Depends(get_model_architecture_id)] = None,
+    model_architecture_id: Annotated[str | None, Query()] = None,
 ) -> dict:
     """
     Update the training configuration for a project.

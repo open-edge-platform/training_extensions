@@ -31,8 +31,6 @@ from app.services.data_collect import DataCollector
 from app.services.event.event_bus import EventBus
 from app.services.label_service import LabelService
 from app.services.training_configuration_service import TrainingConfigurationService
-from app.supported_models import SupportedModels
-from app.supported_models.supported_models import ManifestNotFoundException
 from app.webrtc.manager import WebRTCManager
 
 
@@ -111,23 +109,6 @@ def get_model_id(model_id: str) -> UUID:
     if not is_valid_uuid(model_id):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid model ID")
     return UUID(model_id)
-
-
-def get_model_revision_id(model_id: str) -> UUID:
-    """Initializes and validates a model revision ID"""
-    return get_model_id(model_id=model_id)
-
-
-def get_model_architecture_id(model_architecture_id: str) -> str:
-    """Initializes and validates a model architecture ID"""
-    model_architecture_id = model_architecture_id.strip()
-    try:
-        _ = SupportedModels.get_model_manifest_by_id(model_manifest_id=model_architecture_id)
-    except ManifestNotFoundException:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Model architecture not found")
-    if not model_architecture_id:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid model architecture ID")
-    return model_architecture_id
 
 
 def get_dataset_item_id(dataset_item_id: str) -> UUID:

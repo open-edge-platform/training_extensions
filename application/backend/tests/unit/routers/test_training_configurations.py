@@ -51,6 +51,6 @@ class TestTrainingConfigurationEndpoints:
 
         assert response.status_code == 200
         data = response.json()
-        assert "dataset_augmentation_parameters" in data
+        assert "dataset_preparation" in data
         assert "training" in data
         assert "evaluation" in data
