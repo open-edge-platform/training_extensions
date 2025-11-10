@@ -1,6 +1,5 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-import logging
 import os.path
 from collections.abc import Callable
 from datetime import datetime
@@ -20,8 +19,6 @@ from app.services import LabelService, PipelineService, ProjectService
 from app.services.base import ResourceNotFoundError, ResourceType
 from app.services.dataset_service import DatasetService, InvalidImageError, SubsetAlreadyAssignedError
 from app.services.event.event_bus import EventBus
-
-logger = logging.getLogger(__name__)
 
 
 @pytest.fixture
@@ -368,7 +365,6 @@ class TestDatasetServiceIntegration:
             prediction_model_id=pipeline.model_id if use_pipeline_model else None,
             annotations=fxt_annotations(label_id) if not user_reviewed else None,
         )
-        logger.info(f"Created dataset item: {created_dataset_item}")
 
         dataset_item = db_session.get(DatasetItemDB, str(created_dataset_item.id))
         assert dataset_item is not None

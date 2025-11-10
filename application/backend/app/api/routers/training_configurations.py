@@ -1,7 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
 from typing import Annotated
 from uuid import UUID
 
@@ -17,7 +16,6 @@ from app.api.serializers.training_configuration import TrainingConfigurationConv
 from app.services import ResourceNotFoundError
 from app.services.training_configuration_service import TrainingConfigurationService
 
-logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/projects/{project_id}/training_configuration", tags=["Training Configuration"])
 
 
