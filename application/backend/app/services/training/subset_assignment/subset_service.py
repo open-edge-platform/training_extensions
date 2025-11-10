@@ -16,7 +16,7 @@ from .models import DatasetItemWithLabels, SubsetAssignment
 class SubsetService(BaseSessionManagedService):
     def get_unassigned_items_with_labels(self, project_id: UUID) -> list[DatasetItemWithLabels]:
         """Retrieve all unassigned dataset items for a given project."""
-        repo = DatasetItemRepository(project_id=str(project_id), db=self._get_session())
+        repo = DatasetItemRepository(project_id=str(project_id), db=self.db_session)
         unassigned_items_db = repo.list_unassigned_items()
 
         items_dict = defaultdict(set)
@@ -27,14 +27,14 @@ class SubsetService(BaseSessionManagedService):
 
     def get_subset_distribution(self, project_id: UUID) -> SubsetDistribution:
         """Get distribution of dataset items across subsets."""
-        repo = DatasetItemRepository(project_id=str(project_id), db=self._get_session())
+        repo = DatasetItemRepository(project_id=str(project_id), db=self.db_session)
         results = repo.get_subset_distribution()
 
         return SubsetDistribution(counts={DatasetItemSubset(subset): count for subset, count in results.items()})
 
     def update_subset_assignments(self, project_id: UUID, assignments: list[SubsetAssignment]) -> None:
         """Update subset assignments for dataset items."""
-        repo = DatasetItemRepository(project_id=str(project_id), db=self._get_session())
+        repo = DatasetItemRepository(project_id=str(project_id), db=self.db_session)
 
         assignments_by_subset = defaultdict(set)
         for assignment in assignments:

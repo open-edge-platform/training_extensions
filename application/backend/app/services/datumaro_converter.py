@@ -16,10 +16,10 @@ from datumaro.experimental import (
     score_field,
 )
 from datumaro.experimental.categories import LabelCategories
-from datumaro.experimental.fields import ImageInfo, polygon_field
+from datumaro.experimental.fields import ImageInfo, Subset, polygon_field, subset_field
 from loguru import logger
 
-from app.models import DatasetItem, Label, Polygon, Rectangle, TaskType
+from app.models import DatasetItem, DatasetItemSubset, Label, Polygon, Rectangle, TaskType
 
 CONVERSION_BATCH_SIZE = 50
 
@@ -39,6 +39,7 @@ class ClassificationSample(Sample):
     image_info: ImageInfo = image_info_field()
     label: int = label_field(dtype=pl.Int32(), is_list=False)
     confidence: float | None = score_field(dtype=pl.Float32())
+    subset: Subset = subset_field()
 
 
 class MultilabelClassificationSample(Sample):
@@ -57,6 +58,7 @@ class MultilabelClassificationSample(Sample):
     # TODO: Use NDArrayFloat32 and NDArrayInt instead of np.ndarray after open-edge-platform/datumaro#1949 is solved
     label: np.ndarray = label_field(dtype=pl.Int32(), multi_label=True)
     confidence: np.ndarray | None = score_field(dtype=pl.Float32(), is_list=True)
+    subset: Subset = subset_field()
 
 
 class DetectionSample(Sample):
@@ -77,6 +79,7 @@ class DetectionSample(Sample):
     bboxes: np.ndarray = bbox_field(dtype=pl.Int32())
     label: np.ndarray = label_field(dtype=pl.Int32(), is_list=True)
     confidence: np.ndarray | None = score_field(dtype=pl.Float32(), is_list=True)
+    subset: Subset = subset_field()
 
 
 class InstanceSegmentationSample(Sample):
@@ -97,6 +100,30 @@ class InstanceSegmentationSample(Sample):
     polygons: np.ndarray = polygon_field(dtype=pl.Float32())
     label: np.ndarray = label_field(dtype=pl.Int32(), is_list=True)
     confidence: np.ndarray | None = score_field(dtype=pl.Float32(), is_list=True)
+    subset: Subset = subset_field()
+
+
+def convert_to_dm_subset(subset: DatasetItemSubset) -> Subset:
+    """
+    Convert DatasetItemSubset to Datumaro Subset
+    Args:
+        subset: DatasetItemSubset
+
+    Returns:
+        Subset: Datumaro Subset
+    Raises:
+        ValueError: If subset type cannot be mapped to Datumaro Subset
+
+    """
+    match subset:
+        case DatasetItemSubset.TRAINING:
+            return Subset.TRAINING
+        case DatasetItemSubset.VALIDATION:
+            return Subset.VALIDATION
+        case DatasetItemSubset.TESTING:
+            return Subset.TESTING
+        case _:
+            raise ValueError(f"Unknown subset type: {subset}")
 
 
 def convert_rectangle(r: Rectangle) -> list[int]:
@@ -172,7 +199,7 @@ def convert_classification_dataset(
     def _convert_sample(
         dataset_item: DatasetItem, image_path: str, project_labels_ids: list[UUID]
     ) -> ClassificationSample | None:
-        if dataset_item.annotation_data is None:
+        if dataset_item.annotation_data is None or dataset_item.subset is None:
             return None
         try:
             annotation = dataset_item.annotation_data[0]  # classification -> only one shape (annotation)
@@ -181,6 +208,7 @@ def convert_classification_dataset(
                 image_info=ImageInfo(width=dataset_item.width, height=dataset_item.height),
                 label=project_labels_ids.index(annotation.labels[0].id),  # multiclass -> only one label
                 confidence=annotation.confidences[0] if annotation.confidences else None,
+                subset=convert_to_dm_subset(dataset_item.subset),
             )
         except ValueError:
             logger.error("Unable to find one of dataset item {} labels in project", dataset_item.id)
@@ -215,7 +243,7 @@ def convert_multilabel_classification_dataset(
     def _convert_sample(
         dataset_item: DatasetItem, image_path: str, project_labels_ids: list[UUID]
     ) -> MultilabelClassificationSample | None:
-        if dataset_item.annotation_data is None:
+        if dataset_item.annotation_data is None or dataset_item.subset is None:
             return None
         try:
             annotation = dataset_item.annotation_data[0]  # classification -> only one shape (annotation)
@@ -228,6 +256,7 @@ def convert_multilabel_classification_dataset(
             image_info=ImageInfo(width=dataset_item.width, height=dataset_item.height),
             label=np.array(labels_indexes),
             confidence=np.array(annotation.confidences) if annotation.confidences else None,
+            subset=convert_to_dm_subset(dataset_item.subset),
         )
 
     return _convert_dataset(
@@ -259,7 +288,7 @@ def convert_detection_dataset(
     def _convert_sample(
         dataset_item: DatasetItem, image_path: str, project_labels_ids: list[UUID]
     ) -> DetectionSample | None:
-        if dataset_item.annotation_data is None:
+        if dataset_item.annotation_data is None or dataset_item.subset is None:
             return None
         coords = [
             convert_rectangle(annotation.shape)
@@ -298,6 +327,7 @@ def convert_detection_dataset(
             bboxes=np.array(coords),
             label=np.array(labels_indexes),
             confidence=np.array(confidences) if confidences else None,
+            subset=convert_to_dm_subset(dataset_item.subset),
         )
 
     return _convert_dataset(
@@ -329,7 +359,7 @@ def convert_instance_segmentation_dataset(
     def _convert_sample(
         dataset_item: DatasetItem, image_path: str, project_labels_ids: list[UUID]
     ) -> InstanceSegmentationSample | None:
-        if dataset_item.annotation_data is None:
+        if dataset_item.annotation_data is None or dataset_item.subset is None:
             return None
         polygons = [
             convert_polygon(annotation.shape)
@@ -368,6 +398,7 @@ def convert_instance_segmentation_dataset(
             polygons=np.array(polygons, dtype=np.float32),
             label=np.array(labels_indexes),
             confidence=np.array(confidences) if confidences else None,
+            subset=convert_to_dm_subset(dataset_item.subset),
         )
 
     return _convert_dataset(

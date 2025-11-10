@@ -40,6 +40,9 @@ class OTXTrainer(Trainer):
         self._dataset_service = dataset_service
         self._subset_assigner = subset_assigner
         self._db_session_factory = db_session_factory
+        self._training_dataset: Dataset | None = None
+        self._validation_dataset: Dataset | None = None
+        self._testing_dataset: Dataset | None = None
 
     @step("Prepare Model Weights")
     def prepare_weights(self) -> Path:
@@ -108,7 +111,7 @@ class OTXTrainer(Trainer):
         self.report_progress(f"Successfully assigned {len(assignments)} items to subsets")
 
     @step("Create Training Dataset")
-    def create_training_dataset(self) -> Dataset:
+    def create_training_dataset(self) -> None:
         """Create datasets for training, validation, and testing."""
         if self._training_params is None:
             raise ValueError("Training parameters not set")
@@ -121,7 +124,9 @@ class OTXTrainer(Trainer):
         with self._db_session_factory() as db:
             self._dataset_service.set_db_session(db)
             dm_dataset = self._dataset_service.get_dm_dataset(project_id, task_type, exclusive_labels)
-            return dm_dataset.filter_by_subset(Subset.TRAINING)
+            self._training_dataset = dm_dataset.filter_by_subset(Subset.TRAINING)
+            self._validation_dataset = dm_dataset.filter_by_subset(Subset.VALIDATION)
+            self._testing_dataset = dm_dataset.filter_by_subset(Subset.TESTING)
 
     @step("Train Model with OTX")
     def train_model(self) -> None:
@@ -143,7 +148,7 @@ class OTXTrainer(Trainer):
 
         self.prepare_weights()
         self.assign_subsets()
-        _ = self.create_training_dataset()
+        self.create_training_dataset()
         self.train_model()
 
     @staticmethod

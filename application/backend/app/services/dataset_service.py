@@ -20,6 +20,7 @@ from app.db.schema import DatasetItemDB
 from app.models import (
     DatasetItem,
     DatasetItemAnnotation,
+    DatasetItemAnnotationStatus,
     DatasetItemSubset,
     FullImage,
     Label,
@@ -151,7 +152,7 @@ class DatasetService(BaseSessionManagedService):
 
             dataset_item.annotation_data = [annotation.model_dump(mode="json") for annotation in annotations]
 
-        repo = DatasetItemRepository(project_id=str(project.id), db=self._get_session())
+        repo = DatasetItemRepository(project_id=str(project.id), db=self.db_session)
         db_dataset_item = repo.save(dataset_item)
         if annotations is not None:
             repo.set_labels(
@@ -170,7 +171,7 @@ class DatasetService(BaseSessionManagedService):
         subset: str | None = None,
     ) -> int:
         """Get number of available dataset items (within date range if specified)"""
-        repo = DatasetItemRepository(project_id=str(project.id), db=self._get_session())
+        repo = DatasetItemRepository(project_id=str(project.id), db=self.db_session)
         label_ids_str = [str(label_id) for label_id in label_ids] if label_ids else None
         return repo.count(
             start_date=start_date,
@@ -192,7 +193,7 @@ class DatasetService(BaseSessionManagedService):
         subset: str | None = None,
     ) -> list[DatasetItem]:
         """Get information about available dataset items"""
-        repo = DatasetItemRepository(project_id=str(project_id), db=self._get_session())
+        repo = DatasetItemRepository(project_id=str(project_id), db=self.db_session)
         label_ids_str = [str(label_id) for label_id in label_ids] if label_ids else None
         return [
             DatasetItem.model_validate(db)
@@ -209,7 +210,7 @@ class DatasetService(BaseSessionManagedService):
 
     def get_dataset_item_by_id(self, project_id: UUID, dataset_item_id: UUID) -> DatasetItem:
         """Get a dataset item by its ID"""
-        repo = DatasetItemRepository(project_id=str(project_id), db=self._get_session())
+        repo = DatasetItemRepository(project_id=str(project_id), db=self.db_session)
         db_dataset_item = repo.get_by_id(str(dataset_item_id))
         if not db_dataset_item:
             raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
@@ -232,7 +233,7 @@ class DatasetService(BaseSessionManagedService):
     def delete_dataset_item(self, project: ProjectView, dataset_item_id: UUID) -> None:
         """Delete a dataset item by its ID"""
         dataset_item = self.get_dataset_item_by_id(project_id=project.id, dataset_item_id=dataset_item_id)
-        repo = DatasetItemRepository(project_id=str(project.id), db=self._get_session())
+        repo = DatasetItemRepository(project_id=str(project.id), db=self.db_session)
 
         dataset_dir = self.projects_dir / f"{project.id}/dataset"
         try:
@@ -309,7 +310,7 @@ class DatasetService(BaseSessionManagedService):
         DatasetService._validate_annotations_labels(annotations=annotations, labels=labels)
         DatasetService._validate_annotations(annotations=annotations, project=project)
 
-        repo = DatasetItemRepository(project_id=str(project.id), db=self._get_session())
+        repo = DatasetItemRepository(project_id=str(project.id), db=self.db_session)
         dataset_item = self.get_dataset_item_by_id(project_id=project.id, dataset_item_id=dataset_item_id)
 
         DatasetService._validate_annotations_coordinates(annotations=annotations, dataset_item=dataset_item)
@@ -329,7 +330,7 @@ class DatasetService(BaseSessionManagedService):
 
     def delete_dataset_item_annotations(self, project: ProjectView, dataset_item_id: UUID) -> None:
         """Delete the dataset item annotations"""
-        repo = DatasetItemRepository(project_id=str(project.id), db=self._get_session())
+        repo = DatasetItemRepository(project_id=str(project.id), db=self.db_session)
         updated = repo.delete_annotation_data(obj_id=str(dataset_item_id))
         if not updated:
             raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
@@ -339,7 +340,7 @@ class DatasetService(BaseSessionManagedService):
         self, project_id: UUID, dataset_item_id: UUID, subset: DatasetItemSubset
     ) -> DatasetItem:
         """Assign dataset item subset"""
-        repo = DatasetItemRepository(project_id=str(project_id), db=self._get_session())
+        repo = DatasetItemRepository(project_id=str(project_id), db=self.db_session)
         db_subset = repo.get_subset(str(dataset_item_id))
         if db_subset is None:
             raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
@@ -350,7 +351,12 @@ class DatasetService(BaseSessionManagedService):
 
     def get_dm_dataset(self, project_id: UUID, task_type: TaskType, exclusive_labels: bool) -> dm.Dataset:
         def _get_dataset_items(offset: int, limit: int) -> list[DatasetItem]:
-            return self.list_dataset_items(project_id=project_id, limit=limit, offset=offset)
+            return self.list_dataset_items(
+                project_id=project_id,
+                limit=limit,
+                offset=offset,
+                annotation_status=DatasetItemAnnotationStatus.REVIEWED,
+            )
 
         def _get_image_path(item: DatasetItem) -> str:
             return str(self.get_dataset_item_binary_path(project_id=project_id, dataset_item=item))

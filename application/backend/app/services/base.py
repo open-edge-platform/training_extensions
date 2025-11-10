@@ -76,7 +76,8 @@ class BaseSessionManagedService(ABC):
         """Set the database session for the service."""
         self._db_session = db_session
 
-    def _get_session(self) -> Session:
+    @property
+    def db_session(self) -> Session:
         if self._db_session is not None:
             return self._db_session
         if self._db_session_factory is not None:

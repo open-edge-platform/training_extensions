@@ -29,7 +29,7 @@ class LabelService(BaseSessionManagedService):
     def create_label(
         self, project_id: UUID, name: str, color: str | None, hotkey: str | None, label_id: UUID | None = None
     ) -> Label:
-        label_repo = LabelRepository(str(project_id), self._get_session())
+        label_repo = LabelRepository(str(project_id), self.db_session)
         try:
             db_label = label_repo.save(
                 LabelDB(
@@ -47,19 +47,19 @@ class LabelService(BaseSessionManagedService):
             raise ResourceWithIdAlreadyExistsError(ResourceType.LABEL, str(label_id))
 
     def list_all(self, project_id: UUID) -> list[Label]:
-        label_repo = LabelRepository(str(project_id), self._get_session())
+        label_repo = LabelRepository(str(project_id), self.db_session)
         db_labels = label_repo.list_all()
         return [Label.model_validate(db_label) for db_label in db_labels]
 
     def list_ids(self, project_id: UUID) -> list[UUID]:
-        label_repo = LabelRepository(str(project_id), self._get_session())
+        label_repo = LabelRepository(str(project_id), self.db_session)
         db_ids = label_repo.list_ids()
         return [UUID(db_id) for db_id in db_ids]
 
     def update_label(
         self, project_id: UUID, label_id: UUID, new_name: str | None, new_color: str | None, new_hotkey: str | None
     ) -> Label:
-        label_repo = LabelRepository(str(project_id), self._get_session())
+        label_repo = LabelRepository(str(project_id), self.db_session)
         try:
             db_label = label_repo.get_by_id(str(label_id))
             if db_label is None:
@@ -78,6 +78,6 @@ class LabelService(BaseSessionManagedService):
             raise DuplicateLabelsError
 
     def delete_label(self, project_id: UUID, label_id: UUID) -> None:
-        label_repo = LabelRepository(str(project_id), self._get_session())
+        label_repo = LabelRepository(str(project_id), self.db_session)
         if not label_repo.delete(str(label_id)):
             raise ResourceNotFoundError(ResourceType.LABEL, str(label_id))
