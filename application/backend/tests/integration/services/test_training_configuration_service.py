@@ -151,11 +151,15 @@ class TestTrainingConfigurationService:
         db_session.flush()
 
         training_config_update = {
-            "dataset_augmentation_parameters": {
-                "augmentation": {"topdown_affine": {"enable": True, "probability": 0.5}}
+            "model_manifest_id": "Custom_Image_Classification_EfficientNet-B0",
+            "hyperparameters": {
+                "dataset_preparation": {"augmentation": {"topdown_affine": {"enable": True, "probability": 0.5}}},
+                "training": {"max_epochs": 999},
+                "evaluation": {"metric": "new_metric"},
             },
-            "training": {"max_epochs": 999},
-            "evaluation": {"metric": "new_metric"},
+            "global_parameters": {
+                "dataset_preparation": {"subset_split": {"training": 70, "validation": 15, "test": 15}}
+            },
         }
 
         training_configuration = fxt_training_configuration_service.update_training_configuration(
@@ -163,10 +167,13 @@ class TestTrainingConfigurationService:
         )
         assert isinstance(training_configuration, TrainingConfiguration)
         assert training_configuration != fxt_training_configuration
-        assert training_configuration.dataset_preparation.augmentation.topdown_affine.enable is True
-        assert training_configuration.dataset_preparation.augmentation.topdown_affine.probability == 0.5
-        assert training_configuration.training.max_epochs == 999
-        assert training_configuration.evaluation.metric == "new_metric"
+        assert training_configuration.hyperparameters.dataset_preparation.augmentation.topdown_affine.enable is True
+        assert training_configuration.hyperparameters.dataset_preparation.augmentation.topdown_affine.probability == 0.5
+        assert training_configuration.hyperparameters.training.max_epochs == 999
+        assert training_configuration.hyperparameters.evaluation.metric == "new_metric"
+        assert training_configuration.global_parameters.dataset_preparation.subset_split.training == 70
+        assert training_configuration.global_parameters.dataset_preparation.subset_split.validation == 15
+        assert training_configuration.global_parameters.dataset_preparation.subset_split.test == 15
 
     def test_update_training_configuration_update(
         self, fxt_training_configuration, fxt_training_configuration_service, db_session
@@ -189,11 +196,15 @@ class TestTrainingConfigurationService:
         db_session.flush()
 
         training_config_update = {
-            "dataset_augmentation_parameters": {
-                "augmentation": {"topdown_affine": {"enable": True, "probability": 0.5}}
+            "model_manifest_id": "Custom_Image_Classification_EfficientNet-B0",
+            "hyperparameters": {
+                "dataset_preparation": {"augmentation": {"topdown_affine": {"enable": True, "probability": 0.5}}},
+                "training": {"max_epochs": 999},
+                "evaluation": {"metric": "new_metric"},
             },
-            "training": {"max_epochs": 999},
-            "evaluation": {"metric": "new_metric"},
+            "global_parameters": {
+                "dataset_preparation": {"subset_split": {"training": 60, "validation": 10, "test": 30}}
+            },
         }
 
         training_configuration = fxt_training_configuration_service.update_training_configuration(
@@ -203,7 +214,10 @@ class TestTrainingConfigurationService:
         )
         assert isinstance(training_configuration, TrainingConfiguration)
         assert training_configuration != fxt_training_configuration
-        assert training_configuration.dataset_preparation.augmentation.topdown_affine.enable is True
-        assert training_configuration.dataset_preparation.augmentation.topdown_affine.probability == 0.5
-        assert training_configuration.training.max_epochs == 999
-        assert training_configuration.evaluation.metric == "new_metric"
+        assert training_configuration.hyperparameters.dataset_preparation.augmentation.topdown_affine.enable is True
+        assert training_configuration.hyperparameters.dataset_preparation.augmentation.topdown_affine.probability == 0.5
+        assert training_configuration.hyperparameters.training.max_epochs == 999
+        assert training_configuration.hyperparameters.evaluation.metric == "new_metric"
+        assert training_configuration.global_parameters.dataset_preparation.subset_split.training == 60
+        assert training_configuration.global_parameters.dataset_preparation.subset_split.validation == 10
+        assert training_configuration.global_parameters.dataset_preparation.subset_split.test == 30

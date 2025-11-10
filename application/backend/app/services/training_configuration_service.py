@@ -9,6 +9,7 @@ from app.models.training_configuration.configuration import PartialTrainingConfi
 from app.repositories import ModelRevisionRepository, ProjectRepository
 from app.repositories.training_configuration_repo import TrainingConfigurationRepository
 from app.services import ResourceNotFoundError, ResourceType
+from app.services.tools import ConfigurationOverlayTools
 from app.supported_models import SupportedModels
 from app.supported_models.default_models import DefaultModels
 
@@ -87,7 +88,7 @@ class TrainingConfigurationService:
 
         model_manifest = SupportedModels.get_model_manifest_by_id(model_manifest_id=model_architecture_id)
         return PartialTrainingConfiguration(
-            model_manifest_id=model_architecture_id, hyperparameters=model_manifest.hyperparameters
+            model_manifest_id=model_architecture_id, hyperparameters=model_manifest.hyperparameters.model_dump()
         )  # type: ignore[call-arg]
 
     def _get_default_configuration(self, project_id: UUID) -> TrainingConfiguration:
@@ -110,7 +111,7 @@ class TrainingConfigurationService:
         default_model_manifest = SupportedModels.get_model_manifest_by_id(model_manifest_id=default_model_id)
 
         return PartialTrainingConfiguration(
-            model_manifest_id=default_model_id, hyperparameters=default_model_manifest.hyperparameters
+            model_manifest_id=default_model_id, hyperparameters=default_model_manifest.hyperparameters.model_dump()
         )  # type: ignore[call-arg]
 
     def update_training_configuration(
@@ -139,18 +140,20 @@ class TrainingConfigurationService:
             model_architecture_id=model_architecture_id,
         )
 
-        converter_config = ConfigurableParametersConverter.configurable_parameters_from_rest(training_config_update)
+        converted_config = ConfigurableParametersConverter.configurable_parameters_from_rest(training_config_update)
 
-        validated_update_config = PartialTrainingConfiguration(**converter_config)
-        updated_config = current_config.model_copy(
-            update=validated_update_config.model_dump(),
-            deep=True,
+        validated_update_config = PartialTrainingConfiguration(**converted_config)
+        updated_config = ConfigurationOverlayTools.merge_deep_dict(
+            a=current_config.model_dump(),
+            b=validated_update_config.model_dump(),
         )
+
+        validated_updated_config = PartialTrainingConfiguration(**updated_config)
 
         self._training_config_repo.create_or_update(
             project_id=str(project_id),
             model_architecture_id=model_architecture_id,
-            configuration_data=updated_config.model_dump(),
+            configuration_data=validated_updated_config.model_dump(),
         )
 
-        return updated_config
+        return validated_updated_config
