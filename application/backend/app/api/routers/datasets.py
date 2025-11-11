@@ -20,7 +20,12 @@ from app.core.models import Pagination
 from app.models import DatasetItemAnnotationStatus, DatasetItemSubset
 from app.schemas import ProjectView
 from app.services import DatasetService, ResourceNotFoundError
-from app.services.dataset_service import AnnotationValidationError, InvalidImageError, SubsetAlreadyAssignedError
+from app.services.dataset_service import (
+    AnnotationValidationError,
+    DatasetItemFilters,
+    InvalidImageError,
+    SubsetAlreadyAssignedError,
+)
 
 router = APIRouter(prefix="/api/projects/{project_id}/dataset/items", tags=["Datasets"])
 
@@ -123,13 +128,15 @@ def list_dataset_items(  # noqa: PLR0913
     )
     dataset_items = dataset_service.list_dataset_items(
         project_id=project.id,
-        limit=limit,
-        offset=offset,
-        start_date=start_date,
-        end_date=end_date,
-        annotation_status=annotation_status,
-        label_ids=labels,
-        subset=subset,
+        filters=DatasetItemFilters(
+            limit=limit,
+            offset=offset,
+            start_date=start_date,
+            end_date=end_date,
+            annotation_status=annotation_status,
+            label_ids=labels,
+            subset=subset
+        ),
     )
     return DatasetItemsWithPagination(
         items=[DatasetItemView.model_validate(dataset_item, from_attributes=True) for dataset_item in dataset_items],

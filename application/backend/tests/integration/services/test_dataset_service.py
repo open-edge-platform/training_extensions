@@ -13,11 +13,16 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.db.schema import DatasetItemDB, DatasetItemLabelDB, PipelineDB
-from app.models import DatasetItemAnnotation, DatasetItemSubset, LabelReference, Rectangle
+from app.models import DatasetItemAnnotation, DatasetItemAnnotationStatus, DatasetItemSubset, LabelReference, Rectangle
 from app.schemas import PipelineView, ProjectView
 from app.services import LabelService, PipelineService, ProjectService
 from app.services.base import ResourceNotFoundError, ResourceType
-from app.services.dataset_service import DatasetService, InvalidImageError, SubsetAlreadyAssignedError
+from app.services.dataset_service import (
+    DatasetItemFilters,
+    DatasetService,
+    InvalidImageError,
+    SubsetAlreadyAssignedError,
+)
 from app.services.event.event_bus import EventBus
 
 
@@ -458,6 +463,7 @@ class TestDatasetServiceIntegration:
     @pytest.mark.parametrize("format", ["jpg", "png"])
     def test_create_dataset_item(
         self,
+        tmp_path: Path,
         fxt_dataset_service: DatasetService,
         fxt_project_with_pipeline: tuple[ProjectView, PipelineView],
         fxt_annotations: Callable[[UUID], list[DatasetItemAnnotation]],
@@ -517,11 +523,11 @@ class TestDatasetServiceIntegration:
         else:
             assert dataset_item.annotation_data is None
 
-        binary_file_path = Path(f"data/projects/{project.id}/dataset/{created_dataset_item.id}.{format}")
+        binary_file_path = tmp_path / f"projects/{project.id}/dataset/{created_dataset_item.id}.{format}"
         assert os.path.exists(binary_file_path)
         assert created_dataset_item.size == os.path.getsize(binary_file_path)
 
-        thumbnail_file_path = Path(f"data/projects/{project.id}/dataset/{created_dataset_item.id}-thumb.jpg")
+        thumbnail_file_path = tmp_path / f"projects/{project.id}/dataset/{created_dataset_item.id}-thumb.jpg"
         assert os.path.exists(thumbnail_file_path)
 
     def test_create_dataset_item_invalid_image(
@@ -611,10 +617,12 @@ class TestDatasetServiceIntegration:
 
         dataset_items = fxt_dataset_service.list_dataset_items(
             project_id=project.id,
-            limit=limit,
-            offset=offset,
-            start_date=start_date,
-            end_date=end_date,
+            filters=DatasetItemFilters(
+                limit=limit,
+                offset=offset,
+                start_date=start_date,
+                end_date=end_date,
+            ),
         )
 
         assert (
@@ -657,6 +665,7 @@ class TestDatasetServiceIntegration:
 
     def test_get_dataset_item_binary_path_by_id(
         self,
+        tmp_path: Path,
         fxt_dataset_service: DatasetService,
         fxt_project_with_dataset_items: tuple[ProjectView, list[DatasetItemDB]],
     ):
@@ -667,8 +676,9 @@ class TestDatasetServiceIntegration:
             project_id=project.id, dataset_item_id=UUID(db_dataset_items[0].id)
         )
 
-        assert dataset_item_binary_path == Path(
-            f"data/projects/{str(project.id)}/dataset/{db_dataset_items[0].id}.{db_dataset_items[0].format}"
+        assert (
+            dataset_item_binary_path
+            == tmp_path / f"projects/{str(project.id)}/dataset/{db_dataset_items[0].id}.{db_dataset_items[0].format}"
         )
 
     def test_get_dataset_item_binary_path_by_id_not_found(
@@ -690,6 +700,7 @@ class TestDatasetServiceIntegration:
 
     def test_get_dataset_item_thumbnail_path_by_id(
         self,
+        tmp_path: Path,
         fxt_dataset_service: DatasetService,
         fxt_project_with_dataset_items: tuple[ProjectView, list[DatasetItemDB]],
     ):
@@ -700,8 +711,9 @@ class TestDatasetServiceIntegration:
             project=project, dataset_item_id=UUID(db_dataset_items[0].id)
         )
 
-        assert dataset_item_binary_path == Path(
-            f"data/projects/{str(project.id)}/dataset/{db_dataset_items[0].id}-thumb.jpg"
+        assert (
+            dataset_item_binary_path
+            == tmp_path / f"projects/{str(project.id)}/dataset/{db_dataset_items[0].id}-thumb.jpg"
         )
 
     def test_get_dataset_item_thumbnail_path_by_id_not_found(
@@ -951,16 +963,16 @@ class TestDatasetServiceIntegration:
         "annotation_status, expected_names",
         [
             (None, ["unannotated1", "unannotated2", "reviewed1", "reviewed2", "reviewed3", "to_review1", "to_review2"]),
-            ("unannotated", ["unannotated1", "unannotated2"]),
-            ("reviewed", ["reviewed1", "reviewed2", "reviewed3"]),
-            ("to_review", ["to_review1", "to_review2"]),
+            (DatasetItemAnnotationStatus.UNANNOTATED, ["unannotated1", "unannotated2"]),
+            (DatasetItemAnnotationStatus.REVIEWED, ["reviewed1", "reviewed2", "reviewed3"]),
+            (DatasetItemAnnotationStatus.TO_REVIEW, ["to_review1", "to_review2"]),
         ],
     )
     def test_list_dataset_items_with_annotation_status(
         self,
         fxt_dataset_service: DatasetService,
         fxt_project_with_annotation_status_items: tuple[ProjectView, list[DatasetItemDB]],
-        annotation_status: str | None,
+        annotation_status: DatasetItemAnnotationStatus | None,
         expected_names: list[str],
     ) -> None:
         """Test listing dataset items with annotation_status filter."""
@@ -968,9 +980,9 @@ class TestDatasetServiceIntegration:
 
         dataset_items = fxt_dataset_service.list_dataset_items(
             project_id=project.id,
-            limit=20,
-            offset=0,
-            annotation_status=annotation_status,
+            filters=DatasetItemFilters(
+                annotation_status=annotation_status,
+            ),
         )
 
         assert len(dataset_items) == len(expected_names)
@@ -980,19 +992,19 @@ class TestDatasetServiceIntegration:
     @pytest.mark.parametrize(
         "annotation_status, limit, offset, expected_count",
         [
-            ("unannotated", 1, 0, 1),  # First page of unannotated
-            ("unannotated", 1, 1, 1),  # Second page of unannotated
-            ("unannotated", 1, 2, 0),  # Beyond available unannotated items
-            ("reviewed", 2, 0, 2),  # First page of reviewed
-            ("reviewed", 2, 2, 1),  # Second page of reviewed (only 1 left)
-            ("to_review", 10, 0, 2),  # All to_review items
+            (DatasetItemAnnotationStatus.UNANNOTATED, 1, 0, 1),  # First page of unannotated
+            (DatasetItemAnnotationStatus.UNANNOTATED, 1, 1, 1),  # Second page of unannotated
+            (DatasetItemAnnotationStatus.UNANNOTATED, 1, 2, 0),  # Beyond available unannotated items
+            (DatasetItemAnnotationStatus.REVIEWED, 2, 0, 2),  # First page of reviewed
+            (DatasetItemAnnotationStatus.REVIEWED, 2, 2, 1),  # Second page of reviewed (only 1 left)
+            (DatasetItemAnnotationStatus.TO_REVIEW, 10, 0, 2),  # All to_review items
         ],
     )
     def test_list_dataset_items_with_annotation_status_pagination(
         self,
         fxt_dataset_service: DatasetService,
         fxt_project_with_annotation_status_items: tuple[ProjectView, list[DatasetItemDB]],
-        annotation_status: str | None,
+        annotation_status: DatasetItemAnnotationStatus | None,
         limit: int,
         offset: int,
         expected_count: int,
@@ -1002,9 +1014,11 @@ class TestDatasetServiceIntegration:
 
         dataset_items = fxt_dataset_service.list_dataset_items(
             project_id=project.id,
-            limit=limit,
-            offset=offset,
-            annotation_status=annotation_status,
+            filters=DatasetItemFilters(
+                limit=limit,
+                offset=offset,
+                annotation_status=annotation_status,
+            ),
         )
 
         assert len(dataset_items) == expected_count
@@ -1020,11 +1034,11 @@ class TestDatasetServiceIntegration:
         # All reviewed items within date range
         dataset_items = fxt_dataset_service.list_dataset_items(
             project_id=project.id,
-            limit=20,
-            offset=0,
-            start_date=datetime.fromisoformat("2025-01-01T00:00:00Z"),
-            end_date=datetime.fromisoformat("2025-02-02T00:00:00Z"),
-            annotation_status="reviewed",
+            filters=DatasetItemFilters(
+                start_date=datetime.fromisoformat("2025-01-01T00:00:00Z"),
+                end_date=datetime.fromisoformat("2025-02-02T00:00:00Z"),
+                annotation_status=DatasetItemAnnotationStatus.REVIEWED,
+            ),
         )
         assert len(dataset_items) == 3
         assert all(item.user_reviewed for item in dataset_items)
@@ -1033,11 +1047,11 @@ class TestDatasetServiceIntegration:
         # No items outside date range
         dataset_items = fxt_dataset_service.list_dataset_items(
             project_id=project.id,
-            limit=20,
-            offset=0,
-            start_date=datetime.fromisoformat("2025-03-01T00:00:00Z"),
-            end_date=datetime.fromisoformat("2025-03-31T00:00:00Z"),
-            annotation_status="unannotated",
+            filters=DatasetItemFilters(
+                start_date=datetime.fromisoformat("2025-03-01T00:00:00Z"),
+                end_date=datetime.fromisoformat("2025-03-31T00:00:00Z"),
+                annotation_status=DatasetItemAnnotationStatus.UNANNOTATED,
+            ),
         )
         assert len(dataset_items) == 0
 
@@ -1052,9 +1066,9 @@ class TestDatasetServiceIntegration:
         # Unannotated items should have no annotation_data
         unannotated_items = fxt_dataset_service.list_dataset_items(
             project_id=project.id,
-            limit=20,
-            offset=0,
-            annotation_status="unannotated",
+            filters=DatasetItemFilters(
+                annotation_status=DatasetItemAnnotationStatus.UNANNOTATED,
+            ),
         )
         assert len(unannotated_items) == 2
         for item in unannotated_items:
@@ -1063,9 +1077,9 @@ class TestDatasetServiceIntegration:
         # Reviewed items should have annotation_data and user_reviewed=True
         reviewed_items = fxt_dataset_service.list_dataset_items(
             project_id=project.id,
-            limit=20,
-            offset=0,
-            annotation_status="reviewed",
+            filters=DatasetItemFilters(
+                annotation_status=DatasetItemAnnotationStatus.REVIEWED,
+            ),
         )
         assert len(reviewed_items) == 3
         for item in reviewed_items:
@@ -1075,9 +1089,9 @@ class TestDatasetServiceIntegration:
         # To review items should have annotation_data and user_reviewed=False
         to_review_items = fxt_dataset_service.list_dataset_items(
             project_id=project.id,
-            limit=20,
-            offset=0,
-            annotation_status="to_review",
+            filters=DatasetItemFilters(
+                annotation_status=DatasetItemAnnotationStatus.TO_REVIEW,
+            ),
         )
         assert len(to_review_items) == 2
         for item in to_review_items:
@@ -1096,7 +1110,9 @@ class TestDatasetServiceIntegration:
         # Filter by label_0 - should return items 1 and 3 (item_label_0 and item_both_labels)
         dataset_items = fxt_dataset_service.list_dataset_items(
             project_id=project.id,
-            label_ids=[label_0_id],
+            filters=DatasetItemFilters(
+                label_ids=[label_0_id],
+            ),
         )
 
         assert len(dataset_items) == 2
@@ -1116,7 +1132,9 @@ class TestDatasetServiceIntegration:
         # Filter by label_0 OR label_1 - should return items 1, 2, and 3
         dataset_items = fxt_dataset_service.list_dataset_items(
             project_id=project.id,
-            label_ids=[label_0_id, label_1_id],
+            filters=DatasetItemFilters(
+                label_ids=[label_0_id, label_1_id],
+            ),
         )
 
         assert len(dataset_items) == 3
@@ -1135,7 +1153,9 @@ class TestDatasetServiceIntegration:
         # Filter by nonexistent label - should return empty list
         dataset_items = fxt_dataset_service.list_dataset_items(
             project_id=project.id,
-            label_ids=[nonexistent_label_id],
+            filters=DatasetItemFilters(
+                label_ids=[nonexistent_label_id],
+            ),
         )
 
         assert len(dataset_items) == 0
@@ -1247,10 +1267,12 @@ class TestDatasetServiceIntegration:
         project, db_dataset_items = fxt_project_with_subset_items
 
         dataset_items = fxt_dataset_service.list_dataset_items(
-            project=project,
-            limit=20,
-            offset=0,
-            subset=subset,
+            project_id=project.id,
+            filters=DatasetItemFilters(
+                limit=20,
+                offset=0,
+                subset=subset,
+            )
         )
 
         assert len(dataset_items) == len(expected_names)
@@ -1282,10 +1304,12 @@ class TestDatasetServiceIntegration:
         project, db_dataset_items = fxt_project_with_subset_items
 
         dataset_items = fxt_dataset_service.list_dataset_items(
-            project=project,
-            limit=limit,
-            offset=offset,
-            subset=subset,
+            project_id=project.id,
+            filters=DatasetItemFilters(
+                limit=limit,
+                offset=offset,
+                subset=subset,
+            )
         )
 
         assert len(dataset_items) == expected_count
@@ -1300,10 +1324,12 @@ class TestDatasetServiceIntegration:
 
         # Unassigned items should have subset=unassigned
         unassigned_items = fxt_dataset_service.list_dataset_items(
-            project=project,
-            limit=20,
-            offset=0,
-            subset="unassigned",
+            project_id=project.id,
+            filters=DatasetItemFilters(
+                limit=20,
+                offset=0,
+                subset="unassigned",
+            )
         )
         assert len(unassigned_items) == 2
         for item in unassigned_items:
@@ -1311,10 +1337,12 @@ class TestDatasetServiceIntegration:
 
         # Training items should have subset=training
         training_items = fxt_dataset_service.list_dataset_items(
-            project=project,
-            limit=20,
-            offset=0,
-            subset="training",
+            project_id=project.id,
+            filters=DatasetItemFilters(
+                limit=20,
+                offset=0,
+                subset="training",
+            )
         )
         assert len(training_items) == 3
         for item in training_items:
@@ -1322,10 +1350,12 @@ class TestDatasetServiceIntegration:
 
         # Validation items should have subset=validation
         validation_items = fxt_dataset_service.list_dataset_items(
-            project=project,
-            limit=20,
-            offset=0,
-            subset="validation",
+            project_id=project.id,
+            filters=DatasetItemFilters(
+                limit=20,
+                offset=0,
+                subset="validation",
+            )
         )
         assert len(validation_items) == 2
         for item in validation_items:
@@ -1333,10 +1363,12 @@ class TestDatasetServiceIntegration:
 
         # Testing items should have subset=testing
         testing_items = fxt_dataset_service.list_dataset_items(
-            project=project,
-            limit=20,
-            offset=0,
-            subset="testing",
+            project_id=project.id,
+            filters=DatasetItemFilters(
+                limit=20,
+                offset=0,
+                subset="testing",
+            )
         )
         assert len(testing_items) == 1
         for item in testing_items:

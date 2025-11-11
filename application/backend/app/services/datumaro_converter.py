@@ -113,7 +113,6 @@ def convert_to_dm_subset(subset: DatasetItemSubset) -> Subset:
         Subset: Datumaro Subset
     Raises:
         ValueError: If subset type cannot be mapped to Datumaro Subset
-
     """
     match subset:
         case DatasetItemSubset.TRAINING:

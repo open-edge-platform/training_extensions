@@ -62,7 +62,38 @@ class ResourceWithIdAlreadyExistsError(ResourceError):
 
 
 class BaseSessionManagedService(ABC):
-    """Base class for services that require a managed database session."""
+    """
+    Base class for services that require a managed database session.
+
+    This class supports deferred database session initialization, allowing services
+    to be instantiated without an immediate database connection. The session can be
+    provided either at construction time or injected later via `set_db_session()`.
+
+    This pattern is useful in scenarios where:
+    - Services need to be created before database context is available
+    - Database session management is handled externally (e.g., via session factories)
+    - Services are used in contexts with different session lifecycle requirements
+
+    Args:
+        db_session: Optional database session to use immediately. If not provided,
+            the session must be set later via `set_db_session()` or a factory must be provided.
+        db_session_factory: Optional callable that returns a database session when invoked.
+            Used as a fallback if no session is directly provided.
+
+    Raises:
+        RuntimeError: When accessing `db_session` property without a session or factory configured.
+
+    Example:
+        >>> # With immediate session
+        >>> service = MyService(db_session=session)
+        >>>
+        >>> # With deferred session
+        >>> service = MyService()
+        >>> service.set_db_session(session)
+        >>>
+        >>> # With session factory
+        >>> service = MyService(db_session_factory=lambda: get_session())
+    """
 
     def __init__(
         self,
@@ -71,10 +102,13 @@ class BaseSessionManagedService(ABC):
     ):
         self._db_session: Session | None = db_session
         self._db_session_factory = db_session_factory
+        self._session_managed_services: list[BaseSessionManagedService] = []
 
     def set_db_session(self, db_session: Session) -> None:
         """Set the database session for the service."""
         self._db_session = db_session
+        for service in self._session_managed_services:
+            service.set_db_session(db_session)
 
     @property
     def db_session(self) -> Session:

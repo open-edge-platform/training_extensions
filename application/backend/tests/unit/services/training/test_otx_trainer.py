@@ -273,3 +273,63 @@ class TestOTXTrainerAssignSubsets:
         # Act & Assert
         with pytest.raises(ValueError, match="Project ID must be provided for subset assignment"):
             otx_trainer.assign_subsets()
+
+
+class TestOTXTrainerCreateTrainingDataset:
+    """Tests for the OTXTrainer.create_training_dataset method."""
+
+    def test_create_training_dataset_success(
+        self,
+        fxt_otx_trainer: Callable[[TrainingParams], OTXTrainer],
+        fxt_dataset_service: Mock,
+    ):
+        """Test successful creation of training, validation, and testing datasets."""
+        # Arrange
+        project_id = uuid4()
+        training_params = TrainingParams(
+            project_id=project_id,
+            model_architecture_id="Object_Detection_YOLOX_S",
+            task_type=TaskType.DETECTION,
+            exclusive_labels=True,
+        )
+        otx_trainer = fxt_otx_trainer(training_params)
+
+        mock_dm_dataset = Mock()
+        fxt_dataset_service.get_dm_dataset.return_value = mock_dm_dataset
+
+        mock_training_dataset = Mock()
+        mock_validation_dataset = Mock()
+        mock_testing_dataset = Mock()
+
+        mock_dm_dataset.filter_by_subset.side_effect = [
+            mock_training_dataset,
+            mock_validation_dataset,
+            mock_testing_dataset,
+        ]
+
+        # Act
+        otx_trainer.create_training_dataset()
+
+        # Assert
+        fxt_dataset_service.get_dm_dataset.assert_called_once_with(project_id, TaskType.DETECTION, True)
+        assert otx_trainer._training_dataset == mock_training_dataset
+        assert otx_trainer._validation_dataset == mock_validation_dataset
+        assert otx_trainer._testing_dataset == mock_testing_dataset
+
+    def test_create_training_dataset_without_project_id_raises_error(
+        self,
+        fxt_otx_trainer: Callable[[TrainingParams], OTXTrainer],
+    ):
+        """Test that ValueError is raised when no project ID is provided."""
+        # Arrange
+        training_params = TrainingParams(
+            project_id=None,
+            model_architecture_id="Object_Detection_YOLOX_S",
+            task_type=TaskType.DETECTION,
+            exclusive_labels=True,
+        )
+        otx_trainer = fxt_otx_trainer(training_params)
+
+        # Act & Assert
+        with pytest.raises(ValueError, match="Project ID must be provided"):
+            otx_trainer.create_training_dataset()

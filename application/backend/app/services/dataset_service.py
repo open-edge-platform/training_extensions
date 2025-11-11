@@ -4,6 +4,7 @@
 import os
 import os.path
 from collections.abc import Sequence
+from dataclasses import dataclass
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
@@ -62,6 +63,17 @@ class SubsetAlreadyAssignedError(Exception):
         super().__init__(msg)
 
 
+@dataclass(frozen=True)
+class DatasetItemFilters:
+    limit: int = 20
+    offset: int = 0
+    start_date: datetime | None = None
+    end_date: datetime | None = None
+    annotation_status: DatasetItemAnnotationStatus | None = None
+    label_ids: list[UUID] | None = None
+    subset: str | None = None
+
+
 class DatasetService(BaseSessionManagedService):
     def __init__(
         self,
@@ -73,10 +85,7 @@ class DatasetService(BaseSessionManagedService):
 
         self.projects_dir = data_dir / "projects"
         self._label_service = label_service
-
-    def set_db_session(self, db_session: Session) -> None:
-        super().set_db_session(db_session)
-        self._label_service.set_db_session(db_session)
+        self._session_managed_services.append(label_service)
 
     @staticmethod
     def _read_image_from_ndarray(data: np.ndarray) -> Image.Image:
@@ -181,30 +190,26 @@ class DatasetService(BaseSessionManagedService):
             subset=subset,
         )
 
-    def list_dataset_items(  # noqa: PLR0913
+    def list_dataset_items(
         self,
         project_id: UUID,
-        limit: int = 20,
-        offset: int = 0,
-        start_date: datetime | None = None,
-        end_date: datetime | None = None,
-        annotation_status: str | None = None,
-        label_ids: list[UUID] | None = None,
-        subset: str | None = None,
+        filters: DatasetItemFilters | None = None,
     ) -> list[DatasetItem]:
         """Get information about available dataset items"""
+        if filters is None:
+            filters = DatasetItemFilters()
         repo = DatasetItemRepository(project_id=str(project_id), db=self.db_session)
-        label_ids_str = [str(label_id) for label_id in label_ids] if label_ids else None
+        label_ids_str = [str(label_id) for label_id in filters.label_ids] if filters.label_ids else None
         return [
             DatasetItem.model_validate(db)
             for db in repo.list_items(
-                limit=limit,
-                offset=offset,
-                start_date=start_date,
-                end_date=end_date,
-                annotation_status=annotation_status,
+                limit=filters.limit,
+                offset=filters.offset,
+                start_date=filters.start_date,
+                end_date=filters.end_date,
+                annotation_status=filters.annotation_status,
                 label_ids=label_ids_str,
-                subset=subset,
+                subset=filters.subset,
             )
         ]
 
@@ -353,9 +358,9 @@ class DatasetService(BaseSessionManagedService):
         def _get_dataset_items(offset: int, limit: int) -> list[DatasetItem]:
             return self.list_dataset_items(
                 project_id=project_id,
-                limit=limit,
-                offset=offset,
-                annotation_status=DatasetItemAnnotationStatus.REVIEWED,
+                filters=DatasetItemFilters(
+                    limit=limit, offset=offset, annotation_status=DatasetItemAnnotationStatus.REVIEWED
+                ),
             )
 
         def _get_image_path(item: DatasetItem) -> str:
