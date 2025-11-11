@@ -1,7 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
 from uuid import UUID
 
 from sqlalchemy.exc import IntegrityError
@@ -13,8 +12,6 @@ from app.schemas.model import Model as ModelSchema
 from .base import ResourceInUseError, ResourceNotFoundError, ResourceType
 from .mappers.model_revision_mapper import ModelRevisionMapper
 from .parent_process_guard import parent_process_only
-
-logger = logging.getLogger(__name__)
 
 
 class ModelService:

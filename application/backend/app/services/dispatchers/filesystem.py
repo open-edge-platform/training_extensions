@@ -1,19 +1,17 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
 import os
 from datetime import UTC, datetime
 
 import cv2
 import numpy as np
+from loguru import logger
 from model_api.models.result import Result
 
 from app.models import FolderSinkConfig, OutputFormat
 
 from .base import BaseDispatcher
-
-logger = logging.getLogger(__name__)
 
 
 class FolderDispatcher(BaseDispatcher):

@@ -1,20 +1,18 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
 import os
 from dataclasses import dataclass
 from multiprocessing.synchronize import Event as EventClass
 from pathlib import Path
 from uuid import UUID
 
+from loguru import logger
 from model_api.models import Model
 
 from app.db.engine import get_db_session
 from app.repositories import ModelRevisionRepository
 from app.schemas.model_activation import ModelActivationState
-
-logger = logging.getLogger(__name__)
 
 MODELAPI_DEVICE = os.getenv("MODELAPI_DEVICE", "AUTO")
 MODELAPI_NSTREAMS = os.getenv("MODELAPI_NSTREAMS", "2")
@@ -78,7 +76,7 @@ class ActiveModelService:
         project_id = self._model_activation_state.project_id
         active_model_id = self._model_activation_state.active_model_id
         if self._loaded_model is None or self._loaded_model.id != active_model_id:
-            logger.info("Loading model with ID '%s'", active_model_id)
+            logger.info("Loading model with ID '{}'", active_model_id)
             try:
                 # Ensure all necessary model files exist before loading the model
                 model_xml_path = self._get_model_file_path(project_id, active_model_id, "xml")
@@ -89,7 +87,7 @@ class ActiveModelService:
                     nstreams=MODELAPI_NSTREAMS,
                 )
             except FileNotFoundError:
-                logger.exception("Failed to load model with ID '%s'", active_model_id)
+                logger.exception("Failed to load model with ID '{}'", active_model_id)
                 return None
 
             self._loaded_model = LoadedModel(

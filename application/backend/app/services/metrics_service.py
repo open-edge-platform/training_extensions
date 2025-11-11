@@ -1,7 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
 import time
 from collections import defaultdict
 from datetime import UTC, datetime
@@ -11,8 +10,7 @@ from typing import NamedTuple
 from uuid import UUID
 
 import numpy as np
-
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 MAX_MEASUREMENTS = 1024  # max number of measurements to keep
 DTYPE = np.dtype(

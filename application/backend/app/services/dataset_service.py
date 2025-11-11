@@ -1,7 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
 import os
 import os.path
 from collections.abc import Sequence
@@ -13,6 +12,7 @@ from uuid import UUID, uuid4
 
 import datumaro.experimental as dm
 import numpy as np
+from loguru import logger
 from PIL import Image, UnidentifiedImageError
 from sqlalchemy.orm import Session
 
@@ -33,8 +33,6 @@ from app.services.datumaro_converter import convert_dataset
 from app.utils.images import crop_to_thumbnail
 
 from .base import ResourceNotFoundError, ResourceType
-
-logger = logging.getLogger(__name__)
 
 DEFAULT_THUMBNAIL_SIZE = 256
 
@@ -91,8 +89,8 @@ class DatasetService:
             if thumbnail_image.mode in ("RGBA", "P"):
                 thumbnail_image = thumbnail_image.convert("RGB")
             thumbnail_image.save(path)
-        except Exception as e:
-            logger.exception("Failed to generate thumbnail image %s", e)
+        except Exception:
+            logger.exception("Failed to generate thumbnail image")
 
     def create_dataset_item(  # noqa: PLR0913
         self,
@@ -158,10 +156,15 @@ class DatasetService:
         project: ProjectView,
         start_date: datetime | None = None,
         end_date: datetime | None = None,
+        annotation_status: str | None = None,
+        label_ids: list[UUID] | None = None,
     ) -> int:
         """Get number of available dataset items (within date range if specified)"""
         repo = DatasetItemRepository(project_id=str(project.id), db=self._db_session)
-        return repo.count(start_date=start_date, end_date=end_date)
+        label_ids_str = [str(label_id) for label_id in label_ids] if label_ids else None
+        return repo.count(
+            start_date=start_date, end_date=end_date, annotation_status=annotation_status, label_ids=label_ids_str
+        )
 
     def list_dataset_items(
         self,
@@ -170,12 +173,22 @@ class DatasetService:
         offset: int = 0,
         start_date: datetime | None = None,
         end_date: datetime | None = None,
+        annotation_status: str | None = None,
+        label_ids: list[UUID] | None = None,
     ) -> list[DatasetItem]:
         """Get information about available dataset items"""
         repo = DatasetItemRepository(project_id=str(project.id), db=self._db_session)
+        label_ids_str = [str(label_id) for label_id in label_ids] if label_ids else None
         return [
             DatasetItem.model_validate(db)
-            for db in repo.list_items(limit=limit, offset=offset, start_date=start_date, end_date=end_date)
+            for db in repo.list_items(
+                limit=limit,
+                offset=offset,
+                start_date=start_date,
+                end_date=end_date,
+                annotation_status=annotation_status,
+                label_ids=label_ids_str,
+            )
         ]
 
     def get_dataset_item_by_id(self, project: ProjectView, dataset_item_id: UUID) -> DatasetItem:
@@ -209,11 +222,11 @@ class DatasetService:
         try:
             os.remove(dataset_dir / f"{dataset_item.id}.{dataset_item.format}")
         except FileNotFoundError:
-            logger.warning(f"Dataset item {dataset_item_id} binary was not found during deletion")
+            logger.warning("Dataset item {} binary was not found during deletion", dataset_item_id)
         try:
             os.remove(dataset_dir / f"{dataset_item_id}-thumb.jpg")
         except FileNotFoundError:
-            logger.warning(f"Dataset item {dataset_item_id} thumbnail was not found during deletion")
+            logger.warning("Dataset item {} thumbnail was not found during deletion", dataset_item_id)
 
         repo.delete(obj_id=str(dataset_item.id))
 

@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.core.jobs.control_plane import JobQueue
 from app.db import get_db_session
-from app.models import Sink
+from app.models import Sink, Source
 from app.scheduler import Scheduler
 from app.schemas import ProjectView
 from app.services import (
@@ -133,6 +133,11 @@ def get_data_dir(request: Request) -> Path:
     return request.app.state.settings.data_dir
 
 
+def get_job_dir(request: Request) -> Path:
+    """Provides the job log directory path from settings."""
+    return request.app.state.settings.job_dir
+
+
 def get_event_bus(request: Request) -> EventBus:
     """Provides an EventBus instance."""
     return request.app.state.event_bus
@@ -240,6 +245,17 @@ def get_sink(
     """Provides a Sink instance for request scoped sink."""
     try:
         return sink_service.get_by_id(sink_id)
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+def get_source(
+    source_id: Annotated[UUID, Depends(get_source_id)],
+    source_update_service: Annotated[SourceUpdateService, Depends(get_source_update_service)],
+) -> Source:
+    """Provides a Source instance for request scoped source."""
+    try:
+        return source_update_service.get_by_id(source_id)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 

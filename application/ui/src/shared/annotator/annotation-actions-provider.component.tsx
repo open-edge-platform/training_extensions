@@ -37,7 +37,7 @@ const mapLocalAnnotationsToServer = (localAnnotations: Annotation[]): ServerAnno
         // We only want to send the ids of the labels
         labels: annotation.labels.map((label) => ({ id: label.id })),
         shape: annotation.shape,
-        ...(annotation.confidence !== undefined && { confidence: annotation.confidence }),
+        ...(annotation.confidences !== undefined && { confidences: annotation.confidences }),
     }));
 };
 

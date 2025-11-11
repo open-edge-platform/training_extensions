@@ -2,12 +2,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import json
-import logging
 import threading
 import time
 from typing import Any
 
 import numpy as np
+from loguru import logger
 from model_api.models.result import Result
 
 from app.models import MqttSinkConfig
@@ -19,7 +19,6 @@ try:
 except ImportError:
     mqtt = None  # type: ignore[assignment]
 
-logger = logging.getLogger(__name__)
 MAX_RETRIES = 3
 RETRY_DELAY = 1
 CONNECT_TIMEOUT = 10
@@ -75,15 +74,15 @@ class MqttDispatcher(BaseDispatcher):
         for attempt in range(MAX_RETRIES):
             try:
                 logger.info(
-                    "Connecting to MQTT broker at %s:%s (attempt %s)", self.broker_host, self.broker_port, attempt + 1
+                    "Connecting to MQTT broker at {}:{} (attempt {})", self.broker_host, self.broker_port, attempt + 1
                 )
                 self.client.connect(self.broker_host, self.broker_port)
                 self.client.loop_start()
                 if self._connection_event.wait(CONNECT_TIMEOUT):
                     return
-                logger.warning("Connection timeout after %s seconds", CONNECT_TIMEOUT)
-            except Exception as e:
-                logger.exception("Connection failed %s", e)
+                logger.warning("Connection timeout after {} seconds", CONNECT_TIMEOUT)
+            except Exception:
+                logger.exception("Connection failed")
                 time.sleep(RETRY_DELAY * (attempt + 1))
         raise ConnectionError("Failed to connect to MQTT broker")
 
@@ -93,12 +92,12 @@ class MqttDispatcher(BaseDispatcher):
             self._connection_event.set()
             logger.info("Connected to MQTT broker")
         else:
-            logger.error("MQTT connect failed with code %s", rc)
+            logger.error("MQTT connect failed with code {}", rc)
 
     def _on_disconnect(self, _client: "mqtt.Client", _userdata: Any, rc: int):
         self._connected = False
         self._connection_event.clear()
-        logger.warning("MQTT disconnected (rc=%s)", rc)
+        logger.warning("MQTT disconnected (rc={})", rc)
 
     @property
     def is_connected(self) -> bool:
@@ -116,7 +115,8 @@ class MqttDispatcher(BaseDispatcher):
             result = self.client.publish(topic, json.dumps(payload))
             if result.rc == mqtt.MQTT_ERR_SUCCESS and self._track_messages:
                 self._published_messages.append({"topic": topic, "payload": payload})
-            logger.error(f"Publish failed: {mqtt.error_string(result.rc)}")
+            if result.rc != mqtt.MQTT_ERR_SUCCESS:
+                logger.error("Publish failed: {}", mqtt.error_string(result.rc))
         except ValueError:
             logger.exception("Invalid payload for MQTT publish")
 
@@ -134,9 +134,9 @@ class MqttDispatcher(BaseDispatcher):
     def close(self) -> None:
         err = self.client.loop_stop()
         if err != mqtt.MQTT_ERR_SUCCESS:
-            logger.warning(f"Error stopping MQTT loop: {mqtt.error_string(err)}")
+            logger.warning("Error stopping MQTT loop: {}", mqtt.error_string(err))
         err = self.client.disconnect()
         if err != mqtt.MQTT_ERR_SUCCESS:
-            logger.warning(f"Error disconnecting MQTT client: {mqtt.error_string(err)}")
+            logger.warning("Error disconnecting MQTT client: {}", mqtt.error_string(err))
         self._connected = False
         self._connection_event.clear()

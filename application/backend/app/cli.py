@@ -3,7 +3,6 @@
 
 """Command line interface for interacting with the Geti Tune application."""
 
-import logging
 import sys
 from datetime import datetime, timedelta
 
@@ -11,14 +10,11 @@ import click
 
 from app.db import MigrationManager, get_db_session
 from app.db.schema import DatasetItemDB, LabelDB, ModelRevisionDB, PipelineDB, ProjectDB, SinkDB, SourceDB
-from app.models import DisconnectedSinkConfig, OutputFormat, SinkType, TaskType
-from app.schemas import DisconnectedSourceConfig, SourceType
+from app.models import DisconnectedSinkConfig, DisconnectedSourceConfig, OutputFormat, SinkType, SourceType, TaskType
 from app.schemas.model import TrainingStatus
 from app.schemas.pipeline import FixedRateDataCollectionPolicy
 from app.settings import get_settings
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 settings = get_settings()
 migration_manager = MigrationManager(settings)
 

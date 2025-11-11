@@ -3,7 +3,6 @@
 
 """Application lifecycle management"""
 
-import logging
 import multiprocessing as mp
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
@@ -12,8 +11,10 @@ from multiprocessing.synchronize import Condition
 from pathlib import Path
 
 from fastapi import FastAPI
+from loguru import logger
 
 from app.core.jobs import JobController, JobQueue, ProcessRunnerFactory
+from app.core.logging import setup_logging, setup_uvicorn_logging
 from app.core.run import Runnable, RunnableFactory
 from app.db import MigrationManager, get_db_session
 from app.scheduler import Scheduler
@@ -25,8 +26,6 @@ from app.services.training import OTXTrainer
 from app.services.training.subset_assignment import SubsetAssigner, SubsetService
 from app.settings import get_settings
 from app.webrtc.manager import WebRTCManager
-
-logger = logging.getLogger(__name__)
 
 
 def setup_job_controller(data_dir: Path, max_parallel_jobs: int) -> tuple[JobQueue, JobController]:
@@ -72,8 +71,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     """FastAPI lifespan context manager"""
     # Startup
     settings = get_settings()
+    settings.ensure_dirs_exist()
     app.state.settings = settings
-    logger.info("Starting %s application...", settings.app_name)
+    logger.info("Starting {} application...", settings.app_name)
+
+    # Setup logging
+    setup_logging()
+    setup_uvicorn_logging(settings.log_level)
 
     # Initialize database
     migration_manager = MigrationManager(settings)
@@ -108,7 +112,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
 
     await job_controller.stop()
     # Shutdown
-    logger.info("Shutting down %s application...", settings.app_name)
+    logger.info("Shutting down {} application...", settings.app_name)
     await webrtc_manager.cleanup()
     app_scheduler.shutdown()
     logger.info("Application shutdown completed")

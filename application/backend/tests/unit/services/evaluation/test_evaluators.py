@@ -49,10 +49,11 @@ class TestMultiClassClassificationEvaluator:
         assert f1_score_weighted == pytest.approx(3 / 5)
         assert (confusion_matrix == np.array([[1, 0, 0], [0, 1, 1], [0, 1, 1]])).all()
 
-    def test_evaluate_with_perfect_predictions(self, fxt_multiclass_classification_dataset_gt) -> None:
+    def test_evaluate_with_perfect_predictions(self, fxt_multiclass_classification_dataset_pred) -> None:
+        # Using the same dataset for GT and predictions to simulate perfect predictions
         evaluator = MultiClassClassificationEvaluator(
-            predictions_dataset=fxt_multiclass_classification_dataset_gt,  # using GT as predictions, hence perfect
-            ground_truth_dataset=fxt_multiclass_classification_dataset_gt,
+            predictions_dataset=fxt_multiclass_classification_dataset_pred,
+            ground_truth_dataset=fxt_multiclass_classification_dataset_pred,
         )
 
         precision_micro = evaluator.precision(averaging_method=AveragingMethod.MICRO)
@@ -105,10 +106,11 @@ class TestMultiLabelClassificationEvaluator:
         assert f1_score_macro == pytest.approx(7 / 9)  # harmonic mean of macro precision and recall
         assert f1_score_weighted == pytest.approx(4 / 5)  # harmonic mean of weighted precision and recall
 
-    def test_evaluate_with_perfect_predictions(self, fxt_multilabel_classification_dataset_gt) -> None:
+    def test_evaluate_with_perfect_predictions(self, fxt_multilabel_classification_dataset_pred) -> None:
+        # Using the same dataset for GT and predictions to simulate perfect predictions
         evaluator = MultiLabelClassificationEvaluator(
-            predictions_dataset=fxt_multilabel_classification_dataset_gt,  # using GT as predictions, hence perfect
-            ground_truth_dataset=fxt_multilabel_classification_dataset_gt,
+            predictions_dataset=fxt_multilabel_classification_dataset_pred,
+            ground_truth_dataset=fxt_multilabel_classification_dataset_pred,
         )
 
         precision_micro = evaluator.precision(averaging_method=AveragingMethod.MICRO)
@@ -142,11 +144,12 @@ class TestDetectionEvaluator:
         assert 0 < map_dict["AP_75"] < map_dict["AP_50"] < 1
         assert 0 < map_dict["AP_all"] < 1
 
-    def test_evaluate_with_perfect_predictions(self, fxt_detection_dataset_gt) -> None:
+    def test_evaluate_with_perfect_predictions(self, fxt_detection_dataset_pred) -> None:
         """Evaluate on a scenario where all predictions are correct."""
+        # Using the same dataset for GT and predictions to simulate perfect predictions
         evaluator = DetectionEvaluator(
-            predictions_dataset=fxt_detection_dataset_gt,  # using GT as predictions, hence perfect
-            ground_truth_dataset=fxt_detection_dataset_gt,
+            predictions_dataset=fxt_detection_dataset_pred,
+            ground_truth_dataset=fxt_detection_dataset_pred,
         )
 
         map_dict = evaluator.mean_average_precision()
@@ -170,11 +173,12 @@ class TestInstanceSegmentationEvaluator:
         assert 0 < map_dict["AP_75"] < map_dict["AP_50"] < 1
         assert 0 < map_dict["AP_all"] < 1
 
-    def test_evaluate_with_perfect_predictions(self, fxt_instance_segmentation_dataset_gt) -> None:
+    def test_evaluate_with_perfect_predictions(self, fxt_instance_segmentation_dataset_pred) -> None:
         """Evaluate on a scenario where all predictions are correct."""
+        # Using the same dataset for GT and predictions to simulate perfect predictions
         evaluator = InstanceSegmentationEvaluator(
-            predictions_dataset=fxt_instance_segmentation_dataset_gt,  # using GT as predictions, hence perfect
-            ground_truth_dataset=fxt_instance_segmentation_dataset_gt,
+            predictions_dataset=fxt_instance_segmentation_dataset_pred,
+            ground_truth_dataset=fxt_instance_segmentation_dataset_pred,
         )
 
         map_dict = evaluator.mean_average_precision()

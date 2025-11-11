@@ -1,17 +1,17 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from functools import wraps
 from typing import Any, TypeVar
 
+from loguru import logger
+
 from app.core.run import ExecutionContext, Runnable
 
 from .models import TrainingParams
 
-logger = logging.getLogger(__name__)
 T = TypeVar("T")
 
 

@@ -1,13 +1,13 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
 import time
 from collections.abc import Callable
 from contextlib import AbstractContextManager
 from pathlib import Path
 from uuid import UUID
 
+from loguru import logger
 from sqlalchemy.orm import Session
 
 from app.core.run import ExecutionContext
@@ -15,8 +15,6 @@ from app.services.base_weights_service import BaseWeightsService
 
 from .base import Trainer, step
 from .subset_assignment import SplitRatios, SubsetAssigner, SubsetService
-
-logger = logging.getLogger(__name__)
 
 MODEL_WEIGHTS_PATH = "model_weights_path"
 
@@ -88,7 +86,7 @@ class OTXTrainer(Trainer):
 
             # Get current distribution
             current_distribution = self._subset_service.get_subset_distribution(project_id, db)
-            logger.info("Current subset distribution: %s", current_distribution)
+            logger.info("Current subset distribution: {}", current_distribution)
 
             # Compute adjusted ratios
             # TODO: Infer target ratios from training params
@@ -114,7 +112,7 @@ class OTXTrainer(Trainer):
         step_count = 20
         for i in range(step_count):
             time.sleep(1)
-            logger.info("Training step %d/%d for job %s", i + 1, step_count, job_id)
+            logger.info("Training step {}/{} for job {}", i + 1, step_count, job_id)
             self.report_progress("Model training is in progress", 5.0 * (i + 1))
             self.heartbeat()
 

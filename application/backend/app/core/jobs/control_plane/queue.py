@@ -2,13 +2,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import asyncio
-import logging
 from enum import StrEnum
 from uuid import UUID
 
-from app.core.jobs.models import Job, JobStatus
+from loguru import logger
 
-logger = logging.getLogger(__name__)
+from app.core.jobs.models import Job, JobStatus
 
 
 class CancellationResult(StrEnum):
@@ -43,7 +42,7 @@ class JobQueue:
         async with self._lock:
             self._by_id[job.id] = job
             self._order.append(job.id)
-            logger.info("Submitted job with ID: %s", job.id)
+            logger.info("Submitted job with ID: {}", job.id)
             await self._queue.put(job)
 
     async def next_runnable(self) -> Job:
@@ -51,9 +50,9 @@ class JobQueue:
         while True:
             job = await self._queue.get()
             if job.status == JobStatus.CANCELLED:
-                logger.info("Skipping cancelled job with ID: %s", job.id)
+                logger.info("Skipping cancelled job with ID: {}", job.id)
                 continue
-            logger.debug("Retrieved job from queue ID: %s, status: %s", job.id, job.status)
+            logger.debug("Retrieved job from queue ID: {}, status: {}", job.id, job.status)
             return job
 
     def get(self, job_id: UUID) -> Job | None:
@@ -74,15 +73,15 @@ class JobQueue:
         if not job:
             return None, CancellationResult.NOT_FOUND
         if job.status >= JobStatus.CANCELLING:
-            logger.debug("Ignore cancellation for terminal job (status: %s, id: %s)", job.status, job.id)
+            logger.debug("Ignore cancellation for terminal job (status: {}, id: {})", job.status, job.id)
             return None, CancellationResult.IGNORE_CANCEL
         if job.status == JobStatus.PENDING:
             job.cancel()
-            logger.info("Cancelled pending job with ID: %s", job_id)
+            logger.info("Cancelled pending job with ID: {}", job_id)
             return job, CancellationResult.PENDING_CANCELLED
         if job.status == JobStatus.RUNNING:
             job.cancelling()
-            logger.info("Marked running job for cancellation, ID: %s", job_id)
+            logger.info("Marked running job for cancellation, ID: {}", job_id)
             # Notify any waiting cancellation monitors
             if job_id in self._cancellation_events:
                 self._cancellation_events[job_id].set()

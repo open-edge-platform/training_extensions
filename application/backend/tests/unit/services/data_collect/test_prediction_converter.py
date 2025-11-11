@@ -71,23 +71,27 @@ def test_get_confidence_scores_segmentation() -> None:
 def test_convert_prediction_classification() -> None:
     # Arrange
     frame_data = np.random.rand(100, 100, 3)
-    label = Label(id=uuid4(), project_id=uuid4(), name="cat", color="#ff0000", hotkey="c")
-    raw_prediction = ClassificationResult(
-        top_labels=[model_api.models.result.Label(id=1, name=label.name, confidence=0.81)],
-        raw_scores=[0.19, 0.81],
-        saliency_map=None,
-        feature_vector=None,
+    project_id, label_1_id, label_2_id = uuid4(), uuid4(), uuid4()
+    labels = [
+        Label(id=label_1_id, project_id=project_id, name="dog", color="#00ff00", hotkey="d"),
+        Label(id=label_2_id, project_id=project_id, name="cat", color="#ff0000", hotkey="c"),
+    ]
+    raw_prediction = ClassificationResult(  # multilabel sample with two labels
+        top_labels=[
+            model_api.models.result.Label(id=0, name=labels[0].name, confidence=0.81),
+            model_api.models.result.Label(id=1, name=labels[1].name, confidence=0.65),
+        ],
     )
 
     # Act
-    annotations = convert_prediction(labels=[label], frame_data=frame_data, prediction=raw_prediction)
+    annotations = convert_prediction(labels=labels, frame_data=frame_data, prediction=raw_prediction)
 
     # Assert
     assert annotations == [
         DatasetItemAnnotation(
-            labels=[LabelReference(id=label.id)],
             shape=FullImage(),
-            confidence=0.81,
+            labels=[LabelReference(id=labels[0].id), LabelReference(id=labels[1].id)],
+            confidences=[0.81, 0.65],
         )
     ]
 
@@ -95,56 +99,75 @@ def test_convert_prediction_classification() -> None:
 def test_convert_prediction_detection() -> None:
     # Arrange
     frame_data = np.random.rand(100, 100, 3)
-    label = Label(id=uuid4(), project_id=uuid4(), name="cat", color="#ff0000", hotkey="c")
-    coords = [12, 41, 30, 65]  # x1, y1, x2, y2
+    project_id, label_1_id, label_2_id = uuid4(), uuid4(), uuid4()
+    labels = [
+        Label(id=label_1_id, project_id=project_id, name="cat", color="#ff0000", hotkey="c"),
+        Label(id=label_2_id, project_id=project_id, name="dog", color="#00ff00", hotkey="d"),
+    ]
+    coords = [[12, 41, 30, 65], [130, 213, 164, 244]]  # bboxes in xyxy format
     raw_prediction = DetectionResult(
-        bboxes=np.array([coords]),
-        labels=np.array([1]),
-        scores=np.array([0.81]),
-        label_names=["cat"],
-        saliency_map=None,
-        feature_vector=None,
+        bboxes=np.array(coords),
+        labels=np.array([1, 0]),
+        scores=np.array([0.81, 0.84]),
+        label_names=["dog", "cat"],
     )
 
     # Act
-    annotations = convert_prediction(labels=[label], frame_data=frame_data, prediction=raw_prediction)
+    annotations = convert_prediction(labels=labels, frame_data=frame_data, prediction=raw_prediction)
 
     # Assert
     assert annotations == [
         DatasetItemAnnotation(
-            labels=[LabelReference(id=label.id)],
             shape=Rectangle(x=12, y=41, width=18, height=24),
-            confidence=0.81,
-        )
+            labels=[LabelReference(id=labels[1].id)],
+            confidences=[0.81],
+        ),
+        DatasetItemAnnotation(
+            shape=Rectangle(x=130, y=213, width=34, height=31),
+            labels=[LabelReference(id=labels[0].id)],
+            confidences=[0.84],
+        ),
     ]
 
 
 def test_convert_prediction_segmentation() -> None:
     # Arrange
     frame_data = np.zeros((100, 200, 3), dtype=np.uint8)
-    mask = np.zeros((100, 200), dtype=np.uint8)
-    cv2.rectangle(mask, (0, 0), (100, 100), 255, -1)
 
-    label = Label(id=uuid4(), project_id=uuid4(), name="cat", color="#ff0000", hotkey="c")
-    coords = [12, 41, 12, 46]
+    # First mask - rectangle in the left portion
+    mask1 = np.zeros((100, 200), dtype=np.uint8)
+    cv2.rectangle(mask1, (10, 20), (50, 70), 255, -1)
+
+    # Second mask - rectangle in the right portion
+    mask2 = np.zeros((100, 200), dtype=np.uint8)
+    cv2.rectangle(mask2, (120, 30), (180, 80), 255, -1)
+
+    label_cat = Label(id=uuid4(), project_id=uuid4(), name="cat", color="#ff0000", hotkey="c")
+    label_dog = Label(id=uuid4(), project_id=uuid4(), name="dog", color="#00ff00", hotkey="d")
+
+    # Bounding boxes corresponding to the masks (xyxy format)
+    coords = [[10, 20, 50, 70], [120, 30, 180, 80]]
     raw_prediction = InstanceSegmentationResult(
-        bboxes=np.array([coords]),
-        labels=np.array([1]),
-        masks=np.array([mask]),
-        scores=np.array([0.81]),
-        label_names=["cat"],
-        saliency_map=None,
-        feature_vector=None,
+        bboxes=np.array(coords),
+        labels=np.array([0, 1]),
+        masks=np.array([mask1, mask2]),
+        scores=np.array([0.81, 0.92]),
+        label_names=["cat", "dog"],
     )
 
     # Act
-    annotations = convert_prediction(labels=[label], frame_data=frame_data, prediction=raw_prediction)
+    annotations = convert_prediction(labels=[label_cat, label_dog], frame_data=frame_data, prediction=raw_prediction)
 
     # Assert
     assert annotations == [
         DatasetItemAnnotation(
-            labels=[LabelReference(id=label.id)],
-            shape=Polygon(points=[Point(x=0, y=0), Point(x=0, y=99), Point(x=100, y=99), Point(x=100, y=0)]),
-            confidence=0.81,
-        )
+            shape=Polygon(points=[Point(x=10, y=20), Point(x=10, y=70), Point(x=50, y=70), Point(x=50, y=20)]),
+            labels=[LabelReference(id=label_cat.id)],
+            confidences=[0.81],
+        ),
+        DatasetItemAnnotation(
+            shape=Polygon(points=[Point(x=120, y=30), Point(x=120, y=80), Point(x=180, y=80), Point(x=180, y=30)]),
+            labels=[LabelReference(id=label_dog.id)],
+            confidences=[0.92],
+        ),
     ]

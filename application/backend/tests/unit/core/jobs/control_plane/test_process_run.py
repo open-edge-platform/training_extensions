@@ -182,4 +182,4 @@ class TestProcessRun:
                 await fxt_process_run.stop(graceful_timeout=0.01, term_timeout=0.01, kill_timeout=0.01)
 
                 # Should log error about unkillable process
-                mock_logger.error.assert_called_with("Process %s doesn't respond to SIGKILL", "test-process")
+                mock_logger.error.assert_called_with("Process {} doesn't respond to SIGKILL", "test-process")

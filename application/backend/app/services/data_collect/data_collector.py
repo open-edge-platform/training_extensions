@@ -1,11 +1,11 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-import logging
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
 
 import cv2
 import numpy as np
+from loguru import logger
 
 from app.db import get_db_session
 from app.models import DatasetItemFormat
@@ -14,8 +14,6 @@ from app.schemas.pipeline import ConfidenceThresholdDataCollectionPolicy, FixedR
 from app.services.data_collect.prediction_converter import convert_prediction, get_confidence_scores
 from app.services.event.event_bus import EventBus, EventType
 from app.stream.stream_data import InferenceData
-
-logger = logging.getLogger(__name__)
 
 
 class PolicyChecker(metaclass=ABCMeta):
@@ -121,7 +119,8 @@ class DataCollector:
 
             self.active_pipeline_data = pipeline, project
             logger.info(
-                f"Dataset collection policies set to {pipeline.data_collection_policies}, source: %s",
+                "Dataset collection policies set to {}, source: {}",
+                pipeline.data_collection_policies,
                 pipeline.source_id,
             )
 

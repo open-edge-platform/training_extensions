@@ -4,7 +4,7 @@
 import cv2
 import numpy as np
 
-from app.schemas import SourceType
+from app.models import SourceType
 from app.stream.base_opencv_stream import BaseOpenCVStream
 
 

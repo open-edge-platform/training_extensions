@@ -45,6 +45,13 @@ class Job(BaseIDModel):
     result: dict | None = None  # result of the job, if completed
     error: str | None = None
 
+    @property
+    def log_file(self) -> str:
+        return f"{self.job_type.lower()}-{self.id}.log"
+
+    def on_finish(self) -> None:
+        """Hook called when the job is completed successfully."""
+
     def start(self) -> None:
         self.status = JobStatus.RUNNING
         self.started_at = now_utc_ts()
@@ -61,6 +68,7 @@ class Job(BaseIDModel):
         self.status = JobStatus.DONE
         self.progress = 100.0
         self.updated_at = now_utc_ts()
+        self.on_finish()
 
     def fail(self, msg: str) -> None:
         self.status = JobStatus.FAILED
