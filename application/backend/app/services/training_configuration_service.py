@@ -141,13 +141,13 @@ class TrainingConfigurationService:
             model_architecture_id=model_architecture_id,
         )
 
-        validated_update_config = PartialTrainingConfiguration(**training_config_update)  # type: ignore[call-arg]
+        validated_update_config = PartialTrainingConfiguration(**training_config_update)  # type: ignore[arg-type]
         updated_config = ConfigurationOverlayTools.merge_deep_dict(
             a=current_config.model_dump(),
             b=validated_update_config.model_dump(),
         )
 
-        validated_updated_config = PartialTrainingConfiguration(**updated_config)  # type: ignore[call-arg]
+        validated_updated_config = PartialTrainingConfiguration(**updated_config)  # type: ignore[arg-type]
 
         self._training_config_repo.create_or_update(
             project_id=str(project_id),
