@@ -1,0 +1,72 @@
+name: "Cleanup Runner Resources"
+description: "Free up disk space and clean Docker resources on GitHub Actions runner"
+
+inputs:
+  type:
+    description: "Type of cleanup to perform: initial or pre-build"
+    required: true
+    default: "initial"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Show initial resources
+      shell: bash
+      run: |
+        echo "=== Initial System Resources ==="
+        df -h
+        free -h
+        docker system df 2>/dev/null || echo "Docker not available yet"
+        echo ""
+
+    - name: System cleanup
+      if: inputs.type == 'initial'
+      shell: bash
+      run: |
+        echo "=== Performing System Cleanup ==="
+
+        sudo rm -rf /opt/hostedtoolcache || true
+        if [ -f /swapfile ]; then
+          sudo swapoff -a
+          sudo rm -f /swapfile
+        fi
+
+        echo "Removing unnecessary system packages..."
+        sudo rm -rf /usr/share/dotnet || true
+        sudo rm -rf /opt/ghc || true
+        sudo rm -rf /usr/local/share/boost || true
+        sudo rm -rf "$AGENT_TOOLSDIRECTORY" || true
+        sudo rm -rf /usr/local/lib/android || true
+        sudo rm -rf /usr/share/swift || true
+        sudo rm -rf /opt/az || true
+        sudo rm -rf /usr/share/gradle || true
+
+        sudo rm -rf /usr/share/locale/* || true
+        sudo rm -rf /usr/share/man/* || true
+        sudo rm -rf /usr/share/doc/* || true
+
+        echo "Cleaning package manager caches..."
+        sudo apt-get clean
+        sudo apt-get autoremove -y
+        sudo apt-get autoclean
+
+    - name: Pre-build cleanup
+      if: inputs.type == 'pre-build'
+      shell: bash
+      run: |
+        echo "=== Performing Pre-build Cleanup ==="
+        docker system prune -a -f --volumes || true
+        docker builder prune -a -f || true
+
+        echo "Cleaning temporary files..."
+        sudo rm -rf /tmp/* || true
+        sudo rm -rf /var/tmp/* || true
+
+    - name: Show final resources
+      shell: bash
+      run: |
+        echo "=== Post-cleanup System Resources ==="
+        df -h
+        free -h
+        docker system df 2>/dev/null || echo "Docker not available"
+        echo ""
