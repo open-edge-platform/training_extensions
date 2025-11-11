@@ -180,7 +180,7 @@ class TestConfigurationService:
                 }
             },
         }
-        base_partial_config = PartialTrainingConfiguration(**base_parameters)
+        base_partial_config = PartialTrainingConfiguration(**base_parameters)  # type: ignore[call-arg]
 
         # Create overlay configuration with some changes
         overlay_parameters_1 = {
@@ -198,8 +198,8 @@ class TestConfigurationService:
             },
         }
         overlay_parameters_2 = {"hyperparameters": {"training": {"learning_rate": 0.05}}}
-        overlay_config_1 = PartialTrainingConfiguration(**overlay_parameters_1)
-        overlay_config_2 = PartialTrainingConfiguration(**overlay_parameters_2)
+        overlay_config_1 = PartialTrainingConfiguration(**overlay_parameters_1)  # type: ignore[call-arg]
+        overlay_config_2 = PartialTrainingConfiguration(**overlay_parameters_2)  # type: ignore[call-arg]
 
         expected_parameters = {
             "global_parameters": {
@@ -224,7 +224,7 @@ class TestConfigurationService:
                 }
             },
         }
-        expected_partial_overlay_config = PartialTrainingConfiguration(**expected_parameters)
+        expected_partial_overlay_config = PartialTrainingConfiguration(**expected_parameters)  # type: ignore[call-arg]
 
         # Act
         full_config_overlay = ConfigurationOverlayTools.overlay_training_configurations(
@@ -261,7 +261,7 @@ class TestConfigurationService:
                 }
             }
         }
-        base_partial_config = PartialTrainingConfiguration(**base_parameters)
+        base_partial_config = PartialTrainingConfiguration(**base_parameters)  # type: ignore[call-arg]
 
         # Create overlay configuration with some changes
         overlay_parameters_1 = {
@@ -279,8 +279,8 @@ class TestConfigurationService:
             },
         }
         overlay_parameters_2 = {"hyperparameters": {"training": {"learning_rate": 0.05}}}
-        overlay_config_1 = PartialTrainingConfiguration(**overlay_parameters_1)
-        overlay_config_2 = PartialTrainingConfiguration(**overlay_parameters_2)
+        overlay_config_1 = PartialTrainingConfiguration(**overlay_parameters_1)  # type: ignore[call-arg]
+        overlay_config_2 = PartialTrainingConfiguration(**overlay_parameters_2)  # type: ignore[call-arg]
 
         expected_parameters = {
             "global_parameters": {
@@ -297,7 +297,7 @@ class TestConfigurationService:
                 }
             },
         }
-        expected_partial_overlay_config = TrainingConfiguration(**expected_parameters)
+        expected_partial_overlay_config = TrainingConfiguration(**expected_parameters)  # type: ignore[call-arg]
 
         # Act
         full_config_overlay = ConfigurationOverlayTools.overlay_training_configurations(
