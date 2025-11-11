@@ -7,6 +7,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.api.dependencies import get_project_id, get_training_configuration_service
+from app.api.serializers.configurable_parameters import ConfigurableParametersConverter
 from app.api.serializers.training_configuration import TrainingConfigurationConverter
 from app.services import ResourceNotFoundError
 from app.services.training_configuration_service import TrainingConfigurationService
@@ -60,9 +61,10 @@ def update_training_configuration(
     - If not provided, updates the general task-related configuration.
     """
     try:
+        converted_config = ConfigurableParametersConverter.configurable_parameters_from_rest(training_config_update)
         updated_config = training_configuration_service.update_training_configuration(
             project_id=project_id,
-            training_config_update=training_config_update,
+            training_config_update=converted_config,
             model_architecture_id=model_architecture_id,
         )
         return TrainingConfigurationConverter().training_configuration_to_rest(updated_config)
