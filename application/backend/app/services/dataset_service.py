@@ -30,7 +30,7 @@ from app.models import (
     TaskType,
 )
 from app.repositories import DatasetItemRepository
-from app.schemas.project import ProjectBase, ProjectView
+from app.schemas.project import ProjectBase, ProjectView, TaskBase
 from app.services.datumaro_converter import convert_dataset
 from app.utils.images import crop_to_thumbnail
 
@@ -354,7 +354,7 @@ class DatasetService(BaseSessionManagedService):
         repo.set_subset(obj_ids={str(dataset_item_id)}, subset=subset)
         return self.get_dataset_item_by_id(project_id=project_id, dataset_item_id=dataset_item_id)
 
-    def get_dm_dataset(self, project_id: UUID, task_type: TaskType, exclusive_labels: bool) -> dm.Dataset:
+    def get_dm_dataset(self, project_id: UUID, task: TaskBase) -> dm.Dataset:
         def _get_dataset_items(offset: int, limit: int) -> list[DatasetItem]:
             return self.list_dataset_items(
                 project_id=project_id,
@@ -368,8 +368,7 @@ class DatasetService(BaseSessionManagedService):
 
         labels = self._label_service.list_all(project_id=project_id)
         return convert_dataset(
-            task_type=task_type,
-            exclusive_labels=exclusive_labels,
+            task=task,
             labels=labels,
             get_dataset_items=_get_dataset_items,
             get_image_path=_get_image_path,

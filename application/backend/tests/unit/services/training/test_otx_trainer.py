@@ -10,6 +10,7 @@ import pytest
 
 from app.core.run import ExecutionContext
 from app.models import DatasetItemSubset, TaskType
+from app.schemas.project import TaskBase
 from app.services import DatasetService
 from app.services.base_weights_service import BaseWeightsService
 from app.services.training.models import TrainingParams
@@ -89,7 +90,7 @@ class TestOTXTrainerPrepareWeights:
         # Arrange
         training_params = TrainingParams(
             model_architecture_id="Object_Detection_YOLOX_S",
-            task_type=TaskType.DETECTION,
+            task=TaskBase(task_type=TaskType.DETECTION),
             parent_model_revision_id=None,
         )
         otx_trainer = fxt_otx_trainer(training_params)
@@ -118,7 +119,7 @@ class TestOTXTrainerPrepareWeights:
         training_params = TrainingParams(
             project_id=project_id,
             model_architecture_id="Object_Detection_YOLOX_S",
-            task_type=TaskType.DETECTION,
+            task=TaskBase(task_type=TaskType.DETECTION),
             parent_model_revision_id=parent_model_revision_id,
         )
         expected_weights_path = (
@@ -146,7 +147,7 @@ class TestOTXTrainerPrepareWeights:
         training_params = TrainingParams(
             project_id=project_id,
             model_architecture_id="Object_Detection_YOLOX_S",
-            task_type=TaskType.DETECTION,
+            task=TaskBase(task_type=TaskType.DETECTION),
             parent_model_revision_id=parent_model_revision_id,
         )
         expected_weights_path = (
@@ -166,7 +167,7 @@ class TestOTXTrainerPrepareWeights:
         # Arrange
         training_params = TrainingParams(
             model_architecture_id="Object_Detection_YOLOX_S",
-            task_type=TaskType.DETECTION,
+            task=TaskBase(task_type=TaskType.DETECTION),
             parent_model_revision_id=uuid4(),
             project_id=None,
         )
@@ -192,7 +193,7 @@ class TestOTXTrainerAssignSubsets:
         training_params = TrainingParams(
             project_id=project_id,
             model_architecture_id="Object_Detection_YOLOX_S",
-            task_type=TaskType.DETECTION,
+            task=TaskBase(task_type=TaskType.DETECTION),
         )
         otx_trainer = fxt_otx_trainer(training_params)
 
@@ -243,7 +244,7 @@ class TestOTXTrainerAssignSubsets:
         training_params = TrainingParams(
             project_id=project_id,
             model_architecture_id="Object_Detection_YOLOX_S",
-            task_type=TaskType.DETECTION,
+            task=TaskBase(task_type=TaskType.DETECTION),
         )
         fxt_subset_service.get_unassigned_items_with_labels.return_value = []
         otx_trainer = fxt_otx_trainer(training_params)
@@ -266,7 +267,7 @@ class TestOTXTrainerAssignSubsets:
         training_params = TrainingParams(
             project_id=None,
             model_architecture_id="Object_Detection_YOLOX_S",
-            task_type=TaskType.DETECTION,
+            task=TaskBase(task_type=TaskType.DETECTION),
         )
         otx_trainer = fxt_otx_trainer(training_params)
 
@@ -289,8 +290,7 @@ class TestOTXTrainerCreateTrainingDataset:
         training_params = TrainingParams(
             project_id=project_id,
             model_architecture_id="Object_Detection_YOLOX_S",
-            task_type=TaskType.DETECTION,
-            exclusive_labels=True,
+            task=TaskBase(task_type=TaskType.DETECTION, exclusive_labels=True),
         )
         otx_trainer = fxt_otx_trainer(training_params)
 
@@ -311,7 +311,9 @@ class TestOTXTrainerCreateTrainingDataset:
         otx_trainer.create_training_dataset()
 
         # Assert
-        fxt_dataset_service.get_dm_dataset.assert_called_once_with(project_id, TaskType.DETECTION, True)
+        fxt_dataset_service.get_dm_dataset.assert_called_once_with(
+            project_id, TaskBase(task_type=TaskType.DETECTION, exclusive_labels=True)
+        )
         assert otx_trainer._training_dataset == mock_training_dataset
         assert otx_trainer._validation_dataset == mock_validation_dataset
         assert otx_trainer._testing_dataset == mock_testing_dataset
@@ -325,8 +327,7 @@ class TestOTXTrainerCreateTrainingDataset:
         training_params = TrainingParams(
             project_id=None,
             model_architecture_id="Object_Detection_YOLOX_S",
-            task_type=TaskType.DETECTION,
-            exclusive_labels=True,
+            task=TaskBase(task_type=TaskType.DETECTION, exclusive_labels=True),
         )
         otx_trainer = fxt_otx_trainer(training_params)
 

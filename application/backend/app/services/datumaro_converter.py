@@ -20,6 +20,7 @@ from datumaro.experimental.fields import ImageInfo, Subset, polygon_field, subse
 from loguru import logger
 
 from app.models import DatasetItem, DatasetItemSubset, Label, Polygon, Rectangle, TaskType
+from app.schemas.project import TaskBase
 
 CONVERSION_BATCH_SIZE = 50
 
@@ -39,7 +40,7 @@ class ClassificationSample(Sample):
     image_info: ImageInfo = image_info_field()
     label: int = label_field(dtype=pl.Int32(), is_list=False)
     confidence: float | None = score_field(dtype=pl.Float32())
-    subset: Subset = subset_field()
+    subset: Subset | None = subset_field()
 
 
 class MultilabelClassificationSample(Sample):
@@ -58,7 +59,7 @@ class MultilabelClassificationSample(Sample):
     # TODO: Use NDArrayFloat32 and NDArrayInt instead of np.ndarray after open-edge-platform/datumaro#1949 is solved
     label: np.ndarray = label_field(dtype=pl.Int32(), multi_label=True)
     confidence: np.ndarray | None = score_field(dtype=pl.Float32(), is_list=True)
-    subset: Subset = subset_field()
+    subset: Subset | None = subset_field()
 
 
 class DetectionSample(Sample):
@@ -79,7 +80,7 @@ class DetectionSample(Sample):
     bboxes: np.ndarray = bbox_field(dtype=pl.Int32())
     label: np.ndarray = label_field(dtype=pl.Int32(), is_list=True)
     confidence: np.ndarray | None = score_field(dtype=pl.Float32(), is_list=True)
-    subset: Subset = subset_field()
+    subset: Subset | None = subset_field()
 
 
 class InstanceSegmentationSample(Sample):
@@ -100,10 +101,10 @@ class InstanceSegmentationSample(Sample):
     polygons: np.ndarray = polygon_field(dtype=pl.Float32())
     label: np.ndarray = label_field(dtype=pl.Int32(), is_list=True)
     confidence: np.ndarray | None = score_field(dtype=pl.Float32(), is_list=True)
-    subset: Subset = subset_field()
+    subset: Subset | None = subset_field()
 
 
-def convert_to_dm_subset(subset: DatasetItemSubset) -> Subset:
+def convert_to_dm_subset(subset: DatasetItemSubset | None) -> Subset | None:
     """
     Convert DatasetItemSubset to Datumaro Subset
     Args:
@@ -114,6 +115,8 @@ def convert_to_dm_subset(subset: DatasetItemSubset) -> Subset:
     Raises:
         ValueError: If subset type cannot be mapped to Datumaro Subset
     """
+    if subset is None:
+        return None
     match subset:
         case DatasetItemSubset.TRAINING:
             return Subset.TRAINING
@@ -121,6 +124,8 @@ def convert_to_dm_subset(subset: DatasetItemSubset) -> Subset:
             return Subset.VALIDATION
         case DatasetItemSubset.TESTING:
             return Subset.TESTING
+        case DatasetItemSubset.UNASSIGNED:
+            return None
         case _:
             raise ValueError(f"Unknown subset type: {subset}")
 
@@ -198,7 +203,7 @@ def convert_classification_dataset(
     def _convert_sample(
         dataset_item: DatasetItem, image_path: str, project_labels_ids: list[UUID]
     ) -> ClassificationSample | None:
-        if dataset_item.annotation_data is None or dataset_item.subset is None:
+        if dataset_item.annotation_data is None:
             return None
         try:
             annotation = dataset_item.annotation_data[0]  # classification -> only one shape (annotation)
@@ -242,7 +247,7 @@ def convert_multilabel_classification_dataset(
     def _convert_sample(
         dataset_item: DatasetItem, image_path: str, project_labels_ids: list[UUID]
     ) -> MultilabelClassificationSample | None:
-        if dataset_item.annotation_data is None or dataset_item.subset is None:
+        if dataset_item.annotation_data is None:
             return None
         try:
             annotation = dataset_item.annotation_data[0]  # classification -> only one shape (annotation)
@@ -287,7 +292,7 @@ def convert_detection_dataset(
     def _convert_sample(
         dataset_item: DatasetItem, image_path: str, project_labels_ids: list[UUID]
     ) -> DetectionSample | None:
-        if dataset_item.annotation_data is None or dataset_item.subset is None:
+        if dataset_item.annotation_data is None:
             return None
         coords = [
             convert_rectangle(annotation.shape)
@@ -358,7 +363,7 @@ def convert_instance_segmentation_dataset(
     def _convert_sample(
         dataset_item: DatasetItem, image_path: str, project_labels_ids: list[UUID]
     ) -> InstanceSegmentationSample | None:
-        if dataset_item.annotation_data is None or dataset_item.subset is None:
+        if dataset_item.annotation_data is None:
             return None
         polygons = [
             convert_polygon(annotation.shape)
@@ -410,8 +415,7 @@ def convert_instance_segmentation_dataset(
 
 
 def convert_dataset(
-    task_type: TaskType,
-    exclusive_labels: bool,
+    task: TaskBase,
     labels: Sequence[Label],
     get_dataset_items: Callable[[int, int], list[DatasetItem]],
     get_image_path: Callable[[DatasetItem], str],
@@ -420,8 +424,7 @@ def convert_dataset(
     Convert project dataset to Datumaro format
 
     Args:
-        task_type: Task type
-        exclusive_labels: Flag to indicate whether labels are exclusive
+        task: Task metadata
         labels: Project labels
         get_dataset_items: Function to get a batch of dataset items
         get_image_path: Function to get image path for a dataset item
@@ -429,13 +432,13 @@ def convert_dataset(
     Returns:
         Dataset: Datumaro dataset
     """
-    match task_type:
+    match task.task_type:
         case TaskType.DETECTION:
             return convert_detection_dataset(
                 project_labels=labels, get_dataset_items=get_dataset_items, get_image_path=get_image_path
             )
         case TaskType.CLASSIFICATION:
-            if exclusive_labels:
+            if task.exclusive_labels:
                 return convert_classification_dataset(
                     project_labels=labels, get_dataset_items=get_dataset_items, get_image_path=get_image_path
                 )

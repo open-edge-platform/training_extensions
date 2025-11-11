@@ -55,12 +55,12 @@ class OTXTrainer(Trainer):
         if self._training_params is None:
             raise ValueError("Training parameters not set")
         parent_model_revision_id = self._training_params.parent_model_revision_id
-        task_type = self._training_params.task_type
+        task = self._training_params.task
         model_architecture_id = self._training_params.model_architecture_id
         project_id = self._training_params.project_id
         if parent_model_revision_id is None:
             return self._base_weights_service.get_local_weights_path(
-                task=task_type, model_manifest_id=model_architecture_id
+                task=task.task_type, model_manifest_id=model_architecture_id
             )
 
         if project_id is None:
@@ -118,12 +118,11 @@ class OTXTrainer(Trainer):
         project_id = self._training_params.project_id
         if project_id is None:
             raise ValueError("Project ID must be provided")
-        task_type = self._training_params.task_type
-        exclusive_labels = self._training_params.exclusive_labels
+        task = self._training_params.task
 
         with self._db_session_factory() as db:
             self._dataset_service.set_db_session(db)
-            dm_dataset = self._dataset_service.get_dm_dataset(project_id, task_type, exclusive_labels)
+            dm_dataset = self._dataset_service.get_dm_dataset(project_id, task)
             self._training_dataset = dm_dataset.filter_by_subset(Subset.TRAINING)
             self._validation_dataset = dm_dataset.filter_by_subset(Subset.VALIDATION)
             self._testing_dataset = dm_dataset.filter_by_subset(Subset.TESTING)
