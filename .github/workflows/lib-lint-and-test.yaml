@@ -78,9 +78,16 @@ jobs:
         working-directory: library
         run: uv sync --locked --extra dev
 
-      - name: Run pre-commit checks
+      - name: Check formatting with ruff
         working-directory: library
-        run: uv run pre-commit run --all-files
+        run: |
+          uv run ruff check --output-format=github .
+          uv run ruff format --check .
+
+      - name: Check source code with mypy
+        working-directory: library
+        run: |
+          uv run mypy . --config-file=pyproject.toml
 
   Unit-Test:
     runs-on: [self-hosted, linux, x64, dev, dmount]
@@ -96,7 +103,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11", "3.12"]
+        python-version: ["3.10", "3.13"]
     name: Unit-Test-with-Python${{ matrix.python-version }}
     steps:
       - name: Checkout repository
@@ -142,24 +149,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        python-version: ["3.10", "3.13"]
         include:
           - task: "multi_class_cls"
-            python-version: "3.12"
           - task: "multi_label_cls"
-            python-version: "3.12"
           - task: "h_label_cls"
-            python-version: "3.12"
           - task: "anomaly"
-            python-version: "3.12"
           - task: "keypoint_detection"
-            python-version: "3.12"
           - task: "detection"
-            python-version: "3.12"
           - task: "instance_segmentation"
-            python-version: "3.12"
           - task: "semantic_segmentation"
-            python-version: "3.12"
-    name: Integration-Test-${{ matrix.task }}-py312
+    name: Integration-Test-${{ matrix.task }}-py${{ matrix.python-version }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -176,15 +176,21 @@ jobs:
       - name: Installing dependencies
         working-directory: library
         run: |
-          pip install '.[dev]'
           uv lock --check
-          uv sync --frozen --extra cuda --no-extra xpu
+          uv sync --frozen --extra dev
 
       - name: Integration testing
         working-directory: library
         env:
           CUBLAS_WORKSPACE_CONFIG: ":4096:8"
-        run: uv run --frozen --extra cuda --no-extra xpu pytest tests/integration -ra --showlocals --csv=${{ matrix.task }}_Python-${{ matrix.python-version }}.csv --task ${{ matrix.task }} --open-subprocess --run-category-only
+        run: |
+          uv run --frozen --extra dev pytest tests/integration \
+            -ra \
+            --showlocals \
+            --csv=${{ matrix.task }}_Python-${{ matrix.python-version }}.csv \
+            --task ${{ matrix.task }} \
+            --open-subprocess \
+            --run-category-only
 
   required_check:
     name: Required Check lib-lint-and-test
