@@ -55,7 +55,7 @@ dependencies = [
     "tensorboardx==2.6.4"
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
     "pre-commit==4.2.0",
     "pytest>=5.3.5",
@@ -68,9 +68,16 @@ dev = [
     "pytest-mock",
     "dill",
     "tifffile",
-    "wandb",
 ]
 
+lint = [
+    "ruff==0.9.3",
+    "mypy~=1.16.1",
+    "types-PyYAML~=6.0.12",
+    "types-requests~=2.32.4",
+]
+
+[project.optional-dependencies]
 cpu = [
     "torch==2.8.0",
     "torchvision==0.23.0"
@@ -104,14 +111,6 @@ ci_publish = [
     "build==1.2.2.post1",
 ]
 
-ci_benchmark = [
-    "pandas<2.4",       # To avoid conflict with nncf==2.9.0
-    "matplotlib==3.10.1",
-    "openpyxl==3.1.5",
-    "mlflow==2.21.3",
-    "py-cpuinfo==9.0.0",
-]
-
 [project.scripts]
 otx = "otx.cli:main"
 
@@ -120,11 +119,19 @@ Documentation = "https://open-edge-platform.github.io/training_extensions/"
 Repository = "https://github.com/open-edge-platform/training_extensions/"
 
 [tool.uv]
+default-groups = ["dev", "lint"]
 conflicts = [
     [
         { extra = "cpu" },
         { extra = "xpu" },
         { extra = "cuda" },
+    ],
+    # redeclare library conflicts to workaround bug with uv dependency resolution
+    # For details, see: https://github.com/astral-sh/uv/issues/9942
+    [
+        { package = "otx", extra = "cpu" },
+        { package = "otx", extra = "xpu" },
+        { package = "otx", extra = "cuda" },
     ],
 ]
 
@@ -291,6 +298,9 @@ ignore = [
     "D107",     # Missing docstring in `__init__`
     "D105",     # Missing docstring in magic method
 
+    # NOTE: Disable the following rules for now.
+    "A005", # Module is shadowing a Python built-in
+
     # flake8-annotations
     "ANN101",   # Missing-type-self
     "ANN002",   # Missing type annotation for *args
@@ -303,8 +313,15 @@ ignore = [
 
     "COM812",   # Missing trailing comma -> conflicts with ISC001
 
+    "PT001",    # Use @pytest.fixture over @pytest.fixture()
+
+    "PERF403",  # Use a dictionary comprehension instead of a for-loop
+
+    "RUF022",   # `__all__` is not sorted
+    "RUF024",   # Do not pass mutable objects as values to `dict.fromkeys`
+
     # flake8-type-checking
-    "TCH001",   # typing-only-first-party-import, Sometimes this causes an incorrect error.
+    "TC001",    # typing-only-first-party-import, Sometimes this causes an incorrect error.
     # flake8-fixme
     "FIX002",   # line-contains-todo
 
