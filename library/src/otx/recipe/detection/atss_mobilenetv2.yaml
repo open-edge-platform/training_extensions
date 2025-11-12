@@ -4,6 +4,10 @@ model:
   init_args:
     model_name: atss_mobilenetv2
     label_info: 80
+    data_input_params:
+      input_size: [800, 992]
+      mean: [0.0, 0.0, 0.0]
+      std: [255.0, 255.0, 255.0]
 
     optimizer:
       class_path: torch.optim.SGD

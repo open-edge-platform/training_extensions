@@ -25,6 +25,7 @@ from otx.data.entity.torch import OTXDataBatch
 from otx.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 from otx.types.export import OTXExportFormatType
 from otx.types.precision import OTXPrecisionType
+import kornia
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -197,3 +198,21 @@ class YOLOX(OTXDetectionModel):
     def load_from_otx_v1_ckpt(self, state_dict: dict, add_prefix: str = "model.") -> dict:
         """Load the previous OTX ckpt according to OTX2.0."""
         return OTXv1Helper.load_det_ckpt(state_dict, add_prefix)
+
+    @property
+    def transforms(self):
+        if self.training:
+            return kornia.augmentation.AugmentationSequential(
+                    # kornia.augmentation.RandomMixUpV2(data_keys=["input", "bbox"], p=0.5, lambda_val=[0.5, 0.5]),
+                    kornia.augmentation.RandomMosaic(self.data_input_params.input_size, data_keys=["input", "bbox"]),
+                    kornia.augmentation.RandomAffine(degrees=10.0, translate=[0.1, 0.1], scale=[0.5,1.5], shear=2.0),
+                    kornia.augmentation.ColorJiggle(0.1, 0.1, 0.1, 0.1),
+                    kornia.augmentation.RandomHorizontalFlip(),
+                    kornia.augmentation.Normalize(self.data_input_params.mean, self.data_input_params.std),
+                    data_keys=["input", "bbox"],
+                    same_on_batch=False
+            )
+        return kornia.augmentation.AugmentationSequential(
+            kornia.augmentation.Normalize(self.data_input_params.mean, self.data_input_params.std),
+            data_keys=["input", "bbox"],
+        )
