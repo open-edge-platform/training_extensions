@@ -78,21 +78,21 @@ class TestMSCABlock:
 
         assert len(out) == num_stages
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_load_from_http(self, mocker) -> MagicMock:
         return mocker.patch.object(target_file, "load_from_http")
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_load_checkpoint_to_model(self, mocker) -> MagicMock:
         return mocker.patch.object(target_file, "load_checkpoint_to_model")
 
-    @pytest.fixture()
+    @pytest.fixture
     def pretrained_weight(self, tmp_path) -> str:
         weight = tmp_path / "pretrained.pth"
         weight.touch()
         return str(weight)
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_torch_load(self, mocker) -> MagicMock:
         return mocker.patch("otx.backend.native.models.segmentation.backbones.mscan.torch.load")
 

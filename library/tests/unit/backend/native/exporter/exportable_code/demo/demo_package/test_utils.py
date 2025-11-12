@@ -40,7 +40,7 @@ def test_get_model_path_no_model_file(mocker, tmp_path):
         get_model_path(None)
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_json(mocker):
     return mocker.patch.object(target_file, "json")
 

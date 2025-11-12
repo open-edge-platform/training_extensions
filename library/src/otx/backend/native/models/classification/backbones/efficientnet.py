@@ -499,7 +499,7 @@ class EfficientNetFeatureExtractor(nn.Module):
                         ),
                     )
                 in_channels = out_channels
-            self.features.add_module(f"stage{i+1}", stage)
+            self.features.add_module(f"stage{i + 1}", stage)
             # activation = activation if self.loss == 'softmax': else lambda: nn.PReLU(init=0.25)
         self.features.add_module(
             "final_block",
@@ -625,7 +625,7 @@ class EfficientNetBackbone:
         """
         origin_input_size, depth_factor, width_factor = cls.EFFICIENTNET_CFG[model_name].values()
         input_size = input_size or origin_input_size
-        effnet_layers = [int(math.ceil(li * depth_factor)) for li in cls.layers]
+        effnet_layers = [math.ceil(li * depth_factor) for li in cls.layers]
         channels_per_layers = [round_channels(ci * width_factor) for ci in cls.channels_per_layers]
 
         from functools import reduce

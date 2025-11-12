@@ -14,9 +14,9 @@ from .visualizer import (
 
 __all__ = [
     "BaseVisualizer",
-    "dump_frames",
     "ClassificationVisualizer",
-    "SemanticSegmentationVisualizer",
     "InstanceSegmentationVisualizer",
     "ObjectDetectionVisualizer",
+    "SemanticSegmentationVisualizer",
+    "dump_frames",
 ]

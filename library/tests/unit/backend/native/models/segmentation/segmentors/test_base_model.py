@@ -9,14 +9,14 @@ from otx.data.entity.base import ImageInfo
 
 
 class TestBaseSegmentationModel:
-    @pytest.fixture()
+    @pytest.fixture
     def model(self):
         backbone = torch.nn.Sequential(torch.nn.Conv2d(3, 64, kernel_size=3, padding=1))
         decode_head = torch.nn.Sequential(torch.nn.Conv2d(64, 2, kernel_size=1))
         decode_head.num_classes = 3
         return BaseSegmentationModel(backbone, decode_head)
 
-    @pytest.fixture()
+    @pytest.fixture
     def inputs(self):
         inputs = torch.randn(1, 3, 256, 256)
         masks = torch.randint(0, 2, (1, 256, 256))

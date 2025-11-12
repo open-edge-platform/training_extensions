@@ -25,7 +25,7 @@ class TestSpatialWeightingV2:
 
 
 class TestStem:
-    @pytest.fixture()
+    @pytest.fixture
     def stem(self) -> Stem:
         return Stem(in_channels=32, stem_channels=32, out_channels=32, expand_ratio=1)
 
@@ -59,7 +59,7 @@ class TestNeighbourSupport:
 
 
 class TestLiteHRNetModule:
-    @pytest.fixture()
+    @pytest.fixture
     def cfg(self) -> dict:
         return {
             "stem_configuration": {},
@@ -79,23 +79,23 @@ class TestLiteHRNetModule:
             },
         }
 
-    @pytest.fixture()
+    @pytest.fixture
     def backbone(self, cfg) -> LiteHRNetModule:
         return LiteHRNetModule(**cfg)
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_torch_load(self, mocker) -> MagicMock:
         return mocker.patch("otx.backend.native.models.segmentation.backbones.litehrnet.torch.load")
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_load_from_http(self, mocker) -> MagicMock:
         return mocker.patch("otx.backend.native.models.segmentation.backbones.litehrnet.load_from_http")
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_load_checkpoint_to_model(self, mocker) -> MagicMock:
         return mocker.patch("otx.backend.native.models.segmentation.backbones.litehrnet.load_checkpoint_to_model")
 
-    @pytest.fixture()
+    @pytest.fixture
     def pretrained_weight(self, tmp_path) -> str:
         weight = tmp_path / "pretrained.pth"
         weight.touch()

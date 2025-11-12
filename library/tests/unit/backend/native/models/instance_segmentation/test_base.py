@@ -14,7 +14,7 @@ from otx.types.export import TaskLevelExportParameters
 
 
 class TestOTXInstanceSegModel:
-    @pytest.fixture()
+    @pytest.fixture
     def otx_model(self) -> OTXInstanceSegModel:
         return MaskRCNN(
             label_info=1,

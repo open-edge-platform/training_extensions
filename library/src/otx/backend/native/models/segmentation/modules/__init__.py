@@ -9,6 +9,6 @@ from .utils import channel_shuffle, normalize, resize
 __all__ = [
     "IterativeAggregator",
     "channel_shuffle",
-    "resize",
     "normalize",
+    "resize",
 ]

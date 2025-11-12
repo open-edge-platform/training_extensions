@@ -43,7 +43,7 @@ def set_mock_batch_gt_instances(batch_size: int) -> list[Mock]:
 
 
 class TestRTMDetInsHead:
-    @pytest.fixture()
+    @pytest.fixture
     def rtmdet_ins_head(self) -> RTMDetInstHead:
         train_cfg = {
             "assigner": DynamicSoftLabelAssigner(topk=13),

@@ -32,7 +32,7 @@ class MockDetectionModel(OTXDetectionModel):
         }
 
 
-@pytest.fixture()
+@pytest.fixture
 def detection_model():
     """Create a test detection model."""
     label_info = LabelInfo(
@@ -53,7 +53,7 @@ def detection_model():
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def sample_predictions():
     """Create sample prediction data."""
     return OTXPredBatch(
@@ -88,7 +88,7 @@ def sample_predictions():
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def sample_batch():
     """Create sample input batch."""
     return OTXDataBatch(
