@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 
 class TestOTXKeypointDetectionModel:
-    @pytest.fixture()
+    @pytest.fixture
     def model(self, label_info, optimizer, scheduler, metric, torch_compile) -> OTXKeypointDetectionModel:
         return RTMPose(
             label_info=label_info,
@@ -33,11 +33,11 @@ class TestOTXKeypointDetectionModel:
             torch_compile=torch_compile,
         )
 
-    @pytest.fixture()
+    @pytest.fixture
     def batch_data_entity(self, model) -> OTXDataBatch:
         return model.get_dummy_input(2)
 
-    @pytest.fixture()
+    @pytest.fixture
     def label_info(self) -> LabelInfo:
         return LabelInfo(
             label_names=["label_0", "label_1"],
@@ -45,19 +45,19 @@ class TestOTXKeypointDetectionModel:
             label_ids=["0", "1"],
         )
 
-    @pytest.fixture()
+    @pytest.fixture
     def optimizer(self):
         return DefaultOptimizerCallable
 
-    @pytest.fixture()
+    @pytest.fixture
     def scheduler(self):
         return DefaultSchedulerCallable
 
-    @pytest.fixture()
+    @pytest.fixture
     def metric(self):
         return PCKMeasureCallable
 
-    @pytest.fixture()
+    @pytest.fixture
     def torch_compile(self):
         return False
 

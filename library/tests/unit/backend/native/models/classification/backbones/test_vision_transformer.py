@@ -13,7 +13,7 @@ from otx.backend.native.models.utils.utils import load_checkpoint_to_model
 
 
 class TestVisionTransformer:
-    @pytest.fixture()
+    @pytest.fixture
     def config(self) -> dict:
         return {"model_name": "vit-tiny", "img_size": 224, "patch_size": 16, "drop_path_rate": 0.1}
 

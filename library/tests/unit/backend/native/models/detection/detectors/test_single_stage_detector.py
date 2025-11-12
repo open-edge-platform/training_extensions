@@ -13,7 +13,7 @@ from otx.data.entity.torch import OTXPredBatch
 
 
 class TestSingleStageDetector:
-    @pytest.fixture()
+    @pytest.fixture
     def backbone(self):
         return nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1),
@@ -21,7 +21,7 @@ class TestSingleStageDetector:
             nn.MaxPool2d(kernel_size=2, stride=2),
         )
 
-    @pytest.fixture()
+    @pytest.fixture
     def bbox_head(self):
         class BboxHead(nn.Module):
             def __init__(self):
@@ -46,7 +46,7 @@ class TestSingleStageDetector:
 
         return BboxHead()
 
-    @pytest.fixture()
+    @pytest.fixture
     def batch(self):
         inputs = torch.randn(1, 3, 32, 32)
         return OTXPredBatch(
@@ -57,7 +57,7 @@ class TestSingleStageDetector:
             labels=[torch.tensor([0])],
         )
 
-    @pytest.fixture()
+    @pytest.fixture
     def criterion(self):
         class Criterion(nn.Module):
             def __init__(self):
@@ -68,7 +68,7 @@ class TestSingleStageDetector:
 
         return Criterion()
 
-    @pytest.fixture()
+    @pytest.fixture
     def detector(self, backbone, bbox_head, criterion):
         return SingleStageDetector(backbone=backbone, bbox_head=bbox_head, criterion=criterion)
 

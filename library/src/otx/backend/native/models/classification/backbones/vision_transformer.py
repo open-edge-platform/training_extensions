@@ -77,116 +77,74 @@ class VisionTransformerBackbone(BaseModule):
     """
 
     model_zoo: ClassVar[dict[str, dict[str, Any]]] = {
-        **dict.fromkeys(
-            ["vit-t", "vit-tiny"],
-            {
-                "patch_size": 16,
-                "embed_dim": 192,
-                "depth": 12,
-                "num_heads": 3,
-            },
-        ),
-        **dict.fromkeys(
-            ["vit-s", "vit-small"],
-            {
-                "patch_size": 16,
-                "embed_dim": 384,
-                "depth": 12,
-                "num_heads": 6,
-            },
-        ),
-        **dict.fromkeys(
-            ["vit-b", "vit-base"],
-            {
-                "patch_size": 16,
-                "embed_dim": 768,
-                "depth": 12,
-                "num_heads": 12,
-            },
-        ),
-        **dict.fromkeys(
-            ["vit-l", "vit-large"],
-            {
-                "patch_size": 16,
-                "embed_dim": 1024,
-                "depth": 24,
-                "num_heads": 16,
-            },
-        ),
-        **dict.fromkeys(
-            ["vit-h", "vit-huge"],
-            {
-                # The same as the implementation in MAE
-                # <https://arxiv.org/abs/2111.06377>
-                "patch_size": 16,
-                "embed_dim": 1280,
-                "depth": 32,
-                "num_heads": 16,
-            },
-        ),
-        **dict.fromkeys(
-            ["dinov2-s", "dinov2-small"],
-            {
+        **{key: {"patch_size": 16, "embed_dim": 192, "depth": 12, "num_heads": 3} for key in ["vit-t", "vit-tiny"]},
+        **{key: {"patch_size": 16, "embed_dim": 384, "depth": 12, "num_heads": 6} for key in ["vit-s", "vit-small"]},
+        **{key: {"patch_size": 16, "embed_dim": 768, "depth": 12, "num_heads": 12} for key in ["vit-b", "vit-base"]},
+        **{key: {"patch_size": 16, "embed_dim": 1024, "depth": 24, "num_heads": 16} for key in ["vit-l", "vit-large"]},
+        **{key: {"patch_size": 16, "embed_dim": 1280, "depth": 32, "num_heads": 16} for key in ["vit-h", "vit-huge"]},
+        **{
+            key: {
                 "patch_size": 14,
                 "embed_dim": 384,
                 "depth": 12,
                 "num_heads": 6,
                 "reg_tokens": 4,
                 "no_embed_class": True,
-                "init_values": 1e-5,
-            },
-        ),
-        **dict.fromkeys(
-            ["dinov2-small-seg"],  # segmentation
-            {
+                "init_values": 1e-05,
+            }
+            for key in ["dinov2-s", "dinov2-small"]
+        },
+        **{
+            key: {
                 "patch_size": 14,
                 "embed_dim": 384,
                 "depth": 12,
                 "num_heads": 6,
                 "reg_tokens": 0,
                 "no_embed_class": False,
-                "init_values": 1e-5,
-            },
-        ),
-        **dict.fromkeys(
-            ["dinov2-b", "dinov2-base"],
-            {
+                "init_values": 1e-05,
+            }
+            for key in ["dinov2-small-seg"]
+        },
+        **{
+            key: {
                 "patch_size": 14,
                 "embed_dim": 768,
                 "depth": 12,
                 "num_heads": 12,
                 "reg_tokens": 4,
                 "no_embed_class": True,
-                "init_values": 1e-5,
-            },
-        ),
-        **dict.fromkeys(
-            ["dinov2-l", "dinov2-large"],
-            {
+                "init_values": 1e-05,
+            }
+            for key in ["dinov2-b", "dinov2-base"]
+        },
+        **{
+            key: {
                 "patch_size": 14,
                 "embed_dim": 1024,
                 "depth": 24,
                 "num_heads": 16,
                 "reg_tokens": 4,
                 "no_embed_class": True,
-                "init_values": 1e-5,
-            },
-        ),
-        **dict.fromkeys(
-            ["dinov2-g", "dinov2-giant"],
-            {
+                "init_values": 1e-05,
+            }
+            for key in ["dinov2-l", "dinov2-large"]
+        },
+        **{
+            key: {
                 "patch_size": 14,
                 "embed_dim": 1536,
                 "depth": 40,
                 "num_heads": 24,
                 "reg_tokens": 4,
                 "no_embed_class": True,
-                "init_values": 1e-5,
+                "init_values": 1e-05,
                 "mlp_ratio": 2.66667 * 2,
                 "mlp_layer": SwiGLUPacked,
                 "act_layer": nn.SiLU,
-            },
-        ),
+            }
+            for key in ["dinov2-g", "dinov2-giant"]
+        },
     }
 
     def __init__(  # noqa: PLR0913

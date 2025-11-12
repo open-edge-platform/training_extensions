@@ -69,8 +69,6 @@ def test_native_ov_engine(
     elif isinstance(exported_model_path, dict):
         for key, value in exported_model_path.items():
             assert value.exists(), f"{value} for {key} doesn't exist."
-    else:
-        AssertionError(f"Exported model path is not a Path or a dictionary of Paths: {exported_model_path}")
 
     # Test with IR Model and OVEngine
     ov_engine = create_engine(

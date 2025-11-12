@@ -15,13 +15,13 @@ from .visualizers import (
 )
 
 __all__ = [
-    "SyncExecutor",
     "AsyncExecutor",
-    "create_visualizer",
-    "ModelWrapper",
     "BaseVisualizer",
     "ClassificationVisualizer",
-    "SemanticSegmentationVisualizer",
     "InstanceSegmentationVisualizer",
+    "ModelWrapper",
     "ObjectDetectionVisualizer",
+    "SemanticSegmentationVisualizer",
+    "SyncExecutor",
+    "create_visualizer",
 ]

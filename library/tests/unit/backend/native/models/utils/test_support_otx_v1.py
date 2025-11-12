@@ -11,7 +11,7 @@ from otx.backend.native.models.utils.support_otx_v1 import OTXv1Helper
 
 
 class TestOTXv1Helper:
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_random_tensor(self) -> torch.Tensor:
         return torch.randn(3, 10)
 

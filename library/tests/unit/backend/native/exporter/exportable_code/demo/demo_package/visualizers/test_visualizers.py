@@ -82,15 +82,15 @@ class TestBaseVisualizer:
 
 
 class TestClassificationVisualizer:
-    @pytest.fixture()
+    @pytest.fixture
     def visualizer(self):
         return ClassificationVisualizer(window_name="TestWindow", no_show=True, delay=10, output="test_output")
 
-    @pytest.fixture()
+    @pytest.fixture
     def frame(self):
         return np.zeros((100, 100, 3), dtype=np.uint8)
 
-    @pytest.fixture()
+    @pytest.fixture
     def predictions(self):
         return ClassificationResult(
             top_labels=[(0, "cat", 0.9)],
@@ -132,7 +132,7 @@ class TestClassificationVisualizer:
 
 
 class TestDetectionVisualizer:
-    @pytest.fixture()
+    @pytest.fixture
     def visualizer(self):
         return ObjectDetectionVisualizer(
             labels=["Pedestrian", "Car"],
@@ -171,11 +171,11 @@ class TestDetectionVisualizer:
 
 
 class TestInstanceSegmentationVisualizer:
-    @pytest.fixture()
+    @pytest.fixture
     def rand_generator(self):
         return Generator(PCG64())
 
-    @pytest.fixture()
+    @pytest.fixture
     def visualizer(self):
         return InstanceSegmentationVisualizer(
             labels=["person", "car"],
@@ -230,11 +230,11 @@ class TestInstanceSegmentationVisualizer:
 
 
 class TestSemanticSegmentationVisualizer:
-    @pytest.fixture()
+    @pytest.fixture
     def labels(self):
         return ["background", "object1", "object2"]
 
-    @pytest.fixture()
+    @pytest.fixture
     def visualizer(self, labels):
         return SemanticSegmentationVisualizer(
             labels=labels,
@@ -244,7 +244,7 @@ class TestSemanticSegmentationVisualizer:
             output="test_output",
         )
 
-    @pytest.fixture()
+    @pytest.fixture
     def rand_generator(self):
         return Generator(PCG64())
 

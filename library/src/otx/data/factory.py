@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from otx.config.data import SubsetConfig
 
 
-__all__ = ["TransformLibFactory", "OTXDatasetFactory"]
+__all__ = ["OTXDatasetFactory", "TransformLibFactory"]
 
 
 class TransformLibFactory:

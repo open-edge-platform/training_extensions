@@ -103,7 +103,7 @@ def fxt_dm_item_bbox_only(request, tmpdir) -> DatasetItem:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_mock_dm_subset(mocker: MockerFixture, fxt_dm_item: DatasetItem) -> MagicMock:
     mock_dm_subset = mocker.MagicMock(spec=DmDataset)
     mock_dm_subset.__getitem__.return_value = fxt_dm_item
@@ -118,7 +118,7 @@ def fxt_mock_dm_subset(mocker: MockerFixture, fxt_dm_item: DatasetItem) -> Magic
     return mock_dm_subset
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_mock_det_dm_subset(mocker: MockerFixture, fxt_dm_item_bbox_only: DatasetItem) -> MagicMock:
     mock_dm_subset = mocker.MagicMock(spec=DmDataset)
     mock_dm_subset.__getitem__.return_value = fxt_dm_item_bbox_only
@@ -160,7 +160,7 @@ def fxt_dataset_and_data_entity_cls(
     return request.param
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_mock_hlabelinfo():
     mock_dict = MagicMock()
     mock_dict.__getitem__.return_value = (0, 0)
@@ -192,7 +192,7 @@ def fxt_mock_hlabelinfo():
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_hlabel_dataset_subset() -> DmDataset:
     return DmDataset.from_iterable(
         [

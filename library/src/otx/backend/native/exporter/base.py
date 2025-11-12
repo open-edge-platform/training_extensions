@@ -237,11 +237,11 @@ class OTXModelExporter:
     @staticmethod
     def _embed_onnx_metadata(onnx_model: onnx.ModelProto, metadata: dict[tuple[str, str], Any]) -> onnx.ModelProto:
         """Embeds metadata to ONNX model."""
-        for item in metadata:
+        for k, v in metadata.items():
             meta = onnx_model.metadata_props.add()
-            attr_path = " ".join(map(str, item))
+            attr_path = " ".join(map(str, k))
             meta.key = attr_path.strip()
-            meta.value = str(metadata[item])
+            meta.value = str(v)
 
         return onnx_model
 

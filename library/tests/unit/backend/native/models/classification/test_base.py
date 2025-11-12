@@ -34,11 +34,11 @@ class TestOTXMulticlassClsModel:
     def mock_model(self, mocker):
         OTXMulticlassClsModel._build_model = mocker.MagicMock(return_value=MockClsModel())
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_optimizer(self):
         return lambda _: create_autospec(Optimizer)
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_scheduler(self):
         return lambda _: create_autospec([ReduceLROnPlateau])
 
@@ -91,11 +91,11 @@ class TestOTXMultilabelClsModel:
     def mock_model(self, mocker):
         OTXMultilabelClsModel._build_model = mocker.MagicMock(return_value=MockClsModel())
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_optimizer(self):
         return lambda _: create_autospec(Optimizer)
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_scheduler(self):
         return lambda _: create_autospec([ReduceLROnPlateau])
 
@@ -146,11 +146,11 @@ class TestOTXHlabelClsModel:
     def mock_model(self, mocker):
         OTXHlabelClsModel._build_model = mocker.MagicMock(return_value=MockClsModel())
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_optimizer(self):
         return lambda _: create_autospec(Optimizer)
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_scheduler(self):
         return lambda _: create_autospec([ReduceLROnPlateau])
 

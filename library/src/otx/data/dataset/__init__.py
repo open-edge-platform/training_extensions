@@ -13,12 +13,12 @@ from .tile import OTXTileDatasetFactory
 
 __all__ = [
     "OTXAnomalyDataset",
-    "OTXMulticlassClsDataset",
-    "OTXHlabelClsDataset",
-    "OTXMultilabelClsDataset",
     "OTXDetectionDataset",
+    "OTXHlabelClsDataset",
     "OTXInstanceSegDataset",
     "OTXKeypointDetectionDataset",
+    "OTXMulticlassClsDataset",
+    "OTXMultilabelClsDataset",
     "OTXSegmentationDataset",
     "OTXTileDatasetFactory",
 ]

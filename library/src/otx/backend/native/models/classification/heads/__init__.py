@@ -9,11 +9,11 @@ from .multilabel_cls_head import MultiLabelLinearClsHead, MultiLabelNonLinearCls
 from .vision_transformer_head import VisionTransformerClsHead
 
 __all__ = [
+    "HierarchicalCBAMClsHead",
+    "HierarchicalLinearClsHead",
+    "HierarchicalNonLinearClsHead",
     "LinearClsHead",
     "MultiLabelLinearClsHead",
     "MultiLabelNonLinearClsHead",
-    "HierarchicalLinearClsHead",
-    "HierarchicalNonLinearClsHead",
-    "HierarchicalCBAMClsHead",
     "VisionTransformerClsHead",
 ]

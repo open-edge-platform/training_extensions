@@ -194,7 +194,7 @@ def batched_nms(
 
     nms_op = nms_cfg_.pop("type", "nms")
     if isinstance(nms_op, str):
-        nms_op = eval(nms_op)  # noqa: S307, PGH001
+        nms_op = eval(nms_op)  # noqa: S307
 
     split_thr = nms_cfg_.pop("split_thr", 10000)
     # Won't split to multiple nms nodes when exporting to onnx
