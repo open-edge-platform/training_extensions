@@ -76,7 +76,9 @@ jobs:
 
       - name: Installing dependencies
         working-directory: library
-        run: uv sync --locked --extra dev
+        run: |
+          uv lock --check
+          uv sync --frozen
 
       - name: Check formatting with ruff
         working-directory: library
@@ -122,7 +124,7 @@ jobs:
         working-directory: library
         run: |
           uv lock --check
-          uv sync --frozen --extra dev
+          uv sync --frozen
 
       - name: Unit testing
         working-directory: library
@@ -177,14 +179,14 @@ jobs:
         working-directory: library
         run: |
           uv lock --check
-          uv sync --frozen --extra dev
+          uv sync --frozen --extra cuda
 
       - name: Integration testing
         working-directory: library
         env:
           CUBLAS_WORKSPACE_CONFIG: ":4096:8"
         run: |
-          uv run --frozen --extra dev pytest tests/integration \
+          uv run --frozen --extra cuda pytest tests/integration \
             -ra \
             --showlocals \
             --csv=${{ matrix.task }}_Python-${{ matrix.python-version }}.csv \
