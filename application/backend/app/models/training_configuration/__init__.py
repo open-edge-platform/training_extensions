@@ -1,8 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-
-from .augmentation import (
+from app.models.training_configuration.augmentation import (
     AugmentationParameters,
     ColorJitter,
     GaussianBlur,
@@ -20,7 +19,7 @@ from .augmentation import (
     Tiling,
     TopdownAffine,
 )
-from .hyperparameters import (
+from app.models.training_configuration.hyperparameters import (
     DatasetPreparationParameters,
     EarlyStopping,
     EvaluationParameters,
