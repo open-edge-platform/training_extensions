@@ -331,6 +331,122 @@ def fxt_project_with_labeled_dataset_items(
     return project, db_dataset_items
 
 
+@pytest.fixture
+def fxt_project_with_subset_items(fxt_project_with_pipeline, db_session) -> tuple[ProjectView, list[DatasetItemDB]]:
+    """Fixture with dataset items covering all subset types."""
+    project, _ = fxt_project_with_pipeline
+
+    # Unassigned items
+    unassigned_items = [
+        DatasetItemDB(
+            name="unassigned1",
+            format="jpg",
+            size=1024,
+            width=1024,
+            height=768,
+            subset=DatasetItemSubset.UNASSIGNED,
+            user_reviewed=False,
+            project_id=str(project.id),
+            created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
+        ),
+        DatasetItemDB(
+            name="unassigned2",
+            format="jpg",
+            size=1024,
+            width=1024,
+            height=768,
+            subset=DatasetItemSubset.UNASSIGNED,
+            user_reviewed=False,
+            project_id=str(project.id),
+            created_at=datetime.fromisoformat("2025-02-02T00:00:00Z"),
+        ),
+    ]
+
+    # Training items
+    training_items = [
+        DatasetItemDB(
+            name="training1",
+            format="jpg",
+            size=1024,
+            width=1024,
+            height=768,
+            subset=DatasetItemSubset.TRAINING,
+            user_reviewed=False,
+            project_id=str(project.id),
+            created_at=datetime.fromisoformat("2025-02-03T00:00:00Z"),
+        ),
+        DatasetItemDB(
+            name="training2",
+            format="jpg",
+            size=1024,
+            width=1024,
+            height=768,
+            subset=DatasetItemSubset.TRAINING,
+            user_reviewed=False,
+            project_id=str(project.id),
+            created_at=datetime.fromisoformat("2025-02-04T00:00:00Z"),
+        ),
+        DatasetItemDB(
+            name="training3",
+            format="jpg",
+            size=1024,
+            width=1024,
+            height=768,
+            subset=DatasetItemSubset.TRAINING,
+            user_reviewed=False,
+            project_id=str(project.id),
+            created_at=datetime.fromisoformat("2025-02-05T00:00:00Z"),
+        ),
+    ]
+
+    # Validation items
+    validation_items = [
+        DatasetItemDB(
+            name="validation1",
+            format="jpg",
+            size=1024,
+            width=1024,
+            height=768,
+            subset=DatasetItemSubset.VALIDATION,
+            user_reviewed=False,
+            project_id=str(project.id),
+            created_at=datetime.fromisoformat("2025-02-06T00:00:00Z"),
+        ),
+        DatasetItemDB(
+            name="validation2",
+            format="jpg",
+            size=1024,
+            width=1024,
+            height=768,
+            subset=DatasetItemSubset.VALIDATION,
+            user_reviewed=False,
+            project_id=str(project.id),
+            created_at=datetime.fromisoformat("2025-02-07T00:00:00Z"),
+        ),
+    ]
+
+    # Testing items
+    testing_items = [
+        DatasetItemDB(
+            name="testing1",
+            format="jpg",
+            size=1024,
+            width=1024,
+            height=768,
+            subset=DatasetItemSubset.TESTING,
+            user_reviewed=False,
+            project_id=str(project.id),
+            created_at=datetime.fromisoformat("2025-02-08T00:00:00Z"),
+        ),
+    ]
+
+    db_dataset_items = [*unassigned_items, *training_items, *validation_items, *testing_items]
+    db_session.add_all(db_dataset_items)
+    db_session.flush()
+
+    return project, db_dataset_items
+
+
 class TestDatasetServiceIntegration:
     """Integration tests for DatasetService."""
 
@@ -1069,3 +1185,155 @@ class TestDatasetServiceIntegration:
         assert len(dataset_items) == 4
         item_names = {item.name for item in dataset_items}
         assert item_names == {"item_no_labels", "item_label_0", "item_label_1", "item_both_labels"}
+
+    @pytest.mark.parametrize(
+        "subset, expected_count",
+        [
+            (None, 8),  # All items
+            ("unassigned", 2),  # 2 unassigned items
+            ("training", 3),  # 3 training items
+            ("validation", 2),  # 2 validation items
+            ("testing", 1),  # 1 testing item
+        ],
+    )
+    def test_count_dataset_items_with_subset(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_project_with_subset_items: tuple[ProjectView, list[DatasetItemDB]],
+        subset: str | None,
+        expected_count: int,
+    ) -> None:
+        """Test counting dataset items with subset filter."""
+        project, db_dataset_items = fxt_project_with_subset_items
+
+        count = fxt_dataset_service.count_dataset_items(project=project, subset=subset)
+
+        assert count == expected_count
+
+    @pytest.mark.parametrize(
+        "subset, expected_names",
+        [
+            (
+                None,
+                [
+                    "unassigned1",
+                    "unassigned2",
+                    "training1",
+                    "training2",
+                    "training3",
+                    "validation1",
+                    "validation2",
+                    "testing1",
+                ],
+            ),
+            ("unassigned", ["unassigned1", "unassigned2"]),
+            ("training", ["training1", "training2", "training3"]),
+            ("validation", ["validation1", "validation2"]),
+            ("testing", ["testing1"]),
+        ],
+    )
+    def test_list_dataset_items_with_subset(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_project_with_subset_items: tuple[ProjectView, list[DatasetItemDB]],
+        subset: str | None,
+        expected_names: list[str],
+    ) -> None:
+        """Test listing dataset items with subset filter."""
+        project, db_dataset_items = fxt_project_with_subset_items
+
+        dataset_items = fxt_dataset_service.list_dataset_items(
+            project=project,
+            limit=20,
+            offset=0,
+            subset=subset,
+        )
+
+        assert len(dataset_items) == len(expected_names)
+        actual_names = sorted([item.name for item in dataset_items])
+        assert actual_names == sorted(expected_names)
+
+    @pytest.mark.parametrize(
+        "subset, limit, offset, expected_count",
+        [
+            ("unassigned", 1, 0, 1),  # First page of unassigned
+            ("unassigned", 1, 1, 1),  # Second page of unassigned
+            ("unassigned", 1, 2, 0),  # Beyond available unassigned items
+            ("training", 2, 0, 2),  # First page of training
+            ("training", 2, 2, 1),  # Second page of training (only 1 left)
+            ("validation", 10, 0, 2),  # All validation items
+            ("testing", 10, 0, 1),  # All testing items
+        ],
+    )
+    def test_list_dataset_items_with_subset_pagination(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_project_with_subset_items: tuple[ProjectView, list[DatasetItemDB]],
+        subset: str | None,
+        limit: int,
+        offset: int,
+        expected_count: int,
+    ) -> None:
+        """Test listing dataset items with subset filter and pagination."""
+        project, db_dataset_items = fxt_project_with_subset_items
+
+        dataset_items = fxt_dataset_service.list_dataset_items(
+            project=project,
+            limit=limit,
+            offset=offset,
+            subset=subset,
+        )
+
+        assert len(dataset_items) == expected_count
+
+    def test_subset_filter_verifies_data_correctness(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_project_with_subset_items: tuple[ProjectView, list[DatasetItemDB]],
+    ) -> None:
+        """Test that subset filter returns items with correct subset values."""
+        project, db_dataset_items = fxt_project_with_subset_items
+
+        # Unassigned items should have subset=unassigned
+        unassigned_items = fxt_dataset_service.list_dataset_items(
+            project=project,
+            limit=20,
+            offset=0,
+            subset="unassigned",
+        )
+        assert len(unassigned_items) == 2
+        for item in unassigned_items:
+            assert item.subset == DatasetItemSubset.UNASSIGNED
+
+        # Training items should have subset=training
+        training_items = fxt_dataset_service.list_dataset_items(
+            project=project,
+            limit=20,
+            offset=0,
+            subset="training",
+        )
+        assert len(training_items) == 3
+        for item in training_items:
+            assert item.subset == DatasetItemSubset.TRAINING
+
+        # Validation items should have subset=validation
+        validation_items = fxt_dataset_service.list_dataset_items(
+            project=project,
+            limit=20,
+            offset=0,
+            subset="validation",
+        )
+        assert len(validation_items) == 2
+        for item in validation_items:
+            assert item.subset == DatasetItemSubset.VALIDATION
+
+        # Testing items should have subset=testing
+        testing_items = fxt_dataset_service.list_dataset_items(
+            project=project,
+            limit=20,
+            offset=0,
+            subset="testing",
+        )
+        assert len(testing_items) == 1
+        for item in testing_items:
+            assert item.subset == DatasetItemSubset.TESTING

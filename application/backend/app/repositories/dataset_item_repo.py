@@ -50,6 +50,13 @@ class DatasetItemRepository:
             stmt = stmt.where(DatasetItemDB.annotation_data.is_not(None), DatasetItemDB.user_reviewed.is_(False))
         return stmt
 
+    @staticmethod
+    def _apply_subset_filter(stmt: Select, subset: str | None = None) -> Select:
+        """Apply subset filter to a select statement."""
+        if subset is not None:
+            stmt = stmt.where(DatasetItemDB.subset == subset)
+        return stmt
+
     def save(self, dataset_item_db: DatasetItemDB) -> DatasetItemDB:
         dataset_item_db.updated_at = datetime.now(UTC)
         self.db.add(dataset_item_db)
@@ -62,6 +69,7 @@ class DatasetItemRepository:
         end_date: datetime | None = None,
         annotation_status: str | None = None,
         label_ids: list[str] | None = None,
+        subset: str | None = None,
     ) -> int:
         # When the query involves a JOIN (e.g. when filtering by labels), count distinct items to avoid duplicates
         if label_ids:
@@ -71,6 +79,7 @@ class DatasetItemRepository:
         stmt = select(select_fn).select_from(DatasetItemDB).where(DatasetItemDB.project_id == self.project_id)
         stmt = self._apply_date_filters(stmt, start_date, end_date)
         stmt = self._apply_annotation_status_filter(stmt, annotation_status)
+        stmt = self._apply_subset_filter(stmt, subset)
         if label_ids:
             stmt = stmt.join(DatasetItemLabelDB).where(DatasetItemLabelDB.label_id.in_(label_ids))
         return self.db.scalar(stmt) or 0
@@ -83,10 +92,12 @@ class DatasetItemRepository:
         end_date: datetime | None = None,
         annotation_status: str | None = None,
         label_ids: list[str] | None = None,
+        subset: str | None = None,
     ) -> list[DatasetItemDB]:
         stmt = self._base_select()
         stmt = self._apply_date_filters(stmt, start_date, end_date)
         stmt = self._apply_annotation_status_filter(stmt, annotation_status)
+        stmt = self._apply_subset_filter(stmt, subset)
         if label_ids:
             stmt = stmt.join(DatasetItemLabelDB).where(DatasetItemLabelDB.label_id.in_(label_ids)).distinct()
         stmt = stmt.order_by(DatasetItemDB.created_at.desc()).offset(offset).limit(limit)
