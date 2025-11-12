@@ -234,7 +234,7 @@ class TestDatasetItemEndpoints:
             subset=subset,
         )
         fxt_dataset_service.list_dataset_items.assert_called_once_with(
-            project=fxt_get_project,
+            project_id=fxt_get_project.id,
             filters=DatasetItemFilters(
                 limit=10,
                 offset=0,
