@@ -10,9 +10,9 @@ from .rpn_loss import RPNCriterion
 from .rtmdet_inst_loss import RTMDetInstCriterion
 
 __all__ = [
-    "accuracy",
     "DiceLoss",
-    "RTMDetInstCriterion",
     "ROICriterion",
     "RPNCriterion",
+    "RTMDetInstCriterion",
+    "accuracy",
 ]

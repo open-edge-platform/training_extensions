@@ -11,7 +11,7 @@ from otx.metrics.hier_metric_collection import hier_metric_collection_callable
 
 
 class TestCreateEngine:
-    @pytest.fixture()
+    @pytest.fixture
     def mock_engine_subclass(self):
         """Fixture to create a mock Engine subclass."""
         mock_engine_cls = MagicMock(spec=Engine)

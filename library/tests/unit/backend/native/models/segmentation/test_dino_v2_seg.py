@@ -12,7 +12,7 @@ from otx.backend.native.models.segmentation.dino_v2_seg import DinoV2Seg
 
 
 class TestDinoV2Seg:
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_dino_v2_seg(self) -> DinoV2Seg:
         return DinoV2Seg(
             label_info=10,

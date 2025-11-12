@@ -11,4 +11,4 @@ from .rtmdet import RTMDet
 from .ssd import SSD
 from .yolox import YOLOX
 
-__all__ = ["SSD", "YOLOX", "ATSS", "RTDETR", "RTMDet", "DFine", "DEIMDFine"]
+__all__ = ["ATSS", "RTDETR", "SSD", "YOLOX", "DEIMDFine", "DFine", "RTMDet"]

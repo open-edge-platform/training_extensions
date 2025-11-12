@@ -302,11 +302,9 @@ ignore = [
     "A005", # Module is shadowing a Python built-in
 
     # flake8-annotations
-    "ANN101",   # Missing-type-self
     "ANN002",   # Missing type annotation for *args
     "ANN003",   # Missing type annotation for **kwargs
 
-    "ANN102",   # Missing type annotation for `cls` in classmethod
     "ANN204",   # Missing return type annotation for special method `__init__`
 
     "ARG002",   # Unused method argument -> some function cannot use argument
@@ -360,15 +358,15 @@ exclude = [
     "venv",
     "tests/assets",
 
-    # it will be cleaned up later
-    "for_developers/helpers.py",
-
     # Ruff complains it but don't know how to fix since it literally showed no useful logs.
     # https://github.com/openvinotoolkit/training_extensions/actions/runs/7176557723/job/19541622452?pr=2718#step:5:170
     "tests/regression/*.py",
 
     # Mostly borrowed from jsonargparse codebase
-    "src/otx/core/utils/jsonargparse.py"
+    "src/otx/core/utils/jsonargparse.py",
+
+    # Sphinx auto-generated files
+    "docs/source/conf.py",
 ]
 
 # Allow unused variables when underscore-prefixed.
@@ -409,6 +407,7 @@ notice-rgx = """
 # Declare an additional exclude rule for test code
 "tests/**/*.py" = [
     "S101",     # pytest-style allows `assert` statements in tests.
+    "S603",     # Allow for untrusted input in tests.
     "SLF001",   # We sometimes need to inspect private functions for testing.
     "TCH003",   # It doesn't seem necessary to use TYPE_CHECKING in tests.
     "PT004",    # fixture ignore type returning.

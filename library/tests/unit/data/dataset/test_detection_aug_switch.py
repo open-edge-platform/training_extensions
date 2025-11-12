@@ -18,7 +18,7 @@ from otx.data.dataset.mixins import DataAugSwitchMixin
 class TestOTXDetectionDatasetWithAugSwitch:
     """Integration tests for OTXDetectionDataset with DataAugSwitchMixin."""
 
-    @pytest.fixture()
+    @pytest.fixture
     def sample_policies(self):
         """Create sample augmentation policies."""
         return {
@@ -51,7 +51,7 @@ class TestOTXDetectionDatasetWithAugSwitch:
             },
         }
 
-    @pytest.fixture()
+    @pytest.fixture
     def data_aug_switch(self, sample_policies):
         """Create a DataAugSwitch instance."""
         with patch("otx.data.transform_libs.torchvision.TorchVisionTransformLib.generate") as mock_generate:
@@ -61,7 +61,7 @@ class TestOTXDetectionDatasetWithAugSwitch:
             switch.set_shared_epoch(shared_epoch)
             return switch
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_dm_subset(self):
         """Create a mock datumaro subset."""
         mock_subset = MagicMock()
@@ -82,7 +82,7 @@ class TestOTXDetectionDatasetWithAugSwitch:
         mock_subset.__iter__ = MagicMock(return_value=iter(mock_items))
         return mock_subset
 
-    @pytest.fixture()
+    @pytest.fixture
     def detection_dataset(self, mock_dm_subset):
         """Create an OTXDetectionDataset instance."""
         return OTXDetectionDataset(
@@ -188,9 +188,9 @@ class TestOTXDetectionDatasetWithAugSwitch:
                 assert policy_name == expected_policy_type
 
             assert detection_dataset.to_tv_image == data_aug_switch.policies[policy_name]["to_tv_image"]
-            assert (
-                detection_dataset.transforms == data_aug_switch.policies[policy_name]["transforms"]
-            ), f"transforms should be {data_aug_switch.policies[policy_name]['transforms']} but is {detection_dataset.transforms}"
+            assert detection_dataset.transforms == data_aug_switch.policies[policy_name]["transforms"], (
+                f"transforms should be {data_aug_switch.policies[policy_name]['transforms']} but is {detection_dataset.transforms}"
+            )
 
     def test_detection_dataset_without_aug_switch(self, detection_dataset):
         """Test that detection dataset works normally without augmentation switch."""

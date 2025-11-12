@@ -47,11 +47,11 @@ class TestAsyncExecutor:
     def setup(self, mocker):
         mocker.patch.object(target_file, "AsyncPipeline", side_effect=MockAsyncPipeline)
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_model(self):
         return MagicMock()
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_visualizer(self):
         visualizer = MagicMock()
         visualizer.is_quit.return_value = False
@@ -61,11 +61,11 @@ class TestAsyncExecutor:
     def test_init(self, mock_model, mock_visualizer):
         AsyncExecutor(mock_model, mock_visualizer)
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_streamer(self, mocker):
         return mocker.patch.object(target_file, "get_streamer", return_value=range(1, 4))
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_dump_frames(self, mocker):
         return mocker.patch.object(target_file, "dump_frames")
 

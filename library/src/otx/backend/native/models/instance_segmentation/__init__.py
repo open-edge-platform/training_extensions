@@ -7,4 +7,4 @@ from .maskrcnn import MaskRCNN
 from .maskrcnn_tv import MaskRCNNTV
 from .rtmdet_inst import RTMDetInst
 
-__all__ = ["MaskRCNNTV", "MaskRCNN", "RTMDetInst"]
+__all__ = ["MaskRCNN", "MaskRCNNTV", "RTMDetInst"]

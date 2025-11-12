@@ -12,7 +12,7 @@ from otx.backend.native.models.classification.heads import MultiLabelLinearClsHe
 from otx.data.entity.base import ImageInfo
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_linear_head() -> None:
     return MultiLabelLinearClsHead(
         num_classes=3,
@@ -20,7 +20,7 @@ def fxt_linear_head() -> None:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_non_linear_head() -> None:
     return MultiLabelNonLinearClsHead(
         num_classes=3,
@@ -30,7 +30,7 @@ def fxt_non_linear_head() -> None:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_data_sample() -> dict:
     return {
         "labels": torch.Tensor([[1, 1, 1], [1, 1, 1]]),
@@ -47,7 +47,7 @@ def fxt_data_sample() -> dict:
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_data_sample_with_ignore_labels() -> dict:
     return {
         "labels": torch.Tensor([[1, 1, -1], [1, 1, -1]]),

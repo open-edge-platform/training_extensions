@@ -6,4 +6,4 @@
 from .base_classifier import ImageClassifier
 from .h_label_classifier import HLabelClassifier
 
-__all__ = ["ImageClassifier", "HLabelClassifier"]
+__all__ = ["HLabelClassifier", "ImageClassifier"]

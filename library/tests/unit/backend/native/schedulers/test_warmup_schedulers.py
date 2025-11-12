@@ -10,7 +10,7 @@ from torch.optim.sgd import SGD
 from otx.backend.native.schedulers.warmup_schedulers import LinearWarmupScheduler, LinearWarmupSchedulerCallable
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_optimizer():
     model = nn.Linear(10, 10)
     return SGD(params=model.parameters(), lr=1.0)

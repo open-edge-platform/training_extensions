@@ -20,7 +20,7 @@ from otx.data.entity.base import ImageInfo
 from otx.data.entity.torch import OTXDataBatch
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_inst_seg_batch_entity() -> OTXDataBatch:
     return OTXDataBatch(
         batch_size=1,
@@ -39,7 +39,7 @@ def fxt_inst_seg_batch_entity() -> OTXDataBatch:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_inst_seg_batch_entity_with_ignored_label() -> OTXDataBatch:
     return OTXDataBatch(
         batch_size=1,
@@ -58,7 +58,7 @@ def fxt_inst_seg_batch_entity_with_ignored_label() -> OTXDataBatch:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_instance_list() -> list[InstanceData]:
     data = InstanceData(
         bboxes=torch.Tensor([[0.0, 0.0, 240, 240], [240, 240, 480, 480]]),

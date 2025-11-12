@@ -86,7 +86,7 @@ class ForwardExplainMixInForViT:
 
     @staticmethod
     def _forward_explain_image_classifier(
-        self: ImageClassifier,
+        self: ImageClassifier,  # noqa: PLW0211
         images: torch.Tensor,
         mode: str = "tensor",
         **kwargs,  # noqa: ARG004

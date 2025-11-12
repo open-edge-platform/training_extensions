@@ -7,6 +7,6 @@ from .asynchronous import AsyncExecutor
 from .synchronous import SyncExecutor
 
 __all__ = [
-    "SyncExecutor",
     "AsyncExecutor",
+    "SyncExecutor",
 ]

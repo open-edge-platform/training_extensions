@@ -10,7 +10,7 @@ from otx.backend.native.optimizers import OptimizerCallableSupportAdaptiveBS
 
 
 class TestOptimizerCallableSupportAdaptiveBS:
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_params(self):
         model = nn.Linear(10, 10)
         return model.parameters()
@@ -19,7 +19,7 @@ class TestOptimizerCallableSupportAdaptiveBS:
     def fxt_optimizer_cls(self, request):
         return request.param
 
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_invaliid_optimizer_cls(self):
         class NotOptimizer:
             pass

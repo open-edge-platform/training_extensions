@@ -11,8 +11,8 @@ from .vision_transformer import VisionTransformerBackbone
 
 __all__ = [
     "EfficientNetBackbone",
-    "TimmBackbone",
     "MobileNetV3Backbone",
-    "VisionTransformerBackbone",
+    "TimmBackbone",
     "TorchvisionBackbone",
+    "VisionTransformerBackbone",
 ]

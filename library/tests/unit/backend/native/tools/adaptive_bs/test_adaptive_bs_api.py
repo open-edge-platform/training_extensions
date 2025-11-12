@@ -20,32 +20,32 @@ from otx.backend.native.tools.adaptive_bs.runner import (
 from otx.utils.device import is_xpu_available
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_is_cuda_available(mocker) -> MagicMock:
     return mocker.patch.object(target_file, "is_cuda_available", return_value=True)
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_is_xpu_available(mocker) -> MagicMock:
     return mocker.patch.object(target_file, "is_xpu_available", return_value=False)
 
 
-@pytest.fixture()
+@pytest.fixture
 def default_bs() -> int:
     return 8
 
 
-@pytest.fixture()
+@pytest.fixture
 def train_set_size() -> int:
     return 10
 
 
-@pytest.fixture()
+@pytest.fixture
 def default_lr() -> float:
     return 0.01
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_engine(default_bs: int, train_set_size: int, default_lr: float) -> MagicMock:
     engine = MagicMock()
     engine.datamodule.train_subset.batch_size = default_bs
@@ -57,7 +57,7 @@ def mock_engine(default_bs: int, train_set_size: int, default_lr: float) -> Magi
     return engine
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_bs_search_algo_ins() -> MagicMock:
     bs_search_algo_ins = MagicMock()
     bs_search_algo_ins.auto_decrease_batch_size.return_value = 4
@@ -65,12 +65,12 @@ def mock_bs_search_algo_ins() -> MagicMock:
     return bs_search_algo_ins
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_bs_search_algo_cls(mocker, mock_bs_search_algo_ins) -> MagicMock:
     return mocker.patch.object(target_file, "BsSearchAlgo", return_value=mock_bs_search_algo_ins)
 
 
-@pytest.fixture()
+@pytest.fixture
 def train_args() -> dict[str, Any]:
     return {
         "self": MagicMock(),
@@ -119,7 +119,7 @@ def test_adapt_batch_size(
     assert get_lr(mock_engine) == pytest.approx(default_lr * sqrt(cur_bs / default_bs))
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_os(mocker) -> MagicMock:
     os = mocker.patch.object(target_file, "os")
     os.environ = {}  # noqa: B003
@@ -233,11 +233,11 @@ class TestBatchSizeFinder:
     def test_init(self):
         BatchSizeFinder()
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_active_loop(self):
         return MagicMock()
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_trainer(self, mock_active_loop) -> MagicMock:
         trainer = MagicMock()
         trainer.limit_val_batches = 100

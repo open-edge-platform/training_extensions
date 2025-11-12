@@ -16,12 +16,12 @@ from otx.data.entity.torch import OTXDataBatch
 
 
 class TestOVModel:
-    @pytest.fixture()
+    @pytest.fixture
     def input_batch(self) -> OTXDataBatch:
         image = [torch.rand(3, 10, 10) for _ in range(3)]
         return OTXDataBatch(3, image, [])
 
-    @pytest.fixture()
+    @pytest.fixture
     def model(self, get_dummy_ov_cls_model) -> OVModel:
         with tempfile.TemporaryDirectory() as tmp_dir:
             ov.save_model(get_dummy_ov_cls_model, f"{tmp_dir}/model.xml")

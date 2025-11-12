@@ -15,7 +15,7 @@ from otx.types.export import OTXExportFormatType
 from otx.types.precision import OTXPrecisionType
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_engine(tmp_path) -> OTXEngine:
     return OTXEngine(
         data="tests/assets/classification_dataset",

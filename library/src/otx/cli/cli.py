@@ -319,8 +319,7 @@ class OTXCLI:
             # pass OTXDataModule input size, mean and std to the model
             if self.datamodule.input_size is None:
                 msg = (
-                    "Input size is not specified in the datamodule. "
-                    "Ensure that the datamodule has a valid input size."
+                    "Input size is not specified in the datamodule. Ensure that the datamodule has a valid input size."
                 )
                 raise ValueError(msg)
             model_config.init_args["data_input_params"] = DataInputParams(
