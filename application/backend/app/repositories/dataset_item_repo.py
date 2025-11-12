@@ -90,7 +90,7 @@ class DatasetItemRepository:
             stmt = stmt.join(DatasetItemLabelDB).where(DatasetItemLabelDB.label_id.in_(label_ids))
         return self.db.scalar(stmt) or 0
 
-    def list_items(  # noqa: PLR0913
+    def list_items(
         self,
         limit: int,
         offset: int,
