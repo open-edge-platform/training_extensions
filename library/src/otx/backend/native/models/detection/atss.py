@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, ClassVar, Literal
+import kornia as K
 
 from otx.backend.native.exporter.base import OTXModelExporter
 from otx.backend.native.exporter.native import OTXNativeModelExporter
@@ -204,3 +205,13 @@ class ATSS(OTXDetectionModel):
     def load_from_otx_v1_ckpt(self, state_dict: dict, add_prefix: str = "model.") -> dict:
         """Load the previous OTX ckpt according to OTX2.0."""
         return OTXv1Helper.load_det_ckpt(state_dict, add_prefix)
+
+    # @property
+    # def transforms(self):
+    #     return K.augmentation.AugmentationSequential(
+    #             K.augmentation.ColorJitter(0.1, 0.1, 0.1, 0.1, p=1.0),
+    #             K.augmentation.RandomAffine(360, [0.1, 0.1], [0.7, 1.2], [30.0, 50.0], p=1.0),
+    #             K.augmentation.RandomPerspective(0.5, p=1.0),
+    #             data_keys=["images", "bbox"],
+    #             same_on_batch=False,
+    #     )

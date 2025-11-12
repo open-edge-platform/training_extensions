@@ -15,6 +15,8 @@ from typing import TYPE_CHECKING, Any, Callable, Iterator, Literal, Sequence
 import torch
 from torchmetrics import Metric, MetricCollection
 from torchvision import tv_tensors
+import kornia
+from kornia.geometry.boxes import Boxes
 
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel
 from otx.backend.native.models.utils.utils import InstanceData
@@ -175,7 +177,6 @@ class OTXDetectionModel(OTXModel):
 
         inputs["entity"] = entity
         inputs["mode"] = "loss" if self.training else "predict"
-
         return inputs
 
     def _customize_outputs(
@@ -251,6 +252,28 @@ class OTXDetectionModel(OTXModel):
             bboxes=bboxes,
             labels=labels,
         )
+
+    def apply_batch_transforms(self, inputs: OTXDataBatch) -> types.NoneType:
+        """Apply batch augmentations to Object Detection."""
+        # Convert bounding boxes to Kornia Boxes [N, 4, 2]
+        kornia_boxes = Boxes.from_tensor(inputs.bboxes, mode='xyxy')
+        self.transforms(inputs.images, kornia_boxes)
+        inputs.bboxes = kornia_boxes.to_tensor(mode='xyxy')
+
+    @property
+    def transforms(self):
+        if self.training:
+            return kornia.augmentation.AugmentationSequential(
+                    kornia.augmentation.RandomHorizontalFlip(),
+                    kornia.augmentation.Normalize(self.data_input_params.mean, self.data_input_params.std),
+                    data_keys=["input", "bbox"],
+                    same_on_batch=False
+            )
+        return kornia.augmentation.AugmentationSequential(
+            kornia.augmentation.Normalize(self.data_input_params.mean, self.data_input_params.std),
+            data_keys=["input", "bbox"],
+        )
+
 
     def forward_tiles(self, inputs: OTXTileBatchDataEntity) -> OTXPredBatch:
         """Unpack detection tiles.

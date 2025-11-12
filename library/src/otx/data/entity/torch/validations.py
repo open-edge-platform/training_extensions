@@ -9,6 +9,7 @@ from dataclasses import fields
 
 import numpy as np
 import torch
+from kornia.geometry.boxes import Boxes
 from datumaro import Polygon
 from torchvision.tv_tensors import BoundingBoxes, Mask
 
@@ -61,6 +62,7 @@ class ValidateItemMixin:
             raise TypeError(msg)
         if label.dtype != torch.long:
             msg = f"Label must have dtype torch.long, but got {label.dtype}"
+            print(label)
             raise ValueError(msg)
         # detection tasks allow multiple labels so the shape is [B, N]
         if label.ndim > 2:

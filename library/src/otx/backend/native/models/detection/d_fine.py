@@ -17,6 +17,7 @@ from otx.backend.native.models.detection.rtdetr import RTDETR
 from otx.backend.native.models.utils.utils import load_checkpoint
 from otx.config.data import TileConfig
 from otx.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
+import kornia
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -172,3 +173,17 @@ class DFine(RTDETR):
             ckpt.pop("model.decoder.anchors")
             ckpt.pop("model.decoder.valid_mask")
             return super().load_state_dict(ckpt, *args, strict=False, **kwargs)
+
+    @property
+    def transforms(self):
+        if self.training:
+            return kornia.augmentation.AugmentationSequential(
+                    kornia.augmentation.RandomHorizontalFlip(),
+                    kornia.augmentation.Normalize(self.data_input_params.mean, self.data_input_params.std),
+                    data_keys=["input", "bbox"],
+                    same_on_batch=False
+            )
+        return kornia.augmentation.AugmentationSequential(
+            kornia.augmentation.Normalize(self.data_input_params.mean, self.data_input_params.std),
+            data_keys=["input", "bbox"],
+        )

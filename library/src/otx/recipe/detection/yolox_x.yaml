@@ -69,75 +69,74 @@ overrides:
         - class_path: otx.data.transform_libs.torchvision.Resize
           init_args:
             scale: $(input_size)
-            keep_ratio: true
-            transform_bbox: true
-        - class_path: otx.data.transform_libs.torchvision.CachedMosaic
-          init_args:
-            random_pop: false
-            max_cached_images: 20
-            img_scale: $(input_size) # (H, W)
-        - class_path: otx.data.transform_libs.torchvision.RandomAffine
-          init_args:
-            border: $(input_size) * -0.5
-        - class_path: otx.data.transform_libs.torchvision.CachedMixUp
-          init_args:
-            img_scale: $(input_size) # (H, W)
-            ratio_range:
-              - 1.0
-              - 1.0
-            probability: 0.5
-            random_pop: false
-            max_cached_images: 10
-        - class_path: torchvision.transforms.v2.RandomPhotometricDistort
-          enable: false
-          init_args:
-            brightness:
-              - 0.875
-              - 1.125
-            contrast:
-              - 0.5
-              - 1.5
-            saturation:
-              - 0.5
-              - 1.5
-            hue:
-              - -0.05
-              - 0.05
-            p: 0.5
-        - class_path: otx.data.transform_libs.torchvision.YOLOXHSVRandomAug
-        - class_path: otx.data.transform_libs.torchvision.RandomFlip
-          init_args:
-            probability: 0.5
-            is_numpy_to_tvtensor: false
-        - class_path: otx.data.transform_libs.torchvision.Pad
-          init_args:
-            pad_to_square: true
-            pad_val: 114
-        - class_path: torchvision.transforms.v2.RandomVerticalFlip
-          enable: false
-          init_args:
-            p: 0.5
-        - class_path: otx.data.transform_libs.torchvision.RandomGaussianBlur
-          enable: false
-          init_args:
-            kernel_size: 5
-            sigma:
-              - 0.1
-              - 2.0
-            probability: 0.5
+        # - class_path: otx.data.transform_libs.torchvision.CachedMosaic
+        #   init_args:
+        #     random_pop: false
+        #     max_cached_images: 20
+        #     img_scale: $(input_size) # (H, W)
+        # - class_path: otx.data.transform_libs.torchvision.RandomAffine
+        #   init_args:
+        #     border: $(input_size) * -0.5
+        # - class_path: otx.data.transform_libs.torchvision.CachedMixUp
+        #   init_args:
+        #     img_scale: $(input_size) # (H, W)
+        #     ratio_range:
+        #       - 1.0
+        #       - 1.0
+        #     probability: 0.5
+        #     random_pop: false
+        #     max_cached_images: 10
+        # - class_path: torchvision.transforms.v2.RandomPhotometricDistort
+        #   enable: false
+        #   init_args:
+        #     brightness:
+        #       - 0.875
+        #       - 1.125
+        #     contrast:
+        #       - 0.5
+        #       - 1.5
+        #     saturation:
+        #       - 0.5
+        #       - 1.5
+        #     hue:
+        #       - -0.05
+        #       - 0.05
+        #     p: 0.5
+        # - class_path: otx.data.transform_libs.torchvision.YOLOXHSVRandomAug
+        # - class_path: otx.data.transform_libs.torchvision.RandomFlip
+        #   init_args:
+        #     probability: 0.5
+        #     is_numpy_to_tvtensor: false
+        # - class_path: otx.data.transform_libs.torchvision.Pad
+        #   init_args:
+        #     pad_to_square: true
+        #     pad_val: 114
+        # - class_path: torchvision.transforms.v2.RandomVerticalFlip
+        #   enable: false
+        #   init_args:
+        #     p: 0.5
+        # - class_path: otx.data.transform_libs.torchvision.RandomGaussianBlur
+        #   enable: false
+        #   init_args:
+        #     kernel_size: 5
+        #     sigma:
+        #       - 0.1
+        #       - 2.0
+        #     probability: 0.5
         - class_path: torchvision.transforms.v2.ToDtype
           init_args:
             dtype: ${as_torch_dtype:torch.float32}
-        - class_path: otx.data.transform_libs.torchvision.RandomGaussianNoise
-          enable: false
-          init_args:
-            mean: 0.0
-            sigma: 0.1
-            probability: 0.5
-        - class_path: torchvision.transforms.v2.Normalize
-          init_args:
-            mean: [0.0, 0.0, 0.0]
-            std: [1.0, 1.0, 1.0]
+            scale: true
+        # - class_path: otx.data.transform_libs.torchvision.RandomGaussianNoise
+        #   enable: false
+        #   init_args:
+        #     mean: 0.0
+        #     sigma: 0.1
+        #     probability: 0.5
+        # - class_path: torchvision.transforms.v2.Normalize
+        #   init_args:
+        #     mean: [0.0, 0.0, 0.0]
+        #     std: [1.0, 1.0, 1.0]
       sampler:
         class_path: otx.data.samplers.balanced_sampler.BalancedSampler
 
