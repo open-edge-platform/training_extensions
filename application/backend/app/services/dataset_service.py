@@ -85,7 +85,7 @@ class DatasetService(BaseSessionManagedService):
 
         self.projects_dir = data_dir / "projects"
         self._label_service = label_service
-        self._session_managed_services.append(label_service)
+        self.register_managed_services(label_service)
 
     @staticmethod
     def _read_image_from_ndarray(data: np.ndarray) -> Image.Image:
@@ -354,13 +354,13 @@ class DatasetService(BaseSessionManagedService):
         repo.set_subset(obj_ids={str(dataset_item_id)}, subset=subset)
         return self.get_dataset_item_by_id(project_id=project_id, dataset_item_id=dataset_item_id)
 
-    def get_dm_dataset(self, project_id: UUID, task: TaskBase) -> dm.Dataset:
+    def get_dm_dataset(
+        self, project_id: UUID, task: TaskBase, annotation_status: DatasetItemAnnotationStatus | None
+    ) -> dm.Dataset:
         def _get_dataset_items(offset: int, limit: int) -> list[DatasetItem]:
             return self.list_dataset_items(
                 project_id=project_id,
-                filters=DatasetItemFilters(
-                    limit=limit, offset=offset, annotation_status=DatasetItemAnnotationStatus.REVIEWED
-                ),
+                filters=DatasetItemFilters(limit=limit, offset=offset, annotation_status=annotation_status),
             )
 
         def _get_image_path(item: DatasetItem) -> str:

@@ -13,6 +13,7 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from app.core.run import ExecutionContext
+from app.models import DatasetItemAnnotationStatus
 from app.services import BaseWeightsService, DatasetService
 
 from .base import Trainer, step
@@ -122,7 +123,7 @@ class OTXTrainer(Trainer):
 
         with self._db_session_factory() as db:
             self._dataset_service.set_db_session(db)
-            dm_dataset = self._dataset_service.get_dm_dataset(project_id, task)
+            dm_dataset = self._dataset_service.get_dm_dataset(project_id, task, DatasetItemAnnotationStatus.REVIEWED)
             self._training_dataset = dm_dataset.filter_by_subset(Subset.TRAINING)
             self._validation_dataset = dm_dataset.filter_by_subset(Subset.VALIDATION)
             self._testing_dataset = dm_dataset.filter_by_subset(Subset.TESTING)

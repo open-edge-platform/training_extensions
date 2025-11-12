@@ -110,6 +110,10 @@ class BaseSessionManagedService(ABC):
         for service in self._session_managed_services:
             service.set_db_session(db_session)
 
+    def register_managed_services(self, *services: "BaseSessionManagedService") -> None:
+        """Register a child service that also requires session management."""
+        self._session_managed_services.extend(services)
+
     @property
     def db_session(self) -> Session:
         if self._db_session is not None:

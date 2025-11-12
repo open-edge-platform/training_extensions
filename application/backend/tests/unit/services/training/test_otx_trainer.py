@@ -9,7 +9,7 @@ from uuid import uuid4
 import pytest
 
 from app.core.run import ExecutionContext
-from app.models import DatasetItemSubset, TaskType
+from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, TaskType
 from app.schemas.project import TaskBase
 from app.services import DatasetService
 from app.services.base_weights_service import BaseWeightsService
@@ -312,7 +312,9 @@ class TestOTXTrainerCreateTrainingDataset:
 
         # Assert
         fxt_dataset_service.get_dm_dataset.assert_called_once_with(
-            project_id, TaskBase(task_type=TaskType.DETECTION, exclusive_labels=True)
+            project_id,
+            TaskBase(task_type=TaskType.DETECTION, exclusive_labels=True),
+            DatasetItemAnnotationStatus.REVIEWED,
         )
         assert otx_trainer._training_dataset == mock_training_dataset
         assert otx_trainer._validation_dataset == mock_validation_dataset
