@@ -187,6 +187,13 @@ jobs:
           version: "0.9.7"
           enable-cache: false
 
+      - name: Install OpenCV dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgl1 \
+            libglib2.0-0
+
       - name: Installing dependencies
         working-directory: library
         run: |
