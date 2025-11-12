@@ -73,8 +73,16 @@ dev = [
 lint = [
     "ruff==0.9.3",
     "mypy~=1.6.1",
+    "attrs",
     "types-PyYAML~=6.0.12",
+    "types-aiofiles",
     "types-requests~=2.32.4",
+    "types-Deprecated",
+    "types-docutils",
+    "types_futures",
+    "types-setuptools",
+    "types-python-dateutil",
+    "tokenize-rt==3.2.0"
 ]
 
 [project.optional-dependencies]

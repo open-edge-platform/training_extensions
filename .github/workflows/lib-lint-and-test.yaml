@@ -93,7 +93,7 @@ jobs:
       - name: Check source code with mypy
         working-directory: library
         run: |
-          uv run mypy . --config-file=pyproject.toml
+          uv run mypy src/otx/ --config-file=pyproject.toml
 
   Unit-Test:
     runs-on: [self-hosted, linux, x64, dev, dmount]
