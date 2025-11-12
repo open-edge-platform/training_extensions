@@ -13,7 +13,7 @@ from otx.data.entity.base import OTXBatchLossEntity
 from otx.data.entity.torch import OTXPredBatch
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_multi_class_cls_model():
     return EfficientNetMulticlassCls(
         model_name="efficientnet_b0",
@@ -83,7 +83,7 @@ class TestEfficientNetForMulticlassCls:
         assert all(param.requires_grad for param in model.parameters())
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_multi_label_cls_model():
     return EfficientNetMultilabelCls(
         model_name="efficientnet_b0",
@@ -153,7 +153,7 @@ class TestEfficientNetForMultilabelCls:
         assert all(param.requires_grad for param in model.parameters())
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_h_label_cls_model(fxt_hlabel_cifar):
     return EfficientNetHLabelCls(
         model_name="efficientnet_b0",

@@ -12,13 +12,13 @@ from otx.backend.openvino.models import OVModel, OVMultilabelClassificationModel
 from otx.types.label import NullLabelInfo
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_ov_model(tmp_path, get_dummy_ov_cls_model) -> OVModel:
     ov.save_model(get_dummy_ov_cls_model, f"{tmp_path}/model.xml")
     return OVMultilabelClassificationModel(model_path=f"{tmp_path}/model.xml")
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_engine(tmp_path, fxt_ov_model) -> OVEngine:
     data_root = "tests/assets/multilabel_classification/"
 

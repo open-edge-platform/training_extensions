@@ -39,8 +39,7 @@ class BsSearchAlgo:
             msg = "train data set size should be bigger than 0."
             raise ValueError(msg)
 
-        if max_bs < default_bs:
-            default_bs = max_bs
+        default_bs = min(max_bs, default_bs)
 
         self._train_func = train_func
         self._default_bs = default_bs
@@ -74,8 +73,7 @@ class BsSearchAlgo:
             self._bs_try_history[bs] = max_memory_reserved
 
         logger.debug(
-            f"Adapting Batch size => bs : {bs}, OOM : {oom}, "
-            f"memory usage : {max_memory_reserved / self._total_mem}%",
+            f"Adapting Batch size => bs : {bs}, OOM : {oom}, memory usage : {max_memory_reserved / self._total_mem}%",
         )
 
         return oom, max_memory_reserved
@@ -101,8 +99,7 @@ class BsSearchAlgo:
             oom, max_memory_reserved = self._try_batch_size(current_bs)
             # If memory usage is too close to limit, OOM can be raised during training
             if oom or max_memory_reserved > self._mem_upper_bound:
-                if current_bs < lowest_unavailable_bs:
-                    lowest_unavailable_bs = current_bs
+                lowest_unavailable_bs = min(current_bs, lowest_unavailable_bs)
                 current_bs = self._get_even_center_val(current_bs, available_bs)
             else:
                 available_bs = current_bs
@@ -250,10 +247,7 @@ class BsSearchAlgo:
             else:
                 estimated_bs = bs_arr[cur_max_bs_idx][0]
 
-        if estimated_bs > self._max_bs:
-            estimated_bs = self._max_bs
-
-        return estimated_bs
+        return min(estimated_bs, self._max_bs)
 
 
 def _run_trial(train_func: Callable[[int], Any], bs: int, trial_queue: mp.Queue) -> None:

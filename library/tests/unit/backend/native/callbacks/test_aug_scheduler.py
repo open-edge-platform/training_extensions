@@ -18,7 +18,7 @@ from otx.backend.native.callbacks.aug_scheduler import AugmentationSchedulerCall
 class TestDataAugSwitch:
     """Test cases for DataAugSwitch."""
 
-    @pytest.fixture()
+    @pytest.fixture
     def sample_policies(self):
         """Create sample augmentation policies."""
         return {
@@ -48,12 +48,12 @@ class TestDataAugSwitch:
             },
         }
 
-    @pytest.fixture()
+    @pytest.fixture
     def policy_epochs(self):
         """Create sample policy epochs."""
         return [4, 29, 50]
 
-    @pytest.fixture()
+    @pytest.fixture
     def data_aug_switch(self, policy_epochs, sample_policies):
         """Create a DataAugSwitch instance."""
         with patch("otx.data.transform_libs.torchvision.TorchVisionTransformLib.generate") as mock_generate:
@@ -200,29 +200,29 @@ class TestDataAugSwitch:
 class TestAugmentationSchedulerCallback:
     """Test cases for AugmentationSchedulerCallback."""
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_data_aug_switch(self):
         """Create a mock DataAugSwitch."""
         return MagicMock(spec=DataAugSwitch)
 
-    @pytest.fixture()
+    @pytest.fixture
     def callback_with_switch(self, mock_data_aug_switch):
         """Create callback with DataAugSwitch."""
         return AugmentationSchedulerCallback(mock_data_aug_switch)
 
-    @pytest.fixture()
+    @pytest.fixture
     def callback_without_switch(self):
         """Create callback without DataAugSwitch."""
         return AugmentationSchedulerCallback()
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_trainer(self):
         """Create a mock trainer."""
         trainer = MagicMock(spec=Trainer)
         trainer.current_epoch = 10
         return trainer
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_pl_module(self):
         """Create a mock Lightning module."""
         return MagicMock(spec=LightningModule)
@@ -302,7 +302,7 @@ class TestAugmentationSchedulerCallback:
 class TestDataAugSwitchIntegration:
     """Integration tests for DataAugSwitch and AugmentationSchedulerCallback."""
 
-    @pytest.fixture()
+    @pytest.fixture
     def sample_policies(self):
         """Create sample augmentation policies."""
         return {
@@ -332,7 +332,7 @@ class TestDataAugSwitchIntegration:
             },
         }
 
-    @pytest.fixture()
+    @pytest.fixture
     def integration_setup(self, sample_policies):
         """Set up DataAugSwitch and AugmentationSchedulerCallback for integration testing."""
         with patch("otx.data.transform_libs.torchvision.TorchVisionTransformLib.generate") as mock_generate:

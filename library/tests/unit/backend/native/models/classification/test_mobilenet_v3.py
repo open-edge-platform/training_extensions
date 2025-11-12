@@ -13,7 +13,7 @@ from otx.data.entity.base import OTXBatchLossEntity
 from otx.data.entity.torch import OTXPredBatch
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_multi_class_cls_model():
     return MobileNetV3MulticlassCls(
         model_name="mobilenetv3_large",
@@ -83,7 +83,7 @@ class TestMobileNetV3MulticlassCls:
         assert all(param.requires_grad for param in model.parameters())
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_multi_label_cls_model():
     return MobileNetV3MultilabelCls(
         model_name="mobilenetv3_large",
@@ -153,7 +153,7 @@ class TestMobileNetV3MultilabelCls:
         assert all(param.requires_grad for param in model.parameters())
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_h_label_cls_model(fxt_hlabel_cifar):
     return MobileNetV3HLabelCls(
         model_name="mobilenetv3_large",

@@ -7,4 +7,4 @@ from .anchor_generator import AnchorGenerator, SSDAnchorGeneratorClustered
 from .base_prior_generator import BasePriorGenerator
 from .point_generator import MlvlPointGenerator
 
-__all__ = ["AnchorGenerator", "SSDAnchorGeneratorClustered", "BasePriorGenerator", "MlvlPointGenerator"]
+__all__ = ["AnchorGenerator", "BasePriorGenerator", "MlvlPointGenerator", "SSDAnchorGeneratorClustered"]

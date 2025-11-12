@@ -7,4 +7,4 @@ from .csp_darknet import CSPDarknet
 from .cspnext import CSPNeXt
 from .presnet import PResNet
 
-__all__ = ["CSPDarknet", "PResNet", "CSPNeXt"]
+__all__ = ["CSPDarknet", "CSPNeXt", "PResNet"]

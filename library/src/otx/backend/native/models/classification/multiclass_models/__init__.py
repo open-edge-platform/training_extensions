@@ -12,7 +12,7 @@ from .vit import VisionTransformerMulticlassCls
 __all__ = [
     "EfficientNetMulticlassCls",
     "MobileNetV3MulticlassCls",
-    "TimmModelMulticlassCls",
     "TVModelMulticlassCls",
+    "TimmModelMulticlassCls",
     "VisionTransformerMulticlassCls",
 ]

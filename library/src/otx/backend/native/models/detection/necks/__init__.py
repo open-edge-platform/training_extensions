@@ -8,4 +8,4 @@ from .fpn import FPN
 from .hybrid_encoder import HybridEncoder
 from .yolox_pafpn import YOLOXPAFPN
 
-__all__ = ["CSPNeXtPAFPN", "FPN", "HybridEncoder", "YOLOXPAFPN"]
+__all__ = ["FPN", "YOLOXPAFPN", "CSPNeXtPAFPN", "HybridEncoder"]

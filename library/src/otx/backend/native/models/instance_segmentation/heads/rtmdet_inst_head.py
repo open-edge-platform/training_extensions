@@ -350,7 +350,7 @@ class RTMDetInstHead(RTMDetHead):
         )
 
         total_bytes = mask_logits.element_size() * masks.nelement()
-        num_chunks = int(math.ceil(total_bytes / (gpu_mem_limit * 1024) ** 3))
+        num_chunks = math.ceil(total_bytes / (gpu_mem_limit * 1024) ** 3)
         n = mask_logits.shape[1]
         chunks = torch.chunk(
             torch.arange(n, device=mask_logits.device),

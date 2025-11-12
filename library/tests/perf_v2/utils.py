@@ -149,15 +149,15 @@ def setup_output_root(config: Namespace, task: OTXTaskType) -> Path:
 
 def get_version_tags(current_date: str) -> dict[str, str]:
     try:
-        version_str = subprocess.check_output(["otx", "--version"]).decode("ascii").strip()[4:]  # noqa: S603, S607
+        version_str = subprocess.check_output(["otx", "--version"]).decode("ascii").strip()[4:]  # noqa: S607
     except Exception:
         version_str = "unknown"
     try:
-        branch_str = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"]).decode("ascii").strip()  # noqa: S603, S607
+        branch_str = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"]).decode("ascii").strip()  # noqa: S607
     except Exception:
         branch_str = os.environ.get("GH_CTX_REF_NAME", "unknown")
     try:
-        commit_str = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).decode("ascii").strip()  # noqa: S603, S607
+        commit_str = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).decode("ascii").strip()  # noqa: S607
     except Exception:
         commit_str = os.environ.get("GH_CTX_SHA", "unknown")
     version_tags = {
@@ -179,9 +179,9 @@ def build_tags(config: Namespace, version_tags: dict[str, str]) -> dict[str, str
         "cpu_info": get_cpu_info()["brand_raw"],
     }
     if config.device == "gpu":
-        tags["accelerator_info"] = subprocess.check_output(["nvidia-smi", "-L"]).decode().strip()  # noqa: S603, S607
+        tags["accelerator_info"] = subprocess.check_output(["nvidia-smi", "-L"]).decode().strip()  # noqa: S607
     elif config.device == "xpu":
-        raw = subprocess.check_output(["xpu-smi", "discovery", "--dump", "1,2"]).decode().strip()  # noqa: S603, S607
+        raw = subprocess.check_output(["xpu-smi", "discovery", "--dump", "1,2"]).decode().strip()  # noqa: S607
         tags["accelerator_info"] = "\n".join(
             [ret.replace('"', "").replace(",", " : ") for ret in raw.split("\n")[1:]],
         )

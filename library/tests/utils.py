@@ -24,7 +24,7 @@ def run_main(command_cfg: list[str], open_subprocess: bool) -> None:
 def _run_main_with_open_subprocess(command_cfg) -> None:
     try:
         subprocess.run(
-            [sys.executable, __file__, *command_cfg],  # noqa: S603
+            [sys.executable, __file__, *command_cfg],
             capture_output=True,
             check=True,
         )

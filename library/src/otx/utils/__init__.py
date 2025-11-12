@@ -5,4 +5,4 @@
 
 from .signal import append_main_proc_signal_handler, append_signal_handler
 
-__all__ = ["append_signal_handler", "append_main_proc_signal_handler"]
+__all__ = ["append_main_proc_signal_handler", "append_signal_handler"]

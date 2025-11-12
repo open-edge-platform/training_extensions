@@ -12,9 +12,9 @@ from .smooth_l1_loss import L1Loss, smooth_l1_loss
 __all__ = [
     "CrossEntropyLoss",
     "CrossSigmoidFocalLoss",
-    "QualityFocalLoss",
     "GIoULoss",
     "IoULoss",
     "L1Loss",
+    "QualityFocalLoss",
     "smooth_l1_loss",
 ]

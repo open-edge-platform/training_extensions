@@ -13,12 +13,12 @@ from .multilabel_classification import OVMultilabelClassificationModel
 from .segmentation import OVSegmentationModel
 
 __all__ = [
-    "OVModel",
     "OVDetectionModel",
-    "OVMulticlassClassificationModel",
-    "OVMultilabelClassificationModel",
-    "OVSegmentationModel",
     "OVHlabelClassificationModel",
     "OVInstanceSegmentationModel",
     "OVKeypointDetectionModel",
+    "OVModel",
+    "OVMulticlassClassificationModel",
+    "OVMultilabelClassificationModel",
+    "OVSegmentationModel",
 ]

@@ -12,9 +12,9 @@ from .yolox_loss import YOLOXCriterion
 
 __all__ = [
     "ATSSCriterion",
+    "DFINECriterion",
     "DetrCriterion",
     "RTMDetCriterion",
     "SSDCriterion",
     "YOLOXCriterion",
-    "DFINECriterion",
 ]

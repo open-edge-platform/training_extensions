@@ -53,7 +53,7 @@ class MockVideo:
         return
 
 
-@pytest.fixture()
+@pytest.fixture
 def seg_data_entity() -> OTXDataItem:
     masks = torch.randint(low=0, high=2, size=(1, 112, 224), dtype=torch.uint8)
     return OTXDataItem(
@@ -64,7 +64,7 @@ def seg_data_entity() -> OTXDataItem:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def det_data_entity() -> OTXDataItem:
     return OTXDataItem(
         image=tv_tensors.Image(torch.randint(low=0, high=256, size=(3, 112, 224), dtype=torch.uint8)),
@@ -74,7 +74,7 @@ def det_data_entity() -> OTXDataItem:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def det_data_entity_with_masks() -> OTXDataItem:
     """Create a data entity with masks for testing."""
     img_size = (112, 224)
@@ -102,7 +102,7 @@ def det_data_entity_with_masks() -> OTXDataItem:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def det_data_entity_empty_masks() -> OTXDataItem:
     """Create a data entity with empty masks for testing."""
     img_size = (112, 224)
@@ -123,7 +123,7 @@ def det_data_entity_empty_masks() -> OTXDataItem:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def det_data_entity_with_polygons() -> OTXDataItem:
     """Create a data entity with polygons for testing."""
     img_size = (112, 224)
@@ -158,7 +158,7 @@ def det_data_entity_with_polygons() -> OTXDataItem:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def det_data_entity_empty_polygons() -> OTXDataItem:
     """Create a data entity with empty polygons for testing."""
     img_size = (112, 224)
@@ -180,7 +180,7 @@ def det_data_entity_empty_polygons() -> OTXDataItem:
 
 
 class TestMinIoURandomCrop:
-    @pytest.fixture()
+    @pytest.fixture
     def min_iou_random_crop(self) -> MinIoURandomCrop:
         return MinIoURandomCrop(is_numpy_to_tvtensor=False)
 
@@ -199,7 +199,7 @@ class TestMinIoURandomCrop:
 
 
 class TestResize:
-    @pytest.fixture()
+    @pytest.fixture
     def resize(self) -> Resize:
         return Resize(scale=(128, 96), is_numpy_to_tvtensor=False)  # (64, 64) -> (128, 96)
 
@@ -279,7 +279,7 @@ class TestResize:
 
 
 class TestRandomFlip:
-    @pytest.fixture()
+    @pytest.fixture
     def random_flip(self) -> RandomFlip:
         return RandomFlip(probability=1.0, is_numpy_to_tvtensor=False)
 
@@ -318,7 +318,7 @@ class TestRandomFlip:
 
 
 class TestPhotoMetricDistortion:
-    @pytest.fixture()
+    @pytest.fixture
     def photo_metric_distortion(self) -> PhotoMetricDistortion:
         return PhotoMetricDistortion(is_numpy_to_tvtensor=False)
 
@@ -330,23 +330,23 @@ class TestPhotoMetricDistortion:
 
 
 class TestRandomAffine:
-    @pytest.fixture()
+    @pytest.fixture
     def random_affine(self) -> RandomAffine:
         return RandomAffine(is_numpy_to_tvtensor=False)
 
-    @pytest.fixture()
+    @pytest.fixture
     def random_affine_with_mask_transform(self) -> RandomAffine:
         return RandomAffine(transform_mask=True, mask_fill_value=0, is_numpy_to_tvtensor=False)
 
-    @pytest.fixture()
+    @pytest.fixture
     def random_affine_without_mask_transform(self) -> RandomAffine:
         return RandomAffine(transform_mask=False, is_numpy_to_tvtensor=False)
 
-    @pytest.fixture()
+    @pytest.fixture
     def random_affine_with_polygon_transform(self) -> RandomAffine:
         return RandomAffine(transform_polygon=True, is_numpy_to_tvtensor=False)
 
-    @pytest.fixture()
+    @pytest.fixture
     def random_affine_with_mask_and_polygon_transform(self) -> RandomAffine:
         return RandomAffine(transform_mask=True, transform_polygon=True, mask_fill_value=0, is_numpy_to_tvtensor=False)
 
@@ -580,12 +580,12 @@ class TestRandomAffine:
 
         # Since transform_mask is False, masks should remain unchanged
         # However, they might still be filtered based on valid bounding boxes
-        assert (
-            results.masks.shape[0] == results.bboxes.shape[0]
-        ), f"results.masks.shape[0] = {results.masks.shape[0]}, results.bboxes.shape[0] = {results.bboxes.shape[0]}"
-        assert (
-            results.masks.shape[0] == results.label.shape[0]
-        ), f"results.masks.shape[0] = {results.masks.shape[0]}, results.label.shape[0] = {results.label.shape[0]}"
+        assert results.masks.shape[0] == results.bboxes.shape[0], (
+            f"results.masks.shape[0] = {results.masks.shape[0]}, results.bboxes.shape[0] = {results.bboxes.shape[0]}"
+        )
+        assert results.masks.shape[0] == results.label.shape[0], (
+            f"results.masks.shape[0] = {results.masks.shape[0]}, results.label.shape[0] = {results.label.shape[0]}"
+        )
 
     def test_forward_with_empty_masks(
         self,
@@ -705,7 +705,7 @@ class TestRandomAffine:
 
 
 class TestCachedMosaic:
-    @pytest.fixture()
+    @pytest.fixture
     def cached_mosaic(self) -> CachedMosaic:
         return CachedMosaic(img_scale=(128, 128), random_pop=False, max_cached_images=20, is_numpy_to_tvtensor=False)
 
@@ -757,7 +757,7 @@ class TestCachedMosaic:
 
 
 class TestCachedMixUp:
-    @pytest.fixture()
+    @pytest.fixture
     def cached_mixup(self) -> CachedMixUp:
         return CachedMixUp(
             ratio_range=(1.0, 1.0), probability=1.0, random_pop=False, max_cached_images=10, is_numpy_to_tvtensor=False
@@ -812,7 +812,7 @@ class TestCachedMixUp:
 
 
 class TestYOLOXHSVRandomAug:
-    @pytest.fixture()
+    @pytest.fixture
     def yolox_hsv_random_aug(self) -> YOLOXHSVRandomAug:
         return YOLOXHSVRandomAug(is_numpy_to_tvtensor=False)
 
@@ -955,14 +955,14 @@ class TestRandomResize:
 
 
 class TestRandomCrop:
-    @pytest.fixture()
+    @pytest.fixture
     def entity(self) -> OTXDataItem:
         return OTXDataItem(
             image=torch.randn((3, 24, 32), dtype=torch.float32),
             img_info=ImageInfo(img_idx=0, img_shape=(24, 32), ori_shape=(24, 32)),
         )
 
-    @pytest.fixture()
+    @pytest.fixture
     def det_entity(self) -> OTXDataItem:
         return OTXDataItem(
             image=torch.randn((3, 10, 10), dtype=torch.float32),
@@ -975,7 +975,7 @@ class TestRandomCrop:
             label=torch.LongTensor([0, 1]),
         )
 
-    @pytest.fixture()
+    @pytest.fixture
     def iseg_entity(self) -> OTXDataItem:
         return OTXDataItem(
             image=torch.randn((3, 10, 10), dtype=torch.float32),
@@ -1162,7 +1162,7 @@ class TestRandomCrop:
 
 
 class TestTopdownAffine:
-    @pytest.fixture()
+    @pytest.fixture
     def keypoint_det_entity(self) -> OTXDataItem:
         return OTXDataItem(
             image=torch.randint(0, 255, size=(3, 10, 10), dtype=torch.float32),
