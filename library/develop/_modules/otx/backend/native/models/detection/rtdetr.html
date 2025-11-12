@@ -571,7 +571,7 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_forward_explain_detection</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>  <span class="c1"># noqa: ANN001</span>
+        <span class="bp">self</span><span class="p">,</span>  <span class="c1"># noqa: ANN001, PLW0211</span>
         <span class="n">entity</span><span class="p">:</span> <span class="n">OTXDataBatch</span><span class="p">,</span>
         <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;tensor&quot;</span><span class="p">,</span>  <span class="c1"># noqa: ARG004</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>

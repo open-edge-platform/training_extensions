@@ -590,8 +590,7 @@
             <span class="c1"># pass OTXDataModule input size, mean and std to the model</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">datamodule</span><span class="o">.</span><span class="n">input_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="s2">&quot;Input size is not specified in the datamodule. &quot;</span>
-                    <span class="s2">&quot;Ensure that the datamodule has a valid input size.&quot;</span>
+                    <span class="s2">&quot;Input size is not specified in the datamodule. Ensure that the datamodule has a valid input size.&quot;</span>
                 <span class="p">)</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="n">model_config</span><span class="o">.</span><span class="n">init_args</span><span class="p">[</span><span class="s2">&quot;data_input_params&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">DataInputParams</span><span class="p">(</span>

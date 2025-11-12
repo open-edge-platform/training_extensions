@@ -17,34 +17,34 @@ otx.models
 
    .. autosummary::
    
-      Padim
-      Stfpm
-      Uflow
-      EfficientNet
-      TimmModel
-      MobileNetV3
-      TVModel
-      VisionTransformer
       ATSS
-      DFine
-      SSD
-      RTMDet
       RTDETR
+      SSD
+      DFine
+      DinoV2Seg
+      EfficientNet
+      LiteHRNet
       MaskRCNN
       MaskRCNNTV
-      RTMDetInst
-      RTMPose
-      DinoV2Seg
-      LiteHRNet
-      SegNext
-      OVModel
+      MobileNetV3
       OVDetectionModel
-      OVMulticlassClassificationModel
-      OVMultilabelClassificationModel
-      OVSegmentationModel
       OVHlabelClassificationModel
       OVInstanceSegmentationModel
       OVKeypointDetectionModel
+      OVModel
+      OVMulticlassClassificationModel
+      OVMultilabelClassificationModel
+      OVSegmentationModel
+      Padim
+      RTMDet
+      RTMDetInst
+      RTMPose
+      SegNext
+      Stfpm
+      TVModel
+      TimmModel
+      Uflow
+      VisionTransformer
    
    
 

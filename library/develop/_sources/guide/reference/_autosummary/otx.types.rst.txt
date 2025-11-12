@@ -17,11 +17,11 @@ otx.types
 
    .. autosummary::
    
-      LabelInfo
       HLabelInfo
-      SegLabelInfo
+      LabelInfo
       NullLabelInfo
       OTXTaskType
+      SegLabelInfo
    
    
 
