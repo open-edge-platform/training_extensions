@@ -277,7 +277,7 @@ class DirStreamer(BaseStreamer):
         if not self.dir.is_dir():
             msg = f"Can't find the dir by {input_path}"
             raise RuntimeError(msg)
-        self.names = sorted(self.dir.iterdir())
+        self.names = sorted(p.name for p in self.dir.iterdir())
         if not self.names:
             msg = f"The dir {input_path} is empty"
             raise RuntimeError(msg)
