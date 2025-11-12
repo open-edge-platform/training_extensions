@@ -73,12 +73,12 @@ jobs:
           persist-credentials: false
 
       - name: Initial cleanup
-        uses: ./.github/actions/cleanup-runner
+        uses: open-edge-platform/geti-ci/actions/cleanup-runner@b7d997c1651b1e1b99a280033bd268b55ccb7923
         with:
           type: "initial"
 
       - name: Pre-build cleanup
-        uses: ./.github/actions/cleanup-runner
+        uses: open-edge-platform/geti-ci/actions/cleanup-runner@b7d997c1651b1e1b99a280033bd268b55ccb7923
         with:
           type: "pre-build"
 
