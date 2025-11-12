@@ -13,7 +13,7 @@ from otx.data.entity.torch import OTXDataBatch
 
 
 class TestRTMPoseTiny:
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_keypoint_det_model(self) -> RTMPose:
         return RTMPose(
             label_info=10,

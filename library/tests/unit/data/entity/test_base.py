@@ -25,11 +25,11 @@ class TestImageInfo:
     def fix_seed(self) -> None:
         torch.manual_seed(3003)
 
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_resize(self) -> tvt.Resize:
         return tvt.Resize(size=(2, 5))
 
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_random_resize(self) -> tvt.RandomResize:
         return tvt.RandomResize(min_size=2, max_size=5)
 
@@ -52,15 +52,15 @@ class TestImageInfo:
         )
         assert scale_factor == transformed.img_info.scale_factor
 
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_random_crop(self) -> tvt.RandomCrop:
         return tvt.RandomCrop(size=(2, 5))
 
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_random_resized_crop(self) -> tvt.RandomResizedCrop:
         return tvt.RandomResizedCrop(size=(2, 5))
 
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_center_crop(self) -> tvt.CenterCrop:
         return tvt.CenterCrop(size=(2, 5))
 

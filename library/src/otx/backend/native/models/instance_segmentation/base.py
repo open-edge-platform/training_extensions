@@ -507,7 +507,7 @@ class OTXInstanceSegModel(OTXModel):
     @staticmethod
     @torch.no_grad()
     def _forward_explain_inst_seg(
-        self: TwoStageDetector,
+        self: TwoStageDetector,  # noqa: PLW0211
         entity: OTXDataBatch,
         mode: str = "tensor",  # noqa: ARG004
     ) -> dict[str, Tensor]:

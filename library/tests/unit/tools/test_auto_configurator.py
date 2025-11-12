@@ -20,7 +20,7 @@ from otx.types.transformer_libs import TransformLibType
 from otx.utils.utils import should_pass_label_info
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_data_root_per_task_type() -> dict:
     return {
         OTXTaskType.MULTI_CLASS_CLS: "tests/assets/classification_dataset",

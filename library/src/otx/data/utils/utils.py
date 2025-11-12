@@ -266,8 +266,8 @@ def get_idx_list_per_classes(dm_dataset: DmDataset, use_string_label: bool = Fal
             else:
                 stats[ann.label].append(item_idx)
     # Remove duplicates in label stats idx: O(n)
-    for k in stats:
-        stats[k] = list(dict.fromkeys(stats[k]))
+    for k, v in stats.items():
+        stats[k] = list(dict.fromkeys(v))
     return stats
 
 

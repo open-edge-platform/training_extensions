@@ -675,7 +675,7 @@ class SwinTransformer(BaseModule):
 
         for i in range(1, self.frozen_stages + 1):
             if (i - 1) in self.out_indices:
-                norm_layer = getattr(self, f"norm{i-1}")
+                norm_layer = getattr(self, f"norm{i - 1}")
                 norm_layer.eval()
                 for param in norm_layer.parameters():
                     param.requires_grad = False

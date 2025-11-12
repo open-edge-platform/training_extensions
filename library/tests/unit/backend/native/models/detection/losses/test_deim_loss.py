@@ -14,7 +14,7 @@ from otx.backend.native.models.detection.losses.deim_loss import DEIMCriterion
 class TestDEIMCriterion:
     """Test class for DEIM loss criterion."""
 
-    @pytest.fixture()
+    @pytest.fixture
     def criterion(self) -> DEIMCriterion:
         """Create a DEIM criterion instance."""
         weight_dict = {
@@ -33,7 +33,7 @@ class TestDEIMCriterion:
             num_classes=10,
         )
 
-    @pytest.fixture()
+    @pytest.fixture
     def outputs(self) -> dict[str, torch.Tensor]:
         """Create mock model outputs."""
         return {
@@ -87,7 +87,7 @@ class TestDEIMCriterion:
             ),
         }
 
-    @pytest.fixture()
+    @pytest.fixture
     def targets(self) -> list[dict[str, torch.Tensor]]:
         """Create mock targets."""
         return [

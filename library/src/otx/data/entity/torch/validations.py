@@ -37,7 +37,7 @@ class ValidateItemMixin:
                 msg = f"Validation for field {field.name} is not implemented"
                 raise NotImplementedError(msg)
             if field.name in validators and (value := getattr(self, field.name)) is not None:
-                validators[field.name](value)  #
+                validators[field.name](value)
 
     @staticmethod
     def _image_validator(image: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:

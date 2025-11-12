@@ -48,7 +48,7 @@ def fxt_import_module():
     get_streamer = func1
 
 
-@pytest.fixture()
+@pytest.fixture
 def random_image_folder(tmp_path, width: int = 480, height: int = 360, number_of_images: int = 10) -> str:
     """
     Generates a folder with random images, cleans up automatically if used in a `with` statement
@@ -68,7 +68,7 @@ def random_image_folder(tmp_path, width: int = 480, height: int = 360, number_of
     return str(tmp_path)
 
 
-@pytest.fixture()
+@pytest.fixture
 def random_video_folder(
     tmp_path,
     width: int = 480,
@@ -96,7 +96,7 @@ def random_video_folder(
     return str(tmp_path)
 
 
-@pytest.fixture()
+@pytest.fixture
 def random_single_image(tmp_path, width: int = 480, height: int = 360) -> str:
     """
     Generates a random image, cleans up automatically if used in a `with` statement
@@ -115,7 +115,7 @@ def random_single_image(tmp_path, width: int = 480, height: int = 360) -> str:
     return temp_file
 
 
-@pytest.fixture()
+@pytest.fixture
 def random_single_video(tmp_path, width: int = 480, height: int = 360, number_of_frames: int = 150) -> str:
     """
     Generates a random video, cleans up automatically if used in a `with` statement

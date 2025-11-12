@@ -20,12 +20,12 @@ class MockModelExporter(OTXModelExporter):
         return output_dir / f"{base_model_name}.onnx"
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_model():
     return MagicMock()
 
 
-@pytest.fixture()
+@pytest.fixture
 def exporter(mocker):
     ZipFile.write = MagicMock()
     mocker.patch("otx.backend.native.exporter.base.json")

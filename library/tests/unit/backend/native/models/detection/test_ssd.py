@@ -17,7 +17,7 @@ from otx.types.export import TaskLevelExportParameters
 
 
 class TestSSD:
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_model(self) -> SSD:
         return SSD(
             model_name="ssd_mobilenetv2",
@@ -25,7 +25,7 @@ class TestSSD:
             data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         )
 
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_checkpoint(self, fxt_model, fxt_data_module, tmpdir, monkeypatch: pytest.MonkeyPatch):
         trainer = Trainer(max_steps=0)
 

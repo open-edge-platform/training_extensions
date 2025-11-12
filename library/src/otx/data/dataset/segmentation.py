@@ -219,9 +219,9 @@ class OTXSegmentationDataset(OTXDataset):
     def has_polygons(self) -> bool:
         """Check if the dataset has polygons in annotations."""
         # all polygon-like format should be considered as polygons
-        if {ann_type.name for ann_type in self.dm_subset.ann_types()} & {"polygon", "ellipse", "bbox", "rotated_bbox"}:
-            return True
-        return False
+        return bool(
+            {ann_type.name for ann_type in self.dm_subset.ann_types()} & {"polygon", "ellipse", "bbox", "rotated_bbox"}
+        )
 
     def _get_item_impl(self, index: int) -> OTXDataItem | None:
         """Get a single data item from the dataset.

@@ -10,7 +10,7 @@ from otx.backend.native.models.common.utils.assigners import HungarianMatcher
 
 
 class TestHungarianMatcher:
-    @pytest.fixture()
+    @pytest.fixture
     def targets(self):
         return [
             {
@@ -25,7 +25,7 @@ class TestHungarianMatcher:
             },
         ]
 
-    @pytest.fixture()
+    @pytest.fixture
     def outputs(self):
         return {
             "pred_boxes": torch.tensor([[[0.17, 0.11, 0.21, 0.17], [0.5, 0.6, 0.7, 0.8], [0.3, 0.9, 0.3, 0.9]]]),

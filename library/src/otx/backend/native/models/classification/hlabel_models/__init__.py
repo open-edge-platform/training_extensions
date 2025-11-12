@@ -12,7 +12,7 @@ from .vit import VisionTransformerHLabelCls
 __all__ = [
     "EfficientNetHLabelCls",
     "MobileNetV3HLabelCls",
-    "TimmModelHLabelCls",
     "TVModelHLabelCls",
+    "TimmModelHLabelCls",
     "VisionTransformerHLabelCls",
 ]

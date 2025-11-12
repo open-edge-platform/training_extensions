@@ -22,11 +22,11 @@ def fxt_import_module():
 
 
 class TestSyncExecutor:
-    @pytest.fixture()
+    @pytest.fixture
     def mock_model(self):
         return MagicMock(side_effect=lambda x: (x, x))
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_visualizer(self):
         visualizer = MagicMock()
         visualizer.is_quit.return_value = False
@@ -36,11 +36,11 @@ class TestSyncExecutor:
     def test_init(self, mock_model, mock_visualizer):
         SyncExecutor(mock_model, mock_visualizer)
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_streamer(self, mocker):
         return mocker.patch.object(target_file, "get_streamer", return_value=range(3))
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_dump_frames(self, mocker):
         return mocker.patch.object(target_file, "dump_frames")
 
