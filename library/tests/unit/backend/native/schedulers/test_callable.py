@@ -12,7 +12,7 @@ from otx.backend.native.schedulers import SchedulerCallableSupportAdaptiveBS
 
 
 class TestSchedulerCallableSupportAdaptiveBS:
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_optimizer(self):
         model = nn.Linear(10, 10)
         return SGD(model.parameters(), lr=1.0)

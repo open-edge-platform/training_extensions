@@ -17,14 +17,14 @@ from .dataset import (
 from .module import OTXDataModule
 
 __all__ = [
-    "OTXDataModule",
     "OTXAnomalyDataset",
-    "OTXMulticlassClsDataset",
-    "OTXHlabelClsDataset",
-    "OTXMultilabelClsDataset",
+    "OTXDataModule",
     "OTXDetectionDataset",
+    "OTXHlabelClsDataset",
     "OTXInstanceSegDataset",
     "OTXKeypointDetectionDataset",
+    "OTXMulticlassClsDataset",
+    "OTXMultilabelClsDataset",
     "OTXSegmentationDataset",
     "OTXTileDatasetFactory",
 ]

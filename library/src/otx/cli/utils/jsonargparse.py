@@ -301,11 +301,7 @@ def get_defaults_with_overrides(self: ArgumentParser, skip_check: bool = False) 
 
     cfg = Namespace()
     for action in filter_default_actions(self._actions):
-        if (
-            action.default != argparse.SUPPRESS
-            and action.dest != argparse.SUPPRESS
-            and not isinstance(action.default, UnknownDefault)
-        ):
+        if argparse.SUPPRESS not in (action.default, action.dest) and not isinstance(action.default, UnknownDefault):
             cfg[action.dest] = recreate_branches(action.default)
 
     self._logger.debug("Loaded parser defaults: %s", cfg)

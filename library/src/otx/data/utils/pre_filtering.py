@@ -48,7 +48,7 @@ def pre_filtering(
         DmDataset: The filtered dataset.
     """
     used_background_items = set()
-    msg = f"There are empty annotation items in train set, Of these, only {unannotated_items_ratio*100}% are used."
+    msg = f"There are empty annotation items in train set, Of these, only {unannotated_items_ratio * 100}% are used."
     warnings.warn(msg, stacklevel=2)
 
     labels = get_labels(dataset, task)

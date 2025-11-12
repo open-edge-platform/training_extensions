@@ -9,12 +9,12 @@ from .norm import FrozenBatchNorm2d, build_norm_layer
 from .padding import build_padding_layer
 
 __all__ = [
-    "build_activation_layer",
-    "build_padding_layer",
-    "build_norm_layer",
     "Conv2dModule",
     "Conv3dModule",
     "DepthwiseSeparableConvModule",
     "FrozenBatchNorm2d",
     "PatchedConv2d",
+    "build_activation_layer",
+    "build_norm_layer",
+    "build_padding_layer",
 ]

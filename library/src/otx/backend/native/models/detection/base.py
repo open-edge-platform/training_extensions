@@ -438,7 +438,7 @@ class OTXDetectionModel(OTXModel):
 
     @staticmethod
     def _forward_explain_detection(
-        self: SingleStageDetector,
+        self: SingleStageDetector,  # noqa: PLW0211
         entity: OTXDataBatch,
         mode: str = "tensor",
     ) -> dict[str, torch.Tensor]:

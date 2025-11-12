@@ -40,7 +40,7 @@ class TestModelWrapper:
         self.mock_core_model = MagicMock()
         mocker.patch.object(target_file, "Model").create_model.return_value = self.mock_core_model
 
-    @pytest.fixture()
+    @pytest.fixture
     def model_dir(self, tmp_path):
         (tmp_path / "config.json").touch()
         return tmp_path
@@ -48,7 +48,7 @@ class TestModelWrapper:
     def test_init(self, model_dir):
         ModelWrapper(model_dir)
 
-    @pytest.fixture()
+    @pytest.fixture
     def model_wrapper(self, model_dir):
         return ModelWrapper(model_dir)
 

@@ -7,4 +7,4 @@ from .pytorchcv_backbones import build_model_including_pytorchcv
 from .resnet import ResNet
 from .resnext import ResNeXt
 
-__all__ = ["build_model_including_pytorchcv", "ResNet", "ResNeXt"]
+__all__ = ["ResNeXt", "ResNet", "build_model_including_pytorchcv"]

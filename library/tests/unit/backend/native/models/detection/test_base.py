@@ -26,11 +26,11 @@ if TYPE_CHECKING:
 
 
 class TestOTXDetectionModel:
-    @pytest.fixture()
+    @pytest.fixture
     def mock_optimizer(self):
         return lambda _: create_autospec(Optimizer)
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_scheduler(self):
         return lambda _: create_autospec([ReduceLROnPlateau])
 
@@ -50,12 +50,12 @@ class TestOTXDetectionModel:
     def mock_ckpt(self, request):
         return request.param
 
-    @pytest.fixture()
+    @pytest.fixture
     def config(self) -> DictConfig:
         cfg_path = files("otx") / "algo" / "detection" / "mmconfigs" / "yolox_tiny.yaml"
         return OmegaConf.load(cfg_path)
 
-    @pytest.fixture()
+    @pytest.fixture
     def otx_model(self) -> ATSS:
         return ATSS(
             model_name="atss_mobilenetv2",

@@ -14,11 +14,11 @@ from .streamer import (
 )
 
 __all__ = [
+    "BaseStreamer",
     "CameraStreamer",
     "DirStreamer",
     "ImageStreamer",
     "ThreadedStreamer",
     "VideoStreamer",
-    "BaseStreamer",
     "get_streamer",
 ]

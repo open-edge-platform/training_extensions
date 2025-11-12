@@ -69,8 +69,8 @@ repos:
 
   # Ruff
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.4.10
+    rev: v0.11.13
     hooks:
-      - id: ruff
-        args: [--fix]
+      - id: ruff-check
+        args: [--fix, --unsafe-fixes]
       - id: ruff-format

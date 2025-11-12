@@ -151,9 +151,8 @@ class Benchmark:
         )
 
         kwargs = {}
-        if extra_overrides := dataset_info.extra_overrides:
-            for key, value in extra_overrides.get("train", {}).items():
-                kwargs[key] = value
+        if dataset_info.extra_overrides:
+            kwargs.update(dataset_info.extra_overrides.get("train", {}))
         kwargs["seed"] = seed
         kwargs["deterministic"] = self.deterministic
         if self.num_epoch > 0:
@@ -217,9 +216,8 @@ class Benchmark:
             )
 
         kwargs = {}
-        if extra_overrides := dataset_info.extra_overrides:
-            for key, value in extra_overrides.get("test", {}).items():
-                kwargs[key] = value
+        if dataset_info.extra_overrides:
+            kwargs.update(dataset_info.extra_overrides.get("test", {}))
         kwargs.update(kwargs)
         kwargs.pop("checkpoint", None)  # Remove checkpoint
 
@@ -265,9 +263,8 @@ class Benchmark:
         )
 
         kwargs = {}
-        if extra_overrides := dataset_info.extra_overrides:
-            for key, value in extra_overrides.get("export", {}).items():
-                kwargs[key] = value
+        if dataset_info.extra_overrides:
+            kwargs.update(dataset_info.extra_overrides.get("export", {}))
 
         ckpt_path = sub_work_dir / "train" / "best_checkpoint.ckpt"
         if not ckpt_path.exists():
@@ -294,9 +291,8 @@ class Benchmark:
         )
 
         kwargs = {}
-        if extra_overrides := dataset_info.extra_overrides:
-            for key, value in extra_overrides.get("optimize", {}).items():
-                kwargs[key] = value
+        if dataset_info.extra_overrides:
+            kwargs.update(dataset_info.extra_overrides.get("optimize", {}))
 
         kwargs.pop("checkpoint", None)  # Remove checkpoint
 

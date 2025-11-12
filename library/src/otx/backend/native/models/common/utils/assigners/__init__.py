@@ -8,4 +8,4 @@ from .hungarian_matcher import HungarianMatcher
 from .iou2d_calculator import BboxOverlaps2D
 from .max_iou_assigner import MaxIoUAssigner
 
-__all__ = ["DynamicSoftLabelAssigner", "BboxOverlaps2D", "MaxIoUAssigner", "HungarianMatcher"]
+__all__ = ["BboxOverlaps2D", "DynamicSoftLabelAssigner", "HungarianMatcher", "MaxIoUAssigner"]

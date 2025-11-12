@@ -11,19 +11,19 @@ RNG = np.random.default_rng(42)
 
 
 class TestSimCCLabel:
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_keypoints(self):
         return (0.1 + 0.8 * RNG.random((1, 17, 2))) * [192, 256]
 
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_keypoints_visible(self):
         return np.ones((1, 17), dtype=np.float32)
 
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_codec_gaussian(self):
         return SimCCLabel(input_size=(256, 192), smoothing_type="gaussian", sigma=6.0, simcc_split_ratio=2.0)
 
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_codec_smoothing(self):
         return SimCCLabel(
             input_size=(256, 192),
@@ -33,11 +33,11 @@ class TestSimCCLabel:
             label_smooth_weight=0.1,
         )
 
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_codec_dark(self):
         return SimCCLabel(input_size=(256, 192), smoothing_type="gaussian", sigma=(4.9, 5.66), simcc_split_ratio=2.0)
 
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_codec_separated_sigma(self):
         return SimCCLabel(input_size=(256, 192), smoothing_type="gaussian", sigma=(4.9, 5.66), simcc_split_ratio=2.0)
 

@@ -10,7 +10,7 @@ from otx.data.module import OTXDataModule
 from otx.types.task import OTXTaskType
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_data_module():
     return OTXDataModule(
         task=OTXTaskType.DETECTION,

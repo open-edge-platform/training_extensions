@@ -17,7 +17,7 @@ from otx.backend.native.models.detection.rtdetr import DETR
 
 
 class TestDETR:
-    @pytest.fixture()
+    @pytest.fixture
     def rt_detr_model(self):
         num_classes = 10
         backbone = PResNet(model_name="rtdetr_18")
@@ -36,7 +36,7 @@ class TestDETR:
         )
         return DETR(backbone=backbone, encoder=encoder, decoder=decoder, num_classes=10, criterion=criterion)
 
-    @pytest.fixture()
+    @pytest.fixture
     def targets(self):
         return [
             {
@@ -55,7 +55,7 @@ class TestDETR:
             },
         ]
 
-    @pytest.fixture()
+    @pytest.fixture
     def images(self):
         return torch.randn(2, 3, 640, 640)
 

@@ -95,9 +95,7 @@ class BaseModule(nn.Module, metaclass=ABCMeta):
             # initialization information
             for _, param in self.named_parameters():
                 self._params_init_info[param]["init_info"] = (
-                    f"The value is the same before and "
-                    f"after calling `init_weights` "
-                    f"of {self.__class__.__name__} "
+                    f"The value is the same before and after calling `init_weights` of {self.__class__.__name__} "
                 )
                 self._params_init_info[param]["tmp_mean_value"] = param.data.mean().cpu()
 
@@ -163,13 +161,13 @@ class BaseModule(nn.Module, metaclass=ABCMeta):
                 handler.stream.write("Name of parameter - Initialization information\n")
                 for name, param in self.named_parameters():
                     handler.stream.write(
-                        f'\n{name} - {param.shape}: ' f"\n{self._params_init_info[param]['init_info']} \n",  # noqa: ISC001
+                        f"\n{name} - {param.shape}: \n{self._params_init_info[param]['init_info']} \n",
                     )
                 handler.stream.flush()
                 with_file_handler = True
         if not with_file_handler:
             for name, param in self.named_parameters():
-                logger.info(f'\n{name} - {param.shape}: ' f"\n{self._params_init_info[param]['init_info']} \n ")  # noqa: ISC001
+                logger.info(f"\n{name} - {param.shape}: \n{self._params_init_info[param]['init_info']} \n ")
 
     def __repr__(self):
         s = super().__repr__()

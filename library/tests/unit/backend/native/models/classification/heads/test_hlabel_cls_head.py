@@ -21,7 +21,7 @@ from otx.backend.native.models.classification.losses import AsymmetricAngularLos
 from otx.data.entity.base import ImageInfo
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_data_sample() -> dict:
     return {
         "labels": torch.ones((18, 6), dtype=torch.long),
@@ -38,7 +38,7 @@ def fxt_data_sample() -> dict:
 
 
 class TestHierarchicalLinearClsHead:
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_head_attrs(self, fxt_hlabel_cifar) -> dict[str, Any]:
         return {
             **fxt_hlabel_cifar.as_head_config_dict(),
@@ -47,15 +47,15 @@ class TestHierarchicalLinearClsHead:
             "multilabel_loss": AsymmetricAngularLossWithIgnore(),
         }
 
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_hlabel_linear_head(self, fxt_head_attrs) -> nn.Module:
         return HierarchicalLinearClsHead(**fxt_head_attrs)
 
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_hlabel_non_linear_head(self, fxt_head_attrs) -> nn.Module:
         return HierarchicalNonLinearClsHead(**fxt_head_attrs)
 
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_hlabel_cbam_head(self, fxt_head_attrs) -> nn.Module:
         fxt_head_attrs["step_size"] = 1
         return HierarchicalCBAMClsHead(**fxt_head_attrs)
@@ -79,7 +79,7 @@ class TestHierarchicalLinearClsHead:
 
 
 class TestChannelAttention:
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_channel_attention(self) -> ChannelAttention:
         return ChannelAttention(in_channels=64, reduction=16)
 
@@ -91,7 +91,7 @@ class TestChannelAttention:
 
 
 class TestSpatialAttention:
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_spatial_attention(self) -> SpatialAttention:
         return SpatialAttention(kernel_size=7)
 
@@ -103,7 +103,7 @@ class TestSpatialAttention:
 
 
 class TestCBAM:
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_cbam(self) -> CBAM:
         return CBAM(in_channels=64, reduction=16, kernel_size=7)
 
@@ -115,7 +115,7 @@ class TestCBAM:
 
 
 class TestHierarchicalCBAMClsHead:
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_hierarchical_cbam_cls_head(self) -> HierarchicalCBAMClsHead:
         head_idx_to_logits_range = {"0": (0, 5), "1": (5, 10), "2": (10, 12)}
         return HierarchicalCBAMClsHead(

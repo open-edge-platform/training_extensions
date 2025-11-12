@@ -10,7 +10,7 @@ from otx.data.utils.pre_filtering import is_valid_anno_for_task, pre_filtering
 from otx.types.task import OTXTaskType
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_dm_dataset_with_unannotated() -> DmDataset:
     dataset_items = [
         DatasetItem(
@@ -88,7 +88,7 @@ def test_pre_filtering(fxt_dm_dataset_with_unannotated: DmDataset, unannotated_i
     assert len(filtered_dataset.categories()[AnnotationType.label]) == 3
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_dataset_item() -> DatasetItem:
     """Create a sample dataset item for testing."""
     return DatasetItem(

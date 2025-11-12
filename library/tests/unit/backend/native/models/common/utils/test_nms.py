@@ -14,18 +14,18 @@ from otx.backend.native.models.common.utils.nms import NMSop
 
 
 class TestNMSop:
-    @pytest.fixture()
+    @pytest.fixture
     def mock_torch_nms(self, mocker) -> MagicMock:
         def func(bboxes: torch.Tensor, *args, **kwargs) -> torch.Tensor:
             return torch.tensor(range(min(bboxes.size(0), 2)))
 
         return mocker.patch.object(target_file, "torch_nms", side_effect=func)
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_torch_autocast(self, mocker) -> MagicMock:
         return mocker.patch("otx.backend.native.models.common.utils.nms.torch.autocast")
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_bboxes(self) -> torch.Tensor:
         bboxes = torch.tensor(
             [
@@ -41,25 +41,25 @@ class TestNMSop:
         bboxes.get_device = MagicMock(return_value=0)
         return bboxes
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_bboxes_bfp16_cpu(self, mock_bboxes: torch.Tensor) -> torch.Tensor:
         bboxes = mock_bboxes.type(torch.bfloat16)
         bboxes.get_device = MagicMock(return_value=-1)
         return bboxes
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_scores(self) -> torch.Tensor:
         scores = torch.tensor([0.9, 0.8, 0.7, 0.6, 0.5, 0.4], dtype=torch.float32)
         scores.get_device = MagicMock(return_value=0)
         return scores
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_scores_bfp16_cpu(self, mock_scores: torch.Tensor) -> torch.Tensor:
         scores = mock_scores.type(torch.bfloat16)
         scores.get_device = MagicMock(return_value=-1)
         return scores
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_iou_threshold(self) -> MagicMock:
         return MagicMock()
 

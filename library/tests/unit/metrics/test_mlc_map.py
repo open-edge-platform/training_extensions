@@ -13,11 +13,11 @@ from otx.types.label import LabelInfo
 
 
 class TestMAP:
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_preds(self) -> list[torch.Tensor]:
         return [torch.Tensor([0.7, 0.6, 0.1]), torch.Tensor([0.1, 0.6, 0.1])]
 
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_targets(self) -> list[torch.Tensor]:
         return [torch.Tensor([0, 0, 1]), torch.Tensor([0, 1, 0])]
 

@@ -93,7 +93,7 @@ class TestAccuracy:
 
 
 class TestMixedHLabelAccuracy:
-    @pytest.fixture()
+    @pytest.fixture
     def hlabel_accuracy(self) -> MixedHLabelAccuracy:
         # You may need to adjust the parameters based on your actual use case
         return MixedHLabelAccuracy(

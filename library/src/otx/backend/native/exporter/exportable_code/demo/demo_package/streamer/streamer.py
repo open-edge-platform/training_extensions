@@ -8,7 +8,6 @@ from __future__ import annotations
 import abc
 import contextlib
 import multiprocessing
-import os
 import queue
 import sys
 from enum import Enum
@@ -278,7 +277,7 @@ class DirStreamer(BaseStreamer):
         if not self.dir.is_dir():
             msg = f"Can't find the dir by {input_path}"
             raise RuntimeError(msg)
-        self.names = sorted(os.listdir(self.dir))
+        self.names = sorted(p.name for p in self.dir.iterdir())
         if not self.names:
             msg = f"The dir {input_path} is empty"
             raise RuntimeError(msg)

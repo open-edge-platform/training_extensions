@@ -13,8 +13,8 @@ from .factory import (
 
 __all__ = [
     "EfficientNet",
-    "TimmModel",
     "MobileNetV3",
     "TVModel",
+    "TimmModel",
     "VisionTransformer",
 ]

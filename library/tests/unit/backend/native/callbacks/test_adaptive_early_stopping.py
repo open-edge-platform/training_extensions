@@ -14,7 +14,7 @@ from otx.backend.native.callbacks.adaptive_early_stopping import EarlyStoppingWi
 class TestEarlyStoppingWithWarmup:
     """Test cases for EarlyStoppingWithWarmup callback."""
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_trainer(self):
         """Create a mock trainer for testing."""
         trainer = MagicMock(spec=pl.Trainer)
@@ -32,7 +32,7 @@ class TestEarlyStoppingWithWarmup:
         trainer.state = MockState()
         return trainer
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_pl_module(self):
         """Create a mock PyTorch Lightning module for testing."""
         return MagicMock(spec=pl.LightningModule)

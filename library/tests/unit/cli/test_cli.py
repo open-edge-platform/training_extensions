@@ -33,7 +33,7 @@ class TestOTXCLI:
         with mocker.patch.object(sys, "argv", argv) and pytest.raises(SystemExit, match="0"):
             main()
 
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_train_help_command(self, monkeypatch) -> None:
         argv = ["otx", "train", "-h"]
         monkeypatch.setattr("sys.argv", argv)
@@ -78,7 +78,7 @@ class TestOTXCLI:
         cli.add_subcommands()
         assert cli._subcommand_method_arguments.keys() == cli.engine_subcommands().keys()
 
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_train_argv(self, tmpdir) -> list[str]:
         return [
             "otx",
@@ -93,7 +93,7 @@ class TestOTXCLI:
             str(tmpdir),
         ]
 
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_train_command(self, monkeypatch, fxt_train_argv) -> list[str]:
         monkeypatch.setattr("sys.argv", fxt_train_argv)
         return fxt_train_argv
@@ -130,7 +130,7 @@ class TestOTXCLI:
 
         assert cli.model.data_input_params.input_size == (input_size, input_size)
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_model_cls(self) -> MagicMock:
         model_cls = MagicMock()
         model_cls.input_size_multiplier = 12345
@@ -145,7 +145,7 @@ class TestOTXCLI:
 
         exc_info.match("my_error")
 
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_print_config_scheduler_override_command(self, monkeypatch) -> None:
         argv = [
             "otx",
@@ -168,7 +168,7 @@ class TestOTXCLI:
         result_config = yaml.safe_load(out)
         assert result_config["model"]["init_args"]["scheduler"]["init_args"]["monitor"] == "val/test_f1"
 
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_metric_override_command(self, monkeypatch) -> None:
         argv = [
             "otx",
