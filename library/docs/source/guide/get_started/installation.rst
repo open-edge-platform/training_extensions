@@ -16,139 +16,95 @@ The current version of OpenVINO™ Training Extensions was tested in the followi
     To enable efficient execution of multiple models, we increase the ONEDNN_PRIMITIVE_CACHE_CAPACITY environment variable from its default value to 10000.
     For more information, refer to the `Primitive cache <https://www.intel.com/content/www/us/en/docs/onednn/developer-guide-reference/2024-1/primitive-cache-002.html>`_.
 
-***************
-Installing ``uv``
-***************
+*****************
+Install from pypi
+*****************
 
-To use OpenVINO™ Training Extensions with ``uv``, you first need to install the ``uv`` tool.
+The easiest way to install OpenVINO™ Training Extensions is via PyPI (`otx <https://pypi.org/project/otx>`_ package).
 
-You can install it in one of the following ways:
-
-.. tab-set::
-
-    .. tab-item:: Recommended (Standalone Binary)
-
-        .. code-block:: shell
-
-            curl -LsSf https://astral.sh/uv/install.sh | sh
-
-        This method installs ``uv`` globally as a fast and portable binary.
-        After installation, make sure ``uv`` is available in your ``PATH``.
-
-    .. tab-item:: Via pip (Python-based)
-
-        .. code-block:: shell
-
-            pip install uv
-
-        This installs ``uv`` inside the currently active Python environment.
-
-    .. tab-item:: Verify Installation
-
-        After installation, confirm it works:
-
-        .. code-block:: shell
-
-            uv --version
-
-
-**********************************************************
-Install OpenVINO™ Training Extensions for users (CUDA/CPU)
-**********************************************************
-
-1. Install OpenVINO™ Training Extensions package:
-
-* A local source in development mode
+Select the extra dependencies according to your hardware:
 
 .. tab-set::
 
-    .. tab-item:: PyPI
+    .. tab-item:: CPU only
 
         .. code-block:: shell
 
-            # Create a virtual environment using uv
-            uv venv .otx --python 3.12 # or 3.11
-            source .otx/bin/activate
+            pip install otx[cpu]
 
-            # Install from PyPI
-            uv pip install otx[cuda]
-
-    .. tab-item:: Source
+    .. tab-item:: Intel GPU (XPU)
 
         .. code-block:: shell
 
-            # Clone the training_extensions repository:
+            pip install otx[xpu]
+
+    .. tab-item:: Nvidia GPU (CUDA)
+
+        .. code-block:: shell
+
+            pip install otx[cuda]
+
+.. note::
+
+    It is always recommended to use a virtual environment to avoid conflicts with other packages.
+
+After the installation, you can verify it works with:
+
+.. code-block:: shell
+
+    otx --help
+
+
+*******************
+Install from source
+*******************
+
+If you want to install OpenVINO™ Training Extensions from source, you have to first clone the repository,
+then install the package.
+
+.. tab-set::
+
+    .. tab-item:: CPU only
+
+        .. code-block:: shell
+
             git clone https://github.com/open-edge-platform/training_extensions.git
-            cd training_extensions
+            cd training_extensions/library
+            pip install .[cpu]
 
-            # Create a virtual environment with uv
-            uv venv .otx --python 3.12 # or 3.11
-            source .otx/bin/activate
+    .. tab-item:: Intel GPU (XPU)
 
-            # Install the package in editable mode with base dependencies
-            uv pip install -e .[cuda]
+        .. code-block:: shell
 
-            # Install OTX in development mode
-            uv pip install -e .[dev,cuda]
+            git clone https://github.com/open-edge-platform/training_extensions.git
+            cd training_extensions/library
+            pip install .[xpu]
 
-2. Once the package is installed in the virtual environment, you can use the full
-OpenVINO™ Training Extensions command line functionality.
+    .. tab-item:: Nvidia GPU (CUDA)
 
-.. code-block:: shell
+        .. code-block:: shell
 
-    otx --help
+            git clone https://github.com/open-edge-platform/training_extensions.git
+            cd training_extensions/library
+            pip install .[cuda]
 
-*************************************************************
-Install OpenVINO™ Training Extensions for users (Intel GPUs)
-*************************************************************
 
-1. Install OpenVINO™ Training Extensions from source to use Intel XPU functionality:
+**************
+For developers
+**************
 
-.. code-block:: shell
+For developers, it is recommended to use `uv` to automatically manage virtual environments and dependencies.
 
+.. code-block::
+
+    # Clone the repo
     git clone https://github.com/open-edge-platform/training_extensions.git
-    cd training_extensions
+    cd training_extensions/library
 
-    uv venv .otx --python 3.12 # or 3.11
-    source .otx/bin/activate
+    # Create a virtual environment with uv and sync dependencies
+    uv sync --extra cpu  # or 'xpu' or 'cuda', depending on your hardware
 
-    uv pip install -e .[xpu]
-
-.. note::
-
-    Please refer to the `PyTorch XPU installation guide <https://pytorch.org/docs/stable/notes/get_start_xpu.html>`_
-    to install prerequisites and resolve any potential issues.
-
-2. Once installed, use the command-line interface:
-
-.. code-block:: shell
-
-    otx --help
-
-****************************************************
-Install OpenVINO™ Training Extensions for developers
-****************************************************
-
-1. Install ``tox`` with the ``tox-uv`` plugin using uv's tool system:
-
-.. code-block:: shell
-
-    uv tool install tox --with tox-uv
-
-2. Create a development environment using ``tox``:
-
-.. code-block:: shell
-
-    # Replace '312' with '311' if using Python 3.11
-    tox devenv venv/otx -e unit-test-py312
-    source venv/otx/bin/activate
-
-Now you're ready to develop, test, and make changes — all reflected live in the editable install.
-
-.. note::
-
-    By installing ``tox`` with ``uv tool``, you ensure it runs in a reproducible and isolated environment,
-    with ``uv`` used internally to manage dependencies for each test environment.
+If you plan to edit the documentation, also install the `docs` extra.
 
 
 *****************************************************

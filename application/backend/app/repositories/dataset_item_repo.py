@@ -8,6 +8,7 @@ from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.orm import Session
 
 from app.db.schema import DatasetItemDB, DatasetItemLabelDB
+from app.models import DatasetItemAnnotationStatus, DatasetItemSubset
 
 
 class UpdateDatasetItemAnnotation(NamedTuple):
@@ -27,8 +28,9 @@ class DatasetItemRepository:
         """Create base select statement filtered by project_id."""
         return select(DatasetItemDB).where(DatasetItemDB.project_id == self.project_id)
 
+    @staticmethod
     def _apply_date_filters(
-        self, stmt: Select, start_date: datetime | None = None, end_date: datetime | None = None
+        stmt: Select, start_date: datetime | None = None, end_date: datetime | None = None
     ) -> Select:
         """Apply date range filters to a select statement."""
         if start_date:
@@ -37,22 +39,67 @@ class DatasetItemRepository:
             stmt = stmt.where(DatasetItemDB.created_at < end_date)
         return stmt
 
+    @staticmethod
+    def _apply_annotation_status_filter(stmt: Select, annotation_status: str | None = None) -> Select:
+        """Apply annotation status filter to a select statement."""
+        if annotation_status == DatasetItemAnnotationStatus.UNANNOTATED:
+            stmt = stmt.where(DatasetItemDB.annotation_data.is_(None))
+        elif annotation_status == DatasetItemAnnotationStatus.REVIEWED:
+            stmt = stmt.where(DatasetItemDB.annotation_data.is_not(None), DatasetItemDB.user_reviewed.is_(True))
+        elif annotation_status == DatasetItemAnnotationStatus.TO_REVIEW:
+            stmt = stmt.where(DatasetItemDB.annotation_data.is_not(None), DatasetItemDB.user_reviewed.is_(False))
+        return stmt
+
+    @staticmethod
+    def _apply_subset_filter(stmt: Select, subset: str | None = None) -> Select:
+        """Apply subset filter to a select statement."""
+        if subset is not None:
+            stmt = stmt.where(DatasetItemDB.subset == subset)
+        return stmt
+
     def save(self, dataset_item_db: DatasetItemDB) -> DatasetItemDB:
         dataset_item_db.updated_at = datetime.now(UTC)
         self.db.add(dataset_item_db)
         self.db.flush()
         return dataset_item_db
 
-    def count(self, start_date: datetime | None = None, end_date: datetime | None = None) -> int:
-        stmt = select(func.count()).select_from(DatasetItemDB).where(DatasetItemDB.project_id == self.project_id)
+    def count(
+        self,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+        annotation_status: str | None = None,
+        label_ids: list[str] | None = None,
+        subset: str | None = None,
+    ) -> int:
+        # When the query involves a JOIN (e.g. when filtering by labels), count distinct items to avoid duplicates
+        if label_ids:
+            select_fn = func.count(func.distinct(DatasetItemDB.id))
+        else:
+            select_fn = func.count()
+        stmt = select(select_fn).select_from(DatasetItemDB).where(DatasetItemDB.project_id == self.project_id)
         stmt = self._apply_date_filters(stmt, start_date, end_date)
+        stmt = self._apply_annotation_status_filter(stmt, annotation_status)
+        stmt = self._apply_subset_filter(stmt, subset)
+        if label_ids:
+            stmt = stmt.join(DatasetItemLabelDB).where(DatasetItemLabelDB.label_id.in_(label_ids))
         return self.db.scalar(stmt) or 0
 
     def list_items(
-        self, limit: int, offset: int, start_date: datetime | None = None, end_date: datetime | None = None
+        self,
+        limit: int,
+        offset: int,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+        annotation_status: str | None = None,
+        label_ids: list[str] | None = None,
+        subset: str | None = None,
     ) -> list[DatasetItemDB]:
         stmt = self._base_select()
         stmt = self._apply_date_filters(stmt, start_date, end_date)
+        stmt = self._apply_annotation_status_filter(stmt, annotation_status)
+        stmt = self._apply_subset_filter(stmt, subset)
+        if label_ids:
+            stmt = stmt.join(DatasetItemLabelDB).where(DatasetItemLabelDB.label_id.in_(label_ids)).distinct()
         stmt = stmt.order_by(DatasetItemDB.created_at.desc()).offset(offset).limit(limit)
         return list(self.db.scalars(stmt).all())
 
@@ -128,19 +175,20 @@ class DatasetItemRepository:
         )
         return self.db.scalar(stmt)
 
-    def set_subset(self, obj_id: str, subset: str) -> None:
+    def set_subset(self, obj_ids: set[str], subset: str) -> int:
         stmt = (
             update(DatasetItemDB)
             .where(
                 DatasetItemDB.project_id == self.project_id,
-                DatasetItemDB.id == obj_id,
+                DatasetItemDB.id.in_(obj_ids),
             )
             .values(
                 subset=subset,
                 updated_at=datetime.now(UTC),
             )
         )
-        self.db.execute(stmt)
+        result = self.db.execute(stmt)
+        return result.rowcount or 0
 
     def set_labels(self, dataset_item_id: str, label_ids: set[str]) -> None:
         self.delete_labels(dataset_item_id)
@@ -153,3 +201,23 @@ class DatasetItemRepository:
     def delete_labels(self, dataset_item_id: str) -> None:
         stmt = delete(DatasetItemLabelDB).where(DatasetItemLabelDB.dataset_item_id == dataset_item_id)
         self.db.execute(stmt)
+
+    def list_unassigned_items(self) -> list[DatasetItemLabelDB]:
+        stmt = (
+            select(DatasetItemLabelDB)
+            .join(DatasetItemDB)
+            .where(
+                DatasetItemDB.project_id == self.project_id,
+                DatasetItemDB.subset == DatasetItemSubset.UNASSIGNED,
+            )
+        )
+        return list(self.db.scalars(stmt).all())
+
+    def get_subset_distribution(self) -> dict[str, int]:
+        stmt = (
+            select(DatasetItemDB.subset, func.count(DatasetItemDB.id).label("count"))
+            .where(DatasetItemDB.project_id == self.project_id)
+            .group_by(DatasetItemDB.subset)
+        )
+        result = self.db.execute(stmt)
+        return {row.subset: row.count for row in result}  # type: ignore[misc]

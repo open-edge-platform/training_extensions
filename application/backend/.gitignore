@@ -17,3 +17,4 @@ data/
 **/openapi.json
 .idea
 .DS_Store
+logs/

@@ -486,7 +486,7 @@ class BaseDenseHead(BaseModule):
         mlvl_valid_scores = []
         mlvl_valid_priors = []
 
-        for cls_score, bbox_pred, score_factors, priors in zip(
+        for cls_score, bbox_pred, score_factors, priors in zip(  # noqa: PLR1704
             mlvl_cls_scores,
             mlvl_bbox_preds,
             mlvl_score_factor,

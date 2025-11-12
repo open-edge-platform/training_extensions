@@ -5,7 +5,8 @@ from typing import Generic, TypeVar
 
 from pydantic import BaseModel, Field
 
-from app.core.models import HasID, RequiresID, TaskType
+from app.core.models import HasID, RequiresID
+from app.models import TaskType
 from app.schemas.label import LabelCreate, LabelView
 
 

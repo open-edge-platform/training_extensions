@@ -50,8 +50,7 @@ def pytest_addoption(parser: pytest):
         "--num-epoch",
         action="store",
         default=0,
-        help="Overrides default per-model number of epoch setting. "
-        "Defaults to 0 (per-model epoch & early-stopping).",
+        help="Overrides default per-model number of epoch setting. Defaults to 0 (per-model epoch & early-stopping).",
     )
     parser.addoption(
         "--eval-upto",
@@ -385,7 +384,7 @@ def fxt_multilabel_labelinfo() -> LabelInfo:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_hlabel_multilabel_info() -> HLabelInfo:
     return HLabelInfo(
         label_names=[
@@ -452,7 +451,7 @@ def fxt_hlabel_multilabel_info() -> HLabelInfo:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_export_list() -> list[ExportCase2Test]:
     return [
         ExportCase2Test("ONNX", False, "exported_model.onnx"),

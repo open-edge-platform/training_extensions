@@ -311,7 +311,7 @@ class RTDETR(OTXDetectionModel):
 
     @staticmethod
     def _forward_explain_detection(
-        self,  # noqa: ANN001
+        self,  # noqa: ANN001, PLW0211
         entity: OTXDataBatch,
         mode: str = "tensor",  # noqa: ARG004
     ) -> dict[str, torch.Tensor]:

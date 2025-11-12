@@ -67,7 +67,7 @@ class TestDFine:
         output = model.forward_for_tracing(torch.randn(1, 3, 640, 640))
         assert len(output) == 3
 
-    @pytest.fixture()
+    @pytest.fixture
     def dfine_model(self):
         num_classes = 10
         model_name = "dfine_hgnetv2_x"
@@ -92,7 +92,7 @@ class TestDFine:
         )
         return DETR(backbone=backbone, encoder=encoder, decoder=decoder, num_classes=10, criterion=criterion)
 
-    @pytest.fixture()
+    @pytest.fixture
     def targets(self):
         return [
             {
@@ -111,7 +111,7 @@ class TestDFine:
             },
         ]
 
-    @pytest.fixture()
+    @pytest.fixture
     def images(self):
         return torch.randn(2, 3, 640, 640)
 

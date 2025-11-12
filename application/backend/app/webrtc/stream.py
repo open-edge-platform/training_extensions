@@ -2,14 +2,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import asyncio
-import logging
 import queue
 
 import numpy as np
 from aiortc import VideoStreamTrack
 from av import VideoFrame
-
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 FALLBACK_FRAME = np.full((64, 64, 3), 16, dtype=np.uint8)
 
@@ -78,6 +76,6 @@ class InferenceVideoStreamTrack(VideoStreamTrack):
             frame.pts = pts
             frame.time_base = time_base
             return frame
-        except Exception as e:
-            logger.error("Error in recv: %s", e)
+        except Exception:
+            logger.exception("Error in recv")
             raise

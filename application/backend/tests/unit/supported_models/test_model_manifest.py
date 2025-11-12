@@ -9,15 +9,15 @@ from unittest.mock import patch
 import hiyapyco
 import pytest
 
-from app.supported_models import manifests
-from app.supported_models.hyperparameters import (
-    AugmentationParameters,
+from app.models import TaskType
+from app.models.training_configuration.hyperparameters import (
     DatasetPreparationParameters,
     EarlyStopping,
     EvaluationParameters,
     Hyperparameters,
     TrainingHyperParameters,
 )
+from app.supported_models import manifests
 from app.supported_models.model_manifest import (
     Capabilities,
     GPUMaker,
@@ -64,7 +64,7 @@ def fxt_dummy_supported_gpu():
 @pytest.fixture
 def fxt_dummy_hyperparameters():
     yield Hyperparameters(
-        dataset_preparation=DatasetPreparationParameters(augmentation=AugmentationParameters()),
+        dataset_preparation=DatasetPreparationParameters(),
         training=TrainingHyperParameters(max_epochs=101, learning_rate=0.05, early_stopping=EarlyStopping(patience=5)),
         evaluation=EvaluationParameters(metric=None),
     )
@@ -79,12 +79,12 @@ def fxt_dummy_model_manifest(
         name="Dummy ModelManifest",
         pretrained_weights=fxt_dummy_pretrained_weights,
         description="Dummy manifest for test purposes only",
-        task="classification",
         stats=fxt_dummy_model_stats,
         support_status=ModelManifestDeprecationStatus.OBSOLETE,
         supported_gpus=fxt_dummy_supported_gpu,
         hyperparameters=fxt_dummy_hyperparameters,
         capabilities=Capabilities(xai=True, tiling=False),
+        task=TaskType.CLASSIFICATION,
     )
 
 

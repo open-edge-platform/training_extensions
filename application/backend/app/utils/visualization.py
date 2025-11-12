@@ -1,10 +1,10 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
 from abc import ABC, abstractmethod
 
 import numpy as np
+from loguru import logger
 from model_api.models import AnomalyResult, ClassificationResult, DetectedKeypoints, ImageResultWithSoftPrediction
 from model_api.models.result import DetectionResult, InstanceSegmentationResult, Label, Result
 from model_api.visualizer import BoundingBox, Flatten, Polygon
@@ -19,8 +19,6 @@ from model_api.visualizer.scene import (
 from PIL import Image
 
 from app.utils.singleton import Singleton
-
-logger = logging.getLogger(__name__)
 
 
 class VisualizerCreator(ABC):
@@ -128,7 +126,7 @@ class VisualizationDispatcher(metaclass=Singleton):
         creator = self._creator_map.get(type(predictions))
         if creator is not None:
             return creator.create_visualization(original_image, predictions)
-        logger.error(f"Visualization for {type(predictions)} is not suppported.")
+        logger.error("Visualization for {} is not supported.", type(predictions))
         return None
 
 
@@ -141,7 +139,7 @@ class Visualizer:
             if visualization is None:
                 # If no visualization could be created, return the original image
                 return original_image
-        except Exception as e:
-            logger.exception("An error occurred while creating visualization, returning original image.", exc_info=e)
+        except Exception:
+            logger.exception("An error occurred while creating visualization, returning original image.")
             return original_image
         return visualization

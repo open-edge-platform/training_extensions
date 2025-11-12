@@ -10,11 +10,11 @@ from otx.backend.native.models.detection.heads.rtdetr_decoder import RTDETRTrans
 
 
 class TestRTDETRTransformer:
-    @pytest.fixture()
+    @pytest.fixture
     def rt_detr_transformer(self):
         return RTDETRTransformerModule(num_classes=10, feat_channels=[128, 128, 128], num_decoder_layers=1)
 
-    @pytest.fixture()
+    @pytest.fixture
     def targets(self):
         return [
             {"boxes": torch.tensor([[0.2, 0.3, 0.4, 0.5], [0.6, 0.7, 0.8, 0.9]]), "labels": torch.tensor([1, 0])},

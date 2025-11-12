@@ -166,7 +166,7 @@ class TestJobControlPlaneIntegration:
                 try:
                     # Simulate some work
                     for progress in [50.0, 100.0]:
-                        ctx.report_progress(progress=progress)
+                        ctx.report("", progress)
                         ctx.heartbeat()
                         # Small delay to ensure overlap if running concurrently
                         import time

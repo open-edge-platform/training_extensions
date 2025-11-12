@@ -145,6 +145,30 @@ class TestLabelServiceIntegration:
             updated_db_label.name == "bird" and updated_db_label.color == "#4500FF" and updated_db_label.hotkey == "b"
         )
 
+    def test_update_label_non_existent(
+        self,
+        fxt_stored_project_with_labels: tuple[ProjectDB, list[LabelDB]],
+        fxt_label_service: LabelService,
+        db_session: Session,
+    ) -> None:
+        """
+        Test updating a non-existing label for the project causes an error.
+        """
+        db_project, _ = fxt_stored_project_with_labels
+
+        with pytest.raises(ResourceNotFoundError) as exc_info:
+            label_id = uuid4()
+            fxt_label_service.update_label(
+                project_id=UUID(db_project.id),
+                label_id=label_id,
+                new_name="bird",
+                new_color="#4500FF",
+                new_hotkey="b",
+            )
+
+        assert exc_info.value.resource_type == ResourceType.LABEL
+        assert exc_info.value.resource_id == str(label_id)
+
     def test_update_label_duplicate_name(
         self,
         fxt_stored_project_with_labels: tuple[ProjectDB, list[LabelDB]],

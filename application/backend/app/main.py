@@ -16,19 +16,15 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from loguru import logger
 
 from app.api import routers
+from app.core.logging import InterceptHandler
 from app.lifecycle import lifespan
 from app.settings import get_settings
 
 settings = get_settings()
-
-logging.basicConfig(
-    level=logging.INFO if not settings.debug else logging.DEBUG,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-)
-logger = logging.getLogger(__name__)
-
+logging.basicConfig(handlers=[InterceptHandler()], level=settings.log_level, force=True)
 app = FastAPI(
     title=settings.app_name,
     version=settings.version,
@@ -85,8 +81,8 @@ def main() -> None:
         host=settings.host,
         port=settings.port,
         # FIXME: reload mode currently does not work with multiple workers
-        # reload=settings.debug and settings.environment == "dev",
-        log_level="debug" if settings.debug else "info",
+        # reload=settings.environment == "dev",
+        log_level=settings.log_level.lower(),
     )
 
 

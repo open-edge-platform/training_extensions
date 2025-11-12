@@ -87,7 +87,7 @@ def test_render_guide() -> None:
 class TestCustomHelpFormatter:
     """Test Custom Help Formatter."""
 
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_parser(self) -> ArgumentParser:
         """Mock ArgumentParser."""
         parser = ArgumentParser(env_prefix="otx", formatter_class=CustomHelpFormatter)

@@ -1,22 +1,20 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
 import multiprocessing as mp
 import queue
 from multiprocessing.synchronize import Event as EventClass
 
+from loguru import logger
+
 from app.db import get_db_session
-from app.schemas import DisconnectedSinkConfig, Sink, SinkType
-from app.services import DispatchService
-from app.services.configuration_service import SinkService
+from app.models import DisconnectedSinkConfig, Sink, SinkType
+from app.services import DispatchService, SinkService
 from app.services.data_collect import DataCollector
 from app.services.dispatchers import Dispatcher
 from app.services.event.event_bus import EventBus, EventType
 from app.stream.stream_data import StreamData
 from app.workers.base import BaseThreadWorker
-
-logger = logging.getLogger(__name__)
 
 
 class DispatchingWorker(BaseThreadWorker):
@@ -36,6 +34,7 @@ class DispatchingWorker(BaseThreadWorker):
         data_collector: DataCollector,
     ) -> None:
         super().__init__(stop_event=stop_event)
+        self._event_bus = event_bus
         self._pred_queue = pred_queue
         self._rtc_stream_queue = rtc_stream_queue
 
@@ -53,7 +52,7 @@ class DispatchingWorker(BaseThreadWorker):
 
     def _load_sink(self) -> tuple[Sink, list[Dispatcher]]:
         with get_db_session() as db:
-            active_sink = SinkService(db).get_active_sink()
+            active_sink = SinkService(event_bus=self._event_bus, db_session=db).get_active_sink()
         sink = active_sink if active_sink is not None else DisconnectedSinkConfig()
         destinations = DispatchService.get_destinations(output_configs=[sink])
         return sink, destinations

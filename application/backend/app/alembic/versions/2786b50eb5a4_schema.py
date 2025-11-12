@@ -156,6 +156,19 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["label_id"], ["labels.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("dataset_item_id", "label_id"),
     )
+    op.create_table(
+        "training_configurations",
+        sa.Column("id", sa.Text(), nullable=False),
+        sa.Column("project_id", sa.Text(), nullable=False),
+        sa.Column("model_architecture_id", sa.String(length=255), nullable=True),
+        sa.Column("configuration_data", sa.JSON(), nullable=False),
+        sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
+        sa.Column("updated_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
+        sa.ForeignKeyConstraint(["project_id"], ["projects.id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("project_id", "model_architecture_id", name="uq_project_model_config"),
+    )
+
     # ### end Alembic commands ###
 
 
@@ -177,5 +190,6 @@ def downgrade() -> None:
     op.drop_table("sources")
     op.drop_table("sinks")
     op.drop_index("idx_projects_name", table_name="projects")
+    op.drop_table("training_configurations")
     op.drop_table("projects")
     # ### end Alembic commands ###

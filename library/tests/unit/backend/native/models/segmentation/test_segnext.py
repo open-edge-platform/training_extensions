@@ -12,7 +12,7 @@ from otx.backend.native.models.utils.support_otx_v1 import OTXv1Helper
 
 
 class TestSegNext:
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_segnext(self) -> SegNext:
         return SegNext(
             10,

@@ -15,7 +15,7 @@ from otx.backend.native.models.segmentation.heads.ham_head import LightHamHeadMo
 
 
 class TestLightHamHeadModule:
-    @pytest.fixture()
+    @pytest.fixture
     def head_config(self) -> dict[str, Any]:
         return {
             "ham_kwargs": {"md_r": 16, "md_s": 1, "eval_steps": 7, "train_steps": 6},
@@ -33,11 +33,11 @@ class TestLightHamHeadModule:
         light_ham_head = LightHamHeadModule(**head_config)
         assert light_ham_head.ham_channels == head_config["ham_channels"]
 
-    @pytest.fixture()
+    @pytest.fixture
     def batch_size(self) -> int:
         return 8
 
-    @pytest.fixture()
+    @pytest.fixture
     def fake_input(self, batch_size) -> list[torch.Tensor]:
         return [
             torch.rand(batch_size, 64, 128, 128),

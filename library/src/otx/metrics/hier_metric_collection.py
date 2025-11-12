@@ -29,11 +29,11 @@ from otx.metrics.accuracy import HlabelAccuracy
 from otx.types.label import HLabelInfo
 
 __all__ = [
-    "LeafAccuracy",
     "FullPathAccuracy",
-    "InconsistentPathRatio",
-    "WeightedHierarchicalPrecision",
     "HierMetricCollection",
+    "InconsistentPathRatio",
+    "LeafAccuracy",
+    "WeightedHierarchicalPrecision",
     "hier_metric_collection_callable",
 ]
 

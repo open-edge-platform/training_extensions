@@ -11,7 +11,7 @@ from otx.backend.native.lightning.strategies.xpu_single import SingleXPUStrategy
 
 
 class TestSingleXPUStrategy:
-    @pytest.fixture()
+    @pytest.fixture
     def mock_is_xpu_available(self, mocker):
         return mocker.patch.object(target_file, "is_xpu_available", return_value=True)
 
@@ -26,6 +26,6 @@ class TestSingleXPUStrategy:
         with pytest.raises(MisconfigurationException):
             SingleXPUStrategy(device="xpu:0")
 
-    @pytest.fixture()
+    @pytest.fixture
     def strategy(self, mock_is_xpu_available):
         return SingleXPUStrategy(device="xpu:0", accelerator="xpu")

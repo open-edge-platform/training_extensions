@@ -201,7 +201,7 @@ class RandomSampler(BaseSampler):
             neg_pos_ub=neg_pos_ub,
             add_gt_as_proposals=add_gt_as_proposals,
         )
-        self.rng = ensure_rng(kwargs.get("rng", None))
+        self.rng = ensure_rng(kwargs.get("rng"))
 
     def random_choice(self, gallery: torch.Tensor | np.ndarray | list, num: int) -> torch.Tensor | np.ndarray:
         """Random select some elements from the gallery.

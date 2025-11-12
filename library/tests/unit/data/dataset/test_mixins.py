@@ -27,12 +27,12 @@ class MockDataset(DataAugSwitchMixin):
 class TestDataAugSwitchMixin:
     """Test cases for DataAugSwitchMixin."""
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_dataset(self):
         """Create a mock dataset with the mixin."""
         return MockDataset()
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_data_aug_switch(self):
         """Create a mock DataAugSwitch."""
         mock_switch = MagicMock()
@@ -40,7 +40,7 @@ class TestDataAugSwitchMixin:
         mock_switch.current_transforms = (True, mock_transforms)
         return mock_switch
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_entity(self):
         """Create a mock OTXDataItem."""
         return MagicMock(spec=OTXDataItem)

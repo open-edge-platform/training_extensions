@@ -2,16 +2,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import asyncio
-import logging
 import queue
 from typing import Any
 
 from aiortc import RTCPeerConnection, RTCSessionDescription
+from loguru import logger
 
 from app.schemas.webrtc import Answer, InputData, Offer
 from app.webrtc.stream import InferenceVideoStreamTrack
-
-logger = logging.getLogger(__name__)
 
 
 class WebRTCManager:
@@ -55,10 +53,10 @@ class WebRTCManager:
     async def cleanup_connection(self, webrtc_id: str) -> None:
         """Clean up a specific WebRTC connection by its ID."""
         if webrtc_id in self._pcs:
-            logger.debug("Cleaning up connection: %s", webrtc_id)
+            logger.debug("Cleaning up connection: {}", webrtc_id)
             pc = self._pcs.pop(webrtc_id)
             await pc.close()
-            logger.debug("Connection %s successfully closed.", webrtc_id)
+            logger.debug("Connection {} successfully closed.", webrtc_id)
             self._input_data.pop(webrtc_id, None)
 
     async def cleanup(self) -> None:

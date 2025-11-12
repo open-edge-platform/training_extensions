@@ -14,17 +14,17 @@ from .tile import (
 from .torch import OTXDataBatch, OTXDataItem, OTXPredBatch, OTXPredItem
 
 __all__ = [
-    "OTXDataItem",
+    "ImageInfo",
+    "ImageType",
     "OTXDataBatch",
+    "OTXDataItem",
     "OTXPredBatch",
     "OTXPredItem",
+    "Points",
+    "TileBatchDetDataEntity",
+    "TileBatchInstSegDataEntity",
+    "TileBatchInstSegDataEntity",
+    "TileBatchSegDataEntity",
     "TileDetDataEntity",
     "TileSegDataEntity",
-    "TileBatchInstSegDataEntity",
-    "TileBatchDetDataEntity",
-    "TileBatchSegDataEntity",
-    "TileBatchInstSegDataEntity",
-    "ImageType",
-    "ImageInfo",
-    "Points",
 ]

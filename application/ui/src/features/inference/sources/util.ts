@@ -3,10 +3,10 @@
 
 import type { components } from '../../../api/openapi-spec';
 
-export type ImagesFolderSourceConfig = components['schemas']['ImagesFolderSourceConfig'];
-export type IPCameraSourceConfig = components['schemas']['IPCameraSourceConfig'];
-export type WebcamSourceConfig = components['schemas']['WebcamSourceConfig'];
-export type VideoFileSourceConfig = components['schemas']['VideoFileSourceConfig'];
+export type ImagesFolderSourceConfig = components['schemas']['ImagesFolderSourceConfigView'];
+export type IPCameraSourceConfig = components['schemas']['IPCameraSourceConfigView'];
+export type WebcamSourceConfig = components['schemas']['WebcamSourceConfigView'];
+export type VideoFileSourceConfig = components['schemas']['VideoFileSourceConfigView'];
 
 export type SourceConfig = ImagesFolderSourceConfig | IPCameraSourceConfig | WebcamSourceConfig | VideoFileSourceConfig;
 

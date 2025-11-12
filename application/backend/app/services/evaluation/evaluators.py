@@ -50,24 +50,26 @@ def datumaro_dataset_to_coco(dataset: Dataset) -> dict:
 
         # Detection
         if hasattr(sample, "bboxes") and sample.bboxes is not None:
-            for bbox, label_idx in zip(sample.bboxes, sample.label):
+            confidences = sample.confidence if sample.confidence is not None else [None] * len(sample.bboxes)
+            for bbox, label_idx, confidence in zip(sample.bboxes, sample.label, confidences, strict=True):
                 x1, y1, x2, y2 = bbox
                 width = x2 - x1
                 height = y2 - y1
-                coco_dataset_dict["annotations"].append(
-                    {
-                        "id": annotation_id,
-                        "image_id": image_id,
-                        "category_id": int(label_idx),
-                        "bbox": [float(x1), float(y1), float(width), float(height)],
-                        "score": 1.0,
-                    }
-                )
+                annotation = {
+                    "id": annotation_id,
+                    "image_id": image_id,
+                    "category_id": int(label_idx),
+                    "bbox": [float(x1), float(y1), float(width), float(height)],
+                }
+                if confidence is not None:
+                    annotation["score"] = float(confidence)
+                coco_dataset_dict["annotations"].append(annotation)
                 annotation_id += 1
 
         # Instance Segmentation
         if hasattr(sample, "polygons") and sample.polygons is not None:
-            for polygon, label_idx in zip(sample.polygons, sample.label):
+            confidences = sample.confidence if sample.confidence is not None else [None] * len(sample.polygons)
+            for polygon, label_idx, confidence in zip(sample.polygons, sample.label, confidences, strict=True):
                 flattened_polygon = [coord for point in polygon for coord in point]
                 x_coords = [point[0] for point in polygon]
                 y_coords = [point[1] for point in polygon]
@@ -75,16 +77,16 @@ def datumaro_dataset_to_coco(dataset: Dataset) -> dict:
                 y_min, y_max = min(y_coords), max(y_coords)
                 width = x_max - x_min
                 height = y_max - y_min
-                coco_dataset_dict["annotations"].append(
-                    {
-                        "id": annotation_id,
-                        "image_id": image_id,
-                        "category_id": int(label_idx),
-                        "segmentation": [flattened_polygon],
-                        "bbox": [float(x_min), float(y_min), float(width), float(height)],
-                        "score": 1.0,
-                    }
-                )
+                annotation = {
+                    "id": annotation_id,
+                    "image_id": image_id,
+                    "category_id": int(label_idx),
+                    "segmentation": [flattened_polygon],
+                    "bbox": [float(x_min), float(y_min), float(width), float(height)],
+                }
+                if confidence is not None:
+                    annotation["score"] = float(confidence)
+                coco_dataset_dict["annotations"].append(annotation)
                 annotation_id += 1
 
     return coco_dataset_dict
@@ -197,8 +199,8 @@ class MultiClassClassificationEvaluator(AccuracyEvaluator, ConfusionMatrixEvalua
 
     def __init__(self, predictions_dataset: Dataset, ground_truth_dataset: Dataset):
         if (
-            predictions_dataset.schema.attributes["label"].annotation.multi_label
-            or ground_truth_dataset.schema.attributes["label"].annotation.multi_label
+            predictions_dataset.schema.attributes["label"].field.multi_label
+            or ground_truth_dataset.schema.attributes["label"].field.multi_label
         ):
             raise ValueError(f"{self.__class__.__name__} should not be used for multi-label classification datasets")
 
@@ -220,8 +222,8 @@ class MultiLabelClassificationEvaluator(AccuracyEvaluator):
 
     def __init__(self, predictions_dataset: Dataset, ground_truth_dataset: Dataset):
         if not (
-            predictions_dataset.schema.attributes["label"].annotation.multi_label
-            and ground_truth_dataset.schema.attributes["label"].annotation.multi_label
+            predictions_dataset.schema.attributes["label"].field.multi_label
+            and ground_truth_dataset.schema.attributes["label"].field.multi_label
         ):
             raise ValueError(f"{self.__class__.__name__} should only be used for multi-label classification datasets")
 

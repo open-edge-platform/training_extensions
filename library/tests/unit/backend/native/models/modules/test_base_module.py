@@ -64,7 +64,7 @@ class FooModel(BaseModule):
 
 
 class TestBaseModule:
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_model(self) -> FooModel:
         return FooModel(
             component1=FooConv1d(),

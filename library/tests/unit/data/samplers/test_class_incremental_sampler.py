@@ -13,7 +13,7 @@ from otx.data.samplers.class_incremental_sampler import ClassIncrementalSampler
 from otx.data.utils import get_idx_list_per_classes
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_old_new_dataset() -> OTXDataset:
     dataset_items = (
         [

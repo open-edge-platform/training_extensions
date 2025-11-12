@@ -1,19 +1,17 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
 import os
 from datetime import UTC, datetime
 
 import cv2
 import numpy as np
+from loguru import logger
 from model_api.models.result import Result
 
-from app.schemas.sink import FolderSinkConfig, OutputFormat
+from app.models import FolderSinkConfig, OutputFormat
 
 from .base import BaseDispatcher
-
-logger = logging.getLogger(__name__)
 
 
 class FolderDispatcher(BaseDispatcher):
@@ -26,7 +24,7 @@ class FolderDispatcher(BaseDispatcher):
             output_config: Configuration for the output destination
         """
         super().__init__(output_config=output_config)
-        self.output_folder = output_config.folder_path
+        self.output_folder = output_config.config_data.folder_path
         if not os.path.exists(self.output_folder):
             os.makedirs(self.output_folder, exist_ok=True)
 

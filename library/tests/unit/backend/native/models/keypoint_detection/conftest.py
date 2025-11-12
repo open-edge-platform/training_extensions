@@ -11,7 +11,7 @@ from otx.data.entity.base import ImageInfo
 from otx.data.entity.torch import OTXDataBatch
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_keypoint_det_batch_data_entity() -> OTXDataBatch:
     batch_size = 2
     random_tensor = torch.randn((batch_size, 3, 192, 256))

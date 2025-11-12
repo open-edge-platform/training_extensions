@@ -1,19 +1,11 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from collections.abc import Generator
-from contextlib import contextmanager
-from dataclasses import dataclass
+from abc import ABC
+from collections.abc import Callable
 from enum import StrEnum
-from typing import Generic, Protocol, TypeVar
-from uuid import UUID
 
-from pydantic import BaseModel
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
-
-from app.db.schema import Base
-from app.repositories.base import BaseRepository, PrimaryKeyIntegrityError
 
 
 class ResourceType(StrEnum):
@@ -69,71 +61,63 @@ class ResourceWithIdAlreadyExistsError(ResourceError):
         super().__init__(resource_type, resource_id, msg)
 
 
-S = TypeVar("S", bound=BaseModel)  # Schema type e.g. Source or Sink
-D = TypeVar("D", bound=Base)  # DB model type e.g. SourceDB or SinkDB
-R = TypeVar("R", bound=BaseRepository)  # Repository type
+class BaseSessionManagedService(ABC):
+    """
+    Base class for services that require a managed database session.
 
+    This class supports deferred database session initialization, allowing services
+    to be instantiated without an immediate database connection. The session can be
+    provided either at construction time or injected later via `set_db_session()`.
 
-class MapperProtocol(Protocol[S, D]):
-    """Protocol for mapper classes."""
+    This pattern is useful in scenarios where:
+    - Services need to be created before database context is available
+    - Database session management is handled externally (e.g., via session factories)
+    - Services are used in contexts with different session lifecycle requirements
 
-    @staticmethod
-    def to_schema(db_model: D) -> S: ...
+    Args:
+        db_session: Optional database session to use immediately. If not provided,
+            the session must be set later via `set_db_session()` or a factory must be provided.
+        db_session_factory: Optional callable that returns a database session when invoked.
+            Used as a fallback if no session is directly provided.
 
-    @staticmethod
-    def from_schema(schema: S) -> D: ...
+    Raises:
+        RuntimeError: When accessing `db_session` property without a session or factory configured.
 
+    Example:
+        >>> # With immediate session
+        >>> service = MyService(db_session=session)
+        >>>
+        >>> # With deferred session
+        >>> service = MyService()
+        >>> service.set_db_session(session)
+        >>>
+        >>> # With session factory
+        >>> service = MyService(db_session_factory=lambda: get_session())
+    """
 
-@dataclass(frozen=True)
-class ServiceConfig(Generic[R]):
-    repository_class: type[R]
-    mapper_class: MapperProtocol
-    resource_type: ResourceType
+    def __init__(
+        self,
+        db_session: Session | None = None,
+        db_session_factory: Callable[[], Session] | None = None,
+    ):
+        self._db_session: Session | None = db_session
+        self._db_session_factory = db_session_factory
+        self._session_managed_services: list[BaseSessionManagedService] = []
 
+    def set_db_session(self, db_session: Session) -> None:
+        """Set the database session for the service."""
+        self._db_session = db_session
+        for service in self._session_managed_services:
+            service.set_db_session(db_session)
 
-class GenericPersistenceService(Generic[S, R]):
-    """Generic service for CRUD operations on a repository."""
+    def register_managed_services(self, *services: "BaseSessionManagedService") -> None:
+        """Register a child service that also requires session management."""
+        self._session_managed_services.extend(services)
 
-    def __init__(self, config: ServiceConfig[R], db: Session) -> None:
-        self.config = config
-        self.db = db
-
-    @contextmanager
-    def _get_repo(self) -> Generator[R]:
-        repo = self.config.repository_class(self.db)  # type: ignore[call-arg]
-        yield repo
-
-    def list_all(self) -> list[S]:
-        with self._get_repo() as repo:
-            return [self.config.mapper_class.to_schema(o) for o in repo.list_all()]
-
-    def get_by_id(self, item_id: UUID) -> S | None:
-        with self._get_repo() as repo:
-            item_db = repo.get_by_id(str(item_id))
-            return self.config.mapper_class.to_schema(item_db) if item_db else None
-
-    def create(self, item: S) -> S:
-        try:
-            with self._get_repo() as repo:
-                item_db = self.config.mapper_class.from_schema(item)
-                repo.save(item_db)
-                return self.config.mapper_class.to_schema(item_db)
-        except PrimaryKeyIntegrityError:
-            raise ResourceWithIdAlreadyExistsError(self.config.resource_type, str(item.id))  # type: ignore[attr-defined]
-
-    def update(self, item: S, partial_config: dict) -> S:
-        with self._get_repo() as repo:
-            to_update = item.model_copy(update=partial_config)
-            updated = repo.update(self.config.mapper_class.from_schema(to_update))
-            # Explicit early commit to ensure changes are visible to other transactions before the session is closed
-            self.db.commit()
-            return self.config.mapper_class.to_schema(updated)
-
-    def delete_by_id(self, item_id: UUID) -> None:
-        try:
-            with self._get_repo() as repo:
-                deleted = repo.delete(str(item_id))
-            if not deleted:
-                raise ResourceNotFoundError(self.config.resource_type, str(item_id))
-        except IntegrityError:
-            raise ResourceInUseError(self.config.resource_type, str(item_id))
+    @property
+    def db_session(self) -> Session:
+        if self._db_session is not None:
+            return self._db_session
+        if self._db_session_factory is not None:
+            return self._db_session_factory()
+        raise RuntimeError("No DB session available. Provide session or session factory.")

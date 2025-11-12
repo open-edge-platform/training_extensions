@@ -17,7 +17,7 @@ from otx.types.label import SegLabelInfo
 
 
 class TestOTXSegmentationModel:
-    @pytest.fixture()
+    @pytest.fixture
     def model(self, label_info, optimizer, scheduler, metric, torch_compile):
         return OTXSegmentationModel(
             label_info,
@@ -29,7 +29,7 @@ class TestOTXSegmentationModel:
             torch_compile,
         )
 
-    @pytest.fixture()
+    @pytest.fixture
     def batch_data_entity(self):
         return OTXDataBatch(
             batch_size=2,
@@ -38,7 +38,7 @@ class TestOTXSegmentationModel:
             masks=[torch.randn(1, 224, 224), torch.randn(1, 224, 224)],
         )
 
-    @pytest.fixture()
+    @pytest.fixture
     def label_info(self):
         return SegLabelInfo(
             label_names=["Background", "label_0", "label_1"],
@@ -46,19 +46,19 @@ class TestOTXSegmentationModel:
             label_ids=["0", "1", "2"],
         )
 
-    @pytest.fixture()
+    @pytest.fixture
     def optimizer(self):
         return DefaultOptimizerCallable
 
-    @pytest.fixture()
+    @pytest.fixture
     def scheduler(self):
         return DefaultSchedulerCallable
 
-    @pytest.fixture()
+    @pytest.fixture
     def metric(self):
         return SegmCallable
 
-    @pytest.fixture()
+    @pytest.fixture
     def torch_compile(self):
         return False
 
