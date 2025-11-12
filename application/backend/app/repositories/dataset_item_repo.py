@@ -53,14 +53,8 @@ class DatasetItemRepository:
     @staticmethod
     def _apply_subset_filter(stmt: Select, subset: str | None = None) -> Select:
         """Apply subset filter to a select statement."""
-        if subset == DatasetItemSubset.UNASSIGNED:
-            stmt = stmt.where(DatasetItemDB.subset == DatasetItemSubset.UNASSIGNED)
-        elif subset == DatasetItemSubset.TRAINING:
-            stmt = stmt.where(DatasetItemDB.subset == DatasetItemSubset.TRAINING)
-        elif subset == DatasetItemSubset.VALIDATION:
-            stmt = stmt.where(DatasetItemDB.subset == DatasetItemSubset.VALIDATION)
-        elif subset == DatasetItemSubset.TESTING:
-            stmt = stmt.where(DatasetItemDB.subset == DatasetItemSubset.TESTING)
+        if subset is not None:
+            stmt = stmt.where(DatasetItemDB.subset == subset)
         return stmt
 
     def save(self, dataset_item_db: DatasetItemDB) -> DatasetItemDB:
