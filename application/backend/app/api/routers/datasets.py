@@ -135,7 +135,7 @@ def list_dataset_items(  # noqa: PLR0913
             end_date=end_date,
             annotation_status=annotation_status,
             label_ids=labels,
-            subset=subset
+            subset=subset,
         ),
     )
     return DatasetItemsWithPagination(

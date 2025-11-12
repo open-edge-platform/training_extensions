@@ -1272,7 +1272,7 @@ class TestDatasetServiceIntegration:
                 limit=20,
                 offset=0,
                 subset=subset,
-            )
+            ),
         )
 
         assert len(dataset_items) == len(expected_names)
@@ -1309,7 +1309,7 @@ class TestDatasetServiceIntegration:
                 limit=limit,
                 offset=offset,
                 subset=subset,
-            )
+            ),
         )
 
         assert len(dataset_items) == expected_count
@@ -1329,7 +1329,7 @@ class TestDatasetServiceIntegration:
                 limit=20,
                 offset=0,
                 subset="unassigned",
-            )
+            ),
         )
         assert len(unassigned_items) == 2
         for item in unassigned_items:
@@ -1342,7 +1342,7 @@ class TestDatasetServiceIntegration:
                 limit=20,
                 offset=0,
                 subset="training",
-            )
+            ),
         )
         assert len(training_items) == 3
         for item in training_items:
@@ -1355,7 +1355,7 @@ class TestDatasetServiceIntegration:
                 limit=20,
                 offset=0,
                 subset="validation",
-            )
+            ),
         )
         assert len(validation_items) == 2
         for item in validation_items:
@@ -1368,7 +1368,7 @@ class TestDatasetServiceIntegration:
                 limit=20,
                 offset=0,
                 subset="testing",
-            )
+            ),
         )
         assert len(testing_items) == 1
         for item in testing_items:

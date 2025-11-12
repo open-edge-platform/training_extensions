@@ -118,13 +118,7 @@ class TestDatasetItemEndpoints:
         fxt_dataset_service.list_dataset_items.assert_called_once_with(
             project_id=fxt_get_project.id,
             filters=DatasetItemFilters(
-                limit=10,
-                offset=0,
-                start_date=None,
-                end_date=None,
-                annotation_status=None,
-                label_ids=None,
-                subset=None
+                limit=10, offset=0, start_date=None, end_date=None, annotation_status=None, label_ids=None, subset=None
             ),
         )
 
@@ -217,7 +211,7 @@ class TestDatasetItemEndpoints:
                 end_date=None,
                 annotation_status=annotation_status,
                 label_ids=None,
-                subset=None
+                subset=None,
             ),
         )
 
@@ -248,8 +242,8 @@ class TestDatasetItemEndpoints:
                 end_date=None,
                 annotation_status=None,
                 label_ids=None,
-                subset=subset
-            )
+                subset=subset,
+            ),
         )
 
     @pytest.mark.parametrize(
