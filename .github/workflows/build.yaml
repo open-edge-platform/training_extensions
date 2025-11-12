@@ -199,6 +199,8 @@ jobs:
           TAGS: ${{ steps.meta.outputs.tags }}
 
       - name: Upload image as artifact
+        # Image upload is heavy and slow, so we skip it on PRs
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         uses: ishworkh/container-image-artifact-upload@5d71a2417f0576fa11fe770fb04ece58c4587714
         with:
           image: "geti-tune-${{ matrix.device }}:${{ steps.first-tag.outputs.tag }}"
