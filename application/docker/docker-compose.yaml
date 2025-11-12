@@ -9,13 +9,16 @@ x-proxies: &proxies
 
 services:
   geti-tune:
-    image: geti-tune:${TAG:-latest}
+    image: geti-tune-${AI_DEVICE:-cpu}:${TAG:-latest}
     restart: unless-stopped
     build:
       context: ..
       dockerfile: docker/Dockerfile
+      target: geti-tune-${AI_DEVICE:-cpu}
       <<: *proxies
     working_dir: /app
+    environment:
+      - AI_DEVICE=${AI_DEVICE} # choose between 'cpu' (default), 'xpu', 'gpu'
     volumes:
       - ../backend/data/:/app/data/
       - ../backend/logs/:/app/logs/
