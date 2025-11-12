@@ -1,7 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import shutil
 from collections.abc import Generator
 from pathlib import Path
 from unittest.mock import patch
@@ -18,13 +17,11 @@ CLASSIFICATION_MODEL_MANIFEST_ID = "Custom_Image_Classification_DeiT-Tiny"
 
 
 @pytest.fixture()
-def fxt_pretrained_weights_dir() -> Generator[Path]:
-    """Setup a temporary data directory for tests."""
-    pretrained_weights_dir = Path("data/pretrained_weights")
-    if not pretrained_weights_dir.exists():
-        pretrained_weights_dir.mkdir(parents=True)
+def fxt_pretrained_weights_dir(tmp_path: Path) -> Generator[Path]:
+    """Set up a temporary data directory for tests."""
+    pretrained_weights_dir = tmp_path / "pretrained_weights"
+    pretrained_weights_dir.mkdir(parents=True, exist_ok=True)
     yield pretrained_weights_dir
-    shutil.rmtree(pretrained_weights_dir)
 
 
 @pytest.fixture

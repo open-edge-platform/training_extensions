@@ -180,10 +180,11 @@ class DataCollector:
             return
         frame_data = cv2.cvtColor(frame_data, cv2.COLOR_BGR2RGB)  # Convert BGR to RGB
         with get_db_session() as session:
-            labels = LabelService(db_session=session).list_all(project_id=project.id)
+            label_service = LabelService(db_session=session)
+            labels = label_service.list_all(project_id=project.id)
             annotations = convert_prediction(labels=labels, frame_data=frame_data, prediction=inference_data.prediction)
 
-            dataset_service = DatasetService(data_dir=self.data_dir, db_session=session)
+            dataset_service = DatasetService(data_dir=self.data_dir, label_service=label_service, db_session=session)
             dataset_service.create_dataset_item(
                 project=project,
                 name=f"{timestamp:.4f}".replace(".", "_"),

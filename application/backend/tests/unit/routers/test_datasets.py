@@ -19,9 +19,9 @@ from app.api.schemas.dataset_item import (
     SetDatasetItemAnnotations,
 )
 from app.main import app
-from app.models import DatasetItem, DatasetItemFormat, LabelReference, Rectangle
+from app.models import DatasetItem, DatasetItemAnnotationStatus, DatasetItemFormat, LabelReference, Rectangle
 from app.services import DatasetService, ResourceNotFoundError, ResourceType
-from app.services.dataset_service import AnnotationValidationError, SubsetAlreadyAssignedError
+from app.services.dataset_service import AnnotationValidationError, DatasetItemFilters, SubsetAlreadyAssignedError
 
 
 @pytest.fixture
@@ -116,14 +116,10 @@ class TestDatasetItemEndpoints:
             subset=None,
         )
         fxt_dataset_service.list_dataset_items.assert_called_once_with(
-            project=fxt_get_project,
-            limit=10,
-            offset=0,
-            start_date=None,
-            end_date=None,
-            annotation_status=None,
-            label_ids=None,
-            subset=None,
+            project_id=fxt_get_project.id,
+            filters=DatasetItemFilters(
+                limit=10, offset=0, start_date=None, end_date=None, annotation_status=None, label_ids=None, subset=None
+            ),
         )
 
     def test_list_dataset_items_filtering_and_pagination(
@@ -146,14 +142,16 @@ class TestDatasetItemEndpoints:
             subset=None,
         )
         fxt_dataset_service.list_dataset_items.assert_called_once_with(
-            project=fxt_get_project,
-            limit=50,
-            offset=2,
-            start_date=datetime(2025, 1, 9, 0, 0, 0, tzinfo=ZoneInfo("UTC")),
-            end_date=datetime(2025, 12, 31, 23, 59, 59, tzinfo=ZoneInfo("UTC")),
-            annotation_status=None,
-            label_ids=None,
-            subset=None,
+            project_id=fxt_get_project.id,
+            filters=DatasetItemFilters(
+                limit=50,
+                offset=2,
+                start_date=datetime(2025, 1, 9, 0, 0, 0, tzinfo=ZoneInfo("UTC")),
+                end_date=datetime(2025, 12, 31, 23, 59, 59, tzinfo=ZoneInfo("UTC")),
+                annotation_status=None,
+                label_ids=None,
+                subset=None,
+            ),
         )
 
     @pytest.mark.parametrize("limit", [1000, 0, -20])
@@ -179,7 +177,14 @@ class TestDatasetItemEndpoints:
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
         fxt_dataset_service.list_dataset_items.assert_not_called()
 
-    @pytest.mark.parametrize("annotation_status", ["unannotated", "reviewed", "to_review"])
+    @pytest.mark.parametrize(
+        "annotation_status",
+        [
+            DatasetItemAnnotationStatus.UNANNOTATED,
+            DatasetItemAnnotationStatus.REVIEWED,
+            DatasetItemAnnotationStatus.TO_REVIEW,
+        ],
+    )
     def test_list_dataset_items_with_annotation_status(
         self, fxt_get_project, fxt_dataset_item, fxt_dataset_service, fxt_client, annotation_status
     ):
@@ -198,14 +203,16 @@ class TestDatasetItemEndpoints:
             subset=None,
         )
         fxt_dataset_service.list_dataset_items.assert_called_once_with(
-            project=fxt_get_project,
-            limit=10,
-            offset=0,
-            start_date=None,
-            end_date=None,
-            annotation_status=annotation_status,
-            label_ids=None,
-            subset=None,
+            project_id=fxt_get_project.id,
+            filters=DatasetItemFilters(
+                limit=10,
+                offset=0,
+                start_date=None,
+                end_date=None,
+                annotation_status=annotation_status,
+                label_ids=None,
+                subset=None,
+            ),
         )
 
     @pytest.mark.parametrize("subset", ["unassigned", "training", "validation", "testing"])
@@ -227,14 +234,16 @@ class TestDatasetItemEndpoints:
             subset=subset,
         )
         fxt_dataset_service.list_dataset_items.assert_called_once_with(
-            project=fxt_get_project,
-            limit=10,
-            offset=0,
-            start_date=None,
-            end_date=None,
-            annotation_status=None,
-            label_ids=None,
-            subset=subset,
+            project_id=fxt_get_project.id,
+            filters=DatasetItemFilters(
+                limit=10,
+                offset=0,
+                start_date=None,
+                end_date=None,
+                annotation_status=None,
+                label_ids=None,
+                subset=subset,
+            ),
         )
 
     @pytest.mark.parametrize(
@@ -276,7 +285,7 @@ class TestDatasetItemEndpoints:
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
         fxt_dataset_service.get_dataset_item_by_id.assert_called_once_with(
-            project=fxt_get_project, dataset_item_id=dataset_item_id
+            project_id=fxt_get_project.id, dataset_item_id=dataset_item_id
         )
 
     def test_get_dataset_item_success(self, fxt_get_project, fxt_dataset_item, fxt_dataset_service, fxt_client):
@@ -296,7 +305,7 @@ class TestDatasetItemEndpoints:
             "width": 1024,
         }
         fxt_dataset_service.get_dataset_item_by_id.assert_called_once_with(
-            project=fxt_get_project, dataset_item_id=fxt_dataset_item.id
+            project_id=fxt_get_project.id, dataset_item_id=fxt_dataset_item.id
         )
 
     def test_get_dataset_item_binary_not_found(self, fxt_get_project, fxt_dataset_service, fxt_client):
@@ -309,7 +318,7 @@ class TestDatasetItemEndpoints:
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
         fxt_dataset_service.get_dataset_item_binary_path_by_id.assert_called_once_with(
-            project=fxt_get_project, dataset_item_id=dataset_item_id
+            project_id=fxt_get_project.id, dataset_item_id=dataset_item_id
         )
 
     def test_get_dataset_item_binary_success(self, fxt_get_project, fxt_dataset_service, fxt_client):
@@ -321,7 +330,7 @@ class TestDatasetItemEndpoints:
 
         assert response.status_code == status.HTTP_200_OK
         fxt_dataset_service.get_dataset_item_binary_path_by_id.assert_called_once_with(
-            project=fxt_get_project, dataset_item_id=dataset_item_id
+            project_id=fxt_get_project.id, dataset_item_id=dataset_item_id
         )
 
     def test_get_dataset_item_thumbnail_not_found(self, fxt_get_project, fxt_dataset_service, fxt_client):
@@ -491,7 +500,7 @@ class TestDatasetItemEndpoints:
             "user_reviewed": True,
         }
         fxt_dataset_service.get_dataset_item_by_id.assert_called_once_with(
-            project=fxt_get_project,
+            project_id=fxt_get_project.id,
             dataset_item_id=dataset_item_id,
         )
 
@@ -505,7 +514,7 @@ class TestDatasetItemEndpoints:
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
         fxt_dataset_service.get_dataset_item_by_id.assert_called_once_with(
-            project=fxt_get_project,
+            project_id=fxt_get_project.id,
             dataset_item_id=dataset_item_id,
         )
 
@@ -518,7 +527,7 @@ class TestDatasetItemEndpoints:
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
         fxt_dataset_service.get_dataset_item_by_id.assert_called_once_with(
-            project=fxt_get_project,
+            project_id=fxt_get_project.id,
             dataset_item_id=dataset_item_id,
         )
 
@@ -569,7 +578,7 @@ class TestDatasetItemEndpoints:
             "width": 1024,
         }
         fxt_dataset_service.assign_dataset_item_subset.assert_called_once_with(
-            project=fxt_get_project,
+            project_id=fxt_get_project.id,
             dataset_item_id=dataset_item_id,
             subset=DatasetItemSubset.TRAINING,
         )
@@ -588,7 +597,7 @@ class TestDatasetItemEndpoints:
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
         fxt_dataset_service.assign_dataset_item_subset.assert_called_once_with(
-            project=fxt_get_project,
+            project_id=fxt_get_project.id,
             dataset_item_id=dataset_item_id,
             subset=DatasetItemSubset.TRAINING,
         )
@@ -605,7 +614,7 @@ class TestDatasetItemEndpoints:
 
         assert response.status_code == status.HTTP_409_CONFLICT
         fxt_dataset_service.assign_dataset_item_subset.assert_called_once_with(
-            project=fxt_get_project,
+            project_id=fxt_get_project.id,
             dataset_item_id=dataset_item_id,
             subset=DatasetItemSubset.TRAINING,
         )

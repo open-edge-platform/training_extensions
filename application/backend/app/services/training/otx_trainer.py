@@ -7,11 +7,14 @@ from contextlib import AbstractContextManager
 from pathlib import Path
 from uuid import UUID
 
+from datumaro.experimental import Dataset
+from datumaro.experimental.fields import Subset
 from loguru import logger
 from sqlalchemy.orm import Session
 
 from app.core.run import ExecutionContext
-from app.services.base_weights_service import BaseWeightsService
+from app.models import DatasetItemAnnotationStatus
+from app.services import BaseWeightsService, DatasetService
 
 from .base import Trainer, step
 from .subset_assignment import SplitRatios, SubsetAssigner, SubsetService
@@ -27,6 +30,7 @@ class OTXTrainer(Trainer):
         data_dir: Path,
         base_weights_service: BaseWeightsService,
         subset_service: SubsetService,
+        dataset_service: DatasetService,
         subset_assigner: SubsetAssigner,
         db_session_factory: Callable[[], AbstractContextManager[Session]],
     ):
@@ -34,8 +38,12 @@ class OTXTrainer(Trainer):
         self._data_dir = data_dir
         self._base_weights_service = base_weights_service
         self._subset_service = subset_service
+        self._dataset_service = dataset_service
         self._subset_assigner = subset_assigner
         self._db_session_factory = db_session_factory
+        self._training_dataset: Dataset | None = None
+        self._validation_dataset: Dataset | None = None
+        self._testing_dataset: Dataset | None = None
 
     @step("Prepare Model Weights")
     def prepare_weights(self) -> Path:
@@ -48,12 +56,12 @@ class OTXTrainer(Trainer):
         if self._training_params is None:
             raise ValueError("Training parameters not set")
         parent_model_revision_id = self._training_params.parent_model_revision_id
-        task_type = self._training_params.task_type
+        task = self._training_params.task
         model_architecture_id = self._training_params.model_architecture_id
         project_id = self._training_params.project_id
         if parent_model_revision_id is None:
             return self._base_weights_service.get_local_weights_path(
-                task=task_type, model_manifest_id=model_architecture_id
+                task=task.task_type, model_manifest_id=model_architecture_id
             )
 
         if project_id is None:
@@ -76,7 +84,8 @@ class OTXTrainer(Trainer):
             raise ValueError("Project ID must be provided for subset assignment")
 
         with self._db_session_factory() as db:
-            unassigned_items = self._subset_service.get_unassigned_items_with_labels(project_id, db)
+            self._subset_service.set_db_session(db)
+            unassigned_items = self._subset_service.get_unassigned_items_with_labels(project_id)
 
             if not unassigned_items:
                 self.report_progress("No unassigned items found")
@@ -85,7 +94,7 @@ class OTXTrainer(Trainer):
             self.report_progress(f"Found {len(unassigned_items)} unassigned items")
 
             # Get current distribution
-            current_distribution = self._subset_service.get_subset_distribution(project_id, db)
+            current_distribution = self._subset_service.get_subset_distribution(project_id)
             logger.info("Current subset distribution: {}", current_distribution)
 
             # Compute adjusted ratios
@@ -98,9 +107,26 @@ class OTXTrainer(Trainer):
 
             # Persist assignments
             self.report_progress("Persisting subset assignments")
-            self._subset_service.update_subset_assignments(project_id, assignments, db)
+            self._subset_service.update_subset_assignments(project_id, assignments)
 
         self.report_progress(f"Successfully assigned {len(assignments)} items to subsets")
+
+    @step("Create Training Dataset")
+    def create_training_dataset(self) -> None:
+        """Create datasets for training, validation, and testing."""
+        if self._training_params is None:
+            raise ValueError("Training parameters not set")
+        project_id = self._training_params.project_id
+        if project_id is None:
+            raise ValueError("Project ID must be provided")
+        task = self._training_params.task
+
+        with self._db_session_factory() as db:
+            self._dataset_service.set_db_session(db)
+            dm_dataset = self._dataset_service.get_dm_dataset(project_id, task, DatasetItemAnnotationStatus.REVIEWED)
+            self._training_dataset = dm_dataset.filter_by_subset(Subset.TRAINING)
+            self._validation_dataset = dm_dataset.filter_by_subset(Subset.VALIDATION)
+            self._testing_dataset = dm_dataset.filter_by_subset(Subset.TESTING)
 
     @step("Train Model with OTX")
     def train_model(self) -> None:
@@ -122,6 +148,7 @@ class OTXTrainer(Trainer):
 
         self.prepare_weights()
         self.assign_subsets()
+        self.create_training_dataset()
         self.train_model()
 
     @staticmethod

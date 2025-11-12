@@ -199,8 +199,8 @@ class MultiClassClassificationEvaluator(AccuracyEvaluator, ConfusionMatrixEvalua
 
     def __init__(self, predictions_dataset: Dataset, ground_truth_dataset: Dataset):
         if (
-            predictions_dataset.schema.attributes["label"].annotation.multi_label
-            or ground_truth_dataset.schema.attributes["label"].annotation.multi_label
+            predictions_dataset.schema.attributes["label"].field.multi_label
+            or ground_truth_dataset.schema.attributes["label"].field.multi_label
         ):
             raise ValueError(f"{self.__class__.__name__} should not be used for multi-label classification datasets")
 
@@ -222,8 +222,8 @@ class MultiLabelClassificationEvaluator(AccuracyEvaluator):
 
     def __init__(self, predictions_dataset: Dataset, ground_truth_dataset: Dataset):
         if not (
-            predictions_dataset.schema.attributes["label"].annotation.multi_label
-            and ground_truth_dataset.schema.attributes["label"].annotation.multi_label
+            predictions_dataset.schema.attributes["label"].field.multi_label
+            and ground_truth_dataset.schema.attributes["label"].field.multi_label
         ):
             raise ValueError(f"{self.__class__.__name__} should only be used for multi-label classification datasets")
 

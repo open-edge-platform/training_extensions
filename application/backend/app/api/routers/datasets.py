@@ -20,7 +20,12 @@ from app.core.models import Pagination
 from app.models import DatasetItemAnnotationStatus, DatasetItemSubset
 from app.schemas import ProjectView
 from app.services import DatasetService, ResourceNotFoundError
-from app.services.dataset_service import AnnotationValidationError, InvalidImageError, SubsetAlreadyAssignedError
+from app.services.dataset_service import (
+    AnnotationValidationError,
+    DatasetItemFilters,
+    InvalidImageError,
+    SubsetAlreadyAssignedError,
+)
 
 router = APIRouter(prefix="/api/projects/{project_id}/dataset/items", tags=["Datasets"])
 
@@ -122,14 +127,16 @@ def list_dataset_items(  # noqa: PLR0913
         subset=subset,
     )
     dataset_items = dataset_service.list_dataset_items(
-        project=project,
-        limit=limit,
-        offset=offset,
-        start_date=start_date,
-        end_date=end_date,
-        annotation_status=annotation_status,
-        label_ids=labels,
-        subset=subset,
+        project_id=project.id,
+        filters=DatasetItemFilters(
+            limit=limit,
+            offset=offset,
+            start_date=start_date,
+            end_date=end_date,
+            annotation_status=annotation_status,
+            label_ids=labels,
+            subset=subset,
+        ),
     )
     return DatasetItemsWithPagination(
         items=[DatasetItemView.model_validate(dataset_item, from_attributes=True) for dataset_item in dataset_items],
@@ -157,7 +164,7 @@ def get_dataset_item(
 ) -> DatasetItemView:
     """Get information about a specific dataset item"""
     try:
-        dataset_item = dataset_service.get_dataset_item_by_id(project=project, dataset_item_id=dataset_item_id)
+        dataset_item = dataset_service.get_dataset_item_by_id(project_id=project.id, dataset_item_id=dataset_item_id)
         return DatasetItemView.model_validate(dataset_item, from_attributes=True)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
@@ -179,7 +186,7 @@ def get_dataset_item_binary(
     """Get dataset item binary content"""
     try:
         binary_path = dataset_service.get_dataset_item_binary_path_by_id(
-            project=project, dataset_item_id=dataset_item_id
+            project_id=project.id, dataset_item_id=dataset_item_id
         )
         return FileResponse(path=binary_path)
     except ResourceNotFoundError as e:
@@ -281,7 +288,7 @@ def get_dataset_item_annotations(
 ) -> DatasetItemAnnotations:
     """Get the dataset item annotations"""
     try:
-        dataset_item = dataset_service.get_dataset_item_by_id(project=project, dataset_item_id=dataset_item_id)
+        dataset_item = dataset_service.get_dataset_item_by_id(project_id=project.id, dataset_item_id=dataset_item_id)
         if dataset_item.annotation_data is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Dataset item has not been annotated yet."
@@ -336,7 +343,7 @@ def assign_dataset_item_subset(
     """Assign dataset item subset"""
     try:
         dataset_item = dataset_service.assign_dataset_item_subset(
-            project=project, dataset_item_id=dataset_item_id, subset=subset_config.subset
+            project_id=project.id, dataset_item_id=dataset_item_id, subset=subset_config.subset
         )
         return DatasetItemView.model_validate(dataset_item, from_attributes=True)
     except ResourceNotFoundError as e:

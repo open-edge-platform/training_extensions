@@ -9,7 +9,9 @@ from uuid import uuid4
 import pytest
 
 from app.core.run import ExecutionContext
-from app.models import DatasetItemSubset, TaskType
+from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, TaskType
+from app.schemas.project import TaskBase
+from app.services import DatasetService
 from app.services.base_weights_service import BaseWeightsService
 from app.services.training.models import TrainingParams
 from app.services.training.otx_trainer import OTXTrainer
@@ -41,11 +43,18 @@ def fxt_assigner() -> Mock:
 
 
 @pytest.fixture
+def fxt_dataset_service() -> Mock:
+    """Mock DatasetService for testing."""
+    return Mock(spec=DatasetService)
+
+
+@pytest.fixture
 def fxt_otx_trainer(
     tmp_path: Path,
     fxt_weights_service: Mock,
     fxt_subset_service: Mock,
     fxt_assigner: Mock,
+    fxt_dataset_service: Mock,
     fxt_db_session_factory: Callable,
 ) -> Callable[[TrainingParams], OTXTrainer]:
     """Create an OTXTrainer instance."""
@@ -56,6 +65,7 @@ def fxt_otx_trainer(
             base_weights_service=fxt_weights_service,
             subset_service=fxt_subset_service,
             subset_assigner=fxt_assigner,
+            dataset_service=fxt_dataset_service,
             db_session_factory=fxt_db_session_factory,
         )
         execution_ctx = Mock(spec=ExecutionContext)
@@ -80,7 +90,7 @@ class TestOTXTrainerPrepareWeights:
         # Arrange
         training_params = TrainingParams(
             model_architecture_id="Object_Detection_YOLOX_S",
-            task_type=TaskType.DETECTION,
+            task=TaskBase(task_type=TaskType.DETECTION),
             parent_model_revision_id=None,
         )
         otx_trainer = fxt_otx_trainer(training_params)
@@ -109,7 +119,7 @@ class TestOTXTrainerPrepareWeights:
         training_params = TrainingParams(
             project_id=project_id,
             model_architecture_id="Object_Detection_YOLOX_S",
-            task_type=TaskType.DETECTION,
+            task=TaskBase(task_type=TaskType.DETECTION),
             parent_model_revision_id=parent_model_revision_id,
         )
         expected_weights_path = (
@@ -137,7 +147,7 @@ class TestOTXTrainerPrepareWeights:
         training_params = TrainingParams(
             project_id=project_id,
             model_architecture_id="Object_Detection_YOLOX_S",
-            task_type=TaskType.DETECTION,
+            task=TaskBase(task_type=TaskType.DETECTION),
             parent_model_revision_id=parent_model_revision_id,
         )
         expected_weights_path = (
@@ -157,7 +167,7 @@ class TestOTXTrainerPrepareWeights:
         # Arrange
         training_params = TrainingParams(
             model_architecture_id="Object_Detection_YOLOX_S",
-            task_type=TaskType.DETECTION,
+            task=TaskBase(task_type=TaskType.DETECTION),
             parent_model_revision_id=uuid4(),
             project_id=None,
         )
@@ -176,7 +186,6 @@ class TestOTXTrainerAssignSubsets:
         fxt_otx_trainer: Callable[[TrainingParams], OTXTrainer],
         fxt_subset_service: Mock,
         fxt_assigner: Mock,
-        fxt_db_session: Mock,
     ):
         """Test assigning subsets when unassigned items exist."""
         # Arrange
@@ -184,7 +193,7 @@ class TestOTXTrainerAssignSubsets:
         training_params = TrainingParams(
             project_id=project_id,
             model_architecture_id="Object_Detection_YOLOX_S",
-            task_type=TaskType.DETECTION,
+            task=TaskBase(task_type=TaskType.DETECTION),
         )
         otx_trainer = fxt_otx_trainer(training_params)
 
@@ -218,19 +227,16 @@ class TestOTXTrainerAssignSubsets:
         otx_trainer.assign_subsets()
 
         # Assert
-        fxt_subset_service.get_unassigned_items_with_labels.assert_called_once_with(project_id, fxt_db_session)
-        fxt_subset_service.get_subset_distribution.assert_called_once_with(project_id, fxt_db_session)
+        fxt_subset_service.get_unassigned_items_with_labels.assert_called_once_with(project_id)
+        fxt_subset_service.get_subset_distribution.assert_called_once_with(project_id)
         fxt_assigner.assign.assert_called_once()
-        fxt_subset_service.update_subset_assignments.assert_called_once_with(
-            project_id, expected_assignments, fxt_db_session
-        )
+        fxt_subset_service.update_subset_assignments.assert_called_once_with(project_id, expected_assignments)
 
     def test_assign_subsets_with_no_unassigned_items(
         self,
         fxt_otx_trainer: Callable[[TrainingParams], OTXTrainer],
         fxt_subset_service: Mock,
         fxt_assigner: Mock,
-        fxt_db_session: Mock,
     ):
         """Test assigning subsets when no unassigned items exist."""
         # Arrange
@@ -238,7 +244,7 @@ class TestOTXTrainerAssignSubsets:
         training_params = TrainingParams(
             project_id=project_id,
             model_architecture_id="Object_Detection_YOLOX_S",
-            task_type=TaskType.DETECTION,
+            task=TaskBase(task_type=TaskType.DETECTION),
         )
         fxt_subset_service.get_unassigned_items_with_labels.return_value = []
         otx_trainer = fxt_otx_trainer(training_params)
@@ -247,7 +253,7 @@ class TestOTXTrainerAssignSubsets:
         otx_trainer.assign_subsets()
 
         # Assert
-        fxt_subset_service.get_unassigned_items_with_labels.assert_called_once_with(project_id, fxt_db_session)
+        fxt_subset_service.get_unassigned_items_with_labels.assert_called_once_with(project_id)
         fxt_subset_service.get_subset_distribution.assert_not_called()
         fxt_assigner.assign.assert_not_called()
         fxt_subset_service.update_subset_assignments.assert_not_called()
@@ -261,10 +267,72 @@ class TestOTXTrainerAssignSubsets:
         training_params = TrainingParams(
             project_id=None,
             model_architecture_id="Object_Detection_YOLOX_S",
-            task_type=TaskType.DETECTION,
+            task=TaskBase(task_type=TaskType.DETECTION),
         )
         otx_trainer = fxt_otx_trainer(training_params)
 
         # Act & Assert
         with pytest.raises(ValueError, match="Project ID must be provided for subset assignment"):
             otx_trainer.assign_subsets()
+
+
+class TestOTXTrainerCreateTrainingDataset:
+    """Tests for the OTXTrainer.create_training_dataset method."""
+
+    def test_create_training_dataset_success(
+        self,
+        fxt_otx_trainer: Callable[[TrainingParams], OTXTrainer],
+        fxt_dataset_service: Mock,
+    ):
+        """Test successful creation of training, validation, and testing datasets."""
+        # Arrange
+        project_id = uuid4()
+        training_params = TrainingParams(
+            project_id=project_id,
+            model_architecture_id="Object_Detection_YOLOX_S",
+            task=TaskBase(task_type=TaskType.DETECTION, exclusive_labels=True),
+        )
+        otx_trainer = fxt_otx_trainer(training_params)
+
+        mock_dm_dataset = Mock()
+        fxt_dataset_service.get_dm_dataset.return_value = mock_dm_dataset
+
+        mock_training_dataset = Mock()
+        mock_validation_dataset = Mock()
+        mock_testing_dataset = Mock()
+
+        mock_dm_dataset.filter_by_subset.side_effect = [
+            mock_training_dataset,
+            mock_validation_dataset,
+            mock_testing_dataset,
+        ]
+
+        # Act
+        otx_trainer.create_training_dataset()
+
+        # Assert
+        fxt_dataset_service.get_dm_dataset.assert_called_once_with(
+            project_id,
+            TaskBase(task_type=TaskType.DETECTION, exclusive_labels=True),
+            DatasetItemAnnotationStatus.REVIEWED,
+        )
+        assert otx_trainer._training_dataset == mock_training_dataset
+        assert otx_trainer._validation_dataset == mock_validation_dataset
+        assert otx_trainer._testing_dataset == mock_testing_dataset
+
+    def test_create_training_dataset_without_project_id_raises_error(
+        self,
+        fxt_otx_trainer: Callable[[TrainingParams], OTXTrainer],
+    ):
+        """Test that ValueError is raised when no project ID is provided."""
+        # Arrange
+        training_params = TrainingParams(
+            project_id=None,
+            model_architecture_id="Object_Detection_YOLOX_S",
+            task=TaskBase(task_type=TaskType.DETECTION, exclusive_labels=True),
+        )
+        otx_trainer = fxt_otx_trainer(training_params)
+
+        # Act & Assert
+        with pytest.raises(ValueError, match="Project ID must be provided"):
+            otx_trainer.create_training_dataset()
