@@ -445,6 +445,7 @@ class OTXDataModule(LightningDataModule):
             "persistent_workers": config.num_workers > 0,
             "sampler": sampler,
             "shuffle": sampler is None,
+            "prefetch_factor": 2,
         }
 
         tile_config = self.tile_config

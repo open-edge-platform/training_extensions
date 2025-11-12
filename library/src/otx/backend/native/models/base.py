@@ -789,6 +789,7 @@ class OTXModel(LightningModule):
         """Model forward function for tile task."""
         raise NotImplementedError
 
+    @torch.no_grad()
     def apply_batch_transforms(self, inputs: OTXDataBatch) -> None:
         """Apply kornia batch transforms to OTXDataBatch."""
         self.transforms(inputs.images)

@@ -253,6 +253,7 @@ class OTXDetectionModel(OTXModel):
             labels=labels,
         )
 
+    @torch.no_grad()
     def apply_batch_transforms(self, inputs: OTXDataBatch) -> types.NoneType:
         """Apply batch augmentations to Object Detection."""
         # Convert bounding boxes to Kornia Boxes [N, 4, 2]
