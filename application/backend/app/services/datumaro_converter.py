@@ -40,7 +40,7 @@ class ClassificationSample(Sample):
     image_info: ImageInfo = image_info_field()
     label: int = label_field(dtype=pl.Int32(), is_list=False)
     confidence: float | None = score_field(dtype=pl.Float32())
-    subset: Subset | None = subset_field()
+    subset: Subset = subset_field()
 
 
 class MultilabelClassificationSample(Sample):
@@ -59,7 +59,7 @@ class MultilabelClassificationSample(Sample):
     # TODO: Use NDArrayFloat32 and NDArrayInt instead of np.ndarray after open-edge-platform/datumaro#1949 is solved
     label: np.ndarray = label_field(dtype=pl.Int32(), multi_label=True)
     confidence: np.ndarray | None = score_field(dtype=pl.Float32(), is_list=True)
-    subset: Subset | None = subset_field()
+    subset: Subset = subset_field()
 
 
 class DetectionSample(Sample):
@@ -80,7 +80,7 @@ class DetectionSample(Sample):
     bboxes: np.ndarray = bbox_field(dtype=pl.Int32())
     label: np.ndarray = label_field(dtype=pl.Int32(), is_list=True)
     confidence: np.ndarray | None = score_field(dtype=pl.Float32(), is_list=True)
-    subset: Subset | None = subset_field()
+    subset: Subset = subset_field()
 
 
 class InstanceSegmentationSample(Sample):
@@ -101,7 +101,7 @@ class InstanceSegmentationSample(Sample):
     polygons: np.ndarray = polygon_field(dtype=pl.Float32())
     label: np.ndarray = label_field(dtype=pl.Int32(), is_list=True)
     confidence: np.ndarray | None = score_field(dtype=pl.Float32(), is_list=True)
-    subset: Subset | None = subset_field()
+    subset: Subset = subset_field()
 
 
 def convert_to_dm_subset(subset: DatasetItemSubset | None) -> Subset | None:
@@ -116,7 +116,7 @@ def convert_to_dm_subset(subset: DatasetItemSubset | None) -> Subset | None:
         ValueError: If subset type cannot be mapped to Datumaro Subset
     """
     if subset is None:
-        return None
+        return Subset.UNASSIGNED
     match subset:
         case DatasetItemSubset.TRAINING:
             return Subset.TRAINING
@@ -125,7 +125,7 @@ def convert_to_dm_subset(subset: DatasetItemSubset | None) -> Subset | None:
         case DatasetItemSubset.TESTING:
             return Subset.TESTING
         case DatasetItemSubset.UNASSIGNED:
-            return None
+            return Subset.UNASSIGNED
         case _:
             raise ValueError(f"Unknown subset type: {subset}")
 
@@ -313,8 +313,9 @@ def convert_detection_dataset(
         all_with_confidence = all(annotation.confidences is not None for annotation in dataset_item.annotation_data)
         if any_with_confidence and not all_with_confidence:
             logger.error(
-                f"Dataset item {dataset_item.id} contains shapes with and without "
-                f"confidence scores: {dataset_item.annotation_data}"
+                "Dataset item {} contains shapes with and without confidence scores: {}",
+                dataset_item.id,
+                dataset_item.annotation_data,
             )
             raise ValueError("Either all or none of the annotations must have confidence scores")
         confidences = (
@@ -384,8 +385,9 @@ def convert_instance_segmentation_dataset(
         all_with_confidence = all(annotation.confidences is not None for annotation in dataset_item.annotation_data)
         if any_with_confidence and not all_with_confidence:
             logger.error(
-                f"Dataset item {dataset_item.id} contains shapes with and without "
-                f"confidence scores: {dataset_item.annotation_data}"
+                "Dataset item {} contains shapes with and without confidence scores: {}",
+                dataset_item.id,
+                dataset_item.annotation_data,
             )
             raise ValueError("Either all or none of the annotations must have confidence scores")
         confidences = (
