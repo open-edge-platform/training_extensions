@@ -66,16 +66,11 @@ class OVEngine(Engine):
 
         if isinstance(data, OTXDataModule):
             if task is not None and data.task != task:
-                if "anomaly" in task.value.lower() and "anomaly" in data.task.value.lower():
-                    # Anomaly task can be derived from the model, but the datamodule may have a different task type
-                    # (e.g., anomaly_classification, anomaly_segmentation, etc.)
-                    pass
-                else:
-                    msg = (
-                        "The task of the provided datamodule does not match the task derived from the model. "
-                        f"datamodule.task={data.task}, model.task={task}"
-                    )
-                    raise ValueError(msg)
+                msg = (
+                    "The task of the provided datamodule does not match the task derived from the model. "
+                    f"datamodule.task={data.task}, model.task={task}"
+                )
+                raise ValueError(msg)
             self._datamodule: OTXDataModule | None = data
         else:
             self._datamodule = self._auto_configurator.get_datamodule()

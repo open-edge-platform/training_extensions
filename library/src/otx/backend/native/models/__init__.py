@@ -3,7 +3,6 @@
 
 """Module for OTX custom models."""
 
-from .anomaly import Padim, Stfpm, Uflow
 from .classification import (
     EfficientNet,
     MobileNetV3,
@@ -27,14 +26,11 @@ __all__ = [
     "MaskRCNN",
     "MaskRCNNTV",
     "MobileNetV3",
-    "Padim",
     "RTMDet",
     "RTMDetInst",
     "RTMPose",
     "SegNext",
-    "Stfpm",
     "TVModel",
     "TimmModel",
-    "Uflow",
     "VisionTransformer",
 ]
