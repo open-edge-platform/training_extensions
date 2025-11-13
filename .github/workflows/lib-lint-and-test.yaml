@@ -91,6 +91,7 @@ jobs:
           uv run ruff format --check .
 
       # TODO: Disable mypy for now due to numerous typing issues that need to be resolved
+      # https://github.com/open-edge-platform/training_extensions/issues/5006
       # - name: Check source code with mypy
       #   working-directory: library
       #   run: |
