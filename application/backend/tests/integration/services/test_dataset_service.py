@@ -12,7 +12,7 @@ from PIL import Image
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.db.schema import DatasetItemDB, DatasetItemLabelDB, PipelineDB
+from app.db.schema import DatasetItemDB, DatasetItemLabelDB, DatasetRevisionDB, PipelineDB
 from app.models import DatasetItemAnnotation, DatasetItemAnnotationStatus, DatasetItemSubset, LabelReference, Rectangle
 from app.schemas import PipelineView, ProjectView
 from app.services import LabelService, PipelineService, ProjectService
@@ -1373,3 +1373,25 @@ class TestDatasetServiceIntegration:
         assert len(testing_items) == 1
         for item in testing_items:
             assert item.subset == DatasetItemSubset.TESTING
+
+    def test_save_revision(
+        self,
+        fxt_projects_dir: Path,
+        fxt_dataset_service: DatasetService,
+        fxt_project_with_subset_items: tuple[ProjectView, list[DatasetItemDB]],
+        db_session: Session,
+    ) -> None:
+        """Test saving a dataset revision."""
+        project, db_dataset_items = fxt_project_with_subset_items
+        dataset = fxt_dataset_service.get_dm_dataset(project.id, project.task, DatasetItemAnnotationStatus.REVIEWED)
+
+        fxt_dataset_service.save_revision(
+            project_id=project.id,
+            dataset=dataset,
+        )
+
+        # Verify that a revision entry was created
+        db_revisions = db_session.query(DatasetRevisionDB).all()
+        assert len(db_revisions) == 1
+        revision_id = db_revisions[0].id
+        assert (fxt_projects_dir / str(project.id) / "dataset_revisions" / revision_id / "dataset.zip").exists()

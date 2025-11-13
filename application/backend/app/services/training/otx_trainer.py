@@ -127,6 +127,7 @@ class OTXTrainer(Trainer):
             self._training_dataset = dm_dataset.filter_by_subset(Subset.TRAINING)
             self._validation_dataset = dm_dataset.filter_by_subset(Subset.VALIDATION)
             self._testing_dataset = dm_dataset.filter_by_subset(Subset.TESTING)
+            self._dataset_service.save_revision(project_id, dm_dataset)
 
     @step("Train Model with OTX")
     def train_model(self) -> None:

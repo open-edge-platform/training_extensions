@@ -319,6 +319,7 @@ class TestOTXTrainerCreateTrainingDataset:
         assert otx_trainer._training_dataset == mock_training_dataset
         assert otx_trainer._validation_dataset == mock_validation_dataset
         assert otx_trainer._testing_dataset == mock_testing_dataset
+        fxt_dataset_service.save_revision.assert_called_once_with(project_id, mock_dm_dataset)
 
     def test_create_training_dataset_without_project_id_raises_error(
         self,
