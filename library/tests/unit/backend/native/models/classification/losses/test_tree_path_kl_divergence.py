@@ -130,6 +130,6 @@ def test_multi_level_exact_value_batchmean():
     loss_fn = TreePathKLDivergenceLoss(reduction="batchmean")
     test_kl = loss_fn([logits0.float(), logits1.float()], targets)
 
-    assert torch.allclose(
-        test_kl.double(), manual_kl, atol=1e-8
-    ), f"manual={manual_kl.item():.12f} vs loss={test_kl.item():.12f}"
+    assert torch.allclose(test_kl.double(), manual_kl, atol=1e-8), (
+        f"manual={manual_kl.item():.12f} vs loss={test_kl.item():.12f}"
+    )
