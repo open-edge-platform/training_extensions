@@ -38,7 +38,6 @@ OpenVINO™ Training Extensions supports the following computer vision tasks:
 - **Object detection** including rotated bounding box and tiling support
 - **Semantic segmentation** including tiling algorithm support
 - **Instance segmentation** including tiling algorithm support
-- **Anomaly recognition** tasks including anomaly classification, detection and segmentation
 
 OpenVINO™ Training Extensions provide the :doc:`following features <../explanation/additional_features/index>`:
 
@@ -113,13 +112,6 @@ Documentation content
         :text-align: center
 
         Learn how to train a semantic segmentation model
-
-    .. grid-item-card:: Anomaly Task
-        :link: ../tutorials/base/how_to_train/anomaly_detection
-        :link-type: doc
-        :text-align: center
-
-        Learn how to train an anomaly detection model
 
     .. grid-item-card:: Advanced
         :link: ../tutorials/advanced/index
