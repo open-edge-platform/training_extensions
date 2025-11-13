@@ -34,9 +34,9 @@ def setup_project_with_dataset_items(
 
 
 @pytest.fixture
-def fxt_subset_service() -> SubsetService:
+def fxt_subset_service(db_session: Session) -> SubsetService:
     """Fixture to create a SubsetService instance."""
-    return SubsetService()
+    return SubsetService(db_session)
 
 
 @pytest.fixture
@@ -58,10 +58,9 @@ class TestSubsetServiceIntegration:
         fxt_project_id: UUID,
         fxt_subset_service: SubsetService,
         fxt_default_distribution: dict[DatasetItemSubset, int],
-        db_session: Session,
     ) -> None:
         """Test retrieving unassigned dataset items with labels."""
-        items = fxt_subset_service.get_unassigned_items_with_labels(fxt_project_id, db_session)
+        items = fxt_subset_service.get_unassigned_items_with_labels(fxt_project_id)
         assert len(items) == fxt_default_distribution.get(DatasetItemSubset.UNASSIGNED)  # based on default distribution
 
     def test_get_subset_distribution(
@@ -69,10 +68,9 @@ class TestSubsetServiceIntegration:
         fxt_project_id: UUID,
         fxt_subset_service: SubsetService,
         fxt_default_distribution: dict[DatasetItemSubset, int],
-        db_session: Session,
     ):
         """Test retrieving subset distribution."""
-        distribution = fxt_subset_service.get_subset_distribution(fxt_project_id, db_session)
+        distribution = fxt_subset_service.get_subset_distribution(fxt_project_id)
         assert distribution.get_count(DatasetItemSubset.TRAINING) == fxt_default_distribution.get(
             DatasetItemSubset.TRAINING
         )
@@ -94,14 +92,14 @@ class TestSubsetServiceIntegration:
         db_session: Session,
     ):
         """Test updating subset assignments."""
-        items = fxt_subset_service.get_unassigned_items_with_labels(fxt_project_id, db_session)
+        items = fxt_subset_service.get_unassigned_items_with_labels(fxt_project_id)
         assignments: list[SubsetAssignment] = [
             *[SubsetAssignment(item_id=item.item_id, subset=DatasetItemSubset.TRAINING) for item in items[:30]],
             *[SubsetAssignment(item_id=item.item_id, subset=DatasetItemSubset.VALIDATION) for item in items[30:40]],
             *[SubsetAssignment(item_id=item.item_id, subset=DatasetItemSubset.TESTING) for item in items[40:]],
         ]
 
-        fxt_subset_service.update_subset_assignments(fxt_project_id, assignments, db_session)
+        fxt_subset_service.update_subset_assignments(fxt_project_id, assignments)
 
         # Verify that there are no unassigned items left
         assert (

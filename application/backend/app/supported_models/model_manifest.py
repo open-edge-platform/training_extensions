@@ -8,9 +8,9 @@ from functools import cached_property
 from pydantic import BaseModel, ConfigDict, Field, computed_field
 
 from app.models import TaskType
+from app.models.training_configuration.hyperparameters import Hyperparameters
 
 from .default_models import DefaultCategory, DefaultModels
-from .hyperparameters import Hyperparameters
 
 
 class GPUMaker(str, Enum):

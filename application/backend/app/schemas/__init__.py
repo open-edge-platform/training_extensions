@@ -8,7 +8,6 @@ from app.schemas.model import Model, ModelFormat
 from app.schemas.model_architecture import ModelArchitectures
 from app.schemas.pipeline import DataCollectionPolicy, PipelineStatus, PipelineView
 from app.schemas.project import ProjectCreate, ProjectUpdateName, ProjectView
-from app.schemas.training_configuration import TrainingConfiguration
 
 __all__ = [
     "DataCollectionPolicy",
@@ -29,5 +28,4 @@ __all__ = [
     "ProjectUpdateName",
     "ProjectView",
     "TimeWindow",
-    "TrainingConfiguration",
 ]

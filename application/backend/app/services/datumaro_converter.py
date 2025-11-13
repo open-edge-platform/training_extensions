@@ -16,11 +16,11 @@ from datumaro.experimental import (
     score_field,
 )
 from datumaro.experimental.categories import LabelCategories
-from datumaro.experimental.fields import ImageInfo, polygon_field
+from datumaro.experimental.fields import ImageInfo, Subset, polygon_field, subset_field
 from loguru import logger
 
-from app.models import DatasetItem, Label, Polygon, Rectangle, TaskType
-from app.schemas.project import ProjectBase
+from app.models import DatasetItem, DatasetItemSubset, Label, Polygon, Rectangle, TaskType
+from app.schemas.project import TaskBase
 
 CONVERSION_BATCH_SIZE = 50
 
@@ -40,6 +40,7 @@ class ClassificationSample(Sample):
     image_info: ImageInfo = image_info_field()
     label: int = label_field(dtype=pl.Int32(), is_list=False)
     confidence: float | None = score_field(dtype=pl.Float32())
+    subset: Subset = subset_field()
 
 
 class MultilabelClassificationSample(Sample):
@@ -58,6 +59,7 @@ class MultilabelClassificationSample(Sample):
     # TODO: Use NDArrayFloat32 and NDArrayInt instead of np.ndarray after open-edge-platform/datumaro#1949 is solved
     label: np.ndarray = label_field(dtype=pl.Int32(), multi_label=True)
     confidence: np.ndarray | None = score_field(dtype=pl.Float32(), is_list=True)
+    subset: Subset = subset_field()
 
 
 class DetectionSample(Sample):
@@ -78,6 +80,7 @@ class DetectionSample(Sample):
     bboxes: np.ndarray = bbox_field(dtype=pl.Int32())
     label: np.ndarray = label_field(dtype=pl.Int32(), is_list=True)
     confidence: np.ndarray | None = score_field(dtype=pl.Float32(), is_list=True)
+    subset: Subset = subset_field()
 
 
 class InstanceSegmentationSample(Sample):
@@ -98,6 +101,33 @@ class InstanceSegmentationSample(Sample):
     polygons: np.ndarray = polygon_field(dtype=pl.Float32())
     label: np.ndarray = label_field(dtype=pl.Int32(), is_list=True)
     confidence: np.ndarray | None = score_field(dtype=pl.Float32(), is_list=True)
+    subset: Subset = subset_field()
+
+
+def convert_to_dm_subset(subset: DatasetItemSubset | None) -> Subset | None:
+    """
+    Convert DatasetItemSubset to Datumaro Subset
+    Args:
+        subset: DatasetItemSubset
+
+    Returns:
+        Subset: Datumaro Subset
+    Raises:
+        ValueError: If subset type cannot be mapped to Datumaro Subset
+    """
+    if subset is None:
+        return Subset.UNASSIGNED
+    match subset:
+        case DatasetItemSubset.TRAINING:
+            return Subset.TRAINING
+        case DatasetItemSubset.VALIDATION:
+            return Subset.VALIDATION
+        case DatasetItemSubset.TESTING:
+            return Subset.TESTING
+        case DatasetItemSubset.UNASSIGNED:
+            return Subset.UNASSIGNED
+        case _:
+            raise ValueError(f"Unknown subset type: {subset}")
 
 
 def convert_rectangle(r: Rectangle) -> list[int]:
@@ -182,6 +212,7 @@ def convert_classification_dataset(
                 image_info=ImageInfo(width=dataset_item.width, height=dataset_item.height),
                 label=project_labels_ids.index(annotation.labels[0].id),  # multiclass -> only one label
                 confidence=annotation.confidences[0] if annotation.confidences else None,
+                subset=convert_to_dm_subset(dataset_item.subset),
             )
         except ValueError:
             logger.error("Unable to find one of dataset item {} labels in project", dataset_item.id)
@@ -229,6 +260,7 @@ def convert_multilabel_classification_dataset(
             image_info=ImageInfo(width=dataset_item.width, height=dataset_item.height),
             label=np.array(labels_indexes),
             confidence=np.array(annotation.confidences) if annotation.confidences else None,
+            subset=convert_to_dm_subset(dataset_item.subset),
         )
 
     return _convert_dataset(
@@ -281,8 +313,9 @@ def convert_detection_dataset(
         all_with_confidence = all(annotation.confidences is not None for annotation in dataset_item.annotation_data)
         if any_with_confidence and not all_with_confidence:
             logger.error(
-                f"Dataset item {dataset_item.id} contains shapes with and without "
-                f"confidence scores: {dataset_item.annotation_data}"
+                "Dataset item {} contains shapes with and without confidence scores: {}",
+                dataset_item.id,
+                dataset_item.annotation_data,
             )
             raise ValueError("Either all or none of the annotations must have confidence scores")
         confidences = (
@@ -299,6 +332,7 @@ def convert_detection_dataset(
             bboxes=np.array(coords),
             label=np.array(labels_indexes),
             confidence=np.array(confidences) if confidences else None,
+            subset=convert_to_dm_subset(dataset_item.subset),
         )
 
     return _convert_dataset(
@@ -351,8 +385,9 @@ def convert_instance_segmentation_dataset(
         all_with_confidence = all(annotation.confidences is not None for annotation in dataset_item.annotation_data)
         if any_with_confidence and not all_with_confidence:
             logger.error(
-                f"Dataset item {dataset_item.id} contains shapes with and without "
-                f"confidence scores: {dataset_item.annotation_data}"
+                "Dataset item {} contains shapes with and without confidence scores: {}",
+                dataset_item.id,
+                dataset_item.annotation_data,
             )
             raise ValueError("Either all or none of the annotations must have confidence scores")
         confidences = (
@@ -369,6 +404,7 @@ def convert_instance_segmentation_dataset(
             polygons=np.array(polygons, dtype=np.float32),
             label=np.array(labels_indexes),
             confidence=np.array(confidences) if confidences else None,
+            subset=convert_to_dm_subset(dataset_item.subset),
         )
 
     return _convert_dataset(
@@ -381,7 +417,7 @@ def convert_instance_segmentation_dataset(
 
 
 def convert_dataset(
-    project: ProjectBase,
+    task: TaskBase,
     labels: Sequence[Label],
     get_dataset_items: Callable[[int, int], list[DatasetItem]],
     get_image_path: Callable[[DatasetItem], str],
@@ -390,7 +426,7 @@ def convert_dataset(
     Convert project dataset to Datumaro format
 
     Args:
-        project: Project to perform conversion for
+        task: Task metadata
         labels: Project labels
         get_dataset_items: Function to get a batch of dataset items
         get_image_path: Function to get image path for a dataset item
@@ -398,13 +434,13 @@ def convert_dataset(
     Returns:
         Dataset: Datumaro dataset
     """
-    match project.task.task_type:
+    match task.task_type:
         case TaskType.DETECTION:
             return convert_detection_dataset(
                 project_labels=labels, get_dataset_items=get_dataset_items, get_image_path=get_image_path
             )
         case TaskType.CLASSIFICATION:
-            if project.task.exclusive_labels:
+            if task.exclusive_labels:
                 return convert_classification_dataset(
                     project_labels=labels, get_dataset_items=get_dataset_items, get_image_path=get_image_path
                 )

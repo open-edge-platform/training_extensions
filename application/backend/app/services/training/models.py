@@ -8,7 +8,7 @@ from uuid import UUID, uuid4
 from loguru import logger
 
 from app.core.jobs import Job, JobParams, JobType
-from app.models import TaskType
+from app.schemas.project import TaskBase
 
 
 class TrainingParams(JobParams):
@@ -16,7 +16,7 @@ class TrainingParams(JobParams):
     project_id: UUID | None = None
     model_architecture_id: str
     parent_model_revision_id: UUID | None = None
-    task_type: TaskType
+    task: TaskBase
     model_id: UUID = uuid4()  # Reserve the ID for the model to be created for this training job
 
 

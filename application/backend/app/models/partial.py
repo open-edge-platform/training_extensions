@@ -24,10 +24,25 @@ def partial_model(model: type[BaseModel]) -> type[BaseModel]:
 
     The new model class inherits from the original model, with its name prefixed
     with "Partial" (e.g., "PartialProjectConfiguration").
+
+    Args:
+        model (type[BaseModel]): The Pydantic model class to make partial.
+
+    Returns:
+        type[BaseModel]: A new Pydantic model class with all fields optional.
     """
 
     @cache
     def make_field_optional(field: FieldInfo) -> tuple[Any, FieldInfo]:
+        """
+        Convert a Pydantic field to an optional field.
+
+        Args:
+            field (FieldInfo): The field information to make optional.
+
+        Returns:
+            tuple[Any, FieldInfo]: A tuple containing the optional annotation and updated field info.
+        """
         # use json_schema_extra to store the default value, since default has to be None
         default_value = None if field.default is PydanticUndefined else field.default
         if isinstance(field.json_schema_extra, dict):
