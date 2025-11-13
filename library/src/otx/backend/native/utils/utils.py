@@ -59,7 +59,7 @@ def mock_modules_for_chkpt() -> Iterator[None]:
     import types
 
     import otx
-    from otx.types.label HLabelInfo, LabelInfo, SegLabelInfo
+    from otx.types.label import HLabelInfo, LabelInfo, SegLabelInfo
 
     # Save original sys.modules
     original_sys_modules = dict(sys.modules)
