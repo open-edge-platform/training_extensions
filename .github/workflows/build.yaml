@@ -5,14 +5,14 @@ on:
   push:
     branches:
       - develop
-      - releases/**
+      - release/**
     tags:
       - "v*"
   pull_request:
   merge_group:
     branches:
       - develop
-      - releases/**
+      - release/**
 
 permissions: {} # No permissions by default on workflow level
 
