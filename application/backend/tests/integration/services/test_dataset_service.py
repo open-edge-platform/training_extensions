@@ -1394,4 +1394,4 @@ class TestDatasetServiceIntegration:
         db_revisions = db_session.query(DatasetRevisionDB).all()
         assert len(db_revisions) == 1
         revision_id = db_revisions[0].id
-        assert (fxt_projects_dir / str(project.id) / "revisions" / revision_id / "dataset.zip").exists()
+        assert (fxt_projects_dir / str(project.id) / "dataset_revisions" / revision_id / "dataset.zip").exists()
