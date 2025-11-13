@@ -4,14 +4,14 @@ on:
   push:
     branches:
       - develop
-      - releases/**
+      - release/**
     tags:
       - "v*"
   pull_request:
   merge_group:
     branches:
       - develop
-      - releases/**
+      - release/**
   workflow_dispatch: # run on request (no need for PR)
 
 permissions: {} # No permissions by default
