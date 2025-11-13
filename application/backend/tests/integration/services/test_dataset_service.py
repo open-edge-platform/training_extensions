@@ -1393,4 +1393,5 @@ class TestDatasetServiceIntegration:
         # Verify that a revision entry was created
         db_revisions = db_session.query(DatasetRevisionDB).all()
         assert len(db_revisions) == 1
-        assert (fxt_projects_dir / str(project.id) / "revisions" / db_revisions[0].id / "dataset.zip").exists()
+        revision_id = db_revisions[0].id
+        assert (fxt_projects_dir / str(project.id) / "revisions" / revision_id / "dataset.zip").exists()

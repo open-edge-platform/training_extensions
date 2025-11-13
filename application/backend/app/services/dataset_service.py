@@ -395,7 +395,7 @@ class DatasetService(BaseSessionManagedService):
                 project_id=str(project_id),
             )
         )
-        revision_path = self.projects_dir / f"{project_id}/revisions/{revision_db.id}"
+        revision_path = self.projects_dir / str(project_id) / "revisions" / revision_db.id
         export_dataset(
             dataset=dataset,
             output_path=revision_path,
