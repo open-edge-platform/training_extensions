@@ -10,6 +10,7 @@ from enum import Enum
 
 class OTXTaskType(str, Enum):
     """OTX task type definition."""
+
     # Classification
     MULTI_CLASS_CLS = "MULTI_CLASS_CLS"
     MULTI_LABEL_CLS = "MULTI_LABEL_CLS"

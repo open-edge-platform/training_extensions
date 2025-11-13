@@ -97,7 +97,6 @@ class OVEngine(Engine):
             "detection": OTXTaskType.DETECTION,
             "instance_segmentation": OTXTaskType.INSTANCE_SEGMENTATION,
             "keypoint_detection": OTXTaskType.KEYPOINT_DETECTION,
-            "anomaly": OTXTaskType.ANOMALY,
         }
 
         tree = Elet.parse(ir_xml)
@@ -109,18 +108,11 @@ class OVEngine(Engine):
 
         task_type = rt_info.find(".//task_type")
         if task_type is None:
-            # check old Anomaly models
-            model_info = rt_info.find(".//model_info")
-            if model_info:
-                model_type = model_info.find(".//model_type")
-                if model_type is not None and "anomaly" in model_type.attrib.get("value", "").lower():
-                    task_type = "anomaly"
-            if task_type is None:
-                msg = (
-                    "No <task_type> found in the IR model XML file. Please check the model file."
-                    "Task cannot be derived from the model."
-                )
-                raise ValueError(msg)
+            msg = (
+                "No <task_type> found in the IR model XML file. Please check the model file."
+                "Task cannot be derived from the model."
+            )
+            raise ValueError(msg)
         else:
             task_type = task_type.attrib.get("value")
 

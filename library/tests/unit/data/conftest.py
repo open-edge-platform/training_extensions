@@ -29,7 +29,6 @@ from otx.data.dataset.segmentation import (
     OTXSegmentationDataset,
 )
 from otx.data.entity.torch import OTXDataItem
-from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture
