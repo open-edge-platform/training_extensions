@@ -52,8 +52,6 @@ def get_task_list(task: str) -> list[OTXTaskType]:
         tasks = [OTXTaskType.H_LABEL_CLS]
     elif task == "classification":
         tasks = [OTXTaskType.MULTI_CLASS_CLS, OTXTaskType.MULTI_LABEL_CLS, OTXTaskType.H_LABEL_CLS]
-    elif task == "anomaly_classification":
-        tasks = [OTXTaskType.ANOMALY_CLASSIFICATION]
     elif task == "keypoint_detection":
         tasks = [OTXTaskType.KEYPOINT_DETECTION]
     else:
