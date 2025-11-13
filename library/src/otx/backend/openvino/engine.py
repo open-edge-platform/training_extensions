@@ -113,8 +113,7 @@ class OVEngine(Engine):
                 "Task cannot be derived from the model."
             )
             raise ValueError(msg)
-        else:
-            task_type = task_type.attrib.get("value")
+        task_type = task_type.attrib.get("value")
 
         if task_type == "classification":
             if rt_info.find(".//hierarchical").attrib.get("value") == "True":
