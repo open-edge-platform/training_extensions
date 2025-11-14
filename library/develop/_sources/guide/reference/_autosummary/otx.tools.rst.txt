@@ -29,5 +29,4 @@ otx.tools
 
    otx.tools.auto_configurator
    otx.tools.converter
-   otx.tools.templates
 
