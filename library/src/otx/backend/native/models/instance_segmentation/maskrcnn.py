@@ -75,7 +75,7 @@ class MaskRCNN(OTXInstanceSegModel):
         "maskrcnn_resnet_50": DataInputParams(
             input_size=(1024, 1024), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375)
         ),
-        # TODO(@kprokofi): this looks like a bug
+        # TODO(@kprokofi): The std values of (1.0, 1.0, 1.0) for maskrcnn_efficientnet_b2b differ from other variants which use (58.395, 57.12, 57.375), which may indicate missing normalization.
         "maskrcnn_efficientnet_b2b": DataInputParams(
             input_size=(1024, 1024), mean=(123.675, 116.28, 103.53), std=(1.0, 1.0, 1.0)
         ),
