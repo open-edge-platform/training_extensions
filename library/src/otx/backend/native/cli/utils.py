@@ -34,7 +34,9 @@ def get_otx_root_path() -> Path:
 RECIPE_PATH = get_otx_root_path() / "recipe"
 
 
-def list_models(task: OTXTaskType | None = None, pattern: str | None = None, print_table: bool = False) -> list[str]:
+def list_models(
+    task: OTXTaskType | None = None, pattern: str | None = None, print_table: bool = False, return_recipes: bool = False
+) -> list[str]:
     """Returns a list of available models for training.
 
     Args:
@@ -93,5 +95,8 @@ def list_models(task: OTXTaskType | None = None, pattern: str | None = None, pri
                 recipe_path,
             )
         console.print(table, width=console.width, justify="center")
+
+    if return_recipes:
+        return recipe_list
 
     return list({Path(recipe).stem for recipe in recipe_list})
