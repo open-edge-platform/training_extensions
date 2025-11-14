@@ -7,6 +7,8 @@ from otx.backend.native.models import (
     ATSS,
     RTDETR,
     SSD,
+    YOLOX,
+    DEIMDFine,
     DFine,
     DinoV2Seg,
     EfficientNet,
@@ -24,8 +26,6 @@ from otx.backend.native.models import (
     TVModel,
     Uflow,
     VisionTransformer,
-    YOLOX,
-    DEIMDFine,
 )
 from otx.backend.openvino.models import (
     OVDetectionModel,
@@ -43,9 +43,9 @@ __all__ = [
     "ATSS",
     "RTDETR",
     "SSD",
-    "DFine",
     "YOLOX",
     "DEIMDFine",
+    "DFine",
     # semantic segmentation
     "DinoV2Seg",
     # classification

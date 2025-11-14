@@ -609,9 +609,13 @@ class OTXModel(LightningModule):
 
     def forward(
         self,
-        inputs: OTXDataBatch,
-    ) -> OTXPredBatch | OTXBatchLossEntity:
+        inputs: OTXDataBatch | Tensor,
+    ) -> OTXPredBatch | OTXBatchLossEntity | Tensor:
         """Model forward function."""
+        # Simple forward
+        if isinstance(inputs, Tensor):
+            return self.forward_for_tracing(inputs)
+
         # If customize_inputs is overridden
         if isinstance(inputs, OTXTileBatchDataEntity):
             return self.forward_tiles(inputs)
