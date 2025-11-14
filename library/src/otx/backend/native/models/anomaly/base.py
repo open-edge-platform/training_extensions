@@ -45,7 +45,7 @@ class OTXAnomaly(OTXModel):
     """Methods used to make OTX model compatible with the Anomalib model.
 
     Args:
-        data_input_params (DataInputParams): Data input parameters such as input size, mean, std.
+        data_input_params (DataInputParams | None, optional): Data input parameters such as input size, mean, std.
         label_info (AnomalyLabelInfo): Label information for the model.
     """
 

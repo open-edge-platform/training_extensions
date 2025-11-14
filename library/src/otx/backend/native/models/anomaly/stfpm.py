@@ -36,7 +36,7 @@ class Stfpm(AnomalyMixin, AnomalibStfpm, OTXAnomaly):
 
     def __init__(
         self,
-        data_input_params: DataInputParams,
+        data_input_params: DataInputParams | None = None,
         label_info: LabelInfoTypes = AnomalyLabelInfo(),
         layers: Sequence[str] = ["layer1", "layer2", "layer3"],
         backbone: str = "resnet18",

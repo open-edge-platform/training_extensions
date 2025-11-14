@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Sequence
+from typing import TYPE_CHECKING, Any, ClassVar, Sequence
 
 import torch
 from torch import Tensor
@@ -36,7 +36,7 @@ class OTXMultilabelClsModel(OTXModel):
     Args:
         label_info (LabelInfoTypes | int | Sequence): Information about the labels used in the model.
             if `Sequence` is given, label info will be constructed from the sequence of label names.
-        data_input_params (DataInputParams): Parameters for data input.
+        data_input_params (DataInputParams | None, optional): Parameters for the image data preprocessing.
         model_name (str, optional): Name of the model. Defaults to "multilabel_classification_model".
         optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
@@ -45,10 +45,14 @@ class OTXMultilabelClsModel(OTXModel):
         torch_compile (bool, optional): Flag to indicate whether to use torch.compile. Defaults to False.
     """
 
+    _default_preprocessing_params: ClassVar[dict[str, DataInputParams] | DataInputParams] = DataInputParams(
+        input_size=(224, 224), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375)
+    )
+
     def __init__(
         self,
         label_info: LabelInfoTypes | Sequence,
-        data_input_params: DataInputParams,
+        data_input_params: DataInputParams | None = None,
         model_name: str = "multiclass_classification_model",
         freeze_backbone: bool = False,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,

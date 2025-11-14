@@ -39,7 +39,7 @@ class Uflow(AnomalyMixin, AnomalibUflow, OTXAnomaly):
 
     def __init__(
         self,
-        data_input_params: DataInputParams,
+        data_input_params: DataInputParams | None = None,
         label_info: LabelInfoTypes = AnomalyLabelInfo(),
         backbone: str = "resnet18",
         flow_steps: int = 4,

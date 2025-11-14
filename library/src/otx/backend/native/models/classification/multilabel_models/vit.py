@@ -23,7 +23,6 @@ from otx.backend.native.models.classification.multiclass_models.vit import Forwa
 from otx.backend.native.models.classification.multilabel_models.base import (
     OTXMultilabelClsModel,
 )
-from otx.backend.native.models.utils.support_otx_v1 import OTXv1Helper
 from otx.backend.native.schedulers import LRSchedulerListCallable
 from otx.metrics.accuracy import MultiLabelClsMetricCallable
 from otx.types.label import LabelInfoTypes
@@ -58,7 +57,7 @@ class VisionTransformerMultilabelCls(ForwardExplainMixInForViT, OTXMultilabelCls
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams,
+        data_input_params: DataInputParams | None = None,
         model_name: Literal[
             "vit-tiny",
             "vit-small",
@@ -88,19 +87,6 @@ class VisionTransformerMultilabelCls(ForwardExplainMixInForViT, OTXMultilabelCls
             metric=metric,
             torch_compile=torch_compile,
         )
-
-    def load_from_otx_v1_ckpt(self, state_dict: dict, add_prefix: str = "model.") -> dict:
-        """Load the previous OTX ckpt according to OTX2.0."""
-        for key in list(state_dict.keys()):
-            new_key = key.replace("patch_embed.projection", "patch_embed.proj")
-            new_key = new_key.replace("backbone.ln1", "backbone.norm")
-            new_key = new_key.replace("ffn.layers.0.0", "mlp.fc1")
-            new_key = new_key.replace("ffn.layers.1", "mlp.fc2")
-            new_key = new_key.replace("layers", "blocks")
-            new_key = new_key.replace("ln", "norm")
-            if new_key != key:
-                state_dict[new_key] = state_dict.pop(key)
-        return OTXv1Helper.load_cls_effnet_b0_ckpt(state_dict, "multiclass", add_prefix)
 
     def _create_model(self, num_classes: int | None = None) -> nn.Module:
         num_classes = num_classes if num_classes is not None else self.num_classes

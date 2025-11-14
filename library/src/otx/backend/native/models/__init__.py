@@ -11,7 +11,7 @@ from .classification import (
     TVModel,
     VisionTransformer,
 )
-from .detection import ATSS, RTDETR, SSD, DFine, RTMDet
+from .detection import ATSS, RTDETR, SSD, DFine, RTMDet, YOLOX, DEIMDFine
 from .instance_segmentation import MaskRCNN, MaskRCNNTV, RTMDetInst
 from .keypoint_detection import RTMPose
 from .segmentation import DinoV2Seg, LiteHRNet, SegNext
@@ -21,6 +21,8 @@ __all__ = [
     "RTDETR",
     "SSD",
     "DFine",
+    "YOLOX",
+    "DEIMDFine",
     "DinoV2Seg",
     "EfficientNet",
     "LiteHRNet",

@@ -12,7 +12,7 @@ import logging
 import warnings
 from abc import abstractmethod
 from dataclasses import asdict, dataclass
-from typing import TYPE_CHECKING, Any, Callable, Literal, Sequence
+from typing import TYPE_CHECKING, Any, Callable, ClassVar, Literal, Sequence
 
 import torch
 from datumaro import LabelCategories
@@ -33,7 +33,6 @@ from otx.backend.native.schedulers import (
 from otx.backend.native.utils.utils import (
     ensure_callable,
     is_ckpt_for_finetuning,
-    is_ckpt_from_otx_v1,
     remove_state_dict_prefix,
 )
 from otx.config.data import TileConfig
@@ -102,8 +101,24 @@ DefaultSchedulerCallable = _default_scheduler_callable
 class OTXModel(LightningModule):
     """Base class for the models used in OTX.
 
+    This class is a subclass of `LightningModule`. It is not intended to be used directly.
+
     Args:
-        num_classes: Number of classes this model can predict.
+        label_info (LabelInfoTypes | int | Sequence): Information about the labels used in the model.
+            If `int` is given, label info will be constructed from number of classes,
+            if `Sequence` is given, label info will be constructed from the sequence of label names.
+        model_name (str, optional): Name of the model. Defaults to "OTXModel".
+        optimizer (OptimizerCallable, optional): Optimizer callable. Defaults to DefaultOptimizerCallable.
+        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Scheduler callable.
+            Defaults to DefaultSchedulerCallable.
+        metric (MetricCallable, optional): Metric callable. Defaults to NullMetricCallable.
+        torch_compile (bool, optional): Whether to use torch compile. Defaults to False.
+        tile_config (TileConfig | dict, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).
+        data_input_params (DataInputParams | dict | None, optional): Parameters for image preprocessing.
+            This parameter contains image input size, mean, and std, that is used to preprocess the input image.
+            If None is given, default parameters for the specific model will be used.
+            In most cases you don't need to set this parameter unless you change the image size or pretrained weights.
+            Defaults to None.
 
     Attributes:
         explain_mode: If true, `self.predict_step()` will produce a XAI output as well
@@ -114,11 +129,14 @@ class OTXModel(LightningModule):
 
     _OPTIMIZED_MODEL_BASE_NAME: str = "optimized_model"
     input_size_multiplier: int = 1
+    _default_preprocessing_params: ClassVar[dict[str, DataInputParams] | DataInputParams] = DataInputParams(
+        input_size=(240, 240), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0)
+    )
 
     def __init__(
         self,
         label_info: LabelInfoTypes | int | Sequence,
-        data_input_params: DataInputParams | dict,
+        data_input_params: DataInputParams | dict | None = None,
         task: OTXTaskType | None = None,
         model_name: str = "OTXModel",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
@@ -133,7 +151,10 @@ class OTXModel(LightningModule):
             label_info (LabelInfoTypes | int | Sequence): Information about the labels used in the model.
                 If `int` is given, label info will be constructed from number of classes,
                 if `Sequence` is given, label info will be constructed from the sequence of label names.
-            data_input_params (DataInputParams | dict): Parameters of the input data such as input size, mean, and std.
+            data_input_params (DataInputParams | dict | None, optional): Parameters for image preprocessing.
+                This parameter contains image input size, mean, and std, that is used to preprocess the input image.
+                If None is given, default parameters for the specific model will be used.
+                Defaults to None.
             model_name (str, optional): Name of the model. Defaults to "OTXModel".
             optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
             scheduler (LRSchedulerCallable | LRSchedulerListCallable): Callable for the learning rate scheduler.
@@ -148,11 +169,17 @@ class OTXModel(LightningModule):
         super().__init__()
 
         self._label_info = self._dispatch_label_info(label_info)
+        self.model_name = model_name
         if isinstance(data_input_params, dict):
             data_input_params = DataInputParams(**data_input_params)
+        elif data_input_params is None:
+            data_input_params = (
+                self._default_preprocessing_params[self.model_name]
+                if isinstance(self._default_preprocessing_params, dict)
+                else self._default_preprocessing_params
+            )
         self._check_preprocessing_params(data_input_params)
         self.data_input_params = data_input_params
-        self.model_name = model_name
         self.model = self._create_model()
         self.optimizer_callable = ensure_callable(optimizer)
         self.scheduler_callable = ensure_callable(scheduler)
@@ -455,11 +482,7 @@ class OTXModel(LightningModule):
 
     def load_state_dict_incrementally(self, ckpt: dict[str, Any], *args, **kwargs) -> None:
         """Load state dict incrementally."""
-        ckpt_label_info: LabelInfo | None = (
-            ckpt.get("hyper_parameters", {}).get("label_info")
-            if not is_ckpt_from_otx_v1(ckpt)
-            else self.get_ckpt_label_info_v1(ckpt)
-        )
+        ckpt_label_info: LabelInfo | None = ckpt.get("hyper_parameters", {}).get("label_info")
 
         if ckpt_label_info is None:
             msg = "Checkpoint should have `label_info`."
@@ -485,7 +508,7 @@ class OTXModel(LightningModule):
             )
 
         # Model weights
-        state_dict: dict[str, Any] = ckpt.get("state_dict", {}) if not is_ckpt_from_otx_v1(ckpt) else ckpt
+        state_dict: dict[str, Any] = ckpt.get("state_dict", {})
 
         if state_dict is None or state_dict == {}:
             msg = "Checkpoint should have `state_dict`."
@@ -501,20 +524,12 @@ class OTXModel(LightningModule):
         If checkpoint's label_info and OTXLitModule's label_info are different,
         load_state_pre_hook for smart weight loading will be registered.
         """
-        if is_ckpt_from_otx_v1(ckpt):
-            msg = "The checkpoint comes from OTXv1, checkpoint keys will be updated automatically."
-            warnings.warn(msg, stacklevel=2)
-            state_dict = self.load_from_otx_v1_ckpt(ckpt)
-        elif is_ckpt_for_finetuning(ckpt):
+        if is_ckpt_for_finetuning(ckpt):
             self.on_load_checkpoint(ckpt)
             state_dict = ckpt["state_dict"]
         else:
             state_dict = ckpt
         return super().load_state_dict(state_dict, *args, **kwargs)
-
-    def load_from_otx_v1_ckpt(self, ckpt: dict[str, Any]) -> dict:
-        """Load the previous OTX ckpt according to OTX2.0."""
-        raise NotImplementedError
 
     @staticmethod
     def get_ckpt_label_info_v1(ckpt: dict) -> LabelInfo:

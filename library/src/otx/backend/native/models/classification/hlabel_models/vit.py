@@ -22,7 +22,6 @@ from otx.backend.native.models.classification.heads import (
 from otx.backend.native.models.classification.hlabel_models.base import OTXHlabelClsModel
 from otx.backend.native.models.classification.losses import AsymmetricAngularLossWithIgnore
 from otx.backend.native.models.classification.multiclass_models.vit import ForwardExplainMixInForViT
-from otx.backend.native.models.utils.support_otx_v1 import OTXv1Helper
 from otx.backend.native.schedulers import LRSchedulerListCallable
 from otx.metrics.accuracy import HLabelClsMetricCallable
 from otx.types.label import HLabelInfo
@@ -56,7 +55,7 @@ class VisionTransformerHLabelCls(ForwardExplainMixInForViT, OTXHlabelClsModel):
     Args:
         label_info (HLabelInfo): Information about the hierarchical labels.
         model_name (str): Name of the Vision Transformer model to use.
-        data_input_params (DataInputParams): Parameters for data input.
+        data_input_params (DataInputParams | None, optional): Parameters for the image data preprocessing.
         optimizer (OptimizerCallable): Callable for the optimizer.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable): Callable for the learning rate scheduler.
         metric (MetricCallable): Callable for the metric.
@@ -68,7 +67,7 @@ class VisionTransformerHLabelCls(ForwardExplainMixInForViT, OTXHlabelClsModel):
     def __init__(
         self,
         label_info: HLabelInfo,
-        data_input_params: DataInputParams,
+        data_input_params: DataInputParams | None = None,
         model_name: Literal[
             "vit-tiny",
             "vit-small",
@@ -97,19 +96,6 @@ class VisionTransformerHLabelCls(ForwardExplainMixInForViT, OTXHlabelClsModel):
             metric=metric,
             torch_compile=torch_compile,
         )
-
-    def load_from_otx_v1_ckpt(self, state_dict: dict, add_prefix: str = "model.") -> dict:
-        """Load the previous OTX ckpt according to OTX2.0."""
-        for key in list(state_dict.keys()):
-            new_key = key.replace("patch_embed.projection", "patch_embed.proj")
-            new_key = new_key.replace("backbone.ln1", "backbone.norm")
-            new_key = new_key.replace("ffn.layers.0.0", "mlp.fc1")
-            new_key = new_key.replace("ffn.layers.1", "mlp.fc2")
-            new_key = new_key.replace("layers", "blocks")
-            new_key = new_key.replace("ln", "norm")
-            if new_key != key:
-                state_dict[new_key] = state_dict.pop(key)
-        return OTXv1Helper.load_cls_effnet_b0_ckpt(state_dict, "multiclass", add_prefix)
 
     def _create_model(self, head_config: dict | None = None) -> nn.Module:  # type: ignore[override]
         head_config = head_config if head_config is not None else self.label_info.as_head_config_dict()

@@ -45,7 +45,7 @@ class TestOTXDetectionModel:
                 "state_dict": {},
             },
         ],
-        ids=["v1", "v2"],
+        ids=["v2"],
     )
     def mock_ckpt(self, request):
         return request.param

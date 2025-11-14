@@ -38,7 +38,7 @@ class Padim(AnomalyMixin, AnomalibPadim, OTXAnomaly):
 
     def __init__(
         self,
-        data_input_params: DataInputParams,
+        data_input_params: DataInputParams | None = None,
         label_info: LabelInfoTypes = AnomalyLabelInfo(),
         backbone: str = "resnet18",
         layers: list[str] = ["layer1", "layer2", "layer3"],  # noqa: B006
