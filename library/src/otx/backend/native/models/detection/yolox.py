@@ -72,7 +72,7 @@ class YOLOX(OTXDetectionModel):
         "yolox_tiny": DataInputParams(
             input_size=(640, 640), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375)
         ),
-        # TODO(@kprokofi): this looks like a bug. The image should be normilized before training.
+        # TODO(@kprokofi): this looks like a bug. The image should be normalized before training.
         "yolox_s": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0)),
         "yolox_l": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0)),
         "yolox_x": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0)),
