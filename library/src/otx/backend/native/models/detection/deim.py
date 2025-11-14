@@ -90,10 +90,6 @@ class DEIMDFine(RTDETR):
         torch_compile: bool = False,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
     ) -> None:
-        if data_input_params is None:
-            defaults = self._default_preprocessing_params
-            data_input_params = defaults[model_name] if isinstance(defaults, dict) else defaults
-
         super().__init__(
             model_name=model_name,  # type: ignore[arg-type]
             label_info=label_info,
