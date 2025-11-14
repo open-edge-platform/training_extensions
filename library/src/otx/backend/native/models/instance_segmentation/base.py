@@ -11,7 +11,7 @@ import copy
 import logging as log
 import types
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Callable, ClassVar, Iterator, Literal, Sequence
+from typing import TYPE_CHECKING, Any, Callable, Iterator, Literal, Sequence
 
 import torch
 from torch import Tensor
@@ -70,10 +70,6 @@ class OTXInstanceSegModel(OTXModel):
         tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).
         explain_mode (bool, optional): Whether to enable explainable AI mode. Defaults to False.
     """
-
-    _default_preprocessing_params: ClassVar[dict[str, DataInputParams] | DataInputParams] = DataInputParams(
-        input_size=(1024, 1024), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375)
-    )
 
     def __init__(
         self,
@@ -619,3 +615,7 @@ class OTXInstanceSegModel(OTXModel):
         func_type = types.MethodType
         self.model.forward = func_type(self.original_model_forward, self.model)
         self.original_model_forward = None
+
+    @property
+    def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
+        return DataInputParams(input_size=(1024, 1024), mean=(103.53, 116.28, 123.675), std=(57.375, 57.12, 58.395))

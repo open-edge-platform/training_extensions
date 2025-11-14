@@ -71,19 +71,6 @@ class MaskRCNN(OTXInstanceSegModel):
         "mask_rcnn_swin-t-p4-w7_fpn_fp16_ms-crop-3x_coco_20210908_165006-90a4008c.pth",
     }
 
-    _default_preprocessing_params: ClassVar[dict[str, DataInputParams] | DataInputParams] = {
-        "maskrcnn_resnet_50": DataInputParams(
-            input_size=(1024, 1024), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375)
-        ),
-        # TODO(@kprokofi): The std values of (1.0, 1.0, 1.0) for maskrcnn_efficientnet_b2b differ from other variants which use (58.395, 57.12, 57.375), which may indicate missing normalization.
-        "maskrcnn_efficientnet_b2b": DataInputParams(
-            input_size=(1024, 1024), mean=(123.675, 116.28, 103.53), std=(1.0, 1.0, 1.0)
-        ),
-        "maskrcnn_swin_tiny": DataInputParams(
-            input_size=(1344, 1344), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375)
-        ),
-    }
-
     def __init__(
         self,
         label_info: LabelInfoTypes,
@@ -398,6 +385,22 @@ class MaskRCNN(OTXInstanceSegModel):
             return {"model_type": "transformer"}
 
         return {}
+
+    @property
+    def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
+        return {
+            "maskrcnn_resnet_50": DataInputParams(
+                input_size=(1024, 1024), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375)
+            ),
+            # TODO(@kprokofi): The std values of (1.0, 1.0, 1.0) for maskrcnn_efficientnet_b2b
+            # differ from other variants which use (58.395, 57.12, 57.375), which may indicate missing normalization.
+            "maskrcnn_efficientnet_b2b": DataInputParams(
+                input_size=(1024, 1024), mean=(123.675, 116.28, 103.53), std=(1.0, 1.0, 1.0)
+            ),
+            "maskrcnn_swin_tiny": DataInputParams(
+                input_size=(1344, 1344), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375)
+            ),
+        }
 
 
 class RotatedMaskRCNNModel(RotatedPredictMixin, MaskRCNN):

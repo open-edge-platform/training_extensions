@@ -12,7 +12,7 @@ import logging
 import warnings
 from abc import abstractmethod
 from dataclasses import asdict, dataclass
-from typing import TYPE_CHECKING, Any, Callable, ClassVar, Literal, Sequence
+from typing import TYPE_CHECKING, Any, Callable, Literal, Sequence
 
 import torch
 from datumaro import LabelCategories
@@ -129,9 +129,6 @@ class OTXModel(LightningModule):
 
     _OPTIMIZED_MODEL_BASE_NAME: str = "optimized_model"
     input_size_multiplier: int = 1
-    _default_preprocessing_params: ClassVar[dict[str, DataInputParams] | DataInputParams] = DataInputParams(
-        input_size=(240, 240), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0)
-    )
 
     def __init__(
         self,
@@ -575,6 +572,15 @@ class OTXModel(LightningModule):
             self._reset_prediction_layer(num_classes=new_label_info.num_classes)
 
         self._label_info = new_label_info
+
+    @property
+    @abstractmethod
+    def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
+        """Parameters for image preprocessing.
+
+        Each model architecture must implement this property, returning a DataInputParams
+        containing the image input size, mean, and std, that is used to preprocess the input image.
+        """
 
     @property
     def num_classes(self) -> int:

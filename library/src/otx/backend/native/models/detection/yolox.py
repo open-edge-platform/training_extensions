@@ -68,16 +68,6 @@ class YOLOX(OTXDetectionModel):
         "yolox_x_8x8_300e_coco_20211126_140254-1ef88d67.pth",
     }
 
-    _default_preprocessing_params: ClassVar[dict[str, DataInputParams] | DataInputParams] = {
-        "yolox_tiny": DataInputParams(
-            input_size=(640, 640), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375)
-        ),
-        # TODO(@kprokofi): this looks like a bug. The image should be normalized before training.
-        "yolox_s": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0)),
-        "yolox_l": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0)),
-        "yolox_x": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0)),
-    }
-
     input_size_multiplier = 32
 
     def __init__(
@@ -206,3 +196,15 @@ class YOLOX(OTXDetectionModel):
             return super().export(output_dir, base_name, export_format, precision, to_exportable_code)
         finally:
             self.model.backbone.stem.forward = orig_focus_forward
+
+    @property
+    def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
+        return {
+            "yolox_tiny": DataInputParams(
+                input_size=(640, 640), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375)
+            ),
+            # TODO(@kprokofi): this looks like a bug. The image should be normalized before training.
+            "yolox_s": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0)),
+            "yolox_l": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0)),
+            "yolox_x": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0)),
+        }

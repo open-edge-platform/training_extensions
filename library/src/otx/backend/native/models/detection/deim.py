@@ -66,10 +66,6 @@ class DEIMDFine(RTDETR):
         "deim_dfine_hgnetv2_x": "https://github.com/eugene123tw/DEIM/releases/download/poc/deim_dfine_hgnetv2_x_coco_50e.pth",
     }
 
-    _default_preprocessing_params: ClassVar[dict[str, DataInputParams] | DataInputParams] = DataInputParams(
-        input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(255.0, 255.0, 255.0)
-    )
-
     input_size_multiplier = 32
 
     def __init__(

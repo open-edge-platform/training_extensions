@@ -55,10 +55,6 @@ class DFine(RTDETR):
         "dfine_hgnetv2_x": "https://github.com/Peterande/storage/releases/download/dfinev1.0/dfine_x_coco.pth",
     }
 
-    _default_preprocessing_params: ClassVar[dict[str, DataInputParams] | DataInputParams] = DataInputParams(
-        input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(255.0, 255.0, 255.0)
-    )
-
     input_size_multiplier = 32
 
     def __init__(

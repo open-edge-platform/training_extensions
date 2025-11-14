@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging as log
 import types
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Callable, ClassVar, Iterator, Literal, Sequence
+from typing import TYPE_CHECKING, Any, Callable, Iterator, Literal, Sequence
 
 import torch
 from torchmetrics import Metric, MetricCollection
@@ -65,10 +65,6 @@ class OTXDetectionModel(OTXModel):
             Defaults to False.
 
     """
-
-    _default_preprocessing_params: ClassVar[dict[str, DataInputParams] | DataInputParams] = DataInputParams(
-        input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0)
-    )
 
     def __init__(
         self,
@@ -547,3 +543,7 @@ class OTXDetectionModel(OTXModel):
             )
 
         return [1] * 10
+
+    @property
+    def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
+        return DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(255.0, 255.0, 255.0))

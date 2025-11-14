@@ -72,10 +72,6 @@ class SSD(OTXDetectionModel):
         "object_detection/v2/mobilenet_v2-2s_ssd-992x736.pth",
     }
 
-    _default_preprocessing_params: ClassVar[dict[str, DataInputParams] | DataInputParams] = {
-        "ssd_mobilenetv2": DataInputParams(input_size=(864, 864), mean=(0.0, 0.0, 0.0), std=(255.0, 255.0, 255.0)),
-    }
-
     def __init__(
         self,
         label_info: LabelInfoTypes,
@@ -377,3 +373,9 @@ class SSD(OTXDetectionModel):
             anchor_generator.gen_base_anchors()
 
         return super().on_load_checkpoint(checkpoint)
+
+    @property
+    def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
+        return {
+            "ssd_mobilenetv2": DataInputParams(input_size=(864, 864), mean=(0.0, 0.0, 0.0), std=(255.0, 255.0, 255.0)),
+        }

@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from copy import deepcopy
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any
 
 import torch
 from torch import Tensor
@@ -49,9 +49,6 @@ class OTXHlabelClsModel(OTXModel):
     """
 
     label_info: HLabelInfo
-    _default_preprocessing_params: ClassVar[dict[str, DataInputParams] | DataInputParams] = DataInputParams(
-        input_size=(224, 224), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375)
-    )
 
     def __init__(
         self,
@@ -237,3 +234,7 @@ class OTXHlabelClsModel(OTXModel):
             return self.model(images=image, mode="explain")
 
         return self.model(images=image, mode="tensor")
+
+    @property
+    def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
+        return DataInputParams(input_size=(224, 224), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375))

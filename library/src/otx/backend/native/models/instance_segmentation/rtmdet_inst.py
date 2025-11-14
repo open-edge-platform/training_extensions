@@ -63,12 +63,6 @@ class RTMDetInst(OTXInstanceSegModel):
         ),
     }
 
-    _default_preprocessing_params: ClassVar[dict[str, DataInputParams] | DataInputParams] = {
-        "rtmdet_inst_tiny": DataInputParams(
-            input_size=(640, 640), mean=(103.53, 116.28, 123.675), std=(57.375, 57.12, 58.395)
-        ),
-    }
-
     def __init__(
         self,
         label_info: LabelInfoTypes,
@@ -199,3 +193,11 @@ class RTMDetInst(OTXInstanceSegModel):
         }
         meta_info_list = [meta_info] * len(inputs)
         return self.model.export(inputs, meta_info_list, explain_mode=self.explain_mode)
+
+    @property
+    def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
+        return {
+            "rtmdet_inst_tiny": DataInputParams(
+                input_size=(640, 640), mean=(103.53, 116.28, 123.675), std=(57.375, 57.12, 58.395)
+            ),
+        }

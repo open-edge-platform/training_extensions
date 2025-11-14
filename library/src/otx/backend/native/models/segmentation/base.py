@@ -17,7 +17,7 @@ from torchvision import tv_tensors
 
 from otx.backend.native.exporter.base import OTXModelExporter
 from otx.backend.native.exporter.native import OTXNativeModelExporter
-from otx.backend.native.models.base import DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel
+from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel
 from otx.backend.native.schedulers import LRSchedulerListCallable
 from otx.backend.native.tools.tile_merge import SegmentationTileMerge
 from otx.config.data import TileConfig
@@ -34,7 +34,6 @@ if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from torch import Tensor
 
-    from otx.backend.native.models.base import DataInputParams
     from otx.metrics import MetricCallable
 
 
@@ -297,3 +296,7 @@ class OTXSegmentationModel(OTXModel):
                 ),
             )
         return OTXDataBatch(batch_size, images, imgs_info=infos, masks=[])  # type: ignore[arg-type]
+
+    @property
+    def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
+        return DataInputParams(input_size=(512, 512), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375))

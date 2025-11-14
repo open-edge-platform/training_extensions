@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Sequence
+from typing import TYPE_CHECKING, Any, ClassVar, Sequence
 
 import torch
 
@@ -42,6 +42,10 @@ class OTXKeypointDetectionModel(OTXModel):
         torch_compile (bool, optional): Whether to use torch compile. Defaults to False.
 
     """
+
+    _default_preprocessing_params: ClassVar[dict[str, DataInputParams] | DataInputParams] = {
+        "rtmpose_tiny": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(255.0, 255.0, 255.0)),
+    }
 
     def __init__(
         self,

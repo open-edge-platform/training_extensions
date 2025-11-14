@@ -67,10 +67,6 @@ class MaskRCNNTV(OTXInstanceSegModel):
         "maskrcnn_resnet_50": MaskRCNN_ResNet50_FPN_V2_Weights.verify("DEFAULT"),
     }
 
-    _default_preprocessing_params: ClassVar[dict[str, DataInputParams] | DataInputParams] = DataInputParams(
-        input_size=(1024, 1024), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375)
-    )
-
     def __init__(
         self,
         label_info: LabelInfoTypes,

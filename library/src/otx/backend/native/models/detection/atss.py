@@ -59,10 +59,6 @@ class ATSS(OTXDetectionModel):
         "object_detection/v2/resnext101_atss_070623.pth",
     }
 
-    _default_preprocessing_params: ClassVar[dict[str, DataInputParams] | DataInputParams] = DataInputParams(
-        input_size=(800, 992), mean=(0.0, 0.0, 0.0), std=(255.0, 255.0, 255.0)
-    )
-
     def __init__(
         self,
         label_info: LabelInfoTypes,
@@ -204,3 +200,7 @@ class ATSS(OTXDetectionModel):
             },
             output_names=["bboxes", "labels", "feature_vector", "saliency_map"] if self.explain_mode else None,
         )
+
+    @property
+    def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
+        return DataInputParams(input_size=(800, 992), mean=(0.0, 0.0, 0.0), std=(255.0, 255.0, 255.0))

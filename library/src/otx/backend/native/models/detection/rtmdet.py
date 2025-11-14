@@ -58,12 +58,6 @@ class RTMDet(OTXDetectionModel):
         "rtmdet_tiny": "https://storage.openvinotoolkit.org/repositories/openvino_training_extensions/models/object_detection/v2/rtmdet_tiny.pth",
     }
 
-    _default_preprocessing_params: ClassVar[dict[str, DataInputParams] | DataInputParams] = {
-        "rtmdet_tiny": DataInputParams(
-            input_size=(640, 640), mean=(103.53, 116.28, 123.675), std=(57.375, 57.12, 58.395)
-        ),
-    }
-
     input_size_multiplier = 32
 
     def __init__(
@@ -162,3 +156,11 @@ class RTMDet(OTXDetectionModel):
     def _export_parameters(self) -> TaskLevelExportParameters:
         """Defines parameters required to export a particular model implementation."""
         return super()._export_parameters.wrap(optimization_config={"preset": "mixed"})
+
+    @property
+    def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
+        return {
+            "rtmdet_tiny": DataInputParams(
+                input_size=(640, 640), mean=(103.53, 116.28, 123.675), std=(57.375, 57.12, 58.395)
+            ),
+        }

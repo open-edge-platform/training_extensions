@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, ClassVar, Sequence
+from typing import TYPE_CHECKING, Any, Sequence
 
 import torch
 from torch import Tensor
@@ -46,10 +46,6 @@ class OTXMulticlassClsModel(OTXModel):
         metric (MetricCallable, optional): Callable for the metric. Defaults to HLabelClsMetricCallable.
         torch_compile (bool, optional): Flag to indicate whether to use torch.compile. Defaults to False.
     """
-
-    _default_preprocessing_params: ClassVar[dict[str, DataInputParams] | DataInputParams] = DataInputParams(
-        input_size=(224, 224), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375)
-    )
 
     def __init__(
         self,
@@ -188,3 +184,7 @@ class OTXMulticlassClsModel(OTXModel):
             saliency_map=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
             feature_vector=[feature_vector.unsqueeze(0) for feature_vector in outputs["feature_vector"]],
         )
+
+    @property
+    def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
+        return DataInputParams(input_size=(224, 224), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375))
