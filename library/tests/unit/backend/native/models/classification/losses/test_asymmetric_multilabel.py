@@ -12,23 +12,23 @@ from otx.backend.native.models.classification.losses.asymmetric_angular_loss_wit
 
 
 class TestAsymmetricAngularLoss:
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_num_classes(self) -> int:
         return 2
 
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_gt(self, fxt_num_classes) -> torch.Tensor:
         gt = torch.zeros((2, fxt_num_classes))
         gt[0, 0] = 1
         return gt
 
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_input(self, fxt_num_classes) -> torch.Tensor:
         inputs = torch.zeros((2, fxt_num_classes))
         inputs[0, 0] = 1
         return inputs
 
-    @pytest.fixture()
+    @pytest.fixture
     def loss(self) -> AsymmetricAngularLossWithIgnore:
         return AsymmetricAngularLossWithIgnore(reduction="mean")
 

@@ -45,7 +45,9 @@ class ThreadRun(Runner[Job, ExecutionEvent]):
             return self
 
         self._started = True
-        self._execution_thread = threading.Thread(target=self._execute_job, name=f"job-{self.job.id}", daemon=True)
+        self._execution_thread = threading.Thread(
+            target=self._execute_job, name=f"job-{self.job.job_type}-{self.job.id}", daemon=True
+        )
         self._execution_thread.start()
         return self
 
@@ -101,7 +103,7 @@ class ThreadRun(Runner[Job, ExecutionEvent]):
             def __init__(self, runner: "ThreadRun"):
                 self.runner = runner
 
-            def report_progress(self, message: str = "training", progress: float = 0.0):
+            def report(self, message: str = "training", progress: float = 0.0):
                 if not self.runner._cancel_event.is_set():
                     self.runner._event_queue.put(Progress(message, progress))
 

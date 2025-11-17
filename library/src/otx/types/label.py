@@ -17,12 +17,11 @@ from datumaro.experimental.categories import (
 )
 
 __all__ = [
-    "LabelInfo",
     "HLabelInfo",
-    "SegLabelInfo",
-    "NullLabelInfo",
-    "AnomalyLabelInfo",
+    "LabelInfo",
     "LabelInfoTypes",
+    "NullLabelInfo",
+    "SegLabelInfo",
 ]
 
 
@@ -256,15 +255,9 @@ class HLabelInfo(LabelInfo):
             single_label_ctoi: dict[str, tuple[int, int]],
         ) -> dict[str, tuple[int, int]]:
             """Merge the class_to_idx information from exclusive and single_label groups."""
-
-            def put_key_values(src: dict, dst: dict) -> None:
-                """Put key and values from src to dst."""
-                for k, v in src.items():
-                    dst[k] = v
-
             class_to_idx: dict[str, tuple[int, int]] = {}
-            put_key_values(exclusive_ctoi, class_to_idx)
-            put_key_values(single_label_ctoi, class_to_idx)
+            class_to_idx.update(exclusive_ctoi)
+            class_to_idx.update(single_label_ctoi)
             return class_to_idx
 
         def get_label_tree_edges(dm_label_items: tuple[HierarchicalLabelCategory, ...]) -> list[list[str]]:
@@ -440,14 +433,6 @@ class NullLabelInfo(LabelInfo):
     def from_json(cls, _: str) -> LabelInfo:
         """Reconstruct it from the JSON serialized string."""
         return cls()
-
-
-@dataclass
-class AnomalyLabelInfo(LabelInfo):
-    """Represent no label information. It is used for Anomaly tasks."""
-
-    def __init__(self) -> None:
-        super().__init__(label_names=["Normal", "Anomaly"], label_groups=[["Normal", "Anomaly"]], label_ids=["0", "1"])
 
 
 # Dispatching rules:

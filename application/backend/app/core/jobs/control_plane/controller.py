@@ -3,16 +3,15 @@
 
 import asyncio
 import contextlib
-import logging
 import threading
+
+from loguru import logger
 
 from app.core.jobs.models import Cancelled, Done, Failed, Job, Progress, Started
 from app.core.run import Runner, RunnerFactory
 
 from .capacity import Capacity
 from .queue import JobQueue
-
-logger = logging.getLogger(__name__)
 
 
 class JobController:
@@ -64,7 +63,7 @@ class JobController:
         while self._running:
             try:
                 job = await self._jobs_q.next_runnable()
-                logger.info("Starting job with ID: %s", job.id)
+                logger.info("Starting job with ID: {}", job.id)
                 self._start_job(job)
             except Exception:
                 logger.exception("Exception during supervise loop")
@@ -91,7 +90,7 @@ class JobController:
                     await cancel_task
                 self._jobs_q.cleanup_cancellation_event(job.id)
 
-            logger.info("Job completed, job_id: %s", job.id)
+            logger.success("Job completed, job_id: {}", job.id)
 
     def _setup_job_execution(self, job: Job, job_run: Runner, event_q: asyncio.Queue) -> asyncio.Task:
         """Set up event pumping thread and cancellation monitoring task."""
@@ -137,4 +136,4 @@ class JobController:
                     job.fail(msg=d)
                     break
                 case _:
-                    logger.warning("Unknown trainer event: %s", evt)
+                    logger.warning("Unknown trainer event: {}", evt)

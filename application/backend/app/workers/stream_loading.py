@@ -1,22 +1,21 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
 import multiprocessing as mp
 import queue
 from multiprocessing.synchronize import Condition
 from multiprocessing.synchronize import Event as EventClass
 from threading import Thread
 
+from loguru import logger
+from loguru._logger import Logger as LoguruLogger
+
 from app.db import get_db_session
-from app.schemas import DisconnectedSourceConfig, Source, SourceType
-from app.services import VideoStreamService
-from app.services.configuration_service import SourceService
+from app.models import DisconnectedSourceConfig, Source, SourceType
+from app.services import SourceService, VideoStreamService
 from app.stream.stream_data import StreamData
 from app.stream.video_stream import VideoStream
 from app.workers.base import BaseProcessWorker
-
-logger = logging.getLogger(__name__)
 
 
 class StreamLoader(BaseProcessWorker):
@@ -25,9 +24,13 @@ class StreamLoader(BaseProcessWorker):
     ROLE = "StreamLoader"
 
     def __init__(
-        self, frame_queue: mp.Queue, stop_event: EventClass, source_changed_condition: Condition | None
+        self,
+        frame_queue: mp.Queue,
+        stop_event: EventClass,
+        source_changed_condition: Condition | None,
+        logger_: LoguruLogger,
     ) -> None:
-        super().__init__(stop_event=stop_event, queues_to_cancel=[frame_queue])
+        super().__init__(stop_event=stop_event, logger_=logger_, queues_to_cancel=[frame_queue])
         self._frame_queue = frame_queue
         self._source_changed_condition = source_changed_condition
 
@@ -36,9 +39,9 @@ class StreamLoader(BaseProcessWorker):
 
     def _load_source(self) -> None:
         with get_db_session() as db:
-            source = SourceService(db).get_active_source()
+            source = SourceService(db_session=db).get_active_source()
         self._source = source if source is not None else DisconnectedSourceConfig()
-        logger.info(f"Active source set to {self._source}. Process: %s", mp.current_process().name)
+        logger.info("Active source set to {}. Process: {}", self._source, mp.current_process().name)
         self._reset_stream()
 
     def _reload_source_loop(self) -> None:
@@ -52,6 +55,7 @@ class StreamLoader(BaseProcessWorker):
                 self._load_source()
 
     def setup(self) -> None:
+        super().setup()
         self._load_source()
         Thread(target=self._reload_source_loop, name="Source reloader", daemon=True).start()
 

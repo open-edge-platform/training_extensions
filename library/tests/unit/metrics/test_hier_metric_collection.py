@@ -16,7 +16,7 @@ from otx.metrics.hier_metric_collection import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def label_info_stub():
     """Minimal stub that mimics the LabelInfo attributes used by our metrics.
 
@@ -46,7 +46,7 @@ def label_info_stub():
     return li
 
 
-@pytest.fixture()
+@pytest.fixture
 def sample_tensors():
     """Return (target, preds) shaped (N, L) with class indices.
 

@@ -129,8 +129,7 @@ class OTXEngine(Engine):
             input_size = self._datamodule.input_size
             if input_size is None:
                 msg = (
-                    "Input size is not specified in the datamodule. "
-                    "Ensure that the datamodule has a valid input size."
+                    "Input size is not specified in the datamodule. Ensure that the datamodule has a valid input size."
                 )
                 raise ValueError(msg)
             get_model_args["data_input_params"] = DataInputParams(
@@ -549,7 +548,6 @@ class OTXEngine(Engine):
             base_name=self._EXPORTED_MODEL_BASE_NAME,
             export_format=export_format,
             precision=export_precision,
-            to_exportable_code=export_demo_package,
         )
 
         self.model.explain_mode = False

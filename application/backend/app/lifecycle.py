@@ -3,7 +3,6 @@
 
 """Application lifecycle management"""
 
-import logging
 import multiprocessing as mp
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
@@ -12,41 +11,59 @@ from multiprocessing.synchronize import Condition
 from pathlib import Path
 
 from fastapi import FastAPI
+from loguru import logger
 
 from app.core.jobs import JobController, JobQueue, ProcessRunnerFactory
+from app.core.logging import setup_logging, setup_uvicorn_logging
 from app.core.run import Runnable, RunnableFactory
-from app.db import MigrationManager
+from app.db import MigrationManager, get_db_session
 from app.scheduler import Scheduler
 from app.schemas.job import JobType
+from app.services import DatasetService, LabelService
 from app.services.base_weights_service import BaseWeightsService
 from app.services.data_collect import DataCollector
 from app.services.event.event_bus import EventBus
 from app.services.training import OTXTrainer
+from app.services.training.subset_assignment import SubsetAssigner, SubsetService
 from app.settings import get_settings
 from app.webrtc.manager import WebRTCManager
-
-logger = logging.getLogger(__name__)
 
 
 def setup_job_controller(data_dir: Path, max_parallel_jobs: int) -> tuple[JobQueue, JobController]:
     """
-    Set up job controller with queue and processing infrastructure.
+    Initializes and configures the job queue and job controller for managing parallel job execution.
 
-    Creates a job queue and controller with configured parallel job limits and training infrastructure
-    for job execution.
+    Sets up the infrastructure to run jobs concurrently and registers classes that comply with the Runnable protocol,
+    each associated with a job type and its required dependencies. These classes are executed in a context defined
+    by the runner factory.
 
     Args:
-        data_dir: Path to the data directory.
+        data_dir: Path to the directory containing data required for job execution.
         max_parallel_jobs (int): Maximum number of jobs that can run concurrently.
 
     Returns:
-        tuple[JobQueue, JobController]: A tuple containing the job queue instance and the configured job controller.
+        tuple[JobQueue, JobController]: The job queue and the configured job controller.
     """
     q = JobQueue()
     job_runnable_factory = RunnableFactory[JobType, Runnable]()
     base_weights_service = BaseWeightsService(data_dir=data_dir)
-    job_runnable_factory.register(JobType.TRAIN, partial(OTXTrainer, base_weights_service=base_weights_service))
-    process_runner_factory = ProcessRunnerFactory(data_dir, job_runnable_factory)
+    subset_service = SubsetService()
+    subset_assigner = SubsetAssigner()
+    label_service = LabelService()
+    dataset_service = DatasetService(data_dir=data_dir, label_service=label_service)
+    job_runnable_factory.register(
+        JobType.TRAIN,
+        partial(
+            OTXTrainer,
+            base_weights_service=base_weights_service,
+            subset_service=subset_service,
+            subset_assigner=subset_assigner,
+            dataset_service=dataset_service,
+            data_dir=data_dir,
+            db_session_factory=get_db_session,
+        ),
+    )
+    process_runner_factory = ProcessRunnerFactory(job_runnable_factory)
     job_controller = JobController(
         jobs_queue=q, runner_factory=process_runner_factory, max_parallel_jobs=max_parallel_jobs
     )
@@ -58,8 +75,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     """FastAPI lifespan context manager"""
     # Startup
     settings = get_settings()
+    settings.ensure_dirs_exist()
     app.state.settings = settings
-    logger.info("Starting %s application...", settings.app_name)
+    logger.info("Starting {} application...", settings.app_name)
+
+    # Setup logging
+    setup_logging()
+    setup_uvicorn_logging(settings.log_level)
 
     # Initialize database
     migration_manager = MigrationManager(settings)
@@ -94,7 +116,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
 
     await job_controller.stop()
     # Shutdown
-    logger.info("Shutting down %s application...", settings.app_name)
+    logger.info("Shutting down {} application...", settings.app_name)
     await webrtc_manager.cleanup()
     app_scheduler.shutdown()
     logger.info("Application shutdown completed")

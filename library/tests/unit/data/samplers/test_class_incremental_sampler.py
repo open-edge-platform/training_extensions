@@ -16,7 +16,7 @@ from otx.data.dataset.base import OTXDataset
 from otx.data.samplers.class_incremental_sampler import ClassIncrementalSampler
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_old_new_dataset() -> OTXDataset:
     dataset_items = (
         [

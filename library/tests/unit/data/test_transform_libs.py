@@ -95,7 +95,7 @@ class TestTorchVisionTransformLib:
         assert len(transform.transforms) == 4
         assert "ToDtype" in repr(transform)
 
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_config_w_input_size(self) -> list[dict[str, Any]]:
         cfg = """
         input_size:

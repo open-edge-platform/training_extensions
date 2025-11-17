@@ -12,7 +12,7 @@ from .utils import (
 
 __all__ = [
     "adapt_tile_config",
-    "instantiate_sampler",
     "get_adaptive_num_workers",
     "import_object_from_module",
+    "instantiate_sampler",
 ]

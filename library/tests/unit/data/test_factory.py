@@ -7,7 +7,6 @@ import pytest
 from datumaro.experimental import Dataset
 
 from otx.config.data import SubsetConfig
-from otx.data.dataset.anomaly import OTXAnomalyDataset
 from otx.data.dataset.classification import (
     HLabelInfo,
     OTXHlabelClsDataset,
@@ -49,10 +48,6 @@ class TestOTXDatasetFactory:
             (OTXTaskType.ROTATED_DETECTION, OTXInstanceSegDataset, "fxt_mock_segmentation_dm_subset"),
             (OTXTaskType.INSTANCE_SEGMENTATION, OTXInstanceSegDataset, "fxt_mock_segmentation_dm_subset"),
             (OTXTaskType.SEMANTIC_SEGMENTATION, OTXSegmentationDataset, "fxt_mock_segmentation_dm_subset"),
-            (OTXTaskType.ANOMALY, OTXAnomalyDataset, "fxt_mock_anomaly_dm_subset"),
-            (OTXTaskType.ANOMALY_CLASSIFICATION, OTXAnomalyDataset, "fxt_mock_anomaly_dm_subset"),
-            (OTXTaskType.ANOMALY_DETECTION, OTXAnomalyDataset, "fxt_mock_anomaly_dm_subset"),
-            (OTXTaskType.ANOMALY_SEGMENTATION, OTXAnomalyDataset, "fxt_mock_anomaly_dm_subset"),
         ],
     )
     def test_create(

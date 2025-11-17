@@ -10,7 +10,7 @@ from unittest.mock import Mock, patch
 import numpy as np
 import pytest
 
-from app.schemas import Source
+from app.models import Source
 from app.stream.stream_data import StreamData
 from app.stream.video_stream import VideoStream
 from app.workers import StreamLoader
@@ -108,7 +108,7 @@ class TestStreamLoader:
         frame_queue.put(data2)
 
         # Start the process
-        process = StreamLoader(frame_queue, stop_event, source_changed_condition)
+        process = StreamLoader(frame_queue, stop_event, source_changed_condition, Mock())
         process.start()
 
         # Let it run for a short time to attempt frame acquisition
@@ -134,7 +134,7 @@ class TestStreamLoader:
         """Test that stream frames are acquired when queue is empty"""
 
         # Start the process
-        process = StreamLoader(frame_queue, stop_event, source_changed_condition)
+        process = StreamLoader(frame_queue, stop_event, source_changed_condition, Mock())
         process.start()
 
         time.sleep(1)

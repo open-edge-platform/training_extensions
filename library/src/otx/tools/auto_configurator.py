@@ -38,10 +38,6 @@ DEFAULT_CONFIG_PER_TASK = {
     OTXTaskType.ROTATED_DETECTION: RECIPE_PATH / "rotated_detection" / "maskrcnn_r50.yaml",
     OTXTaskType.SEMANTIC_SEGMENTATION: RECIPE_PATH / "semantic_segmentation" / "litehrnet_18.yaml",
     OTXTaskType.INSTANCE_SEGMENTATION: RECIPE_PATH / "instance_segmentation" / "maskrcnn_r50.yaml",
-    OTXTaskType.ANOMALY: RECIPE_PATH / "anomaly" / "padim.yaml",
-    OTXTaskType.ANOMALY_CLASSIFICATION: RECIPE_PATH / "anomaly_classification" / "padim.yaml",
-    OTXTaskType.ANOMALY_SEGMENTATION: RECIPE_PATH / "anomaly_segmentation" / "padim.yaml",
-    OTXTaskType.ANOMALY_DETECTION: RECIPE_PATH / "anomaly_detection" / "padim.yaml",
     OTXTaskType.KEYPOINT_DETECTION: RECIPE_PATH / "keypoint_detection" / "rtmpose_tiny.yaml",
 }
 
@@ -54,10 +50,6 @@ OVMODEL_PER_TASK = {
     OTXTaskType.ROTATED_DETECTION: "otx.backend.openvino.models.OVRotatedDetectionModel",
     OTXTaskType.INSTANCE_SEGMENTATION: "otx.backend.openvino.models.OVInstanceSegmentationModel",
     OTXTaskType.SEMANTIC_SEGMENTATION: "otx.backend.openvino.models.OVSegmentationModel",
-    OTXTaskType.ANOMALY: "otx.backend.openvino.models.anomaly.OVAnomalyModel",
-    OTXTaskType.ANOMALY_CLASSIFICATION: "otx.backend.openvino.models.anomaly.OVAnomalyModel",
-    OTXTaskType.ANOMALY_DETECTION: "otx.backend.openvino.models.anomaly.OVAnomalyModel",
-    OTXTaskType.ANOMALY_SEGMENTATION: "otx.backend.openvino.models.anomaly.OVAnomalyModel",
     OTXTaskType.KEYPOINT_DETECTION: "otx.backend.openvino.models.OVKeypointDetectionModel",
 }
 
@@ -237,8 +229,7 @@ class AutoConfigurator:
             # get data_input_params info from datamodule
             if datamodule.input_size is None:
                 msg = (
-                    "Input size is not specified in the datamodule. "
-                    "Ensure that the datamodule has a valid input size."
+                    "Input size is not specified in the datamodule. Ensure that the datamodule has a valid input size."
                 )
                 raise ValueError(msg)
             model_config["init_args"]["data_input_params"] = DataInputParams(

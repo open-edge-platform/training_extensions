@@ -13,7 +13,7 @@ from otx.types.label import LabelInfo
 
 
 class TestPCK:
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_preds(self) -> list[dict[str, torch.Tensor]]:
         return [
             {
@@ -26,7 +26,7 @@ class TestPCK:
             },
         ]
 
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_targets(self) -> list[dict[str, torch.Tensor]]:
         return [
             {

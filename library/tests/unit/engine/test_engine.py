@@ -15,7 +15,7 @@ from otx.engine import Engine, create_engine
 
 
 class TestCreateEngine:
-    @pytest.fixture()
+    @pytest.fixture
     def mock_engine_subclass(self):
         """Fixture to create a mock Engine subclass."""
         mock_engine_cls = MagicMock(spec=Engine)

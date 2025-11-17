@@ -13,7 +13,6 @@ from datumaro.components.dataset import Dataset as DmDataset
 from datumaro.components.dataset_base import DatasetItem
 from datumaro.components.media import Image
 
-from otx.data.dataset.anomaly import OTXAnomalyDataset
 from otx.data.dataset.classification import (
     HLabelInfo,
     OTXHlabelClsDataset,
@@ -28,7 +27,6 @@ from otx.data.dataset.segmentation import (
     OTXSegmentationDataset,
 )
 from otx.data.entity.torch import OTXDataItem
-from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture
@@ -36,10 +34,9 @@ if TYPE_CHECKING:
     from otx.data.dataset.base import OTXDataset
 
 _LABEL_NAMES = ["Non-Rigid", "Rigid", "Rectangle", "Triangle", "Circle", "Lion", "Panda"]
-_ANOMALY_LABEL_NAMES = ["good", "anomaly"]
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_dm_item() -> DatasetItem:
     np_img = np.zeros(shape=(10, 10, 3), dtype=np.uint8)
     np_img[:, :, 0] = 0  # Set 0 for B channel
@@ -63,7 +60,7 @@ def fxt_dm_item() -> DatasetItem:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_classification_dm_item() -> DatasetItem:
     np_img = np.zeros(shape=(10, 10, 3), dtype=np.uint8)
     np_img[:, :, 0] = 0  # Set 0 for B channel
@@ -84,31 +81,7 @@ def fxt_classification_dm_item() -> DatasetItem:
     )
 
 
-@pytest.fixture()
-def fxt_anomaly_dm_item() -> DatasetItem:
-    np_img = np.zeros(shape=(10, 10, 3), dtype=np.uint8)
-    np_img[:, :, 0] = 0  # Set 0 for B channel
-    np_img[:, :, 1] = 1  # Set 1 for G channel
-    np_img[:, :, 2] = 2  # Set 2 for R channel
-
-    _, np_bytes = cv2.imencode(".png", np_img)
-    media = Image.from_bytes(np_bytes.tobytes())
-    media.path = ""
-
-    return DatasetItem(
-        id="item",
-        subset="train",
-        media=media,
-        annotations=[
-            Label(label=0),
-            Bbox(x=200, y=200, w=1, h=1, label=0),
-            Mask(label=0, image=np.eye(10, dtype=np.uint8)),
-            Polygon(points=[399.0, 570.0, 397.0, 572.0, 397.0, 573.0, 394.0, 576.0], label=0),
-        ],
-    )
-
-
-@pytest.fixture()
+@pytest.fixture
 def fxt_detection_dm_item() -> DatasetItem:
     np_img = np.zeros(shape=(10, 10, 3), dtype=np.uint8)
     np_img[:, :, 0] = 0  # Set 0 for B channel
@@ -131,7 +104,7 @@ def fxt_detection_dm_item() -> DatasetItem:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_segmentation_dm_item() -> DatasetItem:
     np_img = np.zeros(shape=(10, 10, 3), dtype=np.uint8)
     np_img[:, :, 0] = 0  # Set 0 for B channel
@@ -153,7 +126,7 @@ def fxt_segmentation_dm_item() -> DatasetItem:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_mock_dm_subset(mocker: MockerFixture, fxt_dm_item: DatasetItem) -> MagicMock:
     mock_dm_subset = mocker.MagicMock(spec=DmDataset)
     mock_dm_subset.__getitem__.return_value = fxt_dm_item
@@ -172,7 +145,7 @@ def fxt_mock_dm_subset(mocker: MockerFixture, fxt_dm_item: DatasetItem) -> Magic
     return mock_dm_subset
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_mock_classification_dm_subset(mocker: MockerFixture, fxt_classification_dm_item: DatasetItem) -> MagicMock:
     mock_dm_subset = mocker.MagicMock(spec=DmDataset)
     mock_dm_subset.__getitem__.return_value = fxt_classification_dm_item
@@ -187,25 +160,7 @@ def fxt_mock_classification_dm_subset(mocker: MockerFixture, fxt_classification_
     return mock_dm_subset
 
 
-@pytest.fixture()
-def fxt_mock_anomaly_dm_subset(mocker: MockerFixture, fxt_anomaly_dm_item: DatasetItem) -> MagicMock:
-    mock_dm_subset = mocker.MagicMock(spec=DmDataset)
-    mock_dm_subset.__getitem__.return_value = fxt_anomaly_dm_item
-    mock_dm_subset.__iter__.return_value = [fxt_anomaly_dm_item]
-    mock_dm_subset.__len__.return_value = 1
-    mock_dm_subset.categories().__getitem__.return_value = LabelCategories.from_iterable(_ANOMALY_LABEL_NAMES)
-    mock_dm_subset.categories().get.return_value = LabelCategories.from_iterable(_ANOMALY_LABEL_NAMES)
-    mock_dm_subset.media_type.return_value = Image
-    mock_dm_subset.ann_types.return_value = [
-        AnnotationType.label,
-        AnnotationType.bbox,
-        AnnotationType.mask,
-        AnnotationType.polygon,
-    ]
-    return mock_dm_subset
-
-
-@pytest.fixture()
+@pytest.fixture
 def fxt_mock_detection_dm_subset(mocker: MockerFixture, fxt_detection_dm_item: DatasetItem) -> MagicMock:
     mock_dm_subset = mocker.MagicMock(spec=DmDataset)
     mock_dm_subset.__getitem__.return_value = fxt_detection_dm_item
@@ -218,7 +173,7 @@ def fxt_mock_detection_dm_subset(mocker: MockerFixture, fxt_detection_dm_item: D
     return mock_dm_subset
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_mock_segmentation_dm_subset(mocker: MockerFixture, fxt_segmentation_dm_item: DatasetItem) -> MagicMock:
     mock_dm_subset = mocker.MagicMock(spec=DmDataset)
     mock_dm_subset.__getitem__.return_value = fxt_segmentation_dm_item
@@ -239,10 +194,6 @@ def fxt_mock_segmentation_dm_subset(mocker: MockerFixture, fxt_segmentation_dm_i
         (OTXDetectionDataset, OTXDataItem, {}),
         (OTXInstanceSegDataset, OTXDataItem, {"include_polygons": True}),
         (OTXSegmentationDataset, OTXDataItem, {}),
-        (OTXAnomalyDataset, OTXDataItem, {"task_type": OTXTaskType.ANOMALY}),
-        (OTXAnomalyDataset, OTXDataItem, {"task_type": OTXTaskType.ANOMALY_CLASSIFICATION}),
-        (OTXAnomalyDataset, OTXDataItem, {"task_type": OTXTaskType.ANOMALY_DETECTION}),
-        (OTXAnomalyDataset, OTXDataItem, {"task_type": OTXTaskType.ANOMALY_SEGMENTATION}),
     ],
     ids=[
         "hlabel_cls",
@@ -251,10 +202,6 @@ def fxt_mock_segmentation_dm_subset(mocker: MockerFixture, fxt_segmentation_dm_i
         "detection",
         "instance_seg",
         "semantic_seg",
-        "anomaly",
-        "anomaly_cls",
-        "anomaly_det",
-        "anomaly_seg",
     ],
 )
 def fxt_dataset_and_data_entity_cls(
@@ -263,7 +210,7 @@ def fxt_dataset_and_data_entity_cls(
     return request.param
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_mock_hlabelinfo():
     mock_dict = MagicMock()
     mock_dict.__getitem__.return_value = (0, 0)
@@ -295,7 +242,7 @@ def fxt_mock_hlabelinfo():
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_hlabel_dataset_subset() -> DmDataset:
     return DmDataset.from_iterable(
         [

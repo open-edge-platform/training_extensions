@@ -17,20 +17,20 @@ Functions:
 
 import asyncio
 import contextlib
-import logging
 import multiprocessing as mp
 from collections.abc import Iterator
 from multiprocessing.connection import Connection
 from multiprocessing.context import SpawnProcess
 from multiprocessing.synchronize import Event
-from pathlib import Path
+
+from loguru import logger
 
 from app.core.jobs.models import Done, ExecutionEvent, Failed, Job, JobType, Started
+from app.core.logging import LogConfig, logging_ctx
 from app.core.run import ExecutionContext, RunnableFactory, Runner
+from app.settings import get_settings
 
 from .exceptions import CancelledExc
-
-logger = logging.getLogger(__name__)
 
 
 class ProcessRun:
@@ -39,14 +39,12 @@ class ProcessRun:
 
     Args:
         ctx (mp.context.SpawnContext): Multiprocessing context for process & IPC.
-        data_dir (Path): Directory for job data.
         runnable_factory (RunnableFactory): Factory to create runnable job instances.
         job (Job): Job specification.
     """
 
-    def __init__(self, ctx: mp.context.SpawnContext, data_dir: Path, runnable_factory: RunnableFactory, job: Job):
+    def __init__(self, ctx: mp.context.SpawnContext, runnable_factory: RunnableFactory, job: Job):
         self._ctx = ctx
-        self._data_dir = data_dir
         self._runnable_factory = runnable_factory
         self._job = job
         self._parent, self._child = ctx.Pipe(duplex=False)
@@ -58,13 +56,13 @@ class ProcessRun:
             target=_entrypoint,
             args=(
                 self._runnable_factory,
-                self._data_dir,
                 self._job.job_type,
+                self._job.log_file,
                 self._job.params.model_dump_json(),
                 self._child,
                 self._cancel,
             ),
-            name=f"trainer-{self._job.id}",
+            name=f"job-{self._job.job_type}-{self._job.id}",
         )
         self._proc.start()
         self._child.close()
@@ -99,26 +97,26 @@ class ProcessRun:
         self._cancel.set()
         await asyncio.to_thread(self._proc.join, timeout=graceful_timeout)
         if not self._proc.is_alive():
-            logger.debug("Process %s stopped gracefully", self._proc.name)
+            logger.debug("Process {} stopped gracefully", self._proc.name)
             return
 
         # Try SIGTERM
         self._proc.terminate()
         await asyncio.to_thread(self._proc.join, timeout=term_timeout)
         if not self._proc.is_alive():
-            logger.debug("Process %s terminated gracefully", self._proc.name)
+            logger.debug("Process {} terminated gracefully", self._proc.name)
             return
 
         # Last resort: SIGKILL
-        logger.warning("Force killing process %s", self._proc.name)
+        logger.warning("Force killing process {}", self._proc.name)
         self._proc.kill()
         await asyncio.to_thread(self._proc.join, timeout=kill_timeout)
         if self._proc.is_alive():
-            logger.error("Process %s doesn't respond to SIGKILL", self._proc.name)
+            logger.error("Process {} doesn't respond to SIGKILL", self._proc.name)
 
 
 def _entrypoint(
-    get_runnable: RunnableFactory, data_dir: Path, job_type: str, payload: str, conn: Connection, cancel_event: Event
+    get_runnable: RunnableFactory, job_type: str, log_file: str, payload: str, conn: Connection, cancel_event: Event
 ) -> None:
     """
     Entrypoint for the child process.
@@ -127,8 +125,8 @@ def _entrypoint(
 
     Args:
         get_runnable (RunnableFactory): Factory to create runnable job instance.
-        data_dir (Path): Directory for job data.
         job_type (str): Type of job to execute.
+        log_file (str): Log file path for job logging.
         payload (str): Serialized job parameters.
         conn (Connection): IPC connection to parent process.
         cancel_event (Event): Event to signal cancellation.
@@ -150,7 +148,8 @@ def _entrypoint(
 
     try:
         conn.send(Started())
-        runnable.run(ExecutionContext(payload=payload, data_dir=data_dir, report=report, heartbeat=heartbeat))
+        with logging_ctx(LogConfig(log_folder=str(get_settings().job_dir), log_file=log_file)):
+            runnable.run(ExecutionContext(payload=payload, report=report, heartbeat=heartbeat))
         conn.send(Done())
     except CancelledExc:
         conn.send(Cancelled())
@@ -166,17 +165,15 @@ class ProcessRunnerFactory:
     Factory for creating process-based job runners.
 
     Args:
-        data_dir (Path): Directory for job data.
         runnable_factory (RunnableFactory): Factory to create runnable job instances.
 
     Methods:
         for_job(job: Job) -> Runner[Job, ExecutionEvent]: Create a ProcessRun instance for the given job.
     """
 
-    def __init__(self, data_dir: Path, runnable_factory: RunnableFactory) -> None:
+    def __init__(self, runnable_factory: RunnableFactory) -> None:
         # consider using native context for python 3.14 due to upgrade to 'fork_server' model
         self._ctx = mp.get_context("spawn")
-        self._data_dir = data_dir
         self._runnable_factory = runnable_factory
 
     def for_job(self, job: Job) -> Runner[Job, ExecutionEvent]:
@@ -189,4 +186,4 @@ class ProcessRunnerFactory:
         Returns:
             Runner[Job, ExecutionEvent]: Process-based job runner.
         """
-        return ProcessRun(self._ctx, self._data_dir, self._runnable_factory, job)
+        return ProcessRun(self._ctx, self._runnable_factory, job)

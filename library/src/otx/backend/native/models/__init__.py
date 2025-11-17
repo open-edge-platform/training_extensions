@@ -8,7 +8,6 @@ import multiprocessing
 if multiprocessing.get_start_method(allow_none=True) is None:
     multiprocessing.set_start_method("forkserver")
 
-from .anomaly import Padim, Stfpm, Uflow
 from .classification import (
     EfficientNet,
     MobileNetV3,
@@ -22,24 +21,21 @@ from .keypoint_detection import RTMPose
 from .segmentation import DinoV2Seg, LiteHRNet, SegNext
 
 __all__ = [
-    "Padim",
-    "Stfpm",
-    "Uflow",
-    "EfficientNet",
-    "TimmModel",
-    "MobileNetV3",
-    "TVModel",
-    "VisionTransformer",
     "ATSS",
-    "DFine",
-    "SSD",
-    "RTMDet",
     "RTDETR",
+    "SSD",
+    "DFine",
+    "DinoV2Seg",
+    "EfficientNet",
+    "LiteHRNet",
     "MaskRCNN",
     "MaskRCNNTV",
+    "MobileNetV3",
+    "RTMDet",
     "RTMDetInst",
     "RTMPose",
-    "DinoV2Seg",
-    "LiteHRNet",
     "SegNext",
+    "TVModel",
+    "TimmModel",
+    "VisionTransformer",
 ]

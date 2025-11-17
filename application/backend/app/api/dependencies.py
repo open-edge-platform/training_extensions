@@ -11,10 +11,10 @@ from sqlalchemy.orm import Session
 
 from app.core.jobs.control_plane import JobQueue
 from app.db import get_db_session
+from app.models import Sink, Source
 from app.scheduler import Scheduler
 from app.schemas import ProjectView
 from app.services import (
-    ConfigurationService,
     DatasetService,
     MetricsService,
     ModelService,
@@ -22,12 +22,15 @@ from app.services import (
     PipelineService,
     ProjectService,
     ResourceNotFoundError,
+    SinkService,
+    SourceUpdateService,
     SystemService,
 )
 from app.services.base_weights_service import BaseWeightsService
 from app.services.data_collect import DataCollector
 from app.services.event.event_bus import EventBus
 from app.services.label_service import LabelService
+from app.services.training_configuration_service import TrainingConfigurationService
 from app.webrtc.manager import WebRTCManager
 
 
@@ -131,6 +134,11 @@ def get_data_dir(request: Request) -> Path:
     return request.app.state.settings.data_dir
 
 
+def get_job_dir(request: Request) -> Path:
+    """Provides the job log directory path from settings."""
+    return request.app.state.settings.job_dir
+
+
 def get_event_bus(request: Request) -> EventBus:
     """Provides an EventBus instance."""
     return request.app.state.event_bus
@@ -146,12 +154,18 @@ def get_metrics_service(scheduler: Annotated[Scheduler, Depends(get_scheduler)])
     return MetricsService(scheduler.shm_metrics.name, scheduler.shm_metrics_lock)
 
 
-def get_configuration_service(
-    event_bus: Annotated[EventBus, Depends(get_event_bus)],
-    db: Annotated[Session, Depends(get_db)],
-) -> ConfigurationService:
-    """Provides a ConfigurationService instance."""
-    return ConfigurationService(event_bus=event_bus, db_session=db)
+def get_sink_service(
+    event_bus: Annotated[EventBus, Depends(get_event_bus)], db: Annotated[Session, Depends(get_db)]
+) -> SinkService:
+    """Provides a SinkService instance."""
+    return SinkService(event_bus=event_bus, db_session=db)
+
+
+def get_source_update_service(
+    event_bus: Annotated[EventBus, Depends(get_event_bus)], db: Annotated[Session, Depends(get_db)]
+) -> SourceUpdateService:
+    """Provides a SourceUpdateService instance."""
+    return SourceUpdateService(event_bus=event_bus, db_session=db)
 
 
 def get_pipeline_service(
@@ -203,15 +217,17 @@ def get_project_service(
 ) -> ProjectService:
     """Provides a ProjectService instance for managing projects."""
     return ProjectService(
-        data_dir=data_dir, db_session=db, label_service=label_service, pipeline_service=pipeline_service
+        data_dir=data_dir, label_service=label_service, pipeline_service=pipeline_service, db_session=db
     )
 
 
 def get_dataset_service(
-    data_dir: Annotated[Path, Depends(get_data_dir)], db: Annotated[Session, Depends(get_db)]
+    data_dir: Annotated[Path, Depends(get_data_dir)],
+    label_service: Annotated[LabelService, Depends(get_label_service)],
+    db: Annotated[Session, Depends(get_db)],
 ) -> DatasetService:
     """Provides a DatasetService instance."""
-    return DatasetService(data_dir=data_dir, db_session=db)
+    return DatasetService(data_dir=data_dir, label_service=label_service, db_session=db)
 
 
 def get_project(
@@ -225,6 +241,28 @@ def get_project(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
+def get_sink(
+    sink_id: Annotated[UUID, Depends(get_sink_id)],
+    sink_service: Annotated[SinkService, Depends(get_sink_service)],
+) -> Sink:
+    """Provides a Sink instance for request scoped sink."""
+    try:
+        return sink_service.get_by_id(sink_id)
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+def get_source(
+    source_id: Annotated[UUID, Depends(get_source_id)],
+    source_update_service: Annotated[SourceUpdateService, Depends(get_source_update_service)],
+) -> Source:
+    """Provides a Source instance for request scoped source."""
+    try:
+        return source_update_service.get_by_id(source_id)
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
 def get_base_weights_service(data_dir: Annotated[Path, Depends(get_data_dir)]) -> BaseWeightsService:
     """Provides a BaseWeightsService instance for managing base weights."""
     return BaseWeightsService(data_dir)
@@ -233,3 +271,8 @@ def get_base_weights_service(data_dir: Annotated[Path, Depends(get_data_dir)]) -
 def get_job_queue(request: Request) -> JobQueue:
     """Provides the global JobQueue instance from FastAPI application's state."""
     return request.app.state.job_queue
+
+
+def get_training_configuration_service(db: Annotated[Session, Depends(get_db)]) -> TrainingConfigurationService:
+    """Provides a TrainingConfigurationService instance for managing training configurations."""
+    return TrainingConfigurationService(db_session=db)

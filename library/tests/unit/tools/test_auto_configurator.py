@@ -20,16 +20,12 @@ from otx.types.transformer_libs import TransformLibType
 from otx.utils.utils import should_pass_label_info
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_data_root_per_task_type() -> dict:
     return {
         OTXTaskType.MULTI_CLASS_CLS: "tests/assets/classification_dataset",
         OTXTaskType.MULTI_LABEL_CLS: "tests/assets/multilabel_classification",
         OTXTaskType.DETECTION: "tests/assets/car_tree_bug",
-        OTXTaskType.ANOMALY: "tests/assets/anomaly_hazelnut",
-        OTXTaskType.ANOMALY_CLASSIFICATION: "tests/assets/anomaly_hazelnut",
-        OTXTaskType.ANOMALY_DETECTION: "tests/assets/anomaly_hazelnut",
-        OTXTaskType.ANOMALY_SEGMENTATION: "tests/assets/anomaly_hazelnut",
         OTXTaskType.KEYPOINT_DETECTION: "tests/assets/car_tree_bug_keypoint",
         OTXTaskType.ROTATED_DETECTION: "tests/assets/car_tree_bug",
         OTXTaskType.INSTANCE_SEGMENTATION: "tests/assets/car_tree_bug",

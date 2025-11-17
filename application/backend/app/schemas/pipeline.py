@@ -7,9 +7,9 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, TypeAdapter, model_validator
 
+from app.api.schemas.sink import SinkView
+from app.api.schemas.source import SourceView
 from app.schemas.model import Model
-from app.schemas.sink import Sink
-from app.schemas.source import Source
 
 
 class PipelineStatus(StrEnum):
@@ -49,8 +49,8 @@ DataCollectionPolicyAdapter: TypeAdapter[DataCollectionPolicy] = TypeAdapter(Dat
 
 class PipelineView(BaseModel):
     project_id: UUID  # ID of the project this pipeline belongs to
-    source: Source | None = None  # None if disconnected
-    sink: Sink | None = None  # None if disconnected
+    source: SourceView | None = None  # None if disconnected
+    sink: SinkView | None = None  # None if disconnected
     model: Model | None = None  # None if no model is selected
     source_id: UUID | None = Field(
         default=None, exclude=True

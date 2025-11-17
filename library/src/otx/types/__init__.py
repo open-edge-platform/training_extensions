@@ -13,13 +13,13 @@ from otx.types.label import HLabelInfo, LabelInfo, NullLabelInfo, SegLabelInfo
 from otx.types.task import OTXTaskType
 
 __all__ = [
+    "HLabelInfo",
     # label_info
     "LabelInfo",
-    "HLabelInfo",
-    "SegLabelInfo",
     "NullLabelInfo",
     # task_type
     "OTXTaskType",
+    "SegLabelInfo",
 ]
 
 PathLike: TypeAlias = Union[str, Path, os.PathLike]

@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Callable
+from enum import StrEnum
 from uuid import UUID, uuid4
 
 import pytest
@@ -10,8 +11,12 @@ from app.db.schema import PipelineDB, ProjectDB
 from app.schemas import PipelineStatus
 from app.schemas.pipeline import FixedRateDataCollectionPolicy
 from app.services import PipelineService, ResourceNotFoundError, ResourceType
-from app.services.configuration_service import PipelineField
 from app.services.event.event_bus import EventType
+
+
+class PipelineField(StrEnum):
+    SOURCE_ID = "source_id"
+    SINK_ID = "sink_id"
 
 
 @pytest.fixture

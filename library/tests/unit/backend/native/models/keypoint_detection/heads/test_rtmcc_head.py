@@ -13,14 +13,14 @@ from otx.data.entity.torch import OTXDataBatch
 
 
 class TestRTMCCHead:
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_features(self):
         batch_size = 2
         in_channels = 384  # Match the in_channels of the rtmdet_sep_bn_head fixture
         input_size = (192, 256)
         return [torch.rand(batch_size, in_channels, input_size[0] // 32, input_size[1] // 32)]
 
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_gt_entity(self):
         batch_size = 2
         img_infos = [ImageInfo(img_idx=i, img_shape=(192, 256), ori_shape=(192, 256)) for i in range(batch_size)]
@@ -36,7 +36,7 @@ class TestRTMCCHead:
             keypoints=list(keypoints),
         )
 
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_rtmcc_head(self) -> RTMCCHead:
         return RTMCCHead(
             out_channels=17,

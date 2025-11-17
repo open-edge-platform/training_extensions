@@ -16,7 +16,7 @@ from otx.backend.native.models.common.utils.samplers import PseudoSampler
 from otx.backend.native.models.detection.heads.rtmdet_head import RTMDetHead, RTMDetSepBNHeadModule
 
 
-@pytest.fixture()
+@pytest.fixture
 def input_features():
     batch_size = 2
     in_channels = 96  # Match the in_channels of the rtmdet_sep_bn_head fixture
@@ -25,7 +25,7 @@ def input_features():
 
 
 class TestRTMDetHead:
-    @pytest.fixture()
+    @pytest.fixture
     def rtmdet_head(self) -> RTMDetHead:
         train_cfg = {
             "assigner": DynamicSoftLabelAssigner(topk=13),
@@ -110,7 +110,7 @@ class TestRTMDetHead:
 
 
 class TestRTMDetSepBNHeadModule:
-    @pytest.fixture()
+    @pytest.fixture
     def rtmdet_sep_bn_head(self) -> RTMDetSepBNHeadModule:
         train_cfg = {
             "assigner": DynamicSoftLabelAssigner(topk=13),

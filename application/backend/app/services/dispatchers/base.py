@@ -11,7 +11,7 @@ import cv2
 import numpy as np
 from model_api.models.result import Result
 
-from app.schemas import OutputFormat, Sink
+from app.models import OutputFormat, Sink
 
 
 def numpy_to_base64(image: np.ndarray, fmt: str = ".jpg") -> str:

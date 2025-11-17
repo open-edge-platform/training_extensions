@@ -14,15 +14,12 @@ from otx.backend.native.models import (
     MaskRCNN,
     MaskRCNNTV,
     MobileNetV3,
-    Padim,
     RTMDet,
     RTMDetInst,
     RTMPose,
     SegNext,
-    Stfpm,
     TimmModel,
     TVModel,
-    Uflow,
     VisionTransformer,
 )
 from otx.backend.openvino.models import (
@@ -37,38 +34,34 @@ from otx.backend.openvino.models import (
 )
 
 __all__ = [
-    # anomaly
-    "Padim",
-    "Stfpm",
-    "Uflow",
-    # classification
-    "EfficientNet",
-    "TimmModel",
-    "MobileNetV3",
-    "TVModel",
-    "VisionTransformer",
     # detection
     "ATSS",
-    "DFine",
-    "SSD",
-    "RTMDet",
     "RTDETR",
+    "SSD",
+    "DFine",
+    # semantic segmentation
+    "DinoV2Seg",
+    # classification
+    "EfficientNet",
+    "LiteHRNet",
     # instance segmentation
     "MaskRCNN",
     "MaskRCNNTV",
-    "RTMDetInst",
-    "RTMPose",
-    # semantic segmentation
-    "DinoV2Seg",
-    "LiteHRNet",
-    "SegNext",
-    # OpenVINO models
-    "OVModel",
+    "MobileNetV3",
     "OVDetectionModel",
-    "OVMulticlassClassificationModel",
-    "OVMultilabelClassificationModel",
-    "OVSegmentationModel",
     "OVHlabelClassificationModel",
     "OVInstanceSegmentationModel",
     "OVKeypointDetectionModel",
+    # OpenVINO models
+    "OVModel",
+    "OVMulticlassClassificationModel",
+    "OVMultilabelClassificationModel",
+    "OVSegmentationModel",
+    "RTMDet",
+    "RTMDetInst",
+    "RTMPose",
+    "SegNext",
+    "TVModel",
+    "TimmModel",
+    "VisionTransformer",
 ]
