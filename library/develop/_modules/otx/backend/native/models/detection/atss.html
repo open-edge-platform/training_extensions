@@ -275,7 +275,6 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.detection.losses</span><span class="w"> </span><span class="kn">import</span> <span class="n">ATSSCriterion</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.detection.necks</span><span class="w"> </span><span class="kn">import</span> <span class="n">FPN</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.detection.utils.assigners</span><span class="w"> </span><span class="kn">import</span> <span class="n">ATSSAssigner</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.utils.support_otx_v1</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXv1Helper</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_checkpoint</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.config.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">TileConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.metrics.fmeasure</span><span class="w"> </span><span class="kn">import</span> <span class="n">MeanAveragePrecisionFMeasureCallable</span>
@@ -299,7 +298,8 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        label_info (LabelInfoTypes): Information about the labels.</span>
-<span class="sd">        data_input_params (DataInputParams): Parameters for data input.</span>
+<span class="sd">        data_input_params (DataInputParams | None): Parameters for the image data preprocessing.</span>
+<span class="sd">            If None, uses _default_preprocessing_params.</span>
 <span class="sd">        model_name (Literal, optional): Name of the model to use. Defaults to &quot;atss_mobilenetv2&quot;.</span>
 <span class="sd">        optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.</span>
 <span class="sd">        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.</span>
@@ -309,7 +309,7 @@
 <span class="sd">        tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">pretrained_weights</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">_pretrained_weights</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;atss_mobilenetv2&quot;</span><span class="p">:</span> <span class="s2">&quot;https://storage.openvinotoolkit.org/repositories/openvino_training_extensions/&quot;</span>
         <span class="s2">&quot;models/object_detection/v2/mobilenet_v2-atss.pth&quot;</span><span class="p">,</span>
         <span class="s2">&quot;atss_resnext101&quot;</span><span class="p">:</span> <span class="s2">&quot;https://storage.openvinotoolkit.org/repositories/openvino_training_extensions/models/&quot;</span>
@@ -319,7 +319,7 @@
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">,</span>
-        <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span><span class="p">,</span>
+        <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">model_name</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span>
             <span class="s2">&quot;atss_mobilenetv2&quot;</span><span class="p">,</span>
             <span class="s2">&quot;atss_resnext101&quot;</span><span class="p">,</span>
@@ -330,8 +330,8 @@
         <span class="n">torch_compile</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">tile_config</span><span class="p">:</span> <span class="n">TileConfig</span> <span class="o">=</span> <span class="n">TileConfig</span><span class="p">(</span><span class="n">enable_tiler</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">model_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pretrained_weights</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Unsupported model: </span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">. Supported models: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pretrained_weights</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">if</span> <span class="n">model_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pretrained_weights</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Unsupported model: </span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">. Supported models: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pretrained_weights</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
@@ -404,7 +404,7 @@
             <span class="n">test_cfg</span><span class="o">=</span><span class="n">test_cfg</span><span class="p">,</span>  <span class="c1"># TODO (Kirill): remove</span>
         <span class="p">)</span>
         <span class="n">model</span><span class="o">.</span><span class="n">init_weights</span><span class="p">()</span>
-        <span class="n">load_checkpoint</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pretrained_weights</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">],</span> <span class="n">map_location</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+        <span class="n">load_checkpoint</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pretrained_weights</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">],</span> <span class="n">map_location</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">model</span>
 
@@ -458,12 +458,9 @@
             <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;bboxes&quot;</span><span class="p">,</span> <span class="s2">&quot;labels&quot;</span><span class="p">,</span> <span class="s2">&quot;feature_vector&quot;</span><span class="p">,</span> <span class="s2">&quot;saliency_map&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">explain_mode</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
         <span class="p">)</span>
 
-<div class="viewcode-block" id="ATSS.load_from_otx_v1_ckpt">
-<a class="viewcode-back" href="../../../../../../guide/reference/_autosummary/otx.models.html#otx.models.ATSS.load_from_otx_v1_ckpt">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">load_from_otx_v1_ckpt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">add_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;model.&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load the previous OTX ckpt according to OTX2.0.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">OTXv1Helper</span><span class="o">.</span><span class="n">load_det_ckpt</span><span class="p">(</span><span class="n">state_dict</span><span class="p">,</span> <span class="n">add_prefix</span><span class="p">)</span></div>
-</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_default_preprocessing_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataInputParams</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">DataInputParams</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">DataInputParams</span><span class="p">(</span><span class="n">input_size</span><span class="o">=</span><span class="p">(</span><span class="mi">800</span><span class="p">,</span> <span class="mi">992</span><span class="p">),</span> <span class="n">mean</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="n">std</span><span class="o">=</span><span class="p">(</span><span class="mf">255.0</span><span class="p">,</span> <span class="mf">255.0</span><span class="p">,</span> <span class="mf">255.0</span><span class="p">))</span></div>
 
 </pre></div>
 

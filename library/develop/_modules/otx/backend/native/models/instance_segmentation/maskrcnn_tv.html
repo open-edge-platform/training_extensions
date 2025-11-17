@@ -275,7 +275,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.exporter.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXModelExporter</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.exporter.native</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXNativeModelExporter</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">DefaultOptimizerCallable</span><span class="p">,</span> <span class="n">DefaultSchedulerCallable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataInputParams</span><span class="p">,</span> <span class="n">DefaultOptimizerCallable</span><span class="p">,</span> <span class="n">DefaultSchedulerCallable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.instance_segmentation.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXInstanceSegModel</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.instance_segmentation.heads</span><span class="w"> </span><span class="kn">import</span> <span class="n">TVRoIHeads</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.instance_segmentation.rotated_det</span><span class="w"> </span><span class="kn">import</span> <span class="n">RotatedPredictMixin</span>
@@ -295,7 +295,6 @@
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">lightning.pytorch.cli</span><span class="w"> </span><span class="kn">import</span> <span class="n">LRSchedulerCallable</span><span class="p">,</span> <span class="n">OptimizerCallable</span>
 
-    <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataInputParams</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.schedulers</span><span class="w"> </span><span class="kn">import</span> <span class="n">LRSchedulerListCallable</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">otx.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetricCallable</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.label</span><span class="w"> </span><span class="kn">import</span> <span class="n">LabelInfoTypes</span>
@@ -308,7 +307,8 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        label_info (LabelInfoTypes): Information about the labels used in the model.</span>
-<span class="sd">        data_input_params (DataInputParams): Parameters for the data input.</span>
+<span class="sd">        data_input_params (DataInputParams | None, optional): Parameters for the image data preprocessing.</span>
+<span class="sd">            If None is given, default parameters for the specific model will be used.</span>
 <span class="sd">        model_name (str, optional): Name of the model. Defaults to &quot;maskrcnn_resnet_50&quot;.</span>
 <span class="sd">        optimizer (OptimizerCallable, optional): Optimizer for the model. Defaults to DefaultOptimizerCallable.</span>
 <span class="sd">        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Scheduler for the model.</span>
@@ -320,14 +320,14 @@
 <span class="sd">        explain_mode (bool, optional): Whether to enable explainable AI mode. Defaults to False.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">pretrained_weights</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">_pretrained_weights</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;maskrcnn_resnet_50&quot;</span><span class="p">:</span> <span class="n">MaskRCNN_ResNet50_FPN_V2_Weights</span><span class="o">.</span><span class="n">verify</span><span class="p">(</span><span class="s2">&quot;DEFAULT&quot;</span><span class="p">),</span>
     <span class="p">}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">,</span>
-        <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span><span class="p">,</span>
+        <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">model_name</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;maskrcnn_resnet_50&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;maskrcnn_resnet_50&quot;</span><span class="p">,</span>
         <span class="n">optimizer</span><span class="p">:</span> <span class="n">OptimizerCallable</span> <span class="o">=</span> <span class="n">DefaultOptimizerCallable</span><span class="p">,</span>
         <span class="n">scheduler</span><span class="p">:</span> <span class="n">LRSchedulerCallable</span> <span class="o">|</span> <span class="n">LRSchedulerListCallable</span> <span class="o">=</span> <span class="n">DefaultSchedulerCallable</span><span class="p">,</span>
@@ -351,7 +351,7 @@
 
         <span class="c1"># NOTE: Add 1 to num_classes to account for background class.</span>
         <span class="n">num_classes</span> <span class="o">=</span> <span class="n">num_classes</span> <span class="o">+</span> <span class="mi">1</span>
-        <span class="n">weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pretrained_weights</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">]</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pretrained_weights</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">]</span>
 
         <span class="c1"># init model components, model itself and load weights</span>
         <span class="n">rpn_anchor_generator</span> <span class="o">=</span> <span class="n">_default_anchorgen</span><span class="p">()</span>

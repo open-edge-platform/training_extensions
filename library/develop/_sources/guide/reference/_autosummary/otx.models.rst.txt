@@ -20,6 +20,8 @@ otx.models
       ATSS
       RTDETR
       SSD
+      YOLOX
+      DEIMDFine
       DFine
       DinoV2Seg
       EfficientNet

@@ -302,7 +302,8 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        label_info (LabelInfoTypes): Information about the labels.</span>
-<span class="sd">        data_input_params (DataInputParams): Parameters for data input.</span>
+<span class="sd">        data_input_params (DataInputParams | None): Parameters for the image data preprocessing.</span>
+<span class="sd">            If None, uses _default_preprocessing_params.</span>
 <span class="sd">        model_name (literal, optional): Name of the model to use. Defaults to &quot;rtdetr_50&quot;.</span>
 <span class="sd">        optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.</span>
 <span class="sd">        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.</span>
@@ -313,17 +314,18 @@
 <span class="sd">        tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">pretrained_weights</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">_pretrained_weights</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;rtdetr_18&quot;</span><span class="p">:</span> <span class="s2">&quot;https://github.com/lyuwenyu/storage/releases/download/v0.1/rtdetr_r18vd_5x_coco_objects365_from_paddle.pth&quot;</span><span class="p">,</span>
         <span class="s2">&quot;rtdetr_50&quot;</span><span class="p">:</span> <span class="s2">&quot;https://github.com/lyuwenyu/storage/releases/download/v0.1/rtdetr_r50vd_2x_coco_objects365_from_paddle.pth&quot;</span><span class="p">,</span>
         <span class="s2">&quot;rtdetr_101&quot;</span><span class="p">:</span> <span class="s2">&quot;https://github.com/lyuwenyu/storage/releases/download/v0.1/rtdetr_r101vd_2x_coco_objects365_from_paddle.pth&quot;</span><span class="p">,</span>
     <span class="p">}</span>
+
     <span class="n">input_size_multiplier</span> <span class="o">=</span> <span class="mi">32</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">,</span>
-        <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span><span class="p">,</span>
+        <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">model_name</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;rtdetr_18&quot;</span><span class="p">,</span> <span class="s2">&quot;rtdetr_50&quot;</span><span class="p">,</span> <span class="s2">&quot;rtdetr_101&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;rtdetr_50&quot;</span><span class="p">,</span>
         <span class="n">optimizer</span><span class="p">:</span> <span class="n">OptimizerCallable</span> <span class="o">=</span> <span class="n">DefaultOptimizerCallable</span><span class="p">,</span>
         <span class="n">scheduler</span><span class="p">:</span> <span class="n">LRSchedulerCallable</span> <span class="o">|</span> <span class="n">LRSchedulerListCallable</span> <span class="o">=</span> <span class="n">DefaultSchedulerCallable</span><span class="p">,</span>
@@ -376,7 +378,7 @@
             <span class="n">input_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_input_params</span><span class="o">.</span><span class="n">input_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
         <span class="p">)</span>
         <span class="n">model</span><span class="o">.</span><span class="n">init_weights</span><span class="p">()</span>
-        <span class="n">load_checkpoint</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pretrained_weights</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">],</span> <span class="n">map_location</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+        <span class="n">load_checkpoint</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pretrained_weights</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">],</span> <span class="n">map_location</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">model</span>
 

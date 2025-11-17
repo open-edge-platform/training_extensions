@@ -269,7 +269,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.exporter.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXModelExporter</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.exporter.native</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXNativeModelExporter</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">DefaultOptimizerCallable</span><span class="p">,</span> <span class="n">DefaultSchedulerCallable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataInputParams</span><span class="p">,</span> <span class="n">DefaultOptimizerCallable</span><span class="p">,</span> <span class="n">DefaultSchedulerCallable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.common.backbones</span><span class="w"> </span><span class="kn">import</span> <span class="n">ResNet</span><span class="p">,</span> <span class="n">build_model_including_pytorchcv</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.common.losses</span><span class="w"> </span><span class="kn">import</span> <span class="n">CrossEntropyLoss</span><span class="p">,</span> <span class="n">CrossSigmoidFocalLoss</span><span class="p">,</span> <span class="n">L1Loss</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.common.utils.assigners</span><span class="w"> </span><span class="kn">import</span> <span class="n">MaxIoUAssigner</span>
@@ -285,7 +285,6 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.instance_segmentation.segmentors.two_stage</span><span class="w"> </span><span class="kn">import</span> <span class="n">TwoStageDetector</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.instance_segmentation.utils.roi_extractors</span><span class="w"> </span><span class="kn">import</span> <span class="n">SingleRoIExtractor</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.modules.norm</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_norm_layer</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.utils.support_otx_v1</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXv1Helper</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_checkpoint</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.config.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">TileConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXPredBatch</span>
@@ -294,7 +293,6 @@
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">lightning.pytorch.cli</span><span class="w"> </span><span class="kn">import</span> <span class="n">LRSchedulerCallable</span><span class="p">,</span> <span class="n">OptimizerCallable</span>
 
-    <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataInputParams</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.schedulers</span><span class="w"> </span><span class="kn">import</span> <span class="n">LRSchedulerListCallable</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">otx.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetricCallable</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.label</span><span class="w"> </span><span class="kn">import</span> <span class="n">LabelInfoTypes</span>
@@ -307,7 +305,8 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        label_info (LabelInfoTypes): Information about the labels used in the model.</span>
-<span class="sd">        data_input_params (DataInputParams): Parameters for the data input.</span>
+<span class="sd">        data_input_params (DataInputParams | None, optional): Parameters for the image data preprocessing.</span>
+<span class="sd">            If None is given, default parameters for the specific model will be used.</span>
 <span class="sd">        model_name (str, optional): Name of the model. Defaults to &quot;maskrcnn_resnet_50&quot;.</span>
 <span class="sd">        optimizer (OptimizerCallable, optional): Optimizer for the model. Defaults to DefaultOptimizerCallable.</span>
 <span class="sd">        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Scheduler for the model.</span>
@@ -319,7 +318,7 @@
 <span class="sd">        explain_mode (bool, optional): Whether to enable explainable AI mode. Defaults to False.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">pretrained_weights</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">_pretrained_weights</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;maskrcnn_resnet_50&quot;</span><span class="p">:</span> <span class="s2">&quot;https://download.openmmlab.com/mmdetection/v2.0/mask_rcnn/mask_rcnn_r50_fpn_mstrain-poly_3x_coco/&quot;</span>
         <span class="s2">&quot;mask_rcnn_r50_fpn_mstrain-poly_3x_coco_20210524_201154-21b550bb.pth&quot;</span><span class="p">,</span>
         <span class="s2">&quot;maskrcnn_efficientnet_b2b&quot;</span><span class="p">:</span> <span class="s2">&quot;https://storage.openvinotoolkit.org/repositories/openvino_training_extensions/&quot;</span>
@@ -332,7 +331,7 @@
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">,</span>
-        <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span><span class="p">,</span>
+        <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">model_name</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span>
             <span class="s2">&quot;maskrcnn_resnet_50&quot;</span><span class="p">,</span>
             <span class="s2">&quot;maskrcnn_efficientnet_b2b&quot;</span><span class="p">,</span>
@@ -559,7 +558,7 @@
             <span class="n">roi_criterion</span><span class="o">=</span><span class="n">roi_criterion</span><span class="p">,</span>
             <span class="n">rpn_criterion</span><span class="o">=</span><span class="n">rpn_criterion</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">load_checkpoint</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pretrained_weights</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">],</span> <span class="n">map_location</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+        <span class="n">load_checkpoint</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pretrained_weights</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">],</span> <span class="n">map_location</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">model</span>
 
@@ -627,13 +626,6 @@
             <span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;bboxes&quot;</span><span class="p">,</span> <span class="s2">&quot;labels&quot;</span><span class="p">,</span> <span class="s2">&quot;masks&quot;</span><span class="p">,</span> <span class="s2">&quot;feature_vector&quot;</span><span class="p">,</span> <span class="s2">&quot;saliency_map&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">explain_mode</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
         <span class="p">)</span>
 
-<div class="viewcode-block" id="MaskRCNN.load_from_otx_v1_ckpt">
-<a class="viewcode-back" href="../../../../../../guide/reference/_autosummary/otx.models.html#otx.models.MaskRCNN.load_from_otx_v1_ckpt">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">load_from_otx_v1_ckpt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">add_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;model.&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load the previous OTX ckpt according to OTX2.0.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">OTXv1Helper</span><span class="o">.</span><span class="n">load_iseg_ckpt</span><span class="p">(</span><span class="n">state_dict</span><span class="p">,</span> <span class="n">add_prefix</span><span class="p">)</span></div>
-
-
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_optimization_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;PTQ config for MaskRCNN-Eff.&quot;&quot;&quot;</span>
@@ -649,7 +641,24 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_name</span> <span class="o">==</span> <span class="s2">&quot;maskrcnn_swin_t&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;model_type&quot;</span><span class="p">:</span> <span class="s2">&quot;transformer&quot;</span><span class="p">}</span>
 
-        <span class="k">return</span> <span class="p">{}</span></div>
+        <span class="k">return</span> <span class="p">{}</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_default_preprocessing_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataInputParams</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">DataInputParams</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;maskrcnn_resnet_50&quot;</span><span class="p">:</span> <span class="n">DataInputParams</span><span class="p">(</span>
+                <span class="n">input_size</span><span class="o">=</span><span class="p">(</span><span class="mi">1024</span><span class="p">,</span> <span class="mi">1024</span><span class="p">),</span> <span class="n">mean</span><span class="o">=</span><span class="p">(</span><span class="mf">123.675</span><span class="p">,</span> <span class="mf">116.28</span><span class="p">,</span> <span class="mf">103.53</span><span class="p">),</span> <span class="n">std</span><span class="o">=</span><span class="p">(</span><span class="mf">58.395</span><span class="p">,</span> <span class="mf">57.12</span><span class="p">,</span> <span class="mf">57.375</span><span class="p">)</span>
+            <span class="p">),</span>
+            <span class="c1"># TODO(@kprokofi): The std values of (1.0, 1.0, 1.0) for maskrcnn_efficientnet_b2b</span>
+            <span class="c1"># differ from other variants which use (58.395, 57.12, 57.375), which may indicate missing normalization.</span>
+            <span class="c1"># issue: https://github.com/open-edge-platform/training_extensions/issues/5023</span>
+            <span class="s2">&quot;maskrcnn_efficientnet_b2b&quot;</span><span class="p">:</span> <span class="n">DataInputParams</span><span class="p">(</span>
+                <span class="n">input_size</span><span class="o">=</span><span class="p">(</span><span class="mi">1024</span><span class="p">,</span> <span class="mi">1024</span><span class="p">),</span> <span class="n">mean</span><span class="o">=</span><span class="p">(</span><span class="mf">123.675</span><span class="p">,</span> <span class="mf">116.28</span><span class="p">,</span> <span class="mf">103.53</span><span class="p">),</span> <span class="n">std</span><span class="o">=</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;maskrcnn_swin_tiny&quot;</span><span class="p">:</span> <span class="n">DataInputParams</span><span class="p">(</span>
+                <span class="n">input_size</span><span class="o">=</span><span class="p">(</span><span class="mi">1344</span><span class="p">,</span> <span class="mi">1344</span><span class="p">),</span> <span class="n">mean</span><span class="o">=</span><span class="p">(</span><span class="mf">123.675</span><span class="p">,</span> <span class="mf">116.28</span><span class="p">,</span> <span class="mf">103.53</span><span class="p">),</span> <span class="n">std</span><span class="o">=</span><span class="p">(</span><span class="mf">58.395</span><span class="p">,</span> <span class="mf">57.12</span><span class="p">,</span> <span class="mf">57.375</span><span class="p">)</span>
+            <span class="p">),</span>
+        <span class="p">}</span></div>
 
 
 

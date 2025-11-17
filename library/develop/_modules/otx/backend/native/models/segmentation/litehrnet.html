@@ -272,7 +272,6 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.segmentation.heads</span><span class="w"> </span><span class="kn">import</span> <span class="n">FCNHead</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.segmentation.losses</span><span class="w"> </span><span class="kn">import</span> <span class="n">CrossEntropyLossWithIgnore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.segmentation.segmentors</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseSegmentationModel</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.utils.support_otx_v1</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXv1Helper</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.config.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">TileConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.metrics.dice</span><span class="w"> </span><span class="kn">import</span> <span class="n">SegmCallable</span>
 
@@ -292,7 +291,7 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        label_info (LabelInfoTypes): Information about the hierarchical labels.</span>
-<span class="sd">        data_input_params (DataInputParams): Parameters for data input.</span>
+<span class="sd">        data_input_params (DataInputParams | None, optional): Parameters for the image data preprocessing.</span>
 <span class="sd">        model_name (Literal, optional): Name of the model. Defaults to &quot;lite_hrnet_18&quot;.</span>
 <span class="sd">        optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.</span>
 <span class="sd">        scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.</span>
@@ -305,7 +304,7 @@
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">,</span>
-        <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span><span class="p">,</span>
+        <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">model_name</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;lite_hrnet_s&quot;</span><span class="p">,</span> <span class="s2">&quot;lite_hrnet_18&quot;</span><span class="p">,</span> <span class="s2">&quot;lite_hrnet_x&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;lite_hrnet_18&quot;</span><span class="p">,</span>
         <span class="n">optimizer</span><span class="p">:</span> <span class="n">OptimizerCallable</span> <span class="o">=</span> <span class="n">DefaultOptimizerCallable</span><span class="p">,</span>
         <span class="n">scheduler</span><span class="p">:</span> <span class="n">LRSchedulerCallable</span> <span class="o">|</span> <span class="n">LRSchedulerListCallable</span> <span class="o">=</span> <span class="n">DefaultSchedulerCallable</span><span class="p">,</span>
@@ -336,13 +335,6 @@
             <span class="n">decode_head</span><span class="o">=</span><span class="n">decode_head</span><span class="p">,</span>
             <span class="n">criterion</span><span class="o">=</span><span class="n">criterion</span><span class="p">,</span>
         <span class="p">)</span>
-
-<div class="viewcode-block" id="LiteHRNet.load_from_otx_v1_ckpt">
-<a class="viewcode-back" href="../../../../../../guide/reference/_autosummary/otx.models.html#otx.models.LiteHRNet.load_from_otx_v1_ckpt">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">load_from_otx_v1_ckpt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">add_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;model.model.&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load the previous OTX ckpt according to OTX2.0.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">OTXv1Helper</span><span class="o">.</span><span class="n">load_seg_lite_hrnet_ckpt</span><span class="p">(</span><span class="n">state_dict</span><span class="p">,</span> <span class="n">add_prefix</span><span class="p">)</span></div>
-
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_optimization_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
