@@ -20,7 +20,7 @@ from torchvision.models.detection.mask_rcnn import (
 
 from otx.backend.native.exporter.base import OTXModelExporter
 from otx.backend.native.exporter.native import OTXNativeModelExporter
-from otx.backend.native.models.base import DefaultOptimizerCallable, DefaultSchedulerCallable
+from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.backend.native.models.instance_segmentation.base import OTXInstanceSegModel
 from otx.backend.native.models.instance_segmentation.heads import TVRoIHeads
 from otx.backend.native.models.instance_segmentation.rotated_det import RotatedPredictMixin
@@ -40,7 +40,6 @@ from otx.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
 
-    from otx.backend.native.models.base import DataInputParams
     from otx.backend.native.schedulers import LRSchedulerListCallable
     from otx.metrics import MetricCallable
     from otx.types.label import LabelInfoTypes
@@ -51,7 +50,8 @@ class MaskRCNNTV(OTXInstanceSegModel):
 
     Args:
         label_info (LabelInfoTypes): Information about the labels used in the model.
-        data_input_params (DataInputParams): Parameters for the data input.
+        data_input_params (DataInputParams | None, optional): Parameters for the image data preprocessing.
+            If None is given, default parameters for the specific model will be used.
         model_name (str, optional): Name of the model. Defaults to "maskrcnn_resnet_50".
         optimizer (OptimizerCallable, optional): Optimizer for the model. Defaults to DefaultOptimizerCallable.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Scheduler for the model.
@@ -63,14 +63,14 @@ class MaskRCNNTV(OTXInstanceSegModel):
         explain_mode (bool, optional): Whether to enable explainable AI mode. Defaults to False.
     """
 
-    pretrained_weights: ClassVar[dict[str, Any]] = {
+    _pretrained_weights: ClassVar[dict[str, Any]] = {
         "maskrcnn_resnet_50": MaskRCNN_ResNet50_FPN_V2_Weights.verify("DEFAULT"),
     }
 
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams,
+        data_input_params: DataInputParams | None = None,
         model_name: Literal["maskrcnn_resnet_50"] = "maskrcnn_resnet_50",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
@@ -94,7 +94,7 @@ class MaskRCNNTV(OTXInstanceSegModel):
 
         # NOTE: Add 1 to num_classes to account for background class.
         num_classes = num_classes + 1
-        weights = self.pretrained_weights[self.model_name]
+        weights = self._pretrained_weights[self.model_name]
 
         # init model components, model itself and load weights
         rpn_anchor_generator = _default_anchorgen()

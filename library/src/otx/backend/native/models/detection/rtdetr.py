@@ -45,7 +45,8 @@ class RTDETR(OTXDetectionModel):
 
     Args:
         label_info (LabelInfoTypes): Information about the labels.
-        data_input_params (DataInputParams): Parameters for data input.
+        data_input_params (DataInputParams | None): Parameters for the image data preprocessing.
+            If None, uses _default_preprocessing_params.
         model_name (literal, optional): Name of the model to use. Defaults to "rtdetr_50".
         optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
@@ -56,17 +57,18 @@ class RTDETR(OTXDetectionModel):
         tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).
     """
 
-    pretrained_weights: ClassVar[dict[str, str]] = {
+    _pretrained_weights: ClassVar[dict[str, str]] = {
         "rtdetr_18": "https://github.com/lyuwenyu/storage/releases/download/v0.1/rtdetr_r18vd_5x_coco_objects365_from_paddle.pth",
         "rtdetr_50": "https://github.com/lyuwenyu/storage/releases/download/v0.1/rtdetr_r50vd_2x_coco_objects365_from_paddle.pth",
         "rtdetr_101": "https://github.com/lyuwenyu/storage/releases/download/v0.1/rtdetr_r101vd_2x_coco_objects365_from_paddle.pth",
     }
+
     input_size_multiplier = 32
 
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams,
+        data_input_params: DataInputParams | None = None,
         model_name: Literal["rtdetr_18", "rtdetr_50", "rtdetr_101"] = "rtdetr_50",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
@@ -119,7 +121,7 @@ class RTDETR(OTXDetectionModel):
             input_size=self.data_input_params.input_size[0],
         )
         model.init_weights()
-        load_checkpoint(model, self.pretrained_weights[self.model_name], map_location="cpu")
+        load_checkpoint(model, self._pretrained_weights[self.model_name], map_location="cpu")
 
         return model
 

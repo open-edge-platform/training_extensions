@@ -14,7 +14,7 @@ from torchvision.ops import RoIAlign
 
 from otx.backend.native.exporter.base import OTXModelExporter
 from otx.backend.native.exporter.native import OTXNativeModelExporter
-from otx.backend.native.models.base import DefaultOptimizerCallable, DefaultSchedulerCallable
+from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.backend.native.models.common.backbones import ResNet, build_model_including_pytorchcv
 from otx.backend.native.models.common.losses import CrossEntropyLoss, CrossSigmoidFocalLoss, L1Loss
 from otx.backend.native.models.common.utils.assigners import MaxIoUAssigner
@@ -30,7 +30,6 @@ from otx.backend.native.models.instance_segmentation.rotated_det import RotatedP
 from otx.backend.native.models.instance_segmentation.segmentors.two_stage import TwoStageDetector
 from otx.backend.native.models.instance_segmentation.utils.roi_extractors import SingleRoIExtractor
 from otx.backend.native.models.modules.norm import build_norm_layer
-from otx.backend.native.models.utils.support_otx_v1 import OTXv1Helper
 from otx.backend.native.models.utils.utils import load_checkpoint
 from otx.config.data import TileConfig
 from otx.data.entity.torch import OTXPredBatch
@@ -39,7 +38,6 @@ from otx.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
 
-    from otx.backend.native.models.base import DataInputParams
     from otx.backend.native.schedulers import LRSchedulerListCallable
     from otx.metrics import MetricCallable
     from otx.types.label import LabelInfoTypes
@@ -50,7 +48,8 @@ class MaskRCNN(OTXInstanceSegModel):
 
     Args:
         label_info (LabelInfoTypes): Information about the labels used in the model.
-        data_input_params (DataInputParams): Parameters for the data input.
+        data_input_params (DataInputParams | None, optional): Parameters for the image data preprocessing.
+            If None is given, default parameters for the specific model will be used.
         model_name (str, optional): Name of the model. Defaults to "maskrcnn_resnet_50".
         optimizer (OptimizerCallable, optional): Optimizer for the model. Defaults to DefaultOptimizerCallable.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Scheduler for the model.
@@ -62,7 +61,7 @@ class MaskRCNN(OTXInstanceSegModel):
         explain_mode (bool, optional): Whether to enable explainable AI mode. Defaults to False.
     """
 
-    pretrained_weights: ClassVar[dict[str, Any]] = {
+    _pretrained_weights: ClassVar[dict[str, Any]] = {
         "maskrcnn_resnet_50": "https://download.openmmlab.com/mmdetection/v2.0/mask_rcnn/mask_rcnn_r50_fpn_mstrain-poly_3x_coco/"
         "mask_rcnn_r50_fpn_mstrain-poly_3x_coco_20210524_201154-21b550bb.pth",
         "maskrcnn_efficientnet_b2b": "https://storage.openvinotoolkit.org/repositories/openvino_training_extensions/"
@@ -75,7 +74,7 @@ class MaskRCNN(OTXInstanceSegModel):
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams,
+        data_input_params: DataInputParams | None = None,
         model_name: Literal[
             "maskrcnn_resnet_50",
             "maskrcnn_efficientnet_b2b",
@@ -302,7 +301,7 @@ class MaskRCNN(OTXInstanceSegModel):
             roi_criterion=roi_criterion,
             rpn_criterion=rpn_criterion,
         )
-        load_checkpoint(model, self.pretrained_weights[self.model_name], map_location="cpu")
+        load_checkpoint(model, self._pretrained_weights[self.model_name], map_location="cpu")
 
         return model
 
@@ -370,10 +369,6 @@ class MaskRCNN(OTXInstanceSegModel):
             output_names=["bboxes", "labels", "masks", "feature_vector", "saliency_map"] if self.explain_mode else None,
         )
 
-    def load_from_otx_v1_ckpt(self, state_dict: dict, add_prefix: str = "model.") -> dict:
-        """Load the previous OTX ckpt according to OTX2.0."""
-        return OTXv1Helper.load_iseg_ckpt(state_dict, add_prefix)
-
     @property
     def _optimization_config(self) -> dict[str, Any]:
         """PTQ config for MaskRCNN-Eff."""
@@ -390,6 +385,23 @@ class MaskRCNN(OTXInstanceSegModel):
             return {"model_type": "transformer"}
 
         return {}
+
+    @property
+    def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
+        return {
+            "maskrcnn_resnet_50": DataInputParams(
+                input_size=(1024, 1024), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375)
+            ),
+            # TODO(@kprokofi): The std values of (1.0, 1.0, 1.0) for maskrcnn_efficientnet_b2b
+            # differ from other variants which use (58.395, 57.12, 57.375), which may indicate missing normalization.
+            # issue: https://github.com/open-edge-platform/training_extensions/issues/5023
+            "maskrcnn_efficientnet_b2b": DataInputParams(
+                input_size=(1024, 1024), mean=(123.675, 116.28, 103.53), std=(1.0, 1.0, 1.0)
+            ),
+            "maskrcnn_swin_tiny": DataInputParams(
+                input_size=(1344, 1344), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375)
+            ),
+        }
 
 
 class RotatedMaskRCNNModel(RotatedPredictMixin, MaskRCNN):
