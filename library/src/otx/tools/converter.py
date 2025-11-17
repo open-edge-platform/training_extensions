@@ -227,22 +227,6 @@ TEMPLATE_ID_MAPPING = {
         "status": ModelStatus.ACCURACY,
         "default": False,
     },
-    # ANOMALY
-    "ote_anomaly_padim": {
-        "recipe_path": RECIPE_PATH / "anomaly" / "padim.yaml",
-        "status": ModelStatus.SPEED,
-        "default": True,
-    },
-    "ote_anomaly_stfpm": {
-        "recipe_path": RECIPE_PATH / "anomaly" / "stfpm.yaml",
-        "status": ModelStatus.BALANCE,
-        "default": False,
-    },
-    "ote_anomaly_uflow": {
-        "recipe_path": RECIPE_PATH / "anomaly" / "uflow.yaml",
-        "status": ModelStatus.ACCURACY,
-        "default": False,
-    },
     # KEYPOINT_DETECTION
     "Keypoint_Detection_RTMPose_Tiny": {
         "recipe_path": RECIPE_PATH / "keypoint_detection" / "rtmpose_tiny.yaml",

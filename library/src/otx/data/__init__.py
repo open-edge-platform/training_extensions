@@ -4,7 +4,6 @@
 """Module for data related objects, such as OTXDataset, OTXDataEntity, OTXDataModule, and Transforms."""
 
 from .dataset import (
-    OTXAnomalyDataset,
     OTXDetectionDataset,
     OTXHlabelClsDataset,
     OTXInstanceSegDataset,
@@ -17,7 +16,6 @@ from .dataset import (
 from .module import OTXDataModule
 
 __all__ = [
-    "OTXAnomalyDataset",
     "OTXDataModule",
     "OTXDetectionDataset",
     "OTXHlabelClsDataset",

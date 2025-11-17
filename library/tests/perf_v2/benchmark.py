@@ -41,10 +41,6 @@ FOLDER_MAPPINGS = {
     OTXTaskType.ROTATED_DETECTION: RECIPE_PATH / "rotated_detection",
     OTXTaskType.SEMANTIC_SEGMENTATION: RECIPE_PATH / "semantic_segmentation",
     OTXTaskType.INSTANCE_SEGMENTATION: RECIPE_PATH / "instance_segmentation",
-    OTXTaskType.ANOMALY: RECIPE_PATH / "anomaly",
-    OTXTaskType.ANOMALY_CLASSIFICATION: RECIPE_PATH / "anomaly_classification",
-    OTXTaskType.ANOMALY_SEGMENTATION: RECIPE_PATH / "anomaly_segmentation",
-    OTXTaskType.ANOMALY_DETECTION: RECIPE_PATH / "anomaly_detection",
     OTXTaskType.KEYPOINT_DETECTION: RECIPE_PATH / "keypoint_detection",
 }
 

@@ -745,7 +745,6 @@ class OTXModel(LightningModule):
         base_name: str,
         export_format: OTXExportFormatType,
         precision: OTXPrecisionType = OTXPrecisionType.FP32,
-        to_exportable_code: bool = False,
     ) -> Path:
         """Export this model to the specified output directory.
 
@@ -754,7 +753,6 @@ class OTXModel(LightningModule):
             base_name: (str): base name for the exported model file. Extension is defined by the target export format
             export_format (OTXExportFormatType): format of the output model
             precision (OTXExportPrecisionType): precision of the output model
-            to_exportable_code (bool): flag to export model in exportable code with demo package
 
         Returns:
             Path: path to the exported model.
@@ -774,7 +772,6 @@ class OTXModel(LightningModule):
                 base_name,
                 export_format,
                 precision,
-                to_exportable_code,
             )
         finally:
             self.train(mode)

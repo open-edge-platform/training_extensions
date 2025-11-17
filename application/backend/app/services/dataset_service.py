@@ -13,11 +13,12 @@ from uuid import UUID, uuid4
 
 import datumaro.experimental as dm
 import numpy as np
+from datumaro.experimental.export_import import export_dataset
 from loguru import logger
 from PIL import Image, UnidentifiedImageError
 from sqlalchemy.orm import Session
 
-from app.db.schema import DatasetItemDB
+from app.db.schema import DatasetItemDB, DatasetRevisionDB
 from app.models import (
     DatasetItem,
     DatasetItemAnnotation,
@@ -29,7 +30,7 @@ from app.models import (
     Rectangle,
     TaskType,
 )
-from app.repositories import DatasetItemRepository
+from app.repositories import DatasetItemRepository, DatasetRevisionRepository
 from app.schemas.project import ProjectBase, ProjectView, TaskBase
 from app.services.datumaro_converter import convert_dataset
 from app.utils.images import crop_to_thumbnail
@@ -372,4 +373,33 @@ class DatasetService(BaseSessionManagedService):
             labels=labels,
             get_dataset_items=_get_dataset_items,
             get_image_path=_get_image_path,
+        )
+
+    def save_revision(self, project_id: UUID, dataset: dm.Dataset) -> None:
+        """
+        Saves the dataset as a new revision.
+
+        Creates a new dataset revision entry in the database and exports the dataset
+        to a zip file in the project's revisions directory.
+
+        Args:
+            project_id: The UUID of the project to save the revision for.
+            dataset: The Datumaro dataset to export.
+
+        Returns:
+            None
+        """
+        revision_repo = DatasetRevisionRepository(db=self.db_session)
+        revision_db = revision_repo.save(
+            DatasetRevisionDB(
+                project_id=str(project_id),
+            )
+        )
+        revision_path = self.projects_dir / str(project_id) / "dataset_revisions" / revision_db.id
+        logger.info("Saving dataset revision '{}' to '{}'", revision_db.id, revision_path)
+        export_dataset(
+            dataset=dataset,
+            output_path=revision_path,
+            export_images=True,
+            as_zip=True,
         )
