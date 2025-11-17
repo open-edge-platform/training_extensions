@@ -26,10 +26,6 @@ def fxt_data_root_per_task_type() -> dict:
         OTXTaskType.MULTI_CLASS_CLS: "tests/assets/classification_dataset",
         OTXTaskType.MULTI_LABEL_CLS: "tests/assets/multilabel_classification",
         OTXTaskType.DETECTION: "tests/assets/car_tree_bug",
-        OTXTaskType.ANOMALY: "tests/assets/anomaly_hazelnut",
-        OTXTaskType.ANOMALY_CLASSIFICATION: "tests/assets/anomaly_hazelnut",
-        OTXTaskType.ANOMALY_DETECTION: "tests/assets/anomaly_hazelnut",
-        OTXTaskType.ANOMALY_SEGMENTATION: "tests/assets/anomaly_hazelnut",
         OTXTaskType.KEYPOINT_DETECTION: "tests/assets/car_tree_bug_keypoint",
         OTXTaskType.ROTATED_DETECTION: "tests/assets/car_tree_bug",
         OTXTaskType.INSTANCE_SEGMENTATION: "tests/assets/car_tree_bug",
@@ -40,8 +36,8 @@ def fxt_data_root_per_task_type() -> dict:
 class TestAutoConfigurator:
     def test_check_task(self) -> None:
         # None inputs
-        with pytest.raises(ValueError, match="Either task or model_config_path must be provided."):
-            auto_configurator = AutoConfigurator(task=None, model_config_path=None)
+        with pytest.raises(ValueError, match="Either task or model must be provided."):
+            auto_configurator = AutoConfigurator(task=None, model=None)
 
         # data_root is None & task is not None
         auto_configurator = AutoConfigurator(data_root=None, task="MULTI_CLASS_CLS")
@@ -49,7 +45,17 @@ class TestAutoConfigurator:
 
         # instantiate with model_config_path
         model_config_path = "src/otx/recipe/classification/multi_class_cls/mobilenet_v3_large.yaml"
-        auto_configurator = AutoConfigurator(data_root=None, task=None, model_config_path=model_config_path)
+        auto_configurator = AutoConfigurator(data_root=None, task=None, model=model_config_path)
+        assert auto_configurator.task == "MULTI_CLASS_CLS"
+
+        # instantiate with model_config_path
+        with pytest.raises(
+            ValueError,
+            match="If model is provided as a name, task must be provided to find the model.",
+        ):
+            auto_configurator = AutoConfigurator(data_root=None, task=None, model="mobilenet_v3_large")
+
+        auto_configurator = AutoConfigurator(data_root=None, task="MULTI_CLASS_CLS", model="mobilenet_v3_large")
         assert auto_configurator.task == "MULTI_CLASS_CLS"
 
         # data_root is not None & task is None
@@ -109,7 +115,7 @@ class TestAutoConfigurator:
         auto_configurator = AutoConfigurator(
             data_root="tests/assets/car_tree_bug",
             task=OTXTaskType.DETECTION,
-            model_config_path="src/otx/recipe/detection/yolox_tiny.yaml",
+            model="yolox_tiny",
         )
         auto_configurator.config["data"]["input_size"] = "auto"
 

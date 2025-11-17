@@ -227,22 +227,6 @@ TEMPLATE_ID_MAPPING = {
         "status": ModelStatus.ACCURACY,
         "default": False,
     },
-    # ANOMALY
-    "ote_anomaly_padim": {
-        "recipe_path": RECIPE_PATH / "anomaly" / "padim.yaml",
-        "status": ModelStatus.SPEED,
-        "default": True,
-    },
-    "ote_anomaly_stfpm": {
-        "recipe_path": RECIPE_PATH / "anomaly" / "stfpm.yaml",
-        "status": ModelStatus.BALANCE,
-        "default": False,
-    },
-    "ote_anomaly_uflow": {
-        "recipe_path": RECIPE_PATH / "anomaly" / "uflow.yaml",
-        "status": ModelStatus.ACCURACY,
-        "default": False,
-    },
     # KEYPOINT_DETECTION
     "Keypoint_Detection_RTMPose_Tiny": {
         "recipe_path": RECIPE_PATH / "keypoint_detection" / "rtmpose_tiny.yaml",
@@ -463,7 +447,7 @@ class GetiConfigConverter:
             model_config_path = RECIPE_PATH / "classification" / sub_task_type.lower() / model_config_path.name
         if model_config_path.suffix != ".yaml":
             model_config_path = model_config_path / ".yaml"
-        default_config = AutoConfigurator(model_config_path=model_config_path).config
+        default_config = AutoConfigurator(model=model_config_path).config
         if hyper_parameters:
             GetiConfigConverter._update_params(default_config, hyper_parameters)
         GetiConfigConverter._remove_unused_key(default_config)

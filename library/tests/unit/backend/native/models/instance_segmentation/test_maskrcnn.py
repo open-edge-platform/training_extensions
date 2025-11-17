@@ -8,7 +8,6 @@ import torch
 from otx.backend.native.models.base import DataInputParams
 from otx.backend.native.models.instance_segmentation.maskrcnn import MaskRCNN
 from otx.backend.native.models.instance_segmentation.maskrcnn_tv import MaskRCNNTV
-from otx.backend.native.models.utils.support_otx_v1 import OTXv1Helper
 from otx.data.entity.torch import OTXPredBatch
 from otx.types.export import TaskLevelExportParameters
 
@@ -20,9 +19,6 @@ class TestMaskRCNN:
             model_name="maskrcnn_resnet_50",
             data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         )
-        mock_load_ckpt = mocker.patch.object(OTXv1Helper, "load_iseg_ckpt")
-        model.load_from_otx_v1_ckpt({})
-        mock_load_ckpt.assert_called_once_with({}, "model.")
 
         assert isinstance(model._export_parameters, TaskLevelExportParameters)
 

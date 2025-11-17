@@ -369,10 +369,6 @@ class OTXDataModule(LightningDataModule):
         """
         # Map task type to config file name
         task_to_data_config_file = {
-            OTXTaskType.ANOMALY: "anomaly.yaml",
-            OTXTaskType.ANOMALY_CLASSIFICATION: "anomaly.yaml",
-            OTXTaskType.ANOMALY_DETECTION: "anomaly.yaml",
-            OTXTaskType.ANOMALY_SEGMENTATION: "anomaly.yaml",
             OTXTaskType.MULTI_CLASS_CLS: "classification.yaml",
             OTXTaskType.MULTI_LABEL_CLS: "classification.yaml",
             OTXTaskType.H_LABEL_CLS: "classification.yaml",

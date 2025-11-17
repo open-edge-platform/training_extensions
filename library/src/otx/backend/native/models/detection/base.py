@@ -41,11 +41,18 @@ if TYPE_CHECKING:
 class OTXDetectionModel(OTXModel):
     """Base class for the detection models used in OTX.
 
+    This class is a subclass of OTXModel and provides common functionality for detection models.
+    It is not intended to be used directly.
+
     Args:
         label_info (LabelInfoTypes | int | Sequence): Information about the labels used in the model.
             If `int` is given, label info will be constructed from number of classes,
             if `Sequence` is given, label info will be constructed from the sequence of label names.
-        data_input_params (DataInputParams): Parameters for data input.
+        data_input_params (DataInputParams | dict | None, optional): Parameters for image preprocessing.
+            This parameter contains image input size, mean, and std, that is used to preprocess the input image.
+            If None is given, default parameters for the specific model will be used.
+            In most cases you don't need to set this parameter unless you change the image size or pretrained weights.
+            Defaults to None.
         model_name (str, optional): Name of the model. Defaults to "otx_detection_model".
         optimizer (OptimizerCallable, optional): Optimizer callable. Defaults to DefaultOptimizerCallable.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Scheduler callable.
@@ -53,19 +60,23 @@ class OTXDetectionModel(OTXModel):
         metric (MetricCallable, optional): Metric callable. Defaults to MeanAveragePrecisionFMeasureCallable.
         torch_compile (bool, optional): Whether to use torch compile. Defaults to False.
         tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).
-        explain_mode (bool, optional): Whether to enable explain mode. Defaults to False.
+        explain_mode (bool, optional): Whether to enable explain mode.
+            The model will return feature vectors need for XAI visualization.
+            Defaults to False.
+
     """
 
     def __init__(
         self,
         label_info: LabelInfoTypes | int | Sequence,
-        data_input_params: DataInputParams,
+        data_input_params: DataInputParams | dict | None = None,
         model_name: str = "otx_detection_model",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MeanAveragePrecisionFMeasureCallable,
         torch_compile: bool = False,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
+        explain_mode: bool = False,
     ) -> None:
         super().__init__(
             label_info=label_info,
@@ -79,6 +90,7 @@ class OTXDetectionModel(OTXModel):
             tile_config=tile_config,
         )
 
+        self.explain_mode = explain_mode
         self.model.feature_vector_fn = feature_vector_fn
         self.model.explain_fn = self.get_explain_fn()
 
@@ -533,3 +545,7 @@ class OTXDetectionModel(OTXModel):
             )
 
         return [1] * 10
+
+    @property
+    def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
+        return DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(255.0, 255.0, 255.0))

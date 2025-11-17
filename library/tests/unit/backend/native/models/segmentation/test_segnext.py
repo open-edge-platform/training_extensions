@@ -8,7 +8,6 @@ from torch._dynamo.testing import CompileCounter
 
 from otx.backend.native.models.base import DataInputParams
 from otx.backend.native.models.segmentation.segnext import SegNext
-from otx.backend.native.models.utils.support_otx_v1 import OTXv1Helper
 
 
 class TestSegNext:
@@ -23,11 +22,6 @@ class TestSegNext:
     def test_segnext_init(self, fxt_segnext):
         assert isinstance(fxt_segnext, SegNext)
         assert fxt_segnext.num_classes == 10
-
-    def test_load_from_otx_v1_ckpt(self, fxt_segnext, mocker):
-        mock_load_ckpt = mocker.patch.object(OTXv1Helper, "load_seg_segnext_ckpt")
-        fxt_segnext.load_from_otx_v1_ckpt({})
-        mock_load_ckpt.assert_called_once_with({}, "model.model.")
 
     def test_optimization_config(self, fxt_segnext):
         config = fxt_segnext._optimization_config
