@@ -196,8 +196,4 @@ class RTMDetInst(OTXInstanceSegModel):
 
     @property
     def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
-        return {
-            "rtmdet_inst_tiny": DataInputParams(
-                input_size=(640, 640), mean=(103.53, 116.28, 123.675), std=(57.375, 57.12, 58.395)
-            ),
-        }
+        return DataInputParams(input_size=(640, 640), mean=(103.53, 116.28, 123.675), std=(57.375, 57.12, 58.395))

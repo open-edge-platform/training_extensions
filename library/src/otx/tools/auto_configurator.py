@@ -67,9 +67,11 @@ class AutoConfigurator:
 
     Args:
         data_root (PathLike | None, optional): The root directory for data storage. Defaults to None.
-        task (OTXTaskType | None, optional): The current task. Defaults to None.
-        model_name (str | None, optional): Name of the model to use as the default.
-            If None, the default model will be used. Defaults to None.
+        task (OTXTaskType | None, optional): The task type. If None, the task will be configured based on the model.
+            Defaults to None.
+        model (PathLike | str | None, optional): Path to the model config file or name of the model to use.
+            If None, the task should be provided and the default model for the task will be used.
+            Defaults to None.
 
     Example:
         The following examples show how to use the AutoConfigurator class.

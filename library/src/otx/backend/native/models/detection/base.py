@@ -76,6 +76,7 @@ class OTXDetectionModel(OTXModel):
         metric: MetricCallable = MeanAveragePrecisionFMeasureCallable,
         torch_compile: bool = False,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
+        explain_mode: bool = False,
     ) -> None:
         super().__init__(
             label_info=label_info,
@@ -89,6 +90,7 @@ class OTXDetectionModel(OTXModel):
             tile_config=tile_config,
         )
 
+        self.explain_mode = explain_mode
         self.model.feature_vector_fn = feature_vector_fn
         self.model.explain_fn = self.get_explain_fn()
 

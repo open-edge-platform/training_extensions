@@ -44,9 +44,11 @@ def list_models(
         pattern (Optional[str], optional): A string pattern to filter the list of available models. Defaults to None.
         print_table (bool, optional): Output the recipe information as a Rich.Table.
             This is primarily used for `otx find` in the CLI.
+        return_recipes (bool, optional): If True, return the recipe paths instead of model names.
 
     Returns:
-        list[str]: A list of available models for pretraining.
+        list[str]: A list of available models or recipes for fine-tuning.
+
 
     Example:
         # Return all available model list.

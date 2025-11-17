@@ -105,8 +105,8 @@ class YOLOX(OTXDetectionModel):
         bbox_head = YOLOXHead(
             model_name=self.model_name,
             num_classes=num_classes,
-            train_cfg=train_cfg,  # TODO (kirill): remove
-            test_cfg=test_cfg,  # TODO (kirill): remove
+            train_cfg=train_cfg,
+            test_cfg=test_cfg,
         )
         criterion = YOLOXCriterion(
             num_classes=num_classes,
@@ -120,8 +120,8 @@ class YOLOX(OTXDetectionModel):
             neck=neck,
             bbox_head=bbox_head,
             criterion=criterion,
-            train_cfg=train_cfg,  # TODO (kirill): remove
-            test_cfg=test_cfg,  # TODO (kirill): remove
+            train_cfg=train_cfg,
+            test_cfg=test_cfg,
         )
         model.init_weights()
         load_checkpoint(model, self._pretrained_weights[self.model_name], map_location="cpu")
@@ -204,6 +204,7 @@ class YOLOX(OTXDetectionModel):
                 input_size=(640, 640), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375)
             ),
             # TODO(@kprokofi): this looks like a bug. The image should be normalized before training.
+            # issue: https://github.com/open-edge-platform/training_extensions/issues/5023
             "yolox_s": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0)),
             "yolox_l": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0)),
             "yolox_x": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0)),
