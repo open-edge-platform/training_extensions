@@ -139,7 +139,7 @@ class OTXTrainer(Trainer):
                     project_id=training_params.project_id,
                     architecture_id=training_params.model_architecture_id,
                     parent_revision_id=training_params.parent_model_revision_id,
-                    training_configuration=None,  # todo: to be set when config is added
+                    training_configuration=None,  # TODO: to be set when config is added
                     dataset_revision_id=dataset_revision_id,
                     training_status=TrainingStatus.NOT_STARTED,
                 )
@@ -161,6 +161,8 @@ class OTXTrainer(Trainer):
         self._ctx = ctx
         training_params = self._get_training_params(ctx)
         project_id = training_params.project_id
+        if project_id is None:
+            raise ValueError("Project ID must be provided in training parameters")
         task = training_params.task
 
         self.prepare_weights(training_params)
