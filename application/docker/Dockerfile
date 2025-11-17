@@ -14,8 +14,8 @@ WORKDIR /application
 RUN apt-get update  \
     && apt-get install -y --no-install-recommends \
         build-essential=12.12 \
-        curl=8.14.1-2 \
-        git=1:2.47.3-0+deb13u1 \
+        curl=8.14.1-2* \
+        git=1:2.47.3-0* \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
@@ -79,7 +79,7 @@ ENV PYTHONPATH=/application
 # TODO remove 'git' once all dependencies are available on PyPI
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        git=1:2.47.3-0+deb13u1 \
+        git=1:2.47.3-0* \
         libgl1=1.7.0-1+b2 \
         libglib2.0-0=2.84.4-3~deb13u1 \
         libglx-mesa0=25.0.7-2 \
@@ -123,7 +123,7 @@ RUN apt-get update  \
 # hadolint ignore=DL3008
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        git=1:2.47.3-0+deb13u1 \
+        git=1:2.47.3-0* \
         libgl1=1.7.0-1+b2 \
         libglib2.0-0=2.84.4-3~deb13u1 \
         libglx-mesa0=25.0.7-2 \
@@ -163,7 +163,7 @@ RUN echo "deb [arch=amd64 trusted=yes] https://ppa.launchpadcontent.net/kobuk-te
 # hadolint ignore=DL3008
 RUN apt-get update  \
     && apt-get install -y --no-install-recommends \
-        git=1:2.47.3-0+deb13u1 \
+        git=1:2.47.3-0* \
         libgl1=1.7.0-1+b2 \
         libglib2.0-0=2.84.4-3~deb13u1 \
         libglx-mesa0=25.0.7-2 \
