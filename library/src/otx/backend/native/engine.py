@@ -548,7 +548,6 @@ class OTXEngine(Engine):
             base_name=self._EXPORTED_MODEL_BASE_NAME,
             export_format=export_format,
             precision=export_precision,
-            to_exportable_code=export_demo_package,
         )
 
         self.model.explain_mode = False

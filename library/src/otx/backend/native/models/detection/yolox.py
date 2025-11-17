@@ -171,7 +171,6 @@ class YOLOX(OTXDetectionModel):
         base_name: str,
         export_format: OTXExportFormatType,
         precision: OTXPrecisionType = OTXPrecisionType.FP32,
-        to_exportable_code: bool = False,
     ) -> Path:
         """Export this model to the specified output directory.
 
@@ -190,7 +189,7 @@ class YOLOX(OTXDetectionModel):
         orig_focus_forward = self.model.backbone.stem.forward
         try:
             self.model.backbone.stem.forward = self.model.backbone.stem.export
-            return super().export(output_dir, base_name, export_format, precision, to_exportable_code)
+            return super().export(output_dir, base_name, export_format, precision)
         finally:
             self.model.backbone.stem.forward = orig_focus_forward
 

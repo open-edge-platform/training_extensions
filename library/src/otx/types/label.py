@@ -16,7 +16,6 @@ if TYPE_CHECKING:
     from datumaro import Label, LabelCategories
 
 __all__ = [
-    "AnomalyLabelInfo",
     "HLabelInfo",
     "LabelInfo",
     "LabelInfoTypes",
@@ -437,14 +436,6 @@ class NullLabelInfo(LabelInfo):
     def from_json(cls, _: str) -> LabelInfo:
         """Reconstruct it from the JSON serialized string."""
         return cls()
-
-
-@dataclass
-class AnomalyLabelInfo(LabelInfo):
-    """Represent no label information. It is used for Anomaly tasks."""
-
-    def __init__(self) -> None:
-        super().__init__(label_names=["Normal", "Anomaly"], label_groups=[["Normal", "Anomaly"]], label_ids=["0", "1"])
 
 
 # Dispatching rules:

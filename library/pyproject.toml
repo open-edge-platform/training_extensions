@@ -48,8 +48,6 @@ dependencies = [
     "onnxconverter-common==1.16.0",
     "onnxscript==0.5.3",
     "nncf==2.17.0",
-    "anomalib[core]==1.1.3",
-    "imgaug==0.4.0",  # for anomalib
     "numpy>=2.0",
     "tensorboardx==2.6.4"
 ]
@@ -141,10 +139,6 @@ torchvision = [
     { index = "torch-xpu", extra = "xpu"},
     { index = "torch-cuda", extra = "cuda"},
 ]
-# Anomalib depends on imgaug, which is abandoned and depends on an old version of numpy.
-# To avoid dependency resolution issues, we install imgaug from a maintained fork.
-# For details: https://github.com/aleju/imgaug/issues/859
-imgaug = { git = "https://github.com/imaug/imaug/", rev = "a7ca1b04d44700d075a23f14a97f86285ba3b33f" }
 
 [[tool.uv.index]]
 name = "torch-cpu"
@@ -362,7 +356,6 @@ extend-immutable-calls = [
     "otx.types.label.HLabelInfo",
     "otx.types.label.SegLabelInfo",
     "otx.types.label.NullLabelInfo",
-    "otx.types.label.AnomalyLabelInfo",
 
     # Config objects
     "otx.config.data.TileConfig",

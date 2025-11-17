@@ -59,7 +59,7 @@ def mock_modules_for_chkpt() -> Iterator[None]:
     import types
 
     import otx
-    from otx.types.label import AnomalyLabelInfo, HLabelInfo, LabelInfo, SegLabelInfo
+    from otx.types.label import HLabelInfo, LabelInfo, SegLabelInfo
 
     # Save original sys.modules
     original_sys_modules = dict(sys.modules)
@@ -76,7 +76,6 @@ def mock_modules_for_chkpt() -> Iterator[None]:
         setattr(sys.modules["otx.types.label"], "LabelInfo", LabelInfo)  # noqa: B010
         setattr(sys.modules["otx.types.label"], "HLabelInfo", HLabelInfo)  # noqa: B010
         setattr(sys.modules["otx.types.label"], "SegLabelInfo", SegLabelInfo)  # noqa: B010
-        setattr(sys.modules["otx.types.label"], "AnomalyLabelInfo", AnomalyLabelInfo)  # noqa: B010
         setattr(sys.modules["otx.types.task"], "OTXTrainType", OTXTrainType)  # noqa: B010
 
         sys.modules["otx.core"] = types.ModuleType("otx.core")

@@ -14,15 +14,12 @@ from otx.backend.native.models import (
     MaskRCNN,
     MaskRCNNTV,
     MobileNetV3,
-    Padim,
     RTMDet,
     RTMDetInst,
     RTMPose,
     SegNext,
-    Stfpm,
     TimmModel,
     TVModel,
-    Uflow,
     VisionTransformer,
 )
 from otx.backend.openvino.models import (
@@ -60,15 +57,11 @@ __all__ = [
     "OVMulticlassClassificationModel",
     "OVMultilabelClassificationModel",
     "OVSegmentationModel",
-    # anomaly
-    "Padim",
     "RTMDet",
     "RTMDetInst",
     "RTMPose",
     "SegNext",
-    "Stfpm",
     "TVModel",
     "TimmModel",
-    "Uflow",
     "VisionTransformer",
 ]
