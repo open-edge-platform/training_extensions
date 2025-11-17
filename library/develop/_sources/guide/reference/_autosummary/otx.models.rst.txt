@@ -35,15 +35,12 @@ otx.models
       OVMulticlassClassificationModel
       OVMultilabelClassificationModel
       OVSegmentationModel
-      Padim
       RTMDet
       RTMDetInst
       RTMPose
       SegNext
-      Stfpm
       TVModel
       TimmModel
-      Uflow
       VisionTransformer
    
    

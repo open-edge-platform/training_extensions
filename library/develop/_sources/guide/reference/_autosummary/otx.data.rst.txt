@@ -17,7 +17,6 @@ otx.data
 
    .. autosummary::
    
-      OTXAnomalyDataset
       OTXDataModule
       OTXDetectionDataset
       OTXHlabelClsDataset

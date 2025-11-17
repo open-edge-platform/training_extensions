@@ -54,7 +54,6 @@ New features
 ^^^^^^^^^^^^
 
 - Add DETR XAI Explain Mode
-- Add UFlow anomaly detection algorithm
 - Improve Pre-Merge Test
 
 Enhancements
