@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any, Sequence
 
 import torch
 from torch import Tensor
+import kornia
 
 from otx.backend.native.exporter.base import OTXModelExporter
 from otx.backend.native.exporter.native import OTXNativeModelExporter
@@ -24,6 +25,8 @@ from otx.types.export import TaskLevelExportParameters
 from otx.types.label import LabelInfoTypes
 from otx.types.task import OTXTaskType
 from kornia.augmentation.container import AugmentationSequential
+from kornia.augmentation import Normalize
+from kornia.augmentation.auto import AutoAugment
 from torchvision.transforms.v2 import Compose
 
 if TYPE_CHECKING:
@@ -129,6 +132,12 @@ class OTXMulticlassClsModel(OTXModel):
         )
 
     @property
+    def _default_train_transforms(self):
+        return AugmentationSequential(kornia.augmentation.RandomHorizontalFlip(),
+                                      kornia.augmentation.ColorJiggle(0.1, 0.1, 0.1, 0.1),
+                                      Normalize(self.data_input_params.mean, self.data_input_params.std))
+
+    @property
     def _export_parameters(self) -> TaskLevelExportParameters:
         """Defines parameters required to export a particular model implementation."""
         return super()._export_parameters.wrap(
@@ -198,4 +207,4 @@ class OTXMulticlassClsModel(OTXModel):
 
     @property
     def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
-        return DataInputParams(input_size=(224, 224), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375))
+        return DataInputParams(input_size=(224, 224), mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))

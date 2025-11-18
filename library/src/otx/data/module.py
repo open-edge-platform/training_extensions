@@ -193,7 +193,7 @@ class OTXDataModule(LightningDataModule):
 
     def extract_normalization_params(
         self, transforms_source: list | None
-    ) -> tuple[tuple[float, float, float], tuple[float, float, float]]:
+    ) -> tuple[tuple[float, float, float] | None, tuple[float, float, float]] | None:
         """Extract mean and std from transforms.
 
         Args:
@@ -202,8 +202,8 @@ class OTXDataModule(LightningDataModule):
         Returns:
             Tuple of (mean, std) tuples.
         """
-        mean = (0.0, 0.0, 0.0)
-        std = (1.0, 1.0, 1.0)
+        mean = None
+        std = None
 
         if transforms_source is not None:
             for transform in transforms_source:

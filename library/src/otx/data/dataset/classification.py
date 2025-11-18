@@ -90,7 +90,9 @@ class OTXMulticlassClsDataset(OTXDataset):
         img = item.media_as(Image)
         roi = item.attributes.get("roi", None)
         img_data, img_shape, _ = self._get_img_data_and_shape(img, roi)
-        image = to_dtype(to_image(img_data), dtype=torch.float32)
+        image = to_dtype(to_image(img_data), scale=True, dtype=torch.float32)
+        image.clamp_(0, 1)
+
         if roi:
             # extract labels from ROI
             labels_ids = [
@@ -118,7 +120,12 @@ class OTXMulticlassClsDataset(OTXDataset):
                 image_color_channel=self.image_color_channel,
             ),
         )
-        return self._apply_transforms(entity)
+        entity = self._apply_transforms(entity)
+
+        image = entity.image
+        image.clamp_(0, 1)
+
+        return entity
 
     @property
     def task_type(self) -> OTXTaskType:

@@ -15,6 +15,7 @@ from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING, Any, Callable, Literal, Sequence
 
 import torch
+import kornia
 from datumaro import LabelCategories
 from lightning import LightningModule, Trainer
 from torch import Tensor, nn
@@ -68,9 +69,9 @@ logger = logging.getLogger()
 class DataInputParams:
     """Parameters of the input data such as input size, mean, and std."""
 
-    input_size: tuple[int, int]
-    mean: tuple[float, float, float]
-    std: tuple[float, float, float]
+    input_size: tuple[int, int] | None = None
+    mean: tuple[float, float, float] | None = None
+    std: tuple[float, float, float] | None = None
 
     def as_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
@@ -78,7 +79,11 @@ class DataInputParams:
 
     def as_ncwh(self, batch_size: int = 1) -> tuple[int, int, int, int]:
         """Convert input_size to NCWH format."""
-        return (batch_size, 3, *self.input_size)
+        if self.input_size is not None:
+            return (batch_size, 3, *self.input_size)
+
+        msg = "input_size should not be None."
+        raise ValueError(msg)
 
 
 def _default_optimizer_callable(params: params_t) -> Optimizer:
@@ -175,16 +180,7 @@ class OTXModel(LightningModule):
 
         self._label_info = self._dispatch_label_info(label_info)
         self.model_name = model_name
-        if isinstance(data_input_params, dict):
-            data_input_params = DataInputParams(**data_input_params)
-        elif data_input_params is None:
-            data_input_params = (
-                self._default_preprocessing_params[self.model_name]
-                if isinstance(self._default_preprocessing_params, dict)
-                else self._default_preprocessing_params
-            )
-        self._check_preprocessing_params(data_input_params)
-        self.data_input_params = data_input_params
+        self.data_input_params = self._configure_preprocessing_params(data_input_params)
         self.model = self._create_model()
         self.optimizer_callable = ensure_callable(optimizer)
         self.scheduler_callable = ensure_callable(scheduler)
@@ -200,6 +196,11 @@ class OTXModel(LightningModule):
         # Augmentation configuration
         if apply_gpu_transforms:
             self.batch_train_transforms, self.batch_val_transforms = self._configure_batch_augmentation(batch_train_transforms, batch_val_transforms)
+            self.batch_train_transforms.to(self.device)
+            self.batch_val_transforms.to(self.device)
+        else:
+            self.batch_train_transforms = None
+            self.batch_val_transforms = None
 
         self.save_hyperparameters(
             logger=False,
@@ -455,19 +456,42 @@ class OTXModel(LightningModule):
 
         return train_aug_pipeline, val_aug_pipeline
 
-    @torch.no_grad()
     @staticmethod
+    @torch.no_grad()
     def _apply_batch_augmentations(augmentations_pipeline: AugmentationSequential | Compose | None, batch: OTXDataBatch) -> None:
         if augmentations_pipeline is not None:
             batch.images = augmentations_pipeline(batch.images)
 
     @property
     def _default_train_transforms(self):
-        return AugmentationSequential()
+        if self.task == OTXTaskType.DETECTION:
+            data_keys = ["input", "bbox"]
+        elif self.task == OTXTaskType.SEMANTIC_SEGMENTATION:
+            data_keys = ["input", "mask"]
+        elif self.task == OTXTaskType.INSTANCE_SEGMENTATION:
+            data_keys = ["input", "bbox", "mask"]
+        elif self.task == OTXTaskType.KEYPOINT_DETECTION:
+            data_keys = ["input", "keypoints"]
+        else:
+            data_keys = ["input"]
+
+        return AugmentationSequential(kornia.augmentation.RandomHorizontalFlip(),
+                                      kornia.augmentation.Normalize(self.data_input_params.mean, self.data_input_params.std), data_keys=data_keys)
 
     @property
     def _default_val_transforms(self):
-        return AugmentationSequential()
+        if self.task == OTXTaskType.DETECTION:
+            data_keys = ["input", "bbox"]
+        elif self.task == OTXTaskType.SEMANTIC_SEGMENTATION:
+            data_keys = ["input", "mask"]
+        elif self.task == OTXTaskType.INSTANCE_SEGMENTATION:
+            data_keys = ["input", "bbox", "mask"]
+        elif self.task == OTXTaskType.KEYPOINT_DETECTION:
+            data_keys = ["input", "keypoints"]
+        else:
+            data_keys = ["input"]
+
+        return AugmentationSequential(kornia.augmentation.Normalize(self.data_input_params.mean, self.data_input_params.std), data_keys=data_keys)
 
     @property
     def metric(self) -> Metric | MetricCollection:
@@ -729,28 +753,6 @@ class OTXModel(LightningModule):
     ) -> OTXPredBatch | OTXBatchLossEntity:
         """Model forward function for tile task."""
         raise NotImplementedError
-
-    @torch.no_grad()
-    def apply_batch_transforms(self, inputs: OTXDataBatch) -> None:
-        """Apply GPU batch transforms to OTXDataBatch.
-
-        Args:
-            inputs: Batch data to transform
-        """
-        # Use configured GPU pipeline if available
-        if self._gpu_augmentation_pipeline is not None:
-            inputs.images = self._gpu_augmentation_pipeline(inputs.images)
-            return
-
-        # Fall back to deprecated transforms property
-        if hasattr(self, 'batch_augmentation') and self.batch_augmentation is not None:
-            inputs.images = self.batch_augmentation(inputs.images)
-            return
-
-        # Use legacy transforms property
-        pipeline = self.transforms
-        if pipeline and len(pipeline) > 0:
-            inputs.images = pipeline(inputs.images)
 
     @property
     def transforms(self) -> AugmentationSequential:
@@ -1034,35 +1036,49 @@ class OTXModel(LightningModule):
 
         raise TypeError(label_info)
 
-    def _check_preprocessing_params(self, preprocessing_params: DataInputParams | None) -> None:
+    def _configure_preprocessing_params(self, preprocessing_params: DataInputParams | None) -> DataInputParams:
         """Check the validity of the preprocessing parameters."""
-        if preprocessing_params is None:
-            msg = "Data input parameters should not be None."
+        if isinstance(preprocessing_params, dict):
+            data_input_params = DataInputParams(**preprocessing_params)
+        elif isinstance(preprocessing_params, DataInputParams):
+            data_input_params = preprocessing_params
+        else:
+            # `preprocessing_params` is None
+            data_input_params = DataInputParams()
+
+        default_data_input_params = (
+            self._default_preprocessing_params[self.model_name]
+            if isinstance(self._default_preprocessing_params, dict)
+            else self._default_preprocessing_params
+        )
+
+        # Assign default values if not given in `preprocessing_params`
+        data_input_params.input_size = data_input_params.input_size or default_data_input_params.input_size
+        data_input_params.mean = data_input_params.mean or default_data_input_params.mean
+        data_input_params.std = data_input_params.std or default_data_input_params.std
+
+        # Validate
+        if not (len(data_input_params.mean) == 3 and all(isinstance(m, float) for m in data_input_params.mean)):
+            msg = f"Mean should be a tuple of 3 float values, but got {data_input_params.mean} instead."
+            raise ValueError(msg)
+        if not (len(data_input_params.std) == 3 and all(isinstance(s, float) for s in data_input_params.std)):
+            msg = f"Std should be a tuple of 3 float values, but got {data_input_params.std} instead."
             raise ValueError(msg)
 
-        input_size = preprocessing_params.input_size
-        mean = preprocessing_params.mean
-        std = preprocessing_params.std
-
-        if not (len(mean) == 3 and all(isinstance(m, float) for m in mean)):
-            msg = f"Mean should be a tuple of 3 float values, but got {mean} instead."
+        if not all(0 <= m <= 255 for m in data_input_params.mean):
+            msg = f"Mean values should be in the range [0, 255], but got {data_input_params.mean} instead."
             raise ValueError(msg)
-        if not (len(std) == 3 and all(isinstance(s, float) for s in std)):
-            msg = f"Std should be a tuple of 3 float values, but got {std} instead."
+        if not all(0 <= s <= 255 for s in data_input_params.std):
+            msg = f"Std values should be in the range [0, 255], but got {data_input_params.std} instead."
             raise ValueError(msg)
 
-        if not all(0 <= m <= 255 for m in mean):
-            msg = f"Mean values should be in the range [0, 255], but got {mean} instead."
-            raise ValueError(msg)
-        if not all(0 <= s <= 255 for s in std):
-            msg = f"Std values should be in the range [0, 255], but got {std} instead."
-            raise ValueError(msg)
-
-        if input_size is not None and (
-            input_size[0] % self.input_size_multiplier != 0 or input_size[1] % self.input_size_multiplier != 0
+        if data_input_params.input_size is not None and (
+            data_input_params.input_size[0] % self.input_size_multiplier != 0 or data_input_params.input_size[1] % self.input_size_multiplier != 0
         ):
-            msg = f"Input size should be a multiple of {self.input_size_multiplier}, but got {input_size} instead."
+            msg = f"Input size should be a multiple of {self.input_size_multiplier}, but got {data_input_params.input_size} instead."
             raise ValueError(msg)
+
+        return data_input_params
 
     @property
     @abstractmethod

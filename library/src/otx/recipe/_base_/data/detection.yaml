@@ -8,9 +8,9 @@ unannotated_items_ratio: 0.0
 train_subset:
   subset_name: train
   transform_lib_type: TORCHVISION
-  batch_size: 1
+  batch_size: 8
   num_workers: 4
-  to_tv_image: true
+  to_tv_image: false
   transforms:
     - class_path: torchvision.transforms.v2.RandomIoUCrop
     - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
@@ -19,11 +19,6 @@ train_subset:
     - class_path: torchvision.transforms.v2.Resize
       init_args:
         size: $(input_size)
-    - class_path: torchvision.transforms.v2.ToDtype
-      init_args:
-        dtype: ${as_torch_dtype:torch.float32}
-        scale: true
-
   sampler:
     class_path: torch.utils.data.RandomSampler
     init_args: null
@@ -31,20 +26,13 @@ train_subset:
 val_subset:
   subset_name: val
   transform_lib_type: TORCHVISION
-  batch_size: 1
+  batch_size: 8
   num_workers: 4
-  to_tv_image: false
+  to_tv_image: true
   transforms:
     - class_path: torchvision.transforms.v2.Resize
       init_args:
         size: $(input_size)
-    - class_path: torchvision.transforms.v2.ToDtype
-      init_args:
-        dtype: ${as_torch_dtype:torch.float32}
-    - class_path: torchvision.transforms.v2.Normalize
-      init_args:
-        mean: [0.0, 0.0, 0.0]
-        std: [255.0, 255.0, 255.0]
   sampler:
     class_path: torch.utils.data.RandomSampler
     init_args: null
@@ -52,20 +40,14 @@ val_subset:
 test_subset:
   subset_name: test
   transform_lib_type: TORCHVISION
-  batch_size: 1
+  batch_size: 8
   num_workers: 4
-  to_tv_image: false
+  to_tv_image: true
   transforms:
-    - class_path: otx.data.transform_libs.torchvision.Resize
+    - class_path: torchvision.transforms.v2.Resize
       init_args:
-        scale: $(input_size)
-    - class_path: torchvision.transforms.v2.ToDtype
-      init_args:
-        dtype: ${as_torch_dtype:torch.float32}
-    - class_path: torchvision.transforms.v2.Normalize
-      init_args:
-        mean: [0.0, 0.0, 0.0]
-        std: [255.0, 255.0, 255.0]
+        size: $(input_size)
+
   sampler:
     class_path: torch.utils.data.RandomSampler
     init_args: null
