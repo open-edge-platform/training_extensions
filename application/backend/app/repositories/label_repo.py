@@ -1,8 +1,9 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from collections.abc import Sequence
+from typing import cast
 
-from sqlalchemy import delete, select
+from sqlalchemy import CursorResult, delete, select
 from sqlalchemy.orm import Session
 
 from app.db.schema import LabelDB
@@ -29,5 +30,5 @@ class LabelRepository(BaseRepository[LabelDB]):
     def delete_batch(self, obj_ids: list[str]) -> int:
         """Delete labels by IDs within the project."""
         stmt = delete(self.model).where((self.model.id.in_(obj_ids)) & (self.model.project_id == self.project_id))
-        result = self.db.execute(stmt)
-        return result.rowcount  # type: ignore[union-attr]
+        result = cast(CursorResult, self.db.execute(stmt))
+        return result.rowcount
