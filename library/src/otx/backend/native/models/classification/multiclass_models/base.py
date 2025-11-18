@@ -23,6 +23,8 @@ from otx.metrics.accuracy import (
 from otx.types.export import TaskLevelExportParameters
 from otx.types.label import LabelInfoTypes
 from otx.types.task import OTXTaskType
+from kornia.augmentation.container import AugmentationSequential
+from torchvision.transforms.v2 import Compose
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -51,6 +53,9 @@ class OTXMulticlassClsModel(OTXModel):
         label_info: LabelInfoTypes | int | Sequence,
         data_input_params: DataInputParams,
         model_name: str = "multiclass_classification_model",
+        apply_gpu_transforms: bool = True,
+        batch_train_transforms: AugmentationSequential | Compose | None = None,
+        batch_val_transforms: AugmentationSequential | Compose | None = None,
         freeze_backbone: bool = False,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
@@ -60,8 +65,10 @@ class OTXMulticlassClsModel(OTXModel):
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
-            task=OTXTaskType.MULTI_CLASS_CLS,
             model_name=model_name,
+            apply_gpu_transforms=apply_gpu_transforms,
+            batch_train_transforms=batch_train_transforms,
+            batch_val_transforms=batch_val_transforms,
             optimizer=optimizer,
             scheduler=scheduler,
             metric=metric,
@@ -183,3 +190,7 @@ class OTXMulticlassClsModel(OTXModel):
             saliency_map=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
             feature_vector=[feature_vector.unsqueeze(0) for feature_vector in outputs["feature_vector"]],
         )
+
+    @property
+    def task(self) -> OTXTaskType:
+        return OTXTaskType.MULTI_CLASS_CLS

@@ -9,10 +9,8 @@ from __future__ import annotations
 
 import inspect
 import logging
-import threading
 import warnings
 from abc import abstractmethod
-from contextlib import contextmanager
 from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING, Any, Callable, Literal, Sequence
 
@@ -24,6 +22,7 @@ from torch.optim.lr_scheduler import ConstantLR
 from torch.optim.sgd import SGD
 from torchmetrics import Metric, MetricCollection
 from kornia.augmentation.container import AugmentationSequential
+from torchvision.transforms.v2 import Compose
 
 from otx import __version__
 from otx.backend.native.optimizers.callable import OptimizerCallableSupportAdaptiveBS
@@ -122,14 +121,15 @@ class OTXModel(LightningModule):
         self,
         label_info: LabelInfoTypes | int | Sequence,
         data_input_params: DataInputParams | dict,
-        task: OTXTaskType | None = None,
         model_name: str = "OTXModel",
+        apply_gpu_transforms: bool = True,
+        batch_train_transforms: AugmentationSequential | Compose | None = None,
+        batch_val_transforms: AugmentationSequential | Compose | None = None,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = NullMetricCallable,
         torch_compile: bool = False,
         tile_config: TileConfig | dict = TileConfig(enable_tiler=False),
-        enable_async_streams: bool = False,
     ) -> None:
         """Initialize the base model with the given parameters.
 
@@ -139,17 +139,19 @@ class OTXModel(LightningModule):
                 if `Sequence` is given, label info will be constructed from the sequence of label names.
             data_input_params (DataInputParams | dict): Parameters of the input data such as input size, mean, and std.
             model_name (str, optional): Name of the model. Defaults to "OTXModel".
+            apply_gpu_transforms (bool, optional): Flag to indicate whether to apply GPU transforms.
+                It is recommended to use GPU transforms. Defaults to True.
+            batch_train_transforms (AugmentationSequential | Compose | None): GPU transforms for training applied directly to the batch.
+                If None is given, default augmentation pipeline for the model will be used.
+            batch_val_transforms (AugmentationSequential | Compose | None): GPU transforms for validation / testing applied directly to the batch.
+                If None is given, default augmentation pipeline for the model will be used. Typically just normalization.
             optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
             scheduler (LRSchedulerCallable | LRSchedulerListCallable): Callable for the learning rate scheduler.
                 Defaults to DefaultSchedulerCallable.
             metric (MetricCallable, optional): Callable for the metric. Defaults to NullMetricCallable.
             torch_compile (bool, optional): Flag to indicate if torch.compile should be used. Defaults to False.
             tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).
-            enable_async_streams (bool, optional): Enable asynchronous CUDA/XPU streams for concurrent operations.
-                Defaults to True.
 
-        Returns:
-            None
         """
         super().__init__()
 
@@ -163,7 +165,6 @@ class OTXModel(LightningModule):
         self.optimizer_callable = ensure_callable(optimizer)
         self.scheduler_callable = ensure_callable(scheduler)
         self.metric_callable = ensure_callable(metric)
-        self._task = task
         self.torch_compile = torch_compile
         self._explain_mode = False
 
@@ -172,12 +173,9 @@ class OTXModel(LightningModule):
             tile_config = TileConfig(**tile_config)
         self._tile_config = tile_config.clone()
 
-        # Stream support for concurrent operations
-        self.enable_async_streams = enable_async_streams
-        self._augmentation_stream: torch.cuda.Stream | Any | None = None
-        self._compute_stream: torch.cuda.Stream | Any | None = None
-        self._stream_lock = threading.Lock()
-        self._augmentation_event: torch.cuda.Event | Any | None = None
+        # Augmentation configuration
+        if apply_gpu_transforms:
+            self.batch_train_transforms, self.batch_val_transforms = self._configure_batch_augmentation(batch_train_transforms, batch_val_transforms)
 
         self.save_hyperparameters(
             logger=False,
@@ -186,6 +184,7 @@ class OTXModel(LightningModule):
 
     def training_step(self, batch: OTXDataBatch, batch_idx: int) -> Tensor:
         """Step for model training."""
+        self._apply_batch_augmentations(self.batch_train_transforms, batch)
         train_loss = self.forward(inputs=batch)
         if train_loss is None:
             msg = "Loss is None."
@@ -240,6 +239,7 @@ class OTXModel(LightningModule):
             Updates test metrics based on the prediction results and batch data.
             Handles both single dictionary and list of dictionaries for metric inputs.
         """
+        self._apply_batch_augmentations(self.batch_val_transforms, batch)
         preds = self.forward(inputs=batch)
 
         if isinstance(preds, OTXBatchLossEntity):
@@ -271,6 +271,7 @@ class OTXModel(LightningModule):
             When torch_compile is enabled and stage is "fit", compiles the model for
             optimized performance with appropriate logging level adjustments.
         """
+        self._apply_batch_augmentations(self.batch_val_transforms, batch)
         preds = self.forward(inputs=batch)
 
         if isinstance(preds, OTXBatchLossEntity):
@@ -330,20 +331,6 @@ class OTXModel(LightningModule):
         """Callback triggered when the test epoch ends."""
         self._log_metrics(self.metric, "test")
 
-    def on_train_epoch_end(self) -> None:
-        """Callback triggered when the training epoch ends.
-
-        Synchronizes streams to ensure all async operations are complete.
-        """
-        if self.enable_async_streams and self._augmentation_stream is not None:
-            device_type = self.device.type if hasattr(self.device, 'type') else str(self.device)
-
-            # Ensure all stream operations are complete
-            if device_type == "cuda" and hasattr(self._augmentation_stream, 'synchronize'):
-                self._augmentation_stream.synchronize()
-            elif device_type == "xpu" and hasattr(self._augmentation_stream, 'synchronize'):
-                self._augmentation_stream.synchronize()
-
     def setup(self, stage: str) -> None:
         """Lightning hook called at the beginning of fit, validate, test, or predict stages.
 
@@ -354,14 +341,9 @@ class OTXModel(LightningModule):
             stage: The current stage, either "fit", "validate", "test", or "predict".
 
         Note:
-            Initializes CUDA/XPU streams for asynchronous operations during training.
             When torch_compile is enabled and stage is "fit", compiles the model for
             optimized performance with appropriate logging level adjustments.
         """
-        # Initialize streams for training
-        if self.enable_async_streams and stage == "fit":
-            self._initialize_streams()
-
         if self.torch_compile and stage == "fit":
             # Set the log_level of this to error due to the numerous warning messages from compile.
             torch._logging.set_logs(dynamo=logging.ERROR)  # noqa: SLF001
@@ -373,100 +355,6 @@ class OTXModel(LightningModule):
                 ),
                 stacklevel=1,
             )
-
-    def _initialize_streams(self) -> None:
-        """Initialize CUDA or XPU streams for asynchronous operations.
-
-        Creates separate streams for:
-        - Augmentation operations (GPU-based transforms)
-        - Model computation (forward/backward pass)
-
-        This enables overlapping of augmentation and computation for better GPU utilization.
-        """
-        device_type = self.device.type if hasattr(self.device, 'type') else str(self.device)
-
-        try:
-            if device_type == "cuda" and torch.cuda.is_available():
-                # Create CUDA streams
-                self._augmentation_stream = torch.cuda.Stream()
-                self._compute_stream = torch.cuda.default_stream()
-                self._augmentation_event = torch.cuda.Event()
-                logger.info("CUDA streams initialized for asynchronous augmentation and computation")
-
-            elif device_type == "xpu" and hasattr(torch, 'xpu') and torch.xpu.is_available():
-                # Create XPU streams
-                self._augmentation_stream = torch.xpu.Stream()
-                self._compute_stream = torch.xpu.default_stream()
-                # XPU events might have different API, adjust as needed
-                if hasattr(torch.xpu, 'Event'):
-                    self._augmentation_event = torch.xpu.Event()
-                logger.info("XPU streams initialized for asynchronous augmentation and computation")
-
-            else:
-                logger.info(f"Async streams not available for device type: {device_type}. Using default execution.")
-                self.enable_async_streams = False
-
-        except Exception as e:
-            logger.warning(f"Failed to initialize async streams: {e}. Falling back to default execution.")
-            self.enable_async_streams = False
-            self._augmentation_stream = None
-            self._compute_stream = None
-            self._augmentation_event = None
-
-    @contextmanager
-    def _augmentation_stream_context(self):
-        """Context manager for augmentation stream.
-
-        Yields:
-            Stream context for GPU-based augmentations.
-
-        Example:
-            ```python
-            with self._augmentation_stream_context():
-                augmented_batch = self.apply_batch_transforms(batch)
-            ```
-        """
-        if self._augmentation_stream is not None:
-            device_type = self.device.type if hasattr(self.device, 'type') else str(self.device)
-
-            if device_type == "cuda":
-                with torch.cuda.stream(self._augmentation_stream):
-                    yield
-            elif device_type == "xpu" and hasattr(torch.xpu, 'stream'):
-                with torch.xpu.stream(self._augmentation_stream):
-                    yield
-            else:
-                yield
-        else:
-            yield
-
-    def _wait_for_augmentation(self) -> None:
-        """Wait for augmentation stream to complete before model forward.
-
-        Ensures that augmentation operations are finished before the main
-        computation stream proceeds with the forward pass.
-        """
-        if self._compute_stream is not None and self._augmentation_stream is not None:
-            device_type = self.device.type if hasattr(self.device, 'type') else str(self.device)
-
-            if device_type == "cuda":
-                # Record event in augmentation stream
-                if self._augmentation_event is not None:
-                    self._augmentation_event.record(self._augmentation_stream)
-                    # Make compute stream wait for augmentation
-                    self._compute_stream.wait_event(self._augmentation_event)
-                else:
-                    # Fallback: synchronize streams
-                    self._compute_stream.wait_stream(self._augmentation_stream)
-
-            elif device_type == "xpu" and hasattr(torch.xpu, 'current_stream'):
-                # XPU stream synchronization
-                if hasattr(self._compute_stream, 'wait_stream'):
-                    self._compute_stream.wait_stream(self._augmentation_stream)
-                else:
-                    # Fallback: synchronize augmentation stream
-                    if hasattr(self._augmentation_stream, 'synchronize'):
-                        self._augmentation_stream.synchronize()
 
     def configure_optimizers(self) -> OptimizerLRScheduler:
         """Configure an optimizer and learning-rate schedulers.
@@ -509,6 +397,53 @@ class OTXModel(LightningModule):
             raise TypeError(msg, metric)
 
         self._metric = metric.to(self.device)
+
+    def _configure_batch_augmentation(
+        self,
+        batch_train_transforms: AugmentationSequential | Compose | None = None,
+        batch_val_transforms: AugmentationSequential | Compose | None = None,
+    ) -> tuple[AugmentationSequential, AugmentationSequential]:
+        """Configure batch augmentation.
+
+        Args:
+            batch_train_transforms (AugmentationSequential, optional): batch train transforms
+            batch_val_transforms (AugmentationSequential, optional): batch val transforms
+
+        Returns:
+            GPU augmentation pipeline or None
+        """
+        if batch_train_transforms is not None:
+            if not ensure_callable(batch_train_transforms):
+                msg = "Batch train transforms should be callable. " \
+                "Please use kornia AugmentationSequential or torchvision Compose"
+
+                raise TypeError(msg)
+
+        if batch_val_transforms is not None:
+            if not ensure_callable(batch_val_transforms):
+                msg = "Batch val transforms should be callable. " \
+                "Please use kornia AugmentationSequential or torchvision Compose"
+
+                raise TypeError(msg)
+
+        train_aug_pipeline = batch_train_transforms if batch_train_transforms is not None else self._default_train_transforms
+        val_aug_pipeline = batch_val_transforms if batch_val_transforms is not None else self._default_val_transforms
+
+        return train_aug_pipeline, val_aug_pipeline
+
+    @torch.no_grad()
+    @staticmethod
+    def _apply_batch_augmentations(augmentations_pipeline: AugmentationSequential | Compose | None, batch: OTXDataBatch) -> None:
+        if augmentations_pipeline is not None:
+            batch.images = augmentations_pipeline(batch.images)
+
+    @property
+    def _default_train_transforms(self):
+        return AugmentationSequential()
+
+    @property
+    def _default_val_transforms(self):
+        return AugmentationSequential()
 
     @property
     def metric(self) -> Metric | MetricCollection:
@@ -722,14 +657,7 @@ class OTXModel(LightningModule):
         self,
         inputs: OTXDataBatch,
     ) -> OTXPredBatch | OTXBatchLossEntity:
-        """Model forward function with asynchronous stream support.
-
-        When async streams are enabled, this method:
-        1. Applies batch augmentations on a separate stream
-        2. Waits for augmentation to complete
-        3. Runs model forward on the main compute stream
-
-        This overlaps augmentation with previous batch's backward pass for better GPU utilization.
+        """Model forward function.
 
         Args:
             inputs: Batch of input data.
@@ -737,17 +665,8 @@ class OTXModel(LightningModule):
         Returns:
             Model predictions or loss entity depending on training mode.
         """
-        # Apply batch augmentations asynchronously
-        if self.enable_async_streams and self.training and self._augmentation_stream is not None:
-            # Run augmentations on separate stream
-            with self._augmentation_stream_context():
-                self.apply_batch_transforms(inputs)
-
-            # Wait for augmentations to complete before forward pass
-            self._wait_for_augmentation()
-        else:
-            # Synchronous execution (validation/test or when streams disabled)
-            self.apply_batch_transforms(inputs)
+        # Apply batch augmentations
+        self.apply_batch_transforms(inputs)
 
         # If customize_inputs is overridden
         if isinstance(inputs, OTXTileBatchDataEntity):
@@ -791,12 +710,32 @@ class OTXModel(LightningModule):
 
     @torch.no_grad()
     def apply_batch_transforms(self, inputs: OTXDataBatch) -> None:
-        """Apply kornia batch transforms to OTXDataBatch."""
-        self.transforms(inputs.images)
+        """Apply GPU batch transforms to OTXDataBatch.
+
+        Args:
+            inputs: Batch data to transform
+        """
+        # Use configured GPU pipeline if available
+        if self._gpu_augmentation_pipeline is not None:
+            inputs.images = self._gpu_augmentation_pipeline(inputs.images)
+            return
+
+        # Fall back to deprecated transforms property
+        if hasattr(self, 'batch_augmentation') and self.batch_augmentation is not None:
+            inputs.images = self.batch_augmentation(inputs.images)
+            return
+
+        # Use legacy transforms property
+        pipeline = self.transforms
+        if pipeline and len(pipeline) > 0:
+            inputs.images = pipeline(inputs.images)
 
     @property
     def transforms(self) -> AugmentationSequential:
-        """Kornia Image Transforms."""
+        """Kornia Image Transforms (DEPRECATED).
+
+        Use augmentation_config instead for new code.
+        """
         return AugmentationSequential()
 
     def register_load_state_dict_pre_hook(self, model_classes: list[str], ckpt_classes: list[str]) -> None:
@@ -1042,6 +981,7 @@ class OTXModel(LightningModule):
 
         self._tile_config = tile_config
 
+    @abstractmethod
     def get_dummy_input(self, batch_size: int = 1) -> OTXDataBatch:
         """Generates a dummy input, suitable for launching forward() on it.
 
@@ -1051,7 +991,6 @@ class OTXModel(LightningModule):
         Returns:
             TorchDataBatch: A batch containing randomly generated inference data.
         """
-        raise NotImplementedError
 
     @staticmethod
     def _dispatch_label_info(label_info: LabelInfoTypes) -> LabelInfo:
@@ -1107,9 +1046,6 @@ class OTXModel(LightningModule):
             raise ValueError(msg)
 
     @property
+    @abstractmethod
     def task(self) -> OTXTaskType:
         """Get  task type."""
-        if self._task is None:
-            msg = "Task type is not set. Please set the task type before using this model."
-            raise ValueError(msg)
-        return self._task
