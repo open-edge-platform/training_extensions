@@ -15,7 +15,7 @@ from .dataset_service import DatasetService
 from .dispatch_service import DispatchService
 from .label_service import LabelService
 from .metrics_service import MetricsService
-from .model_service import ModelService
+from .model_service import ModelRevisionMetadata, ModelService
 from .pipeline_metrics_service import PipelineMetricsService
 from .pipeline_service import PipelineService
 from .project_service import ProjectService
@@ -32,6 +32,7 @@ __all__ = [
     "DispatchService",
     "LabelService",
     "MetricsService",
+    "ModelRevisionMetadata",
     "ModelService",
     "PipelineMetricsService",
     "PipelineService",
