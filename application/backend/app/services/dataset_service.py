@@ -375,7 +375,7 @@ class DatasetService(BaseSessionManagedService):
             get_image_path=_get_image_path,
         )
 
-    def save_revision(self, project_id: UUID, dataset: dm.Dataset) -> None:
+    def save_revision(self, project_id: UUID, dataset: dm.Dataset) -> UUID:
         """
         Saves the dataset as a new revision.
 
@@ -387,7 +387,7 @@ class DatasetService(BaseSessionManagedService):
             dataset: The Datumaro dataset to export.
 
         Returns:
-            None
+            UUID: The UUID of the newly created dataset revision.
         """
         revision_repo = DatasetRevisionRepository(db=self.db_session)
         revision_db = revision_repo.save(
@@ -403,3 +403,4 @@ class DatasetService(BaseSessionManagedService):
             export_images=True,
             as_zip=True,
         )
+        return UUID(revision_db.id)

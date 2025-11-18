@@ -18,7 +18,6 @@ from otx.backend.native.models.detection.heads import YOLOXHead
 from otx.backend.native.models.detection.losses import YOLOXCriterion
 from otx.backend.native.models.detection.necks import YOLOXPAFPN
 from otx.backend.native.models.detection.utils.assigners import SimOTAAssigner
-from otx.backend.native.models.utils.support_otx_v1 import OTXv1Helper
 from otx.backend.native.models.utils.utils import load_checkpoint
 from otx.config.data import TileConfig
 from otx.data.entity.torch import OTXDataBatch
@@ -44,7 +43,11 @@ class YOLOX(OTXDetectionModel):
 
     Args:
         label_info (LabelInfoTypes): Information about the labels.
-        data_input_params (DataInputParams): Parameters for data input.
+        data_input_params (DataInputParams | None, optional): Parameters for image preprocessing.
+            This parameter contains image input size, mean, and std, that is used to preprocess the input image.
+            If None is given, default parameters for the specific model will be used.
+            In most cases you don't need to set this parameter unless you change the image size or pretrained weights.
+            Defaults to None.
         model_name (str, optional): Name of the model to use. Defaults to "yolox_s".
         optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
@@ -54,7 +57,7 @@ class YOLOX(OTXDetectionModel):
         tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).
     """
 
-    pretrained_weights: ClassVar[dict[str, str]] = {
+    _pretrained_weights: ClassVar[dict[str, str]] = {
         "yolox_tiny": "https://storage.openvinotoolkit.org/repositories/openvino_training_extensions/models/"
         "object_detection/v2/yolox_tiny_8x8.pth",
         "yolox_s": "https://download.openmmlab.com/mmdetection/v2.0/yolox/yolox_s_8x8_300e_coco/"
@@ -70,7 +73,7 @@ class YOLOX(OTXDetectionModel):
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams,
+        data_input_params: DataInputParams | None = None,
         model_name: Literal["yolox_tiny", "yolox_s", "yolox_l", "yolox_x"] = "yolox_s",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
@@ -102,8 +105,8 @@ class YOLOX(OTXDetectionModel):
         bbox_head = YOLOXHead(
             model_name=self.model_name,
             num_classes=num_classes,
-            train_cfg=train_cfg,  # TODO (kirill): remove
-            test_cfg=test_cfg,  # TODO (kirill): remove
+            train_cfg=train_cfg,
+            test_cfg=test_cfg,
         )
         criterion = YOLOXCriterion(
             num_classes=num_classes,
@@ -117,11 +120,11 @@ class YOLOX(OTXDetectionModel):
             neck=neck,
             bbox_head=bbox_head,
             criterion=criterion,
-            train_cfg=train_cfg,  # TODO (kirill): remove
-            test_cfg=test_cfg,  # TODO (kirill): remove
+            train_cfg=train_cfg,
+            test_cfg=test_cfg,
         )
         model.init_weights()
-        load_checkpoint(model, self.pretrained_weights[self.model_name], map_location="cpu")
+        load_checkpoint(model, self._pretrained_weights[self.model_name], map_location="cpu")
 
         return model
 
@@ -193,6 +196,15 @@ class YOLOX(OTXDetectionModel):
         finally:
             self.model.backbone.stem.forward = orig_focus_forward
 
-    def load_from_otx_v1_ckpt(self, state_dict: dict, add_prefix: str = "model.") -> dict:
-        """Load the previous OTX ckpt according to OTX2.0."""
-        return OTXv1Helper.load_det_ckpt(state_dict, add_prefix)
+    @property
+    def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
+        return {
+            "yolox_tiny": DataInputParams(
+                input_size=(640, 640), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375)
+            ),
+            # TODO(@kprokofi): this looks like a bug. The image should be normalized before training.
+            # issue: https://github.com/open-edge-platform/training_extensions/issues/5023
+            "yolox_s": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0)),
+            "yolox_l": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0)),
+            "yolox_x": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0)),
+        }

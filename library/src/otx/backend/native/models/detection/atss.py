@@ -20,7 +20,6 @@ from otx.backend.native.models.detection.heads import ATSSHead
 from otx.backend.native.models.detection.losses import ATSSCriterion
 from otx.backend.native.models.detection.necks import FPN
 from otx.backend.native.models.detection.utils.assigners import ATSSAssigner
-from otx.backend.native.models.utils.support_otx_v1 import OTXv1Helper
 from otx.backend.native.models.utils.utils import load_checkpoint
 from otx.config.data import TileConfig
 from otx.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
@@ -42,7 +41,8 @@ class ATSS(OTXDetectionModel):
 
     Args:
         label_info (LabelInfoTypes): Information about the labels.
-        data_input_params (DataInputParams): Parameters for data input.
+        data_input_params (DataInputParams | None): Parameters for the image data preprocessing.
+            If None, uses _default_preprocessing_params.
         model_name (Literal, optional): Name of the model to use. Defaults to "atss_mobilenetv2".
         optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
@@ -52,7 +52,7 @@ class ATSS(OTXDetectionModel):
         tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).
     """
 
-    pretrained_weights: ClassVar[dict[str, str]] = {
+    _pretrained_weights: ClassVar[dict[str, str]] = {
         "atss_mobilenetv2": "https://storage.openvinotoolkit.org/repositories/openvino_training_extensions/"
         "models/object_detection/v2/mobilenet_v2-atss.pth",
         "atss_resnext101": "https://storage.openvinotoolkit.org/repositories/openvino_training_extensions/models/"
@@ -62,7 +62,7 @@ class ATSS(OTXDetectionModel):
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams,
+        data_input_params: DataInputParams | None = None,
         model_name: Literal[
             "atss_mobilenetv2",
             "atss_resnext101",
@@ -73,8 +73,8 @@ class ATSS(OTXDetectionModel):
         torch_compile: bool = False,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
     ) -> None:
-        if model_name not in self.pretrained_weights:
-            msg = f"Unsupported model: {model_name}. Supported models: {list(self.pretrained_weights.keys())}"
+        if model_name not in self._pretrained_weights:
+            msg = f"Unsupported model: {model_name}. Supported models: {list(self._pretrained_weights.keys())}"
             raise ValueError(msg)
 
         super().__init__(
@@ -147,7 +147,7 @@ class ATSS(OTXDetectionModel):
             test_cfg=test_cfg,  # TODO (Kirill): remove
         )
         model.init_weights()
-        load_checkpoint(model, self.pretrained_weights[self.model_name], map_location="cpu")
+        load_checkpoint(model, self._pretrained_weights[self.model_name], map_location="cpu")
 
         return model
 
@@ -201,6 +201,6 @@ class ATSS(OTXDetectionModel):
             output_names=["bboxes", "labels", "feature_vector", "saliency_map"] if self.explain_mode else None,
         )
 
-    def load_from_otx_v1_ckpt(self, state_dict: dict, add_prefix: str = "model.") -> dict:
-        """Load the previous OTX ckpt according to OTX2.0."""
-        return OTXv1Helper.load_det_ckpt(state_dict, add_prefix)
+    @property
+    def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
+        return DataInputParams(input_size=(800, 992), mean=(0.0, 0.0, 0.0), std=(255.0, 255.0, 255.0))

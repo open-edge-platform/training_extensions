@@ -1385,13 +1385,11 @@ class TestDatasetServiceIntegration:
         project, db_dataset_items = fxt_project_with_subset_items
         dataset = fxt_dataset_service.get_dm_dataset(project.id, project.task, DatasetItemAnnotationStatus.REVIEWED)
 
-        fxt_dataset_service.save_revision(
+        revision_id = fxt_dataset_service.save_revision(
             project_id=project.id,
             dataset=dataset,
         )
 
         # Verify that a revision entry was created
-        db_revisions = db_session.query(DatasetRevisionDB).all()
-        assert len(db_revisions) == 1
-        revision_id = db_revisions[0].id
-        assert (fxt_projects_dir / str(project.id) / "dataset_revisions" / revision_id / "dataset.zip").exists()
+        assert db_session.get(DatasetRevisionDB, str(revision_id)) is not None
+        assert (fxt_projects_dir / str(project.id) / "dataset_revisions" / str(revision_id) / "dataset.zip").exists()

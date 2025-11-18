@@ -12,18 +12,6 @@ _T = TypeVar("_T")
 _V = TypeVar("_V")
 
 
-def is_ckpt_from_otx_v1(ckpt: dict) -> bool:
-    """Check the checkpoint where it comes from.
-
-    Args:
-        ckpt (dict): the checkpoint file
-
-    Returns:
-        bool: True means the checkpoint comes from otx1
-    """
-    return "model" in ckpt and "VERSION" in ckpt and ckpt["VERSION"] == 1
-
-
 def is_ckpt_for_finetuning(ckpt: dict) -> bool:
     """Check the checkpoint will be used to finetune.
 

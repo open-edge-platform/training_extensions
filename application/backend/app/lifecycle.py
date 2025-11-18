@@ -19,7 +19,7 @@ from app.core.run import Runnable, RunnableFactory
 from app.db import MigrationManager, get_db_session
 from app.scheduler import Scheduler
 from app.schemas.job import JobType
-from app.services import DatasetService, LabelService
+from app.services import DatasetService, LabelService, ModelService
 from app.services.base_weights_service import BaseWeightsService
 from app.services.data_collect import DataCollector
 from app.services.event.event_bus import EventBus
@@ -50,6 +50,7 @@ def setup_job_controller(data_dir: Path, max_parallel_jobs: int) -> tuple[JobQue
     subset_service = SubsetService()
     subset_assigner = SubsetAssigner()
     label_service = LabelService()
+    model_service = ModelService()
     dataset_service = DatasetService(data_dir=data_dir, label_service=label_service)
     job_runnable_factory.register(
         JobType.TRAIN,
@@ -59,6 +60,7 @@ def setup_job_controller(data_dir: Path, max_parallel_jobs: int) -> tuple[JobQue
             subset_service=subset_service,
             subset_assigner=subset_assigner,
             dataset_service=dataset_service,
+            model_service=model_service,
             data_dir=data_dir,
             db_session_factory=get_db_session,
         ),

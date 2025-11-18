@@ -7,6 +7,8 @@ from otx.backend.native.models import (
     ATSS,
     RTDETR,
     SSD,
+    YOLOX,
+    DEIMDFine,
     DFine,
     DinoV2Seg,
     EfficientNet,
@@ -38,6 +40,8 @@ __all__ = [
     "ATSS",
     "RTDETR",
     "SSD",
+    "YOLOX",
+    "DEIMDFine",
     "DFine",
     # semantic segmentation
     "DinoV2Seg",

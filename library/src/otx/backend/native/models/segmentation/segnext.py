@@ -13,7 +13,6 @@ from otx.backend.native.models.segmentation.base import OTXSegmentationModel
 from otx.backend.native.models.segmentation.heads import LightHamHead
 from otx.backend.native.models.segmentation.losses import CrossEntropyLossWithIgnore
 from otx.backend.native.models.segmentation.segmentors import BaseSegmentationModel
-from otx.backend.native.models.utils.support_otx_v1 import OTXv1Helper
 from otx.config.data import TileConfig
 from otx.metrics.dice import SegmCallable
 
@@ -31,7 +30,7 @@ class SegNext(OTXSegmentationModel):
 
     Args:
         label_info (LabelInfoTypes): Information about the hierarchical labels.
-        data_input_params (DataInputParams): Parameters for data input.
+        data_input_params (DataInputParams | None, optional): Parameters for the image data preprocessing.
         model_name (Literal, optional): Name of the model. Defaults to "segnext_small".
         optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
@@ -44,7 +43,7 @@ class SegNext(OTXSegmentationModel):
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams,
+        data_input_params: DataInputParams | None = None,
         model_name: Literal["segnext_tiny", "segnext_small", "segnext_base"] = "segnext_small",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
@@ -75,10 +74,6 @@ class SegNext(OTXSegmentationModel):
             decode_head=decode_head,
             criterion=criterion,
         )
-
-    def load_from_otx_v1_ckpt(self, state_dict: dict, add_prefix: str = "model.model.") -> dict:
-        """Load the previous OTX ckpt according to OTX2.0."""
-        return OTXv1Helper.load_seg_segnext_ckpt(state_dict, add_prefix)
 
     @property
     def _optimization_config(self) -> dict[str, Any]:
