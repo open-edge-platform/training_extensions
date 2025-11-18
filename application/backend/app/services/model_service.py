@@ -18,7 +18,7 @@ from .parent_process_guard import parent_process_only
 
 
 @dataclass(frozen=True)
-class ModelMetadata:
+class ModelRevisionMetadata:
     model_id: UUID
     project_id: UUID
     architecture_id: str
@@ -119,7 +119,7 @@ class ModelService(BaseSessionManagedService):
             raise ResourceNotFoundError(ResourceType.PROJECT, str(project_id))
         return [ModelRevisionMapper.to_schema(model_rev_db) for model_rev_db in project.model_revisions]
 
-    def create_revision(self, metadata: ModelMetadata) -> None:
+    def create_revision(self, metadata: ModelRevisionMetadata) -> None:
         """
         Create and persist a new model revision for the given project metadata.
 
@@ -128,7 +128,7 @@ class ModelService(BaseSessionManagedService):
         and saves it to the database.
 
         Args:
-            metadata (ModelMetadata): Metadata used to create the new model revision
+            metadata (ModelRevisionMetadata): Metadata used to create the new model revision
                 including project id, architecture, optional parent revision id,
                 dataset revision id, training status and optional training
                 configuration.

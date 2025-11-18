@@ -17,7 +17,7 @@ from app.core.run import ExecutionContext
 from app.models import DatasetItemAnnotationStatus
 from app.schemas.model import TrainingStatus
 from app.schemas.project import TaskBase
-from app.services import BaseWeightsService, DatasetService, ModelMetadata, ModelService
+from app.services import BaseWeightsService, DatasetService, ModelRevisionMetadata, ModelService
 
 from .base import Trainer, step
 from .models import TrainingParams
@@ -134,7 +134,7 @@ class OTXTrainer(Trainer):
         with self._db_session_factory() as db:
             self._model_service.set_db_session(db)
             self._model_service.create_revision(
-                ModelMetadata(
+                ModelRevisionMetadata(
                     model_id=training_params.model_id,
                     project_id=training_params.project_id,
                     architecture_id=training_params.model_architecture_id,

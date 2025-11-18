@@ -12,7 +12,7 @@ from app.core.run import ExecutionContext
 from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, TaskType
 from app.schemas.model import TrainingStatus
 from app.schemas.project import TaskBase
-from app.services import DatasetService, ModelMetadata, ModelService
+from app.services import DatasetService, ModelRevisionMetadata, ModelService
 from app.services.base_weights_service import BaseWeightsService
 from app.services.training.models import TrainingParams
 from app.services.training.otx_trainer import OTXTrainer
@@ -326,7 +326,7 @@ class TestOTXTrainerPrepareModel:
 
         # Assert
         fxt_model_service.create_revision.assert_called_once_with(
-            ModelMetadata(
+            ModelRevisionMetadata(
                 model_id=model_id,
                 project_id=project_id,
                 architecture_id="Object_Detection_YOLOX_S",
