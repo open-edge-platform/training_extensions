@@ -69,14 +69,14 @@ class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):
             label_ids=[str(i) for i in range(len(labels))],
         )
 
-    def get_idx_list_per_classes(self, use_string_label: bool = False) -> dict[int, list[int]]:
+    def get_idx_list_per_classes(self, use_string_label: bool = False) -> dict[int | str, list[int]]:
         """Get a dictionary mapping class labels (string or int) to lists of samples.
 
         Args:
             use_string_label (bool): If True, use string class labels as keys.
                 If False, use integer indices as keys.
         """
-        idx_list_per_classes: dict[int, list[int]] = {}
+        idx_list_per_classes: dict[int | str, list[int]] = {}
         for idx in range(len(self)):
             item = self.dm_subset[idx]
             labels = item.label.tolist()
