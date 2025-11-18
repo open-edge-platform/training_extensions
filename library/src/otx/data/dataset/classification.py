@@ -97,6 +97,15 @@ class OTXMulticlassClsDataset(OTXDataset):
             idx_list_per_classes[label_id].append(idx)
         return idx_list_per_classes
 
+    @property
+    def task_type(self) -> OTXTaskType:
+        """OTX Task Type for the dataset.
+
+        Returns:
+            OTXTaskType: The multi-class classification task type.
+        """
+        return OTXTaskType.MULTI_CLASS_CLS
+
 
 class OTXMultilabelClsDataset(OTXDataset):
     """OTX Dataset for multi-label classification tasks.
