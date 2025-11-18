@@ -4,9 +4,9 @@
 from collections.abc import Sequence
 from datetime import UTC, datetime
 from sqlite3 import IntegrityError as SQLIntegrityError
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, cast
 
-from sqlalchemy import delete, exists, select
+from sqlalchemy import CursorResult, delete, exists, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -61,8 +61,8 @@ class BaseRepository(Generic[ModelType]):
 
     def delete(self, obj_id: str) -> bool:
         stmt = delete(self.model).where(self.model.id == obj_id)
-        result = self.db.execute(stmt)
-        return result.rowcount > 0  # type: ignore[union-attr]
+        result = cast(CursorResult, self.db.execute(stmt))
+        return result.rowcount > 0
 
     def save_batch(self, items: list[ModelType]) -> list[ModelType]:
         now = datetime.now(UTC)
@@ -87,8 +87,8 @@ class BaseRepository(Generic[ModelType]):
 
     def delete_batch(self, obj_ids: list[str]) -> int:
         stmt = delete(self.model).where(self.model.id.in_(obj_ids))
-        result = self.db.execute(stmt)
-        return result.rowcount  # type: ignore[union-attr]
+        result = cast(CursorResult, self.db.execute(stmt))
+        return result.rowcount
 
     @staticmethod
     def _handle_integrity_error(error: IntegrityError) -> None:
