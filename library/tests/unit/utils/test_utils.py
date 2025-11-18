@@ -20,7 +20,7 @@ from otx.utils.utils import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def fake_obj(mocker):
     target = mocker.MagicMock()
     target.a.b.c = {"d": mocker.MagicMock()}
@@ -79,7 +79,7 @@ def make_dir_and_file(dir_path: Path, file_path: str | Path) -> Path:
     return file
 
 
-@pytest.fixture()
+@pytest.fixture
 def temporary_dir_w_some_txt(tmp_path):
     some_txt = ["a/b/c/d.txt", "1/2/3/4.txt", "e.txt", "f/g.txt", "5/6/7.txt"]
     for file_path in some_txt:

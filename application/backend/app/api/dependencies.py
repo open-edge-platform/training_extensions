@@ -30,6 +30,7 @@ from app.services.base_weights_service import BaseWeightsService
 from app.services.data_collect import DataCollector
 from app.services.event.event_bus import EventBus
 from app.services.label_service import LabelService
+from app.services.training_configuration_service import TrainingConfigurationService
 from app.webrtc.manager import WebRTCManager
 
 
@@ -216,15 +217,17 @@ def get_project_service(
 ) -> ProjectService:
     """Provides a ProjectService instance for managing projects."""
     return ProjectService(
-        data_dir=data_dir, db_session=db, label_service=label_service, pipeline_service=pipeline_service
+        data_dir=data_dir, label_service=label_service, pipeline_service=pipeline_service, db_session=db
     )
 
 
 def get_dataset_service(
-    data_dir: Annotated[Path, Depends(get_data_dir)], db: Annotated[Session, Depends(get_db)]
+    data_dir: Annotated[Path, Depends(get_data_dir)],
+    label_service: Annotated[LabelService, Depends(get_label_service)],
+    db: Annotated[Session, Depends(get_db)],
 ) -> DatasetService:
     """Provides a DatasetService instance."""
-    return DatasetService(data_dir=data_dir, db_session=db)
+    return DatasetService(data_dir=data_dir, label_service=label_service, db_session=db)
 
 
 def get_project(
@@ -268,3 +271,8 @@ def get_base_weights_service(data_dir: Annotated[Path, Depends(get_data_dir)]) -
 def get_job_queue(request: Request) -> JobQueue:
     """Provides the global JobQueue instance from FastAPI application's state."""
     return request.app.state.job_queue
+
+
+def get_training_configuration_service(db: Annotated[Session, Depends(get_db)]) -> TrainingConfigurationService:
+    """Provides a TrainingConfigurationService instance for managing training configurations."""
+    return TrainingConfigurationService(db_session=db)

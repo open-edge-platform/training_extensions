@@ -10,7 +10,7 @@ from otx.data.utils.pre_filtering import is_valid_anno_for_task, pre_filtering
 from otx.types.task import OTXTaskType
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_dm_dataset_with_unannotated() -> DmDataset:
     dataset_items = [
         DatasetItem(
@@ -88,7 +88,7 @@ def test_pre_filtering(fxt_dm_dataset_with_unannotated: DmDataset, unannotated_i
     assert len(filtered_dataset.categories()[AnnotationType.label]) == 3
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_dataset_item() -> DatasetItem:
     """Create a sample dataset item for testing."""
     return DatasetItem(
@@ -130,9 +130,6 @@ class TestIsValidAnnoForTask:
             (OTXTaskType.SEMANTIC_SEGMENTATION, Polygon(points=[0, 0, 10, 0, 10, 10, 0, 10], label=0), True),
             (OTXTaskType.SEMANTIC_SEGMENTATION, Ellipse(x1=0, y1=0, x2=10, y2=10, label=0), True),
             (OTXTaskType.SEMANTIC_SEGMENTATION, Label(label=0), True),
-            (OTXTaskType.ANOMALY, Bbox(x=0, y=0, w=10, h=10, label=0), True),
-            (OTXTaskType.ANOMALY, Polygon(points=[0, 0, 10, 0, 10, 10, 0, 10], label=0), True),
-            (OTXTaskType.ANOMALY, Ellipse(x1=0, y1=0, x2=10, y2=10, label=0), True),
             (OTXTaskType.ROTATED_DETECTION, Bbox(x=0, y=0, w=10, h=10, label=0), True),
             (OTXTaskType.ROTATED_DETECTION, Polygon(points=[0, 0, 10, 0, 10, 10, 0, 10], label=0), True),
             (OTXTaskType.ROTATED_DETECTION, Ellipse(x1=0, y1=0, x2=10, y2=10, label=0), True),

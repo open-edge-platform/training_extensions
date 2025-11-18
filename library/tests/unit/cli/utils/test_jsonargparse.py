@@ -19,7 +19,7 @@ from otx.cli.utils.jsonargparse import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_configs() -> Namespace:
     return Namespace(
         data=Namespace(

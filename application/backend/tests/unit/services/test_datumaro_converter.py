@@ -62,7 +62,7 @@ def fxt_dataset_item():
             height=height,
             size=size,
             annotation_data=annotation_data,
-            subset=DatasetItemSubset.UNASSIGNED,
+            subset=DatasetItemSubset.TRAINING,
             subset_assigned_at=None,
             user_reviewed=False,
             source_id=None,

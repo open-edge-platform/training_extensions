@@ -16,7 +16,7 @@ from otx.types.export import TaskLevelExportParameters
 from otx.types.task import OTXTaskType
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_tv_model():
     return TVModelMulticlassCls(
         model_name="mobilenet_v3_small",
@@ -25,7 +25,7 @@ def fxt_tv_model():
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_tv_model_and_data_entity(
     request,
     fxt_multiclass_cls_batch_data_entity,

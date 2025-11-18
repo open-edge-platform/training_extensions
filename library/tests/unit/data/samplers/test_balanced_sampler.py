@@ -15,7 +15,7 @@ from otx.data.samplers.balanced_sampler import BalancedSampler
 from otx.data.utils import get_idx_list_per_classes
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_imbalanced_dataset() -> OTXDataset:
     dataset_items = [
         DatasetItem(

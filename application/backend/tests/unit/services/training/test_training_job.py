@@ -7,12 +7,13 @@ from uuid import uuid4
 import pytest
 
 from app.models import TaskType
+from app.schemas.project import TaskBase
 from app.services.training.models import TrainingJob, TrainingParams
 
 
 @pytest.fixture
 def fxt_training_params():
-    return TrainingParams(model_architecture_id="test_arch", task_type=TaskType.CLASSIFICATION, model_id=uuid4())
+    return TrainingParams(model_architecture_id="test_arch", task=TaskBase(task_type=TaskType.CLASSIFICATION))
 
 
 @pytest.fixture

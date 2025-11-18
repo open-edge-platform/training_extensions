@@ -11,7 +11,7 @@ from otx.utils.device import is_xpu_available
 
 
 class TestXPUAccelerator:
-    @pytest.fixture()
+    @pytest.fixture
     def accelerator(self, mocker):
         mock_torch = mocker.patch("otx.backend.native.lightning.accelerators.xpu.torch")
         return XPUAccelerator(), mock_torch

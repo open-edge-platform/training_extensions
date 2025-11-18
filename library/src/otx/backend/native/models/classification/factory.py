@@ -50,7 +50,7 @@ class MobileNetV3:
     def __new__(
         cls,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams | dict,
+        data_input_params: DataInputParams | None = None,
         task: Literal["multi_class", "multi_label", "h_label"] = "multi_class",
         freeze_backbone: bool = False,
         model_name: Literal["mobilenetv3_large", "mobilenetv3_small"] = "mobilenetv3_large",
@@ -120,7 +120,7 @@ class EfficientNet:
     def __new__(
         cls,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams,
+        data_input_params: DataInputParams | None = None,
         task: Literal["multi_class", "multi_label", "h_label"] = "multi_class",
         model_name: Literal[
             "efficientnet_b0",
@@ -192,7 +192,7 @@ class TimmModel:
     def __new__(
         cls,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams,
+        data_input_params: DataInputParams | None = None,
         task: Literal["multi_class", "multi_label", "h_label"] = "multi_class",
         model_name: str = "tf_efficientnetv2_s.in21k",
         freeze_backbone: bool = False,
@@ -279,7 +279,7 @@ class TVModel:
     def __new__(
         cls,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams,
+        data_input_params: DataInputParams | None = None,
         task: Literal["multi_class", "multi_label", "h_label"] = "multi_class",
         model_name: str = "efficientnet_v2_s",
         freeze_backbone: bool = False,
@@ -361,7 +361,7 @@ class VisionTransformer:
     def __new__(
         cls,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams,
+        data_input_params: DataInputParams | None = None,
         task: Literal["multi_class", "multi_label", "h_label"] = "multi_class",
         model_name: Literal[
             "vit-tiny",

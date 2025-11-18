@@ -37,7 +37,7 @@ class TestDEIMDFine:
         assert model.num_classes == 3
         assert model.data_input_params.input_size == (640, 640)
         assert model.input_size_multiplier == 32
-        assert model_name in model.pretrained_weights
+        assert model_name in model._pretrained_weights
 
     def test_create_model(self) -> None:
         """Test DEIM DFine model creation."""
@@ -265,9 +265,9 @@ class TestDEIMDFine:
         assert model.input_size_multiplier == 32
 
         # Test pretrained weights availability
-        assert model.model_name in model.pretrained_weights
-        assert isinstance(model.pretrained_weights[model.model_name], str)
-        assert model.pretrained_weights[model.model_name].startswith("https://")
+        assert model.model_name in model._pretrained_weights
+        assert isinstance(model._pretrained_weights[model.model_name], str)
+        assert model._pretrained_weights[model.model_name].startswith("https://")
 
     def test_inheritance_from_rtdetr(self) -> None:
         """Test that DEIM DFine properly inherits from RTDETR."""

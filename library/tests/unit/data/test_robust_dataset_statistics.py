@@ -19,7 +19,7 @@ from otx.types import OTXTaskType
 class TestComputeRobustDatasetStatistics:
     """Test cases for compute_robust_dataset_statistics function."""
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_semantic_seg_dataset(self):
         """Create a mock semantic segmentation dataset with mixed annotation types."""
         dataset = DmDataset(media_type=Image)

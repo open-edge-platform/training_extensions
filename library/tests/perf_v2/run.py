@@ -37,13 +37,13 @@ def run_job(cmd: list[str], retries: int = MAX_RETRIES) -> dict | None:
     for attempt in range(1, retries + 1):
         try:
             logger.info(f"Running (attempt {attempt}): {' '.join(cmd)}")
-            subprocess.run(cmd, check=True)  # noqa: S603
+            subprocess.run(cmd, check=True)
             return None  # Success  # noqa: TRY300
         except subprocess.CalledProcessError as e:  # noqa: PERF203
             stderr_output = ""
             try:
                 subprocess.run(
-                    cmd,  # noqa: S603
+                    cmd,
                     check=True,
                     capture_output=True,
                     text=True,

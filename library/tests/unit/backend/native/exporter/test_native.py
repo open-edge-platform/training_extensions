@@ -12,7 +12,7 @@ from otx.types.precision import OTXPrecisionType
 
 
 class TestOTXNativeModelExporter:
-    @pytest.fixture()
+    @pytest.fixture
     def exporter(self, mocker):
         # Create an instance of OTXNativeModelExporter with default params
         return OTXNativeModelExporter(
@@ -20,7 +20,7 @@ class TestOTXNativeModelExporter:
             data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         )
 
-    @pytest.fixture()
+    @pytest.fixture
     def dummy_model(self):
         # Define a simple dummy torch model for testing
         return torch.nn.Sequential(

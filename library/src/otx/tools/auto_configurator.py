@@ -14,7 +14,7 @@ from warnings import warn
 
 from jsonargparse import ArgumentParser, Namespace
 
-from otx.backend.native.cli.utils import get_otx_root_path
+from otx.backend.native.cli.utils import get_otx_root_path, list_models
 from otx.backend.native.models.base import DataInputParams, OTXModel
 from otx.config.data import SamplerConfig, SubsetConfig, TileConfig
 from otx.data.module import OTXDataModule
@@ -38,10 +38,6 @@ DEFAULT_CONFIG_PER_TASK = {
     OTXTaskType.ROTATED_DETECTION: RECIPE_PATH / "rotated_detection" / "maskrcnn_r50.yaml",
     OTXTaskType.SEMANTIC_SEGMENTATION: RECIPE_PATH / "semantic_segmentation" / "litehrnet_18.yaml",
     OTXTaskType.INSTANCE_SEGMENTATION: RECIPE_PATH / "instance_segmentation" / "maskrcnn_r50.yaml",
-    OTXTaskType.ANOMALY: RECIPE_PATH / "anomaly" / "padim.yaml",
-    OTXTaskType.ANOMALY_CLASSIFICATION: RECIPE_PATH / "anomaly_classification" / "padim.yaml",
-    OTXTaskType.ANOMALY_SEGMENTATION: RECIPE_PATH / "anomaly_segmentation" / "padim.yaml",
-    OTXTaskType.ANOMALY_DETECTION: RECIPE_PATH / "anomaly_detection" / "padim.yaml",
     OTXTaskType.KEYPOINT_DETECTION: RECIPE_PATH / "keypoint_detection" / "rtmpose_tiny.yaml",
 }
 
@@ -54,10 +50,6 @@ OVMODEL_PER_TASK = {
     OTXTaskType.ROTATED_DETECTION: "otx.backend.openvino.models.OVRotatedDetectionModel",
     OTXTaskType.INSTANCE_SEGMENTATION: "otx.backend.openvino.models.OVInstanceSegmentationModel",
     OTXTaskType.SEMANTIC_SEGMENTATION: "otx.backend.openvino.models.OVSegmentationModel",
-    OTXTaskType.ANOMALY: "otx.backend.openvino.models.anomaly.OVAnomalyModel",
-    OTXTaskType.ANOMALY_CLASSIFICATION: "otx.backend.openvino.models.anomaly.OVAnomalyModel",
-    OTXTaskType.ANOMALY_DETECTION: "otx.backend.openvino.models.anomaly.OVAnomalyModel",
-    OTXTaskType.ANOMALY_SEGMENTATION: "otx.backend.openvino.models.anomaly.OVAnomalyModel",
     OTXTaskType.KEYPOINT_DETECTION: "otx.backend.openvino.models.OVKeypointDetectionModel",
 }
 
@@ -67,9 +59,11 @@ class AutoConfigurator:
 
     Args:
         data_root (PathLike | None, optional): The root directory for data storage. Defaults to None.
-        task (OTXTaskType | None, optional): The current task. Defaults to None.
-        model_name (str | None, optional): Name of the model to use as the default.
-            If None, the default model will be used. Defaults to None.
+        task (OTXTaskType | None, optional): The task type. If None, the task will be configured based on the model.
+            Defaults to None.
+        model (PathLike | str | None, optional): Path to the model config file or name of the model to use.
+            If None, the task should be provided and the default model for the task will be used.
+            Defaults to None.
 
     Example:
         The following examples show how to use the AutoConfigurator class.
@@ -89,20 +83,40 @@ class AutoConfigurator:
         self,
         data_root: PathLike | None = None,
         task: OTXTaskType | None = None,
-        model_config_path: PathLike | None = None,
+        model: PathLike | str | None = None,
     ) -> None:
         self.data_root = data_root
         self._task = task
-        if model_config_path and not Path(model_config_path).exists():
-            msg = f"Model config path {model_config_path} does not exist."
-            raise FileNotFoundError(msg)
+        model_config_path: PathLike | None = None
+        if model is not None:
+            if not str(model).endswith(".yaml"):
+                if task is None:
+                    msg = "If model is provided as a name, task must be provided to find the model."
+                    raise ValueError(msg)
+                recipe_list = list_models(task=task, pattern=str(model), return_recipes=True)
+                if len(recipe_list) > 1:
+                    msg = (
+                        "There is more than 1 model match the given name."
+                        "It may happen with overlap of the tasks. Using the first one."
+                        "To use the specific model, provide model config instead."
+                    )
+                    logger.warning(msg)
+                elif len(recipe_list) == 0:
+                    msg = f"Model {model} does not exist."
+                    raise FileNotFoundError(msg)
+                model_config_path = recipe_list[0]
+            else:
+                model_config_path = model
+            if not Path(model_config_path).exists():
+                msg = f"Model config path {model} does not exist."
+                raise FileNotFoundError(msg)
         if model_config_path:
             self._config: dict = self._load_default_config(config_path=model_config_path)
             self._task = OTXTaskType(self._config.get("task", task))
         elif task:
             self._config = self._load_default_config(task=task)
         else:
-            msg = "Either task or model_config_path must be provided."
+            msg = "Either task or model must be provided."
             raise ValueError(msg)
 
     @property
@@ -237,8 +251,7 @@ class AutoConfigurator:
             # get data_input_params info from datamodule
             if datamodule.input_size is None:
                 msg = (
-                    "Input size is not specified in the datamodule. "
-                    "Ensure that the datamodule has a valid input size."
+                    "Input size is not specified in the datamodule. Ensure that the datamodule has a valid input size."
                 )
                 raise ValueError(msg)
             model_config["init_args"]["data_input_params"] = DataInputParams(

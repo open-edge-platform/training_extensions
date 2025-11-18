@@ -15,7 +15,7 @@ from otx.data.entity.torch import OTXDataBatch
 from otx.types.label import HLabelInfo
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_hlabel_data() -> HLabelInfo:
     return HLabelInfo(
         label_names=[
@@ -67,7 +67,7 @@ def fxt_hlabel_data() -> HLabelInfo:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_hlabel_multilabel_info() -> HLabelInfo:
     return HLabelInfo(
         label_names=[
@@ -134,7 +134,7 @@ def fxt_hlabel_multilabel_info() -> HLabelInfo:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_hlabel_cifar() -> HLabelInfo:
     return HLabelInfo(
         label_names=[
@@ -210,7 +210,7 @@ def fxt_hlabel_cifar() -> HLabelInfo:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_multiclass_cls_batch_data_entity() -> OTXDataBatch:
     batch_size = 2
     random_tensor = torch.randn((batch_size, 3, 224, 224))
@@ -224,7 +224,7 @@ def fxt_multiclass_cls_batch_data_entity() -> OTXDataBatch:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_multilabel_cls_batch_data_entity(
     fxt_multiclass_cls_batch_data_entity,
     fxt_multilabel_labelinfo,
@@ -240,12 +240,12 @@ def fxt_multilabel_cls_batch_data_entity(
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_hlabel_cls_batch_data_entity(fxt_multilabel_cls_batch_data_entity) -> OTXDataBatch:
     return OTXDataBatch(**asdict(fxt_multilabel_cls_batch_data_entity))
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_config_mock() -> DictConfig:
     pseudo_model_config = {
         "backbone": {

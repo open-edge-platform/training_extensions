@@ -488,8 +488,8 @@ class RandomResizedCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
             target_area = RNG.uniform(*self.crop_ratio_range) * area
             log_ratio = (math.log(self.aspect_ratio_range[0]), math.log(self.aspect_ratio_range[1]))
             aspect_ratio = math.exp(RNG.uniform(*log_ratio))
-            target_w = int(round(math.sqrt(target_area * aspect_ratio)))
-            target_h = int(round(math.sqrt(target_area / aspect_ratio)))
+            target_w = round(math.sqrt(target_area * aspect_ratio))
+            target_h = round(math.sqrt(target_area / aspect_ratio))
 
             if 0 < target_w <= w and 0 < target_h <= h:
                 offset_h = RNG.integers(0, h - target_h + 1)
@@ -501,10 +501,10 @@ class RandomResizedCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
         in_ratio = float(w) / float(h)
         if in_ratio < min(self.aspect_ratio_range):
             target_w = w
-            target_h = int(round(target_w / min(self.aspect_ratio_range)))
+            target_h = round(target_w / min(self.aspect_ratio_range))
         elif in_ratio > max(self.aspect_ratio_range):
             target_h = h
-            target_w = int(round(target_h * max(self.aspect_ratio_range)))
+            target_w = round(target_h * max(self.aspect_ratio_range))
         else:  # whole image
             target_w = w
             target_h = h
@@ -727,8 +727,8 @@ class EfficientNetRandomCrop(RandomResizedCrop):
 
         for _ in range(self.max_attempts):
             aspect_ratio = RNG.uniform(*self.aspect_ratio_range)
-            min_target_h = int(round(math.sqrt(min_target_area / aspect_ratio)))
-            max_target_h = int(round(math.sqrt(max_target_area / aspect_ratio)))
+            min_target_h = round(math.sqrt(min_target_area / aspect_ratio))
+            max_target_h = round(math.sqrt(max_target_area / aspect_ratio))
 
             if max_target_h * aspect_ratio > w:
                 max_target_h = int((w + 0.5 - 1e-7) / aspect_ratio)
@@ -739,8 +739,8 @@ class EfficientNetRandomCrop(RandomResizedCrop):
             min_target_h = min(max_target_h, min_target_h)
 
             # slightly differs from tf implementation
-            target_h = int(round(RNG.uniform(min_target_h, max_target_h)))
-            target_w = int(round(target_h * aspect_ratio))
+            target_h = round(RNG.uniform(min_target_h, max_target_h))
+            target_w = round(target_h * aspect_ratio)
             target_area = target_h * target_w
 
             # slight differs from tf. In tf, if target_area > max_target_area,
@@ -763,8 +763,8 @@ class EfficientNetRandomCrop(RandomResizedCrop):
         img_short = min(h, w)
         crop_size = self.scale[0] / (self.scale[0] + self.crop_padding) * img_short
 
-        offset_h = max(0, int(round((h - crop_size) / 2.0)))
-        offset_w = max(0, int(round((w - crop_size) / 2.0)))
+        offset_h = max(0, round((h - crop_size) / 2.0))
+        offset_w = max(0, round((w - crop_size) / 2.0))
         return offset_h, offset_w, crop_size, crop_size
 
     def __repr__(self):

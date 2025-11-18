@@ -48,6 +48,7 @@ class TestJobEndpoints:
         project = Mock(spec=ProjectView)
         project.task = Mock(spec=TaskView)
         project.task.task_type = TaskType.CLASSIFICATION
+        project.task.exclusive_labels = True
         fxt_project_service.get_project_by_id.return_value = project
         job_request = JobRequest(
             project_id=uuid4(),
@@ -65,7 +66,7 @@ class TestJobEndpoints:
         fxt_project_service.get_project_by_id.assert_called_once_with(job_request.project_id)
         fxt_jobs_queue.submit.assert_called_once()
         assert fxt_jobs_queue.submit.call_args[0][0].params.model_architecture_id == "YOLOv8"
-        assert fxt_jobs_queue.submit.call_args[0][0].params.task_type == TaskType.CLASSIFICATION
+        assert fxt_jobs_queue.submit.call_args[0][0].params.task.task_type == TaskType.CLASSIFICATION
 
     def test_list_jobs(self, fxt_client, fxt_jobs_queue, fxt_job):
         fxt_jobs_queue.list_all.return_value = [fxt_job(), fxt_job()]

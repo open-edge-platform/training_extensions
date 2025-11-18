@@ -28,9 +28,7 @@ def is_norm(modules):
 
     Reference : https://github.com/open-mmlab/mmdetection/blob/v3.2.0/tests/test_models/test_backbones/utils.py#L19-L23
     """
-    if isinstance(modules, (GroupNorm, _BatchNorm)):
-        return True
-    return False
+    return bool(isinstance(modules, (GroupNorm, _BatchNorm)))
 
 
 class TestFocus:
