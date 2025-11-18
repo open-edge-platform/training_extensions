@@ -8,7 +8,7 @@ from fastapi import APIRouter, Body, Depends, File, HTTPException, Query, Upload
 from fastapi.openapi.models import Example
 from starlette.responses import FileResponse
 
-from app.api.dependencies import get_dataset_item_id, get_dataset_service, get_file_name_and_extension, get_project
+from app.api.dependencies import get_dataset_service, get_file_name_and_extension, get_project
 from app.api.schemas.dataset_item import (
     DatasetItemAnnotations,
     DatasetItemAssignSubset,
@@ -16,6 +16,7 @@ from app.api.schemas.dataset_item import (
     DatasetItemView,
     SetDatasetItemAnnotations,
 )
+from app.api.validators import DatasetItemID
 from app.core.models import Pagination
 from app.models import DatasetItemAnnotationStatus, DatasetItemSubset
 from app.schemas import ProjectView
@@ -159,7 +160,7 @@ def list_dataset_items(  # noqa: PLR0913
 )
 def get_dataset_item(
     project: Annotated[ProjectView, Depends(get_project)],
-    dataset_item_id: Annotated[UUID, Depends(get_dataset_item_id)],
+    dataset_item_id: DatasetItemID,
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
 ) -> DatasetItemView:
     """Get information about a specific dataset item"""
@@ -180,7 +181,7 @@ def get_dataset_item(
 )
 def get_dataset_item_binary(
     project: Annotated[ProjectView, Depends(get_project)],
-    dataset_item_id: Annotated[UUID, Depends(get_dataset_item_id)],
+    dataset_item_id: DatasetItemID,
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
 ) -> FileResponse:
     """Get dataset item binary content"""
@@ -203,7 +204,7 @@ def get_dataset_item_binary(
 )
 def get_dataset_item_thumbnail(
     project: Annotated[ProjectView, Depends(get_project)],
-    dataset_item_id: Annotated[UUID, Depends(get_dataset_item_id)],
+    dataset_item_id: DatasetItemID,
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
 ) -> FileResponse:
     """Get dataset item thumbnail binary content"""
@@ -227,7 +228,7 @@ def get_dataset_item_thumbnail(
 )
 def delete_dataset_item(
     project: Annotated[ProjectView, Depends(get_project)],
-    dataset_item_id: Annotated[UUID, Depends(get_dataset_item_id)],
+    dataset_item_id: DatasetItemID,
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
 ) -> None:
     """Delete an item from the dataset"""
@@ -248,7 +249,7 @@ def delete_dataset_item(
 )
 def set_dataset_item_annotations(
     project: Annotated[ProjectView, Depends(get_project)],
-    dataset_item_id: Annotated[UUID, Depends(get_dataset_item_id)],
+    dataset_item_id: DatasetItemID,
     dataset_item_annotations: Annotated[
         SetDatasetItemAnnotations, Body(openapi_examples=SET_DATASET_ITEM_ANNOTATIONS_BODY_EXAMPLES)
     ],
@@ -283,7 +284,7 @@ def set_dataset_item_annotations(
 )
 def get_dataset_item_annotations(
     project: Annotated[ProjectView, Depends(get_project)],
-    dataset_item_id: Annotated[UUID, Depends(get_dataset_item_id)],
+    dataset_item_id: DatasetItemID,
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
 ) -> DatasetItemAnnotations:
     """Get the dataset item annotations"""
@@ -313,7 +314,7 @@ def get_dataset_item_annotations(
 )
 def delete_dataset_item_annotation(
     project: Annotated[ProjectView, Depends(get_project)],
-    dataset_item_id: Annotated[UUID, Depends(get_dataset_item_id)],
+    dataset_item_id: DatasetItemID,
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
 ) -> None:
     """Delete dataset item annotations"""
@@ -336,7 +337,7 @@ def delete_dataset_item_annotation(
 )
 def assign_dataset_item_subset(
     project: Annotated[ProjectView, Depends(get_project)],
-    dataset_item_id: Annotated[UUID, Depends(get_dataset_item_id)],
+    dataset_item_id: DatasetItemID,
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
     subset_config: Annotated[DatasetItemAssignSubset, Body()],
 ) -> DatasetItemView:

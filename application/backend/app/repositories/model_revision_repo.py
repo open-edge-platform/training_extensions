@@ -1,5 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+from collections.abc import Sequence
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -30,3 +31,13 @@ class ModelRevisionRepository(BaseRepository[ModelRevisionDB]):
             .where(PipelineDB.is_running)
         )
         return self.db.execute(stmt).scalar_one_or_none()
+
+    def list_by_project(self, project_id: str) -> Sequence[ModelRevisionDB]:
+        """
+        List all model revisions for a given project.
+
+        Returns:
+            Sequence[ModelRevisionDB]: A list of model revisions associated with the project.
+        """
+        stmt = select(ModelRevisionDB).where(ModelRevisionDB.project_id == project_id)
+        return self.db.execute(stmt).scalars().all()

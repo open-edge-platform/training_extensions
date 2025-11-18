@@ -4,18 +4,20 @@ import os
 from collections.abc import Generator
 from pathlib import Path
 from typing import Annotated
-from uuid import UUID
 
 from fastapi import Depends, HTTPException, Request, UploadFile, status
 from sqlalchemy.orm import Session
 
+from app.api.validators import ProjectID, SinkID, SourceID
 from app.core.jobs.control_plane import JobQueue
 from app.db import get_db_session
 from app.models import Sink, Source
 from app.scheduler import Scheduler
 from app.schemas import ProjectView
 from app.services import (
+    BaseWeightsService,
     DatasetService,
+    LabelService,
     MetricsService,
     ModelService,
     PipelineMetricsService,
@@ -26,39 +28,10 @@ from app.services import (
     SourceUpdateService,
     SystemService,
 )
-from app.services.base_weights_service import BaseWeightsService
 from app.services.data_collect import DataCollector
 from app.services.event.event_bus import EventBus
-from app.services.label_service import LabelService
 from app.services.training_configuration_service import TrainingConfigurationService
 from app.webrtc.manager import WebRTCManager
-
-
-def is_valid_uuid(identifier: str) -> bool:
-    """
-    Check if a given string identifier is formatted as a valid UUID.
-
-    Args:
-        identifier: String to check for UUID validity.
-
-    Returns:
-        bool: True if the string is a valid UUID, False otherwise.
-
-    Example:
-        >>> is_valid_uuid("550e8400-e29b-41d4-a716-446655440000")
-        True
-        >>> is_valid_uuid("invalid-uuid")
-        False
-
-    Note:
-        This function only validates the UUID format, not whether the UUID
-        actually exists in any system or database.
-    """
-    try:
-        UUID(identifier)
-    except ValueError:
-        return False
-    return True
 
 
 def get_file_name_and_extension(file: UploadFile) -> tuple[str, str]:
@@ -81,41 +54,6 @@ def get_file_size(file: UploadFile) -> int:
     if not file.size:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File size should be defined.")
     return file.size
-
-
-def get_source_id(source_id: str) -> UUID:
-    """Initializes and validates a source ID"""
-    if not is_valid_uuid(source_id):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid source ID")
-    return UUID(source_id)
-
-
-def get_project_id(project_id: str) -> UUID:
-    """Initializes and validates a project ID"""
-    if not is_valid_uuid(project_id):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid project ID")
-    return UUID(project_id)
-
-
-def get_sink_id(sink_id: str) -> UUID:
-    """Initializes and validates a sink ID"""
-    if not is_valid_uuid(sink_id):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid sink ID")
-    return UUID(sink_id)
-
-
-def get_model_id(model_id: str) -> UUID:
-    """Initializes and validates a model ID"""
-    if not is_valid_uuid(model_id):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid model ID")
-    return UUID(model_id)
-
-
-def get_dataset_item_id(dataset_item_id: str) -> UUID:
-    """Initializes and validates a dataset item ID"""
-    if not is_valid_uuid(dataset_item_id):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid dataset item ID")
-    return UUID(dataset_item_id)
 
 
 def get_db() -> Generator[Session]:
@@ -231,7 +169,7 @@ def get_dataset_service(
 
 
 def get_project(
-    project_id: Annotated[UUID, Depends(get_project_id)],
+    project_id: ProjectID,
     project_service: Annotated[ProjectService, Depends(get_project_service)],
 ) -> ProjectView:
     """Provides a ProjectView instance for request scoped project."""
@@ -242,7 +180,7 @@ def get_project(
 
 
 def get_sink(
-    sink_id: Annotated[UUID, Depends(get_sink_id)],
+    sink_id: SinkID,
     sink_service: Annotated[SinkService, Depends(get_sink_service)],
 ) -> Sink:
     """Provides a Sink instance for request scoped sink."""
@@ -253,7 +191,7 @@ def get_sink(
 
 
 def get_source(
-    source_id: Annotated[UUID, Depends(get_source_id)],
+    source_id: SourceID,
     source_update_service: Annotated[SourceUpdateService, Depends(get_source_update_service)],
 ) -> Source:
     """Provides a Source instance for request scoped source."""
