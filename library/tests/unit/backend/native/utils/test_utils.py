@@ -4,17 +4,8 @@
 
 from otx.backend.native.utils.utils import (
     is_ckpt_for_finetuning,
-    is_ckpt_from_otx_v1,
     remove_state_dict_prefix,
 )
-
-
-def test_is_ckpt_from_otx_v1():
-    ckpt = {"model": "some_model", "VERSION": 1}
-    assert is_ckpt_from_otx_v1(ckpt)
-
-    ckpt = {"model": "another_model", "VERSION": 2}
-    assert not is_ckpt_from_otx_v1(ckpt)
 
 
 def test_is_ckpt_for_finetuning():

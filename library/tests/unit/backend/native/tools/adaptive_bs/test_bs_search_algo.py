@@ -13,12 +13,12 @@ from otx.backend.native.tools.adaptive_bs.algorithm import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_torch(mocker) -> MagicMock:
     return mocker.patch.object(target_file, "torch")
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_is_xpu_available(mocker) -> MagicMock:
     return mocker.patch.object(target_file, "is_xpu_available", return_value=False)
 

@@ -40,11 +40,11 @@ RNG = np.random.default_rng(42)
 
 
 class TestOTXTiling:
-    @pytest.fixture()
+    @pytest.fixture
     def mock_otx_det_model(self) -> OTXDetectionModel:
         return create_autospec(OTXDetectionModel)
 
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_data_roots(self) -> dict[OTXTaskType, Path]:
         parent_root = Path(__file__).parent.parent.parent / "assets"
         return {
@@ -53,7 +53,7 @@ class TestOTXTiling:
             OTXTaskType.SEMANTIC_SEGMENTATION: parent_root / "common_semantic_segmentation_dataset",
         }
 
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_data_config(self, fxt_data_roots) -> dict[dict]:
         torchvision_base = OmegaConf.load("src/otx/recipe/_base_/data/torchvision_base.yaml")
         transforms = torchvision_base.train_subset.transforms
@@ -296,9 +296,9 @@ class TestOTXTiling:
         assert isinstance(inter_polygon, Polygon), "Intersection should be a Polygon"
         assert inter_polygon.get_area() > 0, "Intersection area should be greater than 0"
 
-        assert (
-            OTXTileTransform._tile_polygon(polygon, roi, threshold_drop_ann=1.0) is None
-        ), "Intersection should be None"
+        assert OTXTileTransform._tile_polygon(polygon, roi, threshold_drop_ann=1.0) is None, (
+            "Intersection should be None"
+        )
 
         invalid_polygon = Polygon(points=[0, 0, 5, 0, 5, 5, 5, 0])
         assert OTXTileTransform._tile_polygon(invalid_polygon, roi) is None, "Invalid polygon should be None"
@@ -316,9 +316,9 @@ class TestOTXTiling:
                 )
                 tile_datamodule.prepare_data()
                 assert tile_datamodule.tile_config.tile_size == (8380, 8380), "Tile size should be [8380, 8380]"
-                assert (
-                    pytest.approx(tile_datamodule.tile_config.overlap, rel=1e-3) == 0.04255
-                ), "Overlap should be 0.04255"
+                assert pytest.approx(tile_datamodule.tile_config.overlap, rel=1e-3) == 0.04255, (
+                    "Overlap should be 0.04255"
+                )
                 assert tile_datamodule.tile_config.max_num_instances == 3, "Max num instances should be 3"
             elif task is OTXTaskType.INSTANCE_SEGMENTATION:
                 tile_datamodule = OTXDataModule(
@@ -328,9 +328,9 @@ class TestOTXTiling:
                 )
                 tile_datamodule.prepare_data()
                 assert tile_datamodule.tile_config.tile_size == (6750, 6750), "Tile size should be [6750, 6750]"
-                assert (
-                    pytest.approx(tile_datamodule.tile_config.overlap, rel=1e-3) == 0.03608
-                ), "Overlap should be 0.03608"
+                assert pytest.approx(tile_datamodule.tile_config.overlap, rel=1e-3) == 0.03608, (
+                    "Overlap should be 0.03608"
+                )
                 assert tile_datamodule.tile_config.max_num_instances == 3, "Max num instances should be 3"
             elif task is OTXTaskType.SEMANTIC_SEGMENTATION:
                 tile_datamodule = OTXDataModule(
@@ -340,9 +340,9 @@ class TestOTXTiling:
                 )
                 tile_datamodule.prepare_data()
                 assert tile_datamodule.tile_config.tile_size == (2878, 2878), "Tile size should be [6750, 6750]"
-                assert (
-                    pytest.approx(tile_datamodule.tile_config.overlap, rel=1e-3) == 0.04412
-                ), "Overlap should be 0.04412"
+                assert pytest.approx(tile_datamodule.tile_config.overlap, rel=1e-3) == 0.04412, (
+                    "Overlap should be 0.04412"
+                )
                 assert tile_datamodule.tile_config.max_num_instances == 2, "Max num instances should be 3"
             else:
                 pytest.skip("Task not supported")

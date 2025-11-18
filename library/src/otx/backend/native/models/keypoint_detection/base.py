@@ -32,7 +32,8 @@ class OTXKeypointDetectionModel(OTXModel):
         label_info (LabelInfoTypes | int | Sequence): Information about the labels used in the model.
             If `int` is given, label info will be constructed from number of classes,
             if `Sequence` is given, label info will be constructed from the sequence of label names.
-        data_input_params (DataInputParams): Parameters for data input.
+        data_input_params (DataInputParams | None, optional): Parameters for image data preprocessing. If None is given,
+            default parameters for the specific model will be used.
         model_name (str, optional): Name of the model. Defaults to "keypoint_detection_model".
         optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
@@ -45,7 +46,7 @@ class OTXKeypointDetectionModel(OTXModel):
     def __init__(
         self,
         label_info: LabelInfoTypes | int | Sequence,
-        data_input_params: DataInputParams,
+        data_input_params: DataInputParams | None = None,
         model_name: str = "keypoint_detection_model",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
@@ -207,3 +208,7 @@ class OTXKeypointDetectionModel(OTXModel):
             task_type="keypoint_detection",
             confidence_threshold=self.hparams.get("best_confidence_threshold", None),
         )
+
+    @property
+    def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
+        return DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(255.0, 255.0, 255.0))

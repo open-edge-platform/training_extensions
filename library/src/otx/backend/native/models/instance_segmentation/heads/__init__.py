@@ -12,9 +12,9 @@ from .rtmdet_inst_head import RTMDetInstSepBNHead
 
 __all__ = [
     "ConvFCBBoxHead",
-    "RoIHead",
     "FCNMaskHead",
-    "TVRoIHeads",
     "RPNHead",
     "RTMDetInstSepBNHead",
+    "RoIHead",
+    "TVRoIHeads",
 ]

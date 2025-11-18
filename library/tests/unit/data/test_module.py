@@ -28,7 +28,7 @@ if TYPE_CHECKING:
 
 
 class TestModule:
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_config(self) -> DictConfig:
         train_subset = MagicMock(spec=SubsetConfig)
         train_subset.sampler = DictConfig(
@@ -69,15 +69,15 @@ class TestModule:
 
         return mock
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_dm_dataset(self, mocker) -> MagicMock:
         return mocker.patch("otx.data.module.DmDataset.import_from")
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_otx_dataset_factory(self, mocker) -> MagicMock:
         return mocker.patch("otx.data.module.OTXDatasetFactory")
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_data_filtering(self, mocker) -> MagicMock:
         def func(
             dataset: DmDataset,
@@ -163,11 +163,11 @@ class TestModule:
         assert fxt_config.val_subset.input_size == (1200, 1200)
         assert fxt_config.test_subset.input_size == (800, 800)
 
-    @pytest.fixture()
+    @pytest.fixture
     def mock_adapt_input_size_to_dataset(self, mocker) -> MagicMock:
         return mocker.patch.object(target_file, "adapt_input_size_to_dataset", return_value=(1234, 1234))
 
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_real_tv_cls_config(self) -> DictConfig:
         cfg_path = files("otx") / "recipe" / "_base_" / "data" / "torchvision_base.yaml"
         cfg = OmegaConf.load(cfg_path)
@@ -207,7 +207,7 @@ class TestModule:
         assert hparams_path.exists()
 
     # Fixtures for from_otx_datasets tests
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_mock_subset_configs(self) -> dict[str, MagicMock]:
         """Create mock SubsetConfig instances for testing."""
         mock_config = MagicMock(spec=SubsetConfig)
@@ -222,7 +222,7 @@ class TestModule:
             "test_subset": deepcopy(mock_config),
         }
 
-    @pytest.fixture()
+    @pytest.fixture
     def fxt_mock_dataset(self) -> callable:
         """Factory fixture to create mock datasets with specified parameters."""
 

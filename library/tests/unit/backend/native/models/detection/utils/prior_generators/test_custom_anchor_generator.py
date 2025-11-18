@@ -9,7 +9,7 @@ from otx.backend.native.models.detection.utils.prior_generators import SSDAnchor
 
 
 class TestSSDAnchorGeneratorClustered:
-    @pytest.fixture()
+    @pytest.fixture
     def anchor_generator(self) -> SSDAnchorGeneratorClustered:
         return SSDAnchorGeneratorClustered(
             strides=(16, 32),

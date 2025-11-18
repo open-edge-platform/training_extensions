@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from otx.config.data import SubsetConfig
 
 
-__all__ = ["TransformLibFactory", "OTXDatasetFactory"]
+__all__ = ["OTXDatasetFactory", "TransformLibFactory"]
 
 
 class TransformLibFactory:
@@ -59,16 +59,6 @@ class OTXDatasetFactory:
             "image_color_channel": image_color_channel,
             "to_tv_image": cfg_subset.to_tv_image,
         }
-
-        if task in (
-            OTXTaskType.ANOMALY,
-            OTXTaskType.ANOMALY_CLASSIFICATION,
-            OTXTaskType.ANOMALY_DETECTION,
-            OTXTaskType.ANOMALY_SEGMENTATION,
-        ):
-            from .dataset.anomaly import OTXAnomalyDataset
-
-            return OTXAnomalyDataset(task_type=task, **common_kwargs)
 
         if task == OTXTaskType.MULTI_CLASS_CLS:
             from .dataset.classification import OTXMulticlassClsDataset

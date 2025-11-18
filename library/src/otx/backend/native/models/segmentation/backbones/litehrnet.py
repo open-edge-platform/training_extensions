@@ -571,7 +571,7 @@ class Stem(nn.Module):
                 activation=build_activation_layer(nn.ReLU),
             )
 
-        mid_channels = int(round(stem_channels * expand_ratio))
+        mid_channels = round(stem_channels * expand_ratio)
         branch_channels = stem_channels // 2
         if stem_channels == self.out_channels:
             inc_channels = self.out_channels - branch_channels

@@ -31,14 +31,18 @@ if TYPE_CHECKING:
 class RTMPose(OTXKeypointDetectionModel):
     """RTMPose Model."""
 
-    pretrained_weights: ClassVar[dict[str, str]] = {
+    _pretrained_weights: ClassVar[dict[str, str]] = {
         "rtmpose_tiny": "https://download.openmmlab.com/mmpose/v1/projects/rtmposev1/cspnext-tiny_udp-aic-coco_210e-256x192-cbed682d_20230130.pth",
+    }
+
+    _default_preprocessing_params: ClassVar[dict[str, DataInputParams] | DataInputParams] = {
+        "rtmpose_tiny": DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(255.0, 255.0, 255.0)),
     }
 
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams,
+        data_input_params: DataInputParams | None = None,
         model_name: Literal["rtmpose_tiny"] = "rtmpose_tiny",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
@@ -92,7 +96,7 @@ class RTMPose(OTXKeypointDetectionModel):
             head=head,
         )
         model.init_weights()
-        load_checkpoint(model, self.pretrained_weights[self.model_name], map_location="cpu")
+        load_checkpoint(model, self._pretrained_weights[self.model_name], map_location="cpu")
 
         return model
 

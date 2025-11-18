@@ -54,8 +54,7 @@ class FrozenBatchNorm2d(nn.Module):
         error_msgs: list[str],
     ) -> None:
         num_batches_tracked_key = prefix + "num_batches_tracked"
-        if num_batches_tracked_key in state_dict:
-            del state_dict[num_batches_tracked_key]
+        state_dict.pop(num_batches_tracked_key, None)
 
         super()._load_from_state_dict(
             state_dict,

@@ -85,12 +85,13 @@ class OTXEngine(Engine):
 
     def __init__(
         self,
-        model: OTXModel | PathLike,
+        model: OTXModel | PathLike | str,
         data: OTXDataModule | PathLike,
         work_dir: PathLike = "./otx-workspace",
         checkpoint: PathLike | None = None,
         device: DeviceType = DeviceType.auto,
         num_devices: int = 1,
+        task: OTXTaskType | None = None,
         **kwargs,
     ):
         """Initializes the OTX Engine.
@@ -103,6 +104,8 @@ class OTXEngine(Engine):
             checkpoint (PathLike | None, optional): Path to the checkpoint file (model weights). Defaults to None.
             device (DeviceType, optional): The device type to use. Defaults to DeviceType.auto.
             num_devices (int, optional): The number of devices to use. If it is 2 or more, it will behave as multi-gpu.
+            task (OTXTaskType | None, optional): The task type to use. Useful when you provide model name
+                and this model can be used for multiple tasks. Defaults to None.
             **kwargs: Additional keyword arguments for pl.Trainer.
         """
         self._cache = TrainerArgumentsCache(**kwargs)
@@ -112,10 +115,13 @@ class OTXEngine(Engine):
         if not isinstance(data, (OTXDataModule, str, os.PathLike)):
             msg = f"data should be OTXDataModule or PathLike, but got {type(data)}"
             raise TypeError(msg)
+        if task is not None and isinstance(data, OTXDataModule) and task != data.task:
+            msg = f"task and data.task should be the same, but got {task} and {data.task}"
+            raise ValueError(msg)
         self._auto_configurator = AutoConfigurator(
             data_root=data if isinstance(data, (str, os.PathLike)) else None,
-            task=data.task if isinstance(data, OTXDataModule) else None,
-            model_config_path=None if isinstance(model, OTXModel) else model,
+            task=data.task if isinstance(data, OTXDataModule) else task,
+            model=None if isinstance(model, OTXModel) else model,
         )
         self._datamodule: OTXDataModule = (
             data if isinstance(data, OTXDataModule) else self._auto_configurator.get_datamodule()
@@ -129,8 +135,7 @@ class OTXEngine(Engine):
             input_size = self._datamodule.input_size
             if input_size is None:
                 msg = (
-                    "Input size is not specified in the datamodule. "
-                    "Ensure that the datamodule has a valid input size."
+                    "Input size is not specified in the datamodule. Ensure that the datamodule has a valid input size."
                 )
                 raise ValueError(msg)
             get_model_args["data_input_params"] = DataInputParams(
@@ -549,7 +554,6 @@ class OTXEngine(Engine):
             base_name=self._EXPORTED_MODEL_BASE_NAME,
             export_format=export_format,
             precision=export_precision,
-            to_exportable_code=export_demo_package,
         )
 
         self.model.explain_mode = False

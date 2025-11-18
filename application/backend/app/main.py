@@ -8,6 +8,7 @@
 #  - docker compose up
 
 import importlib
+import logging
 import pkgutil
 from pathlib import Path
 
@@ -18,10 +19,12 @@ from fastapi.responses import FileResponse
 from loguru import logger
 
 from app.api import routers
+from app.core.logging import InterceptHandler
 from app.lifecycle import lifespan
 from app.settings import get_settings
 
 settings = get_settings()
+logging.basicConfig(handlers=[InterceptHandler()], level=settings.log_level, force=True)
 app = FastAPI(
     title=settings.app_name,
     version=settings.version,

@@ -6,13 +6,13 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Body, Depends, Query, status
+from fastapi import APIRouter, Body, Depends, status
 from fastapi.exceptions import HTTPException
 from fastapi.openapi.models import Example
 from starlette.responses import FileResponse
 
 from app.api.dependencies import get_data_collector, get_label_service, get_project, get_project_id, get_project_service
-from app.schemas import LabelView, PatchLabels, ProjectCreate, ProjectUpdateName, ProjectView, TrainingConfiguration
+from app.schemas import LabelView, PatchLabels, ProjectCreate, ProjectUpdateName, ProjectView
 from app.services import (
     LabelService,
     ProjectService,
@@ -22,7 +22,6 @@ from app.services import (
 )
 from app.services.data_collect import DataCollector
 from app.services.label_service import DuplicateLabelsError
-from app.supported_models.hyperparameters import Hyperparameters
 
 router = APIRouter(prefix="/api/projects", tags=["Projects"])
 
@@ -277,82 +276,3 @@ def capture_next_pipeline_frame(
         data_collector.collect_next_frame()
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-
-
-@router.get(
-    "/{project_id}/training_configuration",
-    response_model=TrainingConfiguration,
-    responses={
-        status.HTTP_200_OK: {"description": "Training configuration found"},
-        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID or query parameters"},
-        status.HTTP_404_NOT_FOUND: {"description": "Project not found"},
-    },
-)
-def get_training_configuration(
-    project_id: Annotated[UUID, Depends(get_project_id)],
-    project_service: Annotated[ProjectService, Depends(get_project_service)],
-    model_architecture_id: Annotated[str | None, Query()] = None,
-    model_revision_id: Annotated[UUID | None, Query()] = None,
-) -> TrainingConfiguration:
-    """
-    Get the training configuration for a project.
-
-    - If model_architecture_id is provided, returns configuration for that specific model architecture.
-    - If model_revision_id is provided, returns configuration for a specific trained model.
-    - If neither is provided, returns only general task-related configuration.
-    Note: model_architecture_id and model_revision_id cannot be used together.
-
-    Args:
-        project_id (UUID): The unique identifier of the project.
-        project_service (ProjectService): The project service
-        model_architecture_id (Optional[str]): The model architecture ID for specific configuration retrieval.
-        model_revision_id (Optional[UUID]): The model revision ID for specific configuration retrieval.
-
-    Returns:
-        TrainingConfiguration: The training configuration details.
-    """
-    try:
-        # TODO: Implement actual training configuration retrieval logic
-        _ = project_id, project_service, model_architecture_id, model_revision_id
-        return TrainingConfiguration.from_hyperparameters(hyperparameters=Hyperparameters())
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-
-
-@router.patch(
-    "/{project_id}/training_configuration",
-    status_code=status.HTTP_204_NO_CONTENT,
-    responses={
-        status.HTTP_204_NO_CONTENT: {"description": "Training configuration updated successfully"},
-        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID, query parameters, or request body"},
-        status.HTTP_404_NOT_FOUND: {"description": "Project not found"},
-    },
-)
-def update_training_configuration(
-    project_id: Annotated[UUID, Depends(get_project_id)],
-    training_config_update: Annotated[TrainingConfiguration, Body(description="Training configuration updates")],
-    project_service: Annotated[ProjectService, Depends(get_project_service)],
-    model_architecture_id: Annotated[str | None, Query()] = None,
-) -> None:
-    """
-    Update the training configuration for a project.
-
-    - If model_architecture_id is provided, updates configuration for that specific model architecture.
-    - If not provided, updates the general task-related configuration.
-    Note: model_architecture_id cannot be used with model_revision_id for updates.
-
-    Args:
-        project_id (UUID): The unique identifier of the project.
-        training_config_update (TrainingConfiguration): The training configuration updates.
-        project_service (ProjectService): The project service
-        model_architecture_id (Optional[str]): The model architecture ID for specific configuration update.
-    """
-    try:
-        # TODO: Implement actual training configuration update logic
-        _ = project_id, training_config_update, project_service, model_architecture_id
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

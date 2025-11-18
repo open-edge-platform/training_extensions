@@ -27,7 +27,6 @@ from otx.backend.native.models.detection.detectors import SingleStageDetector
 from otx.backend.native.models.detection.heads import SSDHead
 from otx.backend.native.models.detection.losses import SSDCriterion
 from otx.backend.native.models.detection.utils.prior_generators import SSDAnchorGeneratorClustered
-from otx.backend.native.models.utils.support_otx_v1 import OTXv1Helper
 from otx.backend.native.models.utils.utils import load_checkpoint
 from otx.config.data import TileConfig
 from otx.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
@@ -54,7 +53,11 @@ class SSD(OTXDetectionModel):
 
     Args:
         label_info (LabelInfoTypes): Information about the labels.
-        data_input_params (DataInputParams): Parameters for data input.
+        data_input_params (DataInputParams | None, optional): Parameters for image preprocessing.
+            This parameter contains image input size, mean, and std, that is used to preprocess the input image.
+            If None is given, default parameters for the specific model will be used.
+            In most cases you don't need to set this parameter unless you change the image size or pretrained weights.
+            Defaults to None.
         model_name (str, optional): Name of the model to use. Defaults to "ssd_mobilenetv2".
         optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
@@ -64,7 +67,7 @@ class SSD(OTXDetectionModel):
         tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).
     """
 
-    pretrained_weights: ClassVar[dict[str, str]] = {
+    _pretrained_weights: ClassVar[dict[str, str]] = {
         "ssd_mobilenetv2": "https://storage.openvinotoolkit.org/repositories/openvino_training_extensions/models/"
         "object_detection/v2/mobilenet_v2-2s_ssd-992x736.pth",
     }
@@ -72,7 +75,7 @@ class SSD(OTXDetectionModel):
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams,
+        data_input_params: DataInputParams | None = None,
         model_name: Literal["ssd_mobilenetv2"] = "ssd_mobilenetv2",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
@@ -155,7 +158,7 @@ class SSD(OTXDetectionModel):
             test_cfg=test_cfg,  # TODO (sungchul, kirill): remove
         )
         model.init_weights()
-        load_checkpoint(model, self.pretrained_weights[self.model_name], map_location="cpu")
+        load_checkpoint(model, self._pretrained_weights[self.model_name], map_location="cpu")
 
         return model
 
@@ -371,6 +374,6 @@ class SSD(OTXDetectionModel):
 
         return super().on_load_checkpoint(checkpoint)
 
-    def load_from_otx_v1_ckpt(self, state_dict: dict, add_prefix: str = "model.") -> dict:
-        """Load the previous OTX ckpt according to OTX2.0."""
-        return OTXv1Helper.load_ssd_ckpt(state_dict, add_prefix)
+    @property
+    def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
+        return DataInputParams(input_size=(864, 864), mean=(0.0, 0.0, 0.0), std=(255.0, 255.0, 255.0))

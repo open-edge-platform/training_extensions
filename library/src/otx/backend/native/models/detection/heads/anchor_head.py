@@ -95,9 +95,7 @@ class AnchorHead(BaseDenseHead):
     def num_anchors(self) -> int:
         """Number of anchors."""
         warnings.warn(
-            "DeprecationWarning: `num_anchors` is deprecated, "
-            "for consistency or also use "
-            "`num_base_priors` instead",
+            "DeprecationWarning: `num_anchors` is deprecated, for consistency or also use `num_base_priors` instead",
             stacklevel=2,
         )
         return self.prior_generator.num_base_priors[0]

@@ -6,4 +6,4 @@
 from .litehrnet import LiteHRNetBackbone
 from .mscan import MSCAN
 
-__all__ = ["LiteHRNetBackbone", "MSCAN"]
+__all__ = ["MSCAN", "LiteHRNetBackbone"]

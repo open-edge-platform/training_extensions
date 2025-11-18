@@ -10,7 +10,7 @@ from otx.backend.native.models.detection.layers import ChannelAttention
 
 
 class TestChannelAttention:
-    @pytest.fixture()
+    @pytest.fixture
     def channel_attention(self) -> ChannelAttention:
         return ChannelAttention(3)
 

@@ -79,7 +79,7 @@ def make_media(shape: tuple[int, int, int]):
     return media
 
 
-@pytest.fixture()
+@pytest.fixture
 def mock_dataset() -> DmDataset:
     return DmDataset.from_iterable(
         [
@@ -150,7 +150,7 @@ def test_get_adaptive_num_workers_no_gpu(mocker):
     assert get_adaptive_num_workers() is None
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_dm_dataset() -> DmDataset:
     dataset_items = [
         DatasetItem(

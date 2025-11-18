@@ -13,14 +13,14 @@ RNG = np.random.default_rng(42)
 
 
 class TestOTXDataset:
-    @pytest.fixture()
+    @pytest.fixture
     def mock_image(self) -> Image:
         img = mock.Mock(spec=Image)
         img.data = RNG.integers(0, 256, (10, 10, 3), dtype=np.uint8)
         img.path = "test_path"
         return img
 
-    @pytest.fixture()
+    @pytest.fixture
     def otx_dataset(self):
         class MockOTXDataset(OTXDataset):
             def _get_item_impl(self, idx: int) -> None:

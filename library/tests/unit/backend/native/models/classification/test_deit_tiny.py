@@ -8,7 +8,6 @@ from otx.backend.native.models.base import DataInputParams
 from otx.backend.native.models.classification.hlabel_models.vit import VisionTransformerHLabelCls
 from otx.backend.native.models.classification.multiclass_models.vit import VisionTransformerMulticlassCls
 from otx.backend.native.models.classification.multilabel_models.vit import VisionTransformerMultilabelCls
-from otx.backend.native.models.utils.support_otx_v1 import OTXv1Helper
 from otx.data.entity.base import OTXBatchLossEntity
 
 
@@ -48,10 +47,6 @@ class TestDeitTiny:
         assert len(preds.labels) == fxt_input.batch_size
         assert len(preds.scores) == fxt_input.batch_size
         assert preds.has_xai_outputs == explain_mode
-
-        mock_load_ckpt = mocker.patch.object(OTXv1Helper, "load_cls_effnet_b0_ckpt")
-        fxt_model.load_from_otx_v1_ckpt({})
-        mock_load_ckpt.assert_called_once_with({}, "multiclass", "model.")
 
     @pytest.mark.parametrize(
         ("model_cls", "label_info_fxt_name"),

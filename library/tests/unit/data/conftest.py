@@ -15,7 +15,6 @@ from datumaro.components.dataset import Dataset as DmDataset
 from datumaro.components.dataset_base import DatasetItem
 from datumaro.components.media import Image
 
-from otx.data.dataset.anomaly import OTXAnomalyDataset
 from otx.data.dataset.classification import (
     HLabelInfo,
     OTXHlabelClsDataset,
@@ -30,7 +29,6 @@ from otx.data.dataset.segmentation import (
     OTXSegmentationDataset,
 )
 from otx.data.entity.torch import OTXDataItem
-from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture
@@ -103,7 +101,7 @@ def fxt_dm_item_bbox_only(request, tmpdir) -> DatasetItem:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_mock_dm_subset(mocker: MockerFixture, fxt_dm_item: DatasetItem) -> MagicMock:
     mock_dm_subset = mocker.MagicMock(spec=DmDataset)
     mock_dm_subset.__getitem__.return_value = fxt_dm_item
@@ -118,7 +116,7 @@ def fxt_mock_dm_subset(mocker: MockerFixture, fxt_dm_item: DatasetItem) -> Magic
     return mock_dm_subset
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_mock_det_dm_subset(mocker: MockerFixture, fxt_dm_item_bbox_only: DatasetItem) -> MagicMock:
     mock_dm_subset = mocker.MagicMock(spec=DmDataset)
     mock_dm_subset.__getitem__.return_value = fxt_dm_item_bbox_only
@@ -136,10 +134,6 @@ def fxt_mock_det_dm_subset(mocker: MockerFixture, fxt_dm_item_bbox_only: Dataset
         (OTXDetectionDataset, OTXDataItem, {}),
         (OTXInstanceSegDataset, OTXDataItem, {"include_polygons": True}),
         (OTXSegmentationDataset, OTXDataItem, {}),
-        (OTXAnomalyDataset, OTXDataItem, {"task_type": OTXTaskType.ANOMALY}),
-        (OTXAnomalyDataset, OTXDataItem, {"task_type": OTXTaskType.ANOMALY_CLASSIFICATION}),
-        (OTXAnomalyDataset, OTXDataItem, {"task_type": OTXTaskType.ANOMALY_DETECTION}),
-        (OTXAnomalyDataset, OTXDataItem, {"task_type": OTXTaskType.ANOMALY_SEGMENTATION}),
     ],
     ids=[
         "hlabel_cls",
@@ -148,10 +142,6 @@ def fxt_mock_det_dm_subset(mocker: MockerFixture, fxt_dm_item_bbox_only: Dataset
         "detection",
         "instance_seg",
         "semantic_seg",
-        "anomaly",
-        "anomaly_cls",
-        "anomaly_det",
-        "anomaly_seg",
     ],
 )
 def fxt_dataset_and_data_entity_cls(
@@ -160,7 +150,7 @@ def fxt_dataset_and_data_entity_cls(
     return request.param
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_mock_hlabelinfo():
     mock_dict = MagicMock()
     mock_dict.__getitem__.return_value = (0, 0)
@@ -192,7 +182,7 @@ def fxt_mock_hlabelinfo():
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def fxt_hlabel_dataset_subset() -> DmDataset:
     return DmDataset.from_iterable(
         [
