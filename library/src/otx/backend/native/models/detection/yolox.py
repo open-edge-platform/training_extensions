@@ -24,7 +24,6 @@ from otx.data.entity.torch import OTXDataBatch
 from otx.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 from otx.types.export import OTXExportFormatType
 from otx.types.precision import OTXPrecisionType
-import kornia
 
 if TYPE_CHECKING:
     from pathlib import Path

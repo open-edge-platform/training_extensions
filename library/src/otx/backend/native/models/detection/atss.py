@@ -204,4 +204,4 @@ class ATSS(OTXDetectionModel):
 
     @property
     def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
-        return DataInputParams(input_size=(800, 992), mean=(0.0, 0.0, 0.0), std=(255.0, 255.0, 255.0))
+        return DataInputParams(input_size=(800, 992), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0))

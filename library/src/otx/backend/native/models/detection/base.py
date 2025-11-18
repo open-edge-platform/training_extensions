@@ -17,6 +17,7 @@ from torchmetrics import Metric, MetricCollection
 from torchvision import tv_tensors
 import kornia
 from kornia.geometry.boxes import Boxes
+from kornia.augmentation.container import AugmentationSequential
 
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel
 from otx.backend.native.models.utils.utils import InstanceData
@@ -73,6 +74,9 @@ class OTXDetectionModel(OTXModel):
         label_info: LabelInfoTypes | int | Sequence,
         data_input_params: DataInputParams | dict | None = None,
         model_name: str = "otx_detection_model",
+        apply_gpu_transforms: bool = True,
+        batch_train_transforms: AugmentationSequential | Compose | None = None,
+        batch_val_transforms: AugmentationSequential | Compose | None = None,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MeanAveragePrecisionFMeasureCallable,
@@ -82,9 +86,11 @@ class OTXDetectionModel(OTXModel):
     ) -> None:
         super().__init__(
             label_info=label_info,
-            model_name=model_name,
-            task=OTXTaskType.DETECTION,
             data_input_params=data_input_params,
+            model_name=model_name,
+            apply_gpu_transforms=apply_gpu_transforms,
+            batch_train_transforms=batch_train_transforms,
+            batch_val_transforms=batch_val_transforms,
             optimizer=optimizer,
             scheduler=scheduler,
             metric=metric,
@@ -264,29 +270,6 @@ class OTXDetectionModel(OTXModel):
             bboxes=bboxes,
             labels=labels,
         )
-
-    @torch.no_grad()
-    def apply_batch_transforms(self, inputs: OTXDataBatch) -> types.NoneType:
-        """Apply batch augmentations to Object Detection."""
-        # Convert bounding boxes to Kornia Boxes [N, 4, 2]
-        kornia_boxes = Boxes.from_tensor(inputs.bboxes, mode='xyxy')
-        self.transforms(inputs.images, kornia_boxes)
-        inputs.bboxes = kornia_boxes.to_tensor(mode='xyxy')
-
-    @property
-    def transforms(self):
-        if self.training:
-            return kornia.augmentation.AugmentationSequential(
-                    kornia.augmentation.RandomHorizontalFlip(),
-                    kornia.augmentation.Normalize(self.data_input_params.mean, self.data_input_params.std),
-                    data_keys=["input", "bbox"],
-                    same_on_batch=False
-            )
-        return kornia.augmentation.AugmentationSequential(
-            kornia.augmentation.Normalize(self.data_input_params.mean, self.data_input_params.std),
-            data_keys=["input", "bbox"],
-        )
-
 
     def forward_tiles(self, inputs: OTXTileBatchDataEntity) -> OTXPredBatch:
         """Unpack detection tiles.
@@ -570,6 +553,19 @@ class OTXDetectionModel(OTXModel):
 
         return [1] * 10
 
+    @staticmethod
+    @torch.no_grad()
+    def _apply_batch_augmentations(augmentations_pipeline: AugmentationSequential | Compose | None, batch: OTXDataBatch) -> None:
+        if augmentations_pipeline is not None:
+            # Convert bounding boxes to Kornia Boxes [N, 4, 2]
+            kornia_boxes = Boxes.from_tensor(batch.bboxes, mode='xyxy')
+            batch.images, kornia_boxes = augmentations_pipeline(batch.images, kornia_boxes)
+            batch.bboxes = kornia_boxes.to_tensor(mode='xyxy')
+
     @property
     def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
-        return DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(255.0, 255.0, 255.0))
+        return DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(1.0, 1.0, 1.0))
+
+    @property
+    def task(self) -> OTXTaskType:
+        return OTXTaskType.DETECTION
