@@ -12,6 +12,7 @@ from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any
 
 import torch
+import kornia
 import torch.nn.functional as f
 from torchvision import tv_tensors
 
@@ -20,6 +21,7 @@ from otx.backend.native.exporter.native import OTXNativeModelExporter
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel
 from otx.backend.native.schedulers import LRSchedulerListCallable
 from otx.backend.native.tools.tile_merge import SegmentationTileMerge
+from kornia.augmentation.container import AugmentationSequential
 from otx.config.data import TileConfig
 from otx.data.entity.base import ImageInfo, OTXBatchLossEntity
 from otx.data.entity.tile import OTXTileBatchDataEntity
@@ -59,6 +61,9 @@ class OTXSegmentationModel(OTXModel):
         label_info: LabelInfoTypes | int | Sequence,
         data_input_params: DataInputParams | None = None,
         model_name: str = "otx_segmentation_model",
+        apply_gpu_transforms: bool = True,
+        batch_train_transforms: AugmentationSequential | Compose | None = None,
+        batch_val_transforms: AugmentationSequential | Compose | None = None,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = SegmCallable,  # type: ignore[assignment]
@@ -68,8 +73,10 @@ class OTXSegmentationModel(OTXModel):
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
-            task=OTXTaskType.SEMANTIC_SEGMENTATION,
             model_name=model_name,
+            apply_gpu_transforms=apply_gpu_transforms,
+            batch_train_transforms=batch_train_transforms,
+            batch_val_transforms=batch_val_transforms,
             optimizer=optimizer,
             scheduler=scheduler,
             metric=metric,
@@ -297,6 +304,23 @@ class OTXSegmentationModel(OTXModel):
             )
         return OTXDataBatch(batch_size, images, imgs_info=infos, masks=[])  # type: ignore[arg-type]
 
+    @staticmethod
+    @torch.no_grad()
+    def _apply_batch_augmentations(augmentations_pipeline: AugmentationSequential | Compose | None, batch: OTXDataBatch) -> None:
+        if augmentations_pipeline is not None:
+            batch.images, batch.masks = augmentations_pipeline(batch.images, batch.masks)
+
+    @property
+    def _default_train_transforms(self):
+        return AugmentationSequential(
+                                      kornia.augmentation.ColorJiggle(0.1, 0.1, 0.1, 0.1),
+                                      kornia.augmentation.RandomHorizontalFlip(),
+                                      kornia.augmentation.Normalize(self.data_input_params.mean, self.data_input_params.std), data_keys=["input", "mask"], keepdim=True)
+
     @property
     def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
-        return DataInputParams(input_size=(512, 512), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375))
+        return DataInputParams(input_size=(512, 512), mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
+
+    @property
+    def task(self) -> OTXTaskType:
+        return OTXTaskType.SEMANTIC_SEGMENTATION

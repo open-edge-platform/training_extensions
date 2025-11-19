@@ -16,7 +16,6 @@ from otx.data.entity.base import ImageInfo
 from otx.data.entity.torch import OTXDataItem
 from otx.types import OTXTaskType
 from otx.types.image import ImageColorChannel
-from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from .base import OTXDataset, Transforms
 from .mixins import DataAugSwitchMixin
@@ -85,7 +84,6 @@ class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):  # type: ignore[misc]
         img = item.media_as(Image)
         ignored_labels: list[int] = []  # This should be assigned form item
         img_data, img_shape, _ = self._get_img_data_and_shape(img)
-        img_data = to_dtype(to_image(img_data), scale=True, dtype=torch.float32)
 
         bbox_anns = [ann for ann in item.annotations if isinstance(ann, Bbox)]
 

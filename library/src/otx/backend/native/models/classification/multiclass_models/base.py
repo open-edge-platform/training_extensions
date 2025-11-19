@@ -45,6 +45,12 @@ class OTXMulticlassClsModel(OTXModel):
         data_input_params (DataInputParams | None, optional): Parameters for the image data preprocessing.
             If None is given, default parameters for the specific model will be used.
         model_name (str, optional): Name of the model. Defaults to "multiclass_classification_model".
+        apply_gpu_transforms (bool, optional): Flag to indicate whether to apply GPU transforms.
+            It is recommended to use GPU transforms. Defaults to True.
+        batch_train_transforms (AugmentationSequential | Compose | None): GPU transforms for training applied directly to the batch.
+            If None is given, default augmentation pipeline for the model will be used.
+        batch_val_transforms (AugmentationSequential | Compose | None): GPU transforms for validation / testing applied directly to the batch.
+            If None is given, default augmentation pipeline for the model will be used. Typically just normalization.
         optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
         Defaults to DefaultSchedulerCallable.

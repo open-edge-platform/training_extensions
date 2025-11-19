@@ -9,9 +9,11 @@ from abc import abstractmethod
 from collections.abc import Iterable
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Callable, Iterator, List, Union
+from torchvision.transforms.v2.functional import to_dtype, to_image
 
 import cv2
 import numpy as np
+import torch
 from datumaro.components.annotation import AnnotationType
 from datumaro.util.image import IMAGE_BACKEND, IMAGE_COLOR_CHANNEL, ImageBackend
 from datumaro.util.image import ImageColorChannel as DatumaroImageColorChannel
@@ -194,6 +196,7 @@ class OTXDataset(Dataset):
             img_data = img_data[y1:y2, x1:x2]
             roi_meta = {"x1": x1, "y1": y1, "x2": x2, "y2": y2, "orig_image_shape": (h, w)}
 
+        img_data = to_dtype(to_image(img_data), scale=True, dtype=torch.float32).clamp_(0, 1)
         return img_data, img_data.shape[:2], roi_meta
 
     @abstractmethod
