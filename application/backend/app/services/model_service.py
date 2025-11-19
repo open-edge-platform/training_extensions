@@ -31,11 +31,12 @@ class ModelRevisionMetadata:
 class ModelService(BaseSessionManagedService):
     """Service to register and activate models"""
 
-    def get_model_by_id(self, model_id: UUID) -> ModelSchema:
+    def get_model(self, project_id: UUID, model_id: UUID) -> ModelSchema:
         """
-        Get a model by its ID.
+        Get a model.
 
         Args:
+            project_id (UUID): The unique identifier of the project whose models to get.
             model_id (UUID): The unique identifier of the model to retrieve.
 
         Returns:
@@ -44,18 +45,19 @@ class ModelService(BaseSessionManagedService):
         Raises:
             ResourceNotFoundError: If no model with the given model_id is found.
         """
-        model_rev_repo = ModelRevisionRepository(self.db_session)
+        model_rev_repo = ModelRevisionRepository(project_id=str(project_id), db=self.db_session)
         model_rev_db = model_rev_repo.get_by_id(str(model_id))
         if not model_rev_db:
             raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
         return ModelRevisionMapper.to_schema(model_rev_db)
 
     @parent_process_only
-    def delete_model_by_id(self, model_id: UUID) -> None:
+    def delete_model(self, project_id: UUID, model_id: UUID) -> None:
         """
-        Delete a model by its ID.
+        Delete a model.
 
         Args:
+            project_id (UUID): The unique identifier of the project whose models to delete.
             model_id (UUID): The unique identifier of the model to delete.
 
         Returns:
@@ -66,7 +68,7 @@ class ModelService(BaseSessionManagedService):
             ResourceInUseError: If the model cannot be deleted due to integrity constraints
                 (e.g., the model is referenced by other entities).
         """
-        model_rev_repo = ModelRevisionRepository(self.db_session)
+        model_rev_repo = ModelRevisionRepository(project_id=str(project_id), db=self.db_session)
         try:
             # TODO: delete model artifacts from filesystem when implemented
             deleted = model_rev_repo.delete(str(model_id))
@@ -90,8 +92,8 @@ class ModelService(BaseSessionManagedService):
             list[ModelSchema]: A list of model schema objects representing all model
                 revisions in the project. Returns an empty list if the project has no models.
         """
-        model_rev_repo = ModelRevisionRepository(self.db_session)
-        model_revisions = model_rev_repo.list_by_project(str(project_id))
+        model_rev_repo = ModelRevisionRepository(project_id=str(project_id), db=self.db_session)
+        model_revisions = model_rev_repo.list_all()
         return [ModelRevisionMapper.to_schema(model_rev_db) for model_rev_db in model_revisions]
 
     def create_revision(self, metadata: ModelRevisionMetadata) -> None:
@@ -108,9 +110,10 @@ class ModelService(BaseSessionManagedService):
                 dataset revision id, training status and optional training
                 configuration.
         """
-        label_repo = LabelRepository(project_id=str(metadata.project_id), db=self.db_session)
+        project_id = str(metadata.project_id)
+        label_repo = LabelRepository(project_id=project_id, db=self.db_session)
         labels_schema_rev = {"labels": [{"name": label.name, "id": label.id} for label in label_repo.list_all()]}
-        model_revision_repo = ModelRevisionRepository(self.db_session)
+        model_revision_repo = ModelRevisionRepository(project_id=project_id, db=self.db_session)
         model_revision_repo.save(
             ModelRevisionDB(
                 id=str(metadata.model_id),

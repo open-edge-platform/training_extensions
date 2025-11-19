@@ -43,7 +43,7 @@ class TrainingConfigurationService:
             raise ValueError("Only one of model_architecture_id or model_revision_id should be provided.")
 
         if model_revision_id:
-            return self._get_by_model_revision_id(model_revision_id=model_revision_id)
+            return self._get_by_model_revision_id(project_id=project_id, model_revision_id=model_revision_id)
 
         if model_architecture_id:
             return self._get_by_model_architecture_id(
@@ -52,17 +52,18 @@ class TrainingConfigurationService:
 
         return self._get_default_configuration(project_id=project_id)
 
-    def _get_by_model_revision_id(self, model_revision_id: UUID) -> TrainingConfiguration:
+    def _get_by_model_revision_id(self, project_id: UUID, model_revision_id: UUID) -> TrainingConfiguration:
         """
         Retrieves training configuration from a specific model revision.
 
         Args:
+            project_id (UUID): Identifier for the project.
             model_revision_id (UUID): Identifier for the model revision.
 
         Returns:
             TrainingConfiguration: The training configuration object.
         """
-        model = ModelRevisionRepository(self._db_session).get_by_id(str(model_revision_id))
+        model = ModelRevisionRepository(str(project_id), self._db_session).get_by_id(str(model_revision_id))
         if not model:
             raise ResourceNotFoundError(ResourceType.MODEL, str(model_revision_id))
         return TrainingConfiguration.model_validate(model.training_configuration)
