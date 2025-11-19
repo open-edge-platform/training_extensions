@@ -147,7 +147,7 @@ class OTXKeypointDetectionDataset(OTXDataset):
         keypoints = np.hstack((keypoints, keypoints_visible.reshape(-1, 1)))
 
         entity = OTXDataItem(
-            image=to_dtype(to_image(img_data), torch.float32),
+            image=img_data,
             img_info=ImageInfo(
                 img_idx=index,
                 img_shape=img_shape,

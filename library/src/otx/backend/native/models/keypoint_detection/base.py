@@ -10,7 +10,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Sequence
 
 import torch
+import kornia
 
+from kornia.augmentation.container import AugmentationSequential
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel
 from otx.backend.native.schedulers import LRSchedulerListCallable
 from otx.data.entity.base import ImageInfo, OTXBatchLossEntity
@@ -48,6 +50,9 @@ class OTXKeypointDetectionModel(OTXModel):
         label_info: LabelInfoTypes | int | Sequence,
         data_input_params: DataInputParams | None = None,
         model_name: str = "keypoint_detection_model",
+        apply_gpu_transforms: bool = True,
+        batch_train_transforms: AugmentationSequential | Compose | None = None,
+        batch_val_transforms: AugmentationSequential | Compose | None = None,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = PCKMeasureCallable,
@@ -56,8 +61,10 @@ class OTXKeypointDetectionModel(OTXModel):
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
-            task=OTXTaskType.KEYPOINT_DETECTION,
             model_name=model_name,
+            apply_gpu_transforms=apply_gpu_transforms,
+            batch_train_transforms=batch_train_transforms,
+            batch_val_transforms=batch_val_transforms,
             optimizer=optimizer,
             scheduler=scheduler,
             metric=metric,
@@ -209,6 +216,29 @@ class OTXKeypointDetectionModel(OTXModel):
             confidence_threshold=self.hparams.get("best_confidence_threshold", None),
         )
 
+    @staticmethod
+    @torch.no_grad()
+    def _apply_batch_augmentations(augmentations_pipeline: AugmentationSequential | Compose | None, batch: OTXDataBatch) -> None:
+        if augmentations_pipeline is not None:
+            stacked_kps = torch.stack(batch.keypoints)
+            # Apply augmentations
+            batch.images, augmented_kps = augmentations_pipeline(batch.images, stacked_kps[:, :, :2])
+            stacked_kps[:, :, :2] = augmented_kps
+            h, w = batch.images.shape[-2:]
+            # Compute visible mask. Keypoints should be visible if they are inside the image (>=0, x<=w, y<=h)
+            visible_mask = (augmented_kps > 0).all(axis=2) * (augmented_kps[:, :, 0] <= w) * (augmented_kps[:, :, 1] <= h)
+            stacked_kps[:, :, 2] = stacked_kps[:, :, 2] * visible_mask
+            # Update visible keypoints with augmented values
+            batch.keypoints = [kps for kps in stacked_kps]
+
+    @property
+    def _default_train_transforms(self):
+        return AugmentationSequential(kornia.augmentation.Normalize(self.data_input_params.mean, self.data_input_params.std), data_keys=["input", "keypoints"], keepdim=True)
+
     @property
     def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
-        return DataInputParams(input_size=(640, 640), mean=(0.0, 0.0, 0.0), std=(255.0, 255.0, 255.0))
+        return DataInputParams(input_size=(512, 512), mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
+
+    @property
+    def task(self) -> OTXTaskType:
+        return OTXTaskType.KEYPOINT_DETECTION

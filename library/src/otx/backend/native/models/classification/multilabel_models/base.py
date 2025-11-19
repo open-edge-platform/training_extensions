@@ -38,6 +38,12 @@ class OTXMultilabelClsModel(OTXModel):
             if `Sequence` is given, label info will be constructed from the sequence of label names.
         data_input_params (DataInputParams | None, optional): Parameters for the image data preprocessing.
         model_name (str, optional): Name of the model. Defaults to "multilabel_classification_model".
+        apply_gpu_transforms (bool, optional): Flag to indicate whether to apply GPU transforms.
+            It is recommended to use GPU transforms. Defaults to True.
+        batch_train_transforms (AugmentationSequential | Compose | None): GPU transforms for training applied directly to the batch.
+            If None is given, default augmentation pipeline for the model will be used.
+        batch_val_transforms (AugmentationSequential | Compose | None): GPU transforms for validation / testing applied directly to the batch.
+            If None is given, default augmentation pipeline for the model will be used. Typically just normalization.
         optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
         Defaults to DefaultSchedulerCallable.
@@ -50,6 +56,9 @@ class OTXMultilabelClsModel(OTXModel):
         label_info: LabelInfoTypes | Sequence,
         data_input_params: DataInputParams | None = None,
         model_name: str = "multiclass_classification_model",
+        apply_gpu_transforms: bool = True,
+        batch_train_transforms: AugmentationSequential | Compose | None = None,
+        batch_val_transforms: AugmentationSequential | Compose | None = None,
         freeze_backbone: bool = False,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
@@ -59,8 +68,10 @@ class OTXMultilabelClsModel(OTXModel):
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
-            task=OTXTaskType.MULTI_LABEL_CLS,
             model_name=model_name,
+            apply_gpu_transforms=apply_gpu_transforms,
+            batch_train_transforms=batch_train_transforms,
+            batch_val_transforms=batch_val_transforms,
             optimizer=optimizer,
             scheduler=scheduler,
             metric=metric,

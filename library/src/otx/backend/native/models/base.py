@@ -476,7 +476,7 @@ class OTXModel(LightningModule):
             data_keys = ["input"]
 
         return AugmentationSequential(kornia.augmentation.RandomHorizontalFlip(),
-                                      kornia.augmentation.Normalize(self.data_input_params.mean, self.data_input_params.std), data_keys=data_keys)
+                                      kornia.augmentation.Normalize(self.data_input_params.mean, self.data_input_params.std), data_keys=data_keys, keepdim=True)
 
     @property
     def _default_val_transforms(self):
@@ -491,7 +491,7 @@ class OTXModel(LightningModule):
         else:
             data_keys = ["input"]
 
-        return AugmentationSequential(kornia.augmentation.Normalize(self.data_input_params.mean, self.data_input_params.std), data_keys=data_keys)
+        return AugmentationSequential(kornia.augmentation.Normalize(self.data_input_params.mean, self.data_input_params.std), data_keys=data_keys, keepdim=True)
 
     @property
     def metric(self) -> Metric | MetricCollection:

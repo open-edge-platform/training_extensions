@@ -245,7 +245,7 @@ class OTXSegmentationDataset(OTXDataset):
 
         masks = tv_tensors.Mask(extracted_mask[None], dtype=torch.long)
         entity = OTXDataItem(
-            image=to_dtype(to_image(img_data), dtype=torch.float32),
+            image=img_data,
             img_info=ImageInfo(
                 img_idx=index,
                 img_shape=img_shape,

@@ -18,6 +18,8 @@ from torch import Tensor
 from torchmetrics import Metric, MetricCollection
 from torchvision import tv_tensors
 from torchvision.models.detection.image_list import ImageList
+from kornia.geometry.boxes import Boxes
+from kornia.augmentation.container import AugmentationSequential
 
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel
 from otx.backend.native.models.instance_segmentation.segmentors.maskrcnn_tv import MaskRCNN
@@ -61,6 +63,12 @@ class OTXInstanceSegModel(OTXModel):
         data_input_params (DataInputParams | None, optional): Parameters for the image data preprocessing.
             If None is given, default parameters for the specific model will be used.
         model_name (str, optional): Name of the model. Defaults to "inst_segm_model".
+        apply_gpu_transforms (bool, optional): Flag to indicate whether to apply GPU transforms.
+            It is recommended to use GPU transforms. Defaults to True.
+        batch_train_transforms (AugmentationSequential | Compose | None): GPU transforms for training applied directly to the batch.
+            If None is given, default augmentation pipeline for the model will be used.
+        batch_val_transforms (AugmentationSequential | Compose | None): GPU transforms for validation / testing applied directly to the batch.
+            If None is given, default augmentation pipeline for the model will be used. Typically just normalization.
         optimizer (OptimizerCallable, optional): Optimizer for the model. Defaults to DefaultOptimizerCallable.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Scheduler for the model.
             Defaults to DefaultSchedulerCallable.
@@ -76,6 +84,9 @@ class OTXInstanceSegModel(OTXModel):
         label_info: LabelInfoTypes | int | Sequence,
         data_input_params: DataInputParams | None = None,
         model_name: str = "inst_segm_model",
+        apply_gpu_transforms: bool = True,
+        batch_train_transforms: AugmentationSequential | Compose | None = None,
+        batch_val_transforms: AugmentationSequential | Compose | None = None,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MaskRLEMeanAPFMeasureCallable,
@@ -85,8 +96,10 @@ class OTXInstanceSegModel(OTXModel):
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
-            task=OTXTaskType.INSTANCE_SEGMENTATION,
             model_name=model_name,
+            apply_gpu_transforms=apply_gpu_transforms,
+            batch_train_transforms=batch_train_transforms,
+            batch_val_transforms=batch_val_transforms,
             optimizer=optimizer,
             scheduler=scheduler,
             metric=metric,
@@ -616,6 +629,22 @@ class OTXInstanceSegModel(OTXModel):
         self.model.forward = func_type(self.original_model_forward, self.model)
         self.original_model_forward = None
 
+    @staticmethod
+    @torch.no_grad()
+    def _apply_batch_augmentations(augmentations_pipeline: AugmentationSequential | Compose | None, batch: OTXDataBatch) -> None:
+        if augmentations_pipeline is not None:
+            # Convert bounding boxes to Kornia Boxes [N, 4, 2]
+            kornia_boxes = Boxes.from_tensor(batch.bboxes, mode='xyxy')
+            breakpoint()
+            batch.images, kornia_boxes, masks = augmentations_pipeline(batch.images, kornia_boxes, batch.masks)
+            batch.bboxes = kornia_boxes.to_tensor(mode='xyxy')
+            breakpoint()
+            batch.masks = masks
+
     @property
     def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
-        return DataInputParams(input_size=(1024, 1024), mean=(103.53, 116.28, 123.675), std=(57.375, 57.12, 58.395))
+        return DataInputParams(input_size=(1024, 1024), mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
+
+    @property
+    def task(self) -> OTXTaskType:
+        return OTXTaskType.INSTANCE_SEGMENTATION

@@ -2969,7 +2969,8 @@ class TopdownAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
             inputs.keypoints = torch.zeros([])
         else:
             # update keypoints_visible after affine transforms
-            inputs.keypoints[:, 2] = inputs.keypoints[:, 2] * (inputs.keypoints[:, :2] > 0).all(axis=1)
+            # update keypoints_visible. Keypoints should be visible if they are inside the image (>=0, x<=w, y<=h)
+            inputs.keypoints[:, 2] = inputs.keypoints[:, 2] * (inputs.keypoints[:, :2] >= 0).all(axis=1) * (inputs.keypoints[:, 0] <= w) * (inputs.keypoints[:, 1] <= h)
 
         return self.convert(inputs)
 
