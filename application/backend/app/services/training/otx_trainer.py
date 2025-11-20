@@ -149,7 +149,7 @@ class OTXTrainer(Trainer):
                 revision_id=self._dataset_service.save_revision(project_id, dm_dataset),
             )
 
-    @step("Prepare Model Metadata")
+    @step("Prepare Model Metadata & OTX Configuration")
     def prepare_model(self, training_params: TrainingParams, dataset_revision_id: UUID) -> None:
         if training_params.project_id is None:
             raise ValueError("Project ID must be provided for model preparation")
@@ -229,5 +229,5 @@ class OTXTrainer(Trainer):
             case TaskType.INSTANCE_SEGMENTATION:
                 extended_config["sub_task_type"] = OTXTaskType.INSTANCE_SEGMENTATION.value
         config_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(config_path, "x") as f:
+        with open(config_path, "w") as f:
             yaml.dump(extended_config, f, default_flow_style=False)
