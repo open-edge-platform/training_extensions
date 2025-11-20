@@ -149,7 +149,7 @@ class OTXTrainer(Trainer):
                 revision_id=self._dataset_service.save_revision(project_id, dm_dataset),
             )
 
-    @step("Prepare Model Metadata & OTX Configuration")
+    @step("Prepare Model and Training Configuration")
     def prepare_model(self, training_params: TrainingParams, dataset_revision_id: UUID) -> None:
         if training_params.project_id is None:
             raise ValueError("Project ID must be provided for model preparation")
