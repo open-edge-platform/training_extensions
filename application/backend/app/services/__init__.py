@@ -22,6 +22,7 @@ from .project_service import ProjectService
 from .sink_service import SinkService
 from .source_service import SourceService, SourceUpdateService
 from .system_service import SystemService
+from .training_configuration_service import TrainingConfigurationService
 from .video_stream_service import VideoStreamService
 
 __all__ = [
@@ -46,5 +47,6 @@ __all__ = [
     "SourceService",
     "SourceUpdateService",
     "SystemService",
+    "TrainingConfigurationService",
     "VideoStreamService",
 ]

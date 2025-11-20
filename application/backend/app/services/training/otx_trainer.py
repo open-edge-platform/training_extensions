@@ -8,22 +8,49 @@ from dataclasses import dataclass
 from pathlib import Path
 from uuid import UUID
 
+import yaml
 from datumaro.experimental import Dataset
 from datumaro.experimental.fields import Subset
 from loguru import logger
+from otx.types.task import OTXTaskType
 from sqlalchemy.orm import Session
 
+from app.core.jobs import JobType
 from app.core.run import ExecutionContext
-from app.models import DatasetItemAnnotationStatus
+from app.models import DatasetItemAnnotationStatus, TaskType
+from app.models.training_configuration.configuration import TrainingConfiguration
 from app.schemas.model import TrainingStatus
 from app.schemas.project import TaskBase
-from app.services import BaseWeightsService, DatasetService, ModelRevisionMetadata, ModelService
+from app.services import (
+    BaseWeightsService,
+    DatasetService,
+    ModelRevisionMetadata,
+    ModelService,
+    TrainingConfigurationService,
+)
 
 from .base import Trainer, step
 from .models import TrainingParams
 from .subset_assignment import SplitRatios, SubsetAssigner, SubsetService
 
 MODEL_WEIGHTS_PATH = "model_weights_path"
+
+
+# TODO: Consider adopting some lightweight DI framework
+# As the number of constructor dependencies grows and start violating ruff rules, we should evaluate DI frameworks like:
+# - dependency-injector (https://python-dependency-injector.ets-labs.org/)
+# - injector (https://github.com/python-injector/injector)
+# - python-inject (https://github.com/ivankorobkov/python-inject)
+@dataclass(frozen=True)
+class TrainingDependencies:
+    data_dir: Path
+    base_weights_service: BaseWeightsService
+    subset_service: SubsetService
+    dataset_service: DatasetService
+    model_service: ModelService
+    training_configuration_service: TrainingConfigurationService
+    subset_assigner: SubsetAssigner
+    db_session_factory: Callable[[], AbstractContextManager[Session]]
 
 
 @dataclass(frozen=True)
@@ -39,22 +66,17 @@ class OTXTrainer(Trainer):
 
     def __init__(
         self,
-        data_dir: Path,
-        base_weights_service: BaseWeightsService,
-        subset_service: SubsetService,
-        dataset_service: DatasetService,
-        model_service: ModelService,
-        subset_assigner: SubsetAssigner,
-        db_session_factory: Callable[[], AbstractContextManager[Session]],
+        training_deps: TrainingDependencies,
     ):
         super().__init__()
-        self._data_dir = data_dir
-        self._base_weights_service = base_weights_service
-        self._subset_service = subset_service
-        self._dataset_service = dataset_service
-        self._model_service = model_service
-        self._subset_assigner = subset_assigner
-        self._db_session_factory = db_session_factory
+        self._data_dir = training_deps.data_dir
+        self._base_weights_service = training_deps.base_weights_service
+        self._subset_service = training_deps.subset_service
+        self._dataset_service = training_deps.dataset_service
+        self._model_service = training_deps.model_service
+        self._training_configuration_service = training_deps.training_configuration_service
+        self._subset_assigner = training_deps.subset_assigner
+        self._db_session_factory = training_deps.db_session_factory
 
     @step("Prepare Model Weights")
     def prepare_weights(self, training_params: TrainingParams) -> Path:
@@ -127,19 +149,28 @@ class OTXTrainer(Trainer):
                 revision_id=self._dataset_service.save_revision(project_id, dm_dataset),
             )
 
-    @step("Prepare Model Metadata")
+    @step("Prepare Model and Training Configuration")
     def prepare_model(self, training_params: TrainingParams, dataset_revision_id: UUID) -> None:
         if training_params.project_id is None:
             raise ValueError("Project ID must be provided for model preparation")
         with self._db_session_factory() as db:
+            self._training_configuration_service.set_db_session(db)
             self._model_service.set_db_session(db)
+            configuration = self._training_configuration_service.get_training_configuration(
+                project_id=training_params.project_id,
+                model_architecture_id=training_params.model_architecture_id,
+            )
+            config_path = self.__build_model_config_path(
+                self._data_dir, training_params.project_id, training_params.model_id
+            )
+            self.__persist_configuration(configuration, config_path, training_params.task)
             self._model_service.create_revision(
                 ModelRevisionMetadata(
                     model_id=training_params.model_id,
                     project_id=training_params.project_id,
                     architecture_id=training_params.model_architecture_id,
                     parent_revision_id=training_params.parent_model_revision_id,
-                    training_configuration=None,  # TODO: to be set when config is added
+                    training_configuration=configuration,
                     dataset_revision_id=dataset_revision_id,
                     training_status=TrainingStatus.NOT_STARTED,
                 )
@@ -172,5 +203,31 @@ class OTXTrainer(Trainer):
         self.train_model(training_params)
 
     @staticmethod
-    def __build_model_weights_path(data_dir: Path, project_id: UUID, model_id: UUID) -> Path:
-        return data_dir / "projects" / str(project_id) / "models" / str(model_id) / "model.pth"
+    def __base_model_path(data_dir: Path, project_id: UUID, model_id: UUID) -> Path:
+        return data_dir / "projects" / str(project_id) / "models" / str(model_id)
+
+    @classmethod
+    def __build_model_weights_path(cls, data_dir: Path, project_id: UUID, model_id: UUID) -> Path:
+        return cls.__base_model_path(data_dir, project_id, model_id) / "model.pth"
+
+    @classmethod
+    def __build_model_config_path(cls, data_dir: Path, project_id: UUID, model_id: UUID) -> Path:
+        return cls.__base_model_path(data_dir, project_id, model_id) / "config.yaml"
+
+    @staticmethod
+    def __persist_configuration(configuration: TrainingConfiguration, config_path: Path, task: TaskBase) -> None:
+        extended_config = configuration.model_dump(exclude_none=True)
+        extended_config["job_type"] = JobType.TRAIN.value
+        match task.task_type:
+            case TaskType.CLASSIFICATION:
+                if task.exclusive_labels:
+                    extended_config["sub_task_type"] = OTXTaskType.MULTI_CLASS_CLS.value
+                else:
+                    extended_config["sub_task_type"] = OTXTaskType.MULTI_LABEL_CLS.value
+            case TaskType.DETECTION:
+                extended_config["sub_task_type"] = OTXTaskType.DETECTION.value
+            case TaskType.INSTANCE_SEGMENTATION:
+                extended_config["sub_task_type"] = OTXTaskType.INSTANCE_SEGMENTATION.value
+        config_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(config_path, "w") as f:
+            yaml.dump(extended_config, f, default_flow_style=False)
