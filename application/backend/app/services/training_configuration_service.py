@@ -7,16 +7,15 @@ from sqlalchemy.orm import Session
 from app.models.training_configuration.configuration import PartialTrainingConfiguration, TrainingConfiguration
 from app.repositories import ModelRevisionRepository, ProjectRepository
 from app.repositories.training_configuration_repo import TrainingConfigurationRepository
-from app.services import ResourceNotFoundError, ResourceType
+from app.services import BaseSessionManagedService, ResourceNotFoundError, ResourceType
 from app.services.tools import ConfigurationOverlayTools
 from app.supported_models import SupportedModels
 from app.supported_models.default_models import DefaultModels
 
 
-class TrainingConfigurationService:
-    def __init__(self, db_session: Session) -> None:
-        self._db_session = db_session
-        self._training_config_repo = TrainingConfigurationRepository(db_session)
+class TrainingConfigurationService(BaseSessionManagedService):
+    def __init__(self, db_session: Session | None = None) -> None:
+        super().__init__(db_session)
 
     def get_training_configuration(
         self,
@@ -63,7 +62,7 @@ class TrainingConfigurationService:
         Returns:
             TrainingConfiguration: The training configuration object.
         """
-        model = ModelRevisionRepository(str(project_id), self._db_session).get_by_id(str(model_revision_id))
+        model = ModelRevisionRepository(str(project_id), self.db_session).get_by_id(str(model_revision_id))
         if not model:
             raise ResourceNotFoundError(ResourceType.MODEL, str(model_revision_id))
         return TrainingConfiguration.model_validate(model.training_configuration)
@@ -79,7 +78,7 @@ class TrainingConfigurationService:
         Returns:
             TrainingConfiguration: The training configuration object.
         """
-        stored_config = TrainingConfigurationRepository(self._db_session).get_by_project_and_model_architecture(
+        stored_config = TrainingConfigurationRepository(self.db_session).get_by_project_and_model_architecture(
             project_id=str(project_id),
             model_architecture_id=model_architecture_id,
         )
@@ -102,7 +101,7 @@ class TrainingConfigurationService:
         Returns:
             TrainingConfiguration: The default training configuration object.
         """
-        project = ProjectRepository(self._db_session).get_by_id(str(project_id))
+        project = ProjectRepository(self.db_session).get_by_id(str(project_id))
         if not project:
             raise ResourceNotFoundError(ResourceType.PROJECT, str(project_id))
 
@@ -133,7 +132,7 @@ class TrainingConfigurationService:
         Returns:
             TrainingConfiguration: The updated training configuration object.
         """
-        project = ProjectRepository(self._db_session).get_by_id(str(project_id))
+        project = ProjectRepository(self.db_session).get_by_id(str(project_id))
         if not project:
             raise ResourceNotFoundError(ResourceType.PROJECT, str(project_id))
 
@@ -150,7 +149,8 @@ class TrainingConfigurationService:
 
         validated_updated_config = PartialTrainingConfiguration(**updated_config)  # type: ignore[arg-type]
 
-        self._training_config_repo.create_or_update(
+        training_config_repo = TrainingConfigurationRepository(self.db_session)
+        training_config_repo.create_or_update(
             project_id=str(project_id),
             model_architecture_id=model_architecture_id,
             configuration_data=validated_updated_config.model_dump(),

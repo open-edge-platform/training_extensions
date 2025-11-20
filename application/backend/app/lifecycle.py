@@ -19,11 +19,12 @@ from app.core.run import Runnable, RunnableFactory
 from app.db import MigrationManager, get_db_session
 from app.scheduler import Scheduler
 from app.schemas.job import JobType
-from app.services import DatasetService, LabelService, ModelService
+from app.services import DatasetService, LabelService, ModelService, TrainingConfigurationService
 from app.services.base_weights_service import BaseWeightsService
 from app.services.data_collect import DataCollector
 from app.services.event.event_bus import EventBus
 from app.services.training import OTXTrainer
+from app.services.training.otx_trainer import TrainingDependencies
 from app.services.training.subset_assignment import SubsetAssigner, SubsetService
 from app.settings import get_settings
 from app.webrtc.manager import WebRTCManager
@@ -46,23 +47,20 @@ def setup_job_controller(data_dir: Path, max_parallel_jobs: int) -> tuple[JobQue
     """
     q = JobQueue()
     job_runnable_factory = RunnableFactory[JobType, Runnable]()
-    base_weights_service = BaseWeightsService(data_dir=data_dir)
-    subset_service = SubsetService()
-    subset_assigner = SubsetAssigner()
-    label_service = LabelService()
-    model_service = ModelService()
-    dataset_service = DatasetService(data_dir=data_dir, label_service=label_service)
     job_runnable_factory.register(
         JobType.TRAIN,
         partial(
             OTXTrainer,
-            base_weights_service=base_weights_service,
-            subset_service=subset_service,
-            subset_assigner=subset_assigner,
-            dataset_service=dataset_service,
-            model_service=model_service,
-            data_dir=data_dir,
-            db_session_factory=get_db_session,
+            training_deps=TrainingDependencies(
+                base_weights_service=BaseWeightsService(data_dir=data_dir),
+                subset_service=SubsetService(),
+                subset_assigner=SubsetAssigner(),
+                dataset_service=DatasetService(data_dir=data_dir, label_service=LabelService()),
+                model_service=ModelService(),
+                training_configuration_service=TrainingConfigurationService(),
+                data_dir=data_dir,
+                db_session_factory=get_db_session,
+            ),
         ),
     )
     process_runner_factory = ProcessRunnerFactory(job_runnable_factory)
