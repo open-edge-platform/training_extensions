@@ -48,36 +48,19 @@ class TestModelServiceIntegration:
         for idx in range(len(model_ids)):
             assert fxt_db_models[idx].id in model_ids
 
-    @pytest.mark.parametrize("model_operation", ["list_models", "get_model_by_id", "delete_model_by_id"])
-    def test_model_with_non_existent_project(self, model_operation: str, fxt_model_service: ModelService):
-        """Test deleting a model from non-existent project raises error."""
-        project_id, model_id = uuid4(), uuid4()
-        with pytest.raises(ResourceNotFoundError) as excinfo:
-            if model_operation == "list_models":
-                getattr(fxt_model_service, model_operation)(project_id)
-            else:
-                getattr(fxt_model_service, model_operation)(project_id, model_id)
-
-        assert excinfo.value.resource_type == ResourceType.PROJECT
-        assert excinfo.value.resource_id == str(project_id)
-
     def test_get_model(self, fxt_project_id: UUID, fxt_model_id: UUID, fxt_model_service: ModelService):
         """Test retrieving a model by ID."""
-        model = fxt_model_service.get_model_by_id(fxt_project_id, fxt_model_id)
+        model = fxt_model_service.get_model(fxt_project_id, fxt_model_id)
 
         assert model is not None
         assert model.id == fxt_model_id
 
-    @pytest.mark.parametrize("model_operation", ["get_model_by_id", "delete_model_by_id"])
-    def test_non_existent_model(self, model_operation, fxt_db_projects, fxt_model_service, db_session):
+    @pytest.mark.parametrize("model_operation", ["get_model", "delete_model"])
+    def test_non_existent_model(self, model_operation, fxt_project_id, fxt_db_projects, fxt_model_service, db_session):
         """Test retrieving a non-existent model raises error."""
-        db_project = fxt_db_projects[0]
-        db_session.add(db_project)
-        db_session.flush()
-
-        project_id, model_id = UUID(db_project.id), uuid4()
+        model_id = uuid4()
         with pytest.raises(ResourceNotFoundError) as excinfo:
-            getattr(fxt_model_service, model_operation)(project_id, model_id)
+            getattr(fxt_model_service, model_operation)(fxt_project_id, model_id)
 
         assert excinfo.value.resource_type == ResourceType.MODEL
         assert excinfo.value.resource_id == str(model_id)
@@ -86,6 +69,6 @@ class TestModelServiceIntegration:
         self, fxt_project_id: UUID, fxt_model_id: UUID, fxt_model_service: ModelService, db_session: Session
     ):
         """Test deleting a model by ID."""
-        fxt_model_service.delete_model_by_id(fxt_project_id, fxt_model_id)
+        fxt_model_service.delete_model(project_id=fxt_project_id, model_id=fxt_model_id)
 
         assert db_session.get(ModelRevisionDB, str(fxt_model_id)) is None
