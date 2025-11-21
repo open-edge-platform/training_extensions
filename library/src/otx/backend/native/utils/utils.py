@@ -12,18 +12,6 @@ _T = TypeVar("_T")
 _V = TypeVar("_V")
 
 
-def is_ckpt_from_otx_v1(ckpt: dict) -> bool:
-    """Check the checkpoint where it comes from.
-
-    Args:
-        ckpt (dict): the checkpoint file
-
-    Returns:
-        bool: True means the checkpoint comes from otx1
-    """
-    return "model" in ckpt and "VERSION" in ckpt and ckpt["VERSION"] == 1
-
-
 def is_ckpt_for_finetuning(ckpt: dict) -> bool:
     """Check the checkpoint will be used to finetune.
 
@@ -59,7 +47,7 @@ def mock_modules_for_chkpt() -> Iterator[None]:
     import types
 
     import otx
-    from otx.types.label import AnomalyLabelInfo, HLabelInfo, LabelInfo, SegLabelInfo
+    from otx.types.label import HLabelInfo, LabelInfo, SegLabelInfo
 
     # Save original sys.modules
     original_sys_modules = dict(sys.modules)
@@ -76,7 +64,6 @@ def mock_modules_for_chkpt() -> Iterator[None]:
         setattr(sys.modules["otx.types.label"], "LabelInfo", LabelInfo)  # noqa: B010
         setattr(sys.modules["otx.types.label"], "HLabelInfo", HLabelInfo)  # noqa: B010
         setattr(sys.modules["otx.types.label"], "SegLabelInfo", SegLabelInfo)  # noqa: B010
-        setattr(sys.modules["otx.types.label"], "AnomalyLabelInfo", AnomalyLabelInfo)  # noqa: B010
         setattr(sys.modules["otx.types.task"], "OTXTrainType", OTXTrainType)  # noqa: B010
 
         sys.modules["otx.core"] = types.ModuleType("otx.core")

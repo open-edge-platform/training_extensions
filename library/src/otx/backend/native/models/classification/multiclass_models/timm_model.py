@@ -18,7 +18,6 @@ from otx.backend.native.models.classification.multiclass_models.base import (
     OTXMulticlassClsModel,
 )
 from otx.backend.native.models.classification.necks.gap import GlobalAveragePooling
-from otx.backend.native.models.utils.support_otx_v1 import OTXv1Helper
 from otx.backend.native.schedulers import LRSchedulerListCallable
 from otx.metrics.accuracy import MultiClassClsMetricCallable
 from otx.types.label import LabelInfoTypes
@@ -60,7 +59,7 @@ class TimmModelMulticlassCls(OTXMulticlassClsModel):
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams,
+        data_input_params: DataInputParams | None = None,
         model_name: str = "tf_efficientnetv2_s.in21k",
         freeze_backbone: bool = False,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
@@ -91,10 +90,6 @@ class TimmModelMulticlassCls(OTXMulticlassClsModel):
             ),
             loss=nn.CrossEntropyLoss(),
         )
-
-    def load_from_otx_v1_ckpt(self, state_dict: dict, add_prefix: str = "model.") -> dict:
-        """Load the previous OTX ckpt according to OTX2.0."""
-        return OTXv1Helper.load_cls_effnet_v2_ckpt(state_dict, "multiclass", add_prefix)
 
     def forward_for_tracing(self, image: torch.Tensor) -> torch.Tensor | dict[str, torch.Tensor]:
         """Model forward function used for the model tracing during model exportation."""

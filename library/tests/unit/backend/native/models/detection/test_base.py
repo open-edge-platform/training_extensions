@@ -34,21 +34,12 @@ class TestOTXDetectionModel:
     def mock_scheduler(self):
         return lambda _: create_autospec([ReduceLROnPlateau])
 
-    @pytest.fixture(
-        params=[
-            {
-                "confidence_threshold": 0.35,
-                "state_dict": {},
-            },
-            {
-                "hyper_parameters": {"best_confidence_threshold": 0.35},
-                "state_dict": {},
-            },
-        ],
-        ids=["v1", "v2"],
-    )
+    @pytest.fixture
     def mock_ckpt(self, request):
-        return request.param
+        return {
+            "hyper_parameters": {"best_confidence_threshold": 0.35},
+            "state_dict": {},
+        }
 
     @pytest.fixture
     def config(self) -> DictConfig:

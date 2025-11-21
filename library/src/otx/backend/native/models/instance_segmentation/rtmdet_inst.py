@@ -12,7 +12,7 @@ from torch import nn
 
 from otx.backend.native.exporter.base import OTXModelExporter
 from otx.backend.native.exporter.native import OTXNativeModelExporter
-from otx.backend.native.models.base import DefaultOptimizerCallable, DefaultSchedulerCallable
+from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.backend.native.models.common.losses import GIoULoss, QualityFocalLoss
 from otx.backend.native.models.common.utils.assigners import DynamicSoftLabelAssigner
 from otx.backend.native.models.common.utils.coders import DistancePointBBoxCoder
@@ -33,7 +33,6 @@ if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from torch import Tensor
 
-    from otx.backend.native.models.base import DataInputParams
     from otx.backend.native.schedulers import LRSchedulerListCallable
     from otx.metrics import MetricCallable
     from otx.types.label import LabelInfoTypes
@@ -44,7 +43,8 @@ class RTMDetInst(OTXInstanceSegModel):
 
     Args:
         label_info (LabelInfoTypes): Information about the labels used in the model.
-        data_input_params (DataInputParams): Parameters for the data input.
+        data_input_params (DataInputParams | None, optional): Parameters for the image data preprocessing.
+            If None is given, default parameters for the specific model will be used.
         model_name (str, optional): Name of the model. Defaults to "rtmdet_inst_tiny".
         optimizer (OptimizerCallable, optional): Optimizer for the model. Defaults to DefaultOptimizerCallable.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Scheduler for the model.
@@ -56,7 +56,7 @@ class RTMDetInst(OTXInstanceSegModel):
         explain_mode (bool, optional): Whether to enable explainable AI mode. Defaults to False.
     """
 
-    pretrained_weights: ClassVar[dict[str, str]] = {
+    _pretrained_weights: ClassVar[dict[str, str]] = {
         "rtmdet_inst_tiny": (
             "https://download.openmmlab.com/mmdetection/v3.0/rtmdet/rtmdet-ins_tiny_8xb32-300e_coco/"
             "rtmdet-ins_tiny_8xb32-300e_coco_20221130_151727-ec670f7e.pth"
@@ -66,7 +66,7 @@ class RTMDetInst(OTXInstanceSegModel):
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams,
+        data_input_params: DataInputParams | None = None,
         model_name: Literal["rtmdet_inst_tiny"] = "rtmdet_inst_tiny",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
@@ -149,7 +149,7 @@ class RTMDetInst(OTXInstanceSegModel):
         )
 
         model.init_weights()
-        load_checkpoint(model, self.pretrained_weights[self.model_name], map_location="cpu")
+        load_checkpoint(model, self._pretrained_weights[self.model_name], map_location="cpu")
 
         return model
 
@@ -193,3 +193,7 @@ class RTMDetInst(OTXInstanceSegModel):
         }
         meta_info_list = [meta_info] * len(inputs)
         return self.model.export(inputs, meta_info_list, explain_mode=self.explain_mode)
+
+    @property
+    def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
+        return DataInputParams(input_size=(640, 640), mean=(103.53, 116.28, 123.675), std=(57.375, 57.12, 58.395))

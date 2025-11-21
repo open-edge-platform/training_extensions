@@ -35,7 +35,7 @@ class DinoV2Seg(OTXSegmentationModel):
 
     Args:
         label_info (LabelInfoTypes): Information about the hierarchical labels.
-        data_input_params (DataInputParams): Parameters for data input.
+        data_input_params (DataInputParams | None, optional): Parameters for the image data preprocessing.
         model_name (Literal, optional): Name of the model. Defaults to "dinov2-small-seg".
         optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
@@ -52,7 +52,7 @@ class DinoV2Seg(OTXSegmentationModel):
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams,
+        data_input_params: DataInputParams | None = None,
         model_name: Literal["dinov2-small-seg"] = "dinov2-small-seg",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,

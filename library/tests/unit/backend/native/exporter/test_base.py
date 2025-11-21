@@ -1,13 +1,13 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 from onnx import ModelProto
 from onnxconverter_common import float16
 
-from otx.backend.native.exporter.base import OTXExportFormatType, OTXModelExporter, OTXPrecisionType, ZipFile
+from otx.backend.native.exporter.base import OTXExportFormatType, OTXModelExporter, OTXPrecisionType
 from otx.backend.native.models.base import DataInputParams
 from otx.types.export import TaskLevelExportParameters
 
@@ -26,9 +26,7 @@ def mock_model():
 
 
 @pytest.fixture
-def exporter(mocker):
-    ZipFile.write = MagicMock()
-    mocker.patch("otx.backend.native.exporter.base.json")
+def exporter():
     return MockModelExporter(
         task_level_export_parameters=MagicMock(TaskLevelExportParameters),
         data_input_params=DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
@@ -54,21 +52,6 @@ class TestOTXModelExporter:
         export_format = "unsupported_format"
         with pytest.raises(ValueError, match=f"Unsupported export format: {export_format}"):
             exporter.export(mock_model, tmp_path, export_format=export_format)
-
-    def test_to_exportable_code(self, mock_model, exporter, tmp_path):
-        from otx.backend.native.exporter.base import ZipFile
-
-        ZipFile.writestr = MagicMock()
-
-        base_model_name = "test_model"
-        output_dir = tmp_path / "exportable_code"
-        precision = OTXPrecisionType.FP32
-
-        with patch("builtins.open", new_callable=MagicMock):
-            exporter.to_openvino = MagicMock()
-            result = exporter.to_exportable_code(mock_model, output_dir, base_model_name, precision)
-
-        assert result == output_dir / "exportable_code.zip"
 
     def test_postprocess_openvino_model(self, mock_model, exporter):
         # test output names do not match exporter parameters

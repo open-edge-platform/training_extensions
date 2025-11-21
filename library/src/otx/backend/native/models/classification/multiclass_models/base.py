@@ -37,7 +37,8 @@ class OTXMulticlassClsModel(OTXModel):
         label_info (LabelInfoTypes | int | Sequence): Information about the labels used in the model.
             If `int` is given, label info will be constructed from number of classes,
             if `Sequence` is given, label info will be constructed from the sequence of label names.
-        data_input_params (DataInputParams): Parameters for data input.
+        data_input_params (DataInputParams | None, optional): Parameters for the image data preprocessing.
+            If None is given, default parameters for the specific model will be used.
         model_name (str, optional): Name of the model. Defaults to "multiclass_classification_model".
         optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
@@ -49,7 +50,7 @@ class OTXMulticlassClsModel(OTXModel):
     def __init__(
         self,
         label_info: LabelInfoTypes | int | Sequence,
-        data_input_params: DataInputParams,
+        data_input_params: DataInputParams | None = None,
         model_name: str = "multiclass_classification_model",
         freeze_backbone: bool = False,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
@@ -183,3 +184,7 @@ class OTXMulticlassClsModel(OTXModel):
             saliency_map=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
             feature_vector=[feature_vector.unsqueeze(0) for feature_vector in outputs["feature_vector"]],
         )
+
+    @property
+    def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
+        return DataInputParams(input_size=(224, 224), mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375))

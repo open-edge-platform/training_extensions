@@ -19,7 +19,7 @@ from torchmetrics import Metric, MetricCollection
 from torchvision import tv_tensors
 from torchvision.models.detection.image_list import ImageList
 
-from otx.backend.native.models.base import DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel
+from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel
 from otx.backend.native.models.instance_segmentation.segmentors.maskrcnn_tv import MaskRCNN
 from otx.backend.native.models.instance_segmentation.segmentors.two_stage import TwoStageDetector
 from otx.backend.native.models.utils.utils import InstanceData, load_checkpoint
@@ -43,7 +43,6 @@ if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from torch import nn
 
-    from otx.backend.native.models.base import DataInputParams
     from otx.metrics import MetricCallable
 
 
@@ -59,7 +58,8 @@ class OTXInstanceSegModel(OTXModel):
         label_info (LabelInfoTypes | int | Sequence): Information about the labels used in the model.
             If `int` is given, label info will be constructed from number of classes,
             if `Sequence` is given, label info will be constructed from the sequence of label names.
-        data_input_params (DataInputParams): Parameters for the data input.
+        data_input_params (DataInputParams | None, optional): Parameters for the image data preprocessing.
+            If None is given, default parameters for the specific model will be used.
         model_name (str, optional): Name of the model. Defaults to "inst_segm_model".
         optimizer (OptimizerCallable, optional): Optimizer for the model. Defaults to DefaultOptimizerCallable.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Scheduler for the model.
@@ -74,7 +74,7 @@ class OTXInstanceSegModel(OTXModel):
     def __init__(
         self,
         label_info: LabelInfoTypes | int | Sequence,
-        data_input_params: DataInputParams,
+        data_input_params: DataInputParams | None = None,
         model_name: str = "inst_segm_model",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
@@ -615,3 +615,7 @@ class OTXInstanceSegModel(OTXModel):
         func_type = types.MethodType
         self.model.forward = func_type(self.original_model_forward, self.model)
         self.original_model_forward = None
+
+    @property
+    def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
+        return DataInputParams(input_size=(1024, 1024), mean=(103.53, 116.28, 123.675), std=(57.375, 57.12, 58.395))

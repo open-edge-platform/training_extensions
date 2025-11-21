@@ -4,14 +4,14 @@ on:
   push:
     branches:
       - develop
-      - releases/**
+      - release/**
     tags:
       - "v*"
   pull_request:
   merge_group:
     branches:
       - develop
-      - releases/**
+      - release/**
   workflow_dispatch: # run on request (no need for PR)
 
 permissions: {} # No permissions by default
@@ -148,7 +148,6 @@ jobs:
           - task: "multi_class_cls"
           - task: "multi_label_cls"
           - task: "h_label_cls"
-          - task: "anomaly"
           - task: "keypoint_detection"
           - task: "detection"
           - task: "instance_segmentation"
