@@ -511,28 +511,26 @@ otx<span class="w">                                           </span><span class
 </section>
 <section id="run-tests">
 <h2>Run tests<a class="headerlink" href="#run-tests" title="Link to this heading">#</a></h2>
-<p>To run tests locally, install development dependencies:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s1">&#39;.[dev]&#39;</span>
-pytest<span class="w"> </span>tests/
+<p>To run tests locally, just call <cite>pytest</cite>. <cite>uv</cite> will automatically sync all necessary dependencies.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>tests
 </pre></div>
 </div>
-<p>To run integration tests using <cite>tox</cite>:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>tox<span class="w"> </span>--with<span class="w"> </span>tox-uv
-tox<span class="w"> </span>-e<span class="w"> </span>integration-test-all
+<p>To run integration tests:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>tests/integration
 </pre></div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The first time <cite>tox</cite> is run, it will create virtual environments and install all required dependencies.
-This may take several minutes before the actual tests begin.</p>
+<p>Integration tests may be slow because they involve downloading datasets and simulating training rounds.
+It is recommended to run them on a platform with GPU/XPU support.</p>
 </div>
 </section>
 <section id="troubleshooting">
 <h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading">#</a></h2>
 <ol class="arabic simple">
-<li><p>If you encounter issues with <cite>uv pip</cite>, update uv:</p></li>
+<li><p>If you encounter issues with <cite>uv</cite>, update it:</p></li>
 </ol>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>uv
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>uv<span class="w"> </span>self<span class="w"> </span>update
 </pre></div>
 </div>
 <p>2. If you’re having issues installing <cite>torch</cite> or <cite>mmcv</cite>, check CUDA compatibility with your PyTorch version.
@@ -541,7 +539,6 @@ Update your CUDA toolkit and drivers if needed. See <a class="reference external
 <li><p>If you’re behind a proxy server, set your proxy environment variable:</p></li>
 </ol>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">HTTP_PROXY</span><span class="o">=</span>http://&lt;user&gt;:&lt;password&gt;@&lt;proxy&gt;:&lt;port&gt;
-uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>&lt;package&gt;
 </pre></div>
 </div>
 <ol class="arabic simple" start="4">

@@ -398,11 +398,10 @@ It allows displaying the saliency maps, which provide the locality where the mod
 <p>This tutorial uses an object detection model for example, however for other tasks the functionality remains the same - you just need to replace the input dataset with your own.</p>
 </div>
 <p>For visualization we use images from WGISD dataset from the <a class="reference internal" href="how_to_train/detection.html"><span class="doc">object detection tutorial</span></a> together with trained model.</p>
-<p>1. Activate the virtual environment
-created in the previous step.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>.otx/bin/activate
-<span class="c1"># or by this line, if you created an environment, using tox</span>
-.<span class="w"> </span>venv/otx/bin/activate
+<ol class="arabic simple">
+<li><p>Activate the virtual environment created in the previous step.</p></li>
+</ol>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">source</span><span class="w"> </span>.venv/bin/activate
 </pre></div>
 </div>
 <p>2. <code class="docutils literal notranslate"><span class="pre">otx</span> <span class="pre">predict</span></code> with the <code class="docutils literal notranslate"><span class="pre">--explain</span> <span class="pre">True</span></code> parameter returns saliency maps,

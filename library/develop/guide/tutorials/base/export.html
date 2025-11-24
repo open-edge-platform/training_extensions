@@ -398,11 +398,10 @@ As a result of this step, you’ll get the exported model together with the self
 <p class="admonition-title">Note</p>
 <p>“export” method should be implemented within a framework engine like OTXEngine to be able to export the model. Optimization and validation steps are required to use OVEngine.</p>
 </div>
-<p>1. Activate the virtual environment
-created in the previous step.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">source</span><span class="w"> </span>.otx/bin/activate
-<span class="c1"># or by this line, if you created an environment, using tox</span>
-.<span class="w"> </span>venv/otx/bin/activate
+<ol class="arabic simple">
+<li><p>Activate the virtual environment created in the previous step.</p></li>
+</ol>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">source</span><span class="w"> </span>.venv/bin/activate
 </pre></div>
 </div>
 <p>2. <code class="docutils literal notranslate"><span class="pre">otx</span> <span class="pre">export</span></code> returns an <code class="docutils literal notranslate"><span class="pre">.onnx</span></code>, <code class="docutils literal notranslate"><span class="pre">openvino.xml(.bin)</span></code> and <code class="docutils literal notranslate"><span class="pre">.zip</span></code>
