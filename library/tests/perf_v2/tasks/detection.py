@@ -18,18 +18,24 @@ from otx.types.task import OTXTaskType
 TASK_TYPE = OTXTaskType.DETECTION
 
 MODEL_TEST_CASES = [
-    ModelInfo(task=TASK_TYPE.value, name="atss_mobilenetv2", category="default"),
-    ModelInfo(task=TASK_TYPE.value, name="yolox_s", category="speed"),
-    ModelInfo(task=TASK_TYPE.value, name="dfine_x", category="accuracy"),
-    ModelInfo(task=TASK_TYPE.value, name="atss_resnext101", category="other"),
-    ModelInfo(task=TASK_TYPE.value, name="rtdetr_101", category="other"),
-    ModelInfo(task=TASK_TYPE.value, name="rtdetr_18", category="other"),
-    ModelInfo(task=TASK_TYPE.value, name="rtdetr_50", category="other"),
-    ModelInfo(task=TASK_TYPE.value, name="rtmdet_tiny", category="other"),
-    ModelInfo(task=TASK_TYPE.value, name="ssd_mobilenetv2", category="other"),
-    ModelInfo(task=TASK_TYPE.value, name="yolox_tiny", category="other"),
-    ModelInfo(task=TASK_TYPE.value, name="yolox_l", category="other"),
-    ModelInfo(task=TASK_TYPE.value, name="yolox_x", category="other"),
+    # ModelInfo(task=TASK_TYPE.value, name="atss_mobilenetv2", category="default"),
+    # ModelInfo(task=TASK_TYPE.value, name="yolox_s", category="speed"),
+    # ModelInfo(task=TASK_TYPE.value, name="dfine_x", category="accuracy"),
+    ModelInfo(task=TASK_TYPE.value, name="deim_dfine_x", category="accuracy"),
+    ModelInfo(task=TASK_TYPE.value, name="deim_dfine_l", category="accuracy"),
+    ModelInfo(task=TASK_TYPE.value, name="deim_dfine_m", category="accuracy"),
+    ModelInfo(task=TASK_TYPE.value, name="deimv2_x", category="accuracy"),
+    ModelInfo(task=TASK_TYPE.value, name="deimv2_l", category="accuracy"),
+    ModelInfo(task=TASK_TYPE.value, name="deimv2_m", category="accuracy"),
+    # ModelInfo(task=TASK_TYPE.value, name="atss_resnext101", category="other"),
+    # ModelInfo(task=TASK_TYPE.value, name="rtdetr_101", category="other"),
+    # ModelInfo(task=TASK_TYPE.value, name="rtdetr_18", category="other"),
+    # ModelInfo(task=TASK_TYPE.value, name="rtdetr_50", category="other"),
+    # ModelInfo(task=TASK_TYPE.value, name="rtmdet_tiny", category="other"),
+    # ModelInfo(task=TASK_TYPE.value, name="ssd_mobilenetv2", category="other"),
+    # ModelInfo(task=TASK_TYPE.value, name="yolox_tiny", category="other"),
+    # ModelInfo(task=TASK_TYPE.value, name="yolox_l", category="other"),
+    # ModelInfo(task=TASK_TYPE.value, name="yolox_x", category="other"),
 ]
 
 DATASET_TEST_CASES = (

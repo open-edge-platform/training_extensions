@@ -7,7 +7,8 @@ from __future__ import annotations
 
 import copy
 import math
-from typing import Callable
+from typing import Callable, List, Tuple
+import functools
 
 import torch
 import torch.nn.functional as f
@@ -15,7 +16,45 @@ from torch import Tensor, nn
 from torch.nn import init
 
 from otx.backend.native.models.common.utils.utils import get_clones
-from otx.backend.native.models.modules.transformer import deformable_attention_core_func
+from otx.backend.native.models.modules.transformer import deformable_attention_core_func, deformable_attention_core_func_v2
+
+
+def get_activation(act: str, inpace: bool=True):
+    """get activation
+    """
+    if act is None:
+        return nn.Identity()
+
+    elif isinstance(act, nn.Module):
+        return act
+
+    act = act.lower()
+
+    if act == 'silu' or act == 'swish':
+        m = nn.SiLU()
+
+    elif act == 'relu':
+        m = nn.ReLU()
+
+    elif act == 'leaky_relu':
+        m = nn.LeakyReLU()
+
+    elif act == 'silu':
+        m = nn.SiLU()
+
+    elif act == 'gelu':
+        m = nn.GELU()
+
+    elif act == 'hardsigmoid':
+        m = nn.Hardsigmoid()
+
+    else:
+        raise RuntimeError('')
+
+    if hasattr(m, 'inplace'):
+        m.inplace = inpace
+
+    return m
 
 
 class TransformerEncoderLayer(nn.Module):
@@ -87,6 +126,36 @@ class TransformerEncoderLayer(nn.Module):
         if not self.normalize_before:
             src = self.norm2(src)
         return src
+
+
+class ListForwardMixin(object):
+    def forward(self, x: Tensor):
+        raise NotImplementedError
+
+    def forward_list(self, x_list: List[Tensor]) -> List[Tensor]:
+        x_flat, shapes, num_tokens = cat_keep_shapes(x_list)
+        x_flat = self.forward(x_flat)
+        return uncat_with_shapes(x_flat, shapes, num_tokens)
+
+
+class LayerScale(nn.Module):
+    def __init__(
+        self,
+        dim: int,
+        init_values: Union[float, Tensor] = 1e-5,
+        inplace: bool = False,
+        device=None,
+    ) -> None:
+        super().__init__()
+        self.inplace = inplace
+        self.gamma = nn.Parameter(torch.empty(dim, device=device))
+        self.init_values = init_values
+
+    def reset_parameters(self):
+        nn.init.constant_(self.gamma, self.init_values)
+
+    def forward(self, x: Tensor) -> Tensor:
+        return x.mul_(self.gamma) if self.inplace else x * self.gamma
 
 
 class TransformerEncoder(nn.Module):
@@ -453,6 +522,126 @@ class MSDeformableAttentionV2(nn.Module):
         return output.permute(0, 2, 1)
 
 
+class MLPV2(nn.Module):
+    def __init__(self, input_dim, hidden_dim, output_dim, num_layers=3, activation='relu'):
+        super().__init__()
+        self.num_layers = num_layers
+        h = [hidden_dim] * (num_layers - 1)
+        self.layers = nn.ModuleList(nn.Linear(n, k) for n, k in zip([input_dim] + h, h + [output_dim]))
+        self.act = get_activation(activation)
+
+    def forward(self, x):
+        for i, layer in enumerate(self.layers):
+            x = self.act(layer(x)) if i < self.num_layers - 1 else layer(x)
+        return x
+
+
+class MSDeformableAttentionV3(nn.Module):
+    def __init__(
+        self,
+        embed_dim=256,
+        num_heads=8,
+        num_levels=4,
+        num_points=4,
+        method='default',
+        offset_scale=0.5,
+    ):
+        """Multi-Scale Deformable Attention
+        """
+        super(MSDeformableAttentionV3, self).__init__()
+        self.embed_dim = embed_dim
+        self.num_heads = num_heads
+        self.num_levels = num_levels
+        self.offset_scale = offset_scale
+
+        if isinstance(num_points, list):
+            assert len(num_points) == num_levels, ''
+            num_points_list = num_points
+        else:
+            num_points_list = [num_points for _ in range(num_levels)]
+
+        self.num_points_list = num_points_list
+
+        num_points_scale = [1/n for n in num_points_list for _ in range(n)]
+        self.register_buffer('num_points_scale', torch.tensor(num_points_scale, dtype=torch.float32))
+
+        self.total_points = num_heads * sum(num_points_list)
+        self.method = method
+
+        self.head_dim = embed_dim // num_heads
+        assert self.head_dim * num_heads == self.embed_dim, "embed_dim must be divisible by num_heads"
+
+        self.sampling_offsets = nn.Linear(embed_dim, self.total_points * 2)
+        self.attention_weights = nn.Linear(embed_dim, self.total_points)
+
+        self.ms_deformable_attn_core = functools.partial(deformable_attention_core_func_v2, method=self.method)
+
+        self._reset_parameters()
+
+        if method == 'discrete':
+            for p in self.sampling_offsets.parameters():
+                p.requires_grad = False
+
+    def _reset_parameters(self):
+        # sampling_offsets
+        init.constant_(self.sampling_offsets.weight, 0)
+        thetas = torch.arange(self.num_heads, dtype=torch.float32) * (2.0 * math.pi / self.num_heads)
+        grid_init = torch.stack([thetas.cos(), thetas.sin()], -1)
+        grid_init = grid_init / grid_init.abs().max(-1, keepdim=True).values
+        grid_init = grid_init.reshape(self.num_heads, 1, 2).tile([1, sum(self.num_points_list), 1])
+        scaling = torch.concat([torch.arange(1, n + 1) for n in self.num_points_list]).reshape(1, -1, 1)
+        grid_init *= scaling
+        self.sampling_offsets.bias.data[...] = grid_init.flatten()
+
+        # attention_weights
+        init.constant_(self.attention_weights.weight, 0)
+        init.constant_(self.attention_weights.bias, 0)
+
+
+    def forward(self,
+                query: torch.Tensor,
+                reference_points: torch.Tensor,
+                value: torch.Tensor,
+                value_spatial_shapes: List[int]):
+        """
+        Args:
+            query (Tensor): [bs, query_length, C]
+            reference_points (Tensor): [bs, query_length, n_levels, 2], range in [0, 1], top-left (0,0),
+                bottom-right (1, 1), including padding area
+            value (Tensor): [bs, value_length, C]
+            value_spatial_shapes (List): [n_levels, 2], [(H_0, W_0), (H_1, W_1), ..., (H_{L-1}, W_{L-1})]
+
+        Returns:
+            output (Tensor): [bs, Length_{query}, C]
+        """
+        bs, Len_q = query.shape[:2]
+
+        sampling_offsets: torch.Tensor = self.sampling_offsets(query)
+        sampling_offsets = sampling_offsets.reshape(bs, Len_q, self.num_heads, sum(self.num_points_list), 2)
+
+        attention_weights = self.attention_weights(query).reshape(bs, Len_q, self.num_heads, sum(self.num_points_list))
+        attention_weights = f.softmax(attention_weights, dim=-1)
+
+        if reference_points.shape[-1] == 2:
+            offset_normalizer = torch.tensor(value_spatial_shapes)
+            offset_normalizer = offset_normalizer.flip([1]).reshape(1, 1, 1, self.num_levels, 1, 2)
+            sampling_locations = reference_points.reshape(bs, Len_q, 1, self.num_levels, 1, 2) + sampling_offsets / offset_normalizer
+        elif reference_points.shape[-1] == 4:
+            # reference_points [8, 480, None, 1,  4]
+            # sampling_offsets [8, 480, 8,    12, 2]
+            num_points_scale = self.num_points_scale.to(dtype=query.dtype).unsqueeze(-1)
+            offset = sampling_offsets * num_points_scale * reference_points[:, :, None, :, 2:] * self.offset_scale
+            sampling_locations = reference_points[:, :, None, :, :2] + offset
+        else:
+            raise ValueError(
+                "Last dim of reference_points must be 2 or 4, but get {} instead.".
+                format(reference_points.shape[-1]))
+
+        output = self.ms_deformable_attn_core(value, value_spatial_shapes, sampling_locations, attention_weights, self.num_points_list)
+
+        return output
+
+
 class VisualEncoderLayer(nn.Module):
     """VisualEncoderLayer module consisting of MSDeformableAttention and feed-forward network.
 
@@ -617,3 +806,346 @@ class VisualEncoder(nn.Module):
             output = layer(output, pos, reference_points, spatial_shapes, padding_mask)
 
         return output
+
+######### TODO(kprokofi): Remove duplicates #########
+
+
+def cat_keep_shapes(x_list: List[Tensor]) -> Tuple[Tensor, List[Tuple[int]], List[int]]:
+    shapes = [x.shape for x in x_list]
+    num_tokens = [x.select(dim=-1, index=0).numel() for x in x_list]
+    flattened = torch.cat([x.flatten(0, -2) for x in x_list])
+    return flattened, shapes, num_tokens
+
+
+def uncat_with_shapes(flattened: Tensor, shapes: List[Tuple[int]], num_tokens: List[int]) -> List[Tensor]:
+    outputs_splitted = torch.split_with_sizes(flattened, num_tokens, dim=0)
+    shapes_adjusted = [shape[:-1] + torch.Size([flattened.shape[-1]]) for shape in shapes]
+    outputs_reshaped = [o.reshape(shape) for o, shape in zip(outputs_splitted, shapes_adjusted)]
+    return outputs_reshaped
+
+# RoPE-related functions:
+def rope_rotate_half(x: Tensor) -> Tensor:
+    # x:   [ x0  x1  x2  x3  x4  x5]
+    # out: [-x3 -x4 -x5  x0  x1  x2]
+    x1, x2 = x.chunk(2, dim=-1)
+    return torch.cat([-x2, x1], dim=-1)
+
+
+def rope_apply(x: Tensor, sin: Tensor, cos: Tensor) -> Tensor:
+    # x:   [..., D], eg [x0,     x1,   x2,   x3,   x4,   x5]
+    # sin: [..., D], eg [sin0, sin1, sin2, sin0, sin1, sin2]
+    # cos: [..., D], eg [cos0, cos1, cos2, cos0, cos1, cos2]
+    return (x * cos) + (rope_rotate_half(x) * sin)
+
+
+class LinearKMaskedBias(nn.Linear):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        o = self.out_features
+        assert o % 3 == 0
+        if self.bias is not None:
+            self.register_buffer("bias_mask", torch.full_like(self.bias, fill_value=math.nan))
+
+    def forward(self, input: Tensor) -> Tensor:
+        masked_bias = self.bias * self.bias_mask.to(self.bias.dtype) if self.bias is not None else None
+        return f.linear(input, self.weight, masked_bias)
+
+
+class SelfAttention(nn.Module):
+    def __init__(
+        self,
+        dim: int,
+        num_heads: int = 8,
+        qkv_bias: bool = False,
+        proj_bias: bool = True,
+        attn_drop: float = 0.0,
+        proj_drop: float = 0.0,
+        mask_k_bias: bool = False,
+        device=None,
+    ) -> None:
+        super().__init__()
+        self.num_heads = num_heads
+        head_dim = dim // num_heads
+        self.scale = head_dim**-0.5
+
+        linear_class = LinearKMaskedBias if mask_k_bias else nn.Linear
+        self.qkv = linear_class(dim, dim * 3, bias=qkv_bias, device=device)
+        self.attn_drop = nn.Dropout(attn_drop)
+        self.proj = nn.Linear(dim, dim, bias=proj_bias, device=device)
+        self.proj_drop = nn.Dropout(proj_drop)
+
+    def apply_rope(self, q: Tensor, k: Tensor, rope: Tensor | Tuple[Tensor, Tensor]) -> Tuple[Tensor, Tensor]:
+        # All operations will use the dtype of rope, the output is cast back to the dtype of q and k
+        q_dtype = q.dtype
+        k_dtype = k.dtype
+        sin, cos = rope
+        rope_dtype = sin.dtype
+        q = q.to(dtype=rope_dtype)
+        k = k.to(dtype=rope_dtype)
+        N = q.shape[-2]
+        prefix = N - sin.shape[-2]
+        assert prefix >= 0
+        q_prefix = q[:, :, :prefix, :]
+        q = rope_apply(q[:, :, prefix:, :], sin, cos)  # [B, head, hw, D//head]
+        q = torch.cat((q_prefix, q), dim=-2)  # [B, head, N, D//head]
+        k_prefix = k[:, :, :prefix, :]
+        k = rope_apply(k[:, :, prefix:, :], sin, cos)  # [B, head, hw, D//head]
+        k = torch.cat((k_prefix, k), dim=-2)  # [B, head, N, D//head]
+        q = q.to(dtype=q_dtype)
+        k = k.to(dtype=k_dtype)
+        return q, k
+
+    def forward(self, x: Tensor, attn_bias=None, rope: Tensor = None) -> Tensor:
+        qkv = self.qkv(x)
+        attn_v = self.compute_attention(qkv=qkv, attn_bias=attn_bias, rope=rope)
+        x = self.proj(attn_v)
+        x = self.proj_drop(x)
+        return x
+
+    def forward_list(self, x_list, attn_bias=None, rope_list=None) -> List[Tensor]:
+        assert len(x_list) == len(rope_list)  # should be enforced by the Block
+        x_flat, shapes, num_tokens = cat_keep_shapes(x_list)
+        qkv_flat = self.qkv(x_flat)
+        qkv_list = uncat_with_shapes(qkv_flat, shapes, num_tokens)
+        att_out = []
+        for _, (qkv, _, rope) in enumerate(zip(qkv_list, shapes, rope_list)):
+            att_out.append(self.compute_attention(qkv, attn_bias=attn_bias, rope=rope))
+        x_flat, shapes, num_tokens = cat_keep_shapes(att_out)
+        x_flat = self.proj(x_flat)
+        return uncat_with_shapes(x_flat, shapes, num_tokens)
+
+    def compute_attention(self, qkv: Tensor, attn_bias=None, rope=None) -> Tensor:
+        assert attn_bias is None
+        B, N, _ = qkv.shape
+        C = self.qkv.in_features
+
+        qkv = qkv.reshape(B, N, 3, self.num_heads, C // self.num_heads)
+        q, k, v = torch.unbind(qkv, 2)
+        q, k, v = [t.transpose(1, 2) for t in [q, k, v]]
+        if rope is not None:
+            q, k = self.apply_rope(q, k, rope)
+        x = torch.nn.functional.scaled_dot_product_attention(q, k, v)
+        x = x.transpose(1, 2)
+        return x.reshape([B, N, C])
+
+
+class Mlp(nn.Module, ListForwardMixin):
+    def __init__(
+        self,
+        in_features: int,
+        hidden_features: int | None = None,
+        out_features: int | None = None,
+        act_layer: Callable[..., nn.Module] = nn.GELU,
+        drop: float = 0.0,
+        bias: bool = True,
+        device=None,
+    ) -> None:
+        super().__init__()
+        out_features = out_features or in_features
+        hidden_features = hidden_features or in_features
+        self.fc1 = nn.Linear(in_features, hidden_features, bias=bias, device=device)
+        self.act = act_layer()
+        self.fc2 = nn.Linear(hidden_features, out_features, bias=bias, device=device)
+        self.drop = nn.Dropout(drop)
+
+    def forward(self, x: Tensor) -> Tensor:
+        x = self.fc1(x)
+        x = self.act(x)
+        x = self.drop(x)
+        x = self.fc2(x)
+        x = self.drop(x)
+        return x
+
+
+class SelfAttentionBlock(nn.Module):
+    def __init__(
+        self,
+        dim: int,
+        num_heads: int,
+        ffn_ratio: float = 4.0,
+        qkv_bias: bool = False,
+        proj_bias: bool = True,
+        ffn_bias: bool = True,
+        drop: float = 0.0,
+        attn_drop: float = 0.0,
+        init_values=None,
+        drop_path: float = 0.0,
+        act_layer: Callable[..., nn.Module] = nn.GELU,
+        norm_layer: Callable[..., nn.Module] = nn.LayerNorm,
+        attn_class: Callable[..., nn.Module] = SelfAttention,
+        ffn_layer: Callable[..., nn.Module] = Mlp,
+        mask_k_bias: bool = False,
+        device=None,
+    ) -> None:
+        super().__init__()
+        # print(f"biases: qkv: {qkv_bias}, proj: {proj_bias}, ffn: {ffn_bias}")
+        self.norm1 = norm_layer(dim)
+        self.attn = attn_class(
+            dim,
+            num_heads=num_heads,
+            qkv_bias=qkv_bias,
+            proj_bias=proj_bias,
+            attn_drop=attn_drop,
+            proj_drop=drop,
+            mask_k_bias=mask_k_bias,
+            device=device,
+        )
+        self.ls1 = LayerScale(dim, init_values=init_values, device=device) if init_values else nn.Identity()
+
+        self.norm2 = norm_layer(dim)
+        mlp_hidden_dim = int(dim * ffn_ratio)
+        self.mlp = ffn_layer(
+            in_features=dim,
+            hidden_features=mlp_hidden_dim,
+            act_layer=act_layer,
+            drop=drop,
+            bias=ffn_bias,
+            device=device,
+        )
+        self.ls2 = LayerScale(dim, init_values=init_values, device=device) if init_values else nn.Identity()
+
+        self.sample_drop_ratio = drop_path
+
+    @staticmethod
+    def _maybe_index_rope(rope: tuple[Tensor, Tensor] | None, indices: Tensor) -> tuple[Tensor, Tensor] | None:
+        if rope is None:
+            return None
+
+        sin, cos = rope
+        assert sin.ndim == cos.ndim
+        if sin.ndim == 4:
+            # If the rope embedding has a batch dimension (is different for each batch element), index into it
+            return sin[indices], cos[indices]  # [batch, heads, patches, embed_dim]
+        else:
+            # No batch dimension, do not index
+            return sin, cos  # [heads, patches, embed_dim] or [patches, embed_dim]
+
+    def _forward(self, x: Tensor, rope=None) -> Tensor:
+        """
+        This is the reference implementation for a single tensor, matching what is done below for a list.
+        We call the list op on [x] instead of this function.
+        """
+        b, _, _ = x.shape
+        sample_subset_size = max(int(b * (1 - self.sample_drop_ratio)), 1)
+        residual_scale_factor = b / sample_subset_size
+
+        if self.training and self.sample_drop_ratio > 0.0:
+            indices_1 = (torch.randperm(b, device=x.device))[:sample_subset_size]
+
+            x_subset_1 = x[indices_1]
+            rope_subset = self._maybe_index_rope(rope, indices_1)
+            residual_1 = self.attn(self.norm1(x_subset_1), rope=rope_subset)
+
+            x_attn = torch.index_add(
+                x,
+                dim=0,
+                source=self.ls1(residual_1),
+                index=indices_1,
+                alpha=residual_scale_factor,
+            )
+
+            indices_2 = (torch.randperm(b, device=x.device))[:sample_subset_size]
+
+            x_subset_2 = x_attn[indices_2]
+            residual_2 = self.mlp(self.norm2(x_subset_2))
+
+            x_ffn = torch.index_add(
+                x_attn,
+                dim=0,
+                source=self.ls2(residual_2),
+                index=indices_2,
+                alpha=residual_scale_factor,
+            )
+        else:
+            x_attn = x + self.ls1(self.attn(self.norm1(x), rope=rope))
+            x_ffn = x_attn + self.ls2(self.mlp(self.norm2(x_attn)))
+
+        return x_ffn
+
+    def _forward_list(self, x_list: List[Tensor], rope_list=None) -> List[Tensor]:
+        """
+        This list operator concatenates the tokens from the list of inputs together to save
+        on the elementwise operations. Torch-compile memory-planning allows hiding the overhead
+        related to concat ops.
+        """
+        b_list = [x.shape[0] for x in x_list]
+        sample_subset_sizes = [max(int(b * (1 - self.sample_drop_ratio)), 1) for b in b_list]
+        residual_scale_factors = [b / sample_subset_size for b, sample_subset_size in zip(b_list, sample_subset_sizes)]
+
+        if self.training and self.sample_drop_ratio > 0.0:
+            indices_1_list = [
+                (torch.randperm(b, device=x.device))[:sample_subset_size]
+                for x, b, sample_subset_size in zip(x_list, b_list, sample_subset_sizes)
+            ]
+            x_subset_1_list = [x[indices_1] for x, indices_1 in zip(x_list, indices_1_list)]
+
+            if rope_list is not None:
+                rope_subset_list = [
+                    self._maybe_index_rope(rope, indices_1) for rope, indices_1 in zip(rope_list, indices_1_list)
+                ]
+            else:
+                rope_subset_list = rope_list
+
+            flattened, shapes, num_tokens = cat_keep_shapes(x_subset_1_list)
+            norm1 = uncat_with_shapes(self.norm1(flattened), shapes, num_tokens)
+            residual_1_list = self.attn.forward_list(norm1, rope_list=rope_subset_list)
+
+            x_attn_list = [
+                torch.index_add(
+                    x,
+                    dim=0,
+                    source=self.ls1(residual_1),
+                    index=indices_1,
+                    alpha=residual_scale_factor,
+                )
+                for x, residual_1, indices_1, residual_scale_factor in zip(
+                    x_list, residual_1_list, indices_1_list, residual_scale_factors
+                )
+            ]
+
+            indices_2_list = [
+                (torch.randperm(b, device=x.device))[:sample_subset_size]
+                for x, b, sample_subset_size in zip(x_list, b_list, sample_subset_sizes)
+            ]
+            x_subset_2_list = [x[indices_2] for x, indices_2 in zip(x_attn_list, indices_2_list)]
+            flattened, shapes, num_tokens = cat_keep_shapes(x_subset_2_list)
+            norm2_flat = self.norm2(flattened)
+            norm2_list = uncat_with_shapes(norm2_flat, shapes, num_tokens)
+
+            residual_2_list = self.mlp.forward_list(norm2_list)
+
+            x_ffn = [
+                torch.index_add(
+                    x_attn,
+                    dim=0,
+                    source=self.ls2(residual_2),
+                    index=indices_2,
+                    alpha=residual_scale_factor,
+                )
+                for x_attn, residual_2, indices_2, residual_scale_factor in zip(
+                    x_attn_list, residual_2_list, indices_2_list, residual_scale_factors
+                )
+            ]
+        else:
+            x_out = []
+            for x, rope in zip(x_list, rope_list):
+                x_attn = x + self.ls1(self.attn(self.norm1(x), rope=rope))
+                x_ffn = x_attn + self.ls2(self.mlp(self.norm2(x_attn)))
+                x_out.append(x_ffn)
+            x_ffn = x_out
+
+        return x_ffn
+
+    def forward(self, x_or_x_list, rope_or_rope_list=None) -> List[Tensor]:
+        if isinstance(x_or_x_list, Tensor):
+            # for reference:
+            # return self._forward(x_or_x_list, rope=rope_or_rope_list)
+            # in order to match implementations we call the list op:
+            return self._forward_list([x_or_x_list], rope_list=[rope_or_rope_list])[0]
+        elif isinstance(x_or_x_list, list):
+            if rope_or_rope_list is None:
+                rope_or_rope_list = [None for x in x_or_x_list]
+            # return [self._forward(x, rope=rope) for x, rope in zip(x_or_x_list, rope_or_rope_list)]
+            return self._forward_list(x_or_x_list, rope_list=rope_or_rope_list)
+        else:
+            raise AssertionError

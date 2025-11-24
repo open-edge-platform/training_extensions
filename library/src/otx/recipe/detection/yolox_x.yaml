@@ -62,7 +62,7 @@ overrides:
       - 640
     image_color_channel: BGR
     train_subset:
-      batch_size: 4
+      batch_size: 8
       transforms:
         - class_path: otx.data.transform_libs.torchvision.MinIoURandomCrop
           enable: false
@@ -71,23 +71,15 @@ overrides:
             scale: $(input_size)
             keep_ratio: true
             transform_bbox: true
-        - class_path: otx.data.transform_libs.torchvision.CachedMosaic
-          init_args:
-            random_pop: false
-            max_cached_images: 20
-            img_scale: $(input_size) # (H, W)
-        - class_path: otx.data.transform_libs.torchvision.RandomAffine
-          init_args:
-            border: $(input_size) * -0.5
-        - class_path: otx.data.transform_libs.torchvision.CachedMixUp
-          init_args:
-            img_scale: $(input_size) # (H, W)
-            ratio_range:
-              - 1.0
-              - 1.0
-            probability: 0.5
-            random_pop: false
-            max_cached_images: 10
+        # - class_path: otx.data.transform_libs.torchvision.CachedMosaic
+        #   init_args:
+        #     random_pop: false
+        #     max_cached_images: 20
+        #     img_scale: $(input_size) # (H, W)
+        # - class_path: otx.data.transform_libs.torchvision.RandomAffine
+        #   init_args:
+        #     border: $(input_size) * -0.5
+        - class_path: otx.data.transform_libs.torchvision.CachedCopyBlend
         - class_path: torchvision.transforms.v2.RandomPhotometricDistort
           enable: false
           init_args:

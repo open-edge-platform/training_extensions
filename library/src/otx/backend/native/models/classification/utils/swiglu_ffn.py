@@ -14,6 +14,7 @@ from torch import nn
 
 from otx.backend.native.models.modules.drop import build_dropout
 from otx.backend.native.models.modules.norm import build_norm_layer
+from otx.backend.native.models.common.layers.transformer_layers import ListForwardMixin
 
 
 class SwiGLUFFN(nn.Module):
@@ -100,3 +101,31 @@ class SwiGLUFFNFused(SwiGLUFFN):
             out_dims=out_dims,
             bias=bias,
         )
+
+
+class SwiGLUFFNV2(nn.Module, ListForwardMixin):
+    def __init__(
+        self,
+        in_features: int,
+        hidden_features: int | None = None,
+        out_features: int | None = None,
+        act_layer: Callable[..., nn.Module] | None = None,
+        drop: float = 0.0,
+        bias: bool = True,
+        align_to: int = 8,
+        device=None,
+    ) -> None:
+        super().__init__()
+        out_features = out_features or in_features
+        hidden_features = hidden_features or in_features
+        d = int(hidden_features * 2 / 3)
+        swiglu_hidden_features = d + (-d % align_to)
+        self.w1 = nn.Linear(in_features, swiglu_hidden_features, bias=bias, device=device)
+        self.w2 = nn.Linear(in_features, swiglu_hidden_features, bias=bias, device=device)
+        self.w3 = nn.Linear(swiglu_hidden_features, out_features, bias=bias, device=device)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x1 = self.w1(x)
+        x2 = self.w2(x)
+        hidden = nn.functional.silu(x1) * x2
+        return self.w3(hidden)

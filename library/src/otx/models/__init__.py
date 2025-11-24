@@ -9,6 +9,7 @@ from otx.backend.native.models import (
     SSD,
     YOLOX,
     DEIMDFine,
+    DEIMV2,
     DFine,
     DinoV2Seg,
     EfficientNet,
@@ -43,6 +44,7 @@ __all__ = [
     "YOLOX",
     "DEIMDFine",
     "DFine",
+    "DEIMV2",
     # semantic segmentation
     "DinoV2Seg",
     # classification

@@ -137,20 +137,40 @@ class TransformerDecoderLayer(nn.Module):
         return self.norm3(target.clamp(min=-65504, max=65504))
 
 
+class RMSNorm(nn.Module):
+    def __init__(self, dim: int, eps: float = 1e-6):
+        super().__init__()
+        self.dim = dim
+        self.eps = eps
+        self.scale = nn.Parameter(torch.ones(dim))
+
+    def _norm(self, x):
+        return x * torch.rsqrt(x.pow(2).mean(-1, keepdim=True) + self.eps)
+
+    def forward(self, x):
+        output = self._norm(x.float()).type_as(x)
+        output = output * self.scale
+        return output
+
+    def extra_repr(self) -> str:
+        return f'dim={self.dim}, eps={self.eps}'
+
+
 class Gate(nn.Module):
     """Target Gating Layers.
 
     Args:
         d_model (int): The number of expected features in the input.
+        use_rmsnorm (bool, optional): Whether to use RMSNorm. Defaults to False.
     """
 
-    def __init__(self, d_model: int) -> None:
+    def __init__(self, d_model: int, use_rmsnorm: bool = False) -> None:
         super().__init__()
         self.gate = nn.Linear(2 * d_model, 2 * d_model)
         bias = bias_init_with_prob(0.5)
         init.constant_(self.gate.bias, bias)
         init.constant_(self.gate.weight, 0)
-        self.norm = nn.LayerNorm(d_model)
+        self.norm = RMSNorm(d_model) if use_rmsnorm else nn.LayerNorm(d_model)
 
     def forward(self, x1: Tensor, x2: Tensor) -> Tensor:
         """Forward function of the gate.
