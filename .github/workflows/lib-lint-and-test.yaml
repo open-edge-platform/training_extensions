@@ -90,12 +90,13 @@ jobs:
           uv run ruff check --output-format=github .
           uv run ruff format --check .
 
-      # TODO: Disable mypy for now due to numerous typing issues that need to be resolved
+      # TODO: remove 'continue-on-error' after addressing all mypy issues
       # https://github.com/open-edge-platform/training_extensions/issues/5006
-      # - name: Check source code with mypy
-      #   working-directory: library
-      #   run: |
-      #     uv run mypy src/otx/ --config-file=pyproject.toml
+      - name: Check source code with mypy
+        continue-on-error: true
+        working-directory: library
+        run: |
+          uv run mypy src/otx
 
   Unit-Test:
     runs-on: [self-hosted, linux, x64, dev, dmount]
