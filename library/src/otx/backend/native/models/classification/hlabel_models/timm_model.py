@@ -45,6 +45,7 @@ class TimmModelHLabelCls(OTXHlabelClsModel):
         metric (MetricCallable, optional): The metric callable for evaluating the model.
             Defaults to HLabelClsMetricCallable.
         torch_compile (bool, optional): Whether to compile the model using TorchScript. Defaults to False.
+        kl_weight: The weight of tree-path KL divergence loss. Defaults to zero, use CrossEntropy only.
     """
 
     def __init__(
@@ -57,6 +58,7 @@ class TimmModelHLabelCls(OTXHlabelClsModel):
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = HLabelClsMetricCallable,
         torch_compile: bool = False,
+        kl_weight: float = 0.0,
     ) -> None:
         super().__init__(
             label_info=label_info,
@@ -67,6 +69,7 @@ class TimmModelHLabelCls(OTXHlabelClsModel):
             scheduler=scheduler,
             metric=metric,
             torch_compile=torch_compile,
+            kl_weight=kl_weight,
         )
 
     def _create_model(self, head_config: dict | None = None) -> nn.Module:  # type: ignore[override]
