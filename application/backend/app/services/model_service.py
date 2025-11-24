@@ -79,13 +79,15 @@ class ModelService(BaseSessionManagedService):
                 (e.g., the model is referenced by other entities).
         """
         model_rev_repo = ModelRevisionRepository(project_id=str(project_id), db=self.db_session)
+
+        path = self._projects_dir / str(project_id) / "models" / str(model_id)
+        if path.exists():
+            shutil.rmtree(path)
+
         try:
             deleted = model_rev_repo.delete(str(model_id))
             if not deleted:
                 raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
-            path = self._projects_dir / str(project_id) / "models" / str(model_id)
-            if path.exists():
-                shutil.rmtree(path)
         except IntegrityError:
             raise ResourceInUseError(ResourceType.MODEL, str(model_id))
 
