@@ -42,7 +42,7 @@ dependencies = [
     "torchmetrics==1.6.0",
     "pytorchcv==0.0.67",
     "timm==1.0.3",
-    "openvino==2025.2",
+    "openvino==2025.3",
     "openvino-model-api==0.3.0.4",
     "onnx==1.19.1",
     "onnxconverter-common==1.16.0",
