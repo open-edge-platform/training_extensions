@@ -131,10 +131,11 @@ def get_system_service() -> SystemService:
 
 
 def get_model_service(
+    data_dir: Annotated[Path, Depends(get_data_dir)],
     db: Annotated[Session, Depends(get_db)],
 ) -> ModelService:
     """Provides a ModelService instance with the model reload event from the scheduler."""
-    return ModelService(db_session=db)
+    return ModelService(data_dir=data_dir, db_session=db)
 
 
 def get_webrtc_manager(request: Request) -> WebRTCManager:
