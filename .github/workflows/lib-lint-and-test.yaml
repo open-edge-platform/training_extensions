@@ -24,7 +24,7 @@ jobs:
   # Determines if workflow should execute based on event type and changed paths
   # If push or workflow_dispatch -> always run
   # If PR or merge_group -> run only if files in specified paths changed
-  check_paths:
+  check-paths:
     name: Check if workflow should run
     runs-on: ubuntu-latest
     outputs:
@@ -55,10 +55,10 @@ jobs:
             echo "run=false" >> "$GITHUB_OUTPUT"
           fi
 
-  Code-Quality-Checks:
+  code-quality-checks:
     runs-on: ubuntu-24.04
-    needs: check_paths
-    if: needs.check_paths.outputs.run_workflow == 'true'
+    needs: check-paths
+    if: needs.check-paths.outputs.run_workflow == 'true'
     permissions:
       contents: read
     steps:
@@ -98,22 +98,22 @@ jobs:
         run: |
           uv run mypy src/otx
 
-  Unit-Test:
+  unit-tests:
     runs-on: [self-hosted, linux, x64, dev, dmount]
     permissions:
       contents: read
       # The id-token permission is required by Codecov to use OIDC
       id-token: write
     needs:
-      - Code-Quality-Checks
-      - check_paths
-    if: needs.check_paths.outputs.run_workflow == 'true'
+      - code-quality-checks
+      - check-paths
+    if: needs.check-paths.outputs.run_workflow == 'true'
     timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.10", "3.13"]
-    name: Unit-Test-with-Python${{ matrix.python-version }}
+    name: unit-tests-with-Python${{ matrix.python-version }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -145,20 +145,20 @@ jobs:
         uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5.5.1
         with:
           directory: library
-          flags: coverage_unit-test_Python-${{ matrix.python-version }}
+          flags: coverage_unit-tests_Python-${{ matrix.python-version }}
           use_oidc: true
 
-  Integration-Test:
+  integration-tests:
     #if: |
     #  github.event.pull_request.draft == false &&
     #  !(startsWith(github.event.pull_request.title, '[WIP]')) &&
-    #  needs.check_paths.outputs.run_workflow == 'true'
+    #  needs.check-paths.outputs.run_workflow == 'true'
     runs-on: [self-hosted, linux, x64, dev, dmount]
     permissions:
       contents: read
     needs:
-      - Unit-Test
-      - check_paths
+      - unit-tests
+      - check-paths
     strategy:
       fail-fast: false
       matrix:
@@ -171,7 +171,7 @@ jobs:
           - task: "detection"
           - task: "instance_segmentation"
           - task: "semantic_segmentation"
-    name: Integration-Test-${{ matrix.task }}-py${{ matrix.python-version }}
+    name: integration-tests-${{ matrix.task }}-py${{ matrix.python-version }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -208,13 +208,13 @@ jobs:
             --open-subprocess \
             --run-category-only
 
-  required_check:
+  required-check:
     name: Required Check lib-lint-and-test
     needs:
-      - check_paths
-      - Code-Quality-Checks
-      - Unit-Test
-      - Integration-Test
+      - check-paths
+      - code-quality-checks
+      - unit-tests
+      - integration-tests
     runs-on: ubuntu-latest
     env:
       CHECKS: ${{ join(needs.*.result, ' ') }}
