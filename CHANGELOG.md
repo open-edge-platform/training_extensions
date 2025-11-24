@@ -9,7 +9,6 @@ All notable changes to this project will be documented in this file.
 - Add MobileNetV4 medium recipe
   (https://github.com/open-edge-platform/training_extensions/pull/4341)
 
-
 ## \[2.6.0\]
 
 ### New features
