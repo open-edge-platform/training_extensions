@@ -46,27 +46,44 @@ dependencies = [
     "openvino-model-api==0.3.0.4",
     "onnx==1.19.1",
     "onnxconverter-common==1.16.0",
-    "onnxscript==0.5.3",
+    "onnxscript",
     "nncf==2.17.0",
     "numpy>=2.0",
+    "tensorboard==2.20.0",
     "tensorboardx==2.6.4"
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
-    "uv",
-    "tox-uv==1.26.0",
     "pre-commit==4.2.0",
-    "pylint",
-    "pytest",
+    "pytest>=5.3.5",
+    "pytest-cov>=4.0.0",
+    "pytest-stress",
+    "pytest-html",
     "coverage",
+    "pytest-csv",
     "pytest-timeout",
     "pytest-mock",
-    "pytest-csv",
-    "pytest-cov",
-    "onnxruntime==1.21.1",
+    "dill",
+    "tifffile",
 ]
 
+lint = [
+    "ruff==0.11.13",
+    "mypy~=1.6.1",
+    "attrs",
+    "types-PyYAML~=6.0.12",
+    "types-aiofiles",
+    "types-requests~=2.32.4",
+    "types-Deprecated",
+    "types-docutils",
+    "types_futures",
+    "types-setuptools",
+    "types-python-dateutil",
+    "tokenize-rt==3.2.0"
+]
+
+[project.optional-dependencies]
 cpu = [
     "torch==2.8.0",
     "torchvision==0.23.0"
@@ -83,7 +100,7 @@ xpu = [
 
 docs = [
     "furo",
-    "myst-parser",
+    "myst-parser>=2.0.0",
     "sphinx==7.2.6",
     "pydata-sphinx-theme==0.12.0",
     "sphinx-tabs",
@@ -93,20 +110,11 @@ docs = [
     "sphinx-autoapi",
     "sphinxemoji",
     "nbsphinx",
-    "myst-parser>=2.0.0",
     "linkify-it-py",
 ]
 
 ci_publish = [
     "build==1.2.2.post1",
-]
-
-ci_benchmark = [
-    "pandas<2.4",       # To avoid conflict with nncf==2.9.0
-    "matplotlib==3.10.1",
-    "openpyxl==3.1.5",
-    "mlflow==2.21.3",
-    "py-cpuinfo==9.0.0",
 ]
 
 [project.scripts]
@@ -117,6 +125,7 @@ Documentation = "https://open-edge-platform.github.io/training_extensions/"
 Repository = "https://github.com/open-edge-platform/training_extensions/"
 
 [tool.uv]
+default-groups = ["dev", "lint"]
 conflicts = [
     [
         { extra = "cpu" },
@@ -195,7 +204,7 @@ omit = [
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # MYPY CONFIGURATION.                                                         #
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.13"
 ignore_missing_imports = true
 show_error_codes = true
 
@@ -295,7 +304,7 @@ ignore = [
     "COM812",   # Missing trailing comma -> conflicts with ISC001
 
     # flake8-type-checking
-    "TC001",   # typing-only-first-party-import, Sometimes this causes an incorrect error.
+    "TC001",    # typing-only-first-party-import, Sometimes this causes an incorrect error.
     # flake8-fixme
     "FIX002",   # line-contains-todo
 
