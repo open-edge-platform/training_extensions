@@ -100,3 +100,29 @@ class TestModelServiceIntegration:
 
         assert db_session.get(ModelRevisionDB, str(fxt_model_id)) is None
         assert not model_rev_path.exists()
+
+    def test_delete_model_with_files_no_permission(
+        self,
+        tmp_path: Path,
+        fxt_project_id: UUID,
+        fxt_model_id: UUID,
+        fxt_model_service: ModelService,
+        db_session: Session,
+    ):
+        """Test that deleting a model removes both its database record and filesystem artifacts."""
+        model_rev_path = tmp_path / "projects" / str(fxt_project_id) / "models" / str(fxt_model_id)
+        model_rev_path.mkdir(parents=True, exist_ok=True)
+        (model_rev_path / "config.yaml").touch()
+
+        # Make directory read-only to simulate permission error
+        model_rev_path.chmod(0o444)
+
+        try:
+            with pytest.raises(OSError):
+                fxt_model_service.delete_model(project_id=fxt_project_id, model_id=fxt_model_id)
+
+            assert db_session.get(ModelRevisionDB, str(fxt_model_id)) is not None
+            assert model_rev_path.exists()
+        finally:
+            # Cleanup: restore permissions so pytest can clean up temp directory
+            model_rev_path.chmod(0o755)
