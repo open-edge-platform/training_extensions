@@ -149,10 +149,6 @@ jobs:
           use_oidc: true
 
   integration-tests:
-    #if: |
-    #  github.event.pull_request.draft == false &&
-    #  !(startsWith(github.event.pull_request.title, '[WIP]')) &&
-    #  needs.check-paths.outputs.run_workflow == 'true'
     runs-on: [self-hosted, linux, x64, dev, dmount]
     permissions:
       contents: read
