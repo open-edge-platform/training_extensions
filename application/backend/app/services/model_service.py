@@ -1,10 +1,13 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import shutil
 from dataclasses import dataclass
+from pathlib import Path
 from uuid import UUID
 
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 
 from app.db.schema import ModelRevisionDB
 from app.models.training_configuration.configuration import TrainingConfiguration
@@ -31,6 +34,10 @@ class ModelRevisionMetadata:
 class ModelService(BaseSessionManagedService):
     """Service to register and activate models"""
 
+    def __init__(self, data_dir: Path, db_session: Session | None = None) -> None:
+        super().__init__(db_session)
+        self._projects_dir = data_dir / "projects"
+
     def get_model(self, project_id: UUID, model_id: UUID) -> ModelSchema:
         """
         Get a model.
@@ -56,6 +63,9 @@ class ModelService(BaseSessionManagedService):
         """
         Delete a model.
 
+        Deletes a model revision from the database and deletes the folder from the filesystem
+        associated with this model.
+
         Args:
             project_id (UUID): The unique identifier of the project whose models to delete.
             model_id (UUID): The unique identifier of the model to delete.
@@ -69,8 +79,12 @@ class ModelService(BaseSessionManagedService):
                 (e.g., the model is referenced by other entities).
         """
         model_rev_repo = ModelRevisionRepository(project_id=str(project_id), db=self.db_session)
+
+        path = self._projects_dir / str(project_id) / "models" / str(model_id)
+        if path.exists():
+            shutil.rmtree(path)
+
         try:
-            # TODO: delete model artifacts from filesystem when implemented
             deleted = model_rev_repo.delete(str(model_id))
             if not deleted:
                 raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
