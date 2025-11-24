@@ -13,9 +13,9 @@
 
 <!-- markdownlint-disable MD042 -->
 
-[![python](https://img.shields.io/badge/python-3.10%2B-green)]()
-[![pytorch](https://img.shields.io/badge/pytorch-2.5%2B-orange)]()
-[![openvino](https://img.shields.io/badge/openvino-2025.1-purple)]()
+[![python](https://img.shields.io/badge/python-3.11%2B-green)]()
+[![pytorch](https://img.shields.io/badge/pytorch-2.8%2B-orange)]()
+[![openvino](https://img.shields.io/badge/openvino-2025.3-purple)]()
 
 <!-- markdownlint-enable  MD042 -->
 
@@ -38,32 +38,31 @@ OpenVINO™ Training Extensions offers diverse combinations of model architectur
 
 OpenVINO™ Training Extensions provides a "recipe" for every supported task type, which consolidates necessary information to build a model.
 Model templates are validated on various datasets and serve one-stop shop for obtaining the best models in general.
-If you are an experienced user, you can configure your own model based on [torchvision](https://pytorch.org/vision/stable/index.html), [mmcv](https://github.com/open-mmlab/mmcv) and [OpenVINO Model Zoo (OMZ)](https://github.com/openvinotoolkit/open_model_zoo).
 
-Furthermore, OpenVINO™ Training Extensions provides automatic configuration for ease of use.
-The framework will analyze your dataset and identify the most suitable model and figure out the best input size setting and other hyper-parameters.
-The development team is continuously extending this [Auto-configuration](https://open-edge-platform.github.io/training_extensions/latest/guide/explanation/additional_features/auto_configuration.html) functionalities to make training as simple as possible so that single CLI command can obtain accurate, efficient and robust models ready to be integrated into your project.
+Starting with OTX v2.4.5, we introduced a new repository structure and a more flexible backend concept. We're excited to present support for multiple backends — beginning with the OpenVINO™ backend, while all previous OTX functionality is now organized under the "native" backend.
+
+In the future, we plan to integrate popular third-party libraries such as `Anomalib <https://github.com/open-edge-platform/anomalib>_`, `Transformers <https://huggingface.co/docs/transformers/index>_`, and more — seamlessly integrated into the repository.
+This will enable users to train, test, export, and optimize a wide variety of models from different backends using the same CLI commands and unified API, without the need for reimplementation.
 
 ### Key Features
 
 OpenVINO™ Training Extensions supports the following computer vision tasks:
 
 - **Classification**, including multi-class, multi-label and hierarchical image classification tasks.
-- **Object detection** including rotated bounding box support
-- **Semantic segmentation**
+- **Object detection** including rotated bounding box and tiling support
+- **Semantic segmentation** including tiling algorithm support
 - **Instance segmentation** including tiling algorithm support
 - **Anomaly recognition** tasks including anomaly classification, detection and segmentation
 
-OpenVINO™ Training Extensions supports the [following learning methods](https://open-edge-platform.github.io/training_extensions/latest/guide/explanation/algorithms/index.html):
-
-- **Supervised**, incremental training, which includes class incremental scenario.
-
 OpenVINO™ Training Extensions provides the following usability features:
 
-- [Auto-configuration](https://open-edge-platform.github.io/training_extensions/latest/guide/explanation/additional_features/auto_configuration.html). OpenVINO™ Training Extensions analyzes provided dataset and selects the proper task and model to provide the best accuracy/speed trade-off.
+- Native **Intel GPUs (XPU) support**. OpenVINO™ Training Extensions can be installed with XPU support to utilize Intel GPUs for training and testing.
 - [Datumaro](https://open-edge-platform.github.io/datumaro/stable/index.html) data frontend: OpenVINO™ Training Extensions supports the most common academic field dataset formats for each task. We are constantly working to extend supported formats to give more freedom of datasets format choice.
 - **Distributed training** to accelerate the training process when you have multiple GPUs
 - **Mixed-precision training** to save GPUs memory and use larger batch sizes
+- **Class incremental learning** to add new classes to the existing model
+- **Model deployment** to OpenVINO™ IR and ONNX formats and inference with [OpenVINO™ ModelAPI](https://github.com/open-edge-platform/model_api)
+- **Multiple backend support** to easily adapt models from third-party implementations into the OpenVINO™ Training Extensions repository.
 
 ---
 
@@ -74,37 +73,35 @@ If you want to make changes to the library, then a local installation is recomme
 
 <details>
 <summary>Install from PyPI</summary>
-Installing the library with pip is the easiest way to get started with otx.
+Installing the library with pip or uv is the easiest way to get started with otx.
 
 ```bash
-pip install otx[base]
-```
+# Without GPU support (CPU only)
+pip install otx[cpu]
 
-Alternatively, for zsh users:
+# With Intel GPU support (XPU)
+pip install otx[xpu]
 
-```bash
-pip install 'otx[base]'
+# With NVIDIA GPU support (CUDA)
+pip install otx[cuda]
 ```
 
 </details>
 
 <details>
 <summary>Install from source</summary>
-To install from source, you need to clone the repository and install the library using pip via editable mode.
+To install from source, you need to clone the repository and install the library with pip or uv.
+It is recommended to use a virtual environment to avoid conflicts with other packages.
 
 ```bash
-# Use of virtual environment is highy recommended
-# Using conda
-yes | conda create -n otx_env python=3.10
-conda activate otx_env
-
-# Or using your favorite virtual environment
-# ...
-
-# Clone the repository and install in editable mode
+# Clone the repository
 git clone https://github.com/open-edge-platform/training_extensions.git
 cd training_extensions
-pip install -e .[base]  # for zsh: pip install -e '.[base]'
+
+# Install (optional: pass the '-e' flag for editable mode
+# If you have an Intel GPU, use 'xpu' to enable support.
+# If you have an NVIDIA GPU, use 'cuda' to enable support.
+pip install -e .[cpu]
 ```
 
 </details>
@@ -134,14 +131,31 @@ You can find details with examples in the [CLI Guide](https://open-edge-platform
 Below is how to train with auto-configuration, which is provided to users with datasets and tasks:
 
 <details>
-<summary>Training via API</summary>
+<summary>API Usage</summary>
 
 ```python
-# Training with Auto-Configuration via Engine
-from otx.engine import Engine
+from otx.engine import create_engine
 
-engine = Engine(data_root="data/wgisd", task="DETECTION")
+# get all the available recipes for all tasks
+from otx.backend.native.cli.utils import list_models
+model_lists = list_models(print_table=True)
+
+# instantiate native otx engine with atss model for object detection
+engine = create_engine(data="path/to/dataset/root", model="src/otx/recipe/detection/atss_mobilenetv2.yaml")
 engine.train()
+engine.test()
+exported_path = engine.export()
+
+# by default all artifacts are stored in "./otx-workspace" directory.
+# working directory can be specified
+engine = create_engine(data="path/to/dataset/root", model="src/otx/recipe/detection/atss_mobilenetv2.yaml", work_dir="my_workdir")
+
+
+# openvino backend is used to validate and optimize exported OpenVINO IR models
+ov_engine = create_engine(data="path/to/dataset/root", model=exported_path)
+ov_engine.test()
+ov_engine.optimize()
+
 ```
 
 For more examples, see documentation: [API Quick-Guide](https://open-edge-platform.github.io/training_extensions/latest/guide/get_started/api_tutorial.html)
@@ -149,10 +163,28 @@ For more examples, see documentation: [API Quick-Guide](https://open-edge-platfo
 </details>
 
 <details>
-<summary>Training via CLI</summary>
+<summary> CLI Usage </summary>
 
 ```bash
-otx train --data_root data/wgisd --task DETECTION
+# get all recipes list
+otx find
+
+# otx train
+otx train --config src/otx/recipe/detection/atss_mobilenetv2.yaml --data_root data/wgisd
+
+# by default, working directory is "./otx-workspace". It can be specified with "--work_dir" parameter
+otx test --config src/otx/recipe/detection/atss_mobilenetv2.yaml --data_root data/wgisd --checkpoint otx-workspace/.latest/train/best_checkpoint.ckpt
+otx export --config src/otx/recipe/detection/atss_mobilenetv2.yaml --data_root data/wgisd --checkpoint otx-workspace/.latest/train/best_checkpoint.ckpt
+
+# or using work_dir
+otx test --work_dir otx-workspace/.latest/train
+otx export --work_dir otx-workspace/.latest/train
+
+# directly from working directory
+cd otx-workspace
+otx test
+otx export
+
 ```
 
 For more examples, see documentation: [CLI Guide](https://open-edge-platform.github.io/training_extensions/latest/guide/get_started/cli_commands.html)

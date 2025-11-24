@@ -1,0 +1,55 @@
+job_type: train
+model_manifest_id: Keypoint_Detection_RTMPose_Tiny
+export_parameters:
+  - format: openvino
+    output_model_id: 687dde02ee0628d82f9fdfe4
+    precision: FP32
+    with_xai: false
+  - format: openvino
+    output_model_id: 687dde02ee0628d82f9fdfe5
+    precision: FP16
+    with_xai: false
+  - format: onnx
+    output_model_id: 687dde02ee0628d82f9fdfe6
+    precision: FP32
+    with_xai: false
+hyperparameters:
+  dataset_preparation:
+    augmentation:
+      topdown_affine:
+        enable: true
+        probability: 1.0
+      color_jitter:
+        enable: false
+        brightness: [0.875, 1.125]
+        contrast:
+          - 0.5
+          - 1.5
+        saturation:
+          - 0.5
+          - 1.5
+        hue:
+          - 0.05
+          - 0.05
+        probability: 0.5
+      gaussian_blur:
+        enable: false
+        kernel_size: 5
+        sigma:
+          - 0.1
+          - 2.0
+      gaussian_noise:
+        enable: false
+        mean: 0.0
+        sigma: 0.1
+  training:
+    max_epochs: 200
+    early_stopping:
+      enable: true
+      patience: 10
+    learning_rate: 0.001
+    input_size_width: 512
+    input_size_height: 512
+  evaluation:
+    metric: pck
+sub_task_type: MULTI_CLASS_CLS

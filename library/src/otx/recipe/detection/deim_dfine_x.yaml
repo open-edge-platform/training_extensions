@@ -1,0 +1,266 @@
+task: DETECTION
+model:
+  class_path: otx.backend.native.models.detection.DEIMDFine
+  init_args:
+    model_name: deim_dfine_hgnetv2_x
+    label_info: 80
+    multi_scale: false
+
+    optimizer:
+      class_path: torch.optim.AdamW
+      init_args:
+        lr: 0.0005
+        betas: [0.9, 0.999]
+        weight_decay: 0.000125
+
+    scheduler:
+      class_path: otx.backend.native.schedulers.LinearWarmupSchedulerCallable
+      init_args:
+        num_warmup_steps: 30
+        main_scheduler_callable:
+          class_path: lightning.pytorch.cli.ReduceLROnPlateau
+          init_args:
+            mode: max
+            factor: 0.5
+            patience: 6
+            monitor: val/f1-score
+
+engine:
+  device: auto
+
+callback_monitor: val/f1-score
+
+callbacks:
+  - class_path: otx.backend.native.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
+    init_args:
+      max_interval: 1
+      min_lrschedule_patience: 3
+  - class_path: otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+    init_args:
+      mode: max
+      patience: 10
+      min_delta: 0.001
+      warmup_iters: 30
+      warmup_epochs: 3
+  - class_path: lightning.pytorch.callbacks.ModelCheckpoint
+    init_args:
+      dirpath: "" # use engine.work_dir
+      monitor: val/f1-score
+      mode: max
+      save_top_k: 1
+      save_last: true
+      auto_insert_metric_name: false
+      filename: "checkpoints/epoch_{epoch:03d}"
+  - class_path: otx.backend.native.callbacks.aug_scheduler.AugmentationSchedulerCallback
+    init_args:
+      data_aug_switch:
+        class_path: otx.backend.native.callbacks.aug_scheduler.DataAugSwitch
+        init_args:
+          policy_epochs: [4, 23, 40]
+          policies:
+            no_aug:
+              to_tv_image: false
+              transforms:
+                - class_path: otx.data.transform_libs.torchvision.Resize
+                  init_args:
+                    scale: [640, 640]
+                    keep_ratio: false
+                - class_path: otx.data.transform_libs.torchvision.RandomFlip
+                  init_args:
+                    probability: 0.5
+                - class_path: torchvision.transforms.v2.ToDtype
+                  init_args:
+                    dtype: ${as_torch_dtype:torch.float32}
+                    scale: false
+                - class_path: torchvision.transforms.v2.Normalize
+                  init_args:
+                    mean: [0.0, 0.0, 0.0]
+                    std: [255.0, 255.0, 255.0]
+            light_aug:
+              to_tv_image: true
+              transforms:
+                - class_path: torchvision.transforms.v2.ToImage
+                - class_path: torchvision.transforms.v2.RandomPhotometricDistort
+                  init_args:
+                    p: 0.5
+                - class_path: torchvision.transforms.v2.RandomZoomOut
+                  init_args:
+                    fill: 0
+                    p: 0.5
+                - class_path: otx.data.transform_libs.torchvision.RandomIoUCrop
+                  init_args:
+                    probability: 0.8
+                - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
+                  init_args:
+                    min_area: 1
+                - class_path: otx.data.transform_libs.torchvision.RandomFlip
+                  init_args:
+                    probability: 0.5
+                - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
+                  init_args:
+                    min_area: 1
+                - class_path: otx.data.transform_libs.torchvision.Resize
+                  init_args:
+                    scale: [640, 640]
+                    transform_bbox: true
+                    keep_ratio: false
+                - class_path: torchvision.transforms.v2.ToDtype
+                  init_args:
+                    dtype: ${as_torch_dtype:torch.float32}
+                    scale: false
+                - class_path: torchvision.transforms.v2.Normalize
+                  init_args:
+                    mean: [0.0, 0.0, 0.0]
+                    std: [255.0, 255.0, 255.0]
+            strong_aug_1:
+              to_tv_image: false
+              transforms:
+                - class_path: otx.data.transform_libs.torchvision.CachedMosaic
+                  init_args:
+                    random_pop: false
+                    max_cached_images: 20
+                    img_scale: [640, 640]
+                - class_path: otx.data.transform_libs.torchvision.CachedMixUp
+                  init_args:
+                    img_scale: [640, 640] # (H, W)
+                    ratio_range:
+                      - 1.0
+                      - 1.0
+                    probability: 0.5
+                    random_pop: false
+                    max_cached_images: 10
+                - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
+                  init_args:
+                    min_area: 1
+                - class_path: otx.data.transform_libs.torchvision.Resize
+                  init_args:
+                    scale: [640, 640] # (H, W)
+                    keep_ratio: false
+                    transform_bbox: true
+                - class_path: otx.data.transform_libs.torchvision.YOLOXHSVRandomAug
+                - class_path: otx.data.transform_libs.torchvision.RandomFlip
+                  init_args:
+                    probability: 0.5
+                - class_path: torchvision.transforms.v2.ToDtype
+                  init_args:
+                    dtype: ${as_torch_dtype:torch.float32}
+                    scale: false
+                - class_path: torchvision.transforms.v2.Normalize
+                  init_args:
+                    mean: [0.0, 0.0, 0.0]
+                    std: [255.0, 255.0, 255.0]
+            strong_aug_2:
+              to_tv_image: true
+              transforms:
+                - class_path: torchvision.transforms.v2.ToImage
+                - class_path: torchvision.transforms.v2.RandomPhotometricDistort
+                  init_args:
+                    p: 0.5
+                - class_path: torchvision.transforms.v2.RandomZoomOut # Can't be used when using CachedMosaic
+                  init_args:
+                    fill: 0
+                    p: 0.5
+                - class_path: otx.data.transform_libs.torchvision.RandomIoUCrop # Can't be used when using CachedMosaic
+                  init_args:
+                    probability: 0.8
+                - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
+                  init_args:
+                    min_area: 1
+                - class_path: otx.data.transform_libs.torchvision.RandomFlip
+                  init_args:
+                    probability: 0.5
+                - class_path: otx.data.transform_libs.torchvision.CachedMixUp
+                  init_args:
+                    img_scale: [640, 640] # (H, W)
+                    ratio_range:
+                      - 1.0
+                      - 1.0
+                    probability: 0.5
+                    random_pop: false
+                    max_cached_images: 10
+                - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
+                  init_args:
+                    min_area: 1
+                - class_path: otx.data.transform_libs.torchvision.Resize
+                  init_args:
+                    scale: [640, 640]
+                    transform_bbox: true
+                    keep_ratio: false
+                - class_path: torchvision.transforms.v2.ToDtype
+                  init_args:
+                    dtype: ${as_torch_dtype:torch.float32}
+                    scale: false
+                - class_path: torchvision.transforms.v2.Normalize
+                  init_args:
+                    mean: [0.0, 0.0, 0.0]
+                    std: [255.0, 255.0, 255.0]
+data: ../_base_/data/torchvision_base.yaml
+overrides:
+  callbacks:
+    - class_path: otx.backend.native.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
+      init_args:
+        max_interval: 1
+        min_lrschedule_patience: 3
+    - class_path: otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+      init_args:
+        warmup_iters: 100
+        warmup_epochs: 7
+
+  data:
+    input_size:
+      - 640
+      - 640
+    task: DETECTION
+    data_format: coco_instances
+    train_subset:
+      batch_size: 8
+      num_workers: 4
+      transforms:
+        - class_path: otx.data.transform_libs.torchvision.Resize
+          init_args:
+            scale: $(input_size)
+            keep_ratio: false
+        - class_path: otx.data.transform_libs.torchvision.RandomFlip
+          init_args:
+            probability: 0.5
+        - class_path: torchvision.transforms.v2.ToDtype
+          init_args:
+            dtype: ${as_torch_dtype:torch.float32}
+            scale: false
+        - class_path: torchvision.transforms.v2.Normalize
+          init_args:
+            mean: [0.0, 0.0, 0.0]
+            std: [255.0, 255.0, 255.0]
+      sampler:
+        class_path: otx.data.samplers.balanced_sampler.BalancedSampler
+
+    val_subset:
+      batch_size: 8
+      transforms:
+        - class_path: otx.data.transform_libs.torchvision.Resize
+          init_args:
+            scale: $(input_size)
+            keep_ratio: false
+        - class_path: torchvision.transforms.v2.ToDtype
+          init_args:
+            dtype: ${as_torch_dtype:torch.float32}
+            scale: false
+        - class_path: torchvision.transforms.v2.Normalize
+          init_args:
+            mean: [0.0, 0.0, 0.0]
+            std: [255.0, 255.0, 255.0]
+    test_subset:
+      batch_size: 8
+      transforms:
+        - class_path: otx.data.transform_libs.torchvision.Resize
+          init_args:
+            scale: $(input_size)
+            keep_ratio: false
+        - class_path: torchvision.transforms.v2.ToDtype
+          init_args:
+            dtype: ${as_torch_dtype:torch.float32}
+            scale: false
+        - class_path: torchvision.transforms.v2.Normalize
+          init_args:
+            mean: [0.0, 0.0, 0.0]
+            std: [255.0, 255.0, 255.0]

@@ -1,0 +1,55 @@
+.selectableItem {
+    width: 100%;
+    cursor: pointer;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+
+    border: var(--spectrum-global-dimension-size-25) solid transparent;
+
+    transition: border 0.3s ease-in-out;
+
+    &:hover .selectableItemDescription {
+        background-color: var(--spectrum-global-color-gray-100);
+    }
+}
+
+.selectableItemSelected {
+    border: var(--spectrum-global-dimension-size-25) solid var(--energy-blue);
+    border-radius: var(--spectrum-alias-border-radius-regular);
+}
+
+.selectableItemDescription {
+    background-color: var(--spectrum-global-color-gray-75);
+}
+
+.selectedHeader {
+    background: var(--mixed-gray-800-and-energy-blue) !important;
+
+    h3 {
+        color: var(--energy-blue);
+    }
+}
+
+.selectedDescription {
+    background: var(--mixed-gray-75-and-energy-blue) !important;
+}
+
+.trainTemplateName {
+    color: var(--spectrum-global-color-gray-900);
+    margin: 0;
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.attributeTitle {
+    font-weight: 400;
+    color: var(--spectrum-global-color-gray-700);
+    font-size: var(--spectrum-global-dimension-font-size-50);
+}
+
+.radioItem {
+    margin: 0;
+}

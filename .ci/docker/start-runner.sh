@@ -183,7 +183,7 @@ fi
 echo "Successfully started ci container - $CONTAINER_NAME"
 
 docker exec -it "$CONTAINER_NAME" bash -c \
-    "./actions-runner/config.sh  \
+    "./config.sh  \
     --unattended \
     --url https://github.com/open-edge-platform/training_extensions \
     --token $GITHUB_TOKEN \
@@ -194,14 +194,14 @@ docker exec -it "$CONTAINER_NAME" bash -c \
 if [ $RET -ne 0 ]; then
     echo "failed to configure the runner. $RET"
     docker exec -it "$CONTAINER_NAME" bash -c \
-      "./actions-runner/config.sh --help"
+      "./config.sh --help"
     docker stop "$CONTAINER_NAME"
     yes | docker rm "$CONTAINER_NAME"
     exit 1
 fi
 
 docker exec -d "$CONTAINER_NAME" bash -c \
-    "./actions-runner/run.sh" ; RET=$?
+    "./run.sh" ; RET=$?
 
 if [ $RET -ne 0 ]; then
     echo "failed to start actions runner. $RET"

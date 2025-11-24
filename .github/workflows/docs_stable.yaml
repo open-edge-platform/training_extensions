@@ -4,31 +4,40 @@ on:
   release:
     types: [published]
 
-# Declare default permissions as read only.
-permissions: read-all
+permissions: {} # No permissions by default on workflow level
 
 jobs:
   Build-Docs:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     permissions:
-      contents: write
+      contents: write # needed to commit docs
     steps:
+      - name: Runner cleanup
+        uses: open-edge-platform/geti-ci/actions/cleanup-runner@60c5b06ac4b2c056f3567e84aa7fa06930cdc4e4
+        with:
+          type: "initial"
       - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0 # otherwise, you will failed to push refs to dest repo
+          persist-credentials: false
       - name: Set up Python
-        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
         with:
-          python-version: "3.10"
-      - name: Install tox
+          python-version: "3.12"
+      - name: Install dependencies
+        working-directory: library
         run: |
-          python -m pip install --require-hashes --no-deps -r .ci/requirements.txt
-          pip-compile --generate-hashes --output-file=/tmp/requirements.txt --extra=ci_tox pyproject.toml
-          python -m pip install --require-hashes --no-deps -r /tmp/requirements.txt
-          rm /tmp/requirements.txt
+          python -m pip install uv
       - name: Build-Docs
-        run: tox -e build-doc
+        working-directory: library
+        run: |
+          uv venv .otx
+          source .otx/bin/activate
+          uv pip install .[docs]
+          cd docs
+          make clean
+          make html
       - name: Create gh-pages branch
         run: |
           echo RELEASE_VERSION=${GITHUB_REF#refs/*/} >> $GITHUB_ENV
@@ -53,23 +62,26 @@ jobs:
             echo "Branch gh-pages already exists"
           fi
       - name: Commit docs to gh-pages branch
+        working-directory: library
+        env:
+          RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
         run: |
           git fetch
           git checkout gh-pages
           mkdir -p /tmp/docs_build
-          cp -r docs/build/html/* /tmp/docs_build/
-          rm -rf ${{ env.RELEASE_VERSION }}/*
+          cp -r ./docs/build/html/* /tmp/docs_build/
+          rm -rf "$RELEASE_VERSION"/*
           echo '<html><head><meta http-equiv="refresh" content="0; url=stable/" /></head></html>' > index.html
-          mkdir -p ${{ env.RELEASE_VERSION }}
-          cp -r /tmp/docs_build/* ./${{ env.RELEASE_VERSION }}
-          ln -sfn ${{ env.RELEASE_VERSION }} stable
+          mkdir -p "$RELEASE_VERSION"
+          cp -r /tmp/docs_build/* ./"$RELEASE_VERSION"
+          ln -sfn "$RELEASE_VERSION" stable
           rm -rf /tmp/docs_build
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add ./stable ${{ env.RELEASE_VERSION }}
+          git add ./stable "$RELEASE_VERSION"
           git commit -m "Update documentation" -a || true
       - name: Push changes
-        uses: ad-m/github-push-action@fcea09907c44d7a7a3331c9c04080d55d87c95fe # master
+        uses: ad-m/github-push-action@77c5b412c50b723d2a4fbc6d71fb5723bcd439aa # v1.0.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: gh-pages

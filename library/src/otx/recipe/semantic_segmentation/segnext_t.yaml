@@ -1,0 +1,49 @@
+task: SEMANTIC_SEGMENTATION
+model:
+  class_path: otx.backend.native.models.segmentation.segnext.SegNext
+  init_args:
+    label_info: 2
+    model_name: segnext_tiny
+
+    optimizer:
+      class_path: torch.optim.AdamW
+      init_args:
+        lr: 0.00006
+        betas:
+          - 0.9
+          - 0.999
+        weight_decay: 0.01
+
+    scheduler:
+      class_path: otx.backend.native.schedulers.LinearWarmupSchedulerCallable
+      init_args:
+        num_warmup_steps: 20
+        main_scheduler_callable:
+          class_path: torch.optim.lr_scheduler.PolynomialLR
+          init_args:
+            total_iters: 150
+            power: 0.9
+            last_epoch: -1
+
+engine:
+  device: auto
+
+callback_monitor: val/Dice
+
+data: ../_base_/data/semantic_segmentation.yaml
+
+callbacks:
+  - class_path: otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+    init_args:
+      monitor: val/Dice
+      min_delta: 0.001
+      mode: max
+  - class_path: lightning.pytorch.callbacks.ModelCheckpoint
+    init_args:
+      dirpath: "" # use engine.work_dir
+      monitor: val/Dice
+      mode: max
+      save_top_k: 1
+      save_last: true
+      auto_insert_metric_name: false
+      filename: "checkpoints/epoch_{epoch:03d}"

@@ -1,0 +1,78 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""Application configuration management"""
+
+from functools import lru_cache
+from pathlib import Path
+from typing import Literal
+
+from pydantic import Field, model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    """Application settings with environment variable support"""
+
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", case_sensitive=False, extra="ignore")
+
+    # Application
+    app_name: str = "Geti Tune"
+    version: str = "0.1.0"
+    summary: str = "Geti Tune server"
+    description: str = (
+        "Geti Tune allows to fine-tune computer vision models at the edge. "
+        "It is a lightweight application that covers the complete model AI lifecycle, "
+        "including advanced features for inference, model monitoring and data collection."
+    )
+    openapi_url: str = "/api/openapi.json"
+    log_level: str = Field(default="INFO", alias="LOG_LEVEL")
+    environment: Literal["dev", "prod"] = "dev"
+    data_dir: Path = Field(default=Path("data"), alias="DATA_DIR")
+    log_dir: Path = Field(default=Path("logs"), alias="LOG_DIR")
+    worker_dir: Path | None = None
+    job_dir: Path | None = None
+
+    # Server
+    host: str = Field(default="0.0.0.0", alias="HOST")  # noqa: S104
+    port: int = Field(default=7860, alias="PORT")
+
+    # Database
+    database_file: str = Field(default="geti_tune.db", alias="DATABASE_FILE", description="Database filename")
+    db_echo: bool = Field(default=False, alias="DB_ECHO")
+
+    # Alembic
+    alembic_config_path: str = "app/alembic.ini"
+    alembic_script_location: str = "app/alembic"
+
+    # Proxy settings
+    no_proxy: str = Field(default="localhost,127.0.0.1,::1", alias="no_proxy")
+
+    gpu_slots: int = Field(default=1, alias="GPU_SLOTS", description="Number of GPU slots available for model tuning")
+
+    @property
+    def database_url(self) -> str:
+        """Get database URL"""
+        return f"sqlite:///{self.data_dir / self.database_file}"
+
+    @model_validator(mode="after")
+    def set_default_dirs(self) -> "Settings":
+        """Set default directories based on log_dir"""
+        if self.worker_dir is None:
+            self.worker_dir = self.log_dir / "workers"
+        if self.job_dir is None:
+            self.job_dir = self.log_dir / "jobs"
+
+        return self
+
+    def ensure_dirs_exist(self) -> None:
+        """Create all directories if they don't exist."""
+        for d in [self.data_dir, self.log_dir, self.worker_dir, self.job_dir]:
+            if d:
+                d.mkdir(parents=True, exist_ok=True)
+
+
+@lru_cache
+def get_settings() -> Settings:
+    """Get cached application settings"""
+    return Settings()

@@ -1,0 +1,186 @@
+task: DETECTION
+model:
+  class_path: otx.backend.native.models.detection.yolox.YOLOX
+  init_args:
+    model_name: yolox_l
+    label_info: 80
+
+    optimizer:
+      class_path: torch.optim.SGD
+      init_args:
+        lr: 0.001
+        momentum: 0.9
+        weight_decay: 0.0001
+
+    scheduler:
+      class_path: otx.backend.native.schedulers.LinearWarmupSchedulerCallable
+      init_args:
+        num_warmup_steps: 0
+        main_scheduler_callable:
+          class_path: lightning.pytorch.cli.ReduceLROnPlateau
+          init_args:
+            mode: max
+            factor: 0.1
+            patience: 4
+            monitor: val/map_50
+
+engine:
+  device: auto
+
+callback_monitor: val/map_50
+
+data: ../_base_/data/detection.yaml
+
+callbacks:
+  - class_path: otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+    init_args:
+      mode: max
+      patience: 10
+      check_on_train_epoch_end: false
+      monitor: val/map_50
+      min_delta: 0.001
+      warmup_iters: 30
+      warmup_epochs: 3
+  - class_path: lightning.pytorch.callbacks.ModelCheckpoint
+    init_args:
+      dirpath: "" # use engine.work_dir
+      monitor: val/map_50
+      mode: max
+      save_top_k: 1
+      save_last: true
+      auto_insert_metric_name: false
+      filename: "checkpoints/epoch_{epoch:03d}"
+
+overrides:
+  reset:
+    - data.train_subset.transforms
+    - data.val_subset.transforms
+    - data.test_subset.transforms
+  gradient_clip_val: 35.0
+
+  data:
+    input_size:
+      - 640
+      - 640
+    image_color_channel: BGR
+    train_subset:
+      batch_size: 8
+      transforms:
+        - class_path: otx.data.transform_libs.torchvision.MinIoURandomCrop
+          enable: false
+        - class_path: otx.data.transform_libs.torchvision.Resize
+          init_args:
+            scale: $(input_size)
+            keep_ratio: true
+            transform_bbox: true
+        - class_path: otx.data.transform_libs.torchvision.CachedMosaic
+          init_args:
+            random_pop: false
+            max_cached_images: 20
+            img_scale: $(input_size) # (H, W)
+        - class_path: otx.data.transform_libs.torchvision.RandomAffine
+          init_args:
+            scaling_ratio_range:
+              - 0.1
+              - 2.0
+            border: $(input_size) * -0.5
+        - class_path: otx.data.transform_libs.torchvision.CachedMixUp
+          init_args:
+            img_scale: $(input_size) # (H, W)
+            ratio_range:
+              - 1.0
+              - 1.0
+            probability: 0.5
+            random_pop: false
+            max_cached_images: 10
+        - class_path: torchvision.transforms.v2.RandomPhotometricDistort
+          enable: false
+          init_args:
+            brightness:
+              - 0.875
+              - 1.125
+            contrast:
+              - 0.5
+              - 1.5
+            saturation:
+              - 0.5
+              - 1.5
+            hue:
+              - -0.05
+              - 0.05
+            p: 0.5
+        - class_path: otx.data.transform_libs.torchvision.YOLOXHSVRandomAug
+        - class_path: otx.data.transform_libs.torchvision.RandomFlip
+          init_args:
+            probability: 0.5
+            is_numpy_to_tvtensor: false
+        - class_path: otx.data.transform_libs.torchvision.Pad
+          init_args:
+            pad_to_square: true
+            pad_val: 114
+        - class_path: torchvision.transforms.v2.RandomVerticalFlip
+          enable: false
+          init_args:
+            p: 0.5
+        - class_path: otx.data.transform_libs.torchvision.RandomGaussianBlur
+          enable: false
+          init_args:
+            kernel_size: 5
+            sigma:
+              - 0.1
+              - 2.0
+            probability: 0.5
+        - class_path: torchvision.transforms.v2.ToDtype
+          init_args:
+            dtype: ${as_torch_dtype:torch.float32}
+        - class_path: otx.data.transform_libs.torchvision.RandomGaussianNoise
+          enable: false
+          init_args:
+            mean: 0.0
+            sigma: 0.1
+            probability: 0.5
+        - class_path: torchvision.transforms.v2.Normalize
+          init_args:
+            mean: [0.0, 0.0, 0.0]
+            std: [1.0, 1.0, 1.0]
+      sampler:
+        class_path: otx.data.samplers.balanced_sampler.BalancedSampler
+
+    val_subset:
+      batch_size: 8
+      transforms:
+        - class_path: otx.data.transform_libs.torchvision.Resize
+          init_args:
+            scale: $(input_size)
+            keep_ratio: true
+            is_numpy_to_tvtensor: false
+        - class_path: otx.data.transform_libs.torchvision.Pad
+          init_args:
+            pad_to_square: true
+            pad_val: 114
+        - class_path: torchvision.transforms.v2.ToDtype
+          init_args:
+            dtype: ${as_torch_dtype:torch.float32}
+        - class_path: torchvision.transforms.v2.Normalize
+          init_args:
+            mean: [0.0, 0.0, 0.0]
+            std: [1.0, 1.0, 1.0]
+    test_subset:
+      batch_size: 8
+      transforms:
+        - class_path: otx.data.transform_libs.torchvision.Resize
+          init_args:
+            scale: $(input_size)
+            keep_ratio: true
+            is_numpy_to_tvtensor: false
+        - class_path: otx.data.transform_libs.torchvision.Pad
+          init_args:
+            pad_to_square: true
+            pad_val: 114
+        - class_path: torchvision.transforms.v2.ToDtype
+          init_args:
+            dtype: ${as_torch_dtype:torch.float32}
+        - class_path: torchvision.transforms.v2.Normalize
+          init_args:
+            mean: [0.0, 0.0, 0.0]
+            std: [1.0, 1.0, 1.0]

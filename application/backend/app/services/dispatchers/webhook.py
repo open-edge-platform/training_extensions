@@ -1,0 +1,63 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""This module contains the WebhookDispatcher class for dispatching images and predictions to a webhook endpoint."""
+
+from typing import Any
+
+import numpy as np
+import requests
+from loguru import logger
+from model_api.models.result import Result
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
+from app.models import WebhookSinkConfig
+
+from .base import BaseDispatcher
+
+MAX_RETRIES = 3
+BACKOFF_FACTOR = 0.3
+RETRY_ON_STATUS = [500, 502, 503, 504]
+
+
+class WebhookDispatcher(BaseDispatcher):
+    def __init__(self, output_config: WebhookSinkConfig) -> None:
+        """
+        Initialize the WebhookDispatcher.
+        Args:
+            output_config: Configuration for the webhook-based output destination
+        """
+        super().__init__(output_config=output_config)
+        self.webhook_url = output_config.config_data.webhook_url
+        self.http_method = output_config.config_data.http_method
+        self.headers = output_config.config_data.headers
+        self.timeout = output_config.config_data.timeout
+        self.session = requests.Session()
+        retries = Retry(
+            total=MAX_RETRIES,
+            backoff_factor=BACKOFF_FACTOR,
+            status_forcelist=RETRY_ON_STATUS,
+            allowed_methods=["PATCH", "POST", "PUT"],
+        )
+        adapter = HTTPAdapter(max_retries=retries)
+        self.session.mount("http://", adapter)
+        self.session.mount("https://", adapter)
+
+    def __send_to_webhook(self, payload: dict[str, Any]) -> None:
+        logger.debug("Sending payload to webhook at {}", self.webhook_url)
+        response = self.session.request(
+            self.http_method, self.webhook_url, headers=self.headers, json=payload, timeout=self.timeout
+        )
+        response.raise_for_status()
+        logger.debug("Response from webhook: {}", response.text)
+
+    def _dispatch(
+        self,
+        original_image: np.ndarray,
+        image_with_visualization: np.ndarray,
+        predictions: Result,
+    ) -> None:
+        payload = self._create_payload(original_image, image_with_visualization, predictions)
+
+        self.__send_to_webhook(payload)

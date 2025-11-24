@@ -1,0 +1,52 @@
+task: MULTI_LABEL_CLS
+model:
+  class_path: otx.backend.native.models.classification.multilabel_models.vit.VisionTransformerMultilabelCls
+  init_args:
+    label_info: 1000
+    model_name: "vit-tiny"
+
+    optimizer:
+      class_path: torch.optim.AdamW
+      init_args:
+        lr: 0.0001
+        weight_decay: 0.05
+
+    scheduler:
+      class_path: otx.backend.native.schedulers.LinearWarmupSchedulerCallable
+      init_args:
+        num_warmup_steps: 0
+        main_scheduler_callable:
+          class_path: lightning.pytorch.cli.ReduceLROnPlateau
+          init_args:
+            mode: max
+            factor: 0.5
+            patience: 3
+            monitor: val/accuracy
+
+engine:
+  device: auto
+
+callback_monitor: val/accuracy
+
+data: ../../_base_/data/classification.yaml
+
+callbacks:
+  - class_path: otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+    init_args:
+      patience: 5
+  - class_path: lightning.pytorch.callbacks.ModelCheckpoint
+    init_args:
+      dirpath: "" # use engine.work_dir
+      monitor: val/accuracy
+      mode: max
+      save_top_k: 1
+      save_last: true
+      auto_insert_metric_name: false
+      filename: "checkpoints/epoch_{epoch:03d}"
+
+overrides:
+  max_epochs: 200
+
+  data:
+    task: MULTI_LABEL_CLS
+    data_format: datumaro

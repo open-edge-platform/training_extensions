@@ -1,0 +1,79 @@
+job_type: train
+model_manifest_id: Custom_Image_Classification_EfficinetNet-B0
+export_parameters:
+  - format: openvino
+    output_model_id: 687dde02ee0628d82f9fdfe3
+    precision: FP16
+    with_xai: true
+  - format: openvino
+    output_model_id: 687dde02ee0628d82f9fdfe4
+    precision: FP32
+    with_xai: false
+  - format: openvino
+    output_model_id: 687dde02ee0628d82f9fdfe5
+    precision: FP16
+    with_xai: false
+  - format: onnx
+    output_model_id: 687dde02ee0628d82f9fdfe6
+    precision: FP32
+    with_xai: false
+hyperparameters:
+  dataset_preparation:
+    augmentation:
+      random_resize_crop:
+        enable: true
+        crop_ratio_range:
+          - 0.08
+          - 1.0
+        aspect_ratio_range:
+          - 0.75
+          - 1.34
+      random_affine:
+        enable: false
+        max_rotate_degree: 10.0
+        max_translate_ratio: 0.1
+        scaling_ratio_range:
+          - 0.5
+          - 1.5
+        max_shear_degree: 2.0
+      color_jitter:
+        enable: false
+        brightness: [0.875, 1.125]
+        contrast:
+          - 0.5
+          - 1.5
+        saturation:
+          - 0.5
+          - 1.5
+        hue:
+          - 0.05
+          - 0.05
+        probability: 0.5
+      gaussian_blur:
+        enable: false
+        kernel_size: 5
+        sigma:
+          - 0.1
+          - 2.0
+      random_horizontal_flip:
+        enable: true
+        probability: 0.5
+      random_vertical_flip:
+        enable: false
+        probability: 0.5
+      gaussian_noise:
+        enable: false
+        mean: 0.0
+        sigma: 0.1
+        probability: 0.5
+  training:
+    max_epochs: 200
+    early_stopping:
+      enable: true
+      patience: 10
+    learning_rate: 0.0049
+    input_size_width: 224
+    input_size_height: 224
+  evaluation:
+    metric: accuracy
+sub_task_type: MULTI_CLASS_CLS

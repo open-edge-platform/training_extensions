@@ -1,0 +1,10 @@
+callback_monitor: val/accuracy
+
+data: ../../_base_/data/torchvision_base.yaml
+
+overrides:
+  data:
+    task: MULTI_CLASS_CLS
+    image_color_channel: RGB
+    test_subset:
+      batch_size: 128

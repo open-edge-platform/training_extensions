@@ -1,6 +1,0 @@
-ignore-policy: ""
-ignorefile: .trivyignore
-format: spdx-json
-output: trivy-results.spdx.json
-list-all-pkgs: true
-debug: true

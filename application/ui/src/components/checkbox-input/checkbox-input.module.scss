@@ -1,0 +1,43 @@
+// source https://moderncss.dev/pure-css-custom-checkbox-style/
+
+.checkbox[type='checkbox'] {
+    margin: 0;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    color: currentColor;
+    width: 1.15em;
+    height: 1.15em;
+    border-radius: 0.15em;
+    transform: translateY(-0.075em);
+
+    display: grid;
+    place-content: center;
+    border: 0.15em solid var(--spectrum-global-color-gray-600);
+
+    &::before {
+        content: '';
+        width: 0.65em;
+        height: 0.65em;
+        clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+        transform: scale(0);
+        transform-origin: bottom left;
+        transition: 120ms transform ease-in-out;
+        box-shadow: inset 1em 1em var(--form-control-color);
+        background: var(--spectrum-global-color-gray-75);
+    }
+
+    &:checked {
+        border: none;
+        background: var(--spectrum-global-color-gray-700);
+
+        &::before {
+            transform: scale(1);
+        }
+    }
+
+    &:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
+}

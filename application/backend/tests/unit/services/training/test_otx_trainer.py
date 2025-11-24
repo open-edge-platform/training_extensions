@@ -1,0 +1,387 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+from collections.abc import Callable
+from pathlib import Path
+from unittest.mock import Mock
+from uuid import uuid4
+
+import pytest
+
+from app.core.run import ExecutionContext
+from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, TaskType
+from app.models.training_configuration.configuration import PartialTrainingConfiguration
+from app.schemas.model import TrainingStatus
+from app.schemas.project import TaskBase
+from app.services import DatasetService, ModelRevisionMetadata, ModelService, TrainingConfigurationService
+from app.services.base_weights_service import BaseWeightsService
+from app.services.training.models import TrainingParams
+from app.services.training.otx_trainer import OTXTrainer, TrainingDependencies
+from app.services.training.subset_assignment import (
+    DatasetItemWithLabels,
+    SubsetAssigner,
+    SubsetAssignment,
+    SubsetDistribution,
+    SubsetService,
+)
+
+
+@pytest.fixture
+def fxt_weights_service() -> Mock:
+    """Create a mock BaseWeightsService."""
+    return Mock(spec=BaseWeightsService)
+
+
+@pytest.fixture
+def fxt_subset_service() -> Mock:
+    """Mock SubsetService for testing."""
+    return Mock(spec=SubsetService)
+
+
+@pytest.fixture
+def fxt_assigner() -> Mock:
+    """Mock SubsetAssigner for testing."""
+    return Mock(spec=SubsetAssigner)
+
+
+@pytest.fixture
+def fxt_dataset_service() -> Mock:
+    """Mock DatasetService for testing."""
+    return Mock(spec=DatasetService)
+
+
+@pytest.fixture
+def fxt_model_service() -> Mock:
+    """Mock ModelService for testing."""
+    return Mock(spec=ModelService)
+
+
+@pytest.fixture
+def fxt_training_configuration_service() -> Mock:
+    """Mock TrainingConfigurationService for testing."""
+    return Mock(spec=TrainingConfigurationService)
+
+
+@pytest.fixture
+def fxt_otx_trainer(
+    tmp_path: Path,
+    fxt_weights_service: Mock,
+    fxt_subset_service: Mock,
+    fxt_assigner: Mock,
+    fxt_dataset_service: Mock,
+    fxt_model_service: Mock,
+    fxt_training_configuration_service: Mock,
+    fxt_db_session_factory: Callable,
+) -> Callable[[], OTXTrainer]:
+    """Create an OTXTrainer instance."""
+
+    def create_otx_trainer() -> OTXTrainer:
+        otx_trainer = OTXTrainer(
+            TrainingDependencies(
+                data_dir=tmp_path,
+                base_weights_service=fxt_weights_service,
+                subset_service=fxt_subset_service,
+                subset_assigner=fxt_assigner,
+                dataset_service=fxt_dataset_service,
+                model_service=fxt_model_service,
+                training_configuration_service=fxt_training_configuration_service,
+                db_session_factory=fxt_db_session_factory,
+            )
+        )
+        execution_ctx = Mock(spec=ExecutionContext)
+        execution_ctx.report = Mock()
+        execution_ctx.heartbeat = Mock()
+        otx_trainer._ctx = execution_ctx
+        return otx_trainer
+
+    return create_otx_trainer
+
+
+class TestOTXTrainerPrepareWeights:
+    """Tests for the OTXTrainer.prepare_weights method."""
+
+    def test_prepare_weights_without_parent_model(
+        self,
+        fxt_weights_service: Mock,
+        fxt_otx_trainer: Callable[[], OTXTrainer],
+    ):
+        """Test preparing weights when no parent model revision ID is provided."""
+        # Arrange
+        training_params = TrainingParams(
+            model_architecture_id="Object_Detection_YOLOX_S",
+            task=TaskBase(task_type=TaskType.DETECTION),
+            parent_model_revision_id=None,
+        )
+        otx_trainer = fxt_otx_trainer()
+
+        expected_weights_path = Path("/path/to/weights.pth")
+        fxt_weights_service.get_local_weights_path.return_value = expected_weights_path
+
+        # Act
+        weights_path = otx_trainer.prepare_weights(training_params)
+
+        # Assert
+        assert weights_path == expected_weights_path
+        fxt_weights_service.get_local_weights_path.assert_called_once_with(
+            task=TaskType.DETECTION, model_manifest_id="Object_Detection_YOLOX_S"
+        )
+
+    def test_prepare_weights_with_parent_model(
+        self,
+        tmp_path: Path,
+        fxt_otx_trainer: Callable[[], OTXTrainer],
+    ):
+        """Test preparing weights when parent model revision ID is provided."""
+        # Arrange
+        project_id = uuid4()
+        parent_model_revision_id = uuid4()
+        training_params = TrainingParams(
+            project_id=project_id,
+            model_architecture_id="Object_Detection_YOLOX_S",
+            task=TaskBase(task_type=TaskType.DETECTION),
+            parent_model_revision_id=parent_model_revision_id,
+        )
+        expected_weights_path = (
+            tmp_path / "projects" / str(project_id) / "models" / str(parent_model_revision_id) / "model.pth"
+        )
+        expected_weights_path.parent.mkdir(parents=True, exist_ok=True)
+        expected_weights_path.touch()
+        otx_trainer = fxt_otx_trainer()
+
+        # Act
+        weights_path = otx_trainer.prepare_weights(training_params)
+
+        # Assert
+        assert weights_path == expected_weights_path
+
+    def test_prepare_weights_with_parent_model_no_file_raises_error(
+        self,
+        tmp_path: Path,
+        fxt_otx_trainer: Callable[[], OTXTrainer],
+    ):
+        """Test that FileNotFoundError is raised when parent model weights file is missing."""
+        # Arrange
+        project_id = uuid4()
+        parent_model_revision_id = uuid4()
+        training_params = TrainingParams(
+            project_id=project_id,
+            model_architecture_id="Object_Detection_YOLOX_S",
+            task=TaskBase(task_type=TaskType.DETECTION),
+            parent_model_revision_id=parent_model_revision_id,
+        )
+        expected_weights_path = (
+            tmp_path / "projects" / str(project_id) / "models" / str(parent_model_revision_id) / "model.pth"
+        )
+        otx_trainer = fxt_otx_trainer()
+
+        # Act
+        with pytest.raises(FileNotFoundError, match=f"Parent model weights not found at {expected_weights_path}"):
+            otx_trainer.prepare_weights(training_params)
+
+    def test_prepare_weights_with_parent_model_no_project_id_raises_error(
+        self,
+        fxt_otx_trainer: Callable[[], OTXTrainer],
+    ):
+        """Test that ValueError is raised when parent model revision ID is provided without project ID."""
+        # Arrange
+        training_params = TrainingParams(
+            model_architecture_id="Object_Detection_YOLOX_S",
+            task=TaskBase(task_type=TaskType.DETECTION),
+            parent_model_revision_id=uuid4(),
+            project_id=None,
+        )
+        otx_trainer = fxt_otx_trainer()
+
+        # Act & Assert
+        with pytest.raises(ValueError, match="Project ID must be provided for parent model weights preparation"):
+            otx_trainer.prepare_weights(training_params)
+
+
+class TestOTXTrainerAssignSubsets:
+    """Tests for the OTXTrainer.assign_subsets method."""
+
+    def test_assign_subsets_with_unassigned_items(
+        self,
+        fxt_otx_trainer: Callable[[], OTXTrainer],
+        fxt_subset_service: Mock,
+        fxt_assigner: Mock,
+    ):
+        """Test assigning subsets when unassigned items exist."""
+        # Arrange
+        otx_trainer = fxt_otx_trainer()
+
+        # Create mock unassigned items
+        unassigned_items = [
+            DatasetItemWithLabels(item_id=uuid4(), labels={uuid4(), uuid4()}),
+            DatasetItemWithLabels(item_id=uuid4(), labels={uuid4()}),
+            DatasetItemWithLabels(item_id=uuid4(), labels={uuid4(), uuid4(), uuid4()}),
+        ]
+        fxt_subset_service.get_unassigned_items_with_labels.return_value = unassigned_items
+
+        # Mock current distribution
+        current_distribution = SubsetDistribution(
+            counts={
+                DatasetItemSubset.TRAINING: 10,
+                DatasetItemSubset.VALIDATION: 3,
+                DatasetItemSubset.TESTING: 2,
+            }
+        )
+        fxt_subset_service.get_subset_distribution.return_value = current_distribution
+
+        # Mock assignments
+        expected_assignments = [
+            SubsetAssignment(item_id=unassigned_items[0].item_id, subset=DatasetItemSubset.TRAINING),
+            SubsetAssignment(item_id=unassigned_items[1].item_id, subset=DatasetItemSubset.VALIDATION),
+            SubsetAssignment(item_id=unassigned_items[2].item_id, subset=DatasetItemSubset.TESTING),
+        ]
+        fxt_assigner.assign.return_value = expected_assignments
+        project_id = uuid4()
+
+        # Act
+        otx_trainer.assign_subsets(project_id)
+
+        # Assert
+        fxt_subset_service.get_unassigned_items_with_labels.assert_called_once_with(project_id)
+        fxt_subset_service.get_subset_distribution.assert_called_once_with(project_id)
+        fxt_assigner.assign.assert_called_once()
+        fxt_subset_service.update_subset_assignments.assert_called_once_with(project_id, expected_assignments)
+
+    def test_assign_subsets_with_no_unassigned_items(
+        self,
+        fxt_otx_trainer: Callable[[], OTXTrainer],
+        fxt_subset_service: Mock,
+        fxt_assigner: Mock,
+    ):
+        """Test assigning subsets when no unassigned items exist."""
+        # Arrange
+        project_id = uuid4()
+        fxt_subset_service.get_unassigned_items_with_labels.return_value = []
+        otx_trainer = fxt_otx_trainer()
+
+        # Act
+        otx_trainer.assign_subsets(project_id)
+
+        # Assert
+        fxt_subset_service.get_unassigned_items_with_labels.assert_called_once_with(project_id)
+        fxt_subset_service.get_subset_distribution.assert_not_called()
+        fxt_assigner.assign.assert_not_called()
+        fxt_subset_service.update_subset_assignments.assert_not_called()
+
+
+class TestOTXTrainerCreateTrainingDataset:
+    """Tests for the OTXTrainer.create_training_dataset method."""
+
+    def test_create_training_dataset_success(
+        self,
+        fxt_otx_trainer: Callable[[], OTXTrainer],
+        fxt_dataset_service: Mock,
+    ):
+        """Test successful creation of training, validation, and testing datasets."""
+        # Arrange
+        project_id = uuid4()
+        task = TaskBase(task_type=TaskType.DETECTION, exclusive_labels=True)
+        otx_trainer = fxt_otx_trainer()
+
+        mock_dm_dataset = Mock()
+        fxt_dataset_service.get_dm_dataset.return_value = mock_dm_dataset
+
+        mock_training_dataset = Mock()
+        mock_validation_dataset = Mock()
+        mock_testing_dataset = Mock()
+
+        mock_dm_dataset.filter_by_subset.side_effect = [
+            mock_training_dataset,
+            mock_validation_dataset,
+            mock_testing_dataset,
+        ]
+
+        # Act
+        datasets_info = otx_trainer.create_training_dataset(project_id, task)
+
+        # Assert
+        fxt_dataset_service.get_dm_dataset.assert_called_once_with(
+            project_id,
+            TaskBase(task_type=TaskType.DETECTION, exclusive_labels=True),
+            DatasetItemAnnotationStatus.REVIEWED,
+        )
+        assert datasets_info.training == mock_training_dataset
+        assert datasets_info.validation == mock_validation_dataset
+        assert datasets_info.testing == mock_testing_dataset
+        fxt_dataset_service.save_revision.assert_called_once_with(project_id, mock_dm_dataset)
+
+
+class TestOTXTrainerPrepareModel:
+    """Tests for the OTXTrainer.prepare_model method."""
+
+    def test_prepare_model_success(
+        self,
+        tmp_path: Path,
+        fxt_otx_trainer: Callable[[], OTXTrainer],
+        fxt_model_service: Mock,
+        fxt_training_configuration_service: Mock,
+    ):
+        """Test successful preparation of model metadata."""
+        # Arrange
+        project_id = uuid4()
+        model_id = uuid4()
+        model_architecture_id = "Custom_Image_Classification_EfficientNet-B0"
+        training_params = TrainingParams(
+            model_id=model_id,
+            project_id=project_id,
+            model_architecture_id=model_architecture_id,
+            task=TaskBase(task_type=TaskType.CLASSIFICATION, exclusive_labels=True),
+            parent_model_revision_id=None,
+        )
+        dataset_revision_id = uuid4()
+        otx_trainer = fxt_otx_trainer()
+
+        training_config = PartialTrainingConfiguration(model_manifest_id=model_architecture_id)  # type: ignore
+        fxt_training_configuration_service.get_training_configuration.return_value = training_config
+
+        # Act
+        otx_trainer.prepare_model(training_params, dataset_revision_id)
+
+        # Assert
+        fxt_model_service.create_revision.assert_called_once_with(
+            ModelRevisionMetadata(
+                model_id=model_id,
+                project_id=project_id,
+                architecture_id=model_architecture_id,
+                parent_revision_id=None,
+                training_status=TrainingStatus.NOT_STARTED,
+                dataset_revision_id=dataset_revision_id,
+                training_configuration=training_config,
+            )
+        )
+        fxt_training_configuration_service.get_training_configuration.assert_called_once_with(
+            project_id=project_id,
+            model_architecture_id=model_architecture_id,
+        )
+        config_file = tmp_path / "projects" / str(project_id) / "models" / str(model_id) / "config.yaml"
+        assert config_file.exists()
+        config_yaml = config_file.read_text()
+        assert config_yaml == (
+            "job_type: train\n"
+            "model_manifest_id: Custom_Image_Classification_EfficientNet-B0\n"
+            "sub_task_type: MULTI_CLASS_CLS\n"
+        )
+
+    def test_prepare_model_no_project_id_raises_error(
+        self,
+        fxt_otx_trainer: Callable[[], OTXTrainer],
+    ):
+        """Test that ValueError is raised when project ID is not provided."""
+        # Arrange
+        training_params = TrainingParams(
+            model_id=uuid4(),
+            project_id=None,
+            model_architecture_id="Object_Detection_YOLOX_S",
+            task=TaskBase(task_type=TaskType.DETECTION),
+            parent_model_revision_id=None,
+        )
+        dataset_revision_id = uuid4()
+        otx_trainer = fxt_otx_trainer()
+
+        # Act & Assert
+        with pytest.raises(ValueError, match="Project ID must be provided for model preparation"):
+            otx_trainer.prepare_model(training_params, dataset_revision_id)

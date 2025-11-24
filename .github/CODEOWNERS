@@ -1,4 +1,27 @@
 # See help here: https://help.github.com/en/github/creating-cloning-and-archiving-repositories/about-code-owners
 
-# These owners will be the default owners for everything in the repo.
-* @samet-akcay @eugene123tw @kprokofi @sovrasov @daankrol @djdameln @ashwinvaidya17 @rajeshgangireddy @atwinand
+# Default owners for any file not covered by other rules
+* @samet-akcay @leoll2 @Radwan-Ibrahim
+
+# CI and security
+.github/workflows/ @kamillipka @mramotowski @ivanzati @AlexanderBarabanov
+renovate.json5 @kamillipka @mramotowski @ivanzati @AlexanderBarabanov
+security.md @kamillipka @mramotowski @ivanzati @AlexanderBarabanov
+
+# Library (OTX)
+library/ @open-edge-platform/training_extensions-lib-write
+
+# Application backend
+application/backend/ @open-edge-platform/training_extensions-backend-write
+
+# Application frontend
+application/ui/ @open-edge-platform/training_extensions-ui-write
+
+# Application build and deployment
+application/docker/ @open-edge-platform/training_extensions-backend-write
+
+# Application documentation
+application/docs/ @leoll2 @jpggvilaca
+
+# Model manifests
+application/backend/app/supported_models/manifests/ @leoll2 @kprokofi

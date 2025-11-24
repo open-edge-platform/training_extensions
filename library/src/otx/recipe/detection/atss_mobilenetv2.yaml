@@ -1,0 +1,72 @@
+task: DETECTION
+model:
+  class_path: otx.backend.native.models.detection.atss.ATSS
+  init_args:
+    model_name: atss_mobilenetv2
+    label_info: 80
+
+    optimizer:
+      class_path: torch.optim.SGD
+      init_args:
+        lr: 0.004
+        momentum: 0.9
+        weight_decay: 0.0001
+
+    scheduler:
+      class_path: otx.backend.native.schedulers.LinearWarmupSchedulerCallable
+      init_args:
+        num_warmup_steps: 0
+        main_scheduler_callable:
+          class_path: lightning.pytorch.cli.ReduceLROnPlateau
+          init_args:
+            mode: max
+            factor: 0.1
+            patience: 4
+            monitor: val/map_50
+
+engine:
+  device: auto
+
+callback_monitor: val/map_50
+
+data: ../_base_/data/detection.yaml
+
+callbacks:
+  - class_path: otx.backend.native.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
+    init_args:
+      max_interval: 5
+      decay: -0.025
+      min_lrschedule_patience: 3
+  - class_path: otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
+    init_args:
+      mode: max
+      patience: 10
+      check_on_train_epoch_end: false
+      monitor: val/map_50
+      min_delta: 0.001
+      warmup_iters: 30
+      warmup_epochs: 3
+  - class_path: lightning.pytorch.callbacks.ModelCheckpoint
+    init_args:
+      dirpath: "" # use engine.work_dir
+      monitor: val/map_50
+      mode: max
+      save_top_k: 1
+      save_last: true
+      auto_insert_metric_name: false
+      filename: "checkpoints/epoch_{epoch:03d}"
+
+overrides:
+  gradient_clip_val: 35.0
+
+  data:
+    train_subset:
+      batch_size: 8
+      sampler:
+        class_path: otx.data.samplers.balanced_sampler.BalancedSampler
+
+    val_subset:
+      batch_size: 8
+
+    test_subset:
+      batch_size: 8
