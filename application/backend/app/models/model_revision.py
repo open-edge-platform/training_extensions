@@ -1,0 +1,55 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+from datetime import datetime
+from enum import StrEnum
+from uuid import UUID
+
+from pydantic import Field, model_validator
+
+from app.db.schema import ModelRevisionDB
+from app.models.base import BaseEntity
+
+
+class ModelFormat(StrEnum):
+    OPENVINO = "openvino_ir"
+    ONNX = "onnx"
+
+
+class TrainingStatus(StrEnum):
+    NOT_STARTED = "not_started"
+    IN_PROGRESS = "in_progress"
+    FAILED = "failed"
+    SUCCESSFUL = "successful"
+
+
+class TrainingInfo(BaseEntity):
+    """Information about the training process of a model revision."""
+
+    status: TrainingStatus = TrainingStatus.NOT_STARTED
+    label_schema_revision: dict = Field(default_factory=dict)
+    configuration: dict = Field(default_factory=dict)
+    start_time: datetime | None = None
+    end_time: datetime | None = None
+    dataset_revision_id: UUID | None = None
+
+
+class ModelRevision(BaseEntity):
+    id: UUID
+    architecture: str
+    parent_revision: UUID | None = None
+    training_info: TrainingInfo | None = None
+    files_deleted: bool = False
+
+    @model_validator(mode="before")
+    @classmethod
+    def populate_training_info(cls, data: object) -> object:
+        if isinstance(data, ModelRevisionDB):
+            return {
+                "id": data.id,
+                "architecture": data.architecture,
+                "parent_revision": data.parent_revision,
+                "files_deleted": data.files_deleted,
+                "training_info": TrainingInfo.model_validate(data),
+            }
+        return data

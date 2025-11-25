@@ -9,9 +9,8 @@ from uuid import uuid4
 import pytest
 
 from app.core.run import ExecutionContext
-from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, TaskType
+from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, TaskType, TrainingStatus
 from app.models.training_configuration.configuration import PartialTrainingConfiguration
-from app.schemas.model import TrainingStatus
 from app.schemas.project import TaskBase
 from app.services import DatasetService, ModelRevisionMetadata, ModelService, TrainingConfigurationService
 from app.services.base_weights_service import BaseWeightsService

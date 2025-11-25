@@ -1,39 +1,15 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from datetime import datetime
-from enum import StrEnum
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from app.core.models import BaseIDModel
+from app.models import TrainingInfo
 
 
-class ModelFormat(StrEnum):
-    OPENVINO = "openvino_ir"
-    ONNX = "onnx"
-
-
-class TrainingStatus(StrEnum):
-    NOT_STARTED = "not_started"
-    IN_PROGRESS = "in_progress"
-    FAILED = "failed"
-    SUCCESSFUL = "successful"
-
-
-class TrainingInfo(BaseModel):
-    """Information about the training process of a model revision."""
-
-    status: TrainingStatus = Field(description="Training status", default=TrainingStatus.NOT_STARTED)
-    label_schema_revision: dict = Field(description="Label schema revision used for training")
-    configuration: dict = Field(description="Training configuration parameters")
-    start_time: datetime | None = Field(None, description="Training start time")
-    end_time: datetime | None = Field(None, description="Training end time")
-    dataset_revision_id: UUID | None = Field(None, description="Dataset revision ID used for training")
-
-
-class Model(BaseIDModel):
+class ModelView(BaseIDModel):
     """Represents a model revision with its architecture, parent revision, training info, and file status."""
 
     architecture: str = Field(..., description="Model architecture name")

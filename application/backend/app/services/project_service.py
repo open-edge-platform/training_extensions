@@ -6,10 +6,10 @@ from uuid import UUID
 
 from sqlalchemy.orm import Session
 
-from app.models import Label
+from app.models import Label, PipelineStatus
 from app.repositories import DatasetItemRepository, ProjectRepository
 from app.repositories.base import PrimaryKeyIntegrityError
-from app.schemas import PipelineStatus, ProjectCreate, ProjectView
+from app.schemas import ProjectCreate, ProjectView
 
 from .base import (
     BaseSessionManagedService,

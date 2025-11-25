@@ -1,6 +1,12 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+from .data_collection_policy import (
+    ConfidenceThresholdDataCollectionPolicy,
+    DataCollectionPolicy,
+    DataCollectionPolicyAdapter,
+    FixedRateDataCollectionPolicy,
+)
 from .dataset_item import (
     DatasetItem,
     DatasetItemAnnotation,
@@ -9,6 +15,8 @@ from .dataset_item import (
     DatasetItemSubset,
 )
 from .label import Label, LabelReference
+from .model_revision import ModelRevision, TrainingInfo, TrainingStatus
+from .pipeline import Pipeline, PipelineStatus
 from .shape import FullImage, Point, Polygon, Rectangle, Shape
 from .sink import (
     DisconnectedSinkConfig,
@@ -34,6 +42,9 @@ from .source import (
 from .task_type import TaskType
 
 __all__ = [
+    "ConfidenceThresholdDataCollectionPolicy",
+    "DataCollectionPolicy",
+    "DataCollectionPolicyAdapter",
     "DatasetItem",
     "DatasetItemAnnotation",
     "DatasetItemAnnotationStatus",
@@ -41,14 +52,18 @@ __all__ = [
     "DatasetItemSubset",
     "DisconnectedSinkConfig",
     "DisconnectedSourceConfig",
+    "FixedRateDataCollectionPolicy",
     "FolderSinkConfig",
     "FullImage",
     "IPCameraSourceConfig",
     "ImagesFolderSourceConfig",
     "Label",
     "LabelReference",
+    "ModelRevision",
     "MqttSinkConfig",
     "OutputFormat",
+    "Pipeline",
+    "PipelineStatus",
     "Point",
     "Polygon",
     "Rectangle",
@@ -61,6 +76,8 @@ __all__ = [
     "SourceAdapter",
     "SourceType",
     "TaskType",
+    "TrainingInfo",
+    "TrainingStatus",
     "VideoFileSourceConfig",
     "WebcamSourceConfig",
     "WebhookSinkConfig",
