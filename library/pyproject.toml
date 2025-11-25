@@ -93,9 +93,9 @@ cuda = [
     "torchvision==0.24.1"
 ]
 xpu = [
-    "torch==2.9.1+xpu",
+    "torch==2.9.0+xpu",
     "pytorch-triton-xpu==3.5.0",
-    "torchvision==0.24.1"
+    "torchvision==0.24.0"
 ]
 
 docs = [
