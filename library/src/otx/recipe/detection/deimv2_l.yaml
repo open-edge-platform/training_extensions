@@ -1,8 +1,8 @@
 task: DETECTION
 model:
-  class_path: otx.backend.native.models.detection.DEIMDFine
+  class_path: otx.backend.native.models.detection.DEIMV2
   init_args:
-    model_name: deim_dfine_hgnetv2_l
+    model_name: deimv2_l
     label_info: 80
     multi_scale: false
 
@@ -38,7 +38,7 @@ callbacks:
   - class_path: otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
     init_args:
       mode: max
-      patience: 15
+      patience: 10
       min_delta: 0.001
       warmup_iters: 30
       warmup_epochs: 3
@@ -74,8 +74,8 @@ callbacks:
                     scale: false
                 - class_path: torchvision.transforms.v2.Normalize
                   init_args:
-                    mean: [0.0, 0.0, 0.0]
-                    std: [255.0, 255.0, 255.0]
+                    mean: [123.675, 116.280, 103.530]
+                    std: [58.395, 57.120, 57.375]
             light_aug:
               to_tv_image: true
               transforms:
@@ -110,8 +110,8 @@ callbacks:
                     scale: false
                 - class_path: torchvision.transforms.v2.Normalize
                   init_args:
-                    mean: [0.0, 0.0, 0.0]
-                    std: [255.0, 255.0, 255.0]
+                    mean: [123.675, 116.280, 103.530]
+                    std: [58.395, 57.120, 57.375]
             strong_aug_1:
               to_tv_image: false
               transforms:
@@ -147,8 +147,8 @@ callbacks:
                     scale: false
                 - class_path: torchvision.transforms.v2.Normalize
                   init_args:
-                    mean: [0.0, 0.0, 0.0]
-                    std: [255.0, 255.0, 255.0]
+                    mean: [123.675, 116.280, 103.530]
+                    std: [58.395, 57.120, 57.375]
             strong_aug_2:
               to_tv_image: true
               transforms:
@@ -192,8 +192,8 @@ callbacks:
                     scale: false
                 - class_path: torchvision.transforms.v2.Normalize
                   init_args:
-                    mean: [0.0, 0.0, 0.0]
-                    std: [255.0, 255.0, 255.0]
+                    mean: [123.675, 116.280, 103.530]
+                    std: [58.395, 57.120, 57.375]
 data: ../_base_/data/torchvision_base.yaml
 overrides:
   callbacks:
@@ -229,8 +229,8 @@ overrides:
             scale: false
         - class_path: torchvision.transforms.v2.Normalize
           init_args:
-            mean: [0.0, 0.0, 0.0]
-            std: [255.0, 255.0, 255.0]
+            mean: [123.675, 116.280, 103.530]
+            std: [58.395, 57.120, 57.375]
       sampler:
         class_path: otx.data.samplers.balanced_sampler.BalancedSampler
 
@@ -247,8 +247,8 @@ overrides:
             scale: false
         - class_path: torchvision.transforms.v2.Normalize
           init_args:
-            mean: [0.0, 0.0, 0.0]
-            std: [255.0, 255.0, 255.0]
+            mean: [123.675, 116.280, 103.530]
+            std: [58.395, 57.120, 57.375]
     test_subset:
       batch_size: 8
       transforms:
@@ -262,5 +262,5 @@ overrides:
             scale: false
         - class_path: torchvision.transforms.v2.Normalize
           init_args:
-            mean: [0.0, 0.0, 0.0]
-            std: [255.0, 255.0, 255.0]
+            mean: [123.675, 116.280, 103.530]
+            std: [58.395, 57.120, 57.375]
