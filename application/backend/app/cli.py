@@ -10,9 +10,16 @@ import click
 
 from app.db import MigrationManager, get_db_session
 from app.db.schema import DatasetItemDB, LabelDB, ModelRevisionDB, PipelineDB, ProjectDB, SinkDB, SourceDB
-from app.models import DisconnectedSinkConfig, DisconnectedSourceConfig, OutputFormat, SinkType, SourceType, TaskType
-from app.schemas.model import TrainingStatus
-from app.schemas.pipeline import FixedRateDataCollectionPolicy
+from app.models import (
+    DisconnectedSinkConfig,
+    DisconnectedSourceConfig,
+    FixedRateDataCollectionPolicy,
+    OutputFormat,
+    SinkType,
+    SourceType,
+    TaskType,
+    TrainingStatus,
+)
 from app.settings import get_settings
 
 settings = get_settings()
