@@ -9,7 +9,6 @@ from torch._dynamo.testing import CompileCounter
 from otx.backend.native.exporter.native import OTXModelExporter
 from otx.backend.native.models.base import DataInputParams
 from otx.backend.native.models.detection.atss import ATSS
-from otx.backend.native.models.utils.support_otx_v1 import OTXv1Helper
 from otx.data.entity.torch import OTXPredBatch
 from otx.types.export import TaskLevelExportParameters
 
@@ -21,9 +20,6 @@ class TestATSS:
             label_info=2,
             data_input_params=DataInputParams((800, 992), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         )
-        mock_load_ckpt = mocker.patch.object(OTXv1Helper, "load_det_ckpt")
-        model.load_from_otx_v1_ckpt({})
-        mock_load_ckpt.assert_called_once_with({}, "model.")
 
         assert isinstance(model._export_parameters, TaskLevelExportParameters)
         assert isinstance(model._exporter, OTXModelExporter)

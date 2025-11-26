@@ -19,7 +19,6 @@ from otx.backend.native.models.classification.losses.asymmetric_angular_loss_wit
 )
 from otx.backend.native.models.classification.multilabel_models.base import OTXMultilabelClsModel
 from otx.backend.native.models.classification.necks.gap import GlobalAveragePooling
-from otx.backend.native.models.utils.support_otx_v1 import OTXv1Helper
 from otx.backend.native.schedulers import LRSchedulerListCallable
 from otx.data.entity.base import OTXBatchLossEntity
 from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
@@ -37,7 +36,9 @@ class MobileNetV3MultilabelCls(OTXMultilabelClsModel):
 
     Args:
         label_info (LabelInfoTypes): The label information.
-        data_input_params (DataInputParams): The data input parameters such as input size and normalization.
+        data_input_params (DataInputParams | None, optional): The data input parameters
+            such as input size and normalization. If None is given,
+            default parameters for the specific model will be used.
         model_name (str, optional): The model name. Defaults to "mobilenetv3_large".
         optimizer (OptimizerCallable, optional): The optimizer callable. Defaults to DefaultOptimizerCallable.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): The learning rate scheduler callable.
@@ -49,7 +50,7 @@ class MobileNetV3MultilabelCls(OTXMultilabelClsModel):
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams,
+        data_input_params: DataInputParams | None = None,
         model_name: Literal["mobilenetv3_large", "mobilenetv3_small"] = "mobilenetv3_large",
         freeze_backbone: bool = False,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
@@ -83,10 +84,6 @@ class MobileNetV3MultilabelCls(OTXMultilabelClsModel):
             loss=AsymmetricAngularLossWithIgnore(gamma_pos=0.0, gamma_neg=1.0, reduction="sum"),
             loss_scale=7.0,
         )
-
-    def load_from_otx_v1_ckpt(self, state_dict: dict, add_prefix: str = "model.") -> dict:
-        """Load the previous OTX ckpt according to OTX2.0."""
-        return OTXv1Helper.load_cls_mobilenet_v3_ckpt(state_dict, "multilabel", add_prefix)
 
     def _customize_inputs(self, inputs: OTXDataBatch) -> dict[str, Any]:
         if self.training:

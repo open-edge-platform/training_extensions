@@ -6,7 +6,6 @@
 import pytest
 
 from otx.config.data import SubsetConfig
-from otx.data.dataset.anomaly import OTXAnomalyDataset
 from otx.data.dataset.classification import (
     HLabelInfo,
     OTXHlabelClsDataset,
@@ -49,10 +48,6 @@ class TestOTXDatasetFactory:
             (OTXTaskType.ROTATED_DETECTION, OTXInstanceSegDataset),
             (OTXTaskType.INSTANCE_SEGMENTATION, OTXInstanceSegDataset),
             (OTXTaskType.SEMANTIC_SEGMENTATION, OTXSegmentationDataset),
-            (OTXTaskType.ANOMALY, OTXAnomalyDataset),
-            (OTXTaskType.ANOMALY_CLASSIFICATION, OTXAnomalyDataset),
-            (OTXTaskType.ANOMALY_DETECTION, OTXAnomalyDataset),
-            (OTXTaskType.ANOMALY_SEGMENTATION, OTXAnomalyDataset),
         ],
     )
     def test_create(

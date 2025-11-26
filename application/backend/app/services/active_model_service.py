@@ -12,6 +12,7 @@ from model_api.models import Model
 
 from app.db.engine import get_db_session
 from app.repositories import ModelRevisionRepository
+from app.repositories.active_model_repo import ActiveModelRepo
 from app.schemas.model_activation import ModelActivationState
 
 MODELAPI_DEVICE = os.getenv("MODELAPI_DEVICE", "AUTO")
@@ -41,12 +42,19 @@ class ActiveModelService:
     def _load_state() -> ModelActivationState:
         """Load the state from the file if it exists, otherwise initialize an empty state"""
         with get_db_session() as db:
-            repo = ModelRevisionRepository(db)
-            active_model = repo.get_active_revision()
-            available_models = repo.list_all()
+            active_model_repo = ActiveModelRepo(db=db)
+            active_model = active_model_repo.get_active_revision()
+            if active_model is None:
+                return ModelActivationState(
+                    project_id=None,
+                    active_model_id=None,
+                    available_models=[],
+                )
+            model_rev_repo = ModelRevisionRepository(project_id=str(active_model.project_id), db=db)
+            available_models = model_rev_repo.list_all()
             return ModelActivationState(
-                project_id=UUID(active_model.project_id) if active_model is not None else None,
-                active_model_id=UUID(active_model.id) if active_model is not None else None,
+                project_id=UUID(active_model.project_id),
+                active_model_id=UUID(active_model.id),
                 available_models=[UUID(m.id) for m in available_models],
             )
 

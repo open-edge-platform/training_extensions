@@ -1,9 +1,9 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from datetime import UTC, datetime
-from typing import NamedTuple
+from typing import NamedTuple, cast
 
-from sqlalchemy import Select, delete, func, select, update
+from sqlalchemy import CursorResult, Select, delete, func, select, update
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.orm import Session
 
@@ -125,8 +125,8 @@ class DatasetItemRepository:
             DatasetItemDB.project_id == self.project_id,
             DatasetItemDB.id == obj_id,
         )
-        result = self.db.execute(stmt)
-        return result.rowcount > 0  # type: ignore[union-attr]
+        result = cast(CursorResult, self.db.execute(stmt))
+        return result.rowcount > 0
 
     def set_annotation_data(self, obj_id: str, annotation_data: list) -> UpdateDatasetItemAnnotation | None:
         stmt = (
@@ -161,8 +161,8 @@ class DatasetItemRepository:
                 updated_at=datetime.now(UTC),
             )
         )
-        result = self.db.execute(stmt)
-        return result.rowcount > 0  # type: ignore[union-attr]
+        result = cast(CursorResult, self.db.execute(stmt))
+        return result.rowcount > 0
 
     def get_subset(self, obj_id: str) -> str | None:
         stmt = (
@@ -187,7 +187,7 @@ class DatasetItemRepository:
                 updated_at=datetime.now(UTC),
             )
         )
-        result = self.db.execute(stmt)
+        result = cast(CursorResult, self.db.execute(stmt))
         return result.rowcount or 0
 
     def set_labels(self, dataset_item_id: str, label_ids: set[str]) -> None:

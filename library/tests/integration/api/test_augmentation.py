@@ -26,7 +26,6 @@ def _test_augmentation(
     config = AutoConfigurator(
         data_root=target_dataset_per_task[task_name],
         task=task,
-        model_config_path=recipe,
     ).config
     train_config = config["data"]["train_subset"]
     train_config["input_size"] = (32, 32)

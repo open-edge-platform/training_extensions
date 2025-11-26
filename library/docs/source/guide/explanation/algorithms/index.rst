@@ -25,4 +25,3 @@ Contents
    classification/index
    object_detection/index
    segmentation/index
-   anomaly/index

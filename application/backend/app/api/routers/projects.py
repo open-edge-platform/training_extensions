@@ -4,14 +4,14 @@
 """Endpoints for managing projects"""
 
 from typing import Annotated
-from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends, status
 from fastapi.exceptions import HTTPException
 from fastapi.openapi.models import Example
 from starlette.responses import FileResponse
 
-from app.api.dependencies import get_data_collector, get_label_service, get_project, get_project_id, get_project_service
+from app.api.dependencies import get_data_collector, get_label_service, get_project, get_project_service
+from app.api.validators import ProjectID
 from app.schemas import LabelView, PatchLabels, ProjectCreate, ProjectUpdateName, ProjectView
 from app.services import (
     LabelService,
@@ -115,7 +115,7 @@ def list_projects(project_service: Annotated[ProjectService, Depends(get_project
     },
 )
 def get_project_by_id(
-    project_id: Annotated[UUID, Depends(get_project_id)],
+    project_id: ProjectID,
     project_service: Annotated[ProjectService, Depends(get_project_service)],
 ) -> ProjectView:
     """Get info about a given project"""
@@ -135,7 +135,7 @@ def get_project_by_id(
     },
 )
 def rename_project(
-    project_id: Annotated[UUID, Depends(get_project_id)],
+    project_id: ProjectID,
     project_update_name: Annotated[ProjectUpdateName, Body(description="Updated project name")],
     project_service: Annotated[ProjectService, Depends(get_project_service)],
 ) -> ProjectView:
@@ -159,7 +159,7 @@ def rename_project(
     },
 )
 def delete_project(
-    project_id: Annotated[UUID, Depends(get_project_id)],
+    project_id: ProjectID,
     project_service: Annotated[ProjectService, Depends(get_project_service)],
 ) -> None:
     """Delete a project. Project with a running pipeline cannot be deleted."""
@@ -244,8 +244,7 @@ def update_labels(
     },
 )
 def get_project_thumbnail(
-    project_id: Annotated[UUID, Depends(get_project_id)],
-    project_service: Annotated[ProjectService, Depends(get_project_service)],
+    project_id: ProjectID, project_service: Annotated[ProjectService, Depends(get_project_service)]
 ) -> FileResponse:
     """Get the project's thumbnail image"""
     try:
@@ -266,7 +265,7 @@ def get_project_thumbnail(
     },
 )
 def capture_next_pipeline_frame(
-    project_id: Annotated[UUID, Depends(get_project_id)],
+    project_id: ProjectID,
     project_service: Annotated[ProjectService, Depends(get_project_service)],
     data_collector: Annotated[DataCollector, Depends(get_data_collector)],
 ) -> None:

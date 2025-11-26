@@ -15,7 +15,6 @@ from otx.backend.native.models.classification.classifier import ImageClassifier
 from otx.backend.native.models.classification.heads import LinearClsHead
 from otx.backend.native.models.classification.multiclass_models.base import OTXMulticlassClsModel
 from otx.backend.native.models.classification.necks.gap import GlobalAveragePooling
-from otx.backend.native.models.utils.support_otx_v1 import OTXv1Helper
 from otx.backend.native.schedulers import LRSchedulerListCallable
 from otx.metrics.accuracy import MultiClassClsMetricCallable
 from otx.types.label import LabelInfoTypes
@@ -31,7 +30,9 @@ class MobileNetV3MulticlassCls(OTXMulticlassClsModel):
 
     Args:
         label_info (LabelInfoTypes): The label information.
-        data_input_params (DataInputParams): The data input parameters such as input size and normalization.
+        data_input_params (DataInputParams | None, optional): The data input parameters
+            such as input size and normalization. If None is given,
+            default parameters for the specific model will be used.
         model_name (Literal["mobilenetv3_large", "mobilenetv3_small"], optional): The model name.
             Defaults to "mobilenetv3_large".
         optimizer (OptimizerCallable, optional): The optimizer callable. Defaults to DefaultOptimizerCallable.
@@ -44,7 +45,7 @@ class MobileNetV3MulticlassCls(OTXMulticlassClsModel):
     def __init__(
         self,
         label_info: LabelInfoTypes,
-        data_input_params: DataInputParams,
+        data_input_params: DataInputParams | None = None,
         model_name: Literal["mobilenetv3_large", "mobilenetv3_small"] = "mobilenetv3_large",
         freeze_backbone: bool = False,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
@@ -78,10 +79,6 @@ class MobileNetV3MulticlassCls(OTXMulticlassClsModel):
             ),
             loss=nn.CrossEntropyLoss(),
         )
-
-    def load_from_otx_v1_ckpt(self, state_dict: dict, add_prefix: str = "model.") -> dict:
-        """Load the previous OTX ckpt according to OTX2.0."""
-        return OTXv1Helper.load_cls_mobilenet_v3_ckpt(state_dict, "multiclass", add_prefix)
 
     def forward_for_tracing(self, image: Tensor) -> Tensor | dict[str, Tensor]:
         """Model forward function used for the model tracing during model exportation."""

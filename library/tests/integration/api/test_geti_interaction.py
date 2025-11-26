@@ -34,11 +34,11 @@ DEFAULT_GETI_CONFIG_PER_TASK = {
     OTXTaskType.DETECTION: TEST_ARROW_PATH / "detection",
     OTXTaskType.INSTANCE_SEGMENTATION: TEST_ARROW_PATH / "detection",
     OTXTaskType.SEMANTIC_SEGMENTATION: TEST_ARROW_PATH / "semantic_segmentation",
-    OTXTaskType.ANOMALY: TEST_ARROW_PATH / "anomaly",
     OTXTaskType.KEYPOINT_DETECTION: TEST_ARROW_PATH / "keypoint_detection",
 }
 
 
+@pytest.mark.skip(reason="These tests shall be rewritten after integration with new Datumaro")
 class TestEngineAPI:
     def __init__(
         self,
@@ -193,6 +193,7 @@ class TestEngineAPI:
         assert predictions is not None
 
 
+@pytest.mark.skip(reason="This test shall be rewritten after integration with new Datumaro")
 def test_engine_api(
     task_template: tuple[OTXTaskType, Path, bool],
     tmp_path: Path,

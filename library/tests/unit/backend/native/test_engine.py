@@ -110,7 +110,6 @@ class TestEngine:
             "tests/assets/test_snapshots/dummy_checkpoint_hlabel_2.2.0.ckpt",
             "tests/assets/test_snapshots/dummy_checkpoint_is_2.2.0.ckpt",
             "tests/assets/test_snapshots/dummy_checkpoint_det_2.2.0.ckpt",
-            "tests/assets/test_snapshots/dummy_checkpoint_anomaly_2.2.0.ckpt",
             "tests/assets/test_snapshots/dummy_checkpoint_det_2.4.5.ckpt",
         ],
     )
@@ -180,7 +179,6 @@ class TestEngine:
             base_name="exported_model",
             export_format=OTXExportFormatType.OPENVINO,
             precision=OTXPrecisionType.FP32,
-            to_exportable_code=False,
         )
 
         fxt_engine.export(export_precision=OTXPrecisionType.FP16)
@@ -189,7 +187,6 @@ class TestEngine:
             base_name="exported_model",
             export_format=OTXExportFormatType.OPENVINO,
             precision=OTXPrecisionType.FP16,
-            to_exportable_code=False,
         )
 
         fxt_engine.export(export_format=OTXExportFormatType.ONNX)
@@ -198,7 +195,6 @@ class TestEngine:
             base_name="exported_model",
             export_format=OTXExportFormatType.ONNX,
             precision=OTXPrecisionType.FP32,
-            to_exportable_code=False,
         )
 
         fxt_engine.export(export_format=OTXExportFormatType.ONNX, export_demo_package=True)
@@ -207,7 +203,6 @@ class TestEngine:
             base_name="exported_model",
             export_format=OTXExportFormatType.ONNX,
             precision=OTXPrecisionType.FP32,
-            to_exportable_code=False,
         )
 
     @pytest.mark.parametrize(
