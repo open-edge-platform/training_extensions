@@ -35,6 +35,22 @@ class TrainingInfo(BaseEntity):
 
 
 class ModelRevision(BaseEntity):
+    """
+    Represents a specific revision of a machine learning model.
+
+    A model revision tracks a particular version of a model, including its architecture, relationship to other
+    revisions, training information, and file storage status.
+
+    Attributes:
+        id: Unique identifier for the model revision.
+        architecture: Name of the model architecture (e.g., 'Object_Detection_RTDetr_50').
+        parent_revision: UUID of the parent revision if this is derived from another revision,
+            None if this is the initial revision.
+        training_info: Details about the training process, including status, configuration, and associated dataset.
+            None if training hasn't started.
+        files_deleted: Flag indicating whether the model files have been deleted from storage.
+    """
+
     id: UUID
     architecture: str
     parent_revision: UUID | None = None
