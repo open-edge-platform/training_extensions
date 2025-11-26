@@ -8,7 +8,7 @@ repos:
       - id: uv-lock
         name: uv lock
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: "v1.18.2"
+    rev: "v1.16.1"
     hooks:
       - id: mypy
         alias: mypy_backend
