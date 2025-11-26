@@ -76,44 +76,14 @@ class ProjectService(BaseSessionManagedService):
 
     def list_projects(self) -> list[Project]:
         project_repo = ProjectRepository(self.db_session)
-        projects_db = project_repo.list_all()
-        result: list[Project] = []
-        for project_db in projects_db:
-            active_pipeline = self._pipeline_service.is_running(project_id=UUID(project_db.id))
-            labels = self._label_service.list_all(project_id=UUID(project_db.id))
-            result.append(
-                Project.model_validate(
-                    {
-                        **project_db.__dict__,
-                        "active_pipeline": active_pipeline,
-                        "task": {
-                            "task_type": project_db.task_type,
-                            "exclusive_labels": project_db.exclusive_labels,
-                            "labels": labels,
-                        },
-                    }
-                )
-            )
-        return result
+        return [self._to_project(project_db) for project_db in project_repo.list_all()]
 
     def get_project_by_id(self, project_id: UUID) -> Project:
         project_repo = ProjectRepository(self.db_session)
         project_db = project_repo.get_by_id(str(project_id))
         if not project_db:
             raise ResourceNotFoundError(ResourceType.PROJECT, str(project_id))
-        active_pipeline = self._pipeline_service.is_running(project_id=project_id)
-        labels = self._label_service.list_all(project_id=project_id)
-        return Project.model_validate(
-            {
-                **project_db.__dict__,
-                "active_pipeline": active_pipeline,
-                "task": {
-                    "task_type": project_db.task_type,
-                    "exclusive_labels": project_db.exclusive_labels,
-                    "labels": labels,
-                },
-            }
-        )
+        return self._to_project(project_db)
 
     @parent_process_only
     def update_project_name(self, project_id: UUID, name: str) -> Project:
@@ -123,19 +93,7 @@ class ProjectService(BaseSessionManagedService):
         if not project_db:
             raise ResourceNotFoundError(ResourceType.PROJECT, str(project_id))
         project_db.name = name
-        active_pipeline = self._pipeline_service.is_running(project_id=project_id)
-        labels = self._label_service.list_all(project_id=project_id)
-        return Project.model_validate(
-            {
-                **project_db.__dict__,
-                "active_pipeline": active_pipeline,
-                "task": {
-                    "task_type": project_db.task_type,
-                    "exclusive_labels": project_db.exclusive_labels,
-                    "labels": labels,
-                },
-            }
-        )
+        return self._to_project(project_db)
 
     @parent_process_only
     def delete_project_by_id(self, project_id: UUID) -> None:
@@ -154,3 +112,20 @@ class ProjectService(BaseSessionManagedService):
         if earliest_dataset_item:
             return self._projects_dir / f"{project_id}/dataset/{earliest_dataset_item.id}-thumb.jpg"
         return None
+
+    def _to_project(self, project_db: ProjectDB) -> Project:
+        """Convert database model to domain model with enriched runtime data."""
+        project_id = UUID(project_db.id)
+        active_pipeline = self._pipeline_service.is_running(project_id=project_id)
+        labels = self._label_service.list_all(project_id=project_id)
+        return Project.model_validate(
+            {
+                **project_db.__dict__,
+                "active_pipeline": active_pipeline,
+                "task": {
+                    "task_type": project_db.task_type,
+                    "exclusive_labels": project_db.exclusive_labels,
+                    "labels": labels,
+                },
+            }
+        )

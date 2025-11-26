@@ -66,6 +66,7 @@ class TestProjectServiceIntegration:
         assert created_project.name == "Test Project"
         assert created_project.task.task_type == task.task_type
         assert len(created_project.task.labels) == 2
+        assert {label.id for label in created_project.task.labels} == {label.id for label in labels}
         assert {label.name for label in created_project.task.labels} == {"cat", "dog"}
         assert {label.color for label in created_project.task.labels} == {"#00FF00", "#FF0000"}
         assert {label.hotkey for label in created_project.task.labels} == {"c", "d"}
