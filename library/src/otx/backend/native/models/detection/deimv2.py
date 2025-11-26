@@ -106,6 +106,7 @@ class DEIMV2(DEIMDFine):
             num_classes=num_classes,
             eval_spatial_size=self.data_input_params.input_size,
         )
+
         criterion = DEIMCriterion(
             weight_dict={
                 "loss_vfl": 1,

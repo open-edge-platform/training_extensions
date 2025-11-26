@@ -167,6 +167,7 @@ class OTXModel(LightningModule):
 
         self._label_info = self._dispatch_label_info(label_info)
         self.model_name = model_name
+        self.log_all_losses = False
         if isinstance(data_input_params, dict):
             data_input_params = DataInputParams(**data_input_params)
         elif data_input_params is None:
@@ -212,14 +213,15 @@ class OTXModel(LightningModule):
             )
             return train_loss
         if isinstance(train_loss, dict):
-            for k, v in train_loss.items():
-                self.log(
-                    f"train/{k}",
-                    v,
-                    on_step=True,
-                    on_epoch=False,
-                    prog_bar=True,
-                )
+            if self.log_all_losses:
+                for k, v in train_loss.items():
+                    self.log(
+                        f"train/{k}",
+                        v,
+                        on_step=True,
+                        on_epoch=False,
+                        prog_bar=True,
+                    )
 
             total_train_loss = train_loss.get("total_loss", sum(train_loss.values()))
             self.log(

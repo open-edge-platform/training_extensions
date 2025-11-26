@@ -371,7 +371,7 @@ class EMAWeightAveraging(WeightAveraging):
         self,
         device: Optional[Union[torch.device, str, int]] = None,
         use_buffers: bool = True,
-        decay: float = 0.999,
+        decay: float = 0.9999,
         update_every_n_steps: int = 1,
         update_starting_at_step: Optional[int] = None,
         update_starting_at_epoch: Optional[int] = None,

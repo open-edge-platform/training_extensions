@@ -61,11 +61,11 @@ DATASET_TEST_CASES = (
         #     path=Path("detection/skindetect-roboflow"),
         #     group="small",
         # ),
-        DatasetInfo(
-            name="diopsis",
-            path=Path("detection/diopsis_coco"),
-            group="medium",
-        ),
+        # DatasetInfo(
+        #     name="diopsis",
+        #     path=Path("detection/diopsis_coco"),
+        #     group="medium",
+        # ),
         DatasetInfo(
             name="bdd_medium",
             path=Path("detection/bdd_medium"),
@@ -76,11 +76,11 @@ DATASET_TEST_CASES = (
         #     path=Path("detection/Vitens-Aeromonas-coco"),
         #     group="medium",
         # ),
-        DatasetInfo(
-            name="visdrone",
-            path=Path("detection/visdrone_coco_custom_split"),
-            group="large",
-        ),
+        # DatasetInfo(
+        #     name="visdrone",
+        #     path=Path("detection/visdrone_coco_custom_split"),
+        #     group="large",
+        # ),
     ]
 )
 

@@ -18,6 +18,7 @@ import cv2
 import numpy as np
 import PIL.Image
 import torch
+import uuid
 import torchvision.transforms.v2 as tvt_v2
 import typeguard
 from lightning.pytorch.cli import instantiate_class
@@ -2124,7 +2125,55 @@ class CachedMixUp(tvt_v2.Transform, NumpytoTVTensorMixin):
 
                 inputs.polygons = [mixup_gt_polygons[i] for i in np.where(inside_inds)[0]]
 
+        # self.visualize(inputs, output_path=f"/home/kprokofi/debug_images/{str(uuid.uuid4())}.jpg")
         return self.convert(inputs)
+
+    def visualize(
+        self,
+        inputs: OTXDataItem,
+        output_path: str | None = None,
+        show_blended: bool = True,
+    ) -> np.ndarray:
+        """Visualize CopyBlend augmentation for debugging.
+
+        Args:
+            inputs: OTXDataItem to visualize.
+            output_path: Optional path to save visualization.
+            show_blended: Whether to show blended boxes in different color.
+
+        Returns:
+            Visualization as numpy array.
+        """
+        import cv2
+
+        img = to_np_image(inputs.image).copy()
+        bboxes = inputs.bboxes
+        labels = inputs.label
+
+        # Draw bboxes
+        for idx, bbox in enumerate(bboxes):
+            x1, y1, x2, y2 = bbox.int().tolist()
+            label = labels[idx].item() if hasattr(labels[idx], "item") else labels[idx]
+
+            # Use different colors for original vs blended
+            # Assume last N boxes are blended (where N = num_objects)
+            color = (0, 255, 0)
+
+            cv2.rectangle(img, (x1, y1), (x2, y2), color, 2)
+            cv2.putText(
+                img,
+                f"{label}",
+                (x1, y1 - 5),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.5,
+                color,
+                2,
+            )
+
+        if output_path:
+            cv2.imwrite(output_path, img)
+
+        return img
 
     def __repr__(self):
         repr_str = self.__class__.__name__
@@ -2403,7 +2452,6 @@ class CachedCopyBlend(tvt_v2.Transform, NumpytoTVTensorMixin):
                 canvas_size=(img_h, img_w),
             )
             inputs.label = combined_labels
-
         return self.convert(inputs)
 
     def visualize(

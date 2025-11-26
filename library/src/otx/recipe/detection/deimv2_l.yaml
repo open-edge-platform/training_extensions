@@ -35,6 +35,10 @@ callbacks:
     init_args:
       max_interval: 1
       min_lrschedule_patience: 3
+  # - class_path: otx.backend.native.callbacks.EMAWeightAveraging
+  #   init_args:
+  #     update_starting_at_epoch: 10
+  #     decay: 0.999
   - class_path: otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
     init_args:
       mode: max
@@ -117,7 +121,7 @@ callbacks:
               transforms:
                 - class_path: otx.data.transform_libs.torchvision.CachedMosaic
                   init_args:
-                    random_pop: false
+                    random_pop: true
                     max_cached_images: 20
                     img_scale: [640, 640]
                 - class_path: otx.data.transform_libs.torchvision.CachedMixUp
@@ -127,7 +131,7 @@ callbacks:
                       - 1.0
                       - 1.0
                     probability: 0.5
-                    random_pop: false
+                    random_pop: true
                     max_cached_images: 10
                 - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
                   init_args:
@@ -160,6 +164,7 @@ callbacks:
                   init_args:
                     fill: 0
                     p: 0.5
+                    side_range: [1.0, 2.0]
                 - class_path: otx.data.transform_libs.torchvision.RandomIoUCrop # Can't be used when using CachedMosaic
                   init_args:
                     probability: 0.8
@@ -176,7 +181,7 @@ callbacks:
                       - 1.0
                       - 1.0
                     probability: 0.5
-                    random_pop: false
+                    random_pop: true
                     max_cached_images: 10
                 - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
                   init_args:

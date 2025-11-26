@@ -97,7 +97,6 @@ class Benchmark:
         num_epoch: int = 0,
         eval_upto: str = "train",
         tags: dict[str, str] | None = None,
-        dry_run: bool = False,
         deterministic: bool = False,
         accelerator: str = "gpu",
         reference_results: pd.DataFrame | None = None,
@@ -109,7 +108,6 @@ class Benchmark:
         self.num_epoch = num_epoch
         self.eval_upto = eval_upto
         self.tags = tags or {}
-        self.dry_run = dry_run
         self.deterministic = deterministic
         self.accelerator = accelerator
         self.reference_results = reference_results
@@ -641,7 +639,6 @@ if __name__ == "__main__":
         num_epoch=args.num_epoch,
         eval_upto=args.eval_upto,
         tags=tags,
-        dry_run=args.dry_run,
         deterministic=(
             False if args.deterministic is None else {"true": True, "false": False, "warn": "warn"}[args.deterministic]
         ),

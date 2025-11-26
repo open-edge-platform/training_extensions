@@ -117,7 +117,7 @@ callbacks:
               transforms:
                 - class_path: otx.data.transform_libs.torchvision.CachedMosaic
                   init_args:
-                    random_pop: false
+                    random_pop: true
                     max_cached_images: 20
                     img_scale: [640, 640]
                 - class_path: otx.data.transform_libs.torchvision.CachedMixUp
@@ -127,7 +127,7 @@ callbacks:
                       - 1.0
                       - 1.0
                     probability: 0.5
-                    random_pop: false
+                    random_pop: true
                     max_cached_images: 10
                 - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
                   init_args:
@@ -176,7 +176,7 @@ callbacks:
                       - 1.0
                       - 1.0
                     probability: 0.5
-                    random_pop: false
+                    random_pop: true
                     max_cached_images: 10
                 - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
                   init_args:
