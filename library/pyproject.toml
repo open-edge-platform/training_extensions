@@ -47,7 +47,7 @@ dependencies = [
     "onnx==1.19.1",
     "onnxconverter-common==1.16.0",
     "onnxscript",
-    "nncf==2.17.0",
+    "nncf==2.18.0",
     "numpy>=2.0",
     "tensorboard==2.20.0",
     "tensorboardx==2.6.4"
@@ -85,17 +85,18 @@ lint = [
 
 [project.optional-dependencies]
 cpu = [
-    "torch==2.8.0",
-    "torchvision==0.23.0"
+    "torch==2.9.1",
+    "torchvision==0.24.1"
 ]
 cuda = [
-    "torch==2.8.0",
-    "torchvision==0.23.0"
+    "torch==2.9.1",
+    "torchvision==0.24.1"
 ]
 xpu = [
-    "torch==2.8.0+xpu",
-    "pytorch-triton-xpu==3.4.0",
-    "torchvision==0.23.0"
+    "torch==2.9.0+xpu", # torch 2.9.1 with torchvision==0.24.1 is currently 
+                        # unstable resulting in an error with torchvision ops.
+    "pytorch-triton-xpu==3.5.0",
+    "torchvision==0.24.0"
 ]
 
 docs = [
