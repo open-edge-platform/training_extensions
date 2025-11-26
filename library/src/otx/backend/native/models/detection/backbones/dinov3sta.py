@@ -182,7 +182,6 @@ class DINOv3STAs(nn.Module):
             "name": "dinov3_vits16plus",
             "weights_path": None,
             "interaction_indexes": [5,8,11],
-            "finetune": True,
             "conv_inplane": 64,
             "hidden_dim": 256
         },
@@ -190,7 +189,6 @@ class DINOv3STAs(nn.Module):
             "name": "dinov3_vits16",
             "weights_path": None,
             "interaction_indexes": [5,8,11],
-            "finetune": True,
             "conv_inplane": 32,
             "hidden_dim": 224,
         },

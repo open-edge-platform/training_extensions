@@ -127,6 +127,7 @@ class Benchmark:
         dataset_info: DatasetInfo,
         sub_work_dir: Path,
         seed: int,
+        num_devices: int = 1,
     ) -> float:
         """Train model with given dataset and return the total time.
 
@@ -145,7 +146,7 @@ class Benchmark:
             dataset_info=dataset_info,
             work_dir=sub_work_dir / SubCommand.TRAIN.value,
         )
-
+        engine.num_devices = num_devices
         kwargs = {}
         if dataset_info.extra_overrides:
             kwargs.update(dataset_info.extra_overrides.get("train", {}))
@@ -329,7 +330,7 @@ class Benchmark:
             config_path=FOLDER_MAPPINGS[model_info.task] / (model_info.name + ".yaml"),
             data_root=self.data_root / dataset_info.path,
             work_dir=work_dir,
-            device=self.accelerator,
+            device=self.accelerator
         )
 
     def run(
@@ -338,6 +339,7 @@ class Benchmark:
         dataset_info: DatasetInfo,
         seed: int,
         criteria: list[Criterion],
+        num_devices: int = 1,
     ) -> pd.DataFrame | None:
         """Run configured benchmark with given dataset and model and return the result.
 
@@ -381,6 +383,7 @@ class Benchmark:
                     dataset_info=dataset_info,
                     sub_work_dir=sub_work_dir,
                     seed=seed,
+                    num_devices=num_devices
                 )
 
                 self._log_metrics(
@@ -653,6 +656,7 @@ if __name__ == "__main__":
         dataset_info=dataset_info,
         seed=args.seed,
         criteria=criteria,
+        num_devices=args.num_devices,
     )
     benchmark.check(
         result=result,

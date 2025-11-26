@@ -597,7 +597,7 @@ class DEIMTransformerModule(nn.Module):
             enc_topk_bbox_unact = torch.concat([denoising_bbox_unact, enc_topk_bbox_unact], dim=1)
             content = torch.concat([denoising_logits, content], dim=1)
 
-        return content, enc_topk_bbox_unact, enc_topk_bboxes_list, enc_topk_logits_list
+        return content, enc_topk_bbox_unact, enc_topk_bboxes_list, enc_topk_logits_list, enc_outputs_logits
 
     def _select_topk(self, memory: torch.Tensor, outputs_logits: torch.Tensor, outputs_anchors_unact: torch.Tensor, topk: int):
         if self.query_select_method == 'default':
@@ -623,7 +623,11 @@ class DEIMTransformerModule(nn.Module):
 
         return topk_memory, topk_logits, topk_anchors
 
-    def forward(self, feats, targets=None):
+    def forward(self,
+                feats,
+                targets=None,
+                explain_mode: bool = False,
+                ):
         # input projection and embedding
         memory, spatial_shapes = self._get_encoder_input(feats)
 
@@ -641,7 +645,7 @@ class DEIMTransformerModule(nn.Module):
         else:
             denoising_logits, denoising_bbox_unact, attn_mask, dn_meta = None, None, None, None
 
-        init_ref_contents, init_ref_points_unact, enc_topk_bboxes_list, enc_topk_logits_list = \
+        init_ref_contents, init_ref_points_unact, enc_topk_bboxes_list, enc_topk_logits_list, enc_outputs_logits = \
             self._get_decoder_input(memory, spatial_shapes, denoising_logits, denoising_bbox_unact)
 
         # decoder
@@ -659,6 +663,8 @@ class DEIMTransformerModule(nn.Module):
             self.reg_scale,
             attn_mask=attn_mask,
             dn_meta=dn_meta)
+
+        out_bboxes = out_bboxes.clamp(min=1e-8)
 
         if self.training and dn_meta is not None:
             # the output from the first decoder layer, only one
@@ -689,6 +695,9 @@ class DEIMTransformerModule(nn.Module):
                                                         dn_out_corners[-1], dn_out_logits[-1])
                 out['dn_pre_outputs'] = {'pred_logits': dn_pre_logits, 'pred_boxes': dn_pre_bboxes}
                 out['dn_meta'] = dn_meta
+
+        if explain_mode:
+            out["raw_logits"] = enc_outputs_logits
 
         return out
 

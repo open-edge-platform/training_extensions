@@ -857,7 +857,6 @@ class HybridEncoder:
         "deimv2_x": {
             "in_channels": [256, 256, 256],
             "hidden_dim": 256,
-            "feat_strides": [8, 16, 32],
             "dim_feedforward": 1024,
             "expansion": 1.25,
             "depth_mult": 1.37
