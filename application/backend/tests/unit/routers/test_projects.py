@@ -8,11 +8,10 @@ import pytest
 from fastapi import status
 
 from app.api.dependencies import get_data_collector, get_label_service
+from app.api.schemas import LabelView, PatchLabels, ProjectView, TaskView
+from app.api.schemas.label import LabelCreate, LabelEdit, LabelRemove
 from app.main import app
-from app.models import Label
-from app.schemas import LabelView, PatchLabels, ProjectView
-from app.schemas.label import LabelCreate, LabelEdit, LabelRemove
-from app.schemas.project import TaskType, TaskView
+from app.models import Label, TaskType
 from app.services import ResourceInUseError, ResourceNotFoundError, ResourceType, ResourceWithIdAlreadyExistsError
 from app.services.data_collect import DataCollector
 from app.services.label_service import DuplicateLabelsError, LabelService

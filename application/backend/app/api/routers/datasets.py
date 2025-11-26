@@ -18,8 +18,7 @@ from app.api.schemas.dataset_item import (
 )
 from app.api.validators import DatasetItemID
 from app.core.models import Pagination
-from app.models import DatasetItemAnnotationStatus, DatasetItemSubset
-from app.schemas import ProjectView
+from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Project
 from app.services import DatasetService, ResourceNotFoundError
 from app.services.dataset_service import (
     AnnotationValidationError,
@@ -77,7 +76,7 @@ SET_DATASET_ITEM_ANNOTATIONS_BODY_EXAMPLES = {
     },
 )
 def add_dataset_item(
-    project: Annotated[ProjectView, Depends(get_project)],
+    project: Annotated[Project, Depends(get_project)],
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
     file_name_and_extension: Annotated[tuple[str, str], Depends(get_file_name_and_extension)],
     file: Annotated[UploadFile, File()],
@@ -104,7 +103,7 @@ def add_dataset_item(
     },
 )
 def list_dataset_items(  # noqa: PLR0913
-    project: Annotated[ProjectView, Depends(get_project)],
+    project: Annotated[Project, Depends(get_project)],
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
     limit: Annotated[int, Query(ge=1, le=MAX_DATASET_ITEMS_NUMBER_RETURNED)] = DEFAULT_DATASET_ITEMS_NUMBER_RETURNED,
     offset: Annotated[int, Query(ge=0)] = 0,
@@ -159,7 +158,7 @@ def list_dataset_items(  # noqa: PLR0913
     },
 )
 def get_dataset_item(
-    project: Annotated[ProjectView, Depends(get_project)],
+    project: Annotated[Project, Depends(get_project)],
     dataset_item_id: DatasetItemID,
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
 ) -> DatasetItemView:
@@ -180,7 +179,7 @@ def get_dataset_item(
     },
 )
 def get_dataset_item_binary(
-    project: Annotated[ProjectView, Depends(get_project)],
+    project: Annotated[Project, Depends(get_project)],
     dataset_item_id: DatasetItemID,
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
 ) -> FileResponse:
@@ -203,7 +202,7 @@ def get_dataset_item_binary(
     },
 )
 def get_dataset_item_thumbnail(
-    project: Annotated[ProjectView, Depends(get_project)],
+    project: Annotated[Project, Depends(get_project)],
     dataset_item_id: DatasetItemID,
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
 ) -> FileResponse:
@@ -227,7 +226,7 @@ def get_dataset_item_thumbnail(
     },
 )
 def delete_dataset_item(
-    project: Annotated[ProjectView, Depends(get_project)],
+    project: Annotated[Project, Depends(get_project)],
     dataset_item_id: DatasetItemID,
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
 ) -> None:
@@ -248,7 +247,7 @@ def delete_dataset_item(
     },
 )
 def set_dataset_item_annotations(
-    project: Annotated[ProjectView, Depends(get_project)],
+    project: Annotated[Project, Depends(get_project)],
     dataset_item_id: DatasetItemID,
     dataset_item_annotations: Annotated[
         SetDatasetItemAnnotations, Body(openapi_examples=SET_DATASET_ITEM_ANNOTATIONS_BODY_EXAMPLES)
@@ -283,7 +282,7 @@ def set_dataset_item_annotations(
     },
 )
 def get_dataset_item_annotations(
-    project: Annotated[ProjectView, Depends(get_project)],
+    project: Annotated[Project, Depends(get_project)],
     dataset_item_id: DatasetItemID,
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
 ) -> DatasetItemAnnotations:
@@ -313,7 +312,7 @@ def get_dataset_item_annotations(
     },
 )
 def delete_dataset_item_annotation(
-    project: Annotated[ProjectView, Depends(get_project)],
+    project: Annotated[Project, Depends(get_project)],
     dataset_item_id: DatasetItemID,
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
 ) -> None:
@@ -336,7 +335,7 @@ def delete_dataset_item_annotation(
     },
 )
 def assign_dataset_item_subset(
-    project: Annotated[ProjectView, Depends(get_project)],
+    project: Annotated[Project, Depends(get_project)],
     dataset_item_id: DatasetItemID,
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
     subset_config: Annotated[DatasetItemAssignSubset, Body()],

@@ -7,7 +7,8 @@ from pydantic import BaseModel, Field
 
 from app.core.models import HasID, RequiresID
 from app.models import TaskType
-from app.schemas.label import LabelCreate, LabelView
+
+from .label import LabelCreate, LabelView
 
 
 class TaskBase(BaseModel):

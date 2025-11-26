@@ -11,9 +11,8 @@ from sqlalchemy.orm import Session
 from app.api.validators import ProjectID, SinkID, SourceID
 from app.core.jobs.control_plane import JobQueue
 from app.db import get_db_session
-from app.models import Sink, Source
+from app.models import Project, Sink, Source
 from app.scheduler import Scheduler
-from app.schemas import ProjectView
 from app.services import (
     BaseWeightsService,
     DatasetService,
@@ -172,7 +171,7 @@ def get_dataset_service(
 def get_project(
     project_id: ProjectID,
     project_service: Annotated[ProjectService, Depends(get_project_service)],
-) -> ProjectView:
+) -> Project:
     """Provides a ProjectView instance for request scoped project."""
     try:
         return project_service.get_project_by_id(project_id)

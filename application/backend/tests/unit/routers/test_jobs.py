@@ -12,10 +12,8 @@ from app.api.dependencies import get_data_dir, get_job_dir, get_job_queue
 from app.core.jobs import Job, JobParams, JobQueue, JobStatus
 from app.core.jobs.control_plane import CancellationResult
 from app.main import app
-from app.models import TaskType
-from app.schemas import ProjectView
+from app.models import Project, Task, TaskType
 from app.schemas.job import JobRequest, JobType, TrainingRequestParams
-from app.schemas.project import TaskView
 
 
 @pytest.fixture
@@ -45,8 +43,8 @@ class TestJobEndpoints:
     def test_submit_train_job(self, tmp_path, fxt_client, fxt_jobs_queue, fxt_project_service):
         app.dependency_overrides[get_job_dir] = lambda: tmp_path / "logs" / "jobs"
         app.dependency_overrides[get_data_dir] = lambda: tmp_path / "data"
-        project = Mock(spec=ProjectView)
-        project.task = Mock(spec=TaskView)
+        project = Mock(spec=Project)
+        project.task = Mock(spec=Task)
         project.task.task_type = TaskType.CLASSIFICATION
         project.task.exclusive_labels = True
         fxt_project_service.get_project_by_id.return_value = project
