@@ -24,7 +24,7 @@ MODEL_TEST_CASES = [
     # ModelInfo(task=TASK_TYPE.value, name="deim_dfine_x", category="other"),
     ModelInfo(task=TASK_TYPE.value, name="deimv2_x", category="other"),
     # ModelInfo(task=TASK_TYPE.value, name="deim_dfine_l", category="other"),
-    ModelInfo(task=TASK_TYPE.value, name="deimv2_l", category="other"),
+    # ModelInfo(task=TASK_TYPE.value, name="deimv2_l", category="other"),
     # ModelInfo(task=TASK_TYPE.value, name="deim_dfine_m", category="other"),
     ModelInfo(task=TASK_TYPE.value, name="deimv2_m", category="other"),
     ModelInfo(task=TASK_TYPE.value, name="deimv2_s", category="other"),

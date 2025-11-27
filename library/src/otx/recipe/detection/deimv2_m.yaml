@@ -9,7 +9,7 @@ model:
     optimizer:
       class_path: torch.optim.AdamW
       init_args:
-        lr: 0.0005
+        lr: 0.0004
         betas: [0.9, 0.999]
         weight_decay: 0.0001
 
@@ -166,9 +166,6 @@ callbacks:
                 - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
                   init_args:
                     min_area: 1
-                - class_path: otx.data.transform_libs.torchvision.RandomFlip
-                  init_args:
-                    probability: 0.5
                 - class_path: otx.data.transform_libs.torchvision.CachedMixUp
                   init_args:
                     img_scale: [640, 640] # (H, W)
@@ -178,6 +175,9 @@ callbacks:
                     probability: 0.5
                     random_pop: true
                     max_cached_images: 10
+                - class_path: otx.data.transform_libs.torchvision.RandomFlip
+                  init_args:
+                    probability: 0.5
                 - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
                   init_args:
                     min_area: 1

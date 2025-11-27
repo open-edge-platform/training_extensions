@@ -35,10 +35,6 @@ callbacks:
     init_args:
       max_interval: 1
       min_lrschedule_patience: 3
-  # - class_path: otx.backend.native.callbacks.EMAWeightAveraging
-  #   init_args:
-  #     update_starting_at_epoch: 10
-  #     decay: 0.999
   - class_path: otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
     init_args:
       mode: max
@@ -97,6 +93,9 @@ callbacks:
                 - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
                   init_args:
                     min_area: 1
+                - class_path: otx.data.transform_libs.torchvision.CachedCopyBlend
+                  init_args:
+                    probability: 0.5
                 - class_path: otx.data.transform_libs.torchvision.RandomFlip
                   init_args:
                     probability: 0.5
@@ -132,7 +131,7 @@ callbacks:
                       - 1.0
                     probability: 0.5
                     random_pop: true
-                    max_cached_images: 10
+                    max_cached_images: 20
                 - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
                   init_args:
                     min_area: 1
@@ -182,7 +181,10 @@ callbacks:
                       - 1.0
                     probability: 0.5
                     random_pop: true
-                    max_cached_images: 10
+                    max_cached_images: 20
+                - class_path: otx.data.transform_libs.torchvision.CachedCopyBlend
+                  init_args:
+                    probability: 0.5
                 - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
                   init_args:
                     min_area: 1

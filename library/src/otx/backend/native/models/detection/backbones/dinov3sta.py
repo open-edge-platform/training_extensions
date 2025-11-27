@@ -192,7 +192,7 @@ class DINOv3STAs(nn.Module):
             "conv_inplane": 32,
             "hidden_dim": 224,
         },
-        "deimvv2_m": {
+        "deimv2_m": {
             "name": "vit_tinyplus",
             "embed_dim": 256,
             "weights_path": None,
