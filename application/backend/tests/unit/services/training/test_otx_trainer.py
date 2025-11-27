@@ -9,9 +9,8 @@ from uuid import uuid4
 import pytest
 
 from app.core.run import ExecutionContext
-from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, TaskType, TrainingStatus
+from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Task, TaskType, TrainingStatus
 from app.models.training_configuration.configuration import PartialTrainingConfiguration
-from app.schemas.project import TaskBase
 from app.services import DatasetService, ModelRevisionMetadata, ModelService, TrainingConfigurationService
 from app.services.base_weights_service import BaseWeightsService
 from app.services.training.models import TrainingParams
@@ -108,7 +107,7 @@ class TestOTXTrainerPrepareWeights:
         # Arrange
         training_params = TrainingParams(
             model_architecture_id="Object_Detection_YOLOX_S",
-            task=TaskBase(task_type=TaskType.DETECTION),
+            task=Task(task_type=TaskType.DETECTION),
             parent_model_revision_id=None,
         )
         otx_trainer = fxt_otx_trainer()
@@ -137,7 +136,7 @@ class TestOTXTrainerPrepareWeights:
         training_params = TrainingParams(
             project_id=project_id,
             model_architecture_id="Object_Detection_YOLOX_S",
-            task=TaskBase(task_type=TaskType.DETECTION),
+            task=Task(task_type=TaskType.DETECTION),
             parent_model_revision_id=parent_model_revision_id,
         )
         expected_weights_path = (
@@ -165,7 +164,7 @@ class TestOTXTrainerPrepareWeights:
         training_params = TrainingParams(
             project_id=project_id,
             model_architecture_id="Object_Detection_YOLOX_S",
-            task=TaskBase(task_type=TaskType.DETECTION),
+            task=Task(task_type=TaskType.DETECTION),
             parent_model_revision_id=parent_model_revision_id,
         )
         expected_weights_path = (
@@ -185,7 +184,7 @@ class TestOTXTrainerPrepareWeights:
         # Arrange
         training_params = TrainingParams(
             model_architecture_id="Object_Detection_YOLOX_S",
-            task=TaskBase(task_type=TaskType.DETECTION),
+            task=Task(task_type=TaskType.DETECTION),
             parent_model_revision_id=uuid4(),
             project_id=None,
         )
@@ -278,7 +277,7 @@ class TestOTXTrainerCreateTrainingDataset:
         """Test successful creation of training, validation, and testing datasets."""
         # Arrange
         project_id = uuid4()
-        task = TaskBase(task_type=TaskType.DETECTION, exclusive_labels=True)
+        task = Task(task_type=TaskType.DETECTION, exclusive_labels=True)
         otx_trainer = fxt_otx_trainer()
 
         mock_dm_dataset = Mock()
@@ -300,7 +299,7 @@ class TestOTXTrainerCreateTrainingDataset:
         # Assert
         fxt_dataset_service.get_dm_dataset.assert_called_once_with(
             project_id,
-            TaskBase(task_type=TaskType.DETECTION, exclusive_labels=True),
+            Task(task_type=TaskType.DETECTION, exclusive_labels=True),
             DatasetItemAnnotationStatus.REVIEWED,
         )
         assert datasets_info.training == mock_training_dataset
@@ -328,7 +327,7 @@ class TestOTXTrainerPrepareModel:
             model_id=model_id,
             project_id=project_id,
             model_architecture_id=model_architecture_id,
-            task=TaskBase(task_type=TaskType.CLASSIFICATION, exclusive_labels=True),
+            task=Task(task_type=TaskType.CLASSIFICATION, exclusive_labels=True),
             parent_model_revision_id=None,
         )
         dataset_revision_id = uuid4()
@@ -375,7 +374,7 @@ class TestOTXTrainerPrepareModel:
             model_id=uuid4(),
             project_id=None,
             model_architecture_id="Object_Detection_YOLOX_S",
-            task=TaskBase(task_type=TaskType.DETECTION),
+            task=Task(task_type=TaskType.DETECTION),
             parent_model_revision_id=None,
         )
         dataset_revision_id = uuid4()

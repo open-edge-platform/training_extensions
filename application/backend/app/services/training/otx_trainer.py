@@ -17,9 +17,8 @@ from sqlalchemy.orm import Session
 
 from app.core.jobs import JobType
 from app.core.run import ExecutionContext
-from app.models import DatasetItemAnnotationStatus, TaskType, TrainingStatus
+from app.models import DatasetItemAnnotationStatus, Task, TaskType, TrainingStatus
 from app.models.training_configuration.configuration import TrainingConfiguration
-from app.schemas.project import TaskBase
 from app.services import (
     BaseWeightsService,
     DatasetService,
@@ -136,7 +135,7 @@ class OTXTrainer(Trainer):
         self.report_progress(f"Successfully assigned {len(assignments)} items to subsets")
 
     @step("Create Training Dataset")
-    def create_training_dataset(self, project_id: UUID, task: TaskBase) -> DatasetInfo:
+    def create_training_dataset(self, project_id: UUID, task: Task) -> DatasetInfo:
         """Create datasets for training, validation, and testing."""
         with self._db_session_factory() as db:
             self._dataset_service.set_db_session(db)
@@ -214,7 +213,7 @@ class OTXTrainer(Trainer):
         return cls.__base_model_path(data_dir, project_id, model_id) / "config.yaml"
 
     @staticmethod
-    def __persist_configuration(configuration: TrainingConfiguration, config_path: Path, task: TaskBase) -> None:
+    def __persist_configuration(configuration: TrainingConfiguration, config_path: Path, task: Task) -> None:
         extended_config = configuration.model_dump(exclude_none=True)
         extended_config["job_type"] = JobType.TRAIN.value
         match task.task_type:

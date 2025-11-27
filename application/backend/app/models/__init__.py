@@ -17,6 +17,7 @@ from .dataset_item import (
 from .label import Label, LabelReference
 from .model_revision import ModelRevision, TrainingInfo, TrainingStatus
 from .pipeline import Pipeline, PipelineStatus
+from .project import Project
 from .shape import FullImage, Point, Polygon, Rectangle, Shape
 from .sink import (
     DisconnectedSinkConfig,
@@ -39,7 +40,7 @@ from .source import (
     VideoFileSourceConfig,
     WebcamSourceConfig,
 )
-from .task_type import TaskType
+from .task import Task, TaskType
 
 __all__ = [
     "ConfidenceThresholdDataCollectionPolicy",
@@ -66,6 +67,7 @@ __all__ = [
     "PipelineStatus",
     "Point",
     "Polygon",
+    "Project",
     "Rectangle",
     "RosSinkConfig",
     "Shape",
@@ -75,6 +77,7 @@ __all__ = [
     "Source",
     "SourceAdapter",
     "SourceType",
+    "Task",
     "TaskType",
     "TrainingInfo",
     "TrainingStatus",

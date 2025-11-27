@@ -13,8 +13,8 @@ from app.models import (
     DatasetItemFormat,
     FixedRateDataCollectionPolicy,
     Pipeline,
+    Project,
 )
-from app.schemas import ProjectView
 from app.services.data_collect.prediction_converter import convert_prediction, get_confidence_scores
 from app.services.event.event_bus import EventBus, EventType
 from app.stream.stream_data import InferenceData
@@ -90,7 +90,7 @@ class DataCollector:
         self.should_collect_next_frame = False
         self.data_dir = data_dir
         self.event_bus = event_bus
-        self.active_pipeline_data: tuple[Pipeline, ProjectView] | None = None
+        self.active_pipeline_data: tuple[Pipeline, Project] | None = None
         self.policy_checkers: list[PolicyChecker] = []
 
         self._load_pipeline()

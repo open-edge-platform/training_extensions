@@ -6,9 +6,8 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.api.dependencies import get_model_service, get_project
-from app.api.schemas import ModelView
+from app.api.schemas import ModelView, ProjectView
 from app.api.validators import ModelID
-from app.schemas import ProjectView
 from app.services import ModelService, ResourceInUseError, ResourceNotFoundError
 
 router = APIRouter(prefix="/api/projects/{project_id}/models", tags=["Models"])
