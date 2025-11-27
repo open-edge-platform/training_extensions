@@ -1,0 +1,17 @@
+default_language_version:
+  python: python3.13 # Should match the Python version used by the app (set in backend/pyproject.toml)
+
+repos:
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: "0.9.7"
+    hooks:
+      - id: uv-lock
+        name: uv lock
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: "v1.16.1"
+    hooks:
+      - id: mypy
+        alias: mypy_backend
+        name: mypy (backend)
+        additional_dependencies: [types-PyYAML, types-aiofiles, types-requests]
+        args: [--disallow-untyped-calls, --config-file, pyproject.toml]
