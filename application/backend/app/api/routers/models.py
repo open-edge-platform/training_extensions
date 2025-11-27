@@ -6,8 +6,9 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.api.dependencies import get_model_service, get_project
+from app.api.schemas import ModelView
 from app.api.validators import ModelID
-from app.schemas import Model, ProjectView
+from app.schemas import ProjectView
 from app.services import ModelService, ResourceInUseError, ResourceNotFoundError
 
 router = APIRouter(prefix="/api/projects/{project_id}/models", tags=["Models"])
@@ -15,7 +16,7 @@ router = APIRouter(prefix="/api/projects/{project_id}/models", tags=["Models"])
 
 @router.get(
     "",
-    response_model=list[Model],
+    response_model=list[ModelView],
     responses={
         status.HTTP_200_OK: {"description": "List of available models"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID"},
@@ -25,17 +26,17 @@ router = APIRouter(prefix="/api/projects/{project_id}/models", tags=["Models"])
 def list_models(
     project: Annotated[ProjectView, Depends(get_project)],
     model_service: Annotated[ModelService, Depends(get_model_service)],
-) -> list[Model]:
+) -> list[ModelView]:
     """Get all models in a project."""
     try:
-        return model_service.list_models(project.id)
+        return [ModelView.model_validate(obj, from_attributes=True) for obj in model_service.list_models(project.id)]
     except ResourceNotFoundError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
 
 
 @router.get(
     "/{model_id}",
-    response_model=Model,
+    response_model=ModelView,
     responses={
         status.HTTP_200_OK: {"description": "Model found"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid project or model ID"},
@@ -46,10 +47,11 @@ def get_model(
     project: Annotated[ProjectView, Depends(get_project)],
     model_id: ModelID,
     model_service: Annotated[ModelService, Depends(get_model_service)],
-) -> Model:
+) -> ModelView:
     """Get a specific model by ID."""
     try:
-        return model_service.get_model(project_id=project.id, model_id=model_id)
+        model_revision = model_service.get_model(project_id=project.id, model_id=model_id)
+        return ModelView.model_validate(model_revision, from_attributes=True)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 

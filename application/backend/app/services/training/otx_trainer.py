@@ -17,9 +17,8 @@ from sqlalchemy.orm import Session
 
 from app.core.jobs import JobType
 from app.core.run import ExecutionContext
-from app.models import DatasetItemAnnotationStatus, TaskType
+from app.models import DatasetItemAnnotationStatus, TaskType, TrainingStatus
 from app.models.training_configuration.configuration import TrainingConfiguration
-from app.schemas.model import TrainingStatus
 from app.schemas.project import TaskBase
 from app.services import (
     BaseWeightsService,

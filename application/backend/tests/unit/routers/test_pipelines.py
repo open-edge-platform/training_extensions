@@ -10,10 +10,10 @@ from fastapi import status
 from pydantic import ValidationError
 
 from app.api.dependencies import get_pipeline_metrics_service, get_pipeline_service
+from app.api.schemas import PipelineView
 from app.main import app
-from app.schemas import PipelineStatus, PipelineView
+from app.models import FixedRateDataCollectionPolicy, PipelineStatus
 from app.schemas.metrics import InferenceMetrics, LatencyMetrics, PipelineMetrics, ThroughputMetrics, TimeWindow
-from app.schemas.pipeline import FixedRateDataCollectionPolicy
 from app.services import PipelineMetricsService, PipelineService, ResourceNotFoundError, ResourceType
 
 
