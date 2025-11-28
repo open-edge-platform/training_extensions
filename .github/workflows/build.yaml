@@ -115,7 +115,7 @@ jobs:
           echo "Testing container with tag: $FIRST_TAG for device: $DEVICE"
 
           # Start the container in detached mode
-          CONTAINER_ID=$(docker run -d --rm -v .:/app/data -p 80:80 geti-tune-${DEVICE}:${FIRST_TAG})
+          CONTAINER_ID=$(docker run -d --rm -v .:/app/data -p 80:8080 geti-tune-${DEVICE}:${FIRST_TAG})
           echo "Started container: $CONTAINER_ID"
 
           # Function to cleanup container on exit
