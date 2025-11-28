@@ -8,9 +8,18 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 
 from app.api.dependencies import get_system_service
+from app.schemas.system import DeviceInfo
 from app.services import SystemService
 
 router = APIRouter(prefix="/api")
+
+
+@router.get("/system/devices")
+async def get_devices(
+    system_service: Annotated[SystemService, Depends(get_system_service)],
+) -> list[DeviceInfo]:
+    """Returns the list of available compute devices (CPU, Intel XPU, NVIDIA CUDA)."""
+    return system_service.get_devices()
 
 
 @router.get("/system/metrics/memory")
