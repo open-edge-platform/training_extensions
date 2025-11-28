@@ -405,3 +405,51 @@ class DatasetService(BaseSessionManagedService):
             as_zip=True,
         )
         return UUID(revision_db.id)
+
+    def get_dataset_revision(self, project_id: UUID, revision_id: UUID) -> DatasetRevisionDB:
+        """
+        Get a dataset revision by ID.
+
+        Args:
+            project_id: The UUID of the project.
+            revision_id: The UUID of the dataset revision.
+
+        Returns:
+            DatasetRevisionDB: The dataset revision.
+
+        Raises:
+            ResourceNotFoundError: If the revision is not found.
+        """
+        revision_repo = DatasetRevisionRepository(db=self.db_session)
+        revision = revision_repo.get_by_id(str(revision_id))
+        if revision is None or revision.project_id != str(project_id):
+            raise ResourceNotFoundError(ResourceType.DATASET_REVISION, str(revision_id))
+        return revision
+
+    def delete_dataset_revision_files(self, project_id: UUID, revision_id: UUID) -> None:
+        """
+        Delete the files associated with a dataset revision.
+
+        Args:
+            project_id: The UUID of the project.
+            revision_id: The UUID of the dataset revision.
+
+        Raises:
+            ResourceNotFoundError: If the revision is not found.
+        """
+        revision = self.get_dataset_revision(project_id, revision_id)
+        if revision.files_deleted:
+            logger.info("Files for dataset revision '{}' already deleted", revision_id)
+            return
+
+        revision_path = self.projects_dir / str(project_id) / "dataset_revisions" / str(revision_id)
+        if revision_path.exists():
+            import shutil
+
+            shutil.rmtree(revision_path)
+            logger.info("Deleted dataset revision files at '{}'", revision_path)
+
+        # Mark as deleted in the database
+        revision_repo = DatasetRevisionRepository(db=self.db_session)
+        revision.files_deleted = True
+        revision_repo.save(revision)
