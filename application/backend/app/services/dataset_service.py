@@ -3,6 +3,7 @@
 
 import os
 import os.path
+import shutil
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
@@ -32,6 +33,7 @@ from app.models import (
     Task,
     TaskType,
 )
+from app.models.dataset_revision import DatasetRevision
 from app.repositories import DatasetItemRepository, DatasetRevisionRepository
 from app.services.datumaro_converter import convert_dataset
 from app.utils.images import crop_to_thumbnail
@@ -406,7 +408,7 @@ class DatasetService(BaseSessionManagedService):
         )
         return UUID(revision_db.id)
 
-    def get_dataset_revision(self, project_id: UUID, revision_id: UUID) -> DatasetRevisionDB:
+    def get_dataset_revision(self, project_id: UUID, revision_id: UUID) -> DatasetRevision:
         """
         Get a dataset revision by ID.
 
@@ -415,7 +417,7 @@ class DatasetService(BaseSessionManagedService):
             revision_id: The UUID of the dataset revision.
 
         Returns:
-            DatasetRevisionDB: The dataset revision.
+            DatasetRevision: The dataset revision.
 
         Raises:
             ResourceNotFoundError: If the revision is not found.
@@ -424,7 +426,7 @@ class DatasetService(BaseSessionManagedService):
         revision = revision_repo.get_by_id(str(revision_id))
         if revision is None or revision.project_id != str(project_id):
             raise ResourceNotFoundError(ResourceType.DATASET_REVISION, str(revision_id))
-        return revision
+        return self._to_dataset(dataset_db=revision)
 
     def delete_dataset_revision_files(self, project_id: UUID, revision_id: UUID) -> None:
         """
@@ -444,12 +446,15 @@ class DatasetService(BaseSessionManagedService):
 
         revision_path = self.projects_dir / str(project_id) / "dataset_revisions" / str(revision_id)
         if revision_path.exists():
-            import shutil
-
             shutil.rmtree(revision_path)
             logger.info("Deleted dataset revision files at '{}'", revision_path)
 
         # Mark as deleted in the database
         revision_repo = DatasetRevisionRepository(db=self.db_session)
         revision.files_deleted = True
-        revision_repo.save(revision)
+        revision_repo.save(revision.model_dump())
+
+    @staticmethod
+    def _to_dataset(dataset_db: DatasetRevisionDB) -> DatasetRevision:
+        """Convert database model to DatasetRevision."""
+        return DatasetRevision.model_validate(**dataset_db.__dict__)
