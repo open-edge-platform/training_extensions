@@ -451,10 +451,12 @@ class DatasetService(BaseSessionManagedService):
 
         # Mark as deleted in the database
         revision_repo = DatasetRevisionRepository(db=self.db_session)
-        revision.files_deleted = True
-        revision_repo.save(revision.model_dump())
+        revision_db = revision_repo.get_by_id(str(revision_id))
+        if revision_db:
+            revision_db.files_deleted = True
+            revision_repo.save(revision_db)
 
     @staticmethod
     def _to_dataset(dataset_db: DatasetRevisionDB) -> DatasetRevision:
         """Convert database model to DatasetRevision."""
-        return DatasetRevision.model_validate(**dataset_db.__dict__)
+        return DatasetRevision.model_validate(dataset_db, from_attributes=True)
