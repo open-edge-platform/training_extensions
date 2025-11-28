@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import psutil
+import torch
 
 from app.schemas.system import DeviceInfo
 
@@ -44,8 +45,6 @@ class SystemService:
 
         # Check for Intel XPU devices
         try:
-            import torch
-
             if torch.xpu.is_available():
                 for device_idx in range(torch.xpu.device_count()):
                     dp = torch.xpu.get_device_properties(device_idx)
@@ -63,8 +62,6 @@ class SystemService:
 
         # Check for NVIDIA CUDA devices
         try:
-            import torch
-
             if torch.cuda.is_available():
                 for device_idx in range(torch.cuda.device_count()):
                     dp = torch.cuda.get_device_properties(device_idx)
