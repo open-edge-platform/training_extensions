@@ -33,7 +33,7 @@ FROM backend-base AS cpu-base
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=backend/uv.lock,target=uv.lock \
     --mount=type=bind,source=backend/pyproject.toml,target=pyproject.toml \
-    uv sync --frozen --no-dev --no-editable --inexact --extra mqtt --extra cpu
+    uv sync --frozen --no-dev --no-editable --extra mqtt --extra cpu
 
 ##########
 # GPU Base
@@ -43,7 +43,7 @@ FROM backend-base AS gpu-base
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=backend/uv.lock,target=uv.lock \
     --mount=type=bind,source=backend/pyproject.toml,target=pyproject.toml \
-    uv sync --frozen --no-dev --no-editable --inexact --extra mqtt --extra cuda
+    uv sync --frozen --no-dev --no-editable --extra mqtt --extra cuda
 
 ##########
 # XPU Base
@@ -53,7 +53,7 @@ FROM backend-base AS xpu-base
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=backend/uv.lock,target=uv.lock \
     --mount=type=bind,source=backend/pyproject.toml,target=pyproject.toml \
-    uv sync --frozen --no-dev --no-editable --inexact --extra mqtt --extra xpu
+    uv sync --frozen --no-dev --no-editable --extra mqtt --extra xpu
 
 ##################
 # Geti UI packages
@@ -122,13 +122,12 @@ COPY --link backend/app /application/app
 COPY --from=backend-base /bin/uv /bin/uv
 
 # Make runtime directories writable for non-root user
-RUN mkdir -p /home/${USER_NAME}/.cache/uv && \
-    chown -R ${USER_NAME}:${USER_NAME} \
+RUN mkdir -p /home/${USER_NAME}/.cache/uv /tmp/nginx /tmp/nginx/logs && \
+    chown -R ${UID}:${UID} \
     /application \
     /usr/share/nginx/html \
-    /var/log/nginx \
-    /var/lib/nginx \
-    /home/${USER_NAME}
+    /home/${USER_NAME} \
+    /tmp/nginx
 
 EXPOSE 8080
 
@@ -144,7 +143,7 @@ CMD ["sh", "-c", "nginx && exec uv run app/main.py;"]
 ######################
 FROM runtime-base AS geti-tune-cpu
 
-COPY --from=cpu-base --chown=${UID} /application/.venv /application/.venv
+COPY --from=cpu-base --chown=${UID}:${UID} /application/.venv /application/.venv
 
 ######################
 # Server (GPU version)
@@ -168,7 +167,7 @@ RUN apt-get update \
 
 USER ${USER_NAME}
 
-COPY --from=gpu-base --chown=${UID} /application/.venv /application/.venv
+COPY --from=gpu-base --chown=${UID}:${UID} /application/.venv /application/.venv
 
 #######################
 ## Server (XPU version)
@@ -194,4 +193,4 @@ RUN apt-get update  \
 
 USER ${USER_NAME}
 
-COPY --from=xpu-base --chown=${UID} /application/.venv /application/.venv
+COPY --from=xpu-base --chown=${UID}:${UID} /application/.venv /application/.venv
