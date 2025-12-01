@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 
 from app.api.dependencies import get_system_service
 from app.main import app
-from app.schemas.system import DeviceInfo
+from app.schemas.system import DeviceInfo, DeviceType
 from app.services import SystemService
 
 
@@ -29,7 +29,7 @@ class TestSystemEndpoints:
     def test_get_devices_cpu_only(self, fxt_system_service: Mock, fxt_client: TestClient):
         """Test GET /api/system/devices with CPU only"""
         fxt_system_service.get_devices.return_value = [
-            DeviceInfo(type="cpu", name="CPU", memory=None, index=None),
+            DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None),
         ]
 
         response = fxt_client.get("/api/system/devices")
@@ -45,8 +45,8 @@ class TestSystemEndpoints:
     def test_get_devices_with_xpu(self, fxt_system_service: Mock, fxt_client: TestClient):
         """Test GET /api/system/devices with Intel XPU"""
         fxt_system_service.get_devices.return_value = [
-            DeviceInfo(type="cpu", name="CPU", memory=None, index=None),
-            DeviceInfo(type="xpu", name="Intel(R) Graphics [0x7d41]", memory=36022263808, index=0),
+            DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None),
+            DeviceInfo(type=DeviceType.XPU, name="Intel(R) Graphics [0x7d41]", memory=36022263808, index=0),
         ]
 
         response = fxt_client.get("/api/system/devices")
@@ -63,8 +63,8 @@ class TestSystemEndpoints:
     def test_get_devices_with_cuda(self, fxt_system_service: Mock, fxt_client: TestClient):
         """Test GET /api/system/devices with NVIDIA CUDA"""
         fxt_system_service.get_devices.return_value = [
-            DeviceInfo(type="cpu", name="CPU", memory=None, index=None),
-            DeviceInfo(type="cuda", name="NVIDIA GeForce RTX 4090", memory=25769803776, index=0),
+            DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None),
+            DeviceInfo(type=DeviceType.CUDA, name="NVIDIA GeForce RTX 4090", memory=25769803776, index=0),
         ]
 
         response = fxt_client.get("/api/system/devices")
@@ -81,9 +81,9 @@ class TestSystemEndpoints:
     def test_get_devices_with_all_devices(self, fxt_system_service: Mock, fxt_client: TestClient):
         """Test GET /api/system/devices with all device types"""
         fxt_system_service.get_devices.return_value = [
-            DeviceInfo(type="cpu", name="CPU", memory=None, index=None),
-            DeviceInfo(type="xpu", name="Intel(R) Graphics [0x7d41]", memory=36022263808, index=0),
-            DeviceInfo(type="cuda", name="NVIDIA GeForce RTX 4090", memory=25769803776, index=0),
+            DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None),
+            DeviceInfo(type=DeviceType.XPU, name="Intel(R) Graphics [0x7d41]", memory=36022263808, index=0),
+            DeviceInfo(type=DeviceType.CUDA, name="NVIDIA GeForce RTX 4090", memory=25769803776, index=0),
         ]
 
         response = fxt_client.get("/api/system/devices")

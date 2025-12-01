@@ -4,7 +4,7 @@
 import psutil
 import torch
 
-from app.schemas.system import DeviceInfo
+from app.schemas.system import DeviceInfo, DeviceType
 
 
 class SystemService:
@@ -35,46 +35,38 @@ class SystemService:
     @staticmethod
     def get_devices() -> list[DeviceInfo]:
         """
-        Get available compute devices (CPU, Intel XPU, NVIDIA CUDA)
+        Get available compute devices (CPU,GPUs, ...)
 
         Returns:
             list[DeviceInfo]: List of available devices
         """
         # CPU is always available
-        devices: list[DeviceInfo] = [DeviceInfo(type="cpu", name="CPU", memory=None, index=None)]
+        devices: list[DeviceInfo] = [DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None)]
 
         # Check for Intel XPU devices
-        try:
-            if torch.xpu.is_available():
-                for device_idx in range(torch.xpu.device_count()):
-                    dp = torch.xpu.get_device_properties(device_idx)
-                    devices.append(
-                        DeviceInfo(
-                            type="xpu",
-                            name=dp.name,
-                            memory=dp.total_memory,
-                            index=device_idx,
-                        )
+        if torch.xpu.is_available():
+            for device_idx in range(torch.xpu.device_count()):
+                dp = torch.xpu.get_device_properties(device_idx)
+                devices.append(
+                    DeviceInfo(
+                        type=DeviceType.XPU,
+                        name=dp.name,
+                        memory=dp.total_memory,
+                        index=device_idx,
                     )
-        except (ImportError, AttributeError, RuntimeError):
-            # torch not available, or XPU not supported
-            pass
+                )
 
         # Check for NVIDIA CUDA devices
-        try:
-            if torch.cuda.is_available():
-                for device_idx in range(torch.cuda.device_count()):
-                    dp = torch.cuda.get_device_properties(device_idx)
-                    devices.append(
-                        DeviceInfo(
-                            type="cuda",
-                            name=dp.name,
-                            memory=dp.total_memory,
-                            index=device_idx,
-                        )
+        if torch.cuda.is_available():
+            for device_idx in range(torch.cuda.device_count()):
+                dp = torch.cuda.get_device_properties(device_idx)
+                devices.append(
+                    DeviceInfo(
+                        type=DeviceType.CUDA,
+                        name=dp.name,
+                        memory=dp.total_memory,
+                        index=device_idx,
                     )
-        except (ImportError, AttributeError, RuntimeError):
-            # torch not available, or CUDA not supported
-            pass
+                )
 
         return devices
