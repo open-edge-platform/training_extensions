@@ -195,18 +195,20 @@ class MLP(nn.Module):
 
 
 class MLP2L(nn.Module, ListForwardMixin):
-    """
-    Initialize 2 layers simple MLP.
+    """Multi-Layer Perceptron for Vision Transformer with 2 fixed layers.
+
+    A simple two-layer MLP with configurable hidden dimension and activation.
 
     Args:
-        in_features (int): The number of expected features in the input.
-        hidden_features (int | None, optional): The number of features in the hidden layers. Defaults to None.
-        out_features (int | None, optional): The number of features in the output layer. Defaults to None.
-        act_layer (Callable[..., nn.Module], optional): The activation function. Defaults to nn.GELU.
-        drop (float, optional): The dropout ratio. Defaults to 0.0.
-        bias (bool, optional): Whether or not to use bias in the layers. Defaults to True.
-        device (torch.device, optional): The device to run the model on. Defaults to None.
+        in_features: Number of input features.
+        hidden_features: Number of hidden features. Defaults to in_features.
+        out_features: Number of output features. Defaults to in_features.
+        act_layer: Activation layer class.
+        drop: Dropout rate.
+        bias: Whether to use bias in linear layers.
+        device: Device to place tensors on.
     """
+
     def __init__(
         self,
         in_features: int,
@@ -215,7 +217,7 @@ class MLP2L(nn.Module, ListForwardMixin):
         act_layer: Callable[..., nn.Module] = nn.GELU,
         drop: float = 0.0,
         bias: bool = True,
-        device=None,
+        device: torch.device | str | None = None,
     ) -> None:
         super().__init__()
         out_features = out_features or in_features
@@ -226,6 +228,14 @@ class MLP2L(nn.Module, ListForwardMixin):
         self.drop = nn.Dropout(drop)
 
     def forward(self, x: Tensor) -> Tensor:
+        """Forward pass through the MLP.
+
+        Args:
+            x: Input tensor of shape (B, N, C).
+
+        Returns:
+            Output tensor of shape (B, N, out_features).
+        """
         x = self.fc1(x)
         x = self.act(x)
         x = self.drop(x)

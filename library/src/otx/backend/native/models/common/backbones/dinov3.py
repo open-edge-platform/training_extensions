@@ -3,66 +3,27 @@
 # This software may be used and distributed in accordance with
 # the terms of the DINOv3 License Agreement.
 
-import os
-import math
+"""DINOv3 Vision Transformer backbone implementation.
+
+This module implements the DINOv3 Vision Transformer architecture with
+RoPE (Rotary Position Embedding) and various configuration options.
+"""
+
+from __future__ import annotations
+
 import logging
 from enum import Enum
 from functools import partial
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union, Callable
+from typing import Any, Callable
 
 import torch
 import torch.nn.init
-import torch.nn.functional as f
 from torch import Tensor, nn
 
-from otx.backend.native.models.common.layers.transformer_layers import SelfAttentionBlock, ListForwardMixin, LayerScale
+from otx.backend.native.models.common.layers.transformer_layers import SelfAttentionBlock, LayerScale, MLP2L
+from otx.backend.native.models.modules.transformer import UnflattenPatchEmbed as PatchEmbed
 from otx.backend.native.models.common.layers.position_embed import RopePositionEmbedding
 from otx.backend.native.models.classification.utils.swiglu_ffn import SwiGLUFFNV2
-
-
-class Mlp(nn.Module, ListForwardMixin):
-    def __init__(
-        self,
-        in_features: int,
-        hidden_features: Optional[int] = None,
-        out_features: Optional[int] = None,
-        act_layer: Callable[..., nn.Module] = nn.GELU,
-        drop: float = 0.0,
-        bias: bool = True,
-        device=None,
-    ) -> None:
-        super().__init__()
-        out_features = out_features or in_features
-        hidden_features = hidden_features or in_features
-        self.fc1 = nn.Linear(in_features, hidden_features, bias=bias, device=device)
-        self.act = act_layer()
-        self.fc2 = nn.Linear(hidden_features, out_features, bias=bias, device=device)
-        self.drop = nn.Dropout(drop)
-
-    def forward(self, x: Tensor) -> Tensor:
-        x = self.fc1(x)
-        x = self.act(x)
-        x = self.drop(x)
-        x = self.fc2(x)
-        x = self.drop(x)
-        return x
-
-
-class RMSNorm(nn.Module):
-    def __init__(self, dim: int, eps: float = 1e-5):
-        super().__init__()
-        self.weight = nn.Parameter(torch.ones(dim))
-        self.eps = eps
-
-    def reset_parameters(self) -> None:
-        nn.init.constant_(self.weight, 1)
-
-    def _norm(self, x: Tensor) -> Tensor:
-        return x * torch.rsqrt(x.pow(2).mean(-1, keepdim=True) + self.eps)
-
-    def forward(self, x: Tensor) -> Tensor:
-        output = self._norm(x.float()).type_as(x)
-        return output * self.weight
 
 
 def named_apply(
@@ -72,6 +33,18 @@ def named_apply(
     depth_first: bool = True,
     include_root: bool = False,
 ) -> nn.Module:
+    """Apply a function to all named modules recursively.
+
+    Args:
+        fn: Function to apply, should accept `module` and `name` kwargs.
+        module: Root module to start from.
+        name: Name prefix for the root module.
+        depth_first: If True, apply in depth-first order.
+        include_root: If True, also apply to the root module.
+
+    Returns:
+        The input module (for chaining).
+    """
     if not depth_first and include_root:
         fn(module=module, name=name)
     for child_name, child_module in module.named_children():
@@ -88,90 +61,15 @@ def named_apply(
     return module
 
 
-def make_2tuple(x):
-    if isinstance(x, tuple):
-        assert len(x) == 2
-        return x
-
-    assert isinstance(x, int)
-    return (x, x)
-
-
-class PatchEmbed(nn.Module):
-    """
-    2D image to patch embedding: (B,C,H,W) -> (B,N,D)
-
-    Args:
-        img_size: Image size.
-        patch_size: Patch token size.
-        in_chans: Number of input image channels.
-        embed_dim: Number of linear projection output channels.
-        norm_layer: Normalization layer.
-    """
-
-    def __init__(
-        self,
-        img_size: Union[int, Tuple[int, int]] = 224,
-        patch_size: Union[int, Tuple[int, int]] = 16,
-        in_chans: int = 3,
-        embed_dim: int = 768,
-        norm_layer: Callable | None = None,
-        flatten_embedding: bool = True,
-    ) -> None:
-        super().__init__()
-
-        image_HW = make_2tuple(img_size)
-        patch_HW = make_2tuple(patch_size)
-        patch_grid_size = (
-            image_HW[0] // patch_HW[0],
-            image_HW[1] // patch_HW[1],
-        )
-
-        self.img_size = image_HW
-        self.patch_size = patch_HW
-        self.patches_resolution = patch_grid_size
-        self.num_patches = patch_grid_size[0] * patch_grid_size[1]
-
-        self.in_chans = in_chans
-        self.embed_dim = embed_dim
-
-        self.flatten_embedding = flatten_embedding
-
-        self.proj = nn.Conv2d(in_chans, embed_dim, kernel_size=patch_HW, stride=patch_HW)
-        self.norm = norm_layer(embed_dim) if norm_layer else nn.Identity()
-
-    def forward(self, x: Tensor) -> Tensor:
-        _, _, H, W = x.shape
-        # patch_H, patch_W = self.patch_size
-        # assert H % patch_H == 0, f"Input image height {H} is not a multiple of patch height {patch_H}"
-        # assert W % patch_W == 0, f"Input image width {W} is not a multiple of patch width: {patch_W}"
-
-        x = self.proj(x)  # B C H W
-        H, W = x.size(2), x.size(3)
-        x = x.flatten(2).transpose(1, 2)  # B HW C
-        x = self.norm(x)
-        if not self.flatten_embedding:
-            x = x.reshape(-1, H, W, self.embed_dim)  # B H W C
-        return x
-
-    def flops(self) -> float:
-        Ho, Wo = self.patches_resolution
-        flops = Ho * Wo * self.embed_dim * self.in_chans * (self.patch_size[0] * self.patch_size[1])
-        if self.norm is not None:
-            flops += Ho * Wo * self.embed_dim
-        return flops
-
-    def reset_parameters(self):
-        k = 1 / (self.in_chans * (self.patch_size[0] ** 2))
-        nn.init.uniform_(self.proj.weight, -math.sqrt(k), math.sqrt(k))
-        if self.proj.bias is not None:
-            nn.init.uniform_(self.proj.bias, -math.sqrt(k), math.sqrt(k))
-
 class Weights(Enum):
+    """Pretrained weight options for DINOv3 models."""
+
     LVD1689M = "LVD1689M"
     SAT493M = "SAT493M"
 
-configs = {
+
+#: Configuration dictionary mapping model names to their hyperparameters.
+configs: dict[str, dict[str, Any]] = {
     'dinov3_vits16': {
         'img_size': 224,
         'patch_size': 16,
@@ -229,28 +127,39 @@ configs = {
 
 logger = logging.getLogger("dinov3")
 
-ffn_layer_dict = {
-    "mlp": Mlp,
+#: Mapping from string FFN layer names to their class implementations.
+ffn_layer_dict: dict[str, type | partial] = {
+    "mlp": MLP2L,
     "swiglu": SwiGLUFFNV2,
     "swiglu32": partial(SwiGLUFFNV2, align_to=32),
     "swiglu64": partial(SwiGLUFFNV2, align_to=64),
     "swiglu128": partial(SwiGLUFFNV2, align_to=128),
 }
 
-norm_layer_dict = {
+#: Mapping from string norm layer names to their class implementations.
+norm_layer_dict: dict[str, type | partial] = {
     "layernorm": partial(nn.LayerNorm, eps=1e-6),
     "layernormbf16": partial(nn.LayerNorm, eps=1e-5),
-    "rmsnorm": RMSNorm,
 }
 
-dtype_dict = {
+#: Mapping from string dtype names to torch dtype objects.
+dtype_dict: dict[str, torch.dtype] = {
     "fp32": torch.float32,
     "fp16": torch.float16,
     "bf16": torch.bfloat16,
 }
 
 
-def init_weights_vit(module: nn.Module, name: str = ""):
+def init_weights_vit(module: nn.Module, name: str = "") -> None:
+    """Initialize Vision Transformer module weights.
+
+    Applies truncated normal initialization to Linear layers, and calls
+    reset_parameters on LayerNorm, LayerScale and PatchEmbed.
+
+    Args:
+        module: The module to initialize.
+        name: Name of the module (unused, for compatibility with named_apply).
+    """
     if isinstance(module, nn.Linear):
         torch.nn.init.trunc_normal_(module.weight, std=0.02)
         if module.bias is not None:
@@ -261,15 +170,25 @@ def init_weights_vit(module: nn.Module, name: str = ""):
         module.reset_parameters()
     if isinstance(module, PatchEmbed):
         module.reset_parameters()
-    if isinstance(module, RMSNorm):
-        module.reset_parameters()
 
 
 class DinoVisionTransformer(nn.Module):
+    """DINOv3 Vision Transformer backbone.
+
+    A Vision Transformer with RoPE (Rotary Position Embedding), optional
+    SwiGLU FFN layers, and LayerScale. Designed for self-supervised learning
+    with the DINOv3 methodology.
+
+    Args:
+        name: Model configuration name from the configs dictionary.
+            Supported: 'dinov3_vits16', 'dinov3_vits16plus', 'dinov3_vitb16',
+            'dinov3_vitb16plus', 'dinov3_vitl16plus'.
+    """
+
     def __init__(
         self,
-        name,
-    ):
+        name: str,
+    ) -> None:
         super().__init__()
 
         img_size                        = configs[name]['img_size']
@@ -392,7 +311,8 @@ class DinoVisionTransformer(nn.Module):
 
         self.init_weights()
 
-    def init_weights(self):
+    def init_weights(self) -> None:
+        """Initialize model weights with proper initialization schemes."""
         self.rope_embed._init_weights()
         nn.init.normal_(self.cls_token, std=0.02)
         if self.n_storage_tokens > 0:
@@ -400,7 +320,17 @@ class DinoVisionTransformer(nn.Module):
         nn.init.zeros_(self.mask_token)
         named_apply(init_weights_vit, self)
 
-    def prepare_tokens_with_masks(self, x: Tensor, masks=None) -> Tuple[Tensor, Tuple[int]]:
+    def prepare_tokens_with_masks(self, x: Tensor, masks: Tensor | None = None) -> tuple[Tensor, tuple[int, int]]:
+        """Prepare input tokens with optional mask tokens.
+
+        Args:
+            x: Input image tensor of shape (B, C, H, W).
+            masks: Optional boolean mask tensor for masked image modeling.
+
+        Returns:
+            Tuple of (tokens, (H, W)) where tokens has shape (B, N, D) with
+            cls_token, storage_tokens, and patch tokens concatenated.
+        """
         x = self.patch_embed(x)
         B, H, W, _ = x.shape
         x = x.flatten(1, 2)
@@ -432,7 +362,16 @@ class DinoVisionTransformer(nn.Module):
 
         return x, (H, W)
 
-    def forward_features_list(self, x_list: List[Tensor], masks_list: List[Tensor]) -> List[Dict[str, Tensor]]:
+    def forward_features_list(self, x_list: list[Tensor], masks_list: list[Tensor]) -> list[dict[str, Tensor]]:
+        """Forward pass for a list of images with masks.
+
+        Args:
+            x_list: List of input image tensors.
+            masks_list: List of corresponding mask tensors.
+
+        Returns:
+            List of dictionaries containing normalized features.
+        """
         x = []
         rope = []
         for t_x, t_masks in zip(x_list, masks_list):
@@ -473,13 +412,32 @@ class DinoVisionTransformer(nn.Module):
             )
         return output
 
-    def forward_features(self, x: Tensor | List[Tensor], masks: Optional[Tensor] = None) -> List[Dict[str, Tensor]]:
+    def forward_features(self, x: Tensor | list[Tensor], masks: Tensor | None = None) -> list[dict[str, Tensor]]:
+        """Extract features from input images.
+
+        Args:
+            x: Input image tensor or list of tensors.
+            masks: Optional mask tensor for masked image modeling.
+
+        Returns:
+            Dictionary (single tensor) or list of dictionaries containing
+            normalized CLS token, storage tokens, patch tokens, and pre-norm features.
+        """
         if isinstance(x, torch.Tensor):
             return self.forward_features_list([x], [masks])[0]
         else:
             return self.forward_features_list(x, masks)
 
-    def _get_intermediate_layers_not_chunked(self, x: Tensor, n: int = 1) -> List[Tensor]:
+    def _get_intermediate_layers_not_chunked(self, x: Tensor, n: int = 1) -> list[Tensor]:
+        """Get intermediate layer outputs without chunking.
+
+        Args:
+            x: Input tensor.
+            n: Number of last layers to return, or list of layer indices.
+
+        Returns:
+            List of intermediate feature tensors.
+        """
         x, (H, W) = self.prepare_tokens_with_masks(x)
         # If n is an int, take the n last blocks. If it's a list, take them
         output, total_block_len = [], len(self.blocks)
@@ -499,12 +457,29 @@ class DinoVisionTransformer(nn.Module):
         self,
         x: torch.Tensor,
         *,
-        n: Union[int, Sequence] = 1,  # Layers or n last layers to take
+        n: int | list[int] = 1,  # Layers or n last layers to take
         reshape: bool = False,
         return_class_token: bool = False,
         return_extra_tokens: bool = False,
         norm: bool = True,
-    ) -> Tuple[Union[torch.Tensor, Tuple[torch.Tensor, ...]]]:
+    ) -> tuple[torch.Tensor | tuple[torch.Tensor, ...], ...]:
+        """Get intermediate layer representations.
+
+        Args:
+            x: Input image tensor of shape (B, C, H, W).
+            n: Number of last layers to return, or list of specific layer indices.
+            reshape: If True, reshape outputs to spatial format (B, C, H', W').
+            return_class_token: If True, also return class tokens.
+            return_extra_tokens: If True, also return extra/storage tokens.
+            norm: If True, apply layer normalization to outputs.
+
+        Returns:
+            Tuple of outputs. Format depends on return flags:
+            - Default: (outputs,) for each layer
+            - With class token: ((output, cls_token),) for each layer
+            - With extra tokens: ((output, extra_tokens),) for each layer
+            - Both: ((output, cls_token, extra_tokens),) for each layer
+        """
         outputs = self._get_intermediate_layers_not_chunked(x, n)
         if norm:
             outputs_normed = []
@@ -534,7 +509,18 @@ class DinoVisionTransformer(nn.Module):
         elif return_class_token and return_extra_tokens:
             return tuple(zip(outputs, class_tokens, extra_tokens))
 
-    def forward(self, *args, is_training: bool = False, **kwargs) -> List[Dict[str, Tensor]] | Tensor:
+    def forward(self, *args: Any, is_training: bool = False, **kwargs: Any) -> list[dict[str, Tensor]] | Tensor:
+        """Forward pass through the model.
+
+        Args:
+            *args: Positional arguments passed to forward_features.
+            is_training: If True, return full feature dict; otherwise return
+                classification head output.
+            **kwargs: Keyword arguments passed to forward_features.
+
+        Returns:
+            Feature dictionary during training, or head output during inference.
+        """
         ret = self.forward_features(*args, **kwargs)
         if is_training:
             return ret

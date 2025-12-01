@@ -266,8 +266,8 @@ class UnflattenPatchEmbed(nn.Module):
     ) -> None:
         super().__init__()
 
-        image_HW = (img_size, img_size) if isinstance(img_size, int) else img_size
-        patch_HW = (patch_size, patch_size) if isinstance(patch_size, int) else patch_size
+        image_HW = img_size if isinstance(img_size, tuple) else (img_size, img_size)
+        patch_HW = patch_size if isinstance(patch_size, tuple) else (patch_size, patch_size)
         patch_grid_size = (
             image_HW[0] // patch_HW[0],
             image_HW[1] // patch_HW[1],
@@ -287,7 +287,19 @@ class UnflattenPatchEmbed(nn.Module):
         self.norm = norm_layer(embed_dim) if norm_layer else nn.Identity()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass to embed image patches.
+
+        Args:
+            x: Input image tensor of shape (B, C, H, W).
+
+        Returns:
+            Patch embeddings of shape (B, N, D) or (B, H, W, D) if not flattened.
+        """
         _, _, H, W = x.shape
+        # patch_H, patch_W = self.patch_size
+        # assert H % patch_H == 0, f"Input image height {H} is not a multiple of patch height {patch_H}"
+        # assert W % patch_W == 0, f"Input image width {W} is not a multiple of patch width: {patch_W}"
+
         x = self.proj(x)  # B C H W
         H, W = x.size(2), x.size(3)
         x = x.flatten(2).transpose(1, 2)  # B HW C
@@ -297,13 +309,19 @@ class UnflattenPatchEmbed(nn.Module):
         return x
 
     def flops(self) -> float:
+        """Calculate FLOPs for patch embedding.
+
+        Returns:
+            Number of floating point operations.
+        """
         Ho, Wo = self.patches_resolution
         flops = Ho * Wo * self.embed_dim * self.in_chans * (self.patch_size[0] * self.patch_size[1])
         if self.norm is not None:
             flops += Ho * Wo * self.embed_dim
         return flops
 
-    def reset_parameters(self):
+    def reset_parameters(self) -> None:
+        """Reset projection layer parameters using uniform initialization."""
         k = 1 / (self.in_chans * (self.patch_size[0] ** 2))
         nn.init.uniform_(self.proj.weight, -math.sqrt(k), math.sqrt(k))
         if self.proj.bias is not None:
