@@ -6,9 +6,16 @@ from datetime import datetime, timedelta
 from uuid import UUID
 
 from app.db.schema import LabelDB, ModelRevisionDB, PipelineDB, ProjectDB, SinkDB, SourceDB
-from app.models import DisconnectedSinkConfig, DisconnectedSourceConfig, OutputFormat, SinkType, SourceType, TaskType
-from app.schemas.model import TrainingStatus
-from app.schemas.pipeline import FixedRateDataCollectionPolicy
+from app.models import (
+    DisconnectedSinkConfig,
+    DisconnectedSourceConfig,
+    FixedRateDataCollectionPolicy,
+    OutputFormat,
+    SinkType,
+    SourceType,
+    TaskType,
+    TrainingStatus,
+)
 
 
 def _create_shared_sinks_sources_folders() -> tuple[SourceDB, SinkDB, SinkDB]:
@@ -62,15 +69,15 @@ def _create_project(
     """
     return ProjectDB(
         id=project_id,
-        name=f"Seeded {task_type} project",
+        name=f"Demo {task_type} project",
         task_type=task_type,
         exclusive_labels=exclusive_labels,
     )
 
 
-def _create_labels(project_id: str | UUID) -> list[LabelDB]:
+def _create_detection_labels(project_id: str | UUID) -> list[LabelDB]:
     """
-    Create labels for a project.
+    Create labels for a Detection card project.
 
     Args:
         project_id (str | UUID): ID of the project to add labels to.
@@ -84,6 +91,22 @@ def _create_labels(project_id: str | UUID) -> list[LabelDB]:
         LabelDB(project_id=project_id, name="Spades", color="#000702", hotkey="s"),
         LabelDB(project_id=project_id, name="Hearts", color="#1f016b", hotkey="h"),
         LabelDB(project_id=project_id, name="No_object", color="#565a84", hotkey="n"),
+    ]
+
+
+def _create_segmentation_labels(project_id: str | UUID) -> list[LabelDB]:
+    """
+    Create labels for an Instance Segmentation fish project.
+
+    Args:
+        project_id (str | UUID): ID of the project to add labels to.
+
+    Returns:
+        list[LabelDB]: List of created label objects.
+    """
+    return [
+        LabelDB(project_id=project_id, name="Fish", color="#2d6311", hotkey="f"),
+        LabelDB(project_id=project_id, name="Empty", color="#565a84", hotkey="e"),
     ]
 
 

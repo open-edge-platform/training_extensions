@@ -10,9 +10,10 @@ import click
 from app.db import MigrationManager, get_db_session
 from app.db.schema import DatasetItemDB, ModelRevisionDB, ProjectDB, SinkDB, SourceDB
 from app.db_seeder import (
-    _create_labels,
+    _create_detection_labels,
     _create_pipeline_with_video_source,
     _create_project,
+    _create_segmentation_labels,
     _create_shared_sinks_sources_folders,
 )
 from app.models import TaskType
@@ -97,7 +98,7 @@ def seed(with_model: bool) -> None:
         task_type=TaskType.DETECTION,
         exclusive_labels=True,
     )
-    detection_labels = _create_labels(project_id=detection_project.id)
+    detection_labels = _create_detection_labels(project_id=detection_project.id)
 
     # Project 2: Instance Segmentation
     segmentation_project = _create_project(
@@ -105,7 +106,7 @@ def seed(with_model: bool) -> None:
         task_type=TaskType.INSTANCE_SEGMENTATION,
         exclusive_labels=True,
     )
-    segmentation_labels = _create_labels(project_id=segmentation_project.id)
+    segmentation_labels = _create_segmentation_labels(project_id=segmentation_project.id)
 
     detection_pipeline = None
     instance_segmentation_pipeline = None
