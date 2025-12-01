@@ -46,12 +46,12 @@ class SystemService:
         # Check for Intel XPU devices
         if torch.xpu.is_available():
             for device_idx in range(torch.xpu.device_count()):
-                dp = torch.xpu.get_device_properties(device_idx)
+                xpu_dp = torch.xpu.get_device_properties(device_idx)
                 devices.append(
                     DeviceInfo(
                         type=DeviceType.XPU,
-                        name=dp.name,
-                        memory=dp.total_memory,
+                        name=xpu_dp.name,
+                        memory=xpu_dp.total_memory,
                         index=device_idx,
                     )
                 )
@@ -59,12 +59,12 @@ class SystemService:
         # Check for NVIDIA CUDA devices
         if torch.cuda.is_available():
             for device_idx in range(torch.cuda.device_count()):
-                dp = torch.cuda.get_device_properties(device_idx)
+                cuda_dp = torch.cuda.get_device_properties(device_idx)
                 devices.append(
                     DeviceInfo(
                         type=DeviceType.CUDA,
-                        name=dp.name,
-                        memory=dp.total_memory,
+                        name=cuda_dp.name,
+                        memory=cuda_dp.total_memory,
                         index=device_idx,
                     )
                 )
