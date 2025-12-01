@@ -240,11 +240,12 @@ class TestDatasetRevisionItemEndpoints:
             ResourceType.DATASET_ITEM, str(dataset_item_id)
         )
 
-        response = fxt_client.get(
-            f"/api/projects/{str(fxt_get_project.id)}/dataset_revisions/{str(fxt_dataset_revision_id)}/items/{str(dataset_item_id)}"
-        )
+        with pytest.raises(ResourceNotFoundError):
+            response = fxt_client.get(
+                f"/api/projects/{str(fxt_get_project.id)}/dataset_revisions/{str(fxt_dataset_revision_id)}/items/{str(dataset_item_id)}"
+            )
 
-        assert response.status_code == status.HTTP_404_NOT_FOUND
+            assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_get_dataset_revision_item_invalid_ids(self, fxt_get_project, fxt_dataset_service, fxt_client):
         response = fxt_client.get(
@@ -307,11 +308,12 @@ class TestDatasetRevisionItemEndpoints:
             ResourceType.DATASET_ITEM, str(dataset_item_id)
         )
 
-        response = fxt_client.get(
-            f"/api/projects/{str(fxt_get_project.id)}/dataset_revisions/{str(fxt_dataset_revision_id)}/items/{str(dataset_item_id)}/binary"
-        )
+        with pytest.raises(ResourceNotFoundError):
+            response = fxt_client.get(
+                f"/api/projects/{str(fxt_get_project.id)}/dataset_revisions/{str(fxt_dataset_revision_id)}/items/{str(dataset_item_id)}/binary"
+            )
 
-        assert response.status_code == status.HTTP_404_NOT_FOUND
+            assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_get_dataset_revision_item_binary_invalid_ids(self, fxt_get_project, fxt_dataset_service, fxt_client):
         response = fxt_client.get(
@@ -359,11 +361,12 @@ class TestDatasetRevisionItemEndpoints:
             ResourceType.DATASET_ITEM, str(dataset_item_id)
         )
 
-        response = fxt_client.get(
-            f"/api/projects/{str(fxt_get_project.id)}/dataset_revisions/{str(fxt_dataset_revision_id)}/items/{str(dataset_item_id)}/thumbnail"
-        )
+        with pytest.raises(ResourceNotFoundError):
+            response = fxt_client.get(
+                f"/api/projects/{str(fxt_get_project.id)}/dataset_revisions/{str(fxt_dataset_revision_id)}/items/{str(dataset_item_id)}/thumbnail"
+            )
 
-        assert response.status_code == status.HTTP_404_NOT_FOUND
+            assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_get_dataset_revision_item_thumbnail_invalid_ids(self, fxt_get_project, fxt_dataset_service, fxt_client):
         response = fxt_client.get(
@@ -394,11 +397,12 @@ class TestDeleteDatasetRevisionFiles:
             ResourceType.DATASET_REVISION, str(fxt_dataset_revision_id)
         )
 
-        response = fxt_client.delete(
-            f"/api/projects/{str(fxt_get_project.id)}/dataset_revisions/{str(fxt_dataset_revision_id)}"
-        )
+        with pytest.raises(ResourceNotFoundError):
+            response = fxt_client.delete(
+                f"/api/projects/{str(fxt_get_project.id)}/dataset_revisions/{str(fxt_dataset_revision_id)}"
+            )
 
-        assert response.status_code == status.HTTP_404_NOT_FOUND
+            assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_delete_dataset_revision_files_invalid_id(self, fxt_get_project, fxt_dataset_service, fxt_client):
         response = fxt_client.delete(f"/api/projects/{str(fxt_get_project.id)}/dataset_revisions/invalid-id")
