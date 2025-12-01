@@ -12,9 +12,9 @@ from typing import Callable
 import torch
 from torch import nn
 
+from otx.backend.native.models.common.layers.transformer_layers import ListForwardMixin
 from otx.backend.native.models.modules.drop import build_dropout
 from otx.backend.native.models.modules.norm import build_norm_layer
-from otx.backend.native.models.common.layers.transformer_layers import ListForwardMixin
 
 
 class SwiGLUFFN(nn.Module):
@@ -106,16 +106,17 @@ class SwiGLUFFNFused(SwiGLUFFN):
 class SwiGLUFFNV2(nn.Module, ListForwardMixin):
     """SwiGLUFFN module.
 
-        Args:
-            in_features (int): Input features.
-            hidden_features (int | None, optional): Hidden features. Defaults to None.
-            out_features (int | None, optional): Output features. Defaults to None.
-            act_layer (Callable[..., nn.Module] | None, optional): Activation layer. Defaults to None.
-            drop (float, optional): Dropout rate. Defaults to 0.0.
-            bias (bool, optional): Whether to use bias. Defaults to True.
-            align_to (int, optional): Number of columns to align the hidden features to. Defaults to 8.
-            device (torch.device, optional): Device to use. Defaults to None.
+    Args:
+        in_features (int): Input features.
+        hidden_features (int | None, optional): Hidden features. Defaults to None.
+        out_features (int | None, optional): Output features. Defaults to None.
+        act_layer (Callable[..., nn.Module] | None, optional): Activation layer. Defaults to None.
+        drop (float, optional): Dropout rate. Defaults to 0.0.
+        bias (bool, optional): Whether to use bias. Defaults to True.
+        align_to (int, optional): Number of columns to align the hidden features to. Defaults to 8.
+        device (torch.device, optional): Device to use. Defaults to None.
     """
+
     def __init__(
         self,
         in_features: int,

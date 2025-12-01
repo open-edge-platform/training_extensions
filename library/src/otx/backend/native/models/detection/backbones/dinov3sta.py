@@ -1,4 +1,3 @@
-
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
@@ -133,9 +132,7 @@ class DINOv3STAsModule(nn.Module):
             else:
                 logger.info("Training DINOv3 from scratch...")
         else:
-            self.dinov3 = VisionTransformer(
-                embed_dim=embed_dim, num_heads=num_heads, return_layers=interaction_indexes
-            )
+            self.dinov3 = VisionTransformer(embed_dim=embed_dim, num_heads=num_heads, return_layers=interaction_indexes)
             if weights_path is not None and Path(weights_path).exists():
                 logger.info("Loading checkpoint from %s...", weights_path)
                 self.dinov3._model.load_state_dict(torch.load(weights_path))  # noqa: SLF001
@@ -161,17 +158,21 @@ class DINOv3STAsModule(nn.Module):
 
         # Linear projection layers for fusing semantic and spatial features
         hidden_dim = hidden_dim if hidden_dim is not None else embed_dim
-        self.convs = nn.ModuleList([
-            nn.Conv2d(embed_dim + conv_inplane * 2, hidden_dim, kernel_size=1, stride=1, padding=0, bias=False),
-            nn.Conv2d(embed_dim + conv_inplane * 4, hidden_dim, kernel_size=1, stride=1, padding=0, bias=False),
-            nn.Conv2d(embed_dim + conv_inplane * 4, hidden_dim, kernel_size=1, stride=1, padding=0, bias=False),
-        ])
+        self.convs = nn.ModuleList(
+            [
+                nn.Conv2d(embed_dim + conv_inplane * 2, hidden_dim, kernel_size=1, stride=1, padding=0, bias=False),
+                nn.Conv2d(embed_dim + conv_inplane * 4, hidden_dim, kernel_size=1, stride=1, padding=0, bias=False),
+                nn.Conv2d(embed_dim + conv_inplane * 4, hidden_dim, kernel_size=1, stride=1, padding=0, bias=False),
+            ]
+        )
         # Normalization layers
-        self.norms = nn.ModuleList([
-            nn.SyncBatchNorm(hidden_dim),
-            nn.SyncBatchNorm(hidden_dim),
-            nn.SyncBatchNorm(hidden_dim),
-        ])
+        self.norms = nn.ModuleList(
+            [
+                nn.SyncBatchNorm(hidden_dim),
+                nn.SyncBatchNorm(hidden_dim),
+                nn.SyncBatchNorm(hidden_dim),
+            ]
+        )
 
     def forward(self, x: Tensor) -> tuple[Tensor, Tensor, Tensor]:
         """Extract multi-scale features from input image.
@@ -189,12 +190,12 @@ class DINOv3STAsModule(nn.Module):
         bs = x.shape[0]
 
         # Extract semantic features from backbone
+        all_layers: list[tuple[Tensor, Tensor]]
         if len(self.interaction_indexes) > 0 and not isinstance(self.dinov3, VisionTransformer):
-            all_layers = self.dinov3.get_intermediate_layers(
-                x, n=self.interaction_indexes, return_class_token=True
-            )
+            result = self.dinov3.get_intermediate_layers(x, n=self.interaction_indexes, return_class_token=True)
+            all_layers = [(out, cls) for out, cls in result]  # type: ignore[misc]
         else:
-            all_layers = self.dinov3(x)
+            all_layers = list(self.dinov3(x))
 
         # Repeat single layer for all three scales if needed
         if len(all_layers) == 1:
@@ -215,8 +216,7 @@ class DINOv3STAsModule(nn.Module):
         if self.use_sta and self.sta is not None:
             detail_feats = self.sta(x)
             fused_feats = [
-                torch.cat([sem_feat, detail_feat], dim=1)
-                for sem_feat, detail_feat in zip(sem_feats, detail_feats)
+                torch.cat([sem_feat, detail_feat], dim=1) for sem_feat, detail_feat in zip(sem_feats, detail_feats)
             ]
         else:
             fused_feats = sem_feats

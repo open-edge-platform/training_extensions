@@ -27,7 +27,6 @@ from otx.backend.native.models.modules.activation import build_activation_layer
 from otx.backend.native.models.modules.conv_module import Conv2dModule
 from otx.backend.native.models.modules.norm import build_norm_layer
 
-
 # =============================================================================
 # Helper Layers
 # =============================================================================
@@ -106,9 +105,7 @@ class ConvNormLayerFusable(nn.Module):
     ) -> None:
         super().__init__()
         padding = (kernel_size - 1) // 2 if padding is None else padding
-        self.conv = nn.Conv2d(
-            ch_in, ch_out, kernel_size, stride, groups=groups, padding=padding, bias=bias
-        )
+        self.conv = nn.Conv2d(ch_in, ch_out, kernel_size, stride, groups=groups, padding=padding, bias=bias)
         self.norm = nn.BatchNorm2d(ch_out)
         self.act = nn.Identity() if act is None else act()
         # Store params for deployment conversion
@@ -330,12 +327,18 @@ class SCDown(nn.Module):
     ) -> None:
         super().__init__()
         self.cv1 = Conv2dModule(
-            c1, c2, 1, 1,
+            c1,
+            c2,
+            1,
+            1,
             normalization=build_norm_layer(normalization, num_features=c2),
             activation=None,
         )
         self.cv2 = Conv2dModule(
-            c2, c2, k, s,
+            c2,
+            c2,
+            k,
+            s,
             padding=auto_pad(kernel_size=k),
             groups=c2,
             normalization=build_norm_layer(normalization, num_features=c2),
@@ -401,7 +404,10 @@ class RepNCSPELAN4(nn.Module):
         self.c = c3 // 2
 
         self.cv1 = Conv2dModule(
-            c1, c3, 1, 1,
+            c1,
+            c3,
+            1,
+            1,
             bias=bias,
             activation=build_activation_layer(activation),
             normalization=build_norm_layer(normalization, num_features=c3),
@@ -409,7 +415,10 @@ class RepNCSPELAN4(nn.Module):
         self.cv2 = nn.Sequential(
             CSPRepLayer(c3 // 2, c4, num_blocks, 1, bias=bias, activation=activation, normalization=normalization),
             Conv2dModule(
-                c4, c4, 3, 1,
+                c4,
+                c4,
+                3,
+                1,
                 padding=auto_pad(kernel_size=3),
                 bias=bias,
                 activation=build_activation_layer(activation),
@@ -419,7 +428,10 @@ class RepNCSPELAN4(nn.Module):
         self.cv3 = nn.Sequential(
             CSPRepLayer(c4, c4, num_blocks, 1, bias=bias, activation=activation, normalization=normalization),
             Conv2dModule(
-                c4, c4, 3, 1,
+                c4,
+                c4,
+                3,
+                1,
                 padding=auto_pad(kernel_size=3),
                 bias=bias,
                 activation=build_activation_layer(activation),
@@ -427,7 +439,10 @@ class RepNCSPELAN4(nn.Module):
             ),
         )
         self.cv4 = Conv2dModule(
-            c3 + (2 * c4), c2, 1, 1,
+            c3 + (2 * c4),
+            c2,
+            1,
+            1,
             bias=bias,
             activation=build_activation_layer(activation),
             normalization=build_norm_layer(normalization, num_features=c2),
@@ -561,15 +576,13 @@ class HybridEncoderModule(nn.Module):
             dropout=dropout,
             activation=enc_activation,
         )
-        self.encoder = nn.ModuleList([
-            TransformerEncoder(copy.deepcopy(encoder_layer), num_encoder_layers)
-            for _ in range(len(use_encoder_idx))
-        ])
+        self.encoder = nn.ModuleList(
+            [TransformerEncoder(copy.deepcopy(encoder_layer), num_encoder_layers) for _ in range(len(use_encoder_idx))]
+        )
 
         # Build FPN and PAN
         self._build_fpn_pan(
-            in_channels, hidden_dim, expansion, depth_mult,
-            activation, normalization, fuse_op, use_fusable_layers
+            in_channels, hidden_dim, expansion, depth_mult, activation, normalization, fuse_op, use_fusable_layers
         )
 
         self._reset_parameters()
@@ -587,10 +600,14 @@ class HybridEncoderModule(nn.Module):
                 input_proj.append(nn.Identity())
             else:
                 input_proj.append(
-                    nn.Sequential(OrderedDict([
-                        ("conv", nn.Conv2d(in_channel, hidden_dim, kernel_size=1, bias=False)),
-                        ("norm", nn.BatchNorm2d(hidden_dim)),
-                    ]))
+                    nn.Sequential(
+                        OrderedDict(
+                            [
+                                ("conv", nn.Conv2d(in_channel, hidden_dim, kernel_size=1, bias=False)),
+                                ("norm", nn.BatchNorm2d(hidden_dim)),
+                            ]
+                        )
+                    )
                 )
         return input_proj
 
@@ -631,15 +648,23 @@ class HybridEncoderModule(nn.Module):
                 # D-FINE style with OTX layers
                 self.lateral_convs.append(
                     Conv2dModule(
-                        hidden_dim, hidden_dim, 1, 1,
+                        hidden_dim,
+                        hidden_dim,
+                        1,
+                        1,
                         normalization=build_norm_layer(normalization, num_features=hidden_dim),
                         activation=None,
                     )
                 )
                 self.fpn_blocks.append(
                     RepNCSPELAN4(
-                        hidden_dim * 2, hidden_dim, hidden_dim * 2, c4, num_blocks,
-                        activation=activation, normalization=normalization,
+                        hidden_dim * 2,
+                        hidden_dim,
+                        hidden_dim * 2,
+                        c4,
+                        num_blocks,
+                        activation=activation,
+                        normalization=normalization,
                     )
                 )
                 self.downsample_convs.append(
@@ -647,8 +672,13 @@ class HybridEncoderModule(nn.Module):
                 )
                 self.pan_blocks.append(
                     RepNCSPELAN4(
-                        hidden_dim * 2, hidden_dim, hidden_dim * 2, c4, num_blocks,
-                        activation=activation, normalization=normalization,
+                        hidden_dim * 2,
+                        hidden_dim,
+                        hidden_dim * 2,
+                        c4,
+                        num_blocks,
+                        activation=activation,
+                        normalization=normalization,
                     )
                 )
 
@@ -693,7 +723,7 @@ class HybridEncoderModule(nn.Module):
 
         pos_dim = embed_dim // 4
         omega = torch.arange(pos_dim, dtype=torch.float32) / pos_dim
-        omega = 1.0 / (temperature ** omega)
+        omega = 1.0 / (temperature**omega)
 
         out_w = grid_w.flatten()[..., None] @ omega[None]
         out_h = grid_h.flatten()[..., None] @ omega[None]
@@ -723,9 +753,9 @@ class HybridEncoderModule(nn.Module):
                 src_flatten = proj_feats[enc_ind].flatten(2).permute(0, 2, 1)
 
                 if self.training or self.eval_spatial_size is None:
-                    pos_embed = self.build_2d_sincos_position_embedding(
-                        w, h, self.hidden_dim, self.pe_temperature
-                    ).to(src_flatten.device)
+                    pos_embed = self.build_2d_sincos_position_embedding(w, h, self.hidden_dim, self.pe_temperature).to(
+                        src_flatten.device
+                    )
                 else:
                     pos_embed = getattr(self, f"pos_embed{enc_ind}").to(src_flatten.device)
 

@@ -20,10 +20,10 @@ import torch
 import torch.nn.init
 from torch import Tensor, nn
 
-from otx.backend.native.models.common.layers.transformer_layers import SelfAttentionBlock, LayerScale, MLP2L
-from otx.backend.native.models.modules.transformer import UnflattenPatchEmbed as PatchEmbed
-from otx.backend.native.models.common.layers.position_embed import RopePositionEmbedding
 from otx.backend.native.models.classification.utils.swiglu_ffn import SwiGLUFFNV2
+from otx.backend.native.models.common.layers.position_embed import RopePositionEmbedding
+from otx.backend.native.models.common.layers.transformer_layers import MLP2L, LayerScale, SelfAttentionBlock
+from otx.backend.native.models.modules.transformer import UnflattenPatchEmbed as PatchEmbed
 
 
 def named_apply(
@@ -48,11 +48,11 @@ def named_apply(
     if not depth_first and include_root:
         fn(module=module, name=name)
     for child_name, child_module in module.named_children():
-        child_name = ".".join((name, child_name)) if name else child_name
+        full_name = f"{name}.{child_name}" if name else child_name
         named_apply(
             fn=fn,
             module=child_module,
-            name=child_name,
+            name=full_name,
             depth_first=depth_first,
             include_root=True,
         )
@@ -70,34 +70,33 @@ class Weights(Enum):
 
 #: Configuration dictionary mapping model names to their hyperparameters.
 configs: dict[str, dict[str, Any]] = {
-    'dinov3_vits16': {
-        'img_size': 224,
-        'patch_size': 16,
-        'in_chans': 3,
-        'pos_embed_rope_base': 100,
-        'pos_embed_rope_normalize_coords': "separate",
-        'pos_embed_rope_rescale_coords': 2,
-        'pos_embed_rope_dtype': "fp32",
-        'embed_dim': 384,
-        'depth': 12,
-        'num_heads': 6,
-        'ffn_ratio': 4,
-        'qkv_bias': True,
-        'drop_path_rate': 0.0,
-        'layerscale_init': 1.0e-05,
-        'norm_layer': "layernormbf16",
-        'ffn_layer': "mlp",
-        'ffn_bias': True,
-        'proj_bias': True,
-        'n_storage_tokens': 4,
-        'mask_k_bias': True,
-        'pretrained': True,
-        'weights': Weights.LVD1689M,
-        'compact_arch_name': "vits",
-        'check_hash': False,
+    "dinov3_vits16": {
+        "img_size": 224,
+        "patch_size": 16,
+        "in_chans": 3,
+        "pos_embed_rope_base": 100,
+        "pos_embed_rope_normalize_coords": "separate",
+        "pos_embed_rope_rescale_coords": 2,
+        "pos_embed_rope_dtype": "fp32",
+        "embed_dim": 384,
+        "depth": 12,
+        "num_heads": 6,
+        "ffn_ratio": 4,
+        "qkv_bias": True,
+        "drop_path_rate": 0.0,
+        "layerscale_init": 1.0e-05,
+        "norm_layer": "layernormbf16",
+        "ffn_layer": "mlp",
+        "ffn_bias": True,
+        "proj_bias": True,
+        "n_storage_tokens": 4,
+        "mask_k_bias": True,
+        "pretrained": True,
+        "weights": Weights.LVD1689M,
+        "compact_arch_name": "vits",
+        "check_hash": False,
     },
-
-    'dinov3_vits16plus': {
+    "dinov3_vits16plus": {
         "img_size": 224,
         "patch_size": 16,
         "in_chans": 3,
@@ -122,7 +121,7 @@ configs: dict[str, dict[str, Any]] = {
         "weights": Weights.LVD1689M,
         "compact_arch_name": "vitsplus",
         "check_hash": False,
-    }
+    },
 }
 
 logger = logging.getLogger("dinov3")
@@ -150,7 +149,7 @@ dtype_dict: dict[str, torch.dtype] = {
 }
 
 
-def init_weights_vit(module: nn.Module, name: str = "") -> None:
+def init_weights_vit(module: nn.Module, name: str = "") -> None:  # noqa: ARG001
     """Initialize Vision Transformer module weights.
 
     Applies truncated normal initialization to Linear layers, and calls
@@ -190,39 +189,35 @@ class DinoVisionTransformer(nn.Module):
         name: str,
     ) -> None:
         super().__init__()
-
-        img_size                        = configs[name]['img_size']
-        patch_size                      = configs[name]['patch_size']
-        in_chans                        = configs[name]['in_chans']
-        pos_embed_rope_min_period       = None
-        pos_embed_rope_max_period       = None
-        pos_embed_rope_shift_coords     = None
-        pos_embed_rope_jitter_coords    = None
-        pos_embed_rope_rescale_coords   = None
-        pos_embed_rope_base             = configs[name]['pos_embed_rope_base']
-        pos_embed_rope_normalize_coords = configs[name]['pos_embed_rope_normalize_coords']
-        pos_embed_rope_rescale_coords   = configs[name]['pos_embed_rope_rescale_coords']
-        pos_embed_rope_dtype            = configs[name]['pos_embed_rope_dtype']
-        embed_dim                       = configs[name]['embed_dim']
-        depth                           = configs[name]['depth']
-        num_heads                       = configs[name]['num_heads']
-        ffn_ratio                       = configs[name]['ffn_ratio']
-        qkv_bias                        = configs[name]['qkv_bias']
-        drop_path_rate                  = configs[name]['drop_path_rate']
-        layerscale_init                 = configs[name]['layerscale_init']
-        norm_layer                      = configs[name]['norm_layer']
-        ffn_layer                       = configs[name]['ffn_layer']
-        ffn_bias                        = configs[name]['ffn_bias']
-        proj_bias                       = configs[name]['proj_bias']
-        n_storage_tokens                = configs[name]['n_storage_tokens']
-        mask_k_bias                     = configs[name]['mask_k_bias']
-        pretrained                      = configs[name]['pretrained']
-        weights                         = configs[name]['weights']
-        compact_arch_name               = configs[name]['compact_arch_name']
-        check_hash                      = configs[name]['check_hash']
-        untie_cls_and_patch_norms       = False
+        config = configs[name]
+        img_size = config["img_size"]
+        patch_size = config["patch_size"]
+        in_chans = config["in_chans"]
+        pos_embed_rope_min_period = None
+        pos_embed_rope_max_period = None
+        pos_embed_rope_shift_coords = None
+        pos_embed_rope_jitter_coords = None
+        pos_embed_rope_rescale_coords = None
+        pos_embed_rope_base = config["pos_embed_rope_base"]
+        pos_embed_rope_normalize_coords = config["pos_embed_rope_normalize_coords"]
+        pos_embed_rope_rescale_coords = config["pos_embed_rope_rescale_coords"]
+        pos_embed_rope_dtype = config["pos_embed_rope_dtype"]
+        embed_dim = config["embed_dim"]
+        depth = config["depth"]
+        num_heads = config["num_heads"]
+        ffn_ratio = config["ffn_ratio"]
+        qkv_bias = config["qkv_bias"]
+        drop_path_rate = config["drop_path_rate"]
+        layerscale_init = config["layerscale_init"]
+        norm_layer = config["norm_layer"]
+        ffn_layer = config["ffn_layer"]
+        ffn_bias = config["ffn_bias"]
+        proj_bias = config["proj_bias"]
+        n_storage_tokens = config["n_storage_tokens"]
+        mask_k_bias = config["mask_k_bias"]
+        untie_cls_and_patch_norms = False
         untie_global_and_local_cls_norm = False
-        device                          = None
+        device = None
 
         norm_layer_cls = norm_layer_dict[norm_layer]
 
@@ -243,14 +238,7 @@ class DinoVisionTransformer(nn.Module):
         self.n_storage_tokens = n_storage_tokens
         if self.n_storage_tokens > 0:
             self.storage_tokens = nn.Parameter(torch.empty(1, n_storage_tokens, embed_dim, device=device))
-        logger.info(f"using base={pos_embed_rope_base} for rope new")
-        logger.info(f"using min_period={pos_embed_rope_min_period} for rope new")
-        logger.info(f"using max_period={pos_embed_rope_max_period} for rope new")
-        logger.info(f"using normalize_coords={pos_embed_rope_normalize_coords} for rope new")
-        logger.info(f"using shift_coords={pos_embed_rope_shift_coords} for rope new")
-        logger.info(f"using rescale_coords={pos_embed_rope_rescale_coords} for rope new")
-        logger.info(f"using jitter_coords={pos_embed_rope_jitter_coords} for rope new")
-        logger.info(f"using dtype={pos_embed_rope_dtype} for rope new")
+
         self.rope_embed = RopePositionEmbedding(
             embed_dim=embed_dim,
             num_heads=num_heads,
@@ -264,7 +252,6 @@ class DinoVisionTransformer(nn.Module):
             dtype=dtype_dict[pos_embed_rope_dtype],
             device=device,
         )
-        logger.info(f"using {ffn_layer} layer as FFN")
         ffn_layer_cls = ffn_layer_dict[ffn_layer]
         ffn_ratio_sequence = [ffn_ratio] * depth
         blocks_list = [
@@ -313,7 +300,7 @@ class DinoVisionTransformer(nn.Module):
 
     def init_weights(self) -> None:
         """Initialize model weights with proper initialization schemes."""
-        self.rope_embed._init_weights()
+        self.rope_embed._init_weights()  # noqa: SLF001
         nn.init.normal_(self.cls_token, std=0.02)
         if self.n_storage_tokens > 0:
             nn.init.normal_(self.storage_tokens, std=0.02)
@@ -332,7 +319,7 @@ class DinoVisionTransformer(nn.Module):
             cls_token, storage_tokens, and patch tokens concatenated.
         """
         x = self.patch_embed(x)
-        B, H, W, _ = x.shape
+        B, H, W, _ = x.shape  # noqa: N806
         x = x.flatten(1, 2)
 
         if masks is not None:
@@ -391,16 +378,16 @@ class DinoVisionTransformer(nn.Module):
                 if self.untie_global_and_local_cls_norm and self.training and idx == 1:
                     # Assume second entry of list corresponds to local crops.
                     # We only ever apply this during training.
-                    x_norm_cls_reg = self.local_cls_norm(x[:, : self.n_storage_tokens + 1])
+                    x_norm_cls_reg = self.local_cls_norm(x[:, : self.n_storage_tokens + 1])  # type: ignore[call-overload]
                 elif self.untie_cls_and_patch_norms:
-                    x_norm_cls_reg = self.cls_norm(x[:, : self.n_storage_tokens + 1])
+                    x_norm_cls_reg = self.cls_norm(x[:, : self.n_storage_tokens + 1])  # type: ignore[call-overload]
                 else:
-                    x_norm_cls_reg = self.norm(x[:, : self.n_storage_tokens + 1])
-                x_norm_patch = self.norm(x[:, self.n_storage_tokens + 1 :])
+                    x_norm_cls_reg = self.norm(x[:, : self.n_storage_tokens + 1])  # type: ignore[call-overload]
+                x_norm_patch = self.norm(x[:, self.n_storage_tokens + 1 :])  # type: ignore[call-overload]
             else:
                 x_norm = self.norm(x)
-                x_norm_cls_reg = x_norm[:, : self.n_storage_tokens + 1]
-                x_norm_patch = x_norm[:, self.n_storage_tokens + 1 :]
+                x_norm_cls_reg = x_norm[:, : self.n_storage_tokens + 1]  # type: ignore[call-overload]
+                x_norm_patch = x_norm[:, self.n_storage_tokens + 1 :]  # type: ignore[call-overload]
             output.append(
                 {
                     "x_norm_clstoken": x_norm_cls_reg[:, 0],
@@ -412,7 +399,11 @@ class DinoVisionTransformer(nn.Module):
             )
         return output
 
-    def forward_features(self, x: Tensor | list[Tensor], masks: Tensor | None = None) -> list[dict[str, Tensor]]:
+    def forward_features(
+        self,
+        x: Tensor | list[Tensor],
+        masks: Tensor | list[Tensor] | None = None,
+    ) -> dict[str, Tensor] | list[dict[str, Tensor]]:
         """Extract features from input images.
 
         Args:
@@ -425,10 +416,9 @@ class DinoVisionTransformer(nn.Module):
         """
         if isinstance(x, torch.Tensor):
             return self.forward_features_list([x], [masks])[0]
-        else:
-            return self.forward_features_list(x, masks)
+        return self.forward_features_list(x, masks)
 
-    def _get_intermediate_layers_not_chunked(self, x: Tensor, n: int = 1) -> list[Tensor]:
+    def _get_intermediate_layers_not_chunked(self, x: Tensor, n: int | list[int] = 1) -> list[Tensor]:
         """Get intermediate layer outputs without chunking.
 
         Args:
@@ -438,19 +428,19 @@ class DinoVisionTransformer(nn.Module):
         Returns:
             List of intermediate feature tensors.
         """
-        x, (H, W) = self.prepare_tokens_with_masks(x)
+        x, (H, W) = self.prepare_tokens_with_masks(x)  # noqa: N806
         # If n is an int, take the n last blocks. If it's a list, take them
-        output, total_block_len = [], len(self.blocks)
-        blocks_to_take = range(total_block_len - n, total_block_len) if isinstance(n, int) else n
+        output: list[Tensor] = []
+        total_block_len = len(self.blocks)
+        blocks_to_take: range | list[int] = range(total_block_len - n, total_block_len) if isinstance(n, int) else n
         for i, blk in enumerate(self.blocks):
-            if self.rope_embed is not None:
-                rope_sincos = self.rope_embed(H=H, W=W)
-            else:
-                rope_sincos = None
+            rope_sincos = self.rope_embed(H=H, W=W) if self.rope_embed is not None else None
             x = blk(x, rope_sincos)
             if i in blocks_to_take:
                 output.append(x)
-        assert len(output) == len(blocks_to_take), f"only {len(output)} / {len(blocks_to_take)} blocks found"
+        if len(output) != len(blocks_to_take):
+            msg = f"only {len(output)} / {len(blocks_to_take)} blocks found"
+            raise RuntimeError(msg)
         return output
 
     def get_intermediate_layers(
@@ -495,21 +485,26 @@ class DinoVisionTransformer(nn.Module):
         extra_tokens = [out[:, 1 : self.n_storage_tokens + 1] for out in outputs]
         outputs = [out[:, self.n_storage_tokens + 1 :] for out in outputs]
         if reshape:
-            B, _, h, w = x.shape
+            B, _, h, w = x.shape  # noqa: N806
             outputs = [
                 out.reshape(B, h // self.patch_size, w // self.patch_size, -1).permute(0, 3, 1, 2).contiguous()
                 for out in outputs
             ]
         if not return_class_token and not return_extra_tokens:
             return tuple(outputs)
-        elif return_class_token and not return_extra_tokens:
+        if return_class_token and not return_extra_tokens:
             return tuple(zip(outputs, class_tokens))
-        elif not return_class_token and return_extra_tokens:
+        if not return_class_token and return_extra_tokens:
             return tuple(zip(outputs, extra_tokens))
-        elif return_class_token and return_extra_tokens:
+        if return_class_token and return_extra_tokens:
             return tuple(zip(outputs, class_tokens, extra_tokens))
 
-    def forward(self, *args: Any, is_training: bool = False, **kwargs: Any) -> list[dict[str, Tensor]] | Tensor:
+    def forward(
+        self,
+        *args: Any,  # noqa: ANN401
+        is_training: bool = False,
+        **kwargs: Any,  # noqa: ANN401
+    ) -> dict[str, Tensor] | list[dict[str, Tensor]] | Tensor:
         """Forward pass through the model.
 
         Args:
@@ -524,5 +519,4 @@ class DinoVisionTransformer(nn.Module):
         ret = self.forward_features(*args, **kwargs)
         if is_training:
             return ret
-        else:
-            return self.head(ret["x_norm_clstoken"])
+        return self.head(ret["x_norm_clstoken"])

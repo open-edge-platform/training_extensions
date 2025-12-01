@@ -5,6 +5,7 @@
 
 Modified from DEIMv2 (https://github.com/Intellindust-AI-Lab/DEIMv2)
 """
+
 from __future__ import annotations
 
 import copy
@@ -14,10 +15,18 @@ from typing import TYPE_CHECKING, Any, Callable, ClassVar
 
 import torch
 import torch.nn.functional as F
-import torch.nn.init as init
 from torch import Tensor, nn
+from torch.nn import init
 
-from otx.backend.native.models.common.layers.transformer_layers import MSDeformableAttentionV2, MLP, LQE, Gate, Integral, SwiGLUFFN, get_contrastive_denoising_training_group
+from otx.backend.native.models.common.layers.transformer_layers import (
+    LQE,
+    MLP,
+    Gate,
+    Integral,
+    MSDeformableAttentionV2,
+    SwiGLUFFN,
+    get_contrastive_denoising_training_group,
+)
 from otx.backend.native.models.common.utils.utils import inverse_sigmoid
 from otx.backend.native.models.detection.utils.utils import dfine_distance2bbox, dfine_weighting_function
 from otx.backend.native.models.modules.norm import RMSNorm
@@ -66,7 +75,8 @@ class TransformerDecoderLayer(nn.Module):
         self.norm1 = RMSNorm(d_model)
 
         # cross attention
-        self.cross_attn = MSDeformableAttentionV2(d_model, n_head, n_levels, n_points)
+        n_points_list = [n_points] * n_levels if isinstance(n_points, int) else n_points
+        self.cross_attn = MSDeformableAttentionV2(d_model, n_head, n_levels, n_points_list)
         self.dropout2 = nn.Dropout(dropout)
 
         self.use_gateway = use_gateway
@@ -106,7 +116,6 @@ class TransformerDecoderLayer(nn.Module):
         Returns:
             Updated query features of shape (B, N, C).
         """
-
         # self attention
         q = k = self.with_pos_embed(target, query_pos_embed)
 
@@ -115,11 +124,7 @@ class TransformerDecoderLayer(nn.Module):
         target = self.norm1(target)
 
         # cross attention
-        target2 = self.cross_attn(\
-            self.with_pos_embed(target, query_pos_embed),
-            reference_points,
-            value,
-            spatial_shapes)
+        target2 = self.cross_attn(self.with_pos_embed(target, query_pos_embed), reference_points, value, spatial_shapes)
 
         if self.use_gateway:
             target = self.gateway(target, self.dropout2(target2))
@@ -130,9 +135,7 @@ class TransformerDecoderLayer(nn.Module):
         # ffn
         target2 = self.swish_ffn(target)
         target = target + self.dropout4(target2)
-        target = self.norm3(target.clamp(min=-65504, max=65504))
-
-        return target
+        return self.norm3(target.clamp(min=-65504, max=65504))
 
 
 class TransformerDecoder(nn.Module):
@@ -181,9 +184,9 @@ class TransformerDecoder(nn.Module):
             [copy.deepcopy(decoder_layer) for _ in range(self.eval_idx + 1)]
             + [copy.deepcopy(decoder_layer_wide) for _ in range(num_layers - self.eval_idx - 1)]
         )
-        self.lqe_layers = nn.ModuleList([
-            copy.deepcopy(LQE(4, 64, 2, reg_max, activation=act)) for _ in range(num_layers)
-        ])
+        self.lqe_layers = nn.ModuleList(
+            [copy.deepcopy(LQE(4, 64, 2, reg_max, activation=act)) for _ in range(num_layers)]
+        )
 
     def value_op(
         self,
@@ -217,9 +220,7 @@ class TransformerDecoder(nn.Module):
         """Convert model for deployment by removing unused layers."""
         self.project = dfine_weighting_function(self.reg_max, self.up, self.reg_scale)
         self.layers = self.layers[: self.eval_idx + 1]
-        self.lqe_layers = nn.ModuleList(
-            [nn.Identity()] * self.eval_idx + [self.lqe_layers[self.eval_idx]]
-        )
+        self.lqe_layers = nn.ModuleList([nn.Identity()] * self.eval_idx + [self.lqe_layers[self.eval_idx]])
 
     def forward(
         self,
@@ -267,7 +268,7 @@ class TransformerDecoder(nn.Module):
         dec_out_logits = []
         dec_out_pred_corners = []
         dec_out_refs = []
-        if not hasattr(self, 'project'):
+        if not hasattr(self, "project"):
             project = dfine_weighting_function(self.reg_max, up, reg_scale)
         else:
             project = self.project
@@ -286,7 +287,7 @@ class TransformerDecoder(nn.Module):
 
             output = layer(output, ref_points_input, value, spatial_shapes, attn_mask, query_pos_embed)
 
-            if i == 0 :
+            if i == 0:
                 # Initial bounding box predictions with inverse sigmoid refinement
                 pre_bboxes = F.sigmoid(pre_bbox_head(output) + inverse_sigmoid(ref_points_detach))
                 pre_scores = score_head[0](output)
@@ -312,8 +313,14 @@ class TransformerDecoder(nn.Module):
             ref_points_detach = inter_ref_bbox.detach()
             output_detach = output.detach()
 
-        return torch.stack(dec_out_bboxes), torch.stack(dec_out_logits), \
-               torch.stack(dec_out_pred_corners), torch.stack(dec_out_refs), pre_bboxes, pre_scores
+        return (
+            torch.stack(dec_out_bboxes),
+            torch.stack(dec_out_logits),
+            torch.stack(dec_out_pred_corners),
+            torch.stack(dec_out_refs),
+            pre_bboxes,
+            pre_scores,
+        )
 
 
 class DEIMTransformerModule(nn.Module):
@@ -417,7 +424,7 @@ class DEIMTransformerModule(nn.Module):
             feat_strides.append(feat_strides[-1] * 2)
 
         self.hidden_dim = hidden_dim
-        scaled_dim = round(layer_scale*hidden_dim)
+        scaled_dim = round(layer_scale * hidden_dim)
         self.nhead = nhead
         self.feat_strides = feat_strides
         self.num_levels = num_levels
@@ -429,14 +436,8 @@ class DEIMTransformerModule(nn.Module):
         self.aux_loss = aux_loss
         self.reg_max = reg_max
 
-        assert query_select_method in ('default', 'one2many', 'agnostic'), ''
-        assert cross_attn_method in ('default', 'discrete'), ''
         self.cross_attn_method = cross_attn_method
         self.query_select_method = query_select_method
-        # -- print the parameters
-        print(f"     --- Use Gateway@{use_gateway} ---")
-        print(f"     --- Use Share Bbox Head@{share_bbox_head} ---")
-        print(f"     --- Use Share Score Head@{share_score_head} ---")
 
         # backbone feature projection
         self._build_input_proj_layer(feat_channels)
@@ -445,24 +446,43 @@ class DEIMTransformerModule(nn.Module):
         self.up = nn.Parameter(torch.tensor([0.5]), requires_grad=False)
         self.reg_scale = nn.Parameter(torch.tensor([reg_scale]), requires_grad=False)
         decoder_layer = TransformerDecoderLayer(
-            hidden_dim, nhead, dim_feedforward, 
-            dropout, num_levels, num_points, use_gateway=use_gateway,
+            hidden_dim,
+            nhead,
+            dim_feedforward,
+            dropout,
+            num_levels,
+            num_points,
+            use_gateway=use_gateway,
         )
         decoder_layer_wide = TransformerDecoderLayer(
-            hidden_dim, nhead, dim_feedforward, dropout,
-            num_levels, num_points, layer_scale=layer_scale, use_gateway=use_gateway,
+            hidden_dim,
+            nhead,
+            dim_feedforward,
+            dropout,
+            num_levels,
+            num_points,
+            layer_scale=layer_scale,
+            use_gateway=use_gateway,
         )
         self.decoder = TransformerDecoder(
-            hidden_dim, decoder_layer, decoder_layer_wide, num_layers, nhead,
-            reg_max, self.reg_scale, self.up, eval_idx, layer_scale,
+            hidden_dim,
+            decoder_layer,
+            decoder_layer_wide,
+            num_layers,
+            nhead,
+            reg_max,
+            self.reg_scale,
+            self.up,
+            eval_idx,
+            layer_scale,
             act=partial(activation, inplace=True),
         )
-      # denoising
+        # denoising
         self.num_denoising = num_denoising
         self.label_noise_ratio = label_noise_ratio
         self.box_noise_scale = box_noise_scale
         if num_denoising > 0:
-            self.denoising_class_embed = nn.Embedding(num_classes+1, hidden_dim, padding_idx=num_classes)
+            self.denoising_class_embed = nn.Embedding(num_classes + 1, hidden_dim, padding_idx=num_classes)
             init.normal_(self.denoising_class_embed.weight[:-1])
 
         # decoder embedding
@@ -470,7 +490,7 @@ class DEIMTransformerModule(nn.Module):
         if learn_query_content:
             self.tgt_embed = nn.Embedding(num_queries, hidden_dim)
 
-        if query_select_method == 'agnostic':
+        if query_select_method == "agnostic":
             self.enc_score_head = nn.Linear(hidden_dim, 1)
         else:
             self.enc_score_head = nn.Linear(hidden_dim, num_classes)
@@ -486,23 +506,29 @@ class DEIMTransformerModule(nn.Module):
         dec_score_head = nn.Linear(hidden_dim, num_classes)
         self.dec_score_head = nn.ModuleList(
             [dec_score_head if share_score_head else copy.deepcopy(dec_score_head) for _ in range(self.eval_idx + 1)]
-          + [copy.deepcopy(dec_score_head) for _ in range(num_layers - self.eval_idx - 1)])
+            + [copy.deepcopy(dec_score_head) for _ in range(num_layers - self.eval_idx - 1)]
+        )
 
         # Share the same bbox head for all layers
-        dec_bbox_head = MLP(hidden_dim, hidden_dim, 4 * (self.reg_max+1), 3, activation=partial(activation, inplace=True))
+        dec_bbox_head = MLP(
+            hidden_dim, hidden_dim, 4 * (self.reg_max + 1), 3, activation=partial(activation, inplace=True)
+        )
         self.dec_bbox_head = nn.ModuleList(
             [dec_bbox_head if share_bbox_head else copy.deepcopy(dec_bbox_head) for _ in range(self.eval_idx + 1)]
-          + [MLP(scaled_dim, scaled_dim, 4 * (self.reg_max+1), 3, activation=partial(activation, inplace=True)) for _ in range(num_layers - self.eval_idx - 1)])
+            + [
+                MLP(scaled_dim, scaled_dim, 4 * (self.reg_max + 1), 3, activation=partial(activation, inplace=True))
+                for _ in range(num_layers - self.eval_idx - 1)
+            ]
+        )
 
         # init encoder output anchors and valid_mask
         if self.eval_spatial_size:
             anchors, valid_mask = self._generate_anchors()
-            self.register_buffer('anchors', anchors)
-            self.register_buffer('valid_mask', valid_mask)
+            self.register_buffer("anchors", anchors)
+            self.register_buffer("valid_mask", valid_mask)
         # init encoder output anchors and valid_mask
         if self.eval_spatial_size:
             self.anchors, self.valid_mask = self._generate_anchors()
-
 
         self._reset_parameters(feat_channels)
 
@@ -529,7 +555,7 @@ class DEIMTransformerModule(nn.Module):
 
         for cls_, reg_ in zip(self.dec_score_head, self.dec_bbox_head):
             init.constant_(cls_.bias, bias)
-            if hasattr(reg_, 'layers'):
+            if hasattr(reg_, "layers"):
                 init.constant_(reg_.layers[-1].weight, 0)
                 init.constant_(reg_.layers[-1].bias, 0)
 
@@ -554,9 +580,13 @@ class DEIMTransformerModule(nn.Module):
                 self.input_proj.append(nn.Identity())
             else:
                 self.input_proj.append(
-                    nn.Sequential(OrderedDict([
-                        ('conv', nn.Conv2d(in_channels, self.hidden_dim, 1, bias=False)),
-                        ('norm', nn.BatchNorm2d(self.hidden_dim,))])
+                    nn.Sequential(
+                        OrderedDict(
+                            [
+                                ("conv", nn.Conv2d(in_channels, self.hidden_dim, 1, bias=False)),
+                                ("norm", nn.BatchNorm2d(self.hidden_dim)),
+                            ]
+                        )
                     )
                 )
 
@@ -567,9 +597,13 @@ class DEIMTransformerModule(nn.Module):
                 self.input_proj.append(nn.Identity())
             else:
                 self.input_proj.append(
-                    nn.Sequential(OrderedDict([
-                        ('conv', nn.Conv2d(in_channels, self.hidden_dim, 3, 2, padding=1, bias=False)),
-                        ('norm', nn.BatchNorm2d(self.hidden_dim))])
+                    nn.Sequential(
+                        OrderedDict(
+                            [
+                                ("conv", nn.Conv2d(in_channels, self.hidden_dim, 3, 2, padding=1, bias=False)),
+                                ("norm", nn.BatchNorm2d(self.hidden_dim)),
+                            ]
+                        )
                     )
                 )
                 in_channels = self.hidden_dim
@@ -629,21 +663,24 @@ class DEIMTransformerModule(nn.Module):
             Tuple of (anchor coordinates, validity mask).
         """
         if spatial_shapes is None:
+            if self.eval_spatial_size is None:
+                msg = "eval_spatial_size must be set when spatial_shapes is None"
+                raise ValueError(msg)
             spatial_shapes = []
             eval_h, eval_w = self.eval_spatial_size
             for s in self.feat_strides:
                 spatial_shapes.append([int(eval_h / s), int(eval_w / s)])
 
-        anchors = []
+        anchor_list: list[Tensor] = []
         for lvl, (h, w) in enumerate(spatial_shapes):
-            grid_y, grid_x = torch.meshgrid(torch.arange(h), torch.arange(w), indexing='ij')
+            grid_y, grid_x = torch.meshgrid(torch.arange(h), torch.arange(w), indexing="ij")
             grid_xy = torch.stack([grid_x, grid_y], dim=-1)
             grid_xy = (grid_xy.unsqueeze(0) + 0.5) / torch.tensor([w, h], dtype=dtype)
-            wh = torch.ones_like(grid_xy) * grid_size * (2.0 ** lvl)
+            wh = torch.ones_like(grid_xy) * grid_size * (2.0**lvl)
             lvl_anchors = torch.concat([grid_xy, wh], dim=-1).reshape(-1, h * w, 4)
-            anchors.append(lvl_anchors)
+            anchor_list.append(lvl_anchors)
 
-        anchors = torch.concat(anchors, dim=1).to(device)
+        anchors = torch.concat(anchor_list, dim=1).to(device)
         valid_mask = ((anchors > self.eps) * (anchors < 1 - self.eps)).all(-1, keepdim=True)
         anchors = torch.log(anchors / (1 - anchors))
         anchors = torch.where(valid_mask, anchors, torch.inf)
@@ -729,6 +766,7 @@ class DEIMTransformerModule(nn.Module):
         Returns:
             Tuple of (topk_memory, topk_logits, topk_anchors).
         """
+        topk_ind: Tensor
         if self.query_select_method == "default":
             _, topk_ind = torch.topk(outputs_logits.max(-1).values, topk, dim=-1)
 
@@ -738,8 +776,6 @@ class DEIMTransformerModule(nn.Module):
 
         elif self.query_select_method == "agnostic":
             _, topk_ind = torch.topk(outputs_logits.squeeze(-1), topk, dim=-1)
-
-        topk_ind: Tensor
 
         topk_anchors = outputs_anchors_unact.gather(
             dim=1, index=topk_ind.unsqueeze(-1).repeat(1, 1, outputs_anchors_unact.shape[-1])
@@ -781,21 +817,22 @@ class DEIMTransformerModule(nn.Module):
         memory, spatial_shapes = self._get_encoder_input(feats)
 
         # prepare denoising training
-        if self.training and self.num_denoising > 0:
-            denoising_logits, denoising_bbox_unact, attn_mask, dn_meta = \
-                get_contrastive_denoising_training_group(targets, \
-                    self.num_classes,
-                    self.num_queries,
-                    self.denoising_class_embed,
-                    num_denoising=self.num_denoising,
-                    label_noise_ratio=self.label_noise_ratio,
-                    box_noise_scale=1.0,
-                    )
+        if self.training and self.num_denoising > 0 and targets is not None:
+            denoising_logits, denoising_bbox_unact, attn_mask, dn_meta = get_contrastive_denoising_training_group(
+                targets,
+                self.num_classes,
+                self.num_queries,
+                self.denoising_class_embed,
+                num_denoising=self.num_denoising,
+                label_noise_ratio=self.label_noise_ratio,
+                box_noise_scale=1.0,
+            )
         else:
             denoising_logits, denoising_bbox_unact, attn_mask, dn_meta = None, None, None, None
 
-        init_ref_contents, init_ref_points_unact, enc_topk_bboxes_list, enc_topk_logits_list, enc_outputs_logits = \
+        init_ref_contents, init_ref_points_unact, enc_topk_bboxes_list, enc_topk_logits_list, enc_outputs_logits = (
             self._get_decoder_input(memory, spatial_shapes, denoising_logits, denoising_bbox_unact)
+        )
 
         # decoder
         out_bboxes, out_logits, out_corners, out_refs, pre_bboxes, pre_logits = self.decoder(
@@ -811,39 +848,48 @@ class DEIMTransformerModule(nn.Module):
             self.up,
             self.reg_scale,
             attn_mask=attn_mask,
-            dn_meta=dn_meta)
+            dn_meta=dn_meta,
+        )
 
         out_bboxes = out_bboxes.clamp(min=1e-8)
 
         if self.training and dn_meta is not None:
             # the output from the first decoder layer, only one
-            dn_pre_logits, pre_logits = torch.split(pre_logits, dn_meta['dn_num_split'], dim=1)
-            dn_pre_bboxes, pre_bboxes = torch.split(pre_bboxes, dn_meta['dn_num_split'], dim=1)
+            dn_pre_logits, pre_logits = torch.split(pre_logits, dn_meta["dn_num_split"], dim=1)
+            dn_pre_bboxes, pre_bboxes = torch.split(pre_bboxes, dn_meta["dn_num_split"], dim=1)
 
-            dn_out_logits, out_logits = torch.split(out_logits, dn_meta['dn_num_split'], dim=2)
-            dn_out_bboxes, out_bboxes = torch.split(out_bboxes, dn_meta['dn_num_split'], dim=2)
+            dn_out_logits, out_logits = torch.split(out_logits, dn_meta["dn_num_split"], dim=2)
+            dn_out_bboxes, out_bboxes = torch.split(out_bboxes, dn_meta["dn_num_split"], dim=2)
 
-            dn_out_corners, out_corners = torch.split(out_corners, dn_meta['dn_num_split'], dim=2)
-            dn_out_refs, out_refs = torch.split(out_refs, dn_meta['dn_num_split'], dim=2)
+            dn_out_corners, out_corners = torch.split(out_corners, dn_meta["dn_num_split"], dim=2)
+            dn_out_refs, out_refs = torch.split(out_refs, dn_meta["dn_num_split"], dim=2)
 
         if self.training:
-            out = {'pred_logits': out_logits[-1], 'pred_boxes': out_bboxes[-1], 'pred_corners': out_corners[-1],
-                   'ref_points': out_refs[-1], 'up': self.up, 'reg_scale': self.reg_scale}
+            out = {
+                "pred_logits": out_logits[-1],
+                "pred_boxes": out_bboxes[-1],
+                "pred_corners": out_corners[-1],
+                "ref_points": out_refs[-1],
+                "up": self.up,
+                "reg_scale": self.reg_scale,
+            }
         else:
-            out = {'pred_logits': out_logits[-1], 'pred_boxes': out_bboxes[-1]}
+            out = {"pred_logits": out_logits[-1], "pred_boxes": out_bboxes[-1]}
 
         if self.training and self.aux_loss:
-            out['aux_outputs'] = self._set_aux_loss2(out_logits[:-1], out_bboxes[:-1], out_corners[:-1], out_refs[:-1],
-                                                     out_corners[-1], out_logits[-1])
-            out['enc_aux_outputs'] = self._set_aux_loss(enc_topk_logits_list, enc_topk_bboxes_list)
-            out['pre_outputs'] = {'pred_logits': pre_logits, 'pred_boxes': pre_bboxes}
-            out['enc_meta'] = {'class_agnostic': self.query_select_method == 'agnostic'}
+            out["aux_outputs"] = self._set_aux_loss2(
+                out_logits[:-1], out_bboxes[:-1], out_corners[:-1], out_refs[:-1], out_corners[-1], out_logits[-1]
+            )
+            out["enc_aux_outputs"] = self._set_aux_loss(enc_topk_logits_list, enc_topk_bboxes_list)
+            out["pre_outputs"] = {"pred_logits": pre_logits, "pred_boxes": pre_bboxes}
+            out["enc_meta"] = {"class_agnostic": self.query_select_method == "agnostic"}
 
             if dn_meta is not None:
-                out['dn_outputs'] = self._set_aux_loss2(dn_out_logits, dn_out_bboxes, dn_out_corners, dn_out_refs,
-                                                        dn_out_corners[-1], dn_out_logits[-1])
-                out['dn_pre_outputs'] = {'pred_logits': dn_pre_logits, 'pred_boxes': dn_pre_bboxes}
-                out['dn_meta'] = dn_meta
+                out["dn_outputs"] = self._set_aux_loss2(
+                    dn_out_logits, dn_out_bboxes, dn_out_corners, dn_out_refs, dn_out_corners[-1], dn_out_logits[-1]
+                )
+                out["dn_pre_outputs"] = {"pred_logits": dn_pre_logits, "pred_boxes": dn_pre_bboxes}
+                out["dn_meta"] = dn_meta
 
         if explain_mode:
             out["raw_logits"] = enc_outputs_logits

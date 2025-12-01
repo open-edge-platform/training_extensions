@@ -328,7 +328,7 @@ class Benchmark:
             config_path=FOLDER_MAPPINGS[model_info.task] / (model_info.name + ".yaml"),
             data_root=self.data_root / dataset_info.path,
             work_dir=work_dir,
-            device=self.accelerator
+            device=self.accelerator,
         )
 
     def run(
@@ -381,7 +381,7 @@ class Benchmark:
                     dataset_info=dataset_info,
                     sub_work_dir=sub_work_dir,
                     seed=seed,
-                    num_devices=num_devices
+                    num_devices=num_devices,
                 )
 
                 self._log_metrics(

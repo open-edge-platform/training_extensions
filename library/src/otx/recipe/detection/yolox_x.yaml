@@ -71,15 +71,14 @@ overrides:
             scale: $(input_size)
             keep_ratio: true
             transform_bbox: true
-        # - class_path: otx.data.transform_libs.torchvision.CachedMosaic
-        #   init_args:
-        #     random_pop: false
-        #     max_cached_images: 20
-        #     img_scale: $(input_size) # (H, W)
-        # - class_path: otx.data.transform_libs.torchvision.RandomAffine
-        #   init_args:
-        #     border: $(input_size) * -0.5
-        - class_path: otx.data.transform_libs.torchvision.CachedCopyBlend
+        - class_path: otx.data.transform_libs.torchvision.CachedMosaic
+          init_args:
+            random_pop: false
+            max_cached_images: 20
+            img_scale: $(input_size) # (H, W)
+        - class_path: otx.data.transform_libs.torchvision.RandomAffine
+          init_args:
+            border: $(input_size) * -0.5
         - class_path: torchvision.transforms.v2.RandomPhotometricDistort
           enable: false
           init_args:

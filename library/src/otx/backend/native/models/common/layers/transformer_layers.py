@@ -7,19 +7,21 @@ from __future__ import annotations
 
 import copy
 import math
-from typing import Callable, List, Tuple
 from functools import partial
-import torchvision
+from typing import Callable, NoReturn
 
 import torch
 import torch.nn.functional as f
+import torchvision
 from torch import Tensor, nn
 from torch.nn import init
 
 from otx.backend.native.models.common.utils.utils import get_clones, inverse_sigmoid
-from otx.backend.native.models.modules.transformer import deformable_attention_core_func, deformable_attention_core_func_v2
-from otx.backend.native.models.utils.weight_init import bias_init_with_prob
 from otx.backend.native.models.modules.norm import RMSNorm
+from otx.backend.native.models.modules.transformer import (
+    deformable_attention_core_func,
+)
+from otx.backend.native.models.utils.weight_init import bias_init_with_prob
 
 
 class TransformerEncoderLayer(nn.Module):
@@ -93,11 +95,11 @@ class TransformerEncoderLayer(nn.Module):
         return src
 
 
-class ListForwardMixin(object):
-    def forward(self, x: Tensor):
+class ListForwardMixin:
+    def forward(self, x: Tensor) -> NoReturn:
         raise NotImplementedError
 
-    def forward_list(self, x_list: List[Tensor]) -> List[Tensor]:
+    def forward_list(self, x_list: list[Tensor]) -> list[Tensor]:
         x_flat, shapes, num_tokens = cat_keep_shapes(x_list)
         x_flat = self.forward(x_flat)
         return uncat_with_shapes(x_flat, shapes, num_tokens)
@@ -116,7 +118,7 @@ class LayerScale(nn.Module):
         self.gamma = nn.Parameter(torch.empty(dim, device=device))
         self.init_values = init_values
 
-    def reset_parameters(self):
+    def reset_parameters(self) -> None:
         nn.init.constant_(self.gamma, self.init_values)
 
     def forward(self, x: Tensor) -> Tensor:
@@ -240,9 +242,8 @@ class MLP2L(nn.Module, ListForwardMixin):
         x = self.act(x)
         x = self.drop(x)
         x = self.fc2(x)
-        x = self.drop(x)
-        return x
-    
+        return self.drop(x)
+
 
 class MSDeformableAttention(nn.Module):
     """Multi-Scale Deformable Attention Module.
@@ -254,7 +255,13 @@ class MSDeformableAttention(nn.Module):
         num_points (int): The number of points in MSDeformableAttention.
     """
 
-    def __init__(self, embed_dim: int = 256, num_heads: int = 8, num_levels: int = 4, num_points: int = 4, method: str = 'default') -> None:
+    def __init__(
+        self,
+        embed_dim: int = 256,
+        num_heads: int = 8,
+        num_levels: int = 4,
+        num_points: int = 4,
+    ) -> None:
         """Multi-Scale Deformable Attention Module."""
         super().__init__()
         self.embed_dim = embed_dim
@@ -413,7 +420,7 @@ class MSDeformableAttentionV2(nn.Module):
         num_heads: int = 8,
         num_levels: int = 4,
         num_points_list: list[int] = [3, 6, 3],  # noqa: B006
-        method: str = 'default',
+        method: str = "default",
     ) -> None:
         super().__init__()
         self.embed_dim = embed_dim
@@ -436,7 +443,7 @@ class MSDeformableAttentionV2(nn.Module):
 
         self._reset_parameters()
 
-        if method == 'discrete':
+        if method == "discrete":
             for p in self.sampling_offsets.parameters():
                 p.requires_grad = False
 
@@ -708,21 +715,19 @@ class VisualEncoder(nn.Module):
 
         return output
 
-######### TODO(kprokofi): Remove duplicates #########
 
-
-def cat_keep_shapes(x_list: List[Tensor]) -> Tuple[Tensor, List[Tuple[int]], List[int]]:
+def cat_keep_shapes(x_list: list[Tensor]) -> tuple[Tensor, list[tuple[int]], list[int]]:
     shapes = [x.shape for x in x_list]
     num_tokens = [x.select(dim=-1, index=0).numel() for x in x_list]
     flattened = torch.cat([x.flatten(0, -2) for x in x_list])
     return flattened, shapes, num_tokens
 
 
-def uncat_with_shapes(flattened: Tensor, shapes: List[Tuple[int]], num_tokens: List[int]) -> List[Tensor]:
+def uncat_with_shapes(flattened: Tensor, shapes: list[tuple[int]], num_tokens: list[int]) -> list[Tensor]:
     outputs_splitted = torch.split_with_sizes(flattened, num_tokens, dim=0)
     shapes_adjusted = [shape[:-1] + torch.Size([flattened.shape[-1]]) for shape in shapes]
-    outputs_reshaped = [o.reshape(shape) for o, shape in zip(outputs_splitted, shapes_adjusted)]
-    return outputs_reshaped
+    return [o.reshape(shape) for o, shape in zip(outputs_splitted, shapes_adjusted)]
+
 
 # RoPE-related functions:
 def rope_rotate_half(x: Tensor) -> Tensor:
@@ -775,7 +780,7 @@ class SelfAttention(nn.Module):
         self.proj = nn.Linear(dim, dim, bias=proj_bias, device=device)
         self.proj_drop = nn.Dropout(proj_drop)
 
-    def apply_rope(self, q: Tensor, k: Tensor, rope: Tensor | Tuple[Tensor, Tensor]) -> Tuple[Tensor, Tensor]:
+    def apply_rope(self, q: Tensor, k: Tensor, rope: Tensor | tuple[Tensor, Tensor]) -> tuple[Tensor, Tensor]:
         # All operations will use the dtype of rope, the output is cast back to the dtype of q and k
         q_dtype = q.dtype
         k_dtype = k.dtype
@@ -800,10 +805,9 @@ class SelfAttention(nn.Module):
         qkv = self.qkv(x)
         attn_v = self.compute_attention(qkv=qkv, attn_bias=attn_bias, rope=rope)
         x = self.proj(attn_v)
-        x = self.proj_drop(x)
-        return x
+        return self.proj_drop(x)
 
-    def forward_list(self, x_list, attn_bias=None, rope_list=None) -> List[Tensor]:
+    def forward_list(self, x_list, attn_bias=None, rope_list=None) -> list[Tensor]:
         assert len(x_list) == len(rope_list)  # should be enforced by the Block
         x_flat, shapes, num_tokens = cat_keep_shapes(x_list)
         qkv_flat = self.qkv(x_flat)
@@ -830,34 +834,6 @@ class SelfAttention(nn.Module):
         return x.reshape([B, N, C])
 
 
-class Mlp(nn.Module, ListForwardMixin):
-    def __init__(
-        self,
-        in_features: int,
-        hidden_features: int | None = None,
-        out_features: int | None = None,
-        act_layer: Callable[..., nn.Module] = nn.GELU,
-        drop: float = 0.0,
-        bias: bool = True,
-        device=None,
-    ) -> None:
-        super().__init__()
-        out_features = out_features or in_features
-        hidden_features = hidden_features or in_features
-        self.fc1 = nn.Linear(in_features, hidden_features, bias=bias, device=device)
-        self.act = act_layer()
-        self.fc2 = nn.Linear(hidden_features, out_features, bias=bias, device=device)
-        self.drop = nn.Dropout(drop)
-
-    def forward(self, x: Tensor) -> Tensor:
-        x = self.fc1(x)
-        x = self.act(x)
-        x = self.drop(x)
-        x = self.fc2(x)
-        x = self.drop(x)
-        return x
-
-
 class SelfAttentionBlock(nn.Module):
     def __init__(
         self,
@@ -874,7 +850,7 @@ class SelfAttentionBlock(nn.Module):
         act_layer: Callable[..., nn.Module] = nn.GELU,
         norm_layer: Callable[..., nn.Module] = nn.LayerNorm,
         attn_class: Callable[..., nn.Module] = SelfAttention,
-        ffn_layer: Callable[..., nn.Module] = Mlp,
+        ffn_layer: Callable[..., nn.Module] = MLP2L,
         mask_k_bias: bool = False,
         device=None,
     ) -> None:
@@ -917,13 +893,11 @@ class SelfAttentionBlock(nn.Module):
         if sin.ndim == 4:
             # If the rope embedding has a batch dimension (is different for each batch element), index into it
             return sin[indices], cos[indices]  # [batch, heads, patches, embed_dim]
-        else:
-            # No batch dimension, do not index
-            return sin, cos  # [heads, patches, embed_dim] or [patches, embed_dim]
+        # No batch dimension, do not index
+        return sin, cos  # [heads, patches, embed_dim] or [patches, embed_dim]
 
     def _forward(self, x: Tensor, rope=None) -> Tensor:
-        """
-        This is the reference implementation for a single tensor, matching what is done below for a list.
+        """This is the reference implementation for a single tensor, matching what is done below for a list.
         We call the list op on [x] instead of this function.
         """
         b, _, _ = x.shape
@@ -963,9 +937,8 @@ class SelfAttentionBlock(nn.Module):
 
         return x_ffn
 
-    def _forward_list(self, x_list: List[Tensor], rope_list=None) -> List[Tensor]:
-        """
-        This list operator concatenates the tokens from the list of inputs together to save
+    def _forward_list(self, x_list: list[Tensor], rope_list=None) -> list[Tensor]:
+        """This list operator concatenates the tokens from the list of inputs together to save
         on the elementwise operations. Torch-compile memory-planning allows hiding the overhead
         related to concat ops.
         """
@@ -981,11 +954,11 @@ class SelfAttentionBlock(nn.Module):
             x_subset_1_list = [x[indices_1] for x, indices_1 in zip(x_list, indices_1_list)]
 
             if rope_list is not None:
-                rope_subset_list = [
+                rope_subset_list: list | None = [
                     self._maybe_index_rope(rope, indices_1) for rope, indices_1 in zip(rope_list, indices_1_list)
                 ]
             else:
-                rope_subset_list = rope_list
+                rope_subset_list = None
 
             flattened, shapes, num_tokens = cat_keep_shapes(x_subset_1_list)
             norm1 = uncat_with_shapes(self.norm1(flattened), shapes, num_tokens)
@@ -1037,19 +1010,18 @@ class SelfAttentionBlock(nn.Module):
 
         return x_ffn
 
-    def forward(self, x_or_x_list, rope_or_rope_list=None) -> List[Tensor]:
+    def forward(self, x_or_x_list, rope_or_rope_list=None) -> list[Tensor]:
         if isinstance(x_or_x_list, Tensor):
             # for reference:
             # return self._forward(x_or_x_list, rope=rope_or_rope_list)
             # in order to match implementations we call the list op:
             return self._forward_list([x_or_x_list], rope_list=[rope_or_rope_list])[0]
-        elif isinstance(x_or_x_list, list):
+        if isinstance(x_or_x_list, list):
             if rope_or_rope_list is None:
                 rope_or_rope_list = [None for x in x_or_x_list]
             # return [self._forward(x, rope=rope) for x, rope in zip(x_or_x_list, rope_or_rope_list)]
             return self._forward_list(x_or_x_list, rope_list=rope_or_rope_list)
-        else:
-            raise AssertionError
+        raise AssertionError
 
 
 class Gate(nn.Module):
@@ -1113,7 +1085,7 @@ class Integral(nn.Module):
         shape = x.shape
         x = f.softmax(x.reshape(-1, self.reg_max + 1), dim=1)
         x = f.linear(x, project.to(x.device)).reshape(-1, 4)
-        return x.reshape(list(shape[:-1]) + [-1])
+        return x.reshape([*list(shape[:-1]), -1])
 
 
 class LQE(nn.Module):

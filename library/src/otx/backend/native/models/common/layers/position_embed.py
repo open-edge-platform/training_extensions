@@ -8,10 +8,9 @@ from __future__ import annotations
 import math
 from typing import Literal
 
-import torch
-from torch import nn
 import numpy as np
-from torch import Tensor
+import torch
+from torch import Tensor, nn
 
 
 class PositionEmbeddingSine(nn.Module):
@@ -130,7 +129,8 @@ class RopePositionEmbedding(nn.Module):
         assert embed_dim % (4 * num_heads) == 0
         both_periods = min_period is not None and max_period is not None
         if (base is None and not both_periods) or (base is not None and both_periods):
-            raise ValueError("Either `base` or `min_period`+`max_period` must be provided.")
+            msg = "Either `base` or `min_period`+`max_period` must be provided."
+            raise ValueError(msg)
 
         D_head = embed_dim // num_heads
         self.base = base
@@ -169,7 +169,8 @@ class RopePositionEmbedding(nn.Module):
             coords_h = torch.arange(0.5, H, **dd) / H  # [H]
             coords_w = torch.arange(0.5, W, **dd) / W  # [W]
         else:
-            raise ValueError(f"Unknown normalize_coords: {self.normalize_coords}")
+            msg = f"Unknown normalize_coords: {self.normalize_coords}"
+            raise ValueError(msg)
         coords = torch.stack(torch.meshgrid(coords_h, coords_w, indexing="ij"), dim=-1)  # [H, W, 2]
         coords = coords.flatten(0, 1)  # [HW, 2]
         coords = 2.0 * coords - 1.0  # Shift range [0, 1] to [-1, +1]
@@ -202,7 +203,7 @@ class RopePositionEmbedding(nn.Module):
 
         return (sin, cos)  # 2 * [HW, D]
 
-    def _init_weights(self):
+    def _init_weights(self) -> None:
         device = self.periods.device
         dtype = self.dtype
         if self.base is not None:
@@ -210,6 +211,10 @@ class RopePositionEmbedding(nn.Module):
                 2 * torch.arange(self.D_head // 4, device=device, dtype=dtype) / (self.D_head // 2)
             )  # [D//4]
         else:
+            # min_period and max_period are guaranteed to be set when base is None
+            if self.min_period is None or self.max_period is None:
+                msg = "min_period and max_period must be set when base is None"
+                raise RuntimeError(msg)
             base = self.max_period / self.min_period
             exponents = torch.linspace(0, 1, self.D_head // 4, device=device, dtype=dtype)  # [D//4] range [0, 1]
             periods = base**exponents  # range [1, max_period / min_period]

@@ -4,7 +4,6 @@
 
 from __future__ import annotations
 
-from email.policy import default
 import json
 import logging
 import subprocess

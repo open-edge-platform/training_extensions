@@ -14,7 +14,11 @@ import torch
 from torch import nn
 from torch.nn import init
 
-from otx.backend.native.models.common.layers.transformer_layers import MLP, MSDeformableAttention, get_contrastive_denoising_training_group
+from otx.backend.native.models.common.layers.transformer_layers import (
+    MLP,
+    MSDeformableAttention,
+    get_contrastive_denoising_training_group,
+)
 from otx.backend.native.models.common.utils.utils import inverse_sigmoid
 from otx.backend.native.models.modules.base_module import BaseModule
 

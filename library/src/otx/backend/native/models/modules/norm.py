@@ -12,7 +12,7 @@ from functools import partial
 from typing import Any, Callable
 
 import torch
-from torch import nn
+from torch import Tensor, nn
 from torch.nn import SyncBatchNorm
 from torch.nn.modules.batchnorm import _BatchNorm
 from torch.nn.modules.instancenorm import _InstanceNorm
@@ -53,8 +53,9 @@ class RMSNorm(nn.Module):
         return f"dim={self.dim}, eps={self.eps}"
 
     def reset_parameters(self) -> None:
+        """Reset scale parameter to ones."""
         nn.init.constant_(self.scale, 1)
-        
+
 
 class FrozenBatchNorm2d(nn.Module):
     """Copy and modified from https://github.com/facebookresearch/detr/blob/master/models/backbone.py.

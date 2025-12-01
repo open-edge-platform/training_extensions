@@ -17,8 +17,9 @@ import torch
 from torch import Tensor, nn
 
 from otx.backend.native.models.common.layers.position_embed import RopePositionEmbedding
-from otx.backend.native.models.utils.weight_init import trunc_normal_
 from otx.backend.native.models.common.layers.transformer_layers import MLP2L as MLP
+from otx.backend.native.models.utils.weight_init import trunc_normal_
+
 
 def rotate_half(x: Tensor) -> Tensor:
     """Rotate half the hidden dims of the input for RoPE.
@@ -106,8 +107,7 @@ def drop_path(x: Tensor, drop_prob: float = 0.0, training: bool = False) -> Tens
     keep_prob = 1 - drop_prob
     shape = (x.shape[0],) + (1,) * (x.ndim - 1)
     random_tensor = keep_prob + torch.rand(shape, dtype=x.dtype, device=x.device)
-    output = x.div(keep_prob) * random_tensor.floor()
-    return output
+    return x.div(keep_prob) * random_tensor.floor()
 
 
 class DropPath(nn.Module):
@@ -132,7 +132,7 @@ class DropPath(nn.Module):
         Returns:
             Output tensor with drop path applied.
         """
-        return drop_path(x, self.drop_prob, self.training)
+        return drop_path(x, self.drop_prob or 0.0, self.training)
 
 
 class Attention(nn.Module):
@@ -195,8 +195,8 @@ class Attention(nn.Module):
         x = torch.nn.functional.scaled_dot_product_attention(q, k, v, dropout_p=self.attn_drop)
         x = x.transpose(1, 2).reshape([B, N, C])
         x = self.proj(x)
-        x = self.proj_drop(x)
-        return x
+        return self.proj_drop(x)
+
 
 class Block(nn.Module):
     """Transformer block with attention and MLP.
@@ -232,7 +232,9 @@ class Block(nn.Module):
         self.attn = Attention(dim, num_heads=num_heads, qkv_bias=qkv_bias, attn_drop=attn_drop, proj_drop=drop)
         self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
         self.norm2 = norm_layer(dim)
-        self.mlp = MLP(in_features=dim, hidden_features=int(dim * mlp_ratio), out_features=dim, act_layer=act_layer, drop=drop)
+        self.mlp = MLP(
+            in_features=dim, hidden_features=int(dim * mlp_ratio), out_features=dim, act_layer=act_layer, drop=drop
+        )
 
     def forward(self, x: Tensor, rope_sincos: tuple[Tensor, Tensor] | None = None) -> Tensor:
         """Forward pass through transformer block.
@@ -246,8 +248,7 @@ class Block(nn.Module):
         """
         attn_output = self.attn(self.norm1(x), rope_sincos=rope_sincos)
         x = x + self.drop_path(attn_output)
-        x = x + self.drop_path(self.mlp(self.norm2(x)))
-        return x
+        return x + self.drop_path(self.mlp(self.norm2(x)))
 
 
 class VisionTransformer(nn.Module):
@@ -310,20 +311,22 @@ class VisionTransformer(nn.Module):
         self._model.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
 
         dpr = [x.item() for x in torch.linspace(0, drop_path_rate, depth)]
-        self._model.blocks = nn.ModuleList([
-            Block(
-                dim=embed_dim,
-                num_heads=num_heads,
-                mlp_ratio=mlp_ratio,
-                qkv_bias=qkv_bias,
-                attn_drop=attn_drop_rate,
-                drop=drop_rate,
-                drop_path=dpr[i],
-                norm_layer=norm_layer,
-                act_layer=act_layer,
-            )
-            for i in range(depth)
-        ])
+        self._model.blocks = nn.ModuleList(
+            [
+                Block(
+                    dim=embed_dim,
+                    num_heads=num_heads,
+                    mlp_ratio=mlp_ratio,
+                    qkv_bias=qkv_bias,
+                    attn_drop=attn_drop_rate,
+                    drop=drop_rate,
+                    drop_path=dpr[i],
+                    norm_layer=norm_layer,
+                    act_layer=act_layer,
+                )
+                for i in range(depth)
+            ]
+        )
 
         self._model.rope_embed = RopePositionEmbedding(
             embed_dim=embed_dim,

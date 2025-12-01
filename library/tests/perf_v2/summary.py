@@ -14,7 +14,6 @@ import sys
 from pathlib import Path
 from zipfile import ZipFile
 
-from cv2 import log
 import pandas as pd
 
 from otx.types.task import OTXTaskType

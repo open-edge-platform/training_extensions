@@ -4,6 +4,5 @@
 """Module for OTX custom callbacks."""
 
 from .batchsize_finder import BatchSizeFinder
-from .ema import EMAWeightAveraging
 
-__all__ = ["BatchSizeFinder", "EMAWeightAveraging"]
+__all__ = ["BatchSizeFinder"]

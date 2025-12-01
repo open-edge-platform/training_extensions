@@ -136,9 +136,9 @@ class DEIMV2(DEIMDFine):
             raise ValueError(msg) from err
 
         optimizer_configuration = [
-            {"params": '^(?=.*.dinov3)(?!.*(?:norm|bn|bias)).*$', "lr": backbone_lr},
-            {"params": '^(?=.*.dinov3)(?=.*(?:norm|bn|bias)).*$' , "lr": backbone_lr, "weight_decay": 0.0},
-            {"params": '^(?=.*(?:sta|encoder|decoder))(?=.*(?:norm|bn|bias)).*$', "weight_decay": 0.0},
+            {"params": "^(?=.*.dinov3)(?!.*(?:norm|bn|bias)).*$", "lr": backbone_lr},
+            {"params": "^(?=.*.dinov3)(?=.*(?:norm|bn|bias)).*$", "lr": backbone_lr, "weight_decay": 0.0},
+            {"params": "^(?=.*(?:sta|encoder|decoder))(?=.*(?:norm|bn|bias)).*$", "weight_decay": 0.0},
         ]
 
         model = DETR(
