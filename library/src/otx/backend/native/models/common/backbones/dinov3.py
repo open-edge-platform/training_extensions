@@ -498,6 +498,7 @@ class DinoVisionTransformer(nn.Module):
             return tuple(zip(outputs, extra_tokens))
         if return_class_token and return_extra_tokens:
             return tuple(zip(outputs, class_tokens, extra_tokens))
+        return None
 
     def forward(
         self,
