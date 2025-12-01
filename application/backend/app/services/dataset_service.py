@@ -426,7 +426,7 @@ class DatasetService(BaseSessionManagedService):
         revision = revision_repo.get_by_id(str(revision_id))
         if revision is None or revision.project_id != str(project_id):
             raise ResourceNotFoundError(ResourceType.DATASET_REVISION, str(revision_id))
-        return self._to_dataset(dataset_db=revision)
+        return self._to_dataset_revision(dataset_db=revision)
 
     def delete_dataset_revision_files(self, project_id: UUID, revision_id: UUID) -> None:
         """
@@ -457,6 +457,6 @@ class DatasetService(BaseSessionManagedService):
             revision_repo.save(revision_db)
 
     @staticmethod
-    def _to_dataset(dataset_db: DatasetRevisionDB) -> DatasetRevision:
+    def _to_dataset_revision(dataset_db: DatasetRevisionDB) -> DatasetRevision:
         """Convert database model to DatasetRevision."""
         return DatasetRevision.model_validate(dataset_db, from_attributes=True)

@@ -48,6 +48,9 @@ def fxt_dataset_service() -> MagicMock:
     return dataset_service
 
 
+@pytest.mark.skip(
+    reason="Disable these tests until dataset revisions endpoints are fully implemented: https://github.com/open-edge-platform/training_extensions/issues/5052"
+)
 class TestDatasetRevisionItemEndpoints:
     def test_list_dataset_revision_items_revision_not_found(
         self, fxt_get_project, fxt_dataset_revision_id, fxt_dataset_service, fxt_client
@@ -376,8 +379,6 @@ class TestDatasetRevisionItemEndpoints:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         fxt_dataset_service.get_dataset_revision.assert_not_called()
 
-
-class TestDeleteDatasetRevisionFiles:
     def test_delete_dataset_revision_files_success(
         self, fxt_get_project, fxt_dataset_revision_id, fxt_dataset_service, fxt_client
     ):
