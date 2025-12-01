@@ -174,7 +174,7 @@ jobs:
             IMAGE="geti-tune-${DEVICE}:${TAG}"
             if docker image inspect "$IMAGE" >/dev/null 2>&1; then
               size_bytes=$(docker image inspect "$IMAGE" --format='{{.Size}}')
-              size_readable=$(numfmt --to=iec --format "%.1f" "$size_bytes")
+              size_readable=$(numfmt --to=si --format "%.2f" "$size_bytes")
               echo "| $IMAGE | $size_readable |" >> image-sizes/${DEVICE}.md
             fi
           done
