@@ -1764,9 +1764,8 @@ dependencies = [
     { name = "pyyaml" },
     { name = "torch", version = "2.9.0", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'darwin' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
     { name = "torch", version = "2.9.0+xpu", source = { registry = "https://download.pytorch.org/whl/xpu" }, marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
-    { name = "torch", version = "2.9.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
     { name = "torch", version = "2.9.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform == 'darwin' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "torch", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "torch", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "extra == 'extra-3-otx-cpu' or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
     { name = "torch", version = "2.9.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "extra == 'extra-3-otx-cuda' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
     { name = "torchmetrics" },
     { name = "tqdm" },
@@ -3066,15 +3065,12 @@ ci-publish = [
     { name = "build" },
 ]
 cpu = [
-    { name = "torch", version = "2.9.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "torch", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "torchvision", version = "0.24.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(python_full_version >= '3.13' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (python_full_version < '3.13' and platform_python_implementation != 'CPython' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (python_full_version < '3.13' and platform_python_implementation != 'CPython' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (python_full_version < '3.13' and platform_python_implementation != 'CPython' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (platform_machine != 'aarch64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (platform_machine != 'aarch64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (platform_machine != 'aarch64' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform == 'darwin' and extra == 'extra-3-otx-cpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform == 'darwin' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "torchvision", version = "0.24.1+d801a34", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(python_full_version < '3.13' and platform_python_implementation != 'CPython' and sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (platform_machine != 'aarch64' and sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (sys_platform != 'darwin' and sys_platform != 'linux' and extra == 'extra-3-otx-cpu') or (sys_platform == 'darwin' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'darwin' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform == 'darwin' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "torch", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" } },
+    { name = "torchvision", version = "0.24.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" } },
 ]
 cuda = [
     { name = "torch", version = "2.9.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" } },
-    { name = "torchvision", version = "0.24.1", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-3-otx-cuda') or (platform_machine != 'aarch64' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
-    { name = "torchvision", version = "0.24.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(platform_machine != 'aarch64' and extra == 'extra-3-otx-cuda') or (sys_platform != 'linux' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "torchvision", version = "0.24.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" } },
 ]
 docs = [
     { name = "furo" },
@@ -3164,13 +3160,13 @@ requires-dist = [
     { name = "tensorboard", specifier = "==2.20.0" },
     { name = "tensorboardx", specifier = "==2.6.4" },
     { name = "timm", specifier = "==1.0.3" },
-    { name = "torch", marker = "extra == 'cpu'", specifier = "==2.9.1", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "otx", extra = "cpu" } },
-    { name = "torch", marker = "extra == 'cuda'", specifier = "==2.9.1", index = "https://download.pytorch.org/whl/cu128", conflict = { package = "otx", extra = "cuda" } },
+    { name = "torch", marker = "extra == 'cpu'", specifier = "==2.9.1+cpu", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "otx", extra = "cpu" } },
+    { name = "torch", marker = "extra == 'cuda'", specifier = "==2.9.1+cu128", index = "https://download.pytorch.org/whl/cu128", conflict = { package = "otx", extra = "cuda" } },
     { name = "torch", marker = "extra == 'xpu'", specifier = "==2.9.0+xpu", index = "https://download.pytorch.org/whl/xpu", conflict = { package = "otx", extra = "xpu" } },
     { name = "torchmetrics", specifier = "==1.6.0" },
-    { name = "torchvision", marker = "extra == 'cpu'", specifier = "==0.24.1", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "otx", extra = "cpu" } },
-    { name = "torchvision", marker = "extra == 'cuda'", specifier = "==0.24.1", index = "https://download.pytorch.org/whl/cu128", conflict = { package = "otx", extra = "cuda" } },
-    { name = "torchvision", marker = "extra == 'xpu'", specifier = "==0.24.0", index = "https://download.pytorch.org/whl/xpu", conflict = { package = "otx", extra = "xpu" } },
+    { name = "torchvision", marker = "extra == 'cpu'", specifier = "==0.24.1+cpu", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "otx", extra = "cpu" } },
+    { name = "torchvision", marker = "extra == 'cuda'", specifier = "==0.24.1+cu128", index = "https://download.pytorch.org/whl/cu128", conflict = { package = "otx", extra = "cuda" } },
+    { name = "torchvision", marker = "extra == 'xpu'", specifier = "==0.24.0+xpu", index = "https://download.pytorch.org/whl/xpu", conflict = { package = "otx", extra = "xpu" } },
     { name = "typeguard", specifier = ">=4.3,<4.5" },
 ]
 provides-extras = ["cpu", "cuda", "xpu", "docs", "ci-publish"]
@@ -3843,9 +3839,8 @@ dependencies = [
     { name = "pyyaml" },
     { name = "torch", version = "2.9.0", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'darwin' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
     { name = "torch", version = "2.9.0+xpu", source = { registry = "https://download.pytorch.org/whl/xpu" }, marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
-    { name = "torch", version = "2.9.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
     { name = "torch", version = "2.9.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform == 'darwin' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "torch", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "torch", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "extra == 'extra-3-otx-cpu' or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
     { name = "torch", version = "2.9.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "extra == 'extra-3-otx-cuda' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
     { name = "torchmetrics" },
     { name = "tqdm" },
@@ -5078,17 +5073,14 @@ dependencies = [
     { name = "safetensors" },
     { name = "torch", version = "2.9.0", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'darwin' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
     { name = "torch", version = "2.9.0+xpu", source = { registry = "https://download.pytorch.org/whl/xpu" }, marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
-    { name = "torch", version = "2.9.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
     { name = "torch", version = "2.9.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform == 'darwin' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "torch", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "torch", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "extra == 'extra-3-otx-cpu' or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
     { name = "torch", version = "2.9.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "extra == 'extra-3-otx-cuda' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
     { name = "torchvision", version = "0.24.0", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'darwin' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
     { name = "torchvision", version = "0.24.0+xpu", source = { registry = "https://download.pytorch.org/whl/xpu" }, marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
-    { name = "torchvision", version = "0.24.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(python_full_version >= '3.13' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (python_full_version < '3.13' and platform_python_implementation != 'CPython' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (python_full_version < '3.13' and platform_python_implementation != 'CPython' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (python_full_version < '3.13' and platform_python_implementation != 'CPython' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (platform_machine != 'aarch64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (platform_machine != 'aarch64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (platform_machine != 'aarch64' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform == 'darwin' and extra == 'extra-3-otx-cpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform == 'darwin' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "torchvision", version = "0.24.1", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-3-otx-cuda') or (platform_machine != 'aarch64' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
     { name = "torchvision", version = "0.24.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform == 'darwin' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "torchvision", version = "0.24.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(platform_machine != 'aarch64' and extra == 'extra-3-otx-cuda') or (sys_platform != 'linux' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "torchvision", version = "0.24.1+d801a34", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(python_full_version < '3.13' and platform_python_implementation != 'CPython' and sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (platform_machine != 'aarch64' and sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (sys_platform != 'darwin' and sys_platform != 'linux' and extra == 'extra-3-otx-cpu') or (sys_platform == 'darwin' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'darwin' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform == 'darwin' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "torchvision", version = "0.24.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "extra == 'extra-3-otx-cpu' or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "torchvision", version = "0.24.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "extra == 'extra-3-otx-cuda' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/8f/eb/6201973bd9ab1cd3ba77a88e65f007cae79befd60cd2e61b343ba4444202/timm-1.0.3.tar.gz", hash = "sha256:83920a7efe2cfd503b2a1257dc8808d6ff7dcd18a4b79f451c283e7d71497329", size = 2155644, upload-time = "2024-05-15T18:16:19.995Z" }
 wheels = [
@@ -5303,35 +5295,6 @@ wheels = [
 [[package]]
 name = "torch"
 version = "2.9.1"
-source = { registry = "https://download.pytorch.org/whl/cpu" }
-resolution-markers = [
-    "python_full_version >= '3.13' and sys_platform == 'darwin'",
-    "python_full_version == '3.12.*' and sys_platform == 'darwin'",
-    "python_full_version == '3.11.*' and sys_platform == 'darwin'",
-    "python_full_version < '3.11' and sys_platform == 'darwin'",
-]
-dependencies = [
-    { name = "filelock", marker = "(sys_platform == 'darwin' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "fsspec", marker = "(sys_platform == 'darwin' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "jinja2", marker = "(sys_platform == 'darwin' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "networkx", marker = "(sys_platform == 'darwin' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "setuptools", marker = "(python_full_version >= '3.12' and sys_platform == 'darwin' and extra == 'extra-3-otx-cpu') or (python_full_version < '3.12' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (python_full_version < '3.12' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (python_full_version < '3.12' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform != 'darwin' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform != 'darwin' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform != 'darwin' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "sympy", marker = "(sys_platform == 'darwin' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "typing-extensions", marker = "(sys_platform == 'darwin' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-]
-wheels = [
-    { url = "https://download.pytorch.org/whl/cpu/torch-2.9.1-cp310-none-macosx_11_0_arm64.whl" },
-    { url = "https://download.pytorch.org/whl/cpu/torch-2.9.1-cp311-none-macosx_11_0_arm64.whl" },
-    { url = "https://download.pytorch.org/whl/cpu/torch-2.9.1-cp312-none-macosx_11_0_arm64.whl" },
-    { url = "https://download.pytorch.org/whl/cpu/torch-2.9.1-cp313-cp313t-macosx_11_0_arm64.whl" },
-    { url = "https://download.pytorch.org/whl/cpu/torch-2.9.1-cp313-none-macosx_11_0_arm64.whl" },
-    { url = "https://download.pytorch.org/whl/cpu/torch-2.9.1-cp314-cp314-macosx_11_0_arm64.whl" },
-    { url = "https://download.pytorch.org/whl/cpu/torch-2.9.1-cp314-cp314t-macosx_11_0_arm64.whl" },
-]
-
-[[package]]
-name = "torch"
-version = "2.9.1"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.13' and sys_platform == 'darwin'",
@@ -5396,15 +5359,19 @@ resolution-markers = [
     "(python_full_version < '3.11' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version < '3.11' and sys_platform != 'darwin' and sys_platform != 'linux')",
     "python_full_version == '3.11.*' and platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux'",
     "python_full_version < '3.11' and platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux'",
+    "python_full_version >= '3.13' and sys_platform == 'darwin'",
+    "python_full_version == '3.12.*' and sys_platform == 'darwin'",
+    "python_full_version == '3.11.*' and sys_platform == 'darwin'",
+    "python_full_version < '3.11' and sys_platform == 'darwin'",
 ]
 dependencies = [
-    { name = "filelock", marker = "(sys_platform != 'darwin' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "fsspec", marker = "(sys_platform != 'darwin' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "jinja2", marker = "(sys_platform != 'darwin' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "networkx", marker = "(sys_platform != 'darwin' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "setuptools", marker = "(python_full_version >= '3.12' and sys_platform != 'darwin' and extra == 'extra-3-otx-cpu') or (python_full_version < '3.12' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (python_full_version < '3.12' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (python_full_version < '3.12' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform == 'darwin' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'darwin' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "sympy", marker = "(sys_platform != 'darwin' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "typing-extensions", marker = "(sys_platform != 'darwin' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "filelock", marker = "extra == 'extra-3-otx-cpu' or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "fsspec", marker = "extra == 'extra-3-otx-cpu' or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "jinja2", marker = "extra == 'extra-3-otx-cpu' or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "networkx", marker = "extra == 'extra-3-otx-cpu' or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "setuptools", marker = "(python_full_version >= '3.12' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "sympy", marker = "extra == 'extra-3-otx-cpu' or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "typing-extensions", marker = "extra == 'extra-3-otx-cpu' or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
 ]
 wheels = [
     { url = "https://download.pytorch.org/whl/cpu/torch-2.9.1%2Bcpu-cp310-cp310-manylinux_2_28_aarch64.whl" },
@@ -5510,9 +5477,8 @@ dependencies = [
     { name = "packaging" },
     { name = "torch", version = "2.9.0", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform != 'darwin' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
     { name = "torch", version = "2.9.0+xpu", source = { registry = "https://download.pytorch.org/whl/xpu" }, marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra != 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
-    { name = "torch", version = "2.9.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
     { name = "torch", version = "2.9.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform == 'darwin' and extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "torch", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform != 'darwin' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "torch", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "extra == 'extra-3-otx-cpu' or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
     { name = "torch", version = "2.9.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "extra == 'extra-3-otx-cuda' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/18/88/9b0c5542ce845d153eaa7a7eb8e4fad34347b13b5997bf1d744d64410072/torchmetrics-1.6.0.tar.gz", hash = "sha256:aebba248708fb90def20cccba6f55bddd134a58de43fb22b0c5ca0f3a89fa984", size = 538824, upload-time = "2024-11-12T19:35:40.599Z" }
@@ -5613,69 +5579,6 @@ wheels = [
 [[package]]
 name = "torchvision"
 version = "0.24.1"
-source = { registry = "https://download.pytorch.org/whl/cpu" }
-resolution-markers = [
-    "(python_full_version >= '3.13' and platform_machine == 'aarch64' and platform_python_implementation != 'CPython' and sys_platform == 'linux') or (python_full_version >= '3.14' and platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux')",
-    "python_full_version == '3.13.*' and platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux'",
-    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux'",
-    "python_full_version == '3.11.*' and platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux'",
-    "python_full_version < '3.11' and platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux'",
-    "python_full_version >= '3.13' and sys_platform == 'darwin'",
-    "python_full_version == '3.12.*' and sys_platform == 'darwin'",
-    "python_full_version == '3.11.*' and sys_platform == 'darwin'",
-    "python_full_version < '3.11' and sys_platform == 'darwin'",
-]
-dependencies = [
-    { name = "numpy", marker = "(python_full_version >= '3.13' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (python_full_version < '3.13' and platform_python_implementation != 'CPython' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (python_full_version < '3.13' and platform_python_implementation != 'CPython' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (python_full_version < '3.13' and platform_python_implementation != 'CPython' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (platform_machine != 'aarch64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (platform_machine != 'aarch64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (platform_machine != 'aarch64' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform == 'darwin' and extra == 'extra-3-otx-cpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform == 'darwin' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "pillow", marker = "(python_full_version >= '3.13' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (python_full_version < '3.13' and platform_python_implementation != 'CPython' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (python_full_version < '3.13' and platform_python_implementation != 'CPython' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (python_full_version < '3.13' and platform_python_implementation != 'CPython' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (platform_machine != 'aarch64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (platform_machine != 'aarch64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (platform_machine != 'aarch64' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform == 'darwin' and extra == 'extra-3-otx-cpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform == 'darwin' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "torch", version = "2.9.1", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'darwin' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "torch", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(python_full_version >= '3.13' and platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (python_full_version < '3.13' and platform_python_implementation != 'CPython' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (python_full_version < '3.13' and platform_python_implementation != 'CPython' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (python_full_version < '3.13' and platform_python_implementation != 'CPython' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (platform_machine != 'aarch64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (platform_machine != 'aarch64' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (platform_machine != 'aarch64' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform != 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-]
-wheels = [
-    { url = "https://download.pytorch.org/whl/cpu/torchvision-0.24.1-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:eb6c81e74982cc258185d987006ed7835c6e5893527ee281294c85a2f3f7258a" },
-    { url = "https://download.pytorch.org/whl/cpu/torchvision-0.24.1-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:5679ccbd669a88bab9821c32234d240735d36499291887f262a492f0d96d8b82" },
-    { url = "https://download.pytorch.org/whl/cpu/torchvision-0.24.1-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:73481f7c0da38ec1a04021f2d967282c87da48a2f8332be960091672cffe806b" },
-    { url = "https://download.pytorch.org/whl/cpu/torchvision-0.24.1-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:4527308ffb57f6d2c17e82ee08e25bfbd0a41f137df6d0ea8805b23ef2af0e6b" },
-    { url = "https://download.pytorch.org/whl/cpu/torchvision-0.24.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:4f0956825bab5932dd53394de8e1105ed9182502b367ff0475dbf0e699550612" },
-    { url = "https://download.pytorch.org/whl/cpu/torchvision-0.24.1-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:28157649758fb97491de0db478d5d6e73c23b508e54de20adbc35e6b3aa72443" },
-    { url = "https://download.pytorch.org/whl/cpu/torchvision-0.24.1-cp313-cp313-macosx_12_0_arm64.whl", hash = "sha256:c858f944efea2170acbda2f801613b15193be49e8419c98c204e9f5e8c65a955" },
-    { url = "https://download.pytorch.org/whl/cpu/torchvision-0.24.1-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:59ddbe5779943af99a897fcd5894757ae7cffeb1c25a519b79cd9338188a8664" },
-    { url = "https://download.pytorch.org/whl/cpu/torchvision-0.24.1-cp313-cp313t-macosx_11_0_arm64.whl", hash = "sha256:fff7b030a51c0b96ed0a7a163e9ccd23d4d1b6bb406decaba7ac25933f73ef91" },
-    { url = "https://download.pytorch.org/whl/cpu/torchvision-0.24.1-cp313-cp313t-manylinux_2_28_aarch64.whl", hash = "sha256:0227e8cb5a418ab47e0ed0f70e0ea2fea2febb54b31ced8cd753d2efb49551df" },
-    { url = "https://download.pytorch.org/whl/cpu/torchvision-0.24.1-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:9839848aff47d98e7724abd1a3076121db96066c32ddb319b685dfe077360f40" },
-    { url = "https://download.pytorch.org/whl/cpu/torchvision-0.24.1-cp314-cp314-manylinux_2_28_aarch64.whl", hash = "sha256:32a5ce99ec2081fd5ab304da0aa9691b6ec047d12a329c0d991c69d0a1beee45" },
-    { url = "https://download.pytorch.org/whl/cpu/torchvision-0.24.1-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:7df2c98665e3e5532da320b7d94ca228799b6c7a41700e772536bd4de2d324c7" },
-    { url = "https://download.pytorch.org/whl/cpu/torchvision-0.24.1-cp314-cp314t-manylinux_2_28_aarch64.whl", hash = "sha256:e789fc690ff1307eb46540b4b8b76a8a3e06281078cf29c51b636e747373498a" },
-]
-
-[[package]]
-name = "torchvision"
-version = "0.24.1"
-source = { registry = "https://download.pytorch.org/whl/cu128" }
-resolution-markers = [
-    "python_full_version >= '3.13' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version == '3.11.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-    "python_full_version < '3.11' and platform_machine == 'aarch64' and sys_platform == 'linux'",
-]
-dependencies = [
-    { name = "numpy", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-3-otx-cuda') or (platform_machine != 'aarch64' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
-    { name = "pillow", marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-3-otx-cuda') or (platform_machine != 'aarch64' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
-    { name = "torch", version = "2.9.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(platform_machine == 'aarch64' and sys_platform == 'linux' and extra == 'extra-3-otx-cuda') or (platform_machine != 'aarch64' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform != 'linux' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
-]
-wheels = [
-    { url = "https://download.pytorch.org/whl/cu128/torchvision-0.24.1-cp310-cp310-manylinux_2_28_aarch64.whl" },
-    { url = "https://download.pytorch.org/whl/cu128/torchvision-0.24.1-cp311-cp311-manylinux_2_28_aarch64.whl" },
-    { url = "https://download.pytorch.org/whl/cu128/torchvision-0.24.1-cp312-cp312-manylinux_2_28_aarch64.whl" },
-    { url = "https://download.pytorch.org/whl/cu128/torchvision-0.24.1-cp313-cp313-manylinux_2_28_aarch64.whl" },
-    { url = "https://download.pytorch.org/whl/cu128/torchvision-0.24.1-cp313-cp313t-manylinux_2_28_aarch64.whl" },
-    { url = "https://download.pytorch.org/whl/cu128/torchvision-0.24.1-cp314-cp314-manylinux_2_28_aarch64.whl" },
-    { url = "https://download.pytorch.org/whl/cu128/torchvision-0.24.1-cp314-cp314t-manylinux_2_28_aarch64.whl" },
-]
-
-[[package]]
-name = "torchvision"
-version = "0.24.1"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.13' and sys_platform == 'darwin'",
@@ -5721,22 +5624,70 @@ wheels = [
 
 [[package]]
 name = "torchvision"
+version = "0.24.1+cpu"
+source = { registry = "https://download.pytorch.org/whl/cpu" }
+resolution-markers = [
+    "(python_full_version >= '3.13' and platform_machine == 'aarch64' and platform_python_implementation != 'CPython' and sys_platform == 'linux') or (python_full_version >= '3.14' and platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux')",
+    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and platform_python_implementation != 'CPython' and sys_platform == 'linux'",
+    "(python_full_version >= '3.13' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.13' and sys_platform != 'darwin' and sys_platform != 'linux')",
+    "(python_full_version == '3.12.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.12.*' and sys_platform != 'darwin' and sys_platform != 'linux')",
+    "python_full_version == '3.13.*' and platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux'",
+    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux'",
+    "python_full_version == '3.11.*' and platform_machine == 'aarch64' and platform_python_implementation != 'CPython' and sys_platform == 'linux'",
+    "(python_full_version == '3.11.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.11.*' and sys_platform != 'darwin' and sys_platform != 'linux')",
+    "python_full_version < '3.11' and platform_machine == 'aarch64' and platform_python_implementation != 'CPython' and sys_platform == 'linux'",
+    "(python_full_version < '3.11' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version < '3.11' and sys_platform != 'darwin' and sys_platform != 'linux')",
+    "python_full_version == '3.11.*' and platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux'",
+    "python_full_version < '3.11' and platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux'",
+    "python_full_version >= '3.13' and sys_platform == 'darwin'",
+    "python_full_version == '3.12.*' and sys_platform == 'darwin'",
+    "python_full_version == '3.11.*' and sys_platform == 'darwin'",
+    "python_full_version < '3.11' and sys_platform == 'darwin'",
+]
+dependencies = [
+    { name = "numpy", marker = "extra == 'extra-3-otx-cpu' or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "pillow", marker = "extra == 'extra-3-otx-cpu' or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "torch", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "extra == 'extra-3-otx-cpu' or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+]
+wheels = [
+    { url = "https://download.pytorch.org/whl/cpu/torchvision-0.24.1%2Bcpu-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:c98e219150beaab521c684cfd5c9ba1b6e80794ca851e60e784bd7f368889961" },
+    { url = "https://download.pytorch.org/whl/cpu/torchvision-0.24.1%2Bcpu-cp310-cp310-win_amd64.whl", hash = "sha256:f95c3bd0f65b01224f46142536cc02607ce32ef5e905d0c9eb210fa8cc23f522" },
+    { url = "https://download.pytorch.org/whl/cpu/torchvision-0.24.1%2Bcpu-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:1961587c5155563bc20e029101c65b480d6d5543e234c9f1bf1e7ba0b9328051" },
+    { url = "https://download.pytorch.org/whl/cpu/torchvision-0.24.1%2Bcpu-cp311-cp311-win_amd64.whl", hash = "sha256:dc41d9345769a24984f54aad914ce40954c11cfc4fbbe0fa4187b07c896c9940" },
+    { url = "https://download.pytorch.org/whl/cpu/torchvision-0.24.1%2Bcpu-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:48ff40694812292f1f75cddb517f9eef224a2e8388798a0aa191e27bf159fc5d" },
+    { url = "https://download.pytorch.org/whl/cpu/torchvision-0.24.1%2Bcpu-cp312-cp312-win_amd64.whl", hash = "sha256:af904a34b563c302fa4583a4746f3108bafdc5823a67c912d6023a8fe9b01c51" },
+    { url = "https://download.pytorch.org/whl/cpu/torchvision-0.24.1%2Bcpu-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:19eb1744686a992522bf9ab8bf4b3245c2202e93a39b1fe1fcb2b8d2ca982048" },
+    { url = "https://download.pytorch.org/whl/cpu/torchvision-0.24.1%2Bcpu-cp313-cp313-win_amd64.whl", hash = "sha256:4e2a64198ea3a3efdd4d1283e54418a3816a6943f619e5a33fc8236b6e259539" },
+    { url = "https://download.pytorch.org/whl/cpu/torchvision-0.24.1%2Bcpu-cp313-cp313t-manylinux_2_28_x86_64.whl", hash = "sha256:0a3fecbadc155e7bf378178029215bfcd86f2cf453fbb1d9a474f375b3d475ae" },
+    { url = "https://download.pytorch.org/whl/cpu/torchvision-0.24.1%2Bcpu-cp313-cp313t-win_amd64.whl", hash = "sha256:434347899fed98fb6906d86c00789963d3c22f69e18888aac15ffa012751b256" },
+    { url = "https://download.pytorch.org/whl/cpu/torchvision-0.24.1%2Bcpu-cp314-cp314-manylinux_2_28_x86_64.whl", hash = "sha256:e2c56fdda9e7a0f927d0d2748d756eb11e350e576efc719e9ab8a1b610213835" },
+    { url = "https://download.pytorch.org/whl/cpu/torchvision-0.24.1%2Bcpu-cp314-cp314-win_amd64.whl", hash = "sha256:16e8565e5a8f3de450605a494605f89a4995c99c29734e0fa0d3c5577c717e69" },
+    { url = "https://download.pytorch.org/whl/cpu/torchvision-0.24.1%2Bcpu-cp314-cp314t-manylinux_2_28_x86_64.whl", hash = "sha256:ad95138606b528c0c8976e6e0b184665433505c1aa87472bd31675f71d9d81c5" },
+    { url = "https://download.pytorch.org/whl/cpu/torchvision-0.24.1%2Bcpu-cp314-cp314t-win_amd64.whl", hash = "sha256:75699e64987870f419e6f4fdb6a8508c2952b0faf9482a3a105d5b2c6c76c37a" },
+]
+
+[[package]]
+name = "torchvision"
 version = "0.24.1+cu128"
 source = { registry = "https://download.pytorch.org/whl/cu128" }
 resolution-markers = [
     "python_full_version >= '3.13' and sys_platform == 'darwin'",
     "python_full_version == '3.12.*' and sys_platform == 'darwin'",
+    "python_full_version >= '3.13' and platform_machine == 'aarch64' and sys_platform == 'linux'",
+    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "(python_full_version >= '3.13' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.13' and sys_platform != 'darwin' and sys_platform != 'linux')",
     "(python_full_version == '3.12.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.12.*' and sys_platform != 'darwin' and sys_platform != 'linux')",
     "python_full_version == '3.11.*' and sys_platform == 'darwin'",
+    "python_full_version == '3.11.*' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "(python_full_version == '3.11.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.11.*' and sys_platform != 'darwin' and sys_platform != 'linux')",
     "python_full_version < '3.11' and sys_platform == 'darwin'",
+    "python_full_version < '3.11' and platform_machine == 'aarch64' and sys_platform == 'linux'",
     "(python_full_version < '3.11' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version < '3.11' and sys_platform != 'darwin' and sys_platform != 'linux')",
 ]
 dependencies = [
-    { name = "numpy", marker = "(platform_machine != 'aarch64' and extra == 'extra-3-otx-cuda') or (sys_platform != 'linux' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "pillow", marker = "(platform_machine != 'aarch64' and extra == 'extra-3-otx-cuda') or (sys_platform != 'linux' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "torch", version = "2.9.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(platform_machine != 'aarch64' and extra == 'extra-3-otx-cuda') or (sys_platform != 'linux' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
+    { name = "numpy", marker = "extra == 'extra-3-otx-cuda' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "pillow", marker = "extra == 'extra-3-otx-cuda' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
+    { name = "torch", version = "2.9.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "extra == 'extra-3-otx-cuda' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
 ]
 wheels = [
     { url = "https://download.pytorch.org/whl/cu128/torchvision-0.24.1%2Bcu128-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:87f6e32d2d98d2779f9fa58aa93cf6af049e3f87681344a2088e2fc7d9dd3e00" },
@@ -5753,30 +5704,6 @@ wheels = [
     { url = "https://download.pytorch.org/whl/cu128/torchvision-0.24.1%2Bcu128-cp314-cp314-win_amd64.whl", hash = "sha256:b5528b460d65c64e87301e942f6450d0ae958d919386e01fa682ba5eb77e5c9d" },
     { url = "https://download.pytorch.org/whl/cu128/torchvision-0.24.1%2Bcu128-cp314-cp314t-manylinux_2_28_x86_64.whl", hash = "sha256:45792b58c2a9761da4e1d9d12c4bf5140b6250ef9210f42f716f284cff5566ea" },
     { url = "https://download.pytorch.org/whl/cu128/torchvision-0.24.1%2Bcu128-cp314-cp314t-win_amd64.whl", hash = "sha256:c129e153561be8992c998f87d099ff74203ac19f8b2aadeb8edfbfd30036f81c" },
-]
-
-[[package]]
-name = "torchvision"
-version = "0.24.1+d801a34"
-source = { registry = "https://download.pytorch.org/whl/cpu" }
-resolution-markers = [
-    "python_full_version == '3.12.*' and platform_machine == 'aarch64' and platform_python_implementation != 'CPython' and sys_platform == 'linux'",
-    "(python_full_version >= '3.13' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version >= '3.13' and sys_platform != 'darwin' and sys_platform != 'linux')",
-    "(python_full_version == '3.12.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.12.*' and sys_platform != 'darwin' and sys_platform != 'linux')",
-    "python_full_version == '3.11.*' and platform_machine == 'aarch64' and platform_python_implementation != 'CPython' and sys_platform == 'linux'",
-    "(python_full_version == '3.11.*' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version == '3.11.*' and sys_platform != 'darwin' and sys_platform != 'linux')",
-    "python_full_version < '3.11' and platform_machine == 'aarch64' and platform_python_implementation != 'CPython' and sys_platform == 'linux'",
-    "(python_full_version < '3.11' and platform_machine != 'aarch64' and sys_platform == 'linux') or (python_full_version < '3.11' and sys_platform != 'darwin' and sys_platform != 'linux')",
-]
-dependencies = [
-    { name = "numpy", marker = "(python_full_version < '3.13' and platform_python_implementation != 'CPython' and sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (platform_machine != 'aarch64' and sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (sys_platform != 'darwin' and sys_platform != 'linux' and extra == 'extra-3-otx-cpu') or (sys_platform == 'darwin' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'darwin' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform == 'darwin' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "pillow", marker = "(python_full_version < '3.13' and platform_python_implementation != 'CPython' and sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (platform_machine != 'aarch64' and sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (sys_platform != 'darwin' and sys_platform != 'linux' and extra == 'extra-3-otx-cpu') or (sys_platform == 'darwin' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'darwin' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform == 'darwin' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-    { name = "torch", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(python_full_version < '3.13' and platform_python_implementation != 'CPython' and sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (platform_machine != 'aarch64' and sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (sys_platform != 'darwin' and sys_platform != 'linux' and extra == 'extra-3-otx-cpu') or (sys_platform == 'darwin' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'darwin' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (sys_platform == 'darwin' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
-]
-wheels = [
-    { url = "https://download.pytorch.org/whl/cpu/torchvision-0.24.1%2Bd801a34-cp311-cp311-win_arm64.whl", hash = "sha256:6af503ffb082820f4a0d619e33091d95137a21bc9cf76bc1350cc814bade591f" },
-    { url = "https://download.pytorch.org/whl/cpu/torchvision-0.24.1%2Bd801a34-cp312-cp312-win_arm64.whl", hash = "sha256:f5568bb4dc4069a1e1b1b56bf797db35a37a582e08d227c59f765193f336735c" },
-    { url = "https://download.pytorch.org/whl/cpu/torchvision-0.24.1%2Bd801a34-cp313-cp313-win_arm64.whl", hash = "sha256:a94e23ae2d5f27000152d199d32871a4b4d800c71832d7980a60c3f499f87a9c" },
 ]
 
 [[package]]
