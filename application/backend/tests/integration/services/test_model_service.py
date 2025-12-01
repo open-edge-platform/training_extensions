@@ -109,7 +109,7 @@ class TestModelServiceIntegration:
         fxt_model_service: ModelService,
         db_session: Session,
     ):
-        """Test that deleting a model removes both its database record and filesystem artifacts."""
+        """Test that delete_model fails when filesystem cleanup is denied due to OSError."""
         model_rev_path = tmp_path / "projects" / str(fxt_project_id) / "models" / str(fxt_model_id)
         model_rev_path.mkdir(parents=True, exist_ok=True)
         (model_rev_path / "config.yaml").touch()

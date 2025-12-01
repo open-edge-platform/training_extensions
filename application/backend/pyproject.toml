@@ -44,17 +44,17 @@ mqtt = [
 
 [dependency-groups]
 dev = [
-    "testcontainers~=4.10.0",
     "pytest~=8.4",
     "pytest-asyncio~=1.1.0",
-    "types-aiofiles==24.1.0.20240626",
+    "testcontainers~=4.10.0",
     "time-machine~=2.19.0",
 ]
 lint = [
-    "ruff==0.11.13",
     "mypy~=1.16.1",
-    "types-PyYAML~=6.0.12",
+    "ruff==0.11.13",
+    "types-aiofiles~=25.1.0",  # should match aiofiles version
     "types-requests~=2.32.4",
+    "types-pyyaml~=6.0.12",  # should match pyyaml version
 ]
 
 [tool.uv]

@@ -8,14 +8,15 @@ import pytest
 from fastapi import status
 
 from app.api.dependencies import get_model_service
+from app.api.schemas import ModelView
 from app.main import app
-from app.schemas.model import Model, TrainingInfo, TrainingStatus
+from app.models import TrainingInfo, TrainingStatus
 from app.services import ModelService, ResourceInUseError, ResourceNotFoundError, ResourceType
 
 
 @pytest.fixture
-def fxt_model() -> Model:
-    return Model(
+def fxt_model() -> ModelView:
+    return ModelView(
         id=uuid4(),
         architecture="Object_Detection_YOLOX",
         training_info=TrainingInfo(status=TrainingStatus.NOT_STARTED, label_schema_revision={}, configuration={}),  # type: ignore
