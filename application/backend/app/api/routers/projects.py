@@ -11,8 +11,9 @@ from fastapi.openapi.models import Example
 from starlette.responses import FileResponse
 
 from app.api.dependencies import get_data_collector, get_label_service, get_project, get_project_service
+from app.api.schemas import LabelView, PatchLabels, ProjectCreate, ProjectUpdateName, ProjectView
 from app.api.validators import ProjectID
-from app.schemas import LabelView, PatchLabels, ProjectCreate, ProjectUpdateName, ProjectView
+from app.models import Label, Task
 from app.services import (
     LabelService,
     ProjectService,
@@ -88,7 +89,13 @@ def create_project(
 ) -> ProjectView:
     """Create and configure a new project"""
     try:
-        return project_service.create_project(project_config)
+        task = Task(
+            exclusive_labels=project_config.task.exclusive_labels,
+            task_type=project_config.task.task_type,
+            labels=[Label.model_validate(label) for label in project_config.task.labels],
+        )
+        created_project = project_service.create_project(project_config.id, project_config.name, task)
+        return ProjectView.model_validate(created_project, from_attributes=True)
     except (ResourceWithIdAlreadyExistsError, DuplicateLabelsError) as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
@@ -102,7 +109,7 @@ def create_project(
 )
 def list_projects(project_service: Annotated[ProjectService, Depends(get_project_service)]) -> list[ProjectView]:
     """List the available projects"""
-    return project_service.list_projects()
+    return [ProjectView.model_validate(proj, from_attributes=True) for proj in project_service.list_projects()]
 
 
 @router.get(
@@ -120,7 +127,8 @@ def get_project_by_id(
 ) -> ProjectView:
     """Get info about a given project"""
     try:
-        return project_service.get_project_by_id(project_id)
+        project = project_service.get_project_by_id(project_id)
+        return ProjectView.model_validate(project, from_attributes=True)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -141,7 +149,8 @@ def rename_project(
 ) -> ProjectView:
     """Rename a project"""
     try:
-        return project_service.update_project_name(project_id, project_update_name.name)
+        updated = project_service.update_project_name(project_id, project_update_name.name)
+        return ProjectView.model_validate(updated, from_attributes=True)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 

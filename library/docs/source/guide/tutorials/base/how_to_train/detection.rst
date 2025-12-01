@@ -26,14 +26,11 @@ Setup virtual environment
 1. You can follow the installation process from a :doc:`quick start guide <../../../get_started/installation>`
 to create a universal virtual environment for OpenVINO™ Training Extensions.
 
-2. Activate your virtual
-environment:
+2. Activate your virtual environment:
 
 .. code-block:: shell
 
-    .otx/bin/activate
-    # or by this line, if you created an environment, using tox
-    . venv/otx/bin/activate
+    source .venv/bin/activate
 
 
 .. _wgisd_dataset_descpiption:

@@ -7,7 +7,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.db.schema import DatasetItemDB, LabelDB, PipelineDB, ProjectDB
-from app.schemas.project import LabelCreate, ProjectCreate, TaskCreate, TaskType
+from app.models import Label, Task, TaskType
 from app.services import LabelService, PipelineService, ResourceWithIdAlreadyExistsError
 from app.services.base import ResourceInUseError, ResourceNotFoundError, ResourceType
 from app.services.event.event_bus import EventBus
@@ -51,23 +51,22 @@ class TestProjectServiceIntegration:
 
     def test_create_project(self, fxt_project_service: ProjectService, db_session: Session):
         """Test creating a project."""
+        project_id = uuid4()
         labels = [
-            LabelCreate(name="cat", color="#00FF00", hotkey="c"),
-            LabelCreate(name="dog", color="#FF0000", hotkey="d"),
+            Label(id=uuid4(), project_id=project_id, name="cat", color="#00FF00", hotkey="c"),
+            Label(id=uuid4(), project_id=project_id, name="dog", color="#FF0000", hotkey="d"),
         ]
-        new_project = ProjectCreate(
-            name="Test Project",
-            task=TaskCreate(
-                task_type=TaskType.CLASSIFICATION,
-                exclusive_labels=True,
-                labels=labels,
-            ),
+        task = Task(
+            task_type=TaskType.CLASSIFICATION,
+            exclusive_labels=True,
+            labels=labels,
         )
-        created_project = fxt_project_service.create_project(new_project)
+        created_project = fxt_project_service.create_project(project_id, "Test Project", task)
         assert created_project.id is not None
-        assert created_project.name == new_project.name
-        assert created_project.task.task_type == new_project.task.task_type
+        assert created_project.name == "Test Project"
+        assert created_project.task.task_type == task.task_type
         assert len(created_project.task.labels) == 2
+        assert {label.id for label in created_project.task.labels} == {label.id for label in labels}
         assert {label.name for label in created_project.task.labels} == {"cat", "dog"}
         assert {label.color for label in created_project.task.labels} == {"#00FF00", "#FF0000"}
         assert {label.hotkey for label in created_project.task.labels} == {"c", "d"}
@@ -84,20 +83,16 @@ class TestProjectServiceIntegration:
         """Test creating a project with duplicated labels."""
         project_id = uuid4()
         labels = [
-            LabelCreate(name="cat", color="#00FF00", hotkey="c"),
-            LabelCreate(name="cat", color="#FF0000", hotkey="d"),
+            Label(id=uuid4(), project_id=project_id, name="cat", color="#00FF00", hotkey="c"),
+            Label(id=uuid4(), project_id=project_id, name="cat", color="#FF0000", hotkey="d"),
         ]
-        new_project = ProjectCreate(
-            id=project_id,
-            name="Test Project",
-            task=TaskCreate(
-                task_type=TaskType.CLASSIFICATION,
-                exclusive_labels=True,
-                labels=labels,
-            ),
+        task = Task(
+            task_type=TaskType.CLASSIFICATION,
+            exclusive_labels=True,
+            labels=labels,
         )
         with pytest.raises(DuplicateLabelsError):
-            fxt_project_service.create_project(new_project)
+            fxt_project_service.create_project(project_id, "Test Project", task)
         # Ensure the transaction is rolled back
         assert not db_session.is_active
 
@@ -109,20 +104,16 @@ class TestProjectServiceIntegration:
 
         project_id = db_project.id
         labels = [
-            LabelCreate(name="cat", color="#00FF00", hotkey="c"),
-            LabelCreate(name="dog", color="#FF0000", hotkey="d"),
+            Label(id=uuid4(), project_id=UUID(project_id), name="cat", color="#00FF00", hotkey="c"),
+            Label(id=uuid4(), project_id=UUID(project_id), name="dog", color="#FF0000", hotkey="d"),
         ]
-        new_project = ProjectCreate(
-            id=UUID(project_id),
-            name="Test Project",
-            task=TaskCreate(
-                task_type=TaskType.CLASSIFICATION,
-                exclusive_labels=True,
-                labels=labels,
-            ),
+        task = Task(
+            task_type=TaskType.CLASSIFICATION,
+            exclusive_labels=True,
+            labels=labels,
         )
         with pytest.raises(ResourceWithIdAlreadyExistsError) as exc_info:
-            fxt_project_service.create_project(new_project)
+            fxt_project_service.create_project(UUID(project_id), "Test Project", task)
 
         assert exc_info.value.resource_type == ResourceType.PROJECT
         assert exc_info.value.resource_id == project_id

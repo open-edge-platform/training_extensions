@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 import torch
 
 from otx.backend.native.models.classification.heads.hlabel_cls_head import HierarchicalClsHead
+from otx.backend.native.models.classification.losses.tree_path_kl_divergence_loss import TreePathKLDivergenceLoss
 from otx.backend.native.models.classification.utils.ignored_labels import get_valid_label_mask
 
 from .base_classifier import ImageClassifier
@@ -143,3 +144,87 @@ class HLabelClassifier(ImageClassifier):
             outputs["preds"] = preds
 
         return outputs
+
+
+class KLHLabelClassifier(HLabelClassifier):
+    """Hierarchical label classifier with tree path KL divergence loss.
+
+    Args:
+        backbone (nn.Module): Backbone network.
+        neck (nn.Module | None): Neck network.
+        head (nn.Module): Head network.
+        multiclass_loss (nn.Module): Multiclass loss function.
+        multilabel_loss (nn.Module | None, optional): Multilabel loss function.
+        init_cfg (dict | list[dict] | None, optional): Initialization configuration.
+        kl_weight (float): Loss weight for tree path KL divergence loss
+
+    Attributes:
+        multiclass_loss (nn.Module): Multiclass loss function.
+        multilabel_loss (nn.Module | None): Multilabel loss function.
+        is_ignored_label_loss (bool): Flag indicating if ignored label loss is used.
+
+    Methods:
+        loss(inputs, labels, **kwargs): Calculate losses from a batch of inputs and data samples.
+    """
+
+    def __init__(self, *args, kl_weight: float = 1.0, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.kl_weight = kl_weight
+        self.kl_loss = TreePathKLDivergenceLoss(reduction="batchmean", loss_weight=1.0)
+
+    def loss(self, inputs: torch.Tensor, labels: torch.Tensor, **kwargs) -> torch.Tensor:
+        """Calculate losses from a batch of inputs and data samples.
+
+        Args:
+            inputs (torch.Tensor): The input tensor with shape
+                (N, C, ...) in general.
+            labels (torch.Tensor): The annotation data of
+                every samples.
+
+        Returns:
+            torch.Tensor: loss components
+        """
+        cls_scores = self.extract_feat(inputs, stage="head")
+        loss_score = torch.tensor(0.0, device=cls_scores.device)
+        logits_list = []
+        target_list = []
+        num_effective_heads_in_batch = 0
+        for i in range(self.head.num_multiclass_heads):
+            if i not in self.head.empty_multiclass_head_indices:
+                head_gt = labels[:, i]
+                logit_range = self.head._get_head_idx_to_logits_range(i)  # noqa: SLF001
+                head_logits = cls_scores[:, logit_range[0] : logit_range[1]]
+                valid_mask = head_gt >= 0
+                head_gt = head_gt[valid_mask]
+                if len(head_gt) > 0:
+                    head_logits = head_logits[valid_mask]
+                    logits_list.append(head_logits)
+                    target_list.append(head_gt)
+                    ce = self.multiclass_loss(head_logits, head_gt)
+                    loss_score += ce
+                    num_effective_heads_in_batch += 1
+
+        if num_effective_heads_in_batch > 0:
+            loss_score /= num_effective_heads_in_batch
+
+        if len(logits_list) > 1:
+            kl_loss = self.kl_loss(logits_list, torch.stack(target_list, dim=1))
+            loss_score += self.kl_weight * kl_loss
+
+        # Multilabel logic (preserved as-is)
+        if self.head.num_multilabel_classes > 0:
+            head_gt = labels[:, self.head.num_multiclass_heads :]
+            head_logits = cls_scores[:, self.head.num_single_label_classes :]
+            valid_mask = head_gt > 0
+            head_gt = head_gt[valid_mask]
+            if len(head_gt) > 0 and self.multilabel_loss is not None:
+                head_logits = head_logits[valid_mask]
+                imgs_info = kwargs.pop("imgs_info", None)
+                if imgs_info is not None and self.is_ignored_label_loss:
+                    valid_label_mask = get_valid_label_mask(imgs_info, self.head.num_classes).to(head_logits.device)
+                    valid_label_mask = valid_label_mask[:, self.head.num_single_label_classes :]
+                    valid_label_mask = valid_label_mask[valid_mask]
+                    kwargs["valid_label_mask"] = valid_label_mask
+                loss_score += self.multilabel_loss(head_logits, head_gt, **kwargs)
+
+        return loss_score

@@ -1,19 +1,20 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import shutil
 from dataclasses import dataclass
+from pathlib import Path
 from uuid import UUID
 
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 
 from app.db.schema import ModelRevisionDB
+from app.models import ModelRevision, TrainingStatus
 from app.models.training_configuration.configuration import TrainingConfiguration
 from app.repositories import LabelRepository, ModelRevisionRepository
-from app.schemas.model import Model as ModelSchema
-from app.schemas.model import TrainingStatus
 
 from .base import BaseSessionManagedService, ResourceInUseError, ResourceNotFoundError, ResourceType
-from .mappers.model_revision_mapper import ModelRevisionMapper
 from .parent_process_guard import parent_process_only
 
 
@@ -31,7 +32,11 @@ class ModelRevisionMetadata:
 class ModelService(BaseSessionManagedService):
     """Service to register and activate models"""
 
-    def get_model(self, project_id: UUID, model_id: UUID) -> ModelSchema:
+    def __init__(self, data_dir: Path, db_session: Session | None = None) -> None:
+        super().__init__(db_session)
+        self._projects_dir = data_dir / "projects"
+
+    def get_model(self, project_id: UUID, model_id: UUID) -> ModelRevision:
         """
         Get a model.
 
@@ -40,7 +45,7 @@ class ModelService(BaseSessionManagedService):
             model_id (UUID): The unique identifier of the model to retrieve.
 
         Returns:
-            ModelSchema: The model schema object containing the model's information.
+            ModelRevision: The model revision object containing the model's information.
 
         Raises:
             ResourceNotFoundError: If no model with the given model_id is found.
@@ -49,12 +54,15 @@ class ModelService(BaseSessionManagedService):
         model_rev_db = model_rev_repo.get_by_id(str(model_id))
         if not model_rev_db:
             raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
-        return ModelRevisionMapper.to_schema(model_rev_db)
+        return ModelRevision.model_validate(model_rev_db)
 
     @parent_process_only
     def delete_model(self, project_id: UUID, model_id: UUID) -> None:
         """
         Delete a model.
+
+        Deletes a model revision from the database and deletes the folder from the filesystem
+        associated with this model.
 
         Args:
             project_id (UUID): The unique identifier of the project whose models to delete.
@@ -69,15 +77,19 @@ class ModelService(BaseSessionManagedService):
                 (e.g., the model is referenced by other entities).
         """
         model_rev_repo = ModelRevisionRepository(project_id=str(project_id), db=self.db_session)
+
+        path = self._projects_dir / str(project_id) / "models" / str(model_id)
+        if path.exists():
+            shutil.rmtree(path)
+
         try:
-            # TODO: delete model artifacts from filesystem when implemented
             deleted = model_rev_repo.delete(str(model_id))
             if not deleted:
                 raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
         except IntegrityError:
             raise ResourceInUseError(ResourceType.MODEL, str(model_id))
 
-    def list_models(self, project_id: UUID) -> list[ModelSchema]:
+    def list_models(self, project_id: UUID) -> list[ModelRevision]:
         """
         Get information about all available model revisions in a project.
 
@@ -89,12 +101,11 @@ class ModelService(BaseSessionManagedService):
             project_id (UUID): The unique identifier of the project whose models to list.
 
         Returns:
-            list[ModelSchema]: A list of model schema objects representing all model
+            list[ModelRevision]: A list of model revision objects representing all model
                 revisions in the project. Returns an empty list if the project has no models.
         """
         model_rev_repo = ModelRevisionRepository(project_id=str(project_id), db=self.db_session)
-        model_revisions = model_rev_repo.list_all()
-        return [ModelRevisionMapper.to_schema(model_rev_db) for model_rev_db in model_revisions]
+        return [ModelRevision.model_validate(model_rev_db) for model_rev_db in model_rev_repo.list_all()]
 
     def create_revision(self, metadata: ModelRevisionMetadata) -> None:
         """
