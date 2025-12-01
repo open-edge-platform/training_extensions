@@ -6,17 +6,19 @@ from uuid import UUID
 
 import numpy as np
 import polars as pl
-from datumaro.experimental import (
-    Dataset,
-    Sample,
+from datumaro.experimental import Dataset, Sample
+from datumaro.experimental.categories import LabelCategories
+from datumaro.experimental.fields import (
+    ImageInfo,
+    Subset,
     bbox_field,
     image_info_field,
     image_path_field,
     label_field,
+    polygon_field,
     score_field,
+    subset_field,
 )
-from datumaro.experimental.categories import LabelCategories
-from datumaro.experimental.fields import ImageInfo, Subset, polygon_field, subset_field
 from loguru import logger
 
 from app.models import DatasetItem, DatasetItemSubset, Label, Polygon, Rectangle, Task, TaskType
