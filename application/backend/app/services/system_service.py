@@ -35,7 +35,7 @@ class SystemService:
     @staticmethod
     def get_devices() -> list[DeviceInfo]:
         """
-        Get available compute devices (CPU,GPUs, ...)
+        Get available compute devices (CPU, GPUs, ...)
 
         Returns:
             list[DeviceInfo]: List of available devices
