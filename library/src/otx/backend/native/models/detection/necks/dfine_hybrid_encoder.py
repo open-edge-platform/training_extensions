@@ -20,7 +20,6 @@ from torch import Tensor, nn
 from otx.backend.native.models.common.layers.transformer_layers import (
     TransformerEncoder,
     TransformerEncoderLayer,
-    get_activation,
 )
 from otx.backend.native.models.detection.layers.csp_layer import CSPRepLayer
 from otx.backend.native.models.detection.utils.utils import auto_pad
@@ -57,7 +56,7 @@ class ConvNormLayer(nn.Module):
         groups: int = 1,
         padding: int | None = None,
         bias: bool = False,
-        act: str | None = None,
+        act: Callable[..., nn.Module] | None = None,
     ) -> None:
         super().__init__()
         padding = (kernel_size - 1) // 2 if padding is None else padding
@@ -71,7 +70,7 @@ class ConvNormLayer(nn.Module):
             bias=bias,
         )
         self.norm = nn.BatchNorm2d(ch_out)
-        self.act = nn.Identity() if act is None else get_activation(act)
+        self.act = nn.Identity() if act is None else act()
 
     def forward(self, x: Tensor) -> Tensor:
         """Forward pass."""
@@ -91,7 +90,7 @@ class ConvNormLayerFusable(nn.Module):
         groups: Number of groups for grouped convolution.
         padding: Padding size. If None, uses (kernel_size-1)//2.
         bias: Whether to use bias in convolution.
-        act: Activation function name or None.
+        act: Activation function class or None.
     """
 
     def __init__(
@@ -103,7 +102,7 @@ class ConvNormLayerFusable(nn.Module):
         groups: int = 1,
         padding: int | None = None,
         bias: bool = False,
-        act: str | None = None,
+        act: Callable[..., nn.Module] | None = None,
     ) -> None:
         super().__init__()
         padding = (kernel_size - 1) // 2 if padding is None else padding
@@ -111,7 +110,7 @@ class ConvNormLayerFusable(nn.Module):
             ch_in, ch_out, kernel_size, stride, groups=groups, padding=padding, bias=bias
         )
         self.norm = nn.BatchNorm2d(ch_out)
-        self.act = nn.Identity() if act is None else get_activation(act)
+        self.act = nn.Identity() if act is None else act()
         # Store params for deployment conversion
         self._ch_in = ch_in
         self._ch_out = ch_out
@@ -165,16 +164,21 @@ class VGGBlock(nn.Module):
     Args:
         ch_in: Input channels.
         ch_out: Output channels.
-        act: Activation function name.
+        act: Activation function class.
     """
 
-    def __init__(self, ch_in: int, ch_out: int, act: str = "relu") -> None:
+    def __init__(
+        self,
+        ch_in: int,
+        ch_out: int,
+        act: Callable[..., nn.Module] = nn.ReLU,
+    ) -> None:
         super().__init__()
         self.ch_in = ch_in
         self.ch_out = ch_out
         self.conv1 = ConvNormLayer(ch_in, ch_out, 3, 1, padding=1, act=None)
         self.conv2 = ConvNormLayer(ch_in, ch_out, 1, 1, padding=0, act=None)
-        self.act = nn.Identity() if act is None else get_activation(act)
+        self.act = nn.Identity() if act is None else act()
 
     def forward(self, x: Tensor) -> Tensor:
         """Forward pass."""
@@ -225,7 +229,7 @@ class CSPLayerV2(nn.Module):
         num_blocks: Number of bottleneck blocks.
         expansion: Channel expansion ratio.
         bias: Whether to use bias.
-        act: Activation function name.
+        act: Activation function class.
         bottletype: Bottleneck block type.
     """
 
@@ -236,7 +240,7 @@ class CSPLayerV2(nn.Module):
         num_blocks: int = 3,
         expansion: float = 1.0,
         bias: bool = False,
-        act: str = "silu",
+        act: Callable[..., nn.Module] = nn.SiLU,
         bottletype: type[nn.Module] = VGGBlock,
     ) -> None:
         super().__init__()
@@ -268,7 +272,7 @@ class CSPLayer2(nn.Module):
         num_blocks: Number of bottleneck blocks.
         expansion: Channel expansion ratio.
         bias: Whether to use bias.
-        act: Activation function name.
+        act: Activation function class.
         bottletype: Bottleneck block type.
     """
 
@@ -279,7 +283,7 @@ class CSPLayer2(nn.Module):
         num_blocks: int = 3,
         expansion: float = 1.0,
         bias: bool = False,
-        act: str = "silu",
+        act: Callable[..., nn.Module] = nn.SiLU,
         bottletype: type[nn.Module] = VGGBlock,
     ) -> None:
         super().__init__()
@@ -446,7 +450,7 @@ class RepNCSPELAN5(nn.Module):
         c4: Bottleneck channels.
         num_blocks: Number of blocks.
         bias: Whether to use bias.
-        act: Activation function name.
+        act: Activation function class.
     """
 
     def __init__(
@@ -457,7 +461,7 @@ class RepNCSPELAN5(nn.Module):
         c4: int,
         num_blocks: int = 3,
         bias: bool = False,
-        act: str = "silu",
+        act: Callable[..., nn.Module] = nn.SiLU,
     ) -> None:
         super().__init__()
         self.c = c3 // 2
@@ -496,8 +500,7 @@ class HybridEncoderModule(nn.Module):
         pe_temperature: Temperature for positional encoding.
         expansion: Channel expansion factor.
         depth_mult: Depth multiplier for CSP blocks.
-        activation: Activation for FPN/PAN blocks (class-based).
-        act: Activation for FPN/PAN blocks (string-based, for DEIM).
+        activation: Activation function class for FPN/PAN blocks.
         normalization: Normalization layer builder.
         eval_spatial_size: Spatial size for evaluation (caches positional embeddings).
         fuse_op: Feature fusion operation ('cat' or 'sum').
@@ -518,8 +521,7 @@ class HybridEncoderModule(nn.Module):
         pe_temperature: float = 10000.0,
         expansion: float = 1.0,
         depth_mult: float = 1.0,
-        activation: Callable[..., nn.Module] | None = nn.SiLU,
-        act: str | None = None,
+        activation: Callable[..., nn.Module] = nn.SiLU,
         normalization: Callable[..., nn.Module] | None = None,
         eval_spatial_size: tuple[int, int] | None = None,
         fuse_op: Literal["cat", "sum"] = "cat",
@@ -567,7 +569,7 @@ class HybridEncoderModule(nn.Module):
         # Build FPN and PAN
         self._build_fpn_pan(
             in_channels, hidden_dim, expansion, depth_mult,
-            activation, act, normalization, fuse_op, use_fusable_layers
+            activation, normalization, fuse_op, use_fusable_layers
         )
 
         self._reset_parameters()
@@ -598,8 +600,7 @@ class HybridEncoderModule(nn.Module):
         hidden_dim: int,
         expansion: float,
         depth_mult: float,
-        activation: Callable[..., nn.Module] | None,
-        act: str | None,
+        activation: Callable[..., nn.Module],
         normalization: Callable[..., nn.Module],
         fuse_op: str,
         use_fusable_layers: bool,
@@ -620,11 +621,11 @@ class HybridEncoderModule(nn.Module):
                 # DEIM-style fusable layers
                 self.lateral_convs.append(ConvNormLayerFusable(hidden_dim, hidden_dim, 1, 1))
                 self.fpn_blocks.append(
-                    RepNCSPELAN5(input_dim, hidden_dim, hidden_dim * 2, c4, num_blocks, act=act or "silu")
+                    RepNCSPELAN5(input_dim, hidden_dim, hidden_dim * 2, c4, num_blocks, act=activation)
                 )
                 self.downsample_convs.append(nn.Sequential(SCDownFusable(hidden_dim, hidden_dim, 3, 2)))
                 self.pan_blocks.append(
-                    RepNCSPELAN5(input_dim, hidden_dim, hidden_dim * 2, c4, num_blocks, act=act or "silu")
+                    RepNCSPELAN5(input_dim, hidden_dim, hidden_dim * 2, c4, num_blocks, act=activation)
                 )
             else:
                 # D-FINE style with OTX layers

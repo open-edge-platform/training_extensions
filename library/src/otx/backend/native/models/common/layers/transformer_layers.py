@@ -8,53 +8,18 @@ from __future__ import annotations
 import copy
 import math
 from typing import Callable, List, Tuple
-import functools
+from functools import partial
+import torchvision
 
 import torch
 import torch.nn.functional as f
 from torch import Tensor, nn
 from torch.nn import init
 
-from otx.backend.native.models.common.utils.utils import get_clones
+from otx.backend.native.models.common.utils.utils import get_clones, inverse_sigmoid
 from otx.backend.native.models.modules.transformer import deformable_attention_core_func, deformable_attention_core_func_v2
-
-
-def get_activation(act: str, inpace: bool=True):
-    """get activation
-    """
-    if act is None:
-        return nn.Identity()
-
-    elif isinstance(act, nn.Module):
-        return act
-
-    act = act.lower()
-
-    if act == 'silu' or act == 'swish':
-        m = nn.SiLU()
-
-    elif act == 'relu':
-        m = nn.ReLU()
-
-    elif act == 'leaky_relu':
-        m = nn.LeakyReLU()
-
-    elif act == 'silu':
-        m = nn.SiLU()
-
-    elif act == 'gelu':
-        m = nn.GELU()
-
-    elif act == 'hardsigmoid':
-        m = nn.Hardsigmoid()
-
-    else:
-        raise RuntimeError('')
-
-    if hasattr(m, 'inplace'):
-        m.inplace = inpace
-
-    return m
+from otx.backend.native.models.utils.weight_init import bias_init_with_prob
+from otx.backend.native.models.modules.norm import RMSNorm
 
 
 class TransformerEncoderLayer(nn.Module):
@@ -142,7 +107,7 @@ class LayerScale(nn.Module):
     def __init__(
         self,
         dim: int,
-        init_values: Union[float, Tensor] = 1e-5,
+        init_values: float | Tensor = 1e-5,
         inplace: bool = False,
         device=None,
     ) -> None:
@@ -279,7 +244,7 @@ class MSDeformableAttention(nn.Module):
         num_points (int): The number of points in MSDeformableAttention.
     """
 
-    def __init__(self, embed_dim: int = 256, num_heads: int = 8, num_levels: int = 4, num_points: int = 4) -> None:
+    def __init__(self, embed_dim: int = 256, num_heads: int = 8, num_levels: int = 4, num_points: int = 4, method: str = 'default') -> None:
         """Multi-Scale Deformable Attention Module."""
         super().__init__()
         self.embed_dim = embed_dim
@@ -438,12 +403,14 @@ class MSDeformableAttentionV2(nn.Module):
         num_heads: int = 8,
         num_levels: int = 4,
         num_points_list: list[int] = [3, 6, 3],  # noqa: B006
+        method: str = 'default',
     ) -> None:
         super().__init__()
         self.embed_dim = embed_dim
         self.num_heads = num_heads
         self.num_levels = num_levels
         self.num_points_list = num_points_list
+        self.method = method
 
         num_points_scale = [1 / n for n in num_points_list for _ in range(n)]
         self.register_buffer(
@@ -458,6 +425,10 @@ class MSDeformableAttentionV2(nn.Module):
         self.attention_weights = nn.Linear(embed_dim, self.total_points)
 
         self._reset_parameters()
+
+        if method == 'discrete':
+            for p in self.sampling_offsets.parameters():
+                p.requires_grad = False
 
     def _reset_parameters(self) -> None:
         """Reset parameters of the model."""
@@ -560,126 +531,6 @@ class MSDeformableAttentionV2(nn.Module):
         output = weighted_sample_locs.sum(-1).reshape(bs, n_head * c, len_q)
 
         return output.permute(0, 2, 1)
-
-
-class MLPV2(nn.Module):
-    def __init__(self, input_dim, hidden_dim, output_dim, num_layers=3, activation='relu'):
-        super().__init__()
-        self.num_layers = num_layers
-        h = [hidden_dim] * (num_layers - 1)
-        self.layers = nn.ModuleList(nn.Linear(n, k) for n, k in zip([input_dim] + h, h + [output_dim]))
-        self.act = get_activation(activation)
-
-    def forward(self, x):
-        for i, layer in enumerate(self.layers):
-            x = self.act(layer(x)) if i < self.num_layers - 1 else layer(x)
-        return x
-
-
-class MSDeformableAttentionV3(nn.Module):
-    def __init__(
-        self,
-        embed_dim=256,
-        num_heads=8,
-        num_levels=4,
-        num_points=4,
-        method='default',
-        offset_scale=0.5,
-    ):
-        """Multi-Scale Deformable Attention
-        """
-        super(MSDeformableAttentionV3, self).__init__()
-        self.embed_dim = embed_dim
-        self.num_heads = num_heads
-        self.num_levels = num_levels
-        self.offset_scale = offset_scale
-
-        if isinstance(num_points, list):
-            assert len(num_points) == num_levels, ''
-            num_points_list = num_points
-        else:
-            num_points_list = [num_points for _ in range(num_levels)]
-
-        self.num_points_list = num_points_list
-
-        num_points_scale = [1/n for n in num_points_list for _ in range(n)]
-        self.register_buffer('num_points_scale', torch.tensor(num_points_scale, dtype=torch.float32))
-
-        self.total_points = num_heads * sum(num_points_list)
-        self.method = method
-
-        self.head_dim = embed_dim // num_heads
-        assert self.head_dim * num_heads == self.embed_dim, "embed_dim must be divisible by num_heads"
-
-        self.sampling_offsets = nn.Linear(embed_dim, self.total_points * 2)
-        self.attention_weights = nn.Linear(embed_dim, self.total_points)
-
-        self.ms_deformable_attn_core = functools.partial(deformable_attention_core_func_v2, method=self.method)
-
-        self._reset_parameters()
-
-        if method == 'discrete':
-            for p in self.sampling_offsets.parameters():
-                p.requires_grad = False
-
-    def _reset_parameters(self):
-        # sampling_offsets
-        init.constant_(self.sampling_offsets.weight, 0)
-        thetas = torch.arange(self.num_heads, dtype=torch.float32) * (2.0 * math.pi / self.num_heads)
-        grid_init = torch.stack([thetas.cos(), thetas.sin()], -1)
-        grid_init = grid_init / grid_init.abs().max(-1, keepdim=True).values
-        grid_init = grid_init.reshape(self.num_heads, 1, 2).tile([1, sum(self.num_points_list), 1])
-        scaling = torch.concat([torch.arange(1, n + 1) for n in self.num_points_list]).reshape(1, -1, 1)
-        grid_init *= scaling
-        self.sampling_offsets.bias.data[...] = grid_init.flatten()
-
-        # attention_weights
-        init.constant_(self.attention_weights.weight, 0)
-        init.constant_(self.attention_weights.bias, 0)
-
-
-    def forward(self,
-                query: torch.Tensor,
-                reference_points: torch.Tensor,
-                value: torch.Tensor,
-                value_spatial_shapes: List[int]):
-        """
-        Args:
-            query (Tensor): [bs, query_length, C]
-            reference_points (Tensor): [bs, query_length, n_levels, 2], range in [0, 1], top-left (0,0),
-                bottom-right (1, 1), including padding area
-            value (Tensor): [bs, value_length, C]
-            value_spatial_shapes (List): [n_levels, 2], [(H_0, W_0), (H_1, W_1), ..., (H_{L-1}, W_{L-1})]
-
-        Returns:
-            output (Tensor): [bs, Length_{query}, C]
-        """
-        bs, Len_q = query.shape[:2]
-
-        sampling_offsets: torch.Tensor = self.sampling_offsets(query)
-        sampling_offsets = sampling_offsets.reshape(bs, Len_q, self.num_heads, sum(self.num_points_list), 2)
-
-        attention_weights = self.attention_weights(query).reshape(bs, Len_q, self.num_heads, sum(self.num_points_list))
-        attention_weights = f.softmax(attention_weights, dim=-1)
-
-        if reference_points.shape[-1] == 2:
-            offset_normalizer = torch.tensor(value_spatial_shapes)
-            offset_normalizer = offset_normalizer.flip([1]).reshape(1, 1, 1, self.num_levels, 1, 2)
-            sampling_locations = reference_points.reshape(bs, Len_q, 1, self.num_levels, 1, 2) + sampling_offsets / offset_normalizer
-        elif reference_points.shape[-1] == 4:
-            # reference_points [8, 480, None, 1,  4]
-            # sampling_offsets [8, 480, 8,    12, 2]
-            num_points_scale = self.num_points_scale.to(dtype=query.dtype).unsqueeze(-1)
-            offset = sampling_offsets * num_points_scale * reference_points[:, :, None, :, 2:] * self.offset_scale
-            sampling_locations = reference_points[:, :, None, :, :2] + offset
-        else:
-            raise ValueError(
-                "Last dim of reference_points must be 2 or 4, but get {} instead.".
-                format(reference_points.shape[-1]))
-
-        output = self.ms_deformable_attn_core(value, value_spatial_shapes, sampling_locations, attention_weights, self.num_points_list)
-
-        return output
 
 
 class VisualEncoderLayer(nn.Module):
@@ -1189,3 +1040,275 @@ class SelfAttentionBlock(nn.Module):
             return self._forward_list(x_or_x_list, rope_list=rope_or_rope_list)
         else:
             raise AssertionError
+
+
+class Gate(nn.Module):
+    """Gated fusion module for combining two feature streams.
+
+    Uses learnable gates to adaptively blend two input tensors.
+
+    Args:
+        d_model: Feature dimension.
+        use_rmsnorm: Whether to use RMSNorm instead of LayerNorm.
+    """
+
+    def __init__(self, d_model: int, use_rmsnorm: bool = False) -> None:
+        super().__init__()
+        self.gate = nn.Linear(2 * d_model, 2 * d_model)
+        bias = bias_init_with_prob(0.5)
+        init.constant_(self.gate.bias, bias)
+        init.constant_(self.gate.weight, 0)
+        self.norm = RMSNorm(d_model) if use_rmsnorm else nn.LayerNorm(d_model)
+
+    def forward(self, x1: Tensor, x2: Tensor) -> Tensor:
+        """Gated fusion of two tensors.
+
+        Args:
+            x1: First input tensor of shape (B, N, C).
+            x2: Second input tensor of shape (B, N, C).
+
+        Returns:
+            Fused tensor of shape (B, N, C).
+        """
+        gate_input = torch.cat([x1, x2], dim=-1)
+        gates = torch.sigmoid(self.gate(gate_input))
+        gate1, gate2 = gates.chunk(2, dim=-1)
+        return self.norm(gate1 * x1 + gate2 * x2)
+
+
+class Integral(nn.Module):
+    """Integral layer for distribution-based bounding box regression.
+
+    Computes target location using: `sum{Pr(n) * W(n)}`, where Pr(n) is the
+    softmax probability vector and W(n) is the non-uniform weighting function.
+
+    Args:
+        reg_max: Maximum number of discrete bins for regression.
+    """
+
+    def __init__(self, reg_max: int = 32) -> None:
+        super().__init__()
+        self.reg_max = reg_max
+
+    def forward(self, x: Tensor, project: Tensor) -> Tensor:
+        """Compute integral over distribution.
+
+        Args:
+            x: Distribution tensor of shape (B, N, 4*(reg_max+1)).
+            project: Projection weights for weighted sum.
+
+        Returns:
+            Bounding box offsets of shape (B, N, 4).
+        """
+        shape = x.shape
+        x = f.softmax(x.reshape(-1, self.reg_max + 1), dim=1)
+        x = f.linear(x, project.to(x.device)).reshape(-1, 4)
+        return x.reshape(list(shape[:-1]) + [-1])
+
+
+class LQE(nn.Module):
+    """Location Quality Estimator.
+
+    Estimates localization quality from corner distribution statistics
+    to refine classification scores.
+
+    Args:
+        k: Number of top probabilities to use for statistics.
+        hidden_dim: Hidden dimension for MLP.
+        num_layers: Number of MLP layers.
+        reg_max: Maximum regression bins.
+        activation: Activation function class.
+    """
+
+    def __init__(
+        self,
+        k: int,
+        hidden_dim: int,
+        num_layers: int,
+        reg_max: int,
+        activation: Callable[..., nn.Module] = partial(nn.ReLU, inplace=True),
+    ) -> None:
+        super().__init__()
+        self.k = k
+        self.reg_max = reg_max
+        self.reg_conf = MLP(
+            input_dim=4 * (k + 1),
+            hidden_dim=hidden_dim,
+            output_dim=1,
+            num_layers=num_layers,
+            activation=activation,
+        )
+        init.constant_(self.reg_conf.layers[-1].bias, 0)
+        init.constant_(self.reg_conf.layers[-1].weight, 0)
+
+    def forward(self, scores: Tensor, pred_corners: Tensor) -> Tensor:
+        """Refine scores based on corner distribution quality.
+
+        Args:
+            scores: Classification scores of shape (B, N, num_classes).
+            pred_corners: Corner predictions of shape (B, N, 4*(reg_max+1)).
+
+        Returns:
+            Refined scores of shape (B, N, num_classes).
+        """
+        b, num_pred, _ = pred_corners.size()
+        prob = f.softmax(pred_corners.reshape(b, num_pred, 4, self.reg_max + 1), dim=-1)
+        prob_topk, _ = prob.topk(self.k, dim=-1)
+        stat = torch.cat([prob_topk, prob_topk.mean(dim=-1, keepdim=True)], dim=-1)
+        quality_score = self.reg_conf(stat.reshape(b, num_pred, -1))
+        return scores + quality_score
+
+
+class SwiGLUFFN(nn.Module):
+    """SwiGLU Feed-Forward Network.
+
+    Implements the SwiGLU activation function as described in GLU Variants paper.
+    Uses gated linear units with SiLU activation for improved performance.
+
+    Args:
+        in_features: Number of input features.
+        hidden_features: Number of hidden features.
+        out_features: Number of output features.
+        bias: Whether to use bias in linear layers.
+    """
+
+    def __init__(
+        self,
+        in_features: int,
+        hidden_features: int,
+        out_features: int,
+        bias: bool = True,
+    ) -> None:
+        super().__init__()
+        out_features = out_features or in_features
+        hidden_features = hidden_features or in_features
+        self.w12 = nn.Linear(in_features, 2 * hidden_features, bias=bias)
+        self.w3 = nn.Linear(hidden_features, out_features, bias=bias)
+        self._reset_parameters()
+
+    def _reset_parameters(self) -> None:
+        """Initialize weights with Xavier uniform and zero bias."""
+        init.xavier_uniform_(self.w12.weight)
+        init.constant_(self.w12.bias, 0)
+        init.xavier_uniform_(self.w3.weight)
+        init.constant_(self.w3.bias, 0)
+
+    def forward(self, x: Tensor) -> Tensor:
+        """Forward pass with SwiGLU activation.
+
+        Args:
+            x: Input tensor of shape (B, N, C).
+
+        Returns:
+            Output tensor of shape (B, N, out_features).
+        """
+        x12 = self.w12(x)
+        x1, x2 = x12.chunk(2, dim=-1)
+        hidden = f.silu(x1) * x2
+        return self.w3(hidden)
+
+
+def get_contrastive_denoising_training_group(
+    targets: list[dict[str, torch.Tensor]],
+    num_classes: int,
+    num_queries: int,
+    class_embed: torch.nn.Module,
+    num_denoising: int = 100,
+    label_noise_ratio: float = 0.5,
+    box_noise_scale: float = 1.0,
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, dict[str, torch.Tensor]] | tuple[None, None, None, None]:
+    """Generate contrastive denoising training group.
+
+    Args:
+        targets (List[Dict[str, torch.Tensor]]): List of target dictionaries.
+        num_classes (int): Number of classes.
+        num_queries (int): Number of queries.
+        class_embed (torch.nn.Module): Class embedding module.
+        num_denoising (int, optional): Number of denoising queries. Defaults to 100.
+        label_noise_ratio (float, optional): Ratio of label noise. Defaults to 0.5.
+        box_noise_scale (float, optional): Scale of box noise. Defaults to 1.0.
+
+    Returns:
+        Tuple[Tensor,Tensor,Tensor, dict[str, Tensor]] | tuple[None,None,None,None]:
+        Tuple containing input query class, input query bbox, attention mask, and denoising metadata.
+    """
+    num_gts = [len(t["labels"]) for t in targets]
+    device = targets[0]["labels"].device
+
+    max_gt_num = max(num_gts)
+    if max_gt_num == 0:
+        return None, None, None, None
+
+    num_group = num_denoising // max_gt_num
+    num_group = 1 if num_group == 0 else num_group
+    # pad gt to max_num of a batch
+    bs = len(num_gts)
+
+    input_query_class = torch.full([bs, max_gt_num], num_classes, dtype=torch.int32, device=device)
+    input_query_bbox = torch.zeros([bs, max_gt_num, 4], device=device)
+    pad_gt_mask = torch.zeros([bs, max_gt_num], dtype=torch.bool, device=device)
+
+    for i in range(bs):
+        num_gt = num_gts[i]
+        if num_gt > 0:
+            input_query_class[i, :num_gt] = targets[i]["labels"]
+            input_query_bbox[i, :num_gt] = targets[i]["boxes"]
+            pad_gt_mask[i, :num_gt] = 1
+    # each group has positive and negative queries.
+    input_query_class = input_query_class.tile([1, 2 * num_group])
+    input_query_bbox = input_query_bbox.tile([1, 2 * num_group, 1])
+    pad_gt_mask = pad_gt_mask.tile([1, 2 * num_group])
+    # positive and negative mask
+    negative_gt_mask = torch.zeros([bs, max_gt_num * 2, 1], device=device)
+    negative_gt_mask[:, max_gt_num:] = 1
+    negative_gt_mask = negative_gt_mask.tile([1, num_group, 1])
+    positive_gt_mask = 1 - negative_gt_mask
+    # contrastive denoising training positive index
+    positive_gt_mask = positive_gt_mask.squeeze(-1) * pad_gt_mask
+    dn_positive_idx = torch.nonzero(positive_gt_mask)[:, 1]
+    dn_positive_idx = torch.split(dn_positive_idx, [n * num_group for n in num_gts])
+    # total denoising queries
+    num_denoising = int(max_gt_num * 2 * num_group)
+
+    if label_noise_ratio > 0:
+        mask = torch.rand_like(input_query_class, dtype=torch.float) < (label_noise_ratio * 0.5)
+        # randomly put a new one here
+        new_label = torch.randint_like(mask, 0, num_classes, dtype=input_query_class.dtype)
+        input_query_class = torch.where(mask & pad_gt_mask, new_label, input_query_class)
+
+    if box_noise_scale > 0:
+        known_bbox = torchvision.ops.box_convert(input_query_bbox, in_fmt="cxcywh", out_fmt="xyxy")
+        diff = torch.tile(input_query_bbox[..., 2:] * 0.5, [1, 1, 2]) * box_noise_scale
+        rand_sign = torch.randint_like(input_query_bbox, 0, 2) * 2.0 - 1.0
+        rand_part = torch.rand_like(input_query_bbox)
+        rand_part = (rand_part + 1.0) * negative_gt_mask + rand_part * (1 - negative_gt_mask)
+        rand_part *= rand_sign
+        known_bbox += rand_part * diff
+        known_bbox.clip_(min=0.0, max=1.0)
+        input_query_bbox = torchvision.ops.box_convert(known_bbox, in_fmt="xyxy", out_fmt="cxcywh")
+        input_query_bbox = inverse_sigmoid(input_query_bbox)
+
+    input_query_class = class_embed(input_query_class)
+
+    tgt_size = num_denoising + num_queries
+    attn_mask = torch.full([tgt_size, tgt_size], False, dtype=torch.bool, device=device)
+    # match query cannot see the reconstruction
+    attn_mask[num_denoising:, :num_denoising] = True
+
+    # reconstruct cannot see each other
+    for i in range(num_group):
+        if i == 0:
+            attn_mask[max_gt_num * 2 * i : max_gt_num * 2 * (i + 1), max_gt_num * 2 * (i + 1) : num_denoising] = True
+        if i == num_group - 1:
+            attn_mask[max_gt_num * 2 * i : max_gt_num * 2 * (i + 1), : max_gt_num * i * 2] = True
+        else:
+            attn_mask[max_gt_num * 2 * i : max_gt_num * 2 * (i + 1), max_gt_num * 2 * (i + 1) : num_denoising] = True
+            attn_mask[max_gt_num * 2 * i : max_gt_num * 2 * (i + 1), : max_gt_num * 2 * i] = True
+
+    dn_meta = {
+        "dn_positive_idx": dn_positive_idx,
+        "dn_num_group": num_group,
+        "dn_num_split": [num_denoising, num_queries],
+    }
+
+    return input_query_class, input_query_bbox, attn_mask, dn_meta

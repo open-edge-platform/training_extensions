@@ -1,152 +1,62 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+"""DEIM Transformer Decoder.
+
+Modified from DEIMv2 (https://github.com/Intellindust-AI-Lab/DEIMv2)
 """
-DEIM: DETR with Improved Matching for Fast Convergence
-Copyright (c) 2024 The DEIM Authors. All Rights Reserved.
----------------------------------------------------------------------------------
-Modified from D-FINE (https://github.com/Peterande/D-FINE/)
-Copyright (c) 2024 D-FINE Authors. All Rights Reserved.
-"""
+from __future__ import annotations
 
 import copy
 from collections import OrderedDict
+from functools import partial
+from typing import TYPE_CHECKING, Any, Callable, ClassVar
 
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 import torch.nn.init as init
-from typing import List, ClassVar, Any, Callable
+from torch import Tensor, nn
 
-from otx.backend.native.models.detection.heads.rtdetr_decoder import get_contrastive_denoising_training_group
+from otx.backend.native.models.common.layers.transformer_layers import MSDeformableAttentionV2, MLP, LQE, Gate, Integral, SwiGLUFFN, get_contrastive_denoising_training_group
 from otx.backend.native.models.common.utils.utils import inverse_sigmoid
+from otx.backend.native.models.detection.utils.utils import dfine_distance2bbox, dfine_weighting_function
+from otx.backend.native.models.modules.norm import RMSNorm
 from otx.backend.native.models.utils.weight_init import bias_init_with_prob
 
-from otx.backend.native.models.common.layers.transformer_layers import MSDeformableAttentionV3, MLPV2 as MLP
-from otx.backend.native.models.detection.utils.utils import dfine_distance2bbox, dfine_weighting_function
+if TYPE_CHECKING:
+    from torch.nn import ModuleList
 
-__all__ = ['DEIMTransformer']
-
-
-class SwiGLUFFN(nn.Module):
-    def __init__(
-        self,
-        in_features: int,
-        hidden_features: int,
-        out_features: int,
-        bias: bool = True,
-    ) -> None:
-        super().__init__()
-        out_features = out_features or in_features
-        hidden_features = hidden_features or in_features
-        self.w12 = nn.Linear(in_features, 2 * hidden_features, bias=bias)
-        self.w3 = nn.Linear(hidden_features, out_features, bias=bias)
-        self._reset_parameters()
-
-    def _reset_parameters(self):
-        init.xavier_uniform_(self.w12.weight)
-        init.constant_(self.w12.bias, 0)
-        init.xavier_uniform_(self.w3.weight)
-        init.constant_(self.w3.bias, 0)
-
-    def forward(self, x):
-        x12 = self.w12(x)
-        x1, x2 = x12.chunk(2, dim=-1)
-        hidden = F.silu(x1) * x2
-        return self.w3(hidden)
-
-
-class RMSNorm(nn.Module):
-    def __init__(self, dim: int, eps: float = 1e-6):
-        super().__init__()
-        self.dim = dim
-        self.eps = eps
-        self.scale = nn.Parameter(torch.ones(dim))
-
-    def _norm(self, x):
-        return x * torch.rsqrt(x.pow(2).mean(-1, keepdim=True) + self.eps)
-
-    def forward(self, x):
-        output = self._norm(x.float()).type_as(x)
-        output = output * self.scale
-        return output
-
-    def extra_repr(self) -> str:
-        return f'dim={self.dim}, eps={self.eps}'
-
-
-class Integral(nn.Module):
-    """
-    A static layer that calculates integral results from a distribution.
-
-    This layer computes the target location using the formula: `sum{Pr(n) * W(n)}`,
-    where Pr(n) is the softmax probability vector representing the discrete
-    distribution, and W(n) is the non-uniform Weighting Function.
-
-    Args:
-        reg_max (int): Max number of the discrete bins. Default is 32.
-                       It can be adjusted based on the dataset or task requirements.
-    """
-
-    def __init__(self, reg_max=32):
-        super(Integral, self).__init__()
-        self.reg_max = reg_max
-
-    def forward(self, x, project):
-        shape = x.shape
-        x = F.softmax(x.reshape(-1, self.reg_max + 1), dim=1)
-        x = F.linear(x, project.to(x.device)).reshape(-1, 4)
-        return x.reshape(list(shape[:-1]) + [-1])
-
-
-class LQE(nn.Module):
-    def __init__(self, k, hidden_dim, num_layers, reg_max, act='relu'):
-        super(LQE, self).__init__()
-        self.k = k
-        self.reg_max = reg_max
-        self.reg_conf = MLP(4 * (k + 1), hidden_dim, 1, num_layers, activation=act)
-        init.constant_(self.reg_conf.layers[-1].bias, 0)
-        init.constant_(self.reg_conf.layers[-1].weight, 0)
-
-    def forward(self, scores, pred_corners):
-        B, L, _ = pred_corners.size()
-        prob = F.softmax(pred_corners.reshape(B, L, 4, self.reg_max+1), dim=-1)
-        prob_topk, _ = prob.topk(self.k, dim=-1)
-        stat = torch.cat([prob_topk, prob_topk.mean(dim=-1, keepdim=True)], dim=-1)
-        quality_score = self.reg_conf(stat.reshape(B, L, -1))
-        return scores + quality_score
-
-
-class Gate(nn.Module):
-    def __init__(self, d_model, use_rmsnorm=False):
-        super(Gate, self).__init__()
-        self.gate = nn.Linear(2 * d_model, 2 * d_model)
-        bias = bias_init_with_prob(0.5)
-        init.constant_(self.gate.bias, bias)
-        init.constant_(self.gate.weight, 0)
-        self.norm = RMSNorm(d_model) if use_rmsnorm else nn.LayerNorm(d_model)
-
-    def forward(self, x1, x2):
-        gate_input = torch.cat([x1, x2], dim=-1)
-        gates = torch.sigmoid(self.gate(gate_input))
-        gate1, gate2 = gates.chunk(2, dim=-1)
-        return self.norm(gate1 * x1 + gate2 * x2)
+__all__ = ["DEIMTransformer"]
 
 
 class TransformerDecoderLayer(nn.Module):
-    def __init__(self,
-                 d_model=256,
-                 n_head=8,
-                 dim_feedforward=1024,
-                 dropout=0.,
-                 activation='relu',
-                 n_levels=4,
-                 n_points=4,
-                 cross_attn_method='default',
-                 layer_scale=None,
-                 use_gateway=False,
-                 ):
-        super(TransformerDecoderLayer, self).__init__()
+    """Single transformer decoder layer with self-attention, cross-attention, and FFN.
+
+    Args:
+        d_model: Model dimension.
+        n_head: Number of attention heads.
+        dim_feedforward: FFN hidden dimension.
+        dropout: Dropout rate.
+        n_levels: Number of feature levels for deformable attention.
+        n_points: Number of sampling points per level.
+        layer_scale: Optional scale factor for wide layers.
+        use_gateway: Whether to use gated fusion for cross-attention.
+    """
+
+    def __init__(
+        self,
+        d_model: int = 256,
+        n_head: int = 8,
+        dim_feedforward: int = 1024,
+        dropout: float = 0.0,
+        n_levels: int = 4,
+        n_points: int | list[int] = 4,
+        layer_scale: float | None = None,
+        use_gateway: bool = False,
+    ) -> None:
+        super().__init__()
 
         if layer_scale is not None:
-            print(f"     --- Wide Layer@{layer_scale} ---")
             dim_feedforward = round(layer_scale * dim_feedforward)
             d_model = round(layer_scale * d_model)
 
@@ -156,7 +66,7 @@ class TransformerDecoderLayer(nn.Module):
         self.norm1 = RMSNorm(d_model)
 
         # cross attention
-        self.cross_attn = MSDeformableAttentionV3(d_model, n_head, n_levels, n_points, method=cross_attn_method)
+        self.cross_attn = MSDeformableAttentionV2(d_model, n_head, n_levels, n_points)
         self.dropout2 = nn.Dropout(dropout)
 
         self.use_gateway = use_gateway
@@ -170,16 +80,32 @@ class TransformerDecoderLayer(nn.Module):
         self.dropout4 = nn.Dropout(dropout)
         self.norm3 = RMSNorm(d_model)
 
-    def with_pos_embed(self, tensor, pos):
+    def with_pos_embed(self, tensor: Tensor, pos: Tensor | None) -> Tensor:
+        """Add positional embedding to tensor if provided."""
         return tensor if pos is None else tensor + pos
 
-    def forward(self,
-                target,
-                reference_points,
-                value,
-                spatial_shapes,
-                attn_mask=None,
-                query_pos_embed=None):
+    def forward(
+        self,
+        target: Tensor,
+        reference_points: Tensor,
+        value: tuple[Tensor, ...],
+        spatial_shapes: list[list[int]],
+        attn_mask: Tensor | None = None,
+        query_pos_embed: Tensor | None = None,
+    ) -> Tensor:
+        """Forward pass through decoder layer.
+
+        Args:
+            target: Query features of shape (B, N, C).
+            reference_points: Reference points of shape (B, N, 1, 4).
+            value: Multi-scale value features.
+            spatial_shapes: Spatial shapes of each feature level.
+            attn_mask: Optional attention mask.
+            query_pos_embed: Optional positional embedding for queries.
+
+        Returns:
+            Updated query features of shape (B, N, C).
+        """
 
         # self attention
         q = k = self.with_pos_embed(target, query_pos_embed)
@@ -210,30 +136,74 @@ class TransformerDecoderLayer(nn.Module):
 
 
 class TransformerDecoder(nn.Module):
-    """
-    Transformer Decoder implementing Fine-grained Distribution Refinement (FDR).
+    """Transformer Decoder with Fine-grained Distribution Refinement (FDR).
 
-    This decoder refines object detection predictions through iterative updates across multiple layers,
-    utilizing attention mechanisms, location quality estimators, and distribution refinement techniques
-    to improve bounding box accuracy and robustness.
+    Refines object detection predictions through iterative updates across multiple layers,
+    utilizing attention mechanisms, location quality estimators, and distribution refinement
+    techniques to improve bounding box accuracy.
+
+    Args:
+        hidden_dim: Hidden dimension.
+        decoder_layer: Standard decoder layer.
+        decoder_layer_wide: Wide decoder layer for later stages.
+        num_layers: Total number of decoder layers.
+        num_head: Number of attention heads.
+        reg_max: Maximum regression bins.
+        reg_scale: Regression scale factor.
+        up: Up-sampling parameter.
+        eval_idx: Index of layer used for evaluation.
+        layer_scale: Scale factor for wide layers.
+        act: Activation function class.
     """
 
-    def __init__(self, hidden_dim, decoder_layer, decoder_layer_wide, num_layers, num_head, reg_max, reg_scale, up,
-                 eval_idx=-1, layer_scale=2, act='relu'):
-        super(TransformerDecoder, self).__init__()
+    def __init__(
+        self,
+        hidden_dim: int,
+        decoder_layer: TransformerDecoderLayer,
+        decoder_layer_wide: TransformerDecoderLayer,
+        num_layers: int,
+        num_head: int,
+        reg_max: int,
+        reg_scale: nn.Parameter,
+        up: nn.Parameter,
+        eval_idx: int = -1,
+        layer_scale: int = 2,
+        act: Callable[..., nn.Module] = partial(nn.ReLU, inplace=True),
+    ) -> None:
+        super().__init__()
         self.hidden_dim = hidden_dim
         self.num_layers = num_layers
         self.layer_scale = layer_scale
         self.num_head = num_head
         self.eval_idx = eval_idx if eval_idx >= 0 else num_layers + eval_idx
         self.up, self.reg_scale, self.reg_max = up, reg_scale, reg_max
-        self.layers = nn.ModuleList([copy.deepcopy(decoder_layer) for _ in range(self.eval_idx + 1)] \
-                    + [copy.deepcopy(decoder_layer_wide) for _ in range(num_layers - self.eval_idx - 1)])
-        self.lqe_layers = nn.ModuleList([copy.deepcopy(LQE(4, 64, 2, reg_max, act=act)) for _ in range(num_layers)])
+        self.layers = nn.ModuleList(
+            [copy.deepcopy(decoder_layer) for _ in range(self.eval_idx + 1)]
+            + [copy.deepcopy(decoder_layer_wide) for _ in range(num_layers - self.eval_idx - 1)]
+        )
+        self.lqe_layers = nn.ModuleList([
+            copy.deepcopy(LQE(4, 64, 2, reg_max, activation=act)) for _ in range(num_layers)
+        ])
 
-    def value_op(self, memory, value_proj, value_scale, memory_mask, memory_spatial_shapes):
-        """
-        Preprocess values for MSDeformableAttention.
+    def value_op(
+        self,
+        memory: Tensor,
+        value_proj: nn.Module | None,
+        value_scale: int | None,
+        memory_mask: Tensor | None,
+        memory_spatial_shapes: list[list[int]],
+    ) -> tuple[Tensor, ...]:
+        """Preprocess values for MSDeformableAttention.
+
+        Args:
+            memory: Encoder memory of shape (B, L, C).
+            value_proj: Optional projection layer.
+            value_scale: Optional scale for interpolation.
+            memory_mask: Optional memory mask.
+            memory_spatial_shapes: Spatial shapes of each level.
+
+        Returns:
+            Tuple of value tensors split by level.
         """
         value = value_proj(memory) if value_proj is not None else memory
         value = F.interpolate(memory, size=value_scale) if value_scale is not None else value
@@ -243,26 +213,52 @@ class TransformerDecoder(nn.Module):
         split_shape = [h * w for h, w in memory_spatial_shapes]
         return value.permute(0, 2, 3, 1).split(split_shape, dim=-1)
 
-    def convert_to_deploy(self):
+    def convert_to_deploy(self) -> None:
+        """Convert model for deployment by removing unused layers."""
         self.project = dfine_weighting_function(self.reg_max, self.up, self.reg_scale)
-        self.layers = self.layers[:self.eval_idx + 1]
-        self.lqe_layers = nn.ModuleList([nn.Identity()] * (self.eval_idx) + [self.lqe_layers[self.eval_idx]])
+        self.layers = self.layers[: self.eval_idx + 1]
+        self.lqe_layers = nn.ModuleList(
+            [nn.Identity()] * self.eval_idx + [self.lqe_layers[self.eval_idx]]
+        )
 
-    def forward(self,
-                target,
-                ref_points_unact,
-                memory,
-                spatial_shapes,
-                bbox_head,
-                score_head,
-                query_pos_head,
-                pre_bbox_head,
-                integral,
-                up,
-                reg_scale,
-                attn_mask=None,
-                memory_mask=None,
-                dn_meta=None):
+    def forward(
+        self,
+        target: Tensor,
+        ref_points_unact: Tensor,
+        memory: Tensor,
+        spatial_shapes: list[list[int]],
+        bbox_head: ModuleList,
+        score_head: ModuleList,
+        query_pos_head: MLP,
+        pre_bbox_head: MLP,
+        integral: Integral,
+        up: nn.Parameter,
+        reg_scale: nn.Parameter,
+        attn_mask: Tensor | None = None,
+        memory_mask: Tensor | None = None,
+        dn_meta: dict[str, Any] | None = None,
+    ) -> tuple[Tensor, Tensor, Tensor, Tensor, Tensor, Tensor]:
+        """Forward pass through decoder.
+
+        Args:
+            target: Query features of shape (B, N, C).
+            ref_points_unact: Unactivated reference points of shape (B, N, 4).
+            memory: Encoder memory of shape (B, L, C).
+            spatial_shapes: Spatial shapes of each feature level.
+            bbox_head: Bounding box regression heads.
+            score_head: Classification heads.
+            query_pos_head: Query position embedding head.
+            pre_bbox_head: Pre-bbox head for initial predictions.
+            integral: Integral layer for distribution regression.
+            up: Up-sampling parameter.
+            reg_scale: Regression scale parameter.
+            attn_mask: Optional attention mask.
+            memory_mask: Optional memory mask.
+            dn_meta: Optional denoising metadata.
+
+        Returns:
+            Tuple of (bboxes, logits, corners, refs, pre_bboxes, pre_scores).
+        """
         output = target
         output_detach = pred_corners_undetach = 0
         value = self.value_op(memory, None, None, memory_mask, spatial_shapes)
@@ -321,40 +317,99 @@ class TransformerDecoder(nn.Module):
 
 
 class DEIMTransformerModule(nn.Module):
-    __share__ = ['num_classes', 'eval_spatial_size']
+    """DEIM Transformer module for object detection.
 
-    def __init__(self,
-                 num_classes=80,
-                 hidden_dim=256,
-                 num_queries=300,
-                 feat_channels=[256, 256, 256],
-                 feat_strides=[8, 16, 32],
-                 num_levels=3,
-                 num_points=[3, 6, 3],
-                 nhead=8,
-                 num_layers=6,
-                 dim_feedforward=2048,
-                 dropout=0.,
-                 activation="silu",
-                 num_denoising=100,
-                 label_noise_ratio=0.5,
-                 box_noise_scale=1.0,
-                 learn_query_content=False,
-                 eval_spatial_size=None,
-                 eval_idx=-1,
-                 eps=1e-2,
-                 aux_loss=True,
-                 cross_attn_method='default',
-                 query_select_method='default',
-                 reg_max=32,
-                 reg_scale=4.,
-                 layer_scale=1,
-                 mlp_act='silu',
-                 use_gateway=True,
-                 share_bbox_head=False,
-                 share_score_head=False,
-                 ):
+    This module implements the DEIM (Detection Transformer with Efficient
+    Integration Module) architecture with Fine-grained Distribution Refinement
+    (FDR) for accurate object detection.
+
+    Attributes:
+        __share__: List of attributes shared across instances.
+        hidden_dim: Hidden dimension size.
+        nhead: Number of attention heads.
+        feat_strides: Feature strides for each level.
+        num_levels: Number of feature levels.
+        num_classes: Number of object classes.
+        num_queries: Number of detection queries.
+        eps: Small epsilon for numerical stability.
+        num_layers: Number of decoder layers.
+        eval_spatial_size: Spatial size for evaluation.
+        aux_loss: Whether to use auxiliary losses.
+        reg_max: Maximum regression value for FDR.
+    """
+
+    __share__: ClassVar[list[str]] = ["num_classes", "eval_spatial_size"]
+
+    def __init__(
+        self,
+        num_classes: int = 80,
+        hidden_dim: int = 256,
+        num_queries: int = 300,
+        feat_channels: list[int] | None = None,
+        feat_strides: list[int] | None = None,
+        num_levels: int = 3,
+        num_points: list[int] | None = None,
+        nhead: int = 8,
+        num_layers: int = 6,
+        dim_feedforward: int = 2048,
+        dropout: float = 0.0,
+        activation: Callable[..., nn.Module] = nn.SiLU,
+        num_denoising: int = 100,
+        label_noise_ratio: float = 0.5,
+        box_noise_scale: float = 1.0,
+        learn_query_content: bool = False,
+        eval_spatial_size: tuple[int, int] | None = None,
+        eval_idx: int = -1,
+        eps: float = 1e-2,
+        aux_loss: bool = True,
+        cross_attn_method: str = "default",
+        query_select_method: str = "default",
+        reg_max: int = 32,
+        reg_scale: float = 4.0,
+        layer_scale: int = 1,
+        use_gateway: bool = True,
+        share_bbox_head: bool = False,
+        share_score_head: bool = False,
+    ) -> None:
+        """Initialize DEIMTransformerModule.
+
+        Args:
+            num_classes: Number of object classes.
+            hidden_dim: Hidden dimension size.
+            num_queries: Number of detection queries.
+            feat_channels: Feature channels for each input level.
+            feat_strides: Feature strides for each level.
+            num_levels: Number of feature levels.
+            num_points: Number of sampling points per level.
+            nhead: Number of attention heads.
+            num_layers: Number of decoder layers.
+            dim_feedforward: Feedforward network dimension.
+            dropout: Dropout rate.
+            activation: Activation function class.
+            num_denoising: Number of denoising queries for training.
+            label_noise_ratio: Label noise ratio for denoising.
+            box_noise_scale: Box noise scale for denoising.
+            learn_query_content: Whether to learn query content.
+            eval_spatial_size: Spatial size for evaluation (H, W).
+            eval_idx: Evaluation layer index (-1 for last).
+            eps: Epsilon for numerical stability.
+            aux_loss: Whether to use auxiliary losses.
+            cross_attn_method: Cross attention method ('default' or 'discrete').
+            query_select_method: Query selection method.
+            reg_max: Maximum regression value for FDR.
+            reg_scale: Regression scale factor.
+            layer_scale: Scale factor for wide layers.
+            use_gateway: Whether to use gateway fusion.
+            share_bbox_head: Whether to share bbox head across layers.
+            share_score_head: Whether to share score head across layers.
+        """
         super().__init__()
+        if feat_channels is None:
+            feat_channels = [256, 256, 256]
+        if feat_strides is None:
+            feat_strides = [8, 16, 32]
+        if num_points is None:
+            num_points = [3, 6, 3]
         assert len(feat_channels) <= num_levels
         assert len(feat_strides) == len(feat_channels)
 
@@ -389,12 +444,19 @@ class DEIMTransformerModule(nn.Module):
         # Transformer module
         self.up = nn.Parameter(torch.tensor([0.5]), requires_grad=False)
         self.reg_scale = nn.Parameter(torch.tensor([reg_scale]), requires_grad=False)
-        decoder_layer = TransformerDecoderLayer(hidden_dim, nhead, dim_feedforward, dropout, \
-            activation, num_levels, num_points, cross_attn_method=cross_attn_method, use_gateway=use_gateway)
-        decoder_layer_wide = TransformerDecoderLayer(hidden_dim, nhead, dim_feedforward, dropout, \
-            activation, num_levels, num_points, cross_attn_method=cross_attn_method, layer_scale=layer_scale, use_gateway=use_gateway)
-        self.decoder = TransformerDecoder(hidden_dim, decoder_layer, decoder_layer_wide, num_layers, nhead,
-                                          reg_max, self.reg_scale, self.up, eval_idx, layer_scale, act=activation)
+        decoder_layer = TransformerDecoderLayer(
+            hidden_dim, nhead, dim_feedforward, 
+            dropout, num_levels, num_points, use_gateway=use_gateway,
+        )
+        decoder_layer_wide = TransformerDecoderLayer(
+            hidden_dim, nhead, dim_feedforward, dropout,
+            num_levels, num_points, layer_scale=layer_scale, use_gateway=use_gateway,
+        )
+        self.decoder = TransformerDecoder(
+            hidden_dim, decoder_layer, decoder_layer_wide, num_layers, nhead,
+            reg_max, self.reg_scale, self.up, eval_idx, layer_scale,
+            act=partial(activation, inplace=True),
+        )
       # denoising
         self.num_denoising = num_denoising
         self.label_noise_ratio = label_noise_ratio
@@ -412,12 +474,12 @@ class DEIMTransformerModule(nn.Module):
             self.enc_score_head = nn.Linear(hidden_dim, 1)
         else:
             self.enc_score_head = nn.Linear(hidden_dim, num_classes)
-        self.enc_bbox_head = MLP(hidden_dim, hidden_dim, 4, 3, activation=mlp_act)
+        self.enc_bbox_head = MLP(hidden_dim, hidden_dim, 4, 3, activation=partial(activation, inplace=True))
 
-        self.query_pos_head = MLP(4, hidden_dim, hidden_dim, 3, activation=mlp_act)
+        self.query_pos_head = MLP(4, hidden_dim, hidden_dim, 3, activation=partial(activation, inplace=True))
 
         # decoder head
-        self.pre_bbox_head = MLP(hidden_dim, hidden_dim, 4, 3, activation=mlp_act)
+        self.pre_bbox_head = MLP(hidden_dim, hidden_dim, 4, 3, activation=partial(activation, inplace=True))
         self.integral = Integral(self.reg_max)
 
         self.eval_idx = eval_idx if eval_idx >= 0 else num_layers + eval_idx
@@ -427,10 +489,10 @@ class DEIMTransformerModule(nn.Module):
           + [copy.deepcopy(dec_score_head) for _ in range(num_layers - self.eval_idx - 1)])
 
         # Share the same bbox head for all layers
-        dec_bbox_head = MLP(hidden_dim, hidden_dim, 4 * (self.reg_max+1), 3, activation=mlp_act)
+        dec_bbox_head = MLP(hidden_dim, hidden_dim, 4 * (self.reg_max+1), 3, activation=partial(activation, inplace=True))
         self.dec_bbox_head = nn.ModuleList(
             [dec_bbox_head if share_bbox_head else copy.deepcopy(dec_bbox_head) for _ in range(self.eval_idx + 1)]
-          + [MLP(scaled_dim, scaled_dim, 4 * (self.reg_max+1), 3, activation=mlp_act) for _ in range(num_layers - self.eval_idx - 1)])
+          + [MLP(scaled_dim, scaled_dim, 4 * (self.reg_max+1), 3, activation=partial(activation, inplace=True)) for _ in range(num_layers - self.eval_idx - 1)])
 
         # init encoder output anchors and valid_mask
         if self.eval_spatial_size:
@@ -444,13 +506,19 @@ class DEIMTransformerModule(nn.Module):
 
         self._reset_parameters(feat_channels)
 
-    def convert_to_deploy(self):
+    def convert_to_deploy(self) -> None:
+        """Convert model to deployment mode by pruning unused components."""
         self.dec_score_head = nn.ModuleList([nn.Identity()] * (self.eval_idx) + [self.dec_score_head[self.eval_idx]])
         self.dec_bbox_head = nn.ModuleList(
             [self.dec_bbox_head[i] if i <= self.eval_idx else nn.Identity() for i in range(len(self.dec_bbox_head))]
         )
 
-    def _reset_parameters(self, feat_channels):
+    def _reset_parameters(self, feat_channels: list[int]) -> None:
+        """Reset model parameters with appropriate initialization.
+
+        Args:
+            feat_channels: List of feature channel dimensions.
+        """
         bias = bias_init_with_prob(0.01)
         init.constant_(self.enc_score_head.bias, bias)
         init.constant_(self.enc_bbox_head.layers[-1].weight, 0)
@@ -474,7 +542,12 @@ class DEIMTransformerModule(nn.Module):
             if in_channels != self.hidden_dim:
                 init.xavier_uniform_(m[0].weight)
 
-    def _build_input_proj_layer(self, feat_channels):
+    def _build_input_proj_layer(self, feat_channels: list[int]) -> None:
+        """Build input projection layers for feature transformation.
+
+        Args:
+            feat_channels: List of input feature channel dimensions.
+        """
         self.input_proj = nn.ModuleList()
         for in_channels in feat_channels:
             if in_channels == self.hidden_dim:
@@ -501,7 +574,18 @@ class DEIMTransformerModule(nn.Module):
                 )
                 in_channels = self.hidden_dim
 
-    def _get_encoder_input(self, feats: List[torch.Tensor]):
+    def _get_encoder_input(self, feats: list[Tensor]) -> tuple[Tensor, list[list[int]]]:
+        """Get encoder input from multi-scale features.
+
+        Projects input features to hidden dimension and flattens them
+        for transformer processing.
+
+        Args:
+            feats: List of feature tensors from backbone.
+
+        Returns:
+            Tuple of (flattened features, spatial shapes per level).
+        """
         # get projection features
         proj_feats = [self.input_proj[i](feat) for i, feat in enumerate(feats)]
         if self.num_levels > len(proj_feats):
@@ -526,11 +610,24 @@ class DEIMTransformerModule(nn.Module):
         feat_flatten = torch.concat(feat_flatten, 1)
         return feat_flatten, spatial_shapes
 
-    def _generate_anchors(self,
-                          spatial_shapes=None,
-                          grid_size=0.05,
-                          dtype=torch.float32,
-                          device='cpu'):
+    def _generate_anchors(
+        self,
+        spatial_shapes: list[list[int]] | None = None,
+        grid_size: float = 0.05,
+        dtype: torch.dtype = torch.float32,
+        device: str | torch.device = "cpu",
+    ) -> tuple[Tensor, Tensor]:
+        """Generate anchor points for all feature levels.
+
+        Args:
+            spatial_shapes: Spatial shapes for each level. If None, computed from eval_spatial_size.
+            grid_size: Base grid size for anchors.
+            dtype: Data type for anchor tensors.
+            device: Device to place anchor tensors on.
+
+        Returns:
+            Tuple of (anchor coordinates, validity mask).
+        """
         if spatial_shapes is None:
             spatial_shapes = []
             eval_h, eval_w = self.eval_spatial_size
@@ -553,13 +650,27 @@ class DEIMTransformerModule(nn.Module):
 
         return anchors, valid_mask
 
+    def _get_decoder_input(
+        self,
+        memory: Tensor,
+        spatial_shapes: list[list[int]],
+        denoising_logits: Tensor | None = None,
+        denoising_bbox_unact: Tensor | None = None,
+    ) -> tuple[Tensor, Tensor, list[Tensor], list[Tensor], Tensor]:
+        """Prepare input for the decoder.
 
-    def _get_decoder_input(self,
-                           memory: torch.Tensor,
-                           spatial_shapes,
-                           denoising_logits=None,
-                           denoising_bbox_unact=None):
+        Generates anchors, selects top-k queries, and prepares content
+        embeddings for decoder processing.
 
+        Args:
+            memory: Encoder memory of shape (B, L, C).
+            spatial_shapes: Spatial shapes for each feature level.
+            denoising_logits: Optional denoising logits for training.
+            denoising_bbox_unact: Optional denoising bbox for training.
+
+        Returns:
+            Tuple of (content, bbox_unact, topk_bboxes_list, topk_logits_list, enc_logits).
+        """
         # prepare input for decoder
         if self.training or self.eval_spatial_size is None:
             anchors, valid_mask = self._generate_anchors(spatial_shapes, device=memory.device)
@@ -572,13 +683,14 @@ class DEIMTransformerModule(nn.Module):
         # memory = torch.where(valid_mask, memory, 0)
         memory = valid_mask.to(memory.dtype) * memory
 
-        enc_outputs_logits :torch.Tensor = self.enc_score_head(memory)
+        enc_outputs_logits: Tensor = self.enc_score_head(memory)
 
         # select topk queries
-        enc_topk_memory, enc_topk_logits, enc_topk_anchors = \
-            self._select_topk(memory, enc_outputs_logits, anchors, self.num_queries)
+        enc_topk_memory, enc_topk_logits, enc_topk_anchors = self._select_topk(
+            memory, enc_outputs_logits, anchors, self.num_queries
+        )
 
-        enc_topk_bbox_unact :torch.Tensor = self.enc_bbox_head(enc_topk_memory) + enc_topk_anchors
+        enc_topk_bbox_unact: Tensor = self.enc_bbox_head(enc_topk_memory) + enc_topk_anchors
 
         enc_topk_bboxes_list, enc_topk_logits_list = [], []
         if self.training:
@@ -599,35 +711,72 @@ class DEIMTransformerModule(nn.Module):
 
         return content, enc_topk_bbox_unact, enc_topk_bboxes_list, enc_topk_logits_list, enc_outputs_logits
 
-    def _select_topk(self, memory: torch.Tensor, outputs_logits: torch.Tensor, outputs_anchors_unact: torch.Tensor, topk: int):
-        if self.query_select_method == 'default':
+    def _select_topk(
+        self,
+        memory: Tensor,
+        outputs_logits: Tensor,
+        outputs_anchors_unact: Tensor,
+        topk: int,
+    ) -> tuple[Tensor, Tensor | None, Tensor]:
+        """Select top-k queries based on classification scores.
+
+        Args:
+            memory: Encoder memory of shape (B, L, C).
+            outputs_logits: Classification logits of shape (B, L, num_classes).
+            outputs_anchors_unact: Unactivated anchor coordinates.
+            topk: Number of top queries to select.
+
+        Returns:
+            Tuple of (topk_memory, topk_logits, topk_anchors).
+        """
+        if self.query_select_method == "default":
             _, topk_ind = torch.topk(outputs_logits.max(-1).values, topk, dim=-1)
 
-        elif self.query_select_method == 'one2many':
+        elif self.query_select_method == "one2many":
             _, topk_ind = torch.topk(outputs_logits.flatten(1), topk, dim=-1)
             topk_ind = topk_ind // self.num_classes
 
-        elif self.query_select_method == 'agnostic':
+        elif self.query_select_method == "agnostic":
             _, topk_ind = torch.topk(outputs_logits.squeeze(-1), topk, dim=-1)
 
-        topk_ind: torch.Tensor
+        topk_ind: Tensor
 
-        topk_anchors = outputs_anchors_unact.gather(dim=1, \
-            index=topk_ind.unsqueeze(-1).repeat(1, 1, outputs_anchors_unact.shape[-1]))
+        topk_anchors = outputs_anchors_unact.gather(
+            dim=1, index=topk_ind.unsqueeze(-1).repeat(1, 1, outputs_anchors_unact.shape[-1])
+        )
 
-        topk_logits = outputs_logits.gather(dim=1, \
-            index=topk_ind.unsqueeze(-1).repeat(1, 1, outputs_logits.shape[-1])) if self.training else None
+        topk_logits = (
+            outputs_logits.gather(dim=1, index=topk_ind.unsqueeze(-1).repeat(1, 1, outputs_logits.shape[-1]))
+            if self.training
+            else None
+        )
 
-        topk_memory = memory.gather(dim=1, \
-            index=topk_ind.unsqueeze(-1).repeat(1, 1, memory.shape[-1]))
+        topk_memory = memory.gather(dim=1, index=topk_ind.unsqueeze(-1).repeat(1, 1, memory.shape[-1]))
 
         return topk_memory, topk_logits, topk_anchors
 
-    def forward(self,
-                feats,
-                targets=None,
-                explain_mode: bool = False,
-                ):
+    def forward(
+        self,
+        feats: list[Tensor],
+        targets: list[dict[str, Any]] | None = None,
+        explain_mode: bool = False,
+    ) -> dict[str, Any]:
+        """Forward pass of the DEIM Transformer module.
+
+        Args:
+            feats: List of multi-scale feature tensors from backbone.
+            targets: Optional list of target dictionaries for training.
+            explain_mode: Whether to include raw logits for explainability.
+
+        Returns:
+            Dictionary containing predictions and optional auxiliary outputs:
+                - pred_logits: Classification logits.
+                - pred_boxes: Predicted bounding boxes.
+                - pred_corners: Corner predictions (training only).
+                - ref_points: Reference points (training only).
+                - aux_outputs: Auxiliary outputs from intermediate layers.
+                - dn_outputs: Denoising outputs (training only).
+        """
         # input projection and embedding
         memory, spatial_shapes = self._get_encoder_input(feats)
 
@@ -701,28 +850,74 @@ class DEIMTransformerModule(nn.Module):
 
         return out
 
+    @torch.jit.unused
+    def _set_aux_loss(
+        self,
+        outputs_class: list[Tensor],
+        outputs_coord: list[Tensor],
+    ) -> list[dict[str, Tensor]]:
+        """Set auxiliary loss outputs for encoder.
+
+        This is a workaround to make torchscript happy, as torchscript
+        doesn't support dictionary with non-homogeneous values.
+
+        Args:
+            outputs_class: List of classification outputs.
+            outputs_coord: List of coordinate outputs.
+
+        Returns:
+            List of dictionaries with pred_logits and pred_boxes.
+        """
+        return [{"pred_logits": a, "pred_boxes": b} for a, b in zip(outputs_class, outputs_coord)]
 
     @torch.jit.unused
-    def _set_aux_loss(self, outputs_class, outputs_coord):
-        # this is a workaround to make torchscript happy, as torchscript
-        # doesn't support dictionary with non-homogeneous values, such
-        # as a dict having both a Tensor and a list.
-        return [{'pred_logits': a, 'pred_boxes': b} for a, b in zip(outputs_class, outputs_coord)]
+    def _set_aux_loss2(
+        self,
+        outputs_class: list[Tensor],
+        outputs_coord: list[Tensor],
+        outputs_corners: list[Tensor],
+        outputs_ref: list[Tensor],
+        teacher_corners: Tensor | None = None,
+        teacher_logits: Tensor | None = None,
+    ) -> list[dict[str, Tensor | None]]:
+        """Set auxiliary loss outputs for decoder with FDR.
 
+        This is a workaround to make torchscript happy, as torchscript
+        doesn't support dictionary with non-homogeneous values.
 
-    @torch.jit.unused
-    def _set_aux_loss2(self, outputs_class, outputs_coord, outputs_corners, outputs_ref,
-                       teacher_corners=None, teacher_logits=None):
-        # this is a workaround to make torchscript happy, as torchscript
-        # doesn't support dictionary with non-homogeneous values, such
-        # as a dict having both a Tensor and a list.
-        return [{'pred_logits': a, 'pred_boxes': b, 'pred_corners': c, 'ref_points': d,
-                     'teacher_corners': teacher_corners, 'teacher_logits': teacher_logits}
-                for a, b, c, d in zip(outputs_class, outputs_coord, outputs_corners, outputs_ref)]
+        Args:
+            outputs_class: List of classification outputs.
+            outputs_coord: List of coordinate outputs.
+            outputs_corners: List of corner outputs.
+            outputs_ref: List of reference point outputs.
+            teacher_corners: Optional teacher corner predictions.
+            teacher_logits: Optional teacher logits.
+
+        Returns:
+            List of dictionaries with predictions and teacher outputs.
+        """
+        return [
+            {
+                "pred_logits": a,
+                "pred_boxes": b,
+                "pred_corners": c,
+                "ref_points": d,
+                "teacher_corners": teacher_corners,
+                "teacher_logits": teacher_logits,
+            }
+            for a, b, c, d in zip(outputs_class, outputs_coord, outputs_corners, outputs_ref)
+        ]
 
 
 class DEIMTransformer:
-    """DFINETransformer factory for detection."""
+    """Factory class for creating DEIMTransformerModule instances.
+
+    Provides predefined configurations for different model sizes (x, l, m, s)
+    with appropriate hidden dimensions, number of layers, and feedforward dimensions.
+
+    Attributes:
+        decoder_cfg: Dictionary mapping model names to their configurations.
+    """
 
     decoder_cfg: ClassVar[dict[str, Any]] = {
         "deimv2_x": {
@@ -730,34 +925,49 @@ class DEIMTransformer:
             "eval_idx": -1,
             "feat_channels": [256, 256, 256],
             "hidden_dim": 256,
-            "dim_feedforward": 2048
+            "dim_feedforward": 2048,
         },
         "deimv2_l": {
             "feat_channels": [224, 224, 224],
             "hidden_dim": 224,
             "num_layers": 4,
             "eval_idx": -1,
-            "dim_feedforward": 1792
+            "dim_feedforward": 1792,
         },
         "deimv2_m": {
             "feat_channels": [256, 256, 256],
             "hidden_dim": 256,
             "dim_feedforward": 512,
             "num_layers": 4,
-            "eval_idx": -1
+            "eval_idx": -1,
         },
         "deimv2_s": {
             "feat_channels": [192, 192, 192],
             "hidden_dim": 192,
             "dim_feedforward": 512,
             "num_layers": 4,
-            "eval_idx": -1
+            "eval_idx": -1,
         },
     }
 
     def __new__(
-        cls, model_name: str, num_classes: int, eval_spatial_size: tuple[int, int] = (640, 640)
+        cls,
+        model_name: str,
+        num_classes: int,
+        eval_spatial_size: tuple[int, int] = (640, 640),
     ) -> DEIMTransformerModule:
-        """Constructor for DEIMTransformerModule."""
+        """Create a new DEIMTransformerModule instance.
+
+        Args:
+            model_name: Name of the model configuration (e.g., 'deimv2_x').
+            num_classes: Number of object classes.
+            eval_spatial_size: Spatial size for evaluation (H, W).
+
+        Returns:
+            Configured DEIMTransformerModule instance.
+
+        Raises:
+            KeyError: If model_name is not found in decoder_cfg.
+        """
         cfg = cls.decoder_cfg[model_name]
         return DEIMTransformerModule(num_classes=num_classes, eval_spatial_size=eval_spatial_size, **cfg)
