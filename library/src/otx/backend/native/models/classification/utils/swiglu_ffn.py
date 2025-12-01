@@ -104,6 +104,18 @@ class SwiGLUFFNFused(SwiGLUFFN):
 
 
 class SwiGLUFFNV2(nn.Module, ListForwardMixin):
+    """SwiGLUFFN module.
+
+        Args:
+            in_features (int): Input features.
+            hidden_features (int | None, optional): Hidden features. Defaults to None.
+            out_features (int | None, optional): Output features. Defaults to None.
+            act_layer (Callable[..., nn.Module] | None, optional): Activation layer. Defaults to None.
+            drop (float, optional): Dropout rate. Defaults to 0.0.
+            bias (bool, optional): Whether to use bias. Defaults to True.
+            align_to (int, optional): Number of columns to align the hidden features to. Defaults to 8.
+            device (torch.device, optional): Device to use. Defaults to None.
+    """
     def __init__(
         self,
         in_features: int,

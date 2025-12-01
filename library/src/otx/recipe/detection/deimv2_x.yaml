@@ -93,9 +93,6 @@ callbacks:
                 - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
                   init_args:
                     min_area: 1
-                - class_path: otx.data.transform_libs.torchvision.CachedCopyBlend
-                  init_args:
-                    probability: 0.5
                 - class_path: otx.data.transform_libs.torchvision.RandomFlip
                   init_args:
                     probability: 0.5
@@ -178,9 +175,6 @@ callbacks:
                     probability: 0.5
                     random_pop: true
                     max_cached_images: 20
-                - class_path: otx.data.transform_libs.torchvision.CachedCopyBlend
-                  init_args:
-                    probability: 0.5
                 - class_path: otx.data.transform_libs.torchvision.RandomFlip
                   init_args:
                     probability: 0.5

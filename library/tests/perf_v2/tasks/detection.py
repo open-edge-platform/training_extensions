@@ -22,12 +22,12 @@ MODEL_TEST_CASES = [
     # ModelInfo(task=TASK_TYPE.value, name="yolox_s", category="speed"),
     # ModelInfo(task=TASK_TYPE.value, name="dfine_x", category="accuracy"),
     # ModelInfo(task=TASK_TYPE.value, name="deim_dfine_x", category="other"),
-    ModelInfo(task=TASK_TYPE.value, name="deimv2_x", category="other"),
+    # ModelInfo(task=TASK_TYPE.value, name="deimv2_x", category="other"),
     # ModelInfo(task=TASK_TYPE.value, name="deim_dfine_l", category="other"),
     # ModelInfo(task=TASK_TYPE.value, name="deimv2_l", category="other"),
     # ModelInfo(task=TASK_TYPE.value, name="deim_dfine_m", category="other"),
     ModelInfo(task=TASK_TYPE.value, name="deimv2_m", category="other"),
-    ModelInfo(task=TASK_TYPE.value, name="deimv2_s", category="other"),
+    # ModelInfo(task=TASK_TYPE.value, name="deimv2_s", category="other"),
     # ModelInfo(task=TASK_TYPE.value, name="atss_resnext101", category="other"),
     # ModelInfo(task=TASK_TYPE.value, name="rtdetr_101", category="other"),
     # ModelInfo(task=TASK_TYPE.value, name="rtdetr_18", category="other"),
@@ -41,16 +41,16 @@ MODEL_TEST_CASES = [
 
 DATASET_TEST_CASES = (
     [
-        DatasetInfo(
-            name=f"pothole_tiny_2",
-            path=Path("detection/pothole_coco_tiny/2"),
-            group="tiny",
-        ),
-        DatasetInfo(
-            name=f"blueberry_small",
-            path=Path("detection/blue_berry_small"),
-            group="tiny",
-        ),
+        # DatasetInfo(
+        #     name=f"pothole_tiny_2",
+        #     path=Path("detection/pothole_coco_tiny/2"),
+        #     group="tiny",
+        # ),
+        # DatasetInfo(
+        #     name=f"blueberry_small",
+        #     path=Path("detection/blue_berry_small"),
+        #     group="tiny",
+        # ),
         DatasetInfo(
             name="wgisd_small",
             path=Path("detection/wgisd_merged_coco_small"),
@@ -66,11 +66,11 @@ DATASET_TEST_CASES = (
         #     path=Path("detection/diopsis_coco"),
         #     group="medium",
         # ),
-        DatasetInfo(
-            name="bdd_medium",
-            path=Path("detection/bdd_medium"),
-            group="medium",
-        ),
+        # DatasetInfo(
+        #     name="bdd_medium",
+        #     path=Path("detection/bdd_medium"),
+        #     group="medium",
+        # ),
         # DatasetInfo(
         #     name="Vitens-Aeromonas",
         #     path=Path("detection/Vitens-Aeromonas-coco"),
