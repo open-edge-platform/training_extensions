@@ -4,13 +4,14 @@
 # Backend base
 ##############
 FROM python:3.13-slim@sha256:85dfbf1b566b7addfe645faea9938e81a0a01a83580b0ea05fb23706357d77fb AS backend-base
+
+# uv / uvx
 COPY --from=docker.io/astral/uv:0.9.7@sha256:ba4857bf2a068e9bc0e64eed8563b065908a4cd6bfb66b531a9c424c8e25e142 /uv /uvx /bin/
 
-# Set working directory
 WORKDIR /application
 
-# Install required build dependencies
-# TODO remove 'git' once all dependencies are available on PyPI
+# Build deps (for compiling / Rust-based crates)
+# TODO: remove 'git' once all dependencies are on PyPI
 RUN apt-get update  \
     && apt-get install -y --no-install-recommends \
         build-essential=12.12 \
@@ -19,18 +20,40 @@ RUN apt-get update  \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-# Install Rust compiler
+# Install Rust toolchain
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 ENV PATH="/root/.cargo/bin:${PATH}"
 
-# Install dependencies
+##########
+# CPU Base
+##########
+FROM backend-base AS cpu-base
+
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=backend/uv.lock,target=uv.lock \
     --mount=type=bind,source=backend/pyproject.toml,target=pyproject.toml \
-    uv sync --frozen --no-dev --no-editable --extra mqtt
+    uv sync --frozen --no-dev --no-editable --extra mqtt --extra cpu
 
-COPY backend/app ./app
+##########
+# GPU Base
+##########
+FROM backend-base AS gpu-base
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=backend/uv.lock,target=uv.lock \
+    --mount=type=bind,source=backend/pyproject.toml,target=pyproject.toml \
+    uv sync --frozen --no-dev --no-editable --extra mqtt --extra cuda
+
+##########
+# XPU Base
+##########
+FROM backend-base AS xpu-base
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=backend/uv.lock,target=uv.lock \
+    --mount=type=bind,source=backend/pyproject.toml,target=pyproject.toml \
+    uv sync --frozen --no-dev --no-editable --extra mqtt --extra xpu
 
 ##################
 # Geti UI packages
@@ -59,24 +82,27 @@ COPY --link ui/rsbuild.config.ts ./
 COPY --link ui/src/ src/
 
 ARG PUBLIC_API_BASE_URL=""
-ENV PUBLIC_API_BASE_URL ${PUBLIC_API_BASE_URL}
+ENV PUBLIC_API_BASE_URL=${PUBLIC_API_BASE_URL}
 
 ########
 # Web UI
 ########
-FROM web-ui-base as web-ui
+FROM web-ui-base AS web-ui
 RUN npm run build
 
-######################
-# Server (CPU version)
-######################
-FROM python:3.13-slim@sha256:58c30f5bfaa718b5803a53393190b9c68bd517c44c6c94c1b6c8c172bcfad040 AS geti-tune-cpu
+#########################
+# Base for CPU, GPU and XPU runtime images
+#########################
+FROM python:3.13-slim@sha256:85dfbf1b566b7addfe645faea9938e81a0a01a83580b0ea05fb23706357d77fb AS runtime-base
 
-WORKDIR /application
-ENV PYTHONPATH=/application
+ARG UID=10001
+ARG USER_NAME="non-root"
 
-# Install nginx & runtime system dependencies
-# TODO remove 'git' once all dependencies are available on PyPI
+# Create secure non-root user
+RUN useradd -l -u ${UID} ${USER_NAME}
+
+# Common system deps (CPU/GPU/XPU all need these)
+# TODO: remove 'git' once all dependencies are available on PyPI
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         git=1:2.47.3-0* \
@@ -87,28 +113,44 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+# Nginx config + static UI
+COPY docker/nginx.conf /etc/nginx/nginx.conf
 COPY --from=web-ui /home/app/web_ui/dist/ /usr/share/nginx/html
-COPY --from=backend-base /application /application
+
+# Backend code + uv from backend-base
+COPY --link backend/app /application/app
 COPY --from=backend-base /bin/uv /bin/uv
 
-# Install Python dependencies for CPU version
-RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=backend/uv.lock,target=uv.lock \
-    --mount=type=bind,source=backend/pyproject.toml,target=pyproject.toml \
-    uv sync --frozen --no-dev --no-editable --inexact --extra cpu
+# Make runtime directories writable for non-root user
+RUN mkdir -p /home/${USER_NAME}/.cache/uv /tmp/nginx /tmp/nginx/logs && \
+    chown -R ${UID}:${UID} \
+    /application \
+    /usr/share/nginx/html \
+    /home/${USER_NAME} \
+    /tmp/nginx
 
-EXPOSE 80
+EXPOSE 8080
 
-CMD ["sh", "-c", "nginx && exec uv run ./app/main.py;"]
+WORKDIR /application
+ENV PYTHONPATH=/application
+
+USER ${USER_NAME}
+
+CMD ["sh", "-c", "nginx && exec uv run app/main.py;"]
+
+######################
+# Server (CPU version)
+######################
+FROM runtime-base AS geti-tune-cpu
+
+COPY --from=cpu-base --chown=${UID}:${UID} /application/.venv /application/.venv
 
 ######################
 # Server (GPU version)
 ######################
-FROM python:3.13-slim@sha256:58c30f5bfaa718b5803a53393190b9c68bd517c44c6c94c1b6c8c172bcfad040 AS geti-tune-gpu
+FROM runtime-base AS geti-tune-gpu
 
-WORKDIR /application
-ENV PYTHONPATH=/application
+USER root
 
 RUN apt-get update  \
     && apt-get install -y --no-install-recommends wget=1.25.0-2 \
@@ -117,73 +159,38 @@ RUN apt-get update  \
     && rm -rf cuda-keyring_1.1-1_all.deb \
     && apt-get remove -y wget
 
-# Install nginx & runtime system dependencies, including the Nvidia drivers.
-# Note that CUDA runtime dependencies are shipped through PyTorch, so there's no need to install the CUDA toolkit here.
-# TODO remove 'git' once all dependencies are available on PyPI
-# hadolint ignore=DL3008
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        git=1:2.47.3-0* \
-        libgl1=1.7.0-1+b2 \
-        libglib2.0-0=2.84.4-3~deb13u1 \
-        libglx-mesa0=25.0.7-2 \
-        nvidia-open \
-        nginx=1.26.* \
+      nvidia-open=580.105.08-1 \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=web-ui /home/app/web_ui/dist/ /usr/share/nginx/html
-COPY --from=backend-base /application /application
-COPY --from=backend-base /bin/uv /bin/uv
+USER ${USER_NAME}
 
-# Install Python dependencies for GPU version
-RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=backend/uv.lock,target=uv.lock \
-    --mount=type=bind,source=backend/pyproject.toml,target=pyproject.toml \
-    uv sync --frozen --no-dev --no-editable --inexact --extra cuda
+COPY --from=gpu-base --chown=${UID}:${UID} /application/.venv /application/.venv
 
-EXPOSE 80
+#######################
+## Server (XPU version)
+#######################
+FROM runtime-base AS geti-tune-xpu
 
-CMD ["sh", "-c", "nginx && exec uv run ./app/main.py;"]
+USER root
 
-######################
-# Server (XPU version)
-######################
-FROM python:3.13-slim@sha256:58c30f5bfaa718b5803a53393190b9c68bd517c44c6c94c1b6c8c172bcfad040 AS geti-tune-xpu
-
-WORKDIR /application
-ENV PYTHONPATH=/application
-
-# Install nginx and runtime system dependencies.
+# XPU / Intel stack
 # Includes Intel graphics drivers (steps from https://dgpu-docs.intel.com/driver/client/overview.html#ubuntu-latest)
-# TODO remove 'git' once all dependencies are available on PyPI
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN echo "deb [arch=amd64 trusted=yes] https://ppa.launchpadcontent.net/kobuk-team/intel-graphics/ubuntu noble main" | tee /etc/apt/sources.list.d/kobuk-intel.list
+
+RUN echo "deb [arch=amd64 trusted=yes] https://ppa.launchpadcontent.net/kobuk-team/intel-graphics/ubuntu noble main" \
+    | tee /etc/apt/sources.list.d/kobuk-intel.list
+
 # hadolint ignore=DL3008
 RUN apt-get update  \
     && apt-get install -y --no-install-recommends \
-        git=1:2.47.3-0* \
-        libgl1=1.7.0-1+b2 \
-        libglib2.0-0=2.84.4-3~deb13u1 \
-        libglx-mesa0=25.0.7-2 \
         libze-intel-gpu1 libze1 libze-dev intel-metrics-discovery intel-opencl-icd clinfo intel-gsc intel-ocloc \
         intel-media-va-driver-non-free libmfx-gen1 libvpl2 libvpl-tools libva-glx2 va-driver-all vainfo \
-        nginx=1.26.* \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=web-ui /home/app/web_ui/dist/ /usr/share/nginx/html
-COPY --from=backend-base /application /application
-COPY --from=backend-base /bin/uv /bin/uv
+USER ${USER_NAME}
 
-# Install Python dependencies for XPU version
-RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=backend/uv.lock,target=uv.lock \
-    --mount=type=bind,source=backend/pyproject.toml,target=pyproject.toml \
-    uv sync --frozen --no-dev --no-editable --inexact --extra xpu
-
-EXPOSE 80
-
-CMD ["sh", "-c", "nginx && exec uv run ./app/main.py;"]
+COPY --from=xpu-base --chown=${UID}:${UID} /application/.venv /application/.venv
