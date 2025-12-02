@@ -108,10 +108,10 @@ def get_dataset_revision_item_thumbnail(
     },
 )
 def delete_dataset_revision_files(
-    _project: Annotated[Project, Depends(get_project)],
-    _dataset_revision_id: DatasetRevisionID,
+    project: Annotated[Project, Depends(get_project)],
+    dataset_revision_id: DatasetRevisionID,
     _dataset_revision: Annotated[DatasetRevision, Depends(get_dataset_revision)],
-    _dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
+    dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
 ) -> None:
     """Delete the files associated with a dataset revision"""
-    raise NotImplementedError
+    dataset_service.delete_dataset_revision_files(project_id=project.id, revision_id=dataset_revision_id)
