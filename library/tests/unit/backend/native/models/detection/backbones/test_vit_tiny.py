@@ -463,9 +463,7 @@ class TestGradientFlow:
         outputs = vit(x)
 
         # Sum all outputs for loss
-        loss = sum(
-            patch_feat.sum() + cls_token.sum() for patch_feat, cls_token in outputs
-        )
+        loss = sum(patch_feat.sum() + cls_token.sum() for patch_feat, cls_token in outputs)
         loss.backward()
 
         assert x.grad is not None
@@ -477,9 +475,7 @@ class TestGradientFlow:
         x = torch.randn(2, 3, 224, 224)
 
         outputs = vit(x)
-        loss = sum(
-            patch_feat.sum() + cls_token.sum() for patch_feat, cls_token in outputs
-        )
+        loss = sum(patch_feat.sum() + cls_token.sum() for patch_feat, cls_token in outputs)
         loss.backward()
 
         model = vit.get_model()

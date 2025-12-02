@@ -79,9 +79,7 @@ class TestTransformerDecoderLayer:
         reference_points = torch.rand(batch_size, num_queries, 1, 4)
 
         # Create value tuple for each level
-        values = tuple(
-            torch.randn(batch_size, 8, hidden_dim // 8, h * w) for h, w in spatial_shapes
-        )
+        values = tuple(torch.randn(batch_size, 8, hidden_dim // 8, h * w) for h, w in spatial_shapes)
 
         output = decoder_layer(
             target=target,

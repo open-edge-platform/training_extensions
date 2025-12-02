@@ -90,9 +90,7 @@ class TestDEIMV2:
         ],
     )
     @patch("otx.backend.native.models.detection.deimv2.load_checkpoint")
-    def test_backbone_lr_values(
-        self, mock_load_checkpoint: MagicMock, model_name: str, expected_lr: float
-    ) -> None:
+    def test_backbone_lr_values(self, mock_load_checkpoint: MagicMock, model_name: str, expected_lr: float) -> None:
         """Test that backbone learning rates are correctly set for each model variant."""
         mock_load_checkpoint.return_value = None
 
@@ -107,9 +105,7 @@ class TestDEIMV2:
         assert created_model.optimizer_configuration[0]["lr"] == expected_lr
 
     @patch("otx.backend.native.models.detection.deimv2.load_checkpoint")
-    def test_loss_computation(
-        self, mock_load_checkpoint: MagicMock, fxt_data_module
-    ) -> None:
+    def test_loss_computation(self, mock_load_checkpoint: MagicMock, fxt_data_module) -> None:
         """Test DEIMV2 loss computation in training mode."""
         mock_load_checkpoint.return_value = None
 

@@ -183,7 +183,6 @@ class TestDinoVisionTransformer:
 
         assert len(outputs) == 2
         for out in outputs:
-            # Shape: (batch, num_patches, embed_dim)
             assert out.shape == (1, 196, 384)
 
     def test_get_intermediate_layers_specific_indices(self, vit_small):
@@ -243,9 +242,7 @@ class TestDinoVisionTransformer:
         x = torch.randn(1, 3, 224, 224)
 
         with torch.no_grad():
-            outputs = vit_small.get_intermediate_layers(
-                x, n=1, return_class_token=True, return_extra_tokens=True
-            )
+            outputs = vit_small.get_intermediate_layers(x, n=1, return_class_token=True, return_extra_tokens=True)
 
         assert len(outputs) == 1
         assert len(outputs[0]) == 3  # (features, cls_token, extra_tokens)
@@ -349,7 +346,7 @@ class TestHelperFunctions:
 
         applied_names = []
 
-        def track_fn(module, name):
+        def track_fn(module, name) -> None:
             applied_names.append(name)
 
         named_apply(track_fn, model, include_root=True)
@@ -369,7 +366,7 @@ class TestHelperFunctions:
 
         order = []
 
-        def track_order(module, name):
+        def track_order(module, name) -> None:
             order.append(name)
 
         # Depth-first: children before parent
@@ -389,7 +386,7 @@ class TestHelperFunctions:
 
         order = []
 
-        def track_order(module, name):
+        def track_order(module, name) -> None:
             order.append(name)
 
         # Breadth-first: parent before children
