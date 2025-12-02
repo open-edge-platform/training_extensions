@@ -39,48 +39,46 @@ MODEL_TEST_CASES = [
     ModelInfo(task=TASK_TYPE.value, name="yolox_x", category="other"),
 ]
 
-DATASET_TEST_CASES = [
-    DatasetInfo(
-        name="pothole_tiny_2",
-        path=Path("detection/pothole_coco_tiny/2"),
-        group="tiny",
-    ),
-    DatasetInfo(
-        name="blueberry_small",
-        path=Path("detection/blue_berry_small"),
-        group="tiny",
-    ),
-    DatasetInfo(
-        name="wgisd_small",
-        path=Path("detection/wgisd_merged_coco_small"),
-        group="small",
-    ),
-    DatasetInfo(
-        name="skindetect",
-        path=Path("detection/skindetect-roboflow"),
-        group="small",
-    ),
-    DatasetInfo(
-        name="diopsis",
-        path=Path("detection/diopsis_coco"),
-        group="medium",
-    ),
-    DatasetInfo(
-        name="bdd_medium",
-        path=Path("detection/bdd_medium"),
-        group="medium",
-    ),
-    DatasetInfo(
-        name="Vitens-Aeromonas",
-        path=Path("detection/Vitens-Aeromonas-coco"),
-        group="medium",
-    ),
-    DatasetInfo(
-        name="visdrone",
-        path=Path("detection/visdrone_coco_custom_split"),
-        group="large",
-    ),
-]
+DATASET_TEST_CASES = (
+    [
+        DatasetInfo(
+            name=f"pothole_tiny_{idx}",
+            path=Path("detection/pothole_coco_tiny") / f"{idx}",
+            group="tiny",
+        )
+        for idx in (1, 2, 3)
+    ]
+    + [
+        DatasetInfo(
+            name=f"blueberry_tiny_{idx}",
+            path=Path("detection/blueberry_tiny_coco") / f"{idx}",
+            group="tiny",
+        )
+        for idx in (1, 2, 3)
+    ]
+    + [
+        DatasetInfo(
+            name="wgisd_small",
+            path=Path("detection/wgisd_merged_coco_small"),
+            group="small",
+        ),
+        DatasetInfo(
+            name="diopsis",
+            path=Path("detection/diopsis_coco"),
+            group="medium",
+        ),
+        DatasetInfo(
+            name="bdd_medium",
+            path=Path("detection/bdd_medium"),
+            group="medium",
+        ),
+        DatasetInfo(
+            name="visdrone",
+            path=Path("detection/visdrone_coco_custom_split"),
+            group="large",
+        ),
+    ]
+)
 
 BENCHMARK_CRITERIA = [
     Criterion(name="training:epoch", summary="max", compare="<", margin=0.1),
