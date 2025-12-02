@@ -9,7 +9,7 @@ model:
     optimizer:
       class_path: torch.optim.AdamW
       init_args:
-        lr: 0.0005
+        lr: 0.0004
         betas: [0.9, 0.999]
         weight_decay: 0.0001
 
@@ -22,7 +22,7 @@ model:
           init_args:
             mode: max
             factor: 0.5
-            patience: 6
+            patience: 10
             monitor: val/f1-score
 
 engine:
@@ -40,8 +40,8 @@ callbacks:
       mode: max
       patience: 10
       min_delta: 0.001
-      warmup_iters: 30
-      warmup_epochs: 3
+      warmup_iters: 50
+      warmup_epochs: 10
   - class_path: lightning.pytorch.callbacks.ModelCheckpoint
     init_args:
       dirpath: "" # use engine.work_dir
@@ -93,9 +93,6 @@ callbacks:
                 - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
                   init_args:
                     min_area: 1
-                - class_path: otx.data.transform_libs.torchvision.CachedCopyBlend
-                  init_args:
-                    probability: 0.5
                 - class_path: otx.data.transform_libs.torchvision.RandomFlip
                   init_args:
                     probability: 0.5
@@ -178,9 +175,6 @@ callbacks:
                     probability: 0.5
                     random_pop: true
                     max_cached_images: 20
-                - class_path: otx.data.transform_libs.torchvision.CachedCopyBlend
-                  init_args:
-                    probability: 0.5
                 - class_path: otx.data.transform_libs.torchvision.RandomFlip
                   init_args:
                     probability: 0.5

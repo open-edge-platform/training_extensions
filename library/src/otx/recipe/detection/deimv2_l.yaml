@@ -93,9 +93,6 @@ callbacks:
                 - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
                   init_args:
                     min_area: 1
-                - class_path: otx.data.transform_libs.torchvision.CachedCopyBlend
-                  init_args:
-                    probability: 0.5
                 - class_path: otx.data.transform_libs.torchvision.RandomFlip
                   init_args:
                     probability: 0.5
@@ -182,9 +179,6 @@ callbacks:
                     probability: 0.5
                     random_pop: true
                     max_cached_images: 20
-                - class_path: otx.data.transform_libs.torchvision.CachedCopyBlend
-                  init_args:
-                    probability: 0.5
                 - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
                   init_args:
                     min_area: 1
@@ -210,8 +204,9 @@ overrides:
         min_lrschedule_patience: 3
     - class_path: otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
       init_args:
-        warmup_iters: 100
-        warmup_epochs: 7
+        warmup_iters: 50
+        warmup_epochs: 10
+        patience: 10
 
   data:
     input_size:
