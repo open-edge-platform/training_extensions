@@ -21,8 +21,7 @@ from datumaro.experimental.fields import (
 )
 from loguru import logger
 
-from app.models import DatasetItem, DatasetItemSubset, Label, Polygon, Rectangle, TaskType
-from app.schemas.project import TaskBase
+from app.models import DatasetItem, DatasetItemSubset, Label, Polygon, Rectangle, Task, TaskType
 from app.utils.typing import NDArrayFloat32, NDArrayInt
 
 CONVERSION_BATCH_SIZE = 50
@@ -417,7 +416,7 @@ def convert_instance_segmentation_dataset(
 
 
 def convert_dataset(
-    task: TaskBase,
+    task: Task,
     labels: Sequence[Label],
     get_dataset_items: Callable[[int, int], list[DatasetItem]],
     get_image_path: Callable[[DatasetItem], str],

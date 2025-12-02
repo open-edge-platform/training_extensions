@@ -4,16 +4,17 @@
 """Endpoints for managing pipelines"""
 
 from typing import Annotated
-from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends, status
 from fastapi.exceptions import HTTPException
 from fastapi.openapi.models import Example
 from pydantic import ValidationError
 
-from app.api.dependencies import get_pipeline_metrics_service, get_pipeline_service, get_project_id
+from app.api.dependencies import get_pipeline_metrics_service, get_pipeline_service
+from app.api.schemas import PipelineView
+from app.api.validators import ProjectID
+from app.models import DataCollectionPolicyAdapter, PipelineStatus
 from app.schemas.metrics import PipelineMetrics
-from app.schemas.pipeline import DataCollectionPolicyAdapter, PipelineStatus, PipelineView
 from app.services import PipelineMetricsService, PipelineService, ResourceNotFoundError
 
 router = APIRouter(prefix="/api/projects/{project_id}/pipeline", tags=["Pipelines"])
@@ -70,12 +71,13 @@ UPDATE_PIPELINE_BODY_EXAMPLES = {
     },
 )
 def get_pipeline(
-    project_id: Annotated[UUID, Depends(get_project_id)],
+    project_id: ProjectID,
     pipeline_service: Annotated[PipelineService, Depends(get_pipeline_service)],
 ) -> PipelineView:
     """Get info about a given pipeline"""
     try:
-        return pipeline_service.get_pipeline_by_id(project_id)
+        pipeline = pipeline_service.get_pipeline_by_id(project_id)
+        return PipelineView.model_validate(pipeline, from_attributes=True)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -91,7 +93,7 @@ def get_pipeline(
     },
 )
 def update_pipeline(
-    project_id: Annotated[UUID, Depends(get_project_id)],
+    project_id: ProjectID,
     pipeline_config: Annotated[
         dict,
         Body(
@@ -110,7 +112,8 @@ def update_pipeline(
                 DataCollectionPolicyAdapter.validate_python(policy)
                 for policy in pipeline_config["data_collection_policies"]
             ]
-        return pipeline_service.update_pipeline(project_id, pipeline_config)
+        updated = pipeline_service.update_pipeline(project_id, pipeline_config)
+        return PipelineView.model_validate(updated, from_attributes=True)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ValidationError as e:
@@ -128,7 +131,7 @@ def update_pipeline(
     },
 )
 def enable_pipeline(
-    project_id: Annotated[UUID, Depends(get_project_id)],
+    project_id: ProjectID,
     pipeline_service: Annotated[PipelineService, Depends(get_pipeline_service)],
 ) -> None:
     """
@@ -153,7 +156,7 @@ def enable_pipeline(
     },
 )
 def disable_pipeline(
-    project_id: Annotated[UUID, Depends(get_project_id)],
+    project_id: ProjectID,
     pipeline_service: Annotated[PipelineService, Depends(get_pipeline_service)],
 ) -> None:
     """Stop a pipeline. The pipeline will become idle, and it won't process any data until re-enabled."""
@@ -173,7 +176,7 @@ def disable_pipeline(
     },
 )
 def get_project_metrics(
-    project_id: Annotated[UUID, Depends(get_project_id)],
+    project_id: ProjectID,
     pipeline_metrics_service: Annotated[PipelineMetricsService, Depends(get_pipeline_metrics_service)],
     time_window: int = 60,
 ) -> PipelineMetrics:

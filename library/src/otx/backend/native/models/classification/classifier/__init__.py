@@ -4,6 +4,6 @@
 """Head modules for OTX custom model."""
 
 from .base_classifier import ImageClassifier
-from .h_label_classifier import HLabelClassifier
+from .h_label_classifier import HLabelClassifier, KLHLabelClassifier
 
-__all__ = ["HLabelClassifier", "ImageClassifier"]
+__all__ = ["HLabelClassifier", "ImageClassifier", "KLHLabelClassifier"]

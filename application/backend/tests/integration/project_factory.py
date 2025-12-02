@@ -67,12 +67,24 @@ class ProjectTestDataFactory:
         self._project = project
         return self
 
-    def with_pipeline(self, is_running: bool = False) -> "ProjectTestDataFactory":
+    def with_pipeline(
+        self,
+        is_running: bool = False,
+        model_id: str | None = None,
+        source_id: str | None = None,
+        sink_id: str | None = None,
+    ) -> "ProjectTestDataFactory":
         """Add a pipeline to the project."""
         if not self._project:
             raise ValueError("Project must be set before adding a pipeline")
 
-        self._pipeline = PipelineDB(project_id=self._project.id, is_running=is_running)
+        self._pipeline = PipelineDB(
+            project_id=self._project.id,
+            is_running=is_running,
+            model_revision_id=model_id,
+            source_id=source_id,
+            sink_id=sink_id,
+        )
         return self
 
     def with_models(self, model_revisions: list[ModelRevisionDB]) -> "ProjectTestDataFactory":
@@ -125,6 +137,13 @@ class ProjectTestDataFactory:
         self._item_labels.extend(item_labels)
         return self
 
+    def with_data_policies(self, data_policies: list[dict]) -> "ProjectTestDataFactory":
+        """Set data collection policy for the project."""
+        if not self._pipeline:
+            raise ValueError("Pipeline must be set before adding data policies")
+        self._pipeline.data_collection_policies = data_policies
+        return self
+
     def build(self) -> ProjectDB:
         """Build and persist the project with all entities."""
         if not self._project:
@@ -133,12 +152,12 @@ class ProjectTestDataFactory:
         self.db_session.add(self._project)
         self.db_session.flush()
 
-        if self._pipeline:
-            self.db_session.add(self._pipeline)
-            self.db_session.flush()
-
         if self._model_revisions:
             self.db_session.add_all(self._model_revisions)
+            self.db_session.flush()
+
+        if self._pipeline:
+            self.db_session.add(self._pipeline)
             self.db_session.flush()
 
         if self._labels:

@@ -6,9 +6,10 @@ from typing import Any, Literal
 from uuid import UUID, uuid4
 
 from loguru import logger
+from pydantic import Field
 
 from app.core.jobs import Job, JobParams, JobType
-from app.schemas.project import TaskBase
+from app.models import Task
 
 
 class TrainingParams(JobParams):
@@ -16,8 +17,8 @@ class TrainingParams(JobParams):
     project_id: UUID | None = None
     model_architecture_id: str
     parent_model_revision_id: UUID | None = None
-    task: TaskBase
-    model_id: UUID = uuid4()  # Reserve the ID for the model to be created for this training job
+    task: Task
+    model_id: UUID = Field(default_factory=uuid4)
 
 
 class ProjectJob(Job):

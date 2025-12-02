@@ -6,9 +6,10 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from app.api.dependencies import get_project_id, get_training_configuration_service
+from app.api.dependencies import get_training_configuration_service
 from app.api.serializers.configurable_parameters import ConfigurableParametersConverter
 from app.api.serializers.training_configuration import TrainingConfigurationConverter
+from app.api.validators import ProjectID
 from app.services import ResourceNotFoundError
 from app.services.training_configuration_service import TrainingConfigurationService
 
@@ -20,7 +21,7 @@ def get_training_configuration(
     training_configuration_service: Annotated[
         TrainingConfigurationService, Depends(get_training_configuration_service)
     ],
-    project_id: Annotated[UUID, Depends(get_project_id)],
+    project_id: ProjectID,
     model_architecture_id: Annotated[str | None, Query()] = None,
     model_revision_id: Annotated[UUID | None, Query()] = None,
 ) -> dict:
@@ -50,7 +51,7 @@ def update_training_configuration(
     training_configuration_service: Annotated[
         TrainingConfigurationService, Depends(get_training_configuration_service)
     ],
-    project_id: Annotated[UUID, Depends(get_project_id)],
+    project_id: ProjectID,
     training_config_update: dict,
     model_architecture_id: Annotated[str | None, Query()] = None,
 ) -> dict:

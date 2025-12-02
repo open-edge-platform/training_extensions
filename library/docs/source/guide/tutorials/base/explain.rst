@@ -12,14 +12,11 @@ To be specific, this tutorial uses as an example of the ATSS model trained throu
 
 For visualization we use images from WGISD dataset from the :doc:`object detection tutorial <how_to_train/detection>` together with trained model.
 
-1. Activate the virtual environment 
-created in the previous step.
+1. Activate the virtual environment created in the previous step.
 
 .. code-block:: shell
 
-  .otx/bin/activate
-  # or by this line, if you created an environment, using tox
-  . venv/otx/bin/activate
+  source .venv/bin/activate
 
 2. ``otx predict`` with the ``--explain True`` parameter returns saliency maps, 
 which are heatmaps with red-colored areas indicating focus. Here's an example how to generate saliency maps from trained checkpoint:

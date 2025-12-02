@@ -141,34 +141,32 @@ Example output:
 Run tests
 *********
 
-To run tests locally, install development dependencies:
+To run tests locally, just call `pytest`. `uv` will automatically sync all necessary dependencies.
 
 .. code-block:: shell
 
-    uv pip install -e '.[dev]'
-    pytest tests/
+    uv run pytest tests
 
-To run integration tests using `tox`:
+To run integration tests:
 
 .. code-block:: shell
 
-    uv tool install tox --with tox-uv
-    tox -e integration-test-all
+    uv run pytest tests/integration
 
 .. note::
 
-    The first time `tox` is run, it will create virtual environments and install all required dependencies.
-    This may take several minutes before the actual tests begin.
+    Integration tests may be slow because they involve downloading datasets and simulating training rounds.
+    It is recommended to run them on a platform with GPU/XPU support.
 
 ***************
 Troubleshooting
 ***************
 
-1. If you encounter issues with `uv pip`, update uv:
+1. If you encounter issues with `uv`, update it:
 
 .. code-block:: shell
 
-    pip install --upgrade uv
+    uv self update
 
 2. If you're having issues installing `torch` or `mmcv`, check CUDA compatibility with your PyTorch version.
 Update your CUDA toolkit and drivers if needed. See `CUDA 11.8 Installer <https://developer.nvidia.com/cuda-11-8-0-download-archive?target_os=Linux&target_arch=x86_64&Distribution=Ubuntu&target_version=20.04&target_type=runfile_local>`_.
@@ -178,7 +176,6 @@ Update your CUDA toolkit and drivers if needed. See `CUDA 11.8 Installer <https:
 .. code-block:: shell
 
     export HTTP_PROXY=http://<user>:<password>@<proxy>:<port>
-    uv pip install <package>
 
 4. For CLI-related issues, check the help message:
 

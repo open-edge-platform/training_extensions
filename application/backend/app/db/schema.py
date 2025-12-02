@@ -49,9 +49,9 @@ class PipelineDB(Base):
     is_running: Mapped[bool] = mapped_column(Boolean, default=False)
     data_collection_policies: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
 
-    sink = relationship("SinkDB", uselist=False)
-    source = relationship("SourceDB", uselist=False)
-    model_revision = relationship("ModelRevisionDB", uselist=False)
+    sink = relationship("SinkDB", uselist=False, lazy="joined")
+    source = relationship("SourceDB", uselist=False, lazy="joined")
+    model_revision = relationship("ModelRevisionDB", uselist=False, lazy="joined")
 
 
 class SinkDB(BaseID):

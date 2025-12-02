@@ -6,11 +6,20 @@ from uuid import uuid4
 import pytest
 
 from app.core.jobs import Job, JobParams, JobType
-from app.models import MqttSinkConfig, OutputFormat, SinkType, SourceType, WebcamSourceConfig
+from app.models import (
+    ModelRevision,
+    MqttSinkConfig,
+    OutputFormat,
+    Pipeline,
+    PipelineStatus,
+    SinkType,
+    SourceType,
+    TrainingInfo,
+    TrainingStatus,
+    WebcamSourceConfig,
+)
 from app.models.sink import MqttConfig
 from app.models.source import WebcamConfig
-from app.schemas import Model, PipelineStatus, PipelineView
-from app.schemas.model import TrainingInfo, TrainingStatus
 
 
 @pytest.fixture
@@ -40,34 +49,35 @@ def fxt_mqtt_sink() -> MqttSinkConfig:
 
 
 @pytest.fixture
-def fxt_model() -> Model:
+def fxt_model() -> ModelRevision:
     """Sample model data."""
-    return Model(
+    return ModelRevision(
+        id=uuid4(),
         architecture="Object_Detection_YOLOX",
         training_info=TrainingInfo(status=TrainingStatus.NOT_STARTED, label_schema_revision={}, configuration={}),  # type: ignore
     )  # type: ignore
 
 
 @pytest.fixture
-def fxt_default_pipeline() -> PipelineView:
+def fxt_default_pipeline() -> Pipeline:
     """Sample default pipeline data."""
-    return PipelineView(
+    return Pipeline(
         project_id=uuid4(),
         source=None,
         sink=None,
-        model=None,
+        model_revision=None,
         status=PipelineStatus.IDLE,
     )
 
 
 @pytest.fixture
-def fxt_running_pipeline(fxt_webcam_source, fxt_mqtt_sink, fxt_model) -> PipelineView:
+def fxt_running_pipeline(fxt_webcam_source, fxt_mqtt_sink, fxt_model) -> Pipeline:
     """Sample default pipeline data."""
-    return PipelineView(
+    return Pipeline(
         project_id=uuid4(),
         source_id=fxt_webcam_source.id,
         sink_id=fxt_mqtt_sink.id,
-        model_id=fxt_model.id,
+        model_revision_id=fxt_model.id,
         status=PipelineStatus.RUNNING,
     )
 
