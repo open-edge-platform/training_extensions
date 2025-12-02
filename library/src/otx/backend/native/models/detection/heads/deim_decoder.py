@@ -14,7 +14,7 @@ from functools import partial
 from typing import TYPE_CHECKING, Any, Callable, ClassVar
 
 import torch
-import torch.nn.functional as F
+import torch.nn.functional as f
 from torch import Tensor, nn
 from torch.nn import init
 
@@ -209,7 +209,7 @@ class TransformerDecoder(nn.Module):
             Tuple of value tensors split by level.
         """
         value = value_proj(memory) if value_proj is not None else memory
-        value = F.interpolate(memory, size=value_scale) if value_scale is not None else value
+        value = f.interpolate(memory, size=value_scale) if value_scale is not None else value
         if memory_mask is not None:
             value = value * memory_mask.to(value.dtype).unsqueeze(-1)
         value = value.reshape(value.shape[0], value.shape[1], self.num_head, -1)
@@ -273,23 +273,23 @@ class TransformerDecoder(nn.Module):
         else:
             project = self.project
 
-        ref_points_detach = F.sigmoid(ref_points_unact)
+        ref_points_detach = f.sigmoid(ref_points_unact)
         query_pos_embed = query_pos_head(ref_points_detach).clamp(min=-10, max=10)
 
         for i, layer in enumerate(self.layers):
             ref_points_input = ref_points_detach.unsqueeze(2)
 
             if i >= self.eval_idx + 1 and self.layer_scale > 1:
-                query_pos_embed = F.interpolate(query_pos_embed, scale_factor=self.layer_scale)
+                query_pos_embed = f.interpolate(query_pos_embed, scale_factor=self.layer_scale)
                 value = self.value_op(memory, None, query_pos_embed.shape[-1], memory_mask, spatial_shapes)
-                output = F.interpolate(output, size=query_pos_embed.shape[-1])
+                output = f.interpolate(output, size=query_pos_embed.shape[-1])
                 output_detach = output.detach()
 
             output = layer(output, ref_points_input, value, spatial_shapes, attn_mask, query_pos_embed)
 
             if i == 0:
                 # Initial bounding box predictions with inverse sigmoid refinement
-                pre_bboxes = F.sigmoid(pre_bbox_head(output) + inverse_sigmoid(ref_points_detach))
+                pre_bboxes = f.sigmoid(pre_bbox_head(output) + inverse_sigmoid(ref_points_detach))
                 pre_scores = score_head[0](output)
                 ref_points_initial = pre_bboxes.detach()
 
@@ -347,7 +347,7 @@ class DEIMTransformerModule(nn.Module):
 
     __share__: ClassVar[list[str]] = ["num_classes", "eval_spatial_size"]
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         num_classes: int = 80,
         hidden_dim: int = 256,
@@ -417,8 +417,12 @@ class DEIMTransformerModule(nn.Module):
             feat_strides = [8, 16, 32]
         if num_points is None:
             num_points = [3, 6, 3]
-        assert len(feat_channels) <= num_levels
-        assert len(feat_strides) == len(feat_channels)
+        if len(feat_channels) > num_levels:
+            msg = f"feat_channels ({len(feat_channels)}) must be <= num_levels ({num_levels})"
+            raise ValueError(msg)
+        if len(feat_strides) != len(feat_channels):
+            msg = f"feat_strides ({len(feat_strides)}) must match feat_channels ({len(feat_channels)})"
+            raise ValueError(msg)
 
         for _ in range(num_levels - len(feat_strides)):
             feat_strides.append(feat_strides[-1] * 2)
@@ -633,7 +637,7 @@ class DEIMTransformerModule(nn.Module):
         # get encoder inputs
         feat_flatten = []
         spatial_shapes = []
-        for i, feat in enumerate(proj_feats):
+        for feat in proj_feats:
             _, _, h, w = feat.shape
             # [b, c, h, w] -> [b, h*w, c]
             feat_flatten.append(feat.flatten(2).permute(0, 2, 1))
@@ -731,7 +735,7 @@ class DEIMTransformerModule(nn.Module):
 
         enc_topk_bboxes_list, enc_topk_logits_list = [], []
         if self.training:
-            enc_topk_bboxes = F.sigmoid(enc_topk_bbox_unact)
+            enc_topk_bboxes = f.sigmoid(enc_topk_bbox_unact)
             enc_topk_bboxes_list.append(enc_topk_bboxes)
             enc_topk_logits_list.append(enc_topk_logits)
 

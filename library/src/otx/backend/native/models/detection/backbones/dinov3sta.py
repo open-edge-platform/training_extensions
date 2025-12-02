@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any, ClassVar
 
 import torch
-import torch.nn.functional as F
+import torch.nn.functional as f
 from torch import Tensor, nn
 
 from otx.backend.native.models.common.backbones.dinov3 import DinoVisionTransformer
@@ -186,7 +186,7 @@ class DINOv3STAsModule(nn.Module):
                 - c3: Features at 1/16 scale, shape (B, hidden_dim, H/16, W/16)
                 - c4: Features at 1/32 scale, shape (B, hidden_dim, H/32, W/32)
         """
-        H_c, W_c = x.shape[2] // 16, x.shape[3] // 16
+        h_c, w_c = x.shape[2] // 16, x.shape[3] // 16
         bs = x.shape[0]
 
         # Extract semantic features from backbone
@@ -204,11 +204,11 @@ class DINOv3STAsModule(nn.Module):
         # Process semantic features at multiple scales
         sem_feats: list[Tensor] = []
         num_scales = len(all_layers) - 2
-        for i, sem_feat in enumerate(all_layers):
-            feat, _ = sem_feat
-            sem_feat = feat.transpose(1, 2).view(bs, -1, H_c, W_c).contiguous()  # [B, D, H, W]
-            resize_H, resize_W = int(H_c * 2 ** (num_scales - i)), int(W_c * 2 ** (num_scales - i))
-            sem_feat = F.interpolate(sem_feat, size=[resize_H, resize_W], mode="bilinear", align_corners=False)
+        for i, layer_output in enumerate(all_layers):
+            feat, _ = layer_output
+            sem_feat = feat.transpose(1, 2).view(bs, -1, h_c, w_c).contiguous()  # [B, D, H, W]
+            resize_h, resize_w = int(h_c * 2 ** (num_scales - i)), int(w_c * 2 ** (num_scales - i))
+            sem_feat = f.interpolate(sem_feat, size=[resize_h, resize_w], mode="bilinear", align_corners=False)
             sem_feats.append(sem_feat)
 
         # Fuse semantic and spatial features

@@ -265,15 +265,15 @@ class UnflattenPatchEmbed(nn.Module):
     ) -> None:
         super().__init__()
 
-        image_HW = img_size if isinstance(img_size, tuple) else (img_size, img_size)
-        patch_HW = patch_size if isinstance(patch_size, tuple) else (patch_size, patch_size)
+        image_hw = img_size if isinstance(img_size, tuple) else (img_size, img_size)
+        patch_hw = patch_size if isinstance(patch_size, tuple) else (patch_size, patch_size)
         patch_grid_size = (
-            image_HW[0] // patch_HW[0],
-            image_HW[1] // patch_HW[1],
+            image_hw[0] // patch_hw[0],
+            image_hw[1] // patch_hw[1],
         )
 
-        self.img_size = image_HW
-        self.patch_size = patch_HW
+        self.img_size = image_hw
+        self.patch_size = patch_hw
         self.patches_resolution = patch_grid_size
         self.num_patches = patch_grid_size[0] * patch_grid_size[1]
 
@@ -282,7 +282,7 @@ class UnflattenPatchEmbed(nn.Module):
 
         self.flatten_embedding = flatten_embedding
 
-        self.proj = nn.Conv2d(in_chans, embed_dim, kernel_size=patch_HW, stride=patch_HW)
+        self.proj = nn.Conv2d(in_chans, embed_dim, kernel_size=patch_hw, stride=patch_hw)
         self.norm = norm_layer(embed_dim) if norm_layer else nn.Identity()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -294,17 +294,14 @@ class UnflattenPatchEmbed(nn.Module):
         Returns:
             Patch embeddings of shape (B, N, D) or (B, H, W, D) if not flattened.
         """
-        _, _, H, W = x.shape
-        # patch_H, patch_W = self.patch_size
-        # assert H % patch_H == 0, f"Input image height {H} is not a multiple of patch height {patch_H}"
-        # assert W % patch_W == 0, f"Input image width {W} is not a multiple of patch width: {patch_W}"
+        _, _, h, w = x.shape
 
         x = self.proj(x)  # B C H W
-        H, W = x.size(2), x.size(3)
+        h, w = x.size(2), x.size(3)
         x = x.flatten(2).transpose(1, 2)  # B HW C
         x = self.norm(x)
         if not self.flatten_embedding:
-            x = x.reshape(-1, H, W, self.embed_dim)  # B H W C
+            x = x.reshape(-1, h, w, self.embed_dim)  # B H W C
         return x
 
     def flops(self) -> float:
@@ -313,10 +310,10 @@ class UnflattenPatchEmbed(nn.Module):
         Returns:
             Number of floating point operations.
         """
-        Ho, Wo = self.patches_resolution
-        flops = Ho * Wo * self.embed_dim * self.in_chans * (self.patch_size[0] * self.patch_size[1])
+        ho, wo = self.patches_resolution
+        flops = ho * wo * self.embed_dim * self.in_chans * (self.patch_size[0] * self.patch_size[1])
         if self.norm is not None:
-            flops += Ho * Wo * self.embed_dim
+            flops += ho * wo * self.embed_dim
         return flops
 
     def reset_parameters(self) -> None:

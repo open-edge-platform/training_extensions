@@ -14,7 +14,7 @@ from functools import partial
 from typing import Any, Callable, ClassVar, Literal
 
 import torch
-import torch.nn.functional as F
+import torch.nn.functional as f
 from torch import Tensor, nn
 
 from otx.backend.native.models.common.layers.transformer_layers import (
@@ -197,7 +197,7 @@ class VGGBlock(nn.Module):
         """Get equivalent 3x3 kernel and bias."""
         kernel3x3, bias3x3 = self._fuse_bn_tensor(self.conv1)
         kernel1x1, bias1x1 = self._fuse_bn_tensor(self.conv2)
-        return kernel3x3 + F.pad(kernel1x1, [1, 1, 1, 1]), bias3x3 + bias1x1
+        return kernel3x3 + f.pad(kernel1x1, [1, 1, 1, 1]), bias3x3 + bias1x1
 
     def _fuse_bn_tensor(self, branch: ConvNormLayer) -> tuple[Tensor, Tensor]:
         """Fuse batchnorm into conv weights."""
@@ -771,7 +771,7 @@ class HybridEncoderModule(nn.Module):
             feat_high = self.lateral_convs[len(self.in_channels) - 1 - idx](feat_high)
             inner_outs[0] = feat_high
 
-            upsample_feat = F.interpolate(feat_high, scale_factor=2.0, mode="nearest")
+            upsample_feat = f.interpolate(feat_high, scale_factor=2.0, mode="nearest")
 
             if self.fuse_op == "sum":
                 fused_feat = upsample_feat + feat_low

@@ -349,12 +349,12 @@ class DinoVisionTransformer(nn.Module):
 
         return x, (H, W)
 
-    def forward_features_list(self, x_list: list[Tensor], masks_list: list[Tensor]) -> list[dict[str, Tensor]]:
+    def forward_features_list(self, x_list: list[Tensor], masks_list: list[Tensor | None]) -> list[dict[str, Tensor]]:
         """Forward pass for a list of images with masks.
 
         Args:
             x_list: List of input image tensors.
-            masks_list: List of corresponding mask tensors.
+            masks_list: List of corresponding mask tensors (can be None).
 
         Returns:
             List of dictionaries containing normalized features.
@@ -415,8 +415,9 @@ class DinoVisionTransformer(nn.Module):
             normalized CLS token, storage tokens, patch tokens, and pre-norm features.
         """
         if isinstance(x, torch.Tensor):
-            return self.forward_features_list([x], [masks])[0]
-        return self.forward_features_list(x, masks)
+            masks_as_list: list[Tensor | None] = [masks]
+            return self.forward_features_list([x], masks_as_list)[0]
+        return self.forward_features_list(x, masks if masks is not None else [None] * len(x))
 
     def _get_intermediate_layers_not_chunked(self, x: Tensor, n: int | list[int] = 1) -> list[Tensor]:
         """Get intermediate layer outputs without chunking.
@@ -498,7 +499,8 @@ class DinoVisionTransformer(nn.Module):
             return tuple(zip(outputs, extra_tokens))
         if return_class_token and return_extra_tokens:
             return tuple(zip(outputs, class_tokens, extra_tokens))
-        return None
+        # Default fallback (should not reach here)
+        return tuple(outputs)
 
     def forward(
         self,
@@ -520,4 +522,7 @@ class DinoVisionTransformer(nn.Module):
         ret = self.forward_features(*args, **kwargs)
         if is_training:
             return ret
+        # At inference time, we always have a single dict (not a list)
+        if isinstance(ret, list):
+            ret = ret[0]
         return self.head(ret["x_norm_clstoken"])

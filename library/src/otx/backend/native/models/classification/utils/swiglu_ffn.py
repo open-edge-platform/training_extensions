@@ -126,7 +126,7 @@ class SwiGLUFFNV2(nn.Module, ListForwardMixin):
         drop: float = 0.0,
         bias: bool = True,
         align_to: int = 8,
-        device=None,
+        device: torch.device | str | None = None,
     ) -> None:
         super().__init__()
         out_features = out_features or in_features
@@ -138,6 +138,14 @@ class SwiGLUFFNV2(nn.Module, ListForwardMixin):
         self.w3 = nn.Linear(swiglu_hidden_features, out_features, bias=bias, device=device)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Apply SwiGLU transformation to input tensor.
+
+        Args:
+            x: Input tensor of shape (..., in_features).
+
+        Returns:
+            Output tensor of shape (..., out_features).
+        """
         x1 = self.w1(x)
         x2 = self.w2(x)
         hidden = nn.functional.silu(x1) * x2

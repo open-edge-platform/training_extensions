@@ -177,7 +177,7 @@ class Attention(nn.Module):
         Returns:
             Output tensor of shape (B, N, C).
         """
-        B, N, C = x.shape
+        B, N, C = x.shape  # noqa: N806
         qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
         q, k, v = qkv.unbind(0)
 
@@ -398,7 +398,7 @@ class VisionTransformer(nn.Module):
             cls_token has shape (B, embed_dim).
         """
         outs = []
-        B, C, H, W = x.shape
+        B, C, H, W = x.shape  # noqa: N806
 
         x_embed = self._model.patch_embed(x)
         cls_token = self._model.cls_token.expand(x_embed.shape[0], -1, -1)

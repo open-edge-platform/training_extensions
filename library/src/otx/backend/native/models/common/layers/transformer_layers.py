@@ -8,7 +8,7 @@ from __future__ import annotations
 import copy
 import math
 from functools import partial
-from typing import Callable, NoReturn
+from typing import Any, Callable, NoReturn
 
 import torch
 import torch.nn.functional as f
@@ -96,22 +96,42 @@ class TransformerEncoderLayer(nn.Module):
 
 
 class ListForwardMixin:
+    """Mixin class that provides list-based forward operations for transformers."""
+
     def forward(self, x: Tensor) -> NoReturn:
+        """Forward pass - must be implemented by subclass."""
         raise NotImplementedError
 
     def forward_list(self, x_list: list[Tensor]) -> list[Tensor]:
+        """Process a list of tensors by concatenating, forwarding, and splitting.
+
+        Args:
+            x_list: List of input tensors.
+
+        Returns:
+            List of processed tensors with original shapes.
+        """
         x_flat, shapes, num_tokens = cat_keep_shapes(x_list)
         x_flat = self.forward(x_flat)
         return uncat_with_shapes(x_flat, shapes, num_tokens)
 
 
 class LayerScale(nn.Module):
+    """Learnable per-channel scaling layer for transformer blocks.
+
+    Args:
+        dim: Number of channels/features.
+        init_values: Initial scale value.
+        inplace: If True, apply scaling in-place.
+        device: Device for parameters.
+    """
+
     def __init__(
         self,
         dim: int,
         init_values: float | Tensor = 1e-5,
         inplace: bool = False,
-        device=None,
+        device: torch.device | str | None = None,
     ) -> None:
         super().__init__()
         self.inplace = inplace
@@ -119,9 +139,11 @@ class LayerScale(nn.Module):
         self.init_values = init_values
 
     def reset_parameters(self) -> None:
+        """Reset gamma parameter to initial value."""
         nn.init.constant_(self.gamma, self.init_values)
 
     def forward(self, x: Tensor) -> Tensor:
+        """Apply learnable scaling to input tensor."""
         return x.mul_(self.gamma) if self.inplace else x * self.gamma
 
 
@@ -716,14 +738,32 @@ class VisualEncoder(nn.Module):
         return output
 
 
-def cat_keep_shapes(x_list: list[Tensor]) -> tuple[Tensor, list[tuple[int]], list[int]]:
+def cat_keep_shapes(x_list: list[Tensor]) -> tuple[Tensor, list[tuple[int, ...]], list[int]]:
+    """Concatenate tensors while preserving their original shapes.
+
+    Args:
+        x_list: List of tensors to concatenate.
+
+    Returns:
+        Tuple of (flattened tensor, original shapes, token counts).
+    """
     shapes = [x.shape for x in x_list]
     num_tokens = [x.select(dim=-1, index=0).numel() for x in x_list]
     flattened = torch.cat([x.flatten(0, -2) for x in x_list])
     return flattened, shapes, num_tokens
 
 
-def uncat_with_shapes(flattened: Tensor, shapes: list[tuple[int]], num_tokens: list[int]) -> list[Tensor]:
+def uncat_with_shapes(flattened: Tensor, shapes: list[tuple[int, ...]], num_tokens: list[int]) -> list[Tensor]:
+    """Split a flattened tensor back to original shapes.
+
+    Args:
+        flattened: Concatenated tensor.
+        shapes: Original tensor shapes.
+        num_tokens: Token counts for splitting.
+
+    Returns:
+        List of tensors with original shapes.
+    """
     outputs_splitted = torch.split_with_sizes(flattened, num_tokens, dim=0)
     shapes_adjusted = [shape[:-1] + torch.Size([flattened.shape[-1]]) for shape in shapes]
     return [o.reshape(shape) for o, shape in zip(outputs_splitted, shapes_adjusted)]
@@ -731,6 +771,14 @@ def uncat_with_shapes(flattened: Tensor, shapes: list[tuple[int]], num_tokens: l
 
 # RoPE-related functions:
 def rope_rotate_half(x: Tensor) -> Tensor:
+    """Rotate half of the tensor elements for RoPE.
+
+    Args:
+        x: Input tensor of shape [..., D].
+
+    Returns:
+        Rotated tensor where x[..., :D/2] and x[..., D/2:] are swapped and negated.
+    """
     # x:   [ x0  x1  x2  x3  x4  x5]
     # out: [-x3 -x4 -x5  x0  x1  x2]
     x1, x2 = x.chunk(2, dim=-1)
@@ -738,6 +786,16 @@ def rope_rotate_half(x: Tensor) -> Tensor:
 
 
 def rope_apply(x: Tensor, sin: Tensor, cos: Tensor) -> Tensor:
+    """Apply rotary position embedding to tensor.
+
+    Args:
+        x: Input tensor of shape [..., D].
+        sin: Sine embeddings of shape [..., D].
+        cos: Cosine embeddings of shape [..., D].
+
+    Returns:
+        Tensor with rotary position embedding applied.
+    """
     # x:   [..., D], eg [x0,     x1,   x2,   x3,   x4,   x5]
     # sin: [..., D], eg [sin0, sin1, sin2, sin0, sin1, sin2]
     # cos: [..., D], eg [cos0, cos1, cos2, cos0, cos1, cos2]
@@ -745,19 +803,47 @@ def rope_apply(x: Tensor, sin: Tensor, cos: Tensor) -> Tensor:
 
 
 class LinearKMaskedBias(nn.Linear):
-    def __init__(self, *args, **kwargs):
+    """Linear layer with masked bias for Q, K, V projection.
+
+    Masks the K bias portion with NaN values for specific attention patterns.
+    """
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401
         super().__init__(*args, **kwargs)
         o = self.out_features
-        assert o % 3 == 0
+        if o % 3 != 0:
+            msg = f"out_features ({o}) must be divisible by 3"
+            raise ValueError(msg)
         if self.bias is not None:
             self.register_buffer("bias_mask", torch.full_like(self.bias, fill_value=math.nan))
 
-    def forward(self, input: Tensor) -> Tensor:
+    def forward(self, input: Tensor) -> Tensor:  # noqa: A002
+        """Apply linear transformation with masked bias.
+
+        Args:
+            input: Input tensor.
+
+        Returns:
+            Transformed tensor.
+        """
         masked_bias = self.bias * self.bias_mask.to(self.bias.dtype) if self.bias is not None else None
         return f.linear(input, self.weight, masked_bias)
 
 
 class SelfAttention(nn.Module):
+    """Multi-head self-attention module.
+
+    Args:
+        dim: Input/output feature dimension.
+        num_heads: Number of attention heads.
+        qkv_bias: If True, add bias to QKV projection.
+        proj_bias: If True, add bias to output projection.
+        attn_drop: Attention dropout rate.
+        proj_drop: Output projection dropout rate.
+        mask_k_bias: If True, mask the K bias.
+        device: Device for parameters.
+    """
+
     def __init__(
         self,
         dim: int,
@@ -767,7 +853,7 @@ class SelfAttention(nn.Module):
         attn_drop: float = 0.0,
         proj_drop: float = 0.0,
         mask_k_bias: bool = False,
-        device=None,
+        device: torch.device | str | None = None,
     ) -> None:
         super().__init__()
         self.num_heads = num_heads
@@ -781,6 +867,16 @@ class SelfAttention(nn.Module):
         self.proj_drop = nn.Dropout(proj_drop)
 
     def apply_rope(self, q: Tensor, k: Tensor, rope: Tensor | tuple[Tensor, Tensor]) -> tuple[Tensor, Tensor]:
+        """Apply rotary position embeddings to query and key tensors.
+
+        Args:
+            q: Query tensor of shape [B, heads, N, D//heads].
+            k: Key tensor of shape [B, heads, N, D//heads].
+            rope: Tuple of (sin, cos) tensors for position embedding.
+
+        Returns:
+            Tuple of (q, k) with rotary embeddings applied.
+        """
         # All operations will use the dtype of rope, the output is cast back to the dtype of q and k
         q_dtype = q.dtype
         k_dtype = k.dtype
@@ -788,9 +884,11 @@ class SelfAttention(nn.Module):
         rope_dtype = sin.dtype
         q = q.to(dtype=rope_dtype)
         k = k.to(dtype=rope_dtype)
-        N = q.shape[-2]
-        prefix = N - sin.shape[-2]
-        assert prefix >= 0
+        n = q.shape[-2]
+        prefix = n - sin.shape[-2]
+        if prefix < 0:
+            msg = f"prefix ({prefix}) must be >= 0"
+            raise ValueError(msg)
         q_prefix = q[:, :, :prefix, :]
         q = rope_apply(q[:, :, prefix:, :], sin, cos)  # [B, head, hw, D//head]
         q = torch.cat((q_prefix, q), dim=-2)  # [B, head, N, D//head]
@@ -801,14 +899,46 @@ class SelfAttention(nn.Module):
         k = k.to(dtype=k_dtype)
         return q, k
 
-    def forward(self, x: Tensor, attn_bias=None, rope: Tensor = None) -> Tensor:
+    def forward(
+        self,
+        x: Tensor,
+        attn_bias: Tensor | None = None,
+        rope: Tensor | tuple[Tensor, Tensor] | None = None,
+    ) -> Tensor:
+        """Forward pass for self-attention.
+
+        Args:
+            x: Input tensor of shape [B, N, D].
+            attn_bias: Optional attention bias.
+            rope: Optional rotary position embedding.
+
+        Returns:
+            Output tensor of shape [B, N, D].
+        """
         qkv = self.qkv(x)
         attn_v = self.compute_attention(qkv=qkv, attn_bias=attn_bias, rope=rope)
         x = self.proj(attn_v)
         return self.proj_drop(x)
 
-    def forward_list(self, x_list, attn_bias=None, rope_list=None) -> list[Tensor]:
-        assert len(x_list) == len(rope_list)  # should be enforced by the Block
+    def forward_list(
+        self,
+        x_list: list[Tensor],
+        attn_bias: Tensor | None = None,
+        rope_list: list[tuple[Tensor, Tensor]] | None = None,
+    ) -> list[Tensor]:
+        """Forward pass for list of tensors.
+
+        Args:
+            x_list: List of input tensors.
+            attn_bias: Optional attention bias.
+            rope_list: List of rotary position embeddings.
+
+        Returns:
+            List of output tensors.
+        """
+        if rope_list is None or len(x_list) != len(rope_list):
+            msg = "x_list and rope_list must have same length"
+            raise ValueError(msg)
         x_flat, shapes, num_tokens = cat_keep_shapes(x_list)
         qkv_flat = self.qkv(x_flat)
         qkv_list = uncat_with_shapes(qkv_flat, shapes, num_tokens)
@@ -819,10 +949,27 @@ class SelfAttention(nn.Module):
         x_flat = self.proj(x_flat)
         return uncat_with_shapes(x_flat, shapes, num_tokens)
 
-    def compute_attention(self, qkv: Tensor, attn_bias=None, rope=None) -> Tensor:
-        assert attn_bias is None
-        B, N, _ = qkv.shape
-        C = self.qkv.in_features
+    def compute_attention(
+        self,
+        qkv: Tensor,
+        attn_bias: Tensor | None = None,
+        rope: tuple[Tensor, Tensor] | None = None,
+    ) -> Tensor:
+        """Compute attention from QKV tensor.
+
+        Args:
+            qkv: Combined query-key-value tensor.
+            attn_bias: Optional attention bias (must be None).
+            rope: Optional rotary position embedding.
+
+        Returns:
+            Attention output tensor.
+        """
+        if attn_bias is not None:
+            msg = "attn_bias must be None"
+            raise ValueError(msg)
+        B, N, _ = qkv.shape  # noqa: N806
+        C = self.qkv.in_features  # noqa: N806
 
         qkv = qkv.reshape(B, N, 3, self.num_heads, C // self.num_heads)
         q, k, v = torch.unbind(qkv, 2)
@@ -835,6 +982,26 @@ class SelfAttention(nn.Module):
 
 
 class SelfAttentionBlock(nn.Module):
+    """Transformer block with self-attention and FFN.
+
+    Args:
+        dim: Input/output feature dimension.
+        num_heads: Number of attention heads.
+        mlp_ratio: Ratio of MLP hidden dim to embedding dim.
+        qkv_bias: If True, add bias to QKV projection.
+        proj_bias: If True, add bias to output projection.
+        drop: Dropout rate.
+        attn_drop: Attention dropout rate.
+        init_values: Initial values for LayerScale.
+        drop_path: Drop path rate.
+        act_layer: Activation layer class.
+        norm_layer: Normalization layer class.
+        rope_subset_list: List of RoPE subsets.
+        ffn_layer: FFN layer class.
+        mask_k_bias: If True, mask the K bias.
+        device: Device for parameters.
+    """
+
     def __init__(
         self,
         dim: int,
@@ -845,14 +1012,14 @@ class SelfAttentionBlock(nn.Module):
         ffn_bias: bool = True,
         drop: float = 0.0,
         attn_drop: float = 0.0,
-        init_values=None,
+        init_values: float | None = None,
         drop_path: float = 0.0,
         act_layer: Callable[..., nn.Module] = nn.GELU,
         norm_layer: Callable[..., nn.Module] = nn.LayerNorm,
         attn_class: Callable[..., nn.Module] = SelfAttention,
         ffn_layer: Callable[..., nn.Module] = MLP2L,
         mask_k_bias: bool = False,
-        device=None,
+        device: torch.device | str | None = None,
     ) -> None:
         super().__init__()
         # print(f"biases: qkv: {qkv_bias}, proj: {proj_bias}, ffn: {ffn_bias}")
@@ -889,15 +1056,19 @@ class SelfAttentionBlock(nn.Module):
             return None
 
         sin, cos = rope
-        assert sin.ndim == cos.ndim
+        if sin.ndim != cos.ndim:
+            msg = "sin and cos must have same ndim"
+            raise ValueError(msg)
         if sin.ndim == 4:
             # If the rope embedding has a batch dimension (is different for each batch element), index into it
             return sin[indices], cos[indices]  # [batch, heads, patches, embed_dim]
         # No batch dimension, do not index
         return sin, cos  # [heads, patches, embed_dim] or [patches, embed_dim]
 
-    def _forward(self, x: Tensor, rope=None) -> Tensor:
-        """This is the reference implementation for a single tensor, matching what is done below for a list.
+    def _forward(self, x: Tensor, rope: tuple[Tensor, Tensor] | None = None) -> Tensor:
+        """Forward pass for a single tensor.
+
+        This is the reference implementation for a single tensor, matching what is done below for a list.
         We call the list op on [x] instead of this function.
         """
         b, _, _ = x.shape
@@ -937,8 +1108,10 @@ class SelfAttentionBlock(nn.Module):
 
         return x_ffn
 
-    def _forward_list(self, x_list: list[Tensor], rope_list=None) -> list[Tensor]:
-        """This list operator concatenates the tokens from the list of inputs together to save
+    def _forward_list(self, x_list: list[Tensor], rope_list: list[tuple[Tensor, Tensor]] | None = None) -> list[Tensor]:
+        """Forward pass for list of tensors.
+
+        This list operator concatenates the tokens from the list of inputs together to save
         on the elementwise operations. Torch-compile memory-planning allows hiding the overhead
         related to concat ops.
         """
@@ -954,7 +1127,7 @@ class SelfAttentionBlock(nn.Module):
             x_subset_1_list = [x[indices_1] for x, indices_1 in zip(x_list, indices_1_list)]
 
             if rope_list is not None:
-                rope_subset_list: list | None = [
+                rope_subset_list: list[tuple[Tensor, Tensor] | None] | None = [
                     self._maybe_index_rope(rope, indices_1) for rope, indices_1 in zip(rope_list, indices_1_list)
                 ]
             else:
@@ -1002,7 +1175,8 @@ class SelfAttentionBlock(nn.Module):
             ]
         else:
             x_out = []
-            for x, rope in zip(x_list, rope_list):
+            for i, x in enumerate(x_list):
+                rope = rope_list[i] if rope_list is not None else None
                 x_attn = x + self.ls1(self.attn(self.norm1(x), rope=rope))
                 x_ffn = x_attn + self.ls2(self.mlp(self.norm2(x_attn)))
                 x_out.append(x_ffn)
@@ -1010,18 +1184,33 @@ class SelfAttentionBlock(nn.Module):
 
         return x_ffn
 
-    def forward(self, x_or_x_list, rope_or_rope_list=None) -> list[Tensor]:
+    def forward(
+        self,
+        x_or_x_list: Tensor | list[Tensor],
+        rope_or_rope_list: tuple[Tensor, Tensor] | list[tuple[Tensor, Tensor] | None] | None = None,
+    ) -> Tensor | list[Tensor]:
+        """Forward pass supporting both single tensor and list of tensors.
+
+        Args:
+            x_or_x_list: Input tensor or list of tensors.
+            rope_or_rope_list: Rotary position embedding or list of embeddings.
+
+        Returns:
+            Output tensor or list of tensors.
+        """
         if isinstance(x_or_x_list, Tensor):
             # for reference:
             # return self._forward(x_or_x_list, rope=rope_or_rope_list)
             # in order to match implementations we call the list op:
-            return self._forward_list([x_or_x_list], rope_list=[rope_or_rope_list])[0]
+            rope_as_list = [rope_or_rope_list] if not isinstance(rope_or_rope_list, list) else rope_or_rope_list
+            return self._forward_list([x_or_x_list], rope_list=rope_as_list)[0]  # type: ignore[arg-type]
         if isinstance(x_or_x_list, list):
             if rope_or_rope_list is None:
-                rope_or_rope_list = [None for x in x_or_x_list]
+                rope_or_rope_list = [None for _ in x_or_x_list]
             # return [self._forward(x, rope=rope) for x, rope in zip(x_or_x_list, rope_or_rope_list)]
-            return self._forward_list(x_or_x_list, rope_list=rope_or_rope_list)
-        raise AssertionError
+            return self._forward_list(x_or_x_list, rope_list=rope_or_rope_list)  # type: ignore[arg-type]
+        msg = f"x_or_x_list must be Tensor or list, got {type(x_or_x_list)}"
+        raise TypeError(msg)
 
 
 class Gate(nn.Module):

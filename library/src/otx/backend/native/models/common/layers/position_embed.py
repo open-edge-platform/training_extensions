@@ -110,6 +110,25 @@ def gen_sineembed_for_position(pos_tensor: torch.Tensor) -> torch.Tensor:
 
 
 class RopePositionEmbedding(nn.Module):
+    """Rotary Position Embedding (RoPE) for Vision Transformers.
+
+    Computes sinusoidal position embeddings that are applied via rotation
+    to query and key vectors in attention layers.
+
+    Args:
+        embed_dim: Total embedding dimension.
+        num_heads: Number of attention heads.
+        base: Base frequency for computing periods.
+        min_period: Minimum period (alternative to base).
+        max_period: Maximum period (alternative to base).
+        normalize_coords: How to normalize coordinates ('min', 'max', 'separate').
+        shift_coords: Optional shift to apply to coordinates.
+        jitter_coords: Optional jitter range for data augmentation.
+        rescale_coords: Optional rescaling factor for coordinates.
+        dtype: Data type for embeddings.
+        device: Device for embeddings.
+    """
+
     def __init__(
         self,
         embed_dim: int,
@@ -126,17 +145,19 @@ class RopePositionEmbedding(nn.Module):
         device: torch.device | None = None,
     ):
         super().__init__()
-        assert embed_dim % (4 * num_heads) == 0
+        if embed_dim % (4 * num_heads) != 0:
+            msg = f"embed_dim ({embed_dim}) must be divisible by 4 * num_heads ({4 * num_heads})"
+            raise ValueError(msg)
         both_periods = min_period is not None and max_period is not None
         if (base is None and not both_periods) or (base is not None and both_periods):
             msg = "Either `base` or `min_period`+`max_period` must be provided."
             raise ValueError(msg)
 
-        D_head = embed_dim // num_heads
+        d_head = embed_dim // num_heads
         self.base = base
         self.min_period = min_period
         self.max_period = max_period
-        self.D_head = D_head
+        self.D_head = d_head
         self.normalize_coords = normalize_coords
         self.shift_coords = shift_coords
         self.jitter_coords = jitter_coords
@@ -146,25 +167,34 @@ class RopePositionEmbedding(nn.Module):
         self.dtype = dtype  # Don't rely on self.periods.dtype
         self.register_buffer(
             "periods",
-            torch.empty(D_head // 4, device=device, dtype=dtype),
+            torch.empty(d_head // 4, device=device, dtype=dtype),
             persistent=True,
         )
         self._init_weights()
 
-    def forward(self, *, H: int, W: int) -> tuple[Tensor, Tensor]:
+    def forward(self, *, H: int, W: int) -> tuple[Tensor, Tensor]:  # noqa: N803
+        """Compute sin and cos position embeddings.
+
+        Args:
+            H: Height of the feature map.
+            W: Width of the feature map.
+
+        Returns:
+            Tuple of (sin, cos) tensors for rotary position embedding.
+        """
         device = self.periods.device
         dtype = self.dtype
         dd = {"device": device, "dtype": dtype}
 
         # Prepare coords in range [-1, +1]
         if self.normalize_coords == "max":
-            max_HW = max(H, W)
-            coords_h = torch.arange(0.5, H, **dd) / max_HW  # [H]
-            coords_w = torch.arange(0.5, W, **dd) / max_HW  # [W]
+            max_hw = max(H, W)
+            coords_h = torch.arange(0.5, H, **dd) / max_hw  # [H]
+            coords_w = torch.arange(0.5, W, **dd) / max_hw  # [W]
         elif self.normalize_coords == "min":
-            min_HW = min(H, W)
-            coords_h = torch.arange(0.5, H, **dd) / min_HW  # [H]
-            coords_w = torch.arange(0.5, W, **dd) / min_HW  # [W]
+            min_hw = min(H, W)
+            coords_h = torch.arange(0.5, H, **dd) / min_hw  # [H]
+            coords_w = torch.arange(0.5, W, **dd) / min_hw  # [W]
         elif self.normalize_coords == "separate":
             coords_h = torch.arange(0.5, H, **dd) / H  # [H]
             coords_w = torch.arange(0.5, W, **dd) / W  # [W]
