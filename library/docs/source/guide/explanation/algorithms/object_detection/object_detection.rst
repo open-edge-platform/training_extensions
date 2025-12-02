@@ -23,7 +23,7 @@ and are defined in the respective recipe files. To see the exact configuration f
 
 Common training components include:
 
-- ``Augmentations``: Data augmentation strategies vary by model. Common techniques include random crop, rotation, color/brightness distortions, and multi-scale training. Transformer-based models (DETR, D-FINE, DEIMv2) typically use simpler augmentations, while CNN-based models (YOLOX, SSD) may use more aggressive augmentations like Mosaic.
+- ``Augmentations``: Data augmentation strategies vary by model. Common techniques include random crop, rotation, affine transformations, color/brightness distortions, and advanced techniques like Mosaic and MixUp.
 
 - ``Optimizer``: Model-specific optimizers are used:
     - **AdamW**: Used by transformer-based models (RT-DETR, D-FINE, DEIMv2) with learning rates typically in the range of 1e-4 to 5e-4.
@@ -150,17 +150,6 @@ Choose a model based on your requirements:
 - **Best speed/accuracy trade-off**: DEIMv2-S, DEIMv2-M, DEIM-DFine-M, or YOLOX-L
 - **Fastest inference**: YOLOX-TINY, YOLOX-S, SSD-MobileNetV2, or RTMDet-Tiny
 - **Edge deployment**: DEIMv2-S, YOLOX-TINY, YOLOX-S or SSD-MobileNetV2
-
-.. tip::
-
-    DEIM family models (DEIMv2, DEIM-DFine) are recommended for most use cases as they provide state-of-the-art accuracy with efficient inference.
-    For CNN-based approaches, YOLOX offers an excellent speed-accuracy trade-off.
-
-Above table can be found using the following command
-
-.. code-block:: shell
-
-    (otx) ...$ otx find --task DETECTION
 
 **Recommendations:**
 
