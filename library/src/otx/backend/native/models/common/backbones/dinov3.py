@@ -367,7 +367,7 @@ class DinoVisionTransformer(nn.Module):
             rope.append(hw_tuple)
         for _, blk in enumerate(self.blocks):
             if self.rope_embed is not None:
-                rope_sincos = [self.rope_embed(H=H, W=W) for H, W in rope]
+                rope_sincos = [self.rope_embed(h=h, w=w) for h, w in rope]
             else:
                 rope_sincos = [None for r in rope]
             x = blk(x, rope_sincos)
@@ -429,13 +429,13 @@ class DinoVisionTransformer(nn.Module):
         Returns:
             List of intermediate feature tensors.
         """
-        x, (H, W) = self.prepare_tokens_with_masks(x)  # noqa: N806
+        x, (h, w) = self.prepare_tokens_with_masks(x)
         # If n is an int, take the n last blocks. If it's a list, take them
         output: list[Tensor] = []
         total_block_len = len(self.blocks)
         blocks_to_take: range | list[int] = range(total_block_len - n, total_block_len) if isinstance(n, int) else n
         for i, blk in enumerate(self.blocks):
-            rope_sincos = self.rope_embed(H=H, W=W) if self.rope_embed is not None else None
+            rope_sincos = self.rope_embed(h=h, w=w) if self.rope_embed is not None else None
             x = blk(x, rope_sincos)
             if i in blocks_to_take:
                 output.append(x)
@@ -486,20 +486,17 @@ class DinoVisionTransformer(nn.Module):
         extra_tokens = [out[:, 1 : self.n_storage_tokens + 1] for out in outputs]
         outputs = [out[:, self.n_storage_tokens + 1 :] for out in outputs]
         if reshape:
-            B, _, h, w = x.shape  # noqa: N806
+            b, _, h, w = x.shape
             outputs = [
-                out.reshape(B, h // self.patch_size, w // self.patch_size, -1).permute(0, 3, 1, 2).contiguous()
+                out.reshape(b, h // self.patch_size, w // self.patch_size, -1).permute(0, 3, 1, 2).contiguous()
                 for out in outputs
             ]
-        if not return_class_token and not return_extra_tokens:
-            return tuple(outputs)
         if return_class_token and not return_extra_tokens:
             return tuple(zip(outputs, class_tokens))
         if not return_class_token and return_extra_tokens:
             return tuple(zip(outputs, extra_tokens))
         if return_class_token and return_extra_tokens:
             return tuple(zip(outputs, class_tokens, extra_tokens))
-        # Default fallback (should not reach here)
         return tuple(outputs)
 
     def forward(
@@ -522,7 +519,6 @@ class DinoVisionTransformer(nn.Module):
         ret = self.forward_features(*args, **kwargs)
         if is_training:
             return ret
-        # At inference time, we always have a single dict (not a list)
         if isinstance(ret, list):
             ret = ret[0]
         return self.head(ret["x_norm_clstoken"])

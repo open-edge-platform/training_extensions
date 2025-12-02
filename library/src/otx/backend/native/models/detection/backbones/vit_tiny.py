@@ -406,7 +406,7 @@ class VisionTransformer(nn.Module):
 
         patch_grid_h = H // self.patch_size
         patch_grid_w = W // self.patch_size
-        rope_sincos = self._model.rope_embed(H=patch_grid_h, W=patch_grid_w)
+        rope_sincos = self._model.rope_embed(h=patch_grid_h, w=patch_grid_w)
 
         for i, blk in enumerate(self._model.blocks):
             x = blk(x, rope_sincos=rope_sincos)

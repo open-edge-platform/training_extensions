@@ -172,7 +172,7 @@ class RopePositionEmbedding(nn.Module):
         )
         self._init_weights()
 
-    def forward(self, *, H: int, W: int) -> tuple[Tensor, Tensor]:  # noqa: N803
+    def forward(self, *, h: int, w: int) -> tuple[Tensor, Tensor]:
         """Compute sin and cos position embeddings.
 
         Args:
@@ -188,16 +188,16 @@ class RopePositionEmbedding(nn.Module):
 
         # Prepare coords in range [-1, +1]
         if self.normalize_coords == "max":
-            max_hw = max(H, W)
-            coords_h = torch.arange(0.5, H, **dd) / max_hw  # [H]
-            coords_w = torch.arange(0.5, W, **dd) / max_hw  # [W]
+            max_hw = max(h, w)
+            coords_h = torch.arange(0.5, h, **dd) / max_hw  # [H]
+            coords_w = torch.arange(0.5, w, **dd) / max_hw  # [W]
         elif self.normalize_coords == "min":
-            min_hw = min(H, W)
-            coords_h = torch.arange(0.5, H, **dd) / min_hw  # [H]
-            coords_w = torch.arange(0.5, W, **dd) / min_hw  # [W]
+            min_hw = min(h, w)
+            coords_h = torch.arange(0.5, h, **dd) / min_hw  # [H]
+            coords_w = torch.arange(0.5, w, **dd) / min_hw  # [W]
         elif self.normalize_coords == "separate":
-            coords_h = torch.arange(0.5, H, **dd) / H  # [H]
-            coords_w = torch.arange(0.5, W, **dd) / W  # [W]
+            coords_h = torch.arange(0.5, h, **dd) / h  # [h]
+            coords_w = torch.arange(0.5, w, **dd) / w  # [W]
         else:
             msg = f"Unknown normalize_coords: {self.normalize_coords}"
             raise ValueError(msg)
