@@ -15,8 +15,8 @@ from datumaro.experimental.fields import (
     image_info_field,
     image_path_field,
     label_field,
+    numeric_field,
     polygon_field,
-    score_field,
     subset_field,
 )
 from loguru import logger
@@ -41,7 +41,7 @@ class ClassificationSample(Sample):
     image: str = image_path_field()
     image_info: ImageInfo = image_info_field()
     label: int = label_field(dtype=pl.Int32(), is_list=False)
-    confidence: float | None = score_field(dtype=pl.Float32())
+    confidence: float | None = numeric_field(dtype=pl.Float32())
     subset: Subset = subset_field()
 
 
@@ -59,7 +59,7 @@ class MultilabelClassificationSample(Sample):
     image: str = image_path_field()
     image_info: ImageInfo = image_info_field()
     label: NDArrayInt = label_field(dtype=pl.Int32(), multi_label=True)
-    confidence: NDArrayFloat32 | None = score_field(dtype=pl.Float32(), is_list=True)
+    confidence: NDArrayFloat32 | None = numeric_field(dtype=pl.Float32(), is_list=True)
     subset: Subset = subset_field()
 
 
@@ -79,7 +79,7 @@ class DetectionSample(Sample):
     image_info: ImageInfo = image_info_field()
     bboxes: NDArrayInt = bbox_field(dtype=pl.Int32())
     label: NDArrayInt = label_field(dtype=pl.Int32(), is_list=True)
-    confidence: NDArrayFloat32 | None = score_field(dtype=pl.Float32(), is_list=True)
+    confidence: NDArrayFloat32 | None = numeric_field(dtype=pl.Float32(), is_list=True)
     subset: Subset = subset_field()
 
 
@@ -99,7 +99,7 @@ class InstanceSegmentationSample(Sample):
     image_info: ImageInfo = image_info_field()
     polygons: NDArrayFloat32 = polygon_field(dtype=pl.Float32())
     label: NDArrayInt = label_field(dtype=pl.Int32(), is_list=True)
-    confidence: NDArrayFloat32 | None = score_field(dtype=pl.Float32(), is_list=True)
+    confidence: NDArrayFloat32 | None = numeric_field(dtype=pl.Float32(), is_list=True)
     subset: Subset = subset_field()
 
 

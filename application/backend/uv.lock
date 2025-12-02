@@ -434,7 +434,7 @@ wheels = [
 [[package]]
 name = "datumaro"
 version = "2.0.0"
-source = { git = "https://github.com/open-edge-platform/datumaro.git?rev=develop#366941eaed86524c98ff734deccd31b4d0c30074" }
+source = { git = "https://github.com/open-edge-platform/datumaro.git?rev=develop#8f3276f1476fac803cc50de457cc19b0d5835457" }
 dependencies = [
     { name = "attrs" },
     { name = "defusedxml" },
@@ -2049,7 +2049,7 @@ wheels = [
 [[package]]
 name = "otx"
 version = "2.7.0.dev0"
-source = { git = "https://github.com/open-edge-platform/training_extensions.git?subdirectory=library&branch=feature%2Fdatumaro#0a1d8c4efa2c9f0918a0907813c31a1959e943fe" }
+source = { git = "https://github.com/open-edge-platform/training_extensions.git?subdirectory=library&branch=feature%2Fdatumaro#66273883de8e9ae4b5a4d885087c05f644e273c4" }
 dependencies = [
     { name = "datumaro", extra = ["experimental"], marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
     { name = "docstring-parser", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
