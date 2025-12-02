@@ -24,9 +24,11 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
-    "datumaro~=1.12.0",
+    "datumaro[experimental]",
     "omegaconf==2.3.0",
     "rich==14.0.0",
     "jsonargparse==4.35.0",
@@ -42,7 +44,7 @@ dependencies = [
     "torchmetrics==1.6.0",
     "pytorchcv==0.0.67",
     "timm==1.0.3",
-    "openvino==2025.3",
+    "openvino==2025.4",
     "openvino-model-api==0.3.0.4",
     "onnx==1.19.1",
     "onnxconverter-common==1.16.0",
@@ -148,6 +150,7 @@ torchvision = [
     { index = "torch-xpu", extra = "xpu"},
     { index = "torch-cuda", extra = "cuda"},
 ]
+datumaro = { git = "https://github.com/open-edge-platform/datumaro.git", branch = "develop" }
 
 [[tool.uv.index]]
 name = "torch-cpu"
