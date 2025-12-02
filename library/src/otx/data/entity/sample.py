@@ -173,10 +173,8 @@ class ClassificationHierarchicalSample(OTXSample):
 class DetectionSample(OTXSample):
     """DetectionSample is a base class for OTX detection items."""
 
-    subset: Subset = subset_field()
-
-    image: tv_tensors.Image = image_field(dtype=pl.UInt8(), channels_first=True)
-    label: torch.Tensor = label_field(pl.Int32(), is_list=True)
+    image: np.ndarray | tv_tensors.Image = image_field(dtype=pl.UInt8(), format="BGR")
+    label: np.ndarray | torch.Tensor = label_field(pl.Int32(), is_list=True)
     bboxes: np.ndarray | tv_tensors.BoundingBoxes = bbox_field(dtype=pl.Float32())
     dm_image_info: DmImageInfo = image_info_field()
 
