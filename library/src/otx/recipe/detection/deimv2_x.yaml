@@ -32,17 +32,17 @@ engine:
 callback_monitor: val/f1-score
 
 callbacks:
-  # - class_path: otx.backend.native.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
-  #   init_args:
-  #     max_interval: 1
-  #     min_lrschedule_patience: 3
+  - class_path: otx.backend.native.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
+    init_args:
+      max_interval: 1
+      min_lrschedule_patience: 3
   - class_path: otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
     init_args:
       mode: max
       patience: 10
       min_delta: 0.001
-      warmup_iters: 30
-      warmup_epochs: 3
+      warmup_iters: 50
+      warmup_epochs: 10
   - class_path: otx.backend.native.callbacks.cuda_cache_cleaner.CUDACacheCleaner
     init_args:
       clean_on_validation_end: true
