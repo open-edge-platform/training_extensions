@@ -70,3 +70,30 @@ class SystemService:
                 )
 
         return devices
+
+    def validate_device(self, device_str: str) -> bool:
+        """
+        Validate if a device string is available on the system.
+
+        Args:
+            device_str: Device string in format '<target>[-<index>]' (e.g., 'cpu', 'xpu', 'cuda', 'xpu-2', 'cuda-1')
+
+        Returns:
+            bool: True if the device is available, False otherwise
+        """
+        # Parse device string
+        parts = device_str.split("-")
+        device_type = parts[0].lower()
+        device_index = int(parts[1]) if len(parts) > 1 else 0
+
+        # CPU is always available
+        if device_type == "cpu":
+            return True
+
+        # Check if desired device is among available devices
+        available_devices = self.get_devices()
+        for available_device in available_devices:
+            if device_type == available_device.type and device_index == (available_device.index or 0):
+                return True
+
+        return False

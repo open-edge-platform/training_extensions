@@ -58,6 +58,7 @@ class Pipeline(BaseEntity):
     model_revision_id: UUID | None = None
     status: PipelineStatus = PipelineStatus.IDLE
     data_collection_policies: list[DataCollectionPolicy] = Field(default_factory=list)
+    device: str = Field(default="cpu", pattern=r"^(cpu|xpu|cuda)(-\d+)?$")
 
     @model_validator(mode="before")
     def set_status_from_is_running(cls, data: Any) -> Any:
