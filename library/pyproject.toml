@@ -46,7 +46,7 @@ dependencies = [
     "timm==1.0.3",
     "openvino==2025.4",
     "openvino-model-api==0.3.0.4",
-    "onnx==1.19.1",
+    "onnx==1.20.0",
     "onnxconverter-common==1.16.0",
     "onnxscript",
     "nncf==2.18.0",
