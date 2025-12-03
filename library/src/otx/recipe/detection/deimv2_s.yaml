@@ -5,7 +5,7 @@ model:
     model_name: deimv2_s
     label_info: 80
     multi_scale: false
-    gradient_checkpointing: false  # Set to true to reduce memory usage at cost of ~20% slower training
+    gradient_checkpointing: false # Set to true to reduce memory usage at cost of ~20% slower training
 
     optimizer:
       class_path: torch.optim.AdamW

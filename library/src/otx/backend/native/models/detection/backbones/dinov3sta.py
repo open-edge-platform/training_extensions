@@ -19,7 +19,6 @@ import torch
 import torch.distributed as dist
 import torch.nn.functional as f
 from torch import Tensor, nn
-from torch.utils.checkpoint import checkpoint
 
 from otx.backend.native.models.common.backbones.dinov3 import DinoVisionTransformer
 from otx.backend.native.models.detection.backbones.vit_tiny import VisionTransformer

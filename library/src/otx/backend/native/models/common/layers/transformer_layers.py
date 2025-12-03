@@ -1415,7 +1415,7 @@ def get_contrastive_denoising_training_group(
 
     num_group = num_denoising // max_gt_num
     num_group = 1 if num_group == 0 else num_group
-    
+
     # Cap the number of denoising queries to prevent OOM with many ground truth objects
     total_dn_queries = max_gt_num * 2 * num_group
     if total_dn_queries > max_denoising_queries:

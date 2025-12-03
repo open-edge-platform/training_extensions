@@ -118,12 +118,12 @@ class TransformerDecoderLayer(nn.Module):
             Attention output of shape (B, N, C).
         """
         B, N, C = q.shape  # noqa: N806
-        
+
         # Project Q, K, V together for efficiency
         qkv = self.qkv_proj(q)
         qkv = qkv.reshape(B, N, 3, self.n_head, self.head_dim).permute(2, 0, 3, 1, 4)
         q, k, v = qkv.unbind(0)  # Each: (B, n_head, N, head_dim)
-        
+
         # Convert boolean mask to float mask for scaled_dot_product_attention
         # True means "mask out" (don't attend), so we use -inf for those positions
         if attn_mask is not None:
@@ -132,10 +132,10 @@ class TransformerDecoderLayer(nn.Module):
             # Expand mask for multi-head attention: (N, N) -> (1, 1, N, N)
             if attn_mask.dim() == 2:
                 attn_mask = attn_mask.unsqueeze(0).unsqueeze(0)
-        
+
         # Use scaled_dot_product_attention - automatically uses Flash Attention when possible
         out = f.scaled_dot_product_attention(q, k, v, attn_mask=attn_mask, dropout_p=0.0)
-        
+
         # Reshape back: (B, n_head, N, head_dim) -> (B, N, C)
         out = out.transpose(1, 2).reshape(B, N, C)
         return self.out_proj(out)

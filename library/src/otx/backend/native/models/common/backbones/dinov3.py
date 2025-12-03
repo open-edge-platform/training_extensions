@@ -19,14 +19,13 @@ from typing import Any, Callable
 import torch
 import torch.nn.init
 from torch import Tensor, nn
+from torch.utils.checkpoint import checkpoint as gradient_checkpoint
 
 from otx.backend.native.models.classification.utils.swiglu_ffn import SwiGLUFFNV2
 from otx.backend.native.models.common.layers.position_embed import RopePositionEmbedding
 from otx.backend.native.models.common.layers.transformer_layers import MLP2L, LayerScale, SelfAttentionBlock
 from otx.backend.native.models.modules.transformer import UnflattenPatchEmbed as PatchEmbed
 
-
-from torch.utils.checkpoint import checkpoint as gradient_checkpoint
 
 def named_apply(
     fn: Callable,
