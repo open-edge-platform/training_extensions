@@ -84,7 +84,10 @@ class SystemService:
         # Parse device string
         parts = device_str.split("-")
         device_type = parts[0].lower()
-        device_index = int(parts[1]) if len(parts) > 1 else 0
+        try:
+            device_index = int(parts[1]) if len(parts) > 1 else 0
+        except (ValueError, IndexError):
+            return False
 
         # CPU is always available
         if device_type == "cpu":
