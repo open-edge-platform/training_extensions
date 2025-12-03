@@ -174,7 +174,7 @@ class DetectionSample(OTXSample):
     """DetectionSample is a base class for OTX detection items."""
 
     image: np.ndarray | tv_tensors.Image = image_field(dtype=pl.UInt8(), format="BGR")
-    label: np.ndarray | torch.Tensor = label_field(pl.Int32(), is_list=True)
+    label: torch.Tensor = label_field(pl.Int32(), is_list=True)
     bboxes: np.ndarray | tv_tensors.BoundingBoxes = bbox_field(dtype=pl.Float32())
     dm_image_info: DmImageInfo = image_info_field()
 
@@ -281,7 +281,7 @@ class KeypointSample(OTXSample):
     """KeypointSample is a base class for OTX keypoint detection items."""
 
     subset: Subset = subset_field()
-    image: np.ndarray | tv_tensors.Image = image_field(dtype=pl.UInt8())
+    image: np.ndarray | tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8())
     label: torch.Tensor = label_field(pl.Int32(), is_list=True)
     keypoints: torch.Tensor = keypoints_field()
     dm_image_info: DmImageInfo = image_info_field()

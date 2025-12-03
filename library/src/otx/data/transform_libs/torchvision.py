@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import ast
 import copy
+import logging
 import math
 import operator
 import typing
@@ -65,6 +66,16 @@ from otx.data.transform_libs.utils import (
     translate_polygons,
 )
 from otx.data.utils import import_object_from_module
+
+
+class _OTXLabel(tv_tensors.TVTensor):
+    """A sentinel TVTensor subclass to mark labels as non-transformable by TorchVision V2.
+
+    TorchVision V2 transforms typically operate on pure torch.Tensor, Image, or Video.
+    Wrapping labels into a custom TVTensor subclass ensures they are ignored by
+    generic image transforms like Normalize, RandomCrop, etc.
+    """
+
 
 if TYPE_CHECKING:
     from otx.config.data import SubsetConfig
@@ -2732,15 +2743,56 @@ class Compose(tvt_v2.Compose):
     """
 
     def forward(self, *inputs: OTXDataItem) -> OTXDataItem | None:
-        """Forward with skipping None."""
+        """Forward with skipping None.
+
+        Additionally, skip transforming meta tensors only for specific failing transforms
+        (currently, torchvision v2 Normalize, ToDtype, ConvertImageDtype) by temporarily wrapping `label` and
+        `keypoints` into a sentinel TVTensor subclass around that transform call only.
+        """
         needs_unpacking = len(inputs) > 1
+
+        def _should_protect(t: object) -> bool:
+            name = t.__class__.__name__
+            return name in {"Normalize", "ToDtype", "ConvertImageDtype"}
+
         for transform in self.transforms:
+            # Per-transform protection for meta tensors
+            wrapped_label = False
+            wrapped_keypoints = False
+            if not needs_unpacking and len(inputs) == 1 and _should_protect(transform):
+                inpt = inputs[0]
+                try:
+                    label = getattr(inpt, "label", None)
+                    if isinstance(label, torch.Tensor) and not isinstance(label, tv_tensors.TVTensor):
+                        inpt.label = label.as_subclass(_OTXLabel)  # type: ignore[attr-defined]
+                        wrapped_label = True
+                    keypoints = getattr(inpt, "keypoints", None)
+                    if isinstance(keypoints, torch.Tensor) and not isinstance(keypoints, tv_tensors.TVTensor):
+                        inpt.keypoints = keypoints.as_subclass(_OTXLabel)  # type: ignore[attr-defined]
+                        wrapped_keypoints = True
+                except Exception:
+                    wrapped_label = False
+                    wrapped_keypoints = False
+
             outputs = transform(*inputs)
             # MMCV transform can produce None. Please see
             # https://github.com/open-mmlab/mmengine/blob/26f22ed283ae4ac3a24b756809e5961efe6f9da8/mmengine/dataset/base_dataset.py#L59-L66
             if outputs is None:
                 return outputs
             inputs = outputs if needs_unpacking else (outputs,)
+
+            # Unwrap right after the specific transform
+            if not needs_unpacking and len(inputs) == 1 and (wrapped_label or wrapped_keypoints):
+                try:
+                    out = inputs[0]
+                    if wrapped_label and isinstance(getattr(out, "label", None), _OTXLabel):  # type: ignore[name-defined]
+                        out.label = out.label.as_subclass(torch.Tensor)  # type: ignore[attr-defined, union-attr]
+                    if wrapped_keypoints and isinstance(getattr(out, "keypoints", None), _OTXLabel):  # type: ignore[name-defined]
+                        out.keypoints = out.keypoints.as_subclass(torch.Tensor)  # type: ignore[attr-defined, union-attr]
+                    inputs = (out,)
+                except Exception as e:
+                    logging.warning(f"Failed to unwrap OTXLabel: {e}")
+
         return outputs
 
 
