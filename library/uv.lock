@@ -1551,14 +1551,14 @@ wheels = [
 
 [[package]]
 name = "jsonargparse"
-version = "4.35.0"
+version = "4.44.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pyyaml" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a4/fe/5d9aa1a04d0788fc87069df43545ac00a5ecd6790def90d9e43adea9f15d/jsonargparse-4.35.0.tar.gz", hash = "sha256:815ecd190e4004d2ce69b184fe16915f8f81fd32ae3e479fa37fbb9b89130446", size = 190521, upload-time = "2024-12-16T06:58:38.452Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/cc/44/baab8fa003a2aa5b54c2a4d5062de9d99f42b298ba738bf4e79ac62cf688/jsonargparse-4.44.0.tar.gz", hash = "sha256:54836d2bbb37483dc93fbd21d67241bb3ff0fad6ec513176776c659b2133b287", size = 217881, upload-time = "2025-11-25T14:51:23.674Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/36/7a/cc99579675475079d9a488cd0f22385bfa0ff1788126a25854c67b6a309a/jsonargparse-4.35.0-py3-none-any.whl", hash = "sha256:8298ea953987fb41ed074e8802c77bb19166d632d972b23383cad63da7d7486b", size = 211002, upload-time = "2024-12-16T06:58:34.355Z" },
+    { url = "https://files.pythonhosted.org/packages/46/21/826ca00715bd2dfc419c02e0106ea10f71956ff038469cd40e6f4ba988f6/jsonargparse-4.44.0-py3-none-any.whl", hash = "sha256:7243fd177c29d46a56b4fdf677e3b83acc71fac1ca3710d2954882f220d09741", size = 241767, upload-time = "2025-11-25T14:51:21.592Z" },
 ]
 
 [[package]]
@@ -3175,7 +3175,7 @@ requires-dist = [
     { name = "ftfy", specifier = "==6.3.1" },
     { name = "furo", marker = "extra == 'docs'" },
     { name = "importlib-resources", specifier = "==6.5.2" },
-    { name = "jsonargparse", specifier = "==4.35.0" },
+    { name = "jsonargparse", specifier = "==4.44.0" },
     { name = "lightning", specifier = "==2.4.0" },
     { name = "linkify-it-py", marker = "extra == 'docs'" },
     { name = "myst-parser", marker = "extra == 'docs'", specifier = ">=2.0.0" },
