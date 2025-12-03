@@ -227,6 +227,26 @@ class TestDEIMV2:
         assert model.torch_compile is True
 
     @patch("otx.backend.native.models.detection.deimv2.load_checkpoint")
+    def test_gradient_checkpointing(self, mock_load_checkpoint: MagicMock) -> None:
+        """Test DEIMV2 with gradient checkpointing enabled."""
+        mock_load_checkpoint.return_value = None
+
+        model = DEIMV2(
+            model_name="deimv2_s",
+            label_info=3,
+            data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            gradient_checkpointing=True,
+        )
+
+        # Check that gradient_checkpointing is enabled
+        assert model.gradient_checkpointing is True
+
+        # Create model and verify backbone has gradient checkpointing
+        created_model = model._create_model()
+        assert hasattr(created_model.backbone, "dinov3")
+        assert created_model.backbone.dinov3.gradient_checkpointing is True
+
+    @patch("otx.backend.native.models.detection.deimv2.load_checkpoint")
     def test_weight_dict_configuration(self, mock_load_checkpoint: MagicMock) -> None:
         """Test that the weight dictionary is properly configured."""
         mock_load_checkpoint.return_value = None

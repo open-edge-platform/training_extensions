@@ -26,6 +26,8 @@ from otx.backend.native.models.common.layers.transformer_layers import MLP2L, La
 from otx.backend.native.models.modules.transformer import UnflattenPatchEmbed as PatchEmbed
 
 
+from torch.utils.checkpoint import checkpoint as gradient_checkpoint
+
 def named_apply(
     fn: Callable,
     module: nn.Module,
@@ -182,13 +184,17 @@ class DinoVisionTransformer(nn.Module):
         name: Model configuration name from the configs dictionary.
             Supported: 'dinov3_vits16', 'dinov3_vits16plus', 'dinov3_vitb16',
             'dinov3_vitb16plus', 'dinov3_vitl16plus'.
+        gradient_checkpointing: If True, use gradient checkpointing to reduce memory
+            at the cost of increased computation. Defaults to False.
     """
 
     def __init__(
         self,
         name: str,
+        gradient_checkpointing: bool = False,
     ) -> None:
         super().__init__()
+        self.gradient_checkpointing = gradient_checkpointing
         config = configs[name]
         img_size = config["img_size"]
         patch_size = config["patch_size"]
@@ -370,7 +376,10 @@ class DinoVisionTransformer(nn.Module):
                 rope_sincos = [self.rope_embed(h=h, w=w) for h, w in rope]
             else:
                 rope_sincos = [None for r in rope]
-            x = blk(x, rope_sincos)
+            if self.training and self.gradient_checkpointing:
+                x = gradient_checkpoint(blk, x, rope_sincos, use_reentrant=False)
+            else:
+                x = blk(x, rope_sincos)
         all_x = x
         output = []
         for idx, (x, masks) in enumerate(zip(all_x, masks_list)):
@@ -436,7 +445,11 @@ class DinoVisionTransformer(nn.Module):
         blocks_to_take: range | list[int] = range(total_block_len - n, total_block_len) if isinstance(n, int) else n
         for i, blk in enumerate(self.blocks):
             rope_sincos = self.rope_embed(h=h, w=w) if self.rope_embed is not None else None
-            x = blk(x, rope_sincos)
+            if self.training and self.gradient_checkpointing:
+                # Use gradient checkpointing to reduce memory during training
+                x = gradient_checkpoint(blk, x, rope_sincos, use_reentrant=False)
+            else:
+                x = blk(x, rope_sincos)
             if i in blocks_to_take:
                 output.append(x)
         if len(output) != len(blocks_to_take):

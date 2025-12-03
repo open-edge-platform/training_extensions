@@ -148,17 +148,10 @@ Choose a model based on your requirements:
 
 - **Best accuracy**: DEIMv2-X, DEIM-DFine-X, D-Fine X, or YOLOX-X
 - **Best speed/accuracy trade-off**: DEIMv2-S, DEIMv2-M, DEIM-DFine-M, or YOLOX-L
-- **Fastest inference**: YOLOX-TINY, YOLOX-S, SSD-MobileNetV2, or RTMDet-Tiny
-- **Edge deployment**: DEIMv2-S, YOLOX-TINY, YOLOX-S or SSD-MobileNetV2
+- **Fastest inference**: YOLOX-TINY, YOLOX-S, SSD-MobileNetV2, or ATSS-MobileNetV2
 
 **Recommendations:**
 
-For **transformer-based models**, the DEIM family (DEIMv2 and DEIM-DFine) provides state-of-the-art accuracy with excellent inference speed. DEIMv2-S/M are particularly well-suited for real-time and edge deployment scenarios.
-
-For **CNN-based models**, `YOLOX <https://arxiv.org/abs/2107.08430>`_ offers an excellent speed-accuracy trade-off and is highly recommended. YOLOX variants provide:
-
-- Fast training and inference compared to other CNN detectors
-- Strong performance across different object sizes
-- Easy deployment on various hardware platforms
-
-`MobileNetV2-ATSS <https://arxiv.org/abs/1912.02424>`_ and `SSD <https://arxiv.org/abs/1512.02325>`_ are also good choices for resource-constrained environments.
+- For **transformer-based models**, the DEIM family (DEIMv2 and DEIM-DFine) provides state-of-the-art accuracy with excellent inference speed. DEIMv2-S/M are particularly well-suited for real-time and edge deployment scenarios.
+- For **CNN-based models**, `YOLOX <https://arxiv.org/abs/2107.08430>`_ offers an excellent speed-accuracy trade-off and strong performance across different benchmark datasets. 
+    `MobileNetV2-ATSS <https://arxiv.org/abs/1912.02424>`_ and `SSD <https://arxiv.org/abs/1512.02325>`_ are also good choices for resource-constrained environments.

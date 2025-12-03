@@ -59,7 +59,9 @@ class TestTransformerDecoderLayer:
         """Test decoder layer initialization."""
         assert isinstance(decoder_layer, TransformerDecoderLayer)
         assert decoder_layer.use_gateway is False
-        assert hasattr(decoder_layer, "self_attn")
+        # Check for memory-efficient self-attention components
+        assert hasattr(decoder_layer, "qkv_proj")
+        assert hasattr(decoder_layer, "out_proj")
         assert hasattr(decoder_layer, "cross_attn")
         assert hasattr(decoder_layer, "swish_ffn")
 

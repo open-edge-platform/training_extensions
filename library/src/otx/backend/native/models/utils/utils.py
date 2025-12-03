@@ -83,7 +83,8 @@ def load_checkpoint(
         key_mapping: Dictionary mapping old key names to new key names
             for remapping pretrained weights with different parameter names.
             Example: {"patch_embed.proj": "patch_embed.projection"} will remap
-            "patch_embed.proj.weight" to "patch_embed.projection.weight".
+            any key containing "patch_embed.proj" (e.g., "patch_embed.proj.weight") to  
+            "patch_embed.projection.weight".
             Defaults to None.
     """
     if Path(checkpoint).exists():

@@ -69,8 +69,11 @@ class TransformerDecoderLayer(nn.Module):
             dim_feedforward = round(layer_scale * dim_feedforward)
             d_model = round(layer_scale * d_model)
 
-        # self attention
-        self.self_attn = nn.MultiheadAttention(d_model, n_head, dropout=dropout, batch_first=True)
+        # self attention - use memory-efficient scaled_dot_product_attention
+        self.n_head = n_head
+        self.head_dim = d_model // n_head
+        self.qkv_proj = nn.Linear(d_model, 3 * d_model)
+        self.out_proj = nn.Linear(d_model, d_model)
         self.dropout1 = nn.Dropout(dropout)
         self.norm1 = RMSNorm(d_model)
 
@@ -94,6 +97,49 @@ class TransformerDecoderLayer(nn.Module):
         """Add positional embedding to tensor if provided."""
         return tensor if pos is None else tensor + pos
 
+    def _self_attention(
+        self,
+        q: Tensor,
+        k: Tensor,
+        v: Tensor,
+        attn_mask: Tensor | None = None,
+    ) -> Tensor:
+        """Memory-efficient self-attention using scaled_dot_product_attention.
+
+        Uses Flash Attention when available (PyTorch 2.0+, CUDA, no mask or causal mask).
+
+        Args:
+            q: Query tensor of shape (B, N, C).
+            k: Key tensor of shape (B, N, C).
+            v: Value tensor of shape (B, N, C).
+            attn_mask: Optional attention mask of shape (N, N) or (B, N, N).
+
+        Returns:
+            Attention output of shape (B, N, C).
+        """
+        B, N, C = q.shape  # noqa: N806
+        
+        # Project Q, K, V together for efficiency
+        qkv = self.qkv_proj(q)
+        qkv = qkv.reshape(B, N, 3, self.n_head, self.head_dim).permute(2, 0, 3, 1, 4)
+        q, k, v = qkv.unbind(0)  # Each: (B, n_head, N, head_dim)
+        
+        # Convert boolean mask to float mask for scaled_dot_product_attention
+        # True means "mask out" (don't attend), so we use -inf for those positions
+        if attn_mask is not None:
+            if attn_mask.dtype == torch.bool:
+                attn_mask = attn_mask.float().masked_fill(attn_mask, float("-inf"))
+            # Expand mask for multi-head attention: (N, N) -> (1, 1, N, N)
+            if attn_mask.dim() == 2:
+                attn_mask = attn_mask.unsqueeze(0).unsqueeze(0)
+        
+        # Use scaled_dot_product_attention - automatically uses Flash Attention when possible
+        out = f.scaled_dot_product_attention(q, k, v, attn_mask=attn_mask, dropout_p=0.0)
+        
+        # Reshape back: (B, n_head, N, head_dim) -> (B, N, C)
+        out = out.transpose(1, 2).reshape(B, N, C)
+        return self.out_proj(out)
+
     def forward(
         self,
         target: Tensor,
@@ -116,10 +162,10 @@ class TransformerDecoderLayer(nn.Module):
         Returns:
             Updated query features of shape (B, N, C).
         """
-        # self attention
+        # self attention using memory-efficient scaled_dot_product_attention
         q = k = self.with_pos_embed(target, query_pos_embed)
 
-        target2, _ = self.self_attn(q, k, value=target, attn_mask=attn_mask)
+        target2 = self._self_attention(q, k, target, attn_mask=attn_mask)
         target = target + self.dropout1(target2)
         target = self.norm1(target)
 

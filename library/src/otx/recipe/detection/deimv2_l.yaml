@@ -5,6 +5,7 @@ model:
     model_name: deimv2_l
     label_info: 80
     multi_scale: false
+    gradient_checkpointing: false  # Set to true to reduce memory usage at cost of ~20% slower training
 
     optimizer:
       class_path: torch.optim.AdamW
@@ -128,7 +129,7 @@ callbacks:
                       - 1.0
                     probability: 0.5
                     random_pop: true
-                    max_cached_images: 20
+                    max_cached_images: 10
                 - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
                   init_args:
                     min_area: 1
@@ -178,7 +179,7 @@ callbacks:
                       - 1.0
                     probability: 0.5
                     random_pop: true
-                    max_cached_images: 20
+                    max_cached_images: 10
                 - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
                   init_args:
                     min_area: 1

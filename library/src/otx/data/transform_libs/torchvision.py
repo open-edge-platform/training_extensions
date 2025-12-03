@@ -2124,7 +2124,6 @@ class CachedMixUp(tvt_v2.Transform, NumpytoTVTensorMixin):
 
                 inputs.polygons = [mixup_gt_polygons[i] for i in np.where(inside_inds)[0]]
 
-        # self.visualize(inputs, output_path=f"/home/kprokofi/debug_images/{str(uuid.uuid4())}.jpg")
         return self.convert(inputs)
 
     def __repr__(self):

@@ -1387,6 +1387,7 @@ def get_contrastive_denoising_training_group(
     num_denoising: int = 100,
     label_noise_ratio: float = 0.5,
     box_noise_scale: float = 1.0,
+    max_denoising_queries: int = 1000,
 ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, dict[str, torch.Tensor]] | tuple[None, None, None, None]:
     """Generate contrastive denoising training group.
 
@@ -1398,6 +1399,8 @@ def get_contrastive_denoising_training_group(
         num_denoising (int, optional): Number of denoising queries. Defaults to 100.
         label_noise_ratio (float, optional): Ratio of label noise. Defaults to 0.5.
         box_noise_scale (float, optional): Scale of box noise. Defaults to 1.0.
+        max_denoising_queries (int, optional): Maximum number of denoising queries to prevent OOM.
+            Defaults to 1000.
 
     Returns:
         Tuple[Tensor,Tensor,Tensor, dict[str, Tensor]] | tuple[None,None,None,None]:
@@ -1412,6 +1415,11 @@ def get_contrastive_denoising_training_group(
 
     num_group = num_denoising // max_gt_num
     num_group = 1 if num_group == 0 else num_group
+    
+    # Cap the number of denoising queries to prevent OOM with many ground truth objects
+    total_dn_queries = max_gt_num * 2 * num_group
+    if total_dn_queries > max_denoising_queries:
+        num_group = max(1, max_denoising_queries // (max_gt_num * 2))
     # pad gt to max_num of a batch
     bs = len(num_gts)
 

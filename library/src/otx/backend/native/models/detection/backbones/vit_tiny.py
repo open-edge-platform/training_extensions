@@ -15,6 +15,7 @@ from typing import Callable
 
 import torch
 from torch import Tensor, nn
+from torch.utils.checkpoint import checkpoint as gradient_checkpoint
 
 from otx.backend.native.models.common.layers.position_embed import RopePositionEmbedding
 from otx.backend.native.models.common.layers.transformer_layers import MLP2L as MLP
@@ -274,6 +275,8 @@ class VisionTransformer(nn.Module):
         embed_layer: Patch embedding layer class. Defaults to SimplifiedPatchEmbed.
         norm_layer: Normalization layer class. Defaults to LayerNorm with eps=1e-6.
         act_layer: Activation layer class. Defaults to nn.GELU.
+        gradient_checkpointing: If True, use gradient checkpointing to reduce memory.
+            Defaults to False.
     """
 
     def __init__(
@@ -293,6 +296,7 @@ class VisionTransformer(nn.Module):
         embed_layer: type[nn.Module] = SimplifiedPatchEmbed,
         norm_layer: type[nn.Module] | Callable[..., nn.Module] | None = None,
         act_layer: type[nn.Module] | None = None,
+        gradient_checkpointing: bool = False,
     ) -> None:
         super().__init__()
         if return_layers is None:
@@ -300,6 +304,7 @@ class VisionTransformer(nn.Module):
         self.num_features = self.embed_dim = embed_dim
         self.num_tokens = 1
         self.return_layers = return_layers
+        self.gradient_checkpointing = gradient_checkpointing
         norm_layer = norm_layer or partial(nn.LayerNorm, eps=1e-6)
         act_layer = act_layer or nn.GELU
 
@@ -409,7 +414,10 @@ class VisionTransformer(nn.Module):
         rope_sincos = self._model.rope_embed(h=patch_grid_h, w=patch_grid_w)
 
         for i, blk in enumerate(self._model.blocks):
-            x = blk(x, rope_sincos=rope_sincos)
+            if self.training and self.gradient_checkpointing:
+                x = gradient_checkpoint(blk, x, rope_sincos, use_reentrant=False)
+            else:
+                x = blk(x, rope_sincos=rope_sincos)
             if i in self.return_layers:
                 outs.append((x[:, 1:], x[:, 0]))
         return outs

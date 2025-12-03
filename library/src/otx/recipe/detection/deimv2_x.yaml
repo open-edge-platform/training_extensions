@@ -5,6 +5,7 @@ model:
     model_name: deimv2_x
     label_info: 80
     multi_scale: false
+    gradient_checkpointing: false  # Set to true to reduce memory usage at cost of ~20% slower training
 
     optimizer:
       class_path: torch.optim.AdamW
@@ -31,10 +32,10 @@ engine:
 callback_monitor: val/f1-score
 
 callbacks:
-  - class_path: otx.backend.native.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
-    init_args:
-      max_interval: 1
-      min_lrschedule_patience: 3
+  # - class_path: otx.backend.native.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
+  #   init_args:
+  #     max_interval: 1
+  #     min_lrschedule_patience: 3
   - class_path: otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
     init_args:
       mode: max
@@ -42,6 +43,11 @@ callbacks:
       min_delta: 0.001
       warmup_iters: 30
       warmup_epochs: 3
+  - class_path: otx.backend.native.callbacks.cuda_cache_cleaner.CUDACacheCleaner
+    init_args:
+      clean_on_validation_end: true 
+      clean_on_epoch_end: true     
+      log_memory: false 
   - class_path: lightning.pytorch.callbacks.ModelCheckpoint
     init_args:
       dirpath: "" # use engine.work_dir
@@ -56,7 +62,7 @@ callbacks:
       data_aug_switch:
         class_path: otx.backend.native.callbacks.aug_scheduler.DataAugSwitch
         init_args:
-          policy_epochs: [4, 23, 40]
+          policy_epochs: [0, 23, 40]
           policies:
             no_aug:
               to_tv_image: false
@@ -128,7 +134,7 @@ callbacks:
                       - 1.0
                     probability: 0.5
                     random_pop: true
-                    max_cached_images: 20
+                    max_cached_images: 10
                 - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
                   init_args:
                     min_area: 1
@@ -174,7 +180,7 @@ callbacks:
                       - 1.0
                     probability: 0.5
                     random_pop: true
-                    max_cached_images: 20
+                    max_cached_images: 10
                 - class_path: otx.data.transform_libs.torchvision.RandomFlip
                   init_args:
                     probability: 0.5

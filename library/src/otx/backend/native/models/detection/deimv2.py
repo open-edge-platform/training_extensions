@@ -56,6 +56,9 @@ class DEIMV2(DEIMDFine):
         multi_scale (bool, optional): Whether to use multi-scale training. Defaults to False.
         torch_compile (bool, optional): Whether to use torch compile. Defaults to False.
         tile_config (TileConfig, optional): Configuration for tiling. Defaults to TileConfig(enable_tiler=False).
+        gradient_checkpointing (bool, optional): Whether to use gradient checkpointing to reduce memory
+            at the cost of increased computation. Recommended for large models or limited GPU memory.
+            Defaults to False.
     """
 
     _pretrained_weights: ClassVar[dict[str, str]] = {
@@ -83,7 +86,9 @@ class DEIMV2(DEIMDFine):
         multi_scale: bool = False,
         torch_compile: bool = False,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
+        gradient_checkpointing: bool = False,
     ) -> None:
+        self.gradient_checkpointing = gradient_checkpointing
         super().__init__(
             model_name=model_name,  # type: ignore[arg-type]
             label_info=label_info,
@@ -99,7 +104,7 @@ class DEIMV2(DEIMDFine):
     def _create_model(self, num_classes: int | None = None) -> DETR:
         """Create DEIM-DFine model."""
         num_classes = num_classes if num_classes is not None else self.num_classes
-        backbone = DINOv3STAs(model_name=self.model_name)
+        backbone = DINOv3STAs(model_name=self.model_name, gradient_checkpointing=self.gradient_checkpointing)
         encoder = HybridEncoder(model_name=self.model_name)
         decoder = DEIMTransformer(
             model_name=self.model_name,

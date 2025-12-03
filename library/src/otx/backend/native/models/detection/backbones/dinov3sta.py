@@ -16,13 +16,32 @@ from pathlib import Path
 from typing import Any, ClassVar
 
 import torch
+import torch.distributed as dist
 import torch.nn.functional as f
 from torch import Tensor, nn
+from torch.utils.checkpoint import checkpoint
 
 from otx.backend.native.models.common.backbones.dinov3 import DinoVisionTransformer
 from otx.backend.native.models.detection.backbones.vit_tiny import VisionTransformer
 
 logger = logging.getLogger(__name__)
+
+
+def get_norm_layer(num_features: int, use_sync_bn: bool = True) -> nn.Module:
+    """Get appropriate normalization layer based on distributed training context.
+
+    Uses SyncBatchNorm for multi-GPU training, regular BatchNorm otherwise.
+
+    Args:
+        num_features: Number of features for the normalization layer.
+        use_sync_bn: If True, use SyncBatchNorm when in multi-GPU setting.
+
+    Returns:
+        BatchNorm2d or SyncBatchNorm based on training context.
+    """
+    if use_sync_bn and dist.is_initialized() and dist.get_world_size() > 1:
+        return nn.SyncBatchNorm(num_features)
+    return nn.BatchNorm2d(num_features)
 
 
 class SpatialPriorModulev2(nn.Module):
@@ -34,34 +53,35 @@ class SpatialPriorModulev2(nn.Module):
 
     Args:
         inplanes: Base number of channels for the convolutional layers. Defaults to 16.
+        use_sync_bn: Whether to use SyncBatchNorm for multi-GPU training. Defaults to True.
     """
 
-    def __init__(self, inplanes: int = 16) -> None:
+    def __init__(self, inplanes: int = 16, use_sync_bn: bool = True) -> None:
         super().__init__()
 
         # 1/4 scale stem
         self.stem = nn.Sequential(
             nn.Conv2d(3, inplanes, kernel_size=3, stride=2, padding=1, bias=False),
-            nn.SyncBatchNorm(inplanes),
+            get_norm_layer(inplanes, use_sync_bn),
             nn.GELU(),
             nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
         )
         # 1/8 scale
         self.conv2 = nn.Sequential(
             nn.Conv2d(inplanes, 2 * inplanes, kernel_size=3, stride=2, padding=1, bias=False),
-            nn.SyncBatchNorm(2 * inplanes),
+            get_norm_layer(2 * inplanes, use_sync_bn),
         )
         # 1/16 scale
         self.conv3 = nn.Sequential(
             nn.GELU(),
             nn.Conv2d(2 * inplanes, 4 * inplanes, kernel_size=3, stride=2, padding=1, bias=False),
-            nn.SyncBatchNorm(4 * inplanes),
+            get_norm_layer(4 * inplanes, use_sync_bn),
         )
         # 1/32 scale
         self.conv4 = nn.Sequential(
             nn.GELU(),
             nn.Conv2d(4 * inplanes, 4 * inplanes, kernel_size=3, stride=2, padding=1, bias=False),
-            nn.SyncBatchNorm(4 * inplanes),
+            get_norm_layer(4 * inplanes, use_sync_bn),
         )
 
     def forward(self, x: Tensor) -> tuple[Tensor, Tensor, Tensor]:
@@ -104,6 +124,8 @@ class DINOv3STAsModule(nn.Module):
         use_sta: Whether to use the Spatial Token Attention module. Defaults to True.
         conv_inplane: Base channel number for STA module. Defaults to 16.
         hidden_dim: Hidden dimension for output projection. Defaults to embed_dim.
+        gradient_checkpointing: If True, use gradient checkpointing in backbone
+            to reduce memory at the cost of increased computation. Defaults to False.
     """
 
     def __init__(
@@ -118,6 +140,7 @@ class DINOv3STAsModule(nn.Module):
         use_sta: bool = True,
         conv_inplane: int = 16,
         hidden_dim: int | None = None,
+        gradient_checkpointing: bool = False,
     ) -> None:
         super().__init__()
         if interaction_indexes is None:
@@ -125,14 +148,19 @@ class DINOv3STAsModule(nn.Module):
 
         self.dinov3: DinoVisionTransformer | VisionTransformer
         if "dinov3" in name:
-            self.dinov3 = DinoVisionTransformer(name=name)
+            self.dinov3 = DinoVisionTransformer(name=name, gradient_checkpointing=gradient_checkpointing)
             if weights_path is not None and Path(weights_path).exists():
                 logger.info("Loading checkpoint from %s...", weights_path)
                 self.dinov3.load_state_dict(torch.load(weights_path))
             else:
                 logger.info("Training DINOv3 from scratch...")
         else:
-            self.dinov3 = VisionTransformer(embed_dim=embed_dim, num_heads=num_heads, return_layers=interaction_indexes)
+            self.dinov3 = VisionTransformer(
+                embed_dim=embed_dim,
+                num_heads=num_heads,
+                return_layers=interaction_indexes,
+                gradient_checkpointing=gradient_checkpointing,
+            )
             if weights_path is not None and Path(weights_path).exists():
                 logger.info("Loading checkpoint from %s...", weights_path)
                 self.dinov3._model.load_state_dict(torch.load(weights_path))  # noqa: SLF001
@@ -165,12 +193,13 @@ class DINOv3STAsModule(nn.Module):
                 nn.Conv2d(embed_dim + conv_inplane * 4, hidden_dim, kernel_size=1, stride=1, padding=0, bias=False),
             ]
         )
-        # Normalization layers
+        # Normalization layers - use BatchNorm or SyncBatchNorm based on distributed context
+        use_sync = dist.is_initialized() and dist.get_world_size() > 1
         self.norms = nn.ModuleList(
             [
-                nn.SyncBatchNorm(hidden_dim),
-                nn.SyncBatchNorm(hidden_dim),
-                nn.SyncBatchNorm(hidden_dim),
+                get_norm_layer(hidden_dim, use_sync),
+                get_norm_layer(hidden_dim, use_sync),
+                get_norm_layer(hidden_dim, use_sync),
             ]
         )
 
@@ -275,12 +304,13 @@ class DINOv3STAs(nn.Module):
         },
     }
 
-    def __new__(cls, model_name: str) -> DINOv3STAsModule:
+    def __new__(cls, model_name: str, gradient_checkpointing: bool = False) -> DINOv3STAsModule:
         """Create a DINOv3STAs backbone instance.
 
         Args:
             model_name: Name of the model configuration to use.
                 Must be one of: 'deimv2_x', 'deimv2_l', 'deimv2_m', 'deimv2_s'.
+            gradient_checkpointing: If True, use gradient checkpointing in backbone.
 
         Returns:
             Configured DINOv3STAsModule backbone instance.
@@ -288,4 +318,6 @@ class DINOv3STAs(nn.Module):
         Raises:
             KeyError: If model_name is not in backbone_cfg.
         """
-        return DINOv3STAsModule(**cls.backbone_cfg[model_name])
+        cfg = cls.backbone_cfg[model_name].copy()
+        cfg["gradient_checkpointing"] = gradient_checkpointing
+        return DINOv3STAsModule(**cfg)

@@ -5,6 +5,7 @@ model:
     model_name: deimv2_m
     label_info: 80
     multi_scale: false
+    gradient_checkpointing: true  # Set to true to reduce memory usage at cost of ~20% slower training
 
     optimizer:
       class_path: torch.optim.AdamW
@@ -42,6 +43,11 @@ callbacks:
       min_delta: 0.001
       warmup_iters: 30
       warmup_epochs: 3
+  - class_path: otx.backend.native.callbacks.cuda_cache_cleaner.CUDACacheCleaner
+    init_args:
+      clean_on_validation_end: true 
+      clean_on_epoch_end: true     
+      log_memory: false             
   - class_path: lightning.pytorch.callbacks.ModelCheckpoint
     init_args:
       dirpath: "" # use engine.work_dir

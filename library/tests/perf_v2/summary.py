@@ -170,7 +170,7 @@ def summarize_table(history: pd.DataFrame, task: OTXTaskType) -> list[pd.DataFra
     score_metric = TASK_METRIC_MAP[task]
 
     # Metrics to summarize in aggregated table
-    all_metrics = [
+    expected_metrics = [
         "training:e2e_time",
         "training:epoch",
         "training:train/iter_time",
@@ -186,7 +186,7 @@ def summarize_table(history: pd.DataFrame, task: OTXTaskType) -> list[pd.DataFra
 
     raw_task_data = history.query(f"task == '{task.value}'")
     valid_metrics = []
-    for metric in all_metrics:
+    for metric in expected_metrics:
         if metric not in raw_task_data.columns:
             msg = f"Metric {metric} not found in raw data"
             logger.warning(msg)
