@@ -31,7 +31,7 @@ dependencies = [
     "datumaro[experimental]",
     "omegaconf==2.3.0",
     "rich==14.0.0",
-    "jsonargparse==4.44.0",
+    "jsonargparse==4.35.0",
     "ftfy==6.3.1",
     "regex==2025.11.3",
     "importlib_resources==6.5.2",
