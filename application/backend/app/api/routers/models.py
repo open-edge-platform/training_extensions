@@ -74,7 +74,6 @@ def download_model_binary(
     """Download trained model weights in OpenVINO format as a zip archive containing model.xml and model.bin files."""
     try:
         # Verify the model exists and get the model directory
-        _ = model_service.get_model(project_id=project.id, model_id=model_id)
         model_dir = model_service.get_model_files_path(project_id=project.id, model_id=model_id)
 
         # Create an in-memory zip file

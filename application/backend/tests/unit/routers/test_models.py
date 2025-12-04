@@ -123,7 +123,6 @@ class TestModelEndpoints:
         (model_dir / "model.xml").write_text(xml_content)
         (model_dir / "model.bin").write_bytes(bin_content)
 
-        fxt_model_service.get_model.return_value = fxt_model
         fxt_model_service.get_model_files_path.return_value = model_dir
 
         response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models/{fxt_model.id}/binary")
@@ -141,19 +140,18 @@ class TestModelEndpoints:
             assert zip_file.read("model.xml").decode() == xml_content
             assert zip_file.read("model.bin") == bin_content
 
-        fxt_model_service.get_model.assert_called_once_with(project_id=fxt_get_project.id, model_id=fxt_model.id)
         fxt_model_service.get_model_files_path.assert_called_once_with(
             project_id=fxt_get_project.id, model_id=fxt_model.id
         )
 
     def test_download_model_binary_not_found(self, fxt_get_project, fxt_model_service, fxt_client):
         model_id = uuid4()
-        fxt_model_service.get_model.side_effect = ResourceNotFoundError(ResourceType.MODEL, str(model_id))
+        fxt_model_service.get_model_files_path.side_effect = ResourceNotFoundError(ResourceType.MODEL, str(model_id))
 
         response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models/{model_id}/binary")
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
-        fxt_model_service.get_model.assert_called_once_with(project_id=fxt_get_project.id, model_id=model_id)
+        fxt_model_service.get_model_files_path.assert_called_once_with(project_id=fxt_get_project.id, model_id=model_id)
 
     def test_download_model_binary_invalid_id(self, fxt_get_project, fxt_model_service, fxt_client):
         response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models/invalid-id/binary")
