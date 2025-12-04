@@ -17,6 +17,7 @@ class ResourceType(StrEnum):
     PIPELINE = "Pipeline"
     PROJECT = "Project"
     DATASET_ITEM = "DatasetItem"
+    DATASET_REVISION = "DatasetRevision"
     LABEL = "Label"
 
 

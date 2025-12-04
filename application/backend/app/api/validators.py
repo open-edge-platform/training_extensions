@@ -50,3 +50,6 @@ ModelID = Annotated[UUID, Depends(lambda model_id: validate_uuid_param(model_id,
 DatasetItemID = Annotated[
     UUID, Depends(lambda dataset_item_id: validate_uuid_param(dataset_item_id, "dataset_item_id"))
 ]
+DatasetRevisionID = Annotated[
+    UUID, Depends(lambda dataset_revision_id: validate_uuid_param(dataset_revision_id, "dataset_revision_id"))
+]
