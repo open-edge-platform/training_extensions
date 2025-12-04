@@ -3,11 +3,6 @@
 
 """Module for OTX custom models."""
 
-import multiprocessing
-
-if multiprocessing.get_start_method(allow_none=True) is None:
-    multiprocessing.set_start_method("forkserver")
-
 from .classification import (
     EfficientNet,
     MobileNetV3,
