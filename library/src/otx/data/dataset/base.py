@@ -155,8 +155,14 @@ class OTXDataset(TorchDataset):
 
     @abc.abstractmethod
     def get_idx_list_per_classes(self, use_string_label: bool = False) -> dict[int | str, list[int]]:
-        """Get a dictionary with class labels as keys and lists of corresponding sample indices as values."""
+        """Get a dictionary mapping class labels to lists of corresponding sample indices.
 
+        Args:
+            use_string_label (bool, optional): If True, use string labels as keys; otherwise, use integer labels. Defaults to False.
+
+        Returns:
+            dict[int | str, list[int]]: A dictionary where each key is a class label (int or str) and each value is a list of sample indices belonging to that class.
+        """
     @property
     def task_type(self) -> OTXTaskType | None:
         """OTX Task Type for the dataset. Can be None if no task is defined."""
