@@ -139,3 +139,31 @@ class ModelService(BaseSessionManagedService):
                 label_schema_revision=labels_schema_rev,
             )
         )
+
+    def get_model_files_path(self, project_id: UUID, model_id: UUID) -> Path:
+        """
+        Get the directory path containing the model files (model.xml and model.bin).
+
+        Args:
+            project_id (UUID): The unique identifier of the project.
+            model_id (UUID): The unique identifier of the model.
+
+        Returns:
+            Path: The directory path containing the model files.
+
+        Raises:
+            ResourceNotFoundError: If the model directory doesn't exist or required files are missing.
+        """
+        model_dir = self._projects_dir / str(project_id) / "models" / str(model_id)
+
+        if not model_dir.exists():
+            raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
+
+        # Verify that the required files exist
+        xml_file = model_dir / "model.xml"
+        bin_file = model_dir / "model.bin"
+
+        if not xml_file.exists() or not bin_file.exists():
+            raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
+
+        return model_dir

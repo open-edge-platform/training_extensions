@@ -140,7 +140,7 @@ def _create_pipeline_with_video_source(  # noqa: PLR0913
         project_id=project_id,
         sink_id=sink_id,
         data_collection_policies=[FixedRateDataCollectionPolicy(rate=0.1).model_dump(mode="json")],
-        is_running=True,
+        is_running=False,
     )
 
     pipeline.source = SourceDB(
