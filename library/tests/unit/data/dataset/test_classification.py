@@ -56,3 +56,32 @@ class TestOTXMulticlassClsDataset:
 
         expected = {0: [0, 1, 2, 3, 4]}
         assert result == expected
+
+    def test_get_idx_list_per_classes_string_labels(self):
+        """Test get_idx_list_per_classes with use_string_label=True."""
+        # Create three items with labels 0, 1, 2
+        mock_items = []
+        for lbl in [0, 1, 2, 1, 0]:
+            mock_item = Mock()
+            mock_item.label.item.return_value = lbl
+            mock_items.append(mock_item)
+
+        self.mock_dm_subset.__getitem__ = Mock(side_effect=mock_items)
+
+        dataset = OTXMulticlassClsDataset(
+            dm_subset=self.mock_dm_subset,
+            transforms=self.mock_transforms,
+            data_format="arrow",
+        )
+
+        # Override length for this test
+        dataset.dm_subset.__len__ = Mock(return_value=5)
+
+        result = dataset.get_idx_list_per_classes(use_string_label=True)
+
+        expected = {
+            "class_0": [0, 4],
+            "class_1": [1, 3],
+            "class_2": [2],
+        }
+        assert result == expected

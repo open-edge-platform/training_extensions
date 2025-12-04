@@ -81,3 +81,42 @@ class TestOTXDetectionDataset:
             2: [2],  # Item 2 contains class 2
         }
         assert result == expected
+
+    def test_get_idx_list_per_classes_string_labels(self):
+        """Test get_idx_list_per_classes with use_string_label=True."""
+        # Mock dataset items with multiple labels per item
+        mock_items = []
+        # Item 0: classes [0, 1]
+        mock_item0 = Mock()
+        mock_item0.label.tolist.return_value = [0, 1]
+        mock_items.append(mock_item0)
+
+        # Item 1: class [1]
+        mock_item1 = Mock()
+        mock_item1.label.tolist.return_value = [1]
+        mock_items.append(mock_item1)
+
+        # Item 2: classes [0, 2]
+        mock_item2 = Mock()
+        mock_item2.label.tolist.return_value = [0, 2]
+        mock_items.append(mock_item2)
+
+        self.mock_dm_subset.__getitem__ = Mock(side_effect=mock_items)
+
+        dataset = OTXDetectionDataset(
+            dm_subset=self.mock_dm_subset,
+            transforms=self.mock_transforms,
+            data_format="arrow",
+        )
+
+        # Override length for this test
+        dataset.dm_subset.__len__ = Mock(return_value=3)
+
+        result = dataset.get_idx_list_per_classes(use_string_label=True)
+
+        expected = {
+            "class_0": [0, 2],
+            "class_1": [0, 1],
+            "class_2": [2],
+        }
+        assert result == expected
