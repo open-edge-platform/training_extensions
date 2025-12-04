@@ -73,7 +73,7 @@ class PipelineService:
             if pipeline.data_collection_policies != updated.data_collection_policies:
                 self._event_bus.emit_event(EventType.PIPELINE_DATASET_COLLECTION_POLICIES_CHANGED)
             if pipeline.device != updated.device:
-                self._event_bus.emit_event(EventType.DEVICE_CHANGED)
+                self._event_bus.emit_event(EventType.INFERENCE_DEVICE_CHANGED)
         elif pipeline.status != updated.status:
             # If the pipeline is being activated or stopped
             self._event_bus.emit_event(EventType.PIPELINE_STATUS_CHANGED)

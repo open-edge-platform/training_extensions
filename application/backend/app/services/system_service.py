@@ -1,10 +1,14 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import re
+
 import psutil
 import torch
 
 from app.schemas.system import DeviceInfo, DeviceType
+
+DEVICE_PATTERN = re.compile(r"^(cpu|xpu|cuda)(-(\d+))?$")
 
 
 class SystemService:
@@ -81,13 +85,7 @@ class SystemService:
         Returns:
             bool: True if the device is available, False otherwise
         """
-        # Parse device string
-        parts = device_str.split("-")
-        device_type = parts[0].lower()
-        try:
-            device_index = int(parts[1]) if len(parts) > 1 else 0
-        except (ValueError, IndexError):
-            return False
+        device_type, device_index = self._parse_device(device_str)
 
         # CPU is always available
         if device_type == "cpu":
@@ -100,3 +98,22 @@ class SystemService:
                 return True
 
         return False
+
+    @staticmethod
+    def _parse_device(device_str: str) -> tuple[str, int]:
+        """
+        Parse device string into type and index
+
+        Args:
+            device_str: Device string in format '<target>[-<index>]' (e.g., 'cpu', 'xpu', 'cuda', 'xpu-2', 'cuda-1')
+
+        Returns:
+            tuple[str, int]: Device type and index
+        """
+        m = DEVICE_PATTERN.match(device_str.lower())
+        if not m:
+            raise ValueError(f"Invalid device string: {device_str}")
+
+        device_type, _, device_index = m.groups()
+        device_index = int(device_index) if device_index is not None else 0
+        return device_type.lower(), device_index
