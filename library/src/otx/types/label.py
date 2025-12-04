@@ -360,8 +360,8 @@ class HLabelInfo(LabelInfo):
         id_to_name_mapping = {item.name: label_names[i] for i, item in enumerate(dm_label_categories.items)}
 
         for i, item in enumerate(dm_label_categories.items):
-            object.__setattr__(dm_label_categories, "name", label_names[i])
-            object.__setattr__(dm_label_categories, "parent", id_to_name_mapping.get(item.parent, item.parent))
+            object.__setattr__(item, "name", label_names[i])
+            object.__setattr__(item, "parent", id_to_name_mapping.get(item.parent, item.parent))
 
         for label_group in dm_label_categories.label_groups:
             object.__setattr__(

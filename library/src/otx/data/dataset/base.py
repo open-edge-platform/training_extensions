@@ -158,11 +158,13 @@ class OTXDataset(TorchDataset):
         """Get a dictionary mapping class labels to lists of corresponding sample indices.
 
         Args:
-            use_string_label (bool, optional): If True, use string labels as keys; otherwise, use integer labels. Defaults to False.
+            use_string_label (bool, optional): If True, use string labels as keys; otherwise, use integer labels.
 
         Returns:
-            dict[int | str, list[int]]: A dictionary where each key is a class label (int or str) and each value is a list of sample indices belonging to that class.
+            dict[int | str, list[int]]: A dictionary where each key is a class label (int or str) and each value is a
+            list of sample indices belonging to that class.
         """
+
     @property
     def task_type(self) -> OTXTaskType | None:
         """OTX Task Type for the dataset. Can be None if no task is defined."""
