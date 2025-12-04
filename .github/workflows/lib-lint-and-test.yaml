@@ -116,6 +116,11 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@b9ed5a8fb8afb645c9cfaffecc60fc946d28f857 # stable
+        with:
+          toolchain: stable
+
       - name: Install uv
         uses: astral-sh/setup-uv@3259c6206f993105e3a61b142c2d97bf4b9ef83d # v7.1.0
         with:
