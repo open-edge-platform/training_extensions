@@ -30,10 +30,8 @@ class TestDFine:
             ),
         ],
     )
-    def test_loss(self, model, fxt_data_module):
-        data = next(iter(fxt_data_module.train_dataloader()))
-        data.images = torch.randn([2, 3, 640, 640])
-        model(data)
+    def test_loss(self, model, fxt_detection_batch):
+        model(fxt_detection_batch)
 
     @pytest.mark.parametrize(
         "model",
@@ -45,11 +43,9 @@ class TestDFine:
             ),
         ],
     )
-    def test_predict(self, model, fxt_data_module):
-        data = next(iter(fxt_data_module.train_dataloader()))
-        data.images = torch.randn(2, 3, 640, 640)
+    def test_predict(self, model, fxt_detection_batch):
         model.eval()
-        output = model(data)
+        output = model(fxt_detection_batch)
         assert isinstance(output, OTXPredBatch)
 
     @pytest.mark.parametrize(
