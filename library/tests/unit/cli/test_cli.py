@@ -11,6 +11,7 @@ import yaml
 from rich.console import Console
 
 from otx.cli import OTXCLI, main
+from tests.utils import get_tests_asset_path
 
 
 class TestOTXCLI:
@@ -86,7 +87,7 @@ class TestOTXCLI:
             "--config",
             "src/otx/recipe/detection/atss_mobilenetv2.yaml",
             "--data_root",
-            "tests/assets/car_tree_bug",
+            get_tests_asset_path("car_tree_bug"),
             "--model.label_info",
             "3",
             "--work_dir",
@@ -153,7 +154,7 @@ class TestOTXCLI:
             "--config",
             "src/otx/recipe/detection/atss_mobilenetv2.yaml",
             "--data_root",
-            "tests/assets/car_tree_bug",
+            get_tests_asset_path("car_tree_bug"),
             "--model.scheduler.monitor",
             "val/test_f1",
             "--print_config",
@@ -176,7 +177,7 @@ class TestOTXCLI:
             "--config",
             "src/otx/recipe/detection/atss_mobilenetv2.yaml",
             "--data_root",
-            "tests/assets/car_tree_bug",
+            get_tests_asset_path("car_tree_bug"),
             "--metric",
             "otx.metrics.fmeasure.FMeasureCallable",
             "--print_config",
