@@ -20,7 +20,7 @@ class LabelReference(BaseModel):
 
 class Label(BaseEntity):
     id: UUID
-    project_id: UUID
+    project_id: UUID | None = None
     name: str
     color: str
     hotkey: str | None
