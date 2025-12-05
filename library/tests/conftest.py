@@ -32,17 +32,9 @@ def setup_test_environment():
     - Disables CUDA for unit tests
     - Cleans up PyTorch internals on teardown
     """
-    import os
-
     # Set multiprocessing method if not already set
     if multiprocessing.get_start_method(allow_none=True) is None:
         multiprocessing.set_start_method("spawn")
-
-    # Disable CUDA for unit tests to reduce segfault risk
-    # Integration tests can override this
-    if "CUDA_VISIBLE_DEVICES" not in os.environ:
-        os.environ["CUDA_VISIBLE_DEVICES"] = ""
-
     yield
 
     # Force cleanup to prevent segfaults during pytest teardown
