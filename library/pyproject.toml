@@ -63,6 +63,7 @@ dev = [
     "pytest-csv",
     "pytest-timeout",
     "pytest-mock",
+    "pytest-forked",
     "dill",
     "tifffile",
 ]
@@ -419,3 +420,5 @@ markers = [
     "xpu",  # mark tests which require Intel dGPU,
 ]
 python_files = "tests/**/*.py"
+faulthandler_timeout = 300
+timeout = 300

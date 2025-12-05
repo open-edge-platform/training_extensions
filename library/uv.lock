@@ -3106,6 +3106,7 @@ dev = [
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-csv" },
+    { name = "pytest-forked" },
     { name = "pytest-html" },
     { name = "pytest-mock" },
     { name = "pytest-stress" },
@@ -3185,6 +3186,7 @@ dev = [
     { name = "pytest", specifier = ">=5.3.5" },
     { name = "pytest-cov", specifier = ">=4.0.0" },
     { name = "pytest-csv" },
+    { name = "pytest-forked" },
     { name = "pytest-html" },
     { name = "pytest-mock" },
     { name = "pytest-stress" },
@@ -3572,6 +3574,15 @@ wheels = [
 ]
 
 [[package]]
+name = "py"
+version = "1.11.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/98/ff/fec109ceb715d2a6b4c4a85a61af3b40c723a961e8828319fbcb15b868dc/py-1.11.0.tar.gz", hash = "sha256:51c75c4126074b472f746a24399ad32f6053d1b34b68d2fa41e558e6f4a98719", size = 207796, upload-time = "2021-11-04T17:17:01.377Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f6/f0/10642828a8dfb741e5f3fbaac830550a518a775c7fff6f04a007259b0548/py-1.11.0-py2.py3-none-any.whl", hash = "sha256:607c53218732647dff4acdfcd50cb62615cedf612e72d1724fb1a0cc6405b378", size = 98708, upload-time = "2021-11-04T17:17:00.152Z" },
+]
+
+[[package]]
 name = "pyarrow"
 version = "22.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -3813,6 +3824,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/76/a6/dd9820c07c0d6251ab9c8764307aca3cd2ce9057f7f9459edd173dab342e/pytest-csv-3.0.0.tar.gz", hash = "sha256:6d01e7db1aa2137eae822d3fdb2d6a5dd0ce736548593b5311ae3cf41e2d12d4", size = 21923, upload-time = "2021-04-22T19:31:53.512Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e6/2c/2ce553f606e1544655928d7a9280c63270d57a431e3dad621132e09a8147/pytest_csv-3.0.0-py2.py3-none-any.whl", hash = "sha256:599ab855d2ba748275dc7f814f63f9f6593bdd9a064f27cfd3940e68e6525c36", size = 26401, upload-time = "2021-04-22T19:31:52.472Z" },
+]
+
+[[package]]
+name = "pytest-forked"
+version = "1.6.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "py" },
+    { name = "pytest" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/8c/c9/93ad2ba2413057ee694884b88cf7467a46c50c438977720aeac26e73fdb7/pytest-forked-1.6.0.tar.gz", hash = "sha256:4dafd46a9a600f65d822b8f605133ecf5b3e1941ebb3588e943b4e3eb71a5a3f", size = 9977, upload-time = "2023-02-12T23:22:27.544Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f4/af/9c0bda43e486a3c9bf1e0f876d0f241bc3f229d7d65d09331a0868db9629/pytest_forked-1.6.0-py3-none-any.whl", hash = "sha256:810958f66a91afb1a1e2ae83089d8dc1cd2437ac96b12963042fbb9fb4d16af0", size = 4897, upload-time = "2023-02-12T23:22:26.022Z" },
 ]
 
 [[package]]

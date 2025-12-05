@@ -22,8 +22,40 @@ from otx.types.task import OTXTaskType
 from otx.utils.device import is_xpu_available
 from tests.utils import ExportCase2Test
 
-if multiprocessing.get_start_method(allow_none=True) is None:
-    multiprocessing.set_start_method("forkserver")
+
+@pytest.fixture(scope="session", autouse=True)
+def setup_test_environment():
+    """Initialize test environment safely to prevent segfaults.
+
+    This fixture:
+    - Sets multiprocessing method to 'spawn'
+    - Disables CUDA for unit tests
+    - Cleans up PyTorch internals on teardown
+    """
+    import os
+
+    # Set multiprocessing method if not already set
+    if multiprocessing.get_start_method(allow_none=True) is None:
+        multiprocessing.set_start_method("spawn")
+
+    # Disable CUDA for unit tests to reduce segfault risk
+    # Integration tests can override this
+    if "CUDA_VISIBLE_DEVICES" not in os.environ:
+        os.environ["CUDA_VISIBLE_DEVICES"] = ""
+
+    yield
+
+    # Force cleanup to prevent segfaults during pytest teardown
+    try:
+        torch._C._jit_clear_class_registry()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+        if is_xpu_available():
+            import intel_extension_for_pytorch as ipex
+
+            ipex.xpu.empty_cache()
+    except Exception:  # noqa: S110
+        pass  # Ignore cleanup errors
 
 
 def pytest_addoption(parser: pytest):

@@ -137,7 +137,9 @@ jobs:
 
       - name: Unit testing
         working-directory: library
-        run: uv run pytest tests/unit --cov --cov-report=xml
+        env:
+          OMP_NUM_THREADS: "1"
+        run: uv run pytest tests/unit --cov --cov-report=xml -v --tb=short --forked
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5.5.1
