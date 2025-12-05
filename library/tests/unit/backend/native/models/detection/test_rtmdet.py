@@ -20,18 +20,18 @@ class TestRTMDet:
         otx_rtmdet_tiny = RTMDet(
             model_name="rtmdet_tiny",
             label_info=3,
-            data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         )
         assert isinstance(otx_rtmdet_tiny.model.backbone, CSPNeXtModule)
         assert isinstance(otx_rtmdet_tiny.model.neck, CSPNeXtPAFPNModule)
         assert isinstance(otx_rtmdet_tiny.model.bbox_head, RTMDetSepBNHeadModule)
-        assert otx_rtmdet_tiny.data_input_params.input_size == (640, 640)
+        assert otx_rtmdet_tiny.data_input_params.input_size == (320, 320)
 
     def test_exporter(self) -> None:
         otx_rtmdet_tiny = RTMDet(
             model_name="rtmdet_tiny",
             label_info=3,
-            data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         )
         otx_rtmdet_tiny_exporter = otx_rtmdet_tiny._exporter
         assert isinstance(otx_rtmdet_tiny_exporter, OTXNativeModelExporter)
@@ -43,7 +43,7 @@ class TestRTMDet:
             RTMDet(
                 model_name="rtmdet_tiny",
                 label_info=3,
-                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+                data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
             ),
         ],
     )
@@ -58,7 +58,7 @@ class TestRTMDet:
             RTMDet(
                 model_name="rtmdet_tiny",
                 label_info=3,
-                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+                data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
             ),
         ],
     )
@@ -73,7 +73,7 @@ class TestRTMDet:
             RTMDet(
                 model_name="rtmdet_tiny",
                 label_info=3,
-                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+                data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
             ),
         ],
     )
@@ -92,7 +92,7 @@ class TestRTMDet:
             RTMDet(
                 model_name="rtmdet_tiny",
                 label_info=3,
-                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+                data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
             ),
         ],
     )
@@ -108,3 +108,6 @@ class TestRTMDet:
         x = torch.randn(1, 3, *model.data_input_params.input_size)
         model.model(x)
         assert cnt.frame_count == 1
+
+        # Reset dynamo state
+        torch._dynamo.reset()

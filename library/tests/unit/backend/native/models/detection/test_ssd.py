@@ -22,7 +22,7 @@ class TestSSD:
         return SSD(
             model_name="ssd_mobilenetv2",
             label_info=3,
-            data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         )
 
     @pytest.fixture
@@ -61,7 +61,7 @@ class TestSSD:
         prev_model = SSD(
             model_name="ssd_mobilenetv2",
             label_info=2,
-            data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         )
         state_dict = prev_model.state_dict()
         fxt_model.model_classes = [1, 2, 3]
@@ -99,25 +99,18 @@ class TestSSD:
         output = fxt_model.forward_for_tracing(torch.randn(1, 3, 32, 32))
         assert len(output) == 4
 
-    @pytest.mark.parametrize(
-        "model",
-        [
-            SSD(
-                model_name="ssd_mobilenetv2",
-                label_info=3,
-                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-            ),
-        ],
-    )
-    def test_compiled_model(self, model):
+    def test_compiled_model(self, fxt_model):
         # Set Compile Counter
         torch._dynamo.reset()
         cnt = CompileCounter()
 
         # Set model compile setting
-        model.model = torch.compile(model.model, backend=cnt)
+        fxt_model.model = torch.compile(fxt_model.model, backend=cnt)
 
-        # Prepare inputs
-        x = torch.randn(1, 3, *model.data_input_params.input_size)
-        model.model(x)
+        # Prepare inputs - use smaller size to reduce memory
+        x = torch.randn(1, 3, *fxt_model.data_input_params.input_size)
+        fxt_model.model(x)
         assert cnt.frame_count == 1
+
+        # Reset dynamo state
+        torch._dynamo.reset()

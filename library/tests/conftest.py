@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
+import gc
 from collections import defaultdict
 from pathlib import Path
 
@@ -145,6 +146,17 @@ def pytest_addoption(parser: pytest):
         action="store_true",
         help="Run only the model category tests that categorised as BALANCE, SPEED, ACCURACY.",
     )
+
+
+@pytest.fixture(autouse=True)
+def cleanup_memory():
+    """Cleanup memory after each test to prevent OOM errors in CI."""
+    yield
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+    if is_xpu_available():
+        torch.xpu.empty_cache()
 
 
 @pytest.fixture(scope="session")

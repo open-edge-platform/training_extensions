@@ -229,9 +229,7 @@ class TestOTXDataset:
         mock_transformed_item = Mock(spec=OTXSample)
 
         # First call returns None, second returns valid item
-        with patch.object(dataset, "_apply_transforms", side_effect=[None, mock_transformed_item]), patch.object(
-            dataset, "_sample_another_idx", return_value=10
-        ):
+        with patch.object(dataset, "_apply_transforms", side_effect=[None, mock_transformed_item]):
             result = dataset[5]
 
             assert result == mock_transformed_item
