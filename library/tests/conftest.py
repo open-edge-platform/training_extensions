@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
-import gc
+import multiprocessing
 from collections import defaultdict
 from pathlib import Path
 
@@ -21,6 +21,9 @@ from otx.types.label import HLabelInfo, LabelInfo, NullLabelInfo, SegLabelInfo
 from otx.types.task import OTXTaskType
 from otx.utils.device import is_xpu_available
 from tests.utils import ExportCase2Test
+
+if multiprocessing.get_start_method(allow_none=True) is None:
+    multiprocessing.set_start_method("forkserver")
 
 
 def pytest_addoption(parser: pytest):
@@ -146,17 +149,6 @@ def pytest_addoption(parser: pytest):
         action="store_true",
         help="Run only the model category tests that categorised as BALANCE, SPEED, ACCURACY.",
     )
-
-
-@pytest.fixture(autouse=True)
-def cleanup_memory():
-    """Cleanup memory after each test to prevent OOM errors in CI."""
-    yield
-    gc.collect()
-    if torch.cuda.is_available():
-        torch.cuda.empty_cache()
-    if is_xpu_available():
-        torch.xpu.empty_cache()
 
 
 @pytest.fixture(scope="session")
