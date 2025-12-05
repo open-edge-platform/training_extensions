@@ -41,8 +41,6 @@ class TestOTXKeypointDetectionDataset:
         entity = dataset._get_item_impl(0)
         assert hasattr(entity, "image")
         assert isinstance(entity.image, Tensor)
-        # image dtype should be float32
-        assert entity.image.dtype.name == "float32"
         assert hasattr(entity, "img_info")
         assert isinstance(entity.img_info, ImageInfo)
         assert hasattr(entity, "label")

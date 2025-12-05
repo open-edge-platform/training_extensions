@@ -119,7 +119,7 @@ class ClassificationSample(OTXSample):
 
     subset: Subset = subset_field()
 
-    image: np.ndarray | tv_tensors.Image = image_field(dtype=pl.UInt8())
+    image: np.ndarray | tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8())
     label: torch.Tensor = label_field(pl.Int32())
     dm_image_info: DmImageInfo = image_info_field()
 
@@ -137,7 +137,7 @@ class ClassificationSample(OTXSample):
 class ClassificationMultiLabelSample(OTXSample):
     """ClassificationMultiLabelSample is a base class for OTX multi label classification items."""
 
-    image: np.ndarray | tv_tensors.Image = image_field(dtype=pl.UInt8())
+    image: np.ndarray | tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8())
     label: np.ndarray | torch.Tensor = label_field(pl.Int32(), multi_label=True)
     dm_image_info: DmImageInfo = image_info_field()
 
@@ -155,7 +155,7 @@ class ClassificationMultiLabelSample(OTXSample):
 class ClassificationHierarchicalSample(OTXSample):
     """ClassificationHierarchicalSample is a base class for OTX hierarchical classification items."""
 
-    image: np.ndarray | tv_tensors.Image = image_field(dtype=pl.UInt8())
+    image: np.ndarray | tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8())
     label: np.ndarray | torch.Tensor = label_field(pl.Int32(), is_list=True)
     dm_image_info: DmImageInfo = image_info_field()
 
@@ -173,7 +173,7 @@ class ClassificationHierarchicalSample(OTXSample):
 class DetectionSample(OTXSample):
     """DetectionSample is a base class for OTX detection items."""
 
-    image: np.ndarray | tv_tensors.Image = image_field(dtype=pl.UInt8(), format="BGR")
+    image: np.ndarray | tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8(), format="BGR")
     label: torch.Tensor = label_field(pl.Int32(), is_list=True)
     bboxes: np.ndarray | tv_tensors.BoundingBoxes = bbox_field(dtype=pl.Float32())
     dm_image_info: DmImageInfo = image_info_field()
@@ -202,7 +202,7 @@ class SegmentationSample(OTXSample):
     """OTXDataItemSample is a base class for OTX data items."""
 
     subset: Subset = subset_field()
-    image: tv_tensors.Image = image_field(dtype=pl.UInt8(), channels_first=True)
+    image: np.ndarray | tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
     masks: tv_tensors.Mask = mask_field(dtype=pl.UInt8(), channels_first=True, has_channels_dim=True)
     dm_image_info: DmImageInfo = image_info_field()
 
@@ -220,7 +220,7 @@ class InstanceSegmentationSample(OTXSample):
     """OTXSample for instance segmentation tasks."""
 
     subset: Subset = subset_field()
-    image: tv_tensors.Image = image_field(dtype=pl.UInt8(), channels_first=True)
+    image: np.ndarray | tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
     bboxes: np.ndarray | tv_tensors.BoundingBoxes = bbox_field(dtype=pl.Float32())
     label: torch.Tensor = label_field(is_list=True)
     polygons: np.ndarray = polygon_field(dtype=pl.Float32())  # Ragged array of (Npoly, 2) arrays
@@ -250,7 +250,7 @@ class InstanceSegmentationSampleWithMask(OTXSample):
     """OTXSample for instance segmentation tasks."""
 
     subset: Subset = subset_field()
-    image: tv_tensors.Image = image_field(dtype=pl.UInt8(), channels_first=True)
+    image: np.ndarray | tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
     bboxes: np.ndarray | tv_tensors.BoundingBoxes = bbox_field(dtype=pl.Float32())
     masks: tv_tensors.Mask = instance_mask_field(dtype=pl.UInt8())
     label: torch.Tensor = label_field(is_list=True)
