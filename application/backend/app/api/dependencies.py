@@ -8,10 +8,11 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, Request, UploadFile, status
 from sqlalchemy.orm import Session
 
-from app.api.validators import ProjectID, SinkID, SourceID
+from app.api.validators import DatasetRevisionID, ProjectID, SinkID, SourceID
 from app.core.jobs.control_plane import JobQueue
 from app.db import get_db_session
 from app.models import Project, Sink, Source
+from app.models.dataset_revision import DatasetRevision
 from app.scheduler import Scheduler
 from app.services import (
     BaseWeightsService,
@@ -214,3 +215,15 @@ def get_job_queue(request: Request) -> JobQueue:
 def get_training_configuration_service(db: Annotated[Session, Depends(get_db)]) -> TrainingConfigurationService:
     """Provides a TrainingConfigurationService instance for managing training configurations."""
     return TrainingConfigurationService(db_session=db)
+
+
+def get_dataset_revision(
+    project_id: ProjectID,
+    dataset_revision_id: DatasetRevisionID,
+    dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
+) -> DatasetRevision:
+    """Provides a DatasetService instance."""
+    try:
+        return dataset_service.get_dataset_revision(project_id=project_id, revision_id=dataset_revision_id)
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

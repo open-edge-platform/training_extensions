@@ -110,3 +110,51 @@ class TestModelEndpoints:
         assert response.status_code == status.HTTP_409_CONFLICT
         assert str(err) == response.json()["detail"]
         fxt_model_service.delete_model.assert_called_once_with(project_id=fxt_get_project.id, model_id=model_id)
+
+    def test_download_model_binary_success(self, fxt_get_project, fxt_model, fxt_model_service, fxt_client, tmp_path):
+        import zipfile
+        from io import BytesIO
+
+        # Create mock model files
+        model_dir = tmp_path / "models" / str(fxt_model.id)
+        model_dir.mkdir(parents=True)
+        xml_content = "<xml>model data</xml>"
+        bin_content = b"binary model data"
+        (model_dir / "model.xml").write_text(xml_content)
+        (model_dir / "model.bin").write_bytes(bin_content)
+
+        fxt_model_service.get_model_files_path.return_value = model_dir
+
+        response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models/{fxt_model.id}/binary")
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.headers["content-type"] == "application/zip"
+        assert "content-disposition" in response.headers
+        assert f"model-{fxt_model.id}-fp16.zip" in response.headers["content-disposition"]
+
+        # Verify zip file contents
+        zip_data = BytesIO(response.content)
+        with zipfile.ZipFile(zip_data, "r") as zip_file:
+            assert "model.xml" in zip_file.namelist()
+            assert "model.bin" in zip_file.namelist()
+            assert zip_file.read("model.xml").decode() == xml_content
+            assert zip_file.read("model.bin") == bin_content
+
+        fxt_model_service.get_model_files_path.assert_called_once_with(
+            project_id=fxt_get_project.id, model_id=fxt_model.id
+        )
+
+    def test_download_model_binary_not_found(self, fxt_get_project, fxt_model_service, fxt_client):
+        model_id = uuid4()
+        fxt_model_service.get_model_files_path.side_effect = ResourceNotFoundError(ResourceType.MODEL, str(model_id))
+
+        response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models/{model_id}/binary")
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        fxt_model_service.get_model_files_path.assert_called_once_with(project_id=fxt_get_project.id, model_id=model_id)
+
+    def test_download_model_binary_invalid_id(self, fxt_get_project, fxt_model_service, fxt_client):
+        response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models/invalid-id/binary")
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        fxt_model_service.get_model.assert_not_called()
