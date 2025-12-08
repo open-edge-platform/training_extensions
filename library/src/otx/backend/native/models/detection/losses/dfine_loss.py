@@ -424,10 +424,7 @@ class DFINECriterion(nn.Module):
         dn_positive_idx, dn_num_group = dn_meta["dn_positive_idx"], dn_meta["dn_num_group"]
         # Use subsampled num_gts from dn_meta if available (when ground truth was capped)
         # Otherwise fall back to counting from original targets
-        if "dn_num_gts" in dn_meta:
-            num_gts = dn_meta["dn_num_gts"]
-        else:
-            num_gts = [len(t["labels"]) for t in targets]
+        num_gts = dn_meta["dn_num_gts"] if "dn_num_gts" in dn_meta else [len(t["labels"]) for t in targets]
         device = targets[0]["labels"].device
 
         dn_match_indices = []
