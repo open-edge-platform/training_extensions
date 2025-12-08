@@ -11,7 +11,6 @@ import pytest
 
 from otx.tools.converter import TEMPLATE_ID_MAPPING, ModelStatus
 from otx.types.task import OTXTaskType
-from tests.utils import get_tests_asset_path
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -150,13 +149,13 @@ def fxt_asset_dir() -> Path:
 @pytest.fixture(scope="module")
 def fxt_target_dataset_per_task() -> dict:
     return {
-        "multi_class_cls": get_tests_asset_path("classification_dataset"),
-        "multi_label_cls": get_tests_asset_path("multilabel_classification"),
-        "h_label_cls": get_tests_asset_path("hlabel_classification"),
-        "detection": get_tests_asset_path("car_tree_bug"),
-        "rotated_detection": get_tests_asset_path("car_tree_bug"),
-        "instance_segmentation": get_tests_asset_path("car_tree_bug"),
-        "semantic_segmentation": get_tests_asset_path("common_semantic_segmentation_dataset"),
-        "keypoint_detection": get_tests_asset_path("car_tree_bug_keypoint"),
-        "tiling_detection": get_tests_asset_path("tiling_small_objects"),
+        "multi_class_cls": "tests/assets/classification_dataset",
+        "multi_label_cls": "tests/assets/multilabel_classification",
+        "h_label_cls": "tests/assets/hlabel_classification",
+        "detection": "tests/assets/car_tree_bug",
+        "rotated_detection": "tests/assets/car_tree_bug",
+        "instance_segmentation": "tests/assets/car_tree_bug",
+        "semantic_segmentation": "tests/assets/common_semantic_segmentation_dataset",
+        "keypoint_detection": "tests/assets/car_tree_bug_keypoint",
+        "tiling_detection": "tests/assets/tiling_small_objects",
     }

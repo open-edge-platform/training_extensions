@@ -10,7 +10,6 @@ from pytest_mock import MockerFixture
 from otx.backend.openvino.engine import OVEngine
 from otx.backend.openvino.models import OVModel, OVMultilabelClassificationModel
 from otx.types.label import NullLabelInfo
-from tests.utils import get_tests_asset_path
 
 
 @pytest.fixture
@@ -21,7 +20,7 @@ def fxt_ov_model(tmp_path, get_dummy_ov_cls_model) -> OVModel:
 
 @pytest.fixture
 def fxt_engine(tmp_path, fxt_ov_model) -> OVEngine:
-    data_root = get_tests_asset_path("multilabel_classification")
+    data_root = "tests/assets/multilabel_classification/"
 
     return OVEngine(
         data=data_root,
@@ -32,7 +31,7 @@ def fxt_engine(tmp_path, fxt_ov_model) -> OVEngine:
 
 class TestEngine:
     def test_constructor(self, mocker, tmp_path, fxt_ov_model) -> None:
-        data_root = get_tests_asset_path("multilabel_classification")
+        data_root = "tests/assets/multilabel_classification/"
         engine = OVEngine(data=data_root, model=fxt_ov_model, work_dir=tmp_path)
         assert engine.datamodule.task == "MULTI_LABEL_CLS"
         assert isinstance(engine.model, OVModel)

@@ -12,13 +12,12 @@ from torchvision.transforms.v2 import Identity, Transform
 
 from otx.data.dataset.keypoint_detection import OTXKeypointDetectionDataset
 from otx.data.entity.base import ImageInfo
-from tests.utils import get_tests_asset_path
 
 
 class TestOTXKeypointDetectionDataset:
     @pytest.fixture
     def fxt_dm_dataset(self) -> DmDataset:
-        return DmDataset.import_from(get_tests_asset_path("car_tree_bug_keypoint"), format="coco_person_keypoints")
+        return DmDataset.import_from("tests/assets/car_tree_bug_keypoint", format="coco_person_keypoints")
 
     @pytest.fixture
     def fxt_tvt_transforms(self) -> Identity:
