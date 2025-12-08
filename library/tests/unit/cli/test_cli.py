@@ -81,17 +81,11 @@ class TestOTXCLI:
 
     @pytest.fixture
     def fxt_train_argv(self, tmpdir) -> list[str]:
-        from pathlib import Path
-
-        # Get the recipe path relative to the library directory
-        recipe_path = (
-            Path(__file__).resolve().parents[3] / "src" / "otx" / "recipe" / "detection" / "atss_mobilenetv2.yaml"
-        )
         return [
             "otx",
             "train",
             "--config",
-            str(recipe_path),
+            "src/otx/recipe/detection/atss_mobilenetv2.yaml",
             "--data_root",
             get_tests_asset_path("car_tree_bug"),
             "--model.label_info",
@@ -154,16 +148,11 @@ class TestOTXCLI:
 
     @pytest.fixture
     def fxt_print_config_scheduler_override_command(self, monkeypatch) -> None:
-        from pathlib import Path
-
-        recipe_path = (
-            Path(__file__).resolve().parents[3] / "src" / "otx" / "recipe" / "detection" / "atss_mobilenetv2.yaml"
-        )
         argv = [
             "otx",
             "train",
             "--config",
-            str(recipe_path),
+            "src/otx/recipe/detection/atss_mobilenetv2.yaml",
             "--data_root",
             get_tests_asset_path("car_tree_bug"),
             "--model.scheduler.monitor",
@@ -182,16 +171,11 @@ class TestOTXCLI:
 
     @pytest.fixture
     def fxt_metric_override_command(self, monkeypatch) -> None:
-        from pathlib import Path
-
-        recipe_path = (
-            Path(__file__).resolve().parents[3] / "src" / "otx" / "recipe" / "detection" / "atss_mobilenetv2.yaml"
-        )
         argv = [
             "otx",
             "train",
             "--config",
-            str(recipe_path),
+            "src/otx/recipe/detection/atss_mobilenetv2.yaml",
             "--data_root",
             get_tests_asset_path("car_tree_bug"),
             "--metric",

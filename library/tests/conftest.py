@@ -31,11 +31,28 @@ def setup_test_environment():
     - Sets multiprocessing method to 'spawn'
     - Disables CUDA for unit tests
     - Cleans up PyTorch internals on teardown
+    - Ensures tests run from the correct directory (library root)
     """
+    import os
+
+    # Save the current working directory
+    original_cwd = Path.cwd()
+
+    # Find the library root directory (where pyproject.toml is located)
+    tests_dir = Path(__file__).parent
+    library_root = tests_dir.parent
+
+    # Change to library root if not already there
+    if Path.cwd() != library_root:
+        os.chdir(library_root)
+
     # Set multiprocessing method if not already set
     if multiprocessing.get_start_method(allow_none=True) is None:
         multiprocessing.set_start_method("spawn")
     yield
+
+    # Restore original working directory
+    os.chdir(original_cwd)
 
     # Force cleanup to prevent segfaults during pytest teardown
     try:
