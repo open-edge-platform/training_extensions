@@ -257,7 +257,11 @@ def set_dataset_item_annotations(
     """Set dataset item annotations"""
     try:
         dataset_item = dataset_service.set_dataset_item_annotations(
-            project=project, dataset_item_id=dataset_item_id, annotations=dataset_item_annotations.annotations
+            project=project,
+            dataset_item_id=dataset_item_id,
+            annotations=dataset_item_annotations.annotations,
+            # Annotations submitted via API are considered user-reviewed, unlike auto-generated predictions
+            user_reviewed=True,
         )
         return DatasetItemAnnotations(
             annotations=dataset_item.annotation_data,  # type: ignore[arg-type]
