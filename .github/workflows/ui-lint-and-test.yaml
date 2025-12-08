@@ -115,6 +115,7 @@ jobs:
         id: setup-node
         with:
           node-version-file: application/ui/.nvmrc
+          package-manager-cache: false
 
       - name: Install dependencies
         working-directory: "application/ui"
@@ -152,6 +153,7 @@ jobs:
         id: setup-node
         with:
           node-version-file: application/ui/.nvmrc
+          package-manager-cache: false
 
       - name: Install dependencies
         working-directory: "application/ui"
@@ -203,6 +205,7 @@ jobs:
         id: setup-node
         with:
           node-version-file: application/ui/.nvmrc
+          package-manager-cache: false
 
       - name: Install dependencies
         working-directory: "application/ui"
@@ -313,6 +316,7 @@ jobs:
         id: setup-node
         with:
           node-version-file: application/ui/.nvmrc
+          package-manager-cache: false
 
       - name: Install dependencies
         working-directory: "application/ui"

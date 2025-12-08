@@ -18,7 +18,7 @@ jobs:
   check_paths:
     name: Check which language should be analyzed by CodeQL
     runs-on: ubuntu-latest
-    if: ${{ github.event_name }} == 'pull_request'
+    if: github.event_name == 'pull_request'
     outputs:
       run_python: "${{ steps.prepare_outputs.outputs.run_python }}"
       run_javascript_typescript: "${{ steps.prepare_outputs.outputs.run_javascript_typescript }}"
