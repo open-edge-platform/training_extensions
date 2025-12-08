@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from uuid import UUID
 
+from loguru import logger
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -139,3 +140,35 @@ class ModelService(BaseSessionManagedService):
                 label_schema_revision=labels_schema_rev,
             )
         )
+
+    def get_model_files_path(self, project_id: UUID, model_id: UUID) -> Path:
+        """
+        Get the directory path containing the model files (model.xml and model.bin).
+
+        Args:
+            project_id (UUID): The unique identifier of the project.
+            model_id (UUID): The unique identifier of the model.
+
+        Returns:
+            Path: The directory path containing the model files.
+
+        Raises:
+            ResourceNotFoundError: If the model directory doesn't exist or required files are missing.
+            FileNotFoundError: If the directories or model files are not found in the expected location.
+        """
+        model_revision = self.get_model(project_id=project_id, model_id=model_id)
+        if model_revision.files_deleted:
+            raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
+
+        model_dir = self._projects_dir / str(project_id) / "models" / str(model_id)
+        if not model_dir.exists():
+            logger.error("Model directory not found: {}", model_dir)
+            raise FileNotFoundError
+
+        xml_file = model_dir / "model.xml"
+        bin_file = model_dir / "model.bin"
+        if not xml_file.exists() or not bin_file.exists():
+            logger.error("Model files missing in directory: {}", model_dir)
+            raise FileNotFoundError
+
+        return model_dir
