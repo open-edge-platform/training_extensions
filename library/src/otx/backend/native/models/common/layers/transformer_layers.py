@@ -1389,18 +1389,22 @@ def get_contrastive_denoising_training_group(
     box_noise_scale: float = 1.0,
     max_denoising_queries: int = 1000,
 ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, dict[str, torch.Tensor]] | tuple[None, None, None, None]:
-    """Generate contrastive denoising training group.
+    """Generate contrastive denoising training group with memory-efficient capping.
+
+    This function creates noisy versions of ground truth boxes for denoising training.
+    When there are too many objects per image, it subsamples ground truth to prevent OOM.
+
+    Memory usage scales with (num_denoising_queries + num_queries)² for attention mask.
 
     Args:
         targets (List[Dict[str, torch.Tensor]]): List of target dictionaries.
         num_classes (int): Number of classes.
         num_queries (int): Number of queries.
         class_embed (torch.nn.Module): Class embedding module.
-        num_denoising (int, optional): Number of denoising queries. Defaults to 100.
+        num_denoising (int, optional): Target number of denoising queries (soft hint). Defaults to 100.
         label_noise_ratio (float, optional): Ratio of label noise. Defaults to 0.5.
         box_noise_scale (float, optional): Scale of box noise. Defaults to 1.0.
-        max_denoising_queries (int, optional): Maximum number of denoising queries to prevent OOM.
-            Defaults to 1000.
+        max_denoising_queries (int, optional): Hard limit on denoising queries to prevent OOM. Defaults to 1000.
 
     Returns:
         Tuple[Tensor,Tensor,Tensor, dict[str, Tensor]] | tuple[None,None,None,None]:
@@ -1417,9 +1421,29 @@ def get_contrastive_denoising_training_group(
     num_group = 1 if num_group == 0 else num_group
 
     # Cap the number of denoising queries to prevent OOM with many ground truth objects
+    # Each GT produces 2 queries (positive + negative) per group
     total_dn_queries = max_gt_num * 2 * num_group
     if total_dn_queries > max_denoising_queries:
-        num_group = max(1, max_denoising_queries // (max_gt_num * 2))
+        # First, try reducing the number of groups
+        num_group = max_denoising_queries // (max_gt_num * 2)
+
+        if num_group < 1:
+            # Even with 1 group, max_gt_num * 2 exceeds limit
+            # Must subsample ground truth boxes
+            num_group = 1
+            max_gt_num_capped = max_denoising_queries // 2
+
+            # Vectorized subsampling with consistent permutation for labels and boxes
+            def subsample_target(t: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
+                n = len(t["labels"])
+                if n > max_gt_num_capped:
+                    return {"labels": t["labels"][:max_gt_num_capped], "boxes": t["boxes"][:max_gt_num_capped]}
+                return t
+
+            targets = [subsample_target(t) for t in targets]
+            num_gts = [min(len(t["labels"]), max_gt_num_capped) for t in targets]
+            max_gt_num = max_gt_num_capped
+
     # pad gt to max_num of a batch
     bs = len(num_gts)
 
@@ -1488,6 +1512,7 @@ def get_contrastive_denoising_training_group(
         "dn_positive_idx": dn_positive_idx,
         "dn_num_group": num_group,
         "dn_num_split": [num_denoising, num_queries],
+        "dn_num_gts": num_gts,
     }
 
     return input_query_class, input_query_bbox, attn_mask, dn_meta
