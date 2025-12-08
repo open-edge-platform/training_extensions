@@ -31,7 +31,7 @@ jobs:
       run_workflow: ${{ steps.run_workflow.outputs.run }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
 
@@ -67,17 +67,17 @@ jobs:
       contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
 
       - name: Initial cleanup
-        uses: open-edge-platform/geti-ci/actions/cleanup-runner@b7d997c1651b1e1b99a280033bd268b55ccb7923
+        uses: open-edge-platform/geti-ci/actions/cleanup-runner@afe1729816efe6eb87b6b3a5643ad8aa44fba5ee
         with:
           type: "initial"
 
       - name: Pre-build cleanup
-        uses: open-edge-platform/geti-ci/actions/cleanup-runner@b7d997c1651b1e1b99a280033bd268b55ccb7923
+        uses: open-edge-platform/geti-ci/actions/cleanup-runner@afe1729816efe6eb87b6b3a5643ad8aa44fba5ee
         with:
           type: "pre-build"
 
@@ -86,7 +86,7 @@ jobs:
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
-        uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
         with:
           tags: |
             type=sha
@@ -219,7 +219,7 @@ jobs:
     continue-on-error: true
     steps:
       - name: Download all image size artifacts
-        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
         with:
           pattern: image-sizes-*
           merge-multiple: true
