@@ -37,6 +37,9 @@ def _test_augmentation(
         format=data_format,
     )
 
+    # Extract sampler config once before the loop
+    sampler_config = train_config.pop("sampler", {})
+
     # Evaluate all on/off aug combinations
     img_shape = None
     for switches in itertools.product([True, False], repeat=len(configurable_augs)):
@@ -53,7 +56,7 @@ def _test_augmentation(
         dataset = OTXDatasetFactory.create(
             task=task,
             dm_subset=dm_dataset,
-            cfg_subset=SubsetConfig(sampler=SamplerConfig(**train_config.pop("sampler", {})), **train_config),
+            cfg_subset=SubsetConfig(sampler=SamplerConfig(**sampler_config), **train_config),
             data_format=data_format,
         )
         # Check if all aug combinations are size-compatible
@@ -114,5 +117,4 @@ def test_augmentation_kp_det(
         "RandomGaussianBlur",
         "RandomGaussianNoise",
     ]
-    _test_augmentation(recipe, fxt_target_dataset_per_task, configurable_augs)
     _test_augmentation(recipe, fxt_target_dataset_per_task, configurable_augs)

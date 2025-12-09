@@ -124,6 +124,11 @@ def to_np_image(img: np.ndarray | Tensor | list) -> np.ndarray | list[np.ndarray
 
     """
     if isinstance(img, np.ndarray):
+        # Check if the numpy array is in CHW format (channels should be <= 4 typically)
+        # If the first dimension is small (<=4) and smaller than other dimensions, it's likely CHW format
+        if img.ndim == 3 and img.shape[0] <= 4 and img.shape[0] < min(img.shape[1:]):
+            # Image is in CHW format, transpose to HWC
+            return np.ascontiguousarray(img.transpose(1, 2, 0))
         return img
     if isinstance(img, list):
         return [to_np_image(im) for im in img]

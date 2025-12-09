@@ -113,6 +113,10 @@ class NumpytoTVTensorMixin:
         """Convert numpy to tv tensors."""
         if self.is_numpy_to_tvtensor and inputs is not None:
             if (image := getattr(inputs, "image", None)) is not None and isinstance(image, np.ndarray):
+                # Ensure the image is in HWC format before converting to tv_tensor
+                # If the image is in CHW format (first dim <= 4 and smaller than other dims), transpose it
+                if image.ndim == 3 and image.shape[0] <= 4 and image.shape[0] < min(image.shape[1:]):
+                    image = image.transpose(1, 2, 0)
                 inputs.image = F.to_image(image.copy())
             if (bboxes := getattr(inputs, "bboxes", None)) is not None and isinstance(bboxes, np.ndarray):
                 inputs.bboxes = tv_tensors.BoundingBoxes(bboxes, format="xyxy", canvas_size=inputs.img_info.img_shape)  # type: ignore[attr-defined, union-attr]
