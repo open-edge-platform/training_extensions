@@ -12,7 +12,7 @@ name = "otx"
 dynamic = ["version"]
 description = "OpenVINO™ Training Extensions: Train, Evaluate, Optimize, Deploy Computer Vision Models via OpenVINO™"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.14"
 license = "Apache-2.0"
 authors = [
     { name = "OpenVINO™ Training Extensions Contributors" },
@@ -84,8 +84,12 @@ lint = [
 
 [project.optional-dependencies]
 cpu = [
-    "torch==2.9.1+cpu",
-    "torchvision==0.24.1+cpu"
+    # Note: platform-specific wheels are only available for Linux and Windows.
+    # For macOS, there is only one version of torch (default) available via PyPI.
+    "torch==2.9.1+cpu ; sys_platform == 'linux' or sys_platform == 'win32'",
+    "torchvision==0.24.1+cpu ; sys_platform == 'linux' or sys_platform == 'win32'",
+    "torch==2.9.1 ; sys_platform != 'linux' and sys_platform != 'win32'",
+    "torchvision==0.24.1 ; sys_platform != 'linux' and sys_platform != 'win32'"
 ]
 cuda = [
     "torch==2.9.1+cu128",
@@ -136,7 +140,9 @@ conflicts = [
 
 [tool.uv.sources]
 torch = [
-    { index = "torch-cpu", extra = "cpu"},
+    # Note: Pytorch indexes only provide pre-built wheels for Linux and Windows.
+    # For other platforms (e.g., macOS), Pytorch has to be installed from the default PyPI index.
+    { index = "torch-cpu", extra = "cpu", marker = "sys_platform == 'linux' or sys_platform == 'win32'"},
     { index = "torch-xpu", extra = "xpu"},
     { index = "torch-cuda", extra = "cuda"},
 ]
@@ -144,7 +150,7 @@ pytorch-triton-xpu = [
     { index = "torch-xpu", extra = "xpu"},
 ]
 torchvision = [
-    { index = "torch-cpu", extra = "cpu"},
+    { index = "torch-cpu", extra = "cpu", marker = "sys_platform == 'linux' or sys_platform == 'win32'"},
     { index = "torch-xpu", extra = "xpu"},
     { index = "torch-cuda", extra = "cuda"},
 ]
@@ -163,7 +169,6 @@ explicit = true
 name = "torch-xpu"
 url = "https://download.pytorch.org/whl/xpu"
 explicit = true
-
 
 [tool.setuptools.dynamic]
 version = {attr = "otx.__version__"}
