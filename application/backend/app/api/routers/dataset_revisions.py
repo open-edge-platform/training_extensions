@@ -3,6 +3,7 @@
 
 from pathlib import Path
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, status
 from starlette.responses import FileResponse
@@ -51,24 +52,17 @@ def list_dataset_revision_items(
         subset=subset,
     )
 
-    # Convert items to DatasetItemView format
     items = []
     for item_data in items_data:
-        # Extract relevant fields from the parquet data
-        # Note: The exact field mapping depends on the datumaro export schema
         item_view = DatasetItemView(
-            id=item_data.get("id", item_data.get("image", "unknown")),
-            name=Path(item_data.get("image", "")).stem if isinstance(item_data.get("image"), str) else "unknown",
-            format=DatasetItemFormat.JPG,  # Default, could be extracted from image path
-            width=item_data.get("image_info", {}).get("width", 0)
-            if isinstance(item_data.get("image_info"), dict)
-            else 0,
-            height=item_data.get("image_info", {}).get("height", 0)
-            if isinstance(item_data.get("image_info"), dict)
-            else 0,
+            id=UUID(item_data["id"]),
+            name=Path(item_data["image"]).stem,
+            format=DatasetItemFormat(Path(item_data["image"]).suffix.lstrip(".")),
+            width=item_data["image_info"]["width"],
+            height=item_data["image_info"]["height"],
             size=0,  # Not available in parquet
             source_id=None,
-            subset=DatasetItemSubset(item_data["subset"]) if "subset" in item_data else DatasetItemSubset.UNASSIGNED,
+            subset=DatasetItemSubset(item_data["subset"]),
         )
         items.append(item_view)
 
@@ -104,16 +98,15 @@ def get_dataset_revision_item(
         item_id=str(dataset_item_id),
     )
 
-    # Convert to DatasetItemView format
     return DatasetItemView(
-        id=item_data.get("id", item_data.get("image", "unknown")),
-        name=Path(item_data.get("image", "")).stem if isinstance(item_data.get("image"), str) else "unknown",
-        format=DatasetItemFormat.JPG,  # Default, could be extracted from image path
-        width=item_data.get("image_info", {}).get("width", 0) if isinstance(item_data.get("image_info"), dict) else 0,
-        height=item_data.get("image_info", {}).get("height", 0) if isinstance(item_data.get("image_info"), dict) else 0,
+        id=UUID(item_data["id"]),
+        name=Path(item_data["image"]).stem,
+        format=DatasetItemFormat(Path(item_data["image"]).suffix.lstrip(".")),
+        width=item_data["image_info"]["width"],
+        height=item_data["image_info"]["height"],
         size=0,  # Not available in parquet
         source_id=None,
-        subset=DatasetItemSubset(item_data["subset"]) if "subset" in item_data else DatasetItemSubset.UNASSIGNED,
+        subset=DatasetItemSubset(item_data["subset"]),
     )
 
 
