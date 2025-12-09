@@ -194,7 +194,7 @@ class TestDatasetRevisionItemEndpoints:
             "id": str(fxt_dataset_item.id),
             "image": f"/path/to/{fxt_dataset_item.name}.jpg",
             "image_info": {"width": fxt_dataset_item.width, "height": fxt_dataset_item.height},
-            "subset": fxt_dataset_item.subset.name,
+            "subset": fxt_dataset_item.subset.value,
         }
         fxt_dataset_service.get_dataset_revision_item.return_value = mock_item_data
 
