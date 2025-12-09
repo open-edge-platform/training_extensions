@@ -44,6 +44,7 @@ class Pipeline(BaseEntity):
         model_revision_id: UUID reference to the model revision entity.
         status: Current operational status of the pipeline (IDLE or RUNNING).
         data_collection_policies: List of policies governing data collection behavior during pipeline execution.
+        device: The device used for model inference (e.g., 'cpu', 'xpu', 'cuda', 'xpu-1', etc.).
 
     Raises:
         ValueError: If attempting to set status to RUNNING when source, sink, or model is not configured.
