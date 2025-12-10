@@ -141,10 +141,10 @@ class CommonSemanticSegmentationExporter(Exporter):
         index_map = np.zeros((height, width), dtype=np.uint8)
         for ann in annotations:
             if ann.type is AnnotationType.polygon:
-                bitmask = polygon_to_bitmap([ann], height, width)[0]
+                bitmask = polygon_to_bitmap([np.array(ann.points)], height, width)[0]
                 index_map[bitmask] = ann.label + 1
             elif ann.type is AnnotationType.ellipse:
-                bitmask = polygon_to_bitmap([Polygon(ann.as_polygon(20))], height, width)[0]
+                bitmask = polygon_to_bitmap([np.array(Polygon(ann.as_polygon(20)).points)], height, width)[0]
                 index_map[bitmask] = ann.label + 1
             elif ann.type is AnnotationType.bbox:
                 x1, y1, w, h = (int(v) for v in ann.get_bbox())
