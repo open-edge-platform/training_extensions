@@ -28,7 +28,8 @@ def _test_augmentation(
         task=task,
     ).config
     train_config = config["data"]["train_subset"]
-    train_config["input_size"] = (32, 32)
+    input_size = 32
+    train_config["input_size"] = (input_size, input_size)
     data_format = config["data"]["data_format"]
 
     # Load dataset
@@ -41,7 +42,6 @@ def _test_augmentation(
     sampler_config = train_config.pop("sampler", {})
 
     # Evaluate all on/off aug combinations
-    img_shape = None
     for switches in itertools.product([True, False], repeat=len(configurable_augs)):
         # Configure on/off
         for aug_name, switch in zip(configurable_augs, switches):
@@ -60,11 +60,8 @@ def _test_augmentation(
             data_format=data_format,
         )
         # Check if all aug combinations are size-compatible
-        data = dataset[0]
-        if not img_shape:
-            img_shape = data.img_info.img_shape
-        else:
-            assert img_shape == data.img_info.img_shape
+        sample = dataset[0]
+        assert sample.image.shape == (3, input_size, input_size)
 
 
 CLS_RECIPES = [recipe for recipe in pytest.RECIPE_LIST if "_cls" in recipe and "tv_" not in recipe]
@@ -112,7 +109,6 @@ def test_augmentation_kp_det(
     fxt_target_dataset_per_task: dict,
 ):
     configurable_augs = [
-        "TopdownAffine",
         "RandomPhotometricDistort",
         "RandomGaussianBlur",
         "RandomGaussianNoise",

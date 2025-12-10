@@ -82,7 +82,12 @@ class OTXKeypointDetectionDataset(OTXDataset):
         keypoints = item.keypoints
         keypoints[:, 2] = torch.clamp(keypoints[:, 2], max=1)  # OTX represents visibility as 0 or 1
         item.keypoints = keypoints
-        item.image = to_dtype(to_image(item.image), torch.float32)
+        # Handle image conversion - to_image only permutes numpy arrays, not tensors
+        image = item.image
+        if isinstance(image, torch.Tensor) and image.ndim == 3 and image.shape[-1] in (1, 3):
+            # Image is in HWC format, convert to CHW
+            image = image.permute(2, 0, 1)
+        item.image = to_dtype(to_image(image), torch.float32)
         return self._apply_transforms(item)  # type: ignore[return-value]
 
     @property

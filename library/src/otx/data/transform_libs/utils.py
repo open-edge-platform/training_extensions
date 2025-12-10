@@ -118,7 +118,7 @@ def get_image_shape(img: np.ndarray | Tensor | list) -> tuple[int, int]:
 
 
 def to_np_image(img: np.ndarray | Tensor | list) -> np.ndarray | list[np.ndarray]:
-    """Convert torch.Tensor 3D image to numpy 3D image.
+    """Convert torch.Tensor 3D image to numpy 3D image in HWC format.
 
     TODO (sungchul): move it into base data entity?
 
@@ -133,6 +133,12 @@ def to_np_image(img: np.ndarray | Tensor | list) -> np.ndarray | list[np.ndarray
     if isinstance(img, list):
         return [to_np_image(im) for im in img]
 
+    # For tensors, check if it's already in HWC format before transposing
+    # If the last dimension is <= 4 and smaller than other dimensions, it's likely HWC format
+    if img.ndim == 3 and img.shape[-1] <= 4 and img.shape[-1] < min(img.shape[:-1]):
+        # Already HWC format, just convert to numpy
+        return np.ascontiguousarray(img.numpy())
+    # CHW format, transpose to HWC
     return np.ascontiguousarray(img.numpy().transpose(1, 2, 0))
 
 

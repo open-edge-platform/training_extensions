@@ -112,12 +112,20 @@ class NumpytoTVTensorMixin:
     def convert(self, inputs: OTXDataItem | None) -> OTXDataItem | None:
         """Convert numpy to tv tensors."""
         if self.is_numpy_to_tvtensor and inputs is not None:
-            if (image := getattr(inputs, "image", None)) is not None and isinstance(image, np.ndarray):
-                # Ensure the image is in HWC format before converting to tv_tensor
-                # If the image is in CHW format (first dim <= 4 and smaller than other dims), transpose it
-                if image.ndim == 3 and image.shape[0] <= 4 and image.shape[0] < min(image.shape[1:]):
-                    image = image.transpose(1, 2, 0)
-                inputs.image = F.to_image(image.copy())
+            if (image := getattr(inputs, "image", None)) is not None:
+                if isinstance(image, np.ndarray):
+                    # Ensure the image is in HWC format before converting to tv_tensor
+                    # If the image is in CHW format (first dim <= 4 and smaller than other dims), transpose it
+                    if image.ndim == 3 and image.shape[0] <= 4 and image.shape[0] < min(image.shape[1:]):
+                        image = image.transpose(1, 2, 0)
+                    inputs.image = F.to_image(image.copy())
+                elif isinstance(image, torch.Tensor):
+                    # Handle tensor in HWC format - convert to CHW
+                    # If the last dimension is <= 4 and smaller than other dims, it's likely HWC format
+                    if image.ndim == 3 and image.shape[-1] <= 4 and image.shape[-1] < min(image.shape[:-1]):
+                        image = image.permute(2, 0, 1)
+                    # Always wrap in tv_tensors.Image to ensure proper type for torchvision transforms
+                    inputs.image = tv_tensors.Image(image)
             if (bboxes := getattr(inputs, "bboxes", None)) is not None and isinstance(bboxes, np.ndarray):
                 inputs.bboxes = tv_tensors.BoundingBoxes(bboxes, format="xyxy", canvas_size=inputs.img_info.img_shape)  # type: ignore[attr-defined, union-attr]
             if (masks := getattr(inputs, "masks", None)) is not None and isinstance(masks, np.ndarray):
@@ -2733,18 +2741,65 @@ class Compose(tvt_v2.Compose):
     """Re-implementation of torchvision.transforms.v2.Compose.
 
     MMCV transforms can produce None, so it is required to skip the result.
+
+    This class also handles native torchvision transforms by extracting only the
+    transformable fields (image, masks, bboxes) and applying transforms to them,
+    avoiding transforms being applied to non-image tensors like labels.
     """
+
+    def _is_native_torchvision_transform(self, transform: tvt_v2.Transform) -> bool:
+        """Check if the transform is a native torchvision transform."""
+        module = type(transform).__module__
+        return module.startswith("torchvision.")
+
+    def _apply_native_transform(self, transform: tvt_v2.Transform, inputs: OTXDataItem) -> OTXDataItem:
+        """Apply native torchvision transform only to image-related fields."""
+        # Build a dict of transformable fields
+        transformable = {}
+        if (image := getattr(inputs, "image", None)) is not None:
+            transformable["image"] = image
+        if (masks := getattr(inputs, "masks", None)) is not None:
+            transformable["masks"] = masks
+        if (bboxes := getattr(inputs, "bboxes", None)) is not None:
+            transformable["bboxes"] = bboxes
+        if (label := getattr(inputs, "label", None)) is not None:
+            transformable["labels"] = label
+
+        if not transformable:
+            return inputs
+
+        # Apply transform to transformable fields
+        # If there's only an image, pass it directly; otherwise pass as dict
+        if len(transformable) == 1 and "image" in transformable:
+            result = transform(transformable["image"])
+            inputs.image = result
+        else:
+            result = transform(transformable)
+            if isinstance(result, dict):
+                for key, value in result.items():
+                    # Map 'labels' back to 'label' for OTXDataItem
+                    attr_name = "label" if key == "labels" else key
+                    setattr(inputs, attr_name, value)
+            else:
+                # Single result, assume it's the image
+                inputs.image = result
+
+        return inputs
 
     def forward(self, *inputs: OTXDataItem) -> OTXDataItem | None:
         """Forward with skipping None."""
         needs_unpacking = len(inputs) > 1
         for transform in self.transforms:
-            outputs = transform(*inputs)
+            if self._is_native_torchvision_transform(transform):
+                # Apply native transforms only to image-related fields
+                outputs = self._apply_native_transform(transform, inputs[0])
+            else:
+                outputs = transform(*inputs)
             # MMCV transform can produce None. Please see
             # https://github.com/open-mmlab/mmengine/blob/26f22ed283ae4ac3a24b756809e5961efe6f9da8/mmengine/dataset/base_dataset.py#L59-L66
             if outputs is None:
                 return outputs
-            inputs = outputs if needs_unpacking else (outputs,)
+            inputs = outputs if needs_unpacking else (outputs,)  # type: ignore[assignment]
         return outputs
 
 

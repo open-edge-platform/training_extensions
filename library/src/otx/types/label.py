@@ -33,6 +33,16 @@ class LabelInfo:
     label_ids: list[str]
     label_groups: list[list[str]]
 
+    def __eq__(self, other: object) -> bool:
+        """Compare two LabelInfo objects, normalizing list/tuple differences."""
+        if not isinstance(other, LabelInfo):
+            return NotImplemented
+        return (
+            list(self.label_names) == list(other.label_names)
+            and list(self.label_ids) == list(other.label_ids)
+            and [list(g) for g in self.label_groups] == [list(g) for g in other.label_groups]
+        )
+
     @property
     def num_classes(self) -> int:
         """Return number of labels."""

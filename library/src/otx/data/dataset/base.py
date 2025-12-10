@@ -27,6 +27,27 @@ Transforms = Union[Compose, Callable, List[Callable], dict[str, Compose | Callab
 RNG = np.random.default_rng(42)
 
 
+def _ensure_chw_format(img: torch.Tensor) -> torch.Tensor:
+    """Ensure image tensor is in CHW format.
+
+    Args:
+        img: Image tensor that may be in HWC or CHW format
+
+    Returns:
+        Image tensor in CHW format (C, H, W) for 3D or (B, C, H, W) for 4D
+    """
+    if img.ndim == 3:
+        # Check if last dimension is likely channels (small value like 1, 3, or 4)
+        # and first dimension is not (larger, like image height)
+        if img.shape[-1] in (1, 3, 4) and img.shape[0] > 4:
+            # HWC format detected, convert to CHW
+            img = img.permute(2, 0, 1)
+        # If 4 channels (RGBA), convert to 3 channels (RGB)
+        if img.shape[0] == 4:
+            img = img[:3]
+    return img
+
+
 def _default_collate_fn(items: list[OTXSample]) -> OTXDataBatch:
     """Collate OTXSample items into an OTXDataBatch.
 
@@ -46,6 +67,8 @@ def _default_collate_fn(items: list[OTXSample]) -> OTXDataBatch:
         else:
             # Convert numpy array to float32 tensor
             img = torch.from_numpy(img).float()
+        # Ensure image is in CHW format
+        img = _ensure_chw_format(img)
         image_tensors.append(img)
 
     # Try to stack images if they have the same shape
