@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 import logging
-import logging as log
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Sequence
 
@@ -151,13 +150,13 @@ class OTXDataModule(LightningDataModule):
 
         if self.auto_num_workers:
             if self.device not in [DeviceType.gpu, DeviceType.auto]:
-                log.warning(
+                logger.warning(
                     "Only GPU device type support auto_num_workers. "
                     f"Current deveice type is {self.device!s}. auto_num_workers is skipped.",
                 )
             elif (num_workers := get_adaptive_num_workers()) is not None:
                 for subset_name, subset_config in config_mapping.items():
-                    log.info(
+                    logger.info(
                         f"num_workers of {subset_name} subset is changed : "
                         f"{subset_config.num_workers} -> {num_workers}",
                     )
@@ -166,7 +165,7 @@ class OTXDataModule(LightningDataModule):
         label_infos: list[LabelInfo] = []
         for name, dm_subset in dataset.subsets().items():
             if name not in config_mapping:
-                log.warning(f"{name} is not available. Skip it")
+                logger.warning(f"{name} is not available. Skip it")
                 continue
 
             otx_dataset = OTXDatasetFactory.create(
@@ -186,7 +185,7 @@ class OTXDataModule(LightningDataModule):
                 )
             self.subsets[name] = otx_dataset
             label_infos += [self.subsets[name].label_info]
-            log.info(f"Add name: {name}, self.subsets: {self.subsets}")
+            logger.info(f"Add name: {name}, self.subsets: {self.subsets}")
 
         if self._is_meta_info_valid(label_infos) is False:
             msg = "All data meta infos of subsets should be the same."
@@ -478,7 +477,7 @@ class OTXDataModule(LightningDataModule):
         tile_config = self.tile_config
         if tile_config.enable_tiler and tile_config.sampling_ratio < 1:
             num_samples = max(1, int(len(dataset) * tile_config.sampling_ratio))
-            log.info(f"Using tiled sampling with {num_samples} samples")
+            logger.info(f"Using tiled sampling with {num_samples} samples")
             common_args.update(
                 {
                     "shuffle": False,
