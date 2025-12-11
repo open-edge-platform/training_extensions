@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import logging as log
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Sequence
 
 from datumaro import Dataset as DmDataset
 from lightning import LightningDataModule
@@ -18,7 +18,7 @@ from torchvision.transforms.v2 import Normalize
 from otx.config.data import SubsetConfig, TileConfig
 from otx.data.dataset.tile import OTXTileDatasetFactory
 from otx.data.factory import OTXDatasetFactory
-from otx.data.transform_libs.torchvision import TorchVisionTransformLib
+from otx.data.transform_libs.torchvision import Compose, TorchVisionTransformLib
 from otx.data.utils import adapt_tile_config, get_adaptive_num_workers, instantiate_sampler
 from otx.data.utils.pre_filtering import pre_filtering
 from otx.types.device import DeviceType
@@ -191,13 +191,19 @@ class OTXDataModule(LightningDataModule):
 
         self.label_info = next(iter(label_infos))
 
+    @classmethod
     def extract_normalization_params(
-        self, transforms_source: list | None
+        cls, transforms_source: Sequence[dict[str, Any]] | Compose | None
     ) -> tuple[tuple[float, float, float], tuple[float, float, float]]:
-        """Extract mean and std from transforms.
+        """Extract mean and std from the dataset transforms.
+
+        Specifically, this method looks for a Normalize transform in the provided transforms, and extracts
+        the mean and std values used for normalization.
+        If not found, it returns default values of mean=(0.0, 0.0, 0.0) and std=(1.0, 1.0, 1.0).
 
         Args:
-            transforms_source: List of transforms or None.
+            transforms_source: Transforms applied to the dataset.
+                Should be specified as an iterable of transform descriptors (jsonargparse-like) or a Compose object
 
         Returns:
             Tuple of (mean, std) tuples.
@@ -205,21 +211,34 @@ class OTXDataModule(LightningDataModule):
         mean = (0.0, 0.0, 0.0)
         std = (1.0, 1.0, 1.0)
 
-        if transforms_source is not None:
-            for transform in transforms_source:
-                if isinstance(transform, dict) and "Normalize" in transform.get("class_path", ""):
-                    # CLI case with jsonargparse
-                    mean = transform["init_args"].get("mean", (0.0, 0.0, 0.0))
-                    std = transform["init_args"].get("std", (1.0, 1.0, 1.0))
-                    break
+        if transforms_source is None:
+            return mean, std
+        if hasattr(transforms_source, "__iter__"):
+            transforms_iterable = transforms_source
+        elif isinstance(transforms_source, Compose):
+            transforms_iterable = transforms_source.transforms
+        else:
+            msg = f"Transforms should be given as an iterable or a Compose object, got {type(transforms_source)}"
+            raise TypeError(msg)
 
-                if isinstance(transform, Normalize):
-                    # torchvision.transforms case
-                    mean = transform.mean
-                    std = transform.std
-                    break
+        for transform in transforms_iterable:
+            if isinstance(transform, dict) and "Normalize" in transform.get("class_path", ""):
+                # CLI case with jsonargparse
+                mean = transform["init_args"].get("mean", (0.0, 0.0, 0.0))
+                std = transform["init_args"].get("std", (1.0, 1.0, 1.0))
+                break
 
-        return mean, std
+            if isinstance(transform, Normalize):
+                # torchvision.transforms case
+                mean = transform.mean
+                std = transform.std
+                break
+
+        if len(mean) != 3 or len(std) != 3:
+            msg = f"Expected mean and std to have length 3, got mean={mean}, std={std}"
+            raise ValueError(msg)
+
+        return tuple(mean), tuple(std)  # type: ignore[return-value]
 
     @classmethod
     def from_otx_datasets(
