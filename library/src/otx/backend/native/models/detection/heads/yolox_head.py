@@ -369,8 +369,7 @@ class YOLOXHeadModule(BaseDenseHead):
 
         if not with_nms:
             return bboxes, scores
-
-        return multiclass_nms(
+        nms = multiclass_nms(
             bboxes,
             scores,
             max_output_boxes_per_class=200,  # TODO (sungchul): temporarily set to mmdeploy cfg, will be updated
@@ -379,6 +378,7 @@ class YOLOXHeadModule(BaseDenseHead):
             pre_top_k=5000,
             keep_top_k=cfg["max_per_img"],  # type: ignore[index]
         )
+        return nms
 
     def _bbox_decode(self, priors: Tensor, bbox_preds: Tensor) -> Tensor:
         """Decode regression results (delta_x, delta_x, w, h) to bboxes (tl_x, tl_y, br_x, br_y).

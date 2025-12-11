@@ -155,7 +155,7 @@ class YOLOX(OTXDetectionModel):
                 "input_names": ["image"],
                 "output_names": ["boxes", "labels"],
                 "export_params": True,
-                "opset_version": 11,
+                "opset_version": 13,
                 "dynamic_axes": {
                     "image": {0: "batch"},
                     "boxes": {0: "batch", 1: "num_dets"},
