@@ -335,16 +335,15 @@ class OTXDataModule(LightningDataModule):
         # Store datasets and label info
         instance.label_info = train_dataset.label_info
 
-        # derive image_size from dataset
-        # assume that data uses fixed size during transforms
+        # Derive the image size from the dataset, assuming layout CHW and that all dataset items have
+        # the same size after transforms.
         try:
             example_item = next(iter(train_dataset))
         except StopIteration:
             msg = "train_dataset is empty; cannot infer input_size"
             raise ValueError(msg) from None
-        input_size = example_item.img_info.img_shape
-        instance.input_size = input_size
-        default_subset_configs = instance.get_default_subset_configs(input_size)
+        instance.input_size = example_item.image.shape[1:]
+        default_subset_configs = instance.get_default_subset_configs(instance.input_size)
 
         # merge default configs with provided subsets
         for name, subset in zip(["train", "val", "test"], [train_subset, val_subset, test_subset]):

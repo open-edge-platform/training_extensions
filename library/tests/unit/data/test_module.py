@@ -240,7 +240,11 @@ class TestOTXDataModule:
             mock_dataset.data_format = "coco"
             mock_dataset.image_color_channel = "RGB"
             mock_dataset.transforms = transforms or []
-            mock_dataset.__iter__ = lambda _: iter([MagicMock(img_info=MagicMock(img_shape=img_shape))])
+            mock_dataset_item = MagicMock(
+                image=MagicMock(shape=(3, *img_shape)),
+                img_info=MagicMock(img_shape=img_shape),
+            )
+            mock_dataset.__iter__ = lambda _: iter([mock_dataset_item])
             return mock_dataset
 
         return _create_mock_dataset
