@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import logging
 import logging as log
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Sequence
@@ -30,6 +31,8 @@ if TYPE_CHECKING:
     from lightning.pytorch.utilities.parsing import AttributeDict
 
     from otx.data.dataset.base import OTXDataset
+
+logger = logging.getLogger(__name__)
 
 
 class OTXDataModule(LightningDataModule):
@@ -264,10 +267,13 @@ class OTXDataModule(LightningDataModule):
             test_dataset (OTXDataset | None, optional): Pre-constructed test dataset. Defaults to None.
             train_subset (SubsetConfig | None, optional): Configuration for the training dataloader.
                 If None, default configuration will be used. Defaults to None.
+                Transforms should be left unspecified as they will be taken from the provided train_dataset.
             val_subset (SubsetConfig | None, optional): Configuration for the validation dataloader.
                 If None, default configuration will be used. Defaults to None.
+                Transforms should be left unspecified as they will be taken from the provided val_dataset.
             test_subset (SubsetConfig | None, optional): Configuration for the test dataloader.
                 If None, default configuration will be used. Defaults to None.
+                Transforms should be left unspecified as they will be taken from the provided test_dataset.
             auto_num_workers (bool, optional): Whether to automatically determine the number of workers.
                 Defaults to False.
             device (DeviceType, optional): Device type to use (e.g., 'cpu', 'gpu').
@@ -294,7 +300,6 @@ class OTXDataModule(LightningDataModule):
             >>> from otx.config.data import SubsetConfig
             >>> train_config = SubsetConfig(
             ...     batch_size=64,
-            ...     transforms=[],
             ...     num_workers=8,
             ... )
             >>> datamodule = OTXDataModule.from_otx_datasets(
@@ -343,18 +348,27 @@ class OTXDataModule(LightningDataModule):
             msg = "train_dataset is empty; cannot infer input_size"
             raise ValueError(msg) from None
         instance.input_size = example_item.image.shape[1:]
-        default_subset_configs = instance.get_default_subset_configs(instance.input_size)
 
         # merge default configs with provided subsets
+        default_subset_configs: dict[str, SubsetConfig] = {}  # Initialize lazily if needed)
         for name, subset in zip(["train", "val", "test"], [train_subset, val_subset, test_subset]):
             if subset is not None:
                 # Use provided subset config
                 subset_to_assign = subset
+                if subset.transforms:
+                    logger.warning(
+                        f"The provided {name} SubsetConfig contains transforms which will be overridden "
+                        "by the transforms of the provided OTXDataset. When building OTXDataModule from "
+                        "pre-constructed datasets, developers should set up the transforms when creating the datasets.",
+                    )
             else:
                 # Use default config but get transforms from the dataset
+                if not default_subset_configs:
+                    default_subset_configs = instance.get_default_subset_configs(instance.input_size)
                 subset_to_assign = default_subset_configs[f"{name}_subset"]
-                # Override transforms with the ones from the pre-constructed dataset
-                subset_to_assign.transforms = instance.subsets[name].transforms  # type: ignore[assignment]
+
+            # Override transforms with the ones from the pre-constructed dataset
+            subset_to_assign.transforms = instance.subsets[name].transforms  # type: ignore[assignment]
 
             # Assign subset config and transforms to subset dataset
             setattr(instance, f"{name}_subset", subset_to_assign)
