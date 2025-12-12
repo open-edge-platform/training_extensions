@@ -36,6 +36,7 @@ const test = testBase.extend<Fixtures>({
                     sink: null,
                     model: null,
                     data_collection_policies: [],
+                    device: 'cpu',
                 });
             }),
             http.post('/api/projects/{project_id}/pipeline:enable', () => {

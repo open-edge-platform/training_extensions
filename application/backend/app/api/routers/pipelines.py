@@ -10,12 +10,12 @@ from fastapi.exceptions import HTTPException
 from fastapi.openapi.models import Example
 from pydantic import ValidationError
 
-from app.api.dependencies import get_pipeline_metrics_service, get_pipeline_service
+from app.api.dependencies import get_pipeline_metrics_service, get_pipeline_service, get_system_service
 from app.api.schemas import PipelineView
 from app.api.validators import ProjectID
 from app.models import DataCollectionPolicyAdapter, PipelineStatus
 from app.schemas.metrics import PipelineMetrics
-from app.services import PipelineMetricsService, PipelineService, ResourceNotFoundError
+from app.services import PipelineMetricsService, PipelineService, ResourceNotFoundError, SystemService
 
 router = APIRouter(prefix="/api/projects/{project_id}/pipeline", tags=["Pipelines"])
 
@@ -57,6 +57,11 @@ UPDATE_PIPELINE_BODY_EXAMPLES = {
         summary="Clean data collection policies",
         description="Remove all data collection policies of the pipeline",
         value={"data_collection_policies": []},
+    ),
+    "change_device": Example(
+        summary="Change inference device",
+        description="Change the device used for model inference (e.g., 'cpu', 'xpu', 'cuda', 'xpu-2', 'cuda-1')",
+        value={"device": "xpu"},
     ),
 }
 
@@ -102,10 +107,19 @@ def update_pipeline(
         ),
     ],
     pipeline_service: Annotated[PipelineService, Depends(get_pipeline_service)],
+    system_service: Annotated[SystemService, Depends(get_system_service)],
 ) -> PipelineView:
     """Reconfigure an existing pipeline"""
     if "status" in pipeline_config:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The 'status' field cannot be changed")
+
+    if "device" in pipeline_config:
+        device_str = pipeline_config["device"]
+        if not system_service.validate_device(device_str):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, detail=f"Device '{device_str}' is not available on this system"
+            )
+
     try:
         if "data_collection_policies" in pipeline_config:
             pipeline_config["data_collection_policies"] = [

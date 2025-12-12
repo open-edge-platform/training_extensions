@@ -419,6 +419,7 @@ class TestDatasetItemEndpoints:
             project=fxt_get_project,
             dataset_item_id=dataset_item_id,
             annotations=annotations,
+            user_reviewed=True,
         )
 
     def test_set_dataset_item_annotations_label_not_found(self, fxt_get_project, fxt_dataset_service, fxt_client):
@@ -442,6 +443,7 @@ class TestDatasetItemEndpoints:
             project=fxt_get_project,
             dataset_item_id=dataset_item_id,
             annotations=annotations,
+            user_reviewed=True,
         )
 
     def test_set_dataset_item_annotations_not_found(self, fxt_get_project, fxt_dataset_service, fxt_client):
@@ -467,6 +469,7 @@ class TestDatasetItemEndpoints:
             project=fxt_get_project,
             dataset_item_id=dataset_item_id,
             annotations=annotations,
+            user_reviewed=True,
         )
 
     def test_get_dataset_item_annotations(self, fxt_get_project, fxt_dataset_service, fxt_client):
