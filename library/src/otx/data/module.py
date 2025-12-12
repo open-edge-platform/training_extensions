@@ -369,9 +369,8 @@ class OTXDataModule(LightningDataModule):
             # Override transforms with the ones from the pre-constructed dataset
             subset_to_assign.transforms = instance.subsets[name].transforms  # type: ignore[assignment]
 
-            # Assign subset config and transforms to subset dataset
+            # Set the 'train_subset', 'val_subset', 'test_subset' attributes
             setattr(instance, f"{name}_subset", subset_to_assign)
-            instance.subsets[name].transforms = subset_to_assign.transforms  # type: ignore[assignment]
 
         # Extract normalization parameters from train dataset transforms if available
         instance.input_mean, instance.input_std = instance.extract_normalization_params(
