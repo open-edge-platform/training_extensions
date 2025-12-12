@@ -6,9 +6,10 @@
 from .atss import ATSS
 from .d_fine import DFine
 from .deim import DEIMDFine
+from .rfdetr import RFDETR
 from .rtdetr import RTDETR
 from .rtmdet import RTMDet
 from .ssd import SSD
 from .yolox import YOLOX
 
-__all__ = ["ATSS", "RTDETR", "SSD", "YOLOX", "DEIMDFine", "DFine", "RTMDet"]
+__all__ = ["ATSS", "RTDETR", "SSD", "YOLOX", "DEIMDFine", "DFine", "RTMDet", "RFDETR"]
