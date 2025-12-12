@@ -16,6 +16,7 @@ from app.models.dataset_revision import DatasetRevision
 from app.scheduler import Scheduler
 from app.services import (
     BaseWeightsService,
+    DatasetRevisionService,
     DatasetService,
     LabelService,
     MetricsService,
@@ -169,6 +170,14 @@ def get_dataset_service(
     return DatasetService(data_dir=data_dir, label_service=label_service, db_session=db)
 
 
+def get_dataset_revision_service(
+    data_dir: Annotated[Path, Depends(get_data_dir)],
+    db: Annotated[Session, Depends(get_db)],
+) -> DatasetRevisionService:
+    """Provides a DatasetRevisionService instance."""
+    return DatasetRevisionService(data_dir=data_dir, db_session=db)
+
+
 def get_project(
     project_id: ProjectID,
     project_service: Annotated[ProjectService, Depends(get_project_service)],
@@ -220,10 +229,10 @@ def get_training_configuration_service(db: Annotated[Session, Depends(get_db)]) 
 def get_dataset_revision(
     project_id: ProjectID,
     dataset_revision_id: DatasetRevisionID,
-    dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
+    dataset_revision_service: Annotated[DatasetRevisionService, Depends(get_dataset_revision_service)],
 ) -> DatasetRevision:
     """Provides a DatasetService instance."""
     try:
-        return dataset_service.get_dataset_revision(project_id=project_id, revision_id=dataset_revision_id)
+        return dataset_revision_service.get_dataset_revision(project_id=project_id, revision_id=dataset_revision_id)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
