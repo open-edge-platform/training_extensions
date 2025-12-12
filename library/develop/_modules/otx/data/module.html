@@ -260,9 +260,9 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">log</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Sequence</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">datumaro</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dataset</span> <span class="k">as</span> <span class="n">DmDataset</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">lightning</span><span class="w"> </span><span class="kn">import</span> <span class="n">LightningDataModule</span>
@@ -273,7 +273,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.config.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">SubsetConfig</span><span class="p">,</span> <span class="n">TileConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.dataset.tile</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTileDatasetFactory</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDatasetFactory</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.transform_libs.torchvision</span><span class="w"> </span><span class="kn">import</span> <span class="n">TorchVisionTransformLib</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.transform_libs.torchvision</span><span class="w"> </span><span class="kn">import</span> <span class="n">Compose</span><span class="p">,</span> <span class="n">TorchVisionTransformLib</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">adapt_tile_config</span><span class="p">,</span> <span class="n">get_adaptive_num_workers</span><span class="p">,</span> <span class="n">instantiate_sampler</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.utils.pre_filtering</span><span class="w"> </span><span class="kn">import</span> <span class="n">pre_filtering</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.device</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeviceType</span>
@@ -285,6 +285,8 @@
     <span class="kn">from</span><span class="w"> </span><span class="nn">lightning.pytorch.utilities.parsing</span><span class="w"> </span><span class="kn">import</span> <span class="n">AttributeDict</span>
 
     <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.dataset.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataset</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="OTXDataModule">
@@ -405,13 +407,13 @@
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">auto_num_workers</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">DeviceType</span><span class="o">.</span><span class="n">gpu</span><span class="p">,</span> <span class="n">DeviceType</span><span class="o">.</span><span class="n">auto</span><span class="p">]:</span>
-                <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                     <span class="s2">&quot;Only GPU device type support auto_num_workers. &quot;</span>
                     <span class="sa">f</span><span class="s2">&quot;Current deveice type is </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="si">!s}</span><span class="s2">. auto_num_workers is skipped.&quot;</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="k">elif</span> <span class="p">(</span><span class="n">num_workers</span> <span class="o">:=</span> <span class="n">get_adaptive_num_workers</span><span class="p">())</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">for</span> <span class="n">subset_name</span><span class="p">,</span> <span class="n">subset_config</span> <span class="ow">in</span> <span class="n">config_mapping</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
                         <span class="sa">f</span><span class="s2">&quot;num_workers of </span><span class="si">{</span><span class="n">subset_name</span><span class="si">}</span><span class="s2"> subset is changed : &quot;</span>
                         <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subset_config</span><span class="o">.</span><span class="n">num_workers</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">num_workers</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                     <span class="p">)</span>
@@ -420,7 +422,7 @@
         <span class="n">label_infos</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">LabelInfo</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">dm_subset</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">subsets</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config_mapping</span><span class="p">:</span>
-                <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> is not available. Skip it&quot;</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> is not available. Skip it&quot;</span><span class="p">)</span>
                 <span class="k">continue</span>
 
             <span class="n">otx_dataset</span> <span class="o">=</span> <span class="n">OTXDatasetFactory</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
@@ -440,7 +442,7 @@
                 <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">subsets</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">otx_dataset</span>
             <span class="n">label_infos</span> <span class="o">+=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">subsets</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">label_info</span><span class="p">]</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Add name: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">, self.subsets: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">subsets</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Add name: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">, self.subsets: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">subsets</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_meta_info_valid</span><span class="p">(</span><span class="n">label_infos</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;All data meta infos of subsets should be the same.&quot;</span>
@@ -450,13 +452,19 @@
 
 <div class="viewcode-block" id="OTXDataModule.extract_normalization_params">
 <a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.data.html#otx.data.OTXDataModule.extract_normalization_params">[docs]</a>
+    <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">extract_normalization_params</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">transforms_source</span><span class="p">:</span> <span class="nb">list</span> <span class="o">|</span> <span class="kc">None</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">transforms_source</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="n">Compose</span> <span class="o">|</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract mean and std from transforms.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract mean and std from the dataset transforms.</span>
+
+<span class="sd">        Specifically, this method looks for a Normalize transform in the provided transforms, and extracts</span>
+<span class="sd">        the mean and std values used for normalization.</span>
+<span class="sd">        If not found, it returns default values of mean=(0.0, 0.0, 0.0) and std=(1.0, 1.0, 1.0).</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            transforms_source: List of transforms or None.</span>
+<span class="sd">            transforms_source: Transforms applied to the dataset.</span>
+<span class="sd">                Should be specified as an iterable of transform descriptors (jsonargparse-like) or a Compose object</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Tuple of (mean, std) tuples.</span>
@@ -464,21 +472,34 @@
         <span class="n">mean</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
         <span class="n">std</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">transforms_source</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">transform</span> <span class="ow">in</span> <span class="n">transforms_source</span><span class="p">:</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">transform</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;Normalize&quot;</span> <span class="ow">in</span> <span class="n">transform</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;class_path&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
-                    <span class="c1"># CLI case with jsonargparse</span>
-                    <span class="n">mean</span> <span class="o">=</span> <span class="n">transform</span><span class="p">[</span><span class="s2">&quot;init_args&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;mean&quot;</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
-                    <span class="n">std</span> <span class="o">=</span> <span class="n">transform</span><span class="p">[</span><span class="s2">&quot;init_args&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;std&quot;</span><span class="p">,</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">))</span>
-                    <span class="k">break</span>
+        <span class="k">if</span> <span class="n">transforms_source</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">transforms_source</span><span class="p">,</span> <span class="s2">&quot;__iter__&quot;</span><span class="p">):</span>
+            <span class="n">transforms_iterable</span> <span class="o">=</span> <span class="n">transforms_source</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">transforms_source</span><span class="p">,</span> <span class="n">Compose</span><span class="p">):</span>
+            <span class="n">transforms_iterable</span> <span class="o">=</span> <span class="n">transforms_source</span><span class="o">.</span><span class="n">transforms</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Transforms should be given as an iterable or a Compose object, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">transforms_source</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">transform</span><span class="p">,</span> <span class="n">Normalize</span><span class="p">):</span>
-                    <span class="c1"># torchvision.transforms case</span>
-                    <span class="n">mean</span> <span class="o">=</span> <span class="n">transform</span><span class="o">.</span><span class="n">mean</span>
-                    <span class="n">std</span> <span class="o">=</span> <span class="n">transform</span><span class="o">.</span><span class="n">std</span>
-                    <span class="k">break</span>
+        <span class="k">for</span> <span class="n">transform</span> <span class="ow">in</span> <span class="n">transforms_iterable</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">transform</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;Normalize&quot;</span> <span class="ow">in</span> <span class="n">transform</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;class_path&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
+                <span class="c1"># CLI case with jsonargparse</span>
+                <span class="n">mean</span> <span class="o">=</span> <span class="n">transform</span><span class="p">[</span><span class="s2">&quot;init_args&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;mean&quot;</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+                <span class="n">std</span> <span class="o">=</span> <span class="n">transform</span><span class="p">[</span><span class="s2">&quot;init_args&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;std&quot;</span><span class="p">,</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">))</span>
+                <span class="k">break</span>
 
-        <span class="k">return</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span></div>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">transform</span><span class="p">,</span> <span class="n">Normalize</span><span class="p">):</span>
+                <span class="c1"># torchvision.transforms case</span>
+                <span class="n">mean</span> <span class="o">=</span> <span class="n">transform</span><span class="o">.</span><span class="n">mean</span>
+                <span class="n">std</span> <span class="o">=</span> <span class="n">transform</span><span class="o">.</span><span class="n">std</span>
+                <span class="k">break</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">mean</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">std</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Expected mean and std to have length 3, got mean=</span><span class="si">{</span><span class="n">mean</span><span class="si">}</span><span class="s2">, std=</span><span class="si">{</span><span class="n">std</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">mean</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">std</span><span class="p">)</span>  <span class="c1"># type: ignore[return-value]</span></div>
 
 
 <div class="viewcode-block" id="OTXDataModule.from_otx_datasets">
@@ -507,10 +528,13 @@
 <span class="sd">            test_dataset (OTXDataset | None, optional): Pre-constructed test dataset. Defaults to None.</span>
 <span class="sd">            train_subset (SubsetConfig | None, optional): Configuration for the training dataloader.</span>
 <span class="sd">                If None, default configuration will be used. Defaults to None.</span>
+<span class="sd">                Transforms should be left unspecified as they will be taken from the provided train_dataset.</span>
 <span class="sd">            val_subset (SubsetConfig | None, optional): Configuration for the validation dataloader.</span>
 <span class="sd">                If None, default configuration will be used. Defaults to None.</span>
+<span class="sd">                Transforms should be left unspecified as they will be taken from the provided val_dataset.</span>
 <span class="sd">            test_subset (SubsetConfig | None, optional): Configuration for the test dataloader.</span>
 <span class="sd">                If None, default configuration will be used. Defaults to None.</span>
+<span class="sd">                Transforms should be left unspecified as they will be taken from the provided test_dataset.</span>
 <span class="sd">            auto_num_workers (bool, optional): Whether to automatically determine the number of workers.</span>
 <span class="sd">                Defaults to False.</span>
 <span class="sd">            device (DeviceType, optional): Device type to use (e.g., &#39;cpu&#39;, &#39;gpu&#39;).</span>
@@ -537,7 +561,6 @@
 <span class="sd">            &gt;&gt;&gt; from otx.config.data import SubsetConfig</span>
 <span class="sd">            &gt;&gt;&gt; train_config = SubsetConfig(</span>
 <span class="sd">            ...     batch_size=64,</span>
-<span class="sd">            ...     transforms=[],</span>
 <span class="sd">            ...     num_workers=8,</span>
 <span class="sd">            ... )</span>
 <span class="sd">            &gt;&gt;&gt; datamodule = OTXDataModule.from_otx_datasets(</span>
@@ -578,31 +601,38 @@
         <span class="c1"># Store datasets and label info</span>
         <span class="n">instance</span><span class="o">.</span><span class="n">label_info</span> <span class="o">=</span> <span class="n">train_dataset</span><span class="o">.</span><span class="n">label_info</span>
 
-        <span class="c1"># derive image_size from dataset</span>
-        <span class="c1"># assume that data uses fixed size during transforms</span>
+        <span class="c1"># Derive the image size from the dataset, assuming layout CHW and that all dataset items have</span>
+        <span class="c1"># the same size after transforms.</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">example_item</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">train_dataset</span><span class="p">))</span>
         <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;train_dataset is empty; cannot infer input_size&quot;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
-        <span class="n">input_size</span> <span class="o">=</span> <span class="n">example_item</span><span class="o">.</span><span class="n">img_info</span><span class="o">.</span><span class="n">img_shape</span>
-        <span class="n">instance</span><span class="o">.</span><span class="n">input_size</span> <span class="o">=</span> <span class="n">input_size</span>
-        <span class="n">default_subset_configs</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">get_default_subset_configs</span><span class="p">(</span><span class="n">input_size</span><span class="p">)</span>
+        <span class="n">instance</span><span class="o">.</span><span class="n">input_size</span> <span class="o">=</span> <span class="n">example_item</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
 
         <span class="c1"># merge default configs with provided subsets</span>
+        <span class="n">default_subset_configs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">SubsetConfig</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># Initialize lazily if needed)</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">subset</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">([</span><span class="s2">&quot;train&quot;</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">,</span> <span class="s2">&quot;test&quot;</span><span class="p">],</span> <span class="p">[</span><span class="n">train_subset</span><span class="p">,</span> <span class="n">val_subset</span><span class="p">,</span> <span class="n">test_subset</span><span class="p">]):</span>
             <span class="k">if</span> <span class="n">subset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="c1"># Use provided subset config</span>
                 <span class="n">subset_to_assign</span> <span class="o">=</span> <span class="n">subset</span>
+                <span class="k">if</span> <span class="n">subset</span><span class="o">.</span><span class="n">transforms</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;The provided </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> SubsetConfig contains transforms which will be overridden &quot;</span>
+                        <span class="s2">&quot;by the transforms of the provided OTXDataset. When building OTXDataModule from &quot;</span>
+                        <span class="s2">&quot;pre-constructed datasets, developers should set up the transforms when creating the datasets.&quot;</span><span class="p">,</span>
+                    <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="c1"># Use default config but get transforms from the dataset</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">default_subset_configs</span><span class="p">:</span>
+                    <span class="n">default_subset_configs</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">get_default_subset_configs</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">input_size</span><span class="p">)</span>
                 <span class="n">subset_to_assign</span> <span class="o">=</span> <span class="n">default_subset_configs</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_subset&quot;</span><span class="p">]</span>
-                <span class="c1"># Override transforms with the ones from the pre-constructed dataset</span>
-                <span class="n">subset_to_assign</span><span class="o">.</span><span class="n">transforms</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">subsets</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">transforms</span>  <span class="c1"># type: ignore[assignment]</span>
 
-            <span class="c1"># Assign subset config and transforms to subset dataset</span>
+            <span class="c1"># Override transforms with the ones from the pre-constructed dataset</span>
+            <span class="n">subset_to_assign</span><span class="o">.</span><span class="n">transforms</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">subsets</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">transforms</span>  <span class="c1"># type: ignore[assignment]</span>
+
+            <span class="c1"># Set the &#39;train_subset&#39;, &#39;val_subset&#39;, &#39;test_subset&#39; attributes</span>
             <span class="nb">setattr</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_subset&quot;</span><span class="p">,</span> <span class="n">subset_to_assign</span><span class="p">)</span>
-            <span class="n">instance</span><span class="o">.</span><span class="n">subsets</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">transforms</span> <span class="o">=</span> <span class="n">subset_to_assign</span><span class="o">.</span><span class="n">transforms</span>  <span class="c1"># type: ignore[assignment]</span>
 
         <span class="c1"># Extract normalization parameters from train dataset transforms if available</span>
         <span class="n">instance</span><span class="o">.</span><span class="n">input_mean</span><span class="p">,</span> <span class="n">instance</span><span class="o">.</span><span class="n">input_std</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">extract_normalization_params</span><span class="p">(</span>
@@ -714,7 +744,7 @@
         <span class="n">tile_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_config</span>
         <span class="k">if</span> <span class="n">tile_config</span><span class="o">.</span><span class="n">enable_tiler</span> <span class="ow">and</span> <span class="n">tile_config</span><span class="o">.</span><span class="n">sampling_ratio</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">num_samples</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span> <span class="o">*</span> <span class="n">tile_config</span><span class="o">.</span><span class="n">sampling_ratio</span><span class="p">))</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Using tiled sampling with </span><span class="si">{</span><span class="n">num_samples</span><span class="si">}</span><span class="s2"> samples&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Using tiled sampling with </span><span class="si">{</span><span class="n">num_samples</span><span class="si">}</span><span class="s2"> samples&quot;</span><span class="p">)</span>
             <span class="n">common_args</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
                 <span class="p">{</span>
                     <span class="s2">&quot;shuffle&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
