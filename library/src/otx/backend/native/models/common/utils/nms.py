@@ -50,78 +50,17 @@ class NMSop(torch.autograd.Function):
             inds = torch_nms(bboxes, scores, iou_threshold)
 
         if max_num > 0:
+            if torch.onnx.is_in_onnx_export():
+                # Guard against symbolic integers during tracing
+                num_inds = inds.shape[0]
+                # For Dynamo-based ONNX export, we need to hint the upper bound of dynamic dimensions.
+                # This is skipped for TorchScript export (dynamo=False) which uses symbolic() instead.
+                if isinstance(num_inds, (int, torch.SymInt)):
+                    torch._check(num_inds < 200)
             inds = inds[:max_num]
         if is_filtering_by_score:
             inds = valid_inds[inds]
         return inds
-
-    @staticmethod
-    def symbolic(
-        g: torch.onnx._internal.jit_utils.GraphContext,
-        bboxes: Tensor,
-        scores: Tensor,
-        iou_threshold: float,
-        offset: int,  # noqa: ARG004
-        score_threshold: float,
-        max_num: int,
-    ) -> Callable:
-        """Symbolic function for ONNX export.
-
-        Args:
-            g (Graph): The traced onnx graph.
-            bboxes (Tensor): The bounding boxes of shape [num_boxes, 4].
-            scores (Tensor): The detection scores of shape [num_boxes].
-            iou_threshold (float): IoU threshold for NMS.
-            offset (int): boxes' width or height is (x2 - x1 + offset).
-            score_threshold (float): score threshold for NMS.
-            max_num (int): maximum number of boxes after NMS.
-
-        Returns:
-            Selected indices from NonMaxSuppression op.
-        """
-        # ONNX NMS expects boxes: [batch, num_boxes, 4] and scores: [batch, num_classes, num_boxes]
-        # We have boxes: [num_boxes, 4] and scores: [num_boxes]
-        # Reshape to add batch and class dimensions
-        boxes_onnx = g.op("Unsqueeze", bboxes, axes_i=[0])  # [1, num_boxes, 4]
-        scores_unsqueezed = g.op("Unsqueeze", scores, axes_i=[0])  # [1, num_boxes]
-        scores_onnx = g.op("Unsqueeze", scores_unsqueezed, axes_i=[0])  # [1, 1, num_boxes]
-
-        # Create constants for NMS parameters
-        if not sym_help._is_value(max_num):  # noqa: SLF001
-            max_output_boxes = g.op(
-                "Constant",
-                value_t=torch.tensor([max_num if max_num > 0 else 10000], dtype=torch.long),
-            )
-        else:
-            max_output_boxes = max_num
-
-        if not sym_help._is_value(iou_threshold):  # noqa: SLF001
-            iou_threshold = g.op("Constant", value_t=torch.tensor([iou_threshold], dtype=torch.float))
-
-        if not sym_help._is_value(score_threshold):  # noqa: SLF001
-            score_threshold = g.op("Constant", value_t=torch.tensor([score_threshold], dtype=torch.float))
-
-        # Call ONNX NonMaxSuppression
-        # Output shape: [num_selected_boxes, 3] with [batch_index, class_index, box_index]
-        nms_output = g.op(
-            "NonMaxSuppression",
-            boxes_onnx,
-            scores_onnx,
-            max_output_boxes,
-            iou_threshold,
-            score_threshold,
-        )
-
-        # Extract box indices (third column)
-        # nms_output is [num_selected, 3], we need column index 2 (box_index)
-        box_indices = g.op(
-            "Gather",
-            nms_output,
-            g.op("Constant", value_t=torch.tensor(2, dtype=torch.long)),
-            axis_i=1,
-        )
-
-        return box_indices
 
 
 def nms(
@@ -457,12 +396,6 @@ class ONNXNMSop(torch.autograd.Function):
             (num_selected_indices, 3) with each row of
             [batch_index, class_index, box_index].
         """
-        # During ONNX export, return a dummy tensor since the symbolic function
-        # will be used to create the actual ONNX graph
-        if torch.onnx.is_in_onnx_export():
-            # Return dummy output with shape [1, 3] to represent [batch_idx, class_idx, box_idx]
-            return torch.zeros((1, 3), dtype=torch.long, device=boxes.device)
-
         batch_size, num_class, _ = scores.shape
 
         score_threshold = float(score_threshold)
@@ -488,7 +421,7 @@ class ONNXNMSop(torch.autograd.Function):
 
     @staticmethod
     def symbolic(
-        g: torch.onnx._internal.git_utils.GraphContext,
+        g: Any,  # Graph context from ONNX exporter
         boxes: Tensor,
         scores: Tensor,
         max_output_boxes_per_class: int,

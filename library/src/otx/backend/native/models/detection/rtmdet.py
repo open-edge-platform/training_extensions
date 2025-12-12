@@ -138,7 +138,7 @@ class RTMDet(OTXDetectionModel):
             resize_mode="fit_to_window_letterbox",
             pad_value=114,
             swap_rgb=True,
-            via_onnx=True,
+            via_onnx=False,
             onnx_export_configuration={
                 "input_names": ["image"],
                 "output_names": ["boxes", "labels"],
@@ -147,6 +147,7 @@ class RTMDet(OTXDetectionModel):
                     "boxes": {0: "batch", 1: "num_dets"},
                     "labels": {0: "batch", 1: "num_dets"},
                 },
+                "opset_version": 18,
                 "autograd_inlining": False,
             },
             output_names=["bboxes", "labels", "feature_vector", "saliency_map"] if self.explain_mode else None,
