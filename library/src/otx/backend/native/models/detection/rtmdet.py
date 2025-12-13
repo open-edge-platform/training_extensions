@@ -144,9 +144,12 @@ class RTMDet(OTXDetectionModel):
                 "output_names": ["boxes", "labels"],
                 "dynamic_axes": {
                     "image": {0: "batch"},
+                    "boxes": {0: "batch", 1: "num_dets"},
+                    "labels": {0: "batch", 1: "num_dets"},
                 },
                 "opset_version": 18,
                 "autograd_inlining": False,
+                "dynamo": False,
             },
             output_names=["bboxes", "labels", "feature_vector", "saliency_map"] if self.explain_mode else None,
         )
