@@ -370,8 +370,7 @@ class DinoVisionTransformer(nn.Module):
                 rope_sincos = [self.rope_embed(h=h, w=w) for h, w in rope]
             else:
                 rope_sincos = [None for r in rope]
-            else:
-                x = blk(x, rope_sincos)
+            x = blk(x, rope_sincos)
         all_x = x
         output = []
         for idx, (x, masks) in enumerate(zip(all_x, masks_list)):
