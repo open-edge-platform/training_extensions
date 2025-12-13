@@ -56,7 +56,7 @@ class NMSop(torch.autograd.Function):
                 # For Dynamo-based ONNX export, we need to hint the upper bound of dynamic dimensions.
                 # This is skipped for TorchScript export (dynamo=False) which uses symbolic() instead.
                 if isinstance(num_inds, (int, torch.SymInt)):
-                    torch._check(num_inds < 200)  # noqa: SLF001
+                    torch._check(num_inds <= max_num)  # noqa: SLF001
             inds = inds[:max_num]
         if is_filtering_by_score:
             inds = valid_inds[inds]

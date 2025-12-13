@@ -162,18 +162,16 @@ class RTMDetInst(OTXInstanceSegModel):
             resize_mode="fit_to_window_letterbox",
             pad_value=114,
             swap_rgb=False,
-            via_onnx=False,
+            via_onnx=True,
             onnx_export_configuration={
                 "input_names": ["image"],
                 "output_names": ["boxes", "labels", "masks"],
                 "dynamic_axes": {
                     "image": {0: "batch"},
-                    "boxes": {0: "batch", 1: "num_dets"},
-                    "labels": {0: "batch", 1: "num_dets"},
-                    "masks": {0: "batch", 1: "num_dets", 2: "height", 3: "width"},
                 },
                 "opset_version": 18,
                 "autograd_inlining": False,
+                "dynamo": False,
             },
             # TODO(Eugene): Add XAI support for RTMDetInst
             output_names=["bboxes", "labels", "masks", "feature_vector", "saliency_map"] if self.explain_mode else None,

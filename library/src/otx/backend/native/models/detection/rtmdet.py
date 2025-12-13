@@ -138,14 +138,12 @@ class RTMDet(OTXDetectionModel):
             resize_mode="fit_to_window_letterbox",
             pad_value=114,
             swap_rgb=True,
-            via_onnx=False,
+            via_onnx=True,
             onnx_export_configuration={
                 "input_names": ["image"],
                 "output_names": ["boxes", "labels"],
                 "dynamic_axes": {
                     "image": {0: "batch"},
-                    "boxes": {0: "batch", 1: "num_dets"},
-                    "labels": {0: "batch", 1: "num_dets"},
                 },
                 "opset_version": 18,
                 "autograd_inlining": False,
