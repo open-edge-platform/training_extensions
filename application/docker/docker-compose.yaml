@@ -32,7 +32,7 @@ services:
   mosquitto:
     profiles:
       - mqtt
-    image: eclipse-mosquitto:2.0@sha256:d219d3a72847f3aed6a1d66975972d3b17f86e39e8f6f6b86b4088b879c1a2d6
+    image: eclipse-mosquitto:2.0@sha256:077fe4ff4c49df1e860c98335c77dda08360629e0e2a718147027e4db3eace9d
     restart: unless-stopped
     ports:
       - "1883:1883"
@@ -48,7 +48,7 @@ services:
   mqtt-web-ui:
     profiles:
       - mqtt
-    image: emqx/mqttx-web@sha256:0ed144681abc73235a01f13b47643ce970bf1e7d4884a19a83b76da36d8a8f5c
+    image: emqx/mqttx-web@sha256:52899b451627e7592ff440f9d5a040a2e80a81f414937affb3d3920914c34850
     restart: unless-stopped
     environment:
       - MQTT_BROKER_HOST=mosquitto
