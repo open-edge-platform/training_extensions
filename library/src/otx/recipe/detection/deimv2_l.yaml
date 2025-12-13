@@ -40,8 +40,8 @@ callbacks:
       mode: max
       patience: 10
       min_delta: 0.001
-      warmup_iters: 30
-      warmup_epochs: 3
+      warmup_iters: 50
+      warmup_epochs: 10
   - class_path: lightning.pytorch.callbacks.ModelCheckpoint
     init_args:
       dirpath: "" # use engine.work_dir
@@ -128,7 +128,7 @@ callbacks:
                       - 1.0
                     probability: 0.5
                     random_pop: true
-                    max_cached_images: 20
+                    max_cached_images: 10
                 - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
                   init_args:
                     min_area: 1
@@ -178,7 +178,11 @@ callbacks:
                       - 1.0
                     probability: 0.5
                     random_pop: true
+<<<<<<< HEAD
                     max_cached_images: 20
+=======
+                    max_cached_images: 10
+>>>>>>> dd5a8fc62fcb9547ddff8a60e96f53672fe6cf99
                 - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
                   init_args:
                     min_area: 1

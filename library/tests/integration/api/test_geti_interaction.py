@@ -38,6 +38,7 @@ DEFAULT_GETI_CONFIG_PER_TASK = {
 }
 
 
+@pytest.mark.skip(reason="These tests shall be rewritten after integration with new Datumaro")
 class TestEngineAPI:
     def __init__(
         self,
@@ -192,6 +193,7 @@ class TestEngineAPI:
         assert predictions is not None
 
 
+@pytest.mark.skip(reason="This test shall be rewritten after integration with new Datumaro")
 def test_engine_api(
     task_template: tuple[OTXTaskType, Path, bool],
     tmp_path: Path,

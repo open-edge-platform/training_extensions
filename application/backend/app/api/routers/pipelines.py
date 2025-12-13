@@ -11,9 +11,10 @@ from fastapi.openapi.models import Example
 from pydantic import ValidationError
 
 from app.api.dependencies import get_pipeline_metrics_service, get_pipeline_service
+from app.api.schemas import PipelineView
 from app.api.validators import ProjectID
+from app.models import DataCollectionPolicyAdapter, PipelineStatus
 from app.schemas.metrics import PipelineMetrics
-from app.schemas.pipeline import DataCollectionPolicyAdapter, PipelineStatus, PipelineView
 from app.services import PipelineMetricsService, PipelineService, ResourceNotFoundError
 
 router = APIRouter(prefix="/api/projects/{project_id}/pipeline", tags=["Pipelines"])
@@ -75,7 +76,8 @@ def get_pipeline(
 ) -> PipelineView:
     """Get info about a given pipeline"""
     try:
-        return pipeline_service.get_pipeline_by_id(project_id)
+        pipeline = pipeline_service.get_pipeline_by_id(project_id)
+        return PipelineView.model_validate(pipeline, from_attributes=True)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -110,7 +112,8 @@ def update_pipeline(
                 DataCollectionPolicyAdapter.validate_python(policy)
                 for policy in pipeline_config["data_collection_policies"]
             ]
-        return pipeline_service.update_pipeline(project_id, pipeline_config)
+        updated = pipeline_service.update_pipeline(project_id, pipeline_config)
+        return PipelineView.model_validate(updated, from_attributes=True)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ValidationError as e:

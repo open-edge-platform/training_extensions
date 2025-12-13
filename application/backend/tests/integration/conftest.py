@@ -12,8 +12,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.db.schema import Base, LabelDB, ModelRevisionDB, ProjectDB, SinkDB, SourceDB
-from app.models import OutputFormat, SinkType, SourceType, TaskType
-from app.schemas.model import TrainingStatus
+from app.models import OutputFormat, SinkType, SourceType, TaskType, TrainingStatus
 from app.services import MetricsService, ResourceType
 from app.services.event.event_bus import EventBus
 
@@ -69,11 +68,13 @@ def fxt_db_sources() -> list[SourceDB]:
     """Fixture to create multiple source configurations in the database."""
     return [
         SourceDB(
+            id=str(uuid4()),
             source_type=SourceType.VIDEO_FILE,
             name="Test Video Source",
             config_data={"video_path": "/path/to/video.mp4"},
         ),
         SourceDB(
+            id=str(uuid4()),
             source_type=SourceType.WEBCAM,
             name="Test Webcam Source",
             config_data={
@@ -81,6 +82,7 @@ def fxt_db_sources() -> list[SourceDB]:
             },
         ),
         SourceDB(
+            id=str(uuid4()),
             source_type=SourceType.IP_CAMERA,
             name="Test IPCamera Source",
             config_data={
@@ -96,6 +98,7 @@ def fxt_db_sinks() -> list[SinkDB]:
     """Fixture to create multiple sink configurations in the database."""
     return [
         SinkDB(
+            id=str(uuid4()),
             sink_type=SinkType.FOLDER,
             name="Test Folder Sink",
             rate_limit=0.2,
@@ -107,6 +110,7 @@ def fxt_db_sinks() -> list[SinkDB]:
             config_data={"folder_path": "/test/path"},
         ),
         SinkDB(
+            id=str(uuid4()),
             sink_type=SinkType.MQTT,
             name="Test Mqtt Sink",
             rate_limit=0.2,

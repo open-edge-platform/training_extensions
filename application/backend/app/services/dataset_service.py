@@ -3,6 +3,7 @@
 
 import os
 import os.path
+import shutil
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
@@ -27,11 +28,13 @@ from app.models import (
     FullImage,
     Label,
     Polygon,
+    Project,
     Rectangle,
+    Task,
     TaskType,
 )
+from app.models.dataset_revision import DatasetRevision
 from app.repositories import DatasetItemRepository, DatasetRevisionRepository
-from app.schemas.project import ProjectBase, ProjectView, TaskBase
 from app.services.datumaro_converter import convert_dataset
 from app.utils.images import crop_to_thumbnail
 
@@ -114,7 +117,7 @@ class DatasetService(BaseSessionManagedService):
 
     def create_dataset_item(  # noqa: PLR0913
         self,
-        project: ProjectView,
+        project: Project,
         name: str,
         format: str,
         data: Image.Image | np.ndarray | BinaryIO | BytesIO,
@@ -173,7 +176,7 @@ class DatasetService(BaseSessionManagedService):
 
     def count_dataset_items(
         self,
-        project: ProjectView,
+        project: Project,
         start_date: datetime | None = None,
         end_date: datetime | None = None,
         annotation_status: str | None = None,
@@ -231,12 +234,12 @@ class DatasetService(BaseSessionManagedService):
         dataset_item = self.get_dataset_item_by_id(project_id=project_id, dataset_item_id=dataset_item_id)
         return self.get_dataset_item_binary_path(project_id=project_id, dataset_item=dataset_item)
 
-    def get_dataset_item_thumbnail_path_by_id(self, project: ProjectView, dataset_item_id: UUID) -> Path | str:
+    def get_dataset_item_thumbnail_path_by_id(self, project: Project, dataset_item_id: UUID) -> Path | str:
         """Get a dataset item thumbnail binary content by its ID"""
         dataset_item = self.get_dataset_item_by_id(project_id=project.id, dataset_item_id=dataset_item_id)
         return self.projects_dir / f"{project.id}/dataset/{dataset_item.id}-thumb.jpg"
 
-    def delete_dataset_item(self, project: ProjectView, dataset_item_id: UUID) -> None:
+    def delete_dataset_item(self, project: Project, dataset_item_id: UUID) -> None:
         """Delete a dataset item by its ID"""
         dataset_item = self.get_dataset_item_by_id(project_id=project.id, dataset_item_id=dataset_item_id)
         repo = DatasetItemRepository(project_id=str(project.id), db=self.db_session)
@@ -262,7 +265,7 @@ class DatasetService(BaseSessionManagedService):
                     raise AnnotationValidationError(f"Label {str(annotation_label.id)} is not found in the project.")
 
     @staticmethod
-    def _validate_annotations(annotations: list[DatasetItemAnnotation], project: ProjectBase) -> None:  # noqa: C901
+    def _validate_annotations(annotations: list[DatasetItemAnnotation], project: Project) -> None:  # noqa: C901
         match project.task.task_type:
             case TaskType.CLASSIFICATION:
                 if len(annotations) > 1:
@@ -309,7 +312,7 @@ class DatasetService(BaseSessionManagedService):
                         raise AnnotationValidationError("Polygon points are out of bounds")
 
     def set_dataset_item_annotations(
-        self, project: ProjectView, dataset_item_id: UUID, annotations: list[DatasetItemAnnotation]
+        self, project: Project, dataset_item_id: UUID, annotations: list[DatasetItemAnnotation]
     ) -> DatasetItem:
         """Set dataset item annotations"""
         labels = self._label_service.list_all(project_id=project.id)
@@ -334,7 +337,7 @@ class DatasetService(BaseSessionManagedService):
         )
         return self.get_dataset_item_by_id(project_id=project.id, dataset_item_id=dataset_item_id)
 
-    def delete_dataset_item_annotations(self, project: ProjectView, dataset_item_id: UUID) -> None:
+    def delete_dataset_item_annotations(self, project: Project, dataset_item_id: UUID) -> None:
         """Delete the dataset item annotations"""
         repo = DatasetItemRepository(project_id=str(project.id), db=self.db_session)
         updated = repo.delete_annotation_data(obj_id=str(dataset_item_id))
@@ -356,7 +359,7 @@ class DatasetService(BaseSessionManagedService):
         return self.get_dataset_item_by_id(project_id=project_id, dataset_item_id=dataset_item_id)
 
     def get_dm_dataset(
-        self, project_id: UUID, task: TaskBase, annotation_status: DatasetItemAnnotationStatus | None
+        self, project_id: UUID, task: Task, annotation_status: DatasetItemAnnotationStatus | None
     ) -> dm.Dataset:
         def _get_dataset_items(offset: int, limit: int) -> list[DatasetItem]:
             return self.list_dataset_items(
@@ -404,3 +407,56 @@ class DatasetService(BaseSessionManagedService):
             as_zip=True,
         )
         return UUID(revision_db.id)
+
+    def get_dataset_revision(self, project_id: UUID, revision_id: UUID) -> DatasetRevision:
+        """
+        Get a dataset revision by ID.
+
+        Args:
+            project_id: The UUID of the project.
+            revision_id: The UUID of the dataset revision.
+
+        Returns:
+            DatasetRevision: The dataset revision.
+
+        Raises:
+            ResourceNotFoundError: If the revision is not found.
+        """
+        revision_repo = DatasetRevisionRepository(db=self.db_session)
+        revision = revision_repo.get_by_id(str(revision_id))
+        if revision is None or revision.project_id != str(project_id):
+            raise ResourceNotFoundError(ResourceType.DATASET_REVISION, str(revision_id))
+        return self._to_dataset_revision(dataset_db=revision)
+
+    def delete_dataset_revision_files(self, project_id: UUID, revision_id: UUID) -> None:
+        """
+        Delete the files associated with a dataset revision.
+
+        Args:
+            project_id: The UUID of the project.
+            revision_id: The UUID of the dataset revision.
+
+        Raises:
+            ResourceNotFoundError: If the revision is not found.
+        """
+        revision = self.get_dataset_revision(project_id, revision_id)
+        if revision.files_deleted:
+            logger.info("Files for dataset revision '{}' already deleted", revision_id)
+            return
+
+        revision_path = self.projects_dir / str(project_id) / "dataset_revisions" / str(revision_id)
+        if revision_path.exists():
+            shutil.rmtree(revision_path)
+            logger.info("Deleted dataset revision files at '{}'", revision_path)
+
+        # Mark as deleted in the database
+        revision_repo = DatasetRevisionRepository(db=self.db_session)
+        revision_db = revision_repo.get_by_id(str(revision_id))
+        if revision_db:
+            revision_db.files_deleted = True
+            revision_repo.save(revision_db)
+
+    @staticmethod
+    def _to_dataset_revision(dataset_db: DatasetRevisionDB) -> DatasetRevision:
+        """Convert database model to DatasetRevision."""
+        return DatasetRevision.model_validate(dataset_db, from_attributes=True)

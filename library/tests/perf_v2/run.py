@@ -4,7 +4,6 @@
 
 from __future__ import annotations
 
-from email.policy import default
 import json
 import logging
 import subprocess
@@ -124,6 +123,8 @@ if __name__ == "__main__":
                         str(args.deterministic),
                         "--device",
                         args.device,
+                        "--num-devices",
+                        args.num_devices,
                         "--user-name",
                         args.user_name,
                     ]

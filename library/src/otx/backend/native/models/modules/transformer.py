@@ -243,6 +243,87 @@ class PatchEmbed(BaseModule):
         return x, out_size
 
 
+class UnflattenPatchEmbed(nn.Module):
+    """2D image to patch embedding: (B,C,H,W) -> (B,N,D).
+
+    Args:
+        img_size: Image size.
+        patch_size: Patch token size.
+        in_chans: Number of input image channels.
+        embed_dim: Number of linear projection output channels.
+        norm_layer: Normalization layer.
+    """
+
+    def __init__(
+        self,
+        img_size: int | tuple[int, int] = 224,
+        patch_size: int | tuple[int, int] = 16,
+        in_chans: int = 3,
+        embed_dim: int = 768,
+        norm_layer: Callable | None = None,
+        flatten_embedding: bool = True,
+    ) -> None:
+        super().__init__()
+
+        image_hw = img_size if isinstance(img_size, tuple) else (img_size, img_size)
+        patch_hw = patch_size if isinstance(patch_size, tuple) else (patch_size, patch_size)
+        patch_grid_size = (
+            image_hw[0] // patch_hw[0],
+            image_hw[1] // patch_hw[1],
+        )
+
+        self.img_size = image_hw
+        self.patch_size = patch_hw
+        self.patches_resolution = patch_grid_size
+        self.num_patches = patch_grid_size[0] * patch_grid_size[1]
+
+        self.in_chans = in_chans
+        self.embed_dim = embed_dim
+
+        self.flatten_embedding = flatten_embedding
+
+        self.proj = nn.Conv2d(in_chans, embed_dim, kernel_size=patch_hw, stride=patch_hw)
+        self.norm = norm_layer(embed_dim) if norm_layer else nn.Identity()
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass to embed image patches.
+
+        Args:
+            x: Input image tensor of shape (B, C, H, W).
+
+        Returns:
+            Patch embeddings of shape (B, N, D) or (B, H, W, D) if not flattened.
+        """
+        _, _, h, w = x.shape
+
+        x = self.proj(x)  # B C H W
+        h, w = x.size(2), x.size(3)
+        x = x.flatten(2).transpose(1, 2)  # B HW C
+        x = self.norm(x)
+        if not self.flatten_embedding:
+            x = x.reshape(-1, h, w, self.embed_dim)  # B H W C
+        return x
+
+    def flops(self) -> float:
+        """Calculate FLOPs for patch embedding.
+
+        Returns:
+            Number of floating point operations.
+        """
+        ho, wo = self.patches_resolution
+        flops = ho * wo * self.embed_dim * self.in_chans * (self.patch_size[0] * self.patch_size[1])
+        if self.norm is not None:
+            flops += ho * wo * self.embed_dim
+        return flops
+
+    def reset_parameters(self) -> None:
+        """Reset projection layer parameters using uniform initialization."""
+        k = 1 / (self.in_chans * (self.patch_size[0] ** 2))
+        nn.init.uniform_(self.proj.weight, -math.sqrt(k), math.sqrt(k))
+        if self.proj.bias is not None:
+            nn.init.uniform_(self.proj.bias, -math.sqrt(k), math.sqrt(k))
+
+
 class FFN(BaseModule):
     """Implements feed-forward networks (FFNs) with identity connection.
 
@@ -364,79 +445,6 @@ def deformable_attention_core_func(
         .sum(-1)
         .reshape(bs, n_head * c, len_q)
     )
-
-    return output.permute(0, 2, 1)
-
-
-def deformable_attention_core_func_v2(
-    value: torch.Tensor,
-    value_spatial_shapes,
-    sampling_locations: torch.Tensor,
-    attention_weights: torch.Tensor,
-    num_points_list: list[int],
-    method='default',
-    value_shape='default',
-    ):
-    """
-    Args:
-        value (Tensor): [bs, value_length, n_head, c]
-        value_spatial_shapes (Tensor|List): [n_levels, 2]
-        value_level_start_index (Tensor|List): [n_levels]
-        sampling_locations (Tensor): [bs, query_length, n_head, n_levels * n_points, 2]
-        attention_weights (Tensor): [bs, query_length, n_head, n_levels * n_points]
-
-    Returns:
-        output (Tensor): [bs, Length_{query}, C]
-    """
-    if value_shape == 'default':
-        bs, n_head, c, _ = value[0].shape
-    elif value_shape == 'reshape':   # reshape following RT-DETR
-        bs, _, n_head, c = value.shape
-        split_shape = [h * w for h, w in value_spatial_shapes]
-        value = value.permute(0, 2, 3, 1).flatten(0, 1).split(split_shape, dim=-1)
-    _, Len_q, _, _, _ = sampling_locations.shape
-
-    # sampling_offsets [8, 480, 8, 12, 2]
-    if method == 'default':
-        sampling_grids = 2 * sampling_locations - 1
-
-    elif method == 'discrete':
-        sampling_grids = sampling_locations
-
-    sampling_grids = sampling_grids.permute(0, 2, 1, 3, 4).flatten(0, 1)
-    sampling_locations_list = sampling_grids.split(num_points_list, dim=-2)
-
-    sampling_value_list = []
-    for level, (h, w) in enumerate(value_spatial_shapes):
-        value_l = value[level].reshape(bs * n_head, c, h, w)
-        sampling_grid_l: torch.Tensor = sampling_locations_list[level]
-
-        if method == 'default':
-            sampling_value_l = nn.functional.grid_sample(
-                value_l,
-                sampling_grid_l,
-                mode='bilinear',
-                padding_mode='zeros',
-                align_corners=False)
-
-        elif method == 'discrete':
-            # n * m, seq, n, 2
-            sampling_coord = (sampling_grid_l * torch.tensor([[w, h]], device=value_l.device) + 0.5).to(torch.int64)
-
-            # FIX ME? for rectangle input
-            sampling_coord = sampling_coord.clamp(0, h - 1)
-            sampling_coord = sampling_coord.reshape(bs * n_head, Len_q * num_points_list[level], 2)
-
-            s_idx = torch.arange(sampling_coord.shape[0], device=value_l.device).unsqueeze(-1).repeat(1, sampling_coord.shape[1])
-            sampling_value_l: torch.Tensor = value_l[s_idx, :, sampling_coord[..., 1], sampling_coord[..., 0]] # n l c
-
-            sampling_value_l = sampling_value_l.permute(0, 2, 1).reshape(bs * n_head, c, Len_q, num_points_list[level])
-
-        sampling_value_list.append(sampling_value_l)
-
-    attn_weights = attention_weights.permute(0, 2, 1, 3).reshape(bs * n_head, 1, Len_q, sum(num_points_list))
-    weighted_sample_locs = torch.concat(sampling_value_list, dim=-1) * attn_weights
-    output = weighted_sample_locs.sum(-1).reshape(bs, n_head * c, Len_q)
 
     return output.permute(0, 2, 1)
 

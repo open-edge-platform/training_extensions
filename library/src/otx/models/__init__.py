@@ -5,11 +5,11 @@
 
 from otx.backend.native.models import (
     ATSS,
+    DEIMV2,
     RTDETR,
     SSD,
     YOLOX,
     DEIMDFine,
-    DEIMV2,
     DFine,
     DinoV2Seg,
     EfficientNet,
@@ -39,12 +39,12 @@ from otx.backend.openvino.models import (
 __all__ = [
     # detection
     "ATSS",
+    "DEIMV2",
     "RTDETR",
     "SSD",
     "YOLOX",
     "DEIMDFine",
     "DFine",
-    "DEIMV2",
     # semantic segmentation
     "DinoV2Seg",
     # classification

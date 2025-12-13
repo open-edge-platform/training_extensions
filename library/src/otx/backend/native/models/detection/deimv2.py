@@ -59,10 +59,10 @@ class DEIMV2(DEIMDFine):
     """
 
     _pretrained_weights: ClassVar[dict[str, str]] = {
-        "deimv2_x": "/home/kprokofi/.torch/models/deimv2_dinov3_x_coco.pth",
-        "deimv2_l": "/home/kprokofi/.torch/models/deimv2_dinov3_l_coco.pth",
-        "deimv2_m": "/home/kprokofi/.torch/models/deimv2_dinov3_m_coco.pth",
-        "deimv2_s": "/home/kprokofi/.torch/models/deimv2_dinov3_s_coco.pth",
+        "deimv2_x": "https://github.com/kprokofi/DEIMv2/releases/download/1.0.0/deimv2_dinov3_x_coco.pth",
+        "deimv2_l": "https://github.com/kprokofi/DEIMv2/releases/download/1.0.0/deimv2_dinov3_l_coco.pth",
+        "deimv2_m": "https://github.com/kprokofi/DEIMv2/releases/download/1.0.0/deimv2_dinov3_m_coco.pth",
+        "deimv2_s": "https://github.com/kprokofi/DEIMv2/releases/download/1.0.0/deimv2_dinov3_s_coco.pth",
     }
 
     input_size_multiplier = 32
@@ -136,9 +136,9 @@ class DEIMV2(DEIMDFine):
             raise ValueError(msg) from err
 
         optimizer_configuration = [
-            {"params": '^(?=.*.dinov3)(?!.*(?:norm|bn|bias)).*$', "lr": backbone_lr},
-            {"params": '^(?=.*.dinov3)(?=.*(?:norm|bn|bias)).*$' , "lr": backbone_lr, "weight_decay": 0.0},
-            {"params": '^(?=.*(?:sta|encoder|decoder))(?=.*(?:norm|bn|bias)).*$', "weight_decay": 0.0},
+            {"params": "^(?=.*.dinov3)(?!.*(?:norm|bn|bias)).*$", "lr": backbone_lr},
+            {"params": "^(?=.*.dinov3)(?=.*(?:norm|bn|bias)).*$", "lr": backbone_lr, "weight_decay": 0.0},
+            {"params": "^(?=.*(?:sta|encoder|decoder))(?=.*(?:norm|bn|bias)).*$", "weight_decay": 0.0},
         ]
 
         model = DETR(

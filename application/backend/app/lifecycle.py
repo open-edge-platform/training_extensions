@@ -56,7 +56,7 @@ def setup_job_controller(data_dir: Path, max_parallel_jobs: int) -> tuple[JobQue
                 subset_service=SubsetService(),
                 subset_assigner=SubsetAssigner(),
                 dataset_service=DatasetService(data_dir=data_dir, label_service=LabelService()),
-                model_service=ModelService(),
+                model_service=ModelService(data_dir=data_dir),
                 training_configuration_service=TrainingConfigurationService(),
                 data_dir=data_dir,
                 db_session_factory=get_db_session,

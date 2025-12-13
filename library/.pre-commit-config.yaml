@@ -1,0 +1,18 @@
+default_language_version:
+  python: python3.10 # Should match the lowest Python version supported by the library (set in library/pyproject.toml)
+
+repos:
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: "0.9.7"
+    hooks:
+      - id: uv-lock
+        name: uv lock
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: "v1.6.1"
+    hooks:
+      - id: mypy
+        alias: mypy_lib
+        name: mypy (library)
+        files: '^src/otx/.*\.py'
+        additional_dependencies: [types-PyYAML]
+        args: [--disallow-untyped-calls, --config-file, pyproject.toml]
