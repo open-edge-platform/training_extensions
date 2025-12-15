@@ -122,6 +122,7 @@ class RTMPose(OTXKeypointDetectionModel):
                     "pred_y": {0: "batch"},
                 },
                 "autograd_inlining": False,
+                "opset_version": 18,
             },
             output_names=["pred_x", "pred_y"],
         )

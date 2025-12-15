@@ -363,8 +363,9 @@ class MaskRCNN(OTXInstanceSegModel):
                     "labels": {0: "batch", 1: "num_dets"},
                     "masks": {0: "batch", 1: "num_dets", 2: "height", 3: "width"},
                 },
-                "opset_version": 11,
+                "opset_version": 18,
                 "autograd_inlining": False,
+                "dynamo": False,
             },
             output_names=["bboxes", "labels", "masks", "feature_vector", "saliency_map"] if self.explain_mode else None,
         )

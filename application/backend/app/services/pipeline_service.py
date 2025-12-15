@@ -60,6 +60,7 @@ class PipelineService:
             model_revision_id=str(to_update.model_revision_id) if to_update.model_revision_id else None,
             is_running=to_update.status.as_bool,
             data_collection_policies=[obj.model_dump() for obj in to_update.data_collection_policies],
+            device=to_update.device,
         )
         pipeline_db = pipeline_repo.update(to_update_db)
         updated = Pipeline.model_validate(pipeline_db)
@@ -71,6 +72,8 @@ class PipelineService:
                 self._event_bus.emit_event(EventType.SINK_CHANGED)
             if pipeline.data_collection_policies != updated.data_collection_policies:
                 self._event_bus.emit_event(EventType.PIPELINE_DATASET_COLLECTION_POLICIES_CHANGED)
+            if pipeline.device != updated.device:
+                self._event_bus.emit_event(EventType.INFERENCE_DEVICE_CHANGED)
         elif pipeline.status != updated.status:
             # If the pipeline is being activated or stopped
             self._event_bus.emit_event(EventType.PIPELINE_STATUS_CHANGED)

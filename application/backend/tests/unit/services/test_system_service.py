@@ -111,3 +111,76 @@ class TestSystemService:
             devices = fxt_system_service.get_devices()
 
             assert len(devices) == 3
+
+    def test_validate_device_cpu_always_valid(self, fxt_system_service: SystemService):
+        """Test that CPU device is always valid"""
+        assert fxt_system_service.validate_device("cpu") is True
+
+    def test_validate_device_xpu_available(self, fxt_system_service: SystemService):
+        """Test validating XPU device when available"""
+        mock_xpu_dp = MagicMock()
+        mock_xpu_dp.name = "Intel XPU"
+        mock_xpu_dp.total_memory = 36022263808
+
+        with patch("app.services.system_service.torch") as mock_torch:
+            mock_torch.xpu.is_available.return_value = True
+            mock_torch.cuda.is_available.return_value = False
+            mock_torch.xpu.device_count.return_value = 2
+            mock_torch.xpu.get_device_properties.return_value = mock_xpu_dp
+
+            assert fxt_system_service.validate_device("xpu") is True
+            assert fxt_system_service.validate_device("xpu-0") is True
+            assert fxt_system_service.validate_device("xpu-1") is True
+            assert fxt_system_service.validate_device("xpu-2") is False
+
+    def test_validate_device_xpu_not_available(self, fxt_system_service: SystemService):
+        """Test validating XPU device when not available"""
+        with patch("app.services.system_service.torch") as mock_torch:
+            mock_torch.xpu.is_available.return_value = False
+            mock_torch.cuda.is_available.return_value = False
+
+            assert fxt_system_service.validate_device("xpu") is False
+            assert fxt_system_service.validate_device("xpu-0") is False
+
+    def test_validate_device_cuda_available(self, fxt_system_service: SystemService):
+        """Test validating CUDA device when available"""
+        mock_cuda_dp = MagicMock()
+        mock_cuda_dp.name = "NVIDIA GPU"
+        mock_cuda_dp.total_memory = 25769803776
+
+        with patch("app.services.system_service.torch") as mock_torch:
+            mock_torch.xpu.is_available.return_value = False
+            mock_torch.cuda.is_available.return_value = True
+            mock_torch.cuda.device_count.return_value = 3
+            mock_torch.cuda.get_device_properties.return_value = mock_cuda_dp
+
+            assert fxt_system_service.validate_device("cuda") is True
+            assert fxt_system_service.validate_device("cuda-0") is True
+            assert fxt_system_service.validate_device("cuda-1") is True
+            assert fxt_system_service.validate_device("cuda-2") is True
+            assert fxt_system_service.validate_device("cuda-3") is False
+
+    def test_validate_device_cuda_not_available(self, fxt_system_service: SystemService):
+        """Test validating CUDA device when not available"""
+        with patch("app.services.system_service.torch") as mock_torch:
+            mock_torch.xpu.is_available.return_value = False
+            mock_torch.cuda.is_available.return_value = False
+
+            assert fxt_system_service.validate_device("cuda") is False
+            assert fxt_system_service.validate_device("cuda-0") is False
+
+    def test_validate_device_invalid_type(self, fxt_system_service: SystemService):
+        """Test validating invalid device types"""
+        with patch("app.services.system_service.torch") as mock_torch, pytest.raises(ValueError):
+            mock_torch.xpu.is_available.return_value = False
+            mock_torch.cuda.is_available.return_value = False
+
+            assert fxt_system_service.validate_device("cpu-cpu") is False
+            assert fxt_system_service.validate_device("cpu--1") is False
+            assert fxt_system_service.validate_device("cpu-") is False
+            assert fxt_system_service.validate_device("cpu-0.9") is False
+            assert fxt_system_service.validate_device("1") is False
+            assert fxt_system_service.validate_device("-1") is False
+            assert fxt_system_service.validate_device("gpu") is False
+            assert fxt_system_service.validate_device("tpu") is False
+            assert fxt_system_service.validate_device("invalid") is False

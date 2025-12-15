@@ -18,6 +18,7 @@ class PipelineView(BaseModel):
     model_revision: ModelRevision | None = Field(default=None, serialization_alias="model")
     status: PipelineStatus = PipelineStatus.IDLE
     data_collection_policies: list[DataCollectionPolicy] = Field(default_factory=list)
+    device: str = Field(default="cpu", description="Inference device (e.g., 'cpu', 'xpu', 'cuda', 'xpu-2', 'cuda-1')")
 
     model_config = {
         "json_schema_extra": {
@@ -52,6 +53,7 @@ class PipelineView(BaseModel):
                     "files_deleted": False,
                 },
                 "status": "running",
+                "device": "cpu",
                 "data_collection_policies": [
                     {
                         "type": "fixed_rate",

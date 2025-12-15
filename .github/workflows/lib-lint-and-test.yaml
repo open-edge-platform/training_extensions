@@ -31,7 +31,7 @@ jobs:
       run_workflow: ${{ steps.run_workflow.outputs.run }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
 
@@ -63,20 +63,16 @@ jobs:
       contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
 
-      - name: Set up Python
-        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
-        with:
-          python-version: "3.13"
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@3259c6206f993105e3a61b142c2d97bf4b9ef83d # v7.1.0
+      - name: Install uv and set the Python version
+        uses: astral-sh/setup-uv@ed21f2f24f8dd64503750218de024bcf64c7250a # v7.1.5
         with:
           version: "0.9.7"
           enable-cache: false
+          python-version: "3.10" # Use the lowest supported Python version for linting/type-checking
 
       - name: Installing dependencies
         working-directory: library
@@ -116,20 +112,16 @@ jobs:
     name: unit-tests-with-Python${{ matrix.python-version }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
 
-      - name: Set up Python
-        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
-        with:
-          python-version: "3.13"
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@3259c6206f993105e3a61b142c2d97bf4b9ef83d # v7.1.0
+      - name: Install uv and set the Python version
+        uses: astral-sh/setup-uv@ed21f2f24f8dd64503750218de024bcf64c7250a # v7.1.5
         with:
           version: "0.9.7"
           enable-cache: false
+          python-version: ${{ matrix.python-version }}
 
       - name: Installing dependencies
         working-directory: library
@@ -159,31 +151,27 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.10", "3.13"]
-        include:
-          - task: "multi_class_cls"
-          - task: "multi_label_cls"
-          - task: "h_label_cls"
-          - task: "keypoint_detection"
-          - task: "detection"
-          - task: "instance_segmentation"
-          - task: "semantic_segmentation"
+        task:
+          - "multi_class_cls"
+          - "multi_label_cls"
+          - "h_label_cls"
+          - "keypoint_detection"
+          - "detection"
+          - "instance_segmentation"
+          - "semantic_segmentation"
     name: integration-tests-${{ matrix.task }}-py${{ matrix.python-version }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
 
-      - name: Set up Python
-        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@3259c6206f993105e3a61b142c2d97bf4b9ef83d # v7.1.0
+      - name: Install uv and set the Python version
+        uses: astral-sh/setup-uv@ed21f2f24f8dd64503750218de024bcf64c7250a # v7.1.5
         with:
           version: "0.9.7"
           enable-cache: false
+          python-version: ${{ matrix.python-version }}
 
       - name: Installing dependencies
         working-directory: library
