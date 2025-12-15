@@ -50,6 +50,13 @@ class NMSop(torch.autograd.Function):
             inds = torch_nms(bboxes, scores, iou_threshold)
 
         if max_num > 0:
+            if torch.onnx.is_in_onnx_export():
+                # Guard against symbolic integers during tracing
+                num_inds = inds.shape[0]
+                # For Dynamo-based ONNX export, we need to hint the upper bound of dynamic dimensions.
+                # This is skipped for TorchScript export (dynamo=False) which uses symbolic() instead.
+                if isinstance(num_inds, (int, torch.SymInt)):
+                    torch._check(num_inds <= max_num)  # noqa: SLF001
             inds = inds[:max_num]
         if is_filtering_by_score:
             inds = valid_inds[inds]

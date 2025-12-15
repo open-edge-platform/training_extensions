@@ -128,7 +128,9 @@ class DatasetItemRepository:
         result = cast(CursorResult, self.db.execute(stmt))
         return result.rowcount > 0
 
-    def set_annotation_data(self, obj_id: str, annotation_data: list) -> UpdateDatasetItemAnnotation | None:
+    def set_annotation_data(
+        self, obj_id: str, annotation_data: list, user_reviewed: bool
+    ) -> UpdateDatasetItemAnnotation | None:
         stmt = (
             update(DatasetItemDB)
             .returning(
@@ -142,6 +144,7 @@ class DatasetItemRepository:
             )
             .values(
                 annotation_data=annotation_data,
+                user_reviewed=user_reviewed,
                 updated_at=datetime.now(UTC),
             )
         )

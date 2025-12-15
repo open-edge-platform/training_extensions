@@ -785,8 +785,9 @@ class TestDatasetServiceIntegration:
         "item_idx, label_idx",
         [
             (0, 0),  # Set annotation with new label to unannotated item
-            (1, 0),  # Set annotation with existing label on already annotated item
-            (1, 1),  # Set annotation with new label to already annotated item
+            (2, 0),  # Set annotation with existing label on already reviewed item
+            (2, 1),  # Set annotation with new label to already reviewed item
+            (5, 1),  # Set annotation with new label to an item to review
         ],
     )
     def test_set_dataset_item_annotations(
@@ -794,12 +795,12 @@ class TestDatasetServiceIntegration:
         item_idx: int,
         label_idx: int,
         fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
+        fxt_project_with_annotation_status_items: tuple[Project, list[DatasetItemDB]],
         fxt_annotations: Callable[[UUID], list[DatasetItemAnnotation]],
         db_session: Session,
     ):
         """Test setting a dataset item annotation."""
-        project, db_dataset_items = fxt_project_with_dataset_items
+        project, db_dataset_items = fxt_project_with_annotation_status_items
         label_id = str(project.task.labels[label_idx].id)
         dataset_item_id = db_dataset_items[item_idx].id
         annotations = fxt_annotations(project.task.labels[label_idx].id)
@@ -807,11 +808,13 @@ class TestDatasetServiceIntegration:
             project=project,
             dataset_item_id=UUID(dataset_item_id),
             annotations=annotations,
+            user_reviewed=True,
         )
 
         dataset_item = db_session.get(DatasetItemDB, dataset_item_id)
         assert dataset_item is not None
         assert dataset_item.annotation_data is not None
+        assert dataset_item.user_reviewed is True
         assert [
             DatasetItemAnnotation.model_validate(annotation) for annotation in dataset_item.annotation_data
         ] == annotations
@@ -841,6 +844,7 @@ class TestDatasetServiceIntegration:
                 project=project,
                 dataset_item_id=non_existent_id,
                 annotations=annotations,
+                user_reviewed=True,
             )
 
         assert excinfo.value.resource_type == ResourceType.DATASET_ITEM
