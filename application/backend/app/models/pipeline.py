@@ -44,6 +44,7 @@ class Pipeline(BaseEntity):
         model_revision_id: UUID reference to the model revision entity.
         status: Current operational status of the pipeline (IDLE or RUNNING).
         data_collection_policies: List of policies governing data collection behavior during pipeline execution.
+        device: The device used for model inference (e.g., 'cpu', 'xpu', 'cuda', 'xpu-1', etc.).
 
     Raises:
         ValueError: If attempting to set status to RUNNING when source, sink, or model is not configured.
@@ -58,6 +59,7 @@ class Pipeline(BaseEntity):
     model_revision_id: UUID | None = None
     status: PipelineStatus = PipelineStatus.IDLE
     data_collection_policies: list[DataCollectionPolicy] = Field(default_factory=list)
+    device: str = Field(default="cpu", pattern=r"^(cpu|xpu|cuda)(-\d+)?$")
 
     @model_validator(mode="before")
     def set_status_from_is_running(cls, data: Any) -> Any:
