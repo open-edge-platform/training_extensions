@@ -182,6 +182,12 @@ jobs:
         with:
           persist-credentials: false
 
+      # TODO remove after switching to an official Datumaro release with pre-built wheels
+      - name: Installing Rust toolchain
+        uses: dtolnay/rust-toolchain@6d653acede28d24f02e3cd41383119e8b1b35921
+        with:
+          toolchain: stable
+
       - name: Install uv and set the Python version
         uses: astral-sh/setup-uv@ed21f2f24f8dd64503750218de024bcf64c7250a # v7.1.5
         with:
