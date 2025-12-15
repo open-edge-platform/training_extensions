@@ -121,7 +121,7 @@ def test_engine_from_tile_recipe(
     else:
         pytest.skip("Only Detection, Instance Segmentation, and Semantic Segmentation are supported for now.")
 
-    data_root = fxt_target_dataset_per_task["tiling_detection"]
+    data_root = fxt_target_dataset_per_task["detection"]
     if task is OTXTaskType.SEMANTIC_SEGMENTATION:
         dataset = DmDataset.import_from(path=data_root, format="coco")
         data_root = tmp_path / "tiling_detection_css"
