@@ -39,6 +39,7 @@ from otx.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
+    from torch import nn
 
     from otx.backend.native.schedulers import LRSchedulerListCallable
     from otx.metrics import MetricCallable
@@ -150,6 +151,46 @@ class MaskRCNNTV(OTXInstanceSegModel):
 
         return model
 
+    def _move_model_tensors_to_device_and_dtype(self, device: str, dtype: torch.dtype | None = None) -> nn.Module:
+        """Move model and torchvision-specific cached tensors to the specified device and dtype.
+
+        Torchvision's AnchorGenerator caches cell_anchors which are not moved by model.to().
+        This override ensures those cached tensors are also moved to avoid device/dtype mismatch
+        during TorchScript tracing for export.
+
+        Args:
+            device: Target device ('cpu', 'cuda', etc.)
+            dtype: Target dtype for floating-point tensors. If None, dtype is not changed.
+                   Note: Integer tensors (used for indexing) should not be converted.
+
+        Returns:
+            The model moved to the specified device.
+        """
+
+        def _is_floating_point(tensor: torch.Tensor) -> bool:
+            """Check if tensor is floating point (should have dtype converted)."""
+            return tensor.dtype in (torch.float16, torch.float32, torch.float64, torch.bfloat16)
+
+        # First, move the model parameters
+        model = self.model.to(device)
+        if dtype is not None:
+            model = model.to(dtype)
+
+        # Then handle torchvision-specific cached tensors
+        for module in model.modules():
+            # Handle AnchorGenerator's cell_anchors cache
+            if hasattr(module, "cell_anchors") and module.cell_anchors is not None:
+                new_anchors = []
+                for anchor in module.cell_anchors:
+                    if isinstance(anchor, torch.Tensor):
+                        anchor = anchor.to(device)  # noqa: PLW2901
+                        if dtype is not None and _is_floating_point(anchor):
+                            anchor = anchor.to(dtype)  # noqa: PLW2901
+                    new_anchors.append(anchor)
+                module.cell_anchors = new_anchors
+
+        return model
+
     def _customize_inputs(self, entity: OTXDataBatch) -> dict[str, Any]:
         if isinstance(entity.images, list):
             entity.images, entity.imgs_info = stack_batch(entity.images, entity.imgs_info, pad_size_divisor=32)  # type: ignore[arg-type,assignment]
@@ -244,7 +285,7 @@ class MaskRCNNTV(OTXInstanceSegModel):
             resize_mode="fit_to_window",
             pad_value=0,
             swap_rgb=False,
-            via_onnx=True,
+            via_onnx=False,
             onnx_export_configuration={
                 "input_names": ["image"],
                 "output_names": ["boxes", "labels", "masks"],
@@ -254,8 +295,9 @@ class MaskRCNNTV(OTXInstanceSegModel):
                     "labels": {0: "batch", 1: "num_dets"},
                     "masks": {0: "batch", 1: "num_dets", 2: "height", 3: "width"},
                 },
-                "opset_version": 11,
+                "opset_version": 18,
                 "autograd_inlining": False,
+                "dynamo": False,
             },
             output_names=["bboxes", "labels", "masks", "feature_vector", "saliency_map"] if self.explain_mode else None,
         )
