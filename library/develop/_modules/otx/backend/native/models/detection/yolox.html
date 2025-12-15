@@ -407,12 +407,12 @@
             <span class="n">resize_mode</span><span class="o">=</span><span class="n">resize_mode</span><span class="p">,</span>
             <span class="n">pad_value</span><span class="o">=</span><span class="mi">114</span><span class="p">,</span>
             <span class="n">swap_rgb</span><span class="o">=</span><span class="n">swap_rgb</span><span class="p">,</span>
-            <span class="n">via_onnx</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">via_onnx</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">onnx_export_configuration</span><span class="o">=</span><span class="p">{</span>
                 <span class="s2">&quot;input_names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">],</span>
                 <span class="s2">&quot;output_names&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;boxes&quot;</span><span class="p">,</span> <span class="s2">&quot;labels&quot;</span><span class="p">],</span>
                 <span class="s2">&quot;export_params&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-                <span class="s2">&quot;opset_version&quot;</span><span class="p">:</span> <span class="mi">11</span><span class="p">,</span>
+                <span class="s2">&quot;opset_version&quot;</span><span class="p">:</span> <span class="mi">18</span><span class="p">,</span>
                 <span class="s2">&quot;dynamic_axes&quot;</span><span class="p">:</span> <span class="p">{</span>
                     <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;batch&quot;</span><span class="p">},</span>
                     <span class="s2">&quot;boxes&quot;</span><span class="p">:</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;batch&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;num_dets&quot;</span><span class="p">},</span>
