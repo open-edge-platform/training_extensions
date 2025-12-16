@@ -9,7 +9,11 @@ from fastapi import APIRouter, Depends, Query, status
 from starlette.responses import FileResponse
 
 from app.api.dependencies import get_dataset_revision, get_dataset_revision_service, get_project
-from app.api.schemas.dataset_item import DatasetItemRevisionView, DatasetItemsWithPagination
+from app.api.schemas.dataset_item import (
+    DatasetItemRevisionView,
+    DatasetItemsRevisionWithPagination,
+    DatasetItemsWithPagination,
+)
 from app.api.validators import DatasetItemID, DatasetRevisionID
 from app.core.models import Pagination
 from app.models import DatasetItemFormat, DatasetItemSubset, Project
@@ -42,11 +46,11 @@ def list_dataset_revision_items(
     limit: Annotated[int, Query(ge=1, le=MAX_DATASET_ITEMS_NUMBER_RETURNED)] = DEFAULT_DATASET_ITEMS_NUMBER_RETURNED,
     offset: Annotated[int, Query(ge=0)] = 0,
     subset: Annotated[DatasetItemSubset | None, Query()] = None,
-) -> DatasetItemsWithPagination:
+) -> DatasetItemsRevisionWithPagination:
     """List the items in a dataset revision. This endpoint supports pagination."""
     items_data, total_count = dataset_revision_service.list_dataset_revision_items(
         project_id=project.id,
-        revision_id=dataset_revision.id,
+        dataset_revision=dataset_revision,
         limit=limit,
         offset=offset,
         subset=subset,
@@ -64,7 +68,7 @@ def list_dataset_revision_items(
         )
         items.append(item_view)
 
-    return DatasetItemsWithPagination(
+    return DatasetItemsRevisionWithPagination(
         items=items,
         pagination=Pagination(
             total=total_count,
@@ -92,7 +96,7 @@ def get_dataset_revision_item(
     """Get information about a specific item in the dataset revision"""
     item_data = dataset_revision_service.get_dataset_revision_item(
         project_id=project.id,
-        revision_id=dataset_revision.id,
+        dataset_revision=dataset_revision,
         item_id=str(dataset_item_id),
     )
 
@@ -123,7 +127,7 @@ def get_dataset_revision_item_binary(
     """Get the image data of an item in the dataset revision"""
     binary_path = dataset_revision_service.get_dataset_revision_item_binary_path(
         project_id=project.id,
-        revision_id=dataset_revision.id,
+        dataset_revision=dataset_revision,
         item_id=str(dataset_item_id),
     )
     return FileResponse(binary_path, media_type="application/octet-stream")
@@ -144,9 +148,10 @@ def get_dataset_revision_item_thumbnail(
     dataset_revision_service: Annotated[DatasetRevisionService, Depends(get_dataset_revision_service)],
 ) -> FileResponse:
     """Get the thumbnail of an item in the dataset revision"""
+    # TODO: correctly compute thumbnail image and return it.
     binary_path = dataset_revision_service.get_dataset_revision_item_binary_path(
         project_id=project.id,
-        revision_id=dataset_revision.id,
+        dataset_revision=dataset_revision,
         item_id=str(dataset_item_id),
     )
     return FileResponse(binary_path, media_type="image/jpeg")
@@ -164,7 +169,6 @@ def get_dataset_revision_item_thumbnail(
 def delete_dataset_revision_files(
     project: Annotated[Project, Depends(get_project)],
     dataset_revision_id: DatasetRevisionID,
-    _dataset_revision: Annotated[DatasetRevision, Depends(get_dataset_revision)],
     dataset_revision_service: Annotated[DatasetRevisionService, Depends(get_dataset_revision_service)],
 ) -> None:
     """Delete the files associated with a dataset revision"""

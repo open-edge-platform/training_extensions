@@ -2,10 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import shutil
-import tempfile
 from pathlib import Path
 from uuid import UUID
-from zipfile import ZipFile
 
 import datumaro.experimental as dm
 import polars as pl
@@ -52,7 +50,7 @@ class DatasetRevisionService(BaseSessionManagedService):
             dataset=dataset,
             output_path=revision_path,
             export_images=True,
-            as_zip=True,
+            as_zip=False,  # Export as uncompressed directory, see #5070 for details
         )
         return UUID(revision_db.id)
 
@@ -76,9 +74,19 @@ class DatasetRevisionService(BaseSessionManagedService):
             raise ResourceNotFoundError(ResourceType.DATASET_REVISION, str(revision_id))
         return self._to_dataset_revision(dataset_db=revision)
 
+    def save_dataset_revision(self, dataset_revision: DatasetRevision) -> None:
+        """
+        Saves a dataset revision.
+
+        Args:
+            dataset_revision: The dataset revision to save.
+        """
+        revision_repo = DatasetRevisionRepository(db=self.db_session)
+        _ = revision_repo.save(dataset_revision.model_dump())
+
     def delete_dataset_revision_files(self, project_id: UUID, revision_id: UUID) -> None:
         """
-        Delete the files associated with a dataset revision.
+        Marks the DatasetRevision files as deleted, and deletes associated files from the disk.
 
         Args:
             project_id: The UUID of the project.
@@ -89,53 +97,43 @@ class DatasetRevisionService(BaseSessionManagedService):
         """
         revision = self.get_dataset_revision(project_id, revision_id)
         if revision.files_deleted:
-            logger.info("Files for dataset revision '{}' already deleted", revision_id)
+            logger.info("Files for dataset revision '{}' are already deleted", revision_id)
             return
 
+        # Mark as deleted in the database
+        revision.files_deleted = True
+        self.save_dataset_revision(dataset_revision=revision)
+
+        # Delete files from filesystem
         revision_path = self.projects_dir / str(project_id) / "dataset_revisions" / str(revision_id)
         if revision_path.exists():
             shutil.rmtree(revision_path)
             logger.info("Deleted dataset revision files at '{}'", revision_path)
 
-        # Mark as deleted in the database
-        revision_repo = DatasetRevisionRepository(db=self.db_session)
-        revision_db = revision_repo.get_by_id(str(revision_id))
-        if revision_db:
-            revision_db.files_deleted = True
-            revision_repo.save(revision_db)
-
-    def _get_revision_parquet_path(self, project_id: UUID, revision_id: UUID) -> tuple[Path, bool]:
+    def _get_revision_parquet_path(self, project_id: UUID, revision_id: UUID) -> Path:
         """
         Get the path to the parquet file for a dataset revision.
-
-        If the revision is stored as a zip, extract it temporarily to access the parquet file.
 
         Args:
             project_id: The UUID of the project.
             revision_id: The UUID of the dataset revision.
 
         Returns:
-            Path to the data.parquet file (may be in a temp directory if extracted from zip).
-            Bool indicating if the file was extracted from a zip and is in a temp directory.
+            Path to the data.parquet file.
+
+        Raises:
+            ResourceNotFoundError: If the parquet file is not found.
         """
-        revision_path = self.projects_dir / str(project_id) / "dataset_revisions" / str(revision_id)
+        parquet_path = self.projects_dir / str(project_id) / "dataset_revisions" / str(revision_id) / "data.parquet"
+        if not parquet_path.exists():
+            raise ResourceNotFoundError(ResourceType.DATASET_REVISION, str(revision_id))
 
-        # When as_zip=True, datumaro creates dataset.zip inside the output directory
-        zip_path = revision_path / "dataset.zip"
-        if zip_path.exists():
-            # Extract to temp directory
-            temp_dir = Path(tempfile.mkdtemp(prefix=f"revision_{revision_id}_"))
-            with ZipFile(zip_path, "r") as zip_ref:
-                zip_ref.extractall(temp_dir)
-            return temp_dir / "data.parquet", True
-
-        # Otherwise it's uncompressed (though this shouldn't happen with current implementation)
-        return revision_path / "data.parquet", False
+        return parquet_path
 
     def list_dataset_revision_items(
         self,
         project_id: UUID,
-        revision_id: UUID,
+        dataset_revision: DatasetRevision,
         limit: int = 10,
         offset: int = 0,
         subset: DatasetItemSubset | None = None,
@@ -145,7 +143,7 @@ class DatasetRevisionService(BaseSessionManagedService):
 
         Args:
             project_id: The UUID of the project.
-            revision_id: The UUID of the dataset revision.
+            dataset_revision: The dataset revision.
             limit: Maximum number of items to return.
             offset: Number of items to skip.
             subset: Optional subset filter.
@@ -153,29 +151,22 @@ class DatasetRevisionService(BaseSessionManagedService):
         Returns:
             Tuple of (list of items as dicts, total count).
         """
-        parquet_path, is_temp = self._get_revision_parquet_path(project_id, revision_id)
+        parquet_path = self._get_revision_parquet_path(project_id, dataset_revision.id)
 
-        if not parquet_path.exists():
-            raise ResourceNotFoundError(ResourceType.DATASET_REVISION, str(revision_id))
+        df = pl.read_parquet(parquet_path)
 
-        try:
-            df = pl.read_parquet(parquet_path)
+        if subset is not None:
+            df = df.filter(pl.col("subset") == subset.name)
 
-            if subset is not None:
-                df = df.filter(pl.col("subset") == subset.name)
-
-            total_count = len(df)
-            df = df.slice(offset, limit)
-            items = df.to_dicts()
-            return items, total_count
-        finally:
-            if is_temp:  # Clean up temp directory if we extracted a zip
-                shutil.rmtree(parquet_path.parent, ignore_errors=True)
+        total_count = len(df)
+        df = df.slice(offset, limit)
+        items = df.to_dicts()
+        return items, total_count
 
     def get_dataset_revision_item(
         self,
         project_id: UUID,
-        revision_id: UUID,
+        dataset_revision: DatasetRevision,
         item_id: str,
     ) -> dict:
         """
@@ -183,7 +174,7 @@ class DatasetRevisionService(BaseSessionManagedService):
 
         Args:
             project_id: The UUID of the project.
-            revision_id: The UUID of the dataset revision.
+            dataset_revision: The dataset revision.
             item_id: The ID of the item within the dataset.
 
         Returns:
@@ -192,32 +183,25 @@ class DatasetRevisionService(BaseSessionManagedService):
         Raises:
             ResourceNotFoundError: If the item is not found.
         """
-        parquet_path, is_temp = self._get_revision_parquet_path(project_id, revision_id)
+        parquet_path = self._get_revision_parquet_path(project_id, dataset_revision.id)
 
-        if not parquet_path.exists():
-            raise ResourceNotFoundError(ResourceType.DATASET_REVISION, str(revision_id))
+        df = pl.read_parquet(parquet_path)
 
-        try:
-            df = pl.read_parquet(parquet_path)
+        if "id" in df.columns:
+            filtered = df.filter(pl.col("id") == item_id)
+        else:
+            # Fallback: try to use image column
+            filtered = df.filter(pl.col("image").str.contains(item_id))
 
-            if "id" in df.columns:
-                filtered = df.filter(pl.col("id") == item_id)
-            else:
-                # Fallback: try to use image column
-                filtered = df.filter(pl.col("image").str.contains(item_id))
+        if len(filtered) == 0:
+            raise ResourceNotFoundError(ResourceType.DATASET_ITEM, item_id)
 
-            if len(filtered) == 0:
-                raise ResourceNotFoundError(ResourceType.DATASET_ITEM, item_id)
-
-            return filtered.to_dicts()[0]
-        finally:
-            if is_temp:  # Clean up temp directory if we extracted a zip
-                shutil.rmtree(parquet_path.parent, ignore_errors=True)
+        return filtered.to_dicts()[0]
 
     def get_dataset_revision_item_binary_path(
         self,
         project_id: UUID,
-        revision_id: UUID,
+        dataset_revision: DatasetRevision,
         item_id: str,
     ) -> Path:
         """
@@ -225,46 +209,15 @@ class DatasetRevisionService(BaseSessionManagedService):
 
         Args:
             project_id: The UUID of the project.
-            revision_id: The UUID of the dataset revision.
+            dataset_revision: The dataset revision.
             item_id: The ID of the item within the dataset.
 
         Returns:
             Path to the image file.
         """
-        item = self.get_dataset_revision_item(project_id, revision_id, item_id)
+        item = self.get_dataset_revision_item(project_id, dataset_revision, item_id)
+        revision_path = self.projects_dir / str(project_id) / "dataset_revisions" / str(dataset_revision.id)
 
-        revision_path = self.projects_dir / str(project_id) / "dataset_revisions" / str(revision_id)
-
-        # When as_zip=True, datumaro creates dataset.zip inside the output directory
-        zip_path = revision_path / "dataset.zip"
-        if zip_path.exists():
-            # For zip files, we need to extract to temp directory
-            temp_dir = Path(tempfile.mkdtemp(prefix=f"revision_{revision_id}_item_"))
-            with ZipFile(zip_path, "r") as zip_ref:
-                # Extract only the specific image file
-                image_rel_path = Path(item["image"]).name if isinstance(item.get("image"), str) else f"{item_id}.jpg"
-                image_path_in_zip = f"images/{image_rel_path}"
-                try:
-                    zip_ref.extract(image_path_in_zip, temp_dir)
-                    return temp_dir / image_path_in_zip
-                except KeyError:
-                    logger.warning(
-                        "Unexpected archive structure in {}: could not find {}. "
-                        "Searching for image file by item_id or image name.",
-                        zip_path,
-                        image_path_in_zip,
-                    )
-                    # Try alternative path
-                    zip_ref.extractall(temp_dir)
-                    # Find the image file
-                    for file in (temp_dir / "images").glob("*"):
-                        if item_id in file.name or (
-                            isinstance(item.get("image"), str) and Path(item["image"]).name == file.name
-                        ):
-                            return file
-                    raise ResourceNotFoundError(ResourceType.DATASET_ITEM, item_id)
-
-        # For uncompressed, construct the path directly
         if isinstance(item.get("image"), str):
             image_path = revision_path / "images" / Path(item["image"]).name
         else:
