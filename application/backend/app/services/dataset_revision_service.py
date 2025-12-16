@@ -74,15 +74,21 @@ class DatasetRevisionService(BaseSessionManagedService):
             raise ResourceNotFoundError(ResourceType.DATASET_REVISION, str(revision_id))
         return self._to_dataset_revision(dataset_db=revision)
 
-    def save_dataset_revision(self, dataset_revision: DatasetRevision) -> None:
+    def update_dataset_revision(self, dataset_revision: DatasetRevision) -> None:
         """
-        Saves a dataset revision.
+        Updates a dataset revision.
 
         Args:
-            dataset_revision: The dataset revision to save.
+            dataset_revision: The dataset revision to update.
         """
         revision_repo = DatasetRevisionRepository(db=self.db_session)
-        _ = revision_repo.save(dataset_revision.model_dump())
+        _ = revision_repo.update(
+            DatasetRevisionDB(
+                id=str(dataset_revision.id),
+                project_id=str(dataset_revision.project_id),
+                files_deleted=dataset_revision.files_deleted,
+            )
+        )
 
     def delete_dataset_revision_files(self, project_id: UUID, revision_id: UUID) -> None:
         """
@@ -102,7 +108,7 @@ class DatasetRevisionService(BaseSessionManagedService):
 
         # Mark as deleted in the database
         revision.files_deleted = True
-        self.save_dataset_revision(dataset_revision=revision)
+        self.update_dataset_revision(dataset_revision=revision)
 
         # Delete files from filesystem
         revision_path = self.projects_dir / str(project_id) / "dataset_revisions" / str(revision_id)
