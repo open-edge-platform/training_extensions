@@ -287,6 +287,7 @@ class TestOTXTrainerCreateTrainingDataset:
         self,
         fxt_otx_trainer: Callable[[], OTXTrainer],
         fxt_dataset_service: Mock,
+        fxt_dataset_revision_service: Mock,
     ):
         """Test successful creation of training, validation, and testing datasets."""
         # Arrange
@@ -319,7 +320,7 @@ class TestOTXTrainerCreateTrainingDataset:
         assert datasets_info.training == mock_training_dataset
         assert datasets_info.validation == mock_validation_dataset
         assert datasets_info.testing == mock_testing_dataset
-        fxt_dataset_service.save_revision.assert_called_once_with(project_id, mock_dm_dataset)
+        fxt_dataset_revision_service.save_revision.assert_called_once_with(project_id, mock_dm_dataset)
 
 
 class TestOTXTrainerPrepareModel:
