@@ -301,7 +301,7 @@ class RTDETR(OTXDetectionModel):
                     "scores": {0: "batch", 1: "num_dets"},
                 },
                 "autograd_inlining": False,
-                "opset_version": 16,
+                "opset_version": 18,
             },
             output_names=["bboxes", "labels", "scores"],
         )

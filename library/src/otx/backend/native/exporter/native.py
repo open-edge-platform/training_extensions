@@ -37,6 +37,16 @@ class OTXNativeModelExporter(OTXModelExporter):
         output_names: list[str] | None = None,
         input_names: list[str] | None = None,
     ) -> None:
+        self.via_onnx = via_onnx
+        self.onnx_export_configuration = onnx_export_configuration if onnx_export_configuration is not None else {}
+
+        # Sync output_names and input_names from onnx_export_configuration if not explicitly provided
+        # This ensures they are used for both ONNX export and direct OpenVINO conversion
+        if output_names is None and "output_names" in self.onnx_export_configuration:
+            output_names = self.onnx_export_configuration["output_names"]
+        if input_names is None and "input_names" in self.onnx_export_configuration:
+            input_names = self.onnx_export_configuration["input_names"]
+
         super().__init__(
             task_level_export_parameters=task_level_export_parameters,
             data_input_params=data_input_params,
@@ -46,8 +56,7 @@ class OTXNativeModelExporter(OTXModelExporter):
             output_names=output_names,
             input_names=input_names,
         )
-        self.via_onnx = via_onnx
-        self.onnx_export_configuration = onnx_export_configuration if onnx_export_configuration is not None else {}
+
         if output_names is not None:
             self.onnx_export_configuration.update({"output_names": output_names})
 
@@ -117,7 +126,6 @@ class OTXNativeModelExporter(OTXModelExporter):
         """
         dummy_tensor = torch.rand(self.data_input_params.as_ncwh()).to(next(model.parameters()).device)
         save_path = str(output_dir / (base_model_name + ".onnx"))
-
         torch.onnx.export(model, dummy_tensor, save_path, **self.onnx_export_configuration)
 
         onnx_model = onnx.load(save_path)

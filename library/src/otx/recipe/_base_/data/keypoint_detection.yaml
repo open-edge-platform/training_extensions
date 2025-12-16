@@ -52,6 +52,9 @@ train_subset:
       init_args:
         mean: [123.675, 116.28, 103.53]
         std: [58.395, 57.12, 57.375]
+  sampler:
+    class_path: torch.utils.data.RandomSampler
+    init_args: null
 val_subset:
   subset_name: val
   batch_size: 32
@@ -74,6 +77,9 @@ val_subset:
       init_args:
         mean: [123.675, 116.28, 103.53]
         std: [58.395, 57.12, 57.375]
+  sampler:
+    class_path: torch.utils.data.RandomSampler
+    init_args: null
 test_subset:
   subset_name: test
   batch_size: 32
@@ -96,3 +102,6 @@ test_subset:
       init_args:
         mean: [123.675, 116.28, 103.53]
         std: [58.395, 57.12, 57.375]
+  sampler:
+    class_path: torch.utils.data.RandomSampler
+    init_args: null

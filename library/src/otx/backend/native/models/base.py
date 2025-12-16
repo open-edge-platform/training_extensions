@@ -739,6 +739,26 @@ class OTXModel(LightningModule):
         msg = "Optimization is not implemented for torch models"
         raise NotImplementedError(msg)
 
+    def _move_model_tensors_to_device_and_dtype(self, device: str, dtype: torch.dtype | None = None) -> nn.Module:
+        """Move model and all cached tensors to the specified device and dtype.
+
+        This base implementation simply moves the model to the device.
+        Subclasses can override this to handle model-specific cached tensors
+        (like anchors in detection models) that are not moved by model.to().
+
+        Args:
+            device: Target device ('cpu', 'cuda', etc.)
+            dtype: Target dtype for floating-point tensors. If None, dtype is not changed.
+                   Note: Integer tensors (used for indexing) should not be converted.
+
+        Returns:
+            The model moved to the specified device.
+        """
+        model = self.model.to(device)
+        if dtype is not None:
+            model = model.to(dtype)
+        return model
+
     def export(
         self,
         output_dir: Path,
@@ -759,6 +779,11 @@ class OTXModel(LightningModule):
         """
         mode = self.training
         self.eval()
+        # Move model to CPU with FP32 for export to avoid device/dtype mismatch with TorchScript tracing
+        # AMP training may leave internal tensors in FP16, which breaks TorchScript check_trace
+        original_device = next(self.model.parameters()).device
+        original_dtype = next(self.model.parameters()).dtype
+        self.model = self._move_model_tensors_to_device_and_dtype("cpu", torch.float32)
 
         orig_forward = self.forward
         orig_trainer = self._trainer  # type: ignore[has-type]
@@ -777,6 +802,8 @@ class OTXModel(LightningModule):
             self.train(mode)
             self.forward = orig_forward  # type: ignore[method-assign]
             self._trainer = orig_trainer
+            # Restore model to original device and dtype
+            self.model = self._move_model_tensors_to_device_and_dtype(str(original_device), original_dtype)
 
     @property
     def _exporter(self) -> OTXModelExporter:
