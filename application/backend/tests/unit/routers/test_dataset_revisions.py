@@ -96,7 +96,7 @@ class TestDatasetRevisionItemEndpoints:
         )
         fxt_dataset_revision_service.list_dataset_revision_items.assert_called_once_with(
             project_id=fxt_get_project.id,
-            revision_id=fxt_dataset_revision_id,
+            dataset_revision=fxt_dataset_revision_service.get_dataset_revision(),
             limit=10,
             offset=0,
             subset=None,
@@ -126,7 +126,7 @@ class TestDatasetRevisionItemEndpoints:
 
         fxt_dataset_revision_service.list_dataset_revision_items.assert_called_once_with(
             project_id=fxt_get_project.id,
-            revision_id=fxt_dataset_revision_id,
+            dataset_revision=fxt_dataset_revision_service.get_dataset_revision(),
             limit=50,
             offset=10,
             subset=None,
@@ -158,7 +158,7 @@ class TestDatasetRevisionItemEndpoints:
         assert response.status_code == status.HTTP_200_OK
         fxt_dataset_revision_service.list_dataset_revision_items.assert_called_once_with(
             project_id=fxt_get_project.id,
-            revision_id=fxt_dataset_revision_id,
+            dataset_revision=fxt_dataset_revision_service.get_dataset_revision(),
             limit=10,
             offset=0,
             subset=DatasetItemSubset(subset),
@@ -222,7 +222,9 @@ class TestDatasetRevisionItemEndpoints:
             project_id=fxt_get_project.id, revision_id=fxt_dataset_revision_id
         )
         fxt_dataset_revision_service.get_dataset_revision_item.assert_called_once_with(
-            project_id=fxt_get_project.id, revision_id=fxt_dataset_revision_id, item_id=str(fxt_dataset_item.id)
+            project_id=fxt_get_project.id,
+            dataset_revision=fxt_dataset_revision_service.get_dataset_revision(),
+            item_id=str(fxt_dataset_item.id),
         )
 
     def test_get_dataset_revision_item_revision_not_found(
@@ -287,7 +289,9 @@ class TestDatasetRevisionItemEndpoints:
                 project_id=fxt_get_project.id, revision_id=fxt_dataset_revision_id
             )
             fxt_dataset_revision_service.get_dataset_revision_item_binary_path.assert_called_once_with(
-                project_id=fxt_get_project.id, revision_id=fxt_dataset_revision_id, item_id=str(dataset_item_id)
+                project_id=fxt_get_project.id,
+                dataset_revision=fxt_dataset_revision_service.get_dataset_revision(),
+                item_id=str(dataset_item_id),
             )
         finally:
             if os.path.exists(tmp_file_path):
@@ -358,7 +362,9 @@ class TestDatasetRevisionItemEndpoints:
                 project_id=fxt_get_project.id, revision_id=fxt_dataset_revision_id
             )
             fxt_dataset_revision_service.get_dataset_revision_item_binary_path.assert_called_once_with(
-                project_id=fxt_get_project.id, revision_id=fxt_dataset_revision_id, item_id=str(dataset_item_id)
+                project_id=fxt_get_project.id,
+                dataset_revision=fxt_dataset_revision_service.get_dataset_revision(),
+                item_id=str(dataset_item_id),
             )
         finally:
             if os.path.exists(tmp_file_path):
