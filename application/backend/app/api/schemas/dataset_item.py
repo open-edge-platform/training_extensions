@@ -111,7 +111,7 @@ class DatasetItemsWithPagination(BaseModel):
     Dataset Items list with pagination info
     """
 
-    items: list[DatasetItemRevisionView]
+    items: list[DatasetItemView]
     pagination: Pagination
 
 
