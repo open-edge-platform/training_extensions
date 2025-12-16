@@ -28,13 +28,13 @@ RNG = np.random.default_rng(42)
 
 
 def _ensure_chw_format(img: torch.Tensor) -> torch.Tensor:
-    """Ensure image tensor is in CHW format.
+    """Ensure image tensor is in CHW format with 3 channels.
 
     Args:
         img: Image tensor that may be in HWC or CHW format
 
     Returns:
-        Image tensor in CHW format (C, H, W) for 3D or (B, C, H, W) for 4D
+        Image tensor in CHW format (C, H, W) for 3D or (B, C, H, W) for 4D with 3 channels
     """
     if img.ndim == 3:
         # Check if last dimension is likely channels (small value like 1, 3, or 4)
@@ -45,6 +45,9 @@ def _ensure_chw_format(img: torch.Tensor) -> torch.Tensor:
         # If 4 channels (RGBA), convert to 3 channels (RGB)
         if img.shape[0] == 4:
             img = img[:3]
+        # If 1 channel (grayscale/palette), convert to 3 channels (RGB)
+        if img.shape[0] == 1:
+            img = img.repeat(3, 1, 1)
     return img
 
 
