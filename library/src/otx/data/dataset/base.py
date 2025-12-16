@@ -36,7 +36,11 @@ def _ensure_chw_format(img: torch.Tensor) -> torch.Tensor:
     Returns:
         Image tensor in CHW format (C, H, W) for 3D or (B, C, H, W) for 4D with 3 channels
     """
-    if img.ndim == 3:
+    # Handle 2D grayscale images (H, W) - add channel dimension
+    if img.ndim == 2:
+        img = img.unsqueeze(0)  # (H, W) -> (1, H, W)
+        img = img.repeat(3, 1, 1)  # (1, H, W) -> (3, H, W)
+    elif img.ndim == 3:
         # Check if last dimension is likely channels (small value like 1, 3, or 4)
         # and first dimension is not (larger, like image height)
         if img.shape[-1] in (1, 3, 4) and img.shape[0] > 4:
