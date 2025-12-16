@@ -81,6 +81,14 @@ def _default_collate_fn(items: list[OTXSample]) -> OTXDataBatch:
     # Try to stack images if they have the same shape
     if len(image_tensors) > 0 and all(t.shape == image_tensors[0].shape for t in image_tensors):
         images = torch.stack(image_tensors)
+        # Safety: ensure stacked tensor is BCHW. If it's in BHWC or BHCW, fix it.
+        if images.ndim == 4:
+            # BHWC -> BCHW
+            if images.shape[1] not in (1, 3) and images.shape[-1] in (1, 3):
+                images = images.permute(0, 3, 1, 2)
+            # BHCW -> BCHW (channels at dim=2)
+            elif images.shape[2] in (1, 3) and images.shape[1] not in (1, 3):
+                images = images.permute(0, 2, 1, 3)
     else:
         images = image_tensors
 
