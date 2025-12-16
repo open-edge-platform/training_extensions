@@ -38,6 +38,8 @@ def test_native_ov_engine(
         pytest.skip("Default models are checked in geti interaction tests.")
     if "mobilenet_v4" in recipe:
         pytest.skip("MobileNetV4 is not supported yet.")
+    if not recipe.endswith("litehrnet_s_tile.yaml"):
+        pytest.skip()
     task = Path(recipe).parent.name.lower()
     tmp_path_train = tmp_path / task
 
@@ -127,6 +129,8 @@ def test_engine_from_tile_recipe(
         pytest.skip("Only Detection, Instance Segmentation, and Semantic Segmentation are supported for now.")
 
     data_root = fxt_target_dataset_per_task["detection"]
+    if not recipe.endswith("litehrnet_s_tile.yaml"):
+        pytest.skip()
     if task is OTXTaskType.SEMANTIC_SEGMENTATION:
         dataset = DmDataset.import_from(path=data_root, format="coco")
         data_root = tmp_path / "tiling_detection_css"

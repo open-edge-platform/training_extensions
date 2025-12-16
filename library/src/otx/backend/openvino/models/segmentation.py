@@ -137,13 +137,34 @@ class OVSegmentationModel(OVModel):
             msg = "The input ground truth masks are not provided."
             raise ValueError(msg)
 
-        return [
-            {
-                "preds": pred_mask,
-                "target": target_mask,
-            }
-            for pred_mask, target_mask in zip(preds.masks, inputs.masks)
-        ]
+        aligned: list[dict[str, Any]] = []
+        for pred_mask, target_mask in zip(preds.masks, inputs.masks):
+            pm = pred_mask
+            tm = target_mask
+
+            # Ensure both are 3D with channel dim first: [1, H, W]
+            # Some backends may return [H, W] — add channel dim if needed.
+            if pm.ndim == 2:
+                pm = pm.unsqueeze(0)
+            if tm.ndim == 2:
+                tm = tm.unsqueeze(0)
+
+            # Align spatial dimensions if swapped (e.g., [1, W, H] vs [1, H, W])
+            if pm.ndim == 3 and tm.ndim == 3:
+                ph, pw = pm.shape[-2], pm.shape[-1]
+                th, tw = tm.shape[-2], tm.shape[-1]
+                if (ph, pw) != (th, tw):
+                    # If exactly swapped, transpose the prediction to match target
+                    if (ph, pw) == (tw, th):
+                        pm = pm.transpose(-1, -2)
+                    # Else if target seems swapped relative to prediction, transpose target
+                    elif (th, tw) == (pw, ph):
+                        tm = tm.transpose(-1, -2)
+                    # Otherwise, keep as is and let metric raise if incompatible
+
+            aligned.append({"preds": pm, "target": tm})
+
+        return aligned
 
     def _create_label_info_from_ov_ir(self) -> SegLabelInfo:
         """Create label information from OpenVINO IR.
