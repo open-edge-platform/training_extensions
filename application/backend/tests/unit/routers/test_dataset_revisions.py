@@ -71,8 +71,10 @@ class TestDatasetRevisionItemEndpoints:
         fxt_dataset_revision_service.get_dataset_revision.return_value = MagicMock(id=fxt_dataset_revision_id)
         mock_item_data = {
             "id": str(fxt_dataset_item.id),
-            "image": f"/path/to/{fxt_dataset_item.name}.jpg",
-            "image_info": {"width": fxt_dataset_item.width, "height": fxt_dataset_item.height},
+            "name": fxt_dataset_item.name,
+            "format": fxt_dataset_item.format.value,
+            "width": fxt_dataset_item.width,
+            "height": fxt_dataset_item.height,
             "subset": fxt_dataset_item.subset.value,
         }
         fxt_dataset_revision_service.list_dataset_revision_items.return_value = ([mock_item_data], 1)
@@ -108,8 +110,10 @@ class TestDatasetRevisionItemEndpoints:
         fxt_dataset_revision_service.get_dataset_revision.return_value = MagicMock(id=fxt_dataset_revision_id)
         mock_item_data = {
             "id": str(fxt_dataset_item.id),
-            "image": f"/path/to/{fxt_dataset_item.name}.jpg",
-            "image_info": {"width": fxt_dataset_item.width, "height": fxt_dataset_item.height},
+            "name": fxt_dataset_item.name,
+            "format": fxt_dataset_item.format.value,
+            "width": fxt_dataset_item.width,
+            "height": fxt_dataset_item.height,
             "subset": fxt_dataset_item.subset.value,
         }
         fxt_dataset_revision_service.list_dataset_revision_items.return_value = ([mock_item_data], 100)
@@ -145,9 +149,11 @@ class TestDatasetRevisionItemEndpoints:
         fxt_dataset_revision_service.get_dataset_revision.return_value = MagicMock(id=fxt_dataset_revision_id)
         mock_item_data = {
             "id": str(fxt_dataset_item.id),
-            "image": f"/path/to/{fxt_dataset_item.name}.jpg",
-            "image_info": {"width": fxt_dataset_item.width, "height": fxt_dataset_item.height},
-            "subset": subset,
+            "name": fxt_dataset_item.name,
+            "format": fxt_dataset_item.format.value,
+            "width": fxt_dataset_item.width,
+            "height": fxt_dataset_item.height,
+            "subset": fxt_dataset_item.subset.value,
         }
         fxt_dataset_revision_service.list_dataset_revision_items.return_value = ([mock_item_data], 1)
 
@@ -200,8 +206,10 @@ class TestDatasetRevisionItemEndpoints:
         fxt_dataset_revision_service.get_dataset_revision.return_value = MagicMock(id=fxt_dataset_revision_id)
         mock_item_data = {
             "id": str(fxt_dataset_item.id),
-            "image": f"/path/to/{fxt_dataset_item.name}.jpg",
-            "image_info": {"width": fxt_dataset_item.width, "height": fxt_dataset_item.height},
+            "name": fxt_dataset_item.name,
+            "format": fxt_dataset_item.format.value,
+            "width": fxt_dataset_item.width,
+            "height": fxt_dataset_item.height,
             "subset": fxt_dataset_item.subset.value,
         }
         fxt_dataset_revision_service.get_dataset_revision_item.return_value = mock_item_data

@@ -10,7 +10,7 @@ from app.core.models import BaseRequiredIDNameModel, Pagination
 from app.models import DatasetItemAnnotation, DatasetItemFormat, DatasetItemSubset
 
 
-class DatasetItemRevisionView(BaseRequiredIDNameModel):
+class DatasetRevisionItemView(BaseRequiredIDNameModel):
     """
     Dataset Revision item
     """
@@ -115,12 +115,12 @@ class DatasetItemsWithPagination(BaseModel):
     pagination: Pagination
 
 
-class DatasetItemsRevisionWithPagination(BaseModel):
+class DatasetRevisionItemsWithPagination(BaseModel):
     """
-    Dataset Items Revision list with pagination info
+    Dataset Revision Items list with pagination info
     """
 
-    items: list[DatasetItemRevisionView]
+    items: list[DatasetRevisionItemView]
     pagination: Pagination
 
 

@@ -1,22 +1,20 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from pathlib import Path
 from typing import Annotated
-from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, status
 from starlette.responses import FileResponse
 
 from app.api.dependencies import get_dataset_revision, get_dataset_revision_service, get_project
 from app.api.schemas.dataset_item import (
-    DatasetItemRevisionView,
-    DatasetItemsRevisionWithPagination,
     DatasetItemsWithPagination,
+    DatasetRevisionItemsWithPagination,
+    DatasetRevisionItemView,
 )
 from app.api.validators import DatasetItemID, DatasetRevisionID
 from app.core.models import Pagination
-from app.models import DatasetItemFormat, DatasetItemSubset, Project
+from app.models import DatasetItemSubset, Project
 from app.models.dataset_revision import DatasetRevision
 from app.services import DatasetRevisionService
 
@@ -46,9 +44,9 @@ def list_dataset_revision_items(
     limit: Annotated[int, Query(ge=1, le=MAX_DATASET_ITEMS_NUMBER_RETURNED)] = DEFAULT_DATASET_ITEMS_NUMBER_RETURNED,
     offset: Annotated[int, Query(ge=0)] = 0,
     subset: Annotated[DatasetItemSubset | None, Query()] = None,
-) -> DatasetItemsRevisionWithPagination:
+) -> DatasetRevisionItemsWithPagination:
     """List the items in a dataset revision. This endpoint supports pagination."""
-    items_data, total_count = dataset_revision_service.list_dataset_revision_items(
+    dataset_revision_items, total_count = dataset_revision_service.list_dataset_revision_items(
         project_id=project.id,
         dataset_revision=dataset_revision,
         limit=limit,
@@ -56,25 +54,13 @@ def list_dataset_revision_items(
         subset=subset,
     )
 
-    items = []
-    for item_data in items_data:
-        item_view = DatasetItemRevisionView(
-            id=UUID(item_data["id"]),
-            name=Path(item_data["image"]).stem,
-            format=DatasetItemFormat(Path(item_data["image"]).suffix.lstrip(".")),
-            width=item_data["image_info"]["width"],
-            height=item_data["image_info"]["height"],
-            subset=DatasetItemSubset(item_data["subset"]),
-        )
-        items.append(item_view)
-
-    return DatasetItemsRevisionWithPagination(
-        items=items,
+    return DatasetRevisionItemsWithPagination(
+        items=[DatasetRevisionItemView.model_validate(item, from_attributes=True) for item in dataset_revision_items],
         pagination=Pagination(
             total=total_count,
             limit=limit,
             offset=offset,
-            count=len(items),
+            count=len(dataset_revision_items),
         ),
     )
 
@@ -82,7 +68,7 @@ def list_dataset_revision_items(
 @router.get(
     "/items/{dataset_item_id}",
     responses={
-        status.HTTP_200_OK: {"description": "Dataset item found", "model": DatasetItemRevisionView},
+        status.HTTP_200_OK: {"description": "Dataset revision item found", "model": DatasetRevisionItemView},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid dataset item ID or revision ID"},
         status.HTTP_404_NOT_FOUND: {"description": "Dataset item, revision, or project not found"},
     },
@@ -92,22 +78,15 @@ def get_dataset_revision_item(
     dataset_revision: Annotated[DatasetRevision, Depends(get_dataset_revision)],
     dataset_item_id: DatasetItemID,
     dataset_revision_service: Annotated[DatasetRevisionService, Depends(get_dataset_revision_service)],
-) -> DatasetItemRevisionView:
+) -> DatasetRevisionItemView:
     """Get information about a specific item in the dataset revision"""
-    item_data = dataset_revision_service.get_dataset_revision_item(
+    dataset_revision_item = dataset_revision_service.get_dataset_revision_item(
         project_id=project.id,
         dataset_revision=dataset_revision,
         item_id=str(dataset_item_id),
     )
 
-    return DatasetItemRevisionView(
-        id=UUID(item_data["id"]),
-        name=Path(item_data["image"]).stem,
-        format=DatasetItemFormat(Path(item_data["image"]).suffix.lstrip(".")),
-        width=item_data["image_info"]["width"],
-        height=item_data["image_info"]["height"],
-        subset=DatasetItemSubset(item_data["subset"]),
-    )
+    return DatasetRevisionItemView.model_validate(dataset_revision_item, from_attributes=True)
 
 
 @router.get(

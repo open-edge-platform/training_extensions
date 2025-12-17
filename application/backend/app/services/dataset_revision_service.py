@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.db.schema import DatasetRevisionDB
 from app.models import DatasetItemSubset
+from app.models.dataset_item_revision import DatasetRevisionItem
 from app.models.dataset_revision import DatasetRevision
 from app.repositories import DatasetRevisionRepository
 
@@ -143,7 +144,7 @@ class DatasetRevisionService(BaseSessionManagedService):
         limit: int = 10,
         offset: int = 0,
         subset: DatasetItemSubset | None = None,
-    ) -> tuple[list[dict], int]:
+    ) -> tuple[list[DatasetRevisionItem], int]:
         """
         List items in a dataset revision with pagination and filtering.
 
@@ -166,8 +167,22 @@ class DatasetRevisionService(BaseSessionManagedService):
 
         total_count = len(df)
         df = df.slice(offset, limit)
-        items = df.to_dicts()
-        return items, total_count
+
+        dataset_revision_items = []
+        for item in df.to_dicts():
+            dataset_revision_items.append(
+                DatasetRevisionItem.model_validate(
+                    {
+                        "id": item["id"],
+                        "name": Path(item["image"]).stem,
+                        "format": Path(item["image"]).suffix.lstrip("."),
+                        "width": item["image_info"]["width"],
+                        "height": item["image_info"]["height"],
+                        "subset": item["subset"],
+                    }
+                )
+            )
+        return dataset_revision_items, total_count
 
     def get_dataset_revision_item(
         self,
