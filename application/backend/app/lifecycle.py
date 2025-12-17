@@ -14,7 +14,7 @@ from fastapi import FastAPI
 from loguru import logger
 
 from app.core.jobs import JobController, JobQueue, ProcessRunnerFactory
-from app.core.logging import setup_logging, setup_uvicorn_logging
+from app.core.logging import LogConfig, setup_logging, setup_uvicorn_logging
 from app.core.run import Runnable, RunnableFactory
 from app.db import MigrationManager, get_db_session
 from app.scheduler import Scheduler
@@ -80,7 +80,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     logger.info("Starting {} application...", settings.app_name)
 
     # Setup logging
-    setup_logging()
+    setup_logging(config=LogConfig(level=settings.log_level))
     setup_uvicorn_logging(settings.log_level)
 
     # Initialize database
