@@ -19,7 +19,7 @@ from otx.types.task import OTXTaskType
 from .base import ImageInfo
 
 if TYPE_CHECKING:
-    from datumaro import Polygon
+    import numpy as np
     from datumaro.experimental.fields import TileInfo
     from torch import LongTensor
 
@@ -162,13 +162,13 @@ class TileInstSegDataEntity(TileDataEntity):
         ori_bboxes (tv_tensors.BoundingBoxes): The bounding boxes of the original image.
         ori_labels (LongTensor): The labels of the original image.
         ori_masks (tv_tensors.Mask): The masks of the original image.
-        ori_polygons (list[Polygon]): The polygons of the original image.
+        ori_polygons (list[np.ndarray]): The polygons of the original image as arrays shaped (K, 2).
     """
 
     ori_bboxes: tv_tensors.BoundingBoxes
     ori_labels: LongTensor
     ori_masks: tv_tensors.Mask
-    ori_polygons: list[Polygon]
+    ori_polygons: list[np.ndarray]
 
     @property
     def task(self) -> OTXTaskType:
@@ -184,13 +184,13 @@ class TileBatchInstSegDataEntity(OTXTileBatchDataEntity):
         bboxes (list[tv_tensors.BoundingBoxes]): The bounding boxes of the original image.
         labels (list[LongTensor]): The labels of the original image.
         masks (list[tv_tensors.Mask]): The masks of the original image.
-        polygons (list[list[Polygon]]): The polygons of the original image.
+        polygons (list[list[np.ndarray]]): The polygons of the original image as arrays shaped (K, 2).
     """
 
     bboxes: list[tv_tensors.BoundingBoxes]
     labels: list[LongTensor]
     masks: list[tv_tensors.Mask]
-    polygons: list[list[Polygon]]
+    polygons: list[list[np.ndarray]]
 
     def unbind(self) -> list[tuple[TileAttrDictList, OTXDataBatch]]:
         """Unbind batch data entity for instance segmentation task."""

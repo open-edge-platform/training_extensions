@@ -1429,7 +1429,7 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
         filtered_polygons = (
             [p for p, keep in zip(inputs.polygons, valid_index) if keep] if valid_index is not None else inputs.polygons
         )
-        if len(filtered_polygons) > 0:
+        if filtered_polygons:
             inputs.polygons = project_polygons(filtered_polygons, warp_matrix, output_shape)
 
     def _recompute_bboxes(self, inputs: OTXDataItem, output_shape: tuple[int, int]) -> None:

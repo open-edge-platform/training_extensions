@@ -7,11 +7,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from datumaro.components.annotation import AnnotationType
-from datumaro.experimental.categories import LabelCategories
 from datumaro.experimental.legacy import convert_from_legacy
 
-from otx import LabelInfo, NullLabelInfo
 from otx.types.task import OTXTaskType
 from otx.types.transformer_libs import TransformLibType
 
@@ -115,13 +112,3 @@ class OTXDatasetFactory:
             return OTXKeypointDetectionDataset(**common_kwargs)
 
         raise NotImplementedError(task)
-
-    @staticmethod
-    def _get_label_categories(dm_subset: DmDataset, data_format: str) -> LabelCategories:
-        if dm_subset.categories() and data_format == "arrow":
-            label_info = LabelInfo.from_dm_label_groups_arrow(dm_subset.categories()[AnnotationType.label])
-        elif dm_subset.categories():
-            label_info = LabelInfo.from_dm_label_groups(dm_subset.categories()[AnnotationType.label])
-        else:
-            label_info = NullLabelInfo()
-        return LabelCategories(labels=label_info.label_names)

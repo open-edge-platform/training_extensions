@@ -15,7 +15,6 @@ import logging
 from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 import numpy as np
-from datumaro.experimental.dataset import Dataset as DmDataset
 
 from otx.backend.native.exporter.base import OTXModelExporter
 from otx.backend.native.exporter.native import OTXNativeModelExporter
@@ -29,7 +28,6 @@ from otx.backend.native.models.detection.losses import SSDCriterion
 from otx.backend.native.models.detection.utils.prior_generators import SSDAnchorGeneratorClustered
 from otx.backend.native.models.utils.utils import load_checkpoint
 from otx.config.data import TileConfig
-from otx.data.entity.sample import DetectionSample
 from otx.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 
 if TYPE_CHECKING:
@@ -245,19 +243,7 @@ class SSD(OTXDetectionModel):
             list[tuple[int, int]]: tuples with width and height of each instance
         """
         wh_stats = np.empty((0, 2), dtype=np.float32)
-        if not isinstance(dataset.dm_subset, DmDataset):
-            exc_str = "The variable dataset.dm_subset must be an instance of DmDataset"
-            raise TypeError(exc_str)
-
         for item in dataset.dm_subset:
-            if not isinstance(item, DetectionSample):
-                exc_str = "The variable item must be an instance of DetectionSample"
-                raise TypeError(exc_str)
-
-            if item.img_info is None:
-                exc_str = "The image info must not be None"
-                raise RuntimeError(exc_str)
-
             height, width = item.img_info.img_shape
             x1 = item.bboxes[:, 0]
             y1 = item.bboxes[:, 1]
