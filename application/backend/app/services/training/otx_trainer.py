@@ -142,9 +142,10 @@ class OTXTrainer(Trainer):
             # Compute adjusted ratios
             split_params = training_config.global_parameters.dataset_preparation.subset_split
             target_ratios = SplitRatios(
-                train=split_params.training, val=split_params.validation, test=split_params.test
+                train=(split_params.training / 100), val=(split_params.validation / 100), test=(split_params.test / 100)
             )
             adjusted_ratios = current_distribution.compute_adjusted_ratios(target_ratios, len(unassigned_items))
+            logger.info("Adjusted subset ratios for unassigned items: {}", adjusted_ratios)
 
             self.report_progress("Computing optimal subset assignments")
             assignments = self._subset_assigner.assign(unassigned_items, adjusted_ratios)
