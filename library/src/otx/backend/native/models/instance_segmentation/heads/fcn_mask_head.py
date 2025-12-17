@@ -249,6 +249,10 @@ class FCNMaskHead(BaseModule):
             img_w = np.round(img_w * w_scale.item()).astype(np.int32)
 
         num_preds = len(mask_preds)
+        # Early return for empty predictions
+        if num_preds == 0:
+            return torch.zeros((0, img_h, img_w), device=device, dtype=torch.bool)
+
         # The actual implementation split the input into chunks,
         # and paste them chunk by chunk.
         if device.type == "cpu":
@@ -290,6 +294,10 @@ class FCNMaskHead(BaseModule):
                 img_w,
                 skip_empty=device.type == "cpu",
             )
+
+            # Skip if we got empty masks from degenerate boxes
+            if masks_chunk.numel() == 0:
+                continue
 
             masks_chunk = (masks_chunk >= threshold).to(dtype=torch.bool)
             im_mask[(inds, *spatial_inds)] = masks_chunk
@@ -358,6 +366,16 @@ def _do_paste_mask(masks: Tensor, boxes: Tensor, img_h: int, img_w: int, skip_em
     else:
         x0_int, y0_int = 0, 0
         x1_int, y1_int = img_w, img_h
+
+    # Handle degenerate boxes where bounds are inconsistent
+    if x1_int <= x0_int or y1_int <= y0_int:
+        # Return empty masks for degenerate cases
+        num_preds = masks.shape[0]
+        empty_masks = masks.new_zeros((num_preds, 0, 0))
+        if skip_empty:
+            return empty_masks, (slice(0, 0), slice(0, 0))
+        return empty_masks, ()
+
     x0, y0, x1, y1 = torch.split(boxes, 1, dim=1)  # each is Nx1
 
     num_preds = masks.shape[0]

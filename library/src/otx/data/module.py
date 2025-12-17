@@ -5,9 +5,9 @@
 
 from __future__ import annotations
 
-import logging as log
+import logging
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Sequence
 
 from datumaro import Dataset as DmDataset
 from lightning import LightningDataModule
@@ -18,7 +18,7 @@ from torchvision.transforms.v2 import Normalize
 from otx.config.data import SubsetConfig, TileConfig
 from otx.data.dataset.tile import OTXTileDatasetFactory
 from otx.data.factory import OTXDatasetFactory
-from otx.data.transform_libs.torchvision import TorchVisionTransformLib
+from otx.data.transform_libs.torchvision import Compose, TorchVisionTransformLib
 from otx.data.utils import adapt_tile_config, get_adaptive_num_workers, instantiate_sampler
 from otx.data.utils.pre_filtering import pre_filtering
 from otx.types.device import DeviceType
@@ -30,6 +30,8 @@ if TYPE_CHECKING:
     from lightning.pytorch.utilities.parsing import AttributeDict
 
     from otx.data.dataset.base import OTXDataset
+
+logger = logging.getLogger(__name__)
 
 
 class OTXDataModule(LightningDataModule):
@@ -148,13 +150,13 @@ class OTXDataModule(LightningDataModule):
 
         if self.auto_num_workers:
             if self.device not in [DeviceType.gpu, DeviceType.auto]:
-                log.warning(
+                logger.warning(
                     "Only GPU device type support auto_num_workers. "
                     f"Current deveice type is {self.device!s}. auto_num_workers is skipped.",
                 )
             elif (num_workers := get_adaptive_num_workers()) is not None:
                 for subset_name, subset_config in config_mapping.items():
-                    log.info(
+                    logger.info(
                         f"num_workers of {subset_name} subset is changed : "
                         f"{subset_config.num_workers} -> {num_workers}",
                     )
@@ -163,7 +165,7 @@ class OTXDataModule(LightningDataModule):
         label_infos: list[LabelInfo] = []
         for name, dm_subset in dataset.subsets().items():
             if name not in config_mapping:
-                log.warning(f"{name} is not available. Skip it")
+                logger.warning(f"{name} is not available. Skip it")
                 continue
 
             otx_dataset = OTXDatasetFactory.create(
@@ -183,7 +185,7 @@ class OTXDataModule(LightningDataModule):
                 )
             self.subsets[name] = otx_dataset
             label_infos += [self.subsets[name].label_info]
-            log.info(f"Add name: {name}, self.subsets: {self.subsets}")
+            logger.info(f"Add name: {name}, self.subsets: {self.subsets}")
 
         if self._is_meta_info_valid(label_infos) is False:
             msg = "All data meta infos of subsets should be the same."
@@ -191,13 +193,19 @@ class OTXDataModule(LightningDataModule):
 
         self.label_info = next(iter(label_infos))
 
+    @classmethod
     def extract_normalization_params(
-        self, transforms_source: list | None
+        cls, transforms_source: Sequence[dict[str, Any]] | Compose | None
     ) -> tuple[tuple[float, float, float], tuple[float, float, float]]:
-        """Extract mean and std from transforms.
+        """Extract mean and std from the dataset transforms.
+
+        Specifically, this method looks for a Normalize transform in the provided transforms, and extracts
+        the mean and std values used for normalization.
+        If not found, it returns default values of mean=(0.0, 0.0, 0.0) and std=(1.0, 1.0, 1.0).
 
         Args:
-            transforms_source: List of transforms or None.
+            transforms_source: Transforms applied to the dataset.
+                Should be specified as an iterable of transform descriptors (jsonargparse-like) or a Compose object
 
         Returns:
             Tuple of (mean, std) tuples.
@@ -205,21 +213,34 @@ class OTXDataModule(LightningDataModule):
         mean = (0.0, 0.0, 0.0)
         std = (1.0, 1.0, 1.0)
 
-        if transforms_source is not None:
-            for transform in transforms_source:
-                if isinstance(transform, dict) and "Normalize" in transform.get("class_path", ""):
-                    # CLI case with jsonargparse
-                    mean = transform["init_args"].get("mean", (0.0, 0.0, 0.0))
-                    std = transform["init_args"].get("std", (1.0, 1.0, 1.0))
-                    break
+        if transforms_source is None:
+            return mean, std
+        if hasattr(transforms_source, "__iter__"):
+            transforms_iterable = transforms_source
+        elif isinstance(transforms_source, Compose):
+            transforms_iterable = transforms_source.transforms
+        else:
+            msg = f"Transforms should be given as an iterable or a Compose object, got {type(transforms_source)}"
+            raise TypeError(msg)
 
-                if isinstance(transform, Normalize):
-                    # torchvision.transforms case
-                    mean = transform.mean
-                    std = transform.std
-                    break
+        for transform in transforms_iterable:
+            if isinstance(transform, dict) and "Normalize" in transform.get("class_path", ""):
+                # CLI case with jsonargparse
+                mean = transform["init_args"].get("mean", (0.0, 0.0, 0.0))
+                std = transform["init_args"].get("std", (1.0, 1.0, 1.0))
+                break
 
-        return mean, std
+            if isinstance(transform, Normalize):
+                # torchvision.transforms case
+                mean = transform.mean
+                std = transform.std
+                break
+
+        if len(mean) != 3 or len(std) != 3:
+            msg = f"Expected mean and std to have length 3, got mean={mean}, std={std}"
+            raise ValueError(msg)
+
+        return tuple(mean), tuple(std)  # type: ignore[return-value]
 
     @classmethod
     def from_otx_datasets(
@@ -245,10 +266,13 @@ class OTXDataModule(LightningDataModule):
             test_dataset (OTXDataset | None, optional): Pre-constructed test dataset. Defaults to None.
             train_subset (SubsetConfig | None, optional): Configuration for the training dataloader.
                 If None, default configuration will be used. Defaults to None.
+                Transforms should be left unspecified as they will be taken from the provided train_dataset.
             val_subset (SubsetConfig | None, optional): Configuration for the validation dataloader.
                 If None, default configuration will be used. Defaults to None.
+                Transforms should be left unspecified as they will be taken from the provided val_dataset.
             test_subset (SubsetConfig | None, optional): Configuration for the test dataloader.
                 If None, default configuration will be used. Defaults to None.
+                Transforms should be left unspecified as they will be taken from the provided test_dataset.
             auto_num_workers (bool, optional): Whether to automatically determine the number of workers.
                 Defaults to False.
             device (DeviceType, optional): Device type to use (e.g., 'cpu', 'gpu').
@@ -275,7 +299,6 @@ class OTXDataModule(LightningDataModule):
             >>> from otx.config.data import SubsetConfig
             >>> train_config = SubsetConfig(
             ...     batch_size=64,
-            ...     transforms=[],
             ...     num_workers=8,
             ... )
             >>> datamodule = OTXDataModule.from_otx_datasets(
@@ -316,31 +339,38 @@ class OTXDataModule(LightningDataModule):
         # Store datasets and label info
         instance.label_info = train_dataset.label_info
 
-        # derive image_size from dataset
-        # assume that data uses fixed size during transforms
+        # Derive the image size from the dataset, assuming layout CHW and that all dataset items have
+        # the same size after transforms.
         try:
             example_item = next(iter(train_dataset))
         except StopIteration:
             msg = "train_dataset is empty; cannot infer input_size"
             raise ValueError(msg) from None
-        input_size = example_item.img_info.img_shape
-        instance.input_size = input_size
-        default_subset_configs = instance.get_default_subset_configs(input_size)
+        instance.input_size = example_item.image.shape[1:]
 
         # merge default configs with provided subsets
+        default_subset_configs: dict[str, SubsetConfig] = {}  # Initialize lazily if needed)
         for name, subset in zip(["train", "val", "test"], [train_subset, val_subset, test_subset]):
             if subset is not None:
                 # Use provided subset config
                 subset_to_assign = subset
+                if subset.transforms:
+                    logger.warning(
+                        f"The provided {name} SubsetConfig contains transforms which will be overridden "
+                        "by the transforms of the provided OTXDataset. When building OTXDataModule from "
+                        "pre-constructed datasets, developers should set up the transforms when creating the datasets.",
+                    )
             else:
                 # Use default config but get transforms from the dataset
+                if not default_subset_configs:
+                    default_subset_configs = instance.get_default_subset_configs(instance.input_size)
                 subset_to_assign = default_subset_configs[f"{name}_subset"]
-                # Override transforms with the ones from the pre-constructed dataset
-                subset_to_assign.transforms = instance.subsets[name].transforms  # type: ignore[assignment]
 
-            # Assign subset config and transforms to subset dataset
+            # Override transforms with the ones from the pre-constructed dataset
+            subset_to_assign.transforms = instance.subsets[name].transforms  # type: ignore[assignment]
+
+            # Set the 'train_subset', 'val_subset', 'test_subset' attributes
             setattr(instance, f"{name}_subset", subset_to_assign)
-            instance.subsets[name].transforms = subset_to_assign.transforms  # type: ignore[assignment]
 
         # Extract normalization parameters from train dataset transforms if available
         instance.input_mean, instance.input_std = instance.extract_normalization_params(
@@ -446,7 +476,7 @@ class OTXDataModule(LightningDataModule):
         tile_config = self.tile_config
         if tile_config.enable_tiler and tile_config.sampling_ratio < 1:
             num_samples = max(1, int(len(dataset) * tile_config.sampling_ratio))
-            log.info(f"Using tiled sampling with {num_samples} samples")
+            logger.info(f"Using tiled sampling with {num_samples} samples")
             common_args.update(
                 {
                     "shuffle": False,

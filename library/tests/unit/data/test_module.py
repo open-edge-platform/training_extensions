@@ -11,6 +11,7 @@ import pytest
 from importlib_resources import files
 from lightning.pytorch.loggers import CSVLogger
 from omegaconf import DictConfig, OmegaConf
+from torchvision.transforms.v2 import Normalize
 
 from otx.config.data import (
     SubsetConfig,
@@ -22,12 +23,13 @@ from otx.data.module import (
     OTXDataModule,
     OTXTaskType,
 )
+from otx.data.transform_libs.torchvision import Compose, RandomFlip
 
 if TYPE_CHECKING:
     from datumaro.components.dataset import Dataset as DmDataset
 
 
-class TestModule:
+class TestOTXDataModule:
     @pytest.fixture
     def fxt_config(self) -> DictConfig:
         train_subset = MagicMock(spec=SubsetConfig)
@@ -238,7 +240,11 @@ class TestModule:
             mock_dataset.data_format = "coco"
             mock_dataset.image_color_channel = "RGB"
             mock_dataset.transforms = transforms or []
-            mock_dataset.__iter__ = lambda _: iter([MagicMock(img_info=MagicMock(img_shape=img_shape))])
+            mock_dataset_item = MagicMock(
+                image=MagicMock(shape=(3, *img_shape)),
+                img_info=MagicMock(img_shape=img_shape),
+            )
+            mock_dataset.__iter__ = lambda _: iter([mock_dataset_item])
             return mock_dataset
 
         return _create_mock_dataset
@@ -394,8 +400,8 @@ class TestModule:
         )
 
         # Assertions - normalization params should be extracted
-        assert module.input_mean == normalize_transform.mean
-        assert module.input_std == normalize_transform.std
+        assert module.input_mean == tuple(normalize_transform.mean)
+        assert module.input_std == tuple(normalize_transform.std)
 
     def test_from_otx_datasets_with_auto_num_workers(self, mocker, fxt_mock_subset_configs, fxt_mock_dataset) -> None:
         """Test from_otx_datasets with auto_num_workers enabled."""
@@ -428,3 +434,39 @@ class TestModule:
         # Assertions
         assert module.auto_num_workers is True
         assert module.device == DeviceType.auto  # Default value
+
+    @pytest.mark.parametrize(
+        "transforms_source",
+        [
+            None,
+            [
+                {"class_path": "otx.data.transform_libs.torchvision.RandomFlip", "init_args": {"probability": 0.5}},
+                {
+                    "class_path": "otx.data.transform_libs.torchvision.Normalize",
+                    "init_args": {"mean": [123.675, 116.28, 103.53], "std": [58.395, 57.12, 57.375]},
+                },
+            ],
+            [
+                RandomFlip(probability=0.5),
+                Normalize(mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375]),
+            ],
+            Compose(
+                [
+                    RandomFlip(probability=0.5),
+                    Normalize(mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375]),
+                ]
+            ),
+        ],
+        ids=["from None", "from list of configs", "from list of objects", "from compose"],
+    )
+    def test_extract_normalization_params(self, transforms_source) -> None:
+        """Test _extract_normalization_params with various transform sources."""
+        mean, std = OTXDataModule.extract_normalization_params(transforms_source)
+
+        # Assertions based on expected values
+        if transforms_source is None:
+            assert mean == (0.0, 0.0, 0.0)
+            assert std == (1.0, 1.0, 1.0)
+        else:
+            assert mean == (123.675, 116.28, 103.53)
+            assert std == (58.395, 57.12, 57.375)
