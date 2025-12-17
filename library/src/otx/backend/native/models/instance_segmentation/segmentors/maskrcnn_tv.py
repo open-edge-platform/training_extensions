@@ -117,7 +117,10 @@ class MaskRCNN(_MaskRCNN):
         batch_inputs: Tensor,
         batch_img_metas: list[dict],
         explain_mode: bool = False,
-    ) -> tuple[list[Tensor], list[Tensor], list[Tensor]] | dict[str, Tensor | list[Tensor]]:
+    ) -> (
+        tuple[list[Tensor], list[Tensor], list[Tensor]]
+        | tuple[list[Tensor], list[Tensor], list[Tensor], Tensor, Tensor]
+    ):
         """Export the model.
 
         Args:
@@ -143,14 +146,7 @@ class MaskRCNN(_MaskRCNN):
         if explain_mode:
             saliency_map = torch.zeros(1)
             feature_vector = self.feature_vector_fn(features)
-            return {
-                "boxes": boxes,
-                "labels": labels,
-                "masks": masks_probs,
-                "feature_vector": feature_vector,
-                "saliency_map": saliency_map,
-            }
-
+            return boxes, labels, masks_probs, feature_vector, saliency_map
         return boxes, labels, masks_probs
 
 

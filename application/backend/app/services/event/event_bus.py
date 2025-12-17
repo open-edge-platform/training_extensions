@@ -6,6 +6,8 @@ from enum import StrEnum
 from multiprocessing.synchronize import Condition
 from threading import RLock
 
+from loguru import logger
+
 
 class EventType(StrEnum):
     SOURCE_CHANGED = "SOURCE_CHANGED"
@@ -37,8 +39,10 @@ class EventBus:
         with self._lock:
             for event_type in event_types:
                 self._event_handlers[event_type].append(handler)
+                logger.debug(f"registered event handler for event '{event_type}'")
 
     def emit_event(self, event_type: EventType) -> None:
+        logger.debug(f"Emitting event '{event_type}' to {len(self._event_handlers[event_type])} handlers")
         with self._lock:
             for handler in self._event_handlers[event_type]:
                 handler()

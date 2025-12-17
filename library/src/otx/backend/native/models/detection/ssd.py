@@ -350,7 +350,7 @@ class SSD(OTXDetectionModel):
             resize_mode="standard",
             pad_value=0,
             swap_rgb=False,
-            via_onnx=True,  # Currently SSD should be exported through ONNX
+            via_onnx=False,
             onnx_export_configuration={
                 "input_names": ["image"],
                 "output_names": ["boxes", "labels"],

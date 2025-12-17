@@ -406,7 +406,9 @@ class OTXInstanceSegModel(OTXModel):
             labels.append(_labels[filtered_idx])
 
             if _masks is not None:
-                masks.append(_masks[filtered_idx])
+                # Ensure filtered_idx is on the same device as masks
+                mask_filtered_idx = tuple(idx.to(_masks.device) for idx in filtered_idx)
+                masks.append(_masks[mask_filtered_idx])
             if _polygons is not None:
                 polygons.append(_polygons[filtered_idx])
 
