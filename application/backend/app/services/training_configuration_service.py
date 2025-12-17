@@ -4,7 +4,13 @@ from uuid import UUID
 
 from sqlalchemy.orm import Session
 
-from app.models.training_configuration.configuration import PartialTrainingConfiguration, TrainingConfiguration
+from app.models.training_configuration.configuration import (
+    GlobalDatasetPreparationParameters,
+    PartialGlobalParameters,
+    PartialTrainingConfiguration,
+    SubsetSplit,
+    TrainingConfiguration,
+)
 from app.repositories import ModelRevisionRepository, ProjectRepository
 from app.repositories.training_configuration_repo import TrainingConfigurationRepository
 from app.services import BaseSessionManagedService, ResourceNotFoundError, ResourceType
@@ -89,6 +95,9 @@ class TrainingConfigurationService(BaseSessionManagedService):
         return PartialTrainingConfiguration(
             model_manifest_id=model_architecture_id,
             hyperparameters=model_manifest.hyperparameters.model_dump(),  # type: ignore[arg-type]
+            global_parameters=PartialGlobalParameters(
+                dataset_preparation=GlobalDatasetPreparationParameters(subset_split=SubsetSplit())
+            ),
         )  # type: ignore[call-arg]
 
     def _get_default_configuration(self, project_id: UUID) -> TrainingConfiguration:
@@ -113,6 +122,9 @@ class TrainingConfigurationService(BaseSessionManagedService):
         return PartialTrainingConfiguration(
             model_manifest_id=default_model_id,
             hyperparameters=default_model_manifest.hyperparameters.model_dump(),  # type: ignore[arg-type]
+            global_parameters=PartialGlobalParameters(
+                dataset_preparation=GlobalDatasetPreparationParameters(subset_split=SubsetSplit())
+            ),
         )  # type: ignore[call-arg]
 
     def update_training_configuration(

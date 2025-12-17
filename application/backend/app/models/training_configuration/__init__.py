@@ -19,6 +19,14 @@ from app.models.training_configuration.augmentation import (
     Tiling,
     TopdownAffine,
 )
+from app.models.training_configuration.configuration import (
+    GlobalDatasetPreparationParameters,
+    GlobalParameters,
+    PartialGlobalParameters,
+    PartialTrainingConfiguration,
+    SubsetSplit,
+    TrainingConfiguration,
+)
 from app.models.training_configuration.hyperparameters import (
     DatasetPreparationParameters,
     EarlyStopping,
@@ -36,11 +44,15 @@ __all__ = [
     "EvaluationParameters",
     "GaussianBlur",
     "GaussianNoise",
+    "GlobalDatasetPreparationParameters",
+    "GlobalParameters",
     "HSVRandomAug",
     "Hyperparameters",
     "Mixup",
     "Mosaic",
+    "PartialGlobalParameters",
     "PartialHyperparameters",
+    "PartialTrainingConfiguration",
     "PhotometricDistort",
     "RandomAffine",
     "RandomHorizontalFlip",
@@ -48,7 +60,9 @@ __all__ = [
     "RandomResizeCrop",
     "RandomVerticalFlip",
     "RandomZoomOut",
+    "SubsetSplit",
     "Tiling",
     "TopdownAffine",
+    "TrainingConfiguration",
     "TrainingHyperParameters",
 ]
