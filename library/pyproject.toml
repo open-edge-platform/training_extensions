@@ -50,7 +50,8 @@ dependencies = [
     "nncf==2.18.0",
     "numpy>=2.0",
     "tensorboard==2.20.0",
-    "tensorboardx==2.6.4"
+    "tensorboardx==2.6.4",
+    "rfdetr==1.3.0"
 ]
 
 [dependency-groups]
@@ -96,7 +97,7 @@ cuda = [
     "torchvision==0.24.1+cu128"
 ]
 xpu = [
-    "torch==2.9.0+xpu", # torch 2.9.1 with torchvision==0.24.1 is currently 
+    "torch==2.9.0+xpu", # torch 2.9.1 with torchvision==0.24.1 is currently
                         # unstable resulting in an error with torchvision ops.
     "pytorch-triton-xpu==3.5.0",
     "torchvision==0.24.0+xpu"
