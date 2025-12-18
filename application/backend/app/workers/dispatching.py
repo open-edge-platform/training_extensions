@@ -45,7 +45,7 @@ class DispatchingWorker(BaseThreadWorker):
 
         self._sink, self._destinations = self._load_sink()
         logger.info(f"Active sink set to {self._sink}")
-        event_bus.subscribe([EventType.SINK_CHANGED], self._reload_sink)
+        event_bus.subscribe([EventType.SINK_CHANGED, EventType.PIPELINE_STATUS_CHANGED], self._reload_sink)
 
     def setup(self) -> None:
         pass

@@ -98,8 +98,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
 
     # Condition to notify processes about source updates
     source_changed_condition: Condition = mp.Condition()
+    # Event to signal that the model has to be reloaded
+    model_reload_event = mp.Event()
 
-    event_bus = EventBus(source_changed_condition=source_changed_condition)
+    event_bus = EventBus(source_changed_condition=source_changed_condition, model_reload_event=model_reload_event)
     app.state.event_bus = event_bus
 
     data_collector = DataCollector(data_dir=settings.data_dir, event_bus=event_bus)

@@ -3,7 +3,6 @@
 
 import os
 from dataclasses import dataclass
-from multiprocessing.synchronize import Event as EventClass
 from pathlib import Path
 from uuid import UUID
 
@@ -32,9 +31,8 @@ class ActiveModelService:
     Used exclusively by the InferenceWorker process.
     """
 
-    def __init__(self, data_dir: Path, mp_model_reload_event: EventClass) -> None:
+    def __init__(self, data_dir: Path) -> None:
         self.projects_dir = data_dir / "projects"
-        self._mp_model_reload_event = mp_model_reload_event
         self._model_activation_state: ModelActivationState = self._load_state()
         self._loaded_model: LoadedModel | None = None
 
