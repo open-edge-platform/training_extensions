@@ -34,7 +34,6 @@ export const getMockedPipeline = (customPipeline?: Partial<SchemaPipelineView>):
             rate_limit: 0.2,
             sink_type: 'folder' as const,
         },
-        device: 'cpu',
         ...customPipeline,
     };
 };

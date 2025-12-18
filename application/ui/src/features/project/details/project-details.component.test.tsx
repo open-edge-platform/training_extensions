@@ -65,7 +65,6 @@ describe('ProjectDetails', () => {
                         rate_limit: 0.2,
                         sink_type: 'folder' as const,
                     },
-                    device: 'cpu',
                 } satisfies Record<string, unknown>);
             })
         );
