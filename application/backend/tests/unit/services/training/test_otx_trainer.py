@@ -278,7 +278,7 @@ class TestOTXTrainerAssignSubsets:
         fxt_subset_service.get_unassigned_items_with_labels.return_value = unassigned_items
 
         # Mock configuration
-        training_config = PartialTrainingConfiguration(
+        training_config = PartialTrainingConfiguration(  # type: ignore[call-arg]
             global_parameters=PartialGlobalParameters(
                 dataset_preparation=GlobalDatasetPreparationParameters(subset_split=SubsetSplit())
             ),
