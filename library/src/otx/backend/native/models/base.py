@@ -141,7 +141,6 @@ class OTXModel(LightningModule):
         metric: MetricCallable = NullMetricCallable,
         torch_compile: bool = False,
         tile_config: TileConfig | dict = TileConfig(enable_tiler=False),
-        log_total_loss_only: bool = True,
     ) -> None:
         """Initialize the base model with the given parameters.
 
@@ -168,7 +167,6 @@ class OTXModel(LightningModule):
 
         self._label_info = self._dispatch_label_info(label_info)
         self.model_name = model_name
-        self.log_total_loss_only = log_total_loss_only
         if isinstance(data_input_params, dict):
             data_input_params = DataInputParams(**data_input_params)
         elif data_input_params is None:
@@ -214,15 +212,14 @@ class OTXModel(LightningModule):
             )
             return train_loss
         if isinstance(train_loss, dict):
-            if not self.log_total_loss_only:
-                for k, v in train_loss.items():
-                    self.log(
-                        f"train/{k}",
-                        v,
-                        on_step=True,
-                        on_epoch=False,
-                        prog_bar=True,
-                    )
+            for k, v in train_loss.items():
+                self.log(
+                    f"train/{k}",
+                    v,
+                    on_step=True,
+                    on_epoch=False,
+                    prog_bar=True,
+                )
 
             total_train_loss = train_loss.get("total_loss", sum(train_loss.values()))
             self.log(
