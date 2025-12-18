@@ -166,7 +166,7 @@ class OTXEngine(Engine):
         min_epochs: int = 1,
         seed: int | None = None,
         deterministic: bool | Literal["warn"] = False,
-        precision: _PRECISION_INPUT | None = "bf16-mixed",
+        precision: _PRECISION_INPUT | None = 16,
         callbacks: list[Callback] | Callback | None = None,
         logger: Logger | Iterable[Logger] | bool | None = None,
         resume: bool = False,
