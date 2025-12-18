@@ -11,7 +11,13 @@ import pytest
 from app.core.run import ExecutionContext
 from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Task, TaskType, TrainingStatus
 from app.models.training_configuration.configuration import PartialTrainingConfiguration
-from app.services import DatasetService, ModelRevisionMetadata, ModelService, TrainingConfigurationService
+from app.services import (
+    DatasetRevisionService,
+    DatasetService,
+    ModelRevisionMetadata,
+    ModelService,
+    TrainingConfigurationService,
+)
 from app.services.base_weights_service import BaseWeightsService
 from app.services.training.models import TrainingParams
 from app.services.training.otx_trainer import OTXTrainer, TrainingDependencies
@@ -49,6 +55,12 @@ def fxt_dataset_service() -> Mock:
 
 
 @pytest.fixture
+def fxt_dataset_revision_service() -> Mock:
+    """Mock DatasetRevisionService for testing."""
+    return Mock(spec=DatasetRevisionService)
+
+
+@pytest.fixture
 def fxt_model_service() -> Mock:
     """Mock ModelService for testing."""
     return Mock(spec=ModelService)
@@ -67,6 +79,7 @@ def fxt_otx_trainer(
     fxt_subset_service: Mock,
     fxt_assigner: Mock,
     fxt_dataset_service: Mock,
+    fxt_dataset_revision_service: Mock,
     fxt_model_service: Mock,
     fxt_training_configuration_service: Mock,
     fxt_db_session_factory: Callable,
@@ -81,6 +94,7 @@ def fxt_otx_trainer(
                 subset_service=fxt_subset_service,
                 subset_assigner=fxt_assigner,
                 dataset_service=fxt_dataset_service,
+                dataset_revision_service=fxt_dataset_revision_service,
                 model_service=fxt_model_service,
                 training_configuration_service=fxt_training_configuration_service,
                 db_session_factory=fxt_db_session_factory,
@@ -273,6 +287,7 @@ class TestOTXTrainerCreateTrainingDataset:
         self,
         fxt_otx_trainer: Callable[[], OTXTrainer],
         fxt_dataset_service: Mock,
+        fxt_dataset_revision_service: Mock,
     ):
         """Test successful creation of training, validation, and testing datasets."""
         # Arrange
@@ -305,7 +320,7 @@ class TestOTXTrainerCreateTrainingDataset:
         assert datasets_info.training == mock_training_dataset
         assert datasets_info.validation == mock_validation_dataset
         assert datasets_info.testing == mock_testing_dataset
-        fxt_dataset_service.save_revision.assert_called_once_with(project_id, mock_dm_dataset)
+        fxt_dataset_revision_service.save_revision.assert_called_once_with(project_id, mock_dm_dataset)
 
 
 class TestOTXTrainerPrepareModel:

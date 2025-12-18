@@ -21,6 +21,7 @@ from app.models import DatasetItemAnnotationStatus, Task, TaskType, TrainingStat
 from app.models.training_configuration.configuration import TrainingConfiguration
 from app.services import (
     BaseWeightsService,
+    DatasetRevisionService,
     DatasetService,
     ModelRevisionMetadata,
     ModelService,
@@ -45,6 +46,7 @@ class TrainingDependencies:
     base_weights_service: BaseWeightsService
     subset_service: SubsetService
     dataset_service: DatasetService
+    dataset_revision_service: DatasetRevisionService
     model_service: ModelService
     training_configuration_service: TrainingConfigurationService
     subset_assigner: SubsetAssigner
@@ -71,6 +73,7 @@ class OTXTrainer(Trainer):
         self._base_weights_service = training_deps.base_weights_service
         self._subset_service = training_deps.subset_service
         self._dataset_service = training_deps.dataset_service
+        self._dataset_revision_service = training_deps.dataset_revision_service
         self._model_service = training_deps.model_service
         self._training_configuration_service = training_deps.training_configuration_service
         self._subset_assigner = training_deps.subset_assigner
@@ -144,7 +147,7 @@ class OTXTrainer(Trainer):
                 training=dm_dataset.filter_by_subset(Subset.TRAINING),
                 validation=dm_dataset.filter_by_subset(Subset.VALIDATION),
                 testing=dm_dataset.filter_by_subset(Subset.TESTING),
-                revision_id=self._dataset_service.save_revision(project_id, dm_dataset),
+                revision_id=self._dataset_revision_service.save_revision(project_id, dm_dataset),
             )
 
     @step("Prepare Model and Training Configuration")

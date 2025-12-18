@@ -3,7 +3,6 @@
 
 import os
 import os.path
-import shutil
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
@@ -14,12 +13,11 @@ from uuid import UUID, uuid4
 
 import datumaro.experimental as dm
 import numpy as np
-from datumaro.experimental.export_import import export_dataset
 from loguru import logger
 from PIL import Image, UnidentifiedImageError
 from sqlalchemy.orm import Session
 
-from app.db.schema import DatasetItemDB, DatasetRevisionDB
+from app.db.schema import DatasetItemDB
 from app.models import (
     DatasetItem,
     DatasetItemAnnotation,
@@ -33,8 +31,7 @@ from app.models import (
     Task,
     TaskType,
 )
-from app.models.dataset_revision import DatasetRevision
-from app.repositories import DatasetItemRepository, DatasetRevisionRepository
+from app.repositories import DatasetItemRepository
 from app.services.datumaro_converter import convert_dataset
 from app.utils.images import crop_to_thumbnail
 
@@ -389,86 +386,3 @@ class DatasetService(BaseSessionManagedService):
             get_dataset_items=_get_dataset_items,
             get_image_path=_get_image_path,
         )
-
-    def save_revision(self, project_id: UUID, dataset: dm.Dataset) -> UUID:
-        """
-        Saves the dataset as a new revision.
-
-        Creates a new dataset revision entry in the database and exports the dataset
-        to a zip file in the project's revisions directory.
-
-        Args:
-            project_id: The UUID of the project to save the revision for.
-            dataset: The Datumaro dataset to export.
-
-        Returns:
-            UUID: The UUID of the newly created dataset revision.
-        """
-        revision_repo = DatasetRevisionRepository(db=self.db_session)
-        revision_db = revision_repo.save(
-            DatasetRevisionDB(
-                project_id=str(project_id),
-            )
-        )
-        revision_path = self.projects_dir / str(project_id) / "dataset_revisions" / revision_db.id
-        logger.info("Saving dataset revision '{}' to '{}'", revision_db.id, revision_path)
-        export_dataset(
-            dataset=dataset,
-            output_path=revision_path,
-            export_images=True,
-            as_zip=True,
-        )
-        return UUID(revision_db.id)
-
-    def get_dataset_revision(self, project_id: UUID, revision_id: UUID) -> DatasetRevision:
-        """
-        Get a dataset revision by ID.
-
-        Args:
-            project_id: The UUID of the project.
-            revision_id: The UUID of the dataset revision.
-
-        Returns:
-            DatasetRevision: The dataset revision.
-
-        Raises:
-            ResourceNotFoundError: If the revision is not found.
-        """
-        revision_repo = DatasetRevisionRepository(db=self.db_session)
-        revision = revision_repo.get_by_id(str(revision_id))
-        if revision is None or revision.project_id != str(project_id):
-            raise ResourceNotFoundError(ResourceType.DATASET_REVISION, str(revision_id))
-        return self._to_dataset_revision(dataset_db=revision)
-
-    def delete_dataset_revision_files(self, project_id: UUID, revision_id: UUID) -> None:
-        """
-        Delete the files associated with a dataset revision.
-
-        Args:
-            project_id: The UUID of the project.
-            revision_id: The UUID of the dataset revision.
-
-        Raises:
-            ResourceNotFoundError: If the revision is not found.
-        """
-        revision = self.get_dataset_revision(project_id, revision_id)
-        if revision.files_deleted:
-            logger.info("Files for dataset revision '{}' already deleted", revision_id)
-            return
-
-        revision_path = self.projects_dir / str(project_id) / "dataset_revisions" / str(revision_id)
-        if revision_path.exists():
-            shutil.rmtree(revision_path)
-            logger.info("Deleted dataset revision files at '{}'", revision_path)
-
-        # Mark as deleted in the database
-        revision_repo = DatasetRevisionRepository(db=self.db_session)
-        revision_db = revision_repo.get_by_id(str(revision_id))
-        if revision_db:
-            revision_db.files_deleted = True
-            revision_repo.save(revision_db)
-
-    @staticmethod
-    def _to_dataset_revision(dataset_db: DatasetRevisionDB) -> DatasetRevision:
-        """Convert database model to DatasetRevision."""
-        return DatasetRevision.model_validate(dataset_db, from_attributes=True)
