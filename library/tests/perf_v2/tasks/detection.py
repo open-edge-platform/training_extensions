@@ -63,6 +63,11 @@ DATASET_TEST_CASES = (
             group="small",
         ),
         DatasetInfo(
+            name="skindetect",
+            path=Path("detection/skindetect-roboflow"),
+            group="small",
+        ),
+        DatasetInfo(
             name="diopsis",
             path=Path("detection/diopsis_coco"),
             group="medium",
@@ -70,6 +75,11 @@ DATASET_TEST_CASES = (
         DatasetInfo(
             name="bdd_medium",
             path=Path("detection/bdd_medium"),
+            group="medium",
+        ),
+        DatasetInfo(
+            name="Vitens-Aeromonas",
+            path=Path("detection/Vitens-Aeromonas-coco"),
             group="medium",
         ),
         DatasetInfo(
