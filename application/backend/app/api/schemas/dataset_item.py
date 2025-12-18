@@ -10,6 +10,30 @@ from app.core.models import BaseRequiredIDNameModel, Pagination
 from app.models import DatasetItemAnnotation, DatasetItemFormat, DatasetItemSubset
 
 
+class DatasetRevisionItemView(BaseRequiredIDNameModel):
+    """
+    Dataset Revision item
+    """
+
+    format: DatasetItemFormat
+    width: int
+    height: int
+    subset: DatasetItemSubset
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "id": "7b073838-99d3-42ff-9018-4e901eb047fc",
+                "name": "img-010203",
+                "format": "jpg",
+                "width": 1280,
+                "height": 720,
+                "subset": "unassigned",
+            }
+        }
+    }
+
+
 class DatasetItemView(BaseRequiredIDNameModel):
     """
     Dataset item
@@ -88,6 +112,15 @@ class DatasetItemsWithPagination(BaseModel):
     """
 
     items: list[DatasetItemView]
+    pagination: Pagination
+
+
+class DatasetRevisionItemsWithPagination(BaseModel):
+    """
+    Dataset Revision Items list with pagination info
+    """
+
+    items: list[DatasetRevisionItemView]
     pagination: Pagination
 
 
