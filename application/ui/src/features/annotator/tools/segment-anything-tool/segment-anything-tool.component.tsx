@@ -9,10 +9,10 @@ import { useZoom } from '../../../../components/zoom/zoom.provider';
 import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
 import { AnnotationShapeWithLabels } from '../../annotations/annotation-shape-with-labels.component';
 import { MaskAnnotations } from '../../annotations/mask-annotations.component';
-import { AnnotatorLoading } from '../../annotator-loading.component';
 import type { Annotation, Shape } from '../../types';
 import { SvgToolCanvas } from '../svg-tool-canvas.component';
 import { getRelativePoint, removeOffLimitPoints } from '../utils';
+import { SAMLoading } from './sam-loading.component';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';
 import { useDecodingMutation } from './use-decoding-query.hook';
 import { useSegmentAnythingModel } from './use-segment-anything.hook';
@@ -104,7 +104,7 @@ export const SegmentAnythingTool = () => {
     });
 
     if (isLoading) {
-        return <AnnotatorLoading isLoading={isLoading} />;
+        return <SAMLoading isLoading={isLoading} />;
     }
 
     return (
