@@ -10,15 +10,9 @@ Original implementation: https://github.com/roboflow/rf-detr
 
 from __future__ import annotations
 
-import copy
-import re
 from typing import TYPE_CHECKING, Any, Literal
 
-import torch
-from torch import Tensor, nn
-from torchvision.ops import box_convert
-from torchvision.tv_tensors import BoundingBoxFormat
-from rfdetr.config import (
+from rfdetr import (
     RFDETRBaseConfig,
     RFDETRLargeConfig,
     RFDETRMediumConfig,
@@ -31,22 +25,22 @@ from rfdetr.models.lwdetr import build_criterion_and_postprocessors
 from otx.backend.native.exporter.base import OTXModelExporter
 from otx.backend.native.exporter.native import OTXNativeModelExporter
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from otx.backend.native.models.detection.base import OTXDetectionModel
 from otx.backend.native.models.detection.detectors import RFDETRDetector
+from otx.backend.native.models.detection.rtdetr import RTDETR
 from otx.config.data import TileConfig
-from otx.data.entity.base import OTXBatchLossEntity
-from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
 from otx.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 
 if TYPE_CHECKING:
+    import torch
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
+    from torch import Tensor
 
     from otx.backend.native.schedulers import LRSchedulerListCallable
     from otx.metrics import MetricCallable
     from otx.types.label import LabelInfoTypes
 
 
-class RFDETR(OTXDetectionModel):
+class RFDETR(RTDETR):
     """OTX Detection model class for RF-DETR.
 
     RF-DETR (Real-time Fast DETR) is a state-of-the-art object detector from Roboflow
@@ -74,6 +68,8 @@ class RFDETR(OTXDetectionModel):
         Input sizes must be compatible with patch_size * num_windows.
     """
 
+    input_size_multiplier = 8
+
     def __init__(
         self,
         label_info: LabelInfoTypes,
@@ -98,7 +94,7 @@ class RFDETR(OTXDetectionModel):
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
-            model_name=model_name,
+            model_name=model_name,  # type: ignore[arg-type]
             optimizer=optimizer,
             scheduler=scheduler,
             metric=metric,
@@ -191,12 +187,15 @@ class RFDETR(OTXDetectionModel):
             # Lower LR for backbone, no weight decay for norm layers
             {"params": r"^(?=.*backbone)(?=.*(?:norm|ln)).*$", "weight_decay": 0.0, "lr": 0.00015},
             {"params": r"^(?=.*backbone)(?!.*(?:norm|ln)).*$", "lr": 0.00015},
-            # No weight decay for norm layers and biases in encoder/decoder
-            {"params": r"^(?=.*(?:encoder|decoder|transformer))(?=.*(?:norm|bias)).*$", "weight_decay": 0.0},
+            # No weight decay for norm layers and biases in encoder/decoder, but exclude backbone
+            {
+                "params": r"^(?!.*backbone)(?=.*(?:encoder|decoder|transformer))(?=.*(?:norm|bias)).*$",
+                "weight_decay": 0.0,
+            },
         ]
 
         # Create wrapper
-        wrapper = RFDETRDetector(
+        return RFDETRDetector(
             lwdetr_model=rfdetr_model.model,  # type: ignore[arg-type]
             criterion=criterion,
             postprocessor=postprocessor,
@@ -206,159 +205,10 @@ class RFDETR(OTXDetectionModel):
             group_detr=self.group_detr,
         )
 
-        return wrapper
-
-    def _customize_inputs(
-        self,
-        entity: OTXDataBatch,
-        pad_size_divisor: int = 32,
-        pad_value: int = 0,
-    ) -> dict[str, Any]:
-        """Customize inputs for RF-DETR model.
-
-        Converts OTX batch format to the format expected by RF-DETR.
-
-        Args:
-            entity: OTX data batch.
-            pad_size_divisor: Divisor for padding.
-            pad_value: Value for padding.
-
-        Returns:
-            Dictionary with 'images' and 'targets'.
-        """
-        targets: list[dict[str, Tensor]] = []
-
-        # Get device from images
-        images = entity.images
-        device = images.device if isinstance(images, Tensor) else images[0].device
-
-        # Prepare bboxes for the model
-        if entity.bboxes is not None and entity.labels is not None:
-            for bb, ll in zip(entity.bboxes, entity.labels):
-                if len(bb) > 0:
-                    # Convert to cxcywh if needed
-                    if bb.format == BoundingBoxFormat.XYXY:
-                        converted_bboxes = box_convert(bb, in_fmt="xyxy", out_fmt="cxcywh")
-                    else:
-                        converted_bboxes = bb
-
-                    # Normalize bboxes to [0, 1] range
-                    canvas_size = bb.canvas_size  # (H, W)
-                    scale = torch.tensor(
-                        [canvas_size[1], canvas_size[0], canvas_size[1], canvas_size[0]],
-                        device=converted_bboxes.device,
-                        dtype=converted_bboxes.dtype,
-                    )
-                    normalized_bboxes = converted_bboxes / scale
-
-                    targets.append({
-                        "boxes": normalized_bboxes,
-                        "labels": ll,
-                    })
-                else:
-                    # Empty annotations
-                    targets.append({
-                        "boxes": torch.zeros((0, 4), device=device),
-                        "labels": torch.zeros((0,), dtype=torch.long, device=device),
-                    })
-
-        if self.explain_mode:
-            return {"entity": entity}
-
-        return {
-            "images": images,
-            "targets": targets if targets else None,
-        }
-
-    def _customize_outputs(  # type: ignore[override]
-        self,
-        outputs: dict[str, Tensor],
-        inputs: OTXDataBatch,
-    ) -> OTXPredBatch | OTXBatchLossEntity:
-        """Customize outputs from RF-DETR model.
-
-        Converts model outputs to OTX format.
-
-        Args:
-            outputs: Model outputs (losses during training, predictions during inference).
-            inputs: Original OTX data batch.
-
-        Returns:
-            OTXBatchLossEntity during training, OTXPredBatch during inference.
-        """
-        if self.training:
-            if not isinstance(outputs, dict):
-                raise TypeError(f"Expected dict outputs during training, got {type(outputs)}")
-
-            losses = OTXBatchLossEntity()
-
-            # Get the weight dict from criterion
-            model_wrapper: RFDETRDetector = self.model  # type: ignore[assignment]
-            weight_dict: dict[str, float] = model_wrapper.criterion.weight_dict  # type: ignore[assignment]
-
-            # Sum auxiliary losses and apply weight dict
-            for k, v in outputs.items():
-                if k in weight_dict:
-                    losses[k] = v * weight_dict[k]
-                elif isinstance(v, Tensor) and v.numel() == 1:
-                    # Include unweighted losses like class_error
-                    losses[k] = v
-
-            return losses
-
-        # Inference mode
-        if inputs.imgs_info is None:
-            msg = "imgs_info is required for inference"
-            raise ValueError(msg)
-
-        original_sizes: list[tuple[int, int]] = []
-        for img_info in inputs.imgs_info:
-            if img_info is not None and img_info.ori_shape is not None:
-                original_sizes.append((img_info.ori_shape[0], img_info.ori_shape[1]))
-            else:
-                # Fallback to image shape
-                images = inputs.images
-                if isinstance(images, list):
-                    original_sizes.append((int(images[0].shape[1]), int(images[0].shape[2])))
-                else:
-                    original_sizes.append((int(images.shape[2]), int(images.shape[3])))
-
-        model_wrapper: RFDETRDetector = self.model  # type: ignore[assignment]
-        scores, bboxes, labels = model_wrapper.postprocess(outputs, original_sizes)
-
-        if self.explain_mode:
-            if "feature_vector" not in outputs:
-                msg = "No feature vector in the model output."
-                raise ValueError(msg)
-
-            if "saliency_map" not in outputs:
-                msg = "No saliency maps in the model output."
-                raise ValueError(msg)
-
-            return OTXPredBatch(
-                batch_size=len(scores),
-                images=inputs.images,
-                imgs_info=inputs.imgs_info,
-                scores=scores,
-                bboxes=bboxes,
-                labels=labels,
-                feature_vector=[fv.unsqueeze(0) for fv in outputs["feature_vector"]],
-                saliency_map=[sm.to(torch.float32) for sm in outputs["saliency_map"]],
-            )
-
-        return OTXPredBatch(
-            batch_size=len(scores),
-            images=inputs.images,
-            imgs_info=inputs.imgs_info,
-            scores=scores,
-            bboxes=bboxes,
-            labels=labels,
-        )
-
-    def forward_for_tracing(
+    def forward_for_tracing(  # type: ignore[override]
         self,
         inputs: torch.Tensor,
-    ) -> tuple[Tensor, Tensor, Tensor] | dict[str, Any]:  # type: ignore[override]
+    ) -> tuple[Tensor, Tensor, Tensor] | dict[str, Any]:
         """Forward function for model export/tracing.
 
         Args:
@@ -376,88 +226,7 @@ class RFDETR(OTXDetectionModel):
             "scale_factor": (1.0, 1.0),
         }
         meta_info_list = [meta_info] * len(inputs)
-        model_wrapper: RFDETRDetector = self.model  # type: ignore[assignment]
-        return model_wrapper.export(inputs, meta_info_list, explain_mode=self.explain_mode)
-
-    def configure_optimizers(self) -> tuple[list[torch.optim.Optimizer], list[dict[str, Any]]]:  # type: ignore[override]
-        """Configure optimizer and learning rate schedulers.
-
-        Uses parameter groups with different learning rates for backbone vs head,
-        following RF-DETR's training configuration.
-
-        Returns:
-            Tuple of optimizer list and scheduler config list.
-        """
-        model_wrapper: RFDETRDetector = self.model  # type: ignore[assignment]
-        param_groups = self._get_optim_params(model_wrapper.optimizer_configuration, model_wrapper)
-        optimizer = self.optimizer_callable(param_groups)
-        schedulers = self.scheduler_callable(optimizer)
-
-        def ensure_list(item: Any) -> list:  # noqa: ANN401
-            return item if isinstance(item, list) else [item]
-
-        lr_scheduler_configs: list[dict[str, Any]] = []
-        for scheduler in ensure_list(schedulers):
-            lr_scheduler_config: dict[str, Any] = {"scheduler": scheduler}
-            if hasattr(scheduler, "interval"):
-                lr_scheduler_config["interval"] = scheduler.interval
-            if hasattr(scheduler, "monitor"):
-                lr_scheduler_config["monitor"] = scheduler.monitor
-            lr_scheduler_configs.append(lr_scheduler_config)
-
-        return [optimizer], lr_scheduler_configs
-
-    @staticmethod
-    def _get_optim_params(
-        cfg: list[dict[str, Any]] | None,
-        model: nn.Module,
-    ) -> list[dict[str, Any]]:
-        """Get optimizer parameters with different learning rates.
-
-        Args:
-            cfg: Configuration for parameter groups with regex patterns.
-            model: The model to get parameters from.
-
-        Returns:
-            List of parameter group dictionaries.
-        """
-        if cfg is None:
-            return [{"params": model.parameters()}]
-
-        cfg = copy.deepcopy(cfg)
-
-        param_groups: list[dict[str, Any]] = []
-        visited: set[str] = set()
-
-        for pg in cfg:
-            if "params" not in pg:
-                msg = f"The 'params' key should be included in the configuration, but got {pg.keys()}"
-                raise ValueError(msg)
-
-            pattern = pg["params"]
-            matching_params: dict[str, nn.Parameter] = {}
-
-            for name, param in model.named_parameters():
-                if param.requires_grad and re.search(pattern, name):
-                    matching_params[name] = param
-
-            if matching_params:
-                pg_copy = {k: v for k, v in pg.items() if k != "params"}
-                pg_copy["params"] = list(matching_params.values())
-                param_groups.append(pg_copy)
-                visited.update(matching_params.keys())
-
-        # Add remaining parameters with default settings
-        remaining_params = {
-            name: param
-            for name, param in model.named_parameters()
-            if param.requires_grad and name not in visited
-        }
-
-        if remaining_params:
-            param_groups.append({"params": list(remaining_params.values())})
-
-        return param_groups
+        return self.model.export(inputs, meta_info_list, explain_mode=self.explain_mode)
 
     @property
     def _exporter(self) -> OTXModelExporter:

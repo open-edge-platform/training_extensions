@@ -12,7 +12,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Callable
 
+import numpy as np
 import torch
+from rfdetr.util.misc import nested_tensor_from_tensor_list
 from torch import Tensor, nn
 from torchvision.tv_tensors import BoundingBoxes
 
@@ -56,12 +58,11 @@ class RFDETRDetector(BaseModule):
         self.input_size = input_size
         self.multi_scale = multi_scale
         self.group_detr = group_detr
-        self._rng = torch.Generator()
-        self._rng.manual_seed(42)
 
         # Explainability functions (set by high-level OTX model)
         self.feature_vector_fn: Callable[[FeatureMapType], Tensor] | None = None
         self.explain_fn: Callable[[tuple[Tensor, ...]], Tensor] | None = None
+        self.rng = np.random.default_rng(42)
 
         # Store scales for multi-scale training
         self.scales: list[int] = []
@@ -93,13 +94,8 @@ class RFDETRDetector(BaseModule):
         """
         # Multi-scale training
         if self.training and self.multi_scale and self.scales:
-            import random
-
-            sz = random.choice(self.scales)
+            sz = int(self.rng.choice(self.scales))
             images = nn.functional.interpolate(images, size=[sz, sz], mode="bilinear", align_corners=False)
-
-        # Create nested tensor format expected by LWDETR
-        from rfdetr.util.misc import nested_tensor_from_tensor_list
 
         # Convert to list of tensors if needed
         if isinstance(images, Tensor) and images.dim() == 4:
@@ -114,8 +110,7 @@ class RFDETRDetector(BaseModule):
 
         if self.training and targets is not None:
             # Compute losses during training
-            loss_dict = self.criterion(outputs, targets)
-            return loss_dict
+            return self.criterion(outputs, targets)
 
         return outputs
 
