@@ -13,7 +13,6 @@ from otx.types.task import OTXTaskType
 from otx.types.transformer_libs import TransformLibType
 
 from .dataset.base import OTXDataset, Transforms
-from .dataset.base import OTXDataset as OTXDatasetNew
 
 if TYPE_CHECKING:
     from datumaro.components.dataset import Dataset as DmDataset
@@ -52,7 +51,7 @@ class OTXDatasetFactory:
         include_polygons: bool = False,
         # TODO(gdlg): Add support for ignore_index again
         ignore_index: int = 255,  # noqa: ARG003
-    ) -> OTXDataset | OTXDatasetNew:
+    ) -> OTXDataset:
         """Create OTXDataset."""
         transforms = TransformLibFactory.generate(cfg_subset)
         common_kwargs = {

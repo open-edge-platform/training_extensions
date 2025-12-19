@@ -103,13 +103,13 @@ class TileMerge:
     def merge(
         self,
         batch_tile_preds: list[OTXPredBatch],
-        batch_tile_attrs: list[list[dict]],
+        batch_tile_infos: list[list[dict]],
     ) -> list[OTXPredItem]:
         """Merge batch tile predictions to a list of full-size prediction data entities.
 
         Args:
             batch_tile_preds (list): list of tile predictions.
-            batch_tile_attrs (list): list of tile attributes.
+            batch_tile_infos (list): list of tile attributes.
         """
         raise NotImplementedError
 
@@ -139,44 +139,44 @@ class DetectionTileMerge(TileMerge):
     def merge(
         self,
         batch_tile_preds: list[OTXPredBatch],
-        batch_tile_attrs: list[list[TileInfo]],
+        batch_tile_infos: list[list[TileInfo]],
     ) -> list[OTXPredItem]:
         """Merge batch tile predictions to a list of full-size prediction data entities.
 
         Args:
             batch_tile_preds (list): detection tile predictions.
-            batch_tile_attrs (list): detection tile attributes.
+            batch_tile_infos (list): detection tile attributes.
 
         """
         entities_to_merge = defaultdict(list)
         img_ids = []
         explain_mode = self.explain_mode
 
-        for tile_preds, tile_attrs in zip(batch_tile_preds, batch_tile_attrs, strict=True):
+        for tile_preds, tile_infos in zip(batch_tile_preds, batch_tile_infos, strict=True):
             if tile_preds.imgs_info is None or tile_preds.bboxes is None:
                 msg = "imgs_info or bboxes is None"
                 raise ValueError(msg)
-            batch_size = len(tile_attrs)
+            batch_size = len(tile_infos)
             for i in range(batch_size):
                 if tile_preds.imgs_info[i] is None:
                     msg = "imgs_info is None"
                     raise ValueError(msg)
                 tile_img_info = tile_preds.imgs_info[i]
-                tile_attr = tile_attrs[i]
+                tile_info = tile_infos[i]
                 tile_s_map = tile_preds.saliency_map[i] if tile_preds.saliency_map is not None else None
                 tile_f_vect = tile_preds.feature_vector[i] if tile_preds.feature_vector is not None else None
 
                 tile_bboxes = tile_preds.bboxes[i] if tile_preds.bboxes[i].numel() > 0 else None
-                offset_x = tile_attr.x
-                offset_y = tile_attr.y
+                offset_x = tile_info.x
+                offset_y = tile_info.y
                 if tile_bboxes is not None:
                     tile_bboxes[:, 0::2] += offset_x
                     tile_bboxes[:, 1::2] += offset_y
 
-                tile_id = tile_attr.source_sample_idx
+                tile_id = tile_info.source_sample_idx
                 if tile_id not in img_ids:
                     img_ids.append(tile_id)
-                tile_img_info.padding = [tile_attr.x, tile_attr.y, tile_attr.width, tile_attr.height]  # type: ignore[union-attr]
+                tile_img_info.padding = [tile_info.x, tile_info.y, tile_info.width, tile_info.height]  # type: ignore[union-attr]
 
                 det_pred_entity = OTXPredItem(
                     image=torch.empty(3, *tile_img_info.ori_shape),  # type: ignore[union-attr]
@@ -499,13 +499,13 @@ class SegmentationTileMerge(TileMerge):
     def merge(
         self,
         batch_tile_preds: list[OTXPredBatch],
-        batch_tile_attrs: list[list[TileInfo]],
+        batch_tile_infos: list[list[TileInfo]],
     ) -> list[OTXPredItem]:
         """Merge batch tile predictions to a list of full-size prediction data entities.
 
         Args:
             batch_tile_preds (list[SegBatchPredEntity]): segmentation tile predictions.
-            batch_tile_attrs (list[list[dict]]): segmentation tile attributes.
+            batch_tile_infos (list[list[dict]]): segmentation tile attributes.
 
         Returns:
             list[TorchPredItem]: List of full-size prediction data entities after merging.
@@ -514,7 +514,7 @@ class SegmentationTileMerge(TileMerge):
         img_ids = []
         explain_mode = self.explain_mode
 
-        for tile_preds, tile_attrs in zip(batch_tile_preds, batch_tile_attrs):
+        for tile_preds, tile_infos in zip(batch_tile_preds, batch_tile_infos):
             batch_size = tile_preds.batch_size
             saliency_maps = tile_preds.saliency_map if explain_mode else [[] for _ in range(batch_size)]
             feature_vectors = tile_preds.feature_vector if explain_mode else [[] for _ in range(batch_size)]
@@ -528,8 +528,8 @@ class SegmentationTileMerge(TileMerge):
                 msg = "The predicted masks are not provided."
                 raise ValueError(msg)
 
-            for tile_attr, tile_img_info, tile_masks, tile_s_map, tile_f_vect in zip(
-                tile_attrs,
+            for tile_info, tile_img_info, tile_masks, tile_s_map, tile_f_vect in zip(
+                tile_infos,
                 tile_preds.imgs_info,
                 tile_preds.masks,
                 saliency_maps,
@@ -539,10 +539,10 @@ class SegmentationTileMerge(TileMerge):
                     msg = f"Image information is not provided : {tile_preds.imgs_info}."
                     raise ValueError(msg)
 
-                tile_id = tile_attr.source_sample_idx
+                tile_id = tile_info.source_sample_idx
                 if tile_id not in img_ids:
                     img_ids.append(tile_id)
-                tile_img_info.padding = (tile_attr.x, tile_attr.y, tile_attr.width, tile_attr.height)
+                tile_img_info.padding = (tile_info.x, tile_info.y, tile_info.width, tile_info.height)
                 seg_pred_entity = OTXPredItem(
                     image=torch.empty((3, *tile_img_info.ori_shape)),
                     img_info=tile_img_info,
