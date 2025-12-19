@@ -36,7 +36,7 @@ class PipelineMetricsService:
 
         # Get actual latency measurements from the metrics service
         latency_samples = self._metrics_service.get_latency_measurements(
-            model_id=pipeline.model_revision_id,  # type: ignore[arg-type] # model is always there for running pipeline
+            model_id=pipeline.model_id,  # type: ignore[arg-type] # model is always there for running pipeline
             time_window=time_window,
         )
 
@@ -55,7 +55,7 @@ class PipelineMetricsService:
 
         # Get throughput measurements from the metrics service
         total_requests, throughput_data = self._metrics_service.get_throughput_measurements(
-            model_id=pipeline.model_revision_id,  # type: ignore[arg-type]
+            model_id=pipeline.model_id,  # type: ignore[arg-type]
             time_window=time_window,
         )
         if total_requests:

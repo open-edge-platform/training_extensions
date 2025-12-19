@@ -51,13 +51,14 @@ class PipelineService:
     def update_pipeline(self, project_id: UUID, partial_config: dict) -> Pipeline:
         """Update an existing pipeline."""
         pipeline = self.get_pipeline_by_id(project_id)
-        to_update = type(pipeline).model_validate(pipeline.model_copy(update=partial_config))
+        base = pipeline.model_dump()
+        to_update = type(pipeline).model_validate({**base, **partial_config})
         pipeline_repo = PipelineRepository(self._db_session)
         to_update_db = PipelineDB(
             project_id=str(to_update.project_id),
             source_id=str(to_update.source_id) if to_update.source_id else None,
             sink_id=str(to_update.sink_id) if to_update.sink_id else None,
-            model_revision_id=str(to_update.model_revision_id) if to_update.model_revision_id else None,
+            model_revision_id=str(to_update.model_id) if to_update.model_id else None,
             is_running=to_update.status.as_bool,
             data_collection_policies=[obj.model_dump() for obj in to_update.data_collection_policies],
             device=to_update.device,
@@ -74,6 +75,8 @@ class PipelineService:
                 self._event_bus.emit_event(EventType.PIPELINE_DATASET_COLLECTION_POLICIES_CHANGED)
             if pipeline.device != updated.device:
                 self._event_bus.emit_event(EventType.INFERENCE_DEVICE_CHANGED)
+            if pipeline.model_id != updated.model_revision.id:  # type: ignore[union-attr] # model_revision is always there for running pipeline
+                self._event_bus.emit_event(EventType.MODEL_CHANGED)
         elif pipeline.status != updated.status:
             # If the pipeline is being activated or stopped
             self._event_bus.emit_event(EventType.PIPELINE_STATUS_CHANGED)

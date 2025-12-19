@@ -493,7 +493,7 @@ class TestDatasetServiceIntegration:
             data=image,
             user_reviewed=user_reviewed,
             source_id=pipeline.source_id if use_pipeline_source else None,
-            prediction_model_id=pipeline.model_revision_id if use_pipeline_model else None,
+            prediction_model_id=pipeline.model_id if use_pipeline_model else None,
             annotations=fxt_annotations(label_id) if not user_reviewed else None,
         )
 
@@ -515,7 +515,7 @@ class TestDatasetServiceIntegration:
         else:
             assert dataset_item.source_id is None
         if use_pipeline_model:
-            assert dataset_item.prediction_model_id == str(pipeline.model_revision_id)
+            assert dataset_item.prediction_model_id == str(pipeline.model_id)
         else:
             assert dataset_item.prediction_model_id is None
         if not user_reviewed:
