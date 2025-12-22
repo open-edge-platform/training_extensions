@@ -26,13 +26,13 @@ def fxt_system_service() -> Mock:
 
 
 class TestSystemEndpoints:
-    def test_get_devices_cpu_only(self, fxt_system_service: Mock, fxt_client: TestClient):
-        """Test GET /api/system/devices with CPU only"""
-        fxt_system_service.get_devices.return_value = [
+    def test_get_training_devices_cpu_only(self, fxt_system_service: Mock, fxt_client: TestClient):
+        """Test GET /api/system/devices/training with CPU only"""
+        fxt_system_service.get_training_devices.return_value = [
             DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None),
         ]
 
-        response = fxt_client.get("/api/system/devices")
+        response = fxt_client.get("/api/system/devices/training")
 
         assert response.status_code == status.HTTP_200_OK
         devices = response.json()
@@ -42,14 +42,14 @@ class TestSystemEndpoints:
         assert devices[0]["memory"] is None
         assert devices[0]["index"] is None
 
-    def test_get_devices_with_xpu(self, fxt_system_service: Mock, fxt_client: TestClient):
-        """Test GET /api/system/devices with Intel XPU"""
-        fxt_system_service.get_devices.return_value = [
+    def test_get_training_devices_with_xpu(self, fxt_system_service: Mock, fxt_client: TestClient):
+        """Test GET /api/system/devices/training with Intel XPU"""
+        fxt_system_service.get_training_devices.return_value = [
             DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None),
             DeviceInfo(type=DeviceType.XPU, name="Intel(R) Graphics [0x7d41]", memory=36022263808, index=0),
         ]
 
-        response = fxt_client.get("/api/system/devices")
+        response = fxt_client.get("/api/system/devices/training")
 
         assert response.status_code == status.HTTP_200_OK
         devices = response.json()
@@ -60,14 +60,14 @@ class TestSystemEndpoints:
         assert devices[1]["memory"] == 36022263808
         assert devices[1]["index"] == 0
 
-    def test_get_devices_with_cuda(self, fxt_system_service: Mock, fxt_client: TestClient):
-        """Test GET /api/system/devices with NVIDIA CUDA"""
-        fxt_system_service.get_devices.return_value = [
+    def test_get_training_devices_with_cuda(self, fxt_system_service: Mock, fxt_client: TestClient):
+        """Test GET /api/system/devices/training with NVIDIA CUDA"""
+        fxt_system_service.get_training_devices.return_value = [
             DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None),
             DeviceInfo(type=DeviceType.CUDA, name="NVIDIA GeForce RTX 4090", memory=25769803776, index=0),
         ]
 
-        response = fxt_client.get("/api/system/devices")
+        response = fxt_client.get("/api/system/devices/training")
 
         assert response.status_code == status.HTTP_200_OK
         devices = response.json()
@@ -78,15 +78,15 @@ class TestSystemEndpoints:
         assert devices[1]["memory"] == 25769803776
         assert devices[1]["index"] == 0
 
-    def test_get_devices_with_all_devices(self, fxt_system_service: Mock, fxt_client: TestClient):
-        """Test GET /api/system/devices with all device types"""
-        fxt_system_service.get_devices.return_value = [
+    def test_get_training_devices_with_all_devices(self, fxt_system_service: Mock, fxt_client: TestClient):
+        """Test GET /api/system/devices/training with all device types"""
+        fxt_system_service.get_training_devices.return_value = [
             DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None),
             DeviceInfo(type=DeviceType.XPU, name="Intel(R) Graphics [0x7d41]", memory=36022263808, index=0),
             DeviceInfo(type=DeviceType.CUDA, name="NVIDIA GeForce RTX 4090", memory=25769803776, index=0),
         ]
 
-        response = fxt_client.get("/api/system/devices")
+        response = fxt_client.get("/api/system/devices/training")
 
         assert response.status_code == status.HTTP_200_OK
         devices = response.json()
