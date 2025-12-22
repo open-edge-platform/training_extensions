@@ -11,6 +11,7 @@ import { useAnnotationActions } from '../../../../shared/annotator/annotation-ac
 import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
 import { AnnotationShape } from '../../annotations/annotation-shape.component';
 import { MaskAnnotations } from '../../annotations/mask-annotations.component';
+import { CreateLabelPopover } from '../../labels/create-label-popover.component';
 import type { Annotation, Point, RegionOfInterest, Shape } from '../../types';
 import { SvgToolCanvas } from '../svg-tool-canvas.component';
 import { getRelativePoint, removeOffLimitPoints } from '../utils';
@@ -52,13 +53,13 @@ const PreviewAnnotations = ({ previewAnnotations, image }: PreviewAnnotationsPro
 };
 
 export const SegmentAnythingTool = () => {
-    const [_createLabelFormPosition, setCreateLabelFormPosition] = useState<Point | null>(null);
+    const [createLabelFormPosition, setCreateLabelFormPosition] = useState<Point | null>(null);
     const [previewShapes, setPreviewShapes] = useState<Shape[]>([]);
     const [acceptedShapes, setAcceptedShapes] = useState<Shape[] | null>(null);
     const ref = useRef<SVGSVGElement>(null);
 
     const zoom = useZoom();
-    const { roi, image, selectedLabel } = useAnnotator();
+    const { roi, image, selectedLabel, labels } = useAnnotator();
     const { addAnnotations } = useAnnotationActions();
     const { isLoading, decodingQueryFn } = useSegmentAnythingModel();
     const throttledDecodingQueryFn = useSingleStackFn(decodingQueryFn);
@@ -96,14 +97,14 @@ export const SegmentAnythingTool = () => {
         setPreviewShapes([]);
     };
 
-    // const handleAddAnnotationsCreateLabel = (label: Label) => {
-    //     if (acceptedShapes === null) {
-    //         return;
-    //     }
+    const handleAddAnnotationsCreateLabel = (label: Label) => {
+        if (acceptedShapes === null) {
+            return;
+        }
 
-    //     handleAddAnnotations(acceptedShapes, label);
-    //     setAcceptedShapes(null);
-    // };
+        handleAddAnnotations(acceptedShapes, label);
+        setAcceptedShapes(null);
+    };
 
     const handlePointerDown = (event: PointerEvent<SVGSVGElement>) => {
         if (!ref.current) {
@@ -144,10 +145,10 @@ export const SegmentAnythingTool = () => {
         };
     });
 
-    // const handleClose = () => {
-    //     setCreateLabelFormPosition(null);
-    //     setAcceptedShapes(null);
-    // };
+    const handleClose = () => {
+        setCreateLabelFormPosition(null);
+        setAcceptedShapes(null);
+    };
 
     if (isLoading) {
         return <SAMLoading isLoading={isLoading} />;
@@ -171,13 +172,13 @@ export const SegmentAnythingTool = () => {
             >
                 <PreviewAnnotations previewAnnotations={previewAnnotations} image={image} />
             </SvgToolCanvas>
-            {/* <CreateLabelPopover
+            <CreateLabelPopover
                 ref={ref}
                 onSuccess={handleAddAnnotationsCreateLabel}
                 existingLabels={labels}
                 mousePosition={createLabelFormPosition}
                 onClose={handleClose}
-            /> */}
+            />
         </>
     );
 };

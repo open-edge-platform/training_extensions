@@ -1,0 +1,8 @@
+.labelButton {
+    &:not([class*='disabled']) {
+        background: var(--labelButtonBgColor) !important;
+        svg {
+            fill: var(--spectrum-global-color-gray-900) !important;
+        }
+    }
+}

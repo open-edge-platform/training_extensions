@@ -1,0 +1,9 @@
+.iconButton {
+    background-color: transparent;
+    height: min-content;
+
+    &[class*='is-hovered'] {
+        background-color: transparent !important;
+        border: none !important;
+    }
+}
