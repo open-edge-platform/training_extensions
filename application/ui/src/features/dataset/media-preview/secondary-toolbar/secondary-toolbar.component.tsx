@@ -6,13 +6,13 @@ import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { isEmpty } from 'lodash-es';
 import type { DatasetItem } from 'src/constants/shared-types';
 import { useAnnotationActions } from 'src/shared/annotator/annotation-actions-provider.component';
+import { useAnnotator } from 'src/shared/annotator/annotator-provider.component';
 
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
 import { LabelPicker } from './label-picker.component';
 import { useSecondaryToolbarState } from './use-secondary-toolbar-state.hook';
 
 import classes from '../media-preview.module.scss';
-import { useAnnotator } from 'src/shared/annotator/annotator-provider.component';
 
 type SecondaryToolbarProps = {
     items: DatasetItem[];
@@ -35,7 +35,7 @@ export const SecondaryToolbar = ({ items, mediaItem, onClose, onSelectedMediaIte
     const queryClient = useQueryClient();
     const { annotations, isSaving, submitAnnotations } = useAnnotationActions();
     const { selectedLabel, setSelectedLabelId } = useAnnotator();
-    const { isHidden, projectLabels } = useSecondaryToolbarState();
+    const { isHidden, projectLabels, addLabels } = useSecondaryToolbarState();
 
     const hasAnnotations = !isEmpty(annotations);
     const selectedIndex = items.findIndex((item) => item.id === mediaItem.id);
@@ -69,7 +69,15 @@ export const SecondaryToolbar = ({ items, mediaItem, onClose, onSelectedMediaIte
                     <LabelPicker
                         selectedLabel={selectedLabel}
                         labels={projectLabels}
-                        onSelect={(value) => setSelectedLabelId(value !== null ? String(value) : null)}
+                        onSelect={(value) => {
+                            const labelId = value !== null ? String(value) : null;
+
+                            setSelectedLabelId(labelId);
+
+                            if (labelId && !isHidden) {
+                                addLabels(labelId);
+                            }
+                        }}
                     />
 
                     <ButtonGroup>
