@@ -27,7 +27,7 @@ def fxt_system_service() -> Mock:
 
 class TestSystemEndpoints:
     def test_get_inference_devices_cpu_only(self, fxt_system_service: Mock, fxt_client: TestClient):
-        """Test GET /api/system/devices with CPU only"""
+        """Test GET /api/system/devices/inference with CPU only"""
         fxt_system_service.get_inference_devices.return_value = [
             DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None),
         ]
@@ -43,7 +43,7 @@ class TestSystemEndpoints:
         assert devices[0]["index"] is None
 
     def test_get_inference_devices_with_xpu(self, fxt_system_service: Mock, fxt_client: TestClient):
-        """Test GET /api/system/devices with Intel XPU"""
+        """Test GET /api/system/devices/inference with Intel XPU"""
         fxt_system_service.get_inference_devices.return_value = [
             DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None),
             DeviceInfo(type=DeviceType.XPU, name="Intel(R) Graphics [0x7d41]", memory=36022263808, index=0),
