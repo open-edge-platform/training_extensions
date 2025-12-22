@@ -82,7 +82,7 @@ async def security_headers_middleware(
     request: Request,
     call_next: Callable[[Request], Awaitable[Response]],
 ) -> Response:
-    """"""
+    """Add COEP and COOP security headers to all HTTP responses."""
     response = await call_next(request)
     response.headers.setdefault("Cross-Origin-Embedder-Policy", "require-corp")
     response.headers.setdefault("Cross-Origin-Opener-Policy", "same-origin")
@@ -98,7 +98,7 @@ if static_dir is not None and static_dir.is_dir() and any(static_dir.iterdir()):
 
     @app.get("/", include_in_schema=False)
     @app.get("/{full_path:path}", include_in_schema=False)
-    async def serve_spa(full_path: str = "") -> FileResponse:  # noqa: ARG001
+    async def serve_spa() -> FileResponse:
         """Serve the Single Page Application (SPA) index.html file for any path."""
         return FileResponse(cast(Path, static_dir) / "index.html")
 

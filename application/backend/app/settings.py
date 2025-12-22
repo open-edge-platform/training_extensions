@@ -36,7 +36,11 @@ class Settings(BaseSettings):
     # Server
     host: str = Field(default="0.0.0.0", alias="HOST")  # noqa: S104
     port: int = Field(default=7860, alias="PORT")
-    static_files_dir: Path | None = None
+    static_files_dir: Path | None = Field(
+        default=None,
+        alias="STATIC_FILES_DIR",
+        description="Directory containing static UI files",
+    )
 
     # CORS
     cors_origins: str = Field(
