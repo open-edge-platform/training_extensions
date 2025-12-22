@@ -13,7 +13,7 @@ from app.services.base import ResourceNotFoundError, ResourceType
 from app.services.event.event_bus import EventBus, EventType
 from app.services.parent_process_guard import parent_process_only
 
-from .system_service import SystemService
+from .system_service import DEFAULT_DEVICE, SystemService
 
 MSG_ERR_DELETE_RUNNING_PIPELINE = "Cannot delete a running pipeline."
 
@@ -45,8 +45,8 @@ class PipelineService:
                 pipeline.device,
                 pipeline.project_id,
             )
-            pipeline.device = "cpu"
-            pipeline_db.device = "cpu"
+            pipeline.device = DEFAULT_DEVICE
+            pipeline_db.device = DEFAULT_DEVICE
             pipeline_repo.update(pipeline_db)
         return pipeline
 
