@@ -44,7 +44,7 @@ const mapLocalAnnotationsToServer = (localAnnotations: Annotation[]): ServerAnno
 
 interface AnnotationsContextValue {
     annotations: Annotation[];
-    addAnnotations: (shapes: Shape[]) => void;
+    addAnnotations: (shapes: Shape[], labels: Label[]) => void;
     deleteAnnotations: (annotationIds: string[]) => void;
     updateAnnotations: (updatedAnnotations: Annotation[]) => void;
     submitAnnotations: () => Promise<void>;
@@ -96,13 +96,13 @@ export const AnnotationActionsProvider = ({
         );
     };
 
-    const addAnnotations = (shapes: Shape[]) => {
+    const addAnnotations = (shapes: Shape[], labels: Label[]) => {
         setAnnotations((prevAnnotations) => [
             ...prevAnnotations,
             ...shapes.map((shape) => ({
                 shape,
                 id: uuid(),
-                labels: [],
+                labels,
             })),
         ]);
     };
