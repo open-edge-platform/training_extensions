@@ -4,6 +4,7 @@
 import { PointerEvent, useEffect, useRef, useState } from 'react';
 
 import { clampPointBetweenImage } from '@geti/smart-tools/utils';
+import { useAnnotationActions } from 'src/shared/annotator/annotation-actions-provider.component';
 
 import { useZoom } from '../../../../components/zoom/zoom.provider';
 import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
@@ -14,7 +15,6 @@ import { SvgToolCanvas } from '../svg-tool-canvas.component';
 import { getRelativePoint, removeOffLimitPoints } from '../utils';
 import { SAMLoading } from './sam-loading.component';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';
-import { useDecodingMutation } from './use-decoding-query.hook';
 import { useSegmentAnythingModel } from './use-segment-anything.hook';
 import { useSingleStackFn } from './use-single-stack-fn.hook';
 import { useThrottledCallback } from './use-throttle-callback.hook';
@@ -40,10 +40,10 @@ export const SegmentAnythingTool = () => {
     const [previewShapes, setPreviewShapes] = useState<Shape[]>([]);
 
     const zoom = useZoom();
-    const { mediaItem, roi, image } = useAnnotator();
+    const { mediaItem, roi, image, selectedLabel } = useAnnotator();
+    const { addAnnotations } = useAnnotationActions();
     const { isLoading, decodingQueryFn } = useSegmentAnythingModel();
     const throttledDecodingQueryFn = useSingleStackFn(decodingQueryFn);
-    const decodingMutation = useDecodingMutation(decodingQueryFn);
 
     const ref = useRef<SVGRectElement>(null);
 
@@ -90,9 +90,9 @@ export const SegmentAnythingTool = () => {
             return;
         }
 
-        const point = clampPoint(getRelativePoint(ref.current, { x: event.clientX, y: event.clientY }, zoom.scale));
-
-        decodingMutation.mutate([{ ...point, positive: true }]);
+        if (selectedLabel) {
+            addAnnotations(previewShapes, [selectedLabel]);
+        }
     };
 
     const annotations = previewShapes.map((shape, idx): Annotation => {

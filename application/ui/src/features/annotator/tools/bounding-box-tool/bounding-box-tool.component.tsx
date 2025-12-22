@@ -7,7 +7,7 @@ import { useAnnotator } from '../../../../shared/annotator/annotator-provider.co
 import { DrawingBox } from '../drawing-box-tool/drawing-box.component';
 
 export const BoundingBoxTool = () => {
-    const { mediaItem, image } = useAnnotator();
+    const { mediaItem, image, selectedLabel } = useAnnotator();
     const { addAnnotations } = useAnnotationActions();
     const { scale: zoom } = useZoom();
 
@@ -16,6 +16,7 @@ export const BoundingBoxTool = () => {
             roi={{ x: 0, y: 0, width: mediaItem.width, height: mediaItem.height }}
             image={image}
             zoom={zoom}
+            selectedLabel={selectedLabel}
             onComplete={addAnnotations}
         />
     );

@@ -8,9 +8,9 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { get, isObject } from 'lodash-es';
 import { $api } from 'src/api/client';
 import type { components } from 'src/api/openapi-spec';
-import type { DatasetItem, Label } from 'src/constants/shared-types';
 import { v4 as uuid } from 'uuid';
 
+import type { DatasetItem, Label } from '../../constants/shared-types';
 import type { Annotation, Shape } from '../../features/annotator/types';
 
 type ServerAnnotation = components['schemas']['DatasetItemAnnotation-Input'];
@@ -43,7 +43,7 @@ const mapLocalAnnotationsToServer = (localAnnotations: Annotation[]): ServerAnno
 
 interface AnnotationsContextValue {
     annotations: Annotation[];
-    addAnnotations: (shapes: Shape[]) => void;
+    addAnnotations: (shapes: Shape[], labels: Label[]) => void;
     deleteAnnotations: (annotationIds: string[]) => void;
     updateAnnotations: (updatedAnnotations: Annotation[]) => void;
     submitAnnotations: () => Promise<void>;
@@ -96,13 +96,13 @@ export const AnnotationActionsProvider = ({ children, mediaItem }: AnnotationAct
         isDirty.current = true;
     };
 
-    const addAnnotations = (shapes: Shape[]) => {
+    const addAnnotations = (shapes: Shape[], labels: Label[]) => {
         setLocalAnnotations((prevAnnotations) => [
             ...prevAnnotations,
             ...shapes.map((shape) => ({
                 shape,
                 id: uuid(),
-                labels: [],
+                labels,
             })),
         ]);
         isDirty.current = true;
