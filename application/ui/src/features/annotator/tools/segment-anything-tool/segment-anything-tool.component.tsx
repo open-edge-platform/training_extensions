@@ -52,13 +52,13 @@ const PreviewAnnotations = ({ previewAnnotations, image }: PreviewAnnotationsPro
 };
 
 export const SegmentAnythingTool = () => {
-    const [createLabelFormPosition, setCreateLabelFormPosition] = useState<Point | null>(null);
+    const [_createLabelFormPosition, setCreateLabelFormPosition] = useState<Point | null>(null);
     const [previewShapes, setPreviewShapes] = useState<Shape[]>([]);
     const [acceptedShapes, setAcceptedShapes] = useState<Shape[] | null>(null);
     const ref = useRef<SVGSVGElement>(null);
 
     const zoom = useZoom();
-    const { roi, image, selectedLabel, labels } = useAnnotator();
+    const { roi, image, selectedLabel } = useAnnotator();
     const { addAnnotations } = useAnnotationActions();
     const { isLoading, decodingQueryFn } = useSegmentAnythingModel();
     const throttledDecodingQueryFn = useSingleStackFn(decodingQueryFn);
@@ -96,14 +96,14 @@ export const SegmentAnythingTool = () => {
         setPreviewShapes([]);
     };
 
-    const handleAddAnnotationsCreateLabel = (label: Label) => {
-        if (acceptedShapes === null) {
-            return;
-        }
+    // const handleAddAnnotationsCreateLabel = (label: Label) => {
+    //     if (acceptedShapes === null) {
+    //         return;
+    //     }
 
-        handleAddAnnotations(acceptedShapes, label);
-        setAcceptedShapes(null);
-    };
+    //     handleAddAnnotations(acceptedShapes, label);
+    //     setAcceptedShapes(null);
+    // };
 
     const handlePointerDown = (event: PointerEvent<SVGSVGElement>) => {
         if (!ref.current) {
@@ -144,10 +144,10 @@ export const SegmentAnythingTool = () => {
         };
     });
 
-    const handleClose = () => {
-        setCreateLabelFormPosition(null);
-        setAcceptedShapes(null);
-    };
+    // const handleClose = () => {
+    //     setCreateLabelFormPosition(null);
+    //     setAcceptedShapes(null);
+    // };
 
     if (isLoading) {
         return <SAMLoading isLoading={isLoading} />;
