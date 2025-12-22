@@ -140,8 +140,11 @@ export const AnnotationActionsProvider = ({ children, mediaItem }: AnnotationAct
         if (annotations.length > 0) {
             const localFormattedAnnotations = mapServerAnnotationsToLocal(annotations, projectLabels);
             setLocalAnnotations(localFormattedAnnotations);
-            isDirty.current = false;
+        } else {
+            setLocalAnnotations([]);
         }
+
+        isDirty.current = false;
     }, [serverAnnotations, project, mediaItem.id]);
 
     return (
