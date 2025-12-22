@@ -112,6 +112,10 @@ class TestSystemService:
 
             assert len(devices) == 3
 
+            inference_devices = fxt_system_service.get_inference_devices()
+
+            assert len(inference_devices) == 2
+
     def test_validate_device_cpu_always_valid(self, fxt_system_service: SystemService):
         """Test that CPU device is always valid"""
         assert fxt_system_service.validate_device("cpu") is True
