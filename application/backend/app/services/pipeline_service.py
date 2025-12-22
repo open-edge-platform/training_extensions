@@ -3,6 +3,7 @@
 
 from uuid import UUID
 
+from loguru import logger
 from sqlalchemy.orm import Session
 
 from app.db.schema import PipelineDB
@@ -11,6 +12,8 @@ from app.repositories import PipelineRepository
 from app.services.base import ResourceNotFoundError, ResourceType
 from app.services.event.event_bus import EventBus, EventType
 from app.services.parent_process_guard import parent_process_only
+
+from .system_service import SystemService
 
 MSG_ERR_DELETE_RUNNING_PIPELINE = "Cannot delete a running pipeline."
 
@@ -31,8 +34,21 @@ class PipelineService:
     def get_active_pipeline(self) -> Pipeline | None:
         """Retrieve an active pipeline."""
         pipeline_repo = PipelineRepository(self._db_session)
-        pipeline = pipeline_repo.get_active_pipeline()
-        return Pipeline.model_validate(pipeline) if pipeline is not None else None
+        pipeline_db = pipeline_repo.get_active_pipeline()
+        if pipeline_db is None:
+            return None
+
+        pipeline = Pipeline.model_validate(pipeline_db)
+        if not SystemService().validate_device(pipeline.device):
+            logger.warning(
+                "The configured device '{}' is not available for pipeline '{}'. Falling back to 'cpu'.",
+                pipeline.device,
+                pipeline.project_id,
+            )
+            pipeline.device = "cpu"
+            pipeline_db.device = "cpu"
+            pipeline_repo.update(pipeline_db)
+        return pipeline
 
     def get_pipeline_by_id(self, project_id: UUID) -> Pipeline:
         """Retrieve a pipeline by project ID."""
