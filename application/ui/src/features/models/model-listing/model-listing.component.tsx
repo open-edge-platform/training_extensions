@@ -139,7 +139,7 @@ export const ModelListing = () => {
             <View>
                 {models.map((model) => (
                     <Disclosure key={model.id} isQuiet UNSAFE_className={classes.disclosure}>
-                        <DisclosureTitle>
+                        <DisclosureTitle UNSAFE_className={classes.disclosureItem}>
                             <ModelVariantItem model={model} />
                         </DisclosureTitle>
                         <DisclosurePanel>

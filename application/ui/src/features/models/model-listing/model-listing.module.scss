@@ -9,3 +9,10 @@
         }
     }
 }
+
+.disclosureItem {
+    // Disclosure's chevron
+    [class*='spectrum-Accordion-itemHeader'] > [class*='spectrum-Accordion-itemIndicator'] {
+        padding: 0 var(--spectrum-global-dimension-size-400);
+    }
+}
