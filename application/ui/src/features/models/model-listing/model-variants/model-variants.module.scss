@@ -1,0 +1,7 @@
+.disclosureVariant {
+    background-color: var(--spectrum-global-color-gray-200);
+
+    > [class*='itemContent'] {
+        padding-left: var(--spectrum-global-dimension-size-400) !important;
+    }
+}

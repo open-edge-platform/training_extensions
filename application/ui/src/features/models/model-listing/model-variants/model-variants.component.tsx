@@ -5,18 +5,11 @@ import { Disclosure, DisclosurePanel, DisclosureTitle } from '@geti/ui';
 
 import { ModelVariantsTabs } from './model-variant-tabs.component';
 
+import classes from './model-variants.module.scss';
+
 export const ModelVariants = () => {
     return (
-        <Disclosure
-            isQuiet
-            UNSAFE_style={{
-                backgroundColor: 'var(--spectrum-global-color-gray-200)',
-                paddingLeft: 'var(--spectrum-global-dimension-size-250)',
-                paddingTop: 'var(--spectrum-global-dimension-size-250)',
-                paddingBottom: 'var(--spectrum-global-dimension-size-250)',
-                paddingRight: 'var(--spectrum-global-dimension-size-250)',
-            }}
-        >
+        <Disclosure isQuiet UNSAFE_className={classes.disclosureVariant}>
             <DisclosureTitle>Model variants</DisclosureTitle>
             <DisclosurePanel>
                 <ModelVariantsTabs />

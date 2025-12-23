@@ -9,7 +9,7 @@ import classes from './models.module.scss';
 export const DatasetHeader = () => {
     return (
         <Grid
-            columns={['auto', 'auto', 'minmax(0, 1fr)', 'auto']}
+            columns={['auto', '1fr', 'auto', 'auto']}
             alignItems={'center'}
             marginBottom={'size-225'}
             gap={'size-200'}

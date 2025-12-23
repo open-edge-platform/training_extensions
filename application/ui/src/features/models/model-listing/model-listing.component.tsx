@@ -7,6 +7,8 @@ import { DatasetHeader } from './dataset-header.component';
 import { ModelVariants } from './model-variants/model-variants.component';
 import { ModelsHeader } from './models-header.component';
 
+import classes from './model-listing.module.scss';
+
 const models = [
     { id: 1, name: 'Model Project #1' },
     { id: 2, name: 'Model Project #2' },
@@ -15,11 +17,10 @@ const models = [
 const HeaderRow = () => {
     return (
         <Grid
-            gap='size-100'
-            columns={repeat(5, '1fr')}
+            columns={['2fr 1fr 1fr 1fr 1fr']}
             UNSAFE_style={{
                 backgroundColor: 'var(--spectrum-global-color-gray-200)',
-                padding: 'var(--spectrum-global-dimension-size-150) var(--spectrum-global-dimension-size-300)',
+                padding: 'var(--spectrum-global-dimension-size-150) var(--spectrum-global-dimension-size-1000)',
             }}
         >
             <Text>Model Name</Text>
@@ -44,10 +45,13 @@ export const ModelListing = () => {
 
             <View>
                 {models.map((model) => (
-                    <Disclosure key={model.id}>
+                    <Disclosure key={model.id} isQuiet UNSAFE_className={classes.disclosure}>
                         <DisclosureTitle>{model.name}</DisclosureTitle>
                         <DisclosurePanel>
                             <ModelVariants />
+                            {/* Model metrics */}
+                            {/* Training parameter settings */}
+                            {/* Training datasets */}
                         </DisclosurePanel>
                     </Disclosure>
                 ))}

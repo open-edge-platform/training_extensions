@@ -1,0 +1,11 @@
+.disclosure {
+    background-color: var(--spectrum-global-color-gray-200);
+
+    &[class*='is-expanded'] {
+        background-color: var(--spectrum-global-color-gray-50);
+    }
+
+    > [class*='itemContent'] {
+        padding-left: var(--spectrum-global-dimension-size-1000) !important;
+    }
+}

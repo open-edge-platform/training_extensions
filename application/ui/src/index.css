@@ -102,8 +102,3 @@ svg {
 [data-testid='underlay'] {
     z-index: 2 !important;
 }
-
-/* Disclosures have weird paddings */
-[class*='spectrum-Accordion-itemContent'] {
-    padding: 0 !important;
-}
