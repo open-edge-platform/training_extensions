@@ -1,9 +1,10 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { MouseEvent } from 'react';
+import { CSSProperties, MouseEvent } from 'react';
 
 import { isEmpty } from 'lodash-es';
+import { useAnnotationVisibility } from 'src/shared/annotator/annotation-visibility-provider.component';
 
 import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
 import type { Annotation as AnnotationType } from '../types';
@@ -20,6 +21,7 @@ type AnnotationsProps = {
 
 export const Annotations = ({ annotations, width, height, isFocussed }: AnnotationsProps) => {
     const { setSelectedAnnotations } = useSelectedAnnotations();
+    const { isVisible } = useAnnotationVisibility();
 
     // If the user clicks on an empty spot on the canvas, we want to deselect
     // all annotations
@@ -36,19 +38,25 @@ export const Annotations = ({ annotations, width, height, isFocussed }: Annotati
             height={height}
             tabIndex={-1}
             onClick={handleBackgroundClick}
-            style={{
-                position: 'absolute',
-                inset: 0,
-                outline: 'none',
-                overflow: 'visible',
-                ...DEFAULT_ANNOTATION_STYLES,
-            }}
+            style={
+                {
+                    '--annotation-stroke': '1px solid var(--energy-blue)',
+                    '--annotation-fill': 'rgba(0, 199, 253, 0.2)',
+                    position: 'absolute',
+                    inset: 0,
+                    outline: 'none',
+                    overflow: 'visible',
+                    ...DEFAULT_ANNOTATION_STYLES,
+                } as CSSProperties
+            }
         >
-            {!isEmpty(annotations) && (
+            {!isEmpty(annotations) && isVisible && (
                 <MaskAnnotations annotations={annotations} width={width} height={height} isEnabled={isFocussed}>
-                    {annotations.map((annotation) => (
-                        <Annotation annotation={annotation} key={annotation.id} />
-                    ))}
+                    <g aria-label={'annotation list'}>
+                        {annotations.map((annotation) => (
+                            <Annotation annotation={annotation} key={annotation.id} />
+                        ))}
+                    </g>
                 </MaskAnnotations>
             )}
         </svg>

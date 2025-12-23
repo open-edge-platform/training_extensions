@@ -1,0 +1,4 @@
+.image {
+    filter: brightness(var(--image-brightness)) saturate(var(--image-saturation)) contrast(var(--image-contrast));
+    image-rendering: var(--pixel-view);
+}
