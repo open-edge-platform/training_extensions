@@ -16,7 +16,7 @@ import {
     Text,
     View,
 } from '@geti/ui';
-import { BulbIcon, MoreMenu } from '@geti/ui/icons';
+import { MoreMenu } from '@geti/ui/icons';
 
 import { ReactComponent as StartIcon } from '../../../assets/icons/start.svg';
 import { DatasetHeader } from './dataset-header.component';
