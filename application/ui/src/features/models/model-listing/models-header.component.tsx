@@ -9,11 +9,11 @@ export const ModelsHeader = () => {
             <Text>Models</Text>
 
             <Flex marginStart={'size-300'} gap={'size-100'}>
-                <Picker aria-label='Group by'>
-                    <Item key='dataset'>Grouped by: Dataset</Item>
-                    <Item key='architecture'>Grouped by: Architecture</Item>
+                <Picker placeholder={'Group by'} width={'size-3000'} aria-label={'Group models'}>
+                    <Item key='dataset'>Group by: Dataset</Item>
+                    <Item key='architecture'>Group by: Architecture</Item>
                 </Picker>
-                <Picker aria-label='Sort by'>
+                <Picker placeholder={'Sort by'} width={'size-3000'} aria-label={'Sort models'}>
                     <Item key='active-model'>Sort: Active model</Item>
                     <Item key='architecture'>Sort: Architecture</Item>
                 </Picker>

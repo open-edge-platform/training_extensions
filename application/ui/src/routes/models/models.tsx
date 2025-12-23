@@ -3,8 +3,8 @@
 
 import { Disclosure, DisclosurePanel, DisclosureTitle, Divider, View } from '@geti/ui';
 
-import { DatasetHeader } from '../../features/models/dataset-header.component';
-import { ModelsHeader } from '../../features/models/models-header.component';
+import { DatasetHeader } from '../../features/models/model-listing/dataset-header.component';
+import { ModelsHeader } from '../../features/models/model-listing/models-header.component';
 
 export const Models = () => {
     return (
