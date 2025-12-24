@@ -20,6 +20,7 @@ import { MoreMenu } from '@geti/ui/icons';
 
 import { ReactComponent as StartIcon } from '../../../assets/icons/start.svg';
 import { DatasetHeader } from './dataset-header.component';
+import { AccuracyIndicator } from './model-variants/accuracy-indicator.component';
 import { ModelVariants } from './model-variants/model-variants.component';
 import { ModelsHeader } from './models-header.component';
 
@@ -31,12 +32,13 @@ const models = [
     { id: 2, name: 'Model Project #2' },
 ];
 
-const GRID_COLUMNS = ['var(--spectrum-global-dimension-size-5000) 1fr 1fr 1fr 1fr 1fr'];
+const GRID_COLUMNS = ['2fr 1fr 1fr 1fr 1fr auto'];
 
 const HeaderRow = () => {
     return (
         <Grid
             columns={GRID_COLUMNS}
+            gap={'size-200'}
             UNSAFE_style={{
                 backgroundColor: 'var(--spectrum-global-color-gray-200)',
                 padding: 'var(--spectrum-global-dimension-size-150) var(--spectrum-global-dimension-size-1000)',
@@ -47,7 +49,7 @@ const HeaderRow = () => {
             <Text>Architecture</Text>
             <Text>Total size</Text>
             <Text>Score</Text>
-            <Text>-</Text>
+            <div />
         </Grid>
     );
 };
@@ -55,17 +57,12 @@ const HeaderRow = () => {
 // TODO: Update model interface
 const ModelVariantItem = ({ model }: { model: { id: number; name: string } }) => {
     return (
-        <Grid
-            columns={GRID_COLUMNS}
-            UNSAFE_style={{
-                fontSize: 'var(--spectrum-global-dimension-font-size-100)',
-                fontWeight: 400,
-            }}
-            width={'100%'}
-        >
-            <View>
+        <Grid columns={GRID_COLUMNS} gap={'size-200'} alignItems={'center'} width={'100%'}>
+            <Flex direction={'column'} gap={'size-50'}>
                 <Flex alignItems={'center'} gap={'size-100'}>
-                    <Text>{model.name}</Text>
+                    <Text UNSAFE_style={{ fontSize: 'var(--spectrum-global-dimension-font-size-75)' }}>
+                        {model.name}
+                    </Text>
                     <Tag
                         prefix={<StartIcon />}
                         style={{
@@ -78,49 +75,43 @@ const ModelVariantItem = ({ model }: { model: { id: number; name: string } }) =>
                         text={'Active'}
                     />
                 </Flex>
-                <Flex>
-                    <Text
-                        UNSAFE_style={{
-                            fontSize: 'var(--spectrum-global-dimension-font-size-75)',
-                            lineHeight: 'var(--spectrum-global-dimension-font-size-400)',
-                            fontWeight: 400,
-                        }}
-                    >
-                        Fine-tuned from Model Project #1
-                    </Text>
-                </Flex>
-            </View>
-
-            <View>
-                <Text>01 Oct 2025</Text>
-                <Text UNSAFE_style={{ display: 'block' }}>11:07 AM</Text>
-            </View>
-
-            <View>
-                <Text>YOLOX-S</Text>
-            </View>
-
-            <View>
-                <Text>500 MB</Text>
-            </View>
-
-            <View>
-                <Text>95%</Text>
-            </View>
-
-            <View>
-                <Text>
-                    <MenuTrigger onOpenChange={() => {}}>
-                        <ActionButton isQuiet>
-                            <MoreMenu />
-                        </ActionButton>
-                        <Menu>
-                            <Item key='delete'>Delete</Item>
-                            <Item key='export'>Export</Item>
-                        </Menu>
-                    </MenuTrigger>
+                <Text
+                    UNSAFE_style={{
+                        fontSize: 'var(--spectrum-global-dimension-font-size-75)',
+                        color: 'var(--spectrum-global-color-gray-700)',
+                    }}
+                >
+                    Fine-tuned from Model Project #1
                 </Text>
-            </View>
+            </Flex>
+
+            <Flex direction={'column'} gap={'size-25'}>
+                <Text UNSAFE_style={{ fontSize: 'var(--spectrum-global-dimension-font-size-75)' }}>01 Oct 2025</Text>
+                <Text
+                    UNSAFE_style={{
+                        fontSize: 'var(--spectrum-global-dimension-font-size-75)',
+                        color: 'var(--spectrum-global-color-gray-700)',
+                    }}
+                >
+                    11:07 AM
+                </Text>
+            </Flex>
+
+            <Text UNSAFE_style={{ fontSize: 'var(--spectrum-global-dimension-font-size-75)' }}>YOLOX-S</Text>
+
+            <Text UNSAFE_style={{ fontSize: 'var(--spectrum-global-dimension-font-size-75)' }}>500 MB</Text>
+
+            <AccuracyIndicator accuracy={72} />
+
+            <MenuTrigger onOpenChange={() => {}}>
+                <ActionButton isQuiet>
+                    <MoreMenu />
+                </ActionButton>
+                <Menu>
+                    <Item key='delete'>Delete</Item>
+                    <Item key='export'>Export</Item>
+                </Menu>
+            </MenuTrigger>
         </Grid>
     );
 };
