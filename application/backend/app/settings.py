@@ -36,6 +36,17 @@ class Settings(BaseSettings):
     # Server
     host: str = Field(default="0.0.0.0", alias="HOST")  # noqa: S104
     port: int = Field(default=7860, alias="PORT")
+    static_files_dir: Path | None = Field(
+        default=None,
+        alias="STATIC_FILES_DIR",
+        description="Directory containing static UI files",
+    )
+
+    # CORS
+    cors_origins: str = Field(
+        default="http://localhost:3000, http://localhost:7860",
+        alias="CORS_ORIGINS",
+    )
 
     # Database
     database_file: str = Field(default="geti_tune.db", alias="DATABASE_FILE", description="Database filename")
@@ -54,6 +65,11 @@ class Settings(BaseSettings):
     def database_url(self) -> str:
         """Get database URL"""
         return f"sqlite:///{self.data_dir / self.database_file}"
+
+    @property
+    def cors_allowed_origins(self) -> list[str]:
+        """Parsed list of allowed CORS origins."""
+        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
 
     @model_validator(mode="after")
     def set_default_dirs(self) -> "Settings":
