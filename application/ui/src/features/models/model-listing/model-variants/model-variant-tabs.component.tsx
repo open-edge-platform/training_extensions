@@ -10,7 +10,7 @@ import { ModelVariantTable } from './model-variant-table.component';
 
 export const ModelVariantsTabs = () => {
     return (
-        <Tabs aria-label='Model variants' minWidth={0}>
+        <Tabs aria-label='Model variants'>
             <TabList>
                 <Item key='openvino' textValue='openvino'>
                     <OpenVINO />
@@ -22,7 +22,7 @@ export const ModelVariantsTabs = () => {
                     <ONNX />
                 </Item>
             </TabList>
-            <TabPanels>
+            <TabPanels width={'calc(100% - 1px)'}>
                 <Item key='openvino'>
                     <ModelVariantTable />
                 </Item>

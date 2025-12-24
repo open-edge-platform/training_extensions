@@ -38,9 +38,12 @@ const HeaderRow = () => {
     return (
         <Grid
             columns={GRID_COLUMNS}
+            alignItems={'center'}
+            width={'100%'}
             UNSAFE_style={{
                 backgroundColor: 'var(--spectrum-global-color-gray-200)',
-                padding: 'var(--spectrum-global-dimension-size-150) var(--spectrum-global-dimension-size-1000)',
+                padding: `var(--spectrum-global-dimension-size-150) var(--spectrum-global-dimension-size-600)
+                    var(--spectrum-global-dimension-size-150) var(--spectrum-global-dimension-size-1000)`,
             }}
         >
             <Text>Model Name</Text>
@@ -117,7 +120,7 @@ const ModelVariantItem = ({ model }: { model: { id: number; name: string } }) =>
 
 export const ModelListing = () => {
     return (
-        <View padding={'size-300'} minWidth={0}>
+        <View padding={'size-300'}>
             <ModelsHeader />
 
             <Divider size={'S'} marginY={'size-300'} />
