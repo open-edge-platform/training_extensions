@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Flex, Grid, Heading, Item, Menu, MenuTrigger, RangeSlider, Text } from '@geti/ui';
+import { ActionButton, Button, Flex, Grid, Heading, Item, Menu, MenuTrigger, RangeSlider, Text } from '@geti/ui';
 import { Image, MoreMenu, Tag } from '@geti/ui/icons';
 
 import classes from './models.module.scss';
@@ -47,6 +47,7 @@ export const DatasetHeader = () => {
 
             <Flex>
                 <RangeSlider labelPosition={'side'} label={'TRAINING SUBSETS'} showValueLabel />
+                <Button variant='primary'>Train model</Button>
             </Flex>
         </Grid>
     );

@@ -38,7 +38,6 @@ const HeaderRow = () => {
     return (
         <Grid
             columns={GRID_COLUMNS}
-            gap={'size-200'}
             UNSAFE_style={{
                 backgroundColor: 'var(--spectrum-global-color-gray-200)',
                 padding: 'var(--spectrum-global-dimension-size-150) var(--spectrum-global-dimension-size-1000)',
@@ -57,7 +56,7 @@ const HeaderRow = () => {
 // TODO: Update model interface
 const ModelVariantItem = ({ model }: { model: { id: number; name: string } }) => {
     return (
-        <Grid columns={GRID_COLUMNS} gap={'size-200'} alignItems={'center'} width={'100%'}>
+        <Grid columns={GRID_COLUMNS} alignItems={'center'} width={'100%'}>
             <Flex direction={'column'} gap={'size-50'}>
                 <Flex alignItems={'center'} gap={'size-100'}>
                     <Text UNSAFE_style={{ fontSize: 'var(--spectrum-global-dimension-font-size-75)' }}>
@@ -103,7 +102,7 @@ const ModelVariantItem = ({ model }: { model: { id: number; name: string } }) =>
 
             <AccuracyIndicator accuracy={72} />
 
-            <MenuTrigger onOpenChange={() => {}}>
+            <MenuTrigger>
                 <ActionButton isQuiet>
                     <MoreMenu />
                 </ActionButton>
@@ -127,21 +126,19 @@ export const ModelListing = () => {
 
             <HeaderRow />
 
-            <View>
-                {models.map((model) => (
-                    <Disclosure key={model.id} isQuiet UNSAFE_className={classes.disclosure}>
-                        <DisclosureTitle UNSAFE_className={classes.disclosureItem}>
-                            <ModelVariantItem model={model} />
-                        </DisclosureTitle>
-                        <DisclosurePanel>
-                            <ModelVariants />
-                            {/* Model metrics */}
-                            {/* Training parameter settings */}
-                            {/* Training datasets */}
-                        </DisclosurePanel>
-                    </Disclosure>
-                ))}
-            </View>
+            {models.map((model) => (
+                <Disclosure key={model.id} isQuiet UNSAFE_className={classes.disclosure}>
+                    <DisclosureTitle UNSAFE_className={classes.disclosureItem}>
+                        <ModelVariantItem model={model} />
+                    </DisclosureTitle>
+                    <DisclosurePanel>
+                        <ModelVariants />
+                        {/* Model metrics */}
+                        {/* Training parameter settings */}
+                        {/* Training datasets */}
+                    </DisclosurePanel>
+                </Disclosure>
+            ))}
         </View>
     );
 };
