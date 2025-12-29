@@ -8,7 +8,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 
 from app.api.dependencies import get_system_service
-from app.schemas.system import DeviceInfo
+from app.schemas.system import CameraInfo, DeviceInfo
 from app.services import SystemService
 
 router = APIRouter(prefix="/api")
@@ -28,6 +28,14 @@ async def get_training_devices(
 ) -> list[DeviceInfo]:
     """Returns the list of available training devices (CPU, Intel XPU, NVIDIA CUDA)."""
     return system_service.get_training_devices()
+
+
+@router.get("/system/devices/camera")
+async def get_camera_devices(
+    system_service: Annotated[SystemService, Depends(get_system_service)],
+) -> list[CameraInfo]:
+    """Returns the list of available camera devices."""
+    return system_service.get_camera_devices()
 
 
 @router.get("/system/metrics/memory")
