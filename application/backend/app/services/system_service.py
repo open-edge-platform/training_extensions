@@ -147,6 +147,3 @@ class SystemService:
             list[CameraInfo]: List of available camera devices
         """
         return [CameraInfo(index=camera.index, name=camera.name) for camera in enumerate_cameras()]
-
-
-print([CameraInfo(index=camera.index, name=camera.name) for camera in enumerate_cameras()])
