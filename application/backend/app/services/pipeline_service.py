@@ -19,9 +19,10 @@ MSG_ERR_DELETE_RUNNING_PIPELINE = "Cannot delete a running pipeline."
 
 
 class PipelineService:
-    def __init__(self, event_bus: EventBus, db_session: Session) -> None:
+    def __init__(self, event_bus: EventBus, db_session: Session, system_service: SystemService) -> None:
         self._event_bus: EventBus = event_bus
         self._db_session: Session = db_session
+        self._system_service: SystemService = system_service
 
     def create_pipeline(self, project_id: UUID) -> Pipeline:
         pipeline_repo = PipelineRepository(self._db_session)
@@ -39,7 +40,7 @@ class PipelineService:
             return None
 
         pipeline = Pipeline.model_validate(pipeline_db)
-        if not SystemService().validate_device(pipeline.device):
+        if not self._system_service.validate_device(pipeline.device):
             logger.warning(
                 "The configured device '{}' is not available for pipeline '{}'. Falling back to 'cpu'.",
                 pipeline.device,

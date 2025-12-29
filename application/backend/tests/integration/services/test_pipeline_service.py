@@ -10,7 +10,7 @@ import pytest
 from app.db.schema import PipelineDB, ProjectDB
 from app.models import PipelineStatus
 from app.models.data_collection_policy import FixedRateDataCollectionPolicy
-from app.services import PipelineService, ResourceNotFoundError, ResourceType
+from app.services import PipelineService, ResourceNotFoundError, ResourceType, SystemService
 from app.services.event.event_bus import EventType
 from tests.integration.project_factory import ProjectTestDataFactory
 
@@ -21,9 +21,15 @@ class PipelineField(StrEnum):
 
 
 @pytest.fixture
-def fxt_pipeline_service(fxt_event_bus, db_session) -> PipelineService:
+def fxt_system_service() -> SystemService:
+    """Fixture to create a SystemService instance."""
+    return SystemService()
+
+
+@pytest.fixture
+def fxt_pipeline_service(fxt_event_bus, db_session, fxt_system_service) -> PipelineService:
     """Fixture to create a PipelineService instance with mocked dependencies."""
-    return PipelineService(fxt_event_bus, db_session)
+    return PipelineService(fxt_event_bus, db_session, fxt_system_service)
 
 
 @pytest.fixture

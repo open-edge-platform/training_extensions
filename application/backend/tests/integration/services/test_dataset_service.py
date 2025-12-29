@@ -22,7 +22,7 @@ from app.models import (
     Project,
     Rectangle,
 )
-from app.services import LabelService, PipelineService, ProjectService
+from app.services import LabelService, PipelineService, ProjectService, SystemService
 from app.services.base import ResourceNotFoundError, ResourceType
 from app.services.dataset_service import (
     DatasetItemFilters,
@@ -40,9 +40,17 @@ def fxt_event_bus() -> EventBus:
 
 
 @pytest.fixture
-def fxt_pipeline_service(fxt_event_bus: EventBus, db_session: Session) -> PipelineService:
+def fxt_system_service() -> SystemService:
+    """Fixture to create a SystemService instance."""
+    return SystemService()
+
+
+@pytest.fixture
+def fxt_pipeline_service(
+    fxt_event_bus: EventBus, db_session: Session, fxt_system_service: SystemService
+) -> PipelineService:
     """Fixture to create a PipelineService instance."""
-    return PipelineService(event_bus=fxt_event_bus, db_session=db_session)
+    return PipelineService(event_bus=fxt_event_bus, db_session=db_session, system_service=fxt_system_service)
 
 
 @pytest.fixture
