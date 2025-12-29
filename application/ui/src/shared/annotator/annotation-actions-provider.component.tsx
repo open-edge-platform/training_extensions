@@ -87,9 +87,7 @@ export const AnnotationActionsProvider = ({
         if (localFormattedAnnotations.length > 0) {
             undoRedoActions.reset(localFormattedAnnotations);
         }
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [localFormattedAnnotations.length]);
+    }, [localFormattedAnnotations, undoRedoActions]);
 
     const updateAnnotations = (updatedAnnotations: Annotation[]) => {
         const updatedMap = new Map(updatedAnnotations.map((ann) => [ann.id, ann]));

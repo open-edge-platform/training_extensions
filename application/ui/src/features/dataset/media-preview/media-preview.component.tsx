@@ -80,8 +80,8 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                     <AnnotationActionsProvider
                         mediaItem={mediaItem}
                         key={mediaItem.id}
-                        initialAnnotationsDTO={annotationsData?.annotations}
-                        isUserReviewed={annotationsData?.user_reviewed}
+                        initialAnnotationsDTO={annotationsData?.annotations ?? []}
+                        isUserReviewed={annotationsData?.user_reviewed ?? false}
                     >
                         <ZoomProvider>
                             <Suspense fallback={<CanvasAreaLoading />}>

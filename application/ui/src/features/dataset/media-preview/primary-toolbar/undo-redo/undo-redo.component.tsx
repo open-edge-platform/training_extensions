@@ -14,7 +14,7 @@ export const UndoRedo = ({ isDisabled }: { isDisabled?: boolean }) => {
     // useHotkeys(HOTKEYS.redo, redo, [redo]);
 
     return (
-        <Flex alignItems='center' direction={'column'} justify-content='center' data-testid='undo-redo-tools'>
+        <Flex alignItems='center' direction={'column'} justifyContent={'center'} data-testid='undo-redo-tools'>
             <ActionButton
                 isQuiet
                 id='undo-button'
