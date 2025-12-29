@@ -4,11 +4,11 @@
 import { Button, ButtonGroup, Divider, Flex, Heading, Text, toast } from '@geti/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-import type { DatasetItem } from 'src/constants/shared-types';
 
 import { $api } from '../../../../api/client';
 import { AddMediaButton } from '../../../../components/add-media-button/add-media-button.component';
 import { CheckboxInput } from '../../../../components/checkbox-input/checkbox-input.component';
+import type { DatasetItem } from '../../../../constants/shared-types';
 import { TrainModel } from '../../../models/train-model/train-model';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
 import { useSelectedData } from '../../selected-data-provider.component';

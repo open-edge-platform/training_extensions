@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { getMockedLabel } from 'mocks/mock-labels';
-import type { Label } from 'src/constants/shared-types';
 import { fireEvent, render, screen } from 'test-utils/render';
 
+import type { Label } from '../../../constants/shared-types';
 import { AnnotationLabels } from './annotation-labels.component';
 
 const mockZoom = { scale: 1, maxZoomIn: 10, hasAnimation: false, translate: { x: 0, y: 0 } };

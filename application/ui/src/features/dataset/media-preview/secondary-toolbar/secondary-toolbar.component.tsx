@@ -4,9 +4,9 @@
 import { Button, ButtonGroup, dimensionValue, Flex, Grid } from '@geti/ui';
 import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { isEmpty } from 'lodash-es';
-import type { DatasetItem } from 'src/constants/shared-types';
-import { useAnnotationActions } from 'src/shared/annotator/annotation-actions-provider.component';
 
+import type { DatasetItem } from '../../../../constants/shared-types';
+import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
 import { LabelPicker } from './label-picker.component';
 import { useSecondaryToolbarState } from './use-secondary-toolbar-state.hook';

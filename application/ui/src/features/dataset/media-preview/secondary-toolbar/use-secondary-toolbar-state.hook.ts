@@ -4,6 +4,7 @@
 import { Key } from 'react';
 
 import { useProjectLabels } from 'hooks/use-project-labels.hook';
+
 import type { Label } from '../../../../constants/shared-types';
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
 import { useSelectedAnnotations } from '../../../../shared/annotator/select-annotation-provider.component';

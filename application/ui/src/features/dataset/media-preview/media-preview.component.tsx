@@ -4,12 +4,12 @@
 import { Suspense } from 'react';
 
 import { Content, Dialog, dimensionValue, Divider, Flex, Grid, Heading, Loading, View } from '@geti/ui';
-import type { DatasetItem } from 'src/constants/shared-types';
-import { AnnotationActionsProvider } from 'src/shared/annotator/annotation-actions-provider.component';
-import { AnnotationVisibilityProvider } from 'src/shared/annotator/annotation-visibility-provider.component';
-import { AnnotatorProvider } from 'src/shared/annotator/annotator-provider.component';
 
 import { ZoomProvider } from '../../../components/zoom/zoom.provider';
+import type { DatasetItem } from '../../../constants/shared-types';
+import { AnnotationActionsProvider } from '../../../shared/annotator/annotation-actions-provider.component';
+import { AnnotationVisibilityProvider } from '../../../shared/annotator/annotation-visibility-provider.component';
+import { AnnotatorProvider } from '../../../shared/annotator/annotator-provider.component';
 import { SelectAnnotationProvider } from '../../../shared/annotator/select-annotation-provider.component';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas';
 import { useGetDatasetItems } from '../gallery/use-get-dataset-items.hook';
