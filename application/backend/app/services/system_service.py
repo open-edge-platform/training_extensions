@@ -9,6 +9,7 @@ import torch
 from app.schemas.system import DeviceInfo, DeviceType
 
 DEVICE_PATTERN = re.compile(r"^(cpu|xpu|cuda)(-(\d+))?$")
+DEFAULT_DEVICE = "cpu"
 
 
 class SystemService:

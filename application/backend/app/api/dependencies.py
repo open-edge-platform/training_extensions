@@ -107,12 +107,18 @@ def get_source_update_service(
     return SourceUpdateService(event_bus=event_bus, db_session=db)
 
 
+def get_system_service() -> SystemService:
+    """Provides a SystemService instance for system-level operations."""
+    return SystemService()
+
+
 def get_pipeline_service(
     event_bus: Annotated[EventBus, Depends(get_event_bus)],
     db: Annotated[Session, Depends(get_db)],
+    system_service: Annotated[SystemService, Depends(get_system_service)],
 ) -> PipelineService:
     """Provides a PipelineService instance ."""
-    return PipelineService(event_bus=event_bus, db_session=db)
+    return PipelineService(event_bus=event_bus, db_session=db, system_service=system_service)
 
 
 def get_pipeline_metrics_service(
@@ -124,11 +130,6 @@ def get_pipeline_metrics_service(
         pipeline_service=pipeline_service,
         metrics_service=metrics_service,
     )
-
-
-def get_system_service() -> SystemService:
-    """Provides a SystemService instance for system-level operations."""
-    return SystemService()
 
 
 def get_model_service(
