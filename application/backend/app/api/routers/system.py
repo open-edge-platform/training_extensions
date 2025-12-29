@@ -14,12 +14,12 @@ from app.services import SystemService
 router = APIRouter(prefix="/api")
 
 
-@router.get("/system/devices")
-async def get_devices(
+@router.get("/system/devices/inference")
+async def get_inference_devices(
     system_service: Annotated[SystemService, Depends(get_system_service)],
 ) -> list[DeviceInfo]:
-    """Returns the list of available compute devices (CPU, Intel XPU, NVIDIA CUDA)."""
-    return system_service.get_devices()
+    """Returns the list of available compute devices (CPU, Intel XPU)."""
+    return system_service.get_inference_devices()
 
 
 @router.get("/system/metrics/memory")

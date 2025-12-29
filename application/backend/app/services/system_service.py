@@ -76,6 +76,15 @@ class SystemService:
 
         return devices
 
+    def get_inference_devices(self) -> list[DeviceInfo]:
+        """
+        Get available compute devices for inference (CPU, XPU, ...)
+
+        Returns:
+            list[DeviceInfo]: List of available devices
+        """
+        return [device for device in self.get_devices() if device.type != DeviceType.CUDA]
+
     def validate_device(self, device_str: str) -> bool:
         """
         Validate if a device string is available on the system.
