@@ -1,10 +1,10 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { PointerEvent, useEffect, useRef, useState } from 'react';
+import { PointerEvent, useRef, useState } from 'react';
 
 import { clampBox, clampPointBetweenImage, pointsToRect } from '@geti/smart-tools/utils';
-import { type KeyboardEvent as ReactKeyboardEvent } from '@geti/ui';
+import { useEventListener } from 'hooks/event-listener.hook';
 
 import selectionCursor from '../../../../assets/icons/selection.svg?url';
 import { Rectangle } from '../../shapes/rectangle.component';
@@ -100,17 +100,11 @@ export const DrawingBox = ({ roi, zoom, image, onComplete }: DrawingBoxInterface
         setBoundingBox(null);
     };
 
-    useEffect(() => {
-        window.addEventListener('keydown', ({ key }: KeyboardEvent | ReactKeyboardEvent) => {
-            if (key === 'Escape') {
-                setCleanState();
-            }
-        });
-
-        return () => {
-            window.removeEventListener('keydown', () => null);
-        };
-    }, []);
+    useEventListener('keydown', (event: KeyboardEvent) => {
+        if (event.key === 'Escape') {
+            setCleanState();
+        }
+    });
 
     return (
         <SvgToolCanvas
