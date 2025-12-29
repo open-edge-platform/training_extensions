@@ -9,7 +9,7 @@ import { AnnotationLabels } from './annotation-labels.component';
 
 const mockZoom = { scale: 1, maxZoomIn: 10, hasAnimation: false, translate: { x: 0, y: 0 } };
 
-vi.mock('src/components/zoom/zoom.provider', () => ({
+vi.mock('../../../components/zoom/zoom.provider', () => ({
     useZoom: () => mockZoom,
 }));
 
