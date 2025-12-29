@@ -77,7 +77,7 @@ def fxt_running_pipeline(fxt_webcam_source, fxt_mqtt_sink, fxt_model) -> Pipelin
         project_id=uuid4(),
         source_id=fxt_webcam_source.id,
         sink_id=fxt_mqtt_sink.id,
-        model_revision_id=fxt_model.id,
+        model_id=fxt_model.id,
         status=PipelineStatus.RUNNING,
     )
 

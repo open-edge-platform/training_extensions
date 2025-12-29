@@ -69,6 +69,18 @@ class TestEventBus:
             notified = sink_changed_condition.acquire()
         assert notified
 
+    def test_model_changed(self, fxt_event_bus: EventBusFactory) -> None:
+        """Test model changed"""
+        handler = MagicMock(spec=Callable)
+        model_reload_event = mp.Event()
+        event_bus = fxt_event_bus(None, None, model_reload_event)
+        event_bus.subscribe(event_types=[EventType.MODEL_CHANGED], handler=handler)
+
+        event_bus.emit_event(EventType.MODEL_CHANGED)
+
+        handler.assert_called_once_with()
+        assert model_reload_event.is_set()
+
     def test_pipeline_dataset_collection_policies_changed(self, fxt_event_bus: EventBusFactory) -> None:
         """Test pipeline dataset collection policies changed"""
         handler = MagicMock(spec=Callable)

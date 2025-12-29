@@ -72,7 +72,7 @@ class TestPipelineServiceIntegration:
             and pipeline.source is None
             and pipeline.sink_id is None
             and pipeline.sink is None
-            and pipeline.model_revision_id is None
+            and pipeline.model_id is None
             and pipeline.model_revision is None
             and pipeline.status == PipelineStatus.IDLE
             and pipeline.data_collection_policies == []
@@ -91,7 +91,7 @@ class TestPipelineServiceIntegration:
         assert pipeline.status == PipelineStatus.IDLE
         assert pipeline.sink.name == db_pipeline.sink.name
         assert pipeline.source.name == db_pipeline.source.name
-        assert str(pipeline.model_revision_id) == db_pipeline.model_revision_id
+        assert str(pipeline.model_id) == db_pipeline.model_revision_id
         assert pipeline.data_collection_policies == [FixedRateDataCollectionPolicy(rate=0.1)]
 
     def test_get_active_pipeline(self, fxt_pipeline_service, fxt_project_with_pipeline, db_session):
@@ -141,6 +141,27 @@ class TestPipelineServiceIntegration:
         db_updated = db_session.get(PipelineDB, db_pipeline.project_id)
         assert str(getattr(updated, pipeline_attr)) == item_id
         assert str(getattr(updated, pipeline_attr)) == getattr(db_updated, pipeline_attr)
+
+    @pytest.mark.parametrize("model_attr", ["model_id", "model_revision_id"])
+    def test_switch_model(
+        self,
+        model_attr,
+        fxt_project_with_pipeline,
+        fxt_db_models,
+        fxt_pipeline_service,
+        fxt_event_bus,
+        db_session,
+    ):
+        """Test updating a pipeline by ID."""
+        _, db_pipeline = fxt_project_with_pipeline(is_running=True)
+
+        model_id = fxt_db_models[1].id
+        updated = fxt_pipeline_service.update_pipeline(db_pipeline.project_id, {model_attr: model_id})
+
+        fxt_event_bus.emit_event.assert_called_once_with(EventType.MODEL_CHANGED)
+        db_updated = db_session.get(PipelineDB, db_pipeline.project_id)
+        assert str(updated.model_id) == model_id
+        assert str(updated.model_id) == db_updated.model_revision_id
 
     @pytest.mark.parametrize("pipeline_status", [PipelineStatus.IDLE, PipelineStatus.RUNNING])
     def test_enable_disable_pipeline(
