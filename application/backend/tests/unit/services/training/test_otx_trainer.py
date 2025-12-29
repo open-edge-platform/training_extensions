@@ -488,7 +488,7 @@ class TestOTXTrainerCreateTrainingDataset:
 class TestOTXTrainerPrepareModel:
     """Tests for the OTXTrainer.prepare_model method."""
 
-    def test_prepare_model_success(
+    def test_prepare_model(
         self,
         tmp_path: Path,
         fxt_otx_trainer: Callable[[], OTXTrainer],
@@ -526,27 +526,6 @@ class TestOTXTrainerPrepareModel:
                 training_configuration=training_config,
             )
         )
-
-    def test_prepare_model_no_project_id_raises_error(
-        self,
-        fxt_otx_trainer: Callable[[], OTXTrainer],
-    ):
-        """Test that ValueError is raised when project ID is not provided."""
-        # Arrange
-        training_params = TrainingParams(
-            model_id=uuid4(),
-            project_id=None,
-            model_architecture_id="Object_Detection_YOLOX_S",
-            task=Task(task_type=TaskType.DETECTION),
-            parent_model_revision_id=None,
-        )
-        dataset_revision_id = uuid4()
-        otx_trainer = fxt_otx_trainer()
-        training_config = PartialTrainingConfiguration(model_manifest_id="Object_Detection_YOLOX_S")  # type: ignore
-
-        # Act & Assert
-        with pytest.raises(ValueError, match="Project ID must be provided for model preparation"):
-            otx_trainer.prepare_model(training_params, dataset_revision_id, training_config)
 
 
 class TestOTXTrainerTrainModel:
@@ -744,13 +723,9 @@ class TestOTXTrainerStoreModelArtifacts:
         project_id = uuid4()
         model_id = uuid4()
 
-        # Create a separate data directory for this test
-        test_data_dir = tmp_path / "test_data"
-        test_data_dir.mkdir()
-
         # Create OTXTrainer with isolated data directory
         training_deps = TrainingDependencies(
-            data_dir=test_data_dir,
+            data_dir=tmp_path,
             base_weights_service=Mock(spec=BaseWeightsService),
             subset_service=Mock(spec=SubsetService),
             subset_assigner=Mock(spec=SubsetAssigner),
@@ -774,11 +749,11 @@ class TestOTXTrainerStoreModelArtifacts:
         )
 
         # Create model directory structure
-        model_dir = test_data_dir / "projects" / str(project_id) / "models" / str(model_id)
+        model_dir = tmp_path / "projects" / str(project_id) / "models" / str(model_id)
         model_dir.mkdir(parents=True)
 
         # Create OTX work directory with artifacts
-        otx_work_dir = test_data_dir / f"otx-workspace-{model_id}"
+        otx_work_dir = tmp_path / f"otx-workspace-{model_id}"
         otx_work_dir.mkdir(parents=True)
 
         # Create model checkpoint

@@ -193,6 +193,15 @@ class OTXTrainer(Trainer):
     @step("Create Training Dataset")
     def create_training_dataset(self, project_id: UUID, task: Task, training_config: dict) -> DatasetInfo:
         """Create datasets for training, validation, and testing."""
+
+        def build_subset_config(subset_name: str) -> SubsetConfig:
+            subset_cfg_data = training_config["data"][f"{subset_name}_subset"]
+            subset_cfg_data["input_size"] = training_config["data"]["input_size"]
+            sampler_cfg_data = subset_cfg_data.pop("sampler", {})
+            subset_config = SubsetConfig(sampler=SamplerConfig(**sampler_cfg_data), **subset_cfg_data)
+            subset_config.transforms = TorchVisionTransformLib.generate(subset_config)
+            return subset_config
+
         with self._db_session_factory() as db:
             self._dataset_service.set_db_session(db)
 
@@ -210,28 +219,9 @@ class OTXTrainer(Trainer):
 
             # Build a SubsetConfig for each subset based on the training configuration.
             # SubsetConfigs define the transformations applied to the subset, as well the parameters for data loaders.
-            cfg_data = training_config["data"]
-            train_subset_cfg_data = cfg_data.get("train_subset")
-            val_subset_cfg_data = cfg_data.get("val_subset")
-            test_subset_cfg_data = cfg_data.get("test_subset")
-            train_subset_cfg_data["input_size"] = cfg_data["input_size"]
-            val_subset_cfg_data["input_size"] = cfg_data["input_size"]
-            test_subset_cfg_data["input_size"] = cfg_data["input_size"]
-            train_subset_sampler_cfg_data = train_subset_cfg_data.pop("sampler", {})
-            val_subset_sampler_cfg_data = val_subset_cfg_data.pop("sampler", {})
-            test_subset_sampler_cfg_data = test_subset_cfg_data.pop("sampler", {})
-            train_subset_config = SubsetConfig(
-                sampler=SamplerConfig(**train_subset_sampler_cfg_data), **train_subset_cfg_data
-            )
-            val_subset_config = SubsetConfig(
-                sampler=SamplerConfig(**val_subset_sampler_cfg_data), **val_subset_cfg_data
-            )
-            test_subset_config = SubsetConfig(
-                sampler=SamplerConfig(**test_subset_sampler_cfg_data), **test_subset_cfg_data
-            )
-            train_subset_config.transforms = TorchVisionTransformLib.generate(train_subset_config)
-            val_subset_config.transforms = TorchVisionTransformLib.generate(val_subset_config)
-            test_subset_config.transforms = TorchVisionTransformLib.generate(test_subset_config)
+            train_subset_config = build_subset_config("train")
+            val_subset_config = build_subset_config("val")
+            test_subset_config = build_subset_config("test")
 
             # Wrap them into OTXDataset instances
             otx_task_type = self.__get_otx_task_type_by_task(task)
@@ -267,23 +257,18 @@ class OTXTrainer(Trainer):
                 revision_id=dataset_revision_id,
             )
 
-    @step("Prepare Model and Training Configuration")
+    @step("Prepare Model")
     def prepare_model(
         self, training_params: TrainingParams, dataset_revision_id: UUID, configuration: TrainingConfiguration
     ) -> None:
-        if training_params.project_id is None:
-            raise ValueError("Project ID must be provided for model preparation")
-        logger.info(
-            "Preparing model revision (model_id={}, project_id={})",
-            training_params.model_id,
-            training_params.project_id,
-        )
+        project_id = cast(UUID, training_params.project_id)  # In 'run' we already check that project_id is not None
+        logger.info("Preparing model revision (model_id={}, project_id={})", training_params.model_id, project_id)
         with self._db_session_factory() as db:
             self._model_service.set_db_session(db)
             self._model_service.create_revision(
                 ModelRevisionMetadata(
                     model_id=training_params.model_id,
-                    project_id=training_params.project_id,
+                    project_id=project_id,
                     architecture_id=training_params.model_architecture_id,
                     parent_revision_id=training_params.parent_model_revision_id,
                     training_configuration=configuration,
@@ -297,7 +282,14 @@ class OTXTrainer(Trainer):
         self, training_config: dict, dataset_info: DatasetInfo, weights_path: Path, model_id: UUID
     ) -> tuple[Path, OTXEngine]:
         """Execute model training."""
-        _ = weights_path  # TODO: use weights path to initialize model from pre-downloaded weights
+        # TODO use weights path to initialize model from pre-downloaded weights
+        #  after resolving https://github.com/open-edge-platform/training_extensions/issues/5100
+        logger.warning(
+            "Argument 'weights_path' (value='{}') is not used in model training yet; "
+            "the weights location will be determined internally by OTX",
+            weights_path,
+        )
+
         # Build the OTXDataModule
         logger.info("Preparing the OTXDataModule for training (model_id={})", model_id)
         otx_datamodule = OTXDataModule.from_otx_datasets(

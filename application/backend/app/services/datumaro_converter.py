@@ -176,7 +176,7 @@ def _convert_dataset(
             image_path = get_image_path(dataset_item)
             try:
                 sample = convert_sample(dataset_item, image_path, project_labels_ids)
-            except:
+            except Exception:
                 logger.error(
                     "Failed conversion of dataset item to Datumaro sample. dataset_item = {}; sample_type = {}",
                     dataset_item,
@@ -186,7 +186,7 @@ def _convert_dataset(
             if sample:
                 try:
                     dataset.append(sample)
-                except:
+                except Exception:
                     logger.error(
                         "Failed to append the converted sample to the dataset. sample = {}; dataset = {}",
                         sample,
