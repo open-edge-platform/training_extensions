@@ -24,13 +24,18 @@ export const Webcam = ({ config = initConfig }: WebcamProps) => {
     const [state, submitAction, isPending] = useSourceAction({
         config,
         isNewSource: isEmpty(config?.id),
-        bodyFormatter: (formData: FormData) => ({
-            id: String(formData.get('id')),
-            name: String(formData.get('name')),
-            source_type: 'webcam',
-            device_id: Number(formData.get('device_id')),
-            codec: String(formData.get('codec')),
-        }),
+        bodyFormatter: (formData: FormData) => {
+            const codec = formData.get('codec');
+            const body: WebcamSourceConfig = {
+                id: String(formData.get('id')),
+                name: String(formData.get('name')),
+                source_type: 'webcam',
+                device_id: Number(formData.get('device_id')),
+                ...(codec ? { codec: String(codec) } : {}),
+            };
+
+            return body;
+        },
     });
 
     return (
@@ -48,11 +53,11 @@ export const Webcam = ({ config = initConfig }: WebcamProps) => {
                 />
 
                 <Picker
-                    defaultSelectedKey={String(state?.codec)}
                     placeholder={'Select codec'}
                     name='codec'
                     label='Codec'
                     aria-label={'List of codecs'}
+                    defaultSelectedKey={String(state?.codec)}
                 >
                     {LIST_OF_CODECS.map((codec) => {
                         return <Item key={codec}>{codec}</Item>;
