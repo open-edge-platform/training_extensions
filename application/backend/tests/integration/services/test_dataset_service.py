@@ -22,7 +22,7 @@ from app.models import (
     Project,
     Rectangle,
 )
-from app.services import LabelService, PipelineService, ProjectService
+from app.services import LabelService, PipelineService, ProjectService, SystemService
 from app.services.base import ResourceNotFoundError, ResourceType
 from app.services.dataset_service import (
     DatasetItemFilters,
@@ -40,9 +40,17 @@ def fxt_event_bus() -> EventBus:
 
 
 @pytest.fixture
-def fxt_pipeline_service(fxt_event_bus: EventBus, db_session: Session) -> PipelineService:
+def fxt_system_service() -> SystemService:
+    """Fixture to create a SystemService instance."""
+    return SystemService()
+
+
+@pytest.fixture
+def fxt_pipeline_service(
+    fxt_event_bus: EventBus, db_session: Session, fxt_system_service: SystemService
+) -> PipelineService:
     """Fixture to create a PipelineService instance."""
-    return PipelineService(event_bus=fxt_event_bus, db_session=db_session)
+    return PipelineService(event_bus=fxt_event_bus, db_session=db_session, system_service=fxt_system_service)
 
 
 @pytest.fixture
@@ -493,7 +501,7 @@ class TestDatasetServiceIntegration:
             data=image,
             user_reviewed=user_reviewed,
             source_id=pipeline.source_id if use_pipeline_source else None,
-            prediction_model_id=pipeline.model_revision_id if use_pipeline_model else None,
+            prediction_model_id=pipeline.model_id if use_pipeline_model else None,
             annotations=fxt_annotations(label_id) if not user_reviewed else None,
         )
 
@@ -515,7 +523,7 @@ class TestDatasetServiceIntegration:
         else:
             assert dataset_item.source_id is None
         if use_pipeline_model:
-            assert dataset_item.prediction_model_id == str(pipeline.model_revision_id)
+            assert dataset_item.prediction_model_id == str(pipeline.model_id)
         else:
             assert dataset_item.prediction_model_id is None
         if not user_reviewed:

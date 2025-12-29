@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.db.schema import DatasetItemDB, LabelDB, PipelineDB, ProjectDB
 from app.models import Label, Task, TaskType
-from app.services import LabelService, PipelineService, ResourceWithIdAlreadyExistsError
+from app.services import LabelService, PipelineService, ResourceWithIdAlreadyExistsError, SystemService
 from app.services.base import ResourceInUseError, ResourceNotFoundError, ResourceType
 from app.services.event.event_bus import EventBus
 from app.services.label_service import DuplicateLabelsError
@@ -22,9 +22,17 @@ def fxt_event_bus() -> EventBus:
 
 
 @pytest.fixture
-def fxt_pipeline_service(fxt_event_bus: EventBus, db_session: Session) -> PipelineService:
+def fxt_system_service() -> SystemService:
+    """Fixture to create a SystemService instance."""
+    return SystemService()
+
+
+@pytest.fixture
+def fxt_pipeline_service(
+    fxt_event_bus: EventBus, db_session: Session, fxt_system_service: SystemService
+) -> PipelineService:
     """Fixture to create a PipelineService instance."""
-    return PipelineService(event_bus=fxt_event_bus, db_session=db_session)
+    return PipelineService(event_bus=fxt_event_bus, db_session=db_session, system_service=fxt_system_service)
 
 
 @pytest.fixture

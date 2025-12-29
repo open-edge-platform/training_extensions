@@ -27,7 +27,7 @@ class InferenceWorkerConfig:
     frame_queue: mp.Queue
     pred_queue: mp.Queue
     stop_event: EventClass
-    model_reload_event: EventClass
+    model_reload_event: EventClass | None
     shm_name: str
     shm_lock: Lock
     logger_: LoguruLogger
@@ -58,7 +58,7 @@ class InferenceWorker(BaseProcessWorker):
     def setup(self) -> None:
         super().setup()
         self._metrics_service = MetricsService(self._shm_name, self._shm_lock)
-        self._model_service = ActiveModelService(get_settings().data_dir, self._model_reload_event)
+        self._model_service = ActiveModelService(get_settings().data_dir)
 
     def _on_inference_completed(self, inf_result: Result, userdata: dict[str, Any]) -> None:
         start_time = float(userdata["inference_start_time"])
@@ -98,7 +98,7 @@ class InferenceWorker(BaseProcessWorker):
         clear the event until the latest model is loaded.
         """
         # If no reload requested, return current model
-        if not self._model_reload_event.is_set():
+        if self._model_reload_event is None or not self._model_reload_event.is_set():
             return self._model_service.get_loaded_inference_model()  # type: ignore
 
         # Process reload requests - keep reloading until event stabilizes

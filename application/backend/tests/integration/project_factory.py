@@ -73,6 +73,7 @@ class ProjectTestDataFactory:
         model_id: str | None = None,
         source_id: str | None = None,
         sink_id: str | None = None,
+        device: str = "cpu",
     ) -> "ProjectTestDataFactory":
         """Add a pipeline to the project."""
         if not self._project:
@@ -84,6 +85,7 @@ class ProjectTestDataFactory:
             model_revision_id=model_id,
             source_id=source_id,
             sink_id=sink_id,
+            device=device,
         )
         return self
 
