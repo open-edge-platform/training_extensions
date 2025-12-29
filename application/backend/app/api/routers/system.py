@@ -22,6 +22,14 @@ async def get_inference_devices(
     return system_service.get_inference_devices()
 
 
+@router.get("/system/devices/training")
+async def get_training_devices(
+    system_service: Annotated[SystemService, Depends(get_system_service)],
+) -> list[DeviceInfo]:
+    """Returns the list of available training devices (CPU, Intel XPU, NVIDIA CUDA)."""
+    return system_service.get_training_devices()
+
+
 @router.get("/system/metrics/memory")
 async def get_memory(
     system_service: Annotated[SystemService, Depends(get_system_service)],
