@@ -9,7 +9,14 @@ from sqlalchemy.orm import Session
 
 from app.db.schema import DatasetItemDB, DatasetRevisionDB, PipelineDB
 from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Pipeline, Project
-from app.services import DatasetRevisionService, DatasetService, LabelService, PipelineService, ProjectService
+from app.services import (
+    DatasetRevisionService,
+    DatasetService,
+    LabelService,
+    PipelineService,
+    ProjectService,
+    SystemService,
+)
 from app.services.base import ResourceNotFoundError, ResourceType
 from app.services.event.event_bus import EventBus
 
@@ -21,9 +28,17 @@ def fxt_event_bus() -> EventBus:
 
 
 @pytest.fixture
-def fxt_pipeline_service(fxt_event_bus: EventBus, db_session: Session) -> PipelineService:
+def fxt_system_service() -> SystemService:
+    """Fixture to create a SystemService instance."""
+    return SystemService()
+
+
+@pytest.fixture
+def fxt_pipeline_service(
+    fxt_event_bus: EventBus, db_session: Session, fxt_system_service: SystemService
+) -> PipelineService:
     """Fixture to create a PipelineService instance."""
-    return PipelineService(event_bus=fxt_event_bus, db_session=db_session)
+    return PipelineService(event_bus=fxt_event_bus, db_session=db_session, system_service=fxt_system_service)
 
 
 @pytest.fixture

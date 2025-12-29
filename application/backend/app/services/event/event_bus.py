@@ -10,6 +10,7 @@ from .base import BaseEventBus
 class EventType(StrEnum):
     SOURCE_CHANGED = "SOURCE_CHANGED"
     SINK_CHANGED = "SINK_CHANGED"
+    MODEL_CHANGED = "MODEL_CHANGED"
     PIPELINE_DATASET_COLLECTION_POLICIES_CHANGED = "PIPELINE_DATASET_COLLECTION_POLICIES_CHANGED"
     PIPELINE_STATUS_CHANGED = "PIPELINE_STATUS_CHANGED"
     INFERENCE_DEVICE_CHANGED = "INFERENCE_DEVICE_CHANGED"
@@ -51,6 +52,9 @@ class EventBus(BaseEventBus[EventType]):
     def _should_notify_sink(self, event_type: EventType) -> bool:
         return event_type in (EventType.SINK_CHANGED, EventType.PIPELINE_STATUS_CHANGED)
 
+    def _should_notify_model(self, event_type: EventType) -> bool:
+        return event_type in (EventType.MODEL_CHANGED, EventType.PIPELINE_STATUS_CHANGED)
+
     def emit_event(self, event_type: EventType) -> None:
         super().emit_event(event_type)
 
@@ -60,5 +64,5 @@ class EventBus(BaseEventBus[EventType]):
         if self._should_notify_sink(event_type):
             self._notify_all(self._sink_changed_condition)
 
-        if event_type == EventType.PIPELINE_STATUS_CHANGED and self._model_reload_event:
+        if self._should_notify_model(event_type) and self._model_reload_event:
             self._model_reload_event.set()

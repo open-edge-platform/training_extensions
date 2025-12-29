@@ -20,22 +20,21 @@ from app.services import PipelineMetricsService, PipelineService, ResourceNotFou
 router = APIRouter(prefix="/api/projects/{project_id}/pipeline", tags=["Pipelines"])
 
 UPDATE_PIPELINE_BODY_DESCRIPTION = """
-Partial pipeline configuration update. May contain any subset of fields including 'name', 'source_id', 
-'sink_id', or 'model_id'. Fields not included in the request will remain unchanged.
+Partial pipeline configuration update. May contain any subset of fields including 'device', 'data_collection_policies', 
+'source_id', 'sink_id', or 'model_id'. Fields not included in the request will remain unchanged.
 """
 UPDATE_PIPELINE_BODY_EXAMPLES = {
     "switch_model": Example(
         summary="Switch active model",
-        description="Change the active model for the pipeline",
+        description="Change the active model of the pipeline",
         value={
             "model_id": "c1feaabc-da2b-442e-9b3e-55c11c2c2ff3",
         },
     ),
     "reconfigure": Example(
         summary="Reconfigure pipeline",
-        description="Change the name, source and sink of the pipeline",
+        description="Change the source and the sink of the pipeline",
         value={
-            "name": "Updated Production Pipeline",
             "source_id": "e3cbd8d0-17b8-463e-85a2-4aaed031674e",
             "sink_id": "c6787c06-964b-4097-8eca-238b8cf79fc9",
         },

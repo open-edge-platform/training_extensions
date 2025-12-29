@@ -49,6 +49,24 @@ class TestSystemEndpoints:
         assert devices[2]["memory"] == 25769803776
         assert devices[2]["index"] == 0
 
+    def test_get_inference_devices_with_xpu(self, fxt_system_service: Mock, fxt_client: TestClient):
+        """Test GET /api/system/devices/inference with Intel XPU"""
+        fxt_system_service.get_inference_devices.return_value = [
+            DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None),
+            DeviceInfo(type=DeviceType.XPU, name="Intel(R) Graphics [0x7d41]", memory=36022263808, index=0),
+        ]
+
+        response = fxt_client.get("/api/system/devices/inference")
+
+        assert response.status_code == status.HTTP_200_OK
+        devices = response.json()
+        assert len(devices) == 2
+        assert devices[0]["type"] == "cpu"
+        assert devices[1]["type"] == "xpu"
+        assert devices[1]["name"] == "Intel(R) Graphics [0x7d41]"
+        assert devices[1]["memory"] == 36022263808
+        assert devices[1]["index"] == 0
+
     def test_get_memory(self, fxt_system_service: Mock, fxt_client: TestClient):
         """Test GET /api/system/metrics/memory"""
         fxt_system_service.get_memory_usage.return_value = (1024.5, 8192.0)

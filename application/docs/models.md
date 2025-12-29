@@ -62,7 +62,7 @@ The lifecycle of a model revision in Geti Tune consists of several key stages:
 
 When users want to create a new model revision, they can choose any architecture compatible with the task, as well as
 the base model to fine-tune from. Such weights can be either from a public pre-trained model or from an existing
-model revision in the same project. In the latter case, an parent-child relationship is established between the two
+model revision in the same project. In the latter case, a parent-child relationship is established between the two
 model revisions; these links form a versioning chain that allows users to track the evolution of models over time.
 Revisions trained from scratch, namely from the pre-trained weights, do not have a parent model. A model revision may
 be used as a base for multiple new model revisions, allowing users to experiment with different training configurations.

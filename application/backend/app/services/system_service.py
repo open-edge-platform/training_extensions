@@ -9,6 +9,7 @@ import torch
 from app.schemas.system import DeviceInfo, DeviceType
 
 DEVICE_PATTERN = re.compile(r"^(cpu|xpu|cuda)(-(\d+))?$")
+DEFAULT_DEVICE = "cpu"
 
 
 class SystemService:
@@ -74,6 +75,15 @@ class SystemService:
                 )
 
         return devices
+
+    def get_inference_devices(self) -> list[DeviceInfo]:
+        """
+        Get available compute devices for inference (CPU, XPU, ...)
+
+        Returns:
+            list[DeviceInfo]: List of available devices
+        """
+        return [device for device in self.get_devices() if device.type != DeviceType.CUDA]
 
     def get_training_devices(self) -> list[DeviceInfo]:
         """

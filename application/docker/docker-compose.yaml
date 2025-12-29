@@ -15,6 +15,9 @@ services:
       context: ..
       dockerfile: docker/Dockerfile
       target: geti-tune-${AI_DEVICE:-cpu}
+      args:
+        - ASSET_PREFIX=/html
+        - STATIC_FILES_DIR=/application/html
       <<: *proxies
     working_dir: /application
     environment:
@@ -23,7 +26,7 @@ services:
       - ../backend/data/:/application/data/
       - ../backend/logs/:/application/logs/
     ports:
-      - "80:8080"
+      - "7860:7860"
     # Map all host devices to provide access to webcams and other attached devices
     privileged: true
     devices:
