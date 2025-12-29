@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Flex, Form, TextField } from '@geti/ui';
+import { Button, Flex, Form, Item, Picker, TextField } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 
 import { useSourceAction } from '../hooks/use-source-action.hook';
@@ -18,6 +18,8 @@ const initConfig: WebcamSourceConfig = {
     device_id: 0,
 };
 
+const LIST_OF_CODECS = ['XVID', 'MJPG', 'YUY2', 'H264', 'H265', 'MP4V', 'DIVX'];
+
 export const Webcam = ({ config = initConfig }: WebcamProps) => {
     const [state, submitAction, isPending] = useSourceAction({
         config,
@@ -27,6 +29,7 @@ export const Webcam = ({ config = initConfig }: WebcamProps) => {
             name: String(formData.get('name')),
             source_type: 'webcam',
             device_id: Number(formData.get('device_id')),
+            codec: String(formData.get('codec')),
         }),
     });
 
@@ -43,6 +46,18 @@ export const Webcam = ({ config = initConfig }: WebcamProps) => {
                     defaultValue={String(state?.device_id)}
                     validate={(value) => (isOnlyDigits(value) ? '' : 'Only digits are allowed')}
                 />
+
+                <Picker
+                    defaultSelectedKey={String(state?.codec)}
+                    placeholder={'Select codec'}
+                    name='codec'
+                    label='Codec'
+                    aria-label={'List of codecs'}
+                >
+                    {LIST_OF_CODECS.map((codec) => {
+                        return <Item key={codec}>{codec}</Item>;
+                    })}
+                </Picker>
 
                 <Button type='submit' maxWidth='size-1000' isDisabled={isPending}>
                     Apply

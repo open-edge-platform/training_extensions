@@ -23,6 +23,7 @@ const mockedConfig: WebcamSourceConfig = {
     name: 'Test Folder',
     source_type: 'webcam',
     device_id: 0,
+    codec: 'XVID',
 };
 
 describe('Webcam', () => {
@@ -60,6 +61,7 @@ describe('Webcam', () => {
         expect(screen.getByRole('textbox', { name: /^Id$/i, hidden: true })).toHaveValue(mockedConfig.id);
         expect(screen.getByRole('textbox', { name: /Name/i })).toHaveValue(mockedConfig.name);
         expect(screen.getByRole('textbox', { name: /Webcam device id/i })).toHaveValue(String(mockedConfig.device_id));
+        expect(screen.getByRole('button', { name: /Codec/i })).toHaveTextContent('XVID');
 
         expect(screen.getByRole('button', { name: 'Apply' })).toBeEnabled();
     });
