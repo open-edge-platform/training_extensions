@@ -39,17 +39,15 @@ class PipelineService:
         if pipeline_db is None:
             return None
 
-        pipeline = Pipeline.model_validate(pipeline_db)
-        if not self._system_service.validate_device(pipeline.device):
+        if not self._system_service.validate_device(pipeline_db.device):
             logger.warning(
                 "The configured device '{}' is not available for pipeline '{}'. Falling back to 'cpu'.",
-                pipeline.device,
-                pipeline.project_id,
+                pipeline_db.device,
+                pipeline_db.project_id,
             )
-            pipeline.device = DEFAULT_DEVICE
             pipeline_db.device = DEFAULT_DEVICE
             pipeline_repo.update(pipeline_db)
-        return pipeline
+        return Pipeline.model_validate(pipeline_db)
 
     def get_pipeline_by_id(self, project_id: UUID) -> Pipeline:
         """Retrieve a pipeline by project ID."""
