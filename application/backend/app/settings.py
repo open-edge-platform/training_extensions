@@ -63,6 +63,9 @@ class Settings(BaseSettings):
 
     gpu_slots: int = Field(default=1, alias="GPU_SLOTS", description="Number of GPU slots available for model tuning")
 
+    # WebRTC
+    ice_servers: list[dict] = Field(default=[], alias="ICE_SERVERS")
+
     @property
     def database_url(self) -> str:
         """Get database URL"""
