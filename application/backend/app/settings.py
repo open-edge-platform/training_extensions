@@ -65,6 +65,7 @@ class Settings(BaseSettings):
 
     # WebRTC
     ice_servers: list[dict] = Field(default=[], alias="ICE_SERVERS")
+    webrtc_advertise_ip: str | None = Field(default=None, alias="WEBRTC_ADVERTISE_IP")
 
     @property
     def database_url(self) -> str:
