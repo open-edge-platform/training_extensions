@@ -75,6 +75,7 @@ class ModelRevisionDB(BaseID):
 
     project_id: Mapped[str] = mapped_column(Text, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
     architecture: Mapped[str] = mapped_column(String(100), nullable=False)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
     parent_revision: Mapped[str | None] = mapped_column(Text, ForeignKey("model_revisions.id"), nullable=True)
     training_status: Mapped[str] = mapped_column(String(50), nullable=False)
     training_configuration: Mapped[dict] = mapped_column(JSON, nullable=False)
