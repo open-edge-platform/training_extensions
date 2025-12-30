@@ -10,33 +10,38 @@ Original implementation: https://github.com/roboflow/rf-detr
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
-from rfdetr import (
+import torch
+from rfdetr.config import (
     RFDETRBaseConfig,
     RFDETRLargeConfig,
     RFDETRMediumConfig,
     RFDETRNanoConfig,
     RFDETRSmallConfig,
 )
-from rfdetr.main import Model, download_pretrain_weights
+from rfdetr.main import Model, populate_args
 from rfdetr.models.lwdetr import build_criterion_and_postprocessors
+from rfdetr.util.get_param_dicts import get_param_dict
 
 from otx.backend.native.exporter.base import OTXModelExporter
 from otx.backend.native.exporter.native import OTXNativeModelExporter
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.backend.native.models.detection.detectors import RFDETRDetector
 from otx.backend.native.models.detection.rtdetr import RTDETR
+from otx.backend.native.models.utils.utils import load_checkpoint
 from otx.config.data import TileConfig
 from otx.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
+from otx.types.precision import OTXPrecisionType
 
 if TYPE_CHECKING:
-    import torch
+    from pathlib import Path
+
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
-    from torch import Tensor
 
     from otx.backend.native.schedulers import LRSchedulerListCallable
     from otx.metrics import MetricCallable
+    from otx.types.export import OTXExportFormatType
     from otx.types.label import LabelInfoTypes
 
 
@@ -57,7 +62,6 @@ class RFDETR(RTDETR):
         scheduler: Callable for the learning rate scheduler.
         metric: Callable for the metric.
         multi_scale: Whether to use multi-scale training.
-        group_detr: Number of groups for Group DETR training (speeds up training).
         torch_compile: Whether to use torch compile.
         tile_config: Configuration for tiling.
 
@@ -67,6 +71,16 @@ class RFDETR(RTDETR):
         - base, large: patch_size=14
         Input sizes must be compatible with patch_size * num_windows.
     """
+
+    _pretrained_weights: ClassVar[dict[str, str]] = {
+        "rfdetr_base": "https://storage.googleapis.com/rfdetr/rf-detr-base-coco.pth",
+        "rfdetr_base_2": "https://storage.googleapis.com/rfdetr/rf-detr-base-2.pth",
+        # "rfdetr_base": "/home/kprokofi/training_extensions/library/output/checkpoint_best.pth",
+        "rfdetr_large": "https://storage.googleapis.com/rfdetr/rf-detr-large.pth",
+        "rfdetr_nano": "https://storage.googleapis.com/rfdetr/nano_coco/checkpoint_best_regular.pth",
+        "rfdetr_small": "https://storage.googleapis.com/rfdetr/small_coco/checkpoint_best_regular.pth",
+        "rfdetr_medium": "https://storage.googleapis.com/rfdetr/medium_coco/checkpoint_best_regular.pth",
+    }
 
     input_size_multiplier = 8
 
@@ -85,12 +99,10 @@ class RFDETR(RTDETR):
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MeanAveragePrecisionFMeasureCallable,
         multi_scale: bool = False,
-        group_detr: int = 13,
         torch_compile: bool = False,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
     ) -> None:
         self.multi_scale = multi_scale
-        self.group_detr = group_detr
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
@@ -102,12 +114,145 @@ class RFDETR(RTDETR):
             tile_config=tile_config,
         )
 
+    def _create_model(self, num_classes: int | None = None) -> RFDETRDetector:
+        """Create RF-DETR model using rfdetr package.
+
+        Args:
+            num_classes: Number of classes for detection.
+
+        Returns:
+            RFDETRDetector instance.
+        """
+        num_classes = num_classes if num_classes is not None else self.num_classes
+
+        # Get the appropriate config class
+        config_mapping: dict[str, type] = {
+            "rfdetr_nano": RFDETRNanoConfig,
+            "rfdetr_small": RFDETRSmallConfig,
+            "rfdetr_base": RFDETRBaseConfig,
+            "rfdetr_medium": RFDETRMediumConfig,
+            "rfdetr_large": RFDETRLargeConfig,
+        }
+
+        config_class = config_mapping[self.model_name]
+
+        # Create config with our num_classes
+        model_config = config_class(
+            num_classes=num_classes - 1,  # max obj_id
+            pretrain_weights=None,
+        )
+
+        # Create the Model instance which builds LWDETR and loads weights
+        rfdetr_model = Model(**model_config.model_dump())
+        rfdetr_model.reinitialize_detection_head(num_classes=num_classes)  # max_obj_id + 1
+
+        # Build criterion and postprocessor
+        criterion, postprocessor = build_criterion_and_postprocessors(rfdetr_model.args)
+
+        # Load pretrained weights
+        load_checkpoint(rfdetr_model.model, self._pretrained_weights[self.model_name], map_location="cpu")
+        # Create wrapper
+        return RFDETRDetector(
+            lwdetr_model=rfdetr_model.model,  # type: ignore[arg-type]
+            criterion=criterion,
+            postprocessor=postprocessor,
+            input_size=model_config.resolution,
+            multi_scale=self.multi_scale,
+        )
+
+    def configure_optimizers(self) -> tuple[list[torch.optim.Optimizer], list[dict[str, Any]]]:
+        """Configure an optimizer and learning-rate schedulers.
+
+        Configure an optimizer and learning-rate schedulers
+        from the given optimizer and scheduler or scheduler list callable in the constructor.
+        Generally, there is two lr schedulers. One is for a linear warmup scheduler and
+        the other is the main scheduler working after the warmup period.
+
+        Returns:
+            Two list. The former is a list that contains an optimizer
+            The latter is a list of lr scheduler configs which has a dictionary format.
+        """
+        # extract learning rate, weight decay and get parameter groups from rfdetr
+        dummy = torch.nn.Parameter(torch.zeros(1, requires_grad=True))
+        dummy_param_groups = [{"params": [dummy]}]
+        default_lr = self.optimizer_callable(dummy_param_groups).param_groups[0]["lr"]
+        default_weight_decay = self.optimizer_callable(dummy_param_groups).param_groups[0]["weight_decay"]
+        args = populate_args(lr=default_lr, weight_decay=default_weight_decay)
+        param_groups = get_param_dict(args, self.model.lwdetr)
+
+        # create optimizer and schedulers
+        optimizer = self.optimizer_callable(param_groups)
+        schedulers = self.scheduler_callable(optimizer)
+
+        def ensure_list(item: Any) -> list:  # noqa: ANN401
+            return item if isinstance(item, list) else [item]
+
+        lr_scheduler_configs = []
+        for scheduler in ensure_list(schedulers):
+            lr_scheduler_config = {"scheduler": scheduler}
+            if hasattr(scheduler, "interval"):
+                lr_scheduler_config["interval"] = scheduler.interval
+            if hasattr(scheduler, "monitor"):
+                lr_scheduler_config["monitor"] = scheduler.monitor
+            lr_scheduler_configs.append(lr_scheduler_config)
+
+        return [optimizer], lr_scheduler_configs
+
+    def export(
+        self,
+        output_dir: Path,
+        base_name: str,
+        export_format: OTXExportFormatType,
+        precision: OTXPrecisionType = OTXPrecisionType.FP32,
+    ) -> Path:
+        """Export this model to the specified output directory.
+
+        Args:
+            output_dir (Path): directory for saving the exported model
+            base_name: (str): base name for the exported model file. Extension is defined by the target export format
+            export_format (OTXExportFormatType): format of the output model
+            precision (OTXExportPrecisionType): precision of the output model
+
+        Returns:
+            Path: path to the exported model.
+        """
+        self.model.lwdetr.export()
+        return super().export(output_dir, base_name, export_format, precision)
+
+    @property
+    def _exporter(self) -> OTXModelExporter:
+        """Creates OTXModelExporter object for model export."""
+        return OTXNativeModelExporter(
+            task_level_export_parameters=self._export_parameters,
+            data_input_params=self.data_input_params,
+            resize_mode="standard",
+            swap_rgb=False,
+            via_onnx=True,
+            onnx_export_configuration={
+                "input_names": ["input"],
+                "output_names": ["bboxes", "labels", "scores"],
+                "dynamic_axes": {
+                    "images": {0: "batch"},
+                    "bboxes": {0: "batch", 1: "num_dets"},
+                    "labels": {0: "batch", 1: "num_dets"},
+                    "scores": {0: "batch", 1: "num_dets"},
+                },
+                "dynamo": False,  # RF-DETR does not support dynamo
+                "do_constant_folding": True,
+                "opset_version": 17,
+                "autograd_inlining": False,
+            },
+            output_names=["bboxes", "labels", "scores"],
+        )
+
+    @property
+    def _optimization_config(self) -> dict[str, Any]:
+        """PTQ config for RF-DETR."""
+        return {"model_type": "transformer"}
+
     @property
     def _default_preprocessing_params(self) -> dict[str, DataInputParams]:  # type: ignore[override]
-        """Default preprocessing parameters for RF-DETR models.
-
-        Uses 0-255 range normalization values (unscaled ImageNet stats).
-        """
+        """Default preprocessing parameters for RF-DETR models."""
         imagenet_mean = (123.675, 116.28, 103.53)
         imagenet_std = (58.395, 57.12, 57.375)
 
@@ -138,120 +283,3 @@ class RFDETR(RTDETR):
                 std=imagenet_std,
             ),
         }
-
-    def _create_model(self, num_classes: int | None = None) -> RFDETRDetector:
-        """Create RF-DETR model using rfdetr package.
-
-        Args:
-            num_classes: Number of classes for detection.
-
-        Returns:
-            RFDETRDetector instance.
-        """
-        num_classes = num_classes if num_classes is not None else self.num_classes
-
-        # Get the appropriate config class
-        config_mapping: dict[str, type] = {
-            "rfdetr_nano": RFDETRNanoConfig,
-            "rfdetr_small": RFDETRSmallConfig,
-            "rfdetr_base": RFDETRBaseConfig,
-            "rfdetr_medium": RFDETRMediumConfig,
-            "rfdetr_large": RFDETRLargeConfig,
-        }
-
-        config_class = config_mapping[self.model_name]
-
-        # Create config with our num_classes
-        # Note: rfdetr uses num_classes + 1 internally for no-object class
-        model_config = config_class(
-            num_classes=num_classes,
-            group_detr=self.group_detr,
-        )
-
-        # Download pretrained weights if needed
-        if model_config.pretrain_weights:
-            download_pretrain_weights(model_config.pretrain_weights)
-
-        # Create the Model instance which builds LWDETR and loads weights
-        rfdetr_model = Model(**model_config.model_dump())
-
-        # Build criterion and postprocessor
-        criterion, postprocessor = build_criterion_and_postprocessors(rfdetr_model.args)
-
-        # Define optimizer configuration for different parts of the model
-        # Following rfdetr's training configuration:
-        # - lr_encoder: 1.5e-4 for backbone
-        # - lr: 1e-4 for head (default)
-        # - lr_vit_layer_decay: 0.8, lr_component_decay: 0.7
-        optimizer_configuration: list[dict[str, Any]] = [
-            # Lower LR for backbone, no weight decay for norm layers
-            {"params": r"^(?=.*backbone)(?=.*(?:norm|ln)).*$", "weight_decay": 0.0, "lr": 0.00015},
-            {"params": r"^(?=.*backbone)(?!.*(?:norm|ln)).*$", "lr": 0.00015},
-            # No weight decay for norm layers and biases in encoder/decoder, but exclude backbone
-            {
-                "params": r"^(?!.*backbone)(?=.*(?:encoder|decoder|transformer))(?=.*(?:norm|bias)).*$",
-                "weight_decay": 0.0,
-            },
-        ]
-
-        # Create wrapper
-        return RFDETRDetector(
-            lwdetr_model=rfdetr_model.model,  # type: ignore[arg-type]
-            criterion=criterion,
-            postprocessor=postprocessor,
-            optimizer_configuration=optimizer_configuration,
-            input_size=model_config.resolution,
-            multi_scale=self.multi_scale,
-            group_detr=self.group_detr,
-        )
-
-    def forward_for_tracing(  # type: ignore[override]
-        self,
-        inputs: torch.Tensor,
-    ) -> tuple[Tensor, Tensor, Tensor] | dict[str, Any]:
-        """Forward function for model export/tracing.
-
-        Args:
-            inputs: Input images tensor.
-
-        Returns:
-            If explain_mode is False: Tuple of (boxes, labels, scores) tensors.
-            If explain_mode is True: Dict with boxes, labels, scores, feature_vector, saliency_map.
-        """
-        shape = (int(inputs.shape[2]), int(inputs.shape[3]))
-        meta_info = {
-            "pad_shape": shape,
-            "batch_input_shape": shape,
-            "img_shape": shape,
-            "scale_factor": (1.0, 1.0),
-        }
-        meta_info_list = [meta_info] * len(inputs)
-        return self.model.export(inputs, meta_info_list, explain_mode=self.explain_mode)
-
-    @property
-    def _exporter(self) -> OTXModelExporter:
-        """Creates OTXModelExporter object for model export."""
-        return OTXNativeModelExporter(
-            task_level_export_parameters=self._export_parameters,
-            data_input_params=self.data_input_params,
-            resize_mode="standard",
-            swap_rgb=False,
-            via_onnx=True,  # RF-DETR exports better via ONNX
-            onnx_export_configuration={
-                "input_names": ["images"],
-                "output_names": ["bboxes", "labels", "scores"],
-                "dynamic_axes": {
-                    "images": {0: "batch"},
-                    "bboxes": {0: "batch", 1: "num_dets"},
-                    "labels": {0: "batch", 1: "num_dets"},
-                    "scores": {0: "batch", 1: "num_dets"},
-                },
-                "opset_version": 17,
-            },
-            output_names=["bboxes", "labels", "scores"],
-        )
-
-    @property
-    def _optimization_config(self) -> dict[str, Any]:
-        """PTQ config for RF-DETR."""
-        return {"model_type": "transformer"}

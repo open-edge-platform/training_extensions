@@ -20,9 +20,8 @@ model:
   class_path: otx.backend.native.models.detection.rfdetr.RFDETR
   init_args:
     model_name: rfdetr_base
-    label_info: 80
+    label_info: 91
     multi_scale: false
-    group_detr: 13
 
     optimizer:
       class_path: torch.optim.AdamW
@@ -39,14 +38,14 @@ model:
           class_path: lightning.pytorch.cli.ReduceLROnPlateau
           init_args:
             mode: max
-            factor: 0.1
-            patience: 10
-            monitor: val/f1-score
+            factor: 0.5
+            patience: 20
+            monitor: val/map
 
 engine:
   device: auto
 
-callback_monitor: val/f1-score
+callback_monitor: val/map
 
 data: ../_base_/data/torchvision_base.yaml
 
@@ -58,14 +57,16 @@ callbacks:
   - class_path: otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
     init_args:
       mode: max
-      monitor: val/f1-score
+      patience: 10
+      check_on_train_epoch_end: false
+      monitor: val/map
       min_delta: 0.001
       warmup_iters: 100
       warmup_epochs: 10
   - class_path: lightning.pytorch.callbacks.ModelCheckpoint
     init_args:
       dirpath: ""
-      monitor: val/f1-score
+      monitor: val/map
       mode: max
       save_top_k: 1
       save_last: true
@@ -73,6 +74,7 @@ callbacks:
       filename: "checkpoints/epoch_{epoch:03d}"
 
 overrides:
+  # gradient_clip_val: 0.1
   data:
     input_size:
       - 560
@@ -80,21 +82,27 @@ overrides:
     task: DETECTION
     data_format: coco_instances
     train_subset:
-      batch_size: 4
+      batch_size: 8
       transforms:
         # RF-DETR augmentation pipeline (similar to D-Fine):
         # RandomZoomOut -> RandomIoUCrop -> SanitizeBoundingBoxes -> Resize -> RandomFlip
-        - class_path: torchvision.transforms.v2.RandomZoomOut
-          enable: true
-          init_args:
-            fill: 0
-        - class_path: otx.data.transform_libs.torchvision.RandomIoUCrop
-          enable: true
-          init_args:
-            probability: 0.8
+        # - class_path: torchvision.transforms.v2.RandomZoomOut
+        #   enable: true
+        #   init_args:
+        #     fill: 0
+        #     p: 0.5
+        # - class_path: otx.data.transform_libs.torchvision.RandomIoUCrop
+        #   enable: true
+        #   init_args:
+        #     probability: 0.7
+        # - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
+        #   init_args:
+        #     min_size: 1
+        # - class_path: otx.data.transform_libs.torchvision.MinIoURandomCrop
+        #   enable: true
         - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
           init_args:
-            min_size: 1
+            min_area: 1
         - class_path: otx.data.transform_libs.torchvision.Resize
           init_args:
             scale: $(input_size)

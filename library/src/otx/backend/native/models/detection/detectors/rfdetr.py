@@ -37,7 +37,6 @@ class RFDETRDetector(BaseModule):
         optimizer_configuration: Configuration for optimizer parameter groups.
         input_size: The input resolution of the model.
         multi_scale: Whether to enable multi-scale training.
-        group_detr: Number of groups for Group DETR training.
     """
 
     def __init__(
@@ -48,7 +47,6 @@ class RFDETRDetector(BaseModule):
         optimizer_configuration: list[dict[str, Any]] | None = None,
         input_size: int = 560,
         multi_scale: bool = False,
-        group_detr: int = 13,
     ) -> None:
         super().__init__()
         self.lwdetr = lwdetr_model
@@ -57,7 +55,6 @@ class RFDETRDetector(BaseModule):
         self.optimizer_configuration = optimizer_configuration
         self.input_size = input_size
         self.multi_scale = multi_scale
-        self.group_detr = group_detr
 
         # Explainability functions (set by high-level OTX model)
         self.feature_vector_fn: Callable[[FeatureMapType], Tensor] | None = None
@@ -106,11 +103,20 @@ class RFDETRDetector(BaseModule):
         samples = nested_tensor_from_tensor_list(image_list)
 
         # Forward through model
-        outputs = self.lwdetr(samples, targets)
+        outputs = self.lwdetr(samples)
 
-        if self.training and targets is not None:
+        if self.training:
+            if targets is None:
+                msg = "targets should not be None"
+                raise ValueError(msg)
             # Compute losses during training
-            return self.criterion(outputs, targets)
+            loss_dict = self.criterion(outputs, targets)
+            weight_dict = self.criterion.weight_dict
+            # return loss_dict
+            return {k: v * weight_dict[k] for k, v in loss_dict.items() if k in weight_dict}
+            # return {
+            #     k: v for k, v in loss_dict.items() if k in weight_dict
+            # }
 
         return outputs
 
@@ -144,6 +150,8 @@ class RFDETRDetector(BaseModule):
                     canvas_size=orig_size,
                 ),
             )
+            # result["labels"] = result["labels"] - 1
+            # result["labels"].clamp_(min=0)
             labels_list.append(result["labels"].long())
 
         return scores_list, boxes_list, labels_list
@@ -168,7 +176,6 @@ class RFDETRDetector(BaseModule):
             If explain_mode is True: Dict with boxes, labels, scores, feature_vector, saliency_map.
         """
         # Enable export mode on LWDETR
-        self.lwdetr.export()  # type: ignore[operator]
         outputs = self.lwdetr(batch_inputs)
         # outputs is (pred_boxes, pred_logits, pred_masks) in export mode
         pred_boxes, pred_logits, _ = outputs

@@ -21,7 +21,6 @@ model:
     model_name: rfdetr_small
     label_info: 80
     multi_scale: false
-    group_detr: 13
 
     optimizer:
       class_path: torch.optim.AdamW

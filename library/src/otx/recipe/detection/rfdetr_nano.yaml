@@ -21,7 +21,6 @@ model:
     model_name: rfdetr_nano
     label_info: 80
     multi_scale: false
-    group_detr: 13
 
     optimizer:
       class_path: torch.optim.AdamW
@@ -81,7 +80,7 @@ overrides:
     train_subset:
       batch_size: 8
       transforms:
-            # RF-DETR augmentation pipeline (similar to D-Fine)
+        # RF-DETR augmentation pipeline (similar to D-Fine)
         - class_path: torchvision.transforms.v2.RandomZoomOut
           enable: true
           init_args:

@@ -166,7 +166,7 @@ class OTXEngine(Engine):
         min_epochs: int = 1,
         seed: int | None = None,
         deterministic: bool | Literal["warn"] = False,
-        precision: _PRECISION_INPUT | None = 16,
+        precision: _PRECISION_INPUT | None = "16-mixed",
         callbacks: list[Callback] | Callback | None = None,
         logger: Logger | Iterable[Logger] | bool | None = None,
         resume: bool = False,
@@ -874,7 +874,7 @@ class OTXEngine(Engine):
         """Instantiate the trainer based on the model parameters."""
         if self._cache.requires_update(**kwargs) or self._trainer is None:
             self._apply_param_overrides(kwargs)
-            # set up xpu device
+            # set up accelerator
             self.configure_accelerator()
             # setup default loggers
             logger = self.configure_loggers(logger)
@@ -909,7 +909,7 @@ class OTXEngine(Engine):
         if self._device.accelerator == DeviceType.xpu:
             self._cache.update(strategy="xpu_single")
             # add plugin for Automatic Mixed Precision on XPU
-            if self._cache.args.get("precision", 32) == 16:
+            if self._cache.args.get("precision", 32) in [16, "16-mixed", "bf16-mixed", "bf16"]:
                 self._cache.update(
                     plugins=[
                         MixedPrecision(
