@@ -3,11 +3,13 @@
 
 """Application configuration management"""
 
+import os
+import sys
 from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -36,7 +38,7 @@ class Settings(BaseSettings):
     # Server
     host: str = Field(default="0.0.0.0", alias="HOST")  # noqa: S104
     port: int = Field(default=7860, alias="PORT")
-    static_files_dir: Path | None = Field(
+    static_files_dir: str | None = Field(
         default=None,
         alias="STATIC_FILES_DIR",
         description="Directory containing static UI files",
@@ -86,6 +88,13 @@ class Settings(BaseSettings):
         for d in [self.data_dir, self.log_dir, self.worker_dir, self.job_dir]:
             if d:
                 d.mkdir(parents=True, exist_ok=True)
+
+    @field_validator("static_files_dir", "alembic_config_path", "alembic_script_location", mode="after")
+    def prefix_paths(cls, v: str | None) -> str | None:
+        if v and getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+            # If application is running in pyinstaller bundle, adjust the path accordingly.
+            return os.path.join(getattr(sys, "_MEIPASS", ""), v)
+        return v
 
 
 @lru_cache

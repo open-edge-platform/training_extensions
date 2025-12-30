@@ -169,9 +169,9 @@ def gen_api(target_path: str) -> None:
 
     try:
         create_openapi(target_path=target_path)
-        click.echo("✓ OpenAPI specification generated successfully!")
+        click.echo("OpenAPI specification generated successfully!")
     except Exception as e:
-        click.echo(f"✗ Failed to generate OpenAPI specification: {e}")
+        click.echo(f"Failed to generate OpenAPI specification: {e}")
         sys.exit(1)
     click.echo("Waiting for threading to finish...")
 
