@@ -67,6 +67,23 @@ class TestSystemEndpoints:
         assert devices[1]["memory"] == 36022263808
         assert devices[1]["index"] == 0
 
+    def test_get_camera_devices(self, fxt_system_service: Mock, fxt_client: TestClient):
+        """Test GET /api/system/devices/camera"""
+        fxt_system_service.get_camera_devices.return_value = [
+            {"index": 0, "name": "Integrated Webcam"},
+            {"index": 1, "name": "USB Camera"},
+        ]
+
+        response = fxt_client.get("/api/system/devices/camera")
+
+        assert response.status_code == status.HTTP_200_OK
+        cameras = response.json()
+        assert len(cameras) == 2
+        assert cameras[0]["index"] == 0
+        assert cameras[0]["name"] == "Integrated Webcam"
+        assert cameras[1]["index"] == 1
+        assert cameras[1]["name"] == "USB Camera"
+
     def test_get_memory(self, fxt_system_service: Mock, fxt_client: TestClient):
         """Test GET /api/system/metrics/memory"""
         fxt_system_service.get_memory_usage.return_value = (1024.5, 8192.0)

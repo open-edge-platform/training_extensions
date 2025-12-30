@@ -5,8 +5,9 @@ import re
 
 import psutil
 import torch
+from cv2_enumerate_cameras import enumerate_cameras
 
-from app.schemas.system import DeviceInfo, DeviceType
+from app.schemas.system import CameraInfo, DeviceInfo, DeviceType
 
 DEVICE_PATTERN = re.compile(r"^(cpu|xpu|cuda)(-(\d+))?$")
 DEFAULT_DEVICE = "cpu"
@@ -136,3 +137,13 @@ class SystemService:
         device_type, _, device_index = m.groups()
         device_index = int(device_index) if device_index is not None else 0
         return device_type.lower(), device_index
+
+    @staticmethod
+    def get_camera_devices() -> list[CameraInfo]:
+        """
+        Get available camera devices.
+
+        Returns:
+            list[CameraInfo]: List of available camera devices
+        """
+        return [CameraInfo(index=camera.index, name=camera.name) for camera in enumerate_cameras()]
