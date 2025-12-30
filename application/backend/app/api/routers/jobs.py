@@ -40,19 +40,7 @@ async def submit_job(
     data_dir: Annotated[Path, Depends(get_data_dir)],
     project_service: Annotated[ProjectService, Depends(get_project_service)],
 ) -> JobView:
-    """
-    Create a new job for the project.
-
-    Args:
-        job_request (JobRequest): The Job request payload.
-        job_queue (JobQueue): The job queue instance responsible for managing job submissions and tracking job statuses.
-        job_dir (Path): The directory where job log files are stored.
-        data_dir (Path): The base directory for project data storage.
-        project_service (ProjectService): The service to interact with project data.
-
-    Returns:
-        JobView: The response containing the job ID.
-    """
+    """Create a new job and submit it to the scheduler."""
     try:
         project = project_service.get_project_by_id(job_request.project_id)
         job = None
@@ -87,16 +75,10 @@ async def submit_job(
 )
 async def list_jobs(job_queue: Annotated[JobQueue, Depends(get_job_queue)]) -> list[JobView]:
     """
-    Retrieve a list of all jobs.
+    List all the jobs.
 
-    This endpoint returns a list of all jobs that have been registered
-    during the active server session.
-
-    Args:
-        job_queue (JobQueue): The job queue instance responsible for managing job submissions and tracking job statuses.
-
-    Returns:
-        list[JobView]: A list of job responses.
+    Note that job details are not persisted across server restarts;
+    in other words, this endpoint only returns jobs submitted during the current server session.
     """
     return [JobView.of(job) for job in job_queue.list_all()]
 
@@ -110,18 +92,7 @@ async def list_jobs(job_queue: Annotated[JobQueue, Depends(get_job_queue)]) -> l
     },
 )
 async def get_job(job_id: JobID, job_queue: Annotated[JobQueue, Depends(get_job_queue)]) -> JobView:
-    """
-    Retrieve details of a specific job.
-
-    This endpoint fetches the details of a job using its unique job ID.
-
-    Args:
-        job_id (JobID): The unique identifier of the job.
-        job_queue (JobQueue): The job queue instance responsible for managing job submissions and tracking job statuses.
-
-    Returns:
-        JobView: The response containing the job details.
-    """
+    """Get detailed information about a specific job."""
     job = job_queue.get(job_id)
     if not job:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
@@ -142,18 +113,8 @@ async def cancel_job(job_id: JobID, job_queue: Annotated[JobQueue, Depends(get_j
     """
     Request cancellation of a specific job.
 
-    This endpoint allows the client to request the cancellation of a job
-    using its unique job ID. The cancellation request is processed asynchronously.
-
-    Args:
-        job_id (JobID): The unique identifier of the job to be canceled.
-        job_queue (JobQueue): The job queue instance responsible for managing job submissions and tracking job statuses.
-
-    Returns:
-        JobView: The response containing the job ID of the canceled job.
-
-    Raises:
-        HTTPException: If the job is not found (404) or the cancellation fails (409).
+    This endpoint allows the client to request the cancellation of a job using its unique job ID.
+    The cancellation request is processed asynchronously.
     """
     try:
         job, result = job_queue.cancel(job_id)
@@ -179,13 +140,6 @@ async def stream_job_status(
 
     This endpoint streams job status updates using Server-Sent Events (SSE).
     It sends periodic updates until the job reaches terminal state.
-
-    Args:
-        job_id (JobID): The unique identifier of the job.
-        job_queue (JobQueue): The job queue instance responsible for tracking job statuses.
-
-    Returns:
-        EventSourceResponse: A streaming response with job status updates.
     """
     if not job_queue.get(job_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
@@ -206,18 +160,6 @@ async def stream_job_logs(
     the job's log file and yields new lines as they are written, allowing clients
     to follow the job's progress in real-time. The stream continues until the
     client disconnects or an error occurs.
-
-    Args:
-        job_id (JobID): The unique identifier of the job.
-        job_dir (Path): The directory where job log files are stored.
-        job_queue (JobQueue): The job queue instance for tracking job statuses.
-
-    Returns:
-        EventSourceResponse: A streaming response with log entries sent as SSE events.
-
-    Raises:
-        HTTPException: If the job is not found (404), the log file doesn't exist (404),
-                       or the job has already completed (409).
     """
     job = job_queue.get(job_id)
     if not job:

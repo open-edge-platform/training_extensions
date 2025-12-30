@@ -69,12 +69,12 @@ def get_scheduler(request: Request) -> Scheduler:
 
 
 def get_data_dir(request: Request) -> Path:
-    """Provides the data directory path from settings."""
+    """Provides the path to the folder that stores the projects data. This path is defined in the app settings."""
     return request.app.state.settings.data_dir
 
 
 def get_job_dir(request: Request) -> Path:
-    """Provides the job log directory path from settings."""
+    """Provides the path to the folder where the jobs logs are saved. This path is defined in the app settings."""
     return request.app.state.settings.job_dir
 
 
@@ -218,7 +218,10 @@ def get_base_weights_service(data_dir: Annotated[Path, Depends(get_data_dir)]) -
 
 
 def get_job_queue(request: Request) -> JobQueue:
-    """Provides the global JobQueue instance from FastAPI application's state."""
+    """
+    Provides the global JobQueue instance from FastAPI application's state.
+    The JobQueue is responsible for managing job submissions and tracking job statuses.
+    """
     return request.app.state.job_queue
 
 
