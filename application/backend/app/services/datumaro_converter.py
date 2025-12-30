@@ -413,7 +413,11 @@ def convert_instance_segmentation_dataset(
             if all_with_confidence
             else []
         )
-        # Polygons array is ragged because the number of vertices is not fixed
+        # Each polygon is a float32 array with dimension (num_vert, 2); since the number of vertices varies
+        # between polygons, we need a ragged array (dtype=object) to stack the polygons.
+        # While building this array, we must also avoid unwanted type conversions by numpy, hence the use of np.empty
+        # and explicit assignment - trying to wrap the polygons simply with np.array([...], dtype=object) would cause
+        # the outer array dtype to become float32 instead of object if all polygons have the same number of vertices.
         polygons_np = np.empty(len(polygons), dtype=object)
         polygons_np[:] = [np.asarray(p, dtype=np.float32) for p in polygons]
         return InstanceSegmentationSample(
