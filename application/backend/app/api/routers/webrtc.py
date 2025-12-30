@@ -49,8 +49,16 @@ async def webrtc_input_hook(data: InputData, webrtc_manager: Annotated[WebRTCMan
 @router.get(
     path="/config",
     response_model=WebRTCConfigResponse,
+    responses={
+        status.HTTP_200_OK: {"description": "WebRTC configuration"},
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {"description": "Internal Server Error"},
+    },
 )
 async def get_webrtc_config(ice_servers: Annotated[list[dict], Depends(get_ice_servers)]) -> WebRTCConfigResponse:
     """Get WebRTC configuration including ICE servers"""
-    servers = [WebRTCIceServer(**server) for server in ice_servers]
+    try:
+        servers = [WebRTCIceServer(**server) for server in ice_servers]
+    except TypeError as e:
+        logger.exception("Error processing WebRTC configuration")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
     return WebRTCConfigResponse(iceServers=servers)
