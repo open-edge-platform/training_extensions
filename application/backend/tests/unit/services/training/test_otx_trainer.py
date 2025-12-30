@@ -720,26 +720,9 @@ class TestOTXTrainerStoreModelArtifacts:
     ):
         """Test successful storing of model artifacts and cleanup."""
         # Arrange
+        otx_trainer = fxt_otx_trainer()
         project_id = uuid4()
         model_id = uuid4()
-
-        # Create OTXTrainer with isolated data directory
-        training_deps = TrainingDependencies(
-            data_dir=tmp_path,
-            base_weights_service=Mock(spec=BaseWeightsService),
-            subset_service=Mock(spec=SubsetService),
-            subset_assigner=Mock(spec=SubsetAssigner),
-            dataset_service=Mock(spec=DatasetService),
-            dataset_revision_service=Mock(spec=DatasetRevisionService),
-            model_service=Mock(spec=ModelService),
-            training_configuration_service=Mock(spec=TrainingConfigurationService),
-            db_session_factory=Mock(),
-        )
-        otx_trainer = OTXTrainer(training_deps)
-        execution_ctx = Mock(spec=ExecutionContext)
-        execution_ctx.report = Mock()
-        execution_ctx.heartbeat = Mock()
-        otx_trainer._ctx = execution_ctx
 
         training_params = TrainingParams(
             model_id=model_id,
