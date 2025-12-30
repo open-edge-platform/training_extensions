@@ -14,7 +14,9 @@ from app.repositories import ModelRevisionRepository
 from app.repositories.active_model_repo import ActiveModelRepo
 from app.schemas.model_activation import ModelActivationState
 
-MODELAPI_DEVICE = os.getenv("MODELAPI_DEVICE", "AUTO")
+# It's safer to default to CPU since inference with other devices sometimes results in degraded prediction quality
+# See for example: https://github.com/open-edge-platform/model_api/issues/460
+MODELAPI_DEVICE = os.getenv("MODELAPI_DEVICE", "CPU")
 MODELAPI_NSTREAMS = os.getenv("MODELAPI_NSTREAMS", "2")
 
 
