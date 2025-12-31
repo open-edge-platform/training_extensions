@@ -64,7 +64,7 @@ export class WebRTCConnection {
         const iceServers = await this.fetchIceServers();
         const rtcConfig: RTCConfiguration = {
             iceServers,
-        }
+        };
         this.peerConnection = new RTCPeerConnection(rtcConfig);
         this.timeoutId = setTimeout(() => {
             console.warn('Connection is taking longer than usual. Are you on a VPN?');
