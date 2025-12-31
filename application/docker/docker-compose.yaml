@@ -71,6 +71,7 @@ services:
       - coturn
     image: quay.io/coturn/coturn
     restart: unless-stopped
+    network_mode: host
     command:
       - -n
       - --listening-port=${COTURN_PORT:-443}
