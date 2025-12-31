@@ -21,10 +21,7 @@ router = APIRouter(prefix="/api/webrtc", tags=["WebRTC"])
 @router.post(
     "/offer",
     response_model=Answer,
-    responses={
-        status.HTTP_200_OK: {"description": "WebRTC Answer"},
-        status.HTTP_500_INTERNAL_SERVER_ERROR: {"description": "Internal Server Error"},
-    },
+    responses={status.HTTP_200_OK: {"description": "WebRTC Answer"}},
 )
 async def create_webrtc_offer(offer: Offer, webrtc_manager: Annotated[WebRTCManager, Depends(get_webrtc)]) -> Answer:
     """Create a WebRTC offer"""
@@ -49,16 +46,9 @@ async def webrtc_input_hook(data: InputData, webrtc_manager: Annotated[WebRTCMan
 @router.get(
     path="/config",
     response_model=WebRTCConfigResponse,
-    responses={
-        status.HTTP_200_OK: {"description": "WebRTC configuration"},
-        status.HTTP_500_INTERNAL_SERVER_ERROR: {"description": "Internal Server Error"},
-    },
+    responses={status.HTTP_200_OK: {"description": "WebRTC configuration"}},
 )
 async def get_webrtc_config(ice_servers: Annotated[list[dict], Depends(get_ice_servers)]) -> WebRTCConfigResponse:
     """Get WebRTC configuration including ICE servers"""
-    try:
-        servers = [WebRTCIceServer(**server) for server in ice_servers]
-    except TypeError as e:
-        logger.exception("Error processing WebRTC configuration")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+    servers = [WebRTCIceServer(**server) for server in ice_servers]
     return WebRTCConfigResponse(iceServers=servers)
