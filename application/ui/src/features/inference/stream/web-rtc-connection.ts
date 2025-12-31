@@ -273,8 +273,12 @@ export class WebRTCConnection {
     private async fetchIceServers() {
         try {
             const { data } = await fetchClient.GET('/api/webrtc/config');
+            if (!data) {
+                console.warn('No ICE server data received.');
+                return [];
+            }
             console.info('ICE servers:', data.iceServers);
-            return data.iceServers;
+            return data.iceServers as RTCIceServer[];
         } catch (err) {
             console.error('Error fetching ICE servers:', err);
             return [];
