@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import re
+from functools import lru_cache
 
 import psutil
 import torch
@@ -39,6 +40,7 @@ class SystemService:
         return self.process.cpu_percent(interval=None)
 
     @staticmethod
+    @lru_cache
     def get_devices() -> list[DeviceInfo]:
         """
         Get available compute devices (CPU, GPUs, ...)
@@ -77,6 +79,7 @@ class SystemService:
 
         return devices
 
+    @lru_cache
     def get_inference_devices(self) -> list[DeviceInfo]:
         """
         Get available compute devices for inference (CPU, XPU, ...)
@@ -86,6 +89,7 @@ class SystemService:
         """
         return [device for device in self.get_devices() if device.type != DeviceType.CUDA]
 
+    @lru_cache
     def get_training_devices(self) -> list[DeviceInfo]:
         """
         Get available compute devices for training (CPUs, XPUs, GPUs, ...)
@@ -108,7 +112,7 @@ class SystemService:
         device_type, device_index = self._parse_device(device_str)
 
         # CPU is always available
-        if device_type == "cpu":
+        if device_type == DeviceType.CPU:
             return True
 
         # Check if desired device is among available devices
@@ -119,8 +123,28 @@ class SystemService:
 
         return False
 
+    def get_device_info(self, device_str: str) -> DeviceInfo:
+        """
+        Get DeviceInfo for a given device string.
+
+        Args:
+            device_str: Device string in format '<target>[-<index>]' (e.g., 'cpu', 'xpu', 'cuda', 'xpu-2', 'cuda-1')
+
+        Returns:
+            DeviceInfo: Information about the specified device
+        """
+        if not self.validate_device(device_str):
+            raise ValueError(f"Device '{device_str}' is not available on the system.")
+
+        device_type, device_index = self._parse_device(device_str)
+        return next(
+            device
+            for device in self.get_devices()
+            if device.type == device_type and (device.index or 0) == device_index
+        )
+
     @staticmethod
-    def _parse_device(device_str: str) -> tuple[str, int]:
+    def _parse_device(device_str: str) -> tuple[DeviceType, int]:
         """
         Parse device string into type and index
 
@@ -136,7 +160,7 @@ class SystemService:
 
         device_type, _, device_index = m.groups()
         device_index = int(device_index) if device_index is not None else 0
-        return device_type.lower(), device_index
+        return DeviceType(device_type.lower()), device_index
 
     @staticmethod
     def get_camera_devices() -> list[CameraInfo]:

@@ -20,6 +20,7 @@ class TrainingParams(JobParams):
     parent_model_revision_id: UUID | None = None
     task: Task
     model_id: UUID = Field(default_factory=uuid4)
+    device: DeviceInfo
 
 
 class ProjectJob(Job):
@@ -28,7 +29,6 @@ class ProjectJob(Job):
 
 class TrainingJob(ProjectJob):
     job_type: Literal[JobType.TRAIN] = JobType.TRAIN
-    training_device: DeviceInfo
     log_dir: Path
     data_dir: Path
     params: TrainingParams

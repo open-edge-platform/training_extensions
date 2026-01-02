@@ -13,7 +13,11 @@ from app.services.training.models import TrainingJob, TrainingParams
 
 @pytest.fixture
 def fxt_training_params():
-    return TrainingParams(model_architecture_id="test_arch", task=Task(task_type=TaskType.CLASSIFICATION))
+    return TrainingParams(
+        device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
+        model_architecture_id="test_arch",
+        task=Task(task_type=TaskType.CLASSIFICATION),
+    )
 
 
 @pytest.fixture
@@ -30,7 +34,6 @@ def fxt_training_job(tmp_path, fxt_training_params):
         log_dir=log_dir,
         data_dir=data_dir,
         params=fxt_training_params,
-        training_device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
     )
 
 

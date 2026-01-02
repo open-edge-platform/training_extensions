@@ -8,12 +8,12 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 from app.core.jobs.models import Job, JobStatus, JobType
-from app.schemas.system import DeviceInfo
 
 
 class TrainingRequestParams(BaseModel):
     """Request schema for training a new model."""
 
+    device: str = Field(..., description="Device identifier for training (e.g., 'cpu', 'xpu-0', 'cuda-1')")
     model_architecture_id: str = Field(..., description="Model architecture identifier")
     parent_model_revision_id: UUID | None = Field(
         None, description="Parent model revision ID for fine-tuning, null for training from scratch"
@@ -22,6 +22,7 @@ class TrainingRequestParams(BaseModel):
     model_config = {
         "json_schema_extra": {
             "example": {
+                "device": "xpu-0",
                 "model_architecture_id": "Custom_Object_Detection_Gen3_ATSS",
                 "parent_model_revision_id": "ef3983f1-cef0-4ebe-91db-7330f1dd6e27",
             }
@@ -37,17 +38,16 @@ class BaseJobRequest(BaseModel):
 class TrainingRequest(BaseJobRequest):
     job_type: Literal[JobType.TRAIN]
     parameters: TrainingRequestParams = Field(..., description="Parameters required for the job")
-    training_device: DeviceInfo = Field(..., description="Device assigned to the job")
 
     model_config = {
         "json_schema_extra": {
             "example": {
                 "job_type": "train",
-                "training_device": {"type": "xpu", "name": "Intel Arc B580", "memory": 12884901888, "index": 0},
                 "project_id": "7b073838-99d3-42ff-9018-4e901eb047fc",
                 "parameters": {
                     "model_architecture_id": "Custom_Object_Detection_Gen3_ATSS",
                     "parent_model_revision_id": "ef3983f1-cef0-4ebe-91db-7330f1dd6e27",
+                    "device": "xpu-0",
                 },
             }
         }
