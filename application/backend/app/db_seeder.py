@@ -152,6 +152,7 @@ def _create_pipeline_with_video_source(  # noqa: PLR0913
 
     pipeline.model_revision = ModelRevisionDB(
         id=model_id,
+        name=model_architecture,
         project_id=project_id,
         architecture=model_architecture,
         training_status=TrainingStatus.SUCCESSFUL,
