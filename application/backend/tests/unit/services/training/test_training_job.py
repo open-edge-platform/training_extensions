@@ -7,6 +7,7 @@ from uuid import uuid4
 import pytest
 
 from app.models import Task, TaskType
+from app.schemas.system import DeviceInfo, DeviceType
 from app.services.training.models import TrainingJob, TrainingParams
 
 
@@ -29,6 +30,7 @@ def fxt_training_job(tmp_path, fxt_training_params):
         log_dir=log_dir,
         data_dir=data_dir,
         params=fxt_training_params,
+        training_device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
     )
 
 
