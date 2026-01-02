@@ -11,7 +11,7 @@ import { useAnnotationActions } from '../../../../shared/annotator/annotation-ac
 import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
 import { AnnotationShape } from '../../annotations/annotation-shape.component';
 import { MaskAnnotations } from '../../annotations/mask-annotations.component';
-import type { Annotation, Point, RegionOfInterest, Shape } from '../../types';
+import type { Annotation, RegionOfInterest, Shape } from '../../types';
 import { SvgToolCanvas } from '../svg-tool-canvas.component';
 import { getRelativePoint, removeOffLimitPoints } from '../utils';
 import { SAMLoading } from './sam-loading.component';
@@ -52,7 +52,6 @@ const PreviewAnnotations = ({ previewAnnotations, image }: PreviewAnnotationsPro
 };
 
 export const SegmentAnythingTool = () => {
-    const [_createLabelFormPosition, setCreateLabelFormPosition] = useState<Point | null>(null);
     const [previewShapes, setPreviewShapes] = useState<Shape[]>([]);
     const [acceptedShapes, setAcceptedShapes] = useState<Shape[] | null>(null);
     const ref = useRef<SVGSVGElement>(null);
@@ -110,15 +109,8 @@ export const SegmentAnythingTool = () => {
         }
 
         if (selectedLabel == null) {
-            const boundingBox = ref.current.getBoundingClientRect();
-
-            const point = {
-                x: event.clientX - boundingBox.left,
-                y: event.clientY - boundingBox.bottom,
-            };
-
-            setCreateLabelFormPosition(point);
             setAcceptedShapes(previewShapes);
+
             return;
         }
 
