@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { createContext, ReactNode, useContext, useEffect, useMemo } from 'react';
+import { createContext, ReactNode, useContext, useEffect } from 'react';
 
 import { useProject } from 'hooks/api/project.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
@@ -75,19 +75,18 @@ export const AnnotationActionsProvider = ({
 
     const { data: project } = useProject();
 
-    const localFormattedAnnotations = useMemo(() => {
-        const projectLabels = project?.task?.labels || [];
-
-        return mapServerAnnotationsToLocal(initialAnnotationsDTO, projectLabels);
-    }, [initialAnnotationsDTO, project?.task?.labels]);
-
     const [annotations, setAnnotations, undoRedoActions] = useUndoRedoState<Annotation[]>([]);
 
     useEffect(() => {
-        if (localFormattedAnnotations.length > 0) {
-            undoRedoActions.reset(localFormattedAnnotations);
+        const projectLabels = project?.task?.labels || [];
+
+        const localAnnotations = mapServerAnnotationsToLocal(initialAnnotationsDTO, projectLabels);
+
+        if (localAnnotations.length > 0) {
+            undoRedoActions.reset(localAnnotations);
         }
-    }, [localFormattedAnnotations, undoRedoActions]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [initialAnnotationsDTO, project?.task?.labels]);
 
     const updateAnnotations = (updatedAnnotations: Annotation[]) => {
         const updatedMap = new Map(updatedAnnotations.map((ann) => [ann.id, ann]));
