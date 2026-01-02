@@ -10,6 +10,7 @@ from pydantic import Field
 
 from app.core.jobs import Job, JobParams, JobType
 from app.models import Task
+from app.schemas.system import DeviceInfo
 
 
 class TrainingParams(JobParams):
@@ -27,6 +28,7 @@ class ProjectJob(Job):
 
 class TrainingJob(ProjectJob):
     job_type: Literal[JobType.TRAIN] = JobType.TRAIN
+    training_device: DeviceInfo
     log_dir: Path
     data_dir: Path
     params: TrainingParams

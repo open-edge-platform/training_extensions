@@ -8,6 +8,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 from app.core.jobs.models import Job, JobStatus, JobType
+from app.schemas.system import DeviceInfo
 
 
 class TrainingRequestParams(BaseModel):
@@ -36,11 +37,13 @@ class BaseJobRequest(BaseModel):
 class TrainingRequest(BaseJobRequest):
     job_type: Literal[JobType.TRAIN]
     parameters: TrainingRequestParams = Field(..., description="Parameters required for the job")
+    training_device: DeviceInfo = Field(..., description="Device assigned to the job")
 
     model_config = {
         "json_schema_extra": {
             "example": {
                 "job_type": "train",
+                "training_device": {"type": "xpu", "name": "Intel Arc B580", "memory": 12884901888, "index": 0},
                 "project_id": "7b073838-99d3-42ff-9018-4e901eb047fc",
                 "parameters": {
                     "model_architecture_id": "Custom_Object_Detection_Gen3_ATSS",

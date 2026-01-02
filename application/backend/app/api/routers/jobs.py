@@ -48,6 +48,7 @@ async def submit_job(
             case JobType.TRAIN:
                 job = TrainingJob(
                     project_id=job_request.project_id,
+                    training_device=job_request.training_device,
                     log_dir=job_dir,
                     data_dir=data_dir,
                     params=TrainingParams(
