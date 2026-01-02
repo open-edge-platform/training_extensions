@@ -13,9 +13,7 @@ class TestSystemService:
 
     @pytest.fixture
     def fxt_system_service(self) -> SystemService:
-        service = SystemService()
-        service.get_devices.cache_clear()
-        return service
+        return SystemService()
 
     def test_get_memory_usage(self, fxt_system_service: SystemService):
         """Test getting memory usage"""

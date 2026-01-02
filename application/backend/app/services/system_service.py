@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import re
-from functools import lru_cache
 
 import psutil
 import torch
@@ -40,7 +39,6 @@ class SystemService:
         return self.process.cpu_percent(interval=None)
 
     @staticmethod
-    @lru_cache
     def get_devices() -> list[DeviceInfo]:
         """
         Get available compute devices (CPU, GPUs, ...)
@@ -79,7 +77,6 @@ class SystemService:
 
         return devices
 
-    @lru_cache
     def get_inference_devices(self) -> list[DeviceInfo]:
         """
         Get available compute devices for inference (CPU, XPU, ...)
@@ -89,7 +86,6 @@ class SystemService:
         """
         return [device for device in self.get_devices() if device.type != DeviceType.CUDA]
 
-    @lru_cache
     def get_training_devices(self) -> list[DeviceInfo]:
         """
         Get available compute devices for training (CPUs, XPUs, GPUs, ...)
