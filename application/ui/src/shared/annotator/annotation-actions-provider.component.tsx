@@ -5,7 +5,7 @@ import { createContext, ReactNode, useContext, useEffect, useRef, useState } fro
 
 import { useProject } from 'hooks/api/project.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-import { get, isEmpty, isObject } from 'lodash-es';
+import { get, isObject } from 'lodash-es';
 import { v4 as uuid } from 'uuid';
 
 import { $api } from '../../api/client';
@@ -20,7 +20,7 @@ const mapServerAnnotationsToLocal = (serverAnnotations: ServerAnnotation[], proj
 
     return serverAnnotations.map((annotation) => {
         // We only get the ids of the labels
-        const labels = annotation.labels
+        const labels = (annotation.labels ?? [])
             .map((labelRef) => labelMap.get(labelRef.id))
             .filter((label): label is Label => label !== undefined);
 
@@ -71,7 +71,7 @@ export const AnnotationActionsProvider = ({ children, mediaItem }: AnnotationAct
         '/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations'
     );
 
-    const { data: serverAnnotations, error: fetchError } = $api.useQuery(
+    const { data: serverAnnotations } = $api.useQuery(
         'get',
         '/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations',
         {
@@ -129,24 +129,23 @@ export const AnnotationActionsProvider = ({ children, mediaItem }: AnnotationAct
     };
 
     useEffect(() => {
-        if (!project || !serverAnnotations) return;
+        if (!project || !serverAnnotations) {
+            setLocalAnnotations([]);
+            return;
+        }
 
         const annotations = get(serverAnnotations, 'annotations', []);
         const projectLabels = project.task?.labels || [];
 
         if (annotations.length > 0) {
             const localFormattedAnnotations = mapServerAnnotationsToLocal(annotations, projectLabels);
-
             setLocalAnnotations(localFormattedAnnotations);
-            isDirty.current = false;
-        }
-    }, [serverAnnotations, project]);
-
-    useEffect(() => {
-        if (!isEmpty(fetchError)) {
+        } else {
             setLocalAnnotations([]);
         }
-    }, [fetchError]);
+
+        isDirty.current = false;
+    }, [serverAnnotations, project, mediaItem.id]);
 
     return (
         <AnnotationsContext.Provider
