@@ -54,6 +54,7 @@ class TestJobEndpoints:
             job_type=JobType.TRAIN,
             training_device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
             parameters=TrainingRequestParams(
+                device="xpu-0",
                 model_architecture_id="YOLOv8",
                 parent_model_revision_id=uuid4(),
             ),
