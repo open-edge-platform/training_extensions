@@ -8,7 +8,6 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 from app.core.jobs.models import Job, JobStatus, JobType
-from app.services.training.models import TrainingJob
 
 
 class TrainingRequestParams(BaseModel):
@@ -79,7 +78,7 @@ class TrainingMetadata(BaseModel):
     model: ModelMetadata = Field(..., description="Model being trained")
 
     @staticmethod
-    def of(job: TrainingJob) -> "TrainingMetadata":
+    def of(job: Job) -> "TrainingMetadata":
         return TrainingMetadata(
             project=ProjectMetadata(id=job.project_id),
             model=ModelMetadata(
@@ -91,12 +90,15 @@ class TrainingMetadata(BaseModel):
         )
 
 
+JobMetadata = Annotated[TrainingMetadata, Field(..., description="Metadata associated with the job")]
+
+
 class JobView(BaseModel):
     """Response schema for job creation."""
 
     job_id: UUID = Field(..., description="Job identifier")
     job_type: JobType = Field(..., description="Type of the job")
-    metadata: TrainingMetadata = Field(..., description="Metadata associated with the job")  # | InferenceMetadata | ...
+    metadata: JobMetadata = Field(..., description="Metadata associated with the job")
     status: str = Field(..., description="Job status")
     progress: float = Field(..., description="Job progress percentage (0-100)")
     message: str | None = Field(None, description="Additional information about the job status")
@@ -129,9 +131,9 @@ class JobView(BaseModel):
     }
 
     @staticmethod
-    def of(job: Job | TrainingJob) -> "JobView":
-        match job:
-            case TrainingJob():
+    def of(job: Job) -> "JobView":
+        match job.job_type:
+            case JobType.TRAIN:
                 metadata = TrainingMetadata.of(job)
             case _:
                 raise NotImplementedError("JobView is not implemented for this job type")
