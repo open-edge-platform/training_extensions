@@ -14,7 +14,6 @@ from app.core.jobs.control_plane import CancellationResult
 from app.main import app
 from app.models import Project, Task, TaskType
 from app.schemas.job import JobRequest, JobType, TrainingRequestParams
-from app.schemas.system import DeviceInfo, DeviceType
 
 
 @pytest.fixture
@@ -52,9 +51,8 @@ class TestJobEndpoints:
         job_request = JobRequest(
             project_id=uuid4(),
             job_type=JobType.TRAIN,
-            training_device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
             parameters=TrainingRequestParams(
-                device="xpu-0",
+                device="cpu",
                 model_architecture_id="YOLOv8",
                 parent_model_revision_id=uuid4(),
             ),
