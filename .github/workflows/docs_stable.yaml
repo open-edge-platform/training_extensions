@@ -13,7 +13,7 @@ jobs:
       contents: write # needed to commit docs
     steps:
       - name: Runner cleanup
-        uses: open-edge-platform/geti-ci/actions/cleanup-runner@a79fb2f70857ef7d2b1b89fdb5632e03f40df0a1
+        uses: open-edge-platform/geti-ci/actions/cleanup-runner@d30e32248aa6bd06adeda7129b50a38bdbceca12
         with:
           type: "initial"
       - name: Checkout repository
