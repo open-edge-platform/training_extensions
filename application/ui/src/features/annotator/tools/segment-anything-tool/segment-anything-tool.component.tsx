@@ -96,15 +96,6 @@ export const SegmentAnythingTool = () => {
         setPreviewShapes([]);
     };
 
-    // const handleAddAnnotationsCreateLabel = (label: Label) => {
-    //     if (acceptedShapes === null) {
-    //         return;
-    //     }
-
-    //     handleAddAnnotations(acceptedShapes, label);
-    //     setAcceptedShapes(null);
-    // };
-
     const handlePointerDown = (event: PointerEvent<SVGSVGElement>) => {
         if (!ref.current) {
             return;
@@ -144,11 +135,6 @@ export const SegmentAnythingTool = () => {
         };
     });
 
-    // const handleClose = () => {
-    //     setCreateLabelFormPosition(null);
-    //     setAcceptedShapes(null);
-    // };
-
     if (isLoading) {
         return <SAMLoading isLoading={isLoading} />;
     }
@@ -171,13 +157,6 @@ export const SegmentAnythingTool = () => {
             >
                 <PreviewAnnotations previewAnnotations={previewAnnotations} image={image} />
             </SvgToolCanvas>
-            {/* <CreateLabelPopover
-                ref={ref}
-                onSuccess={handleAddAnnotationsCreateLabel}
-                existingLabels={labels}
-                mousePosition={createLabelFormPosition}
-                onClose={handleClose}
-            /> */}
         </>
     );
 };
