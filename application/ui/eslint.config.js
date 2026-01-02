@@ -45,6 +45,10 @@ export default [
                             group: ['@spectrum-icons'],
                             message: 'Use icons from the @geti/ui/icons folder instead.',
                         },
+                        {
+                            group: ['src/*'],
+                            message: 'Use relative imports instead of absolute "src/" imports.',
+                        },
                     ],
                 },
             ],

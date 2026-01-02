@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Disclosure, DisclosurePanel, DisclosureTitle, Divider, View } from '@geti/ui';
-import { DatasetHeader } from 'src/features/models/dataset-header.component';
-import { ModelsHeader } from 'src/features/models/models-header.component';
+
+import { DatasetHeader } from '../../features/models/dataset-header.component';
+import { ModelsHeader } from '../../features/models/models-header.component';
 
 export const Models = () => {
     return (

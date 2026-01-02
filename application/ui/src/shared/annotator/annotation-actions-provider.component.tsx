@@ -6,11 +6,11 @@ import { createContext, ReactNode, useContext, useEffect, useRef, useState } fro
 import { useProject } from 'hooks/api/project.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { get, isEmpty, isObject } from 'lodash-es';
-import { $api } from 'src/api/client';
-import type { components } from 'src/api/openapi-spec';
-import type { DatasetItem, Label } from 'src/constants/shared-types';
 import { v4 as uuid } from 'uuid';
 
+import { $api } from '../../api/client';
+import type { components } from '../../api/openapi-spec';
+import type { DatasetItem, Label } from '../../constants/shared-types';
 import type { Annotation, Shape } from '../../features/annotator/types';
 
 type ServerAnnotation = components['schemas']['DatasetItemAnnotation-Input'];

@@ -3,10 +3,10 @@
 
 import { View } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-import { API_BASE_URL } from 'src/api/client';
-import type { DatasetItem } from 'src/constants/shared-types';
 
+import { API_BASE_URL } from '../../api/client';
 import { ZoomTransform } from '../../components/zoom/zoom-transform';
+import type { DatasetItem } from '../../constants/shared-types';
 import { useAnnotationActions } from '../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotationVisibility } from '../../shared/annotator/annotation-visibility-provider.component';
 import { useSelectedAnnotations } from '../../shared/annotator/select-annotation-provider.component';
