@@ -28,6 +28,9 @@ export const TrainModelDialog = ({ isOpen, onClose }: TrainModelDialogProps) => 
                 job_type: 'train',
                 project_id,
                 parameters: {
+                    // TODO: device is hardcoded for now but once we have the train model designs updated
+                    // we will have a dropdown to pick this device so this needs to be updated
+                    device: 'cpu',
                     model_architecture_id: String(selectedModelArchitectureId),
                 },
             },
