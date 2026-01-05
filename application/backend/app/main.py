@@ -19,6 +19,7 @@ import logging
 from collections.abc import Awaitable, Callable
 from os import getenv
 from pathlib import Path
+from typing import cast
 
 import uvicorn
 from fastapi import FastAPI, Request, Response
@@ -125,7 +126,7 @@ if static_dir is not None and static_dir.is_dir() and any(static_dir.iterdir()):
     @app.get("/{full_path:path}", include_in_schema=False)
     async def serve_spa() -> FileResponse:
         """Serve the Single Page Application (SPA) index.html file for any path."""
-        return FileResponse(static_dir / "index.html")
+        return FileResponse(cast(Path, static_dir) / "index.html")
 
 
 def main() -> None:
