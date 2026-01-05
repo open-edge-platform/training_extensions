@@ -26,4 +26,18 @@ test.describe('Health Check', () => {
 
         await expect(page.getByRole('progressbar')).toBeHidden();
     });
+
+    test('Shows error message when health check fails', async ({ page, network }) => {
+        network.use(
+            http.get('/health', ({ response }) => {
+                // @ts-expect-error Simulate server error
+                return response(500).json({});
+            })
+        );
+
+        await page.goto('/');
+
+        await expect(page.getByRole('heading', { name: 'Server Error' })).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Refresh' })).toBeVisible();
+    });
 });
