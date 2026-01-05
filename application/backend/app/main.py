@@ -6,6 +6,7 @@ import sys
 if getattr(sys, "frozen", False) and __name__ == "__main__":
     print("Calling multiprocessing.freeze_support()")
     import multiprocessing
+
     multiprocessing.freeze_support()
 
 # export no_proxy="localhost, 127.0.0.1, ::1"
@@ -114,19 +115,17 @@ async def security_headers_middleware(
 
 
 static_dir = settings.static_files_dir
-if static_dir is not None:
-    static_dir_path = Path(static_dir)
-    if static_dir_path.is_dir() and any(static_dir_path.iterdir()):
-        asset_prefix = getenv("ASSET_PREFIX", "/html")
-        logger.info("Serving static files from {} by context {}", static_dir_path, asset_prefix)
+if static_dir is not None and static_dir.is_dir() and any(static_dir.iterdir()):
+    asset_prefix = getenv("ASSET_PREFIX", "/html")
+    logger.info("Serving static files from {} by context {}", static_dir, asset_prefix)
 
-        app.mount(asset_prefix, StaticFiles(directory=static_dir_path), name="static")
+    app.mount(asset_prefix, StaticFiles(directory=static_dir), name="static")
 
-        @app.get("/", include_in_schema=False)
-        @app.get("/{full_path:path}", include_in_schema=False)
-        async def serve_spa() -> FileResponse:
-            """Serve the Single Page Application (SPA) index.html file for any path."""
-            return FileResponse(static_dir_path / "index.html")
+    @app.get("/", include_in_schema=False)
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def serve_spa() -> FileResponse:
+        """Serve the Single Page Application (SPA) index.html file for any path."""
+        return FileResponse(static_dir / "index.html")
 
 
 def main() -> None:

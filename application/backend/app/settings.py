@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     # Server
     host: str = Field(default="0.0.0.0", alias="HOST")  # noqa: S104
     port: int = Field(default=7860, alias="PORT")
-    static_files_dir: str | None = Field(
+    static_files_dir: Path | None = Field(
         default=None,
         alias="STATIC_FILES_DIR",
         description="Directory containing static UI files",
@@ -90,10 +90,11 @@ class Settings(BaseSettings):
                 d.mkdir(parents=True, exist_ok=True)
 
     @field_validator("static_files_dir", "alembic_config_path", "alembic_script_location", mode="after")
-    def prefix_paths(cls, v: str | None) -> str | None:
+    def prefix_paths(cls, v: str | Path | None) -> str | Path | None:
         if v and getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
             # If application is running in pyinstaller bundle, adjust the path accordingly.
-            return os.path.join(getattr(sys, "_MEIPASS", ""), v)
+            prefixed_path = os.path.join(getattr(sys, "_MEIPASS", ""), v)
+            return Path(prefixed_path) if isinstance(v, Path) else prefixed_path
         return v
 
 
