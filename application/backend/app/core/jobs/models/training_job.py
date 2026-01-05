@@ -8,7 +8,7 @@ from uuid import UUID, uuid4
 from loguru import logger
 from pydantic import Field
 
-from app.core.jobs import Job, JobParams, JobType
+from app.core.jobs.models import Job, JobParams, JobType
 from app.models import Task
 
 

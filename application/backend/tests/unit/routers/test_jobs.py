@@ -9,8 +9,9 @@ import pytest
 from starlette import status
 
 from app.api.dependencies import get_data_dir, get_job_dir, get_job_queue
-from app.core.jobs import Job, JobParams, JobQueue, JobStatus
+from app.core.jobs import JobQueue
 from app.core.jobs.control_plane import CancellationResult
+from app.core.jobs.models import Job, JobParams, JobStatus
 from app.main import app
 from app.models import Project, Task, TaskType
 from app.schemas.job import JobRequest, JobType, TrainingRequestParams
