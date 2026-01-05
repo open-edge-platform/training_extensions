@@ -70,7 +70,7 @@ class TestDatasetItemEndpoints:
 
         response = fxt_client.post(f"/api/projects/{uuid4()}/dataset/items")
 
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
         fxt_dataset_service.create_dataset_item.assert_not_called()
 
     def test_create_dataset_item_success(self, fxt_get_project, fxt_dataset_item, fxt_dataset_service, fxt_client):
@@ -158,14 +158,14 @@ class TestDatasetItemEndpoints:
     def test_list_dataset_items_wrong_limit(self, fxt_get_project, fxt_dataset_service, fxt_client, limit):
         response = fxt_client.get(f"/api/projects/{uuid4()}/dataset/items?limit=${limit}")
 
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
         fxt_dataset_service.list_dataset_items.assert_not_called()
 
     @pytest.mark.parametrize("offset", [-20])
     def test_list_dataset_items_wrong_offset(self, fxt_get_project, fxt_dataset_service, fxt_client, offset):
         response = fxt_client.get(f"/api/projects/{uuid4()}/dataset/items?offset=${offset}")
 
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
         fxt_dataset_service.list_dataset_items.assert_not_called()
 
     @pytest.mark.parametrize("offset", [-20])
@@ -174,7 +174,7 @@ class TestDatasetItemEndpoints:
             f"/api/projects/{str(uuid4())}/dataset/items?start_date=2025-12-31T23:59:59Z&end_date=2025-01-09T00:00:00Z"
         )
 
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
         fxt_dataset_service.list_dataset_items.assert_not_called()
 
     @pytest.mark.parametrize(
@@ -631,5 +631,5 @@ class TestDatasetItemEndpoints:
             json='{"subset": "' + subset + '"}',
         )
 
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
         fxt_dataset_service.assign_dataset_item_subset.assert_not_called()

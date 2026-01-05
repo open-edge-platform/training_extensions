@@ -78,7 +78,7 @@ CREATE_PROJECT_BODY_EXAMPLES = {
     responses={
         status.HTTP_201_CREATED: {"description": "Project successfully created"},
         status.HTTP_409_CONFLICT: {"description": "Project already exists or labels have duplicated names or hotkeys"},
-        status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Invalid request body"},
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {"description": "Invalid request body"},
     },
 )
 def create_project(

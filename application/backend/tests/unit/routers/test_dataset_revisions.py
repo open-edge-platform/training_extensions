@@ -178,7 +178,7 @@ class TestDatasetRevisionItemEndpoints:
             f"/api/projects/{str(fxt_get_project.id)}/dataset_revisions/{str(fxt_dataset_revision_id)}/items?limit={limit}"
         )
 
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
         fxt_dataset_revision_service.list_dataset_revision_items.assert_not_called()
 
     @pytest.mark.parametrize("offset", [-1, -20])
@@ -189,7 +189,7 @@ class TestDatasetRevisionItemEndpoints:
             f"/api/projects/{str(fxt_get_project.id)}/dataset_revisions/{str(fxt_dataset_revision_id)}/items?offset={offset}"
         )
 
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
         fxt_dataset_revision_service.list_dataset_revision_items.assert_not_called()
 
     def test_list_dataset_revision_items_invalid_revision_id(

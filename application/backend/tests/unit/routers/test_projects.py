@@ -101,7 +101,7 @@ class TestProjectEndpoints:
     def test_create_project_invalid(self, fxt_project_service, fxt_client):
         response = fxt_client.post("/api/projects", json={"name": "New Pipeline", "attr": "invalid"})
 
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
         fxt_project_service.create_project.assert_not_called()
 
     def test_delete_project_success(self, fxt_project, fxt_project_service, fxt_client):
