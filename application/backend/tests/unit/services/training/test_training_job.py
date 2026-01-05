@@ -54,7 +54,7 @@ class TestTrainingJob:
         assert expected_path.exists()
         assert expected_path.read_text() == "Training log content"
 
-    @patch("app.services.training.models.logger")
+    @patch("app.core.jobs.models.training_job.logger")
     def test_on_finish_logs_warning(self, mock_logger, fxt_training_job):
         """Test that a warning is logged and no file copied when the source log file doesn't exist."""
         # Don't create the log file
