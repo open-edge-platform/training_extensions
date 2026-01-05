@@ -32,6 +32,7 @@ from otx.types.precision import OTXPrecisionType
 from otx.types.task import OTXTaskType
 from sqlalchemy.orm import Session
 
+from app.core.jobs.models import TrainingJobParams
 from app.core.run import ExecutionContext
 from app.models import DatasetItemAnnotationStatus, Task, TaskType, TrainingStatus
 from app.models.training_configuration.configuration import TrainingConfiguration
@@ -45,7 +46,6 @@ from app.services import (
 )
 
 from .base import Trainer, step
-from .models import TrainingParams
 from .subset_assignment import SplitRatios, SubsetAssigner, SubsetService
 
 MODEL_WEIGHTS_PATH = "model_weights_path"
@@ -99,7 +99,7 @@ class OTXTrainer(Trainer):
         self._db_session_factory = training_deps.db_session_factory
 
     @step("Prepare Model Weights")
-    def prepare_weights(self, training_params: TrainingParams) -> Path:
+    def prepare_weights(self, training_params: TrainingJobParams) -> Path:
         """
         Prepare weights for training based on training parameters.
 
@@ -161,7 +161,7 @@ class OTXTrainer(Trainer):
 
     @step("Prepare Training Configuration")
     def prepare_training_configuration(
-        self, training_params: TrainingParams, task: Task
+        self, training_params: TrainingJobParams, task: Task
     ) -> tuple[TrainingConfiguration, dict]:
         project_id = cast(UUID, training_params.project_id)
         with self._db_session_factory() as db:
@@ -259,7 +259,7 @@ class OTXTrainer(Trainer):
 
     @step("Prepare Model")
     def prepare_model(
-        self, training_params: TrainingParams, dataset_revision_id: UUID, configuration: TrainingConfiguration
+        self, training_params: TrainingJobParams, dataset_revision_id: UUID, configuration: TrainingConfiguration
     ) -> None:
         project_id = cast(UUID, training_params.project_id)  # In 'run' we already check that project_id is not None
         logger.info("Preparing model revision (model_id={}, project_id={})", training_params.model_id, project_id)
@@ -368,7 +368,7 @@ class OTXTrainer(Trainer):
     @step("Store Model Artifacts")
     def store_model_artifacts(
         self,
-        training_params: TrainingParams,
+        training_params: TrainingJobParams,
         otx_work_dir: Path,
         trained_model_path: Path,
         exported_model_path: Path,

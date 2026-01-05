@@ -7,7 +7,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from app.core.jobs.models import Job, JobStatus, JobType
+from app.core.jobs.models import Job, JobStatus, JobType, TrainingJob
 
 
 class TrainingRequestParams(BaseModel):
@@ -78,7 +78,7 @@ class TrainingMetadata(BaseModel):
     model: ModelMetadata = Field(..., description="Model being trained")
 
     @staticmethod
-    def of(job: Job) -> "TrainingMetadata":
+    def of(job: TrainingJob) -> "TrainingMetadata":
         return TrainingMetadata(
             project=ProjectMetadata(id=job.project_id),
             model=ModelMetadata(
