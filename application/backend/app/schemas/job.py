@@ -134,7 +134,7 @@ class JobView(BaseModel):
     def of(job: Job) -> "JobView":
         match job.job_type:
             case JobType.TRAIN:
-                metadata = TrainingMetadata.of(job)
+                metadata = TrainingMetadata.of(job)  # type: ignore[arg-type]
             case _:
                 raise NotImplementedError("JobView is not implemented for this job type")
 
