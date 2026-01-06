@@ -2,11 +2,11 @@
     "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
     "productName": "Geti Tune",
     "version": "0.1.0",
-    "identifier": "com.tauri.dev",
+    "identifier": "com.intel",
     "build": {
         "frontendDist": "../dist",
         "devUrl": "http://localhost:3000",
-        "beforeDevCommand": "npm run start",
+        "beforeDevCommand": "npm run dev",
         "beforeBuildCommand": "npm run build"
     },
     "app": {
@@ -25,7 +25,9 @@
     },
     "bundle": {
         "active": true,
-        "targets": "all",
-        "icon": ["icons/32x32.png"]
+        "targets": ["app"],
+        "externalBin": ["geti-tune-backend"],
+        "resources": ["_internal"],
+        "icon": ["icons/icon.ico"]
     }
 }

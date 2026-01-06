@@ -174,6 +174,15 @@ wheels = [
 ]
 
 [[package]]
+name = "altgraph"
+version = "0.17.5"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/7e/f8/97fdf103f38fed6792a1601dbc16cc8aac56e7459a9fff08c812d8ae177a/altgraph-0.17.5.tar.gz", hash = "sha256:c87b395dd12fabde9c99573a9749d67da8d29ef9de0125c7f536699b4a9bc9e7", size = 48428, upload-time = "2025-11-21T20:35:50.583Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a9/ba/000a1996d4308bc65120167c21241a3b205464a2e0b58deda26ae8ac21d1/altgraph-0.17.5-py2.py3-none-any.whl", hash = "sha256:f3a22400bce1b0c701683820ac4f3b159cd301acab067c51c653e06961600597", size = 21228, upload-time = "2025-11-21T20:35:49.444Z" },
+]
+
+[[package]]
 name = "annotated-doc"
 version = "0.0.4"
 source = { registry = "https://pypi.org/simple" }
@@ -800,6 +809,9 @@ cpu = [
 cuda = [
     { name = "otx", extra = ["cuda"], marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra != 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra != 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-3-otx-cuda' and extra != 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra != 'extra-3-otx-cpu' and extra != 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
 ]
+installer = [
+    { name = "pyinstaller" },
+]
 mqtt = [
     { name = "paho-mqtt" },
 ]
@@ -843,6 +855,7 @@ requires-dist = [
     { name = "pillow", specifier = "~=12.0" },
     { name = "psutil", specifier = "~=7.1.3" },
     { name = "pydantic-settings", specifier = "~=2.12.0" },
+    { name = "pyinstaller", marker = "extra == 'installer'", specifier = "~=6.16.0" },
     { name = "python-multipart", specifier = "~=0.0.20" },
     { name = "pyyaml", specifier = "~=6.0.3" },
     { name = "scikit-learn", specifier = "~=1.7.2" },
@@ -852,7 +865,7 @@ requires-dist = [
     { name = "uvicorn", specifier = "~=0.38.0" },
     { name = "watchdog", specifier = "==6.0.0" },
 ]
-provides-extras = ["cpu", "xpu", "cuda", "mqtt"]
+provides-extras = ["cpu", "xpu", "cuda", "mqtt", "installer"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -1410,6 +1423,18 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/76/04/5c5e2b8577bc936e219becb2e98cdb1aca14a4921a12995b9d0c523502ae/lxml-6.0.2-cp313-cp313-win32.whl", hash = "sha256:e8cd2415f372e7e5a789d743d133ae474290a90b9023197fd78f32e2dc6873e2", size = 3610700, upload-time = "2025-09-22T04:02:24.465Z" },
     { url = "https://files.pythonhosted.org/packages/fe/0a/4643ccc6bb8b143e9f9640aa54e38255f9d3b45feb2cbe7ae2ca47e8782e/lxml-6.0.2-cp313-cp313-win_amd64.whl", hash = "sha256:b30d46379644fbfc3ab81f8f82ae4de55179414651f110a1514f0b1f8f6cb2d7", size = 4010347, upload-time = "2025-09-22T04:02:26.286Z" },
     { url = "https://files.pythonhosted.org/packages/31/ef/dcf1d29c3f530577f61e5fe2f1bd72929acf779953668a8a47a479ae6f26/lxml-6.0.2-cp313-cp313-win_arm64.whl", hash = "sha256:13dcecc9946dca97b11b7c40d29fba63b55ab4170d3c0cf8c0c164343b9bfdcf", size = 3671248, upload-time = "2025-09-22T04:02:27.918Z" },
+]
+
+[[package]]
+name = "macholib"
+version = "1.16.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "altgraph", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-3-otx-cuda' and extra != 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (platform_machine != 'aarch64' and extra != 'extra-3-otx-cpu') or (platform_python_implementation != 'CPython' and extra != 'extra-3-otx-cpu') or sys_platform == 'darwin' or (sys_platform != 'linux' and sys_platform != 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (sys_platform != 'linux' and extra != 'extra-3-otx-cpu') or (sys_platform == 'win32' and extra != 'extra-3-otx-cpu') or (sys_platform == 'win32' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (sys_platform == 'win32' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or extra == 'extra-3-otx-xpu' or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cuda') or (extra != 'extra-3-otx-cpu' and extra != 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-3-otx-cuda' and extra != 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-xpu') or (extra != 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu') or (extra != 'extra-9-geti-tune-cpu' and extra != 'extra-9-geti-tune-cuda' and extra != 'extra-9-geti-tune-xpu')" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/10/2f/97589876ea967487978071c9042518d28b958d87b17dceb7cdc1d881f963/macholib-1.16.4.tar.gz", hash = "sha256:f408c93ab2e995cd2c46e34fe328b130404be143469e41bc366c807448979362", size = 59427, upload-time = "2025-11-22T08:28:38.373Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c7/d1/a9f36f8ecdf0fb7c9b1e78c8d7af12b8c8754e74851ac7b94a8305540fc7/macholib-1.16.4-py2.py3-none-any.whl", hash = "sha256:da1a3fa8266e30f0ce7e97c6a54eefaae8edd1e5f86f3eb8b95457cae90265ea", size = 38117, upload-time = "2025-11-22T08:28:36.939Z" },
 ]
 
 [[package]]
@@ -2278,6 +2303,15 @@ wheels = [
 ]
 
 [[package]]
+name = "pefile"
+version = "2023.2.7"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/78/c5/3b3c62223f72e2360737fd2a57c30e5b2adecd85e70276879609a7403334/pefile-2023.2.7.tar.gz", hash = "sha256:82e6114004b3d6911c77c3953e3838654b04511b8b66e8583db70c65998017dc", size = 74854, upload-time = "2023-02-07T12:23:55.958Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/55/26/d0ad8b448476d0a1e8d3ea5622dc77b916db84c6aa3cb1e1c0965af948fc/pefile-2023.2.7-py3-none-any.whl", hash = "sha256:da185cd2af68c08a6cd4481f7325ed600a88f6a813bad9dea07ab3ef73d8d8d6", size = 71791, upload-time = "2023-02-07T12:28:36.678Z" },
+]
+
+[[package]]
 name = "pillow"
 version = "12.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2577,6 +2611,47 @@ wheels = [
 ]
 
 [[package]]
+name = "pyinstaller"
+version = "6.16.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "altgraph" },
+    { name = "macholib", marker = "sys_platform == 'darwin' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
+    { name = "packaging" },
+    { name = "pefile", marker = "sys_platform == 'win32' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
+    { name = "pyinstaller-hooks-contrib" },
+    { name = "pywin32-ctypes", marker = "sys_platform == 'win32' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
+    { name = "setuptools" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/94/94/1f62e95e4a28b64cfbb5b922ef3046f968b47170d37a1e1a029f56ac9cb4/pyinstaller-6.16.0.tar.gz", hash = "sha256:53559fe1e041a234f2b4dcc3288ea8bdd57f7cad8a6644e422c27bb407f3edef", size = 4008473, upload-time = "2025-09-13T20:07:01.733Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7b/0a/c42ce6e5d3de287f2e9432a074fb209f1fb72a86a72f3903849fdb5e4829/pyinstaller-6.16.0-py3-none-macosx_10_13_universal2.whl", hash = "sha256:7fd1c785219a87ca747c21fa92f561b0d2926a7edc06d0a0fe37f3736e00bd7a", size = 1027899, upload-time = "2025-09-13T20:05:59.2Z" },
+    { url = "https://files.pythonhosted.org/packages/4e/d0/f18fedde32835d5a758f464c75924e2154065625f09d5456c3c303527654/pyinstaller-6.16.0-py3-none-manylinux2014_aarch64.whl", hash = "sha256:b756ddb9007b8141c5476b553351f9d97559b8af5d07f9460869bfae02be26b0", size = 727990, upload-time = "2025-09-13T20:06:03.583Z" },
+    { url = "https://files.pythonhosted.org/packages/7a/db/c8bb47514ce857b24bf9294cf1ff74844b6a489fa0ab4ef6f923288c4e38/pyinstaller-6.16.0-py3-none-manylinux2014_i686.whl", hash = "sha256:0a48f55b85ff60f83169e10050f2759019cf1d06773ad1c4da3a411cd8751058", size = 739238, upload-time = "2025-09-13T20:06:07.69Z" },
+    { url = "https://files.pythonhosted.org/packages/c6/3e/451dc784a8fcca0fe9f9b6b802d58555364a95b60f253613a2c83fc6b023/pyinstaller-6.16.0-py3-none-manylinux2014_ppc64le.whl", hash = "sha256:73ba72e04fcece92e32518bbb1e1fb5ac2892677943dfdff38e01a06e8742851", size = 737142, upload-time = "2025-09-13T20:06:11.732Z" },
+    { url = "https://files.pythonhosted.org/packages/71/37/2f457479ef8fa2821cdb448acee2421dfb19fbe908bf5499d1930c164084/pyinstaller-6.16.0-py3-none-manylinux2014_s390x.whl", hash = "sha256:b1752488248f7899281b17ca3238eefb5410521291371a686a4f5830f29f52b3", size = 734133, upload-time = "2025-09-13T20:06:15.477Z" },
+    { url = "https://files.pythonhosted.org/packages/63/c4/0f7daac4d062a4d1ac2571d8a8b9b5d6812094fcd914d139af591ca5e1ba/pyinstaller-6.16.0-py3-none-manylinux2014_x86_64.whl", hash = "sha256:ba618a61627ee674d6d68e5de084ba17c707b59a4f2a856084b3999bdffbd3f0", size = 733817, upload-time = "2025-09-13T20:06:19.683Z" },
+    { url = "https://files.pythonhosted.org/packages/11/e4/b6127265b42bef883e8873d850becadf748bc5652e5a7029b059328f3c31/pyinstaller-6.16.0-py3-none-musllinux_1_1_aarch64.whl", hash = "sha256:c8b7ef536711617e12fef4673806198872033fa06fa92326ad7fd1d84a9fa454", size = 732912, upload-time = "2025-09-13T20:06:23.46Z" },
+    { url = "https://files.pythonhosted.org/packages/2b/00/c6663107bdf814b2916e71563beabd09f693c47712213bc228994cb2cc65/pyinstaller-6.16.0-py3-none-musllinux_1_1_x86_64.whl", hash = "sha256:d1ebf84d02c51fed19b82a8abb4df536923abd55bb684d694e1356e4ae2a0ce5", size = 732773, upload-time = "2025-09-13T20:06:27.352Z" },
+    { url = "https://files.pythonhosted.org/packages/a3/14/cabe9bc5f60b95d2e70e7d045ab94b0015ff8f6c8b16e2142d3597e30749/pyinstaller-6.16.0-py3-none-win32.whl", hash = "sha256:6d5f8617f3650ff9ef893e2ab4ddbf3c0d23d0c602ef74b5df8fbef4607840c8", size = 1313878, upload-time = "2025-09-13T20:06:33.234Z" },
+    { url = "https://files.pythonhosted.org/packages/aa/99/2005efbc297e7813c1d6f18484aa94a1a81ce87b6a5b497c563681f4c4ea/pyinstaller-6.16.0-py3-none-win_amd64.whl", hash = "sha256:bc10eb1a787f99fea613509f55b902fbd2d8b73ff5f51ff245ea29a481d97d41", size = 1374706, upload-time = "2025-09-13T20:06:39.95Z" },
+    { url = "https://files.pythonhosted.org/packages/ca/f4/4dfcf69b86d60fcaae05a42bbff1616d48a91e71726e5ed795d773dae9b3/pyinstaller-6.16.0-py3-none-win_arm64.whl", hash = "sha256:d0af8a401de792c233c32c44b16d065ca9ab8262ee0c906835c12bdebc992a64", size = 1315923, upload-time = "2025-09-13T20:06:45.846Z" },
+]
+
+[[package]]
+name = "pyinstaller-hooks-contrib"
+version = "2025.11"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "packaging" },
+    { name = "setuptools" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/45/2f/2c68b6722d233dae3e5243751aafc932940b836919cfaca22dd0c60d417c/pyinstaller_hooks_contrib-2025.11.tar.gz", hash = "sha256:dfe18632e06655fa88d218e0d768fd753e1886465c12a6d4bce04f1aaeec917d", size = 169183, upload-time = "2025-12-23T12:59:37.361Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a7/c4/3a096c6e701832443b957b9dac18a163103360d0c7f5842ca41695371148/pyinstaller_hooks_contrib-2025.11-py3-none-any.whl", hash = "sha256:777e163e2942474aa41a8e6d31ac1635292d63422c3646c176d584d04d971c34", size = 449478, upload-time = "2025-12-23T12:59:35.987Z" },
+]
+
+[[package]]
 name = "pylibsrtp"
 version = "1.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2850,6 +2925,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/a5/be/3fd5de0979fcb3994bfee0d65ed8ca9506a8a1260651b86174f6a86f52b3/pywin32-311-cp313-cp313-win32.whl", hash = "sha256:f95ba5a847cba10dd8c4d8fefa9f2a6cf283b8b88ed6178fa8a6c1ab16054d0d", size = 8705700, upload-time = "2025-07-14T20:13:26.471Z" },
     { url = "https://files.pythonhosted.org/packages/e3/28/e0a1909523c6890208295a29e05c2adb2126364e289826c0a8bc7297bd5c/pywin32-311-cp313-cp313-win_amd64.whl", hash = "sha256:718a38f7e5b058e76aee1c56ddd06908116d35147e133427e59a3983f703a20d", size = 9494700, upload-time = "2025-07-14T20:13:28.243Z" },
     { url = "https://files.pythonhosted.org/packages/04/bf/90339ac0f55726dce7d794e6d79a18a91265bdf3aa70b6b9ca52f35e022a/pywin32-311-cp313-cp313-win_arm64.whl", hash = "sha256:7b4075d959648406202d92a2310cb990fea19b535c7f4a78d3f5e10b926eeb8a", size = 8709318, upload-time = "2025-07-14T20:13:30.348Z" },
+]
+
+[[package]]
+name = "pywin32-ctypes"
+version = "0.2.3"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/85/9f/01a1a99704853cb63f253eea009390c88e7131c67e66a0a02099a8c917cb/pywin32-ctypes-0.2.3.tar.gz", hash = "sha256:d162dc04946d704503b2edc4d55f3dba5c1d539ead017afa00142c38b9885755", size = 29471, upload-time = "2024-08-14T10:15:34.626Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/de/3d/8161f7711c017e01ac9f008dfddd9410dff3674334c233bde66e7ba65bbf/pywin32_ctypes-0.2.3-py3-none-any.whl", hash = "sha256:8a1513379d709975552d202d942d9837758905c8d01eb82b8bcc30918929e7b8", size = 30756, upload-time = "2024-08-14T10:15:33.187Z" },
 ]
 
 [[package]]

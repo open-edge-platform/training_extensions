@@ -42,6 +42,7 @@ cuda = ["otx[cuda]"]
 mqtt = [
     "paho-mqtt~=2.1.0",
 ]
+installer = ["pyinstaller~=6.16.0"]
 
 [dependency-groups]
 dev = [

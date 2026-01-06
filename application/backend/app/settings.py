@@ -3,11 +3,13 @@
 
 """Application configuration management"""
 
+import os
+import sys
 from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -86,6 +88,17 @@ class Settings(BaseSettings):
         for d in [self.data_dir, self.log_dir, self.worker_dir, self.job_dir]:
             if d:
                 d.mkdir(parents=True, exist_ok=True)
+
+    @field_validator("static_files_dir", "alembic_config_path", "alembic_script_location", mode="after")
+    def prefix_paths(cls, v: str | Path | None) -> str | Path | None:
+        # In "frozen" pyinstaller applications data paths must be prefixed with the absolute path to the bundle folder
+        # which is stored in  sys._MEIPASS attribute.
+        # https://pyinstaller.org/en/stable/runtime-information.html
+        if v and getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+            # If application is running in pyinstaller bundle, adjust the path accordingly.
+            prefixed_path = os.path.join(getattr(sys, "_MEIPASS", ""), v)
+            return Path(prefixed_path) if isinstance(v, Path) else prefixed_path
+        return v
 
 
 @lru_cache
