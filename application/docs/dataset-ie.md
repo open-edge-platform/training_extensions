@@ -33,7 +33,7 @@ benefits in terms of maintainability and reliability.
 - Metadata about the dataset (e.g., type of annotations, labels, number of items) can be obtained without fully loading
 the dataset into memory, provided that the dataset is stored in Datumaro format.
 - Datasets may be imported to projects of different task types and labels. If so, annotations need to be adapted
-accordingly (see [Task compatibility](task-compatibility.md) for more details) and the labels must explicitly re-mapped.
+accordingly (see [Task compatibility](#task-compatibility) for more details) and the labels must explicitly re-mapped.
 
 ### Overview
 
