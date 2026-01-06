@@ -60,10 +60,6 @@ def setup_test_environment():
         torch._C._jit_clear_class_registry()
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
-        if is_xpu_available():
-            import intel_extension_for_pytorch as ipex
-
-            ipex.xpu.empty_cache()
     except Exception:  # noqa: S110
         pass  # Ignore cleanup errors
 
