@@ -21,6 +21,7 @@ from app.models.training_configuration.configuration import (
     SubsetSplit,
     TrainingConfiguration,
 )
+from app.schemas.system import DeviceInfo, DeviceType
 from app.services import (
     DatasetRevisionService,
     DatasetService,
@@ -129,6 +130,7 @@ class TestOTXTrainerPrepareWeights:
         """Test preparing weights when no parent model revision ID is provided."""
         # Arrange
         training_params = TrainingJobParams(
+            device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
             model_architecture_id="Object_Detection_YOLOX_S",
             task=Task(task_type=TaskType.DETECTION),
             parent_model_revision_id=None,
@@ -157,6 +159,7 @@ class TestOTXTrainerPrepareWeights:
         project_id = uuid4()
         parent_model_revision_id = uuid4()
         training_params = TrainingJobParams(
+            device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
             project_id=project_id,
             model_architecture_id="Object_Detection_YOLOX_S",
             task=Task(task_type=TaskType.DETECTION),
@@ -185,6 +188,7 @@ class TestOTXTrainerPrepareWeights:
         project_id = uuid4()
         parent_model_revision_id = uuid4()
         training_params = TrainingJobParams(
+            device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
             project_id=project_id,
             model_architecture_id="Object_Detection_YOLOX_S",
             task=Task(task_type=TaskType.DETECTION),
@@ -206,6 +210,7 @@ class TestOTXTrainerPrepareWeights:
         """Test that ValueError is raised when parent model revision ID is provided without project ID."""
         # Arrange
         training_params = TrainingJobParams(
+            device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
             model_architecture_id="Object_Detection_YOLOX_S",
             task=Task(task_type=TaskType.DETECTION),
             parent_model_revision_id=uuid4(),
@@ -226,6 +231,7 @@ class TestOTXTrainerPrepareTrainingConfiguration:
         project_id = uuid4()
         parent_model_revision_id = uuid4()
         training_params = TrainingJobParams(
+            device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
             project_id=project_id,
             model_architecture_id="Object_Detection_YOLOX_S",
             task=Task(task_type=TaskType.DETECTION),
@@ -500,6 +506,7 @@ class TestOTXTrainerPrepareModel:
         model_id = uuid4()
         model_architecture_id = "Custom_Image_Classification_EfficientNet-B0"
         training_params = TrainingJobParams(
+            device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
             model_id=model_id,
             project_id=project_id,
             model_architecture_id=model_architecture_id,
@@ -725,6 +732,7 @@ class TestOTXTrainerStoreModelArtifacts:
         model_id = uuid4()
 
         training_params = TrainingJobParams(
+            device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
             model_id=model_id,
             project_id=project_id,
             model_architecture_id="Object_Detection_YOLOX_S",

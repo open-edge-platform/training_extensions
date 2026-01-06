@@ -211,6 +211,33 @@ class TestSystemService:
             assert fxt_system_service.validate_device("tpu") is False
             assert fxt_system_service.validate_device("invalid") is False
 
+    def test_get_device_info(self, fxt_system_service: SystemService):
+        """Test getting device info"""
+        with patch("app.services.system_service.torch") as mock_torch:
+            # Mock XPU device
+            mock_xpu_dp = MagicMock()
+            mock_xpu_dp.name = "Intel(R) Graphics [0x7d41]"
+            mock_xpu_dp.total_memory = 36022263808
+
+            mock_torch.xpu.is_available.return_value = True
+            mock_torch.xpu.device_count.return_value = 1
+            mock_torch.xpu.get_device_properties.return_value = mock_xpu_dp
+
+            # CUDA not available
+            mock_torch.cuda.is_available.return_value = False
+
+            device_info = fxt_system_service.get_device_info("xpu-0")
+
+            assert device_info.type == "xpu"
+            assert device_info.name == "Intel(R) Graphics [0x7d41]"
+            assert device_info.memory == 36022263808
+            assert device_info.index == 0
+
+    def test_get_device_info_invalid(self, fxt_system_service: SystemService):
+        """Test getting device info for invalid device"""
+        with pytest.raises(ValueError):
+            fxt_system_service.get_device_info("xpu-999")
+
     def test_get_camera_devices(self, fxt_system_service: SystemService):
         """Test getting camera devices"""
         with patch("app.services.system_service.enumerate_cameras") as mock_enumerate_cameras:

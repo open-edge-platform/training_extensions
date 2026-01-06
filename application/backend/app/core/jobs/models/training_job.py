@@ -10,6 +10,7 @@ from pydantic import Field
 
 from app.core.jobs.models import Job, JobParams, JobType
 from app.models import Task
+from app.schemas.system import DeviceInfo
 
 
 class TrainingJobParams(JobParams):
@@ -19,6 +20,7 @@ class TrainingJobParams(JobParams):
     parent_model_revision_id: UUID | None = None
     task: Task
     model_id: UUID = Field(default_factory=uuid4)
+    device: DeviceInfo
 
 
 class ProjectJob(Job):

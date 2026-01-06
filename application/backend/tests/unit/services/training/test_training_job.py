@@ -8,11 +8,16 @@ import pytest
 
 from app.core.jobs.models import TrainingJob, TrainingJobParams
 from app.models import Task, TaskType
+from app.schemas.system import DeviceInfo, DeviceType
 
 
 @pytest.fixture
 def fxt_training_params():
-    return TrainingJobParams(model_architecture_id="test_arch", task=Task(task_type=TaskType.CLASSIFICATION))
+    return TrainingJobParams(
+        device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
+        model_architecture_id="test_arch",
+        task=Task(task_type=TaskType.CLASSIFICATION),
+    )
 
 
 @pytest.fixture

@@ -11,13 +11,12 @@ import aiofiles
 from fastapi import APIRouter, Body, Depends, HTTPException, status
 from sse_starlette.sse import EventSourceResponse, ServerSentEvent
 
-from app.api.dependencies import get_data_dir, get_job_dir, get_job_queue, get_project_service
+from app.api.dependencies import get_data_dir, get_job_dir, get_job_queue, get_project_service, get_system_service
 from app.api.validators import JobID
 from app.core.jobs.control_plane import CancellationResult, JobQueue
 from app.core.jobs.models import JobStatus, TrainingJob, TrainingJobParams
-from app.schemas import JobRequest, JobView
-from app.schemas.job import JobType
-from app.services import ProjectService, ResourceNotFoundError
+from app.schemas.job import JobRequest, JobType, JobView
+from app.services import ProjectService, ResourceNotFoundError, SystemService
 
 router = APIRouter(prefix="/api/jobs", tags=["Jobs"])
 
@@ -38,9 +37,11 @@ async def submit_job(
     job_dir: Annotated[Path, Depends(get_job_dir)],
     data_dir: Annotated[Path, Depends(get_data_dir)],
     project_service: Annotated[ProjectService, Depends(get_project_service)],
+    system_service: Annotated[SystemService, Depends(get_system_service)],
 ) -> JobView:
     """Create a new job and submit it to the scheduler."""
     try:
+        device = system_service.get_device_info(job_request.parameters.device)
         project = project_service.get_project_by_id(job_request.project_id)
         job = None
         match job_request.job_type:
@@ -50,6 +51,7 @@ async def submit_job(
                     log_dir=job_dir,
                     data_dir=data_dir,
                     params=TrainingJobParams(
+                        device=device,
                         model_architecture_id=job_request.parameters.model_architecture_id,
                         parent_model_revision_id=job_request.parameters.parent_model_revision_id,
                         task=project.task,

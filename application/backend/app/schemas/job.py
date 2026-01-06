@@ -13,6 +13,7 @@ from app.core.jobs.models import Job, JobStatus, JobType, TrainingJob
 class TrainingRequestParams(BaseModel):
     """Request schema for training a new model."""
 
+    device: str = Field(..., description="Device identifier for training (e.g., 'cpu', 'xpu-0', 'cuda-1')")
     model_architecture_id: str = Field(..., description="Model architecture identifier")
     parent_model_revision_id: UUID | None = Field(
         None, description="Parent model revision ID for fine-tuning, null for training from scratch"
@@ -21,6 +22,7 @@ class TrainingRequestParams(BaseModel):
     model_config = {
         "json_schema_extra": {
             "example": {
+                "device": "xpu-0",
                 "model_architecture_id": "Custom_Object_Detection_Gen3_ATSS",
                 "parent_model_revision_id": "ef3983f1-cef0-4ebe-91db-7330f1dd6e27",
             }
@@ -45,6 +47,7 @@ class TrainingRequest(BaseJobRequest):
                 "parameters": {
                     "model_architecture_id": "Custom_Object_Detection_Gen3_ATSS",
                     "parent_model_revision_id": "ef3983f1-cef0-4ebe-91db-7330f1dd6e27",
+                    "device": "xpu-0",
                 },
             }
         }
