@@ -8,12 +8,12 @@ from uuid import UUID, uuid4
 from loguru import logger
 from pydantic import Field
 
-from app.core.jobs import Job, JobParams, JobType
+from app.core.jobs.models import Job, JobParams, JobType
 from app.models import Task
 from app.schemas.system import DeviceInfo
 
 
-class TrainingParams(JobParams):
+class TrainingJobParams(JobParams):
     job_id: UUID | None = None
     project_id: UUID | None = None
     model_architecture_id: str
@@ -31,7 +31,7 @@ class TrainingJob(ProjectJob):
     job_type: Literal[JobType.TRAIN] = JobType.TRAIN
     log_dir: Path
     data_dir: Path
-    params: TrainingParams
+    params: TrainingJobParams
 
     def model_post_init(self, _: Any) -> None:
         self.params.job_id = self.id

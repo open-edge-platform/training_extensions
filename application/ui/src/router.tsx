@@ -1,10 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Suspense } from 'react';
-
-import { Loading } from '@geti/ui';
-import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 
 import { paths } from './constants/paths';
 import { SelectedDataProvider } from './features/dataset/selected-data-provider.component';
@@ -18,6 +15,7 @@ import { Inference } from './routes/inference/inference';
 import { Models } from './routes/models/models';
 import { CreateProject } from './routes/project/create-project';
 import { ViewProject } from './routes/project/view-project';
+import { RootLayout } from './routes/root/root';
 
 const Redirect = () => {
     let path = paths.project.index({});
@@ -55,11 +53,7 @@ const Redirect = () => {
 export const router = createBrowserRouter([
     {
         path: paths.root.pattern,
-        element: (
-            <Suspense fallback={<Loading mode='fullscreen' />}>
-                <Outlet />
-            </Suspense>
-        ),
+        element: <RootLayout />,
         errorElement: <ErrorPage />,
         children: [
             {

@@ -5,7 +5,7 @@ from uuid import uuid4
 
 import pytest
 
-from app.core.jobs import Job, JobParams, JobType
+from app.core.jobs.models import Job, JobParams, JobType
 from app.models import (
     ModelRevision,
     MqttSinkConfig,

@@ -51,32 +51,11 @@ export const useSecondaryToolbarState = () => {
         updateAnnotations(updatedAnnotations);
     };
 
-    const toggleLabels = (labelId: Key | null) => {
-        const selectedLabel = projectLabels.find((label) => label.id === labelId);
-
-        if (!selectedLabel) {
-            return;
-        }
-
-        const labelIsAssignedToEveryAnnotation = annotationsToUpdate.every((annotation) =>
-            annotation.labels?.some((label) => label.id === labelId)
-        );
-
-        if (labelIsAssignedToEveryAnnotation) {
-            removeLabels(labelId);
-        } else {
-            addLabels(labelId);
-        }
-    };
-
     return {
         isHidden,
 
         projectLabels,
-        toggleLabels,
         addLabels,
         removeLabels,
-
-        annotationsToUpdate,
     };
 };

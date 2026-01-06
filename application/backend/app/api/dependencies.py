@@ -38,22 +38,22 @@ from app.webrtc.manager import WebRTCManager
 def get_file_name_and_extension(file: UploadFile) -> tuple[str, str]:
     """Return the file name and extension"""
     if not file.filename:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File name cannot be empty.")
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="File name cannot be empty.")
     full_name = file.filename.strip()
     if not full_name:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File name cannot be empty.")
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="File name cannot be empty.")
     file_name, file_ext = os.path.splitext(full_name)
     file_name = file_name.strip()  # remove whitespace characters between the basename and the extension
     file_ext = file_ext[1:]  # remove leading dot in the extension
     if not file_ext:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File extension cannot be empty.")
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="File extension cannot be empty.")
     return file_name, file_ext
 
 
 def get_file_size(file: UploadFile) -> int:
     """Return the file size in bytes"""
     if not file.size:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File size should be defined.")
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="File size should be defined.")
     return file.size
 
 
