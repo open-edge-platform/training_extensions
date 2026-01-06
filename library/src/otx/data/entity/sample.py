@@ -22,7 +22,6 @@ from datumaro.experimental.fields import (
     keypoints_field,
     label_field,
     mask_field,
-    polygon_field,
     subset_field,
 )
 from torchvision import tv_tensors
@@ -224,39 +223,8 @@ class InstanceSegmentationSample(OTXSample):
     subset: Subset = subset_field()
     image: tv_tensors.Image | np.ndarray | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
     bboxes: np.ndarray | tv_tensors.BoundingBoxes = bbox_field(dtype=pl.Float32())
-    label: torch.Tensor = label_field(is_list=True)
-    polygons: np.ndarray = polygon_field(dtype=pl.Float32())  # Ragged array of (Npoly, 2) arrays
-    dm_image_info: DmImageInfo = image_info_field()
-
-    def __post_init__(self) -> None:
-        shape = (self.dm_image_info.height, self.dm_image_info.width)
-
-        # Convert bboxes to tv_tensors format
-        if isinstance(self.bboxes, np.ndarray):
-            self.bboxes = tv_tensors.BoundingBoxes(
-                self.bboxes,
-                format=tv_tensors.BoundingBoxFormat.XYXY,
-                canvas_size=shape,
-                dtype=torch.float32,
-            )
-
-        self.img_info = ImageInfo(
-            img_idx=0,
-            img_shape=shape,
-            ori_shape=shape,
-        )
-
-
-@register_pytree_node
-class InstanceSegmentationSampleWithMask(OTXSample):
-    """OTXSample for instance segmentation tasks."""
-
-    subset: Subset = subset_field()
-    image: tv_tensors.Image | np.ndarray | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
-    bboxes: np.ndarray | tv_tensors.BoundingBoxes = bbox_field(dtype=pl.Float32())
     masks: tv_tensors.Mask = instance_mask_field(dtype=pl.UInt8())
     label: torch.Tensor = label_field(is_list=True)
-    polygons: np.ndarray = polygon_field(dtype=pl.Float32())  # Ragged array of (Npoly, 2) arrays
     dm_image_info: DmImageInfo = image_info_field()
 
     def __post_init__(self) -> None:

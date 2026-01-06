@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 from otx import LabelInfo
 from otx.data.dataset.base import OTXDataset, Transforms
-from otx.data.entity.sample import InstanceSegmentationSample, InstanceSegmentationSampleWithMask
+from otx.data.entity.sample import InstanceSegmentationSample
 from otx.types import OTXTaskType
 
 if TYPE_CHECKING:
@@ -19,9 +19,7 @@ if TYPE_CHECKING:
 class OTXInstanceSegDataset(OTXDataset):
     """Dataset class for instance segmentation tasks in OTX.
 
-    This class handles loading images and their instance segmentation annotations,
-    supporting polygons, bounding boxes, and ellipses. Annotations can be kept as polygons
-    or converted to bitmaps for training, depending on the `include_polygons` flag.
+    This class handles loading images and their masks.
 
     Args:
         dm_subset (DmDataset): The subset of the dataset to use.
@@ -31,8 +29,6 @@ class OTXInstanceSegDataset(OTXDataset):
         stack_images (bool, optional): Whether to stack images. Defaults to True.
         to_tv_image (bool, optional): Whether to convert images to torchvision format. Defaults to True.
         data_format (str, optional): Data format string. Defaults to "".
-        include_polygons (bool, optional): If True, polygons are included in the dataset.
-            If False, polygons are converted to bitmaps for training. Defaults to False.
     """
 
     def __init__(
@@ -44,9 +40,8 @@ class OTXInstanceSegDataset(OTXDataset):
         stack_images: bool = True,
         to_tv_image: bool = True,
         data_format: str = "",
-        include_polygons: bool = True,
     ) -> None:
-        sample_type = InstanceSegmentationSample if include_polygons else InstanceSegmentationSampleWithMask
+        sample_type = InstanceSegmentationSample
         dm_subset = dm_subset.convert_to_schema(sample_type)
         super().__init__(
             dm_subset=dm_subset,

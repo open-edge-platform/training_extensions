@@ -7,7 +7,6 @@ from unittest.mock import Mock
 from datumaro.experimental import Dataset
 
 from otx.data.dataset.instance_segmentation import OTXInstanceSegDataset
-from otx.data.entity.sample import InstanceSegmentationSample, InstanceSegmentationSampleWithMask
 
 
 class TestOTXInstanceSegDataset:
@@ -27,31 +26,6 @@ class TestOTXInstanceSegDataset:
 
         self.mock_transforms = Mock()
 
-    def test_init_schema_selection_include_polygons_true(self):
-        dataset = OTXInstanceSegDataset(
-            dm_subset=self.mock_dm_subset,
-            transforms=self.mock_transforms,
-            include_polygons=True,
-        )
-
-        # Schema conversion to polygon sample
-        self.mock_dm_subset.convert_to_schema.assert_called_once_with(InstanceSegmentationSample)
-        # Label info
-        assert dataset.label_info.label_names == ["person", "car", "dog"]
-
-    def test_init_schema_selection_include_polygons_false(self):
-        # Reset mock call history
-        self.mock_dm_subset.convert_to_schema.reset_mock()
-
-        OTXInstanceSegDataset(
-            dm_subset=self.mock_dm_subset,
-            transforms=self.mock_transforms,
-            include_polygons=False,
-        )
-
-        # Schema conversion to mask sample
-        self.mock_dm_subset.convert_to_schema.assert_called_once_with(InstanceSegmentationSampleWithMask)
-
     def test_get_idx_list_per_classes_int_and_string(self):
         # Prepare items with multi-instance labels per sample
         mock_items = []
@@ -65,7 +39,6 @@ class TestOTXInstanceSegDataset:
         dataset = OTXInstanceSegDataset(
             dm_subset=self.mock_dm_subset,
             transforms=self.mock_transforms,
-            include_polygons=True,
         )
 
         dataset.dm_subset.__len__ = Mock(return_value=4)

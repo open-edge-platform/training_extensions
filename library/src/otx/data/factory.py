@@ -48,7 +48,6 @@ class OTXDatasetFactory:
         dm_subset: DmDataset | DatasetNew,
         cfg_subset: SubsetConfig,
         data_format: str,
-        include_polygons: bool = False,
         # TODO(gdlg): Add support for ignore_index again
         ignore_index: int = 255,  # noqa: ARG003
     ) -> OTXDataset:
@@ -94,7 +93,7 @@ class OTXDatasetFactory:
 
             dataset = convert_from_legacy(dm_subset)
             common_kwargs["dm_subset"] = dataset
-            return OTXInstanceSegDataset(task_type=task, include_polygons=include_polygons, **common_kwargs)
+            return OTXInstanceSegDataset(task_type=task, **common_kwargs)
 
         if task == OTXTaskType.SEMANTIC_SEGMENTATION:
             from .dataset.segmentation import OTXSegmentationDataset

@@ -192,7 +192,7 @@ def fxt_mock_segmentation_dm_subset(mocker: MockerFixture, fxt_segmentation_dm_i
         (OTXMultilabelClsDataset, OTXDataItem, {}),
         (OTXMulticlassClsDataset, OTXDataItem, {}),
         (OTXDetectionDataset, OTXDataItem, {}),
-        (OTXInstanceSegDataset, OTXDataItem, {"include_polygons": True}),
+        (OTXInstanceSegDataset, OTXDataItem, {}),
         (OTXSegmentationDataset, OTXDataItem, {}),
     ],
     ids=[

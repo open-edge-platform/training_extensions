@@ -353,7 +353,6 @@ class AutoConfigurator:
             test_subset=datamodule.test_subset,
             input_size=datamodule.input_size,
             tile_config=datamodule.tile_config,
-            include_polygons=datamodule.include_polygons,
             ignore_index=datamodule.ignore_index,
             unannotated_items_ratio=datamodule.unannotated_items_ratio,
             auto_num_workers=datamodule.auto_num_workers,
