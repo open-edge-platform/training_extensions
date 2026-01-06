@@ -156,7 +156,6 @@ class DataCollector:
 
         Args:
             timestamp: Floating-point timestamp of the captured image, used for item naming.
-            confidence: Floating-point confidence of the captured image, used for item naming.
             frame_data: Image data in numpy ndarray format (expected in BGR color space).
             inference_data: Inference data containing model predictions and model identifier.
 
@@ -187,11 +186,15 @@ class DataCollector:
         frame_data = cv2.cvtColor(frame_data, cv2.COLOR_BGR2RGB)  # Convert BGR to RGB
         with get_db_session() as session:
             label_service = LabelService(db_session=session)
-            dataset_service = DatasetService(data_dir=self.data_dir, label_service=label_service, db_session=session)
 
             # Check if max_dataset_size limit has been reached
             max_dataset_size = pipeline.data_collection.max_dataset_size
             if max_dataset_size is not None:
+                dataset_service = DatasetService(
+                    data_dir=self.data_dir,
+                    label_service=label_service,
+                    db_session=session,
+                )
                 current_count = dataset_service.count_dataset_items(project=project)
                 if current_count >= max_dataset_size:
                     logger.debug(
