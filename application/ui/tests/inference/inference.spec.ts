@@ -5,7 +5,7 @@ import { getMockedPipeline } from 'mocks/mock-pipeline';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 
-import { expect, http, test } from './fixtures';
+import { expect, http, test } from '../fixtures';
 
 test.describe('Inference', () => {
     test.beforeEach(({ network }) => {
@@ -52,14 +52,12 @@ test.describe('Inference', () => {
         );
     });
 
-    test('starts stream', async ({ page }) => {
+    test('starts stream', async ({ page, streamPage }) => {
         await page.goto('/projects/id-1/inference');
 
-        await expect(page.getByLabel('Idle')).toBeVisible();
+        await streamPage.startStream();
 
-        await page.getByLabel('Start stream').click();
-
-        await expect(page.getByLabel('Connecting')).toBeVisible();
+        expect(streamPage.isConnected()).toBeTruthy();
     });
 
     test('updates pipeline status', async ({ page, network }) => {

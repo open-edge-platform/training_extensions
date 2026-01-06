@@ -38,7 +38,11 @@ export const AnnotatorCanvas = ({ mediaItem }: AnnotatorCanvasProps) => {
     return (
         <ZoomTransform target={size}>
             <View position={'relative'} width={'100%'} height={'100%'}>
-                <img src={getImageUrl(project_id, String(mediaItem.id))} alt='Collected data' />
+                <img
+                    src={getImageUrl(project_id, String(mediaItem.id))}
+                    alt='Media item'
+                    aria-label='media item image'
+                />
 
                 <Annotations
                     annotations={orderedAnnotations}

@@ -10,12 +10,14 @@ import { expect, test as testBase } from '@playwright/test';
 import { HttpResponse } from 'msw';
 
 import { handlers, http } from '../src/api/utils';
+import { StreamPage } from './inference/stream-page';
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
 
 interface Fixtures {
     network: NetworkFixture;
+    streamPage: StreamPage;
 }
 
 const test = testBase.extend<Fixtures>({
@@ -84,6 +86,10 @@ const test = testBase.extend<Fixtures>({
             }),
         ],
     }),
+    streamPage: async ({ page }, use) => {
+        const streamPage = new StreamPage(page);
+        await use(streamPage);
+    },
 });
 
 export { expect, http, test };
