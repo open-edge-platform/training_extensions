@@ -112,8 +112,12 @@ class NumpytoTVTensorMixin:
     def convert(self, inputs: OTXDataItem | None) -> OTXDataItem | None:
         """Convert numpy to tv tensors."""
         if self.is_numpy_to_tvtensor and inputs is not None:
-            if (image := getattr(inputs, "image", None)) is not None and isinstance(image, np.ndarray):
-                inputs.image = F.to_image(image.copy())
+            if (image := getattr(inputs, "image", None)) is not None:
+                if isinstance(image, np.ndarray):
+                    inputs.image = F.to_image(image.copy())
+                elif isinstance(image, torch.Tensor):
+                    # Always wrap in tv_tensors.Image to ensure proper type for torchvision transforms
+                    inputs.image = tv_tensors.Image(image)
             if (bboxes := getattr(inputs, "bboxes", None)) is not None and isinstance(bboxes, np.ndarray):
                 inputs.bboxes = tv_tensors.BoundingBoxes(bboxes, format="xyxy", canvas_size=inputs.img_info.img_shape)  # type: ignore[attr-defined, union-attr]
             if (masks := getattr(inputs, "masks", None)) is not None and isinstance(masks, np.ndarray):
