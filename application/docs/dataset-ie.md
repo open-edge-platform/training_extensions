@@ -76,7 +76,7 @@ data/
 In the above example, the staging area contains two datasets being processed, each uniquely identified by a UUID:
 - The first one is a zip archive in COCO format. A dataset in this form (compressed) is normally the result of an upload
   operation (for later import) or an export operation (dataset ready for download).
-- The second one the other is a Datumaro dataset in uncompressed form. This form is ideal for internal processing, as
+- The second one is a Datumaro dataset in uncompressed form. This form is ideal for internal processing, as
   Datumaro datasets can be efficiently filtered and transformed thanks to its internal polars-based representation.
 
 Notably, the staging area exists purely in the file system; there is no corresponding representation in the database.
@@ -190,7 +190,7 @@ involved in dataset import and export.
 > implement it in practice since the *export* operation already combines **stage** and **prepare-for-export**._
 
 > [!NOTE]
-> The operation **stage** is also technically redudant, as it could be expressed as an **export** operation followed
+> The operation **stage** is also technically redundant, as it could be expressed as an **export** operation followed
 > by a **prepare-for-import**. Nevertheless, it still makes sense to implement it, to avoid an unnecessary compression /
 > decompression cycle when copying the dataset internally from one project to another.
 

@@ -115,14 +115,14 @@
 
 ## Jobs
 
-| Method | Path                    | Payload             | Return       | Description                                        |
-|--------|-------------------------| ------------------- | ------------ |----------------------------------------------------|
-| `POST` | `/api/jobs`             | job type and params | job id       | Create and submit a new job                        |
-| `GET`  | `/api/jobs`             | -                   | list of jobs | List the jobs in a project (scheduled or running)  |
-| `GET`  | `/api/jobs/<id>`        | -                   | job info     | Get info about a specific job                      |
-| `POST` | `/api/jobs/<id>:cancel` | -                   | -            | Cancel a job                                       |
-| `GET`  | `/api/jobs/<id>/status` | -                   | job status   | Stream real-time status updates for a specific job |
-| `GET`  | `/api/jobs/<id>/logs`   | -                   | job logs     | Stream real-time log output for a specific job     |
+| Method | Path                    | Payload              | Return       | Description                                        |
+| ------ | ----------------------- | -------------------- | ------------ | -------------------------------------------------- |
+| `POST` | `/api/jobs`             | job type and params  | job id       | Create and submit a new job                        |
+| `GET`  | `/api/jobs`             | -                    | list of jobs | List the jobs in a project (scheduled or running)  |
+| `GET`  | `/api/jobs/<id>`        | -                    | job info     | Get info about a specific job                      |
+| `POST` | `/api/jobs/<id>:cancel` | -                    | -            | Cancel a job                                       |
+| `GET`  | `/api/jobs/<id>/status` | -                    | job status   | Stream real-time status updates for a specific job |
+| `GET`  | `/api/jobs/<id>/logs`   | -                    | job logs     | Stream real-time log output for a specific job     |
 
 Job types:
 
