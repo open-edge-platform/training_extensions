@@ -92,6 +92,11 @@ jobs:
           uv run ruff check --output-format=github .
           uv run ruff format --check .
 
+      - name: Check imports with import-linter
+        working-directory: application/backend
+        run: |
+          uv run lint-imports
+
       - name: Check source code with mypy
         working-directory: application/backend
         run: |
