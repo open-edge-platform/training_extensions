@@ -1,87 +1,96 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { PointerEvent, useEffect, useRef, useState } from 'react';
+import { PointerEvent, useRef, useState } from 'react';
 
 import { clampPointBetweenImage } from '@geti/smart-tools/utils';
 
 import { useZoom } from '../../../../components/zoom/zoom.provider';
+import { Label } from '../../../../constants/shared-types';
+import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
-import { AnnotationShapeWithLabels } from '../../annotations/annotation-shape-with-labels.component';
+import { AnnotationShape } from '../../annotations/annotation-shape.component';
 import { MaskAnnotations } from '../../annotations/mask-annotations.component';
-import type { Annotation, Shape } from '../../types';
+import type { Annotation, RegionOfInterest, Shape } from '../../types';
 import { SvgToolCanvas } from '../svg-tool-canvas.component';
 import { getRelativePoint, removeOffLimitPoints } from '../utils';
 import { SAMLoading } from './sam-loading.component';
-import { InteractiveAnnotationPoint } from './segment-anything.interface';
-import { useDecodingMutation } from './use-decoding-query.hook';
 import { useSegmentAnythingModel } from './use-segment-anything.hook';
 import { useSingleStackFn } from './use-single-stack-fn.hook';
-import { useThrottledCallback } from './use-throttle-callback.hook';
 
 import classes from './segment-anything.module.scss';
 
-// Whenever the user moves their mouse over the canvas  we compute a preview of
-// SAM being applied to the user's mouse position.
-// The decoding step of SAM takes on average 100ms with 150-250ms being a high
-// exception. We throttle the mouse update based on this so that we don't overload
-// the user's cpu with too many decoding requests
-const THROTTLE_TIME = 150;
+interface PreviewAnnotationsProps {
+    previewAnnotations: Annotation[];
+    image: Pick<RegionOfInterest, 'width' | 'height'>;
+}
 
-const SELECT_ANNOTATION_STYLES = {
-    fillOpacity: 0.3,
-    fill: 'var(--energy-blue-shade)',
-    stroke: 'var(--energy-blue-shade)',
-    strokeWidth: 'calc(2px / var(--zoom-scale))',
+const PreviewAnnotations = ({ previewAnnotations, image }: PreviewAnnotationsProps) => {
+    if (previewAnnotations.length === 0) return null;
+
+    return (
+        <MaskAnnotations isEnabled annotations={previewAnnotations} width={image.width} height={image.height}>
+            {previewAnnotations.map((annotation) => (
+                <g
+                    key={annotation.id}
+                    aria-label='Segment anything preview'
+                    stroke={'var(--energy-blue-shade)'}
+                    strokeWidth={'calc(3px / var(--zoom-scale))'}
+                    fill={'transparent'}
+                    className={classes.animateStroke}
+                >
+                    <AnnotationShape annotation={annotation} />
+                </g>
+            ))}
+        </MaskAnnotations>
+    );
 };
 
 export const SegmentAnythingTool = () => {
-    const [mousePosition, setMousePosition] = useState<InteractiveAnnotationPoint>();
     const [previewShapes, setPreviewShapes] = useState<Shape[]>([]);
+    const [acceptedShapes, setAcceptedShapes] = useState<Shape[] | null>(null);
+    const ref = useRef<SVGSVGElement>(null);
 
     const zoom = useZoom();
-    const { mediaItem, roi, image } = useAnnotator();
+    const { roi, image, selectedLabel } = useAnnotator();
+    const { addAnnotations } = useAnnotationActions();
     const { isLoading, decodingQueryFn } = useSegmentAnythingModel();
     const throttledDecodingQueryFn = useSingleStackFn(decodingQueryFn);
-    const decodingMutation = useDecodingMutation(decodingQueryFn);
 
-    const ref = useRef<SVGRectElement>(null);
+    const canvasRef = useRef<SVGRectElement>(null);
 
     const clampPoint = clampPointBetweenImage(image);
 
-    const throttleSetMousePosition = useThrottledCallback((point: InteractiveAnnotationPoint) => {
-        setMousePosition(point);
-    }, THROTTLE_TIME);
-
-    useEffect(() => {
-        if (mousePosition === undefined) {
+    const handleMouseMove = (event: PointerEvent<SVGSVGElement>) => {
+        if (acceptedShapes !== null) {
             return;
         }
 
-        throttledDecodingQueryFn([mousePosition])
+        if (!canvasRef.current) {
+            return;
+        }
+
+        const point = clampPoint(
+            getRelativePoint(canvasRef.current, { x: event.clientX, y: event.clientY }, zoom.scale)
+        );
+
+        throttledDecodingQueryFn([{ ...point, positive: true }])
             .then((shapes) => {
                 setPreviewShapes(shapes.map((shape) => removeOffLimitPoints(shape, roi)));
-
-                throttleSetMousePosition.flush();
             })
             .catch(() => {
                 // If getting decoding went wrong we set an empty preview and
                 // start to compute the next decoding
                 return [];
             });
-    }, [mousePosition, throttledDecodingQueryFn, throttleSetMousePosition, roi]);
-
-    const handleMouseMove = (event: PointerEvent<SVGSVGElement>) => {
-        if (!ref.current) {
-            return;
-        }
-
-        const point = clampPoint(getRelativePoint(ref.current, { x: event.clientX, y: event.clientY }, zoom.scale));
-
-        throttleSetMousePosition({ ...point, positive: true });
     };
 
-    const onPointerUp = (event: PointerEvent<SVGSVGElement>) => {
+    const handleAddAnnotations = (shapes: Shape[], label: Label) => {
+        addAnnotations(shapes, [label]);
+        setPreviewShapes([]);
+    };
+
+    const handlePointerDown = (event: PointerEvent<SVGSVGElement>) => {
         if (!ref.current) {
             return;
         }
@@ -90,15 +99,25 @@ export const SegmentAnythingTool = () => {
             return;
         }
 
-        const point = clampPoint(getRelativePoint(ref.current, { x: event.clientX, y: event.clientY }, zoom.scale));
+        if (previewShapes.length === 0) {
+            return;
+        }
 
-        decodingMutation.mutate([{ ...point, positive: true }]);
+        if (selectedLabel == null) {
+            setAcceptedShapes(previewShapes);
+
+            return;
+        }
+
+        handleAddAnnotations(previewShapes, selectedLabel);
     };
 
-    const annotations = previewShapes.map((shape, idx): Annotation => {
+    const previewAnnotations = (acceptedShapes ?? previewShapes).map((shape, idx): Annotation => {
         return {
             shape,
-            labels: [{ id: 'id', color: 'red', name: 'Segment Anything', isPrediction: false }],
+            // During preview mode (while hovering), display the annotation without label color
+            // to provide an unobscured view of the underlying image before finalizing placement.
+            labels: [],
             id: `${idx}`,
         };
     });
@@ -108,43 +127,23 @@ export const SegmentAnythingTool = () => {
     }
 
     return (
-        <SvgToolCanvas
-            image={image}
-            canvasRef={ref}
-            onPointerMove={handleMouseMove}
-            onPointerUp={onPointerUp}
-            onPointerLeave={() => {
-                throttleSetMousePosition.cancel();
-                setMousePosition(undefined);
-                setPreviewShapes([]);
-            }}
-            style={{
-                cursor: `url("/icons/selection.svg") 8 8, auto`,
-            }}
-        >
-            <MaskAnnotations isEnabled annotations={annotations} width={mediaItem.width} height={mediaItem.height}>
-                <></>
-            </MaskAnnotations>
-
-            {previewShapes.length > 0 &&
-                previewShapes.map((shape, idx) => (
-                    <g
-                        key={idx}
-                        aria-label='Segment anything preview'
-                        {...SELECT_ANNOTATION_STYLES}
-                        strokeWidth={'calc(3px / var(--zoom-scale))'}
-                        fillOpacity={0.0}
-                        className={classes.stroke}
-                    >
-                        <AnnotationShapeWithLabels
-                            annotation={{
-                                shape,
-                                id: '',
-                                labels: [{ id: 'id', color: 'red', name: 'Segment Anything', isPrediction: false }],
-                            }}
-                        />
-                    </g>
-                ))}
-        </SvgToolCanvas>
+        <>
+            <SvgToolCanvas
+                ref={ref}
+                aria-label='SAM tool canvas'
+                image={image}
+                canvasRef={canvasRef}
+                onPointerMove={handleMouseMove}
+                onPointerDown={handlePointerDown}
+                onPointerLeave={() => {
+                    setPreviewShapes([]);
+                }}
+                style={{
+                    cursor: `url("/icons/selection.svg") 8 8, auto`,
+                }}
+            >
+                <PreviewAnnotations previewAnnotations={previewAnnotations} image={image} />
+            </SvgToolCanvas>
+        </>
     );
 };

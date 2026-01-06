@@ -7,6 +7,7 @@ import { isEmpty } from 'lodash-es';
 
 import type { DatasetItem } from '../../../../constants/shared-types';
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
+import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
 import { LabelPicker } from './label-picker.component';
 import { useSecondaryToolbarState } from './use-secondary-toolbar-state.hook';
@@ -33,10 +34,9 @@ const invalidateMediaItemAnnotations = (queryClient: QueryClient) => {
 export const SecondaryToolbar = ({ items, mediaItem, onClose, onSelectedMediaItem }: SecondaryToolbarProps) => {
     const queryClient = useQueryClient();
     const { annotations, isSaving, submitAnnotations } = useAnnotationActions();
-    const { isHidden, projectLabels, toggleLabels, annotationsToUpdate } = useSecondaryToolbarState();
+    const { selectedLabel, setSelectedLabelId } = useAnnotator();
+    const { isHidden, projectLabels } = useSecondaryToolbarState();
 
-    const annotationLabelId = annotationsToUpdate.at(0)?.labels?.at(0)?.id;
-    const selectedLabel = projectLabels.find((label) => label.id === annotationLabelId) ?? null;
     const hasAnnotations = !isEmpty(annotations);
     const selectedIndex = items.findIndex((item) => item.id === mediaItem.id);
 
@@ -66,7 +66,11 @@ export const SecondaryToolbar = ({ items, mediaItem, onClose, onSelectedMediaIte
         >
             <Grid width={'100%'} UNSAFE_className={classes.toolbarGrid} isHidden={isHidden}>
                 <Flex width={'100%'} UNSAFE_className={classes.toolbarSection} justifyContent={'space-between'}>
-                    <LabelPicker selectedLabel={selectedLabel} labels={projectLabels} onSelect={toggleLabels} />
+                    <LabelPicker
+                        selectedLabel={selectedLabel}
+                        labels={projectLabels}
+                        onSelect={(value) => setSelectedLabelId(value !== null ? String(value) : null)}
+                    />
 
                     <ButtonGroup>
                         <DeleteMediaItem

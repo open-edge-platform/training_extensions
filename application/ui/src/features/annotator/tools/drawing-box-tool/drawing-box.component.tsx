@@ -7,6 +7,7 @@ import { clampBox, clampPointBetweenImage, pointsToRect } from '@geti/smart-tool
 import { useEventListener } from 'hooks/event-listener.hook';
 
 import selectionCursor from '../../../../assets/icons/selection.svg?url';
+import { Label } from '../../../../constants/shared-types';
 import { Rectangle } from '../../shapes/rectangle.component';
 import type { Point, Rect as RectInterface, RegionOfInterest } from '../../types';
 import { DEFAULT_ANNOTATION_STYLES, isLeftButton } from '../../utils';
@@ -23,13 +24,14 @@ enum PointerType {
 
 const CURSOR_OFFSET = '7 8';
 interface DrawingBoxInterface {
-    onComplete: (shapes: RectInterface[]) => void;
+    onComplete: (shapes: RectInterface[], labels: Label[]) => void;
     roi: RegionOfInterest;
     image: ImageData;
+    selectedLabel: Label | null;
     zoom: number;
 }
 
-export const DrawingBox = ({ roi, zoom, image, onComplete }: DrawingBoxInterface) => {
+export const DrawingBox = ({ roi, zoom, image, selectedLabel, onComplete }: DrawingBoxInterface) => {
     const [startPoint, setStartPoint] = useState<Point | null>(null);
     const [boundingBox, setBoundingBox] = useState<RectInterface | null>(null);
 
@@ -87,7 +89,7 @@ export const DrawingBox = ({ roi, zoom, image, onComplete }: DrawingBoxInterface
 
         // Don't make empty annotations
         if (boundingBox.width > 1 && boundingBox.height > 1) {
-            onComplete([boundingBox]);
+            onComplete([boundingBox], selectedLabel ? [selectedLabel] : []);
         }
 
         setCleanState();
