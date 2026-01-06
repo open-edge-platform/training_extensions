@@ -1,17 +1,18 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { createContext, ReactNode, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, ReactNode, useContext, useEffect } from 'react';
 
 import { useProject } from 'hooks/api/project.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-import { get, isObject } from 'lodash-es';
 import { v4 as uuid } from 'uuid';
 
 import { $api } from '../../api/client';
 import type { components } from '../../api/openapi-spec';
 import type { DatasetItem, Label } from '../../constants/shared-types';
 import type { Annotation, Shape } from '../../features/annotator/types';
+import { UndoRedoProvider } from '../../features/dataset/media-preview/primary-toolbar/undo-redo/undo-redo-provider.component';
+import useUndoRedoState from '../../features/dataset/media-preview/primary-toolbar/undo-redo/use-undo-redo-state';
 
 type ServerAnnotation = components['schemas']['DatasetItemAnnotation-Input'];
 
@@ -55,49 +56,48 @@ const AnnotationsContext = createContext<AnnotationsContextValue | null>(null);
 
 type AnnotationActionsProviderProps = {
     children: ReactNode;
+    initialAnnotationsDTO?: ServerAnnotation[];
+    isUserReviewed?: boolean;
     mediaItem: DatasetItem;
 };
 
-const isUnannotatedError = (error: unknown): boolean => {
-    return (
-        isObject(error) && 'detail' in error && /Dataset item has not been annotated yet/i.test(String(error.detail))
-    );
-};
-
-export const AnnotationActionsProvider = ({ children, mediaItem }: AnnotationActionsProviderProps) => {
+export const AnnotationActionsProvider = ({
+    children,
+    initialAnnotationsDTO = [],
+    isUserReviewed = false,
+    mediaItem,
+}: AnnotationActionsProviderProps) => {
     const projectId = useProjectIdentifier();
     const saveMutation = $api.useMutation(
         'post',
         '/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations'
     );
 
-    const { data: serverAnnotations } = $api.useQuery(
-        'get',
-        '/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations',
-        {
-            params: { path: { project_id: projectId, dataset_item_id: mediaItem.id || '' } },
-        },
-        {
-            retry: (_failureCount, error: unknown) => !isUnannotatedError(error),
-        }
-    );
-
     const { data: project } = useProject();
 
-    const [localAnnotations, setLocalAnnotations] = useState<Annotation[]>([]);
-    const isDirty = useRef<boolean>(false);
+    const [annotations, setAnnotations, undoRedoActions] = useUndoRedoState<Annotation[]>([]);
+
+    useEffect(() => {
+        const projectLabels = project?.task?.labels || [];
+
+        const localAnnotations = mapServerAnnotationsToLocal(initialAnnotationsDTO, projectLabels);
+
+        if (localAnnotations.length > 0) {
+            undoRedoActions.reset(localAnnotations);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [initialAnnotationsDTO, project?.task?.labels]);
 
     const updateAnnotations = (updatedAnnotations: Annotation[]) => {
         const updatedMap = new Map(updatedAnnotations.map((ann) => [ann.id, ann]));
 
-        setLocalAnnotations((prevAnnotations) =>
+        setAnnotations((prevAnnotations) =>
             prevAnnotations.map((annotation) => updatedMap.get(annotation.id) ?? annotation)
         );
-        isDirty.current = true;
     };
 
     const addAnnotations = (shapes: Shape[]) => {
-        setLocalAnnotations((prevAnnotations) => [
+        setAnnotations((prevAnnotations) => [
             ...prevAnnotations,
             ...shapes.map((shape) => ({
                 shape,
@@ -105,53 +105,28 @@ export const AnnotationActionsProvider = ({ children, mediaItem }: AnnotationAct
                 labels: [],
             })),
         ]);
-        isDirty.current = true;
     };
 
     const deleteAnnotations = (annotationIds: string[]) => {
-        setLocalAnnotations((prevAnnotations) =>
+        setAnnotations((prevAnnotations) =>
             prevAnnotations.filter((annotation) => !annotationIds.includes(annotation.id))
         );
-        isDirty.current = true;
     };
 
     const submitAnnotations = async () => {
-        if (!isDirty) return;
-
-        const serverFormattedAnnotations = mapLocalAnnotationsToServer(localAnnotations);
+        const serverFormattedAnnotations = mapLocalAnnotationsToServer(annotations);
 
         await saveMutation.mutateAsync({
             params: { path: { dataset_item_id: mediaItem.id || '', project_id: projectId } },
             body: { annotations: serverFormattedAnnotations },
         });
-
-        isDirty.current = false;
     };
-
-    useEffect(() => {
-        if (!project || !serverAnnotations) {
-            setLocalAnnotations([]);
-            return;
-        }
-
-        const annotations = get(serverAnnotations, 'annotations', []);
-        const projectLabels = project.task?.labels || [];
-
-        if (annotations.length > 0) {
-            const localFormattedAnnotations = mapServerAnnotationsToLocal(annotations, projectLabels);
-            setLocalAnnotations(localFormattedAnnotations);
-        } else {
-            setLocalAnnotations([]);
-        }
-
-        isDirty.current = false;
-    }, [serverAnnotations, project, mediaItem.id]);
 
     return (
         <AnnotationsContext.Provider
             value={{
-                isUserReviewed: get(serverAnnotations, 'user_reviewed', false),
-                annotations: localAnnotations,
+                isUserReviewed,
+                annotations,
 
                 // Local
                 addAnnotations,
@@ -164,7 +139,7 @@ export const AnnotationActionsProvider = ({ children, mediaItem }: AnnotationAct
                 isSaving: saveMutation.isPending,
             }}
         >
-            {children}
+            <UndoRedoProvider state={undoRedoActions}>{children}</UndoRedoProvider>
         </AnnotationsContext.Provider>
     );
 };
