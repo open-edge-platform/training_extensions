@@ -5,6 +5,7 @@ build/
 dist/
 wheels/
 *.egg-info
+.import_linter_cache
 
 # Virtual environments
 .venv

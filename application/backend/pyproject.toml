@@ -53,6 +53,7 @@ dev = [
 lint = [
     "mypy~=1.16.1",
     "ruff==0.11.13",
+    "import-linter==2.3",
     "types-aiofiles~=25.1.0",  # should match aiofiles version
     "types-requests~=2.32.4",
     "types-pyyaml~=6.0.12",  # should match pyyaml version
@@ -109,6 +110,62 @@ split-on-trailing-comma = false
 
 [tool.ruff.lint.pylint]
 max-args=7
+
+[tool.importlinter]
+root_package = "app"
+include_external_packages = true
+exclude_type_checking_imports = true
+
+[[tool.importlinter.contracts]]
+name = "App Main Vertical"
+type = "layers"
+id = "main_app"
+layers = [
+    "app.api",
+    "app.services",
+    "app.repositories",
+    "app.db",
+]
+
+[[tool.importlinter.contracts]]
+name = "Internal API"
+type = "layers"
+id = "api"
+layers = [
+    "app.api.routers",
+    "app.api.serializers",
+    "app.api.schemas",
+    "app.api.dependencies",
+]
+
+[[tool.importlinter.contracts]]
+name = "Core Module"
+type = "layers"
+id = "core_module"
+layers = [
+    "app.core.jobs",
+    "app.core.run",
+    "app.core.models",
+    "app.core.logging",
+]
+
+[[tool.importlinter.contracts]]
+name = "Schema-Model"
+type = "layers"
+id = "schema_model"
+layers = [
+    "app.schemas",
+    "app.core.models : app.models",
+]
+
+[[tool.importlinter.contracts]]
+name = "Service-Utils"
+type = "layers"
+id = "service_utils"
+layers = [
+    "app.services",
+    "app.utils",
+]
 
 [tool.mypy]
 python_version = "3.13"
