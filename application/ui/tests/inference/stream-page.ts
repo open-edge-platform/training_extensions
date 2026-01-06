@@ -10,8 +10,8 @@ export class StreamPage {
         await this.page.getByRole('button', { name: 'Start Stream' }).click();
     }
 
-    isConnected() {
-        return this.page.getByLabel('Connected');
+    async isConnected() {
+        return await this.page.getByLabel('Connected').isVisible();
     }
 
     async stopStream() {

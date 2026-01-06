@@ -7,51 +7,51 @@ import { HttpResponse } from 'msw';
 
 import { expect, http, test } from '../fixtures';
 
-test('Inference', async ({ streamPage, page, network }) => {
-    test.beforeEach(() => {
-        network.use(
-            http.get('/api/projects/{project_id}', () => {
-                return HttpResponse.json(getMockedProject({ id: 'id-1' }));
-            }),
-            http.get('/api/projects/{project_id}/pipeline', ({ response }) => {
-                return response(200).json(getMockedPipeline({ status: 'running' }));
-            }),
-            http.get('/api/sources', () => {
-                return HttpResponse.json([]);
-            }),
-            http.get('/api/sinks', () => {
-                return HttpResponse.json([]);
-            }),
-            http.post('/api/sources', () => {
-                return HttpResponse.json(
-                    {
-                        id: 'generated-source-id',
-                        name: 'Default Source',
-                        source_type: 'webcam',
-                        device_id: 0,
-                    },
-                    { status: 201 }
-                );
-            }),
-            http.post('/api/sinks', () => {
-                return HttpResponse.json(
-                    {
-                        id: 'generated-sink-id',
-                        name: 'Default Sink',
-                        sink_type: 'folder',
-                        rate_limit: 5,
-                        folder_path: '/default/path',
-                        output_formats: ['predictions'],
-                    },
-                    { status: 201 }
-                );
-            }),
-            http.patch('/api/projects/{project_id}/pipeline', () => {
-                return HttpResponse.json({});
-            })
-        );
-    });
+test.beforeEach(({ network }) => {
+    network.use(
+        http.get('/api/projects/{project_id}', () => {
+            return HttpResponse.json(getMockedProject({ id: 'id-1' }));
+        }),
+        http.get('/api/projects/{project_id}/pipeline', ({ response }) => {
+            return response(200).json(getMockedPipeline({ status: 'running' }));
+        }),
+        http.get('/api/sources', () => {
+            return HttpResponse.json([]);
+        }),
+        http.get('/api/sinks', () => {
+            return HttpResponse.json([]);
+        }),
+        http.post('/api/sources', () => {
+            return HttpResponse.json(
+                {
+                    id: 'generated-source-id',
+                    name: 'Default Source',
+                    source_type: 'webcam',
+                    device_id: 0,
+                },
+                { status: 201 }
+            );
+        }),
+        http.post('/api/sinks', () => {
+            return HttpResponse.json(
+                {
+                    id: 'generated-sink-id',
+                    name: 'Default Sink',
+                    sink_type: 'folder',
+                    rate_limit: 5,
+                    folder_path: '/default/path',
+                    output_formats: ['predictions'],
+                },
+                { status: 201 }
+            );
+        }),
+        http.patch('/api/projects/{project_id}/pipeline', () => {
+            return HttpResponse.json({});
+        })
+    );
+});
 
+test('Inference', async ({ streamPage, page, network }) => {
     await test.step('starts stream', async () => {
         await page.goto('/projects/id-1/inference');
 
