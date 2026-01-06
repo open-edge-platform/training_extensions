@@ -18,6 +18,7 @@ services:
       args:
         - ASSET_PREFIX=/html
         - STATIC_FILES_DIR=/application/html
+        - PUBLIC_API_BASE_URL=${PUBLIC_API_BASE_URL:-/}
       <<: *proxies
     working_dir: /application
     environment:

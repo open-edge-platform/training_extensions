@@ -19,8 +19,6 @@ from .stream import InferenceVideoStreamTrack
 class WebRTCSettings:
     config: RTCConfiguration
     advertise_ip: str | None = None
-from app.models.webrtc import Answer, InputData, Offer
-from app.webrtc.stream import InferenceVideoStreamTrack
 
 
 class WebRTCManager:
