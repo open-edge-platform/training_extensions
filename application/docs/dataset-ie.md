@@ -32,6 +32,8 @@ benefits in terms of maintainability and reliability.
   - Example of operations: uploading, downloading, archiving, extracting, parsing, transforming.
 - Metadata about the dataset (e.g., type of annotations, labels, number of items) can be obtained without fully loading
 the dataset into memory, provided that the dataset is stored in Datumaro format.
+- Datasets may be imported to projects of different task types and labels. If so, annotations need to be adapted
+accordingly (see [Task compatibility](task-compatibility.md) for more details) and the labels must explicitly re-mapped.
 
 ### Overview
 
@@ -150,6 +152,21 @@ can be reused multiple times, applying filtering at staging time can save time a
 filtering is needed for multiple imports. On the other hand, applying filtering at import time allows more
 flexibility, as different filtering criteria can be applied for each import operation.
 
+### Task compatibility
+
+When importing a dataset into an existing project, it is essential to ensure that the dataset's annotations are
+compatible with the project's task type and labels. If necessary, annotations must be transformed according to the
+following rules:
+
+| Dataset Annotation Type | Project Task Type          | Transformation                                             |
+|-------------------------|----------------------------|------------------------------------------------------------|
+| Bounding Box            | Multi-label classification | Collect all the labels of the bounding boxes in the image  |
+| Bounding Box            | Instance segmentation      | Reinterpret bounding boxes as polygons                     |
+| Polygon                 | Multi-label classification | Collect all the labels of the polygons in the image        |
+| Polygon                 | Object detection           | Enclose each polygon in the smallest possible bounding box |
+
+Conversions not listed in the table are not supported and will cause the import operation to fail.
+
 ## Jobs
 
 The design relies heavily on background jobs to perform long-running operations. This section describes the main jobs
@@ -158,9 +175,10 @@ involved in dataset import and export.
 - **prepare_dataset_for_import**: extracts a compressed dataset archive, saving it to Datumaro format while determining
     its characteristics (task type, labels, number of media and annotations).
 - **import_dataset_to_existing_project**: loads a Datumaro dataset and inserts its items into the dataset of a project,
-    applying optional filtering and label remapping. If the target is a new project, this job also creates the project.
+    applying optional filtering, annotation conversion and label remapping.
+    If the target is a new project, this job also creates the project.
 - **import_dataset_as_new_project**: creates a new project, then loads a Datumaro dataset and inserts its items into
-    the dataset of the newly created project, applying optional filtering and label remapping.
+    the dataset of the newly created project, applying optional filtering and annotation conversion.
 - **stage_dataset**: loads a project's dataset (or dataset revision) as a Datumaro dataset, applying optional filtering,
     then saves it to the staging area in Datumaro native format.
 - **export_dataset**: loads a project's dataset (or dataset revision) as a Datumaro dataset, applying optional
