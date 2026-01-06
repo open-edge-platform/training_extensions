@@ -1,15 +1,17 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Button, Flex, Grid, Heading, Item, Menu, MenuTrigger, RangeSlider, Text } from '@geti/ui';
+import { ActionButton, Button, Flex, Grid, Heading, Item, Menu, MenuTrigger, Text } from '@geti/ui';
 import { Image, MoreMenu, Tag } from '@geti/ui/icons';
 
-import classes from './models.module.scss';
+import { ThreeSectionRange } from './three-section-range.component';
 
-export const DatasetHeader = () => {
+import classes from './dataset-item.module.scss';
+
+export const DatasetItem = () => {
     return (
         <Grid
-            columns={['auto', '1fr', 'auto', 'auto']}
+            columns={['auto', '1fr', 'auto', '1fr', 'auto']}
             alignItems={'center'}
             marginBottom={'size-225'}
             gap={'size-200'}
@@ -45,8 +47,10 @@ export const DatasetHeader = () => {
                 </Flex>
             </Flex>
 
+            {/* TODO: Update with actual values from the API  */}
+            <ThreeSectionRange trainingValue={7} validationValue={2} testingValue={1} />
+
             <Flex>
-                <RangeSlider labelPosition={'side'} label={'TRAINING SUBSETS'} showValueLabel />
                 <Button variant='primary'>Train model</Button>
             </Flex>
         </Grid>

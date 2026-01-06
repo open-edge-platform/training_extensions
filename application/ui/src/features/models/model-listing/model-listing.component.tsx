@@ -19,10 +19,10 @@ import {
 import { MoreMenu } from '@geti/ui/icons';
 
 import { ReactComponent as StartIcon } from '../../../assets/icons/start.svg';
-import { DatasetHeader } from './dataset-header.component';
+import { DatasetItem } from './dataset-item/dataset-item.component';
+import { Header } from './header.component';
 import { AccuracyIndicator } from './model-variants/accuracy-indicator.component';
 import { ModelVariants } from './model-variants/model-variants.component';
-import { ModelsHeader } from './models-header.component';
 
 import classes from './model-listing.module.scss';
 
@@ -121,11 +121,12 @@ const ModelVariantItem = ({ model }: { model: { id: number; name: string } }) =>
 export const ModelListing = () => {
     return (
         <View padding={'size-300'}>
-            <ModelsHeader />
+            <Header />
 
             <Divider size={'S'} marginY={'size-300'} />
 
-            <DatasetHeader />
+            {/* TODO: Update to a more generic name, since this will either be a dataset, or a model */}
+            <DatasetItem />
 
             <HeaderRow />
 

@@ -3,7 +3,7 @@
 
 import { Flex, Grid, Item, Picker, Text } from '@geti/ui';
 
-export const ModelsHeader = () => {
+export const Header = () => {
     return (
         <Grid columns={['auto auto 1fr']} alignItems={'center'}>
             <Text>Models</Text>
