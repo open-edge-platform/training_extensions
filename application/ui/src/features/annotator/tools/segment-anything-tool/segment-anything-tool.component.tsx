@@ -127,23 +127,17 @@ export const SegmentAnythingTool = () => {
     }
 
     return (
-        <>
-            <SvgToolCanvas
-                ref={ref}
-                aria-label='SAM tool canvas'
-                image={image}
-                canvasRef={canvasRef}
-                onPointerMove={handleMouseMove}
-                onPointerDown={handlePointerDown}
-                onPointerLeave={() => {
-                    setPreviewShapes([]);
-                }}
-                style={{
-                    cursor: `url("/icons/selection.svg") 8 8, auto`,
-                }}
-            >
-                <PreviewAnnotations previewAnnotations={previewAnnotations} image={image} />
-            </SvgToolCanvas>
-        </>
+        <SvgToolCanvas
+            ref={ref}
+            image={image}
+            canvasRef={canvasRef}
+            aria-label='SAM tool canvas'
+            onPointerMove={handleMouseMove}
+            onPointerDown={handlePointerDown}
+            onPointerLeave={() => setPreviewShapes([])}
+            style={{ cursor: `url("/icons/selection.svg") 8 8, auto` }}
+        >
+            <PreviewAnnotations previewAnnotations={previewAnnotations} image={image} />
+        </SvgToolCanvas>
     );
 };
