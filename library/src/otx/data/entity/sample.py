@@ -204,7 +204,7 @@ class SegmentationSample(OTXSample):
     """OTXDataItemSample is a base class for OTX data items."""
 
     subset: Subset = subset_field()
-    image: np.ndarray | tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
+    image: np.ndarray | tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=False)
     masks: tv_tensors.Mask = mask_field(dtype=pl.UInt8(), channels_first=True, has_channels_dim=True)
     dm_image_info: DmImageInfo = image_info_field()
 
