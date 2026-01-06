@@ -7,8 +7,8 @@ import { HttpResponse } from 'msw';
 
 import { expect, http, test } from '../fixtures';
 
-test.describe('Inference', () => {
-    test.beforeEach(({ network }) => {
+test('Inference', async ({ streamPage, page, network }) => {
+    test.beforeEach(() => {
         network.use(
             http.get('/api/projects/{project_id}', () => {
                 return HttpResponse.json(getMockedProject({ id: 'id-1' }));
@@ -52,7 +52,7 @@ test.describe('Inference', () => {
         );
     });
 
-    test('starts stream', async ({ page, streamPage }) => {
+    await test.step('starts stream', async () => {
         await page.goto('/projects/id-1/inference');
 
         await streamPage.startStream();
@@ -60,7 +60,7 @@ test.describe('Inference', () => {
         expect(streamPage.isConnected()).toBeTruthy();
     });
 
-    test('updates pipeline status', async ({ page, network }) => {
+    await test.step('updates pipeline status', async () => {
         await page.goto('/projects/id-1/inference');
 
         await page.getByRole('switch', { name: 'Disable pipeline' }).click();
@@ -76,7 +76,7 @@ test.describe('Inference', () => {
         await expect(page.getByText('Enable pipeline')).toBeVisible();
     });
 
-    test('updates data collection policy', async ({ page, network }) => {
+    await test.step('updates data collection policy', async () => {
         await page.goto('/projects/id-1/inference');
 
         // Open both tabs just to make sure everything works
@@ -200,7 +200,7 @@ test.describe('Inference', () => {
         await expect(confidenceSlider).toHaveValue('0.7');
     });
 
-    test('updates input and output source', async ({ page, network }) => {
+    await test.step('updates input and output source', async () => {
         network.use(
             http.get('/api/projects/{project_id}/pipeline', ({ response }) => {
                 return response(200).json(getMockedPipeline({ source: null, sink: null }));
