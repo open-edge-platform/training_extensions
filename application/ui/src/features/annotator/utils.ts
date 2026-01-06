@@ -3,30 +3,7 @@
 
 import type { CSSProperties, PointerEvent, SVGProps } from 'react';
 
-const BUTTON_LEFT = {
-    button: 0,
-    buttons: 1,
-};
-const BUTTON_WHEEL = {
-    button: 1,
-    buttons: 4,
-};
-
-interface MouseButton {
-    button: number;
-    buttons: number;
-}
-
-const isButton = (button: MouseButton, buttonToCompare: MouseButton): boolean =>
-    button.button === buttonToCompare.button || button.buttons === buttonToCompare.buttons;
-
-export const isLeftButton = (button: MouseButton): boolean => {
-    return button.button === BUTTON_LEFT.button || button.buttons === BUTTON_LEFT.buttons;
-};
-
-export const isWheelButton = (button: MouseButton): boolean => {
-    return isButton(button, BUTTON_WHEEL);
-};
+import { isLeftButton, isWheelButton } from './buttons-utils';
 
 type OnPointerDown = SVGProps<SVGElement>['onPointerDown'];
 export const allowPanning = (onPointerDown?: OnPointerDown): OnPointerDown | undefined => {
