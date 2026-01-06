@@ -42,7 +42,7 @@ def fxt_job() -> Callable[[UUID | None, JobStatus, float], Job]:
             progress=100.0 if job_status >= JobStatus.DONE else progress,
             job_type=JobType.TRAIN,
             params=TrainingJobParams(
-                device=DeviceInfo(type=DeviceType.CPU, name="CPU"),
+                device=DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None),
                 job_id=job_id_,
                 project_id=project_id_,
                 model_architecture_id="TestArch",
