@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { CSSProperties, PointerEvent, useRef, useState } from 'react';
+import { PointerEvent, useRef, useState } from 'react';
 
 import { clampPointBetweenImage } from '@geti/smart-tools/utils';
 
@@ -34,11 +34,6 @@ const PreviewAnnotations = ({ previewAnnotations, image }: PreviewAnnotationsPro
                 <g
                     key={annotation.id}
                     aria-label='Segment anything preview'
-                    style={
-                        {
-                            '--energy-blue-shade': '#0095ca',
-                        } as CSSProperties
-                    }
                     stroke={'var(--energy-blue-shade)'}
                     strokeWidth={'calc(3px / var(--zoom-scale))'}
                     fill={'transparent'}
