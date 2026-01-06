@@ -16,6 +16,7 @@ from app.core.jobs.models import Job, JobStatus, TrainingJob, TrainingJobParams
 from app.main import app
 from app.models import Project, Task, TaskType
 from app.schemas.job import JobRequest, JobType, TrainingRequestParams
+from app.schemas.system import DeviceInfo, DeviceType
 
 
 @pytest.fixture
@@ -41,6 +42,7 @@ def fxt_job() -> Callable[[UUID | None, JobStatus, float], Job]:
             progress=100.0 if job_status >= JobStatus.DONE else progress,
             job_type=JobType.TRAIN,
             params=TrainingJobParams(
+                device=DeviceInfo(type=DeviceType.CPU, name="CPU"),
                 job_id=job_id_,
                 project_id=project_id_,
                 model_architecture_id="TestArch",
