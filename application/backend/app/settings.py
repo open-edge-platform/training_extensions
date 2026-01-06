@@ -91,6 +91,9 @@ class Settings(BaseSettings):
 
     @field_validator("static_files_dir", "alembic_config_path", "alembic_script_location", mode="after")
     def prefix_paths(cls, v: str | Path | None) -> str | Path | None:
+        # In "frozen" pyinstaller applications data paths must be prefixed with the absolute path to the bundle folder
+        # which is stored in  sys._MEIPASS attribute.
+        # https://pyinstaller.org/en/stable/runtime-information.html
         if v and getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
             # If application is running in pyinstaller bundle, adjust the path accordingly.
             prefixed_path = os.path.join(getattr(sys, "_MEIPASS", ""), v)

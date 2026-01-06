@@ -1,19 +1,23 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+# export no_proxy="localhost, 127.0.0.1, ::1"
+# Start with:
+#  - uv run app/main.py
+# or use docker
+#  - docker compose up
+
 import sys
 
 if getattr(sys, "frozen", False) and __name__ == "__main__":
     print("Calling multiprocessing.freeze_support()")
     import multiprocessing
 
+    # Pyinstaller requires this method to be called in "frozen" applications if multiprocessing module is
+    # used to prevent issues. This line must be called before any attempt to use multiprocessing module, so it makes
+    # sense to put it in the very beginning.
+    # https://pyinstaller.org/en/stable/common-issues-and-pitfalls.html#multi-processing
     multiprocessing.freeze_support()
-
-# export no_proxy="localhost, 127.0.0.1, ::1"
-# Start with:
-#  - uv run app/main.py
-# or use docker
-#  - docker compose up
 
 import logging
 from collections.abc import Awaitable, Callable
