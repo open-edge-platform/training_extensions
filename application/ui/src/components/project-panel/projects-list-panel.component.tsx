@@ -80,7 +80,15 @@ export const ProjectsListPanel = () => {
 
             <Dialog width={'size-4600'} UNSAFE_className={styles.dialog}>
                 <Header>
-                    <Flex direction={'column'} justifyContent={'center'} width={'100%'} alignItems={'center'}>
+                    <Flex
+                        direction={'column'}
+                        justifyContent={'center'}
+                        width={'100%'}
+                        alignItems={'center'}
+                        UNSAFE_style={{
+                            padding: 'var(--spectrum-global-dimension-size-200)',
+                        }}
+                    >
                         <PhotoPlaceholder
                             name={selectedProjectName}
                             indicator={selectedProject?.id ?? selectedProjectName}

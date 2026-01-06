@@ -82,13 +82,13 @@ class TestSourceEndpoints:
             "/api/sources", json={"source_type": SourceType.DISCONNECTED, "name": "Disconnected Source"}
         )
 
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
         fxt_source_update_service.create_source.assert_not_called()
 
     def test_create_source_validation_error(self, fxt_source_update_service, fxt_client):
         response = fxt_client.post("/api/sources", json={"name": ""})
 
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
         fxt_source_update_service.create_source.assert_not_called()
 
     def test_create_source_exists(self, fxt_webcam_source_create, fxt_source_update_service, fxt_client):
@@ -258,5 +258,5 @@ class TestSourceEndpoints:
 
         response = fxt_client.post("/api/sources:import", files=files)
 
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
         fxt_source_update_service.create_source.assert_not_called()

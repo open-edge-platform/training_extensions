@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { ActionButton, Flex, Grid, Heading, Item, Menu, MenuTrigger, RangeSlider, Text } from '@geti/ui';
-import { Image, MoreMenu, Tag } from 'packages/ui/icons';
+import { Image, MoreMenu, Tag } from '@geti/ui/icons';
 
 import classes from './models.module.scss';
 

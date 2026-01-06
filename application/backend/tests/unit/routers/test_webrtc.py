@@ -51,7 +51,7 @@ class TestWebRTCEndpoints:
 
     def test_create_webrtc_offer_invalid_payload(self, fxt_client):
         resp = fxt_client.post("/api/webrtc/offer", json={"sdp": 123})
-        assert resp.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert resp.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
     def test_webrtc_input_hook_success(self, fxt_client, fxt_webrtc_manager, fxt_input_data):
         resp = fxt_client.post("/api/webrtc/input_hook", json=fxt_input_data.model_dump(mode="json"))
@@ -60,4 +60,4 @@ class TestWebRTCEndpoints:
 
     def test_webrtc_input_hook_invalid_payload(self, fxt_client, fxt_webrtc_manager):
         resp = fxt_client.post("/api/webrtc/input_hook", json={"wrong": "field"})
-        assert resp.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert resp.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT

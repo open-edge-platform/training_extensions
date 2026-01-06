@@ -44,16 +44,6 @@ const Header = () => {
                     }}
                 >
                     <Item
-                        textValue='Inference page showing live inference on your project'
-                        key={'inference'}
-                        href={paths.project.inference({ projectId })}
-                    >
-                        <Flex alignItems='center' gap='size-100'>
-                            <LiveFeedIcon style={iconStyles} />
-                            Inference
-                        </Flex>
-                    </Item>
-                    <Item
                         textValue='Data collection page to visualise your media items'
                         key={'dataset'}
                         href={paths.project.dataset({ projectId })}
@@ -61,6 +51,16 @@ const Header = () => {
                         <Flex alignItems='center' gap='size-100'>
                             <BuildIcon style={iconStyles} />
                             Dataset
+                        </Flex>
+                    </Item>
+                    <Item
+                        textValue='Inference page showing live inference on your project'
+                        key={'inference'}
+                        href={paths.project.inference({ projectId })}
+                    >
+                        <Flex alignItems='center' gap='size-100'>
+                            <LiveFeedIcon style={iconStyles} />
+                            Inference
                         </Flex>
                     </Item>
                     <Item

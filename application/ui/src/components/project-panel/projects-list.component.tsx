@@ -3,8 +3,8 @@
 
 import { toast } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
-import type { SchemaProjectView } from 'src/api/openapi-spec';
 
+import type { SchemaProjectView } from '../../api/openapi-spec';
 import { useDeleteProject, usePatchProject } from '../../hooks/api/project.hook';
 import { ProjectListItem } from './project-list-item/project-list-item.component';
 

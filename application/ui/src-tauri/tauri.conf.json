@@ -1,33 +1,33 @@
 {
-  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "Geti Tune",
-  "version": "0.1.0",
+    "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+    "productName": "Geti Tune",
+    "version": "0.1.0",
     "identifier": "com.intel",
-  "build": {
-    "frontendDist": "../dist",
-    "devUrl": "http://localhost:3000",
-    "beforeDevCommand": "npm run dev",
-    "beforeBuildCommand": "npm run build"
-  },
-  "app": {
-    "windows": [
-      {
-        "title": "Geti Tune",
-        "width": 800,
-        "height": 600,
-        "resizable": true,
-        "fullscreen": false
-      }
-    ],
-    "security": {
-      "csp": null
+    "build": {
+        "frontendDist": "../dist",
+        "devUrl": "http://localhost:3000",
+        "beforeDevCommand": "npm run dev",
+        "beforeBuildCommand": "npm run build"
+    },
+    "app": {
+        "windows": [
+            {
+                "title": "Geti Tune",
+                "width": 800,
+                "height": 600,
+                "resizable": true,
+                "fullscreen": false
+            }
+        ],
+        "security": {
+            "csp": null
+        }
+    },
+    "bundle": {
+        "active": true,
+        "targets": ["app"],
+        "externalBin": ["geti-tune-backend"],
+        "resources": ["_internal"],
+        "icon": ["icons/icon.ico"]
     }
-  },
-  "bundle": {
-    "active": true,
-    "targets": ["app"],
-    "externalBin": ["geti-tune-backend"],
-    "resources": ["_internal"],
-    "icon": ["icons/icon.ico"]
-  }
 }

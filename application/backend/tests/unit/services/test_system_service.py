@@ -210,3 +210,19 @@ class TestSystemService:
             assert fxt_system_service.validate_device("gpu") is False
             assert fxt_system_service.validate_device("tpu") is False
             assert fxt_system_service.validate_device("invalid") is False
+
+    def test_get_camera_devices(self, fxt_system_service: SystemService):
+        """Test getting camera devices"""
+        with patch("app.services.system_service.enumerate_cameras") as mock_enumerate_cameras:
+            # Mock camera device
+            mock_camera = MagicMock()
+            mock_camera.name = "Integrated Camera"
+            mock_camera.index = 1400
+
+            mock_enumerate_cameras.return_value = [mock_camera]
+
+            camera_devices = fxt_system_service.get_camera_devices()
+
+            assert len(camera_devices) == 1
+            assert camera_devices[0].name == "Integrated Camera"
+            assert camera_devices[0].index == 1400

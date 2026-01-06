@@ -72,7 +72,7 @@ SET_DATASET_ITEM_ANNOTATIONS_BODY_EXAMPLES = {
     response_model=DatasetItemView,
     responses={
         status.HTTP_201_CREATED: {"description": "Dataset item created"},
-        status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Invalid image has been uploaded"},
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {"description": "Invalid image has been uploaded"},
     },
 )
 def add_dataset_item(
@@ -93,7 +93,9 @@ def add_dataset_item(
         )
         return DatasetItemView.model_validate(dataset_item, from_attributes=True)
     except InvalidImageError:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid image has been uploaded.")
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Invalid image has been uploaded."
+        )
 
 
 @router.get(
@@ -116,7 +118,7 @@ def list_dataset_items(  # noqa: PLR0913
     """List the available dataset items and their metadata. This endpoint supports pagination."""
     if start_date is not None and end_date is not None and start_date > end_date:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Start date must be before end date."
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Start date must be before end date."
         )
     total = dataset_service.count_dataset_items(
         project=project,
@@ -335,7 +337,7 @@ def delete_dataset_item_annotation(
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid dataset item ID or project ID"},
         status.HTTP_404_NOT_FOUND: {"description": "Dataset item or project not found"},
         status.HTTP_409_CONFLICT: {"description": "Dataset item already has a subset assigned"},
-        status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Invalid subset"},
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {"description": "Invalid subset"},
     },
 )
 def assign_dataset_item_subset(

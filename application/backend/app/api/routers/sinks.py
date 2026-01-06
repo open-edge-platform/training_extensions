@@ -207,7 +207,7 @@ def export_sink(sink: Annotated[Sink, Depends(get_sink)]) -> Response:
         status.HTTP_201_CREATED: {"description": "Sink imported successfully", "model": SinkView},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid YAML format"},
         status.HTTP_409_CONFLICT: {"description": "Sink already exists"},
-        status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Validation error(s)"},
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {"description": "Validation error(s)"},
     },
 )
 def import_sink(
@@ -233,7 +233,7 @@ def import_sink(
     except (ResourceWithNameAlreadyExistsError, ResourceWithIdAlreadyExistsError) as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
     except ValidationError as e:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(e))
 
 
 @router.delete(

@@ -8,9 +8,8 @@ from typing import Any, TypeVar
 
 from loguru import logger
 
+from app.core.jobs.models import TrainingJobParams
 from app.core.run import ExecutionContext, Runnable
-
-from .models import TrainingParams
 
 T = TypeVar("T")
 
@@ -59,14 +58,14 @@ class Trainer(Runnable, ABC):
 
     def __init__(self) -> None:
         self._ctx: ExecutionContext | None = None
-        self._training_params: TrainingParams | None = None
+        self._training_params: TrainingJobParams | None = None
 
     @abstractmethod
     def run(self, ctx: ExecutionContext) -> None: ...
 
     @staticmethod
-    def _get_training_params(ctx: ExecutionContext) -> TrainingParams:
-        return TrainingParams.model_validate_json(ctx.payload)
+    def _get_training_params(ctx: ExecutionContext) -> TrainingJobParams:
+        return TrainingJobParams.model_validate_json(ctx.payload)
 
     def report_progress(self, msg: str = "", percent: float = 0.0) -> None:
         if self._ctx is not None:

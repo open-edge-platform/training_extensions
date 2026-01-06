@@ -33,3 +33,19 @@ class DeviceInfo(BaseModel):
             ]
         }
     }
+
+
+class CameraInfo(BaseModel):
+    """Camera information schema"""
+
+    index: int = Field(..., description="Camera device index")
+    name: str = Field(..., description="Camera device name")
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {"index": 0, "name": "Integrated Webcam"},
+                {"index": 1, "name": "USB Camera"},
+            ]
+        }
+    }

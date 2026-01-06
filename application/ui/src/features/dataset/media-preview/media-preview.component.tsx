@@ -4,18 +4,27 @@
 import { Suspense } from 'react';
 
 import { Content, Dialog, dimensionValue, Divider, Flex, Grid, Heading, Loading, View } from '@geti/ui';
-import type { DatasetItem } from 'src/constants/shared-types';
-import { AnnotationActionsProvider } from 'src/shared/annotator/annotation-actions-provider.component';
-import { AnnotationVisibilityProvider } from 'src/shared/annotator/annotation-visibility-provider.component';
-import { AnnotatorProvider } from 'src/shared/annotator/annotator-provider.component';
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import { isObject } from 'lodash-es';
 
+import { $api } from '../../../api/client';
 import { ZoomProvider } from '../../../components/zoom/zoom.provider';
+import type { DatasetItem } from '../../../constants/shared-types';
+import { AnnotationActionsProvider } from '../../../shared/annotator/annotation-actions-provider.component';
+import { AnnotationVisibilityProvider } from '../../../shared/annotator/annotation-visibility-provider.component';
+import { AnnotatorProvider } from '../../../shared/annotator/annotator-provider.component';
 import { SelectAnnotationProvider } from '../../../shared/annotator/select-annotation-provider.component';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas';
 import { useGetDatasetItems } from '../gallery/use-get-dataset-items.hook';
 import { PrimaryToolbar } from './primary-toolbar/primary-toolbar.component';
 import { SecondaryToolbar } from './secondary-toolbar/secondary-toolbar.component';
 import { SidebarItems } from './sidebar-items/sidebar-items.component';
+
+const isUnannotatedError = (error: unknown): boolean => {
+    return (
+        isObject(error) && 'detail' in error && /Dataset item has not been annotated yet/i.test(String(error.detail))
+    );
+};
 
 type MediaPreviewProps = {
     mediaItem: DatasetItem;
@@ -30,7 +39,20 @@ const CanvasAreaLoading = () => (
 );
 
 export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPreviewProps) => {
+    const projectId = useProjectIdentifier();
+
     const { items, hasNextPage, isFetchingNextPage, fetchNextPage } = useGetDatasetItems();
+
+    const { data: annotationsData } = $api.useQuery(
+        'get',
+        '/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations',
+        {
+            params: { path: { project_id: projectId, dataset_item_id: mediaItem.id } },
+        },
+        {
+            retry: (_failureCount, error: unknown) => !isUnannotatedError(error),
+        }
+    );
 
     return (
         <Dialog UNSAFE_style={{ width: '95vw', height: '95vh' }}>
@@ -55,7 +77,11 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                     }}
                     areas={['toolbar header aside', 'toolbar canvas aside', 'toolbar footer aside']}
                 >
-                    <AnnotationActionsProvider mediaItem={mediaItem}>
+                    <AnnotationActionsProvider
+                        mediaItem={mediaItem}
+                        initialAnnotationsDTO={annotationsData?.annotations ?? []}
+                        isUserReviewed={annotationsData?.user_reviewed ?? false}
+                    >
                         <ZoomProvider>
                             <Suspense fallback={<CanvasAreaLoading />}>
                                 <SelectAnnotationProvider>

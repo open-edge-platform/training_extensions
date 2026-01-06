@@ -6,8 +6,8 @@ import { Suspense, useState } from 'react';
 import { Button, ButtonGroup, Content, Dialog, DialogContainer, Divider, Heading, Loading, Text, View } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isEmpty } from 'lodash-es';
-import { $api } from 'src/api/client';
 
+import { $api } from '../../../api/client';
 import { ModelTypesList } from './model-types-list/model-types-list.component';
 
 import classes from './train-model-dialog.module.scss';

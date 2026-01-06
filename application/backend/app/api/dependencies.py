@@ -38,22 +38,22 @@ from app.webrtc.manager import WebRTCManager
 def get_file_name_and_extension(file: UploadFile) -> tuple[str, str]:
     """Return the file name and extension"""
     if not file.filename:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File name cannot be empty.")
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="File name cannot be empty.")
     full_name = file.filename.strip()
     if not full_name:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File name cannot be empty.")
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="File name cannot be empty.")
     file_name, file_ext = os.path.splitext(full_name)
     file_name = file_name.strip()  # remove whitespace characters between the basename and the extension
     file_ext = file_ext[1:]  # remove leading dot in the extension
     if not file_ext:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File extension cannot be empty.")
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="File extension cannot be empty.")
     return file_name, file_ext
 
 
 def get_file_size(file: UploadFile) -> int:
     """Return the file size in bytes"""
     if not file.size:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File size should be defined.")
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="File size should be defined.")
     return file.size
 
 
@@ -69,12 +69,12 @@ def get_scheduler(request: Request) -> Scheduler:
 
 
 def get_data_dir(request: Request) -> Path:
-    """Provides the data directory path from settings."""
+    """Provides the path to the folder that stores the projects data. This path is defined in the app settings."""
     return request.app.state.settings.data_dir
 
 
 def get_job_dir(request: Request) -> Path:
-    """Provides the job log directory path from settings."""
+    """Provides the path to the folder where the jobs logs are saved. This path is defined in the app settings."""
     return request.app.state.settings.job_dir
 
 
@@ -218,7 +218,10 @@ def get_base_weights_service(data_dir: Annotated[Path, Depends(get_data_dir)]) -
 
 
 def get_job_queue(request: Request) -> JobQueue:
-    """Provides the global JobQueue instance from FastAPI application's state."""
+    """
+    Provides the global JobQueue instance from FastAPI application's state.
+    The JobQueue is responsible for managing job submissions and tracking job statuses.
+    """
     return request.app.state.job_queue
 
 

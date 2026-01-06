@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Grid, View } from '@geti/ui';
-import { useProjectsQuery } from 'src/hooks/api/project.hook';
 
 import { CreateProjectForm } from '../../features/project/create/create-project-form';
+import { useProjectsQuery } from '../../hooks/api/project.hook';
 
 import backgroundStyles from '../../features/project/project-background.module.scss';
 

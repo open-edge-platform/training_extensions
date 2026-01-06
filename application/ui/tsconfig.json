@@ -11,7 +11,6 @@
     ],
     "compilerOptions": {
         "types": ["vitest/globals"],
-        "baseUrl": ".",
         "paths": {
             "test-utils/*": ["./src/test-utils/*"],
             "hooks/*": ["./src/hooks/*"],
