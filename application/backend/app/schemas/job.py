@@ -7,7 +7,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from app.core.jobs.models import Job, JobStatus, JobType
+from app.core.jobs.models import Job, JobStatus, JobType, TrainingJob
 
 
 class TrainingRequestParams(BaseModel):
@@ -54,10 +54,51 @@ class TrainingRequest(BaseJobRequest):
 JobRequest = Annotated[TrainingRequest, Field(discriminator="job_type")]
 
 
+class ProjectMetadata(BaseModel):
+    """Metadata about a project."""
+
+    id: UUID = Field(..., description="Project identifier")
+
+
+class ModelMetadata(BaseModel):
+    """Metadata about a model."""
+
+    id: UUID = Field(..., description="Model identifier")
+    architecture: str = Field(..., description="Model architecture identifier")
+    parent_revision_id: UUID | None = Field(
+        None, description="Parent model revision ID for fine-tuning, null if trained from scratch"
+    )
+    dataset_revision_id: UUID = Field(..., description="Dataset revision ID used for training")
+
+
+class TrainingMetadata(BaseModel):
+    """Metadata associated with a training job."""
+
+    project: ProjectMetadata = Field(..., description="Project associated with the training job")
+    model: ModelMetadata = Field(..., description="Model being trained")
+
+    @staticmethod
+    def of(job: TrainingJob) -> "TrainingMetadata":
+        return TrainingMetadata(
+            project=ProjectMetadata(id=job.project_id),
+            model=ModelMetadata(
+                id=job.params.model_id,
+                architecture=job.params.model_architecture_id,
+                parent_revision_id=job.params.parent_model_revision_id,
+                dataset_revision_id=UUID("00000000-0000-0000-0000-000000000000"),  # TODO set correct value
+            ),
+        )
+
+
+JobMetadata = Annotated[TrainingMetadata, Field(..., description="Metadata associated with the job")]
+
+
 class JobView(BaseModel):
     """Response schema for job creation."""
 
     job_id: UUID = Field(..., description="Job identifier")
+    job_type: JobType = Field(..., description="Type of the job")
+    metadata: JobMetadata = Field(..., description="Metadata associated with the job")
     status: str = Field(..., description="Job status")
     progress: float = Field(..., description="Job progress percentage (0-100)")
     message: str | None = Field(None, description="Additional information about the job status")
@@ -69,6 +110,16 @@ class JobView(BaseModel):
         "json_schema_extra": {
             "example": {
                 "job_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                "job_type": "train",
+                "metadata": {
+                    "project": {"id": "7b073838-99d3-42ff-9018-4e901eb047fc"},
+                    "model": {
+                        "id": "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
+                        "architecture": "Custom_Object_Detection_Gen3_ATSS",
+                        "parent_revision_id": "ef3983f1-cef0-4ebe-91db-7330f1dd6e27",
+                        "dataset_revision_id": "2b073838-99d3-42ff-9018-4e901eb047fc",
+                    },
+                },
                 "status": "done",
                 "progress": 100.0,
                 "message": "Training completed successfully",
@@ -81,8 +132,16 @@ class JobView(BaseModel):
 
     @staticmethod
     def of(job: Job) -> "JobView":
+        match job.job_type:
+            case JobType.TRAIN:
+                metadata = TrainingMetadata.of(job)  # type: ignore[arg-type]
+            case _:
+                raise NotImplementedError("JobView is not implemented for this job type")
+
         return JobView(
             job_id=job.id,
+            job_type=job.job_type,
+            metadata=metadata,
             status=job.status.name,
             progress=job.progress,
             message=job.message,

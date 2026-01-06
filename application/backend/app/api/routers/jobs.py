@@ -14,11 +14,10 @@ from sse_starlette.sse import EventSourceResponse, ServerSentEvent
 from app.api.dependencies import get_data_dir, get_job_dir, get_job_queue, get_project_service
 from app.api.validators import JobID
 from app.core.jobs.control_plane import CancellationResult, JobQueue
-from app.core.jobs.models import JobStatus
+from app.core.jobs.models import JobStatus, TrainingJob, TrainingJobParams
 from app.schemas import JobRequest, JobView
 from app.schemas.job import JobType
 from app.services import ProjectService, ResourceNotFoundError
-from app.services.training.models import TrainingJob, TrainingParams
 
 router = APIRouter(prefix="/api/jobs", tags=["Jobs"])
 
@@ -50,7 +49,7 @@ async def submit_job(
                     project_id=job_request.project_id,
                     log_dir=job_dir,
                     data_dir=data_dir,
-                    params=TrainingParams(
+                    params=TrainingJobParams(
                         model_architecture_id=job_request.parameters.model_architecture_id,
                         parent_model_revision_id=job_request.parameters.parent_model_revision_id,
                         task=project.task,
