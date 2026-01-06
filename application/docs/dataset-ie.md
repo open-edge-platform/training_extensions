@@ -46,7 +46,7 @@ Through careful interface modeling, it is possible to get all sources to work wi
 use cases by composing the necessary intermediate steps in a set of endpoints and jobs.
 
 Two important design choices follow from these observations:
-1. All datasets that are uploaded or downloaded by the user, regardless of how, must be zip archives in a standard
+1. All datasets that are uploaded or downloaded by the user (directly or via API), must be zip archives in a standard
 dataset format (Datumaro, COCO, ...).
 2. Internally, all processing steps must operate on a common representation of the dataset. In practice, this means
 `dm.Dataset` objects from Datumaro.
@@ -217,6 +217,11 @@ _Response:_ HTTP 201 Created
     "size_bytes": 123456789
 }
 ```
+
+> [!NOTE]
+> For large datasets, a simple file upload endpoint may not be ideal in case of unreliable network connections.
+> Normally, a more robust upload mechanism would leverage resumable uploads (tus); in this case, for simplicity,
+> the recommended approach is to upload the dataset archive directly to the staging area folder, bypassing the API.
 
 ---
 
