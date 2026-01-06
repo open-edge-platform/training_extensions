@@ -22,6 +22,11 @@ const test = testBase.extend<Fixtures>({
     network: createNetworkFixture({
         initialHandlers: [
             ...handlers,
+            http.get('/health', ({ response }) => {
+                return response(200).json({
+                    status: 'ok',
+                });
+            }),
             http.get('/api/system/metrics/memory', ({ response }) => {
                 return response(200).json({});
             }),
