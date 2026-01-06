@@ -130,6 +130,10 @@ export const ModelListing = () => {
 
             <HeaderRow />
 
+            {/* 
+                TODO: Update this to a dynamic value.
+                It will either be all models from the dataset, or all models from an architecture
+            */}
             {models.map((model) => (
                 <Disclosure key={model.id} isQuiet UNSAFE_className={classes.disclosure}>
                     <DisclosureTitle UNSAFE_className={classes.disclosureItem}>

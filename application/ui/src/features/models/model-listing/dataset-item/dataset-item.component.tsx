@@ -16,7 +16,7 @@ export const DatasetItem = () => {
             marginBottom={'size-225'}
             gap={'size-200'}
         >
-            <Flex alignItems={'center'}>
+            <Flex alignItems={'center'} gap={'size-50'}>
                 <Heading level={2} UNSAFE_style={{ fontSize: 'var(--spectrum-global-dimension-size-300)' }}>
                     Dataset #1
                 </Heading>
@@ -27,6 +27,7 @@ export const DatasetItem = () => {
                     <Menu>
                         <Item key='rename'>Rename</Item>
                         <Item key='delete'>Delete</Item>
+                        <Item key='export'>Export</Item>
                     </Menu>
                 </MenuTrigger>
             </Flex>
