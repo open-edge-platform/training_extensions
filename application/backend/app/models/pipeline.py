@@ -8,7 +8,7 @@ from uuid import UUID
 from pydantic import AliasChoices, Field, model_validator
 
 from .base import BaseEntity
-from .data_collection_policy import DataCollectionPolicy
+from .data_collection_policy import DataCollectionConfig, DataCollectionPolicy
 from .model_revision import ModelRevision
 from .sink import Sink
 from .source import Source
@@ -43,7 +43,7 @@ class Pipeline(BaseEntity):
         sink_id: UUID reference to the sink entity.
         model_id: UUID reference to the model revision entity.
         status: Current operational status of the pipeline (IDLE or RUNNING).
-        data_collection_policies: List of policies governing data collection behavior during pipeline execution.
+        data_collection: Configuration for data collection including max dataset size and policies.
         device: The device used for model inference (e.g., 'cpu', 'xpu', 'cuda', 'xpu-1', etc.).
 
     Raises:
@@ -58,8 +58,13 @@ class Pipeline(BaseEntity):
     sink_id: UUID | None = None
     model_id: UUID | None = Field(default=None, validation_alias=AliasChoices("model_revision_id", "model_id"))
     status: PipelineStatus = PipelineStatus.IDLE
-    data_collection_policies: list[DataCollectionPolicy] = Field(default_factory=list)
+    data_collection: DataCollectionConfig = Field(default_factory=DataCollectionConfig)
     device: str = Field(default="cpu", pattern=r"^(cpu|xpu|cuda)(-\d+)?$")
+
+    @property
+    def data_collection_policies(self) -> list[DataCollectionPolicy]:
+        """Backward-compatible property to access data collection policies."""
+        return self.data_collection.policies
 
     @model_validator(mode="before")
     def set_status_from_is_running(cls, data: Any) -> Any:

@@ -14,7 +14,7 @@ from app.models import (
     SinkType,
     SourceType,
     TaskType,
-    TrainingStatus,
+    TrainingStatus, DataCollectionConfig,
 )
 
 
@@ -139,7 +139,7 @@ def _create_pipeline_with_video_source(  # noqa: PLR0913
     pipeline = PipelineDB(
         project_id=project_id,
         sink_id=sink_id,
-        data_collection_policies=[FixedRateDataCollectionPolicy(rate=0.1).model_dump(mode="json")],
+        data_collection=DataCollectionConfig(max_dataset_size=100, policies=[FixedRateDataCollectionPolicy(rate=0.1).model_dump(mode="json")]).model_dump(mode="json"),
         is_running=project_id == "9d6af8e8-6017-4ebe-9126-33aae739c5fa",  # Running only for detection project
     )
 

@@ -75,7 +75,7 @@ class PipelineService:
             sink_id=str(to_update.sink_id) if to_update.sink_id else None,
             model_revision_id=str(to_update.model_id) if to_update.model_id else None,
             is_running=to_update.status.as_bool,
-            data_collection_policies=[obj.model_dump() for obj in to_update.data_collection_policies],
+            data_collection=to_update.data_collection.model_dump(),
             device=to_update.device,
         )
         pipeline_db = pipeline_repo.update(to_update_db)
@@ -86,7 +86,7 @@ class PipelineService:
                 self._event_bus.emit_event(EventType.SOURCE_CHANGED)
             if pipeline.sink_id != updated.sink_id:  # type: ignore[union-attr] # sink is always there for running pipeline
                 self._event_bus.emit_event(EventType.SINK_CHANGED)
-            if pipeline.data_collection_policies != updated.data_collection_policies:
+            if pipeline.data_collection != updated.data_collection:
                 self._event_bus.emit_event(EventType.PIPELINE_DATASET_COLLECTION_POLICIES_CHANGED)
             if pipeline.device != updated.device:
                 self._event_bus.emit_event(EventType.INFERENCE_DEVICE_CHANGED)

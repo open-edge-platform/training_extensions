@@ -143,7 +143,7 @@ class ProjectTestDataFactory:
         """Set data collection policy for the project."""
         if not self._pipeline:
             raise ValueError("Pipeline must be set before adding data policies")
-        self._pipeline.data_collection_policies = data_policies
+        self._pipeline.data_collection = {"max_dataset_size": None, "policies": data_policies}
         return self
 
     def build(self) -> ProjectDB:

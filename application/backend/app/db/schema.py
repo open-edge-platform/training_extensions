@@ -47,7 +47,7 @@ class PipelineDB(Base):
     sink_id: Mapped[str | None] = mapped_column(Text, ForeignKey("sinks.id", ondelete="RESTRICT"))
     model_revision_id: Mapped[str | None] = mapped_column(Text, ForeignKey("model_revisions.id", ondelete="RESTRICT"))
     is_running: Mapped[bool] = mapped_column(Boolean, default=False)
-    data_collection_policies: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    data_collection: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     device: Mapped[str] = mapped_column(String(50), nullable=False, default="cpu")
 
     sink = relationship("SinkDB", uselist=False, lazy="joined")
