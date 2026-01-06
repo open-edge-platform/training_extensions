@@ -46,4 +46,3 @@ class DataCollectionConfig(BaseModel):
         description="Maximum number of items allowed in the dataset. None for unlimited.",
     )
     policies: list[DataCollectionPolicy] = Field(default_factory=list)
-
