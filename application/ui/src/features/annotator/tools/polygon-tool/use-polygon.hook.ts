@@ -1,7 +1,7 @@
-// Copyright (C) 2022-2025 Intel Corporation
-// LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
 
-import { PointerEvent, useCallback, useEffect, useRef } from 'react';
+import { PointerEvent, useEffect, useRef } from 'react';
 
 import { getIntersectionPoint } from '@geti/smart-tools/utils';
 import { isEmpty } from 'lodash-es';
@@ -65,94 +65,82 @@ export const usePolygon = ({
         }
     }, [mode, setLassoSegment]);
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    const onPointerDown = useCallback(
-        leftRightMouseButtonHandler(
-            (event) => {
-                event.currentTarget.setPointerCapture(event.pointerId);
+    const onPointerDown = leftRightMouseButtonHandler(
+        (event) => {
+            event.currentTarget.setPointerCapture(event.pointerId);
 
-                setPointFromEvent((point: Point) => {
-                    setMode(PolygonMode.Polygon);
+            setPointFromEvent((point: Point) => {
+                setMode(PolygonMode.Polygon);
 
-                    isPointerDown.current = true;
-
-                    if (canPathBeClosed(point)) {
-                        isPointerDown.current = false;
-
-                        return;
-                    }
-
-                    setSegments(removeEmptySegments(lassoSegment, [point]));
-                    setLassoSegment([]);
-                })(event);
-            },
-            (event) => {
-                if (isEmpty(segments)) return;
-
-                event.currentTarget.setPointerCapture(event.pointerId);
-
-                setMode(PolygonMode.Eraser);
-            }
-        ),
-        [complete, setSegments, setMode, setLassoSegment]
-    );
-
-    const onPointerUp = useCallback(
-        (event: PointerEvent<SVGSVGElement>) => {
-            event.currentTarget.releasePointerCapture(event.pointerId);
-
-            setPointFromEvent((point: Point): void => {
-                // finish the drawing while releasing the button inside the area of starting point
-                if ((mode === PolygonMode.Lasso || isCloseMode(mode)) && polygon) {
-                    setSegments(removeEmptySegments(lassoSegment));
-                    setLassoSegment([]);
-                }
+                isPointerDown.current = true;
 
                 if (canPathBeClosed(point)) {
-                    //Note: to not clear snapping mode state
-                    const expectedMode = mode === PolygonMode.MagneticLassoClose ? mode : null;
-                    complete(expectedMode);
+                    isPointerDown.current = false;
+
+                    return;
                 }
 
-                setMode(prevMainMode.current);
-                isPointerDown.current = false;
+                setSegments(removeEmptySegments(lassoSegment, [point]));
+                setLassoSegment([]);
             })(event);
         },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        [lassoSegment, mode, polygon]
-    );
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    const onPointerMove = useCallback(
-        setPointFromEvent((newPoint: Point) => {
+        (event) => {
             if (isEmpty(segments)) return;
 
-            if (mode === PolygonMode.Polygon && isPointerDown.current) setMode(PolygonMode.Lasso);
+            event.currentTarget.setPointerCapture(event.pointerId);
 
-            if (mode === PolygonMode.Lasso) {
-                setLassoSegment((newLassoSegment: Point[]) => [...newLassoSegment, newPoint]);
-            }
-
-            if (mode === PolygonMode.Eraser) {
-                const intersectionPoint = getIntersectionPoint(
-                    Math.ceil(ERASER_FIELD_DEFAULT_RADIUS / zoom),
-                    newPoint,
-                    segments.flat()
-                );
-
-                if (!intersectionPoint) return;
-
-                setLassoSegment([]);
-                setSegments(deleteSegments(intersectionPoint));
-            }
-
-            if (mode !== PolygonMode.Eraser) {
-                handleIsStartingPointHovered(newPoint);
-                setPointerLine(() => [...segments.flat(), ...lassoSegment, newPoint]);
-            }
-        }),
-        [lassoSegment, mode, segments, zoom, setSegments, setMode, handleIsStartingPointHovered]
+            setMode(PolygonMode.Eraser);
+        }
     );
+
+    const onPointerUp = (event: PointerEvent<SVGSVGElement>) => {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+
+        setPointFromEvent((point: Point): void => {
+            // finish the drawing while releasing the button inside the area of starting point
+            if ((mode === PolygonMode.Lasso || isCloseMode(mode)) && polygon) {
+                setSegments(removeEmptySegments(lassoSegment));
+                setLassoSegment([]);
+            }
+
+            if (canPathBeClosed(point)) {
+                //Note: to not clear snapping mode state
+                const expectedMode = mode === PolygonMode.MagneticLassoClose ? mode : null;
+                complete(expectedMode);
+            }
+
+            setMode(prevMainMode.current);
+            isPointerDown.current = false;
+        })(event);
+    };
+
+    const onPointerMove = setPointFromEvent((newPoint: Point) => {
+        if (isEmpty(segments)) return;
+
+        if (mode === PolygonMode.Polygon && isPointerDown.current) setMode(PolygonMode.Lasso);
+
+        if (mode === PolygonMode.Lasso) {
+            setLassoSegment((newLassoSegment: Point[]) => [...newLassoSegment, newPoint]);
+        }
+
+        if (mode === PolygonMode.Eraser) {
+            const intersectionPoint = getIntersectionPoint(
+                Math.ceil(ERASER_FIELD_DEFAULT_RADIUS / zoom),
+                newPoint,
+                segments.flat()
+            );
+
+            if (!intersectionPoint) return;
+
+            setLassoSegment([]);
+            setSegments(deleteSegments(intersectionPoint));
+        }
+
+        if (mode !== PolygonMode.Eraser) {
+            handleIsStartingPointHovered(newPoint);
+            setPointerLine(() => [...segments.flat(), ...lassoSegment, newPoint]);
+        }
+    });
 
     return { onPointerDown, onPointerUp, onPointerMove };
 };

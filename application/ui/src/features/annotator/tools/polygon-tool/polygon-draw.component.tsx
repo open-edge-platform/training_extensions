@@ -1,5 +1,5 @@
-// Copyright (C) 2022-2025 Intel Corporation
-// LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
 
 import { Polygon } from '../../types';
 import { getFormattedPoints, ShapeStyle } from './utils';
@@ -21,6 +21,7 @@ export const PolygonDraw = ({ shape, styles, indicatorRadius, className = '', ar
                 cy={shape.points[0].y}
                 fill='transparent'
                 stroke={CIRCLE_STROKE_COLOR}
+                strokeWidth={styles?.strokeWidth}
             />
             <polyline
                 {...styles}
@@ -28,7 +29,6 @@ export const PolygonDraw = ({ shape, styles, indicatorRadius, className = '', ar
                 className={className}
                 aria-label={ariaLabel}
             />
-            ;
         </g>
     );
 };

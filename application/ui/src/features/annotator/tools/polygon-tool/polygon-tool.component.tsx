@@ -1,9 +1,8 @@
-// Copyright (C) 2022-2025 Intel Corporation
-// LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
 
-import { PointerEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { PointerEvent, useEffect, useRef, useState } from 'react';
 
-import { Polygon as GetiPolygon } from '@geti/smart-tools/types';
 import { clampPointBetweenImage, isPointOverPoint, isPolygonValid } from '@geti/smart-tools/utils';
 import { isEmpty } from 'lodash-es';
 
@@ -18,9 +17,9 @@ import { PolygonDraw } from './polygon-draw.component';
 import { usePolygon } from './use-polygon.hook';
 import {
     drawingStyles,
+    getCloseMode,
+    getToolIcon,
     isCloseMode,
-    PointerIcons,
-    PointerIconsOffset,
     PolygonMode,
     START_POINT_FIELD_DEFAULT_RADIUS,
     START_POINT_FIELD_FOCUS_RADIUS,
@@ -28,107 +27,63 @@ import {
 
 import classes from './polygon-tool.module.scss';
 
-const getCloseMode = (mode: PolygonMode | null) => {
-    if (mode === PolygonMode.MagneticLasso) {
-        return PolygonMode.MagneticLassoClose;
-    }
-
-    if (mode === PolygonMode.Lasso) {
-        return PolygonMode.LassoClose;
-    }
-
-    return PolygonMode.PolygonClose;
-};
-
-const TOOL_ICON: Record<PolygonMode, { icon: PointerIcons; offset: PointerIconsOffset }> = {
-    [PolygonMode.Polygon]: { icon: PointerIcons.Polygon, offset: PointerIconsOffset.Polygon },
-    [PolygonMode.Eraser]: { icon: PointerIcons.Eraser, offset: PointerIconsOffset.Eraser },
-    [PolygonMode.Lasso]: { icon: PointerIcons.Lasso, offset: PointerIconsOffset.Lasso },
-    [PolygonMode.LassoClose]: { icon: PointerIcons.LassoClose, offset: PointerIconsOffset.LassoClose },
-    [PolygonMode.MagneticLasso]: { icon: PointerIcons.MagneticLasso, offset: PointerIconsOffset.MagneticLasso },
-    [PolygonMode.MagneticLassoClose]: {
-        icon: PointerIcons.MagneticLassoClose,
-        offset: PointerIconsOffset.MagneticLassoClose,
-    },
-    [PolygonMode.PolygonClose]: { icon: PointerIcons.PolygonClose, offset: PointerIconsOffset.PolygonClose },
-};
-
 export const PolygonTool = () => {
     const { scale: zoom } = useZoom();
     const { addAnnotations } = useAnnotationActions();
-    const { mediaItem, image, selectedLabel } = useAnnotator();
+    const { image, selectedLabel } = useAnnotator();
 
     const ref = useRef<SVGRectElement>({} as SVGRectElement);
     const isClosing = useRef(false);
     const previousPolygonMode = useRef<PolygonMode | null>(null);
 
+    const [mode, setMode] = useState<PolygonMode | null>(PolygonMode.Polygon);
     const [polygon, setPolygon] = useState<Polygon | null>(null);
     const [pointerLine, setPointerLine] = useState<Point[]>([]);
     const [lassoSegment, setLassoSegment] = useState<Point[]>([]);
     const [isOptimizingPolygons, setIsOptimizingPolygons] = useState(false);
 
     const [segments, setSegments, undoRedoActions] = useUndoRedoState<Point[][]>([]);
-    const [mode, setMode] = useState<PolygonMode | null>(PolygonMode.Polygon);
 
-    // START_POINT_FIELD_FOCUS_RADIUS / zoom ~ 16 px
-    // START_POINT_FIELD_DEFAULT_RADIUS / zoom ~ 12 px
-    const STARTING_POINT_RADIUS = useMemo(
-        () => Math.ceil((isCloseMode(mode) ? START_POINT_FIELD_FOCUS_RADIUS : START_POINT_FIELD_DEFAULT_RADIUS) / zoom),
-        [mode, zoom]
+    const toolIcon = getToolIcon(mode);
+
+    const STARTING_POINT_RADIUS = Math.ceil(
+        (isCloseMode(mode) ? START_POINT_FIELD_FOCUS_RADIUS : START_POINT_FIELD_DEFAULT_RADIUS) / zoom
     );
 
-    const toolIcon = TOOL_ICON[PolygonMode.Polygon];
+    const reset = (): void => {
+        undoRedoActions.reset();
 
-    const reset = useCallback(
-        (): void => {
-            undoRedoActions.reset();
-
-            setPointerLine([]);
-            setLassoSegment([]);
-            setPolygon(null);
-        },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        [undoRedoActions.reset]
-    );
-
-    const onComplete = (optimizedPolygon: Polygon) => {
-        !isEmpty(optimizedPolygon.points) &&
-            addAnnotations(
-                [{ type: 'polygon', points: optimizedPolygon.points }],
-                selectedLabel ? [selectedLabel] : []
-            );
+        setPointerLine([]);
+        setLassoSegment([]);
+        setPolygon(null);
     };
 
-    const getPointerRelativePosition = useCallback(
-        (event: PointerEvent<SVGElement>): Point => {
-            const clampPoint = clampPointBetweenImage(image);
+    const onComplete = ({ points }: Polygon) => {
+        !isEmpty(points) && addAnnotations([{ type: 'polygon', points }], selectedLabel ? [selectedLabel] : []);
+    };
 
-            return clampPoint(getRelativePoint(ref.current, { x: event.clientX, y: event.clientY }, zoom));
-        },
-        [image, zoom]
-    );
+    const getPointerRelativePosition = (event: PointerEvent<SVGElement>): Point => {
+        const clampPoint = clampPointBetweenImage(image);
 
-    const complete = useCallback(
-        async (inputMode: PolygonMode | null) => {
-            if (!polygon || isClosing.current) return;
+        return clampPoint(getRelativePoint(ref.current, { x: event.clientX, y: event.clientY }, zoom));
+    };
 
-            isClosing.current = true;
-            polygon.points.pop();
+    const complete = async () => {
+        if (!polygon || isClosing.current) return;
 
-            if (isPolygonValid(polygon as unknown as GetiPolygon)) {
-                setIsOptimizingPolygons(true);
+        isClosing.current = true;
+        polygon.points.pop();
 
-                onComplete(polygon);
-                setIsOptimizingPolygons(false);
-            }
+        if (isPolygonValid({ shapeType: 'polygon', points: polygon.points })) {
+            setIsOptimizingPolygons(true);
 
-            reset();
-            //resetMode(inputMode);
-            isClosing.current = false;
-        },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        [onComplete, polygon, reset, mode]
-    );
+            onComplete(polygon);
+            setIsOptimizingPolygons(false);
+        }
+
+        reset();
+        isClosing.current = false;
+    };
 
     useEffect((): void => setPolygon({ type: 'polygon', points: segments?.flat() }), [segments]);
 
@@ -137,36 +92,30 @@ export const PolygonTool = () => {
     const setPointFromEvent = (callback: (point: Point) => void) => (event: PointerEvent<SVGElement>) =>
         callback(getPointerRelativePosition(event));
 
-    const canPathBeClosed = useCallback(
-        (point: Point): boolean => {
-            const flatSegments = segments.flat();
+    const canPathBeClosed = (point: Point): boolean => {
+        const flatSegments = segments.flat();
 
-            if (isEmpty(flatSegments)) return false;
+        if (isEmpty(flatSegments)) return false;
 
-            return (
-                Boolean(polygon) &&
-                isPolygonValid(polygon as unknown as GetiPolygon) &&
-                isPointOverPoint(flatSegments[0], point, STARTING_POINT_RADIUS)
-            );
-        },
-        [polygon, segments, STARTING_POINT_RADIUS]
-    );
+        return (
+            Boolean(polygon) &&
+            isPolygonValid({ shapeType: 'polygon', points: polygon?.points ?? [] }) &&
+            isPointOverPoint(flatSegments[0], point, STARTING_POINT_RADIUS)
+        );
+    };
 
-    const handleIsStartingPointHovered = useCallback(
-        (point: Point): void => {
-            if (!isCloseMode(mode) && canPathBeClosed(point)) {
-                // store the previously used polygon mode
-                previousPolygonMode.current = mode;
+    const handleIsStartingPointHovered = (point: Point): void => {
+        if (!isCloseMode(mode) && canPathBeClosed(point)) {
+            // store the previously used polygon mode
+            previousPolygonMode.current = mode;
 
-                setMode(getCloseMode(mode));
-            }
+            setMode(getCloseMode(mode));
+        }
 
-            if (isCloseMode(mode) && !canPathBeClosed(point)) {
-                setMode(previousPolygonMode.current);
-            }
-        },
-        [mode, canPathBeClosed, previousPolygonMode, setMode]
-    );
+        if (isCloseMode(mode) && !canPathBeClosed(point)) {
+            setMode(previousPolygonMode.current);
+        }
+    };
 
     const polygonHandlers = usePolygon({
         mode,
@@ -186,21 +135,16 @@ export const PolygonTool = () => {
 
     const eventHandlers = polygonHandlers;
 
-    console.log('toolIcon', toolIcon);
     return (
         <SvgToolCanvas
             image={image}
             canvasRef={ref}
-            onPointerUp={(event) => {
-                eventHandlers.onPointerUp(event);
-            }}
-            onPointerDown={(event) => {
-                eventHandlers.onPointerDown(event);
-            }}
+            aria-label={'polygon tool'}
+            onPointerUp={eventHandlers.onPointerUp}
+            onPointerDown={eventHandlers.onPointerDown}
             onPointerMove={eventHandlers.onPointerMove}
             onPointerLeave={eventHandlers.onPointerMove}
             style={{ cursor: `url(/icons/cursor/${toolIcon.icon}.png) ${toolIcon.offset}, auto` }}
-            aria-label='polygon tool'
         >
             {polygon !== null && !isEmpty(polygon.points) && (
                 <PolygonDraw

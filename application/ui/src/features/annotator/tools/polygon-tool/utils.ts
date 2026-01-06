@@ -1,3 +1,6 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 import { PointerEvent, SVGProps } from 'react';
 
 import { isEmpty, isEqual, negate } from 'lodash-es';
@@ -5,6 +8,7 @@ import { isEmpty, isEqual, negate } from 'lodash-es';
 import { Label } from '../../../../constants/shared-types';
 import { isEraserOrRightButton, isLeftButton } from '../../buttons-utils';
 import { Point } from '../../types';
+import { DEFAULT_ANNOTATION_STYLES } from '../../utils';
 import { PointerType } from '../utils';
 
 export interface ShapeStyle<T> {
@@ -42,10 +46,17 @@ export enum PointerIconsOffset {
     MagneticLassoClose = '0 0',
 }
 
-export const DEFAULT_ANNOTATION_STYLES = {
-    fillOpacity: 'var(--annotation-fill-opacity)',
-    fill: 'var(--energy-blue)',
-    stroke: 'var(--energy-blue)',
+export const TOOL_ICON: Record<PolygonMode, { icon: PointerIcons; offset: PointerIconsOffset }> = {
+    [PolygonMode.Lasso]: { icon: PointerIcons.Lasso, offset: PointerIconsOffset.Lasso },
+    [PolygonMode.Eraser]: { icon: PointerIcons.Eraser, offset: PointerIconsOffset.Eraser },
+    [PolygonMode.Polygon]: { icon: PointerIcons.Polygon, offset: PointerIconsOffset.Polygon },
+    [PolygonMode.LassoClose]: { icon: PointerIcons.LassoClose, offset: PointerIconsOffset.LassoClose },
+    [PolygonMode.MagneticLasso]: { icon: PointerIcons.MagneticLasso, offset: PointerIconsOffset.MagneticLasso },
+    [PolygonMode.MagneticLassoClose]: {
+        icon: PointerIcons.MagneticLassoClose,
+        offset: PointerIconsOffset.MagneticLassoClose,
+    },
+    [PolygonMode.PolygonClose]: { icon: PointerIcons.PolygonClose, offset: PointerIconsOffset.PolygonClose },
 };
 
 export const ERASER_FIELD_DEFAULT_RADIUS = 5;
@@ -53,6 +64,18 @@ export const START_POINT_FIELD_DEFAULT_RADIUS = 6;
 export const START_POINT_FIELD_FOCUS_RADIUS = 8;
 
 const isDifferent = negate(isEqual);
+
+export const getCloseMode = (mode: PolygonMode | null) => {
+    if (mode === PolygonMode.MagneticLasso) {
+        return PolygonMode.MagneticLassoClose;
+    }
+
+    if (mode === PolygonMode.Lasso) {
+        return PolygonMode.LassoClose;
+    }
+
+    return PolygonMode.PolygonClose;
+};
 
 export const drawingStyles = (defaultLabel: Label | null): typeof DEFAULT_ANNOTATION_STYLES => {
     if (defaultLabel === null) {
@@ -64,6 +87,14 @@ export const drawingStyles = (defaultLabel: Label | null): typeof DEFAULT_ANNOTA
         fill: defaultLabel.color,
         stroke: defaultLabel.color,
     };
+};
+
+export const getToolIcon = (polygonMode: PolygonMode | null) => {
+    if (polygonMode === null) {
+        return TOOL_ICON[PolygonMode.Polygon];
+    }
+
+    return TOOL_ICON[polygonMode];
 };
 
 export const getFormattedPoints = (points: Point[]): string => points.map(({ x, y }) => `${x},${y}`).join(' ');
