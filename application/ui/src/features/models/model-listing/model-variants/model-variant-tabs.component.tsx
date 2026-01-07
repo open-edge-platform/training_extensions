@@ -8,9 +8,11 @@ import { ReactComponent as OpenVINO } from '../../../../assets/icons/openvino-lo
 import { ReactComponent as Pytorch } from '../../../../assets/icons/pytorch-logo.svg';
 import { ModelVariantTable } from './model-variant-table.component';
 
+import classes from './model-variant-tabs.module.scss';
+
 export const ModelVariantsTabs = () => {
     return (
-        <Tabs aria-label='Model variants'>
+        <Tabs aria-label='Model variants' UNSAFE_className={classes.tabs} marginTop={'size-300'}>
             <TabList>
                 <Item key='openvino' textValue='openvino'>
                     <OpenVINO />

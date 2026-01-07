@@ -2,27 +2,24 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
-    ActionButton,
     Disclosure,
     DisclosurePanel,
     DisclosureTitle,
     Divider,
-    Flex,
     Grid,
     Item,
-    Menu,
-    MenuTrigger,
-    Tag,
+    TabList,
+    TabPanels,
+    Tabs,
     Text,
     View,
 } from '@geti/ui';
-import { MoreMenu } from '@geti/ui/icons';
 
-import { ReactComponent as StartIcon } from '../../../assets/icons/start.svg';
+import { GRID_COLUMNS } from './constants';
 import { DatasetItem } from './dataset-item/dataset-item.component';
 import { Header } from './header.component';
-import { AccuracyIndicator } from './model-variants/accuracy-indicator.component';
-import { ModelVariants } from './model-variants/model-variants.component';
+import { ModelRow } from './model-row.component';
+import { ModelVariantsTabs } from './model-variants/model-variant-tabs.component';
 
 import classes from './model-listing.module.scss';
 
@@ -32,9 +29,7 @@ const models = [
     { id: 2, name: 'Model Project #2' },
 ];
 
-const GRID_COLUMNS = ['2fr 1fr 1fr 1fr 1fr auto'];
-
-const HeaderRow = () => {
+const DatasetHeaderRow = () => {
     return (
         <Grid
             columns={GRID_COLUMNS}
@@ -56,68 +51,6 @@ const HeaderRow = () => {
     );
 };
 
-// TODO: Update model interface
-const ModelVariantItem = ({ model }: { model: { id: number; name: string } }) => {
-    return (
-        <Grid columns={GRID_COLUMNS} alignItems={'center'} width={'100%'}>
-            <Flex direction={'column'} gap={'size-50'}>
-                <Flex alignItems={'center'} gap={'size-100'}>
-                    <Text UNSAFE_style={{ fontSize: 'var(--spectrum-global-dimension-font-size-75)' }}>
-                        {model.name}
-                    </Text>
-                    <Tag
-                        prefix={<StartIcon />}
-                        style={{
-                            backgroundColor: 'var(--energy-blue)',
-                            color: 'var(--spectrum-global-color-gray-50)',
-                            borderRadius: 'var(--spectrum-global-dimension-size-50)',
-                            padding:
-                                'var(--spectrum-global-dimension-size-25) var(--spectrum-global-dimension-size-50)',
-                        }}
-                        text={'Active'}
-                    />
-                </Flex>
-                <Text
-                    UNSAFE_style={{
-                        fontSize: 'var(--spectrum-global-dimension-font-size-75)',
-                        color: 'var(--spectrum-global-color-gray-700)',
-                    }}
-                >
-                    Fine-tuned from Model Project #1
-                </Text>
-            </Flex>
-
-            <Flex direction={'column'} gap={'size-25'}>
-                <Text UNSAFE_style={{ fontSize: 'var(--spectrum-global-dimension-font-size-75)' }}>01 Oct 2025</Text>
-                <Text
-                    UNSAFE_style={{
-                        fontSize: 'var(--spectrum-global-dimension-font-size-75)',
-                        color: 'var(--spectrum-global-color-gray-700)',
-                    }}
-                >
-                    11:07 AM
-                </Text>
-            </Flex>
-
-            <Text UNSAFE_style={{ fontSize: 'var(--spectrum-global-dimension-font-size-75)' }}>YOLOX-S</Text>
-
-            <Text UNSAFE_style={{ fontSize: 'var(--spectrum-global-dimension-font-size-75)' }}>500 MB</Text>
-
-            <AccuracyIndicator accuracy={72} />
-
-            <MenuTrigger>
-                <ActionButton isQuiet>
-                    <MoreMenu />
-                </ActionButton>
-                <Menu>
-                    <Item key='delete'>Delete</Item>
-                    <Item key='export'>Export</Item>
-                </Menu>
-            </MenuTrigger>
-        </Grid>
-    );
-};
-
 export const ModelListing = () => {
     return (
         <View padding={'size-300'}>
@@ -128,7 +61,7 @@ export const ModelListing = () => {
             {/* TODO: Update to a more generic name, since this will either be a dataset, or a model */}
             <DatasetItem />
 
-            <HeaderRow />
+            <DatasetHeaderRow />
 
             {/* 
                 TODO: Update this to a dynamic value.
@@ -137,13 +70,39 @@ export const ModelListing = () => {
             {models.map((model) => (
                 <Disclosure key={model.id} isQuiet UNSAFE_className={classes.disclosure}>
                     <DisclosureTitle UNSAFE_className={classes.disclosureItem}>
-                        <ModelVariantItem model={model} />
+                        <ModelRow model={model} />
                     </DisclosureTitle>
                     <DisclosurePanel>
-                        <ModelVariants />
-                        {/* Model metrics */}
-                        {/* Training parameter settings */}
-                        {/* Training datasets */}
+                        <Tabs aria-label='Model details'>
+                            <TabList>
+                                <Item key='variants'>
+                                    <Text>Model variants</Text>
+                                </Item>
+                                <Item key='metrics'>
+                                    <Text>Model metrics</Text>
+                                </Item>
+                                <Item key='parameters'>
+                                    <Text>Training parameters</Text>
+                                </Item>
+                                <Item key='datasets'>
+                                    <Text>Training datasets</Text>
+                                </Item>
+                            </TabList>
+                            <TabPanels>
+                                <Item key='variants'>
+                                    <ModelVariantsTabs />
+                                </Item>
+                                <Item key='metrics'>
+                                    <Text>Model metrics content</Text>
+                                </Item>
+                                <Item key='parameters'>
+                                    <Text>Training parameter settings content</Text>
+                                </Item>
+                                <Item key='datasets'>
+                                    <Text>Training datasets content</Text>
+                                </Item>
+                            </TabPanels>
+                        </Tabs>
                     </DisclosurePanel>
                 </Disclosure>
             ))}
