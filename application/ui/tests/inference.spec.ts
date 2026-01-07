@@ -27,7 +27,7 @@ test.describe('Inference', () => {
                     {
                         id: 'generated-source-id',
                         name: 'Default Source',
-                        source_type: 'webcam',
+                        source_type: 'usb_camera',
                         device_id: 0,
                     },
                     { status: 201 }

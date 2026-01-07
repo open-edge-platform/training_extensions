@@ -25,7 +25,7 @@ export const getIpCameraData = <T extends { source_type: string }>(sources: T[])
 };
 
 export const getWebcamData = <T extends { source_type: string }>(sources: T[]) => {
-    return sources.filter(({ source_type }) => source_type === 'webcam').at(0) as unknown as WebcamSourceConfig;
+    return sources.filter(({ source_type }) => source_type === 'usb_camera').at(0) as unknown as WebcamSourceConfig;
 };
 
 export const getVideoFileData = <T extends { source_type: string }>(sources: T[]) => {
