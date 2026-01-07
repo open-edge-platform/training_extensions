@@ -4,9 +4,32 @@
 import { ActionButton, Button, Flex, Grid, Heading, Item, Menu, MenuTrigger, Text } from '@geti/ui';
 import { Image, MoreMenu, Tag } from '@geti/ui/icons';
 
+import { GRID_COLUMNS } from '../constants';
 import { ThreeSectionRange } from './three-section-range.component';
 
 import classes from './dataset-item.module.scss';
+
+export const DatasetHeaderRow = () => {
+    return (
+        <Grid
+            columns={GRID_COLUMNS}
+            alignItems={'center'}
+            width={'100%'}
+            UNSAFE_style={{
+                backgroundColor: 'var(--spectrum-global-color-gray-200)',
+                padding: `var(--spectrum-global-dimension-size-150) var(--spectrum-global-dimension-size-600)
+                    var(--spectrum-global-dimension-size-150) var(--spectrum-global-dimension-size-1000)`,
+            }}
+        >
+            <Text>Model Name</Text>
+            <Text>Trained</Text>
+            <Text>Architecture</Text>
+            <Text>Total size</Text>
+            <Text>Score</Text>
+            <div />
+        </Grid>
+    );
+};
 
 export const DatasetItem = () => {
     return (

@@ -1,11 +1,11 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, Grid, Item, Picker, Text } from '@geti/ui';
+import { Flex, Grid, Item, Picker, Text, ToggleButton } from '@geti/ui';
 
 export const Header = () => {
     return (
-        <Grid columns={['auto auto 1fr']} alignItems={'center'}>
+        <Grid columns={['auto auto 1fr']} gap={'size-100'} alignItems={'center'}>
             <Text>Models</Text>
 
             <Flex marginStart={'size-300'} gap={'size-100'}>
@@ -27,6 +27,10 @@ export const Header = () => {
                     <Item key='active-model'>Sort: Active model</Item>
                     <Item key='architecture'>Sort: Architecture</Item>
                 </Picker>
+            </Flex>
+
+            <Flex>
+                <ToggleButton isEmphasized>Pin active model on top</ToggleButton>
             </Flex>
         </Grid>
     );

@@ -6,7 +6,6 @@ import {
     DisclosurePanel,
     DisclosureTitle,
     Divider,
-    Grid,
     Item,
     TabList,
     TabPanels,
@@ -15,8 +14,7 @@ import {
     View,
 } from '@geti/ui';
 
-import { GRID_COLUMNS } from './constants';
-import { DatasetItem } from './dataset-item/dataset-item.component';
+import { DatasetHeaderRow, DatasetItem } from './dataset-item/dataset-item.component';
 import { Header } from './header.component';
 import { ModelRow } from './model-row.component';
 import { ModelVariantsTabs } from './model-variants/model-variant-tabs.component';
@@ -28,28 +26,6 @@ const models = [
     { id: 1, name: 'Model Project #1' },
     { id: 2, name: 'Model Project #2' },
 ];
-
-const DatasetHeaderRow = () => {
-    return (
-        <Grid
-            columns={GRID_COLUMNS}
-            alignItems={'center'}
-            width={'100%'}
-            UNSAFE_style={{
-                backgroundColor: 'var(--spectrum-global-color-gray-200)',
-                padding: `var(--spectrum-global-dimension-size-150) var(--spectrum-global-dimension-size-600)
-                    var(--spectrum-global-dimension-size-150) var(--spectrum-global-dimension-size-1000)`,
-            }}
-        >
-            <Text>Model Name</Text>
-            <Text>Trained</Text>
-            <Text>Architecture</Text>
-            <Text>Total size</Text>
-            <Text>Score</Text>
-            <div />
-        </Grid>
-    );
-};
 
 export const ModelListing = () => {
     return (
