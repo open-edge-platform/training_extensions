@@ -8,16 +8,16 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, ClassVar, Literal
 
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from otx.backend.native.models.detection.backbones.hgnetv2 import HGNetv2
+from otx.backend.native.models.detection.backbones.dinov3sta import DINOv3STAs
 from otx.backend.native.models.detection.detectors import DETR
-from otx.backend.native.models.detection.heads.dfine_decoder import DFINETransformer
+from otx.backend.native.models.detection.heads.deim_decoder import DEIMTransformer
 from otx.backend.native.models.detection.losses.deim_loss import DEIMCriterion
 from otx.backend.native.models.detection.necks.dfine_hybrid_encoder import HybridEncoder
 from otx.backend.native.models.utils.utils import load_checkpoint
 from otx.config.data import TileConfig
 from otx.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 
-from .rtdetr import RTDETR
+from .deim import DEIMDFine
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -27,13 +27,13 @@ if TYPE_CHECKING:
     from otx.types.label import LabelInfoTypes
 
 
-class DEIMDFine(RTDETR):
-    """OTX Detection model class for DEIMDFine.
+class DEIMV2(DEIMDFine):
+    """OTX Detection model class for DEIMV2.
 
-    DEIM-DFine is an improved version of D-FINE, which halfed the training time and improved the performance on COCO.
+    DEIMV2 is an improved version of DEIMV1, which introduces DINOV3 backbone and improved decoder.
 
-    It is based on the DEIM-DFine paper: https://arxiv.org/abs/2412.04234
-    The original implementation is available at: https://github.com/ShihuaHuang95/DEIM
+    It is based on the DEIMV2 paper: https://arxiv.org/abs/2412.04234
+    The original implementation is available at: https://github.com/Intellindust-AI-Lab/DEIMv2/tree/main
 
     The model should be used with
     :class:`~otx.backend.native.callbacks.aug_scheduler.DataAugSwitch` and
@@ -41,7 +41,7 @@ class DEIMDFine(RTDETR):
     for dynamic augmentation scheduling.
 
     Attributes:
-        pretrained_weights (ClassVar[dict[str, str]]): Dictionary containing URLs for pretrained weights.
+        _pretrained_weights (ClassVar[dict[str, str]]): Dictionary containing URLs for pretrained weights.
         input_size_multiplier (int): Multiplier for the input size.
 
     Args:
@@ -59,11 +59,10 @@ class DEIMDFine(RTDETR):
     """
 
     _pretrained_weights: ClassVar[dict[str, str]] = {
-        "deim_dfine_hgnetv2_n": "https://github.com/eugene123tw/DEIM/releases/download/poc/deim_dfine_hgnetv2_n_coco_160e.pth",
-        "deim_dfine_hgnetv2_s": "https://github.com/eugene123tw/DEIM/releases/download/poc/deim_dfine_hgnetv2_s_coco_120e.pth",
-        "deim_dfine_hgnetv2_m": "https://github.com/eugene123tw/DEIM/releases/download/poc/deim_dfine_hgnetv2_m_coco_90e.pth",
-        "deim_dfine_hgnetv2_l": "https://github.com/eugene123tw/DEIM/releases/download/poc/deim_dfine_hgnetv2_l_coco_50e.pth",
-        "deim_dfine_hgnetv2_x": "https://github.com/eugene123tw/DEIM/releases/download/poc/deim_dfine_hgnetv2_x_coco_50e.pth",
+        "deimv2_x": "https://github.com/kprokofi/DEIMv2/releases/download/1.0.0/deimv2_dinov3_x_coco.pth",
+        "deimv2_l": "https://github.com/kprokofi/DEIMv2/releases/download/1.0.0/deimv2_dinov3_l_coco.pth",
+        "deimv2_m": "https://github.com/kprokofi/DEIMv2/releases/download/1.0.0/deimv2_dinov3_m_coco.pth",
+        "deimv2_s": "https://github.com/kprokofi/DEIMv2/releases/download/1.0.0/deimv2_dinov3_s_coco.pth",
     }
 
     input_size_multiplier = 32
@@ -73,12 +72,11 @@ class DEIMDFine(RTDETR):
         label_info: LabelInfoTypes,
         data_input_params: DataInputParams | None = None,
         model_name: Literal[
-            "deim_dfine_hgnetv2_n",
-            "deim_dfine_hgnetv2_s",
-            "deim_dfine_hgnetv2_m",
-            "deim_dfine_hgnetv2_l",
-            "deim_dfine_hgnetv2_x",
-        ] = "deim_dfine_hgnetv2_x",
+            "deimv2_x",
+            "deimv2_l",
+            "deimv2_m",
+            "deimv2_s",
+        ] = "deimv2_x",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MeanAveragePrecisionFMeasureCallable,
@@ -101,13 +99,14 @@ class DEIMDFine(RTDETR):
     def _create_model(self, num_classes: int | None = None) -> DETR:
         """Create DEIM-DFine model."""
         num_classes = num_classes if num_classes is not None else self.num_classes
-        backbone = HGNetv2(model_name=self.model_name)
+        backbone = DINOv3STAs(model_name=self.model_name)
         encoder = HybridEncoder(model_name=self.model_name)
-        decoder = DFINETransformer(
+        decoder = DEIMTransformer(
             model_name=self.model_name,
             num_classes=num_classes,
             eval_spatial_size=self.data_input_params.input_size,
         )
+
         criterion = DEIMCriterion(
             weight_dict={
                 "loss_vfl": 1,
@@ -124,11 +123,10 @@ class DEIMDFine(RTDETR):
         )
 
         backbone_lr_mapping = {
-            "deim_dfine_hgnetv2_n": 0.0004,
-            "deim_dfine_hgnetv2_s": 0.0002,
-            "deim_dfine_hgnetv2_m": 0.0001,
-            "deim_dfine_hgnetv2_l": 0.000025,
-            "deim_dfine_hgnetv2_x": 0.000005,
+            "deimv2_x": 0.00001,
+            "deimv2_l": 0.0000125,
+            "deimv2_m": 0.000025,
+            "deimv2_s": 0.000025,
         }
 
         try:
@@ -138,15 +136,10 @@ class DEIMDFine(RTDETR):
             raise ValueError(msg) from err
 
         optimizer_configuration = [
-            {"params": "^(?=.*backbone)(?!.*norm|bn).*$", "lr": backbone_lr},
-            {"params": "^(?=.*(?:encoder|decoder))(?=.*(?:norm|bn)).*$", "weight_decay": 0.0},
+            {"params": "^(?=.*.dinov3)(?!.*(?:norm|bn|bias)).*$", "lr": backbone_lr},
+            {"params": "^(?=.*.dinov3)(?=.*(?:norm|bn|bias)).*$", "lr": backbone_lr, "weight_decay": 0.0},
+            {"params": "^(?=.*(?:sta|encoder|decoder))(?=.*(?:norm|bn|bias)).*$", "weight_decay": 0.0},
         ]
-        if self.model_name == "deim_dfine_hgnetv2_n":
-            optimizer_configuration = [
-                {"params": "^(?=.*backbone)(?!.*norm|bn).*$", "lr": backbone_lr},
-                {"params": "^(?=.*backbone)(?=.*norm|bn).*$", "lr": backbone_lr, "weight_decay": 0.0},
-                {"params": "^(?=.*(?:encoder|decoder))(?=.*(?:norm|bn|bias)).*$", "weight_decay": 0.0},
-            ]
 
         model = DETR(
             multi_scale=self.multi_scale,
@@ -160,5 +153,8 @@ class DEIMDFine(RTDETR):
         )
         model.init_weights()
         load_checkpoint(model, self._pretrained_weights[self.model_name], map_location="cpu")
-
         return model
+
+    @property
+    def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
+        return DataInputParams(input_size=(640, 640), mean=(123.675, 116.280, 103.530), std=(58.395, 57.120, 57.375))

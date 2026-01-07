@@ -97,7 +97,6 @@ class Benchmark:
         num_epoch: int = 0,
         eval_upto: str = "train",
         tags: dict[str, str] | None = None,
-        dry_run: bool = False,
         deterministic: bool = False,
         accelerator: str = "gpu",
         reference_results: pd.DataFrame | None = None,
@@ -109,7 +108,6 @@ class Benchmark:
         self.num_epoch = num_epoch
         self.eval_upto = eval_upto
         self.tags = tags or {}
-        self.dry_run = dry_run
         self.deterministic = deterministic
         self.accelerator = accelerator
         self.reference_results = reference_results
@@ -127,6 +125,7 @@ class Benchmark:
         dataset_info: DatasetInfo,
         sub_work_dir: Path,
         seed: int,
+        num_devices: int = 1,
     ) -> float:
         """Train model with given dataset and return the total time.
 
@@ -145,7 +144,7 @@ class Benchmark:
             dataset_info=dataset_info,
             work_dir=sub_work_dir / SubCommand.TRAIN.value,
         )
-
+        engine.num_devices = num_devices
         kwargs = {}
         if dataset_info.extra_overrides:
             kwargs.update(dataset_info.extra_overrides.get("train", {}))
@@ -338,6 +337,7 @@ class Benchmark:
         dataset_info: DatasetInfo,
         seed: int,
         criteria: list[Criterion],
+        num_devices: int = 1,
     ) -> pd.DataFrame | None:
         """Run configured benchmark with given dataset and model and return the result.
 
@@ -381,6 +381,7 @@ class Benchmark:
                     dataset_info=dataset_info,
                     sub_work_dir=sub_work_dir,
                     seed=seed,
+                    num_devices=num_devices,
                 )
 
                 self._log_metrics(
@@ -638,7 +639,6 @@ if __name__ == "__main__":
         num_epoch=args.num_epoch,
         eval_upto=args.eval_upto,
         tags=tags,
-        dry_run=args.dry_run,
         deterministic=(
             False if args.deterministic is None else {"true": True, "false": False, "warn": "warn"}[args.deterministic]
         ),
@@ -653,6 +653,7 @@ if __name__ == "__main__":
         dataset_info=dataset_info,
         seed=args.seed,
         criteria=criteria,
+        num_devices=args.num_devices,
     )
     benchmark.check(
         result=result,

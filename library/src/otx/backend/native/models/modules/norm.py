@@ -12,10 +12,49 @@ from functools import partial
 from typing import Any, Callable
 
 import torch
-from torch import nn
+from torch import Tensor, nn
 from torch.nn import SyncBatchNorm
 from torch.nn.modules.batchnorm import _BatchNorm
 from torch.nn.modules.instancenorm import _InstanceNorm
+
+
+class RMSNorm(nn.Module):
+    """Root Mean Square Layer Normalization.
+
+    Args:
+        dim (int): The number of features in the input.
+        eps (float, optional): A value added for numerical stability. Defaults to 1e-6.
+    """
+
+    def __init__(self, dim: int, eps: float = 1e-6) -> None:
+        super().__init__()
+        self.dim = dim
+        self.eps = eps
+        self.scale = nn.Parameter(torch.ones(dim))
+
+    def _norm(self, x: Tensor) -> Tensor:
+        """Compute RMS normalization."""
+        return x * torch.rsqrt(x.pow(2).mean(-1, keepdim=True) + self.eps)
+
+    def forward(self, x: Tensor) -> Tensor:
+        """Forward pass of RMSNorm.
+
+        Args:
+            x (Tensor): Input tensor.
+
+        Returns:
+            Tensor: Normalized and scaled tensor.
+        """
+        output = self._norm(x.float()).type_as(x)
+        return output * self.scale
+
+    def extra_repr(self) -> str:
+        """Extra representation string."""
+        return f"dim={self.dim}, eps={self.eps}"
+
+    def reset_parameters(self) -> None:
+        """Reset scale parameter to ones."""
+        nn.init.constant_(self.scale, 1)
 
 
 class FrozenBatchNorm2d(nn.Module):
