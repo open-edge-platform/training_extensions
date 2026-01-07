@@ -4,7 +4,7 @@
 import { getMultipleMockedMediaItems } from 'mocks/mock-media-item';
 import { HttpResponse } from 'msw';
 
-import { expect, http, test } from './fixtures';
+import { expect, http, test } from '../fixtures';
 
 const mockedItems = getMultipleMockedMediaItems(20, '1');
 const mockedItems2 = getMultipleMockedMediaItems(20, '2');

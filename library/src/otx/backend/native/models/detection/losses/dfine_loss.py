@@ -422,7 +422,9 @@ class DFINECriterion(nn.Module):
             targets (list[dict[str, torch.Tensor]]): targets
         """
         dn_positive_idx, dn_num_group = dn_meta["dn_positive_idx"], dn_meta["dn_num_group"]
-        num_gts = [len(t["labels"]) for t in targets]
+        # Use subsampled num_gts from dn_meta if available (when ground truth was capped)
+        # Otherwise fall back to counting from original targets
+        num_gts = dn_meta["dn_num_gts"] if "dn_num_gts" in dn_meta else [len(t["labels"]) for t in targets]
         device = targets[0]["labels"].device
 
         dn_match_indices = []

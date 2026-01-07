@@ -5,6 +5,7 @@
 
 from otx.backend.native.models import (
     ATSS,
+    DEIMV2,
     RTDETR,
     SSD,
     YOLOX,
@@ -38,6 +39,7 @@ from otx.backend.openvino.models import (
 __all__ = [
     # detection
     "ATSS",
+    "DEIMV2",
     "RTDETR",
     "SSD",
     "YOLOX",
