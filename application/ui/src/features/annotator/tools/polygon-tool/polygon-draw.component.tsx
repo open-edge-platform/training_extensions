@@ -4,8 +4,6 @@
 import { Polygon } from '../../types';
 import { getFormattedPoints, ShapeStyle } from './utils';
 
-const CIRCLE_STROKE_COLOR = 'var(--energy-blue-shade)';
-
 export interface PolygonDrawProps extends ShapeStyle<SVGPolygonElement> {
     shape: Polygon;
     ariaLabel?: string;
@@ -19,8 +17,8 @@ export const PolygonDraw = ({ shape, styles, indicatorRadius, className = '', ar
                 r={indicatorRadius}
                 cx={shape.points[0].x}
                 cy={shape.points[0].y}
-                fill='transparent'
-                stroke={CIRCLE_STROKE_COLOR}
+                fill={'transparent'}
+                stroke={`var(--energy-blue-shade)`}
                 strokeWidth={styles?.strokeWidth}
             />
             <polyline
