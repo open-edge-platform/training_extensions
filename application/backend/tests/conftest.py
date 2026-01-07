@@ -16,17 +16,20 @@ from app.models import (
     SourceType,
     TrainingInfo,
     TrainingStatus,
-    WebcamSourceConfig,
+    USBCameraSourceConfig,
 )
 from app.models.sink import MqttConfig
-from app.models.source import WebcamConfig
+from app.models.source import USBCameraConfig
 
 
 @pytest.fixture
-def fxt_webcam_source() -> WebcamSourceConfig:
+def fxt_usb_camera_source() -> USBCameraSourceConfig:
     """Sample source configuration data."""
-    return WebcamSourceConfig(
-        id=uuid4(), source_type=SourceType.WEBCAM, name="Test Source", config_data=WebcamConfig(device_id=1, codec=None)
+    return USBCameraSourceConfig(
+        id=uuid4(),
+        source_type=SourceType.USB_CAMERA,
+        name="Test Source",
+        config_data=USBCameraConfig(device_id=1, codec=None),
     )
 
 
@@ -71,11 +74,11 @@ def fxt_default_pipeline() -> Pipeline:
 
 
 @pytest.fixture
-def fxt_running_pipeline(fxt_webcam_source, fxt_mqtt_sink, fxt_model) -> Pipeline:
+def fxt_running_pipeline(fxt_usb_camera_source, fxt_mqtt_sink, fxt_model) -> Pipeline:
     """Sample default pipeline data."""
     return Pipeline(
         project_id=uuid4(),
-        source_id=fxt_webcam_source.id,
+        source_id=fxt_usb_camera_source.id,
         sink_id=fxt_mqtt_sink.id,
         model_id=fxt_model.id,
         status=PipelineStatus.RUNNING,

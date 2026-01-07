@@ -27,7 +27,7 @@ services:
       - ../backend/logs/:/application/logs/
     ports:
       - "7860:7860"
-    # Map all host devices to provide access to webcams and other attached devices
+    # Map all host devices to provide access to USB cameras and other attached devices
     privileged: true
     devices:
       - /dev:/dev

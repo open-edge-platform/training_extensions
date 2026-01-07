@@ -70,7 +70,7 @@ class TestSystemEndpoints:
     def test_get_camera_devices(self, fxt_system_service: Mock, fxt_client: TestClient):
         """Test GET /api/system/devices/camera"""
         fxt_system_service.get_camera_devices.return_value = [
-            {"index": 0, "name": "Integrated Webcam"},
+            {"index": 0, "name": "Integrated USB Camera"},
             {"index": 1, "name": "USB Camera"},
         ]
 
@@ -80,7 +80,7 @@ class TestSystemEndpoints:
         cameras = response.json()
         assert len(cameras) == 2
         assert cameras[0]["index"] == 0
-        assert cameras[0]["name"] == "Integrated Webcam"
+        assert cameras[0]["name"] == "Integrated USB Camera"
         assert cameras[1]["index"] == 1
         assert cameras[1]["name"] == "USB Camera"
 

@@ -18,7 +18,7 @@ IP_CAMERA_PASSWORD = "IP_CAMERA_PASSWORD"  # noqa: S105
 
 class SourceType(StrEnum):
     DISCONNECTED = "disconnected"
-    WEBCAM = "webcam"
+    USB_CAMERA = "usb_camera"
     IP_CAMERA = "ip_camera"
     VIDEO_FILE = "video_file"
     IMAGES_FOLDER = "images_folder"
@@ -43,16 +43,16 @@ class DisconnectedSourceConfig(BaseSourceConfig):
     config_data: DisconnectedConfig = DisconnectedConfig()
 
 
-class WebcamConfig(SourceConfig):
+class USBCameraConfig(SourceConfig):
     device_id: int
     codec: Annotated[str | None, StringConstraints(min_length=4, max_length=4, to_upper=True)] = Field(
         None, description="Video codec fourcc"
     )
 
 
-class WebcamSourceConfig(BaseSourceConfig):
-    source_type: Literal[SourceType.WEBCAM]
-    config_data: WebcamConfig
+class USBCameraSourceConfig(BaseSourceConfig):
+    source_type: Literal[SourceType.USB_CAMERA]
+    config_data: USBCameraConfig
 
 
 class IPCameraConfig(SourceConfig):
@@ -101,7 +101,7 @@ class ImagesFolderSourceConfig(BaseSourceConfig):
 
 
 Source = Annotated[
-    WebcamSourceConfig
+    USBCameraSourceConfig
     | IPCameraSourceConfig
     | VideoFileSourceConfig
     | ImagesFolderSourceConfig

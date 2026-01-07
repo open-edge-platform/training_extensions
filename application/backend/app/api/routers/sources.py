@@ -29,12 +29,12 @@ CREATE_SOURCE_BODY_DESCRIPTION = """
 Configuration for the new source. The exact list of fields that can be configured depends on the source type.
 """
 CREATE_SOURCE_BODY_EXAMPLES = {
-    "webcam": Example(
-        summary="Webcam source",
-        description="Configuration for a webcam source",
+    "usb_camera": Example(
+        summary="USB camera source",
+        description="Configuration for a USB camera source",
         value={
-            "source_type": "webcam",
-            "name": "My Webcam",
+            "source_type": "usb_camera",
+            "name": "USB Camera 1",
             "device_id": 0,
         },
     ),
@@ -71,15 +71,15 @@ CREATE_SOURCE_BODY_EXAMPLES = {
 
 UPDATE_SOURCE_BODY_DESCRIPTION = """
 Partial source configuration update. May contain any subset of fields from the respective source type
-(e.g., 'device_id' for webcams; 'video_path' for video files).
+(e.g., 'device_id' for USB camera; 'video_path' for video files).
 Fields not included in the request will remain unchanged. The 'source_type' field cannot be changed.
 """
 UPDATE_SOURCE_BODY_EXAMPLES = {
-    "webcam": Example(
-        summary="Update webcam source",
-        description="Rename a webcam source",
+    "usb_camera": Example(
+        summary="Update USB camera source",
+        description="Rename a USB camera source",
         value={
-            "name": "Updated Webcam Name",
+            "name": "Updated USB camera name",
         },
     ),
     "video_file": Example(

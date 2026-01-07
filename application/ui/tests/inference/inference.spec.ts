@@ -26,7 +26,7 @@ test.beforeEach(({ network }) => {
                 {
                     id: 'generated-source-id',
                     name: 'Default Source',
-                    source_type: 'webcam',
+                    source_type: 'usb_camera',
                     device_id: 0,
                 },
                 { status: 201 }
@@ -226,7 +226,7 @@ test('Inference', async ({ streamPage, page, network }) => {
                     {
                         id: '1',
                         name: 'New Webcam',
-                        source_type: 'webcam',
+                        source_type: 'usb_camera',
                         device_id: 1,
                     },
                 ]);
