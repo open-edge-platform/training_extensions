@@ -13,7 +13,7 @@ import { useSourceMutation } from './use-source-mutation.hook';
 const mockedSource: WebcamSourceConfig = {
     id: 'original-id',
     name: 'Mock Source',
-    source_type: 'webcam' as const,
+    source_type: 'usb_camera' as const,
     device_id: 0,
 };
 

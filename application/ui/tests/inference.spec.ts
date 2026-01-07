@@ -228,7 +228,7 @@ test.describe('Inference', () => {
                     {
                         id: '1',
                         name: 'New Webcam',
-                        source_type: 'webcam',
+                        source_type: 'usb_camera',
                         device_id: 1,
                     },
                 ]);

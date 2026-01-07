@@ -14,7 +14,7 @@ type WebcamProps = {
 const initConfig: WebcamSourceConfig = {
     id: '',
     name: '',
-    source_type: 'webcam',
+    source_type: 'usb_camera',
     device_id: 0,
 };
 
@@ -25,7 +25,7 @@ export const Webcam = ({ config = initConfig }: WebcamProps) => {
         bodyFormatter: (formData: FormData) => ({
             id: String(formData.get('id')),
             name: String(formData.get('name')),
-            source_type: 'webcam',
+            source_type: 'usb_camera',
             device_id: Number(formData.get('device_id')),
         }),
     });

@@ -75,8 +75,8 @@ def fxt_db_sources() -> list[SourceDB]:
         ),
         SourceDB(
             id=str(uuid4()),
-            source_type=SourceType.WEBCAM,
-            name="Test Webcam Source",
+            source_type=SourceType.USB_CAMERA,
+            name="Test USB Camera Source",
             config_data={
                 "device_id": 1,
             },

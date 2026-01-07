@@ -21,7 +21,7 @@ vi.mock('../hooks/use-source-action.hook');
 const mockedConfig: WebcamSourceConfig = {
     id: '1',
     name: 'Test Folder',
-    source_type: 'webcam',
+    source_type: 'usb_camera',
     device_id: 0,
 };
 
