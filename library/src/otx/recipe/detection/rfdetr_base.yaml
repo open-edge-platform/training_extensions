@@ -74,7 +74,7 @@ callbacks:
       filename: "checkpoints/epoch_{epoch:03d}"
 
 overrides:
-  # gradient_clip_val: 0.1
+  gradient_clip_val: 0.1
   data:
     input_size:
       - 560
@@ -86,32 +86,26 @@ overrides:
       transforms:
         # RF-DETR augmentation pipeline (similar to D-Fine):
         # RandomZoomOut -> RandomIoUCrop -> SanitizeBoundingBoxes -> Resize -> RandomFlip
-        # - class_path: torchvision.transforms.v2.RandomZoomOut
-        #   enable: true
-        #   init_args:
-        #     fill: 0
-        #     p: 0.5
-        # - class_path: otx.data.transform_libs.torchvision.RandomIoUCrop
-        #   enable: true
-        #   init_args:
-        #     probability: 0.7
-        # - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
-        #   init_args:
-        #     min_size: 1
-        # - class_path: otx.data.transform_libs.torchvision.MinIoURandomCrop
-        #   enable: true
+        - class_path: torchvision.transforms.v2.RandomZoomOut
+          enable: true
+          init_args:
+            fill: 0
+        - class_path: otx.data.transform_libs.torchvision.RandomIoUCrop
+          enable: true
+          init_args:
+            probability: 0.8
         - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
           init_args:
-            min_area: 1
+            min_size: 1
+        - class_path: otx.data.transform_libs.torchvision.RandomFlip
+          enable: true
+          init_args:
+            probability: 0.5
         - class_path: otx.data.transform_libs.torchvision.Resize
           init_args:
             scale: $(input_size)
             keep_ratio: false
             transform_bbox: true
-        - class_path: otx.data.transform_libs.torchvision.RandomFlip
-          enable: true
-          init_args:
-            probability: 0.5
         - class_path: torchvision.transforms.v2.ToDtype
           init_args:
             dtype: ${as_torch_dtype:torch.float32}
@@ -130,6 +124,7 @@ overrides:
           init_args:
             scale: $(input_size)
             keep_ratio: false
+            transform_bbox: true
         - class_path: torchvision.transforms.v2.ToDtype
           init_args:
             dtype: ${as_torch_dtype:torch.float32}
@@ -145,6 +140,7 @@ overrides:
           init_args:
             scale: $(input_size)
             keep_ratio: false
+            transform_bbox: true
         - class_path: torchvision.transforms.v2.ToDtype
           init_args:
             dtype: ${as_torch_dtype:torch.float32}

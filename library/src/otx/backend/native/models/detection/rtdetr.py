@@ -174,7 +174,7 @@ class RTDETR(OTXDetectionModel):
                     raise TypeError(msg)
             return losses
 
-        original_sizes = [img_info.ori_shape for img_info in inputs.imgs_info]  # type: ignore[union-attr]
+        original_sizes = [img_info.img_shape for img_info in inputs.imgs_info]  # type: ignore[union-attr]
         scores, bboxes, labels = self.model.postprocess(outputs, original_sizes)
 
         if self.explain_mode:

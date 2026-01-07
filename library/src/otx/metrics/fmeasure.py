@@ -13,6 +13,7 @@ import numpy as np
 from torch import Tensor
 from torchmetrics import Metric, MetricCollection
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
+from torchmetrics.utilities.data import _flatten_dict
 
 from otx.types.label import LabelInfo
 
@@ -710,12 +711,11 @@ class FMeasure(Metric):
             cross_class_nms=self.cross_class_nms,
         )
         self._f_measure_per_label = {label: result.best_f_measure_per_class[label] for label in self.classes}
-
         if best_confidence_threshold is not None:
             (index,) = np.where(
                 np.isclose(list(np.arange(*boxes_pair.confidence_range)), best_confidence_threshold),
             )
-            computed_f_measure = result.per_confidence.all_classes_f_measure_curve[int(index)]
+            computed_f_measure = result.per_confidence.all_classes_f_measure_curve[index.item()]
         else:
             self._f_measure_per_confidence = {
                 "xs": list(np.arange(*boxes_pair.confidence_range)),
@@ -817,6 +817,38 @@ class MeanAveragePrecisionFMeasure(MetricCollection):
         cls_params = inspect.signature(cls.__init__).parameters
         valid_keys = set(cls_params.keys()) - {"self"}
         return {k: v for k, v in kwargs.items() if k in valid_keys}
+
+    def compute(self, best_confidence_threshold: float | None = None) -> dict[str, Any]:
+        """Compute result from collection and reduce into a single dictionary.
+
+        Args:
+            best_confidence_threshold: The confidence threshold to use for filtering predictions.
+        """
+        result = {}
+        for k, m in self.items(keep_base=True, copy_state=False):
+            res = m.compute(best_confidence_threshold=best_confidence_threshold) if k == "FMeasure" else m.compute()
+            result[k] = res
+
+        _, duplicates = _flatten_dict(result)
+
+        flattened_results = {}
+        for k, m in self.items(keep_base=True, copy_state=False):
+            res = result[k]
+            if isinstance(res, dict):
+                for key, v in res.items():
+                    # if duplicates of keys we need to add unique prefix to each key
+                    if duplicates:
+                        stripped_k = k.replace(getattr(m, "prefix", ""), "")
+                        stripped_k = stripped_k.replace(getattr(m, "postfix", ""), "")
+                        key = f"{stripped_k}_{key}"  # noqa: PLW2901
+                    if getattr(m, "_from_collection", None) and m.prefix is not None:
+                        key = f"{m.prefix}{key}"  # noqa: PLW2901
+                    if getattr(m, "_from_collection", None) and m.postfix is not None:
+                        key = f"{key}{m.postfix}"  # noqa: PLW2901
+                    flattened_results[key] = v
+            else:
+                flattened_results[k] = res
+        return {self._set_name(k): v for k, v in flattened_results.items()}
 
 
 def _f_measure_callable(label_info: LabelInfo) -> FMeasure:

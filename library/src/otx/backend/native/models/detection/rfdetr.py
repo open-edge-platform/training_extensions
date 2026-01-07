@@ -13,23 +13,16 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 import torch
-from rfdetr.config import (
-    RFDETRBaseConfig,
-    RFDETRLargeConfig,
-    RFDETRMediumConfig,
-    RFDETRNanoConfig,
-    RFDETRSmallConfig,
-)
-from rfdetr.main import Model, populate_args
+from rfdetr import RFDETRBase, RFDETRLarge, RFDETRMedium, RFDETRNano, RFDETRSmall
+from rfdetr.main import populate_args
 from rfdetr.models.lwdetr import build_criterion_and_postprocessors
 from rfdetr.util.get_param_dicts import get_param_dict
 
 from otx.backend.native.exporter.base import OTXModelExporter
 from otx.backend.native.exporter.native import OTXNativeModelExporter
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from otx.backend.native.models.detection.detectors import RFDETRDetector
-from otx.backend.native.models.detection.rtdetr import RTDETR
-from otx.backend.native.models.utils.utils import load_checkpoint
+from otx.backend.native.models.detection.d_fine import DFine
+from otx.backend.native.models.detection.detectors.rfdetr import RFDETRDetector
 from otx.config.data import TileConfig
 from otx.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 from otx.types.precision import OTXPrecisionType
@@ -45,7 +38,7 @@ if TYPE_CHECKING:
     from otx.types.label import LabelInfoTypes
 
 
-class RFDETR(RTDETR):
+class RFDETR(DFine):
     """OTX Detection model class for RF-DETR.
 
     RF-DETR (Real-time Fast DETR) is a state-of-the-art object detector from Roboflow
@@ -74,8 +67,6 @@ class RFDETR(RTDETR):
 
     _pretrained_weights: ClassVar[dict[str, str]] = {
         "rfdetr_base": "https://storage.googleapis.com/rfdetr/rf-detr-base-coco.pth",
-        "rfdetr_base_2": "https://storage.googleapis.com/rfdetr/rf-detr-base-2.pth",
-        # "rfdetr_base": "/home/kprokofi/training_extensions/library/output/checkpoint_best.pth",
         "rfdetr_large": "https://storage.googleapis.com/rfdetr/rf-detr-large.pth",
         "rfdetr_nano": "https://storage.googleapis.com/rfdetr/nano_coco/checkpoint_best_regular.pth",
         "rfdetr_small": "https://storage.googleapis.com/rfdetr/small_coco/checkpoint_best_regular.pth",
@@ -117,70 +108,78 @@ class RFDETR(RTDETR):
     def _create_model(self, num_classes: int | None = None) -> RFDETRDetector:
         """Create RF-DETR model using rfdetr package.
 
+        Creates the RFDETRDetector wrapper which contains:
+        - LWDETR model (backbone + decoder)
+        - SetCriterion (loss computation)
+        - PostProcessor (inference post-processing)
+        - Optimizer configuration (from rfdetr args)
+
         Args:
             num_classes: Number of classes for detection.
 
         Returns:
-            RFDETRDetector instance.
+            RFDETRDetector model instance.
         """
         num_classes = num_classes if num_classes is not None else self.num_classes
 
-        # Get the appropriate config class
-        config_mapping: dict[str, type] = {
-            "rfdetr_nano": RFDETRNanoConfig,
-            "rfdetr_small": RFDETRSmallConfig,
-            "rfdetr_base": RFDETRBaseConfig,
-            "rfdetr_medium": RFDETRMediumConfig,
-            "rfdetr_large": RFDETRLargeConfig,
+        # Create RF-DETR model and reinitialize detection head for our num_classes
+        model_class_mapping = {
+            "rfdetr_base": RFDETRBase,
+            "rfdetr_large": RFDETRLarge,
+            "rfdetr_medium": RFDETRMedium,
+            "rfdetr_nano": RFDETRNano,
+            "rfdetr_small": RFDETRSmall,
         }
+        rfdetr = model_class_mapping[self.model_name](num_classes=num_classes)
+        rfdetr.model.reinitialize_detection_head(num_classes)
 
-        config_class = config_mapping[self.model_name]
+        # Update args for criterion building
+        rfdetr.model.args.num_classes = num_classes
 
-        # Create config with our num_classes
-        model_config = config_class(
-            num_classes=num_classes - 1,  # max obj_id
-            pretrain_weights=None,
-        )
+        # Get the actual LWDETR model
+        lwdetr_model = rfdetr.model.model
 
-        # Create the Model instance which builds LWDETR and loads weights
-        rfdetr_model = Model(**model_config.model_dump())
-        rfdetr_model.reinitialize_detection_head(num_classes=num_classes)  # max_obj_id + 1
+        # Build criterion and postprocessor with correct args
+        rfdetr_args = populate_args(**rfdetr.get_model_config().model_dump())
+        criterion, postprocessor = build_criterion_and_postprocessors(rfdetr_args)
 
-        # Build criterion and postprocessor
-        criterion, postprocessor = build_criterion_and_postprocessors(rfdetr_model.args)
+        # Override criterion.num_classes to match OTX labels
+        criterion.num_classes = num_classes
 
-        # Load pretrained weights
-        load_checkpoint(rfdetr_model.model, self._pretrained_weights[self.model_name], map_location="cpu")
-        # Create wrapper
+        # Store rfdetr_args for optimizer configuration
+        self.rfdetr_args = rfdetr_args
+
+        # Create RFDETRDetector wrapper
         return RFDETRDetector(
-            lwdetr_model=rfdetr_model.model,  # type: ignore[arg-type]
+            lwdetr_model=lwdetr_model,
             criterion=criterion,
             postprocessor=postprocessor,
-            input_size=model_config.resolution,
+            input_size=self.data_input_params.input_size[0],
             multi_scale=self.multi_scale,
         )
 
     def configure_optimizers(self) -> tuple[list[torch.optim.Optimizer], list[dict[str, Any]]]:
-        """Configure an optimizer and learning-rate schedulers.
+        """Configure optimizer and learning-rate schedulers.
 
-        Configure an optimizer and learning-rate schedulers
-        from the given optimizer and scheduler or scheduler list callable in the constructor.
-        Generally, there is two lr schedulers. One is for a linear warmup scheduler and
-        the other is the main scheduler working after the warmup period.
+        Uses rfdetr's get_param_dict to create proper parameter groups with
+        correct lr and weight_decay settings from rfdetr_args.
 
         Returns:
-            Two list. The former is a list that contains an optimizer
-            The latter is a list of lr scheduler configs which has a dictionary format.
+            Two lists: optimizer list and lr scheduler config list.
         """
-        # extract learning rate, weight decay and get parameter groups from rfdetr
+        # Extract default lr and weight_decay from optimizer callable
         dummy = torch.nn.Parameter(torch.zeros(1, requires_grad=True))
         dummy_param_groups = [{"params": [dummy]}]
         default_lr = self.optimizer_callable(dummy_param_groups).param_groups[0]["lr"]
         default_weight_decay = self.optimizer_callable(dummy_param_groups).param_groups[0]["weight_decay"]
-        args = populate_args(lr=default_lr, weight_decay=default_weight_decay)
-        param_groups = get_param_dict(args, self.model.lwdetr)
 
-        # create optimizer and schedulers
+        # Get parameter groups from rfdetr with correct args
+        # Access the LWDETR model inside the wrapper
+        self.rfdetr_args.lr = default_lr
+        self.rfdetr_args.weight_decay = default_weight_decay
+        param_groups = get_param_dict(self.rfdetr_args, self.model.lwdetr)
+
+        # Create optimizer and schedulers
         optimizer = self.optimizer_callable(param_groups)
         schedulers = self.scheduler_callable(optimizer)
 
@@ -216,7 +215,7 @@ class RFDETR(RTDETR):
         Returns:
             Path: path to the exported model.
         """
-        self.model.lwdetr.export()
+        self.model.lwdetr.export()  # Activate export mode
         return super().export(output_dir, base_name, export_format, precision)
 
     @property

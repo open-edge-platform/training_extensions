@@ -18,6 +18,7 @@ from rfdetr.util.misc import nested_tensor_from_tensor_list
 from torch import Tensor, nn
 from torchvision.tv_tensors import BoundingBoxes
 
+from otx.backend.native.models.detection.utils.utils import generate_scales
 from otx.backend.native.models.modules.base_module import BaseModule
 
 if TYPE_CHECKING:
@@ -34,7 +35,6 @@ class RFDETRDetector(BaseModule):
         lwdetr_model: The LWDETR model instance from rfdetr package.
         criterion: The SetCriterion loss function from rfdetr package.
         postprocessor: The PostProcess module from rfdetr package.
-        optimizer_configuration: Configuration for optimizer parameter groups.
         input_size: The input resolution of the model.
         multi_scale: Whether to enable multi-scale training.
     """
@@ -44,7 +44,6 @@ class RFDETRDetector(BaseModule):
         lwdetr_model: nn.Module,
         criterion: nn.Module,
         postprocessor: nn.Module,
-        optimizer_configuration: list[dict[str, Any]] | None = None,
         input_size: int = 560,
         multi_scale: bool = False,
     ) -> None:
@@ -52,9 +51,7 @@ class RFDETRDetector(BaseModule):
         self.lwdetr = lwdetr_model
         self.criterion = criterion
         self.postprocessor = postprocessor
-        self.optimizer_configuration = optimizer_configuration
         self.input_size = input_size
-        self.multi_scale = multi_scale
 
         # Explainability functions (set by high-level OTX model)
         self.feature_vector_fn: Callable[[FeatureMapType], Tensor] | None = None
@@ -62,17 +59,7 @@ class RFDETRDetector(BaseModule):
         self.rng = np.random.default_rng(42)
 
         # Store scales for multi-scale training
-        self.scales: list[int] = []
-        if multi_scale:
-            self.scales = self._generate_scales(input_size)
-
-    def _generate_scales(self, input_size: int, base_size_repeat: int = 3) -> list[int]:
-        """Generate scales for multi-scale training."""
-        scale_repeat = (input_size - int(input_size * 0.75 / 32) * 32) // 32
-        scales = [int(input_size * 0.75 / 32) * 32 + i * 32 for i in range(scale_repeat)]
-        scales += [input_size] * base_size_repeat
-        scales += [int(input_size * 1.25 / 32) * 32 - i * 32 for i in range(scale_repeat)]
-        return scales
+        self.scales = generate_scales(input_size) if multi_scale else []
 
     def forward(
         self,
@@ -82,15 +69,15 @@ class RFDETRDetector(BaseModule):
         """Forward pass of the model.
 
         Args:
-            images: Input images tensor of shape [B, C, H, W].
+            images: NestedTensor with images and masks from _customize_inputs.
             targets: List of target dictionaries with 'boxes' and 'labels'.
 
         Returns:
             During training: Loss dictionary.
             During inference: Predictions dictionary with 'pred_logits' and 'pred_boxes'.
         """
-        # Multi-scale training
-        if self.training and self.multi_scale and self.scales:
+        # Multi-scale training - need to handle NestedTensor
+        if self.training and self.scales:
             sz = int(self.rng.choice(self.scales))
             images = nn.functional.interpolate(images, size=[sz, sz], mode="bilinear", align_corners=False)
 
@@ -102,21 +89,21 @@ class RFDETRDetector(BaseModule):
 
         samples = nested_tensor_from_tensor_list(image_list)
 
-        # Forward through model
+        # Forward through model - images is already a NestedTensor
         outputs = self.lwdetr(samples)
 
         if self.training:
+            self.criterion.train()
             if targets is None:
                 msg = "targets should not be None"
                 raise ValueError(msg)
-            # Compute losses during training
+
             loss_dict = self.criterion(outputs, targets)
             weight_dict = self.criterion.weight_dict
             # return loss_dict
-            return {k: v * weight_dict[k] for k, v in loss_dict.items() if k in weight_dict}
-            # return {
-            #     k: v for k, v in loss_dict.items() if k in weight_dict
-            # }
+            total_loss = sum(loss_dict[k] * weight_dict[k] for k in loss_dict if k in weight_dict)
+            loss_dict["total_loss"] = total_loss
+            return loss_dict
 
         return outputs
 
@@ -150,8 +137,6 @@ class RFDETRDetector(BaseModule):
                     canvas_size=orig_size,
                 ),
             )
-            # result["labels"] = result["labels"] - 1
-            # result["labels"].clamp_(min=0)
             labels_list.append(result["labels"].long())
 
         return scores_list, boxes_list, labels_list

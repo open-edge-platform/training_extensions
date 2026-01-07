@@ -251,6 +251,15 @@ def generate_anchors(image_size: tuple[int, int], strides: list[int]) -> tuple[T
     return all_anchors, all_scalers
 
 
+def generate_scales(input_size: int, base_size_repeat: int = 3) -> list[int]:
+    """Generates scales for multi-scale training."""
+    scale_repeat = (input_size - int(input_size * 0.75 / 32) * 32) // 32
+    scales = [int(input_size * 0.75 / 32) * 32 + i * 32 for i in range(scale_repeat)]
+    scales += [input_size] * base_size_repeat
+    scales += [int(input_size * 1.25 / 32) * 32 - i * 32 for i in range(scale_repeat)]
+    return scales
+
+
 def set_info_into_instance(layer_dict: dict[str, Any]) -> nn.Module:
     """Set the information into the instance.
 
