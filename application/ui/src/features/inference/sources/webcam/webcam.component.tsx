@@ -5,13 +5,13 @@ import { Button, Flex, Form, TextField } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 
 import { useSourceAction } from '../hooks/use-source-action.hook';
-import { isOnlyDigits, WebcamSourceConfig } from '../util';
+import { isOnlyDigits, USBCameraSourceConfig } from '../util';
 
 type WebcamProps = {
-    config?: WebcamSourceConfig;
+    config?: USBCameraSourceConfig;
 };
 
-const initConfig: WebcamSourceConfig = {
+const initConfig: USBCameraSourceConfig = {
     id: '',
     name: '',
     source_type: 'usb_camera',

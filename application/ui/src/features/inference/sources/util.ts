@@ -5,13 +5,13 @@ import type { components } from '../../../api/openapi-spec';
 
 export type ImagesFolderSourceConfig = components['schemas']['ImagesFolderSourceConfigView'];
 export type IPCameraSourceConfig = components['schemas']['IPCameraSourceConfigView'];
-export type USBCameraSourceConfigView = components['schemas']['USBCameraSourceConfigView'];
+export type USBCameraSourceConfig = components['schemas']['USBCameraSourceConfigView'];
 export type VideoFileSourceConfig = components['schemas']['VideoFileSourceConfigView'];
 
 export type SourceConfig =
     | ImagesFolderSourceConfig
     | IPCameraSourceConfig
-    | USBCameraSourceConfigView
+    | USBCameraSourceConfig
     | VideoFileSourceConfig;
 
 export const isOnlyDigits = (str: string): boolean => {
@@ -29,9 +29,7 @@ export const getIpCameraData = <T extends { source_type: string }>(sources: T[])
 };
 
 export const getWebcamData = <T extends { source_type: string }>(sources: T[]) => {
-    return sources
-        .filter(({ source_type }) => source_type === 'usb_camera')
-        .at(0) as unknown as USBCameraSourceConfigView;
+    return sources.filter(({ source_type }) => source_type === 'usb_camera').at(0) as unknown as USBCameraSourceConfig;
 };
 
 export const getVideoFileData = <T extends { source_type: string }>(sources: T[]) => {
