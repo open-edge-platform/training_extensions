@@ -44,7 +44,7 @@ class CameraInfo(BaseModel):
     model_config = {
         "json_schema_extra": {
             "examples": [
-                {"index": 0, "name": "Integrated Webcam"},
+                {"index": 0, "name": "Integrated USB Camera"},
                 {"index": 1, "name": "USB Camera"},
             ]
         }

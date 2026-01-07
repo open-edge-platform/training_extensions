@@ -5,7 +5,7 @@ import { PointerEvent, useRef, useState } from 'react';
 
 import { isEmpty } from 'lodash-es';
 
-import { isWheelButton } from '../../features/annotator/utils';
+import { isWheelButton } from '../../features/annotator/buttons-utils';
 import type { Point } from './types';
 
 export const useWheelPanning = (setIsPanning: (value: boolean) => void) => {
