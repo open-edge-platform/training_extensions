@@ -155,7 +155,6 @@ name = "Schema-Model"
 type = "layers"
 id = "schema_model"
 layers = [
-    "app.schemas",
     "app.core.models : app.models",
 ]
 
