@@ -59,7 +59,6 @@ jobs:
     timeout-minutes: 60
 
     steps:
-
       - name: Define paths
         env:
           DEBUG_BUILD: ${{ inputs.debug_build }}
@@ -67,22 +66,21 @@ jobs:
           BUILD_VERSION: ${{ inputs.build_version }}
         run: |
           Write-Host "DEBUG_BUILD=$env:DEBUG_BUILD"
-          
+
           $TARGET = $(IF ($env:DEBUG_BUILD -eq "true") {"debug"} else {"release"})         
           $UI_BUILD_PATH = $env:UI_TARGET_PATH + "\" + $TARGET
           Write-Host "UI_BUILD_PATH=$UI_BUILD_PATH"
           Add-Content -Path $env:GITHUB_ENV -Value "UI_BUILD_PATH=$UI_BUILD_PATH"
-          
+
           $UI_MSIX_BUNDLE_PATH = $UI_BUILD_PATH + "\bundle\msix"  
           Write-Host "UI_MSIX_BUNDLE_PATH=$UI_MSIX_BUNDLE_PATH"
           Add-Content -Path $env:GITHUB_ENV -Value "UI_MSIX_BUNDLE_PATH=$UI_MSIX_BUNDLE_PATH"
-          
+
           $PREFIX = $(IF ($env:DEBUG_BUILD -eq "true") {"-debug"} else {""})
           $MSIX_FILE_NAME = "geti-tune-" + $env:DEVICE + "-" + $env:BUILD_VERSION + $PREFIX + ".msix"
           $MSIX_FILE_PATH = $UI_MSIX_BUNDLE_PATH + "\" + $MSIX_FILE_NAME
           Write-Host "MSIX_FILE_PATH=$MSIX_FILE_PATH"
-          Add-Content -Path $env:GITHUB_ENV -Value "MSIX_FILE_PATH=$MSIX_FILE_PATH"          
-          
+          Add-Content -Path $env:GITHUB_ENV -Value "MSIX_FILE_PATH=$MSIX_FILE_PATH"
 
       - name: Checkout code
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -154,7 +152,7 @@ jobs:
         uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
         with:
           node-version-file: application/ui/.nvmrc
-          cache: 'npm'
+          cache: "npm"
           cache-dependency-path: application/ui/package-lock.json
 
       - name: Enable long paths
