@@ -38,7 +38,6 @@ describe('ProjectDetails', () => {
                 return HttpResponse.json({
                     project_id: '123',
                     status: 'running' as const,
-                    data_collection_policies: [],
                     source: {
                         id: 'source-id',
                         name: 'source',

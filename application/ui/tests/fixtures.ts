@@ -42,7 +42,6 @@ const test = testBase.extend<Fixtures>({
                     source: null,
                     sink: null,
                     model: null,
-                    data_collection_policies: [],
                     device: 'cpu',
                 });
             }),
