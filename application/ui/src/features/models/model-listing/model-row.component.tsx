@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Flex, Grid, Item, Menu, MenuTrigger, Tag, Text } from '@geti/ui';
+import { ActionButton, dimensionValue, Flex, Grid, Item, Menu, MenuTrigger, Tag, Text } from '@geti/ui';
 import { MoreMenu } from '@geti/ui/icons';
 
 import { ReactComponent as StartIcon } from '../../../assets/icons/start.svg';
@@ -13,24 +13,21 @@ export const ModelRow = ({ model }: { model: { id: number; name: string } }) => 
         <Grid columns={GRID_COLUMNS} alignItems={'center'} width={'100%'}>
             <Flex direction={'column'} gap={'size-50'}>
                 <Flex alignItems={'center'} gap={'size-100'}>
-                    <Text UNSAFE_style={{ fontSize: 'var(--spectrum-global-dimension-font-size-200)' }}>
-                        {model.name}
-                    </Text>
+                    <Text UNSAFE_style={{ fontSize: dimensionValue('font-size-200') }}>{model.name}</Text>
                     <Tag
                         prefix={<StartIcon />}
                         style={{
                             backgroundColor: 'var(--energy-blue)',
                             color: 'var(--spectrum-global-color-gray-50)',
-                            borderRadius: 'var(--spectrum-global-dimension-size-50)',
-                            padding:
-                                'var(--spectrum-global-dimension-size-25) var(--spectrum-global-dimension-size-50)',
+                            borderRadius: dimensionValue('size-50'),
+                            padding: `${dimensionValue('size-25')} ${dimensionValue('size-50')}`,
                         }}
                         text={'Active'}
                     />
                 </Flex>
                 <Text
                     UNSAFE_style={{
-                        fontSize: 'var(--spectrum-global-dimension-font-size-75)',
+                        fontSize: dimensionValue('font-size-75'),
                         color: 'var(--spectrum-global-color-gray-700)',
                     }}
                 >
@@ -39,10 +36,10 @@ export const ModelRow = ({ model }: { model: { id: number; name: string } }) => 
             </Flex>
 
             <Flex direction={'column'} gap={'size-25'}>
-                <Text UNSAFE_style={{ fontSize: 'var(--spectrum-global-dimension-font-size-75)' }}>01 Oct 2025</Text>
+                <Text UNSAFE_style={{ fontSize: dimensionValue('font-size-75') }}>01 Oct 2025</Text>
                 <Text
                     UNSAFE_style={{
-                        fontSize: 'var(--spectrum-global-dimension-font-size-75)',
+                        fontSize: dimensionValue('font-size-75'),
                         color: 'var(--spectrum-global-color-gray-700)',
                     }}
                 >
@@ -50,9 +47,9 @@ export const ModelRow = ({ model }: { model: { id: number; name: string } }) => 
                 </Text>
             </Flex>
 
-            <Text UNSAFE_style={{ fontSize: 'var(--spectrum-global-dimension-font-size-75)' }}>YOLOX-S</Text>
+            <Text UNSAFE_style={{ fontSize: dimensionValue('font-size-75') }}>YOLOX-S</Text>
 
-            <Text UNSAFE_style={{ fontSize: 'var(--spectrum-global-dimension-font-size-75)' }}>500 MB</Text>
+            <Text UNSAFE_style={{ fontSize: dimensionValue('font-size-75') }}>500 MB</Text>
 
             <AccuracyIndicator accuracy={72} />
 

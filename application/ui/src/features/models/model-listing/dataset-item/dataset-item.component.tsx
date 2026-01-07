@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Button, Flex, Grid, Heading, Item, Menu, MenuTrigger, Text } from '@geti/ui';
+import { ActionButton, Button, dimensionValue, Flex, Grid, Heading, Item, Menu, MenuTrigger, Text } from '@geti/ui';
 import { Image, MoreMenu, Tag } from '@geti/ui/icons';
 
 import { GRID_COLUMNS } from '../constants';
@@ -17,8 +17,8 @@ export const DatasetHeaderRow = () => {
             width={'100%'}
             UNSAFE_style={{
                 backgroundColor: 'var(--spectrum-global-color-gray-200)',
-                padding: `var(--spectrum-global-dimension-size-150) var(--spectrum-global-dimension-size-600)
-                    var(--spectrum-global-dimension-size-150) var(--spectrum-global-dimension-size-1000)`,
+                padding: `${dimensionValue('size-150')} ${dimensionValue('size-600')}
+                    ${dimensionValue('size-150')} ${dimensionValue('size-1000')}`,
             }}
         >
             <Text>Model Name</Text>
@@ -40,7 +40,7 @@ export const DatasetItem = () => {
             gap={'size-200'}
         >
             <Flex alignItems={'center'} gap={'size-50'}>
-                <Heading level={2} UNSAFE_style={{ fontSize: 'var(--spectrum-global-dimension-size-300)' }}>
+                <Heading level={2} UNSAFE_style={{ fontSize: dimensionValue('size-300') }}>
                     Dataset #1
                 </Heading>
                 <MenuTrigger onOpenChange={() => {}}>
