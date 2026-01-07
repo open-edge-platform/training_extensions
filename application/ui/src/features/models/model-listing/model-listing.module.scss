@@ -1,0 +1,18 @@
+.disclosure {
+    background-color: var(--spectrum-global-color-gray-200);
+
+    &[class*='is-expanded'] {
+        background-color: var(--spectrum-global-color-gray-50);
+
+        > [class*='itemContent'] {
+            padding: var(--spectrum-global-dimension-size-300) var(--spectrum-global-dimension-size-1000) !important;
+        }
+    }
+}
+
+.disclosureItem {
+    // Disclosure's chevron
+    [class*='spectrum-Accordion-itemHeader'] > [class*='spectrum-Accordion-itemIndicator'] {
+        padding: 0 var(--spectrum-global-dimension-size-400);
+    }
+}
