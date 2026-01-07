@@ -108,7 +108,7 @@ class ConfigurableParametersConverter:
         default_config = default_config or {}
 
         json_model = configurable_parameters.model_json_schema()
-        for field_name, field_info in configurable_parameters.model_fields.items():
+        for field_name, field_info in type(configurable_parameters).model_fields.items():
             field = getattr(configurable_parameters, field_name)
             default_field = default_config.get(field_name)
 
