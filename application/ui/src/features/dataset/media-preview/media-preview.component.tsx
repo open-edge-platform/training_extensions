@@ -60,11 +60,7 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
 
             <Divider />
 
-            <Content
-                UNSAFE_style={{
-                    backgroundColor: 'var(--spectrum-global-color-gray-50)',
-                }}
-            >
+            <Content UNSAFE_style={{ backgroundColor: 'var(--spectrum-global-color-gray-50)' }}>
                 <Grid
                     gap='size-125'
                     width='100%'

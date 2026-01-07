@@ -8,19 +8,14 @@ import { useEventListener } from 'hooks/event-listener.hook';
 
 import selectionCursor from '../../../../assets/icons/selection.svg?url';
 import { Label } from '../../../../constants/shared-types';
+import { isLeftButton } from '../../buttons-utils';
 import { Rectangle } from '../../shapes/rectangle.component';
 import type { Point, Rect as RectInterface, RegionOfInterest } from '../../types';
-import { DEFAULT_ANNOTATION_STYLES, isLeftButton } from '../../utils';
+import { DEFAULT_ANNOTATION_STYLES } from '../../utils';
 import { SvgToolCanvas } from '../svg-tool-canvas.component';
-import { getRelativePoint } from '../utils';
+import { getRelativePoint, PointerType } from '../utils';
 import { Crosshair } from './crosshair/crosshair.component';
 import { useCrosshair } from './crosshair/use-crosshair.hook';
-
-enum PointerType {
-    Mouse = 'mouse',
-    Pen = 'pen',
-    Touch = 'touch',
-}
 
 const CURSOR_OFFSET = '7 8';
 interface DrawingBoxInterface {
@@ -115,9 +110,7 @@ export const DrawingBox = ({ roi, zoom, image, selectedLabel, onComplete }: Draw
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
             onPointerDown={onPointerDown}
-            style={{
-                cursor: `url(${selectionCursor}) ${CURSOR_OFFSET}, auto`,
-            }}
+            style={{ cursor: `url(${selectionCursor}) ${CURSOR_OFFSET}, auto` }}
         >
             {boundingBox ? (
                 <Rectangle

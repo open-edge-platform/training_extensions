@@ -12,6 +12,12 @@ import type { ClipperPoint, Point, Polygon, Rect, RegionOfInterest, Shape } from
 // @ts-expect-error `default` actually exists in the module
 const ClipperJS = Clipper.default || Clipper;
 
+export enum PointerType {
+    Mouse = 'mouse',
+    Pen = 'pen',
+    Touch = 'touch',
+}
+
 export const getBoundingBoxInRoi = (boundingBox: RegionOfInterest, roi: RegionOfInterest) => {
     const x = Math.max(0, boundingBox.x);
     const y = Math.max(0, boundingBox.y);

@@ -32,6 +32,8 @@
 
     --moss-tint-1: #b1d272;
 
+    --annotation-fill-opacity: 0.4;
+
     --spectrum-button-primary-text-font-weight: 500;
     --spectrum-accent-background-color-default: var(--energy-blue);
     --spectrum-accent-background-color: var(--energy-blue);

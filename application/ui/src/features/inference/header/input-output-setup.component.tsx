@@ -1,13 +1,31 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Suspense } from 'react';
+import { CSSProperties, Suspense } from 'react';
 
-import { Button, Content, Dialog, DialogTrigger, Item, Loading, TabList, TabPanels, Tabs, Text, View } from '@geti/ui';
+import {
+    Button,
+    Content,
+    Dialog,
+    DialogTrigger,
+    dimensionValue,
+    Item,
+    Loading,
+    TabList,
+    TabPanels,
+    Tabs,
+    Text,
+    View,
+} from '@geti/ui';
 
 import { ReactComponent as Camera } from '../../../assets/icons/camera.svg';
 import { SinkOptions } from '../sinks/sink-options';
 import { SourceOptions } from '../sources/source-options';
+
+const paddingStyle = {
+    '--spectrum-dialog-padding-x': dimensionValue('size-300'),
+    '--spectrum-dialog-padding-y': dimensionValue('size-300'),
+} as CSSProperties;
 
 export const InputOutputSetup = () => {
     return (
@@ -16,7 +34,7 @@ export const InputOutputSetup = () => {
                 <Camera fill='white' />
                 <Text>Pipeline configuration</Text>
             </Button>
-            <Dialog minWidth={'size-6000'}>
+            <Dialog minWidth={'size-6000'} UNSAFE_style={paddingStyle}>
                 <Content>
                     <Tabs aria-label='Dataset import tabs' height={'100%'}>
                         <TabList>
