@@ -18,6 +18,7 @@ otx.models
    .. autosummary::
    
       ATSS
+      DEIMV2
       RTDETR
       SSD
       YOLOX

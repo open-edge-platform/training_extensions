@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>otx.backend.native.models.detection.deim &#8212; OpenVINO™ Training Extensions 2.7.0dev documentation</title>
+    <title>otx.backend.native.models.detection.deimv2 &#8212; OpenVINO™ Training Extensions 2.7.0dev documentation</title>
   
   
   
@@ -39,7 +39,7 @@
     <script src="../../../../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../../../../_static/copybutton.js?v=f281be69"></script>
     <script src="../../../../../../_static/design-tabs.js?v=f930bc37"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/otx/backend/native/models/detection/deim';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/otx/backend/native/models/detection/deimv2';</script>
     <link rel="index" title="Index" href="../../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -252,7 +252,7 @@
             
             <article class="bd-article" role="main">
               
-  <h1>Source code for otx.backend.native.models.detection.deim</h1><div class="highlight"><pre>
+  <h1>Source code for otx.backend.native.models.detection.deimv2</h1><div class="highlight"><pre>
 <span></span><span class="c1"># Copyright (C) 2025 Intel Corporation</span>
 <span class="c1"># SPDX-License-Identifier: Apache-2.0</span>
 
@@ -263,16 +263,16 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Literal</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataInputParams</span><span class="p">,</span> <span class="n">DefaultOptimizerCallable</span><span class="p">,</span> <span class="n">DefaultSchedulerCallable</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.detection.backbones.hgnetv2</span><span class="w"> </span><span class="kn">import</span> <span class="n">HGNetv2</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.detection.backbones.dinov3sta</span><span class="w"> </span><span class="kn">import</span> <span class="n">DINOv3STAs</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.detection.detectors</span><span class="w"> </span><span class="kn">import</span> <span class="n">DETR</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.detection.heads.dfine_decoder</span><span class="w"> </span><span class="kn">import</span> <span class="n">DFINETransformer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.detection.heads.deim_decoder</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEIMTransformer</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.detection.losses.deim_loss</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEIMCriterion</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.detection.necks.dfine_hybrid_encoder</span><span class="w"> </span><span class="kn">import</span> <span class="n">HybridEncoder</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_checkpoint</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.config.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">TileConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.metrics.fmeasure</span><span class="w"> </span><span class="kn">import</span> <span class="n">MeanAveragePrecisionFMeasureCallable</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">.rtdetr</span><span class="w"> </span><span class="kn">import</span> <span class="n">RTDETR</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.deim</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEIMDFine</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">lightning.pytorch.cli</span><span class="w"> </span><span class="kn">import</span> <span class="n">LRSchedulerCallable</span><span class="p">,</span> <span class="n">OptimizerCallable</span>
@@ -282,15 +282,15 @@
     <span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.label</span><span class="w"> </span><span class="kn">import</span> <span class="n">LabelInfoTypes</span>
 
 
-<div class="viewcode-block" id="DEIMDFine">
-<a class="viewcode-back" href="../../../../../../guide/reference/_autosummary/otx.models.html#otx.models.DEIMDFine">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">DEIMDFine</span><span class="p">(</span><span class="n">RTDETR</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;OTX Detection model class for DEIMDFine.</span>
+<div class="viewcode-block" id="DEIMV2">
+<a class="viewcode-back" href="../../../../../../guide/reference/_autosummary/otx.models.html#otx.models.DEIMV2">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DEIMV2</span><span class="p">(</span><span class="n">DEIMDFine</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;OTX Detection model class for DEIMV2.</span>
 
-<span class="sd">    DEIM-DFine is an improved version of D-FINE, which halfed the training time and improved the performance on COCO.</span>
+<span class="sd">    DEIMV2 is an improved version of DEIMV1, which introduces DINOV3 backbone and improved decoder.</span>
 
-<span class="sd">    It is based on the DEIM-DFine paper: https://arxiv.org/abs/2412.04234</span>
-<span class="sd">    The original implementation is available at: https://github.com/ShihuaHuang95/DEIM</span>
+<span class="sd">    It is based on the DEIMV2 paper: https://arxiv.org/abs/2412.04234</span>
+<span class="sd">    The original implementation is available at: https://github.com/Intellindust-AI-Lab/DEIMv2/tree/main</span>
 
 <span class="sd">    The model should be used with</span>
 <span class="sd">    :class:`~otx.backend.native.callbacks.aug_scheduler.DataAugSwitch` and</span>
@@ -298,7 +298,7 @@
 <span class="sd">    for dynamic augmentation scheduling.</span>
 
 <span class="sd">    Attributes:</span>
-<span class="sd">        pretrained_weights (ClassVar[dict[str, str]]): Dictionary containing URLs for pretrained weights.</span>
+<span class="sd">        _pretrained_weights (ClassVar[dict[str, str]]): Dictionary containing URLs for pretrained weights.</span>
 <span class="sd">        input_size_multiplier (int): Multiplier for the input size.</span>
 
 <span class="sd">    Args:</span>
@@ -316,11 +316,10 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">_pretrained_weights</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;deim_dfine_hgnetv2_n&quot;</span><span class="p">:</span> <span class="s2">&quot;https://github.com/eugene123tw/DEIM/releases/download/poc/deim_dfine_hgnetv2_n_coco_160e.pth&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;deim_dfine_hgnetv2_s&quot;</span><span class="p">:</span> <span class="s2">&quot;https://github.com/eugene123tw/DEIM/releases/download/poc/deim_dfine_hgnetv2_s_coco_120e.pth&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;deim_dfine_hgnetv2_m&quot;</span><span class="p">:</span> <span class="s2">&quot;https://github.com/eugene123tw/DEIM/releases/download/poc/deim_dfine_hgnetv2_m_coco_90e.pth&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;deim_dfine_hgnetv2_l&quot;</span><span class="p">:</span> <span class="s2">&quot;https://github.com/eugene123tw/DEIM/releases/download/poc/deim_dfine_hgnetv2_l_coco_50e.pth&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;deim_dfine_hgnetv2_x&quot;</span><span class="p">:</span> <span class="s2">&quot;https://github.com/eugene123tw/DEIM/releases/download/poc/deim_dfine_hgnetv2_x_coco_50e.pth&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;deimv2_x&quot;</span><span class="p">:</span> <span class="s2">&quot;https://github.com/kprokofi/DEIMv2/releases/download/1.0.0/deimv2_dinov3_x_coco.pth&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;deimv2_l&quot;</span><span class="p">:</span> <span class="s2">&quot;https://github.com/kprokofi/DEIMv2/releases/download/1.0.0/deimv2_dinov3_l_coco.pth&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;deimv2_m&quot;</span><span class="p">:</span> <span class="s2">&quot;https://github.com/kprokofi/DEIMv2/releases/download/1.0.0/deimv2_dinov3_m_coco.pth&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;deimv2_s&quot;</span><span class="p">:</span> <span class="s2">&quot;https://github.com/kprokofi/DEIMv2/releases/download/1.0.0/deimv2_dinov3_s_coco.pth&quot;</span><span class="p">,</span>
     <span class="p">}</span>
 
     <span class="n">input_size_multiplier</span> <span class="o">=</span> <span class="mi">32</span>
@@ -330,12 +329,11 @@
         <span class="n">label_info</span><span class="p">:</span> <span class="n">LabelInfoTypes</span><span class="p">,</span>
         <span class="n">data_input_params</span><span class="p">:</span> <span class="n">DataInputParams</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">model_name</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span>
-            <span class="s2">&quot;deim_dfine_hgnetv2_n&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;deim_dfine_hgnetv2_s&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;deim_dfine_hgnetv2_m&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;deim_dfine_hgnetv2_l&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;deim_dfine_hgnetv2_x&quot;</span><span class="p">,</span>
-        <span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;deim_dfine_hgnetv2_x&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;deimv2_x&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;deimv2_l&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;deimv2_m&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;deimv2_s&quot;</span><span class="p">,</span>
+        <span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;deimv2_x&quot;</span><span class="p">,</span>
         <span class="n">optimizer</span><span class="p">:</span> <span class="n">OptimizerCallable</span> <span class="o">=</span> <span class="n">DefaultOptimizerCallable</span><span class="p">,</span>
         <span class="n">scheduler</span><span class="p">:</span> <span class="n">LRSchedulerCallable</span> <span class="o">|</span> <span class="n">LRSchedulerListCallable</span> <span class="o">=</span> <span class="n">DefaultSchedulerCallable</span><span class="p">,</span>
         <span class="n">metric</span><span class="p">:</span> <span class="n">MetricCallable</span> <span class="o">=</span> <span class="n">MeanAveragePrecisionFMeasureCallable</span><span class="p">,</span>
@@ -358,13 +356,14 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_create_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DETR</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create DEIM-DFine model.&quot;&quot;&quot;</span>
         <span class="n">num_classes</span> <span class="o">=</span> <span class="n">num_classes</span> <span class="k">if</span> <span class="n">num_classes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span>
-        <span class="n">backbone</span> <span class="o">=</span> <span class="n">HGNetv2</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">)</span>
+        <span class="n">backbone</span> <span class="o">=</span> <span class="n">DINOv3STAs</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">)</span>
         <span class="n">encoder</span> <span class="o">=</span> <span class="n">HybridEncoder</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">)</span>
-        <span class="n">decoder</span> <span class="o">=</span> <span class="n">DFINETransformer</span><span class="p">(</span>
+        <span class="n">decoder</span> <span class="o">=</span> <span class="n">DEIMTransformer</span><span class="p">(</span>
             <span class="n">model_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span>
             <span class="n">num_classes</span><span class="o">=</span><span class="n">num_classes</span><span class="p">,</span>
             <span class="n">eval_spatial_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_input_params</span><span class="o">.</span><span class="n">input_size</span><span class="p">,</span>
         <span class="p">)</span>
+
         <span class="n">criterion</span> <span class="o">=</span> <span class="n">DEIMCriterion</span><span class="p">(</span>
             <span class="n">weight_dict</span><span class="o">=</span><span class="p">{</span>
                 <span class="s2">&quot;loss_vfl&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
@@ -381,11 +380,10 @@
         <span class="p">)</span>
 
         <span class="n">backbone_lr_mapping</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;deim_dfine_hgnetv2_n&quot;</span><span class="p">:</span> <span class="mf">0.0004</span><span class="p">,</span>
-            <span class="s2">&quot;deim_dfine_hgnetv2_s&quot;</span><span class="p">:</span> <span class="mf">0.0002</span><span class="p">,</span>
-            <span class="s2">&quot;deim_dfine_hgnetv2_m&quot;</span><span class="p">:</span> <span class="mf">0.0001</span><span class="p">,</span>
-            <span class="s2">&quot;deim_dfine_hgnetv2_l&quot;</span><span class="p">:</span> <span class="mf">0.000025</span><span class="p">,</span>
-            <span class="s2">&quot;deim_dfine_hgnetv2_x&quot;</span><span class="p">:</span> <span class="mf">0.000005</span><span class="p">,</span>
+            <span class="s2">&quot;deimv2_x&quot;</span><span class="p">:</span> <span class="mf">0.00001</span><span class="p">,</span>
+            <span class="s2">&quot;deimv2_l&quot;</span><span class="p">:</span> <span class="mf">0.0000125</span><span class="p">,</span>
+            <span class="s2">&quot;deimv2_m&quot;</span><span class="p">:</span> <span class="mf">0.000025</span><span class="p">,</span>
+            <span class="s2">&quot;deimv2_s&quot;</span><span class="p">:</span> <span class="mf">0.000025</span><span class="p">,</span>
         <span class="p">}</span>
 
         <span class="k">try</span><span class="p">:</span>
@@ -395,15 +393,10 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">err</span>
 
         <span class="n">optimizer_configuration</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="p">{</span><span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="s2">&quot;^(?=.*backbone)(?!.*norm|bn).*$&quot;</span><span class="p">,</span> <span class="s2">&quot;lr&quot;</span><span class="p">:</span> <span class="n">backbone_lr</span><span class="p">},</span>
-            <span class="p">{</span><span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="s2">&quot;^(?=.*(?:encoder|decoder))(?=.*(?:norm|bn)).*$&quot;</span><span class="p">,</span> <span class="s2">&quot;weight_decay&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">},</span>
+            <span class="p">{</span><span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="s2">&quot;^(?=.*.dinov3)(?!.*(?:norm|bn|bias)).*$&quot;</span><span class="p">,</span> <span class="s2">&quot;lr&quot;</span><span class="p">:</span> <span class="n">backbone_lr</span><span class="p">},</span>
+            <span class="p">{</span><span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="s2">&quot;^(?=.*.dinov3)(?=.*(?:norm|bn|bias)).*$&quot;</span><span class="p">,</span> <span class="s2">&quot;lr&quot;</span><span class="p">:</span> <span class="n">backbone_lr</span><span class="p">,</span> <span class="s2">&quot;weight_decay&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">},</span>
+            <span class="p">{</span><span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="s2">&quot;^(?=.*(?:sta|encoder|decoder))(?=.*(?:norm|bn|bias)).*$&quot;</span><span class="p">,</span> <span class="s2">&quot;weight_decay&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">},</span>
         <span class="p">]</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_name</span> <span class="o">==</span> <span class="s2">&quot;deim_dfine_hgnetv2_n&quot;</span><span class="p">:</span>
-            <span class="n">optimizer_configuration</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="p">{</span><span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="s2">&quot;^(?=.*backbone)(?!.*norm|bn).*$&quot;</span><span class="p">,</span> <span class="s2">&quot;lr&quot;</span><span class="p">:</span> <span class="n">backbone_lr</span><span class="p">},</span>
-                <span class="p">{</span><span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="s2">&quot;^(?=.*backbone)(?=.*norm|bn).*$&quot;</span><span class="p">,</span> <span class="s2">&quot;lr&quot;</span><span class="p">:</span> <span class="n">backbone_lr</span><span class="p">,</span> <span class="s2">&quot;weight_decay&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">},</span>
-                <span class="p">{</span><span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="s2">&quot;^(?=.*(?:encoder|decoder))(?=.*(?:norm|bn|bias)).*$&quot;</span><span class="p">,</span> <span class="s2">&quot;weight_decay&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">},</span>
-            <span class="p">]</span>
 
         <span class="n">model</span> <span class="o">=</span> <span class="n">DETR</span><span class="p">(</span>
             <span class="n">multi_scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">multi_scale</span><span class="p">,</span>
@@ -417,8 +410,11 @@
         <span class="p">)</span>
         <span class="n">model</span><span class="o">.</span><span class="n">init_weights</span><span class="p">()</span>
         <span class="n">load_checkpoint</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pretrained_weights</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">model_name</span><span class="p">],</span> <span class="n">map_location</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">model</span>
 
-        <span class="k">return</span> <span class="n">model</span></div>
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_default_preprocessing_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataInputParams</span> <span class="o">|</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">DataInputParams</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">DataInputParams</span><span class="p">(</span><span class="n">input_size</span><span class="o">=</span><span class="p">(</span><span class="mi">640</span><span class="p">,</span> <span class="mi">640</span><span class="p">),</span> <span class="n">mean</span><span class="o">=</span><span class="p">(</span><span class="mf">123.675</span><span class="p">,</span> <span class="mf">116.280</span><span class="p">,</span> <span class="mf">103.530</span><span class="p">),</span> <span class="n">std</span><span class="o">=</span><span class="p">(</span><span class="mf">58.395</span><span class="p">,</span> <span class="mf">57.120</span><span class="p">,</span> <span class="mf">57.375</span><span class="p">))</span></div>
 
 </pre></div>
 
