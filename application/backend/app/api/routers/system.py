@@ -8,7 +8,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 
 from app.api.dependencies import get_system_service
-from app.schemas.system import CameraInfo, DeviceInfo
+from app.models.system import CameraInfo, DeviceInfo
 from app.services import SystemService
 
 router = APIRouter(prefix="/api/system", tags=["System"])

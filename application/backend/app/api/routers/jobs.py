@@ -15,7 +15,7 @@ from app.api.dependencies import get_data_dir, get_job_dir, get_job_queue, get_p
 from app.api.validators import JobID
 from app.core.jobs.control_plane import CancellationResult, JobQueue
 from app.core.jobs.models import JobStatus, TrainingJob, TrainingJobParams
-from app.schemas.job import JobRequest, JobType, JobView
+from app.models.job import JobRequest, JobType, JobView
 from app.services import ProjectService, ResourceNotFoundError, SystemService
 
 router = APIRouter(prefix="/api/jobs", tags=["Jobs"])

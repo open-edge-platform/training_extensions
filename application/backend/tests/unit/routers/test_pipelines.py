@@ -13,7 +13,7 @@ from app.api.dependencies import get_pipeline_metrics_service, get_pipeline_serv
 from app.api.schemas import PipelineView
 from app.main import app
 from app.models import FixedRateDataCollectionPolicy, PipelineStatus
-from app.schemas.metrics import InferenceMetrics, LatencyMetrics, PipelineMetrics, ThroughputMetrics, TimeWindow
+from app.models.metrics import InferenceMetrics, LatencyMetrics, PipelineMetrics, ThroughputMetrics, TimeWindow
 from app.services import PipelineMetricsService, PipelineService, ResourceNotFoundError, ResourceType
 
 

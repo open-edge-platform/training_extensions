@@ -9,7 +9,7 @@ from uuid import UUID
 import pytest
 from model_api.models import Model
 
-from app.schemas.model_activation import ModelActivationState
+from app.models.model_activation import ModelActivationState
 from app.services import ActiveModelService
 from app.services.active_model_service import LoadedModel
 

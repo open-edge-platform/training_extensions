@@ -10,7 +10,7 @@ from pydantic import Field
 
 from app.core.jobs.models import Job, JobParams, JobType
 from app.models import Task
-from app.schemas.system import DeviceInfo
+from app.models.system import DeviceInfo
 
 
 class TrainingJobParams(JobParams):

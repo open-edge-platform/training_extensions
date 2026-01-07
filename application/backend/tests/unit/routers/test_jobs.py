@@ -15,8 +15,8 @@ from app.core.jobs.control_plane import CancellationResult
 from app.core.jobs.models import Job, JobStatus, TrainingJob, TrainingJobParams
 from app.main import app
 from app.models import Project, Task, TaskType
-from app.schemas.job import JobRequest, JobType, TrainingRequestParams
-from app.schemas.system import DeviceInfo, DeviceType
+from app.models.job import JobRequest, JobType, TrainingRequestParams
+from app.models.system import DeviceInfo, DeviceType
 
 
 @pytest.fixture

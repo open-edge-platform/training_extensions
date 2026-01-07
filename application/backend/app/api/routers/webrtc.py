@@ -10,7 +10,7 @@ from fastapi.exceptions import HTTPException
 from loguru import logger
 
 from app.api.dependencies import get_webrtc_manager as get_webrtc
-from app.schemas.webrtc import Answer, InputData, Offer
+from app.models.webrtc import Answer, InputData, Offer
 from app.webrtc.manager import WebRTCManager
 
 router = APIRouter(prefix="/api/webrtc", tags=["WebRTC"])

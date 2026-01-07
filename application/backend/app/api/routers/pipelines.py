@@ -14,7 +14,7 @@ from app.api.dependencies import get_pipeline_metrics_service, get_pipeline_serv
 from app.api.schemas import PipelineView
 from app.api.validators import ProjectID
 from app.models import DataCollectionPolicyAdapter, PipelineStatus
-from app.schemas.metrics import PipelineMetrics
+from app.models.metrics import PipelineMetrics
 from app.services import PipelineMetricsService, PipelineService, ResourceNotFoundError, SystemService
 
 router = APIRouter(prefix="/api/projects/{project_id}/pipeline", tags=["Pipelines"])

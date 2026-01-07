@@ -8,7 +8,7 @@ from typing import Any
 from aiortc import RTCPeerConnection, RTCSessionDescription
 from loguru import logger
 
-from app.schemas.webrtc import Answer, InputData, Offer
+from app.models.webrtc import Answer, InputData, Offer
 from app.webrtc.stream import InferenceVideoStreamTrack
 
 

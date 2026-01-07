@@ -5,8 +5,7 @@
 
 from fastapi import APIRouter, status
 
-from app.schemas import ModelArchitectures
-from app.schemas.model_architecture import ModelArchitecture
+from app.models.model_architecture import ModelArchitecture, ModelArchitectures
 from app.supported_models import SupportedModels
 
 router = APIRouter(prefix="/api/model_architectures", tags=["Model Architectures"])
