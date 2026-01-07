@@ -100,13 +100,13 @@ class TrainingHyperParameters(BaseModelNoExtra):
 
         # Update the model's json_schema to include allowed values for input_size
         # Note: existing json_schema_extra cannot be overwritten, otherwise it will absent from model_json_schema()
-        self.model_fields["input_size_width"].json_schema_extra.update(  # type: ignore[union-attr]
+        TrainingHyperParameters.model_fields["input_size_width"].json_schema_extra.update(  # type: ignore[union-attr]
             {
                 "allowed_values": self.allowed_values_input_size,  # type:ignore[dict-item]
                 "default_value": w,
             }
         )
-        self.model_fields["input_size_height"].json_schema_extra.update(  # type: ignore[union-attr]
+        TrainingHyperParameters.model_fields["input_size_height"].json_schema_extra.update(  # type: ignore[union-attr]
             {
                 "allowed_values": self.allowed_values_input_size,  # type:ignore[dict-item]
                 "default_value": h,
