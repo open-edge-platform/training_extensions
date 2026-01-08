@@ -35,34 +35,3 @@ class ModelArchitecture(BaseModel):
             stats=manifest.stats,
             support_status=manifest.support_status,
         )
-
-
-class ModelArchitectures(BaseModel):
-    """Model architectures response"""
-
-    model_architectures: list[ModelArchitecture] = Field(
-        title="Model Architectures", description="List of available model architectures"
-    )
-
-    model_config = {
-        "json_schema_extra": {
-            "example": {
-                "model_architectures": [
-                    {
-                        "id": "Object_Detection_Deim_DFine_M",
-                        "task": "detection",
-                        "name": "Deim-DFine-M",
-                        "description": "DEIM is an advanced training framework designed to enhance the matching"
-                        " mechanism in DETRs, enabling faster convergence and improved accuracy.",
-                        "capabilities": {"xai": True, "tiling": True},
-                        "stats": {
-                            "gigaflops": 57,
-                            "trainable_parameters": 19,
-                            "performance_ratings": {"accuracy": 2, "training_time": 2, "inference_speed": 2},
-                        },
-                        "support_status": "active",
-                    },
-                ]
-            }
-        }
-    }
