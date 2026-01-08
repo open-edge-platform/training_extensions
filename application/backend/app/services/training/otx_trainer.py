@@ -26,7 +26,6 @@ from otx.data.dataset.base import OTXDataset
 from otx.data.module import OTXDataModule
 from otx.data.transform_libs.torchvision import TorchVisionTransformLib
 from otx.tools.converter import GetiConfigConverter
-from otx.types.device import DeviceType
 from otx.types.export import OTXExportFormatType
 from otx.types.precision import OTXPrecisionType
 from otx.types.task import OTXTaskType
@@ -36,6 +35,7 @@ from app.core.jobs.models import TrainingJobParams
 from app.core.run import ExecutionContext
 from app.models import DatasetItemAnnotationStatus, Task, TaskType, TrainingStatus
 from app.models.training_configuration.configuration import TrainingConfiguration
+from app.schemas.system import DeviceInfo
 from app.services import (
     BaseWeightsService,
     DatasetRevisionService,
@@ -279,7 +279,7 @@ class OTXTrainer(Trainer):
 
     @step("Train Model")
     def train_model(
-        self, training_config: dict, dataset_info: DatasetInfo, weights_path: Path, model_id: UUID
+        self, training_config: dict, dataset_info: DatasetInfo, weights_path: Path, model_id: UUID, device: DeviceInfo
     ) -> tuple[Path, OTXEngine]:
         """Execute model training."""
         # TODO use weights path to initialize model from pre-downloaded weights
@@ -321,7 +321,7 @@ class OTXTrainer(Trainer):
         otx_engine = OTXEngine(
             model=otx_model,
             data=otx_datamodule,
-            device=DeviceType.cpu,  # TODO make device configurable (#5040)
+            device=f"{device.type}:{device.index if device.index else 0}",
             work_dir=f"./otx-workspace-{model_id}",
         )
 
@@ -426,6 +426,7 @@ class OTXTrainer(Trainer):
             dataset_info=dataset_info,
             weights_path=weights_path,
             model_id=training_params.model_id,
+            device=training_params.device,
         )
         self.evaluate_model(otx_engine=otx_engine, model_checkpoint_path=trained_model_path)
         exported_model_path = self.export_model(otx_engine=otx_engine, model_checkpoint_path=trained_model_path)
