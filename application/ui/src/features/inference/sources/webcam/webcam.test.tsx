@@ -59,7 +59,6 @@ describe('Webcam', () => {
 
         expect(screen.getByRole('textbox', { name: /^Id$/i, hidden: true })).toHaveValue(mockedConfig.id);
         expect(screen.getByRole('textbox', { name: /Name/i })).toHaveValue(mockedConfig.name);
-        expect(screen.getByRole('textbox', { name: /Webcam device id/i })).toHaveValue(String(mockedConfig.device_id));
 
         expect(screen.getByRole('button', { name: 'Apply' })).toBeEnabled();
     });

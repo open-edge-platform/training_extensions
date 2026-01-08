@@ -30,7 +30,7 @@ const paddingStyle = {
 export const InputOutputSetup = () => {
     return (
         <DialogTrigger type='popover'>
-            <Button width={'size-3000'} variant={'secondary'}>
+            <Button variant={'secondary'} UNSAFE_style={{ gap: dimensionValue('size-125') }}>
                 <Camera fill='white' />
                 <Text>Pipeline configuration</Text>
             </Button>
@@ -38,10 +38,10 @@ export const InputOutputSetup = () => {
                 <Content>
                     <Tabs aria-label='Dataset import tabs' height={'100%'}>
                         <TabList>
-                            <Item key='sources' textValue='FoR'>
+                            <Item key='sources' textValue='Sources'>
                                 <Text>Input</Text>
                             </Item>
-                            <Item key='sinks' textValue='MaR'>
+                            <Item key='sinks' textValue='Sinks'>
                                 <Text>Output</Text>
                             </Item>
                         </TabList>
