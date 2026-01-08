@@ -34,7 +34,7 @@ export const Header = ({ groupBy, onGroupByChange, onSortChange, onPinActiveTogg
                     width={'size-3000'}
                     aria-label={'Sort models'}
                     defaultSelectedKey={'active-model'}
-                    onSelectionChange={(key) => onSortChange(key as string)}
+                    onSelectionChange={(key) => onSortChange(String(key))}
                 >
                     <Item key='active-model'>Sort: Active model</Item>
                     <Item key='architecture'>Sort: Architecture</Item>

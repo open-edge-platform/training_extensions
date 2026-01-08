@@ -19,7 +19,7 @@ export const ModelRow = ({ model }: ModelRowProps) => {
             <Flex direction={'column'} gap={'size-50'}>
                 <Flex alignItems={'center'} gap={'size-100'}>
                     <Text UNSAFE_style={{ fontSize: dimensionValue('font-size-200') }}>
-                        {model.id || 'Unnamed Model'}
+                        {model.id ?? 'Unnamed Model'}
                     </Text>
                     <Tag
                         prefix={<StartIcon />}
