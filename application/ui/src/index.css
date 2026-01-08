@@ -20,8 +20,10 @@
     --coral-shade-1: #c81326;
     --energy-blue-light: #7bdeff;
     --energy-blue: rgb(0, 199, 253);
+    --energy-blue-shade: #0095ca;
 
     --daisy-shade: rgb(237, 178, 0); /* #edb200 */
+    --geode-tint: rgba(204, 148, 218, 1); /* #cc94da */
     --brand-daisy: #fec91b;
     --brand-daisy-tint: #ffe17a;
     --brand-rust: #e96115;
@@ -30,6 +32,8 @@
     --annotation-stroke: var(--energy-blue-light, #7bdeff);
 
     --moss-tint-1: #b1d272;
+
+    --annotation-fill-opacity: 0.4;
 
     --spectrum-button-primary-text-font-weight: 500;
     --spectrum-accent-background-color-default: var(--energy-blue);

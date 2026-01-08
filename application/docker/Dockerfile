@@ -81,13 +81,14 @@ COPY --link ui/tsconfig.json ./
 COPY --link ui/rsbuild.config.ts ./
 COPY --link ui/src/ src/
 
-ARG PUBLIC_API_BASE_URL=""
-ENV PUBLIC_API_BASE_URL=${PUBLIC_API_BASE_URL}
-
 ########
 # Web UI
 ########
 FROM web-ui-base AS web-ui
+
+ARG ASSET_PREFIX=""
+ENV ASSET_PREFIX=${ASSET_PREFIX}
+
 RUN npm run build
 
 #########################
@@ -95,6 +96,8 @@ RUN npm run build
 #########################
 FROM python:3.13-slim@sha256:baf66684c5fcafbda38a54b227ee30ec41e40af1e4073edee3a7110a417756ba AS runtime-base
 
+ARG STATIC_FILES_DIR=""
+ENV STATIC_FILES_DIR=${STATIC_FILES_DIR}
 ARG UID=10001
 ARG USER_NAME="non-root"
 
@@ -109,34 +112,28 @@ RUN apt-get update \
         libgl1=1.7.0-1+b2 \
         libglib2.0-0=2.84.4-3~deb13u1 \
         libglx-mesa0=25.0.7-2 \
-        nginx=1.26.* \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
-
-# Nginx config + static UI
-COPY docker/nginx.conf /etc/nginx/nginx.conf
-COPY --from=web-ui /home/app/web_ui/dist/ /usr/share/nginx/html
 
 # Backend code + uv from backend-base
 COPY --link backend/app /application/app
 COPY --from=backend-base /bin/uv /bin/uv
+COPY --from=web-ui /home/app/web_ui/dist/ ${STATIC_FILES_DIR}
 
 # Make runtime directories writable for non-root user
-RUN mkdir -p /home/${USER_NAME}/.cache/uv /tmp/nginx /tmp/nginx/logs && \
+RUN mkdir -p /home/${USER_NAME}/.cache/uv && \
     chown -R ${UID}:${UID} \
     /application \
-    /usr/share/nginx/html \
-    /home/${USER_NAME} \
-    /tmp/nginx
+    /home/${USER_NAME}
 
-EXPOSE 8080
+EXPOSE 7860
 
 WORKDIR /application
 ENV PYTHONPATH=/application
 
 USER ${USER_NAME}
 
-CMD ["sh", "-c", "nginx && exec uv run app/main.py;"]
+CMD ["uv", "run", "app/main.py"]
 
 ######################
 # Server (CPU version)

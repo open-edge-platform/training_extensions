@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { DatasetItem } from 'src/constants/shared-types';
+import type { DatasetItem } from '../src/constants/shared-types';
 
 const getMockedMediaItem = (data: Partial<DatasetItem>): DatasetItem => ({
     id: '2f3c9f61-7aa0-4529-a924-193761a64b22',

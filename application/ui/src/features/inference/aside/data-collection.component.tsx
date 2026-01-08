@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { Divider, Flex, Heading, Slider, Switch, Text } from '@geti/ui';
 import { usePatchPipeline, usePipeline } from 'hooks/api/pipeline.hook';
@@ -29,9 +29,6 @@ export const DataCollection = () => {
 
     const [localRate, setLocalRate] = useState(serverRate);
     const [localConfidenceThreshold, setLocalConfidenceThreshold] = useState(serverConfidenceThreshold);
-
-    useEffect(() => setLocalRate(serverRate), [serverRate]);
-    useEffect(() => setLocalConfidenceThreshold(serverConfidenceThreshold), [serverConfidenceThreshold]);
 
     const updatePolicies = (updates: {
         rateEnabled?: boolean;
@@ -63,6 +60,7 @@ export const DataCollection = () => {
 
     return (
         <Flex
+            key={`${serverRate}-${serverConfidenceThreshold}`}
             UNSAFE_style={{
                 padding: 'var(--spectrum-global-dimension-size-200)',
             }}

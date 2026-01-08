@@ -29,13 +29,13 @@ def fxt_model_activation_state() -> ModelActivationState:
 
 
 @pytest.fixture
-def fxt_active_model_service(fxt_model_activation_state, fxt_condition) -> Iterator[ActiveModelService]:
-    """Fixture to create an ActiveModelService instance with mocked dependencies and a temporary data directory."""
+def fxt_active_model_service(fxt_model_activation_state) -> Iterator[ActiveModelService]:
+    """Fixture to create an ActiveModelService instance with a temporary data directory."""
     with (
         tempfile.TemporaryDirectory() as tmpdir,
         patch.object(ActiveModelService, "_load_state", return_value=fxt_model_activation_state),
     ):
-        yield ActiveModelService(data_dir=Path(tmpdir), mp_model_reload_event=fxt_condition)
+        yield ActiveModelService(data_dir=Path(tmpdir))
 
 
 class TestActiveModelServiceUnit:

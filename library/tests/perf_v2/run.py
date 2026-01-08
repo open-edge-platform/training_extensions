@@ -99,7 +99,6 @@ if __name__ == "__main__":
                     if (output_root / model.name / dataset.name / str(seed)).exists():
                         logger.info(f"Skipping existing job for {model.name} on {dataset.name} with seed {seed}")
                         continue
-
                     cmd = [
                         "python",
                         "-m",
@@ -116,10 +115,16 @@ if __name__ == "__main__":
                         str(output_root),
                         "--seed",
                         str(seed),
+                        "--eval-upto",
+                        str(args.eval_upto),
                         "--num-epoch",
                         str(args.num_epoch),
+                        "--deterministic",
+                        str(args.deterministic),
                         "--device",
                         args.device,
+                        "--num-devices",
+                        args.num_devices,
                         "--user-name",
                         args.user_name,
                     ]

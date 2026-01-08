@@ -3,7 +3,6 @@
 
 import os
 from dataclasses import dataclass
-from multiprocessing.synchronize import Event as EventClass
 from pathlib import Path
 from uuid import UUID
 
@@ -15,7 +14,9 @@ from app.repositories import ModelRevisionRepository
 from app.repositories.active_model_repo import ActiveModelRepo
 from app.schemas.model_activation import ModelActivationState
 
-MODELAPI_DEVICE = os.getenv("MODELAPI_DEVICE", "AUTO")
+# It's safer to default to CPU since inference with other devices sometimes results in degraded prediction quality
+# See for example: https://github.com/open-edge-platform/model_api/issues/460
+MODELAPI_DEVICE = os.getenv("MODELAPI_DEVICE", "CPU")
 MODELAPI_NSTREAMS = os.getenv("MODELAPI_NSTREAMS", "2")
 
 
@@ -32,9 +33,8 @@ class ActiveModelService:
     Used exclusively by the InferenceWorker process.
     """
 
-    def __init__(self, data_dir: Path, mp_model_reload_event: EventClass) -> None:
+    def __init__(self, data_dir: Path) -> None:
         self.projects_dir = data_dir / "projects"
-        self._mp_model_reload_event = mp_model_reload_event
         self._model_activation_state: ModelActivationState = self._load_state()
         self._loaded_model: LoadedModel | None = None
 

@@ -15,8 +15,8 @@ from datumaro.experimental.fields import (
     image_info_field,
     image_path_field,
     label_field,
+    numeric_field,
     polygon_field,
-    score_field,
     subset_field,
 )
 from loguru import logger
@@ -41,7 +41,7 @@ class ClassificationSample(Sample):
     image: str = image_path_field()
     image_info: ImageInfo = image_info_field()
     label: int = label_field(dtype=pl.Int32(), is_list=False)
-    confidence: float | None = score_field(dtype=pl.Float32())
+    confidence: float | None = numeric_field(dtype=pl.Float32())
     subset: Subset = subset_field()
 
 
@@ -59,7 +59,7 @@ class MultilabelClassificationSample(Sample):
     image: str = image_path_field()
     image_info: ImageInfo = image_info_field()
     label: NDArrayInt = label_field(dtype=pl.Int32(), multi_label=True)
-    confidence: NDArrayFloat32 | None = score_field(dtype=pl.Float32(), is_list=True)
+    confidence: NDArrayFloat32 | None = numeric_field(dtype=pl.Float32(), is_list=True)
     subset: Subset = subset_field()
 
 
@@ -79,7 +79,7 @@ class DetectionSample(Sample):
     image_info: ImageInfo = image_info_field()
     bboxes: NDArrayInt = bbox_field(dtype=pl.Int32())
     label: NDArrayInt = label_field(dtype=pl.Int32(), is_list=True)
-    confidence: NDArrayFloat32 | None = score_field(dtype=pl.Float32(), is_list=True)
+    confidence: NDArrayFloat32 | None = numeric_field(dtype=pl.Float32(), is_list=True)
     subset: Subset = subset_field()
 
 
@@ -97,9 +97,9 @@ class InstanceSegmentationSample(Sample):
 
     image: str = image_path_field()
     image_info: ImageInfo = image_info_field()
-    polygons: NDArrayFloat32 = polygon_field(dtype=pl.Float32())
+    polygons: NDArrayFloat32 = polygon_field(dtype=pl.Float32())  # Ragged array (num_polygons, num_vertices, 2)
     label: NDArrayInt = label_field(dtype=pl.Int32(), is_list=True)
-    confidence: NDArrayFloat32 | None = score_field(dtype=pl.Float32(), is_list=True)
+    confidence: NDArrayFloat32 | None = numeric_field(dtype=pl.Float32(), is_list=True)
     subset: Subset = subset_field()
 
 
@@ -174,9 +174,25 @@ def _convert_dataset(
     while len(dataset_items) > 0:
         for dataset_item in dataset_items:
             image_path = get_image_path(dataset_item)
-            sample = convert_sample(dataset_item, image_path, project_labels_ids)
+            try:
+                sample = convert_sample(dataset_item, image_path, project_labels_ids)
+            except Exception:
+                logger.error(
+                    "Failed conversion of dataset item to Datumaro sample. dataset_item = {}; sample_type = {}",
+                    dataset_item,
+                    sample_type,
+                )
+                raise
             if sample:
-                dataset.append(sample)
+                try:
+                    dataset.append(sample)
+                except Exception:
+                    logger.error(
+                        "Failed to append the converted sample to the dataset. sample = {}; dataset = {}",
+                        sample,
+                        dataset,
+                    )
+                    raise
         offset += len(dataset_items)
         dataset_items = get_dataset_items(offset, CONVERSION_BATCH_SIZE)
     return dataset
@@ -397,10 +413,17 @@ def convert_instance_segmentation_dataset(
             if all_with_confidence
             else []
         )
+        # Each polygon is a float32 array with dimension (num_vert, 2); since the number of vertices varies
+        # between polygons, we need a ragged array (dtype=object) to stack the polygons.
+        # While building this array, we must also avoid unwanted type conversions by numpy, hence the use of np.empty
+        # and explicit assignment - trying to wrap the polygons simply with np.array([...], dtype=object) would cause
+        # the outer array dtype to become float32 instead of object if all polygons have the same number of vertices.
+        polygons_np = np.empty(len(polygons), dtype=object)
+        polygons_np[:] = [np.asarray(p, dtype=np.float32) for p in polygons]
         return InstanceSegmentationSample(
             image=image_path,
             image_info=ImageInfo(width=dataset_item.width, height=dataset_item.height),
-            polygons=np.array(polygons, dtype=np.float32),
+            polygons=polygons_np,
             label=np.array(labels_indexes),
             confidence=np.array(confidences) if confidences else None,
             subset=convert_to_dm_subset(dataset_item.subset),

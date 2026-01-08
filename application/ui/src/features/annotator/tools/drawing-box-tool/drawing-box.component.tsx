@@ -1,35 +1,32 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { PointerEvent, useEffect, useRef, useState } from 'react';
+import { PointerEvent, useRef, useState } from 'react';
 
 import { clampBox, clampPointBetweenImage, pointsToRect } from '@geti/smart-tools/utils';
-import { type KeyboardEvent as ReactKeyboardEvent } from '@geti/ui';
+import { useEventListener } from 'hooks/event-listener.hook';
 
 import selectionCursor from '../../../../assets/icons/selection.svg?url';
+import { Label } from '../../../../constants/shared-types';
+import { isLeftButton } from '../../buttons-utils';
 import { Rectangle } from '../../shapes/rectangle.component';
 import type { Point, Rect as RectInterface, RegionOfInterest } from '../../types';
-import { DEFAULT_ANNOTATION_STYLES, isLeftButton } from '../../utils';
+import { DEFAULT_ANNOTATION_STYLES } from '../../utils';
 import { SvgToolCanvas } from '../svg-tool-canvas.component';
-import { getRelativePoint } from '../utils';
+import { getRelativePoint, PointerType } from '../utils';
 import { Crosshair } from './crosshair/crosshair.component';
 import { useCrosshair } from './crosshair/use-crosshair.hook';
 
-enum PointerType {
-    Mouse = 'mouse',
-    Pen = 'pen',
-    Touch = 'touch',
-}
-
 const CURSOR_OFFSET = '7 8';
 interface DrawingBoxInterface {
-    onComplete: (shapes: RectInterface[]) => void;
+    onComplete: (shapes: RectInterface[], labels: Label[]) => void;
     roi: RegionOfInterest;
     image: ImageData;
+    selectedLabel: Label | null;
     zoom: number;
 }
 
-export const DrawingBox = ({ roi, zoom, image, onComplete }: DrawingBoxInterface) => {
+export const DrawingBox = ({ roi, zoom, image, selectedLabel, onComplete }: DrawingBoxInterface) => {
     const [startPoint, setStartPoint] = useState<Point | null>(null);
     const [boundingBox, setBoundingBox] = useState<RectInterface | null>(null);
 
@@ -87,7 +84,7 @@ export const DrawingBox = ({ roi, zoom, image, onComplete }: DrawingBoxInterface
 
         // Don't make empty annotations
         if (boundingBox.width > 1 && boundingBox.height > 1) {
-            onComplete([boundingBox]);
+            onComplete([boundingBox], selectedLabel ? [selectedLabel] : []);
         }
 
         setCleanState();
@@ -100,17 +97,11 @@ export const DrawingBox = ({ roi, zoom, image, onComplete }: DrawingBoxInterface
         setBoundingBox(null);
     };
 
-    useEffect(() => {
-        window.addEventListener('keydown', ({ key }: KeyboardEvent | ReactKeyboardEvent) => {
-            if (key === 'Escape') {
-                setCleanState();
-            }
-        });
-
-        return () => {
-            window.removeEventListener('keydown', () => null);
-        };
-    }, []);
+    useEventListener('keydown', (event: KeyboardEvent) => {
+        if (event.key === 'Escape') {
+            setCleanState();
+        }
+    });
 
     return (
         <SvgToolCanvas
@@ -119,9 +110,7 @@ export const DrawingBox = ({ roi, zoom, image, onComplete }: DrawingBoxInterface
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
             onPointerDown={onPointerDown}
-            style={{
-                cursor: `url(${selectionCursor}) ${CURSOR_OFFSET}, auto`,
-            }}
+            style={{ cursor: `url(${selectionCursor}) ${CURSOR_OFFSET}, auto` }}
         >
             {boundingBox ? (
                 <Rectangle

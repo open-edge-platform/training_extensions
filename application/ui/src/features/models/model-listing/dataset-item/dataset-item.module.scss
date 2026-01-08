@@ -1,0 +1,25 @@
+.tag {
+    background-color: var(--spectrum-gray-100);
+    border-radius: var(--spectrum-global-dimension-size-50);
+    padding: var(--spectrum-global-dimension-size-25) var(--spectrum-global-dimension-size-50);
+    align-items: center;
+    justify-content: center;
+    color: var(--spectrum-global-color-gray-800);
+
+    svg {
+        fill: var(--spectrum-global-color-gray-800);
+    }
+}
+
+.label {
+    font-size: var(--spectrum-global-dimension-font-size-50);
+    line-height: var(--spectrum-global-dimension-font-size-200);
+    color: var(--spectrum-global-color-gray-700);
+    white-space: nowrap;
+}
+
+.rangeGrid {
+    border-radius: calc(var(--spectrum-global-dimension-size-100) / 2);
+    overflow: hidden;
+    border: var(--spectrum-global-dimension-size-10) solid var(--spectrum-global-color-gray-300);
+}

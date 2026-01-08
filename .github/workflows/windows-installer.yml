@@ -1,0 +1,224 @@
+name: windows-installer
+on:
+  workflow_call:
+    inputs:
+      build_version:
+        description: "Specifies the build version to apply to all binaries produced by this workflow"
+        type: string
+        required: true
+      device:
+        description: "Specifies the device to build the backend for (cpu, xpu, gpu)"
+        type: string
+        required: true
+        default: "xpu"
+      debug_build:
+        description: "If the debug build should be produced"
+        type: boolean
+        required: false
+        default: false
+
+  # allow to manually trigger this workflow
+  workflow_dispatch:
+    inputs:
+      build_version:
+        description: "Specifies the build version to apply to all binaries produced by this workflow"
+        type: string
+        required: true
+      device:
+        description: "Specifies the device to build the backend for (cpu, xpu, gpu)"
+        required: true
+        options:
+          - xpu
+          - cpu
+          - gpu
+        default: "xpu"
+      debug_build:
+        description: "If the debug build should be produced"
+        required: false
+        type: boolean
+        default: false
+
+env:
+  GIT_SH_PATH: C:\Program Files\Git\bin\sh.exe
+  BACKEND_PATH: .\application\backend
+  UI_PATH: .\application\ui
+  BACKEND_BUILD_PATH: .\application\backend\.build
+  BACKEND_DIST_PATH: .\application\backend\dist\geti-tune-backend
+  UI_SRC_API_PATH: .\application\ui\src\api
+  UI_SRC_TAURI_PATH: .\application\ui\src-tauri
+  UI_TARGET_PATH: .\application\ui\src-tauri\target
+  MAKEAPP_PATH: "C:\\Program Files (x86)\\Windows Kits\\10\\bin\\10.0.26100.0\\x64\\makeappx.exe"
+  SIGNTOOL_PATH: "C:\\Program Files (x86)\\Windows Kits\\10\\bin\\10.0.26100.0\\x64\\signtool.exe"
+
+jobs:
+  windows-installer:
+    name: Build windows installer
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    timeout-minutes: 60
+
+    steps:
+
+      - name: Define paths
+        env:
+          DEBUG_BUILD: ${{ inputs.debug_build }}
+          DEVICE: ${{ inputs.device || 'xpu' }}
+          BUILD_VERSION: ${{ inputs.build_version }}
+        run: |
+          Write-Host "DEBUG_BUILD=$env:DEBUG_BUILD"
+          
+          $TARGET = $(IF ($env:DEBUG_BUILD -eq "true") {"debug"} else {"release"})         
+          $UI_BUILD_PATH = $env:UI_TARGET_PATH + "\" + $TARGET
+          Write-Host "UI_BUILD_PATH=$UI_BUILD_PATH"
+          Add-Content -Path $env:GITHUB_ENV -Value "UI_BUILD_PATH=$UI_BUILD_PATH"
+          
+          $UI_MSIX_BUNDLE_PATH = $UI_BUILD_PATH + "\bundle\msix"  
+          Write-Host "UI_MSIX_BUNDLE_PATH=$UI_MSIX_BUNDLE_PATH"
+          Add-Content -Path $env:GITHUB_ENV -Value "UI_MSIX_BUNDLE_PATH=$UI_MSIX_BUNDLE_PATH"
+          
+          $PREFIX = $(IF ($env:DEBUG_BUILD -eq "true") {"-debug"} else {""})
+          $MSIX_FILE_NAME = "geti-tune-" + $env:DEVICE + "-" + $env:BUILD_VERSION + $PREFIX + ".msix"
+          $MSIX_FILE_PATH = $UI_MSIX_BUNDLE_PATH + "\" + $MSIX_FILE_NAME
+          Write-Host "MSIX_FILE_PATH=$MSIX_FILE_PATH"
+          Add-Content -Path $env:GITHUB_ENV -Value "MSIX_FILE_PATH=$MSIX_FILE_PATH"          
+          
+
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+
+      # Install and setup build tools
+
+      - name: Set up Python
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@a02a550bdd3185dba2ebb6aa98d77047ce54ad21 # v6.2.1
+        with:
+          version: "0.9.7"
+          enable-cache: true
+          cache-dependency-glob: "application/backend/uv.lock"
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@6d9817901c499d6b02debbb57edb38d33daa680b
+        with:
+          toolchain: stable
+
+      - name: Cache Rust dependencies & target
+        uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5 # v2.8.2
+        with:
+          save-if: ${{ startsWith(github.ref_name, 'release/') || github.ref_name == 'develop' }}
+          workspaces: |
+            application\ui\src-tauri -> target
+
+      # Build backend
+
+      - name: Build venv
+        working-directory: application/backend
+        env:
+          DEVICE: ${{ inputs.device || 'xpu' }}
+        run: |
+          uv lock --check
+          uv sync --extra installer --extra $env:DEVICE --extra mqtt --frozen --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org
+
+      - name: Build OpenAPI spec
+        working-directory: application/backend
+        env:
+          PYTHONPATH: "."
+        run: |
+          uv run --no-sync app/cli.py gen-api --target-path .build/openapi-spec.json
+
+      - name: Build executable
+        working-directory: application/backend
+        run: |
+          uv run pyinstaller --noconfirm geti-tune.spec
+
+      # Copy backend artifacts to UI
+
+      - name: Copy backend artifacts to UI
+        run: |
+          cp -r ${{ env.BACKEND_DIST_PATH }}\_internal ${{ env.UI_SRC_TAURI_PATH }}
+          cp -r ${{ env.BACKEND_DIST_PATH }}\geti-tune-backend.exe ${{ env.UI_SRC_TAURI_PATH }}\geti-tune-backend-x86_64-pc-windows-msvc.exe
+
+      - name: Copy OpenAPI spec
+        run: |
+          cp -r ${{ env.BACKEND_BUILD_PATH }}\openapi-spec.json ${{ env.UI_SRC_API_PATH }}
+
+        # Build UI with Tauri
+
+      - name: Setup Node & npm
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        with:
+          node-version-file: application/ui/.nvmrc
+          cache: 'npm'
+          cache-dependency-path: application/ui/package-lock.json
+
+      - name: Enable long paths
+        run: reg add "HKLM\SYSTEM\CurrentControlSet\Control\FileSystem" /v LongPathsEnabled /t REG_DWORD /d 1 /f
+
+      - name: Configure Git long paths
+        run: git config --system core.longpaths true
+
+      - name: Install dependencies
+        working-directory: application/ui
+        run: npm ci
+
+      - name: Install Tauri CLI
+        run: cargo install tauri-cli --version "^2.0.0" --locked
+
+      - name: Build OpenAPI type definitions
+        working-directory: application/ui
+        run: npm run build:api
+
+      - name: Build Tauri app
+        if: inputs.debug_build == true
+        env:
+          PUBLIC_API_URL: http://localhost:9100
+        working-directory: application/ui
+        run: |
+          cargo tauri build --debug
+
+      - name: Build Tauri app
+        if: inputs.debug_build == false
+        env:
+          PUBLIC_API_URL: http://localhost:9100
+        working-directory: application/ui
+        run: |
+          cargo tauri build
+
+      # Build MSIX bundle
+
+      - name: Create MSIX package
+        run: |
+          mkdir -p $env:UI_MSIX_BUNDLE_PATH
+          cp $env:UI_BUILD_PATH\geti-tune-backend.exe $env:UI_MSIX_BUNDLE_PATH
+          cp $env:UI_BUILD_PATH\geti_tune_ui.exe $env:UI_MSIX_BUNDLE_PATH
+          cp -r $env:UI_BUILD_PATH\_internal $env:UI_MSIX_BUNDLE_PATH
+          cp -r ${{ env.UI_SRC_TAURI_PATH }}\msix\* $env:UI_MSIX_BUNDLE_PATH
+          & "${{ env.MAKEAPP_PATH }}" pack /d $env:UI_MSIX_BUNDLE_PATH /p $env:MSIX_FILE_PATH
+
+      - name: Sign MSIX package
+        env:
+          MSIX_SIGN_CERTIFICATE: ${{ secrets.MSIX_SIGN_CERTIFICATE }}
+          MSIX_SIGN_CERTIFICATE_PASSWORD: ${{ secrets.MSIX_SIGN_CERTIFICATE_PASSWORD }}
+        run: |
+          $bytes = [System.Convert]::FromBase64String($env:MSIX_SIGN_CERTIFICATE)
+          [System.IO.File]::WriteAllBytes("sign.pfx", $bytes)
+          try {
+            & "${{ env.SIGNTOOL_PATH }}" sign /fd SHA256 /a /f "sign.pfx" /p "$env:MSIX_SIGN_CERTIFICATE_PASSWORD" $env:MSIX_FILE_PATH
+          }
+          finally {
+            if (Test-Path "sign.pfx") {
+              Remove-Item "sign.pfx" -Force
+            }
+          }
+
+      - name: Upload MSIX package
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          path: ${{ env.MSIX_FILE_PATH }}
+          retention-days: 20

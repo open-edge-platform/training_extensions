@@ -12,7 +12,7 @@ from PIL import Image
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.db.schema import DatasetItemDB, DatasetItemLabelDB, DatasetRevisionDB, PipelineDB
+from app.db.schema import DatasetItemDB, DatasetItemLabelDB, PipelineDB
 from app.models import (
     DatasetItemAnnotation,
     DatasetItemAnnotationStatus,
@@ -22,7 +22,7 @@ from app.models import (
     Project,
     Rectangle,
 )
-from app.services import LabelService, PipelineService, ProjectService
+from app.services import LabelService, PipelineService, ProjectService, SystemService
 from app.services.base import ResourceNotFoundError, ResourceType
 from app.services.dataset_service import (
     DatasetItemFilters,
@@ -40,9 +40,17 @@ def fxt_event_bus() -> EventBus:
 
 
 @pytest.fixture
-def fxt_pipeline_service(fxt_event_bus: EventBus, db_session: Session) -> PipelineService:
+def fxt_system_service() -> SystemService:
+    """Fixture to create a SystemService instance."""
+    return SystemService()
+
+
+@pytest.fixture
+def fxt_pipeline_service(
+    fxt_event_bus: EventBus, db_session: Session, fxt_system_service: SystemService
+) -> PipelineService:
     """Fixture to create a PipelineService instance."""
-    return PipelineService(event_bus=fxt_event_bus, db_session=db_session)
+    return PipelineService(event_bus=fxt_event_bus, db_session=db_session, system_service=fxt_system_service)
 
 
 @pytest.fixture
@@ -493,7 +501,7 @@ class TestDatasetServiceIntegration:
             data=image,
             user_reviewed=user_reviewed,
             source_id=pipeline.source_id if use_pipeline_source else None,
-            prediction_model_id=pipeline.model_revision_id if use_pipeline_model else None,
+            prediction_model_id=pipeline.model_id if use_pipeline_model else None,
             annotations=fxt_annotations(label_id) if not user_reviewed else None,
         )
 
@@ -515,7 +523,7 @@ class TestDatasetServiceIntegration:
         else:
             assert dataset_item.source_id is None
         if use_pipeline_model:
-            assert dataset_item.prediction_model_id == str(pipeline.model_revision_id)
+            assert dataset_item.prediction_model_id == str(pipeline.model_id)
         else:
             assert dataset_item.prediction_model_id is None
         if not user_reviewed:
@@ -1384,195 +1392,3 @@ class TestDatasetServiceIntegration:
         assert len(testing_items) == 1
         for item in testing_items:
             assert item.subset == DatasetItemSubset.TESTING
-
-    def test_save_revision(
-        self,
-        fxt_projects_dir: Path,
-        fxt_dataset_service: DatasetService,
-        fxt_project_with_subset_items: tuple[Project, list[DatasetItemDB]],
-        db_session: Session,
-    ) -> None:
-        """Test saving a dataset revision."""
-        project, db_dataset_items = fxt_project_with_subset_items
-        dataset = fxt_dataset_service.get_dm_dataset(project.id, project.task, DatasetItemAnnotationStatus.REVIEWED)
-
-        revision_id = fxt_dataset_service.save_revision(
-            project_id=project.id,
-            dataset=dataset,
-        )
-
-        # Verify that a revision entry was created
-        assert db_session.get(DatasetRevisionDB, str(revision_id)) is not None
-        assert (fxt_projects_dir / str(project.id) / "dataset_revisions" / str(revision_id) / "dataset.zip").exists()
-
-    def test_get_dataset_revision(
-        self,
-        fxt_projects_dir: Path,
-        fxt_dataset_service: DatasetService,
-        fxt_project_with_subset_items: tuple[Project, list[DatasetItemDB]],
-        db_session: Session,
-    ) -> None:
-        """Test getting a dataset revision."""
-        project, db_dataset_items = fxt_project_with_subset_items
-        dataset = fxt_dataset_service.get_dm_dataset(project.id, project.task, DatasetItemAnnotationStatus.REVIEWED)
-
-        # Save a revision
-        revision_id = fxt_dataset_service.save_revision(
-            project_id=project.id,
-            dataset=dataset,
-        )
-
-        # Now get the revision
-        revision = fxt_dataset_service.get_dataset_revision(project_id=project.id, revision_id=revision_id)
-
-        assert revision is not None
-        assert revision.id == revision_id
-        assert revision.project_id == project.id
-        assert revision.files_deleted is False
-
-    def test_get_dataset_revision_not_found(
-        self,
-        fxt_dataset_service: DatasetService,
-        fxt_project_with_subset_items: tuple[Project, list[DatasetItemDB]],
-    ) -> None:
-        """Test getting a non-existent dataset revision raises error."""
-        project, _ = fxt_project_with_subset_items
-        non_existent_id = uuid4()
-
-        with pytest.raises(ResourceNotFoundError) as excinfo:
-            fxt_dataset_service.get_dataset_revision(project_id=project.id, revision_id=non_existent_id)
-
-        assert excinfo.value.resource_type == ResourceType.DATASET_REVISION
-        assert excinfo.value.resource_id == str(non_existent_id)
-
-    def test_get_dataset_revision_wrong_project(
-        self,
-        fxt_projects_dir: Path,
-        fxt_dataset_service: DatasetService,
-        fxt_project_with_subset_items: tuple[Project, list[DatasetItemDB]],
-        db_session: Session,
-    ) -> None:
-        """Test getting a dataset revision with wrong project ID raises error."""
-        project, db_dataset_items = fxt_project_with_subset_items
-        dataset = fxt_dataset_service.get_dm_dataset(project.id, project.task, DatasetItemAnnotationStatus.REVIEWED)
-
-        # Save a revision for the project
-        revision_id = fxt_dataset_service.save_revision(
-            project_id=project.id,
-            dataset=dataset,
-        )
-
-        # Try to get the revision with a different project ID
-        wrong_project_id = uuid4()
-        with pytest.raises(ResourceNotFoundError) as excinfo:
-            fxt_dataset_service.get_dataset_revision(project_id=wrong_project_id, revision_id=revision_id)
-
-        assert excinfo.value.resource_type == ResourceType.DATASET_REVISION
-        assert excinfo.value.resource_id == str(revision_id)
-
-    def test_delete_dataset_revision_files(
-        self,
-        fxt_projects_dir: Path,
-        fxt_dataset_service: DatasetService,
-        fxt_project_with_subset_items: tuple[Project, list[DatasetItemDB]],
-        db_session: Session,
-    ) -> None:
-        """Test deleting dataset revision files."""
-        project, db_dataset_items = fxt_project_with_subset_items
-        dataset = fxt_dataset_service.get_dm_dataset(project.id, project.task, DatasetItemAnnotationStatus.REVIEWED)
-
-        # Save a revision
-        revision_id = fxt_dataset_service.save_revision(
-            project_id=project.id,
-            dataset=dataset,
-        )
-
-        revision_path = fxt_projects_dir / str(project.id) / "dataset_revisions" / str(revision_id)
-        assert revision_path.exists()
-        assert (revision_path / "dataset.zip").exists()
-
-        # Delete the revision files
-        fxt_dataset_service.delete_dataset_revision_files(project_id=project.id, revision_id=revision_id)
-
-        # Verify the files were deleted
-        assert not revision_path.exists()
-
-        # Verify the database record is marked as deleted
-        revision = fxt_dataset_service.get_dataset_revision(project_id=project.id, revision_id=revision_id)
-        assert revision.files_deleted is True
-
-    def test_delete_dataset_revision_files_not_found(
-        self,
-        fxt_dataset_service: DatasetService,
-        fxt_project_with_subset_items: tuple[Project, list[DatasetItemDB]],
-    ) -> None:
-        """Test deleting files for a non-existent dataset revision raises error."""
-        project, _ = fxt_project_with_subset_items
-        non_existent_id = uuid4()
-
-        with pytest.raises(ResourceNotFoundError) as excinfo:
-            fxt_dataset_service.delete_dataset_revision_files(project_id=project.id, revision_id=non_existent_id)
-
-        assert excinfo.value.resource_type == ResourceType.DATASET_REVISION
-        assert excinfo.value.resource_id == str(non_existent_id)
-
-    def test_delete_dataset_revision_files_already_deleted(
-        self,
-        fxt_projects_dir: Path,
-        fxt_dataset_service: DatasetService,
-        fxt_project_with_subset_items: tuple[Project, list[DatasetItemDB]],
-        db_session: Session,
-    ) -> None:
-        """Test deleting dataset revision files that are already deleted is idempotent."""
-        project, db_dataset_items = fxt_project_with_subset_items
-        dataset = fxt_dataset_service.get_dm_dataset(project.id, project.task, DatasetItemAnnotationStatus.REVIEWED)
-
-        # Save a revision
-        revision_id = fxt_dataset_service.save_revision(
-            project_id=project.id,
-            dataset=dataset,
-        )
-
-        # Delete the revision files once
-        fxt_dataset_service.delete_dataset_revision_files(project_id=project.id, revision_id=revision_id)
-
-        # Verify files are deleted
-        revision_path = fxt_projects_dir / str(project.id) / "dataset_revisions" / str(revision_id)
-        assert not revision_path.exists()
-
-        # Delete again - should not raise an error
-        fxt_dataset_service.delete_dataset_revision_files(project_id=project.id, revision_id=revision_id)
-
-        # Verify it's still marked as deleted
-        revision = fxt_dataset_service.get_dataset_revision(project_id=project.id, revision_id=revision_id)
-        assert revision.files_deleted is True
-
-    def test_delete_dataset_revision_files_no_directory(
-        self,
-        fxt_projects_dir: Path,
-        fxt_dataset_service: DatasetService,
-        fxt_project_with_subset_items: tuple[Project, list[DatasetItemDB]],
-        db_session: Session,
-    ) -> None:
-        """Test deleting dataset revision files when directory doesn't exist."""
-        project, _ = fxt_project_with_subset_items
-
-        # Create a revision record in the database without creating files
-        revision_id = uuid4()
-        db_revision = DatasetRevisionDB(
-            id=str(revision_id),
-            project_id=str(project.id),
-            files_deleted=False,
-        )
-        db_session.add(db_revision)
-        db_session.flush()
-
-        revision_path = fxt_projects_dir / str(project.id) / "dataset_revisions" / str(revision_id)
-        assert not revision_path.exists()
-
-        # Delete the revision files - should not raise an error even though directory doesn't exist
-        fxt_dataset_service.delete_dataset_revision_files(project_id=project.id, revision_id=revision_id)
-
-        # Verify it's marked as deleted
-        revision = fxt_dataset_service.get_dataset_revision(project_id=project.id, revision_id=revision_id)
-        assert revision.files_deleted is True

@@ -15,9 +15,15 @@ import torch.nn.functional as f
 from torch import Tensor, nn
 from torch.nn import init
 
-from otx.backend.native.models.common.layers.transformer_layers import MLP, MSDeformableAttentionV2
+from otx.backend.native.models.common.layers.transformer_layers import (
+    LQE,
+    MLP,
+    Gate,
+    Integral,
+    MSDeformableAttentionV2,
+    get_contrastive_denoising_training_group,
+)
 from otx.backend.native.models.common.utils.utils import inverse_sigmoid
-from otx.backend.native.models.detection.heads.rtdetr_decoder import get_contrastive_denoising_training_group
 from otx.backend.native.models.detection.utils.utils import dfine_distance2bbox, dfine_weighting_function
 from otx.backend.native.models.utils.weight_init import bias_init_with_prob
 
@@ -135,109 +141,6 @@ class TransformerDecoderLayer(nn.Module):
         target2 = self.forward_ffn(target)
         target = target + self.dropout4(target2)
         return self.norm3(target.clamp(min=-65504, max=65504))
-
-
-class Gate(nn.Module):
-    """Target Gating Layers.
-
-    Args:
-        d_model (int): The number of expected features in the input.
-    """
-
-    def __init__(self, d_model: int) -> None:
-        super().__init__()
-        self.gate = nn.Linear(2 * d_model, 2 * d_model)
-        bias = bias_init_with_prob(0.5)
-        init.constant_(self.gate.bias, bias)
-        init.constant_(self.gate.weight, 0)
-        self.norm = nn.LayerNorm(d_model)
-
-    def forward(self, x1: Tensor, x2: Tensor) -> Tensor:
-        """Forward function of the gate.
-
-        Args:
-            x1 (Tensor): first target input tensor.
-            x2 (Tensor): second target input tensor.
-
-        Returns:
-            Tensor: gated target tensor.
-        """
-        gate_input = torch.cat([x1, x2], dim=-1)
-        gates = torch.sigmoid(self.gate(gate_input))
-        gate1, gate2 = gates.chunk(2, dim=-1)
-        return self.norm(gate1 * x1 + gate2 * x2)
-
-
-class Integral(nn.Module):
-    """A static layer that calculates integral results from a distribution.
-
-    This layer computes the target location using the formula: `sum{Pr(n) * W(n)}`,
-    where Pr(n) is the softmax probability vector representing the discrete
-    distribution, and W(n) is the non-uniform Weighting Function.
-
-    Args:
-        reg_max (int): Max number of the discrete bins. Default is 32.
-                        It can be adjusted based on the dataset or task requirements.
-    """
-
-    def __init__(self, reg_max: int = 32):
-        super().__init__()
-        self.reg_max = reg_max
-
-    def forward(self, x: Tensor, box_distance_weight: Tensor) -> Tensor:
-        """Forward function of the Integral layer."""
-        shape = x.shape
-        x = f.softmax(x.reshape(-1, self.reg_max + 1), dim=1)
-        x = f.linear(x, box_distance_weight).reshape(-1, 4)
-        return x.reshape([*list(shape[:-1]), -1])
-
-
-class LQE(nn.Module):
-    """Localization Quality Estimation.
-
-    Args:
-        k (int): number of edge points.
-        hidden_dim (int): The number of expected features in the input.
-        num_layers (int): The number of layers in the MLP.
-        reg_max (int): Max number of the discrete bins.
-    """
-
-    def __init__(
-        self,
-        k: int,
-        hidden_dim: int,
-        num_layers: int,
-        reg_max: int,
-    ):
-        super().__init__()
-        self.k = k
-        self.reg_max = reg_max
-        self.reg_conf = MLP(
-            input_dim=4 * (k + 1),
-            hidden_dim=hidden_dim,
-            output_dim=1,
-            num_layers=num_layers,
-            activation=partial(nn.ReLU, inplace=True),
-        )
-        init.constant_(self.reg_conf.layers[-1].bias, 0)
-        init.constant_(self.reg_conf.layers[-1].weight, 0)
-
-    def forward(self, scores: Tensor, pred_corners: Tensor) -> Tensor:
-        """Forward function of the LQE layer.
-
-        Args:
-            scores (Tensor): Prediction scores.
-            pred_corners (Tensor): Predicted bounding box corners.
-
-        Returns:
-            Tensor: Updated scores.
-        """
-        b, num_pred, _ = pred_corners.size()
-        prob = f.softmax(pred_corners.reshape(b, num_pred, 4, self.reg_max + 1), dim=-1)
-        prob_topk, _ = prob.topk(self.k, dim=-1)
-        stat = torch.cat([prob_topk, prob_topk.mean(dim=-1, keepdim=True)], dim=-1)
-        quality_score = self.reg_conf(stat.reshape(b, num_pred, -1))
-        return scores + quality_score
 
 
 class TransformerDecoder(nn.Module):

@@ -5,10 +5,12 @@ import re
 
 import psutil
 import torch
+from cv2_enumerate_cameras import enumerate_cameras
 
-from app.schemas.system import DeviceInfo, DeviceType
+from app.schemas.system import CameraInfo, DeviceInfo, DeviceType
 
 DEVICE_PATTERN = re.compile(r"^(cpu|xpu|cuda)(-(\d+))?$")
+DEFAULT_DEVICE = "cpu"
 
 
 class SystemService:
@@ -75,6 +77,24 @@ class SystemService:
 
         return devices
 
+    def get_inference_devices(self) -> list[DeviceInfo]:
+        """
+        Get available compute devices for inference (CPU, XPU, ...)
+
+        Returns:
+            list[DeviceInfo]: List of available devices
+        """
+        return [device for device in self.get_devices() if device.type != DeviceType.CUDA]
+
+    def get_training_devices(self) -> list[DeviceInfo]:
+        """
+        Get available compute devices for training (CPUs, XPUs, GPUs, ...)
+
+        Returns:
+            list[DeviceInfo]: List of available training devices
+        """
+        return self.get_devices()  # currently same as get_devices, can be customized later with filters
+
     def validate_device(self, device_str: str) -> bool:
         """
         Validate if a device string is available on the system.
@@ -88,7 +108,7 @@ class SystemService:
         device_type, device_index = self._parse_device(device_str)
 
         # CPU is always available
-        if device_type == "cpu":
+        if device_type == DeviceType.CPU:
             return True
 
         # Check if desired device is among available devices
@@ -99,8 +119,28 @@ class SystemService:
 
         return False
 
+    def get_device_info(self, device_str: str) -> DeviceInfo:
+        """
+        Get DeviceInfo for a given device string.
+
+        Args:
+            device_str: Device string in format '<target>[-<index>]' (e.g., 'cpu', 'xpu', 'cuda', 'xpu-2', 'cuda-1')
+
+        Returns:
+            DeviceInfo: Information about the specified device
+        """
+        if not self.validate_device(device_str):
+            raise ValueError(f"Device '{device_str}' is not available on the system.")
+
+        device_type, device_index = self._parse_device(device_str)
+        return next(
+            device
+            for device in self.get_devices()
+            if device.type == device_type and (device.index or 0) == device_index
+        )
+
     @staticmethod
-    def _parse_device(device_str: str) -> tuple[str, int]:
+    def _parse_device(device_str: str) -> tuple[DeviceType, int]:
         """
         Parse device string into type and index
 
@@ -116,4 +156,14 @@ class SystemService:
 
         device_type, _, device_index = m.groups()
         device_index = int(device_index) if device_index is not None else 0
-        return device_type.lower(), device_index
+        return DeviceType(device_type.lower()), device_index
+
+    @staticmethod
+    def get_camera_devices() -> list[CameraInfo]:
+        """
+        Get available camera devices.
+
+        Returns:
+            list[CameraInfo]: List of available camera devices
+        """
+        return [CameraInfo(index=camera.index, name=camera.name) for camera in enumerate_cameras()]

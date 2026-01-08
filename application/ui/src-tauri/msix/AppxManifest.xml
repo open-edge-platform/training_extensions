@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+         xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+         xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
+         xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities">
+
+    <Identity Name="intel.geti.tune" Publisher="CN=Intel Corporation, O=Intel Corporation, S=California, C=US" Version="1.0.0.0"/>
+
+    <Properties>
+        <DisplayName>Intel Geti Tune</DisplayName>
+        <PublisherDisplayName>Intel</PublisherDisplayName>
+        <Description>Geti Tune by Intel</Description>
+        <Logo>Assets\logo.png</Logo>
+    </Properties>
+
+    <Resources>
+        <Resource Language="en-us"/>
+    </Resources>
+
+    <Dependencies>
+        <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.15063.0" MaxVersionTested="10.0.19045.0"/>
+    </Dependencies>
+
+    <Applications>
+        <Application Id="GetiTune" Executable="geti_tune_ui.exe" EntryPoint="Windows.FullTrustApplication">
+            <uap:VisualElements BackgroundColor="transparent" DisplayName="Intel Geti Tune"
+                                Square150x150Logo="Assets\logo.png" Square44x44Logo="Assets\logo.png"
+                                Description="Geti Tune by Intel">
+                <uap:DefaultTile Wide310x150Logo="Assets\logo.png"/>
+                <uap:SplashScreen Image="Assets\logo.png"/>
+            </uap:VisualElements>
+            <Extensions>
+                <desktop:Extension Category="windows.fullTrustProcess">
+                    <desktop:FullTrustProcess/>
+                </desktop:Extension>
+            </Extensions>
+        </Application>
+    </Applications>
+
+
+    <Capabilities>
+        <rescap:Capability Name="runFullTrust"/>
+    </Capabilities>
+
+</Package>

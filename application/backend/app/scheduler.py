@@ -35,8 +35,6 @@ class Scheduler:
         self.rtc_stream_queue: queue.Queue = queue.Queue(maxsize=1)
         # Event to sync all processes on application shutdown
         self.mp_stop_event = mp.Event()
-        # Event to signal that the model has to be reloaded
-        self.mp_model_reload_event = mp.Event()
 
         # Shared memory for metrics collector
         self.shm_metrics = SharedMemory(create=True, size=SIZE)
@@ -62,7 +60,7 @@ class Scheduler:
             frame_queue=self.frame_queue,
             pred_queue=self.pred_queue,
             stop_event=self.mp_stop_event,
-            model_reload_event=self.mp_model_reload_event,
+            model_reload_event=self._event_bus.model_reload_event,
             shm_name=self.shm_metrics.name,
             shm_lock=self.shm_metrics_lock,
             logger_=logger,  # type: ignore

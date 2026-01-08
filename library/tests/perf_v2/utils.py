@@ -352,4 +352,10 @@ def get_parser() -> ArgumentParser:
         default="gpu",
         help="Which device to use.",
     )
+    parser.add_argument(
+        "--num-devices",
+        type=int,
+        default=1,
+        help="How much devices to use during training.",
+    )
     return parser

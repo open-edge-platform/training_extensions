@@ -28,7 +28,7 @@ export const SvgToolCanvas: FC<PropsWithChildren<CanvasProps>> = ({
             // eslint-disable-next-line jsx-a11y/aria-role
             role='editor'
             viewBox={`0 0 ${roi.width} ${roi.height}`}
-            aria-label='tool'
+            aria-label={props['aria-label'] ?? 'tool'}
         >
             <rect {...roi} fillOpacity={0} ref={canvasRef} />
             {children}

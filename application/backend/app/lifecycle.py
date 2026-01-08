@@ -19,7 +19,13 @@ from app.core.run import Runnable, RunnableFactory
 from app.db import MigrationManager, get_db_session
 from app.scheduler import Scheduler
 from app.schemas.job import JobType
-from app.services import DatasetService, LabelService, ModelService, TrainingConfigurationService
+from app.services import (
+    DatasetRevisionService,
+    DatasetService,
+    LabelService,
+    ModelService,
+    TrainingConfigurationService,
+)
 from app.services.base_weights_service import BaseWeightsService
 from app.services.data_collect import DataCollector
 from app.services.event.event_bus import EventBus
@@ -56,6 +62,7 @@ def setup_job_controller(data_dir: Path, max_parallel_jobs: int) -> tuple[JobQue
                 subset_service=SubsetService(),
                 subset_assigner=SubsetAssigner(),
                 dataset_service=DatasetService(data_dir=data_dir, label_service=LabelService()),
+                dataset_revision_service=DatasetRevisionService(data_dir=data_dir),
                 model_service=ModelService(data_dir=data_dir),
                 training_configuration_service=TrainingConfigurationService(),
                 data_dir=data_dir,
@@ -91,8 +98,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
 
     # Condition to notify processes about source updates
     source_changed_condition: Condition = mp.Condition()
+    # Event to signal that the model has to be reloaded
+    model_reload_event = mp.Event()
 
-    event_bus = EventBus(source_changed_condition=source_changed_condition)
+    event_bus = EventBus(source_changed_condition=source_changed_condition, model_reload_event=model_reload_event)
     app.state.event_bus = event_bus
 
     data_collector = DataCollector(data_dir=settings.data_dir, event_bus=event_bus)
