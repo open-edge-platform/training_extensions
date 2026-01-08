@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Flex, Grid, Item, Picker, Text, ToggleButton } from '@geti/ui';
+import { Search } from '@geti/ui/icons';
 
 import type { GroupByMode } from './types';
 
@@ -14,7 +15,7 @@ interface HeaderProps {
 
 export const Header = ({ groupBy, onGroupByChange, onSortChange, onPinActiveToggle }: HeaderProps) => {
     return (
-        <Grid columns={['auto auto 1fr']} gap={'size-100'} alignItems={'center'}>
+        <Grid columns={['auto auto 1fr auto']} gap={'size-100'} alignItems={'center'}>
             <Text>Models</Text>
 
             <Flex marginStart={'size-300'} gap={'size-100'}>
@@ -44,6 +45,10 @@ export const Header = ({ groupBy, onGroupByChange, onSortChange, onPinActiveTogg
                 <ToggleButton isEmphasized onChange={onPinActiveToggle}>
                     Pin active model on top
                 </ToggleButton>
+            </Flex>
+
+            <Flex>
+                <Search />
             </Flex>
         </Grid>
     );
