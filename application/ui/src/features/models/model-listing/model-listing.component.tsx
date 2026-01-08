@@ -8,7 +8,8 @@ import { Divider, View } from '@geti/ui';
 import type { SchemaModelView } from '../../../api/openapi-spec';
 import { GroupModelsContainer } from './group-models-container.component';
 import { Header } from './header.component';
-import type { GroupByMode, GroupedModels } from './types';
+import type { GroupByMode } from './types';
+import { groupModelsByArchitecture, groupModelsByDataset } from './utils/grouping';
 
 // TODO: Replace with actual API data
 const mockModels: SchemaModelView[] = [
@@ -35,42 +36,16 @@ const mockModels: SchemaModelView[] = [
         files_deleted: false,
     },
 ];
-const mockGroupedModels: GroupedModels[] = [
-    {
-        group: {
-            id: 'dataset-1',
-            name: 'Dataset #dataset-1',
-            createdAt: 'Created 01 Oct 2025, 11:07 AM',
-            labelCount: 2,
-            imageCount: 3600,
-            trainingSubsets: {
-                training: 70,
-                validation: 20,
-                testing: 10,
-            },
-        },
-        models: mockModels,
-    },
-];
-
-// TODO: implement grouping
-const groupModelsByDataset = (): GroupedModels[] => {
-    return mockGroupedModels;
-};
-
-const groupModelsByArchitecture = (): GroupedModels[] => {
-    return mockGroupedModels;
-};
 
 export const ModelListing = () => {
     const [groupBy, setGroupBy] = useState<GroupByMode>('dataset');
 
     const groupedModels = useMemo(() => {
         if (groupBy === 'dataset') {
-            return groupModelsByDataset();
+            return groupModelsByDataset(mockModels);
         }
 
-        return groupModelsByArchitecture();
+        return groupModelsByArchitecture(mockModels);
     }, [groupBy]);
 
     return (
