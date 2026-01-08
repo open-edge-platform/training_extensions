@@ -272,10 +272,7 @@ class OTXHlabelClsDataset(OTXDataset):
             data_format=data_format,
         )
         self.dm_categories = dm_subset.schema.attributes["label"].categories
-        if self.data_format == "arrow":
-            self.label_info = HLabelInfo.from_dm_label_groups_arrow(self.dm_categories)
-        else:
-            self.label_info = HLabelInfo.from_dm_label_groups(self.dm_categories)
+        self.label_info = HLabelInfo.from_dm_label_groups(self.dm_categories)
 
         self.id_to_name_mapping = dict(zip(self.label_info.label_ids, self.label_info.label_names))
         self.id_to_name_mapping[""] = ""
