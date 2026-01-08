@@ -42,7 +42,7 @@ the model inference, which are usually not sufficient to run multiple pipelines 
 
 Supported sources include:
 
-- Cameras (webcams, industrial cameras, IP cameras, ...)
+- Cameras (USB cameras, industrial cameras, IP cameras, ...)
 - Files (videos, images)
 
 The configuration of a source consists of a _type_ and a set of source-specific attributes. For example:

@@ -38,8 +38,8 @@ from .source import (
     Source,
     SourceAdapter,
     SourceType,
+    USBCameraSourceConfig,
     VideoFileSourceConfig,
-    WebcamSourceConfig,
 )
 from .task import Task, TaskType
 
@@ -83,7 +83,7 @@ __all__ = [
     "TaskType",
     "TrainingInfo",
     "TrainingStatus",
+    "USBCameraSourceConfig",
     "VideoFileSourceConfig",
-    "WebcamSourceConfig",
     "WebhookSinkConfig",
 ]

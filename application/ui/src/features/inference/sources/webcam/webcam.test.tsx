@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event';
 import { render, screen, waitFor } from 'test-utils/render';
 
 import { useSourceAction } from '../hooks/use-source-action.hook';
-import { WebcamSourceConfig } from '../util';
+import { USBCameraSourceConfig } from '../util';
 import { Webcam } from './webcam.component';
 
 vi.mock('react-router', async (importOriginal) => {
@@ -18,10 +18,10 @@ vi.mock('react-router', async (importOriginal) => {
 
 vi.mock('../hooks/use-source-action.hook');
 
-const mockedConfig: WebcamSourceConfig = {
+const mockedConfig: USBCameraSourceConfig = {
     id: '1',
-    name: 'Test Folder',
-    source_type: 'webcam',
+    name: 'Test Camera',
+    source_type: 'usb_camera',
     device_id: 0,
 };
 

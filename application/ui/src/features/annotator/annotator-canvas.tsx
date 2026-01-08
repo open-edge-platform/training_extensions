@@ -1,7 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { View } from '@geti/ui';
+import { MouseEvent } from 'react';
+
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { API_BASE_URL } from '../../api/client';
@@ -37,21 +38,20 @@ export const AnnotatorCanvas = ({ mediaItem }: AnnotatorCanvasProps) => {
 
     return (
         <ZoomTransform target={size}>
-            <View position={'relative'} width={'100%'} height={'100%'}>
-                <img
-                    src={getImageUrl(project_id, String(mediaItem.id))}
-                    alt='Media item'
-                    aria-label='media item image'
-                />
+            <div
+                style={{ position: 'relative', height: '100%', width: '100%' }}
+                onContextMenu={(event: MouseEvent): void => event.preventDefault()}
+            >
+                <img src={getImageUrl(project_id, String(mediaItem.id))} alt='Collected data' />
 
                 <Annotations
-                    annotations={orderedAnnotations}
                     width={size.width}
                     height={size.height}
                     isFocussed={isFocussed}
+                    annotations={orderedAnnotations}
                 />
                 <ToolManager />
-            </View>
+            </div>
         </ZoomTransform>
     );
 };

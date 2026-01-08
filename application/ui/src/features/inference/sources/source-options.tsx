@@ -27,7 +27,7 @@ export const SourceOptions = () => {
             items={[
                 {
                     label: 'Webcam',
-                    value: 'webcam',
+                    value: 'usb_camera',
                     icon: <WebcamIcon width={'24px'} />,
                     content: <Webcam config={getWebcamData(sources)} />,
                 },
