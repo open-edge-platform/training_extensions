@@ -1,8 +1,8 @@
 """schema
 
-Revision ID: 2786b50eb5a4
+Revision ID: b62d0a0aac96
 Revises:
-Create Date: 2025-10-22 11:11:26.872693
+Create Date: 2025-12-30 14:01:28.660957
 
 """
 
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "2786b50eb5a4"
+revision: str = "b62d0a0aac96"
 down_revision: str | Sequence[str] | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -82,9 +82,22 @@ def upgrade() -> None:
         sa.UniqueConstraint("project_id", "name", name="uq_project_label_name"),
     )
     op.create_table(
+        "training_configurations",
+        sa.Column("project_id", sa.Text(), nullable=False),
+        sa.Column("model_architecture_id", sa.String(length=255), nullable=True),
+        sa.Column("configuration_data", sa.JSON(), nullable=False),
+        sa.Column("id", sa.Text(), nullable=False),
+        sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
+        sa.Column("updated_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
+        sa.ForeignKeyConstraint(["project_id"], ["projects.id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("project_id", "model_architecture_id", name="uq_project_model_config"),
+    )
+    op.create_table(
         "model_revisions",
         sa.Column("project_id", sa.Text(), nullable=False),
         sa.Column("architecture", sa.String(length=100), nullable=False),
+        sa.Column("name", sa.String(length=255), nullable=False),
         sa.Column("parent_revision", sa.Text(), nullable=True),
         sa.Column("training_status", sa.String(length=50), nullable=False),
         sa.Column("training_configuration", sa.JSON(), nullable=False),
@@ -101,10 +114,10 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["training_dataset_id"], ["dataset_revisions.id"]),
         sa.PrimaryKeyConstraint("id"),
     )
+    op.create_index("idx_model_revisions_architecture", "model_revisions", ["project_id", "architecture"], unique=False)
     op.create_index(
         "idx_model_revisions_project_status", "model_revisions", ["project_id", "training_status"], unique=False
     )
-    op.create_index("idx_model_revisions_architecture", "model_revisions", ["project_id", "architecture"], unique=False)
     op.create_table(
         "dataset_items",
         sa.Column("project_id", sa.Text(), nullable=False),
@@ -128,7 +141,6 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index("idx_dataset_items_user_reviewed", "dataset_items", ["project_id", "user_reviewed"], unique=False)
-    op.create_index("idx_dataset_items_project_created_at", "dataset_items", ["project_id", "created_at"], unique=False)
     op.create_table(
         "pipelines",
         sa.Column("project_id", sa.Text(), nullable=False),
@@ -137,7 +149,7 @@ def upgrade() -> None:
         sa.Column("model_revision_id", sa.Text(), nullable=True),
         sa.Column("is_running", sa.Boolean(), nullable=False),
         sa.Column("data_collection_policies", sa.JSON(), nullable=False),
-        sa.Column("device", sa.String(length=50), nullable=False, server_default="cpu"),
+        sa.Column("device", sa.String(length=50), nullable=False),
         sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.Column("updated_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.ForeignKeyConstraint(["model_revision_id"], ["model_revisions.id"], ondelete="RESTRICT"),
@@ -157,19 +169,6 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["label_id"], ["labels.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("dataset_item_id", "label_id"),
     )
-    op.create_table(
-        "training_configurations",
-        sa.Column("id", sa.Text(), nullable=False),
-        sa.Column("project_id", sa.Text(), nullable=False),
-        sa.Column("model_architecture_id", sa.String(length=255), nullable=True),
-        sa.Column("configuration_data", sa.JSON(), nullable=False),
-        sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
-        sa.ForeignKeyConstraint(["project_id"], ["projects.id"], ondelete="CASCADE"),
-        sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("project_id", "model_architecture_id", name="uq_project_model_config"),
-    )
-
     # ### end Alembic commands ###
 
 
@@ -179,18 +178,17 @@ def downgrade() -> None:
     op.drop_table("dataset_items_labels")
     op.drop_index("idx_pipelines_is_running", table_name="pipelines")
     op.drop_table("pipelines")
-    op.drop_index("idx_dataset_items_project_created_at", table_name="dataset_items")
     op.drop_index("idx_dataset_items_user_reviewed", table_name="dataset_items")
     op.drop_table("dataset_items")
-    op.drop_index("idx_model_revisions_architecture", table_name="model_revisions")
     op.drop_index("idx_model_revisions_project_status", table_name="model_revisions")
+    op.drop_index("idx_model_revisions_architecture", table_name="model_revisions")
     op.drop_table("model_revisions")
+    op.drop_table("training_configurations")
     op.drop_table("labels")
     op.drop_index("idx_dataset_revisions_project", table_name="dataset_revisions")
     op.drop_table("dataset_revisions")
     op.drop_table("sources")
     op.drop_table("sinks")
     op.drop_index("idx_projects_name", table_name="projects")
-    op.drop_table("training_configurations")
     op.drop_table("projects")
     # ### end Alembic commands ###
