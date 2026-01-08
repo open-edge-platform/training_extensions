@@ -54,3 +54,10 @@ export const useConnectSourceToPipeline = () => {
 
     return (source_id: string) => pipeline.mutateAsync({ params: { path: { project_id } }, body: { source_id } });
 };
+
+export const useConnectSinkToPipeline = () => {
+    const project_id = useProjectIdentifier();
+    const pipeline = usePatchPipeline();
+
+    return (sink_id: string) => pipeline.mutateAsync({ params: { path: { project_id } }, body: { sink_id } });
+};

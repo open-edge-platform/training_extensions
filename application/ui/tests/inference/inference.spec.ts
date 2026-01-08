@@ -234,6 +234,7 @@ test('Inference', async ({ streamPage, page, network }) => {
         );
         await page.goto('/projects/id-1/inference');
 
+        await page.pause();
         await page.getByRole('button', { name: 'Pipeline configuration' }).click();
         await page.getByRole('button', { name: 'Add new source' }).click();
         await page.getByRole('button', { name: 'Webcam' }).click();

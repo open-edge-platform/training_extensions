@@ -15,7 +15,6 @@ export const getMockedPipeline = (customPipeline?: Partial<SchemaPipelineView>):
         },
         model: {
             id: '1',
-            name: 'My amazing model',
             architecture: 'Object_Detection_TestModel',
             training_info: {
                 status: 'successful' as const,
