@@ -20,7 +20,7 @@ export type DatasetGroup = {
 
 export type ArchitectureGroup = {
     name: string;
-    recommended_for: string;
+    recommendedFor: string;
 };
 
 export type GroupedModels = {

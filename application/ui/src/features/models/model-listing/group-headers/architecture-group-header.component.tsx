@@ -19,7 +19,7 @@ export const ArchitectureGroupHeader = ({ architecture }: ArchitectureGroupHeade
 
             <Flex alignItems={'center'} gap={'size-100'}>
                 <VideoThumb />
-                <Text>{architecture.recommended_for}</Text>
+                <Text>{architecture.recommendedFor}</Text>
             </Flex>
 
             <MenuTrigger>
