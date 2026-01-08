@@ -17,11 +17,17 @@ import {
 } from '@geti/ui';
 import { DownloadIcon, MoreMenu } from '@geti/ui/icons';
 
-export const ModelVariantTable = () => {
+import type { SchemaModelView } from '../../../../api/openapi-spec';
+
+interface ModelVariantTableProps {
+    model: SchemaModelView;
+}
+
+export const ModelVariantTable = ({ model }: ModelVariantTableProps) => {
     // TODO: Replace with dynamic data
 
     return (
-        <TableView aria-label='Model variants for <variant>' overflowMode={'wrap'} density={'compact'}>
+        <TableView aria-label={`Model variants for ${model.id}`} overflowMode={'wrap'} density={'compact'}>
             <TableHeader>
                 <Column isRowHeader>Optimized models</Column>
                 <Column isRowHeader>License</Column>
