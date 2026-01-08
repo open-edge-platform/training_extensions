@@ -56,6 +56,7 @@ def fxt_model() -> ModelRevision:
     """Sample model data."""
     return ModelRevision(
         id=uuid4(),
+        name="Object_Detection_YoloX_1",
         architecture="Object_Detection_YOLOX",
         training_info=TrainingInfo(status=TrainingStatus.NOT_STARTED, label_schema_revision={}, configuration={}),  # type: ignore
     )  # type: ignore

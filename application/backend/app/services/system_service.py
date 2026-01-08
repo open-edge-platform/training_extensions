@@ -133,10 +133,10 @@ class SystemService:
             raise ValueError(f"Device '{device_str}' is not available on the system.")
 
         device_type, device_index = self._parse_device(device_str)
+        if device_type == DeviceType.CPU:
+            return DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None)
         return next(
-            device
-            for device in self.get_devices()
-            if device.type == device_type and (device.index or 0) == device_index
+            device for device in self.get_devices() if device.type == device_type and device.index == device_index
         )
 
     @staticmethod

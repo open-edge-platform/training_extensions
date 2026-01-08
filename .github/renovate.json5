@@ -22,7 +22,12 @@
     schedule: ["* * * * 0"], // weekly
   },
 
-  extends: ["config:base", ":gitSignOff", "helpers:pinGitHubActionDigests", ":semanticCommits"],
+  extends: [
+    "config:base",
+    ":gitSignOff",
+    "helpers:pinGitHubActionDigests",
+    ":semanticCommits",
+  ],
   // https://docs.renovatebot.com/presets-default/#gitsignoff
   // https://docs.renovatebot.com/presets-helpers/#helperspingithubactiondigests
   // https://docs.renovatebot.com/semantic-commits/

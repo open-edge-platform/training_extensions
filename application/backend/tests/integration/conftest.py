@@ -48,6 +48,7 @@ def fxt_db_models() -> list[ModelRevisionDB]:
     return [
         ModelRevisionDB(
             id=str(uuid4()),
+            name="Object_Detection_YOLOv5",
             training_status=TrainingStatus.NOT_STARTED,
             architecture="Object_Detection_YOLOv5",
             training_configuration={},
@@ -55,6 +56,7 @@ def fxt_db_models() -> list[ModelRevisionDB]:
         ),
         ModelRevisionDB(
             id=str(uuid4()),
+            name="Object_Detection_YOLOX",
             training_status=TrainingStatus.NOT_STARTED,
             architecture="Object_Detection_YOLOX",
             training_configuration={},

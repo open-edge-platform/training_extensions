@@ -200,8 +200,9 @@ class TestOTXTrainerPrepareWeights:
         otx_trainer = fxt_otx_trainer()
 
         # Act
-        with pytest.raises(FileNotFoundError, match=f"Parent model weights not found at {expected_weights_path}"):
+        with pytest.raises(FileNotFoundError) as excinfo:
             otx_trainer.prepare_weights(training_params)
+        assert excinfo.value.args[0] == f"Parent model weights not found at {expected_weights_path}"
 
     def test_prepare_weights_with_parent_model_no_project_id_raises_error(
         self,
@@ -630,6 +631,7 @@ class TestOTXTrainerTrainModel:
                         dataset_info=mock_dataset_info,
                         weights_path=weights_path,
                         model_id=model_id,
+                        device=DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None),
                     )
 
         # Assert

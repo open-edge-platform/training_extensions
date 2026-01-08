@@ -129,6 +129,7 @@ class ModelService(BaseSessionManagedService):
         model_revision_repo.save(
             ModelRevisionDB(
                 id=str(metadata.model_id),
+                name=f"{metadata.architecture_id} ({str(metadata.model_id).split('-')[0]})",
                 project_id=str(metadata.project_id),
                 architecture=metadata.architecture_id,
                 parent_revision=str(metadata.parent_revision_id) if metadata.parent_revision_id else None,

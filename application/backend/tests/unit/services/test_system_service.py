@@ -226,6 +226,13 @@ class TestSystemService:
             # CUDA not available
             mock_torch.cuda.is_available.return_value = False
 
+            device_info = fxt_system_service.get_device_info("cpu")
+
+            assert device_info.type == "cpu"
+            assert device_info.name == "CPU"
+            assert device_info.memory is None
+            assert device_info.index is None
+
             device_info = fxt_system_service.get_device_info("xpu-0")
 
             assert device_info.type == "xpu"

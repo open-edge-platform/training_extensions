@@ -43,6 +43,7 @@ class ModelRevision(BaseEntity):
 
     Attributes:
         id: Unique identifier for the model revision.
+        name: User friendly name to identify a model
         architecture: Name of the model architecture (e.g., 'Object_Detection_RTDetr_50').
         parent_revision: UUID of the parent revision if this is derived from another revision,
             None if this is the initial revision.
@@ -52,6 +53,7 @@ class ModelRevision(BaseEntity):
     """
 
     id: UUID
+    name: str
     architecture: str
     parent_revision: UUID | None = None
     training_info: TrainingInfo | None = None
@@ -63,6 +65,7 @@ class ModelRevision(BaseEntity):
         if isinstance(data, ModelRevisionDB):
             return {
                 "id": data.id,
+                "name": data.name,
                 "architecture": data.architecture,
                 "parent_revision": data.parent_revision,
                 "files_deleted": data.files_deleted,

@@ -52,6 +52,7 @@ class TestTrainingConfigurationService:
         db_session.add(project)
         model = ModelRevisionDB(
             id=str(uuid4()),
+            name="Object_Detection_YOLOv5",
             project_id=project.id,
             architecture="Object_Detection_YOLOv5",
             training_status="running",
