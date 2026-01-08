@@ -1,5 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+import os
 import tempfile
 from unittest.mock import MagicMock
 from uuid import uuid4
@@ -290,12 +291,18 @@ class TestProjectEndpoints:
         fxt_project_service.get_project_by_id.assert_not_called()
 
     def test_get_project_thumbnail(self, fxt_project, fxt_project_service, fxt_client):
-        with tempfile.NamedTemporaryFile(suffix=".jpg") as tmp_file:
-            fxt_project_service.get_project_thumbnail_path.return_value = tmp_file.name
-            response = fxt_client.get(f"/api/projects/{str(fxt_project.id)}/thumbnail")
+        tmp_file_path = None
+        try:
+            with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp_file:
+                tmp_file_path = tmp_file.name
+                fxt_project_service.get_project_thumbnail_path.return_value = tmp_file_path
+                response = fxt_client.get(f"/api/projects/{str(fxt_project.id)}/thumbnail")
 
-        assert response.status_code == status.HTTP_200_OK
-        fxt_project_service.get_project_thumbnail_path.assert_called_once()
+            assert response.status_code == status.HTTP_200_OK
+            fxt_project_service.get_project_thumbnail_path.assert_called_once()
+        finally:
+            if tmp_file_path and os.path.exists(tmp_file_path):
+                os.unlink(tmp_file_path)
 
     def test_get_project_thumbnail_none(self, fxt_project, fxt_project_service, fxt_client):
         fxt_project_service.get_project_thumbnail_path.return_value = None
