@@ -3,7 +3,7 @@
 
 import { Flex, Grid, Text, View } from '@geti/ui';
 
-import classes from './dataset-item.module.scss';
+import classes from './three-section-range.module.scss';
 
 type ThreeSectionRangeProps = {
     trainingValue: number;
