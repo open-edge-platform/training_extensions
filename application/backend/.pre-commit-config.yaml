@@ -7,14 +7,15 @@ repos:
     hooks:
       - id: uv-lock
         name: uv lock
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: "v1.16.1"
+
+  - repo: local
     hooks:
-      - id: mypy
-        alias: mypy_backend
-        name: mypy (backend)
-        additional_dependencies: [types-PyYAML, types-aiofiles, types-requests]
-        args: [--disallow-untyped-calls, --config-file, pyproject.toml]
+      - id: pyrefly-check
+        name: pyrefly-check
+        entry: uv run pyrefly check
+        pass_filenames: false
+        language: system
+
   - repo: https://github.com/seddonym/import-linter
     rev: "v2.3"
     hooks:
