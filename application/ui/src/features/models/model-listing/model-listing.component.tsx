@@ -75,7 +75,12 @@ export const ModelListing = () => {
 
     return (
         <View padding={'size-300'}>
-            <Header groupBy={groupBy} onGroupByChange={setGroupBy} />
+            <Header
+                groupBy={groupBy}
+                onGroupByChange={setGroupBy}
+                onSortChange={() => {}}
+                onPinActiveToggle={() => {}}
+            />
 
             <Divider size={'S'} marginY={'size-300'} />
 
