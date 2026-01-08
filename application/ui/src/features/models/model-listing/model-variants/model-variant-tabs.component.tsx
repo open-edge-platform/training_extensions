@@ -24,7 +24,7 @@ export const ModelVariantsTabs = () => {
                     <ONNX />
                 </Item>
             </TabList>
-            <TabPanels width={'calc(100% - 1px)'}>
+            <TabPanels width={0} minWidth={'100%'}>
                 <Item key='openvino'>
                     <ModelVariantTable />
                 </Item>
