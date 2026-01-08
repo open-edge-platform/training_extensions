@@ -6,7 +6,7 @@ import { render, screen, waitFor } from 'test-utils/render';
 
 import { useSourceAction } from '../hooks/use-source-action.hook';
 import { USBCameraSourceConfig } from '../util';
-import { Webcam } from './webcam.component';
+import { Webcam } from './webcam-fields.component';
 
 vi.mock('react-router', async (importOriginal) => {
     const actual = await importOriginal<typeof import('react-router')>();

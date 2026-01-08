@@ -20,7 +20,7 @@ import {
 
 import { ReactComponent as Camera } from '../../../assets/icons/camera.svg';
 import { SinkOptions } from '../sinks/sink-options';
-import { SourceOptions } from '../sources/source-options';
+import { SourceActions } from '../sources/source-actions.component';
 
 const paddingStyle = {
     '--spectrum-dialog-padding-x': dimensionValue('size-300'),
@@ -49,7 +49,7 @@ export const InputOutputSetup = () => {
                             <Item key='sources'>
                                 <View marginTop={'size-200'}>
                                     <Suspense fallback={<Loading size='M' />}>
-                                        <SourceOptions />
+                                        <SourceActions />
                                     </Suspense>
                                 </View>
                             </Item>

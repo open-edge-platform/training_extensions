@@ -4,6 +4,7 @@
 import { useActionState } from 'react';
 
 import { toast } from '@geti/ui';
+import { isFunction } from 'lodash-es';
 
 import { usePatchPipeline } from '../../../../hooks/api/pipeline.hook';
 import { useProjectIdentifier } from '../../../../hooks/use-project-identifier.hook';
@@ -13,12 +14,14 @@ import { useSourceMutation } from './use-source-mutation.hook';
 interface useSourceActionProps<T> {
     config: Awaited<T>;
     isNewSource: boolean;
+    onSaved?: (source_id: string) => void;
     bodyFormatter: (formData: FormData) => T;
 }
 
 export const useSourceAction = <T extends SourceConfig>({
     config,
     isNewSource,
+    onSaved,
     bodyFormatter,
 }: useSourceActionProps<T>) => {
     const projectId = useProjectIdentifier();
@@ -41,6 +44,7 @@ export const useSourceAction = <T extends SourceConfig>({
                 message: `Source configuration ${isNewSource ? 'created' : 'updated'} successfully.`,
             });
 
+            isFunction(onSaved) && onSaved(source_id);
             return { ...body, id: source_id };
         } catch (error: unknown) {
             const details = (error as { detail?: string })?.detail;
