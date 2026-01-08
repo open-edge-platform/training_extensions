@@ -321,7 +321,7 @@ class OTXTrainer(Trainer):
         otx_engine = OTXEngine(
             model=otx_model,
             data=otx_datamodule,
-            device=device.type,
+            device=f"{device.type}:{device.index if device.index else 0}",
             work_dir=f"./otx-workspace-{model_id}",
         )
 
