@@ -8,6 +8,7 @@ import { Back } from '@geti/ui/icons';
 import { isEmpty } from 'lodash-es';
 
 import { $api } from '../../../api/client';
+import { EditSourceForm } from './edit-source-form.component';
 import { SourcesList } from './source-list/source-list.component';
 import { SourceOptions } from './source-options';
 import { SourceConfig } from './util';
@@ -36,8 +37,7 @@ export const SourceActions = () => {
     }
 
     if (view === 'edit' && !isEmpty(currentSource)) {
-        return <p>edit items</p>;
-        /* return <EditSourceForm config={currentSource} onSaved={handleShowList} onBackToList={handleShowList} />; */
+        return <EditSourceForm config={currentSource} onSaved={handleShowList} onBackToList={handleShowList} />;
     }
 
     if (view === 'list') {

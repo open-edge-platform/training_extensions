@@ -6,8 +6,6 @@ import { useActionState } from 'react';
 import { toast } from '@geti/ui';
 import { isFunction } from 'lodash-es';
 
-import { usePatchPipeline } from '../../../../hooks/api/pipeline.hook';
-import { useProjectIdentifier } from '../../../../hooks/use-project-identifier.hook';
 import { SourceConfig } from '../util';
 import { useSourceMutation } from './use-source-mutation.hook';
 
@@ -24,8 +22,6 @@ export const useSourceAction = <T extends SourceConfig>({
     onSaved,
     bodyFormatter,
 }: useSourceActionProps<T>) => {
-    const projectId = useProjectIdentifier();
-    const pipeline = usePatchPipeline();
     const addOrUpdateSource = useSourceMutation(isNewSource);
 
     return useActionState<T, FormData>(async (_prevState: T, formData: FormData) => {
@@ -33,11 +29,6 @@ export const useSourceAction = <T extends SourceConfig>({
 
         try {
             const source_id = await addOrUpdateSource(body);
-
-            await pipeline.mutateAsync({
-                params: { path: { project_id: projectId } },
-                body: { source_id },
-            });
 
             toast({
                 type: 'success',

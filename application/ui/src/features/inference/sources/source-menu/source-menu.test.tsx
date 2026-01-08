@@ -4,13 +4,13 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse } from 'msw';
-import { http } from 'src/api/utils';
-import { server } from 'src/msw-node-setup';
-import { TestProviders } from 'src/providers';
+import { TestProviders } from 'test-utils/render';
 
+import { http } from '../../../../api/utils';
+import { server } from '../../../../msw-node-setup';
 import { SourceMenu, SourceMenuProps } from './source-menu.component';
 
-vi.mock('@geti-inspect/hooks', () => ({ useProjectIdentifier: () => ({ projectId: '123' }) }));
+vi.mock('hooks/use-project-identifier.hook', () => ({ useProjectIdentifier: () => ({ projectId: '123' }) }));
 
 describe('SourceMenu', () => {
     const renderApp = ({
@@ -47,9 +47,7 @@ describe('SourceMenu', () => {
                     pipelinePatchSpy();
                     return HttpResponse.json({}, { status });
                 }),
-                http.delete('/api/projects/{project_id}/sources/{source_id}', () =>
-                    HttpResponse.json(null, { status: 204 })
-                )
+                http.delete('/api/sources/{source_id}', () => HttpResponse.json(null, { status: 204 }))
             );
 
             return pipelinePatchSpy;
