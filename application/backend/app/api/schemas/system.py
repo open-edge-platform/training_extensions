@@ -1,22 +1,14 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """System schemas"""
 
-from enum import StrEnum, auto
-
 from pydantic import BaseModel, Field
 
-
-class DeviceType(StrEnum):
-    """Enumeration of device types"""
-
-    CPU = auto()
-    XPU = auto()
-    CUDA = auto()
+from app.models.system import DeviceType
 
 
-class DeviceInfo(BaseModel):
+class DeviceInfoView(BaseModel):
     """Device information schema"""
 
     type: DeviceType = Field(..., description="Device type (cpu, xpu, or cuda)")
@@ -35,7 +27,7 @@ class DeviceInfo(BaseModel):
     }
 
 
-class CameraInfo(BaseModel):
+class CameraInfoView(BaseModel):
     """Camera information schema"""
 
     index: int = Field(..., description="Camera device index")

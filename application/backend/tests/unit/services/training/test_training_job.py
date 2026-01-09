@@ -8,7 +8,7 @@ import pytest
 
 from app.core.jobs.models import TrainingJob, TrainingJobParams
 from app.models import Task, TaskType
-from app.schemas.system import DeviceInfo, DeviceType
+from app.models.system import DeviceInfo, DeviceType
 
 
 @pytest.fixture

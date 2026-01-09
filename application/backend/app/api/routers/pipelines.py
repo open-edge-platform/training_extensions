@@ -11,10 +11,9 @@ from fastapi.openapi.models import Example
 from pydantic import ValidationError
 
 from app.api.dependencies import get_pipeline_metrics_service, get_pipeline_service, get_system_service
-from app.api.schemas import PipelineView
+from app.api.schemas import PipelineMetricsView, PipelineView
 from app.api.validators import ProjectID
 from app.models import DataCollectionPolicyAdapter, PipelineStatus
-from app.schemas.metrics import PipelineMetrics
 from app.services import PipelineMetricsService, PipelineService, ResourceNotFoundError, SystemService
 
 router = APIRouter(prefix="/api/projects/{project_id}/pipeline", tags=["Pipelines"])
@@ -181,7 +180,7 @@ def disable_pipeline(
 
 @router.get(
     "/metrics",
-    response_model=PipelineMetrics,
+    response_model=PipelineMetricsView,
     responses={
         status.HTTP_200_OK: {"description": "Pipeline metrics successfully calculated"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID or duration parameter"},
@@ -192,7 +191,7 @@ def get_project_metrics(
     project_id: ProjectID,
     pipeline_metrics_service: Annotated[PipelineMetricsService, Depends(get_pipeline_metrics_service)],
     time_window: int = 60,
-) -> PipelineMetrics:
+) -> PipelineMetricsView:
     """
     Calculate model metrics for a pipeline over a specified time window.
 
@@ -205,7 +204,8 @@ def get_project_metrics(
         )
 
     try:
-        return pipeline_metrics_service.get_pipeline_metrics(project_id, time_window)
+        pipeline_metrics = pipeline_metrics_service.get_pipeline_metrics(project_id, time_window)
+        return PipelineMetricsView.model_validate(pipeline_metrics, from_attributes=True)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ValueError as e:

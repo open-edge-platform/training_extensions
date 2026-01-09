@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 
 from app.api.dependencies import get_system_service
 from app.main import app
-from app.schemas.system import DeviceInfo, DeviceType
+from app.models.system import DeviceInfo, DeviceType
 from app.services import SystemService
 
 

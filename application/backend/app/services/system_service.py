@@ -7,7 +7,7 @@ import psutil
 import torch
 from cv2_enumerate_cameras import enumerate_cameras
 
-from app.schemas.system import CameraInfo, DeviceInfo, DeviceType
+from app.models.system import CameraInfo, DeviceInfo, DeviceType
 
 DEVICE_PATTERN = re.compile(r"^(cpu|xpu|cuda)(-(\d+))?$")
 DEFAULT_DEVICE = "cpu"

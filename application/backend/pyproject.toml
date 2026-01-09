@@ -151,15 +151,6 @@ layers = [
 ]
 
 [[tool.importlinter.contracts]]
-name = "Schema-Model"
-type = "layers"
-id = "schema_model"
-layers = [
-    "app.schemas",
-    "app.core.models : app.models",
-]
-
-[[tool.importlinter.contracts]]
 name = "Service-Utils"
 type = "layers"
 id = "service_utils"

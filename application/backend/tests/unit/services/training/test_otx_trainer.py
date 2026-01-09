@@ -14,6 +14,7 @@ from otx.types.precision import OTXPrecisionType
 from app.core.jobs.models import TrainingJobParams
 from app.core.run import ExecutionContext
 from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Task, TaskType, TrainingStatus
+from app.models.system import DeviceInfo, DeviceType
 from app.models.training_configuration.configuration import (
     GlobalDatasetPreparationParameters,
     PartialGlobalParameters,
@@ -21,7 +22,6 @@ from app.models.training_configuration.configuration import (
     SubsetSplit,
     TrainingConfiguration,
 )
-from app.schemas.system import DeviceInfo, DeviceType
 from app.services import (
     DatasetRevisionService,
     DatasetService,

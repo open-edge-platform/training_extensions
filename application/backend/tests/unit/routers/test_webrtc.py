@@ -8,7 +8,7 @@ from fastapi import status
 
 from app.api.dependencies import get_webrtc_manager
 from app.main import app
-from app.schemas.webrtc import Answer, InputData, Offer
+from app.models.webrtc import Answer, InputData, Offer
 from app.webrtc.manager import WebRTCManager
 
 
