@@ -43,7 +43,7 @@
         "openapi-fetch": "~0.14.0",
         "openapi-react-query": "~0.5.0",
         "react": "~19.1.1",
-        "react-aria-components": "~1.10.1",
+        "react-aria-components": "^1.11.0",
         "react-dom": "~19.1.1",
         "react-error-boundary": "~3.1.4",
         "react-router": "~6.30.1",
