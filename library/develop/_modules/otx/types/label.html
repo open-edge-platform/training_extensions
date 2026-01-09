@@ -260,15 +260,15 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">asdict</span><span class="p">,</span> <span class="n">dataclass</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">datumaro.components.annotation</span><span class="w"> </span><span class="kn">import</span> <span class="n">GroupType</span>
-
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">datumaro</span><span class="w"> </span><span class="kn">import</span> <span class="n">Label</span><span class="p">,</span> <span class="n">LabelCategories</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">datumaro.experimental.categories</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+        <span class="n">HierarchicalLabelCategories</span><span class="p">,</span>
+        <span class="n">HierarchicalLabelCategory</span><span class="p">,</span>
+    <span class="p">)</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">&quot;HLabelInfo&quot;</span><span class="p">,</span>
@@ -288,6 +288,16 @@
     <span class="n">label_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="n">label_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="n">label_groups</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compare two LabelInfo objects, normalizing list/tuple differences.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">LabelInfo</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label_names</span><span class="p">)</span> <span class="o">==</span> <span class="nb">list</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">label_names</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label_ids</span><span class="p">)</span> <span class="o">==</span> <span class="nb">list</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">label_ids</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_groups</span><span class="p">]</span> <span class="o">==</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">other</span><span class="o">.</span><span class="n">label_groups</span><span class="p">]</span>
+        <span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">num_classes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
@@ -318,68 +328,6 @@
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
             <span class="n">label_names</span><span class="o">=</span><span class="n">label_names</span><span class="p">,</span>
             <span class="n">label_groups</span><span class="o">=</span><span class="p">[</span><span class="n">label_names</span><span class="p">],</span>
-            <span class="n">label_ids</span><span class="o">=</span><span class="n">label_ids</span><span class="p">,</span>
-        <span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="LabelInfo.from_dm_label_groups">
-<a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.types.html#otx.types.LabelInfo.from_dm_label_groups">[docs]</a>
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">from_dm_label_groups</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">dm_label_categories</span><span class="p">:</span> <span class="n">LabelCategories</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LabelInfo</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create this object from the datumaro label groups.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            dm_label_categories (LabelCategories): The label category information from Datumaro.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            LabelInfo(</span>
-<span class="sd">                label_names=[&quot;Heart_King&quot;, &quot;Heart_Queen&quot;, &quot;Spade_King&quot;, &quot;Spade_Jack&quot;]</span>
-<span class="sd">                label_groups=[[&quot;Heart_King&quot;, &quot;Heart_Queen&quot;], [&quot;Spade_King&quot;, &quot;Spade_Jack&quot;]]</span>
-<span class="sd">            )</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">label_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">dm_label_categories</span><span class="o">.</span><span class="n">items</span><span class="p">]</span>
-        <span class="n">label_groups</span> <span class="o">=</span> <span class="p">[</span><span class="n">label_group</span><span class="o">.</span><span class="n">labels</span> <span class="k">for</span> <span class="n">label_group</span> <span class="ow">in</span> <span class="n">dm_label_categories</span><span class="o">.</span><span class="n">label_groups</span><span class="p">]</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">label_groups</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># Single-label classification</span>
-            <span class="n">label_groups</span> <span class="o">=</span> <span class="p">[</span><span class="n">label_names</span><span class="p">]</span>
-
-        <span class="k">return</span> <span class="n">LabelInfo</span><span class="p">(</span>
-            <span class="n">label_names</span><span class="o">=</span><span class="n">label_names</span><span class="p">,</span>
-            <span class="n">label_groups</span><span class="o">=</span><span class="n">label_groups</span><span class="p">,</span>
-            <span class="n">label_ids</span><span class="o">=</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">label_names</span><span class="p">))],</span>
-        <span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="LabelInfo.from_dm_label_groups_arrow">
-<a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.types.html#otx.types.LabelInfo.from_dm_label_groups_arrow">[docs]</a>
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">from_dm_label_groups_arrow</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">dm_label_categories</span><span class="p">:</span> <span class="n">LabelCategories</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LabelInfo</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Overload to support datumaro&#39;s arrow format.&quot;&quot;&quot;</span>
-        <span class="n">label_names</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">dm_label_categories</span><span class="o">.</span><span class="n">items</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">attributes</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">attr</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;__name__&quot;</span><span class="p">):</span>
-                    <span class="n">label_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">attr</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="s2">&quot;__name__&quot;</span><span class="p">)</span> <span class="p">:])</span>
-                    <span class="k">break</span>
-
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">label_names</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dm_label_categories</span><span class="o">.</span><span class="n">items</span><span class="p">):</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Wrong arrow format: can not extract label names from attributes&quot;</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-        <span class="n">id_to_name_mapping</span> <span class="o">=</span> <span class="p">{</span><span class="n">item</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">label_names</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dm_label_categories</span><span class="o">.</span><span class="n">items</span><span class="p">)}</span>
-
-        <span class="k">for</span> <span class="n">label_group</span> <span class="ow">in</span> <span class="n">dm_label_categories</span><span class="o">.</span><span class="n">label_groups</span><span class="p">:</span>
-            <span class="n">label_group</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">id_to_name_mapping</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span> <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">label_group</span><span class="o">.</span><span class="n">labels</span><span class="p">]</span>
-
-        <span class="n">label_groups</span> <span class="o">=</span> <span class="p">[</span><span class="n">label_group</span><span class="o">.</span><span class="n">labels</span> <span class="k">for</span> <span class="n">label_group</span> <span class="ow">in</span> <span class="n">dm_label_categories</span><span class="o">.</span><span class="n">label_groups</span><span class="p">]</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">label_groups</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># Single-label classification</span>
-            <span class="n">label_groups</span> <span class="o">=</span> <span class="p">[</span><span class="n">label_names</span><span class="p">]</span>
-
-        <span class="n">label_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">dm_label_categories</span><span class="o">.</span><span class="n">items</span><span class="p">]</span>
-
-        <span class="k">return</span> <span class="n">LabelInfo</span><span class="p">(</span>
-            <span class="n">label_names</span><span class="o">=</span><span class="n">label_names</span><span class="p">,</span>
-            <span class="n">label_groups</span><span class="o">=</span><span class="n">label_groups</span><span class="p">,</span>
             <span class="n">label_ids</span><span class="o">=</span><span class="n">label_ids</span><span class="p">,</span>
         <span class="p">)</span></div>
 
@@ -441,7 +389,6 @@
 <span class="sd">    Args:</span>
 <span class="sd">        num_multiclass_heads: The number of multiclass heads in the hierarchy.</span>
 <span class="sd">        num_multilabel_classes: The number of multilabel classes.</span>
-<span class="sd">        head_to_logits_range: The logit range for each head as a dictionary mapping</span>
 <span class="sd">                            head indices to (start, end) tuples.</span>
 <span class="sd">        num_single_label_classes: The number of single label classes.</span>
 <span class="sd">        class_to_group_idx: Dictionary mapping class names to (head_index, label_index)</span>
@@ -482,7 +429,7 @@
     <span class="n">head_idx_to_logits_range</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span>
     <span class="n">num_single_label_classes</span><span class="p">:</span> <span class="nb">int</span>
     <span class="n">class_to_group_idx</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span>
-    <span class="n">all_groups</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span>
+    <span class="n">all_groups</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span>
     <span class="n">label_to_idx</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
     <span class="n">label_tree_edges</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span>
     <span class="n">empty_multiclass_head_indices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
@@ -490,14 +437,14 @@
 <div class="viewcode-block" id="HLabelInfo.from_dm_label_groups">
 <a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.types.html#otx.types.HLabelInfo.from_dm_label_groups">[docs]</a>
     <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">from_dm_label_groups</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">dm_label_categories</span><span class="p">:</span> <span class="n">LabelCategories</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HLabelInfo</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_dm_label_groups</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">dm_label_categories</span><span class="p">:</span> <span class="n">HierarchicalLabelCategories</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HLabelInfo</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate HLabelData from the Datumaro LabelCategories.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            dm_label_categories (LabelCategories): the label categories of datumaro.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">def</span><span class="w"> </span><span class="nf">get_exclusive_group_info</span><span class="p">(</span><span class="n">exclusive_groups</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Label</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">Label</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">get_exclusive_group_info</span><span class="p">(</span><span class="n">exclusive_groups</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;Get exclusive group information.&quot;&quot;&quot;</span>
             <span class="n">last_logits_pos</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="n">num_single_label_classes</span> <span class="o">=</span> <span class="mi">0</span>
@@ -519,7 +466,7 @@
             <span class="p">}</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">get_single_label_group_info</span><span class="p">(</span>
-            <span class="n">single_label_groups</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Label</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="n">Label</span><span class="p">]],</span>
+            <span class="n">single_label_groups</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
             <span class="n">num_exclusive_groups</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;Get single label group information.&quot;&quot;&quot;</span>
@@ -543,30 +490,28 @@
             <span class="n">class_to_idx</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">single_label_ctoi</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">class_to_idx</span>
 
-        <span class="k">def</span><span class="w"> </span><span class="nf">get_label_tree_edges</span><span class="p">(</span><span class="n">dm_label_items</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">LabelCategories</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">get_label_tree_edges</span><span class="p">(</span><span class="n">dm_label_items</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">HierarchicalLabelCategory</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;Get label tree edges information. Each edges represent [child, parent].&quot;&quot;&quot;</span>
             <span class="k">return</span> <span class="p">[[</span><span class="n">item</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">parent</span><span class="p">]</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">dm_label_items</span> <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">parent</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">]</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">convert_labels_if_needed</span><span class="p">(</span>
-            <span class="n">dm_label_categories</span><span class="p">:</span> <span class="n">LabelCategories</span><span class="p">,</span>
+            <span class="n">dm_label_categories</span><span class="p">:</span> <span class="n">HierarchicalLabelCategories</span><span class="p">,</span>
             <span class="n">label_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-        <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
             <span class="c1"># Check if the labels need conversion and create name to ID mapping if required</span>
             <span class="n">name_to_id_mapping</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">for</span> <span class="n">label_group</span> <span class="ow">in</span> <span class="n">dm_label_categories</span><span class="o">.</span><span class="n">label_groups</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">label_group</span><span class="o">.</span><span class="n">labels</span> <span class="ow">and</span> <span class="n">label_group</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">label_names</span><span class="p">:</span>
                     <span class="n">name_to_id_mapping</span> <span class="o">=</span> <span class="p">{</span>
-                        <span class="n">attr</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="s2">&quot;__name__&quot;</span><span class="p">)</span> <span class="p">:]:</span> <span class="n">category</span><span class="o">.</span><span class="n">name</span>
-                        <span class="k">for</span> <span class="n">category</span> <span class="ow">in</span> <span class="n">dm_label_categories</span><span class="o">.</span><span class="n">items</span>
-                        <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">category</span><span class="o">.</span><span class="n">attributes</span>
-                        <span class="k">if</span> <span class="n">attr</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;__name__&quot;</span><span class="p">)</span>
+                        <span class="n">category</span><span class="o">.</span><span class="n">label_semantics</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]:</span> <span class="n">category</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">category</span> <span class="ow">in</span> <span class="n">dm_label_categories</span><span class="o">.</span><span class="n">items</span>
                     <span class="p">}</span>
-                    <span class="k">break</span>
 
             <span class="c1"># If mapping exists, update the labels</span>
             <span class="k">if</span> <span class="n">name_to_id_mapping</span><span class="p">:</span>
                 <span class="k">for</span> <span class="n">label_group</span> <span class="ow">in</span> <span class="n">dm_label_categories</span><span class="o">.</span><span class="n">label_groups</span><span class="p">:</span>
-                    <span class="n">label_group</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">name_to_id_mapping</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span> <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">label_group</span><span class="o">.</span><span class="n">labels</span><span class="p">]</span>
+                    <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span>
+                        <span class="n">label_group</span><span class="p">,</span> <span class="s2">&quot;labels&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">name_to_id_mapping</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span> <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">label_group</span><span class="o">.</span><span class="n">labels</span><span class="p">]</span>
+                    <span class="p">)</span>
 
             <span class="c1"># Retrieve all label groups after conversion</span>
             <span class="k">return</span> <span class="p">[</span><span class="n">group</span><span class="o">.</span><span class="n">labels</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">dm_label_categories</span><span class="o">.</span><span class="n">label_groups</span><span class="p">]</span>
@@ -591,7 +536,7 @@
 
         <span class="k">return</span> <span class="n">HLabelInfo</span><span class="p">(</span>
             <span class="n">label_names</span><span class="o">=</span><span class="n">label_names</span><span class="p">,</span>
-            <span class="n">label_groups</span><span class="o">=</span><span class="n">exclusive_groups</span> <span class="o">+</span> <span class="n">single_label_groups</span><span class="p">,</span>
+            <span class="n">label_groups</span><span class="o">=</span><span class="n">exclusive_groups</span> <span class="o">+</span> <span class="n">single_label_groups</span><span class="p">,</span>  <span class="c1"># type: ignore[arg-type]</span>
             <span class="n">num_multiclass_heads</span><span class="o">=</span><span class="n">exclusive_group_info</span><span class="p">[</span><span class="s2">&quot;num_multiclass_heads&quot;</span><span class="p">],</span>
             <span class="n">num_multilabel_classes</span><span class="o">=</span><span class="n">single_label_group_info</span><span class="p">[</span><span class="s2">&quot;num_multilabel_classes&quot;</span><span class="p">],</span>
             <span class="n">head_idx_to_logits_range</span><span class="o">=</span><span class="n">exclusive_group_info</span><span class="p">[</span><span class="s2">&quot;head_idx_to_logits_range&quot;</span><span class="p">],</span>
@@ -603,60 +548,6 @@
             <span class="n">empty_multiclass_head_indices</span><span class="o">=</span><span class="p">[],</span>  <span class="c1"># consider the label removing case</span>
             <span class="n">label_ids</span><span class="o">=</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">label_names</span><span class="p">))],</span>
         <span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="HLabelInfo.from_dm_label_groups_arrow">
-<a class="viewcode-back" href="../../../guide/reference/_autosummary/otx.types.html#otx.types.HLabelInfo.from_dm_label_groups_arrow">[docs]</a>
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">from_dm_label_groups_arrow</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">dm_label_categories</span><span class="p">:</span> <span class="n">LabelCategories</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HLabelInfo</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate HLabelData from the Datumaro LabelCategories. Arrow-specific implementation.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            dm_label_categories (LabelCategories): the label categories of datumaro.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">dm_label_categories</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">dm_label_categories</span><span class="p">)</span>
-
-        <span class="n">empty_label_name</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">for</span> <span class="n">label_group</span> <span class="ow">in</span> <span class="n">dm_label_categories</span><span class="o">.</span><span class="n">label_groups</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">label_group</span><span class="o">.</span><span class="n">group_type</span> <span class="o">==</span> <span class="n">GroupType</span><span class="o">.</span><span class="n">RESTRICTED</span><span class="p">:</span>
-                <span class="n">empty_label_name</span> <span class="o">=</span> <span class="n">label_group</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-
-        <span class="n">dm_label_categories</span><span class="o">.</span><span class="n">label_groups</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">group</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">dm_label_categories</span><span class="o">.</span><span class="n">label_groups</span> <span class="k">if</span> <span class="n">group</span><span class="o">.</span><span class="n">group_type</span> <span class="o">!=</span> <span class="n">GroupType</span><span class="o">.</span><span class="n">RESTRICTED</span>
-        <span class="p">]</span>
-
-        <span class="n">empty_label_id</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="n">label_names</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">dm_label_categories</span><span class="o">.</span><span class="n">items</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">attributes</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">attr</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;__name__&quot;</span><span class="p">):</span>
-                    <span class="n">name</span> <span class="o">=</span> <span class="n">attr</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="s2">&quot;__name__&quot;</span><span class="p">)</span> <span class="p">:]</span>
-                    <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="n">empty_label_name</span><span class="p">:</span>
-                        <span class="n">empty_label_id</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">name</span>
-                    <span class="n">label_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-                    <span class="k">break</span>
-
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">label_names</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dm_label_categories</span><span class="o">.</span><span class="n">items</span><span class="p">):</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Wrong arrow file: can not extract label names from attributes&quot;</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">empty_label_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">label_names</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">empty_label_name</span><span class="p">)</span>
-        <span class="n">dm_label_categories</span><span class="o">.</span><span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">dm_label_categories</span><span class="o">.</span><span class="n">items</span> <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="n">empty_label_id</span><span class="p">]</span>
-        <span class="n">label_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">dm_label_categories</span><span class="o">.</span><span class="n">items</span><span class="p">]</span>
-
-        <span class="n">id_to_name_mapping</span> <span class="o">=</span> <span class="p">{</span><span class="n">item</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">label_names</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dm_label_categories</span><span class="o">.</span><span class="n">items</span><span class="p">)}</span>
-
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dm_label_categories</span><span class="o">.</span><span class="n">items</span><span class="p">):</span>
-            <span class="n">item</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">label_names</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-            <span class="n">item</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="n">id_to_name_mapping</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span>
-
-        <span class="k">for</span> <span class="n">label_group</span> <span class="ow">in</span> <span class="n">dm_label_categories</span><span class="o">.</span><span class="n">label_groups</span><span class="p">:</span>
-            <span class="n">label_group</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">id_to_name_mapping</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span> <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">label_group</span><span class="o">.</span><span class="n">labels</span><span class="p">]</span>
-
-        <span class="n">obj</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_dm_label_groups</span><span class="p">(</span><span class="n">dm_label_categories</span><span class="p">)</span>
-        <span class="n">obj</span><span class="o">.</span><span class="n">label_ids</span> <span class="o">=</span> <span class="n">label_ids</span>
-        <span class="k">return</span> <span class="n">obj</span></div>
 
 
 <div class="viewcode-block" id="HLabelInfo.as_head_config_dict">

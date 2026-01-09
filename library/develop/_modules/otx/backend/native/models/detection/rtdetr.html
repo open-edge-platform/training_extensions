@@ -281,6 +281,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.config.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">TileConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXBatchLossEntity</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataBatch</span><span class="p">,</span> <span class="n">OTXPredBatch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">stack_batch</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.metrics.fmeasure</span><span class="w"> </span><span class="kn">import</span> <span class="n">MeanAveragePrecisionFMeasureCallable</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
@@ -388,6 +389,15 @@
         <span class="n">pad_size_divisor</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">32</span><span class="p">,</span>
         <span class="n">pad_value</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="c1"># Stack images if they&#39;re in list format</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entity</span><span class="o">.</span><span class="n">images</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">entity</span><span class="o">.</span><span class="n">images</span><span class="p">,</span> <span class="n">entity</span><span class="o">.</span><span class="n">imgs_info</span> <span class="o">=</span> <span class="n">stack_batch</span><span class="p">(</span>  <span class="c1"># type: ignore[assignment]</span>
+                <span class="n">entity</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
+                <span class="n">entity</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>  <span class="c1"># type: ignore[arg-type]</span>
+                <span class="n">pad_size_divisor</span><span class="o">=</span><span class="n">pad_size_divisor</span><span class="p">,</span>
+                <span class="n">pad_value</span><span class="o">=</span><span class="n">pad_value</span><span class="p">,</span>
+            <span class="p">)</span>
+
         <span class="n">targets</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="c1"># prepare bboxes for the model</span>
         <span class="k">if</span> <span class="n">entity</span><span class="o">.</span><span class="n">bboxes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">entity</span><span class="o">.</span><span class="n">labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>

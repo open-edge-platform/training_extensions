@@ -262,26 +262,19 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">datumaro</span><span class="w"> </span><span class="kn">import</span> <span class="n">Bbox</span><span class="p">,</span> <span class="n">Image</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">torchvision</span><span class="w"> </span><span class="kn">import</span> <span class="n">tv_tensors</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageInfo</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataItem</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTaskType</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.image</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageColorChannel</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataset</span><span class="p">,</span> <span class="n">Transforms</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">.mixins</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataAugSwitchMixin</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTaskType</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.dataset.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataset</span><span class="p">,</span> <span class="n">Transforms</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.dataset.mixins</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataAugSwitchMixin</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.sample</span><span class="w"> </span><span class="kn">import</span> <span class="n">DetectionSample</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.label</span><span class="w"> </span><span class="kn">import</span> <span class="n">LabelInfo</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">datumaro</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dataset</span> <span class="k">as</span> <span class="n">DmDataset</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">datumaro.experimental</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dataset</span>
 
 
 <div class="viewcode-block" id="OTXDetectionDataset">
 <a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.html#otx.data.OTXDetectionDataset">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">OTXDetectionDataset</span><span class="p">(</span><span class="n">OTXDataset</span><span class="p">,</span> <span class="n">DataAugSwitchMixin</span><span class="p">):</span>  <span class="c1"># type: ignore[misc]</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">OTXDetectionDataset</span><span class="p">(</span><span class="n">OTXDataset</span><span class="p">,</span> <span class="n">DataAugSwitchMixin</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;OTX Dataset for object detection tasks.</span>
 
 <span class="sd">    This dataset handles object detection where each image contains multiple objects with</span>
@@ -292,7 +285,6 @@
 <span class="sd">        dm_subset (DmDataset): Datumaro dataset subset containing the data items.</span>
 <span class="sd">        transforms (Transforms | None, optional): Transform operations to apply to the data items.</span>
 <span class="sd">        max_refetch (int): Maximum number of retries when fetching a data item fails.</span>
-<span class="sd">        image_color_channel (ImageColorChannel): Color channel format for images (RGB, BGR, etc.).</span>
 <span class="sd">        stack_images (bool): Whether to stack images in batch processing.</span>
 <span class="sd">        to_tv_image (bool): Whether to convert images to torchvision format.</span>
 <span class="sd">        data_format (str): Format of the source data (e.g., &quot;coco&quot;, &quot;pascal_voc&quot;).</span>
@@ -302,76 +294,59 @@
 <span class="sd">        &gt;&gt;&gt; dataset = OTXDetectionDataset(</span>
 <span class="sd">        ...     dm_subset=my_dm_subset,</span>
 <span class="sd">        ...     transforms=my_transforms,</span>
-<span class="sd">        ...     image_color_channel=ImageColorChannel.RGB</span>
 <span class="sd">        ... )</span>
 <span class="sd">        &gt;&gt;&gt; item = dataset[0]  # Get first item with bounding boxes</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">dm_subset</span><span class="p">:</span> <span class="n">DmDataset</span><span class="p">,</span>
+        <span class="n">dm_subset</span><span class="p">:</span> <span class="n">Dataset</span><span class="p">,</span>
         <span class="n">transforms</span><span class="p">:</span> <span class="n">Transforms</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">max_refetch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
-        <span class="n">image_color_channel</span><span class="p">:</span> <span class="n">ImageColorChannel</span> <span class="o">=</span> <span class="n">ImageColorChannel</span><span class="o">.</span><span class="n">RGB</span><span class="p">,</span>
         <span class="n">stack_images</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">to_tv_image</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">data_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">sample_type</span> <span class="o">=</span> <span class="n">DetectionSample</span>
+        <span class="n">dm_subset</span> <span class="o">=</span> <span class="n">dm_subset</span><span class="o">.</span><span class="n">convert_to_schema</span><span class="p">(</span><span class="n">sample_type</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">dm_subset</span><span class="o">=</span><span class="n">dm_subset</span><span class="p">,</span>
+            <span class="n">sample_type</span><span class="o">=</span><span class="n">sample_type</span><span class="p">,</span>
             <span class="n">transforms</span><span class="o">=</span><span class="n">transforms</span><span class="p">,</span>
             <span class="n">max_refetch</span><span class="o">=</span><span class="n">max_refetch</span><span class="p">,</span>
-            <span class="n">image_color_channel</span><span class="o">=</span><span class="n">image_color_channel</span><span class="p">,</span>
             <span class="n">stack_images</span><span class="o">=</span><span class="n">stack_images</span><span class="p">,</span>
             <span class="n">to_tv_image</span><span class="o">=</span><span class="n">to_tv_image</span><span class="p">,</span>
             <span class="n">data_format</span><span class="o">=</span><span class="n">data_format</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_item_impl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXDataItem</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get a single data item from the dataset.</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">dm_subset</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">categories</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label_info</span> <span class="o">=</span> <span class="n">LabelInfo</span><span class="p">(</span>
+            <span class="n">label_names</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+            <span class="n">label_groups</span><span class="o">=</span><span class="p">[</span><span class="n">labels</span><span class="p">],</span>
+            <span class="n">label_ids</span><span class="o">=</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">))],</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="OTXDetectionDataset.get_idx_list_per_classes">
+<a class="viewcode-back" href="../../../../guide/reference/_autosummary/otx.data.html#otx.data.OTXDetectionDataset.get_idx_list_per_classes">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_idx_list_per_classes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_string_label</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get a dictionary mapping class labels (string or int) to lists of samples.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            index: Index of the item to retrieve.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            OTXDataItem or None: The processed data item with image, bounding boxes, and labels,</span>
-<span class="sd">                or None if the item could not be processed.</span>
+<span class="sd">            use_string_label (bool): If True, use string class labels as keys.</span>
+<span class="sd">                If False, use integer indices as keys.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm_subset</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
-        <span class="n">img</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">media_as</span><span class="p">(</span><span class="n">Image</span><span class="p">)</span>
-        <span class="n">ignored_labels</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># This should be assigned form item</span>
-        <span class="n">img_data</span><span class="p">,</span> <span class="n">img_shape</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_img_data_and_shape</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+        <span class="n">idx_list_per_classes</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)):</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm_subset</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">use_string_label</span><span class="p">:</span>
+                <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">label_info</span><span class="o">.</span><span class="n">label_names</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">label</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">idx_list_per_classes</span><span class="p">:</span>
+                    <span class="n">idx_list_per_classes</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">idx_list_per_classes</span><span class="p">[</span><span class="n">label</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">idx_list_per_classes</span></div>
 
-        <span class="n">bbox_anns</span> <span class="o">=</span> <span class="p">[</span><span class="n">ann</span> <span class="k">for</span> <span class="n">ann</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">annotations</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ann</span><span class="p">,</span> <span class="n">Bbox</span><span class="p">)]</span>
-
-        <span class="n">bboxes</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">ann</span><span class="o">.</span><span class="n">points</span> <span class="k">for</span> <span class="n">ann</span> <span class="ow">in</span> <span class="n">bbox_anns</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">bbox_anns</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
-            <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
-        <span class="p">)</span>
-
-        <span class="n">entity</span> <span class="o">=</span> <span class="n">OTXDataItem</span><span class="p">(</span>
-            <span class="n">image</span><span class="o">=</span><span class="n">img_data</span><span class="p">,</span>
-            <span class="n">img_info</span><span class="o">=</span><span class="n">ImageInfo</span><span class="p">(</span>
-                <span class="n">img_idx</span><span class="o">=</span><span class="n">index</span><span class="p">,</span>
-                <span class="n">img_shape</span><span class="o">=</span><span class="n">img_shape</span><span class="p">,</span>
-                <span class="n">ori_shape</span><span class="o">=</span><span class="n">img_shape</span><span class="p">,</span>
-                <span class="n">image_color_channel</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">image_color_channel</span><span class="p">,</span>
-                <span class="n">ignored_labels</span><span class="o">=</span><span class="n">ignored_labels</span><span class="p">,</span>
-            <span class="p">),</span>
-            <span class="n">bboxes</span><span class="o">=</span><span class="n">tv_tensors</span><span class="o">.</span><span class="n">BoundingBoxes</span><span class="p">(</span>
-                <span class="n">bboxes</span><span class="p">,</span>
-                <span class="nb">format</span><span class="o">=</span><span class="n">tv_tensors</span><span class="o">.</span><span class="n">BoundingBoxFormat</span><span class="o">.</span><span class="n">XYXY</span><span class="p">,</span>
-                <span class="n">canvas_size</span><span class="o">=</span><span class="n">img_shape</span><span class="p">,</span>
-                <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
-            <span class="p">),</span>
-            <span class="n">label</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">([</span><span class="n">ann</span><span class="o">.</span><span class="n">label</span> <span class="k">for</span> <span class="n">ann</span> <span class="ow">in</span> <span class="n">bbox_anns</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">),</span>
-        <span class="p">)</span>
-        <span class="c1"># Apply augmentation switch if available</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_dynamic_augmentation</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_apply_augmentation_switch</span><span class="p">()</span>
-
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_transforms</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">task_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXTaskType</span><span class="p">:</span>

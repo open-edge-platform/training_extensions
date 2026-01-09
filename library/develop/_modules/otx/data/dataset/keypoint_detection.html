@@ -260,26 +260,22 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">datumaro</span><span class="w"> </span><span class="kn">import</span> <span class="n">AnnotationType</span><span class="p">,</span> <span class="n">Bbox</span><span class="p">,</span> <span class="n">Image</span><span class="p">,</span> <span class="n">Points</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">datumaro</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dataset</span> <span class="k">as</span> <span class="n">DmDataset</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">torchvision</span><span class="w"> </span><span class="kn">import</span> <span class="n">tv_tensors</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torchvision.transforms.v2.functional</span><span class="w"> </span><span class="kn">import</span> <span class="n">to_dtype</span><span class="p">,</span> <span class="n">to_image</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageInfo</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataItem</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.sample</span><span class="w"> </span><span class="kn">import</span> <span class="n">KeypointSample</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.transform_libs.torchvision</span><span class="w"> </span><span class="kn">import</span> <span class="n">Compose</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTaskType</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.image</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageColorChannel</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.label</span><span class="w"> </span><span class="kn">import</span> <span class="n">LabelInfo</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataset</span>
 
 <span class="n">Transforms</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">Compose</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Callable</span><span class="p">],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Compose</span> <span class="o">|</span> <span class="n">Callable</span> <span class="o">|</span> <span class="n">List</span><span class="p">[</span><span class="n">Callable</span><span class="p">]]]</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">datumaro.experimental</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dataset</span>
 
 
 <div class="viewcode-block" id="OTXKeypointDetectionDataset">
@@ -313,115 +309,43 @@
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">dm_subset</span><span class="p">:</span> <span class="n">DmDataset</span><span class="p">,</span>
+        <span class="n">dm_subset</span><span class="p">:</span> <span class="n">Dataset</span><span class="p">,</span>
         <span class="n">transforms</span><span class="p">:</span> <span class="n">Transforms</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">max_refetch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
-        <span class="n">image_color_channel</span><span class="p">:</span> <span class="n">ImageColorChannel</span> <span class="o">=</span> <span class="n">ImageColorChannel</span><span class="o">.</span><span class="n">RGB</span><span class="p">,</span>
         <span class="n">stack_images</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">to_tv_image</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">data_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">sample_type</span> <span class="o">=</span> <span class="n">KeypointSample</span>
+        <span class="n">dm_subset</span> <span class="o">=</span> <span class="n">dm_subset</span><span class="o">.</span><span class="n">convert_to_schema</span><span class="p">(</span><span class="n">sample_type</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">dm_subset</span><span class="o">=</span><span class="n">dm_subset</span><span class="p">,</span>
+            <span class="n">sample_type</span><span class="o">=</span><span class="n">sample_type</span><span class="p">,</span>
             <span class="n">transforms</span><span class="o">=</span><span class="n">transforms</span><span class="p">,</span>
             <span class="n">max_refetch</span><span class="o">=</span><span class="n">max_refetch</span><span class="p">,</span>
-            <span class="n">image_color_channel</span><span class="o">=</span><span class="n">image_color_channel</span><span class="p">,</span>
             <span class="n">stack_images</span><span class="o">=</span><span class="n">stack_images</span><span class="p">,</span>
             <span class="n">to_tv_image</span><span class="o">=</span><span class="n">to_tv_image</span><span class="p">,</span>
             <span class="n">data_format</span><span class="o">=</span><span class="n">data_format</span><span class="p">,</span>
         <span class="p">)</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">dm_subset</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">categories</span><span class="o">.</span><span class="n">labels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label_info</span> <span class="o">=</span> <span class="n">LabelInfo</span><span class="p">(</span>
+            <span class="n">label_names</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+            <span class="n">label_groups</span><span class="o">=</span><span class="p">[],</span>
+            <span class="n">label_ids</span><span class="o">=</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">))],</span>
+        <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">dm_subset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_single_bbox_dataset</span><span class="p">(</span><span class="n">dm_subset</span><span class="p">)</span>
-
-        <span class="c1"># arrow doesn&#39;t follow common coco convention, no need to fetch kp-specific labels</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm_subset</span><span class="o">.</span><span class="n">categories</span><span class="p">()</span> <span class="ow">and</span> <span class="n">data_format</span> <span class="o">!=</span> <span class="s2">&quot;arrow&quot;</span><span class="p">:</span>
-            <span class="n">kp_labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm_subset</span><span class="o">.</span><span class="n">categories</span><span class="p">()[</span><span class="n">AnnotationType</span><span class="o">.</span><span class="n">points</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">labels</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">label_info</span> <span class="o">=</span> <span class="n">LabelInfo</span><span class="p">(</span>
-                <span class="n">label_names</span><span class="o">=</span><span class="n">kp_labels</span><span class="p">,</span>
-                <span class="n">label_groups</span><span class="o">=</span><span class="p">[],</span>
-                <span class="n">label_ids</span><span class="o">=</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">kp_labels</span><span class="p">))],</span>
-            <span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_single_bbox_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dm_subset</span><span class="p">:</span> <span class="n">DmDataset</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DmDataset</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Method for splitting dataset items into multiple items for each bbox/keypoint.&quot;&quot;&quot;</span>
-        <span class="n">dm_items</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">dm_subset</span><span class="p">:</span>
-            <span class="n">new_items</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">ann</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">annotations</span><span class="p">:</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ann</span><span class="p">,</span> <span class="p">(</span><span class="n">Bbox</span><span class="p">,</span> <span class="n">Points</span><span class="p">)):</span>
-                    <span class="n">new_items</span><span class="p">[</span><span class="n">ann</span><span class="o">.</span><span class="n">id</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ann</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">ann_id</span><span class="p">,</span> <span class="n">anns</span> <span class="ow">in</span> <span class="n">new_items</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="n">available_types</span> <span class="o">=</span> <span class="p">[]</span>
-                <span class="k">for</span> <span class="n">ann</span> <span class="ow">in</span> <span class="n">anns</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ann</span><span class="p">,</span> <span class="n">Bbox</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">ann</span><span class="o">.</span><span class="n">w</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">ann</span><span class="o">.</span><span class="n">h</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">):</span>
-                        <span class="k">continue</span>
-                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ann</span><span class="p">,</span> <span class="n">Points</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">max</span><span class="p">(</span><span class="n">ann</span><span class="o">.</span><span class="n">points</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-                        <span class="k">continue</span>
-                    <span class="n">available_types</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ann</span><span class="o">.</span><span class="n">type</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">AnnotationType</span><span class="o">.</span><span class="n">points</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">available_types</span><span class="p">:</span>
-                    <span class="k">continue</span>
-                <span class="n">dm_items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">id</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">ann_id</span><span class="p">),</span> <span class="n">annotations</span><span class="o">=</span><span class="n">anns</span><span class="p">))</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dm_items</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;No keypoints found in the dataset. Please, check dataset annotations.&quot;</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">DmDataset</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">(</span><span class="n">dm_items</span><span class="p">,</span> <span class="n">categories</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dm_subset</span><span class="o">.</span><span class="n">categories</span><span class="p">())</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_get_item_impl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXDataItem</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get a single data item from the dataset.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            index: Index of the item to retrieve.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            OTXDataItem or None: The processed data item with image and keypoint annotations,</span>
-<span class="sd">                or None if the item could not be processed.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_item_impl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">KeypointSample</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm_subset</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
-        <span class="n">img</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">media_as</span><span class="p">(</span><span class="n">Image</span><span class="p">)</span>
-        <span class="n">ignored_labels</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># This should be assigned form item</span>
-        <span class="n">img_data</span><span class="p">,</span> <span class="n">img_shape</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_img_data_and_shape</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
-
-        <span class="n">bbox_anns</span> <span class="o">=</span> <span class="p">[</span><span class="n">ann</span> <span class="k">for</span> <span class="n">ann</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">annotations</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ann</span><span class="p">,</span> <span class="n">Bbox</span><span class="p">)]</span>
-        <span class="n">bboxes</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">ann</span><span class="o">.</span><span class="n">points</span> <span class="k">for</span> <span class="n">ann</span> <span class="ow">in</span> <span class="n">bbox_anns</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">bbox_anns</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
-            <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
-        <span class="p">)</span>
-
-        <span class="c1"># keypoints in shape [1, K, 2] and keypoints_visible in [1, K]</span>
-        <span class="n">keypoint_anns</span> <span class="o">=</span> <span class="p">[</span><span class="n">ann</span> <span class="k">for</span> <span class="n">ann</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">annotations</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ann</span><span class="p">,</span> <span class="n">Points</span><span class="p">)]</span>
-        <span class="n">keypoints</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">ann</span><span class="o">.</span><span class="n">points</span> <span class="k">for</span> <span class="n">ann</span> <span class="ow">in</span> <span class="n">keypoint_anns</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">keypoint_anns</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
-            <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label_info</span><span class="o">.</span><span class="n">label_names</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-
-        <span class="n">keypoints_visible</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">ann</span><span class="o">.</span><span class="n">visibility</span> <span class="k">for</span> <span class="n">ann</span> <span class="ow">in</span> <span class="n">keypoint_anns</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">keypoint_anns</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">keypoint_anns</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;visibility&quot;</span><span class="p">)</span>
-            <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">keypoints</span><span class="p">)[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
-        <span class="p">)</span>
-        <span class="n">keypoints</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">keypoints</span><span class="p">,</span> <span class="n">keypoints_visible</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
-
-        <span class="n">entity</span> <span class="o">=</span> <span class="n">OTXDataItem</span><span class="p">(</span>
-            <span class="n">image</span><span class="o">=</span><span class="n">to_dtype</span><span class="p">(</span><span class="n">to_image</span><span class="p">(</span><span class="n">img_data</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
-            <span class="n">img_info</span><span class="o">=</span><span class="n">ImageInfo</span><span class="p">(</span>
-                <span class="n">img_idx</span><span class="o">=</span><span class="n">index</span><span class="p">,</span>
-                <span class="n">img_shape</span><span class="o">=</span><span class="n">img_shape</span><span class="p">,</span>
-                <span class="n">ori_shape</span><span class="o">=</span><span class="n">img_shape</span><span class="p">,</span>
-                <span class="n">image_color_channel</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">image_color_channel</span><span class="p">,</span>
-                <span class="n">ignored_labels</span><span class="o">=</span><span class="n">ignored_labels</span><span class="p">,</span>
-            <span class="p">),</span>
-            <span class="n">bboxes</span><span class="o">=</span><span class="n">tv_tensors</span><span class="o">.</span><span class="n">BoundingBoxes</span><span class="p">(</span>
-                <span class="n">bboxes</span><span class="p">,</span>
-                <span class="nb">format</span><span class="o">=</span><span class="n">tv_tensors</span><span class="o">.</span><span class="n">BoundingBoxFormat</span><span class="o">.</span><span class="n">XYXY</span><span class="p">,</span>
-                <span class="n">canvas_size</span><span class="o">=</span><span class="n">img_shape</span><span class="p">,</span>
-            <span class="p">),</span>
-            <span class="n">label</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">([</span><span class="n">ann</span><span class="o">.</span><span class="n">label</span> <span class="k">for</span> <span class="n">ann</span> <span class="ow">in</span> <span class="n">bbox_anns</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">),</span>
-            <span class="n">keypoints</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">keypoints</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
-        <span class="p">)</span>
-
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_transforms</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span>  <span class="c1"># type: ignore[return-value]</span>
+        <span class="n">keypoints</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">keypoints</span>
+        <span class="n">keypoints</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">keypoints</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span> <span class="nb">max</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># OTX represents visibility as 0 or 1</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">keypoints</span> <span class="o">=</span> <span class="n">keypoints</span>
+        <span class="c1"># Handle image conversion - to_image only permutes numpy arrays, not tensors</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">image</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="ow">and</span> <span class="n">image</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span> <span class="ow">and</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+            <span class="c1"># Image is in HWC format, convert to CHW</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">image</span> <span class="o">=</span> <span class="n">to_dtype</span><span class="p">(</span><span class="n">to_image</span><span class="p">(</span><span class="n">image</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_transforms</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>  <span class="c1"># type: ignore[return-value]</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">task_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXTaskType</span><span class="p">:</span>

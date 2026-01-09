@@ -277,7 +277,6 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">adapt_tile_config</span><span class="p">,</span> <span class="n">get_adaptive_num_workers</span><span class="p">,</span> <span class="n">instantiate_sampler</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.utils.pre_filtering</span><span class="w"> </span><span class="kn">import</span> <span class="n">pre_filtering</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.device</span><span class="w"> </span><span class="kn">import</span> <span class="n">DeviceType</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.image</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageColorChannel</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.label</span><span class="w"> </span><span class="kn">import</span> <span class="n">LabelInfo</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.task</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXTaskType</span>
 
@@ -304,8 +303,6 @@
 <span class="sd">        val_subset (SubsetConfig, optional): Validation subset configuration. Defaults to None.</span>
 <span class="sd">        test_subset (SubsetConfig, optional): Test subset configuration. Defaults to None.</span>
 <span class="sd">        tile_config (TileConfig, optional): Tiling configuration. Defaults to TileConfig(enable_tiler=False).</span>
-<span class="sd">        image_color_channel (ImageColorChannel, optional): Image color channel. Defaults to ImageColorChannel.RGB.</span>
-<span class="sd">        include_polygons (bool, optional): Whether to include polygons. Defaults to False.</span>
 <span class="sd">        ignore_index (int, optional): Ignore index for segmentation. Defaults to 255.</span>
 <span class="sd">        unannotated_items_ratio (float, optional): Ratio of unannotated items. Defaults to 0.0.</span>
 <span class="sd">        auto_num_workers (bool, optional): Automatically determine number of workers. Defaults to False.</span>
@@ -325,8 +322,6 @@
         <span class="n">val_subset</span><span class="p">:</span> <span class="n">SubsetConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">test_subset</span><span class="p">:</span> <span class="n">SubsetConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">tile_config</span><span class="p">:</span> <span class="n">TileConfig</span> <span class="o">=</span> <span class="n">TileConfig</span><span class="p">(</span><span class="n">enable_tiler</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
-        <span class="n">image_color_channel</span><span class="p">:</span> <span class="n">ImageColorChannel</span> <span class="o">=</span> <span class="n">ImageColorChannel</span><span class="o">.</span><span class="n">RGB</span><span class="p">,</span>
-        <span class="n">include_polygons</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">ignore_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">255</span><span class="p">,</span>
         <span class="n">unannotated_items_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
         <span class="n">auto_num_workers</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -350,8 +345,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">test_subset</span> <span class="o">=</span> <span class="n">test_subset</span> <span class="k">if</span> <span class="n">test_subset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">subset_configs</span><span class="p">[</span><span class="s2">&quot;test_subset&quot;</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tile_config</span> <span class="o">=</span> <span class="n">tile_config</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">image_color_channel</span> <span class="o">=</span> <span class="n">image_color_channel</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">include_polygons</span> <span class="o">=</span> <span class="n">include_polygons</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ignore_index</span> <span class="o">=</span> <span class="n">ignore_index</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">unannotated_items_ratio</span> <span class="o">=</span> <span class="n">unannotated_items_ratio</span>
 
@@ -429,9 +422,7 @@
                 <span class="n">task</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">task</span><span class="p">,</span>
                 <span class="n">dm_subset</span><span class="o">=</span><span class="n">dm_subset</span><span class="o">.</span><span class="n">as_dataset</span><span class="p">(),</span>
                 <span class="n">cfg_subset</span><span class="o">=</span><span class="n">config_mapping</span><span class="p">[</span><span class="n">name</span><span class="p">],</span>
-                <span class="n">data_format</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_format</span><span class="p">,</span>  <span class="c1"># type: ignore [arg-type]</span>
-                <span class="n">image_color_channel</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">image_color_channel</span><span class="p">,</span>
-                <span class="n">include_polygons</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">include_polygons</span><span class="p">,</span>
+                <span class="n">data_format</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_format</span><span class="p">,</span>  <span class="c1"># type: ignore[arg-type]</span>
                 <span class="n">ignore_index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ignore_index</span><span class="p">,</span>
             <span class="p">)</span>
 
@@ -591,8 +582,6 @@
         <span class="n">instance</span><span class="o">.</span><span class="n">tile_config</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">train_dataset</span><span class="o">.</span><span class="n">tile_config</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">train_dataset</span><span class="p">,</span> <span class="s2">&quot;tile_config&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="n">TileConfig</span><span class="p">(</span><span class="n">enable_tiler</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="p">)</span>
-        <span class="n">instance</span><span class="o">.</span><span class="n">image_color_channel</span> <span class="o">=</span> <span class="n">train_dataset</span><span class="o">.</span><span class="n">image_color_channel</span>
-        <span class="n">instance</span><span class="o">.</span><span class="n">include_polygons</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="n">instance</span><span class="o">.</span><span class="n">ignore_index</span> <span class="o">=</span> <span class="mi">255</span>
         <span class="n">instance</span><span class="o">.</span><span class="n">unannotated_items_ratio</span> <span class="o">=</span> <span class="mf">0.0</span>
         <span class="n">instance</span><span class="o">.</span><span class="n">auto_num_workers</span> <span class="o">=</span> <span class="n">auto_num_workers</span>
@@ -850,8 +839,6 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">val_subset</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">test_subset</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">tile_config</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">image_color_channel</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">include_polygons</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">ignore_index</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">unannotated_items_ratio</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">auto_num_workers</span><span class="p">,</span>
