@@ -4,7 +4,7 @@
 import { Divider, Flex, Heading, Radio, Tooltip, TooltipTrigger, View } from '@geti/ui';
 import { clsx } from 'clsx';
 
-import type { SchemaModelArchitecture } from '../../../../api/openapi-spec';
+import type { SchemaModelArchitectureView } from '../../../../api/openapi-spec';
 import { InfoTooltip } from '../../../../components/info-tooltip/info-tooltip.component';
 import { ModelAttributes } from '../model-attributes/model-attributes.component';
 import { Ratings } from '../model-rating/attribute-rating.component';
@@ -16,7 +16,7 @@ import classes from './model-type.module.scss';
 
 interface ModelTypeProps {
     selectedModelArchitectureId: string | null;
-    modelArchitecture: SchemaModelArchitecture;
+    modelArchitecture: SchemaModelArchitectureView;
 }
 
 const RATING_MAP: Record<number, Ratings> = {
