@@ -22,7 +22,6 @@ from otx.data.transform_libs.torchvision import Compose, TorchVisionTransformLib
 from otx.data.utils import adapt_tile_config, get_adaptive_num_workers, instantiate_sampler
 from otx.data.utils.pre_filtering import pre_filtering
 from otx.types.device import DeviceType
-from otx.types.image import ImageColorChannel
 from otx.types.label import LabelInfo
 from otx.types.task import OTXTaskType
 
@@ -47,8 +46,6 @@ class OTXDataModule(LightningDataModule):
         val_subset (SubsetConfig, optional): Validation subset configuration. Defaults to None.
         test_subset (SubsetConfig, optional): Test subset configuration. Defaults to None.
         tile_config (TileConfig, optional): Tiling configuration. Defaults to TileConfig(enable_tiler=False).
-        image_color_channel (ImageColorChannel, optional): Image color channel. Defaults to ImageColorChannel.RGB.
-        include_polygons (bool, optional): Whether to include polygons. Defaults to False.
         ignore_index (int, optional): Ignore index for segmentation. Defaults to 255.
         unannotated_items_ratio (float, optional): Ratio of unannotated items. Defaults to 0.0.
         auto_num_workers (bool, optional): Automatically determine number of workers. Defaults to False.
@@ -68,8 +65,6 @@ class OTXDataModule(LightningDataModule):
         val_subset: SubsetConfig | None = None,
         test_subset: SubsetConfig | None = None,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
-        image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
-        include_polygons: bool = False,
         ignore_index: int = 255,
         unannotated_items_ratio: float = 0.0,
         auto_num_workers: bool = False,
@@ -93,8 +88,6 @@ class OTXDataModule(LightningDataModule):
         self.test_subset = test_subset if test_subset is not None else subset_configs["test_subset"]
         self.tile_config = tile_config
 
-        self.image_color_channel = image_color_channel
-        self.include_polygons = include_polygons
         self.ignore_index = ignore_index
         self.unannotated_items_ratio = unannotated_items_ratio
 
@@ -172,9 +165,7 @@ class OTXDataModule(LightningDataModule):
                 task=self.task,
                 dm_subset=dm_subset.as_dataset(),
                 cfg_subset=config_mapping[name],
-                data_format=self.data_format,  # type: ignore [arg-type]
-                image_color_channel=self.image_color_channel,
-                include_polygons=self.include_polygons,
+                data_format=self.data_format,  # type: ignore[arg-type]
                 ignore_index=self.ignore_index,
             )
 
@@ -329,8 +320,6 @@ class OTXDataModule(LightningDataModule):
         instance.tile_config = (
             train_dataset.tile_config if hasattr(train_dataset, "tile_config") else TileConfig(enable_tiler=False)
         )
-        instance.image_color_channel = train_dataset.image_color_channel
-        instance.include_polygons = False
         instance.ignore_index = 255
         instance.unannotated_items_ratio = 0.0
         instance.auto_num_workers = auto_num_workers
@@ -566,8 +555,6 @@ class OTXDataModule(LightningDataModule):
                 self.val_subset,
                 self.test_subset,
                 self.tile_config,
-                self.image_color_channel,
-                self.include_polygons,
                 self.ignore_index,
                 self.unannotated_items_ratio,
                 self.auto_num_workers,

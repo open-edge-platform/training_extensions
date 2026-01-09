@@ -4,6 +4,7 @@
 """Test Factory classes for dataset and transforms."""
 
 import pytest
+from datumaro.experimental import Dataset
 
 from otx.config.data import SubsetConfig
 from otx.data.dataset.classification import (
@@ -17,7 +18,6 @@ from otx.data.dataset.instance_segmentation import OTXInstanceSegDataset
 from otx.data.dataset.segmentation import OTXSegmentationDataset
 from otx.data.factory import OTXDatasetFactory, TransformLibFactory
 from otx.data.transform_libs.torchvision import TorchVisionTransformLib
-from otx.types.image import ImageColorChannel
 from otx.types.task import OTXTaskType
 from otx.types.transformer_libs import TransformLibType
 
@@ -39,35 +39,42 @@ class TestTransformLibFactory:
 
 class TestOTXDatasetFactory:
     @pytest.mark.parametrize(
-        ("task_type", "dataset_cls"),
+        ("task_type", "dataset_cls", "dm_subset_fxt_name"),
         [
-            (OTXTaskType.MULTI_CLASS_CLS, OTXMulticlassClsDataset),
-            (OTXTaskType.MULTI_LABEL_CLS, OTXMultilabelClsDataset),
-            (OTXTaskType.H_LABEL_CLS, OTXHlabelClsDataset),
-            (OTXTaskType.DETECTION, OTXDetectionDataset),
-            (OTXTaskType.ROTATED_DETECTION, OTXInstanceSegDataset),
-            (OTXTaskType.INSTANCE_SEGMENTATION, OTXInstanceSegDataset),
-            (OTXTaskType.SEMANTIC_SEGMENTATION, OTXSegmentationDataset),
+            (OTXTaskType.MULTI_CLASS_CLS, OTXMulticlassClsDataset, "fxt_mock_classification_dm_subset"),
+            (OTXTaskType.MULTI_LABEL_CLS, OTXMultilabelClsDataset, "fxt_mock_classification_dm_subset"),
+            (OTXTaskType.H_LABEL_CLS, OTXHlabelClsDataset, "fxt_mock_classification_dm_subset"),
+            (OTXTaskType.DETECTION, OTXDetectionDataset, "fxt_mock_detection_dm_subset"),
+            (OTXTaskType.ROTATED_DETECTION, OTXInstanceSegDataset, "fxt_mock_segmentation_dm_subset"),
+            (OTXTaskType.INSTANCE_SEGMENTATION, OTXInstanceSegDataset, "fxt_mock_segmentation_dm_subset"),
+            (OTXTaskType.SEMANTIC_SEGMENTATION, OTXSegmentationDataset, "fxt_mock_segmentation_dm_subset"),
         ],
     )
     def test_create(
         self,
+        request,
         fxt_mock_hlabelinfo,
-        fxt_mock_dm_subset,
         task_type,
         dataset_cls,
+        dm_subset_fxt_name,
         mocker,
     ) -> None:
         mocker.patch.object(TransformLibFactory, "generate", return_value=None)
+        dm_subset = request.getfixturevalue(dm_subset_fxt_name)
+        mock_schema = mocker.MagicMock()
+        mock_label = mocker.MagicMock()
+        mock_label.categories.labels = []
+        mock_schema.attributes = {"label": mock_label, "masks": mock_label}
+        dm_subset.schema = mock_schema
         cfg_subset = mocker.MagicMock(spec=SubsetConfig)
-        image_color_channel = ImageColorChannel.BGR
         mocker.patch.object(HLabelInfo, "from_dm_label_groups", return_value=fxt_mock_hlabelinfo)
+        mocker.patch.object(Dataset, "convert_to_schema", return_value=dm_subset)
+
         assert isinstance(
             OTXDatasetFactory.create(
                 task=task_type,
-                dm_subset=fxt_mock_dm_subset,
+                dm_subset=dm_subset,
                 cfg_subset=cfg_subset,
-                image_color_channel=image_color_channel,
                 data_format="",
             ),
             dataset_cls,

@@ -67,8 +67,8 @@ def mock_modules_for_chkpt() -> Iterator[None]:
         setattr(sys.modules["otx.types.task"], "OTXTrainType", OTXTrainType)  # noqa: B010
 
         sys.modules["otx.core"] = types.ModuleType("otx.core")
-        sys.modules["otx.core.config"] = otx.config
-        sys.modules["otx.core.config.data"] = otx.config.data
+        sys.modules["otx.core.config"] = otx.config  # type: ignore[attr-defined]
+        sys.modules["otx.core.config.data"] = otx.config.data  # type: ignore[attr-defined]
         sys.modules["otx.core.types"] = otx.types
         sys.modules["otx.core.types.task"] = otx.types.task
         sys.modules["otx.core.types.label"] = otx.types.label

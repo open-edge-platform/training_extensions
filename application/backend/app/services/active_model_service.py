@@ -10,9 +10,9 @@ from loguru import logger
 from model_api.models import Model
 
 from app.db.engine import get_db_session
+from app.models.model_activation import ModelActivationState
 from app.repositories import ModelRevisionRepository
 from app.repositories.active_model_repo import ActiveModelRepo
-from app.schemas.model_activation import ModelActivationState
 
 # It's safer to default to CPU since inference with other devices sometimes results in degraded prediction quality
 # See for example: https://github.com/open-edge-platform/model_api/issues/460

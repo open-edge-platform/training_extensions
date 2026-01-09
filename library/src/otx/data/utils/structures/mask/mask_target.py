@@ -14,7 +14,6 @@ import warnings
 
 import numpy as np
 import torch
-from datumaro.components.annotation import Polygon
 from torch import Tensor
 from torch.nn.modules.utils import _pair
 from torchvision import tv_tensors
@@ -25,7 +24,7 @@ from .mask_util import crop_and_resize_masks, crop_and_resize_polygons
 def mask_target(
     pos_proposals_list: list[Tensor],
     pos_assigned_gt_inds_list: list[Tensor],
-    gt_masks_list: list[list[Polygon]] | list[tv_tensors.Mask],
+    gt_masks_list: list[np.ndarray] | list[tv_tensors.Mask],
     mask_size: int,
     meta_infos: list[dict],
 ) -> Tensor:
@@ -36,8 +35,7 @@ def mask_target(
             images, each has shape (num_pos, 4).
         pos_assigned_gt_inds_list (list[Tensor]): Assigned GT indices for each
             positive proposals, each has shape (num_pos,).
-        gt_masks_list (list[list[Polygon]] or list[tv_tensors.Mask]): Ground truth masks of
-            each image.
+        gt_masks_list (list[np.ndarray] or list[tv_tensors.Mask]): Ground truth masks or polygons.
         mask_size (int): The mask size.
         meta_infos (list[dict]): Meta information of each image.
 
@@ -62,7 +60,7 @@ def mask_target(
 def mask_target_single(
     pos_proposals: Tensor,
     pos_assigned_gt_inds: Tensor,
-    gt_masks: list[Polygon] | tv_tensors.Mask,
+    gt_masks: np.ndarray | tv_tensors.Mask,
     mask_size: list[int],
     meta_info: dict,
 ) -> Tensor:
@@ -71,7 +69,7 @@ def mask_target_single(
     Args:
         pos_proposals (Tensor): Positive proposals, has shape (num_pos, 4).
         pos_assigned_gt_inds (Tensor): Assigned GT indices for positive proposals, has shape (num_pos,).
-        gt_masks (list[Polygon] or tv_tensors.Mask): Ground truth masks as list of polygons or tv_tensors.Mask.
+        gt_masks (np.ndarray or tv_tensors.Mask): Ground truth masks as polygons or tv_tensors.Mask.
         mask_size (list[int]): The mask size.
         meta_info (dict): Meta information of the image.
 
@@ -83,7 +81,7 @@ def mask_target_single(
         warnings.warn("No ground truth masks are provided!", stacklevel=2)
         return pos_proposals.new_zeros((0, *mask_size))
 
-    if isinstance(gt_masks[0], Polygon):
+    if isinstance(gt_masks, np.ndarray):
         crop_and_resize = crop_and_resize_polygons
     elif isinstance(gt_masks, tv_tensors.Mask):
         crop_and_resize = crop_and_resize_masks

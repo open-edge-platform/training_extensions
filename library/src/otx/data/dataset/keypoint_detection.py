@@ -5,26 +5,22 @@
 
 from __future__ import annotations
 
-from collections import defaultdict
-from typing import Callable, List, Union
+from typing import TYPE_CHECKING, Callable, List, Union
 
-import numpy as np
 import torch
-from datumaro import AnnotationType, Bbox, Image, Points
-from datumaro import Dataset as DmDataset
-from torchvision import tv_tensors
 from torchvision.transforms.v2.functional import to_dtype, to_image
 
-from otx.data.entity.base import ImageInfo
-from otx.data.entity.torch import OTXDataItem
+from otx.data.entity.sample import KeypointSample
 from otx.data.transform_libs.torchvision import Compose
 from otx.types import OTXTaskType
-from otx.types.image import ImageColorChannel
 from otx.types.label import LabelInfo
 
 from .base import OTXDataset
 
 Transforms = Union[Compose, Callable, List[Callable], dict[str, Compose | Callable | List[Callable]]]
+
+if TYPE_CHECKING:
+    from datumaro.experimental import Dataset
 
 
 class OTXKeypointDetectionDataset(OTXDataset):
@@ -56,115 +52,43 @@ class OTXKeypointDetectionDataset(OTXDataset):
 
     def __init__(
         self,
-        dm_subset: DmDataset,
+        dm_subset: Dataset,
         transforms: Transforms | None = None,
         max_refetch: int = 1000,
-        image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
         stack_images: bool = True,
         to_tv_image: bool = True,
         data_format: str = "",
     ) -> None:
+        sample_type = KeypointSample
+        dm_subset = dm_subset.convert_to_schema(sample_type)
         super().__init__(
             dm_subset=dm_subset,
+            sample_type=sample_type,
             transforms=transforms,
             max_refetch=max_refetch,
-            image_color_channel=image_color_channel,
             stack_images=stack_images,
             to_tv_image=to_tv_image,
             data_format=data_format,
         )
+        labels = dm_subset.schema.attributes["label"].categories.labels
+        self.label_info = LabelInfo(
+            label_names=labels,
+            label_groups=[],
+            label_ids=[str(i) for i in range(len(labels))],
+        )
 
-        self.dm_subset = self._get_single_bbox_dataset(dm_subset)
-
-        # arrow doesn't follow common coco convention, no need to fetch kp-specific labels
-        if self.dm_subset.categories() and data_format != "arrow":
-            kp_labels = self.dm_subset.categories()[AnnotationType.points][0].labels
-            self.label_info = LabelInfo(
-                label_names=kp_labels,
-                label_groups=[],
-                label_ids=[str(i) for i in range(len(kp_labels))],
-            )
-
-    def _get_single_bbox_dataset(self, dm_subset: DmDataset) -> DmDataset:
-        """Method for splitting dataset items into multiple items for each bbox/keypoint."""
-        dm_items = []
-        for item in dm_subset:
-            new_items = defaultdict(list)
-            for ann in item.annotations:
-                if isinstance(ann, (Bbox, Points)):
-                    new_items[ann.id].append(ann)
-            for ann_id, anns in new_items.items():
-                available_types = []
-                for ann in anns:
-                    if isinstance(ann, Bbox) and (ann.w <= 0 or ann.h <= 0):
-                        continue
-                    if isinstance(ann, Points) and max(ann.points) <= 0:
-                        continue
-                    available_types.append(ann.type)
-                if AnnotationType.points not in available_types:
-                    continue
-                dm_items.append(item.wrap(id=item.id + "_" + str(ann_id), annotations=anns))
-        if len(dm_items) == 0:
-            msg = "No keypoints found in the dataset. Please, check dataset annotations."
-            raise ValueError(msg)
-        return DmDataset.from_iterable(dm_items, categories=self.dm_subset.categories())
-
-    def _get_item_impl(self, index: int) -> OTXDataItem | None:
-        """Get a single data item from the dataset.
-
-        Args:
-            index: Index of the item to retrieve.
-
-        Returns:
-            OTXDataItem or None: The processed data item with image and keypoint annotations,
-                or None if the item could not be processed.
-        """
+    def _get_item_impl(self, index: int) -> KeypointSample | None:
         item = self.dm_subset[index]
-        img = item.media_as(Image)
-        ignored_labels: list[int] = []  # This should be assigned form item
-        img_data, img_shape, _ = self._get_img_data_and_shape(img)
-
-        bbox_anns = [ann for ann in item.annotations if isinstance(ann, Bbox)]
-        bboxes = (
-            np.stack([ann.points for ann in bbox_anns], axis=0).astype(np.float32)
-            if len(bbox_anns) > 0
-            else np.zeros((0, 4), dtype=np.float32)
-        )
-
-        # keypoints in shape [1, K, 2] and keypoints_visible in [1, K]
-        keypoint_anns = [ann for ann in item.annotations if isinstance(ann, Points)]
-        keypoints = (
-            np.stack([ann.points for ann in keypoint_anns], axis=0).astype(np.float32)
-            if len(keypoint_anns) > 0
-            else np.zeros((0, len(self.label_info.label_names) * 2), dtype=np.float32)
-        ).reshape(-1, 2)
-
-        keypoints_visible = (
-            (np.array([ann.visibility for ann in keypoint_anns]) > 1).reshape(-1).astype(np.int8)
-            if len(keypoint_anns) > 0 and hasattr(keypoint_anns[0], "visibility")
-            else np.minimum(1, keypoints)[..., 0]
-        )
-        keypoints = np.hstack((keypoints, keypoints_visible.reshape(-1, 1)))
-
-        entity = OTXDataItem(
-            image=to_dtype(to_image(img_data), torch.float32),
-            img_info=ImageInfo(
-                img_idx=index,
-                img_shape=img_shape,
-                ori_shape=img_shape,
-                image_color_channel=self.image_color_channel,
-                ignored_labels=ignored_labels,
-            ),
-            bboxes=tv_tensors.BoundingBoxes(
-                bboxes,
-                format=tv_tensors.BoundingBoxFormat.XYXY,
-                canvas_size=img_shape,
-            ),
-            label=torch.as_tensor([ann.label for ann in bbox_anns], dtype=torch.long),
-            keypoints=torch.as_tensor(keypoints, dtype=torch.float32),
-        )
-
-        return self._apply_transforms(entity)  # type: ignore[return-value]
+        keypoints = item.keypoints
+        keypoints[:, 2] = torch.clamp(keypoints[:, 2], max=1)  # OTX represents visibility as 0 or 1
+        item.keypoints = keypoints
+        # Handle image conversion - to_image only permutes numpy arrays, not tensors
+        image = item.image
+        if isinstance(image, torch.Tensor) and image.ndim == 3 and image.shape[-1] in (1, 3):
+            # Image is in HWC format, convert to CHW
+            image = image.permute(2, 0, 1)
+        item.image = to_dtype(to_image(image), torch.float32)
+        return self._apply_transforms(item)  # type: ignore[return-value]
 
     @property
     def task_type(self) -> OTXTaskType:

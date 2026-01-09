@@ -34,8 +34,8 @@ from sqlalchemy.orm import Session
 from app.core.jobs.models import TrainingJobParams
 from app.core.run import ExecutionContext
 from app.models import DatasetItemAnnotationStatus, Task, TaskType, TrainingStatus
+from app.models.system import DeviceInfo
 from app.models.training_configuration.configuration import TrainingConfiguration
-from app.schemas.system import DeviceInfo
 from app.services import (
     BaseWeightsService,
     DatasetRevisionService,

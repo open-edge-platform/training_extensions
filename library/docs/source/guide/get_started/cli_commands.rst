@@ -182,7 +182,6 @@ Preview all configuration values that will be executed through that command line
         mem_cache_size: 1GB
         mem_cache_img_max_size: null
         image_color_channel: RGB
-        include_polygons: false
     max_epochs: 2
     deterministic: false
     precision: 16

@@ -5,8 +5,8 @@
 
 from fastapi import APIRouter, status
 
-from app.schemas import ModelArchitectures
-from app.schemas.model_architecture import ModelArchitecture
+from app.api.schemas.model_architecture import ModelArchitectures, ModelArchitectureView
+from app.models.model_architecture import ModelArchitecture
 from app.supported_models import SupportedModels
 
 router = APIRouter(prefix="/api/model_architectures", tags=["Model Architectures"])
@@ -36,4 +36,9 @@ def get_model_architectures(task: str | None = None) -> ModelArchitectures:
         if not task or manifest.task.lower() == task.lower()
     ]
 
-    return ModelArchitectures(model_architectures=model_architectures)
+    return ModelArchitectures(
+        model_architectures=[
+            ModelArchitectureView.model_validate(model_architecture, from_attributes=True)
+            for model_architecture in model_architectures
+        ]
+    )

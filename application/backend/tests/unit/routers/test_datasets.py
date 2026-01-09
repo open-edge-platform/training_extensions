@@ -1,5 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+import os
 import tempfile
 from datetime import datetime
 from io import BytesIO
@@ -324,14 +325,20 @@ class TestDatasetItemEndpoints:
     def test_get_dataset_item_binary_success(self, fxt_get_project, fxt_dataset_service, fxt_client):
         dataset_item_id = uuid4()
 
-        with tempfile.NamedTemporaryFile(suffix=".jpg") as tmp_file:
-            fxt_dataset_service.get_dataset_item_binary_path_by_id.return_value = tmp_file.name
-            response = fxt_client.get(f"/api/projects/{str(uuid4())}/dataset/items/{str(dataset_item_id)}/binary")
+        tmp_file_path = None
+        try:
+            with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp_file:
+                temp_file_path = tmp_file.name
+                fxt_dataset_service.get_dataset_item_binary_path_by_id.return_value = temp_file_path
+                response = fxt_client.get(f"/api/projects/{str(uuid4())}/dataset/items/{str(dataset_item_id)}/binary")
 
-        assert response.status_code == status.HTTP_200_OK
-        fxt_dataset_service.get_dataset_item_binary_path_by_id.assert_called_once_with(
-            project_id=fxt_get_project.id, dataset_item_id=dataset_item_id
-        )
+            assert response.status_code == status.HTTP_200_OK
+            fxt_dataset_service.get_dataset_item_binary_path_by_id.assert_called_once_with(
+                project_id=fxt_get_project.id, dataset_item_id=dataset_item_id
+            )
+        finally:
+            if tmp_file_path and os.path.exists(tmp_file_path):
+                os.unlink(tmp_file_path)
 
     def test_get_dataset_item_thumbnail_not_found(self, fxt_get_project, fxt_dataset_service, fxt_client):
         dataset_item_id = uuid4()
@@ -349,14 +356,22 @@ class TestDatasetItemEndpoints:
     def test_get_dataset_item_thumbnail_success(self, fxt_get_project, fxt_dataset_service, fxt_client):
         dataset_item_id = uuid4()
 
-        with tempfile.NamedTemporaryFile(suffix=".jpg") as tmp_file:
-            fxt_dataset_service.get_dataset_item_thumbnail_path_by_id.return_value = tmp_file.name
-            response = fxt_client.get(f"/api/projects/{str(uuid4())}/dataset/items/{str(dataset_item_id)}/thumbnail")
+        tmp_file_path = None
+        try:
+            with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp_file:
+                temp_file_path = tmp_file.name
+                fxt_dataset_service.get_dataset_item_thumbnail_path_by_id.return_value = temp_file_path
+                response = fxt_client.get(
+                    f"/api/projects/{str(uuid4())}/dataset/items/{str(dataset_item_id)}/thumbnail"
+                )
 
-        assert response.status_code == status.HTTP_200_OK
-        fxt_dataset_service.get_dataset_item_thumbnail_path_by_id.assert_called_once_with(
-            project=fxt_get_project, dataset_item_id=dataset_item_id
-        )
+            assert response.status_code == status.HTTP_200_OK
+            fxt_dataset_service.get_dataset_item_thumbnail_path_by_id.assert_called_once_with(
+                project=fxt_get_project, dataset_item_id=dataset_item_id
+            )
+        finally:
+            if tmp_file_path and os.path.exists(tmp_file_path):
+                os.unlink(tmp_file_path)
 
     def test_delete_dataset_item_not_found(self, fxt_get_project, fxt_dataset_service, fxt_client):
         dataset_item_id = uuid4()

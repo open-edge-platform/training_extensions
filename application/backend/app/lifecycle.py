@@ -14,11 +14,11 @@ from fastapi import FastAPI
 from loguru import logger
 
 from app.core.jobs import JobController, JobQueue, ProcessRunnerFactory
+from app.core.jobs.models import JobType
 from app.core.logging import LogConfig, setup_logging, setup_uvicorn_logging
 from app.core.run import Runnable, RunnableFactory
 from app.db import MigrationManager, get_db_session
 from app.scheduler import Scheduler
-from app.schemas.job import JobType
 from app.services import (
     DatasetRevisionService,
     DatasetService,

@@ -1,14 +1,14 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 
 from pydantic import BaseModel, Field
 
 from app.models import TaskType
-from app.supported_models.model_manifest import Capabilities, ModelManifest, ModelManifestDeprecationStatus, ModelStats
+from app.supported_models.model_manifest import Capabilities, ModelManifestDeprecationStatus, ModelStats
 
 
-class ModelArchitecture(BaseModel):
+class ModelArchitectureView(BaseModel):
     """Simplified model architecture information for API responses"""
 
     id: str = Field(title="Model architecture ID", description="Unique identifier for the model architecture")
@@ -23,24 +23,11 @@ class ModelArchitecture(BaseModel):
         title="Support Status", description="Current support level (active, deprecated, or obsolete)"
     )
 
-    @classmethod
-    def from_manifest(cls, manifest: ModelManifest) -> "ModelArchitecture":
-        """Create a ModelArchitecture from a ModelManifest, excluding unwanted fields"""
-        return cls(
-            id=manifest.id,
-            task=manifest.task,
-            name=manifest.name,
-            description=manifest.description,
-            capabilities=manifest.capabilities,
-            stats=manifest.stats,
-            support_status=manifest.support_status,
-        )
-
 
 class ModelArchitectures(BaseModel):
     """Model architectures response"""
 
-    model_architectures: list[ModelArchitecture] = Field(
+    model_architectures: list[ModelArchitectureView] = Field(
         title="Model Architectures", description="List of available model architectures"
     )
 

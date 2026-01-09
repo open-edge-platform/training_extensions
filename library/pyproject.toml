@@ -26,7 +26,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
-    "datumaro~=1.12.0",
+    "datumaro[experimental] @ git+https://github.com/open-edge-platform/datumaro.git@develop",
     "omegaconf==2.3.0",
     "rich==14.0.0",
     "jsonargparse==4.35.0",
@@ -63,6 +63,7 @@ dev = [
     "pytest-csv",
     "pytest-timeout",
     "pytest-mock",
+    "pytest-forked",
     "dill",
     "tifffile",
 ]

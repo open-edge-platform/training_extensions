@@ -5,7 +5,7 @@ import queue
 
 import pytest
 
-from app.schemas.webrtc import InputData, Offer
+from app.models.webrtc import InputData, Offer
 from app.webrtc.manager import WebRTCManager
 
 VALID_SDP = (

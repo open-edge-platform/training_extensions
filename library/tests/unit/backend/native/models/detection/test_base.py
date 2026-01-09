@@ -51,7 +51,7 @@ class TestOTXDetectionModel:
         return ATSS(
             model_name="atss_mobilenetv2",
             label_info=1,
-            data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         )
 
     def test_configure_metric_with_ckpt(
@@ -63,7 +63,7 @@ class TestOTXDetectionModel:
         model = ATSS(
             model_name="atss_mobilenetv2",
             label_info=2,
-            data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
             torch_compile=False,
             optimizer=mock_optimizer,
             scheduler=mock_scheduler,

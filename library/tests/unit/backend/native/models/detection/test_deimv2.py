@@ -105,7 +105,7 @@ class TestDEIMV2:
         assert created_model.optimizer_configuration[0]["lr"] == expected_lr
 
     @patch("otx.backend.native.models.detection.deimv2.load_checkpoint")
-    def test_loss_computation(self, mock_load_checkpoint: MagicMock, fxt_data_module) -> None:
+    def test_loss_computation(self, mock_load_checkpoint: MagicMock, fxt_detection_batch) -> None:
         """Test DEIMV2 loss computation in training mode."""
         mock_load_checkpoint.return_value = None
 
@@ -114,15 +114,11 @@ class TestDEIMV2:
             label_info=10,
         )
 
-        # Get data batch
-        data = next(iter(fxt_data_module.train_dataloader()))
-        data.images = torch.randn(2, 3, 640, 640)
-
         # Set model to training mode
         model.train()
 
         # Forward pass should return loss dictionary
-        output = model(data)
+        output = model(fxt_detection_batch)
 
         # Check that output contains expected DEIM loss components
         assert isinstance(output, dict)
@@ -142,7 +138,7 @@ class TestDEIMV2:
             "deimv2_x",
         ],
     )
-    def test_predict(self, mock_load_checkpoint: MagicMock, model_name: str, fxt_data_module) -> None:
+    def test_predict(self, mock_load_checkpoint: MagicMock, model_name: str, fxt_detection_batch) -> None:
         """Test DEIMV2 prediction in evaluation mode."""
         mock_load_checkpoint.return_value = None
 
@@ -152,15 +148,11 @@ class TestDEIMV2:
             data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         )
 
-        # Get data batch
-        data = next(iter(fxt_data_module.train_dataloader()))
-        data.images = torch.randn(2, 3, 640, 640)
-
         # Set model to evaluation mode
         model.eval()
 
         # Forward pass should return predictions
-        output = model(data)
+        output = model(fxt_detection_batch)
 
         # Check that output is OTXPredBatch
         assert isinstance(output, OTXPredBatch)

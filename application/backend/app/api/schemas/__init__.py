@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from .label import LabelView, PatchLabels
+from .metrics import PipelineMetricsView
 from .model import ModelView
 from .pipeline import PipelineView
 from .project import ProjectCreate, ProjectUpdateName, ProjectView, TaskView
@@ -12,6 +13,7 @@ __all__ = [
     "LabelView",
     "ModelView",
     "PatchLabels",
+    "PipelineMetricsView",
     "PipelineView",
     "ProjectCreate",
     "ProjectUpdateName",
