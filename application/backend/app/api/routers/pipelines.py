@@ -11,8 +11,7 @@ from fastapi.openapi.models import Example
 from pydantic import ValidationError
 
 from app.api.dependencies import get_pipeline_metrics_service, get_pipeline_service, get_system_service
-from app.api.schemas import PipelineView
-from app.api.schemas.metrics import PipelineMetricsView
+from app.api.schemas import PipelineMetricsView, PipelineView
 from app.api.validators import ProjectID
 from app.models import DataCollectionPolicyAdapter, PipelineStatus
 from app.services import PipelineMetricsService, PipelineService, ResourceNotFoundError, SystemService
