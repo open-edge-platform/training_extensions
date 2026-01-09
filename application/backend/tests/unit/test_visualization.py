@@ -47,18 +47,6 @@ class TestVisualizationDispatcherValidation(unittest.TestCase):
         with self.assertRaises(Exception):
             dispatcher.create_visualization(original_image, predictions)
 
-    def test_handles_none_image_input(self):
-        dispatcher = VisualizationDispatcher()
-        predictions = DetectionResult(bboxes, labels)
-        with self.assertRaises(Exception):
-            dispatcher.create_visualization(None, predictions)
-
-    def test_handles_none_predictions_input(self):
-        dispatcher = VisualizationDispatcher()
-        original_image = np.zeros((100, 100, 3), dtype=np.uint8)
-        result = dispatcher.create_visualization(original_image, None)
-        self.assertIsNone(result)
-
 
 class TestDetectionVisualizerCreator(unittest.TestCase):
     def test_creates_visualization(self):

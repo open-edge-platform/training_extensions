@@ -153,7 +153,7 @@ SourceViewAdapter: TypeAdapter[SourceView] = TypeAdapter(SourceView)
 
 
 class BasicSourceConfigCreate(BaseIDNameModel):
-    source_type: SourceType
+    pass
 
 
 class USBCameraSourceConfigCreate(BasicSourceConfigCreate):

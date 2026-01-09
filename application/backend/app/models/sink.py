@@ -29,7 +29,6 @@ class SinkType(StrEnum):
 
 
 class BaseSinkConfig(BaseRequiredIDNameModel, BaseEntity):
-    sink_type: SinkType
     rate_limit: float | None = None  # Rate limit in Hz, None means no limit
     output_formats: list[OutputFormat]
 

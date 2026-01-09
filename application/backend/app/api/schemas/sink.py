@@ -169,7 +169,6 @@ SinkViewAdapter: TypeAdapter[SinkView] = TypeAdapter(SinkView)
 
 
 class BasicSinkConfigCreate(BaseIDNameModel):
-    sink_type: SinkType
     rate_limit: float | None = None
     output_formats: list[OutputFormat]
 

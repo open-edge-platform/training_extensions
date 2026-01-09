@@ -2,13 +2,13 @@
 # SPDX-License-Identifier: Apache-2.0
 import shutil
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Generic, Literal
 from uuid import UUID, uuid4
 
 from loguru import logger
 from pydantic import Field
 
-from app.core.jobs.models import Job, JobParams, JobType
+from app.core.jobs.models import Job, JobParams, JobParamsT, JobType
 from app.models import Task
 from app.models.system import DeviceInfo
 
@@ -23,12 +23,13 @@ class TrainingJobParams(JobParams):
     device: DeviceInfo
 
 
-class ProjectJob(Job):
+class ProjectJob(Job, Generic[JobParamsT]):
     project_id: UUID
+    params: JobParamsT
 
 
-class TrainingJob(ProjectJob):
-    job_type: Literal[JobType.TRAIN] = JobType.TRAIN
+class TrainingJob(ProjectJob[TrainingJobParams]):
+    job_type: Literal[JobType.TRAIN] = JobType.TRAIN  # pyrefly: ignore[bad-override]
     log_dir: Path
     data_dir: Path
     params: TrainingJobParams

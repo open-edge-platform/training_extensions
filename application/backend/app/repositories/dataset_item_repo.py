@@ -150,7 +150,7 @@ class DatasetItemRepository:
         )
         result = self.db.execute(stmt)
         row = result.mappings().first()
-        return UpdateDatasetItemAnnotation(**row) if row else None
+        return UpdateDatasetItemAnnotation(**row) if row else None  # pyrefly: ignore[missing-argument,bad-unpacking]
 
     def delete_annotation_data(self, obj_id: str) -> bool:
         stmt = (

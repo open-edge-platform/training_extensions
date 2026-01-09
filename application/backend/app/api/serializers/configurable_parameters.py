@@ -55,7 +55,9 @@ class ConfigurableParametersConverter:
         }
         # optional parameter may contain `'anyOf': [{'exclusiveMinimum': 0, 'type': 'integer'}, {'type': 'null'}]`
         type_any_of = json_schema.get(PYDANTIC_ANY_OF, [{}])[0]
-        rest_view["type"] = PYDANTIC_BASE_TYPES_MAPPING.get(json_schema.get("type", type_any_of.get("type")))
+        rest_view["type"] = PYDANTIC_BASE_TYPES_MAPPING.get(  # pyrefly: ignore[no-matching-overload]
+            json_schema.get("type", type_any_of.get("type"))
+        )
         if rest_view["type"] in ["int", "float"]:
             # min/max values can be contained in "minimum", "exclusiveMinimum" or 'anyOf.*'
             rest_view["min_value"] = json_schema.get(
