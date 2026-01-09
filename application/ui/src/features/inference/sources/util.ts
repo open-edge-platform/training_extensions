@@ -13,8 +13,7 @@ export type SourceConfig =
     | ImagesFolderSourceConfig
     | IPCameraSourceConfig
     | USBCameraSourceConfig
-    | VideoFileSourceConfig
-    | DisconnectedSourceConfig;
+    | VideoFileSourceConfig;
 
 export const isOnlyDigits = (str: string): boolean => {
     return /^\d+$/.test(str);

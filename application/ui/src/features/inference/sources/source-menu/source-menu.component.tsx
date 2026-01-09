@@ -49,7 +49,7 @@ export const SourceMenu = ({ id, name, isConnected, onEdit }: SourceMenuProps) =
 
             toast({
                 type: 'success',
-                message: `Successfully connected to "${name}"`,
+                message: `Successfully connected to "${name}".`,
             });
         } catch (_error) {
             toast({

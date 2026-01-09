@@ -64,7 +64,7 @@ const SourceListItem = ({ source, isConnected, onEditSource }: SourceListItemPro
 
 export const SourcesList = ({ sources, onAddSource, onEditSource }: SourcesListProps) => {
     const pipeline = usePipeline();
-    const currentSourceId = pipeline.data.source?.id;
+    const currentSourceId = pipeline.data?.source?.id;
 
     return (
         <Flex
