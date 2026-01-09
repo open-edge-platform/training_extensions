@@ -15,7 +15,6 @@ from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING, Any, Callable, Literal, Sequence
 
 import torch
-from datumaro import LabelCategories
 from lightning import LightningModule, Trainer
 from torch import Tensor, nn
 from torch.optim.lr_scheduler import ConstantLR
@@ -527,11 +526,6 @@ class OTXModel(LightningModule):
         else:
             state_dict = ckpt
         return super().load_state_dict(state_dict, *args, **kwargs)
-
-    @staticmethod
-    def get_ckpt_label_info_v1(ckpt: dict) -> LabelInfo:
-        """Generate label info from OTX v1 checkpoint."""
-        return LabelInfo.from_dm_label_groups(LabelCategories.from_iterable(ckpt["labels"].keys()))
 
     @property
     def label_info(self) -> LabelInfo:

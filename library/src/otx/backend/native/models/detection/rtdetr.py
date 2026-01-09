@@ -26,6 +26,7 @@ from otx.backend.native.models.utils.utils import load_checkpoint
 from otx.config.data import TileConfig
 from otx.data.entity.base import OTXBatchLossEntity
 from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
+from otx.data.entity.utils import stack_batch
 from otx.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 
 if TYPE_CHECKING:
@@ -131,6 +132,15 @@ class RTDETR(OTXDetectionModel):
         pad_size_divisor: int = 32,
         pad_value: int = 0,
     ) -> dict[str, Any]:
+        # Stack images if they're in list format
+        if isinstance(entity.images, list):
+            entity.images, entity.imgs_info = stack_batch(  # type: ignore[assignment]
+                entity.images,
+                entity.imgs_info,  # type: ignore[arg-type]
+                pad_size_divisor=pad_size_divisor,
+                pad_value=pad_value,
+            )
+
         targets: list[dict[str, Any]] = []
         # prepare bboxes for the model
         if entity.bboxes is not None and entity.labels is not None:

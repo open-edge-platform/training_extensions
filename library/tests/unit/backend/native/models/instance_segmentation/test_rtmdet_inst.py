@@ -10,31 +10,26 @@ from otx.data.entity.torch import OTXPredBatch
 
 
 class TestRTMDetInst:
-    def test_loss(self, fxt_data_module):
+    def test_loss(self, fxt_instance_seg_batch):
         model = RTMDetInst(
             label_info=3,
             model_name="rtmdet_inst_tiny",
             data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         )
-        data = next(iter(fxt_data_module.train_dataloader()))
-        data.images = torch.randn([2, 3, 32, 32])
-        data.masks = [torch.zeros((len(masks), 32, 32)) for masks in data.masks]
 
-        output = model(data)
+        output = model(fxt_instance_seg_batch)
         assert "loss_cls" in output
         assert "loss_bbox" in output
         assert "loss_mask" in output
 
-    def test_predict(self, fxt_data_module):
+    def test_predict(self, fxt_instance_seg_batch):
         model = RTMDetInst(
             label_info=3,
             model_name="rtmdet_inst_tiny",
             data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         )
-        data = next(iter(fxt_data_module.train_dataloader()))
-        data.images = [torch.randn(3, 32, 32), torch.randn(3, 48, 48)]
         model.eval()
-        output = model(data)
+        output = model(fxt_instance_seg_batch)
         assert isinstance(output, OTXPredBatch)
 
     def test_export(self):

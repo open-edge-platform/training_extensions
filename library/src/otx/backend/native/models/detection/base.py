@@ -33,6 +33,7 @@ from otx.types.label import LabelInfoTypes
 from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
+    from datumaro.experimental.fields import TileInfo
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
 
     from otx.backend.native.models.detection.detectors import SingleStageDetector
@@ -274,21 +275,21 @@ class OTXDetectionModel(OTXModel):
             DetBatchPredEntity: Merged detection prediction.
         """
         tile_preds: list[OTXPredBatch] = []
-        tile_attrs: list[list[dict[str, int | str]]] = []
+        tile_infos: list[list[TileInfo]] = []
         merger = DetectionTileMerge(
             inputs.imgs_info,
             self.num_classes,
             self.tile_config,
             self.explain_mode,
         )
-        for batch_tile_attrs, batch_tile_input in inputs.unbind():
+        for batch_tile_infos, batch_tile_input in inputs.unbind():
             output = self.forward_explain(batch_tile_input) if self.explain_mode else self.forward(batch_tile_input)
             if isinstance(output, OTXBatchLossEntity):
                 msg = "Loss output is not supported for tile merging"
                 raise TypeError(msg)
             tile_preds.append(output)
-            tile_attrs.append(batch_tile_attrs)
-        pred_entities = merger.merge(tile_preds, tile_attrs)
+            tile_infos.append(batch_tile_infos)
+        pred_entities = merger.merge(tile_preds, tile_infos)
 
         pred_entity = OTXPredBatch(
             batch_size=inputs.batch_size,

@@ -1,104 +1,87 @@
-# Copyright (C) 2023 Intel Corporation
+# Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Unit tests of classification datasets."""
+"""Unit tests for classification_new dataset."""
 
-from unittest.mock import MagicMock
+from __future__ import annotations
 
-from otx.data.dataset.classification import (
-    HLabelInfo,
-    OTXHlabelClsDataset,
-    OTXMulticlassClsDataset,
-    OTXMultilabelClsDataset,
-)
-from otx.data.entity.torch import OTXDataItem
+from unittest.mock import Mock
+
+from datumaro.experimental import Dataset
+
+from otx.data.dataset.classification import OTXMulticlassClsDataset
 
 
 class TestOTXMulticlassClsDataset:
-    def test_get_item(
-        self,
-        fxt_mock_dm_subset,
-    ) -> None:
+    """Test OTXMulticlassClsDataset class."""
+
+    def setup_method(self):
+        """Set up test fixtures."""
+        self.mock_dm_subset = Mock(spec=Dataset)
+        self.mock_dm_subset.__len__ = Mock(return_value=10)
+        self.mock_dm_subset.convert_to_schema = Mock(return_value=self.mock_dm_subset)
+
+        # Mock schema attributes for label_info
+        mock_schema = Mock()
+        mock_attributes = {"label": Mock()}
+        mock_attributes["label"].categories = Mock()
+        # Configure labels to be a list with proper length support
+        mock_attributes["label"].categories.labels = ["class_0", "class_1", "class_2"]
+        mock_schema.attributes = mock_attributes
+        self.mock_dm_subset.schema = mock_schema
+
+        self.mock_transforms = Mock()
+
+    def test_get_idx_list_per_classes_single_class(self):
+        """Test get_idx_list_per_classes with single class."""
+        # Mock dataset items with labels
+        mock_items = []
+        for _ in range(5):
+            mock_item = Mock()
+            mock_item.label.item.return_value = 0  # All items have label 0
+            mock_items.append(mock_item)
+
+        self.mock_dm_subset.__getitem__ = Mock(side_effect=mock_items)
+
         dataset = OTXMulticlassClsDataset(
-            dm_subset=fxt_mock_dm_subset,
-            transforms=[lambda x: x],
-            max_refetch=3,
+            dm_subset=self.mock_dm_subset,
+            transforms=self.mock_transforms,
+            data_format="arrow",
         )
-        assert isinstance(dataset[0], OTXDataItem)
 
-    def test_get_item_from_bbox_dataset(
-        self,
-        fxt_mock_det_dm_subset,
-    ) -> None:
+        # Override length for this test
+        dataset.dm_subset.__len__ = Mock(return_value=5)
+
+        result = dataset.get_idx_list_per_classes()
+
+        expected = {0: [0, 1, 2, 3, 4]}
+        assert result == expected
+
+    def test_get_idx_list_per_classes_string_labels(self):
+        """Test get_idx_list_per_classes with use_string_label=True."""
+        # Create three items with labels 0, 1, 2
+        mock_items = []
+        for lbl in [0, 1, 2, 1, 0]:
+            mock_item = Mock()
+            mock_item.label.item.return_value = lbl
+            mock_items.append(mock_item)
+
+        self.mock_dm_subset.__getitem__ = Mock(side_effect=mock_items)
+
         dataset = OTXMulticlassClsDataset(
-            dm_subset=fxt_mock_det_dm_subset,
-            transforms=[lambda x: x],
-            max_refetch=3,
+            dm_subset=self.mock_dm_subset,
+            transforms=self.mock_transforms,
+            data_format="arrow",
         )
-        assert isinstance(dataset[0], OTXDataItem)
 
+        # Override length for this test
+        dataset.dm_subset.__len__ = Mock(return_value=5)
 
-class TestOTXMultilabelClsDataset:
-    def test_get_item(
-        self,
-        fxt_mock_dm_subset,
-    ) -> None:
-        dataset = OTXMultilabelClsDataset(
-            dm_subset=fxt_mock_dm_subset,
-            transforms=[lambda x: x],
-            max_refetch=3,
-        )
-        assert isinstance(dataset[0], OTXDataItem)
+        result = dataset.get_idx_list_per_classes(use_string_label=True)
 
-    def test_get_item_from_bbox_dataset(
-        self,
-        fxt_mock_det_dm_subset,
-    ) -> None:
-        dataset = OTXMultilabelClsDataset(
-            dm_subset=fxt_mock_det_dm_subset,
-            transforms=[lambda x: x],
-            max_refetch=3,
-        )
-        assert isinstance(dataset[0], OTXDataItem)
-
-
-class TestOTXHlabelClsDataset:
-    def test_add_ancestors(self, fxt_hlabel_dataset_subset):
-        original_anns = fxt_hlabel_dataset_subset.get(id=0, subset="train").annotations
-        assert len(original_anns) == 1
-
-        hlabel_dataset = OTXHlabelClsDataset(
-            dm_subset=fxt_hlabel_dataset_subset,
-            transforms=MagicMock(),
-        )
-        # Added the ancestor
-        adjusted_anns = hlabel_dataset.dm_subset.get(id=0, subset="train").annotations
-        assert len(adjusted_anns) == 2
-
-    def test_get_item(
-        self,
-        mocker,
-        fxt_mock_dm_subset,
-        fxt_mock_hlabelinfo,
-    ) -> None:
-        mocker.patch.object(HLabelInfo, "from_dm_label_groups", return_value=fxt_mock_hlabelinfo)
-        dataset = OTXHlabelClsDataset(
-            dm_subset=fxt_mock_dm_subset,
-            transforms=[lambda x: x],
-            max_refetch=3,
-        )
-        assert isinstance(dataset[0], OTXDataItem)
-
-    def test_get_item_from_bbox_dataset(
-        self,
-        mocker,
-        fxt_mock_det_dm_subset,
-        fxt_mock_hlabelinfo,
-    ) -> None:
-        mocker.patch.object(HLabelInfo, "from_dm_label_groups", return_value=fxt_mock_hlabelinfo)
-        dataset = OTXHlabelClsDataset(
-            dm_subset=fxt_mock_det_dm_subset,
-            transforms=[lambda x: x],
-            max_refetch=3,
-        )
-        assert isinstance(dataset[0], OTXDataItem)
+        expected = {
+            "class_0": [0, 4],
+            "class_1": [1, 3],
+            "class_2": [2],
+        }
+        assert result == expected

@@ -116,6 +116,12 @@ jobs:
         with:
           persist-credentials: false
 
+      # TODO remove after switching to an official Datumaro release with pre-built wheels
+      - name: Installing Rust toolchain
+        uses: dtolnay/rust-toolchain@6d653acede28d24f02e3cd41383119e8b1b35921
+        with:
+          toolchain: stable
+
       - name: Install uv and set the Python version
         uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
         with:
@@ -129,9 +135,19 @@ jobs:
           uv lock --check
           uv sync --frozen
 
-      - name: Unit testing
+      - name: Unit testing (excluding models)
         working-directory: library
-        run: uv run pytest tests/unit --cov --cov-report=xml
+        env:
+          OMP_NUM_THREADS: "1"
+        run: uv run pytest tests/unit --ignore=tests/unit/backend/native/models --cov --cov-report=xml --cov-append
+
+      # Unit test models separately using --forked flag so that each is run in a separate process.
+      # Running these models after each other from the same process can cause segfaults
+      - name: Unit testing models
+        working-directory: library
+        env:
+          OMP_NUM_THREADS: "1"
+        run: uv run pytest tests/unit/backend/native/models --cov --cov-report=xml --cov-append --forked
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
@@ -165,6 +181,12 @@ jobs:
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
+
+      # TODO remove after switching to an official Datumaro release with pre-built wheels
+      - name: Installing Rust toolchain
+        uses: dtolnay/rust-toolchain@6d653acede28d24f02e3cd41383119e8b1b35921
+        with:
+          toolchain: stable
 
       - name: Install uv and set the Python version
         uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6

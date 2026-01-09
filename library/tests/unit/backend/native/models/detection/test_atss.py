@@ -39,10 +39,8 @@ class TestATSS:
             ),
         ],
     )
-    def test_loss(self, model, fxt_data_module):
-        data = next(iter(fxt_data_module.train_dataloader()))
-        data.images = [torch.randn(3, 32, 32), torch.randn(3, 48, 48)]
-        output = model(data)
+    def test_loss(self, model, fxt_detection_batch):
+        output = model(fxt_detection_batch)
         assert "loss_cls" in output
         assert "loss_bbox" in output
         assert "loss_centerness" in output
@@ -62,11 +60,9 @@ class TestATSS:
             ),
         ],
     )
-    def test_predict(self, model, fxt_data_module):
-        data = next(iter(fxt_data_module.train_dataloader()))
-        data.images = [torch.randn(3, 32, 32), torch.randn(3, 48, 48)]
+    def test_predict(self, model, fxt_detection_batch):
         model.eval()
-        output = model(data)
+        output = model(fxt_detection_batch)
         assert isinstance(output, OTXPredBatch)
 
     @pytest.mark.parametrize(

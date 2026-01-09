@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import pytest
 from datumaro import Dataset as DmDataset
+from datumaro.experimental.legacy import convert_from_legacy
 from torch import Tensor
 from torchvision.transforms.v2 import Identity, Transform
 
@@ -29,9 +30,11 @@ class TestOTXKeypointDetectionDataset:
         fxt_tvt_transforms: Transform,
         subset: str,
     ) -> None:
+        dm_subset = fxt_dm_dataset.get_subset(subset).as_dataset()
+        dataset = convert_from_legacy(dm_subset)
         dataset = OTXKeypointDetectionDataset(
-            fxt_dm_dataset.get_subset(subset).as_dataset(),
-            fxt_tvt_transforms,
+            dataset,
+            transforms=fxt_tvt_transforms,
         )
 
         entity = dataset._get_item_impl(0)
@@ -45,3 +48,6 @@ class TestOTXKeypointDetectionDataset:
         assert hasattr(entity, "keypoints")
         assert isinstance(entity.keypoints, Tensor)
         assert entity.keypoints.shape == (4, 3)
+        # visibility channel should be clamped to 1 at max
+        visibility = entity.keypoints[:, 2]
+        assert visibility.max().item() <= 1

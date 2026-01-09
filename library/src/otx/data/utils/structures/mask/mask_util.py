@@ -10,7 +10,6 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pycocotools.mask as mask_utils
 import torch
-from datumaro import Polygon
 from torchvision.ops import roi_align
 
 if TYPE_CHECKING:
@@ -18,44 +17,45 @@ if TYPE_CHECKING:
 
 
 def polygon_to_bitmap(
-    polygons: list[Polygon],
+    polygons: np.ndarray,
     height: int,
     width: int,
 ) -> np.ndarray:
-    """Convert a list of polygons to a bitmap mask.
+    """Convert polygons to a bitmap mask.
 
     Args:
-        polygons (list[Polygon]): List of Datumaro Polygon objects.
-        height (int): bitmap height
-        width (int): bitmap width
+        polygons: a ragged array containing np.ndarray objects of shape (Npoly, 2)
+        height: bitmap height
+        width: bitmap width
 
     Returns:
         np.ndarray: bitmap masks
     """
-    polygons = [polygon.points for polygon in polygons]
-    rles = mask_utils.frPyObjects(polygons, height, width)
+    # Convert to list of flat point arrays for pycocotools
+    polygon_points = [points.reshape(-1) for points in polygons]
+    rles = mask_utils.frPyObjects(polygon_points, height, width)
     return mask_utils.decode(rles).astype(bool).transpose((2, 0, 1))
 
 
 def polygon_to_rle(
-    polygons: list[Polygon],
+    polygons: np.ndarray,
     height: int,
     width: int,
 ) -> list[dict]:
-    """Convert a list of polygons to a list of RLE masks.
+    """Convert polygons to a list of RLE masks.
 
     Args:
-        polygons (list[Polygon]): List of Datumaro Polygon objects.
-        height (int): bitmap height
-        width (int): bitmap width
+        polygons: a ragged array containing np.ndarray objects of shape (Npoly, 2)
+        height: bitmap height
+        width: bitmap width
 
     Returns:
         list[dict]: List of RLE masks.
     """
-    polygons = [polygon.points for polygon in polygons]
-    if len(polygons):
-        return mask_utils.frPyObjects(polygons, height, width)
-    return []
+    # Convert to list of flat point arrays for pycocotools
+    polygon_points = [points.reshape(-1) for points in polygons]
+
+    return mask_utils.frPyObjects(polygon_points, height, width)
 
 
 def encode_rle(mask: torch.Tensor) -> dict:
@@ -96,20 +96,31 @@ def encode_rle(mask: torch.Tensor) -> dict:
 
 
 def crop_and_resize_polygons(
-    annos: list[Polygon],
+    annos: np.ndarray,
     bboxes: np.ndarray,
     out_shape: tuple,
     inds: np.ndarray,
     device: str = "cpu",
 ) -> torch.Tensor:
-    """Crop and resize polygons to the target size."""
+    """Crop and resize polygons to the target size.
+
+    Args:
+        annos: Ragged array containing np.ndarray objects of shape (Npoly, 2)
+        bboxes: Bounding boxes array of shape (N, 4)
+        out_shape: Output shape (height, width)
+        inds: Indices array
+        device: Target device
+
+    Returns:
+        torch.Tensor: Resized polygon masks
+    """
     out_h, out_w = out_shape
     if len(annos) == 0:
         return torch.empty((0, *out_shape), dtype=torch.float, device=device)
 
-    resized_polygons = []
+    resized_polygons = np.empty(len(bboxes), dtype=object)
     for i in range(len(bboxes)):
-        polygon = annos[inds[i]]
+        polygon_points = annos[inds[i]]
         bbox = bboxes[i, :]
         x1, y1, x2, y2 = bbox
         w = np.maximum(x2 - x1, 1)
@@ -117,21 +128,17 @@ def crop_and_resize_polygons(
         h_scale = out_h / max(h, 0.1)  # avoid too large scale
         w_scale = out_w / max(w, 0.1)
 
-        points = polygon.points
-        points = points.copy()
-        points = np.array(points)
-        # crop
-        # pycocotools will clip the boundary
-        points[0::2] = points[0::2] - bbox[0]
-        points[1::2] = points[1::2] - bbox[1]
+        # Crop: translate points relative to bbox origin
+        cropped_points = polygon_points.copy()
+        cropped_points[:, 0] -= x1  # x coordinates
+        cropped_points[:, 1] -= y1  # y coordinates
 
-        # resize
-        points[0::2] = points[0::2] * w_scale
-        points[1::2] = points[1::2] * h_scale
+        # Resize: scale points to output size
+        resized_points = cropped_points.copy()
+        resized_points[:, 0] *= w_scale
+        resized_points[:, 1] *= h_scale
 
-        resized_polygon = Polygon(points.tolist())
-
-        resized_polygons.append(resized_polygon)
+        resized_polygons[i] = resized_points
 
     mask_targets = polygon_to_bitmap(resized_polygons, *out_shape)
 

@@ -15,7 +15,6 @@ import logging
 from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 import numpy as np
-from datumaro.components.annotation import Bbox
 
 from otx.backend.native.exporter.base import OTXModelExporter
 from otx.backend.native.exporter.native import OTXNativeModelExporter
@@ -234,7 +233,7 @@ class SSD(OTXDetectionModel):
         return self._get_anchor_boxes(wh_stats, group_as)
 
     @staticmethod
-    def _get_sizes_from_dataset_entity(dataset: OTXDataset, target_wh: list[int]) -> list[tuple[int, int]]:
+    def _get_sizes_from_dataset_entity(dataset: OTXDataset, target_wh: list[int]) -> np.ndarray:
         """Function to get width and height size of items in OTXDataset.
 
         Args:
@@ -243,20 +242,22 @@ class SSD(OTXDetectionModel):
         Return
             list[tuple[int, int]]: tuples with width and height of each instance
         """
-        wh_stats: list[tuple[int, int]] = []
+        wh_stats = np.empty((0, 2), dtype=np.float32)
         for item in dataset.dm_subset:
-            for ann in item.annotations:
-                if isinstance(ann, Bbox):
-                    x1, y1, x2, y2 = ann.points
-                    x1 = x1 / item.media.size[1] * target_wh[0]
-                    y1 = y1 / item.media.size[0] * target_wh[1]
-                    x2 = x2 / item.media.size[1] * target_wh[0]
-                    y2 = y2 / item.media.size[0] * target_wh[1]
-                    wh_stats.append((x2 - x1, y2 - y1))
+            height, width = item.img_info.img_shape
+            x1 = item.bboxes[:, 0]
+            y1 = item.bboxes[:, 1]
+            x2 = item.bboxes[:, 2]
+            y2 = item.bboxes[:, 3]
+
+            w = (x2 - x1) / width * target_wh[0]
+            h = (y2 - y1) / height * target_wh[1]
+
+            wh_stats = np.concatenate((wh_stats, np.stack((w, h), axis=1)), axis=0)
         return wh_stats
 
     @staticmethod
-    def _get_anchor_boxes(wh_stats: list[tuple[int, int]], group_as: list[int]) -> tuple:
+    def _get_anchor_boxes(wh_stats: np.ndarray, group_as: list[int]) -> tuple:
         """Get new anchor box widths & heights using KMeans."""
         from sklearn.cluster import KMeans
 

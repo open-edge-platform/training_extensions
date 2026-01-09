@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import ast
 import copy
-import itertools
 import math
 import operator
 import typing
@@ -35,6 +34,7 @@ from otx.data.entity.base import (
     _resize_image_info,
     _resized_crop_image_info,
 )
+from otx.data.entity.sample import OTXSample
 from otx.data.entity.torch import OTXDataItem
 from otx.data.transform_libs.utils import (
     CV2_INTERP_CODES,
@@ -112,8 +112,12 @@ class NumpytoTVTensorMixin:
     def convert(self, inputs: OTXDataItem | None) -> OTXDataItem | None:
         """Convert numpy to tv tensors."""
         if self.is_numpy_to_tvtensor and inputs is not None:
-            if (image := getattr(inputs, "image", None)) is not None and isinstance(image, np.ndarray):
-                inputs.image = F.to_image(image.copy())
+            if (image := getattr(inputs, "image", None)) is not None:
+                if isinstance(image, np.ndarray):
+                    inputs.image = F.to_image(image.copy())
+                elif isinstance(image, torch.Tensor):
+                    # Always wrap in tv_tensors.Image to ensure proper type for torchvision transforms
+                    inputs.image = tv_tensors.Image(image)
             if (bboxes := getattr(inputs, "bboxes", None)) is not None and isinstance(bboxes, np.ndarray):
                 inputs.bboxes = tv_tensors.BoundingBoxes(bboxes, format="xyxy", canvas_size=inputs.img_info.img_shape)  # type: ignore[attr-defined, union-attr]
             if (masks := getattr(inputs, "masks", None)) is not None and isinstance(masks, np.ndarray):
@@ -1413,11 +1417,10 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
         if valid_index is not None and hasattr(valid_index, "numpy"):
             valid_index = valid_index.numpy()
 
-        # Filter polygons using valid_index if available
+        # Filter polygons using valid_index
         filtered_polygons = (
             [p for p, keep in zip(inputs.polygons, valid_index) if keep] if valid_index is not None else inputs.polygons
         )
-
         if filtered_polygons:
             inputs.polygons = project_polygons(filtered_polygons, warp_matrix, output_shape)
 
@@ -1449,14 +1452,13 @@ class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
 
         elif has_polygons:
             polygons = inputs.polygons
-            for i, polygon in enumerate(polygons):  # type: ignore[arg-type]
-                points_1d = np.array(polygon.points, dtype=np.float32)
-                if len(points_1d) % 2 != 0:
-                    continue
 
-                points = points_1d.reshape(-1, 2)
-                x, y, w, h = cv2.boundingRect(points)
-                bboxes[i] = np.array([x, y, x + w, y + h])
+            for i, poly_points in enumerate(polygons):  # type: ignore[arg-type]
+                if poly_points.size > 0:
+                    points = poly_points.astype(np.float32)
+                    if len(points) >= 3:  # Need at least 3 points for valid polygon
+                        x, y, w, h = cv2.boundingRect(points)
+                        bboxes[i] = np.array([x, y, x + w, y + h])
 
         inputs.bboxes = tv_tensors.BoundingBoxes(
             bboxes,
@@ -1772,9 +1774,7 @@ class CachedMosaic(tvt_v2.Transform, NumpytoTVTensorMixin):
             if len(mosaic_masks) > 0:
                 inputs.masks = np.concatenate(mosaic_masks, axis=0)[inside_inds]
             if len(mosaic_polygons) > 0:
-                inputs.polygons = [
-                    polygon for ind, polygon in zip(inside_inds, itertools.chain(*mosaic_polygons)) if ind
-                ]  # type: ignore[union-attr]
+                inputs.polygons = np.concatenate(mosaic_polygons, axis=0)[inside_inds]
         return self.convert(inputs)
 
     def _mosaic_combine(
@@ -2047,7 +2047,7 @@ class CachedMixUp(tvt_v2.Transform, NumpytoTVTensorMixin):
         mixup_img = 0.5 * ori_img + 0.5 * padded_cropped_img.astype(np.float32)
 
         # TODO(ashwinvaidya17): remove this once we have a unified TorchDataItem
-        if isinstance(retrieve_results, OTXDataItem):
+        if isinstance(retrieve_results, (OTXDataItem, OTXSample)):
             retrieve_gt_bboxes_labels = retrieve_results.label
         else:
             retrieve_gt_bboxes_labels = retrieve_results.labels
@@ -2120,9 +2120,9 @@ class CachedMixUp(tvt_v2.Transform, NumpytoTVTensorMixin):
                 )
 
                 # 8. mix up
-                mixup_gt_polygons = list(itertools.chain(*[inputs.polygons, retrieve_gt_polygons]))
+                mixup_gt_polygons = np.concatenate((inputs.polygons, retrieve_gt_polygons))
 
-                inputs.polygons = [mixup_gt_polygons[i] for i in np.where(inside_inds)[0]]
+                inputs.polygons = mixup_gt_polygons[np.where(inside_inds)[0]]
 
         return self.convert(inputs)
 
@@ -2639,8 +2639,16 @@ class RandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
                 )
 
         if (polygons := getattr(inputs, "polygons", None)) is not None and len(polygons) > 0:
+            # Handle both ragged array and legacy polygon formats
+            if isinstance(polygons, np.ndarray):
+                # Filter valid polygons using valid_inds for ragged array
+                filtered_polygons = polygons[valid_inds.nonzero()[0]]
+            else:
+                # Filter valid polygons for legacy format
+                filtered_polygons = [polygons[i] for i in valid_inds.nonzero()[0]]
+
             inputs.polygons = crop_polygons(
-                [polygons[i] for i in valid_inds.nonzero()[0]],
+                filtered_polygons,
                 np.asarray([crop_x1, crop_y1, crop_x2, crop_y2]),
                 *orig_shape,
             )
@@ -2725,18 +2733,65 @@ class Compose(tvt_v2.Compose):
     """Re-implementation of torchvision.transforms.v2.Compose.
 
     MMCV transforms can produce None, so it is required to skip the result.
+
+    This class also handles native torchvision transforms by extracting only the
+    transformable fields (image, masks, bboxes) and applying transforms to them,
+    avoiding transforms being applied to non-image tensors like labels.
     """
+
+    def _is_native_torchvision_transform(self, transform: tvt_v2.Transform) -> bool:
+        """Check if the transform is a native torchvision transform."""
+        module = type(transform).__module__
+        return module.startswith("torchvision.")
+
+    def _apply_native_transform(self, transform: tvt_v2.Transform, inputs: OTXDataItem) -> OTXDataItem:
+        """Apply native torchvision transform only to image-related fields."""
+        # Build a dict of transformable fields
+        transformable = {}
+        if (image := getattr(inputs, "image", None)) is not None:
+            transformable["image"] = image
+        if (masks := getattr(inputs, "masks", None)) is not None:
+            transformable["masks"] = masks
+        if (bboxes := getattr(inputs, "bboxes", None)) is not None:
+            transformable["bboxes"] = bboxes
+        if (label := getattr(inputs, "label", None)) is not None:
+            transformable["labels"] = label
+
+        if not transformable:
+            return inputs
+
+        # Apply transform to transformable fields
+        # If there's only an image, pass it directly; otherwise pass as dict
+        if len(transformable) == 1 and "image" in transformable:
+            result = transform(transformable["image"])
+            inputs.image = result
+        else:
+            result = transform(transformable)
+            if isinstance(result, dict):
+                for key, value in result.items():
+                    # Map 'labels' back to 'label' for OTXDataItem
+                    attr_name = "label" if key == "labels" else key
+                    setattr(inputs, attr_name, value)
+            else:
+                # Single result, assume it's the image
+                inputs.image = result
+
+        return inputs
 
     def forward(self, *inputs: OTXDataItem) -> OTXDataItem | None:
         """Forward with skipping None."""
         needs_unpacking = len(inputs) > 1
         for transform in self.transforms:
-            outputs = transform(*inputs)
+            if self._is_native_torchvision_transform(transform):
+                # Apply native transforms only to image-related fields
+                outputs = self._apply_native_transform(transform, inputs[0])
+            else:
+                outputs = transform(*inputs)
             # MMCV transform can produce None. Please see
             # https://github.com/open-mmlab/mmengine/blob/26f22ed283ae4ac3a24b756809e5961efe6f9da8/mmengine/dataset/base_dataset.py#L59-L66
             if outputs is None:
                 return outputs
-            inputs = outputs if needs_unpacking else (outputs,)
+            inputs = outputs if needs_unpacking else (outputs,)  # type: ignore[assignment]
         return outputs
 
 
