@@ -115,25 +115,17 @@ jobs:
 
       # Build backend
 
-      - name: Build venv
+      - name: Build OpenAPI spec
         working-directory: application/backend
         env:
           DEVICE: ${{ inputs.device || 'xpu' }}
         run: |
-          uv lock --check
-          uv sync --extra installer --extra $env:DEVICE --extra mqtt --frozen --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org
-
-      - name: Build OpenAPI spec
-        working-directory: application/backend
-        env:
-          PYTHONPATH: "."
-        run: |
-          uv run --no-sync app/cli.py gen-api --target-path .build/openapi-spec.json
+          just --shell "${{ env.GIT_SH_PATH }}" --shell-arg -c device="$env:DEVICE" gen-openapi
 
       - name: Build executable
         working-directory: application/backend
         run: |
-          uv run pyinstaller --noconfirm geti-tune.spec
+          just --shell "${{ env.GIT_SH_PATH }}" --shell-arg -c device="$env:DEVICE" pyinstaller
 
       # Copy backend artifacts to UI
 

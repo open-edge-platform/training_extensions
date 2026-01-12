@@ -1,0 +1,88 @@
+#!/usr/bin/env just --justfile
+import "../recipes.justfile"
+
+port := "7860"
+host := "0.0.0.0"
+
+# Ensure version in GHA workflow matches uv version here
+uv_version := "0.9.7"
+device := "cpu" # cpu, cuda, xpu
+
+default:
+    @just --list
+
+# Generate OpenAPI specification from FastAPI app
+gen-openapi: _venv
+    PYTHONPATH=. uv run --no-sync app/cli.py gen-api --target-path .build/openapi-spec.json
+
+# Initialize database
+init-db: _venv
+    PYTHONPATH=. uv run --no-sync app/cli.py init-db
+
+# Seed database
+seed-db: _venv init-db
+    echo "Seeding database with initial data..."
+    PYTHONPATH=. uv run --no-sync app/cli.py seed --with-model=True
+
+# Start FastAPI development server with auto-reload
+dev: _venv seed-db download-files
+    CORS_ORIGINS='*' \
+    PYTHONPATH=app uv run uvicorn main:app --reload --host {{ host }} --port {{ port }}
+
+_pre-venv:
+    if ! uv self version | grep {{uv_version}} >/dev/null; then \
+        curl --proto '=https' --tlsv1.2 -LsSf "https://github.com/astral-sh/uv/releases/download/{{uv_version}}/uv-installer.sh" | sh; \
+    fi
+
+_venv: _pre-venv
+    uv lock --check
+    uv sync --extra {{ device }} --extra mqtt --frozen --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org
+
+# Generate uv lock file
+venv-lock: _pre-venv
+    uv lock
+
+# Run unit tests
+test-unit: _venv
+    if [ -d "./tests/unit" ]; then \
+        uv run pytest ./tests/unit -v; \
+    else \
+        echo "./tests/unit directory not found - skipping unit tests"; \
+    fi
+
+# Run integration tests
+test-integration: _venv
+    if [ -d "./tests/integration" ]; then \
+        uv run pytest ./tests/integration -v; \
+    else \
+        echo "./tests/integration directory not found - skipping integration tests"; \
+    fi
+
+# Run all tests (unit + integration)
+tests: test-unit test-integration
+
+# Fix code style and format with ruff
+style-fix: _venv
+    uv run ruff check --config pyproject.toml --fix
+    uv run ruff format --config pyproject.toml
+
+# Run linters (ruff + mypy)
+lint: _venv ruff mypy
+
+ruff:
+    uv run ruff check --config pyproject.toml --output-format=github .
+    uv run ruff format --check --config pyproject.toml .
+
+lint-imports:
+    uv run lint-imports
+
+mypy:
+    uv run mypy . --config-file=pyproject.toml
+
+# -------------------------------------------------------------------------------------------------
+# Installer
+# -------------------------------------------------------------------------------------------------
+
+pyinstaller: _venv
+    uv sync --extra installer --extra {{device}} --extra mqtt --frozen --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org
+    uv run pyinstaller --noconfirm geti-tune.spec

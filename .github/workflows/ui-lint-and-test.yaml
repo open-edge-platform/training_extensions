@@ -90,13 +90,12 @@ jobs:
       - name: Get OpenAPI spec
         working-directory: application/backend
         run: |
-          export PYTHONPATH=.
-          uv run app/cli.py gen-api --target-path openapi-spec.json
+          just gen-openapi
 
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: openapi-spec
-          path: application/backend/openapi-spec.json
+          path: application/backend/.build/openapi-spec.json
 
   build:
     name: Build UI

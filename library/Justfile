@@ -1,0 +1,72 @@
+#!/usr/bin/env just --justfile
+
+set shell := ["bash", "-cu"]
+
+py_path := "tests:src"
+# Ensure version in GHA workflow matches uv version here
+uv_version := "0.9.7"
+device := "cpu" # cpu, cuda, xpu
+
+default_csv_file_name := 'integration_tests.csv'
+default_task := 'all'
+
+default:
+    @just --list
+
+# -------------------------------------------------------------------------------------------------
+# Environment
+# -------------------------------------------------------------------------------------------------
+pre-venv:
+    if ! uv self version | grep {{uv_version}} >/dev/null; then \
+        curl --proto '=https' --tlsv1.2 -LsSf "https://github.com/astral-sh/uv/releases/download/{{uv_version}}/uv-installer.sh" | sh; \
+    fi
+
+venv: pre-venv
+    uv lock --check
+    uv sync --extra {{ device }} --frozen --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org
+
+venv-lock: pre-venv
+    uv lock
+
+# -------------------------------------------------------------------------------------------------
+# Tests
+# -------------------------------------------------------------------------------------------------
+test-unit: venv
+    if [ -d "./tests/unit" ]; then \
+        PYTHONPATH={{py_path}} uv run pytest ./tests/unit --ignore=tests/unit/backend/native/models --cov --cov-report=xml --cov-append -v; \
+    else \
+        echo "./tests/unit directory not found - skipping unit tests"; \
+    fi
+
+test-unit-native-models: venv
+    if [ -d "./tests/unit" ]; then \
+        PYTHONPATH={{py_path}} uv run pytest tests/unit/backend/native/models --cov --cov-report=xml --cov-append --forked -v; \
+    else \
+        echo "./tests/unit directory not found - skipping unit tests"; \
+    fi
+
+test-integration csv_file_name=default_csv_file_name task=default_task: venv
+    if [ -d "./tests/integration" ]; then \
+        PYTHONPATH={{py_path}} uv run pytest ./tests/integration -ra --showlocals --csv={{ csv_file_name }} --task {{ task }} --open-subprocess --run-category-only -v; \
+    else \
+        echo "./tests/integration directory not found - skipping integration tests"; \
+    fi
+
+tests: test-unit test-integration
+
+# -------------------------------------------------------------------------------------------------
+# Static analysis / style
+# -------------------------------------------------------------------------------------------------
+
+style-fix: venv
+    uv run ruff check --config pyproject.toml --fix
+    uv run ruff format --config pyproject.toml
+
+lint: venv ruff mypy
+
+ruff:
+    uv run ruff check --config pyproject.toml --output-format=github .
+    uv run ruff format --check --config pyproject.toml .
+
+mypy:
+    uv run mypy src/otx --config-file=pyproject.toml

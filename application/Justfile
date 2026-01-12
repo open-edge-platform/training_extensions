@@ -1,0 +1,70 @@
+#!/usr/bin/env just --justfile
+import "recipes.justfile"
+
+# Use bash as the shell for evaluating backtick expressions
+set shell := ["bash", "-cu"]
+
+# -------------------------------------------------------------------------------------------------
+# Runtime variables
+# -------------------------------------------------------------------------------------------------
+port := "9100"
+ui-port := "3000"
+webcam-device := "/dev/video0"
+data-dir := ""
+host := "0.0.0.0"
+webrtc-ports := "50000-51000"
+device := "cpu"  # cpu, cuda, xpu
+
+# -------------------------------------------------------------------------------------------------
+# Variables used in the Justfile to build in Docker image
+# -------------------------------------------------------------------------------------------------
+docker-build-context := ""
+build-target := "cpu"  # options: cpu, gpu, xpu
+component-name := "geti-tune"
+container-registry := 'localhost:5000/open-edge-platform'
+version := "latest"
+image-name := container-registry / component-name / build-target + ":" + version
+
+host-ip := `uv run python -c "import socket; s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM); s.connect(('8.8.8.8',80)); print(s.getsockname()[0]); s.close()"`
+
+docker-build-args := "--build-arg http_proxy --build-arg https_proxy --build-arg no_proxy --build-arg HTTP_PROXY --build-arg HTTPS_PROXY --build-arg NO_PROXY"
+docker-run-args := "--env http_proxy --env https_proxy --env no_proxy --env HTTP_PROXY --env HTTPS_PROXY --env NO_PROXY"
+
+# Run both backend and frontend development servers
+dev:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    export PUBLIC_API_URL="http://{{ host-ip }}:{{ port }}"
+
+    (cd backend && just port={{ port }} host={{ host }} device={{ device }} dev) &
+    (cd ui && npm install && PORT={{ ui-port }} npm start) &
+
+    wait
+
+# Build geti tune with optional port mapping
+build-image:
+    @echo "Building docker image for component: {{ component-name }}"
+    @docker build \
+        {{ docker-build-args }} \
+        {{ docker-build-context }} \
+        --tag "{{ image-name }}" \
+        --file docker/Dockerfile . \
+        --target geti-tune-{{ build-target }}
+
+# launch geti tune with optional webcam, volume and port mapping
+run-image: build-image
+    @echo "Running docker image for component: {{ component-name }} with build-target: {{ build-target }}"
+    @echo "Proxy args: {{ docker-run-args }}"
+    @docker run --rm \
+        {{ docker-run-args }} \
+        --sysctl net.ipv4.ip_local_port_range="{{ replace(webrtc-ports, '-', ' ') }}" \
+        --publish {{ webrtc-ports }}:{{ webrtc-ports }}/udp \
+        --publish {{ port }}:{{ port }} \
+        --env PORT={{ port }} \
+        --env HOST={{ host }} \
+        --env WEBRTC_ADVERTISE_IP='{{ host-ip }}' \
+        {{ if data-dir != "" { " --volume " + data-dir + ":/geti_prompt/data" } else { "" } }} \
+        {{ if path_exists(webcam-device) == "true" { " --device " + webcam-device + ":" + webcam-device } else { "" } }} \
+        --name "{{ component-name }}-{{ version }}" \
+        "{{ image-name }}"

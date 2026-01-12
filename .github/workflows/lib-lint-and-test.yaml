@@ -74,17 +74,10 @@ jobs:
           enable-cache: false
           python-version: "3.10" # Use the lowest supported Python version for linting/type-checking
 
-      - name: Installing dependencies
-        working-directory: library
-        run: |
-          uv lock --check
-          uv sync --frozen
-
       - name: Check formatting with ruff
         working-directory: library
         run: |
-          uv run ruff check --output-format=github .
-          uv run ruff format --check .
+          just ruff
 
       # TODO: remove 'continue-on-error' after addressing all mypy issues
       # https://github.com/open-edge-platform/training_extensions/issues/5006
@@ -92,7 +85,7 @@ jobs:
         continue-on-error: true
         working-directory: library
         run: |
-          uv run mypy src/otx
+          just mypy
 
   unit-tests:
     runs-on: [self-hosted, linux, x64, dev, dmount]
@@ -129,17 +122,11 @@ jobs:
           enable-cache: false
           python-version: ${{ matrix.python-version }}
 
-      - name: Installing dependencies
-        working-directory: library
-        run: |
-          uv lock --check
-          uv sync --frozen
-
       - name: Unit testing (excluding models)
         working-directory: library
         env:
           OMP_NUM_THREADS: "1"
-        run: uv run pytest tests/unit --ignore=tests/unit/backend/native/models --cov --cov-report=xml --cov-append
+        run: just test-unit
 
       # Unit test models separately using --forked flag so that each is run in a separate process.
       # Running these models after each other from the same process can cause segfaults
@@ -147,7 +134,7 @@ jobs:
         working-directory: library
         env:
           OMP_NUM_THREADS: "1"
-        run: uv run pytest tests/unit/backend/native/models --cov --cov-report=xml --cov-append --forked
+        run: just test-unit-native-models
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
@@ -206,13 +193,7 @@ jobs:
         env:
           CUBLAS_WORKSPACE_CONFIG: ":4096:8"
         run: |
-          uv run --frozen --extra cuda pytest tests/integration \
-            -ra \
-            --showlocals \
-            --csv=${{ matrix.task }}_Python-${{ matrix.python-version }}.csv \
-            --task ${{ matrix.task }} \
-            --open-subprocess \
-            --run-category-only
+          just device='cuda' csv_file_name='${{ matrix.task }}_Python-${{ matrix.python-version }}.csv' task='${{ matrix.task }}' test-integration
 
   required-check:
     name: Required Check lib-lint-and-test
