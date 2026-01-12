@@ -3,6 +3,7 @@
 
 from .data_collection_policy import (
     ConfidenceThresholdDataCollectionPolicy,
+    DataCollectionConfig,
     DataCollectionPolicy,
     DataCollectionPolicyAdapter,
     FixedRateDataCollectionPolicy,
@@ -37,13 +38,14 @@ from .source import (
     Source,
     SourceAdapter,
     SourceType,
+    USBCameraSourceConfig,
     VideoFileSourceConfig,
-    WebcamSourceConfig,
 )
 from .task import Task, TaskType
 
 __all__ = [
     "ConfidenceThresholdDataCollectionPolicy",
+    "DataCollectionConfig",
     "DataCollectionPolicy",
     "DataCollectionPolicyAdapter",
     "DatasetItem",
@@ -81,7 +83,7 @@ __all__ = [
     "TaskType",
     "TrainingInfo",
     "TrainingStatus",
+    "USBCameraSourceConfig",
     "VideoFileSourceConfig",
-    "WebcamSourceConfig",
     "WebhookSinkConfig",
 ]

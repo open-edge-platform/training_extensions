@@ -169,6 +169,32 @@ class TestSystemService:
             assert fxt_system_service.validate_device("cuda") is False
             assert fxt_system_service.validate_device("cuda-0") is False
 
+    def test_get_inference_devices_with_multiple_devices(self, fxt_system_service: SystemService):
+        """Test getting inference devices when multiple GPUs are available"""
+        with patch("app.services.system_service.torch") as mock_torch:
+            # Mock XPU device
+            mock_xpu_dp = MagicMock()
+            mock_xpu_dp.name = "Intel(R) Graphics [0x7d41]"
+            mock_xpu_dp.total_memory = 36022263808
+
+            mock_torch.xpu.is_available.return_value = True
+            mock_torch.xpu.device_count.return_value = 1
+            mock_torch.xpu.get_device_properties.return_value = mock_xpu_dp
+
+            # Mock CUDA device
+            mock_cuda_dp = MagicMock()
+            mock_cuda_dp.name = "NVIDIA GeForce RTX 4090"
+            mock_cuda_dp.total_memory = 25769803776
+
+            mock_torch.cuda.is_available.return_value = True
+            mock_torch.cuda.device_count.return_value = 1
+            mock_torch.cuda.get_device_properties.return_value = mock_cuda_dp
+
+            inference_devices = fxt_system_service.get_inference_devices()
+
+            assert len(inference_devices) == 2
+            assert not any(device.type == "cuda" for device in inference_devices)
+
     def test_validate_device_invalid_type(self, fxt_system_service: SystemService):
         """Test validating invalid device types"""
         with patch("app.services.system_service.torch") as mock_torch, pytest.raises(ValueError):
@@ -184,3 +210,53 @@ class TestSystemService:
             assert fxt_system_service.validate_device("gpu") is False
             assert fxt_system_service.validate_device("tpu") is False
             assert fxt_system_service.validate_device("invalid") is False
+
+    def test_get_device_info(self, fxt_system_service: SystemService):
+        """Test getting device info"""
+        with patch("app.services.system_service.torch") as mock_torch:
+            # Mock XPU device
+            mock_xpu_dp = MagicMock()
+            mock_xpu_dp.name = "Intel(R) Graphics [0x7d41]"
+            mock_xpu_dp.total_memory = 36022263808
+
+            mock_torch.xpu.is_available.return_value = True
+            mock_torch.xpu.device_count.return_value = 1
+            mock_torch.xpu.get_device_properties.return_value = mock_xpu_dp
+
+            # CUDA not available
+            mock_torch.cuda.is_available.return_value = False
+
+            device_info = fxt_system_service.get_device_info("cpu")
+
+            assert device_info.type == "cpu"
+            assert device_info.name == "CPU"
+            assert device_info.memory is None
+            assert device_info.index is None
+
+            device_info = fxt_system_service.get_device_info("xpu-0")
+
+            assert device_info.type == "xpu"
+            assert device_info.name == "Intel(R) Graphics [0x7d41]"
+            assert device_info.memory == 36022263808
+            assert device_info.index == 0
+
+    def test_get_device_info_invalid(self, fxt_system_service: SystemService):
+        """Test getting device info for invalid device"""
+        with pytest.raises(ValueError):
+            fxt_system_service.get_device_info("xpu-999")
+
+    def test_get_camera_devices(self, fxt_system_service: SystemService):
+        """Test getting camera devices"""
+        with patch("app.services.system_service.enumerate_cameras") as mock_enumerate_cameras:
+            # Mock camera device
+            mock_camera = MagicMock()
+            mock_camera.name = "Integrated Camera"
+            mock_camera.index = 1400
+
+            mock_enumerate_cameras.return_value = [mock_camera]
+
+            camera_devices = fxt_system_service.get_camera_devices()
+
+            assert len(camera_devices) == 1
+            assert camera_devices[0].name == "Integrated Camera"
+            assert camera_devices[0].index == 1400

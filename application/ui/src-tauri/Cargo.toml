@@ -1,8 +1,8 @@
 [package]
-name = "app"
+name = "geti_tune_ui"
 version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
+description = "Geti Tune UI"
+authors = ["Intel"]
 license = ""
 repository = ""
 edition = "2021"
@@ -11,15 +11,15 @@ rust-version = "1.77.2"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
-name = "app_lib"
+name = "geti_tune_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build = { version = "2.3.0", features = [] }
+tauri-build = { version = "2.5.1", features = [] }
 
 [dependencies]
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
-tauri = { version = "2.6.2", features = [] }
+tauri = { version = "2.9.2", features = [] }
 tauri-plugin-log = "2"

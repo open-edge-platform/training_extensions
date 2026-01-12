@@ -22,48 +22,48 @@ def fxt_source_update_service(fxt_event_bus, db_session) -> SourceUpdateService:
 class TestSourceUpdateServiceIntegration:
     """Integration tests for ConfigurationService."""
 
-    def test_create_source(self, fxt_webcam_source, fxt_source_update_service, db_session):
+    def test_create_source(self, fxt_usb_camera_source, fxt_source_update_service, db_session):
         """Test creating a new configuration."""
         fxt_source_update_service.create_source(
-            name=fxt_webcam_source.name,
-            source_type=fxt_webcam_source.source_type,
-            config_data=fxt_webcam_source.config_data,
-            source_id=fxt_webcam_source.id,
+            name=fxt_usb_camera_source.name,
+            source_type=fxt_usb_camera_source.source_type,
+            config_data=fxt_usb_camera_source.config_data,
+            source_id=fxt_usb_camera_source.id,
         )
 
         assert db_session.query(SourceDB).count() == 1
         created = db_session.query(SourceDB).one()
-        assert created.id == str(fxt_webcam_source.id)
-        assert created.name == fxt_webcam_source.name
-        assert created.source_type == fxt_webcam_source.source_type.value
+        assert created.id == str(fxt_usb_camera_source.id)
+        assert created.name == fxt_usb_camera_source.name
+        assert created.source_type == fxt_usb_camera_source.source_type.value
 
     def test_create_source_non_unique(
         self,
         fxt_db_sources,
-        fxt_webcam_source,
+        fxt_usb_camera_source,
         fxt_source_update_service,
         db_session,
     ):
         """Test creating a new source with the name that already exists."""
         db_session.add(fxt_db_sources[0])
 
-        fxt_webcam_source.name = fxt_db_sources[0].name  # Set the same name as existing resource
+        fxt_usb_camera_source.name = fxt_db_sources[0].name  # Set the same name as existing resource
 
         with pytest.raises(ResourceWithNameAlreadyExistsError) as excinfo:
             fxt_source_update_service.create_source(
-                name=fxt_webcam_source.name,
-                source_type=fxt_webcam_source.source_type,
-                config_data=fxt_webcam_source.config_data,
-                source_id=fxt_webcam_source.id,
+                name=fxt_usb_camera_source.name,
+                source_type=fxt_usb_camera_source.source_type,
+                config_data=fxt_usb_camera_source.config_data,
+                source_id=fxt_usb_camera_source.id,
             )
 
         assert excinfo.value.resource_type == ResourceType.SOURCE
-        assert excinfo.value.resource_id == fxt_webcam_source.name
+        assert excinfo.value.resource_id == fxt_usb_camera_source.name
 
     def test_create_source_duplicating_id(
         self,
         fxt_db_sources,
-        fxt_webcam_source,
+        fxt_usb_camera_source,
         fxt_source_update_service,
         db_session,
     ):
@@ -71,14 +71,14 @@ class TestSourceUpdateServiceIntegration:
         db_session.add(fxt_db_sources[0])
         db_session.flush()
 
-        fxt_webcam_source.id = UUID(fxt_db_sources[0].id)  # Set the same ID as existing resource
+        fxt_usb_camera_source.id = UUID(fxt_db_sources[0].id)  # Set the same ID as existing resource
 
         with pytest.raises(ResourceWithIdAlreadyExistsError) as excinfo:
             fxt_source_update_service.create_source(
-                name=fxt_webcam_source.name,
-                source_type=fxt_webcam_source.source_type,
-                config_data=fxt_webcam_source.config_data,
-                source_id=fxt_webcam_source.id,
+                name=fxt_usb_camera_source.name,
+                source_type=fxt_usb_camera_source.source_type,
+                config_data=fxt_usb_camera_source.config_data,
+                source_id=fxt_usb_camera_source.id,
             )
 
         assert excinfo.value.resource_type == ResourceType.SOURCE

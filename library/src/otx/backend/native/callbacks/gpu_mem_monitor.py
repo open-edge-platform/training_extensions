@@ -29,7 +29,7 @@ class GPUMemMonitor(Callback):
             batch_size (int): batch size.
         """
         device = trainer.strategy.root_device
-        if device.type in ["cpu", "xpu"]:
+        if device.type in ["cpu", "xpu", "mps"]:
             return
 
         device_stats = trainer.accelerator.get_device_stats(device)

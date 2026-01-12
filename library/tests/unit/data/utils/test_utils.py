@@ -5,8 +5,6 @@
 
 from __future__ import annotations
 
-from collections import defaultdict
-
 import cv2
 import numpy as np
 import pytest
@@ -21,8 +19,6 @@ from otx.data.utils.utils import (
     compute_robust_scale_statistics,
     compute_robust_statistics,
     get_adaptive_num_workers,
-    get_idx_list_per_classes,
-    import_object_from_module,
 )
 
 RNG = np.random.default_rng(42)
@@ -175,29 +171,3 @@ def fxt_dm_dataset() -> DmDataset:
     ]
 
     return DmDataset.from_iterable(dataset_items, categories=["0", "1"])
-
-
-def test_get_idx_list_per_classes(fxt_dm_dataset):
-    # Call the function under test
-    result = get_idx_list_per_classes(fxt_dm_dataset)
-
-    # Assert the expected output
-    expected_result = defaultdict(list)
-    expected_result[0] = list(range(100))
-    expected_result[1] = list(range(100, 108))
-    assert result == expected_result
-
-    # Call the function under test with use_string_label
-    result = get_idx_list_per_classes(fxt_dm_dataset, use_string_label=True)
-
-    # Assert the expected output
-    expected_result = defaultdict(list)
-    expected_result["0"] = list(range(100))
-    expected_result["1"] = list(range(100, 108))
-    assert result == expected_result
-
-
-def test_import_object_from_module():
-    obj_path = "otx.data.utils.get_idx_list_per_classes"
-    obj = import_object_from_module(obj_path)
-    assert obj == get_idx_list_per_classes

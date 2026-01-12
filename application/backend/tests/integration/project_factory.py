@@ -73,6 +73,7 @@ class ProjectTestDataFactory:
         model_id: str | None = None,
         source_id: str | None = None,
         sink_id: str | None = None,
+        device: str = "cpu",
     ) -> "ProjectTestDataFactory":
         """Add a pipeline to the project."""
         if not self._project:
@@ -84,6 +85,7 @@ class ProjectTestDataFactory:
             model_revision_id=model_id,
             source_id=source_id,
             sink_id=sink_id,
+            device=device,
         )
         return self
 
@@ -141,7 +143,7 @@ class ProjectTestDataFactory:
         """Set data collection policy for the project."""
         if not self._pipeline:
             raise ValueError("Pipeline must be set before adding data policies")
-        self._pipeline.data_collection_policies = data_policies
+        self._pipeline.data_collection = {"max_dataset_size": None, "policies": data_policies}
         return self
 
     def build(self) -> ProjectDB:

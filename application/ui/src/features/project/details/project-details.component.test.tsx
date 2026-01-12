@@ -38,7 +38,6 @@ describe('ProjectDetails', () => {
                 return HttpResponse.json({
                     project_id: '123',
                     status: 'running' as const,
-                    data_collection_policies: [],
                     source: {
                         id: 'source-id',
                         name: 'source',
@@ -47,6 +46,7 @@ describe('ProjectDetails', () => {
                     },
                     model: {
                         id: '1',
+                        name: 'My amazing model',
                         architecture: 'Object_Detection_TestModel',
                         training_info: {
                             status: 'successful' as const,

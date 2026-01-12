@@ -9,7 +9,6 @@ from dataclasses import fields
 
 import numpy as np
 import torch
-from datumaro import Polygon
 from torchvision.tv_tensors import BoundingBoxes, Mask
 
 from otx.data.entity.base import ImageInfo
@@ -154,15 +153,15 @@ class ValidateItemMixin:
         return keypoints
 
     @staticmethod
-    def _polygons_validator(polygons: list[Polygon]) -> list[Polygon]:
+    def _polygons_validator(polygons: np.ndarray) -> np.ndarray:
         """Validate the polygons."""
         if len(polygons) == 0:
             return polygons
-        if not isinstance(polygons, list):
-            msg = f"Polygons must be a list of datumaro.Polygon. Got {type(polygons)}"
+        if not isinstance(polygons, np.ndarray):
+            msg = f"Polygons must be a np.ndarray of np.ndarray. Got {type(polygons)}"
             raise TypeError(msg)
-        if not isinstance(polygons[0], Polygon):
-            msg = f"Polygons must be a list of datumaro.Polygon. Got {type(polygons[0])}"
+        if not isinstance(polygons[0], np.ndarray):
+            msg = f"Polygons must be a np.ndarray of np.ndarray. Got {type(polygons[0])}"
             raise TypeError(msg)
         return polygons
 
@@ -388,20 +387,20 @@ class ValidateBatchMixin:
         return batch_size
 
     @staticmethod
-    def _polygons_validator(polygons_batch: list[list[Polygon] | None]) -> list[list[Polygon] | None]:
+    def _polygons_validator(polygons_batch: list[np.ndarray | None]) -> list[np.ndarray | None]:
         """Validate the polygons batch."""
         if all(polygon is None for polygon in polygons_batch):
             return []
         if not isinstance(polygons_batch, list):
             msg = "Polygons batch must be a list"
             raise TypeError(msg)
-        if not isinstance(polygons_batch[0], list):
-            msg = "Polygons batch must be a list of list"
+        if not isinstance(polygons_batch[0], np.ndarray):
+            msg = "Polygons batch must be a list of np.ndarray of np.ndarray"
             raise TypeError(msg)
         if len(polygons_batch[0]) == 0:
             msg = f"Polygons batch must not be empty. Got {polygons_batch}"
             raise ValueError(msg)
-        if not isinstance(polygons_batch[0][0], Polygon):
-            msg = "Polygons batch must be a list of list of datumaro.Polygon"
+        if not isinstance(polygons_batch[0][0], np.ndarray):
+            msg = "Polygons batch must be a list of np.ndarray of np.ndarray"
             raise TypeError(msg)
         return polygons_batch

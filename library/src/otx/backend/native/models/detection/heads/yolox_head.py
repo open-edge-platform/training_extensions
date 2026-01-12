@@ -369,7 +369,6 @@ class YOLOXHeadModule(BaseDenseHead):
 
         if not with_nms:
             return bboxes, scores
-
         return multiclass_nms(
             bboxes,
             scores,

@@ -3,6 +3,7 @@
 
 from .events import Cancelled, Done, ExecutionEvent, Failed, Progress, Started
 from .job import Job, JobParams, JobStatus, JobType, now_utc_ts
+from .training_job import TrainingJob, TrainingJobParams
 
 __all__ = [
     "Cancelled",
@@ -15,5 +16,7 @@ __all__ = [
     "JobType",
     "Progress",
     "Started",
+    "TrainingJob",
+    "TrainingJobParams",
     "now_utc_ts",
 ]

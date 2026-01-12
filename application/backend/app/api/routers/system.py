@@ -8,21 +8,40 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 
 from app.api.dependencies import get_system_service
-from app.schemas.system import DeviceInfo
+from app.api.schemas.system import CameraInfoView, DeviceInfoView
 from app.services import SystemService
 
-router = APIRouter(prefix="/api")
+router = APIRouter(prefix="/api/system", tags=["System"])
 
 
-@router.get("/system/devices")
-async def get_devices(
+@router.get("/devices/inference")
+async def get_inference_devices(
     system_service: Annotated[SystemService, Depends(get_system_service)],
-) -> list[DeviceInfo]:
-    """Returns the list of available compute devices (CPU, Intel XPU, NVIDIA CUDA)."""
-    return system_service.get_devices()
+) -> list[DeviceInfoView]:
+    """Returns the list of available compute devices (CPU, Intel XPU)."""
+    inference_devices = system_service.get_inference_devices()
+    return [DeviceInfoView.model_validate(device, from_attributes=True) for device in inference_devices]
 
 
-@router.get("/system/metrics/memory")
+@router.get("/devices/training")
+async def get_training_devices(
+    system_service: Annotated[SystemService, Depends(get_system_service)],
+) -> list[DeviceInfoView]:
+    """Returns the list of available training devices (CPU, Intel XPU, NVIDIA CUDA)."""
+    training_devices = system_service.get_training_devices()
+    return [DeviceInfoView.model_validate(device, from_attributes=True) for device in training_devices]
+
+
+@router.get("/devices/camera")
+async def get_camera_devices(
+    system_service: Annotated[SystemService, Depends(get_system_service)],
+) -> list[CameraInfoView]:
+    """Returns the list of available camera devices."""
+    camera_devices = system_service.get_camera_devices()
+    return [CameraInfoView.model_validate(device, from_attributes=True) for device in camera_devices]
+
+
+@router.get("/metrics/memory")
 async def get_memory(
     system_service: Annotated[SystemService, Depends(get_system_service)],
 ) -> dict:

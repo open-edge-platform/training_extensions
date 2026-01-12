@@ -243,6 +243,87 @@ class PatchEmbed(BaseModule):
         return x, out_size
 
 
+class UnflattenPatchEmbed(nn.Module):
+    """2D image to patch embedding: (B,C,H,W) -> (B,N,D).
+
+    Args:
+        img_size: Image size.
+        patch_size: Patch token size.
+        in_chans: Number of input image channels.
+        embed_dim: Number of linear projection output channels.
+        norm_layer: Normalization layer.
+    """
+
+    def __init__(
+        self,
+        img_size: int | tuple[int, int] = 224,
+        patch_size: int | tuple[int, int] = 16,
+        in_chans: int = 3,
+        embed_dim: int = 768,
+        norm_layer: Callable | None = None,
+        flatten_embedding: bool = True,
+    ) -> None:
+        super().__init__()
+
+        image_hw = img_size if isinstance(img_size, tuple) else (img_size, img_size)
+        patch_hw = patch_size if isinstance(patch_size, tuple) else (patch_size, patch_size)
+        patch_grid_size = (
+            image_hw[0] // patch_hw[0],
+            image_hw[1] // patch_hw[1],
+        )
+
+        self.img_size = image_hw
+        self.patch_size = patch_hw
+        self.patches_resolution = patch_grid_size
+        self.num_patches = patch_grid_size[0] * patch_grid_size[1]
+
+        self.in_chans = in_chans
+        self.embed_dim = embed_dim
+
+        self.flatten_embedding = flatten_embedding
+
+        self.proj = nn.Conv2d(in_chans, embed_dim, kernel_size=patch_hw, stride=patch_hw)
+        self.norm = norm_layer(embed_dim) if norm_layer else nn.Identity()
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass to embed image patches.
+
+        Args:
+            x: Input image tensor of shape (B, C, H, W).
+
+        Returns:
+            Patch embeddings of shape (B, N, D) or (B, H, W, D) if not flattened.
+        """
+        _, _, h, w = x.shape
+
+        x = self.proj(x)  # B C H W
+        h, w = x.size(2), x.size(3)
+        x = x.flatten(2).transpose(1, 2)  # B HW C
+        x = self.norm(x)
+        if not self.flatten_embedding:
+            x = x.reshape(-1, h, w, self.embed_dim)  # B H W C
+        return x
+
+    def flops(self) -> float:
+        """Calculate FLOPs for patch embedding.
+
+        Returns:
+            Number of floating point operations.
+        """
+        ho, wo = self.patches_resolution
+        flops = ho * wo * self.embed_dim * self.in_chans * (self.patch_size[0] * self.patch_size[1])
+        if self.norm is not None:
+            flops += ho * wo * self.embed_dim
+        return flops
+
+    def reset_parameters(self) -> None:
+        """Reset projection layer parameters using uniform initialization."""
+        k = 1 / (self.in_chans * (self.patch_size[0] ** 2))
+        nn.init.uniform_(self.proj.weight, -math.sqrt(k), math.sqrt(k))
+        if self.proj.bias is not None:
+            nn.init.uniform_(self.proj.bias, -math.sqrt(k), math.sqrt(k))
+
+
 class FFN(BaseModule):
     """Implements feed-forward networks (FFNs) with identity connection.
 

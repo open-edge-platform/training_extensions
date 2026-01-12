@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import time
+from pathlib import Path
 from unittest.mock import MagicMock, call, patch
 
 from app.stream.images_folder_stream import ImagesFolderStream
@@ -28,10 +29,12 @@ class TestImagesFolderStream:
     @patch("os.listdir", return_value=["file1", "file2"])
     def test_init_do_not_ignore_existing_images(self, mock_listdir, mock_isfile, mock_getmtime, mock_init_watchdog):
         stream = ImagesFolderStream(folder_path="folder_path", ignore_existing_images=False)
-        assert stream.files == ["folder_path/file1", "folder_path/file2"]
+        file_1 = str(Path("folder_path", "file1"))
+        file_2 = str(Path("folder_path", "file2"))
+        assert stream.files == [file_1, file_2]
         mock_listdir.assert_called_once_with("folder_path")
-        mock_isfile.assert_has_calls([call("folder_path/file1"), call("folder_path/file2")])
-        mock_getmtime.assert_has_calls([call("folder_path/file1"), call("folder_path/file2")])
+        mock_isfile.assert_has_calls([call(file_1), call(file_2)])
+        mock_getmtime.assert_has_calls([call(file_1), call(file_2)])
         mock_init_watchdog.assert_called_once_with("folder_path")
 
     @patch.object(ImagesFolderStream, "_init_watchdog")

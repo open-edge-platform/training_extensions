@@ -67,7 +67,7 @@ def partial_model(model: type[BaseModel]) -> type[BaseModel]:
         if type(new_field.annotation) is type(BaseModel):
             partial_inner_model = partial_model(cast("type[BaseModel]", new_field.annotation))  # type: ignore[arg-type]
             partial_fields[field_name] = (
-                partial_inner_model | None,
+                partial_inner_model | new_field.annotation | None,
                 FieldInfo(annotation=partial_inner_model, default=None),
             )
         else:

@@ -15,3 +15,9 @@ repos:
         name: mypy (backend)
         additional_dependencies: [types-PyYAML, types-aiofiles, types-requests]
         args: [--disallow-untyped-calls, --config-file, pyproject.toml]
+  - repo: https://github.com/seddonym/import-linter
+    rev: "v2.3"
+    hooks:
+      - id: import-linter
+        name: import linter
+        args: [--no-cache]

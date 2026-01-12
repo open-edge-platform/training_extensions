@@ -1,12 +1,13 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { View } from '@geti/ui';
-import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-import { API_BASE_URL } from 'src/api/client';
-import type { DatasetItem } from 'src/constants/shared-types';
+import { MouseEvent } from 'react';
 
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+
+import { API_BASE_URL } from '../../api/client';
 import { ZoomTransform } from '../../components/zoom/zoom-transform';
+import type { DatasetItem } from '../../constants/shared-types';
 import { useAnnotationActions } from '../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotationVisibility } from '../../shared/annotator/annotation-visibility-provider.component';
 import { useSelectedAnnotations } from '../../shared/annotator/select-annotation-provider.component';
@@ -37,17 +38,20 @@ export const AnnotatorCanvas = ({ mediaItem }: AnnotatorCanvasProps) => {
 
     return (
         <ZoomTransform target={size}>
-            <View position={'relative'} width={'100%'} height={'100%'}>
+            <div
+                style={{ position: 'relative', height: '100%', width: '100%' }}
+                onContextMenu={(event: MouseEvent): void => event.preventDefault()}
+            >
                 <img src={getImageUrl(project_id, String(mediaItem.id))} alt='Collected data' />
 
                 <Annotations
-                    annotations={orderedAnnotations}
                     width={size.width}
                     height={size.height}
                     isFocussed={isFocussed}
+                    annotations={orderedAnnotations}
                 />
                 <ToolManager />
-            </View>
+            </div>
         </ZoomTransform>
     );
 };

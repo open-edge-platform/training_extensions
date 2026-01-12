@@ -7,7 +7,6 @@ export const getMockedPipeline = (customPipeline?: Partial<SchemaPipelineView>):
     return {
         project_id: '123',
         status: 'running' as const,
-        data_collection_policies: [],
         source: {
             id: 'source-id',
             name: 'source',
@@ -16,6 +15,7 @@ export const getMockedPipeline = (customPipeline?: Partial<SchemaPipelineView>):
         },
         model: {
             id: '1',
+            name: 'My amazing model',
             architecture: 'Object_Detection_TestModel',
             training_info: {
                 status: 'successful' as const,

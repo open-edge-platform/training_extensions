@@ -15,14 +15,13 @@ from typing import TYPE_CHECKING, Any
 import cv2
 import numpy as np
 import torch
-from datumaro.components.annotation import AnnotationType, Bbox, ExtractedMask, LabelCategories, Polygon
+from datumaro.components.annotation import AnnotationType, Bbox, ExtractedMask, Polygon
 from datumaro.components.annotation import Shape as _Shape
 
 from otx.types import OTXTaskType
 from otx.utils.device import is_xpu_available
 
 if TYPE_CHECKING:
-    from datumaro import Dataset as DmDataset
     from datumaro import DatasetSubset
     from torch.utils.data import Dataset, Sampler
 
@@ -253,22 +252,6 @@ def get_adaptive_num_workers(num_dataloader: int = 1) -> int | None:
     if num_devices == 0:
         return None
     return min(cpu_count() // (num_dataloader * num_devices), 8)  # max available num_workers is 8
-
-
-def get_idx_list_per_classes(dm_dataset: DmDataset, use_string_label: bool = False) -> dict[int | str, list[int]]:
-    """Compute class statistics."""
-    stats: dict[int | str, list[int]] = defaultdict(list)
-    labels = dm_dataset.categories().get(AnnotationType.label, LabelCategories())
-    for item_idx, item in enumerate(dm_dataset):
-        for ann in item.annotations:
-            if use_string_label:
-                stats[labels.items[ann.label].name].append(item_idx)
-            else:
-                stats[ann.label].append(item_idx)
-    # Remove duplicates in label stats idx: O(n)
-    for k, v in stats.items():
-        stats[k] = list(dict.fromkeys(v))
-    return stats
 
 
 def import_object_from_module(obj_path: str) -> Any:  # noqa: ANN401

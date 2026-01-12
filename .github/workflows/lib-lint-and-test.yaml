@@ -37,7 +37,7 @@ jobs:
 
       - name: Get all paths that should trigger the workflow
         id: changed-files-yaml
-        uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v47.0.0
+        uses: tj-actions/changed-files@e0021407031f5be11a464abee9a0776171c79891 # v47.0.1
         with:
           files_yaml: |
             test:
@@ -68,7 +68,7 @@ jobs:
           persist-credentials: false
 
       - name: Install uv and set the Python version
-        uses: astral-sh/setup-uv@ed21f2f24f8dd64503750218de024bcf64c7250a # v7.1.5
+        uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
         with:
           version: "0.9.7"
           enable-cache: false
@@ -116,8 +116,14 @@ jobs:
         with:
           persist-credentials: false
 
+      # TODO remove after switching to an official Datumaro release with pre-built wheels
+      - name: Installing Rust toolchain
+        uses: dtolnay/rust-toolchain@6d653acede28d24f02e3cd41383119e8b1b35921
+        with:
+          toolchain: stable
+
       - name: Install uv and set the Python version
-        uses: astral-sh/setup-uv@ed21f2f24f8dd64503750218de024bcf64c7250a # v7.1.5
+        uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
         with:
           version: "0.9.7"
           enable-cache: false
@@ -129,12 +135,22 @@ jobs:
           uv lock --check
           uv sync --frozen
 
-      - name: Unit testing
+      - name: Unit testing (excluding models)
         working-directory: library
-        run: uv run pytest tests/unit --cov --cov-report=xml
+        env:
+          OMP_NUM_THREADS: "1"
+        run: uv run pytest tests/unit --ignore=tests/unit/backend/native/models --cov --cov-report=xml --cov-append
+
+      # Unit test models separately using --forked flag so that each is run in a separate process.
+      # Running these models after each other from the same process can cause segfaults
+      - name: Unit testing models
+        working-directory: library
+        env:
+          OMP_NUM_THREADS: "1"
+        run: uv run pytest tests/unit/backend/native/models --cov --cov-report=xml --cov-append --forked
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5.5.1
+        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
         with:
           directory: library
           flags: coverage_unit-tests_Python-${{ matrix.python-version }}
@@ -151,14 +167,14 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.10", "3.13"]
-        include:
-          - task: "multi_class_cls"
-          - task: "multi_label_cls"
-          - task: "h_label_cls"
-          - task: "keypoint_detection"
-          - task: "detection"
-          - task: "instance_segmentation"
-          - task: "semantic_segmentation"
+        task:
+          - "multi_class_cls"
+          - "multi_label_cls"
+          - "h_label_cls"
+          - "keypoint_detection"
+          - "detection"
+          - "instance_segmentation"
+          - "semantic_segmentation"
     name: integration-tests-${{ matrix.task }}-py${{ matrix.python-version }}
     steps:
       - name: Checkout repository
@@ -166,8 +182,14 @@ jobs:
         with:
           persist-credentials: false
 
+      # TODO remove after switching to an official Datumaro release with pre-built wheels
+      - name: Installing Rust toolchain
+        uses: dtolnay/rust-toolchain@6d653acede28d24f02e3cd41383119e8b1b35921
+        with:
+          toolchain: stable
+
       - name: Install uv and set the Python version
-        uses: astral-sh/setup-uv@ed21f2f24f8dd64503750218de024bcf64c7250a # v7.1.5
+        uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
         with:
           version: "0.9.7"
           enable-cache: false

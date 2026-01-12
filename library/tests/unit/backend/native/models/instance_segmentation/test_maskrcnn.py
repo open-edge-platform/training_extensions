@@ -47,9 +47,8 @@ class TestMaskRCNN:
             ),
         ],
     )
-    def test_loss(self, model, fxt_data_module):
-        data = next(iter(fxt_data_module.train_dataloader()))
-        data.images = torch.randn([2, 3, 32, 32])
+    def test_loss(self, model, fxt_instance_seg_batch):
+        data = fxt_instance_seg_batch
 
         output = model(data)
         if model.model_name == "maskrcnn_resnet_50" and isinstance(model, MaskRCNNTV):
@@ -90,8 +89,8 @@ class TestMaskRCNN:
             ),
         ],
     )
-    def test_predict(self, model, fxt_data_module):
-        data = next(iter(fxt_data_module.train_dataloader()))
+    def test_predict(self, model, fxt_instance_seg_batch):
+        data = fxt_instance_seg_batch
         data.images = [torch.randn(3, 32, 32), torch.randn(3, 48, 48)]
         model.eval()
         output = model(data)

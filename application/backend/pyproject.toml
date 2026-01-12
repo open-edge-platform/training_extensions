@@ -27,6 +27,7 @@ dependencies = [
     "scikit-multilearn~=0.2.0",
     "loguru~=0.7.3",
     "sse-starlette~=3.0.3",
+    "cv2-enumerate-cameras==1.3.1",
 ]
 
 [project.optional-dependencies]
@@ -41,6 +42,7 @@ cuda = ["otx[cuda]"]
 mqtt = [
     "paho-mqtt~=2.1.0",
 ]
+installer = ["pyinstaller~=6.16.0"]
 
 [dependency-groups]
 dev = [
@@ -52,6 +54,7 @@ dev = [
 lint = [
     "mypy~=1.16.1",
     "ruff==0.11.13",
+    "import-linter==2.3",
     "types-aiofiles~=25.1.0",  # should match aiofiles version
     "types-requests~=2.32.4",
     "types-pyyaml~=6.0.12",  # should match pyyaml version
@@ -80,9 +83,9 @@ module-root = ""
 module-name = "app"
 
 [tool.uv.sources]
-# TODO switch to local path after the 'feature/datumaro' branch is merged to develop
+# TODO (#5165) source 'otx' from local path to enable local builds that include local changes to the library
 # otx = { path = "../../library", editable = true }
-otx = { git = "https://github.com/open-edge-platform/training_extensions.git", branch = "feature/datumaro", subdirectory = "library" }
+otx = { git = "https://github.com/open-edge-platform/training_extensions.git", branch = "develop", subdirectory = "library" }
 
 [tool.ruff]
 target-version = "py313"
@@ -108,6 +111,53 @@ split-on-trailing-comma = false
 
 [tool.ruff.lint.pylint]
 max-args=7
+
+[tool.importlinter]
+root_package = "app"
+include_external_packages = true
+exclude_type_checking_imports = true
+
+[[tool.importlinter.contracts]]
+name = "App Main Vertical"
+type = "layers"
+id = "main_app"
+layers = [
+    "app.api",
+    "app.services",
+    "app.repositories",
+    "app.db",
+]
+
+[[tool.importlinter.contracts]]
+name = "Internal API"
+type = "layers"
+id = "api"
+layers = [
+    "app.api.routers",
+    "app.api.serializers",
+    "app.api.schemas",
+    "app.api.dependencies",
+]
+
+[[tool.importlinter.contracts]]
+name = "Core Module"
+type = "layers"
+id = "core_module"
+layers = [
+    "app.core.jobs",
+    "app.core.run",
+    "app.core.models",
+    "app.core.logging",
+]
+
+[[tool.importlinter.contracts]]
+name = "Service-Utils"
+type = "layers"
+id = "service_utils"
+layers = [
+    "app.services",
+    "app.utils",
+]
 
 [tool.mypy]
 python_version = "3.13"

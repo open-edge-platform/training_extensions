@@ -3,11 +3,13 @@
 
 """Application configuration management"""
 
+import os
+import sys
 from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -36,6 +38,17 @@ class Settings(BaseSettings):
     # Server
     host: str = Field(default="0.0.0.0", alias="HOST")  # noqa: S104
     port: int = Field(default=7860, alias="PORT")
+    static_files_dir: Path | None = Field(
+        default=None,
+        alias="STATIC_FILES_DIR",
+        description="Directory containing static UI files",
+    )
+
+    # CORS
+    cors_origins: str = Field(
+        default="http://localhost:3000, http://localhost:7860",
+        alias="CORS_ORIGINS",
+    )
 
     # Database
     database_file: str = Field(default="geti_tune.db", alias="DATABASE_FILE", description="Database filename")
@@ -55,6 +68,11 @@ class Settings(BaseSettings):
         """Get database URL"""
         return f"sqlite:///{self.data_dir / self.database_file}"
 
+    @property
+    def cors_allowed_origins(self) -> list[str]:
+        """Parsed list of allowed CORS origins."""
+        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+
     @model_validator(mode="after")
     def set_default_dirs(self) -> "Settings":
         """Set default directories based on log_dir"""
@@ -70,6 +88,17 @@ class Settings(BaseSettings):
         for d in [self.data_dir, self.log_dir, self.worker_dir, self.job_dir]:
             if d:
                 d.mkdir(parents=True, exist_ok=True)
+
+    @field_validator("static_files_dir", "alembic_config_path", "alembic_script_location", mode="after")
+    def prefix_paths(cls, v: str | Path | None) -> str | Path | None:
+        # In "frozen" pyinstaller applications data paths must be prefixed with the absolute path to the bundle folder
+        # which is stored in  sys._MEIPASS attribute.
+        # https://pyinstaller.org/en/stable/runtime-information.html
+        if v and getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+            # If application is running in pyinstaller bundle, adjust the path accordingly.
+            prefixed_path = os.path.join(getattr(sys, "_MEIPASS", ""), v)
+            return Path(prefixed_path) if isinstance(v, Path) else prefixed_path
+        return v
 
 
 @lru_cache

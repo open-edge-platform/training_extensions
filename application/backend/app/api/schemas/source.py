@@ -10,16 +10,16 @@ from app.models import (
     DisconnectedSourceConfig,
     ImagesFolderSourceConfig,
     IPCameraSourceConfig,
+    USBCameraSourceConfig,
     VideoFileSourceConfig,
-    WebcamSourceConfig,
 )
 from app.models.source import (
     DisconnectedConfig,
     ImagesFolderConfig,
     IPCameraConfig,
     SourceType,
+    USBCameraConfig,
     VideoFileConfig,
-    WebcamConfig,
 )
 
 
@@ -36,8 +36,8 @@ class DisconnectedSourceConfigView(DisconnectedSourceConfig):
     }
 
 
-class WebcamSourceConfigView(WebcamSourceConfig):
-    config_data: WebcamConfig = Field(exclude=True)
+class USBCameraSourceConfigView(USBCameraSourceConfig):
+    config_data: USBCameraConfig = Field(exclude=True)
 
     @computed_field
     @property
@@ -52,8 +52,8 @@ class WebcamSourceConfigView(WebcamSourceConfig):
     model_config = {
         "json_schema_extra": {
             "example": {
-                "source_type": "webcam",
-                "name": "Webcam 0",
+                "source_type": "usb_camera",
+                "name": "USB Camera 0",
                 "id": "f9e0ae4f-d96c-4304-baab-2ab845362d03",
                 "device_id": 0,
                 "codec": "YUY2",
@@ -142,7 +142,7 @@ class ImagesFolderSourceConfigView(ImagesFolderSourceConfig):
 
 SourceView = Annotated[
     DisconnectedSourceConfigView
-    | WebcamSourceConfigView
+    | USBCameraSourceConfigView
     | IPCameraSourceConfigView
     | VideoFileSourceConfigView
     | ImagesFolderSourceConfigView,
@@ -156,14 +156,14 @@ class BasicSourceConfigCreate(BaseIDNameModel):
     source_type: SourceType
 
 
-class WebcamSourceConfigCreate(BasicSourceConfigCreate):
-    source_type: Literal[SourceType.WEBCAM]
+class USBCameraSourceConfigCreate(BasicSourceConfigCreate):
+    source_type: Literal[SourceType.USB_CAMERA]
     device_id: int
     codec: str | None = None
 
     @property
-    def config_data(self) -> WebcamConfig:
-        return WebcamConfig(device_id=self.device_id, codec=self.codec)
+    def config_data(self) -> USBCameraConfig:
+        return USBCameraConfig(device_id=self.device_id, codec=self.codec)
 
 
 class IPCameraSourceConfigCreate(BasicSourceConfigCreate):
@@ -198,7 +198,7 @@ class ImagesFolderSourceConfigCreate(BasicSourceConfigCreate):
 
 
 SourceCreate = Annotated[
-    WebcamSourceConfigCreate
+    USBCameraSourceConfigCreate
     | IPCameraSourceConfigCreate
     | VideoFileSourceConfigCreate
     | ImagesFolderSourceConfigCreate,

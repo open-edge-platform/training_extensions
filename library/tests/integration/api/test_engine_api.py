@@ -52,6 +52,11 @@ def test_native_ov_engine(
     assert isinstance(engine.model, OTXModel)
     assert isinstance(engine.datamodule, OTXDataModule)
 
+    # Set num_workers=0 to avoid Polars serialization issues with multiprocessing
+    engine.datamodule.train_subset.num_workers = 0
+    engine.datamodule.val_subset.num_workers = 0
+    engine.datamodule.test_subset.num_workers = 0
+
     max_epochs = 2
     train_metric = engine.train(max_epochs=max_epochs)
     assert len(train_metric) > 0
@@ -121,7 +126,7 @@ def test_engine_from_tile_recipe(
     else:
         pytest.skip("Only Detection, Instance Segmentation, and Semantic Segmentation are supported for now.")
 
-    data_root = fxt_target_dataset_per_task["tiling_detection"]
+    data_root = fxt_target_dataset_per_task["detection"]
     if task is OTXTaskType.SEMANTIC_SEGMENTATION:
         dataset = DmDataset.import_from(path=data_root, format="coco")
         data_root = tmp_path / "tiling_detection_css"
@@ -133,6 +138,12 @@ def test_engine_from_tile_recipe(
         work_dir=tmp_path / task,
         device=fxt_accelerator,
     )
+
+    # Set num_workers=0 to avoid Polars serialization issues with multiprocessing
+    engine.datamodule.train_subset.num_workers = 0
+    engine.datamodule.val_subset.num_workers = 0
+    engine.datamodule.test_subset.num_workers = 0
+
     engine.train(max_epochs=1)
     exported_model_path = engine.export()
     assert exported_model_path.exists()

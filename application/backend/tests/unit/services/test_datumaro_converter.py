@@ -253,7 +253,7 @@ def test_convert_instance_segmentation_dataset(fxt_project_labels, fxt_instance_
         "cat",
         [
             (str(fxt_project_labels[0].id), [[0, 0], [10, 0], [10, 10], [0, 10]]),
-            (str(fxt_project_labels[0].id), [[20, 20], [30, 20], [30, 30], [20, 30]]),
+            (str(fxt_project_labels[0].id), [[20, 20], [30, 20], [30, 30]]),
         ],
     )
     dataset_item_2 = fxt_instance_segmentation_dataset_item(
