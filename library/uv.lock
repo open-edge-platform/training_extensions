@@ -3246,7 +3246,7 @@ requires-dist = [
     { name = "torch", marker = "sys_platform != 'linux' and sys_platform != 'win32' and extra == 'cpu'", specifier = "==2.9.1" },
     { name = "torch", marker = "extra == 'cuda'", specifier = "==2.9.1+cu128", index = "https://download.pytorch.org/whl/cu128", conflict = { package = "otx", extra = "cuda" } },
     { name = "torch", marker = "extra == 'xpu'", specifier = "==2.9.0+xpu", index = "https://download.pytorch.org/whl/xpu", conflict = { package = "otx", extra = "xpu" } },
-    { name = "torchmetrics", specifier = "==1.6.0" },
+    { name = "torchmetrics", specifier = "==1.8.2" },
     { name = "torchvision", marker = "(sys_platform == 'linux' and extra == 'cpu') or (sys_platform == 'win32' and extra == 'cpu')", specifier = "==0.24.1+cpu", index = "https://download.pytorch.org/whl/cpu", conflict = { package = "otx", extra = "cpu" } },
     { name = "torchvision", marker = "sys_platform != 'linux' and sys_platform != 'win32' and extra == 'cpu'", specifier = "==0.24.1" },
     { name = "torchvision", marker = "extra == 'cuda'", specifier = "==0.24.1+cu128", index = "https://download.pytorch.org/whl/cu128", conflict = { package = "otx", extra = "cuda" } },
@@ -5771,7 +5771,7 @@ wheels = [
 
 [[package]]
 name = "torchmetrics"
-version = "1.6.0"
+version = "1.8.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "lightning-utilities" },
@@ -5782,9 +5782,9 @@ dependencies = [
     { name = "torch", version = "2.9.1+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu')" },
     { name = "torch", version = "2.9.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "extra == 'extra-3-otx-cuda' or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu')" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/18/88/9b0c5542ce845d153eaa7a7eb8e4fad34347b13b5997bf1d744d64410072/torchmetrics-1.6.0.tar.gz", hash = "sha256:aebba248708fb90def20cccba6f55bddd134a58de43fb22b0c5ca0f3a89fa984", size = 538824, upload-time = "2024-11-12T19:35:40.599Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/85/2e/48a887a59ecc4a10ce9e8b35b3e3c5cef29d902c4eac143378526e7485cb/torchmetrics-1.8.2.tar.gz", hash = "sha256:cf64a901036bf107f17a524009eea7781c9c5315d130713aeca5747a686fe7a5", size = 580679, upload-time = "2025-09-03T14:00:54.077Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/46/1a/9728a502f377ab8cff1fd15c625aa2919a183fa113ebcefa2cd38edff28b/torchmetrics-1.6.0-py3-none-any.whl", hash = "sha256:a508cdd87766cedaaf55a419812bf9f493aff8fffc02cc19df5a8e2e7ccb942a", size = 926379, upload-time = "2024-11-12T19:35:38.247Z" },
+    { url = "https://files.pythonhosted.org/packages/02/21/aa0f434434c48490f91b65962b1ce863fdcce63febc166ca9fe9d706c2b6/torchmetrics-1.8.2-py3-none-any.whl", hash = "sha256:08382fd96b923e39e904c4d570f3d49e2cc71ccabd2a94e0f895d1f0dac86242", size = 983161, upload-time = "2025-09-03T14:00:51.921Z" },
 ]
 
 [[package]]

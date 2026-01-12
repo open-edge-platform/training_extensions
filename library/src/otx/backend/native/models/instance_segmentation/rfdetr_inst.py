@@ -62,7 +62,7 @@ class RFDETRInst(OTXInstanceSegModel):
         "rfdetr_seg_preview": "https://storage.googleapis.com/rfdetr/rf-detr-seg-preview.pt",
     }
 
-    input_size_multiplier = 8
+    input_size_multiplier = 24
 
     def __init__(
         self,
