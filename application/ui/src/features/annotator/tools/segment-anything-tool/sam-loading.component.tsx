@@ -17,7 +17,7 @@ export const SAMLoading = ({ isLoading }: { isLoading: boolean }) => {
             }}
         >
             <Flex direction={'column'} alignItems={'center'} justifyContent={'center'} height='100%' gap='size-100'>
-                <IntelBrandedLoading />
+                <IntelBrandedLoading height={'auto'} />
                 <Heading
                     level={1}
                     UNSAFE_style={{

@@ -5,6 +5,8 @@ import type { SchemaModelView } from '../../../api/openapi-spec';
 
 export type GroupByMode = 'dataset' | 'architecture';
 
+export type SortBy = 'name' | 'trained' | 'architecture' | 'size' | 'score';
+
 export type DatasetGroup = {
     id: string;
     name: string;

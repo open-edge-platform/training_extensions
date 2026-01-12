@@ -33,11 +33,14 @@ export const Header = ({ groupBy, onGroupByChange, onSortChange, onPinActiveTogg
                     placeholder={'Sort by'}
                     width={'size-3000'}
                     aria-label={'Sort models'}
-                    defaultSelectedKey={'active-model'}
-                    onSelectionChange={(key) => onSortChange(key as string)}
+                    defaultSelectedKey={'trained'}
+                    onSelectionChange={(key) => onSortChange(String(key))}
                 >
-                    <Item key='active-model'>Sort: Active model</Item>
+                    <Item key='name'>Sort: Name</Item>
+                    <Item key='trained'>Sort: Trained</Item>
                     <Item key='architecture'>Sort: Architecture</Item>
+                    <Item key='size'>Sort: Size</Item>
+                    <Item key='score'>Sort: Score</Item>
                 </Picker>
             </Flex>
 
