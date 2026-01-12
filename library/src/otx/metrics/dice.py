@@ -35,40 +35,29 @@ class OTXDice(DiceScore):
 
     def __init__(
         self,
-        zero_division: int = 0,
         num_classes: int | None = None,
-        threshold: float = 0.5,
-        average: Literal["micro", "macro", "none"] = "micro",
-        mdmc_average: str = "global",
+        average: Literal["micro", "macro", "none"] = "macro",
+        aggregation_level: str = "global",
         ignore_index: int | None = None,
-        top_k: int | None = None,
-        multiclass: bool | None = None,
+        input_format: Literal["one-hot", "index", "mixed"] = "index",
         **kwargs,
     ) -> None:
         super().__init__(
-            zero_division=zero_division,
             num_classes=num_classes,
-            threshold=threshold,
             average=average,
-            mdmc_average=mdmc_average,
-            ignore_index=None,
-            top_k=top_k,
-            multiclass=multiclass,
+            aggregation_level=aggregation_level,
+            input_format=input_format,
+            include_background=False,
             **kwargs,
         )
-        # workaround to use ignore index > num_classes or < 0
-        self.extended_ignore_index = ignore_index
+        self.ignore_index = ignore_index
 
     def update(self, preds: Tensor, target: Tensor) -> None:
         """Update state with predictions and targets. Fix ignore_index handling."""
-        if self.extended_ignore_index is not None:
-            filtered_preds = preds[target != self.extended_ignore_index]
-            filtered_target = target[target != self.extended_ignore_index]
-        else:
-            filtered_preds = preds
-            filtered_target = target
-
-        super().update(filtered_preds, filtered_target)
+        # treat ignore_index as a background to exclude it from metric computation
+        preds[target == self.ignore_index] = 0
+        target[target == self.ignore_index] = 0
+        super().update(preds.long(), target.long())
 
 
 SegmCallable = _segm_callable

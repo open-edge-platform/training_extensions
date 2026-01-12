@@ -14,14 +14,16 @@ from typing import TYPE_CHECKING, Any, Callable
 
 import numpy as np
 import torch
+from rfdetr.datasets.coco import compute_multi_scale_scales
 from rfdetr.util.misc import nested_tensor_from_tensor_list
 from torch import Tensor, nn
 from torchvision.tv_tensors import BoundingBoxes
 
-from otx.backend.native.models.detection.utils.utils import generate_scales
 from otx.backend.native.models.modules.base_module import BaseModule
 
 if TYPE_CHECKING:
+    from jsonargparse import Namespace
+
     from otx.types.explain import FeatureMapType
 
 EXPORT_OUTPUTS = tuple[Tensor, Tensor, Tensor, Tensor] | tuple[Tensor, Tensor, Tensor] | dict[str, Any]
@@ -46,6 +48,7 @@ class RFDETRDetector(BaseModule):
         lwdetr_model: nn.Module,
         criterion: nn.Module,
         postprocessor: nn.Module,
+        rfdetr_args: Namespace,
         input_size: int = 560,
         multi_scale: bool = False,
     ) -> None:
@@ -61,7 +64,13 @@ class RFDETRDetector(BaseModule):
         self.rng = np.random.default_rng(42)
 
         # Store scales for multi-scale training
-        self.scales = generate_scales(input_size) if multi_scale else []
+        self.scales = (
+            compute_multi_scale_scales(
+                rfdetr_args.resolution, rfdetr_args.expanded_scales, rfdetr_args.patch_size, rfdetr_args.num_windows
+            )
+            if multi_scale
+            else []
+        )
 
     def forward(
         self,

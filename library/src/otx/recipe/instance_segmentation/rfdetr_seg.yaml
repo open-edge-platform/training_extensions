@@ -1,8 +1,9 @@
-task: DETECTION
+task: INSTANCE_SEGMENTATION
+
 model:
-  class_path: otx.backend.native.models.detection.rfdetr.RFDETR
+  class_path: otx.backend.native.models.instance_segmentation.RFDETRInst
   init_args:
-    model_name: rfdetr_large
+    model_name: rfdetr_seg_preview
     label_info: 91
     multi_scale: true
 
@@ -28,9 +29,9 @@ model:
 engine:
   device: auto
 
-callback_monitor: val/map
+data: ../_base_/data/instance_segmentation.yaml
 
-data: ../_base_/data/torchvision_base.yaml
+callback_monitor: val/map
 
 callbacks:
   - class_path: otx.backend.native.callbacks.adaptive_train_scheduling.AdaptiveTrainScheduling
@@ -60,15 +61,23 @@ callbacks:
       decay: 0.993
 
 overrides:
+  max_epochs: 100
   gradient_clip_val: 0.1
+  reset:
+    - data.train_subset.transforms
+    - data.val_subset.transforms
+    - data.test_subset.transforms
   data:
-    input_size:
-      - 560
-      - 560
-    task: DETECTION
+    task: INSTANCE_SEGMENTATION
     data_format: coco_instances
+    include_polygons: false
+    input_size:
+      - 432
+      - 432
     train_subset:
       batch_size: 4
+      num_workers: 4
+      subset_name: train
       to_tv_image: true
       transforms:
         - class_path: torchvision.transforms.v2.RandomZoomOut
@@ -92,6 +101,7 @@ overrides:
         - class_path: torchvision.transforms.v2.ToDtype
           init_args:
             dtype: ${as_torch_dtype:torch.float32}
+            scale: false
         - class_path: torchvision.transforms.v2.Normalize
           init_args:
             mean: [123.675, 116.28, 103.53]
@@ -102,6 +112,7 @@ overrides:
 
     val_subset:
       batch_size: 4
+      num_workers: 4
       to_tv_image: true
       transforms:
         - class_path: torchvision.transforms.v2.Resize
@@ -110,6 +121,7 @@ overrides:
         - class_path: torchvision.transforms.v2.ToDtype
           init_args:
             dtype: ${as_torch_dtype:torch.float32}
+            scale: false
         - class_path: torchvision.transforms.v2.Normalize
           init_args:
             mean: [123.675, 116.28, 103.53]
@@ -117,6 +129,7 @@ overrides:
 
     test_subset:
       batch_size: 4
+      num_workers: 4
       to_tv_image: true
       transforms:
         - class_path: torchvision.transforms.v2.Resize
@@ -125,6 +138,7 @@ overrides:
         - class_path: torchvision.transforms.v2.ToDtype
           init_args:
             dtype: ${as_torch_dtype:torch.float32}
+            scale: false
         - class_path: torchvision.transforms.v2.Normalize
           init_args:
             mean: [123.675, 116.28, 103.53]

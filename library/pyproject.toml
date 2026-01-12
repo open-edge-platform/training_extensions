@@ -38,7 +38,7 @@ dependencies = [
     "einops==0.8.1",
     "typeguard>=4.3,<4.5",
     "setuptools==78.1.1",
-    "lightning==2.4.0",
+    "lightning==2.6.0",
     "torchmetrics==1.6.0",
     "pytorchcv==0.0.67",
     "timm==1.0.3",

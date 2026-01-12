@@ -1,33 +1,30 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""RF-DETR model implementations for OTX.
-
-RF-DETR is a state-of-the-art real-time object detector from Roboflow based on
-DINOv2 backbone with a lightweight DETR decoder.
-Original implementation: https://github.com/roboflow/rf-detr
-"""
+"""RF-DETR model implementation for Instance Segmentation."""
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 import torch
-from rfdetr import RFDETRBase, RFDETRLarge, RFDETRMedium, RFDETRNano, RFDETRSmall
+from rfdetr import RFDETRSegPreview
 from rfdetr.main import populate_args
 from rfdetr.models.lwdetr import build_criterion_and_postprocessors
 from rfdetr.util.get_param_dicts import get_param_dict
+from torchvision import tv_tensors
+from torchvision.ops import box_convert
 
 from otx.backend.native.exporter.base import OTXModelExporter
 from otx.backend.native.exporter.native import OTXNativeModelExporter
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
-from otx.backend.native.models.detection.d_fine import DFine
 from otx.backend.native.models.detection.detectors.rfdetr import RFDETRDetector
+from otx.backend.native.models.instance_segmentation.base import OTXInstanceSegModel
 from otx.backend.native.models.utils.utils import load_checkpoint
 from otx.config.data import TileConfig
 from otx.data.entity.base import OTXBatchLossEntity
 from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
-from otx.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
+from otx.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -37,14 +34,14 @@ if TYPE_CHECKING:
     from otx.types.label import LabelInfoTypes
 
 
-class RFDETR(DFine):
-    """OTX Detection model class for RF-DETR.
+class RFDETRInst(OTXInstanceSegModel):
+    """OTX Instance Segmentation model class for RF-DETR.
 
     RF-DETR (Real-time Fast DETR) is a state-of-the-art object detector from Roboflow
-    that combines a DINOv2 backbone with a lightweight DETR decoder for real-time
-    object detection.
+    that combines a DINOv2 backbone with a lightweight DETR decoder. This implementation
+    adds instance segmentation support with a mask prediction head.
 
-    This implementation uses the rfdetr Python package for the core model components.
+    This implementation uses the rfdetr Python package with RFDETRSegPreview for the core model components.
 
     Args:
         label_info: Information about the labels.
@@ -58,18 +55,11 @@ class RFDETR(DFine):
         tile_config: Configuration for tiling.
 
     Note:
-        RF-DETR uses different patch sizes for different model variants:
-        - nano, small, medium: patch_size=16
-        - base, large: patch_size=14
-        Input sizes must be compatible with patch_size * num_windows.
+        RF-DETR Segmentation uses patch_size=12 with 2 windows for 432x432 input resolution.
     """
 
     _pretrained_weights: ClassVar[dict[str, str]] = {
-        "rfdetr_base": "https://storage.googleapis.com/rfdetr/rf-detr-base-coco.pth",
-        "rfdetr_large": "https://storage.googleapis.com/rfdetr/rf-detr-large.pth",
-        "rfdetr_nano": "https://storage.googleapis.com/rfdetr/nano_coco/checkpoint_best_regular.pth",
-        "rfdetr_small": "https://storage.googleapis.com/rfdetr/small_coco/checkpoint_best_regular.pth",
-        "rfdetr_medium": "https://storage.googleapis.com/rfdetr/medium_coco/checkpoint_best_regular.pth",
+        "rfdetr_seg_preview": "https://storage.googleapis.com/rfdetr/rf-detr-seg-preview.pt",
     }
 
     input_size_multiplier = 8
@@ -78,16 +68,10 @@ class RFDETR(DFine):
         self,
         label_info: LabelInfoTypes,
         data_input_params: DataInputParams | None = None,
-        model_name: Literal[
-            "rfdetr_nano",
-            "rfdetr_small",
-            "rfdetr_base",
-            "rfdetr_medium",
-            "rfdetr_large",
-        ] = "rfdetr_base",
+        model_name: Literal["rfdetr_seg_preview"] = "rfdetr_seg_preview",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
-        metric: MetricCallable = MeanAveragePrecisionFMeasureCallable,
+        metric: MetricCallable = MaskRLEMeanAPFMeasureCallable,
         multi_scale: bool = False,
         torch_compile: bool = False,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
@@ -96,7 +80,7 @@ class RFDETR(DFine):
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
-            model_name=model_name,  # type: ignore[arg-type]
+            model_name=model_name,
             optimizer=optimizer,
             scheduler=scheduler,
             metric=metric,
@@ -105,42 +89,37 @@ class RFDETR(DFine):
         )
 
     def _create_model(self, num_classes: int | None = None) -> RFDETRDetector:
-        """Create RF-DETR model using rfdetr package.
+        """Create RF-DETR Instance Segmentation model using rfdetr package.
 
-        Creates the RFDETRDetector wrapper which contains:
-        - LWDETR model (backbone + decoder)
-        - SetCriterion (loss computation)
-        - PostProcessor (inference post-processing)
+        Creates the RFDETRInstDetector wrapper which contains:
+        - LWDETR model with segmentation head (backbone + decoder + mask head)
+        - SetCriterion (loss computation including mask loss)
+        - PostProcessor (inference post-processing with mask outputs)
         - Optimizer configuration (from rfdetr args)
 
         Args:
             num_classes: Number of classes for detection.
 
         Returns:
-            RFDETRDetector model instance.
+            RFDETRInstDetector model instance.
         """
         num_classes = num_classes if num_classes is not None else self.num_classes
 
-        # Create RF-DETR model and reinitialize detection head for our num_classes
-        model_class_mapping = {
-            "rfdetr_base": RFDETRBase,
-            "rfdetr_large": RFDETRLarge,
-            "rfdetr_medium": RFDETRMedium,
-            "rfdetr_nano": RFDETRNano,
-            "rfdetr_small": RFDETRSmall,
-        }
-        rfdetr = model_class_mapping[self.model_name](num_classes=num_classes, pretrained_weights=None)
-        rfdetr.model.reinitialize_detection_head(num_classes)
+        # Create RF-DETR Segmentation model with segmentation_head=True
+        detector = RFDETRSegPreview(num_classes=num_classes, pretrain_weights=None)
+
+        # Reinitialize detection head for our num_classes
+        detector.model.reinitialize_detection_head(num_classes)
 
         # Update args for criterion building
-        rfdetr.model.args.num_classes = num_classes
+        detector.model.args.num_classes = num_classes
 
-        # Get the actual LWDETR model
-        lwdetr_model = rfdetr.model.model
+        # Get the actual LWDETR model with segmentation head
+        lwdetr_model = detector.model.model
 
-        # Build criterion and postprocessor with correct args
-        model_cfg = rfdetr.get_model_config().model_dump()
-        train_cfg = rfdetr.get_train_config(dataset_dir="").model_dump()
+        # Build criterion and postprocessor with correct args (including segmentation_head=True)
+        model_cfg = detector.get_model_config().model_dump()
+        train_cfg = detector.get_train_config(dataset_dir="").model_dump()
         model_cfg.pop("num_classes")
         if "class_names" in model_cfg:
             model_cfg.pop("class_names")
@@ -153,15 +132,15 @@ class RFDETR(DFine):
         rfdetr_args = populate_args(**all_kwargs)
 
         criterion, postprocessor = build_criterion_and_postprocessors(rfdetr_args)
-
+        self.criterion = criterion
+        self.postprocessor = postprocessor
         # Override criterion.num_classes to match OTX labels
         criterion.num_classes = num_classes
 
         # Store rfdetr_args for optimizer configuration
         self.rfdetr_args = rfdetr_args
-
         load_checkpoint(lwdetr_model, self._pretrained_weights[self.model_name], map_location="cpu")
-        # Create RFDETRDetector wrapper
+
         return RFDETRDetector(
             lwdetr_model=lwdetr_model,
             criterion=criterion,
@@ -171,60 +150,118 @@ class RFDETR(DFine):
             multi_scale=self.multi_scale,
         )
 
+    def _customize_inputs(self, entity: OTXDataBatch) -> dict[str, Any]:
+        """Convert OTX batch format to RF-DETR format for instance segmentation.
+
+        Args:
+            entity: OTX data batch with images, bboxes, labels, and polygons/masks.
+
+        Returns:
+            Dictionary with images and targets formatted for RF-DETR.
+        """
+        # Prepare inputs - RF-DETR wrapper handles NestedTensor creation
+        images = entity.images
+        # Convert targets with masks
+        targets = []
+
+        # Only build targets when all required annotations are present
+        if all(getattr(entity, attr) is not None for attr in ("bboxes", "labels", "masks")):
+            for i, (bb, ll, mm) in enumerate(zip(entity.bboxes, entity.labels, entity.masks)):  # type: ignore[arg-type]
+                # Determine image size (prefer bounding-box canvas_size, fall back to imgs_info or image tensor)
+                if len(bb) > 0 and getattr(bb, "canvas_size", None) is not None:
+                    h, w = bb.canvas_size
+
+                    # Convert XYXY to CXCYWH - extract .data to get plain tensor
+                    boxes_cxcywh = box_convert(bb.data, in_fmt="xyxy", out_fmt="cxcywh")
+                    device = boxes_cxcywh.device
+                    boxes_normalized = boxes_cxcywh / torch.tensor([w, h, w, h], device=device, dtype=torch.float32)
+                else:
+                    # Fallbacks for image size and device
+                    if getattr(entity, "imgs_info", None) is not None:
+                        h, w = entity.imgs_info[i].img_shape  # type: ignore[union-attr, arg-type, index]
+                    else:
+                        img = entity.images[i]
+                        if isinstance(img, torch.Tensor):
+                            _, h, w = img.shape
+                        else:
+                            h, w = 0, 0
+
+                    device = getattr(entity.images, "device", torch.device("cpu"))
+                    boxes_normalized = torch.zeros((0, 4), device=device, dtype=torch.float32)
+
+                target_dict = {
+                    "boxes": boxes_normalized,
+                    "labels": ll,
+                    "masks": mm,
+                    "size": torch.tensor([h, w], device=device),
+                    "orig_size": torch.tensor([h, w], device=device),
+                }
+
+                targets.append(target_dict)
+
+        return {
+            "images": images,
+            "targets": targets,
+        }
+
     def _customize_outputs(
         self,
-        outputs: tuple[torch.Tensor, ...] | dict[str, Any],  # type: ignore[override]
+        outputs: dict | tuple,  # type: ignore[override]
         inputs: OTXDataBatch,
     ) -> OTXPredBatch | OTXBatchLossEntity:
+        """Convert model outputs to OTX format with masks.
+
+        Args:
+            outputs: Model outputs (loss dict during training, predictions during inference).
+            inputs: Original OTX data batch.
+
+        Returns:
+            OTXPredBatch with masks during inference, OTXBatchLossEntity during training.
+        """
         if self.training:
+            # Training: outputs is loss dictionary from RFDETRInstDetector
             if not isinstance(outputs, dict):
-                raise TypeError(outputs)
+                msg = f"Expected dict during training, got {type(outputs)}"
+                raise TypeError(msg)
 
             losses = OTXBatchLossEntity()
             for k, v in outputs.items():
-                if isinstance(v, list):
-                    losses[k] = sum(v)
-                elif isinstance(v, torch.Tensor):
+                if isinstance(v, torch.Tensor):
                     losses[k] = v
-                else:
-                    msg = "Loss output should be list or torch.tensor but got {type(v)}"
-                    raise TypeError(msg)
+                elif isinstance(v, list):
+                    losses[k] = sum(_loss.mean() for _loss in v)
             return losses
 
+        # Inference: get predictions from the model wrapper
+        # The RFDETRInstDetector.postprocess returns (scores, boxes, labels, masks)
         original_sizes = [img_info.img_shape for img_info in inputs.imgs_info]  # type: ignore[union-attr]
-        scores, bboxes, labels, _ = self.model.postprocess(outputs, original_sizes)
 
-        if self.explain_mode:
-            if not isinstance(outputs, dict):
-                msg = f"Model output should be a dict, but got {type(outputs)}."
-                raise ValueError(msg)
+        # Model forward returns outputs dict, postprocess it
+        scores_list, boxes_list, labels_list, masks_list = self.model.postprocess(outputs, original_sizes)
 
-            if "feature_vector" not in outputs:
-                msg = "No feature vector in the model output."
-                raise ValueError(msg)
-
-            if "saliency_map" not in outputs:
-                msg = "No saliency maps in the model output."
-                raise ValueError(msg)
-
-            return OTXPredBatch(
-                batch_size=len(outputs),
-                images=inputs.images,
-                imgs_info=inputs.imgs_info,
-                scores=scores,
-                bboxes=bboxes,
-                labels=labels,
-                feature_vector=[feature_vector.unsqueeze(0) for feature_vector in outputs["feature_vector"]],
-                saliency_map=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
-            )
-
+        # Convert masks to proper format for OTX
+        formatted_masks = []
+        for masks, img_info in zip(masks_list, inputs.imgs_info):  # type: ignore[union-attr, arg-type]
+            if masks is not None and len(masks) > 0:
+                # Masks are already in [N, H, W] boolean format from postprocessor
+                formatted_masks.append(
+                    tv_tensors.Mask(masks, dtype=torch.uint8)  # type: ignore[call-overload]
+                )
+            else:
+                # Empty masks
+                formatted_masks.append(
+                    tv_tensors.Mask(
+                        torch.zeros((0, img_info.img_shape[0], img_info.img_shape[1]), dtype=torch.bool)  # type: ignore[union-attr,call-overload]
+                    )
+                )
         return OTXPredBatch(
-            batch_size=len(outputs),
+            batch_size=len(scores_list),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
-            scores=scores,
-            bboxes=bboxes,
-            labels=labels,
+            scores=scores_list,
+            bboxes=boxes_list,
+            labels=labels_list,
+            masks=formatted_masks,
         )
 
     def configure_optimizers(self) -> tuple[list[torch.optim.Optimizer], list[dict[str, Any]]]:
@@ -291,19 +328,20 @@ class RFDETR(DFine):
             via_onnx=True,
             onnx_export_configuration={
                 "input_names": ["input"],
-                "output_names": ["bboxes", "labels", "scores"],
+                "output_names": ["bboxes", "labels", "scores", "masks"],
                 "dynamic_axes": {
                     "images": {0: "batch"},
                     "bboxes": {0: "batch", 1: "num_dets"},
                     "labels": {0: "batch", 1: "num_dets"},
                     "scores": {0: "batch", 1: "num_dets"},
+                    "masks": {0: "batch", 1: "num_dets", 2: "height", 3: "width"},
                 },
                 "dynamo": False,  # RF-DETR does not support dynamo
                 "do_constant_folding": True,
                 "opset_version": 17,
                 "autograd_inlining": False,
             },
-            output_names=["bboxes", "labels", "scores"],
+            output_names=["bboxes", "labels", "scores", "masks"],
         )
 
     @property
@@ -313,33 +351,13 @@ class RFDETR(DFine):
 
     @property
     def _default_preprocessing_params(self) -> dict[str, DataInputParams]:  # type: ignore[override]
-        """Default preprocessing parameters for RF-DETR models."""
+        """Default preprocessing parameters for RF-DETR segmentation models."""
         imagenet_mean = (123.675, 116.28, 103.53)
         imagenet_std = (58.395, 57.12, 57.375)
 
         return {
-            "rfdetr_nano": DataInputParams(
-                input_size=(384, 384),
-                mean=imagenet_mean,
-                std=imagenet_std,
-            ),
-            "rfdetr_small": DataInputParams(
-                input_size=(512, 512),
-                mean=imagenet_mean,
-                std=imagenet_std,
-            ),
-            "rfdetr_base": DataInputParams(
-                input_size=(560, 560),
-                mean=imagenet_mean,
-                std=imagenet_std,
-            ),
-            "rfdetr_medium": DataInputParams(
-                input_size=(576, 576),
-                mean=imagenet_mean,
-                std=imagenet_std,
-            ),
-            "rfdetr_large": DataInputParams(
-                input_size=(560, 560),
+            "rfdetr_seg_preview": DataInputParams(
+                input_size=(432, 432),
                 mean=imagenet_mean,
                 std=imagenet_std,
             ),
