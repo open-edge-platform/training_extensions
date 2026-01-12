@@ -83,9 +83,9 @@ module-root = ""
 module-name = "app"
 
 [tool.uv.sources]
-# TODO switch to local path after the 'feature/datumaro' branch is merged to develop
+# TODO (#5165) source 'otx' from local path to enable local builds that include local changes to the library
 # otx = { path = "../../library", editable = true }
-otx = { git = "https://github.com/open-edge-platform/training_extensions.git", branch = "feature/datumaro", subdirectory = "library" }
+otx = { git = "https://github.com/open-edge-platform/training_extensions.git", branch = "develop", subdirectory = "library" }
 
 [tool.ruff]
 target-version = "py313"

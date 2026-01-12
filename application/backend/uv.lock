@@ -848,9 +848,9 @@ requires-dist = [
     { name = "loguru", specifier = "~=0.7.3" },
     { name = "openvino", specifier = "==2025.3.0" },
     { name = "openvino-model-api", specifier = "~=0.3.0.4" },
-    { name = "otx", extras = ["cpu"], marker = "extra == 'cpu'", git = "https://github.com/open-edge-platform/training_extensions.git?subdirectory=library&branch=feature%2Fdatumaro" },
-    { name = "otx", extras = ["cuda"], marker = "extra == 'cuda'", git = "https://github.com/open-edge-platform/training_extensions.git?subdirectory=library&branch=feature%2Fdatumaro" },
-    { name = "otx", extras = ["xpu"], marker = "extra == 'xpu'", git = "https://github.com/open-edge-platform/training_extensions.git?subdirectory=library&branch=feature%2Fdatumaro" },
+    { name = "otx", extras = ["cpu"], marker = "extra == 'cpu'", git = "https://github.com/open-edge-platform/training_extensions.git?subdirectory=library&branch=develop" },
+    { name = "otx", extras = ["cuda"], marker = "extra == 'cuda'", git = "https://github.com/open-edge-platform/training_extensions.git?subdirectory=library&branch=develop" },
+    { name = "otx", extras = ["xpu"], marker = "extra == 'xpu'", git = "https://github.com/open-edge-platform/training_extensions.git?subdirectory=library&branch=develop" },
     { name = "paho-mqtt", marker = "extra == 'mqtt'", specifier = "~=2.1.0" },
     { name = "pillow", specifier = "~=12.0" },
     { name = "psutil", specifier = "~=7.1.3" },
@@ -2202,7 +2202,7 @@ wheels = [
 [[package]]
 name = "otx"
 version = "2.7.0.dev0"
-source = { git = "https://github.com/open-edge-platform/training_extensions.git?subdirectory=library&branch=feature%2Fdatumaro#631815546df9eb66ba1d565e1edd2eb8bbb55827" }
+source = { git = "https://github.com/open-edge-platform/training_extensions.git?subdirectory=library&branch=develop#61ace97d3f759bcdc4728cd9e91f8f020663b4f2" }
 dependencies = [
     { name = "datumaro", extra = ["experimental"], marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
     { name = "docstring-parser", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },

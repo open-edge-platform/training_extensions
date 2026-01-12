@@ -110,7 +110,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         git=1:2.47.3-0* \
         libgl1=1.7.0-1+b2 \
-        libglib2.0-0=2.84.4-3~deb13u1 \
+        libglib2.0-0t64=2.84.4-3~deb13u2 \
         libglx-mesa0=25.0.7-2 \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
