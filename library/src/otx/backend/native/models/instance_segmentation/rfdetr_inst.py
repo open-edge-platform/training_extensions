@@ -306,16 +306,7 @@ class RFDETRInst(OTXInstanceSegModel):
     def forward_for_tracing(self, inputs: torch.Tensor) -> tuple[torch.Tensor, ...] | dict[str, Any]:
         """Forward function for export."""
         self.model.lwdetr.export()
-        outputs = self.model.export(inputs, explain_mode=self.explain_mode)
-        if self.explain_mode:
-            return {
-                "bboxes": outputs["bboxes"],
-                "labels": outputs["labels"],
-                "scores": outputs["scores"],
-                "feature_vector": outputs["feature_vector"],
-                "saliency_map": outputs["saliency_map"],
-            }
-        return outputs[:3]  # bboxes, labels, scores
+        return self.model.export(inputs, explain_mode=self.explain_mode)
 
     @property
     def _exporter(self) -> OTXModelExporter:
