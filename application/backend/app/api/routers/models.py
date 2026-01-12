@@ -123,7 +123,7 @@ UPDATE_MODEL_BODY_EXAMPLES = {
         status.HTTP_404_NOT_FOUND: {"description": "Project or model not found"},
     },
 )
-def rename_model(
+def update_model(
     project: Annotated[ProjectView, Depends(get_project)],
     model_id: ModelID,
     model_metadata: Annotated[
