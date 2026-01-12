@@ -691,30 +691,42 @@ class TestOTXTrainerEvaluateModel:
 class TestOTXTrainerExportModel:
     """Tests for the OTXTrainer.export_model method."""
 
+    @pytest.mark.parametrize(
+        "export_format, export_precision",
+        [
+            (OTXExportFormatType.OPENVINO, OTXPrecisionType.FP16),
+            (OTXExportFormatType.ONNX, OTXPrecisionType.FP32),
+        ],
+    )
     def test_export_model(
         self,
         fxt_otx_trainer: Callable[[], OTXTrainer],
         tmp_path: Path,
+        export_format: OTXExportFormatType,
+        export_precision: OTXPrecisionType,
     ):
-        """Test successful model export to OpenVINO format."""
+        """Test successful model export to OpenVINO and ONNX format."""
         # Arrange
         otx_trainer = fxt_otx_trainer()
         mock_otx_engine = Mock()
         model_checkpoint_path = tmp_path / "best_checkpoint.ckpt"
         model_checkpoint_path.touch()
-        expected_export_path = tmp_path / "exported_model"
+        expected_export_path = tmp_path / f"exported_{export_format.value}_model"
         mock_otx_engine.export.return_value = expected_export_path
 
         # Act
         exported_path = otx_trainer.export_model(
-            otx_engine=mock_otx_engine, model_checkpoint_path=model_checkpoint_path
+            otx_engine=mock_otx_engine,
+            model_checkpoint_path=model_checkpoint_path,
+            format=export_format,
+            precision=export_precision,
         )
 
         # Assert
         mock_otx_engine.export.assert_called_once_with(
             checkpoint=model_checkpoint_path,
-            export_format=OTXExportFormatType.OPENVINO,
-            export_precision=OTXPrecisionType.FP16,
+            export_format=export_format,
+            export_precision=export_precision,
         )
         assert exported_path == expected_export_path
 

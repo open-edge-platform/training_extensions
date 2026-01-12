@@ -353,16 +353,22 @@ class OTXTrainer(Trainer):
         logger.info("Evaluating the model on the testing set...")
         otx_engine.test(checkpoint=model_checkpoint_path, datamodule=otx_engine._datamodule)
 
-    @step("Export Model to OpenVINO")
-    def export_model(self, otx_engine: OTXEngine, model_checkpoint_path: Path) -> Path:
-        """Export the trained model to OpenVINO format"""
-        logger.info("Exporting the model to OpenVINO format with FP16 precision...")
+    @step("Export Model")
+    def export_model(
+        self,
+        otx_engine: OTXEngine,
+        model_checkpoint_path: Path,
+        format: OTXExportFormatType,
+        precision: OTXPrecisionType,
+    ) -> Path:
+        """Export the trained model to desired format and precision"""
+        logger.info("Exporting the model to {} format with {} precision...", format, precision)
         exported_model_path = otx_engine.export(
             checkpoint=model_checkpoint_path,
-            export_format=OTXExportFormatType.OPENVINO,
-            export_precision=OTXPrecisionType.FP16,
+            export_format=format,
+            export_precision=precision,
         )
-        logger.info(f"Model exported to: {exported_model_path}")
+        logger.info("{} model exported to: {}", format.value, exported_model_path)
         return exported_model_path
 
     @step("Store Model Artifacts")
@@ -429,13 +435,19 @@ class OTXTrainer(Trainer):
             device=training_params.device,
         )
         self.evaluate_model(otx_engine=otx_engine, model_checkpoint_path=trained_model_path)
-        exported_model_path = self.export_model(otx_engine=otx_engine, model_checkpoint_path=trained_model_path)
-        self.store_model_artifacts(
-            otx_work_dir=Path(otx_engine.work_dir),
-            training_params=training_params,
-            trained_model_path=trained_model_path,
-            exported_model_path=exported_model_path,
-        )
+        for format in OTXExportFormatType:
+            exported_model_path = self.export_model(
+                otx_engine=otx_engine,
+                model_checkpoint_path=trained_model_path,
+                format=format,
+                precision=OTXPrecisionType.FP16 if format == OTXExportFormatType.OPENVINO else OTXPrecisionType.FP32,
+            )
+            self.store_model_artifacts(
+                otx_work_dir=Path(otx_engine.work_dir),
+                training_params=training_params,
+                trained_model_path=trained_model_path,
+                exported_model_path=exported_model_path,
+            )
 
     @staticmethod
     def __base_model_path(data_dir: Path, project_id: UUID, model_id: UUID) -> Path:
