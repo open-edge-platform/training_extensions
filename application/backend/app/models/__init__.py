@@ -3,6 +3,7 @@
 
 from .data_collection_policy import (
     ConfidenceThresholdDataCollectionPolicy,
+    DataCollectionConfig,
     DataCollectionPolicy,
     DataCollectionPolicyAdapter,
     FixedRateDataCollectionPolicy,
@@ -44,6 +45,7 @@ from .task import Task, TaskType
 
 __all__ = [
     "ConfidenceThresholdDataCollectionPolicy",
+    "DataCollectionConfig",
     "DataCollectionPolicy",
     "DataCollectionPolicyAdapter",
     "DatasetItem",

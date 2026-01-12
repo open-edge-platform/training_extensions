@@ -148,7 +148,7 @@ def upgrade() -> None:
         sa.Column("sink_id", sa.Text(), nullable=True),
         sa.Column("model_revision_id", sa.Text(), nullable=True),
         sa.Column("is_running", sa.Boolean(), nullable=False),
-        sa.Column("data_collection_policies", sa.JSON(), nullable=False),
+        sa.Column("data_collection", sa.JSON(), nullable=False),
         sa.Column("device", sa.String(length=50), nullable=False),
         sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.Column("updated_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),

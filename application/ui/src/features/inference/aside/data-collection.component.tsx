@@ -20,7 +20,8 @@ export const DataCollection = () => {
     const canEditPipeline = useIsPipelineConfigured(pipelineQuery.data);
     const patchPipelineMutation = usePatchPipeline();
 
-    const policies = pipelineQuery.data?.data_collection_policies ?? [];
+    const policies = pipelineQuery.data?.data_collection?.policies ?? [];
+    const maxDatasetSize = pipelineQuery.data?.data_collection?.max_dataset_size ?? 500;
     const ratePolicy = policies.find((policy) => policy.type === 'fixed_rate');
     const confidencePolicy = policies.find((policy) => policy.type === 'confidence_threshold');
 
@@ -36,23 +37,26 @@ export const DataCollection = () => {
         confidenceEnabled?: boolean;
         confidenceThreshold?: number;
     }) => {
-        const newPolicies = [
-            {
-                type: 'fixed_rate' as const,
-                rate: updates.rate ?? serverRate,
-                enabled: updates.rateEnabled ?? ratePolicy?.enabled ?? false,
-            },
-            {
-                type: 'confidence_threshold' as const,
-                confidence_threshold: updates.confidenceThreshold ?? serverConfidenceThreshold,
-                min_sampling_interval: confidencePolicy?.min_sampling_interval ?? DEFAULTS.MIN_SAMPLING_INTERVAL,
-                enabled: updates.confidenceEnabled ?? confidencePolicy?.enabled ?? false,
-            },
-        ];
+        const newDataCollectionPolicies = {
+            max_dataset_size: maxDatasetSize,
+            policies: [
+                {
+                    type: 'fixed_rate' as const,
+                    rate: updates.rate ?? serverRate,
+                    enabled: updates.rateEnabled ?? ratePolicy?.enabled ?? false,
+                },
+                {
+                    type: 'confidence_threshold' as const,
+                    confidence_threshold: updates.confidenceThreshold ?? serverConfidenceThreshold,
+                    min_sampling_interval: confidencePolicy?.min_sampling_interval ?? DEFAULTS.MIN_SAMPLING_INTERVAL,
+                    enabled: updates.confidenceEnabled ?? confidencePolicy?.enabled ?? false,
+                },
+            ],
+        };
 
         patchPipelineMutation.mutate({
             params: { path: { project_id: projectId } },
-            body: { data_collection_policies: newPolicies },
+            body: { data_collection: newDataCollectionPolicies },
         });
     };
 

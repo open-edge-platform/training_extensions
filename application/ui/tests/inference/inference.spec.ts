@@ -95,19 +95,22 @@ test('Inference', async ({ streamPage, page, network }) => {
             http.get('/api/projects/{project_id}/pipeline', ({ response }) => {
                 return response(200).json(
                     getMockedPipeline({
-                        data_collection_policies: [
-                            {
-                                type: 'fixed_rate',
-                                enabled: true,
-                                rate: 12,
-                            },
-                            {
-                                type: 'confidence_threshold',
-                                enabled: false,
-                                confidence_threshold: 0.5,
-                                min_sampling_interval: 2.5,
-                            },
-                        ],
+                        data_collection: {
+                            max_dataset_size: 500,
+                            policies: [
+                                {
+                                    type: 'fixed_rate',
+                                    enabled: true,
+                                    rate: 12,
+                                },
+                                {
+                                    type: 'confidence_threshold',
+                                    enabled: false,
+                                    confidence_threshold: 0.5,
+                                    min_sampling_interval: 2.5,
+                                },
+                            ],
+                        },
                     })
                 );
             })
@@ -120,19 +123,22 @@ test('Inference', async ({ streamPage, page, network }) => {
             http.get('/api/projects/{project_id}/pipeline', ({ response }) => {
                 return response(200).json(
                     getMockedPipeline({
-                        data_collection_policies: [
-                            {
-                                type: 'fixed_rate',
-                                enabled: true,
-                                rate: 20,
-                            },
-                            {
-                                type: 'confidence_threshold',
-                                enabled: false,
-                                confidence_threshold: 0.5,
-                                min_sampling_interval: 2.5,
-                            },
-                        ],
+                        data_collection: {
+                            max_dataset_size: 500,
+                            policies: [
+                                {
+                                    type: 'fixed_rate',
+                                    enabled: true,
+                                    rate: 20,
+                                },
+                                {
+                                    type: 'confidence_threshold',
+                                    enabled: false,
+                                    confidence_threshold: 0.5,
+                                    min_sampling_interval: 2.5,
+                                },
+                            ],
+                        },
                     })
                 );
             })
@@ -150,19 +156,22 @@ test('Inference', async ({ streamPage, page, network }) => {
             http.get('/api/projects/{project_id}/pipeline', ({ response }) => {
                 return response(200).json(
                     getMockedPipeline({
-                        data_collection_policies: [
-                            {
-                                type: 'fixed_rate',
-                                enabled: true,
-                                rate: 20,
-                            },
-                            {
-                                type: 'confidence_threshold',
-                                enabled: true,
-                                confidence_threshold: 0.5,
-                                min_sampling_interval: 2.5,
-                            },
-                        ],
+                        data_collection: {
+                            max_dataset_size: 500,
+                            policies: [
+                                {
+                                    type: 'fixed_rate',
+                                    enabled: true,
+                                    rate: 20,
+                                },
+                                {
+                                    type: 'confidence_threshold',
+                                    enabled: true,
+                                    confidence_threshold: 0.5,
+                                    min_sampling_interval: 2.5,
+                                },
+                            ],
+                        },
                     })
                 );
             })
@@ -175,19 +184,22 @@ test('Inference', async ({ streamPage, page, network }) => {
             http.get('/api/projects/{project_id}/pipeline', ({ response }) => {
                 return response(200).json(
                     getMockedPipeline({
-                        data_collection_policies: [
-                            {
-                                type: 'fixed_rate',
-                                enabled: true,
-                                rate: 20,
-                            },
-                            {
-                                type: 'confidence_threshold',
-                                enabled: true,
-                                confidence_threshold: 0.7,
-                                min_sampling_interval: 2.5,
-                            },
-                        ],
+                        data_collection: {
+                            max_dataset_size: 500,
+                            policies: [
+                                {
+                                    type: 'fixed_rate',
+                                    enabled: true,
+                                    rate: 20,
+                                },
+                                {
+                                    type: 'confidence_threshold',
+                                    enabled: true,
+                                    confidence_threshold: 0.7,
+                                    min_sampling_interval: 2.5,
+                                },
+                            ],
+                        },
                     })
                 );
             })

@@ -12,7 +12,7 @@ from pydantic import ValidationError
 from app.api.dependencies import get_pipeline_metrics_service, get_pipeline_service
 from app.api.schemas import PipelineView
 from app.main import app
-from app.models import FixedRateDataCollectionPolicy, PipelineStatus
+from app.models import DataCollectionConfig, FixedRateDataCollectionPolicy, PipelineStatus
 from app.models.metrics import InferenceMetrics, LatencyMetrics, PipelineMetrics, ThroughputMetrics, TimeWindow
 from app.services import PipelineMetricsService, PipelineService, ResourceNotFoundError, ResourceType
 
@@ -22,7 +22,7 @@ def fxt_pipeline() -> PipelineView:
     return PipelineView(
         project_id=uuid4(),
         status=PipelineStatus.IDLE,
-        data_collection_policies=[FixedRateDataCollectionPolicy(type="fixed_rate", rate=0.1)],
+        data_collection=DataCollectionConfig(policies=[FixedRateDataCollectionPolicy(type="fixed_rate", rate=0.1)]),
     )
 
 
@@ -79,16 +79,19 @@ class TestPipelineEndpoints:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         fxt_pipeline_service.update_pipeline.assert_not_called()
 
-    def test_update_pipeline_data_collection_policies(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
+    def test_update_pipeline_data_collection(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
         project_id = fxt_pipeline.project_id
         fxt_pipeline_service.update_pipeline.return_value = fxt_pipeline
 
         response = fxt_client.patch(
             f"/api/projects/{project_id}/pipeline",
             json={
-                "data_collection_policies": [
-                    {"type": "fixed_rate", "enabled": "true", "rate": 0.1},
-                ]
+                "data_collection": {
+                    "max_dataset_size": 500,
+                    "policies": [
+                        {"type": "fixed_rate", "enabled": True, "rate": 0.1},
+                    ],
+                }
             },
         )
 
@@ -96,22 +99,25 @@ class TestPipelineEndpoints:
         fxt_pipeline_service.update_pipeline.assert_called_once_with(
             project_id,
             {
-                "data_collection_policies": [
-                    FixedRateDataCollectionPolicy(type="fixed_rate", rate=0.1),
-                ]
+                "data_collection": DataCollectionConfig(
+                    max_dataset_size=500,
+                    policies=[FixedRateDataCollectionPolicy(type="fixed_rate", rate=0.1)],
+                ),
             },
         )
 
-    def test_update_pipeline_data_collection_policies_invalid(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
+    def test_update_pipeline_data_collection_invalid(self, fxt_pipeline, fxt_pipeline_service, fxt_client):
         project_id = fxt_pipeline.project_id
         fxt_pipeline_service.update_pipeline.return_value = fxt_pipeline
 
         response = fxt_client.patch(
             f"/api/projects/{project_id}/pipeline",
             json={
-                "data_collection_policies": [
-                    {"type": "wrong_policy", "enabled": "true"},
-                ]
+                "data_collection": {
+                    "policies": [
+                        {"type": "wrong_policy", "enabled": True},
+                    ],
+                }
             },
         )
 

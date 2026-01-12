@@ -13,13 +13,13 @@ from pydantic import ValidationError
 from app.api.dependencies import get_pipeline_metrics_service, get_pipeline_service, get_system_service
 from app.api.schemas import PipelineMetricsView, PipelineView
 from app.api.validators import ProjectID
-from app.models import DataCollectionPolicyAdapter, PipelineStatus
+from app.models import DataCollectionConfig, DataCollectionPolicyAdapter, PipelineStatus
 from app.services import PipelineMetricsService, PipelineService, ResourceNotFoundError, SystemService
 
 router = APIRouter(prefix="/api/projects/{project_id}/pipeline", tags=["Pipelines"])
 
 UPDATE_PIPELINE_BODY_DESCRIPTION = """
-Partial pipeline configuration update. May contain any subset of fields including 'device', 'data_collection_policies', 
+Partial pipeline configuration update. May contain any subset of fields including 'device', 'data_collection', 
 'source_id', 'sink_id', or 'model_id'. Fields not included in the request will remain unchanged.
 """
 UPDATE_PIPELINE_BODY_EXAMPLES = {
@@ -38,23 +38,26 @@ UPDATE_PIPELINE_BODY_EXAMPLES = {
             "sink_id": "c6787c06-964b-4097-8eca-238b8cf79fc9",
         },
     ),
-    "enable_data_collection_policies": Example(
-        summary="Enable data collection policies",
-        description="Change data collection policies of the pipeline to fixed rate",
+    "enable_data_collection": Example(
+        summary="Enable data collection with max size",
+        description="Configure data collection with max dataset size and policies",
         value={
-            "data_collection_policies": [
-                {
-                    "type": "fixed_rate",
-                    "enabled": "true",
-                    "rate": 0.1,
-                }
-            ]
+            "data_collection": {
+                "max_dataset_size": 500,
+                "policies": [
+                    {
+                        "type": "fixed_rate",
+                        "enabled": True,
+                        "rate": 0.1,
+                    }
+                ],
+            }
         },
     ),
-    "clean_data_collection_policies": Example(
-        summary="Clean data collection policies",
+    "disable_data_collection": Example(
+        summary="Disable data collection",
         description="Remove all data collection policies of the pipeline",
-        value={"data_collection_policies": []},
+        value={"data_collection": {"max_dataset_size": None, "policies": []}},
     ),
     "change_device": Example(
         summary="Change inference device",
@@ -119,11 +122,13 @@ def update_pipeline(
             )
 
     try:
-        if "data_collection_policies" in pipeline_config:
-            pipeline_config["data_collection_policies"] = [
-                DataCollectionPolicyAdapter.validate_python(policy)
-                for policy in pipeline_config["data_collection_policies"]
-            ]
+        if "data_collection" in pipeline_config:
+            data_collection = pipeline_config["data_collection"]
+            if "policies" in data_collection:
+                data_collection["policies"] = [
+                    DataCollectionPolicyAdapter.validate_python(policy) for policy in data_collection["policies"]
+                ]
+            pipeline_config["data_collection"] = DataCollectionConfig.model_validate(data_collection)
         updated = pipeline_service.update_pipeline(project_id, pipeline_config)
         return PipelineView.model_validate(updated, from_attributes=True)
     except ResourceNotFoundError as e:

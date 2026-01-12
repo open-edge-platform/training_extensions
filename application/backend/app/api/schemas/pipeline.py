@@ -5,7 +5,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from app.models import DataCollectionPolicy, ModelRevision, PipelineStatus
+from app.models import DataCollectionConfig, ModelRevision, PipelineStatus
 
 from .sink import SinkView
 from .source import SourceView
@@ -17,7 +17,7 @@ class PipelineView(BaseModel):
     sink: SinkView | None = None  # None if disconnected
     model_revision: ModelRevision | None = Field(default=None, serialization_alias="model")
     status: PipelineStatus = PipelineStatus.IDLE
-    data_collection_policies: list[DataCollectionPolicy] = Field(default_factory=list)
+    data_collection: DataCollectionConfig = Field(default_factory=DataCollectionConfig)
     device: str = Field(default="cpu", description="Inference device (e.g., 'cpu', 'xpu', 'cuda', 'xpu-2', 'cuda-1')")
 
     model_config = {
@@ -54,19 +54,22 @@ class PipelineView(BaseModel):
                 },
                 "status": "running",
                 "device": "cpu",
-                "data_collection_policies": [
-                    {
-                        "type": "fixed_rate",
-                        "enabled": "true",
-                        "rate": 0.02,
-                    },
-                    {
-                        "type": "confidence_threshold",
-                        "enabled": "true",
-                        "confidence_threshold": 0.2,
-                        "min_sampling_interval": 2.5,
-                    },
-                ],
+                "data_collection": {
+                    "max_dataset_size": 500,
+                    "policies": [
+                        {
+                            "type": "fixed_rate",
+                            "enabled": True,
+                            "rate": 0.02,
+                        },
+                        {
+                            "type": "confidence_threshold",
+                            "enabled": True,
+                            "confidence_threshold": 0.2,
+                            "min_sampling_interval": 2.5,
+                        },
+                    ],
+                },
             }
         }
     }
