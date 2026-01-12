@@ -67,11 +67,10 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install uv and set the Python version
-        uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
+      - name: Install dependencies
+        uses: ./.github/actions/install-dependencies
         with:
-          version: "0.9.7"
-          enable-cache: false
+          uv-cache-dependency-glob: 'library/uv.lock'
           python-version: "3.10" # Use the lowest supported Python version for linting/type-checking
 
       - name: Check formatting with ruff
@@ -115,11 +114,10 @@ jobs:
         with:
           toolchain: stable
 
-      - name: Install uv and set the Python version
-        uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
+      - name: Install dependencies
+        uses: ./.github/actions/install-dependencies
         with:
-          version: "0.9.7"
-          enable-cache: false
+          uv-cache-dependency-glob: 'library/uv.lock'
           python-version: ${{ matrix.python-version }}
 
       - name: Unit testing (excluding models)
@@ -169,18 +167,17 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Install dependencies
+        uses: ./.github/actions/install-dependencies
+        with:
+          uv-cache-dependency-glob: 'library/uv.lock'
+          python-version: ${{ matrix.python-version }}
+
       # TODO remove after switching to an official Datumaro release with pre-built wheels
       - name: Installing Rust toolchain
         uses: dtolnay/rust-toolchain@6d653acede28d24f02e3cd41383119e8b1b35921
         with:
           toolchain: stable
-
-      - name: Install uv and set the Python version
-        uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
-        with:
-          version: "0.9.7"
-          enable-cache: false
-          python-version: ${{ matrix.python-version }}
 
       - name: Installing dependencies
         working-directory: library

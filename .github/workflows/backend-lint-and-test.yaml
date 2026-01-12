@@ -66,11 +66,10 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install uv and set the Python version
-        uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
+      - name: Install dependencies
+        uses: ./.github/actions/install-dependencies
         with:
-          version: "0.9.7"
-          enable-cache: false
+          uv-cache-dependency-glob: 'application/backend/uv.lock'
           python-version: "3.13"
 
       - name: Install OpenCV dependencies

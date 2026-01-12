@@ -1,0 +1,45 @@
+name: 'Install Dependencies'
+description: 'Sets up common tools and dependencies used across workflows'
+inputs:
+  install-just:
+    description: 'Install Just task runner'
+    required: false
+    default: 'true'
+  install-uv:
+    description: 'Install uv package manager'
+    required: false
+    default: 'true'
+  just-version:
+    description: 'Version of Just to install'
+    required: false
+    default: '1.21.0'
+  uv-cache-dependency-glob:
+    description: 'Glob pattern for uv cache dependency files'
+    required: false
+    default: ''
+  uv-version:
+    description: 'Version of uv to install'
+    required: false
+    default: '0.9.7'
+  python-version:
+    description: 'Python version'
+    required: false
+    default: '3.13'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install Just
+      if: ${{ inputs.install-just == 'true' }}
+      uses: extractions/setup-just@e33e0265a09d6d736e2ee1e0eb685ef1de4669ff # v3.0.0
+      with:
+        just-version: ${{ inputs.just-version }}
+
+    - name: Install uv
+      if: ${{ inputs.install-uv == 'true' }}
+      uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
+      with:
+        version: ${{ inputs.uv-version }}
+        enable-cache: ${{ inputs.uv-cache-dependency-glob != '' && 'true' || 'false' }}
+        cache-dependency-glob: ${{ inputs.uv-cache-dependency-glob }}
+        python-version: ${{ inputs.python-version }}
