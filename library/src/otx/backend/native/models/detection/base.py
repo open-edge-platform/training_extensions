@@ -409,7 +409,7 @@ class OTXDetectionModel(OTXModel):
         if threshold is None:
             # Only log warning once to avoid spam
             if not getattr(self, "_threshold_warning_logged", False):
-                log.warning("There is no predefined best_confidence_threshold, no threshold will be applied.")
+                log.warning("There is no predefined best_confidence_threshold, 0.5 will be used as default.")
                 self._threshold_warning_logged = True
             return 0.5
         return float(threshold)

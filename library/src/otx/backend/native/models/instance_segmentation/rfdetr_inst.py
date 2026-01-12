@@ -24,7 +24,7 @@ from otx.backend.native.models.utils.utils import load_checkpoint
 from otx.config.data import TileConfig
 from otx.data.entity.base import OTXBatchLossEntity
 from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
-from otx.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
+from otx.metrics.fmeasure import MaskRLEMeanAPFMeasureCallable
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable

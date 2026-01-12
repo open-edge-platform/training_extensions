@@ -15,7 +15,7 @@ from otx.backend.openvino.models.base import OVModel
 from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
 from otx.data.utils.structures.mask.mask_util import encode_rle, polygon_to_rle
 from otx.metrics import MetricInput
-from otx.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
+from otx.metrics.fmeasure import MaskRLEMeanAPFMeasureCallable
 from otx.types.label import LabelInfo
 from otx.types.task import OTXTaskType
 

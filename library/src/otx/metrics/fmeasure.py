@@ -15,6 +15,7 @@ from torchmetrics import Metric, MetricCollection
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
 from torchmetrics.utilities.data import _flatten_dict
 
+from otx.metrics.mean_ap import MaskRLEMeanAveragePrecision
 from otx.types.label import LabelInfo
 
 logger = logging.getLogger()
@@ -805,10 +806,15 @@ class MeanAveragePrecisionFMeasure(MetricCollection):
     def __init__(self, box_format: str, iou_type: str, label_info: LabelInfo, **kwargs):
         map_kwargs = self._filter_kwargs(MeanAveragePrecision, kwargs)
         fmeasure_kwargs = self._filter_kwargs(FMeasure, kwargs)
+        map_compute_class = (
+            MeanAveragePrecision(box_format, iou_type, **map_kwargs)
+            if iou_type == "bbox"
+            else MaskRLEMeanAveragePrecision(box_format, iou_type, **map_kwargs)
+        )
 
         super().__init__(
             [
-                MeanAveragePrecision(box_format, iou_type, **map_kwargs),
+                map_compute_class,
                 FMeasure(label_info, **fmeasure_kwargs),
             ],
         )
@@ -862,6 +868,16 @@ def _mean_ap_f_measure_callable(label_info: LabelInfo) -> MeanAveragePrecisionFM
         label_info=label_info,
     )
 
+
+def _rle_mean_ap_f_measure_callable(label_info: LabelInfo) -> MeanAveragePrecisionFMeasure:
+    return MeanAveragePrecisionFMeasure(
+        box_format="xyxy",
+        iou_type="segm",
+        label_info=label_info,
+    )
+
+
+MaskRLEMeanAPFMeasureCallable = _rle_mean_ap_f_measure_callable
 
 FMeasureCallable = _f_measure_callable
 
