@@ -718,7 +718,7 @@ class TestOTXTrainerExportModel:
         exported_path = otx_trainer.export_model(
             otx_engine=mock_otx_engine,
             model_checkpoint_path=model_checkpoint_path,
-            format=export_format,
+            export_format=export_format,
             precision=export_precision,
         )
 
