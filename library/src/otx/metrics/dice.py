@@ -8,8 +8,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Literal
 
 from torchmetrics import JaccardIndex
-from torchmetrics.classification.dice import Dice
 from torchmetrics.collections import MetricCollection
+from torchmetrics.segmentation.dice import DiceScore
 
 from otx.types.label import SegLabelInfo
 
@@ -30,7 +30,7 @@ def _segm_callable(label_info: SegLabelInfo) -> MetricCollection:
     )
 
 
-class OTXDice(Dice):
+class OTXDice(DiceScore):
     """Dice metric used for the OTX semantic segmentation task."""
 
     def __init__(

@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """RF-DETR detector wrapper for OTX integration.
@@ -23,6 +23,8 @@ from otx.backend.native.models.modules.base_module import BaseModule
 
 if TYPE_CHECKING:
     from otx.types.explain import FeatureMapType
+
+EXPORT_OUTPUTS = tuple[Tensor, Tensor, Tensor, Tensor] | tuple[Tensor, Tensor, Tensor] | dict[str, Any]
 
 
 class RFDETRDetector(BaseModule):
@@ -100,10 +102,7 @@ class RFDETRDetector(BaseModule):
 
             loss_dict = self.criterion(outputs, targets)
             weight_dict = self.criterion.weight_dict
-            # return loss_dict
-            total_loss = sum(loss_dict[k] * weight_dict[k] for k in loss_dict if k in weight_dict)
-            loss_dict["total_loss"] = total_loss
-            return loss_dict
+            return {k: v * weight_dict[k] for k, v in loss_dict.items() if k in weight_dict}
 
         return outputs
 
@@ -111,7 +110,7 @@ class RFDETRDetector(BaseModule):
         self,
         outputs: dict[str, Tensor],
         original_sizes: list[tuple[int, int]],
-    ) -> tuple[list[Tensor], list[BoundingBoxes], list[Tensor]]:
+    ) -> tuple[list[Tensor], list[BoundingBoxes], list[Tensor], list[Tensor]]:
         """Post-process model outputs to get final predictions.
 
         Args:
@@ -127,6 +126,7 @@ class RFDETRDetector(BaseModule):
         scores_list: list[Tensor] = []
         boxes_list: list[BoundingBoxes] = []
         labels_list: list[Tensor] = []
+        masks_list: list[Tensor] = []
 
         for result, orig_size in zip(results, original_sizes):
             scores_list.append(result["scores"])
@@ -138,32 +138,32 @@ class RFDETRDetector(BaseModule):
                 ),
             )
             labels_list.append(result["labels"].long())
+            if "masks" in result:
+                masks_list.append(torch.tensor(result["masks"].squeeze(1), dtype=torch.uint8))
 
-        return scores_list, boxes_list, labels_list
+        return scores_list, boxes_list, labels_list, masks_list
 
     def export(
         self,
         batch_inputs: Tensor,
-        batch_img_metas: list[dict],
         explain_mode: bool = False,
         num_select: int = 300,
-    ) -> tuple[Tensor, Tensor, Tensor] | dict[str, Any]:
-        """Export function for model tracing.
+    ) -> EXPORT_OUTPUTS:
+        """Export function for model tracing with mask support.
 
         Args:
             batch_inputs: Input images tensor.
-            batch_img_metas: List of image meta information.
             explain_mode: Whether to include explainability outputs.
             num_select: Number of top predictions to select.
 
         Returns:
-            If explain_mode is False: Tuple of (boxes, labels, scores) tensors.
-            If explain_mode is True: Dict with boxes, labels, scores, feature_vector, saliency_map.
+            If explain_mode is False: Tuple of (boxes, labels, scores, masks) tensors.
+            If explain_mode is True: Dict with boxes, labels, scores, masks, feature_vector, saliency_map.
         """
         # Enable export mode on LWDETR
         outputs = self.lwdetr(batch_inputs)
         # outputs is (pred_boxes, pred_logits, pred_masks) in export mode
-        pred_boxes, pred_logits, _ = outputs
+        pred_boxes, pred_logits, pred_masks = outputs
 
         # Process outputs similar to PostProcess
         scores = torch.sigmoid(pred_logits)
@@ -176,6 +176,21 @@ class RFDETRDetector(BaseModule):
             dim=1,
             index=box_index.unsqueeze(-1).repeat(1, 1, pred_boxes.shape[-1]),
         )
+
+        # Handle masks
+        if pred_masks is not None:
+            # pred_masks shape: [B, num_queries, H, W]
+            # We need to gather masks for selected indices
+            masks = pred_masks.gather(
+                dim=1,
+                index=box_index.unsqueeze(-1).unsqueeze(-1).repeat(1, 1, pred_masks.shape[-2], pred_masks.shape[-1]),
+            )
+            # Apply sigmoid to get mask probabilities
+            masks = torch.sigmoid(masks)
+        else:
+            # Create dummy masks if not available
+            batch_size = pred_boxes.shape[0]
+            masks = torch.zeros((batch_size, num_select, 1, 1), device=pred_boxes.device)
 
         if explain_mode:
             # Get backbone features for explainability
@@ -197,11 +212,12 @@ class RFDETRDetector(BaseModule):
                 "bboxes": boxes,
                 "labels": labels,
                 "scores": scores,
+                "masks": masks,
                 "feature_vector": feature_vector,
                 "saliency_map": saliency_map,
             }
 
-        return boxes, labels, scores
+        return boxes, labels, scores, masks
 
     def _get_backbone_features(self, batch_inputs: Tensor) -> tuple[Tensor, ...]:
         """Extract backbone features for explainability.

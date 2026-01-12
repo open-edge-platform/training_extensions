@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """RF-DETR model implementations for OTX.
@@ -23,18 +23,17 @@ from otx.backend.native.exporter.native import OTXNativeModelExporter
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.backend.native.models.detection.d_fine import DFine
 from otx.backend.native.models.detection.detectors.rfdetr import RFDETRDetector
+from otx.backend.native.models.utils.utils import load_checkpoint
 from otx.config.data import TileConfig
+from otx.data.entity.base import OTXBatchLossEntity
+from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
 from otx.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
-from otx.types.precision import OTXPrecisionType
 
 if TYPE_CHECKING:
-    from pathlib import Path
-
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
 
     from otx.backend.native.schedulers import LRSchedulerListCallable
     from otx.metrics import MetricCallable
-    from otx.types.export import OTXExportFormatType
     from otx.types.label import LabelInfoTypes
 
 
@@ -130,7 +129,7 @@ class RFDETR(DFine):
             "rfdetr_nano": RFDETRNano,
             "rfdetr_small": RFDETRSmall,
         }
-        rfdetr = model_class_mapping[self.model_name](num_classes=num_classes)
+        rfdetr = model_class_mapping[self.model_name](num_classes=num_classes, pretrained_weights=None)
         rfdetr.model.reinitialize_detection_head(num_classes)
 
         # Update args for criterion building
@@ -140,7 +139,19 @@ class RFDETR(DFine):
         lwdetr_model = rfdetr.model.model
 
         # Build criterion and postprocessor with correct args
-        rfdetr_args = populate_args(**rfdetr.get_model_config().model_dump())
+        model_cfg = rfdetr.get_model_config().model_dump()
+        train_cfg = rfdetr.get_train_config(dataset_dir="").model_dump()
+        model_cfg.pop("num_classes")
+        if "class_names" in model_cfg:
+            model_cfg.pop("class_names")
+
+        for k in train_cfg:
+            if k in model_cfg:
+                model_cfg.pop(k)
+
+        all_kwargs = {**model_cfg, **train_cfg, "num_classes": num_classes}
+        rfdetr_args = populate_args(**all_kwargs)
+
         criterion, postprocessor = build_criterion_and_postprocessors(rfdetr_args)
 
         # Override criterion.num_classes to match OTX labels
@@ -149,6 +160,7 @@ class RFDETR(DFine):
         # Store rfdetr_args for optimizer configuration
         self.rfdetr_args = rfdetr_args
 
+        load_checkpoint(lwdetr_model, self._pretrained_weights[self.model_name], map_location="cpu")
         # Create RFDETRDetector wrapper
         return RFDETRDetector(
             lwdetr_model=lwdetr_model,
@@ -156,6 +168,62 @@ class RFDETR(DFine):
             postprocessor=postprocessor,
             input_size=self.data_input_params.input_size[0],
             multi_scale=self.multi_scale,
+        )
+
+    def _customize_outputs(
+        self,
+        outputs: tuple[torch.Tensor, ...] | dict[str, Any],  # type: ignore[override]
+        inputs: OTXDataBatch,
+    ) -> OTXPredBatch | OTXBatchLossEntity:
+        if self.training:
+            if not isinstance(outputs, dict):
+                raise TypeError(outputs)
+
+            losses = OTXBatchLossEntity()
+            for k, v in outputs.items():
+                if isinstance(v, list):
+                    losses[k] = sum(v)
+                elif isinstance(v, torch.Tensor):
+                    losses[k] = v
+                else:
+                    msg = "Loss output should be list or torch.tensor but got {type(v)}"
+                    raise TypeError(msg)
+            return losses
+
+        original_sizes = [img_info.img_shape for img_info in inputs.imgs_info]  # type: ignore[union-attr]
+        scores, bboxes, labels, _ = self.model.postprocess(outputs, original_sizes)
+
+        if self.explain_mode:
+            if not isinstance(outputs, dict):
+                msg = f"Model output should be a dict, but got {type(outputs)}."
+                raise ValueError(msg)
+
+            if "feature_vector" not in outputs:
+                msg = "No feature vector in the model output."
+                raise ValueError(msg)
+
+            if "saliency_map" not in outputs:
+                msg = "No saliency maps in the model output."
+                raise ValueError(msg)
+
+            return OTXPredBatch(
+                batch_size=len(outputs),
+                images=inputs.images,
+                imgs_info=inputs.imgs_info,
+                scores=scores,
+                bboxes=bboxes,
+                labels=labels,
+                feature_vector=[feature_vector.unsqueeze(0) for feature_vector in outputs["feature_vector"]],
+                saliency_map=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
+            )
+
+        return OTXPredBatch(
+            batch_size=len(outputs),
+            images=inputs.images,
+            imgs_info=inputs.imgs_info,
+            scores=scores,
+            bboxes=bboxes,
+            labels=labels,
         )
 
     def configure_optimizers(self) -> tuple[list[torch.optim.Optimizer], list[dict[str, Any]]]:
@@ -197,26 +265,19 @@ class RFDETR(DFine):
 
         return [optimizer], lr_scheduler_configs
 
-    def export(
-        self,
-        output_dir: Path,
-        base_name: str,
-        export_format: OTXExportFormatType,
-        precision: OTXPrecisionType = OTXPrecisionType.FP32,
-    ) -> Path:
-        """Export this model to the specified output directory.
-
-        Args:
-            output_dir (Path): directory for saving the exported model
-            base_name: (str): base name for the exported model file. Extension is defined by the target export format
-            export_format (OTXExportFormatType): format of the output model
-            precision (OTXExportPrecisionType): precision of the output model
-
-        Returns:
-            Path: path to the exported model.
-        """
-        self.model.lwdetr.export()  # Activate export mode
-        return super().export(output_dir, base_name, export_format, precision)
+    def forward_for_tracing(self, inputs: torch.Tensor) -> tuple[torch.Tensor, ...] | dict[str, Any]:
+        """Forward function for export."""
+        self.model.lwdetr.export()
+        outputs = self.model.export(inputs, explain_mode=self.explain_mode)
+        if self.explain_mode:
+            return {
+                "bboxes": outputs["bboxes"],
+                "labels": outputs["labels"],
+                "scores": outputs["scores"],
+                "feature_vector": outputs["feature_vector"],
+                "saliency_map": outputs["saliency_map"],
+            }
+        return outputs[:3]  # bboxes, labels, scores
 
     @property
     def _exporter(self) -> OTXModelExporter:

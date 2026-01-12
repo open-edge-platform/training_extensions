@@ -144,7 +144,16 @@ class RTDETR(OTXDetectionModel):
                     scaled_bboxes = converted_bboxes / torch.tensor(bb.canvas_size[::-1]).tile(2)[None].to(
                         converted_bboxes.device,
                     )
-                targets.append({"boxes": scaled_bboxes, "labels": ll})
+                h, w = bb.canvas_size
+                device = scaled_bboxes.device
+                targets.append(
+                    {
+                        "boxes": scaled_bboxes,
+                        "labels": ll,
+                        "size": torch.tensor([h, w], device=device),
+                        "orig_size": torch.tensor([h, w], device=device),
+                    }
+                )
 
         if self.explain_mode:
             return {"entity": entity}
@@ -174,7 +183,7 @@ class RTDETR(OTXDetectionModel):
                     raise TypeError(msg)
             return losses
 
-        original_sizes = [img_info.img_shape for img_info in inputs.imgs_info]  # type: ignore[union-attr]
+        original_sizes = [img_info.ori_shape for img_info in inputs.imgs_info]  # type: ignore[union-attr]
         scores, bboxes, labels = self.model.postprocess(outputs, original_sizes)
 
         if self.explain_mode:

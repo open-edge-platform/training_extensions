@@ -240,7 +240,7 @@ class OTXInstanceSegModel(OTXModel):
 
         return pred_entity
 
-    def forward_for_tracing(self, inputs: Tensor) -> tuple[Tensor, ...]:
+    def forward_for_tracing(self, inputs: Tensor) -> tuple[Tensor, ...] | dict[str, Any]:
         """Forward function for export."""
         shape = (int(inputs.shape[2]), int(inputs.shape[3]))
         meta_info = {

@@ -196,7 +196,7 @@ class OTXDetectionModel(OTXModel):
 
     def _customize_outputs(
         self,
-        outputs: list[InstanceData] | dict | None,
+        outputs: list[InstanceData] | tuple[torch.Tensor, ...] | dict[str, Any],
         inputs: OTXDataBatch,
     ) -> OTXPredBatch | OTXBatchLossEntity:
         if self.training:
@@ -308,7 +308,7 @@ class OTXDetectionModel(OTXModel):
 
         return pred_entity
 
-    def forward_for_tracing(self, inputs: torch.Tensor) -> list[InstanceData]:
+    def forward_for_tracing(self, inputs: torch.Tensor) -> tuple[torch.Tensor, ...] | dict[str, Any]:
         """Forward function for export."""
         shape = (int(inputs.shape[2]), int(inputs.shape[3]))
         meta_info = {

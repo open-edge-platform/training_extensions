@@ -122,7 +122,6 @@ class OTXInstanceSegDataset(OTXDataset):
         masks = np.stack(gt_masks, axis=0) if gt_masks else np.zeros((0, *img_shape), dtype=bool)
 
         labels = np.array(gt_labels, dtype=np.int64)
-
         entity = OTXDataItem(
             image=img_data,
             img_info=ImageInfo(

@@ -1,31 +1,15 @@
-# RF-DETR Medium Recipe
-# RF-DETR is a state-of-the-art real-time object detector from Roboflow based on
-# DINOv2 backbone with a lightweight DETR decoder.
-# Original implementation: https://github.com/roboflow/rf-detr
-#
-# Model specs:
-#   - Parameters: ~15M
-#   - Input size: 576x576
-#   - Backbone: DINOv2 (ViT-Small with windowed attention)
-#
-# Original training settings from rfdetr:
-#   - lr: 1e-4 (head), lr_encoder: 1.5e-4 (backbone)
-#   - lr_vit_layer_decay: 0.8, lr_component_decay: 0.7
-#   - weight_decay: 1e-4
-#   - Multi-scale training with expanded scales
-
 task: DETECTION
 model:
   class_path: otx.backend.native.models.detection.rfdetr.RFDETR
   init_args:
     model_name: rfdetr_medium
-    label_info: 80
-    multi_scale: false
+    label_info: 91
+    multi_scale: true
 
     optimizer:
       class_path: torch.optim.AdamW
       init_args:
-        lr: 0.0001
+        lr: 0.00021
         betas: [0.9, 0.999]
         weight_decay: 0.0001
 
@@ -39,12 +23,12 @@ model:
             mode: max
             factor: 0.1
             patience: 10
-            monitor: val/f1-score
+            monitor: val/map
 
 engine:
   device: auto
 
-callback_monitor: val/f1-score
+callback_monitor: val/map
 
 data: ../_base_/data/torchvision_base.yaml
 
@@ -56,21 +40,27 @@ callbacks:
   - class_path: otx.backend.native.callbacks.adaptive_early_stopping.EarlyStoppingWithWarmup
     init_args:
       mode: max
-      monitor: val/f1-score
+      patience: 15
+      check_on_train_epoch_end: false
+      monitor: val/map
       min_delta: 0.001
       warmup_iters: 100
       warmup_epochs: 10
   - class_path: lightning.pytorch.callbacks.ModelCheckpoint
     init_args:
       dirpath: ""
-      monitor: val/f1-score
+      monitor: val/map
       mode: max
       save_top_k: 1
       save_last: true
       auto_insert_metric_name: false
       filename: "checkpoints/epoch_{epoch:03d}"
+  - class_path: lightning.pytorch.callbacks.EMAWeightAveraging
+    init_args:
+      decay: 0.993
 
 overrides:
+  gradient_clip_val: 0.1
   data:
     input_size:
       - 576
@@ -79,8 +69,8 @@ overrides:
     data_format: coco_instances
     train_subset:
       batch_size: 8
+      to_tv_image: true
       transforms:
-        # RF-DETR augmentation pipeline (similar to D-Fine)
         - class_path: torchvision.transforms.v2.RandomZoomOut
           enable: true
           init_args:
@@ -88,19 +78,17 @@ overrides:
         - class_path: otx.data.transform_libs.torchvision.RandomIoUCrop
           enable: true
           init_args:
-            probability: 0.8
+            probability: 1.0
         - class_path: torchvision.transforms.v2.SanitizeBoundingBoxes
           init_args:
             min_size: 1
-        - class_path: otx.data.transform_libs.torchvision.Resize
-          init_args:
-            scale: $(input_size)
-            keep_ratio: false
-            transform_bbox: true
-        - class_path: otx.data.transform_libs.torchvision.RandomFlip
+        - class_path: torchvision.transforms.v2.RandomHorizontalFlip
           enable: true
           init_args:
-            probability: 0.5
+            p: 0.5
+        - class_path: torchvision.transforms.v2.Resize
+          init_args:
+            size: $(input_size)
         - class_path: torchvision.transforms.v2.ToDtype
           init_args:
             dtype: ${as_torch_dtype:torch.float32}
@@ -114,11 +102,11 @@ overrides:
 
     val_subset:
       batch_size: 8
+      to_tv_image: true
       transforms:
-        - class_path: otx.data.transform_libs.torchvision.Resize
+        - class_path: torchvision.transforms.v2.Resize
           init_args:
-            scale: $(input_size)
-            keep_ratio: false
+            size: $(input_size)
         - class_path: torchvision.transforms.v2.ToDtype
           init_args:
             dtype: ${as_torch_dtype:torch.float32}
@@ -129,11 +117,11 @@ overrides:
 
     test_subset:
       batch_size: 8
+      to_tv_image: true
       transforms:
-        - class_path: otx.data.transform_libs.torchvision.Resize
+        - class_path: torchvision.transforms.v2.Resize
           init_args:
-            scale: $(input_size)
-            keep_ratio: false
+            size: $(input_size)
         - class_path: torchvision.transforms.v2.ToDtype
           init_args:
             dtype: ${as_torch_dtype:torch.float32}
