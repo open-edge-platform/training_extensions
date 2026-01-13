@@ -132,7 +132,9 @@ async def cancel_job(job_id: JobID, job_queue: Annotated[JobQueue, Depends(get_j
                 return JobView.of(job)
             case _:
                 logger.error("Unexpected cancellation result: {}", result)
-                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Invalid job state")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error while processing job cancellation"
+                )
     except ValueError:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Unable to cancel job")
 
