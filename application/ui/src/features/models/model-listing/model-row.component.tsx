@@ -38,7 +38,7 @@ export const ModelRow = ({ model }: ModelRowProps) => {
                         color: 'var(--spectrum-global-color-gray-700)',
                     }}
                 >
-                    Fine-tuned from <Link>Model Project #1</Link>
+                    Fine-tuned from <Link UNSAFE_style={{ textDecoration: 'none' }}>Model Project #1</Link>
                 </Text>
             </Flex>
 

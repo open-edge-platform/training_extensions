@@ -104,7 +104,3 @@ svg {
 [data-testid='underlay'] {
     z-index: 2 !important;
 }
-
-[role='link'] {
-    text-decoration: none;
-}
