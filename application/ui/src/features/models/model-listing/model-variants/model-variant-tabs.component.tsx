@@ -11,9 +11,9 @@ import { ModelVariantTable } from './model-variant-table.component';
 
 import classes from './model-variant-tabs.module.scss';
 
-interface ModelVariantsTabsProps {
+type ModelVariantsTabsProps = {
     model: SchemaModelView;
-}
+};
 
 export const ModelVariantsTabs = ({ model }: ModelVariantsTabsProps) => {
     return (
