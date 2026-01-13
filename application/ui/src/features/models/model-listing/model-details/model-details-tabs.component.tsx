@@ -5,6 +5,7 @@ import { Item, TabList, TabPanels, Tabs, Text } from '@geti/ui';
 
 import type { SchemaModelView } from '../../../../api/openapi-spec';
 import { ModelMetrics } from '../model-metrics/model-metrics.component';
+import { ModelTrainingParameters } from '../model-training-parameters/model-training-parameters.component';
 import { ModelVariantsTabs } from '../model-variants/model-variant-tabs.component';
 
 interface ModelDetailsTabsProps {
@@ -18,9 +19,11 @@ export const ModelDetailsTabs = ({ model }: ModelDetailsTabsProps) => {
             UNSAFE_style={{
                 backgroundColor: 'var(--spectrum-global-color-gray-75)',
                 padding: 'var(--spectrum-global-dimension-size-400)',
+                borderRadius: 'var(--spectrum-global-dimension-size-50)',
+                border: 'var(--spectrum-global-dimension-size-10) solid var(--spectrum-global-color-gray-200)',
             }}
         >
-            <TabList>
+            <TabList marginBottom={'size-300'}>
                 <Item key='variants'>
                     <Text>Model variants</Text>
                 </Item>
@@ -42,7 +45,7 @@ export const ModelDetailsTabs = ({ model }: ModelDetailsTabsProps) => {
                     <ModelMetrics />
                 </Item>
                 <Item key='parameters'>
-                    <Text>Training parameter settings content</Text>
+                    <ModelTrainingParameters />
                 </Item>
                 <Item key='datasets'>
                     <Text>Training datasets content</Text>

@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, dimensionValue, Flex, Grid, Item, Menu, MenuTrigger, Tag, Text } from '@geti/ui';
+import { ActionButton, dimensionValue, Flex, Grid, Item, Link, Menu, MenuTrigger, Tag, Text } from '@geti/ui';
 import { MoreMenu } from '@geti/ui/icons';
 
 import type { SchemaModelView } from '../../../api/openapi-spec';
@@ -38,7 +38,7 @@ export const ModelRow = ({ model }: ModelRowProps) => {
                         color: 'var(--spectrum-global-color-gray-700)',
                     }}
                 >
-                    Fine-tuned from Model Project #1
+                    Fine-tuned from <Link UNSAFE_style={{ textDecoration: 'none' }}>Model Project #1</Link>
                 </Text>
             </Flex>
 

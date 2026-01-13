@@ -47,8 +47,8 @@ export const ModelMetrics = () => {
     const jobDuration = '00:04:35';
 
     return (
-        <Flex direction='column'>
-            <Flex alignItems={'center'} marginY={'size-300'}>
+        <Flex direction='column' gap={'size-300'}>
+            <Flex alignItems={'center'}>
                 <Text UNSAFE_style={{ color: 'var(--spectrum-global-color-gray-900)' }}>
                     {`Model training time: ${trainingTime}`}
                 </Text>
@@ -60,7 +60,7 @@ export const ModelMetrics = () => {
 
             <ModelMetricsGraphs lossData={mockLossData} accuracyData={mockAccuracyData} />
 
-            <Link marginTop={'size-300'}>See more</Link>
+            <Link UNSAFE_style={{ textDecoration: 'none' }}>See more</Link>
         </Flex>
     );
 };
