@@ -123,7 +123,7 @@ UPDATE_MODEL_BODY_EXAMPLES = {
         status.HTTP_404_NOT_FOUND: {"description": "Project or model not found"},
     },
 )
-def update_model(
+def rename_model(
     project: Annotated[ProjectView, Depends(get_project)],
     model_id: ModelID,
     model_metadata: Annotated[
@@ -135,9 +135,9 @@ def update_model(
     ],
     model_service: Annotated[ModelService, Depends(get_model_service)],
 ) -> ModelView:
-    """Rename a model by ID."""
+    """Rename a model"""
     try:
-        model_revision = model_service.update_model(
+        model_revision = model_service.rename_model(
             project_id=project.id, model_id=model_id, model_metadata=model_metadata
         )
         return ModelView.model_validate(model_revision, from_attributes=True)

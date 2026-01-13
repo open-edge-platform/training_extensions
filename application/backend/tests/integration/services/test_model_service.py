@@ -61,7 +61,7 @@ class TestModelServiceIntegration:
         new_model_name = "This is a new model name"
         model_metadata = {"name": new_model_name}
         model_from_get_before_update = fxt_model_service.get_model(fxt_project_id, fxt_model_id)
-        model_from_update = fxt_model_service.update_model(
+        model_from_update = fxt_model_service.rename_model(
             project_id=fxt_project_id, model_id=fxt_model_id, model_metadata=model_metadata
         )
         model_from_get_after_update = fxt_model_service.get_model(fxt_project_id, fxt_model_id)
