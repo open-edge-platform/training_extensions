@@ -22,7 +22,7 @@ init-db: _venv
 # Seed database
 seed-db: _venv init-db
     echo "Seeding database with initial data..."
-    PYTHONPATH=. uv run --no-sync app/cli.py seed --with-model=True
+    PYTHONPATH=. uv run --no-sync app/cli.py seed --with-model=True || exit 0
 
 # Start FastAPI development server with auto-reload
 dev: _venv seed-db download-files

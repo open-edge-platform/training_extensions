@@ -45,9 +45,9 @@ test-unit-native-models: venv
         echo "./tests/unit directory not found - skipping unit tests"; \
     fi
 
-test-integration csv_file_name=default_csv_file_name task=default_task: venv
+test-integration csv-file-name=default_csv_file_name task=default_task: venv
     if [ -d "./tests/integration" ]; then \
-        PYTHONPATH={{py_path}} uv run pytest ./tests/integration -ra --showlocals --csv={{ csv_file_name }} --task {{ task }} --open-subprocess --run-category-only -v; \
+        PYTHONPATH={{py_path}} uv run pytest ./tests/integration -ra --showlocals --csv={{ csv-file-name }} --task {{ task }} --open-subprocess --run-category-only -v; \
     else \
         echo "./tests/integration directory not found - skipping integration tests"; \
     fi
