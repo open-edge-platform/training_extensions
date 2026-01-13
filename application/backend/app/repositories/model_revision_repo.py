@@ -17,14 +17,21 @@ class ModelRevisionRepository(BaseRepository[ModelRevisionDB]):
         super().__init__(db, ModelRevisionDB)
         self.project_id = project_id
 
-    def list_all(self) -> Sequence[ModelRevisionDB]:
+    def list_all(self, training_dataset_id: str | None = None) -> Sequence[ModelRevisionDB]:
         """
         List all model revisions for a given project.
+
+        Optionally the model revisions can be filtered on training dataset id
+
+        Args:
+            training_dataset_id (str): Optional unique id of the training dataset to filter on
 
         Returns:
             Sequence[ModelRevisionDB]: A list of model revisions associated with the project.
         """
         stmt = select(ModelRevisionDB).where(ModelRevisionDB.project_id == self.project_id)
+        if training_dataset_id is not None:
+            stmt = stmt.where(ModelRevisionDB.training_dataset_id == training_dataset_id)
         return self.db.execute(stmt).scalars().all()
 
     def get_by_id(self, obj_id: str) -> ModelRevisionDB | None:

@@ -5,12 +5,12 @@ import io
 import zipfile
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 
 from app.api.dependencies import get_model_service, get_project
 from app.api.schemas import ModelView, ProjectView
-from app.api.validators import ModelID
+from app.api.validators import DatasetRevisionID, ModelID
 from app.services import ModelService, ResourceInUseError, ResourceNotFoundError
 
 router = APIRouter(prefix="/api/projects/{project_id}/models", tags=["Models"])
@@ -28,10 +28,16 @@ router = APIRouter(prefix="/api/projects/{project_id}/models", tags=["Models"])
 def list_models(
     project: Annotated[ProjectView, Depends(get_project)],
     model_service: Annotated[ModelService, Depends(get_model_service)],
+    dataset_revision_id: DatasetRevisionID = Query(
+        None, description="Optional query parameter to filter models on dataset revision id"
+    ),
 ) -> list[ModelView]:
-    """Get all models in a project."""
+    """Get all models in a project, optionally for a specific dataset."""
     try:
-        return [ModelView.model_validate(obj, from_attributes=True) for obj in model_service.list_models(project.id)]
+        return [
+            ModelView.model_validate(obj, from_attributes=True)
+            for obj in model_service.list_models(project_id=project.id, dataset_revision_id=dataset_revision_id)
+        ]
     except ResourceNotFoundError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
 
