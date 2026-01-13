@@ -539,10 +539,21 @@ class TestOTXTrainerPrepareModel:
 class TestOTXTrainerTrainModel:
     """Tests for the OTXTrainer.train_model method."""
 
+    @pytest.mark.parametrize(
+        "geti_device,otx_device",
+        [
+            (DeviceInfo(type=DeviceType.CPU, name="Intel Core", index=None, memory=None), "cpu"),
+            (DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", index=0, memory=123), "xpu"),
+            (DeviceInfo(type=DeviceType.CUDA, name="NVIDIA RTX 3090", index=1, memory=123), "gpu"),
+        ],
+        ids=["CPU", "XPU (Intel GPU)", "CUDA (NVIDIA GPU)"],
+    )
     def test_train_model(
         self,
         fxt_otx_trainer: Callable[[], OTXTrainer],
         tmp_path: Path,
+        geti_device: DeviceInfo,
+        otx_device: str,
     ):
         """Test successful model training."""
         # Arrange
@@ -631,7 +642,7 @@ class TestOTXTrainerTrainModel:
                         dataset_info=mock_dataset_info,
                         weights_path=weights_path,
                         model_id=model_id,
-                        device=DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None),
+                        device=geti_device,
                     )
 
         # Assert
@@ -651,12 +662,17 @@ class TestOTXTrainerTrainModel:
         assert engine_call_kwargs["model"] == mock_otx_model
         assert engine_call_kwargs["data"] == mock_datamodule
         assert engine_call_kwargs["work_dir"] == f"./otx-workspace-{model_id}"
+        assert engine_call_kwargs["device"] == otx_device
 
         # Verify training was started
         mock_otx_engine.train.assert_called_once()
         train_call_kwargs = mock_otx_engine.train.call_args.kwargs
         assert train_call_kwargs["max_epochs"] == 10
         assert train_call_kwargs["precision"] == "32"
+        if geti_device.type == DeviceType.CPU or not geti_device.index:
+            assert "devices" not in train_call_kwargs
+        else:
+            assert train_call_kwargs["devices"] == [geti_device.index]
         assert "callbacks" in train_call_kwargs
 
         # Verify return values
