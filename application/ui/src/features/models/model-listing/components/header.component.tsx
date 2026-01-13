@@ -10,7 +10,7 @@ interface HeaderProps {
     groupBy?: GroupByMode;
     onGroupByChange: (groupBy: GroupByMode) => void;
     onSortChange: (sortBy: SortBy) => void;
-    onPinActiveToggle: (isPinned: boolean) => void;
+    onPinActiveToggle: () => void;
 }
 
 export const Header = ({ groupBy, onGroupByChange, onSortChange, onPinActiveToggle }: HeaderProps) => {
