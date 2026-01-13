@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import type { ArchitectureGroup, DatasetGroup, GroupByMode } from '../types';
+import type { ArchitectureGroup, DatasetGroup, GroupByMode } from '../../types';
 import { ArchitectureGroupHeader } from './architecture-group-header.component';
 import { DatasetGroupHeader } from './dataset-group-header.component';
 

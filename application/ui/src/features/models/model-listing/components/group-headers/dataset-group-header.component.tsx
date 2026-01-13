@@ -4,8 +4,8 @@
 import { ActionButton, Button, dimensionValue, Flex, Grid, Heading, Item, Menu, MenuTrigger, Text } from '@geti/ui';
 import { Image, MoreMenu, Tag } from '@geti/ui/icons';
 
+import type { DatasetGroup } from '../../types';
 import { ThreeSectionRange } from '../three-section-range.component';
-import type { DatasetGroup } from '../types';
 
 import classes from './group-headers.module.scss';
 

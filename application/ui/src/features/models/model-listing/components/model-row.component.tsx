@@ -4,10 +4,10 @@
 import { ActionButton, dimensionValue, Flex, Grid, Item, Link, Menu, MenuTrigger, Tag, Text } from '@geti/ui';
 import { MoreMenu } from '@geti/ui/icons';
 
-import type { SchemaModelView } from '../../../api/openapi-spec';
-import { ReactComponent as StartIcon } from '../../../assets/icons/start.svg';
-import { GRID_COLUMNS } from './constants';
-import { AccuracyIndicator } from './model-variants/accuracy-indicator.component';
+import { SchemaModelView } from '../../../../api/openapi-spec';
+import { ReactComponent as StartIcon } from '../../../../assets/icons/start.svg';
+import { GRID_COLUMNS } from '../constants';
+import { AccuracyIndicator } from '../model-variants/accuracy-indicator.component';
 
 interface ModelRowProps {
     model: SchemaModelView;

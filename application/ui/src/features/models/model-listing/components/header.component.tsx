@@ -4,12 +4,12 @@
 import { Flex, Grid, Item, Picker, Text, ToggleButton } from '@geti/ui';
 import { Search } from '@geti/ui/icons';
 
-import type { GroupByMode } from './types';
+import type { GroupByMode, SortBy } from '../types';
 
 interface HeaderProps {
     groupBy?: GroupByMode;
     onGroupByChange: (groupBy: GroupByMode) => void;
-    onSortChange: (sortBy: string) => void;
+    onSortChange: (sortBy: SortBy) => void;
     onPinActiveToggle: (isPinned: boolean) => void;
 }
 
@@ -34,7 +34,7 @@ export const Header = ({ groupBy, onGroupByChange, onSortChange, onPinActiveTogg
                     width={'size-3000'}
                     aria-label={'Sort models'}
                     defaultSelectedKey={'trained'}
-                    onSelectionChange={(key) => onSortChange(String(key))}
+                    onSelectionChange={(key) => onSortChange(key as SortBy)}
                 >
                     <Item key='name'>Sort: Name</Item>
                     <Item key='trained'>Sort: Trained</Item>
