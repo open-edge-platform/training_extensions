@@ -3,7 +3,7 @@
 
 from .label import LabelView, PatchLabels
 from .metrics import PipelineMetricsView
-from .model import ModelView
+from .model import ModelUpdateRequest, ModelView
 from .pipeline import PipelineView
 from .project import ProjectCreate, ProjectUpdateName, ProjectView, TaskView
 from .sink import SinkView
@@ -11,6 +11,7 @@ from .source import SourceView
 
 __all__ = [
     "LabelView",
+    "ModelUpdateRequest",
     "ModelView",
     "PatchLabels",
     "PipelineMetricsView",

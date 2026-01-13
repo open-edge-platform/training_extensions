@@ -6,11 +6,10 @@ import zipfile
 from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, HTTPException, status
-from fastapi.openapi.models import Example
 from fastapi.responses import StreamingResponse
 
 from app.api.dependencies import get_model_service, get_project
-from app.api.schemas import ModelView, ProjectView
+from app.api.schemas import ModelUpdateRequest, ModelView, ProjectView
 from app.api.validators import ModelID
 from app.services import ModelService, ResourceInUseError, ResourceNotFoundError
 
@@ -103,15 +102,6 @@ def download_model_binary(
 UPDATE_MODEL_BODY_DESCRIPTION = """
 Update name of model revision.
 """
-UPDATE_MODEL_BODY_EXAMPLES = {
-    "name": Example(
-        summary="Update model name",
-        description="Change the name of the model",
-        value={
-            "name": "new_model_name",
-        },
-    ),
-}
 
 
 @router.patch(
@@ -126,11 +116,10 @@ UPDATE_MODEL_BODY_EXAMPLES = {
 def rename_model(
     project: Annotated[ProjectView, Depends(get_project)],
     model_id: ModelID,
-    model_metadata: Annotated[
-        dict,
+    model_update: Annotated[
+        ModelUpdateRequest,
         Body(
             description=UPDATE_MODEL_BODY_DESCRIPTION,
-            openapi_examples=UPDATE_MODEL_BODY_EXAMPLES,
         ),
     ],
     model_service: Annotated[ModelService, Depends(get_model_service)],
@@ -138,7 +127,7 @@ def rename_model(
     """Rename a model"""
     try:
         model_revision = model_service.rename_model(
-            project_id=project.id, model_id=model_id, model_metadata=model_metadata
+            project_id=project.id, model_id=model_id, model_metadata=model_update.model_dump(exclude_none=True)
         )
         return ModelView.model_validate(model_revision, from_attributes=True)
     except ResourceNotFoundError as e:

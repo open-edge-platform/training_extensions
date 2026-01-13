@@ -4,6 +4,7 @@
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 from uuid import UUID
 
 from loguru import logger
@@ -57,7 +58,7 @@ class ModelService(BaseSessionManagedService):
             raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
         return ModelRevision.model_validate(model_rev_db)
 
-    def rename_model(self, project_id: UUID, model_id: UUID, model_metadata: dict[str, str]) -> ModelRevision:
+    def rename_model(self, project_id: UUID, model_id: UUID, model_metadata: dict[str, Any]) -> ModelRevision:
         """
         Rename a model revision.
 
