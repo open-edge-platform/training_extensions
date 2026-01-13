@@ -48,7 +48,7 @@ export const ModelMetrics = () => {
 
     return (
         <Flex direction='column'>
-            <Flex alignItems={'center'} marginY={'size-300'}>
+            <Flex alignItems={'center'} marginBottom={'size-300'}>
                 <Text UNSAFE_style={{ color: 'var(--spectrum-global-color-gray-900)' }}>
                     {`Model training time: ${trainingTime}`}
                 </Text>
