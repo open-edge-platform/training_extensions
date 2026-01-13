@@ -73,7 +73,7 @@ def download_model_binary(
     model_service: Annotated[ModelService, Depends(get_model_service)],
     format: Annotated[OTXExportFormatType, Query()] = OTXExportFormatType.OPENVINO,
 ) -> StreamingResponse:
-    """Download trained model weights in OpenVINO format as a zip archive containing model.xml and model.bin files."""
+    """Download trained model weights in OpenVINO or ONNX format as a zip archive"""
     try:
         # Verify the model exists and get the model directory
         model_dir = model_service.get_model_files_path(project_id=project.id, model_id=model_id)
@@ -86,14 +86,18 @@ def download_model_binary(
                 bin_file = model_dir / "model.bin"
                 zip_file.write(xml_file, arcname="model.xml")
                 zip_file.write(bin_file, arcname="model.bin")
-                precision = "fp16"
             elif format == OTXExportFormatType.ONNX:
                 onnx_file = model_dir / "model.onnx"
                 zip_file.write(onnx_file, arcname="model.onnx")
-                precision = "fp32"
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Unsupported model format: {format}",
+                )
 
         zip_buffer.seek(0)
 
+        precision = "fp16" if format == OTXExportFormatType.OPENVINO else "fp32"
         filename = f"model-{model_id}-{format.name.lower()}-{precision}.zip"
 
         return StreamingResponse(
