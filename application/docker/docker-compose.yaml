@@ -12,14 +12,14 @@ services:
     image: geti-tune-${AI_DEVICE:-cpu}:${TAG:-latest}
     restart: unless-stopped
     build:
-      context: ..
-      dockerfile: docker/Dockerfile
+      context: ../..
+      dockerfile: application/docker/Dockerfile
       target: geti-tune-${AI_DEVICE:-cpu}
       args:
         - ASSET_PREFIX=/html
         - STATIC_FILES_DIR=/application/html
       <<: *proxies
-    working_dir: /application
+    working_dir: /application/backend
     environment:
       - AI_DEVICE=${AI_DEVICE} # choose between 'cpu' (default), 'xpu', 'gpu'
     volumes:

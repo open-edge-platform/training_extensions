@@ -8,7 +8,7 @@ FROM python:3.13-slim@sha256:baf66684c5fcafbda38a54b227ee30ec41e40af1e4073edee3a
 # uv / uvx
 COPY --from=docker.io/astral/uv:0.9.7@sha256:ba4857bf2a068e9bc0e64eed8563b065908a4cd6bfb66b531a9c424c8e25e142 /uv /uvx /bin/
 
-WORKDIR /application
+WORKDIR /application/backend
 
 # Build deps (for compiling / Rust-based crates)
 # TODO: remove 'git' once all dependencies are on PyPI
@@ -31,8 +31,9 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 FROM backend-base AS cpu-base
 
 RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=backend/uv.lock,target=uv.lock \
-    --mount=type=bind,source=backend/pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=application/backend/uv.lock,target=uv.lock \
+    --mount=type=bind,source=application/backend/pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=library,target=/library,rw \
     uv sync --frozen --no-dev --no-editable --extra mqtt --extra cpu
 
 ##########
@@ -41,8 +42,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 FROM backend-base AS gpu-base
 
 RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=backend/uv.lock,target=uv.lock \
-    --mount=type=bind,source=backend/pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=application/backend/uv.lock,target=uv.lock \
+    --mount=type=bind,source=application/backend/pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=library,target=/library,rw \
     uv sync --frozen --no-dev --no-editable --extra mqtt --extra cuda
 
 ##########
@@ -51,8 +53,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 FROM backend-base AS xpu-base
 
 RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=backend/uv.lock,target=uv.lock \
-    --mount=type=bind,source=backend/pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=application/backend/uv.lock,target=uv.lock \
+    --mount=type=bind,source=application/backend/pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=library,target=/library,rw \
     uv sync --frozen --no-dev --no-editable --extra mqtt --extra xpu
 
 ##################
@@ -60,9 +63,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 ##################
 FROM node:24-alpine3.22@sha256:4f4a059445c5a6ef2b9d169d9afde176301263178141fc05ba657dab1c84f9a7 AS geti-ui-packages
 
-WORKDIR /home/app/web_ui/
+WORKDIR /home/application/ui/
 RUN apk add --no-cache git=2.49.1-r0
-COPY --link ./ui/package.json ./
+COPY --link application/ui/package.json ./
 RUN npm run clone-geti-ui-packages
 
 #############
@@ -70,16 +73,16 @@ RUN npm run clone-geti-ui-packages
 #############
 FROM node:24-alpine3.22@sha256:4f4a059445c5a6ef2b9d169d9afde176301263178141fc05ba657dab1c84f9a7 AS web-ui-base
 
-WORKDIR /home/app/web_ui/
+WORKDIR /home/application/ui/
 
-COPY --link ui/package.json ./
-COPY --link ui/package-lock.json ./
-COPY --from=geti-ui-packages /home/app/web_ui/packages/ /home/app/web_ui/packages/
+COPY --link application/ui/package.json ./
+COPY --link application/ui/package-lock.json ./
+COPY --from=geti-ui-packages /home/application/ui/packages/ /home/application/ui/packages/
 RUN npm ci --audit=false --ignore-scripts
 
-COPY --link ui/tsconfig.json ./
-COPY --link ui/rsbuild.config.ts ./
-COPY --link ui/src/ src/
+COPY --link application/ui/tsconfig.json ./
+COPY --link application/ui/rsbuild.config.ts ./
+COPY --link application/ui/src/ src/
 
 ########
 # Web UI
@@ -116,9 +119,9 @@ RUN apt-get update \
     && apt-get clean
 
 # Backend code + uv from backend-base
-COPY --link backend/app /application/app
+COPY --link application/backend/app /application/backend/app
 COPY --from=backend-base /bin/uv /bin/uv
-COPY --from=web-ui /home/app/web_ui/dist/ ${STATIC_FILES_DIR}
+COPY --from=web-ui /home/application/ui/dist/ ${STATIC_FILES_DIR}
 
 # Make runtime directories writable for non-root user
 RUN mkdir -p /home/${USER_NAME}/.cache/uv && \
@@ -128,8 +131,8 @@ RUN mkdir -p /home/${USER_NAME}/.cache/uv && \
 
 EXPOSE 7860
 
-WORKDIR /application
-ENV PYTHONPATH=/application
+WORKDIR /application/backend
+ENV PYTHONPATH=/application/backend
 
 USER ${USER_NAME}
 
@@ -140,7 +143,7 @@ CMD ["uv", "run", "app/main.py"]
 ######################
 FROM runtime-base AS geti-tune-cpu
 
-COPY --from=cpu-base --chown=${UID}:${UID} /application/.venv /application/.venv
+COPY --from=cpu-base --chown=${UID}:${UID} /application/backend/.venv /application/backend/.venv
 
 ######################
 # Server (GPU version)
@@ -164,7 +167,7 @@ RUN apt-get update \
 
 USER ${USER_NAME}
 
-COPY --from=gpu-base --chown=${UID}:${UID} /application/.venv /application/.venv
+COPY --from=gpu-base --chown=${UID}:${UID} /application/backend/.venv /application/backend/.venv
 
 #######################
 ## Server (XPU version)
@@ -190,4 +193,4 @@ RUN apt-get update  \
 
 USER ${USER_NAME}
 
-COPY --from=xpu-base --chown=${UID}:${UID} /application/.venv /application/.venv
+COPY --from=xpu-base --chown=${UID}:${UID} /application/backend/.venv /application/backend/.venv

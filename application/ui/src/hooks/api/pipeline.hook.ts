@@ -47,3 +47,10 @@ export const useDisablePipeline = () => {
         meta: { invalidateQueries: [['get', '/api/projects/{project_id}/pipeline']] },
     });
 };
+
+export const useConnectSourceToPipeline = () => {
+    const project_id = useProjectIdentifier();
+    const pipeline = usePatchPipeline();
+
+    return (source_id: string) => pipeline.mutateAsync({ params: { path: { project_id } }, body: { source_id } });
+};

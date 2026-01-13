@@ -83,9 +83,7 @@ module-root = ""
 module-name = "app"
 
 [tool.uv.sources]
-# TODO (#5165) source 'otx' from local path to enable local builds that include local changes to the library
-# otx = { path = "../../library", editable = true }
-otx = { git = "https://github.com/open-edge-platform/training_extensions.git", branch = "develop", subdirectory = "library" }
+otx = { path = "../../library", editable = true }
 
 [tool.ruff]
 target-version = "py313"

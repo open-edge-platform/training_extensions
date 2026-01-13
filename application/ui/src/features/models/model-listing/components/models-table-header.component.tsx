@@ -4,8 +4,8 @@
 import { dimensionValue, Flex, Grid, Text } from '@geti/ui';
 import { SortDown } from '@geti/ui/icons';
 
-import { GRID_COLUMNS } from './constants';
-import type { GroupByMode, SortBy } from './types';
+import { GRID_COLUMNS } from '../constants';
+import type { GroupByMode, SortBy } from '../types';
 
 interface ModelsTableHeaderProps {
     groupBy: GroupByMode;
