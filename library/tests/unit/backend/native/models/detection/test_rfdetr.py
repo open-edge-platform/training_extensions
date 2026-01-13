@@ -8,7 +8,6 @@ from __future__ import annotations
 import pytest
 import torch
 
-from otx.backend.native.models.base import DataInputParams
 from otx.backend.native.models.detection.rfdetr import RFDETR
 from otx.data.entity.torch import OTXPredBatch
 

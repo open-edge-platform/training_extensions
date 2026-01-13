@@ -24,12 +24,7 @@ class DummyLWDETR(nn.Module):
 
     def forward(self, x, targets=None):
         """Forward pass returning pred_boxes, pred_logits, pred_masks."""
-        if isinstance(x, torch.Tensor):
-            batch = x.shape[0]
-        else:
-            # Handle nested tensor
-            batch = len(x.tensors) if hasattr(x, "tensors") else 2
-
+        batch = x.shape[0] if isinstance(x, torch.Tensor) else len(x.tensors) if hasattr(x, "tensors") else 2
         return {
             "pred_boxes": torch.rand(batch, 300, 4),
             "pred_logits": torch.rand(batch, 300, self.num_classes),
@@ -42,11 +37,8 @@ class DummyLWDETR(nn.Module):
     def __call__(self, x, targets=None):
         """Make callable for export mode."""
         if self._export_mode:
+            batch = x.shape[0] if isinstance(x, torch.Tensor) else 1
             # In export mode, return tuple format
-            if isinstance(x, torch.Tensor):
-                batch = x.shape[0]
-            else:
-                batch = 1
             return (
                 torch.rand(batch, 300, 4),  # pred_boxes
                 torch.rand(batch, 300, self.num_classes),  # pred_logits
@@ -219,8 +211,8 @@ class TestRFDETRDetector:
         rfdetr_detector.eval()
 
         # Set up explainability functions
-        rfdetr_detector.feature_vector_fn = lambda feats: torch.ones(1, 128)
-        rfdetr_detector.explain_fn = lambda logits: torch.ones(1, 10, 7, 7)
+        rfdetr_detector.feature_vector_fn = lambda _: torch.ones(1, 128)
+        rfdetr_detector.explain_fn = lambda _: torch.ones(1, 10, 7, 7)
 
         images = torch.randn(1, 3, 560, 560)
         batch_img_metas = [{"img_shape": (560, 560)}]
