@@ -53,6 +53,7 @@ dependencies = [
     "tensorboardx==2.6.4",
     "rfdetr==1.3.0",
     "aiohttp>=3.13.3",
+    "certifi>=2023.7.22",
 ]
 
 [dependency-groups]
