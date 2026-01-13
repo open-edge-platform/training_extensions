@@ -13,7 +13,11 @@ const Box = ({ title, content }: { title: string; content: ReactNode }) => {
             <Heading UNSAFE_className={styles.boxHeading} level={5}>
                 {title}
             </Heading>
-            <Content UNSAFE_className={styles.boxContent}>{content}</Content>
+            <Content UNSAFE_className={styles.boxContent}>
+                <Grid columns={['1fr', '1fr']} gap={'size-100'}>
+                    {content}
+                </Grid>
+            </Content>
         </Flex>
     );
 };
@@ -24,7 +28,7 @@ export const ModelTrainingParameters = () => {
             <Box
                 title={'LEARNING PARAMETERS'}
                 content={
-                    <Grid columns={['1fr', '1fr']} rows={['auto', 'auto', 'auto', 'auto', 'auto']} gap={'size-100'}>
+                    <>
                         <Text>Input size:</Text>
                         <Text>256 x 640 px</Text>
 
@@ -39,13 +43,13 @@ export const ModelTrainingParameters = () => {
 
                         <Text>Row 5:</Text>
                         <Text>Value 5</Text>
-                    </Grid>
+                    </>
                 }
             />
             <Box
                 title={'FILTERS'}
                 content={
-                    <Grid columns={['1fr', '1fr']} rows={['auto', 'auto', 'auto', 'auto']} gap={'size-100'}>
+                    <>
                         <Text>Param 1:</Text>
                         <Text>Value 1</Text>
 
@@ -57,13 +61,13 @@ export const ModelTrainingParameters = () => {
 
                         <Text>Param 4:</Text>
                         <Text>Value 4</Text>
-                    </Grid>
+                    </>
                 }
             />
             <Box
                 title={'FINE-TUNE'}
                 content={
-                    <Grid columns={['1fr', '1fr']} rows={['auto', 'auto', 'auto', 'auto', 'auto']} gap={'size-100'}>
+                    <>
                         <Text>Param 1:</Text>
                         <Text>Value 1</Text>
 
@@ -78,15 +82,15 @@ export const ModelTrainingParameters = () => {
 
                         <Text>Param 5:</Text>
                         <Text>Value 5</Text>
-                    </Grid>
+                    </>
                 }
             />
             <Box
                 title={'TILING'}
                 content={
-                    <Grid columns={['1fr']} rows={['auto']} gap={'size-100'}>
+                    <>
                         <Text>Off</Text>
-                    </Grid>
+                    </>
                 }
             />
         </Grid>
