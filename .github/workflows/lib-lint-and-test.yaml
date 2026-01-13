@@ -190,7 +190,7 @@ jobs:
         env:
           CUBLAS_WORKSPACE_CONFIG: ":4096:8"
         run: |
-          just device='cuda' csv_file_name='${{ matrix.task }}_Python-${{ matrix.python-version }}.csv' task='${{ matrix.task }}' test-integration
+          just device='cuda' test-integration '${{ matrix.task }}_Python-${{ matrix.python-version }}.csv' '${{ matrix.task }}'
 
   required-check:
     name: Required Check lib-lint-and-test
