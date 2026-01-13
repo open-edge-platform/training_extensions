@@ -20,7 +20,7 @@ import {
 
 import { ReactComponent as Camera } from '../../../assets/icons/camera.svg';
 import { SinkOptions } from '../sinks/sink-options';
-import { SourceOptions } from '../sources/source-options';
+import { SourceActions } from '../sources/source-actions.component';
 
 const paddingStyle = {
     '--spectrum-dialog-padding-x': dimensionValue('size-300'),
@@ -30,7 +30,7 @@ const paddingStyle = {
 export const InputOutputSetup = () => {
     return (
         <DialogTrigger type='popover'>
-            <Button width={'size-3000'} variant={'secondary'}>
+            <Button variant={'secondary'} UNSAFE_style={{ gap: dimensionValue('size-125') }}>
                 <Camera fill='white' />
                 <Text>Pipeline configuration</Text>
             </Button>
@@ -38,10 +38,10 @@ export const InputOutputSetup = () => {
                 <Content>
                     <Tabs aria-label='Dataset import tabs' height={'100%'}>
                         <TabList>
-                            <Item key='sources' textValue='FoR'>
+                            <Item key='sources' textValue='Sources'>
                                 <Text>Input</Text>
                             </Item>
-                            <Item key='sinks' textValue='MaR'>
+                            <Item key='sinks' textValue='Sinks'>
                                 <Text>Output</Text>
                             </Item>
                         </TabList>
@@ -49,7 +49,7 @@ export const InputOutputSetup = () => {
                             <Item key='sources'>
                                 <View marginTop={'size-200'}>
                                     <Suspense fallback={<Loading size='M' />}>
-                                        <SourceOptions />
+                                        <SourceActions />
                                     </Suspense>
                                 </View>
                             </Item>
