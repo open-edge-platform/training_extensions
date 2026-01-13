@@ -4,7 +4,7 @@
 import json
 import threading
 import time
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from loguru import logger
@@ -46,11 +46,10 @@ class MqttDispatcher(BaseDispatcher):
         """
         try:
             import paho.mqtt.client
+
             self.mqtt_cl = paho.mqtt.client
         except ImportError:
-            raise ImportError(
-                "Package 'paho-mqtt' is required for MQTT dispatcher. Please install with extra 'mqtt'."
-            )
+            raise ImportError("Package 'paho-mqtt' is required for MQTT dispatcher. Please install with extra 'mqtt'.")
 
         super().__init__(output_config)
         self.broker_host = output_config.config_data.broker_host
