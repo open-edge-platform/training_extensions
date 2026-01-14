@@ -51,6 +51,7 @@ class TestModelServiceIntegration:
 
     def test_list_models_with_dataset_revision(
         self,
+        request: pytest.FixtureRequest,
         db_session: Session,
         fxt_project_id: UUID,
         fxt_model_service: ModelService,
@@ -80,6 +81,14 @@ class TestModelServiceIntegration:
         )
         db_session.add(model)
         db_session.flush()
+
+        # Add finalizer to cleanup test data
+        def cleanup():
+            db_session.delete(model)
+            db_session.delete(dataset_revision)
+            db_session.flush()
+
+        request.addfinalizer(cleanup)
 
         # Call list_models with dataset_revision_id and without
         dataset_models = fxt_model_service.list_models(fxt_project_id, dataset_revision_id=dataset_revision_id)
