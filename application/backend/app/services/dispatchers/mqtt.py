@@ -16,10 +16,10 @@ from .base import BaseDispatcher
 
 try:
     import paho.mqtt.client as mqtt
-    from paho.mqtt.enums import CallbackAPIVersion
+    import paho.mqtt.enums as mqtt_enums
 except ImportError:
     mqtt = None  # type: ignore[assignment]
-    CallbackAPIVersion = None  # type: ignore[assignment]
+    mqtt_enums = None  # type: ignore[assignment]
 
 MAX_RETRIES = 3
 RETRY_DELAY = 1
@@ -65,7 +65,7 @@ class MqttDispatcher(BaseDispatcher):
 
     def _create_default_client(self) -> "mqtt.Client":
         client_id = f"dispatcher_{int(time.time())}"
-        client = mqtt.Client(callback_api_version=CallbackAPIVersion.VERSION2, client_id=client_id)
+        client = mqtt.Client(callback_api_version=mqtt_enums.CallbackAPIVersion.VERSION2, client_id=client_id)
         client.on_connect = self._on_connect
         client.on_disconnect = self._on_disconnect
         if self.username is not None and self.password is not None:
