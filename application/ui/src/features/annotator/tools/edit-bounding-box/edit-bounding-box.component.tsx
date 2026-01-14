@@ -5,7 +5,7 @@ import { useState } from 'react';
 
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
-import { AnnotationShapeWithLabels } from '../../annotations/annotation-shape-with-labels.component';
+import { AnnotationShapeRenderer } from '../../annotations/annotation-shape-renderer.component';
 import type { Annotation, Point } from '../../types';
 import { getBoundingBoxInRoi, getBoundingBoxResizePoints, getClampedBoundingBox } from '../utils';
 import { ANCHOR_SIZE, ResizeAnchor } from './resize-anchor.component';
@@ -49,7 +49,7 @@ export const EditBoundingBox = ({ annotation, zoom }: EditBoundingBoxProps) => {
                 translateShape={translate}
                 onComplete={onComplete}
             >
-                <AnnotationShapeWithLabels annotation={{ ...annotation, shape }} />
+                <AnnotationShapeRenderer annotation={{ ...annotation, shape }} />
             </TranslateShape>
 
             <g
