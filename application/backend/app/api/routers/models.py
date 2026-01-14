@@ -29,7 +29,7 @@ router = APIRouter(prefix="/api/projects/{project_id}/models", tags=["Models"])
 def list_models(
     project: Annotated[ProjectView, Depends(get_project)],
     model_service: Annotated[ModelService, Depends(get_model_service)],
-    dataset_revision_id: DatasetRevisionID = Query(
+    dataset_revision_id: DatasetRevisionID | None = Query(
         None, description="Optional query parameter to filter models on dataset revision id"
     ),
 ) -> list[ModelView]:
