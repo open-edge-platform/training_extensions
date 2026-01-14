@@ -8,6 +8,7 @@ import { Back } from '@geti/ui/icons';
 import { isEmpty } from 'lodash-es';
 
 import { $api } from '../../../api/client';
+import { EditSinkForm } from './edit-sink-form.component';
 import { SinkList } from './sink-list/sink-list.component';
 import { SinkOptions } from './sink-options';
 import { SinkConfig } from './utils';
@@ -36,8 +37,7 @@ export const SinkActions = () => {
     }
 
     if (view === 'edit' && !isEmpty(currentSink)) {
-        return <p>edit</p>;
-        /* return <EditSinkForm config={currentSink} onSaved={handleShowList} onBackToList={handleShowList} />; */
+        return <EditSinkForm config={currentSink} onSaved={handleShowList} onBackToList={handleShowList} />;
     }
 
     if (view === 'list') {

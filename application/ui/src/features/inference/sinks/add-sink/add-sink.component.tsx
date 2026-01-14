@@ -5,7 +5,8 @@ import { ReactNode } from 'react';
 
 import { Button, Form } from '@geti/ui';
 
-import { useConnectSinkToPipeline } from '../../../../hooks/api/pipeline.hook';
+import { usePatchPipeline } from '../../../../hooks/api/pipeline.hook';
+import { useProjectIdentifier } from '../../../../hooks/use-project-identifier.hook';
 import { useSinkAction } from '../hooks/use-sink-action.hook';
 import { SinkConfig } from '../utils';
 
@@ -17,13 +18,14 @@ interface AddSinkProps<T> {
 }
 
 export const AddSink = <T extends SinkConfig>({ config, onSaved, bodyFormatter, componentFields }: AddSinkProps<T>) => {
-    const connectToPipelineMutation = useConnectSinkToPipeline();
+    const pipeline = usePatchPipeline();
+    const project_id = useProjectIdentifier();
 
     const [state, submitAction, isPending] = useSinkAction({
         config,
         isNewSink: true,
-        onSaved: async (sourceId) => {
-            await connectToPipelineMutation(sourceId);
+        onSaved: async (sink_id) => {
+            await pipeline.mutateAsync({ params: { path: { project_id } }, body: { sink_id } });
             onSaved();
         },
         bodyFormatter,
@@ -33,7 +35,11 @@ export const AddSink = <T extends SinkConfig>({ config, onSaved, bodyFormatter, 
         <Form validationBehavior={'native'} action={submitAction}>
             <>{componentFields(state)}</>
 
-            <Button type='submit' isDisabled={isPending} UNSAFE_style={{ maxWidth: 'fit-content' }}>
+            <Button
+                type='submit'
+                isDisabled={isPending || pipeline.isPending}
+                UNSAFE_style={{ maxWidth: 'fit-content' }}
+            >
                 Add & Connect
             </Button>
         </Form>
