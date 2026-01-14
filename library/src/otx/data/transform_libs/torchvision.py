@@ -2756,6 +2756,8 @@ class Compose(tvt_v2.Compose):
             transformable["bboxes"] = bboxes
         if (label := getattr(inputs, "label", None)) is not None:
             transformable["labels"] = label
+        if (img_info := getattr(inputs, "img_info", None)) is not None:
+            transformable["img_info"] = img_info
 
         if not transformable:
             return inputs
@@ -2775,7 +2777,6 @@ class Compose(tvt_v2.Compose):
             else:
                 # Single result, assume it's the image
                 inputs.image = result
-
         return inputs
 
     def forward(self, *inputs: OTXDataItem) -> OTXDataItem | None:
