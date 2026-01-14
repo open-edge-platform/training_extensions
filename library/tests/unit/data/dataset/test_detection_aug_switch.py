@@ -278,8 +278,8 @@ class TestOTXDetectionDatasetWithAugSwitch:
         assert callable(detection_dataset._apply_augmentation_switch)
         assert isinstance(detection_dataset.has_dynamic_augmentation, bool)
 
-    def test_transforms_pipeline_integrity(self, detection_dataset, data_aug_switch, mocker):
-        """Test that transforms pipeline integrity is maintained after augmentation switch."""
+    def test_transforms_pipeline_switch(self, detection_dataset, data_aug_switch, mocker):
+        """Test that augmentation switch is triggered during data retrieval."""
         switcher = mocker.patch("otx.data.dataset.detection.OTXDetectionDataset._apply_augmentation_switch")
         detection_dataset.set_data_aug_switch(data_aug_switch)
         detection_dataset.augmentations = Compose(
