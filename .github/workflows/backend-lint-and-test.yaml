@@ -92,17 +92,20 @@ jobs:
           uv sync --frozen --extra cpu --extra mqtt
 
       - name: Check formatting with ruff
+        if: matrix.os != 'windows-latest'
         working-directory: application/backend
         run: |
           uv run ruff check --output-format=github .
           uv run ruff format --check .
 
       - name: Check imports with import-linter
+        if: matrix.os != 'windows-latest'
         working-directory: application/backend
         run: |
           uv run lint-imports
 
       - name: Check source code with mypy
+        if: matrix.os != 'windows-latest'
         working-directory: application/backend
         run: |
           uv run mypy . --config-file=pyproject.toml
