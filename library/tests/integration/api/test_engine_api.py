@@ -36,7 +36,7 @@ def test_native_ov_engine(
     default_models = [str(template["recipe_path"]) for template in TEMPLATE_ID_MAPPING.values() if template["default"]]
     if recipe in default_models:
         pytest.skip("Default models are checked in geti interaction tests.")
-    if "mobilenet_v4" in recipe or "classification" in recipe:
+    if "mobilenet_v4" in recipe:
         pytest.skip("MobileNetV4 is not supported yet.")
     task = Path(recipe).parent.name.lower()
     tmp_path_train = tmp_path / task
