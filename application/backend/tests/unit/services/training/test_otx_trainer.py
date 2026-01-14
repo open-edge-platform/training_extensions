@@ -724,7 +724,7 @@ class TestOTXTrainerExportModel:
                 call(
                     checkpoint=model_checkpoint_path,
                     export_format=OTXExportFormatType.ONNX,
-                    export_precision=OTXPrecisionType.FP32,
+                    export_precision=OTXPrecisionType.FP16,
                 ),
             ]
         )
