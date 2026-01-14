@@ -58,7 +58,7 @@ jobs:
     strategy:
       matrix:
         os: ["ubuntu-latest", "windows-latest"]
-    name: python-${{ matrix.os }})-checks
+    name: python-${{ matrix.os }}-checks
     runs-on: ${{ matrix.os }}
     needs: check_paths
     if: needs.check_paths.outputs.run_workflow == 'true'
