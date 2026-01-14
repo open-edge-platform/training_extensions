@@ -5,11 +5,11 @@ import { useAnnotationVisibility } from '../../../shared/annotator/annotation-vi
 import { Annotation } from '../types';
 import { AnnotationShape } from './annotation-shape.component';
 
-interface AnnotationShapeWithoutLabels {
+interface AnnotationShapeWithoutLabelsProps {
     annotation: Annotation;
 }
 
-export const AnnotationShapeWithoutLabels = ({ annotation }: AnnotationShapeWithoutLabels) => {
+export const AnnotationShapeWithoutLabels = ({ annotation }: AnnotationShapeWithoutLabelsProps) => {
     const { isVisible } = useAnnotationVisibility();
     const { shape } = annotation;
 
