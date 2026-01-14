@@ -68,6 +68,30 @@ export const SelectableAnnotation = ({ children }: { children: ReactNode }) => {
         handleDeleteAnnotations();
     });
 
+    useHotkeys(
+        HOTKEYS.selectAllAnnotations,
+        (event) => {
+            event.preventDefault();
+
+            setSelectedAnnotations((prev) => {
+                return new Set([...prev, annotation.id]);
+            });
+        },
+        [setSelectedAnnotations]
+    );
+
+    useHotkeys(
+        HOTKEYS.delectAllAnnotations,
+        (event) => {
+            event.preventDefault();
+
+            setSelectedAnnotations(() => {
+                return new Set();
+            });
+        },
+        [setSelectedAnnotations]
+    );
+
     return (
         <g
             ref={elementRef}

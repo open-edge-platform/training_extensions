@@ -44,6 +44,9 @@ export const HotkeysList = () => {
                 hotkeyName={'Show or hide all annotations'}
                 hotkey={getHotkey(HOTKEYS.toggleAnnotationsVisibility)}
             />
+            <HotkeyItem hotkeyName={'Select all annotations'} hotkey={getHotkey(HOTKEYS.selectAllAnnotations)} />
+            <HotkeyItem hotkeyName={'Deselect all annotations'} hotkey={getHotkey(HOTKEYS.delectAllAnnotations)} />
+            <Divider size='S' gridColumn={'1/-1'} />
             <HotkeyItem hotkeyName={'Reset zoom'} hotkey={getHotkey(HOTKEYS.fitToScreen)} />
         </Grid>
     );
