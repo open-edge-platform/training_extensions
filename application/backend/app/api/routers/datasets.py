@@ -33,34 +33,62 @@ DEFAULT_DATASET_ITEMS_NUMBER_RETURNED = 10
 MAX_DATASET_ITEMS_NUMBER_RETURNED = 100
 
 SET_DATASET_ITEM_ANNOTATIONS_BODY_EXAMPLES = {
-    "full_image": Example(
-        summary="Full image annotation",
+    "single_label": Example(
+        summary="Single label (multiclass classification)",
         value={
             "annotations": [
                 {"labels": [{"id": "d476573e-d43c-42a6-9327-199a9aa75c33"}], "shape": {"type": "full_image"}}
             ],
         },
     ),
-    "rectangle": Example(
-        summary="Rectangle annotation",
+    "multi_label": Example(
+        summary="Multiple labels (multilabel classification)",
+        value={
+            "annotations": [
+                {
+                    "labels": [
+                        {"id": "d476573e-d43c-42a6-9327-199a9aa75c33"},
+                        {"id": "bbb782b7-8322-44e8-b6a9-90a5c9ee4bad"},
+                    ],
+                    "shape": {"type": "full_image"},
+                },
+            ],
+        },
+    ),
+    "bounding_boxes": Example(
+        summary="Bounding boxes (detection)",
         value={
             "annotations": [
                 {
                     "labels": [{"id": "d476573e-d43c-42a6-9327-199a9aa75c33"}],
                     "shape": {"type": "rectangle", "x": 10, "y": 20, "width": 100, "height": 200},
-                }
+                },
+                {
+                    "labels": [{"id": "bbb782b7-8322-44e8-b6a9-90a5c9ee4bad"}],
+                    "shape": {"type": "rectangle", "x": 150, "y": 250, "width": 80, "height": 120},
+                },
             ],
         },
     ),
-    "polygon": Example(
-        summary="Polygon annotation",
+    "polygons": Example(
+        summary="Polygons (segmentation)",
         value={
             "annotations": [
                 {
                     "labels": [{"id": "d476573e-d43c-42a6-9327-199a9aa75c33"}],
                     "shape": {"type": "polygon", "points": [[10, 20], [20, 60], [30, 40]]},
-                }
+                },
+                {
+                    "labels": [{"id": "bbb782b7-8322-44e8-b6a9-90a5c9ee4bad"}],
+                    "shape": {"type": "polygon", "points": [[150, 250], [180, 300], [200, 280]]},
+                },
             ],
+        },
+    ),
+    "empty": Example(
+        summary="No objects (detection / segmentation)",
+        value={
+            "annotations": [],
         },
     ),
 }
