@@ -4,7 +4,7 @@
 import { ActionButton, dimensionValue, Flex, Heading, Item, Menu, MenuTrigger, Text } from '@geti/ui';
 import { MoreMenu, VideoThumb } from '@geti/ui/icons';
 
-import type { ArchitectureGroup } from '../types';
+import type { ArchitectureGroup } from '../../types';
 
 type ArchitectureGroupHeaderProps = {
     architecture: ArchitectureGroup;

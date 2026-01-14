@@ -5,6 +5,7 @@ import type { SchemaModelView } from '../src/api/openapi-spec';
 
 export const getMockedModel = (overrides: Partial<SchemaModelView> = {}): SchemaModelView => ({
     id: 'model-1',
+    name: 'Mocked Model',
     architecture: 'YOLOX',
     parent_revision: null,
     training_info: {

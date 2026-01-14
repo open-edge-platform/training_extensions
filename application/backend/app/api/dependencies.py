@@ -78,6 +78,11 @@ def get_job_dir(request: Request) -> Path:
     return request.app.state.settings.job_dir
 
 
+def get_ice_servers(request: Request) -> list[dict]:
+    """Provides the ICE servers from settings."""
+    return request.app.state.settings.ice_servers
+
+
 def get_event_bus(request: Request) -> EventBus:
     """Provides an EventBus instance."""
     return request.app.state.event_bus

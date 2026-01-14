@@ -26,6 +26,7 @@ from otx.data.dataset.base import OTXDataset
 from otx.data.module import OTXDataModule
 from otx.data.transform_libs.torchvision import TorchVisionTransformLib
 from otx.tools.converter import GetiConfigConverter
+from otx.types.device import DeviceType as OTXDeviceType
 from otx.types.export import OTXExportFormatType
 from otx.types.precision import OTXPrecisionType
 from otx.types.task import OTXTaskType
@@ -34,7 +35,7 @@ from sqlalchemy.orm import Session
 from app.core.jobs.models import TrainingJobParams
 from app.core.run import ExecutionContext
 from app.models import DatasetItemAnnotationStatus, Task, TaskType, TrainingStatus
-from app.models.system import DeviceInfo
+from app.models.system import DeviceInfo, DeviceType
 from app.models.training_configuration.configuration import TrainingConfiguration
 from app.services import (
     BaseWeightsService,
@@ -204,6 +205,7 @@ class OTXTrainer(Trainer):
 
         with self._db_session_factory() as db:
             self._dataset_service.set_db_session(db)
+            self._dataset_revision_service.set_db_session(db)
 
             # Create a dataset including only the items with user-verified annotations
             logger.info("Creating dataset (dm.Dataset) from the DB items with reviewed annotations")
@@ -318,11 +320,12 @@ class OTXTrainer(Trainer):
 
         # Set up the OTXEngine
         logger.info("Initializing the OTXEngine for training (model_id={})", model_id)
+        otx_device_type = OTXDeviceType.gpu if device.type is DeviceType.CUDA else OTXDeviceType(device.type)
         otx_engine = OTXEngine(
             model=otx_model,
             data=otx_datamodule,
-            device=f"{device.type}:{device.index if device.index else 0}",
             work_dir=f"./otx-workspace-{model_id}",
+            device=otx_device_type,
         )
 
         # Set up the callbacks
@@ -337,10 +340,12 @@ class OTXTrainer(Trainer):
 
         # Start training
         logger.info("Starting the training loop (model_id={})", model_id)
+        train_kwargs = {"devices": [device.index]} if device.type is not DeviceType.CPU and device.index else {}
         otx_engine.train(
             max_epochs=training_config["max_epochs"],
             precision=training_config["precision"],
             callbacks=callbacks_list,
+            **train_kwargs,
         )
         trained_model_path = Path(otx_engine.work_dir) / "best_checkpoint.ckpt"
         logger.info("Model training completed. Trained model saved at {}", trained_model_path)
