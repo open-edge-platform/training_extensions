@@ -4,6 +4,28 @@
 import type { SchemaModelView } from '../../../../api/openapi-spec';
 import type { GroupedModels } from '../types';
 
+const formatDatasetCreatedAt = (dateString: string | null | undefined): string => {
+    if (!dateString) return '-';
+
+    try {
+        const date = new Date(dateString);
+        const formattedDate = date.toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+        });
+        const formattedTime = date.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true,
+        });
+
+        return `Created ${formattedDate}, ${formattedTime}`;
+    } catch {
+        return '-';
+    }
+};
+
 export const groupModelsByDataset = (models: SchemaModelView[]): GroupedModels[] => {
     const groups: Record<string, GroupedModels> = {}; // datasetId -> models
 
@@ -16,10 +38,11 @@ export const groupModelsByDataset = (models: SchemaModelView[]): GroupedModels[]
             groups[datasetId] = {
                 group: {
                     id: datasetId,
-                    name: `Dataset #${datasetId}`,
-                    createdAt: 'Created 01 Oct 2025, 11:07 AM',
+                    name: `Dataset #${datasetId.slice(0, 8)}`,
+                    createdAt: formatDatasetCreatedAt(model.training_info.start_time),
                     labelCount,
-                    imageCount: 3600,
+                    // TODO: Replace with actual dataset info when available from API
+                    imageCount: 0,
                     trainingSubsets: {
                         training: 70,
                         validation: 20,
