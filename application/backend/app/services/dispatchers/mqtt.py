@@ -87,7 +87,14 @@ class MqttDispatcher(BaseDispatcher):
                 time.sleep(RETRY_DELAY * (attempt + 1))
         raise ConnectionError("Failed to connect to MQTT broker")
 
-    def _on_connect(self, _client: "mqtt.Client", _userdata: Any, _flags: dict[str, int], rc: int, _properties: Any):
+    def _on_connect(
+        self,
+        _client: "mqtt.Client",
+        _userdata: Any,
+        _flags: "mqtt.DisconnectFlags",
+        rc: "mqtt.ReasonCode",
+        _properties: "mqtt.Properties | None",
+    ):
         if rc == 0:
             self._connected = True
             self._connection_event.set()
@@ -95,7 +102,14 @@ class MqttDispatcher(BaseDispatcher):
         else:
             logger.error("MQTT connect failed with code {}", rc)
 
-    def _on_disconnect(self, _client: "mqtt.Client", _userdata: Any, _flags: dict[str, int], rc: int, _properties: Any):
+    def _on_disconnect(
+        self,
+        _client: "mqtt.Client",
+        _userdata: Any,
+        _flags: "mqtt.DisconnectFlags",
+        rc: "mqtt.ReasonCode",
+        _properties: "mqtt.Properties | None",
+    ):
         self._connected = False
         self._connection_event.clear()
         logger.warning("MQTT disconnected (rc={})", rc)
