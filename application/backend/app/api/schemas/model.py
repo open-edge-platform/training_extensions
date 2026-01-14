@@ -12,6 +12,7 @@ from app.models import TrainingInfo
 class ModelView(BaseIDModel):
     """Represents a model revision with its architecture, parent revision, training info, and file status."""
 
+    name: str = Field(..., description="User friendly model name")
     architecture: str = Field(..., description="Model architecture name")
     parent_revision: UUID | None = Field(None, description="Parent model revision ID")
     training_info: TrainingInfo = Field(..., description="Information about the training process")
@@ -21,6 +22,7 @@ class ModelView(BaseIDModel):
         "json_schema_extra": {
             "example": {
                 "id": "76e07d18-196e-4e33-bf98-ac1d35dca4cb",
+                "name": "Object_Detection_YOLOX_X (76e07d18)",
                 "architecture": "Object_Detection_YOLOX_X",
                 "parent_revision": "06091f82-5506-41b9-b97f-c761380df870",
                 "training_info": {

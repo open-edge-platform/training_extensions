@@ -3,14 +3,14 @@
 
 import { Disclosure, DisclosurePanel, DisclosureTitle } from '@geti/ui';
 
-import type { SchemaModelView } from '../../../api/openapi-spec';
+import { SchemaModelView } from '../../../../api/openapi-spec';
+import { ModelDetailsTabs } from '../model-details/model-details-tabs.component';
+import { ArchitectureGroup, DatasetGroup, GroupByMode, SortBy } from '../types';
 import { GroupHeader } from './group-headers/group-header.component';
-import { ModelDetailsTabs } from './model-details/model-details-tabs.component';
 import { ModelRow } from './model-row.component';
 import { ModelsTableHeader } from './models-table-header.component';
-import type { ArchitectureGroup, DatasetGroup, GroupByMode, SortBy } from './types';
 
-import classes from './model-listing.module.scss';
+import classes from './group-models-container.module.scss';
 
 interface GroupModelsContainerProps {
     groupBy: GroupByMode;

@@ -3,26 +3,37 @@
 
 import asyncio
 import queue
+from dataclasses import dataclass
 from typing import Any
 
-from aiortc import RTCPeerConnection, RTCSessionDescription
+from aiortc import RTCConfiguration, RTCPeerConnection, RTCSessionDescription
 from loguru import logger
 
 from app.models.webrtc import Answer, InputData, Offer
-from app.webrtc.stream import InferenceVideoStreamTrack
+
+from .sdp_handler import SDPHandler
+from .stream import InferenceVideoStreamTrack
+
+
+@dataclass(frozen=True)
+class WebRTCSettings:
+    config: RTCConfiguration
+    advertise_ip: str | None = None
 
 
 class WebRTCManager:
     """Manager for handling WebRTC connections."""
 
-    def __init__(self, stream_queue: queue.Queue) -> None:
+    def __init__(self, stream_queue: queue.Queue, settings: WebRTCSettings, sdp_handler: SDPHandler) -> None:
         self._pcs: dict[str, RTCPeerConnection] = {}
         self._input_data: dict[str, Any] = {}
         self._stream_queue = stream_queue
+        self._settings = settings
+        self._sdp_handler = sdp_handler
 
     async def handle_offer(self, offer: Offer) -> Answer:
         """Create an SDP offer for a new WebRTC connection."""
-        pc = RTCPeerConnection()
+        pc = RTCPeerConnection(configuration=self._settings.config)
         self._pcs[offer.webrtc_id] = pc
 
         # Add video track
@@ -41,7 +52,12 @@ class WebRTCManager:
         answer = await pc.createAnswer()
         await pc.setLocalDescription(answer)
 
-        return Answer(sdp=pc.localDescription.sdp, type=pc.localDescription.type)
+        # Mangle SDP if public IP is configured
+        sdp = pc.localDescription.sdp
+        if self._settings.advertise_ip:
+            sdp = await self._sdp_handler.mangle_sdp(sdp, self._settings.advertise_ip)
+
+        return Answer(sdp=sdp, type=pc.localDescription.type)
 
     def set_input(self, data: InputData) -> None:
         """Set input data for specific WebRTC connection"""

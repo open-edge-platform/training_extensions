@@ -11,13 +11,13 @@ import { ModelVariantTable } from './model-variant-table.component';
 
 import classes from './model-variant-tabs.module.scss';
 
-interface ModelVariantsTabsProps {
+type ModelVariantsTabsProps = {
     model: SchemaModelView;
-}
+};
 
 export const ModelVariantsTabs = ({ model }: ModelVariantsTabsProps) => {
     return (
-        <Tabs aria-label='Model variants' UNSAFE_className={classes.tabs} marginTop={'size-300'}>
+        <Tabs aria-label='Model variants' UNSAFE_className={classes.tabs}>
             <TabList>
                 <Item key='openvino' textValue='openvino'>
                     <OpenVINO />
@@ -29,7 +29,7 @@ export const ModelVariantsTabs = ({ model }: ModelVariantsTabsProps) => {
                     <ONNX />
                 </Item>
             </TabList>
-            <TabPanels width={0} minWidth={'100%'}>
+            <TabPanels width={0} minWidth={'100%'} UNSAFE_className={classes.tabPanels}>
                 <Item key='openvino'>
                     <ModelVariantTable model={model} />
                 </Item>

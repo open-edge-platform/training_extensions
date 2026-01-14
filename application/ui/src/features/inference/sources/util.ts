@@ -7,6 +7,7 @@ export type ImagesFolderSourceConfig = components['schemas']['ImagesFolderSource
 export type IPCameraSourceConfig = components['schemas']['IPCameraSourceConfigView'];
 export type USBCameraSourceConfig = components['schemas']['USBCameraSourceConfigView'];
 export type VideoFileSourceConfig = components['schemas']['VideoFileSourceConfigView'];
+export type DisconnectedSourceConfig = components['schemas']['DisconnectedSourceConfigView'];
 
 export type SourceConfig =
     | ImagesFolderSourceConfig

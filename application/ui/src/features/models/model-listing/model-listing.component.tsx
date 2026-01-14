@@ -1,60 +1,35 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useMemo, useState } from 'react';
-
 import { Divider, View } from '@geti/ui';
 
-import type { SchemaModelView } from '../../../api/openapi-spec';
-import { GroupModelsContainer } from './group-models-container.component';
-import { Header } from './header.component';
-import type { GroupByMode, SortBy } from './types';
-import { groupModelsByArchitecture, groupModelsByDataset } from './utils/grouping';
-import { sortModels } from './utils/sorting';
+import { GroupModelsContainer } from './components/group-models-container.component';
+import { Header } from './components/header.component';
+import type { GroupByMode, GroupedModels, SortBy } from './types';
 
-// TODO: Replace with actual API data
-const mockModels: SchemaModelView[] = [
-    {
-        id: 'Amazing model',
-        architecture: 'YOLOX',
-        parent_revision: null,
-        training_info: {
-            status: 'successful',
-            label_schema_revision: {},
-            configuration: {},
-        },
-        files_deleted: false,
-    },
-    {
-        id: 'Beautiful model',
-        architecture: 'ResNet',
-        parent_revision: null,
-        training_info: {
-            status: 'successful',
-            label_schema_revision: {},
-            configuration: {},
-        },
-        files_deleted: false,
-    },
-];
-
-export const ModelListing = () => {
-    const [groupBy, setGroupBy] = useState<GroupByMode>('dataset');
-    const [sortBy, setSortBy] = useState<SortBy>('score');
-
-    const groupedModels = useMemo(() => {
-        const groups = groupBy === 'dataset' ? groupModelsByDataset(mockModels) : groupModelsByArchitecture(mockModels);
-
-        return groups.map((group) => ({ ...group, models: sortModels(group.models, sortBy) }));
-    }, [groupBy, sortBy]);
-
+type ModelListingProps = {
+    groupedModels: GroupedModels[];
+    groupBy: GroupByMode;
+    sortBy: SortBy;
+    onGroupByChange: (mode: GroupByMode) => void;
+    onSortChange: (key: SortBy) => void;
+    onPinActiveToggle: () => void;
+};
+export const ModelListing = ({
+    groupedModels,
+    groupBy,
+    sortBy,
+    onGroupByChange,
+    onSortChange,
+    onPinActiveToggle,
+}: ModelListingProps) => {
     return (
         <View padding={'size-300'}>
             <Header
                 groupBy={groupBy}
-                onGroupByChange={setGroupBy}
-                onSortChange={(key) => setSortBy(key as SortBy)}
-                onPinActiveToggle={() => {}}
+                onGroupByChange={onGroupByChange}
+                onSortChange={onSortChange}
+                onPinActiveToggle={onPinActiveToggle}
             />
 
             <Divider size={'S'} marginY={'size-300'} />

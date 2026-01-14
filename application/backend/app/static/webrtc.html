@@ -221,7 +221,21 @@
             this.updateStatus("connecting");
 
             // Create new peer connection WITHOUT ice servers
-            this.pc = new RTCPeerConnection();
+            const config = {
+              iceServers: [
+                {
+                  urls: "stun:stun.l.google.com:19302",
+                  username: null,
+                  credential: null,
+                },
+                {
+                  urls: "turn:192.168.2.52:443?transport=tcp",
+                  username: "user",
+                  credential: "password",
+                },
+              ],
+            };
+            this.pc = new RTCPeerConnection(config);
 
             // Set up event listeners
             this.setupEventListeners();

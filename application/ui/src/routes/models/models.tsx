@@ -1,8 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ModelListing } from '../../features/models/model-listing/model-listing.component';
+import { ModelListingContainer } from '../../features/models/model-listing/model-listing.container';
 
 export const Models = () => {
-    return <ModelListing />;
+    return <ModelListingContainer />;
 };

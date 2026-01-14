@@ -2,11 +2,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import queue
+import socket
 
 import pytest
+from aiortc import RTCConfiguration
 
 from app.models.webrtc import InputData, Offer
-from app.webrtc.manager import WebRTCManager
+from app.webrtc import SDPHandler
+from app.webrtc.manager import WebRTCManager, WebRTCSettings
 
 VALID_SDP = (
     "v=0\n"
@@ -31,8 +34,18 @@ def fxt_stream_queue():
 
 
 @pytest.fixture
-def fxt_manager(fxt_stream_queue):
-    return WebRTCManager(fxt_stream_queue)
+def fxt_settings():
+    return WebRTCSettings(config=RTCConfiguration(iceServers=[]))
+
+
+@pytest.fixture
+def fxt_sdp_handler():
+    return SDPHandler()
+
+
+@pytest.fixture
+def fxt_manager(fxt_stream_queue, fxt_settings, fxt_sdp_handler):
+    return WebRTCManager(fxt_stream_queue, fxt_settings, fxt_sdp_handler)
 
 
 @pytest.fixture
@@ -40,13 +53,35 @@ def fxt_offer():
     return Offer(webrtc_id="test_id", sdp=VALID_SDP, type="offer")
 
 
+def get_local_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        # Doesn't need to be reachable
+        s.connect(("10.255.255.255", 1))
+        ip = s.getsockname()[0]
+    except Exception:
+        ip = "127.0.0.1"
+    finally:
+        s.close()
+    return ip
+
+
 class TestWebRTCManager:
     @pytest.mark.asyncio
     async def test_handle_offer_creates_connection(self, fxt_manager, fxt_offer):
         answer = await fxt_manager.handle_offer(fxt_offer)
-        assert "v=0" in answer.sdp
+        assert get_local_ip() in answer.sdp
         assert answer.type == "answer"
         assert "test_id" in fxt_manager._pcs
+
+    @pytest.mark.asyncio
+    async def test_handle_offer_with_host_resolution(self, fxt_stream_queue, fxt_sdp_handler, fxt_offer):
+        settings = WebRTCSettings(config=RTCConfiguration(iceServers=[]), advertise_ip="localhost")
+        manager = WebRTCManager(fxt_stream_queue, settings, fxt_sdp_handler)
+        answer = await manager.handle_offer(fxt_offer)
+        assert "127.0.0.1" in answer.sdp
+        assert answer.type == "answer"
+        assert "test_id" in manager._pcs
 
     @pytest.mark.asyncio
     async def test_cleanup_connection_removes_pc(self, fxt_manager, fxt_offer):

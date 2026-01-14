@@ -8,6 +8,7 @@ from .pipeline import PipelineView
 from .project import ProjectCreate, ProjectUpdateName, ProjectView, TaskView
 from .sink import SinkView
 from .source import SourceView
+from .webrtc import WebRTCConfigResponse, WebRTCIceServer
 
 __all__ = [
     "LabelView",
@@ -21,4 +22,6 @@ __all__ = [
     "SinkView",
     "SourceView",
     "TaskView",
+    "WebRTCConfigResponse",
+    "WebRTCIceServer",
 ]
