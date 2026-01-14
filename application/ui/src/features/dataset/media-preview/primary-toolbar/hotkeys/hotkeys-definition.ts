@@ -7,14 +7,10 @@ const CTRL_KEY = 'ctrl';
 export const COMMAND_KEY = 'meta';
 const CTRL_OR_COMMAND_KEY = isMac() ? COMMAND_KEY : CTRL_KEY;
 
-type HotKeyActions = 'undo' | 'redo' | 'toggleAnnotations' | 'deleteAnnotation' | 'fitToScreen';
-
-type Hotkeys = Record<HotKeyActions, string>;
-
-export const HOTKEYS: Hotkeys = {
+export const HOTKEYS = {
     undo: `${CTRL_OR_COMMAND_KEY}+z`,
     redo: `${CTRL_OR_COMMAND_KEY}+y`,
-    toggleAnnotations: 'a',
+    toggleAnnotationsVisibility: 'a',
     deleteAnnotation: 'delete',
     fitToScreen: 'r',
-};
+} as const;

@@ -33,7 +33,10 @@ export const HotkeysList = () => {
             <HotkeyItem hotkeyName={'Undo'} hotkey={getHotkey(HOTKEYS.undo)} />
             <HotkeyItem hotkeyName={'Redo'} hotkey={getHotkey(HOTKEYS.redo)} />
             <HotkeyItem hotkeyName={'Delete annotation'} hotkey={getHotkey(HOTKEYS.deleteAnnotation)} />
-            <HotkeyItem hotkeyName={'Show or hide all annotations'} hotkey={getHotkey(HOTKEYS.toggleAnnotations)} />
+            <HotkeyItem
+                hotkeyName={'Show or hide all annotations'}
+                hotkey={getHotkey(HOTKEYS.toggleAnnotationsVisibility)}
+            />
             <HotkeyItem hotkeyName={'Reset zoom'} hotkey={getHotkey(HOTKEYS.fitToScreen)} />
         </Grid>
     );
