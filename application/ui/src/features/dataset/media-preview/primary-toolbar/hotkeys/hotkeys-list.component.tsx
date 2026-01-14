@@ -1,8 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Grid, Keyboard, Text } from '@geti/ui';
+import { Divider, Grid, Keyboard, Text } from '@geti/ui';
 
+import { useAvailableTools } from '../../../../annotator/tools/annotator-tools/use-available-tools';
 import { COMMAND_KEY, HOTKEYS } from './hotkeys-definition';
 
 interface HotkeyItemProps {
@@ -28,11 +29,17 @@ export const getHotkey = (key: string): string => {
 };
 
 export const HotkeysList = () => {
+    const availableTools = useAvailableTools();
+
     return (
         <Grid columns={['2fr', '1fr']} rowGap={'size-100'}>
+            {availableTools.map((tool) => (
+                <HotkeyItem key={tool.label} hotkeyName={tool.label} hotkey={getHotkey(tool.hotkey)} />
+            ))}
+            <Divider size='S' gridColumn={'1/-1'} />
             <HotkeyItem hotkeyName={'Undo'} hotkey={getHotkey(HOTKEYS.undo)} />
             <HotkeyItem hotkeyName={'Redo'} hotkey={getHotkey(HOTKEYS.redo)} />
-            <HotkeyItem hotkeyName={'Delete annotation'} hotkey={getHotkey(HOTKEYS.deleteAnnotation)} />
+            <HotkeyItem hotkeyName={'Delete selected annotation'} hotkey={getHotkey(HOTKEYS.deleteAnnotation)} />
             <HotkeyItem
                 hotkeyName={'Show or hide all annotations'}
                 hotkey={getHotkey(HOTKEYS.toggleAnnotationsVisibility)}

@@ -13,4 +13,8 @@ export const HOTKEYS = {
     toggleAnnotationsVisibility: 'a',
     deleteAnnotation: 'delete',
     fitToScreen: 'r',
+    selectionTool: 'v',
+    boundingBoxTool: 'b',
+    autoSegmentation: 's',
+    polygonTool: 'p',
 } as const;

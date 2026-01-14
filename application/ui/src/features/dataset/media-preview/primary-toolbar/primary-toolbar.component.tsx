@@ -3,7 +3,7 @@
 
 import { Divider, Flex, Grid } from '@geti/ui';
 
-import { AnnotatorTools } from '../../../annotator/tools/annotator-tools.component';
+import { AnnotatorTools } from '../../../annotator/tools/annotator-tools/annotator-tools.component';
 import { Hotkeys } from './hotkeys/hotkeys.component';
 import { Settings } from './settings/settings.component';
 import { ToggleAnnotationsVisibility } from './toggle-annotations-visibility.component';
