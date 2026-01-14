@@ -5,7 +5,6 @@ import io
 import zipfile
 from typing import Annotated
 
-
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from fastapi.openapi.models import Example
 from fastapi.responses import StreamingResponse
