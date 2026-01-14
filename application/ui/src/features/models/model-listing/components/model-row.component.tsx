@@ -6,19 +6,18 @@ import { MoreMenu } from '@geti/ui/icons';
 
 import { SchemaModelView } from '../../../../api/openapi-spec';
 import { ReactComponent as StartIcon } from '../../../../assets/icons/start.svg';
-import { useGetActiveModelId } from '../../hooks/api/use-get-active-model-id.hook';
 import { useGetModel } from '../../hooks/api/use-get-model.hook';
 import { GRID_COLUMNS } from '../constants';
 import { AccuracyIndicator } from '../model-variants/accuracy-indicator.component';
+import { useModelListing } from '../provider/model-listing-provider';
 import { formatTrainingDateTime } from '../utils/date-formatting';
 
 interface ModelRowProps {
     model: SchemaModelView;
-    onExpandModel: (modelId: string) => void;
 }
 
-export const ModelRow = ({ model, onExpandModel }: ModelRowProps) => {
-    const activeModelId = useGetActiveModelId();
+export const ModelRow = ({ model }: ModelRowProps) => {
+    const { activeModelId, onExpandModel } = useModelListing();
 
     const trainingEndTime = model.training_info.end_time;
     const parentRevisionModel = useGetModel(model.parent_revision);
@@ -49,18 +48,18 @@ export const ModelRow = ({ model, onExpandModel }: ModelRowProps) => {
                         color: 'var(--spectrum-global-color-gray-700)',
                     }}
                 >
-                    {parentRevisionModel ? (
+                    {parentRevisionModel?.data ? (
                         <>
                             Fine-tuned from{' '}
                             <Link
                                 UNSAFE_style={{ textDecoration: 'none' }}
                                 onPress={() => {
-                                    if (parentRevisionModel.id) {
-                                        onExpandModel(parentRevisionModel.id);
+                                    if (parentRevisionModel.data.id) {
+                                        onExpandModel(parentRevisionModel.data.id);
                                     }
                                 }}
                             >
-                                {parentRevisionModel.name}
+                                {parentRevisionModel.data.name}
                             </Link>
                         </>
                     ) : null}

@@ -5,7 +5,8 @@ import { Disclosure, DisclosurePanel, DisclosureTitle, Flex } from '@geti/ui';
 
 import { SchemaModelView } from '../../../../api/openapi-spec';
 import { ModelDetailsTabs } from '../model-details/model-details-tabs.component';
-import { ArchitectureGroup, DatasetGroup, GroupByMode, SortBy } from '../types';
+import { useModelListing } from '../provider/model-listing-provider';
+import { ArchitectureGroup, DatasetGroup } from '../types';
 import { GroupHeader } from './group-headers/group-header.component';
 import { ModelRow } from './model-row.component';
 import { ModelsTableHeader } from './models-table-header.component';
@@ -13,26 +14,17 @@ import { ModelsTableHeader } from './models-table-header.component';
 import classes from './group-models-container.module.scss';
 
 interface GroupModelsContainerProps {
-    groupBy: GroupByMode;
     group: DatasetGroup | ArchitectureGroup;
     models: SchemaModelView[];
-    sortBy?: SortBy;
-    expandedModelIds: Set<string>;
-    onExpandModel: (modelId: string) => void;
 }
 
-export const GroupModelsContainer = ({
-    groupBy,
-    group,
-    models,
-    sortBy,
-    expandedModelIds,
-    onExpandModel,
-}: GroupModelsContainerProps) => {
+export const GroupModelsContainer = ({ group, models }: GroupModelsContainerProps) => {
+    const { expandedModelIds, onExpandModel } = useModelListing();
+
     return (
         <Flex direction={'column'} UNSAFE_className={classes.datasetWrapper}>
-            <GroupHeader groupBy={groupBy} data={group} />
-            <ModelsTableHeader groupBy={groupBy} sortBy={sortBy} />
+            <GroupHeader data={group} />
+            <ModelsTableHeader />
 
             {models.map((model) => (
                 <Disclosure
@@ -43,7 +35,7 @@ export const GroupModelsContainer = ({
                     onExpandedChange={() => model.id && onExpandModel(model.id)}
                 >
                     <DisclosureTitle UNSAFE_className={classes.disclosureItem}>
-                        <ModelRow model={model} onExpandModel={onExpandModel} />
+                        <ModelRow model={model} />
                     </DisclosureTitle>
                     <DisclosurePanel>
                         <ModelDetailsTabs model={model} />
