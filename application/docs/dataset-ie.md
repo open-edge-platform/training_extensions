@@ -31,9 +31,9 @@ benefits in terms of maintainability and reliability.
 - Datasets can be arbitrarily large, and most of the operations scale linearly with dataset size.
   - Example of operations: uploading, downloading, archiving, extracting, parsing, transforming.
 - Metadata about the dataset (e.g., type of annotations, labels, number of items) can be obtained without fully loading
-the dataset into memory, provided that the dataset is stored in Datumaro format.
+  the dataset into memory, provided that the dataset is stored in Datumaro format.
 - Datasets may be imported to projects of different task types and labels. If so, annotations need to be adapted
-accordingly (see [Task compatibility](#task-compatibility) for more details) and the labels must explicitly re-mapped.
+  accordingly (see [Task compatibility](#task-compatibility) for more details) and the labels must explicitly re-mapped.
 
 ### Overview
 
@@ -46,10 +46,11 @@ Through careful interface modeling, it is possible to get all sources to work wi
 use cases by composing the necessary intermediate steps in a set of endpoints and jobs.
 
 Two important design choices follow from these observations:
+
 1. All datasets that are uploaded or downloaded by the user (directly or via API), must be zip archives in a standard
-dataset format (Datumaro, COCO, ...).
+   dataset format (Datumaro, COCO, ...).
 2. Internally, all processing steps must operate on a common representation of the dataset. In practice, this means
-`dm.Dataset` objects from Datumaro.
+   `dm.Dataset` objects from Datumaro.
 
 The first condition provides users with a stable and familiar interface for working with datasets.
 The second one avoids coupling the import/export logic to the specifics of any dataset format, making it easier to
@@ -60,7 +61,7 @@ After defining _how_ datasets should be represented, the next step is to define 
 during the import/export process. Given the potentially large size of the datasets, it is not feasible to keep them in
 memory throughout the entire process; instead, they must be stored on disk, in a location that is accessible to both
 the application and the user. To this end, the datasets being imported or exported are temporarily stored in a
-*staging area*, that is a dedicated folder in the application storage with a well-defined structure:
+_staging area_, that is a dedicated folder in the application storage with a well-defined structure:
 
 ```
 data/
@@ -74,6 +75,7 @@ data/
 ```
 
 In the above example, the staging area contains two datasets being processed, each uniquely identified by a UUID:
+
 - The first one is a zip archive in COCO format. A dataset in this form (compressed) is normally the result of an upload
   operation (for later import) or an export operation (dataset ready for download).
 - The second one is a Datumaro dataset in uncompressed form. This form is ideal for internal processing, as
@@ -91,6 +93,7 @@ The interactions between the user, the staging area and the application are summ
 <img src="media/dataset-ie-full-data-flow.jpg" alt="Detailed data flow with filtering and label remapping" width="900" />
 
 The diagram covers the three main workflows, which are analyzed individually in the next sections:
+
 - [Dataset Export](#dataset-export)
 - [Dataset Import](#dataset-import)
 - [Dataset Copy / Fork](#dataset-copy--fork)
@@ -108,7 +111,7 @@ the staging area (import scenarios) or before persisting it to the staging area 
 
 <img src="media/dataset-export-detailed-flow.jpg" alt="Dataset export detailed flow with filtering" width="900" />
 
-1. Upon user request, the dataset (or dataset revision) to be exported is loaded from the database as a `dm.Dataset` 
+1. Upon user request, the dataset (or dataset revision) to be exported is loaded from the database as a `dm.Dataset`
    object and filtered according to request (e.g., only include images with selected labels). These operations are
    executed in a background job, since they may take a long time depending on dataset size.
 2. The filtered dataset is saved to the staging area, in the requested format (e.g. COCO), compressed as a zip archive.
@@ -159,7 +162,7 @@ compatible with the project's task type and labels. If necessary, annotations mu
 following rules:
 
 | Dataset Annotation Type | Project Task Type          | Transformation                                             |
-|-------------------------|----------------------------|------------------------------------------------------------|
+| ----------------------- | -------------------------- | ---------------------------------------------------------- |
 | Bounding Box            | Multi-label classification | Collect all the labels of the bounding boxes in the image  |
 | Bounding Box            | Instance segmentation      | Reinterpret bounding boxes as polygons                     |
 | Polygon                 | Multi-label classification | Collect all the labels of the polygons in the image        |
@@ -167,27 +170,55 @@ following rules:
 
 Conversions not listed in the table are not supported and will cause the import operation to fail.
 
+### Concurrency
+
+If the client attempts to launch multiple import/export operations on the same dataset at the same time, there could
+be conflicts and race conditions in the staging area. To avoid such issues, the system must implement a locking
+mechanism that prevents multiple jobs from accessing the same staged dataset concurrently.
+
+The lock can be implemented using a simple file-based approach: when a job starts processing a staged dataset, it
+must acquire a lock by creating a file `{job_id}.lock` in the staged dataset folder. If a `*.lock` file already exists,
+then another job is already processing the dataset, and the new job should fail with an appropriate error message.
+Once the job completes (successfully or not), it must release the lock by deleting the `{job_id}.lock` file.
+
+### Stage datasets cleanup
+
+Staged datasets can take up significant disk space, which directly depends on the size of the dataset.
+It's therefore important to define how and when staged datasets can be removed, otherwise the disk will fill up with
+unnecessary files.
+
+A stage dataset can be deleted in two ways:
+
+1. **Manually**: the client can delete a staged dataset through the API when it is no longer needed.
+2. **Automatically**: the system can periodically clean up staged datasets that are older than a certain threshold
+   (e.g., 24 hours). This can be implemented with a daemon thread that runs at regular intervals (e.g., every hour),
+   checking the age of each staged dataset and deleting those that exceed the threshold.
+
+Locked staged datasets (i.e., those currently being processed by a job) must not be deleted.
+
 ## Jobs
 
 The design relies heavily on background jobs to perform long-running operations. This section describes the main jobs
 involved in dataset import and export.
 
 - **prepare_dataset_for_import**: extracts a compressed dataset archive, saving it to Datumaro format while determining
-    its characteristics (task type, labels, number of media and annotations).
+  its characteristics (task type, labels, number of media and annotations).
 - **import_dataset_to_existing_project**: loads a Datumaro dataset and inserts its items into the dataset of a project,
-    applying optional filtering, annotation conversion and label remapping.
-    If the target is a new project, this job also creates the project.
+  applying optional filtering, annotation conversion and label remapping.
+  If the target is a new project, this job also creates the project.
 - **import_dataset_as_new_project**: creates a new project, then loads a Datumaro dataset and inserts its items into
-    the dataset of the newly created project, applying optional filtering and annotation conversion.
+  the dataset of the newly created project, applying optional filtering and annotation conversion.
 - **stage_dataset**: loads a project's dataset (or dataset revision) as a Datumaro dataset, applying optional filtering,
-    then saves it to the staging area in Datumaro native format.
+  then saves it to the staging area in Datumaro native format.
 - **export_dataset**: loads a project's dataset (or dataset revision) as a Datumaro dataset, applying optional
-    filtering, then saves it to the staging area in the requested format (e.g., COCO) as a compressed zip archive.
+  filtering, then saves it to the staging area in the requested format (e.g., COCO) as a compressed zip archive.
 
 > [!NOTE]
 > The diagram in the [Data flow](#data-flow) section also shows an operation **prepare-for-export**, to create
-> a zip archive out of a persisted Datumaro dataset. It is shown for completeness, however it is not necessary to 
-> implement it in practice since the *export* operation already combines **stage** and **prepare-for-export**._
+> a zip archive out of a persisted Datumaro dataset. It is shown for completeness, however it is not necessary to
+> implement it in practice since the _export_ operation already combines **stage** and **prepare-for-export**.\_
+
+[](ignored)
 
 > [!NOTE]
 > The operation **stage** is also technically redundant, as it could be expressed as an **export** operation followed
@@ -207,14 +238,15 @@ involved in dataset import and export.
 _Endpoint:_ `POST /api/staged_datasets`
 
 _Response:_ HTTP 201 Created
+
 ```json
 {
-    "id": "43134c71-20b7-4504-ad14-207648a1baf9",
-    "format": "coco",
-    "compressed": true,
-    "ready_for_export": false,
-    "ready_for_import": false,
-    "size_bytes": 123456789
+  "id": "43134c71-20b7-4504-ad14-207648a1baf9",
+  "format": "coco",
+  "compressed": true,
+  "ready_for_export": false,
+  "ready_for_import": false,
+  "size_bytes": 123456789
 }
 ```
 
@@ -238,32 +270,34 @@ _Response:_ HTTP 200 OK and zip file content
 _Endpoint:_ `GET /api/staged_datasets`
 
 _Response:_ success -> JSON list of staged datasets
+
 ```json
 [
-    {
-        "id": "43134c71-20b7-4504-ad14-207648a1baf9",
-        "format": "coco",
-        "compressed": true,
-        "ready_for_export": true,
-        "ready_for_import": false,
-        "size_bytes": 123456789
-    },
-    {
-        "id": "63f983fe-f2c7-4054-a0b1-6aab8a355a12",
-        "format": "datumaro",
-        "compressed": false,
-        "ready_for_export": false,
-        "ready_for_import": true,
-        "size_bytes": 987654321,
-        "metadata": {
-          "num_items": 2000,
-          "annotation_type": "bounding_box",
-          "num_annotations": 10000,
-          "labels": ["person", "bicycle", "tree"]
-        }
+  {
+    "id": "43134c71-20b7-4504-ad14-207648a1baf9",
+    "format": "coco",
+    "compressed": true,
+    "ready_for_export": true,
+    "ready_for_import": false,
+    "size_bytes": 123456789
+  },
+  {
+    "id": "63f983fe-f2c7-4054-a0b1-6aab8a355a12",
+    "format": "datumaro",
+    "compressed": false,
+    "ready_for_export": false,
+    "ready_for_import": true,
+    "size_bytes": 987654321,
+    "metadata": {
+      "num_items": 2000,
+      "annotation_type": "bounding_box",
+      "num_annotations": 10000,
+      "labels": ["person", "bicycle", "tree"]
     }
+  }
 ]
 ```
+
 The `metadata` field is only returned for staged datasets in uncompressed Datumaro format (ready for import).
 
 ---
@@ -282,27 +316,30 @@ _Response:_ HTTP 204 No Content
 
 _Endpoint:_ `POST /api/jobs`
 
-_Body_: 
+_Body_:
+
 ```json
 {
-    "job_type": "export_dataset",
-    "project_id": "103b9b76-ada6-4381-91bf-fa315fe5cb66",
-    "dataset_revision_id": "be9f47fc-c741-457b-9c97-f60b9485821b",
-    "parameters": {
-        "export_format": "coco",
-        "filters": {
-            "labels": ["person", "car"],
-            "subset": "train",
-            "include_unannotated": false
-        }
+  "job_type": "export_dataset",
+  "project_id": "103b9b76-ada6-4381-91bf-fa315fe5cb66",
+  "dataset_revision_id": "be9f47fc-c741-457b-9c97-f60b9485821b",
+  "parameters": {
+    "export_format": "coco",
+    "filters": {
+      "labels": ["person", "car"],
+      "subset": "train",
+      "include_unannotated": false
     }
+  }
 }
 ```
+
 - Dataset revision is optional; if not provided, the project's dataset is used.
 - `export_format` can be any of the supported formats (e.g., `coco`, `yolo`, `datumaro`, ...)
 - `filters` are optional; if not provided, the entire dataset is exported.
 
 _Response:_ HTTP 201 Created
+
 ```json
 {
     "job_id": "d290f1ee-6c54-4b01-90e6-d701748f0851",
@@ -316,23 +353,25 @@ _Response:_ HTTP 201 Created
 
 _Endpoint:_ `POST /api/jobs`
 
-_Body_: 
+_Body_:
+
 ```json
 {
-    "job_type": "stage_dataset",
-    "project_id": "103b9b76-ada6-4381-91bf-fa315fe5cb66",
-    "dataset_revision_id": "be9f47fc-c741-457b-9c97-f60b9485821b",
-    "parameters": {
-        "filters": {
-            "labels": ["person", "car"],
-            "subset": "train",
-            "include_unannotated": false
-        }
+  "job_type": "stage_dataset",
+  "project_id": "103b9b76-ada6-4381-91bf-fa315fe5cb66",
+  "dataset_revision_id": "be9f47fc-c741-457b-9c97-f60b9485821b",
+  "parameters": {
+    "filters": {
+      "labels": ["person", "car"],
+      "subset": "train",
+      "include_unannotated": false
     }
+  }
 }
 ```
 
 _Response:_ HTTP 201 Created
+
 ```json
 {
     "job_id": "d290f1ee-6c54-4b01-90e6-d701748f0851",
@@ -348,15 +387,17 @@ _Response:_ HTTP 201 Created
 
 _Endpoint:_ `POST /api/jobs`
 
-_Body_: 
+_Body_:
+
 ```json
 {
-    "job_type": "prepare_dataset_for_import",
-    "staged_dataset_id": "63f983fe-f2c7-4054-a0b1-6aab8a355a12"
+  "job_type": "prepare_dataset_for_import",
+  "staged_dataset_id": "63f983fe-f2c7-4054-a0b1-6aab8a355a12"
 }
 ```
 
 _Response:_ HTTP 201 Created
+
 ```json
 {
     "job_id": "d290f1ee-6c54-4b01-90e6-d701748f0851",
@@ -370,31 +411,33 @@ _Response:_ HTTP 201 Created
 
 _Endpoint:_ `POST /api/jobs`
 
-_Body_: 
+_Body_:
+
 ```json
 {
-    "job_type": "import_dataset_to_project",
-    "staged_dataset_id": "63f983fe-f2c7-4054-a0b1-6aab8a355a12",
-    "project_id": "103b9b76-ada6-4381-91bf-fa315fe5cb66",
-    "parameters": {
-        "filters": {
-            "labels": ["person", "car", "motorcycle"],
-            "subsets": ["training", "validation"],
-            "include_unannotated": false
-        },
-        "labels_mapping": {
-            "car": "vehicle",
-            "motorcycle": "vehicle",
-            "person": "person"
-        },
-        "subset_mapping": {
-            "train": "training",
-            "validation": "validation",
-            "unassigned": "testing"
-        }
+  "job_type": "import_dataset_to_project",
+  "staged_dataset_id": "63f983fe-f2c7-4054-a0b1-6aab8a355a12",
+  "project_id": "103b9b76-ada6-4381-91bf-fa315fe5cb66",
+  "parameters": {
+    "filters": {
+      "labels": ["person", "car", "motorcycle"],
+      "subsets": ["training", "validation"],
+      "include_unannotated": false
+    },
+    "labels_mapping": {
+      "car": "vehicle",
+      "motorcycle": "vehicle",
+      "person": "person"
+    },
+    "subset_mapping": {
+      "train": "training",
+      "validation": "validation",
+      "unassigned": "testing"
     }
+  }
 }
 ```
+
 - `filters.labels` determines which labels to consider among those present in the staged dataset. If omitted, all
   labels are considered.
 - `filters.subsets` optionally selects which subsets of the dataset to consider. If omitted, all subsets are considered.
@@ -405,6 +448,7 @@ _Body_:
   If omitted, subsets are not remapped.
 
 _Response:_ HTTP 201 Created
+
 ```json
 {
     "job_id": "d290f1ee-6c54-4b01-90e6-d701748f0851",
@@ -418,31 +462,32 @@ _Response:_ HTTP 201 Created
 
 _Endpoint:_ `POST /api/jobs`
 
-_Body_: 
+_Body_:
+
 ```json
 {
-    "job_type": "import_dataset_as_new_project",
-    "staged_dataset_id": "63f983fe-f2c7-4054-a0b1-6aab8a355a12",
-    "parameters": {
-        "project": {
-            "name": "New Project from Imported Dataset",
-            "task_type": "object_detection",
-            "labels": ["person", "vehicle"]
-        },
-        "filters": {
-            "labels": ["person", "car", "motorcycle"],
-            "subsets": ["train", "validation"],
-            "include_unannotated": false
-        }
+  "job_type": "import_dataset_as_new_project",
+  "staged_dataset_id": "63f983fe-f2c7-4054-a0b1-6aab8a355a12",
+  "parameters": {
+    "project": {
+      "name": "New Project from Imported Dataset",
+      "task_type": "object_detection",
+      "labels": ["person", "vehicle"]
+    },
+    "filters": {
+      "labels": ["person", "car", "motorcycle"],
+      "subsets": ["train", "validation"],
+      "include_unannotated": false
     }
+  }
 }
 ```
 
 _Response:_ HTTP 201 Created
+
 ```json
 {
     "job_id": "d290f1ee-6c54-4b01-90e6-d701748f0851",
     ... other job fields ...
 }
 ```
-
