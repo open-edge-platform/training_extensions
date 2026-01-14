@@ -126,7 +126,7 @@ class ModelService(BaseSessionManagedService):
 
         Args:
             project_id (UUID): The unique identifier of the project whose models to list.
-            dataset_revision_id (UUID): The optional unique identifier of the dataset revision to filter on.
+            dataset_revision_id (UUID | None, optional): The unique identifier of the dataset revision to filter on.
 
         Returns:
             list[ModelRevision]: A list of model revision objects representing all model

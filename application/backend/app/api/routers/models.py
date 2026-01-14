@@ -29,11 +29,12 @@ router = APIRouter(prefix="/api/projects/{project_id}/models", tags=["Models"])
 def list_models(
     project: Annotated[ProjectView, Depends(get_project)],
     model_service: Annotated[ModelService, Depends(get_model_service)],
-    dataset_revision_id: DatasetRevisionID | None = Query(
-        None, description="Optional query parameter to filter models on dataset revision id"
-    ),
+    dataset_revision_id: Annotated[
+        DatasetRevisionID | None,
+        Query(description="Dataset revision id for optional filtering"),
+    ] = None,
 ) -> list[ModelView]:
-    """Get all models in a project, optionally for a specific dataset."""
+    """Get all models in a project, optionally filtered by dataset revision."""
     try:
         return [
             ModelView.model_validate(obj, from_attributes=True)
