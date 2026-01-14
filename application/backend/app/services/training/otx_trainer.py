@@ -287,7 +287,13 @@ class OTXTrainer(Trainer):
 
     @step("Train Model")
     def train_model(
-        self, training_config: dict, dataset_info: DatasetInfo, weights_path: Path, model_id: UUID, device: DeviceInfo
+        self,
+        training_config: dict,
+        dataset_info: DatasetInfo,
+        weights_path: Path,
+        model_id: UUID,
+        device: DeviceInfo,
+        has_parent_revision: bool,
     ) -> tuple[Path, OTXEngine]:
         """Execute model training."""
         # TODO use weights path to initialize model from pre-downloaded weights
@@ -330,6 +336,7 @@ class OTXTrainer(Trainer):
         otx_engine = OTXEngine(
             model=otx_model,
             data=otx_datamodule,
+            checkpoint=weights_path if has_parent_revision else None,
             work_dir=f"./otx-workspace-{model_id}",
             device=otx_device_type,
         )
@@ -449,6 +456,7 @@ class OTXTrainer(Trainer):
             weights_path=weights_path,
             model_id=training_params.model_id,
             device=training_params.device,
+            has_parent_revision=training_params.parent_model_revision_id is not None,
         )
         self.evaluate_model(otx_engine=otx_engine, model_checkpoint_path=trained_model_path)
         exported_model_paths = self.export_model(otx_engine=otx_engine, model_checkpoint_path=trained_model_path)
@@ -465,7 +473,7 @@ class OTXTrainer(Trainer):
 
     @classmethod
     def __build_model_weights_path(cls, data_dir: Path, project_id: UUID, model_id: UUID) -> Path:
-        return cls.__base_model_path(data_dir, project_id, model_id) / "model.pth"
+        return cls.__base_model_path(data_dir, project_id, model_id) / "model.ckpt"
 
     @classmethod
     def __build_model_config_path(cls, data_dir: Path, project_id: UUID, model_id: UUID) -> Path:
