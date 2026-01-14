@@ -13,6 +13,7 @@ import cv2
 import numpy as np
 import paho.mqtt.client as mqtt
 import pytest
+from paho.mqtt.enums import CallbackAPIVersion
 from testcontainers.compose import DockerCompose
 
 from app.models import MqttSinkConfig, OutputFormat, SinkType
@@ -106,7 +107,7 @@ def mqtt_test_subscriber(mqtt_broker):
     class TestSubscriber:
         def __init__(self):
             self.received_messages = []
-            self.client = mqtt.Client(client_id="test_subscriber")
+            self.client = mqtt.Client(callback_api_version=CallbackAPIVersion.VERSION2, client_id="test_subscriber")
             self.client.on_message = self._on_message
 
         def _on_message(self, client, userdata, msg):

@@ -17,7 +17,7 @@ from app.models.source import IPCameraConfig
 from app.stream.ip_camera_stream import IPCameraStream
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def ip_camera() -> Generator[str]:
     """Start IP camera stream using testcontainers."""
     compose = DockerCompose("tests/integration/fixtures", compose_file_name="docker-compose.test.ip-camera.yaml")

@@ -54,7 +54,7 @@ jobs:
             echo "run=false" >> "$GITHUB_OUTPUT"
           fi
 
-  python-checks:
+  python-ubuntu-checks:
     runs-on: ubuntu-latest
     needs: check_paths
     if: needs.check_paths.outputs.run_workflow == 'true'
@@ -112,11 +112,49 @@ jobs:
         run: |
           uv run pytest tests/integration
 
+  python-windows-checks:
+    runs-on: windows-latest
+    needs: check_paths
+    if: needs.check_paths.outputs.run_workflow == 'true'
+    permissions:
+      contents: read # to checkout code
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv and set the Python version
+        uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
+        with:
+          version: "0.9.7"
+          enable-cache: false
+          python-version: "3.13"
+
+      - name: Prepare venv and install Python dependencies
+        working-directory: application/backend
+        run: |
+          uv lock --check
+          uv sync --frozen --extra cpu --extra mqtt
+
+      # Linting is skipped on Windows as it is run on Ubuntu
+
+      - name: Run unit tests
+        working-directory: application/backend
+        run: |
+          uv run pytest tests/unit
+
+      - name: Run integration tests
+        working-directory: application/backend
+        run: |
+          uv run pytest tests/integration
+
   required_check:
     name: Required Check backend-lint-and-test
     needs:
       - check_paths
-      - python-checks
+      - python-ubuntu-checks
+      - python-windows-checks
     runs-on: ubuntu-latest
     env:
       CHECKS: ${{ join(needs.*.result, ' ') }}
