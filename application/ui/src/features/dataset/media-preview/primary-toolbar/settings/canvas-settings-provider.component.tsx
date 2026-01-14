@@ -14,6 +14,7 @@ export interface CanvasSettingsState {
     imageContrast: { value: number; defaultValue: number };
     imageSaturation: { value: number; defaultValue: number };
     pixelView: { value: boolean; defaultValue: boolean };
+    hideLabels: { value: boolean; defaultValue: boolean };
 }
 
 interface CanvasSettingsContextProps {
@@ -45,6 +46,10 @@ export const DEFAULT_CANVAS_SETTINGS: CanvasSettingsState = {
         defaultValue: 0,
     },
     pixelView: {
+        value: false,
+        defaultValue: false,
+    },
+    hideLabels: {
         value: false,
         defaultValue: false,
     },

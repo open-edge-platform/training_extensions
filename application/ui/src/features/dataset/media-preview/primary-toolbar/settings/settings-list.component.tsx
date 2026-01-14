@@ -24,6 +24,22 @@ export const SettingsList = ({ canvasSettings, onCanvasSettingsChange }: Setting
 
     return (
         <View paddingEnd={'size-50'}>
+            <Flex alignItems={'center'} justifyContent={'space-between'}>
+                <Text>Hide labels</Text>
+                <Flex alignItems={'center'} gap={'size-100'}>
+                    <Switch
+                        aria-label={'Hide labels'}
+                        isEmphasized
+                        isSelected={canvasSettings.hideLabels.value}
+                        onChange={(isSelected) => {
+                            updateCanvasSettings('hideLabels', isSelected);
+                        }}
+                    />
+                </Flex>
+            </Flex>
+
+            <Divider size={'S'} marginY={'size-250'} />
+
             <AnnotationSetting
                 headerText={'Annotation fill opacity'}
                 formatOptions={{ style: 'percent' }}
