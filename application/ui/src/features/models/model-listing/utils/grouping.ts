@@ -4,7 +4,7 @@
 import type { SchemaModelView } from '../../../../api/openapi-spec';
 import type { GroupedModels } from '../types';
 
-const formatDatasetCreatedAt = (dateString: string | null | undefined): string => {
+const formatDatasetStartTime = (dateString: string | null | undefined): string => {
     if (!dateString) return '-';
 
     try {
@@ -39,7 +39,7 @@ export const groupModelsByDataset = (models: SchemaModelView[]): GroupedModels[]
                 group: {
                     id: datasetId,
                     name: `Dataset #${datasetId.slice(0, 8)}`,
-                    createdAt: formatDatasetCreatedAt(model.training_info.start_time),
+                    createdAt: formatDatasetStartTime(model.training_info.start_time),
                     labelCount,
                     // TODO: Replace with actual dataset info when available from API
                     imageCount: 0,

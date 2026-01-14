@@ -5,7 +5,7 @@ export const formatTrainingDateTime = (dateString: string | null | undefined): s
     if (!dateString) return '-';
 
     try {
-        const date = new Date(new Date());
+        const date = new Date(dateString);
 
         const day = date.getDate().toString().padStart(2, '0');
         const month = date.toLocaleDateString('en-GB', { month: 'short' });
