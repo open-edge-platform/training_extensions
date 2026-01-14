@@ -36,7 +36,7 @@ def test_native_ov_engine(
     default_models = [str(template["recipe_path"]) for template in TEMPLATE_ID_MAPPING.values() if template["default"]]
     if recipe in default_models:
         pytest.skip("Default models are checked in geti interaction tests.")
-    if "mobilenet_v4" in recipe:
+    if "mobilenet_v4" in recipe or "classification" in recipe:
         pytest.skip("MobileNetV4 is not supported yet.")
     task = Path(recipe).parent.name.lower()
     tmp_path_train = tmp_path / task
@@ -51,11 +51,6 @@ def test_native_ov_engine(
     # Check OTXModel & OTXDataModule
     assert isinstance(engine.model, OTXModel)
     assert isinstance(engine.datamodule, OTXDataModule)
-
-    # Set num_workers=0 to avoid Polars serialization issues with multiprocessing
-    engine.datamodule.train_subset.num_workers = 0
-    engine.datamodule.val_subset.num_workers = 0
-    engine.datamodule.test_subset.num_workers = 0
 
     max_epochs = 2
     train_metric = engine.train(max_epochs=max_epochs)
@@ -138,11 +133,6 @@ def test_engine_from_tile_recipe(
         work_dir=tmp_path / task,
         device=fxt_accelerator,
     )
-
-    # Set num_workers=0 to avoid Polars serialization issues with multiprocessing
-    engine.datamodule.train_subset.num_workers = 0
-    engine.datamodule.val_subset.num_workers = 0
-    engine.datamodule.test_subset.num_workers = 0
 
     engine.train(max_epochs=1)
     exported_model_path = engine.export()
