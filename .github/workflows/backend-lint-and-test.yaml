@@ -144,11 +144,11 @@ jobs:
         run: |
           uv run pytest tests/unit
 
-      # Skipping IP camera stream test on Windows due to potential issues with OpenCV and camera access
+      # Skipping tests de to docker set up requirements on Windows runners
       - name: Run integration tests
         working-directory: application/backend
         run: |
-          uv run pytest --ignore=tests/integration/stream/test_ip_camera_stream.py tests/integration
+          uv run pytest --ignore=tests/integration/stream/test_ip_camera_stream.py --ignore=/tests/integration/services/dispatchers/test_mqtt.py tests/integration
 
   required_check:
     name: Required Check backend-lint-and-test
