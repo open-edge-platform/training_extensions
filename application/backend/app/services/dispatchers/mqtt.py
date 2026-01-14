@@ -91,7 +91,7 @@ class MqttDispatcher(BaseDispatcher):
         self,
         _client: "mqtt.Client",
         _userdata: Any,
-        _flags: "mqtt.DisconnectFlags",
+        _flags: "mqtt.ConnectFlags",
         rc: "mqtt.ReasonCode",
         _properties: "mqtt.Properties | None",
     ):
