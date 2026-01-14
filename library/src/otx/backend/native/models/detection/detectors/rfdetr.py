@@ -10,7 +10,7 @@ Original implementation: https://github.com/roboflow/rf-detr
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING
 
 import numpy as np
 import torch
@@ -23,10 +23,6 @@ from otx.backend.native.models.modules.base_module import BaseModule
 
 if TYPE_CHECKING:
     from jsonargparse import Namespace
-
-    from otx.types.explain import FeatureMapType
-
-EXPORT_OUTPUTS = tuple[Tensor, Tensor, Tensor, Tensor] | tuple[Tensor, Tensor, Tensor] | dict[str, Any]
 
 
 class RFDETRDetector(BaseModule):
@@ -57,10 +53,6 @@ class RFDETRDetector(BaseModule):
         self.criterion = criterion
         self.postprocessor = postprocessor
         self.input_size = input_size
-
-        # Explainability functions (set by high-level OTX model)
-        self.feature_vector_fn: Callable[[FeatureMapType], Tensor] | None = None
-        self.explain_fn: Callable[[tuple[Tensor, ...]], Tensor] | None = None
         self.rng = np.random.default_rng(42)
 
         # Store scales for multi-scale training
@@ -155,21 +147,17 @@ class RFDETRDetector(BaseModule):
     def export(
         self,
         batch_inputs: Tensor,
-        explain_mode: bool = False,
         num_select: int = 300,
-    ) -> EXPORT_OUTPUTS:
+    ) -> tuple[Tensor, Tensor, Tensor, Tensor] | tuple[Tensor, Tensor, Tensor]:
         """Export function for model tracing with mask support.
 
         Args:
             batch_inputs: Input images tensor.
-            explain_mode: Whether to include explainability outputs.
             num_select: Number of top predictions to select.
 
         Returns:
-            If explain_mode is False: Tuple of (boxes, labels, scores, masks) tensors.
-            If explain_mode is True: Dict with boxes, labels, scores, masks, feature_vector, saliency_map.
+            Tuple of (boxes, labels, scores, masks) tensors.
         """
-        # Enable export mode on LWDETR
         outputs = self.lwdetr(batch_inputs)
         # outputs is (pred_boxes, pred_logits, pred_masks) in export mode
         pred_boxes, pred_logits, pred_masks = outputs
@@ -201,95 +189,4 @@ class RFDETRDetector(BaseModule):
             batch_size = pred_boxes.shape[0]
             masks = torch.zeros((batch_size, num_select, 1, 1), device=pred_boxes.device)
 
-        if explain_mode:
-            # Get backbone features for explainability
-            backbone_feats = self._get_backbone_features(batch_inputs)
-
-            # Generate feature vector
-            feature_vector: list[Tensor] = []
-            if self.feature_vector_fn is not None:
-                feature_vector = [self.feature_vector_fn(backbone_feats)]
-
-            # Generate saliency maps
-            saliency_map: list[Tensor] = []
-            if self.explain_fn is not None:
-                # Reshape logits similar to DETR for saliency computation
-                raw_logits = self._reshape_logits_for_explain(backbone_feats, pred_logits)
-                saliency_map = [self.explain_fn(raw_logits)]
-
-            return {
-                "bboxes": boxes,
-                "labels": labels,
-                "scores": scores,
-                "masks": masks,
-                "feature_vector": feature_vector,
-                "saliency_map": saliency_map,
-            }
-
         return boxes, labels, scores, masks
-
-    def _get_backbone_features(self, batch_inputs: Tensor) -> tuple[Tensor, ...]:
-        """Extract backbone features for explainability.
-
-        Args:
-            batch_inputs: Input images tensor.
-
-        Returns:
-            Tuple of backbone feature tensors.
-        """
-        # Access the backbone through LWDETR's encoder
-        # RF-DETR uses DINOv2 backbone
-        encoder = self.lwdetr.encoder  # type: ignore[attr-defined]
-
-        # Get features from the backbone
-        # DINOv2 produces a single feature map, but we wrap it in tuple for consistency
-        with torch.no_grad():
-            features = encoder.backbone(batch_inputs)  # type: ignore[attr-defined]
-            if isinstance(features, Tensor):
-                return (features,)
-            return tuple(features) if not isinstance(features, tuple) else features
-
-    def _reshape_logits_for_explain(
-        self,
-        backbone_feats: tuple[Tensor, ...],
-        raw_logits: Tensor,
-    ) -> tuple[Tensor, ...]:
-        """Reshape raw logits for saliency map computation.
-
-        Similar to DETR.split_and_reshape_logits but adapted for RF-DETR.
-
-        Args:
-            backbone_feats: Tuple of backbone features.
-            raw_logits: Raw prediction logits from decoder.
-
-        Returns:
-            Tuple of reshaped logits aligned with backbone features.
-        """
-        # For RF-DETR, we need to handle the logits differently
-        # since it uses a different decoder architecture
-        # For now, return the raw logits reshaped to match backbone spatial dims
-        if len(backbone_feats) == 1:
-            feat = backbone_feats[0]
-            batch_size = feat.shape[0]
-            num_classes = raw_logits.shape[-1]
-            h, w = feat.shape[-2], feat.shape[-1]
-
-            # Create a spatial representation of logits
-            # Average over queries: [B, num_queries, num_classes] -> [B, num_classes]
-            spatial_logits = raw_logits.mean(dim=1)  # [B, num_classes]
-            # Expand to spatial dimensions: [B, num_classes] -> [B, num_classes, H, W]
-            spatial_logits = spatial_logits.unsqueeze(-1).unsqueeze(-1)  # [B, num_classes, 1, 1]
-            spatial_logits = spatial_logits.expand(batch_size, num_classes, h, w)
-            return (spatial_logits,)
-
-        # Handle multi-scale features
-        results = []
-        for feat in backbone_feats:
-            batch_size = feat.shape[0]
-            num_classes = raw_logits.shape[-1]
-            h, w = feat.shape[-2], feat.shape[-1]
-            spatial_logits = raw_logits.mean(dim=1)  # [B, num_classes]
-            spatial_logits = spatial_logits.unsqueeze(-1).unsqueeze(-1)  # [B, num_classes, 1, 1]
-            spatial_logits = spatial_logits.expand(batch_size, num_classes, h, w)
-            results.append(spatial_logits)
-        return tuple(results)

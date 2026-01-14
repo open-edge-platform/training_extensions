@@ -67,15 +67,21 @@ class TestRFDETR:
     def test_optimizer_configuration(self) -> None:
         """Test that optimizer configuration is properly set."""
         model = RFDETR(
-            model_name="rfdetr_base",
+            model_name="rfdetr_nano",
             label_info=5,
         )
-        created_model = model._create_model()
 
-        # Check optimizer configuration exists
-        assert hasattr(created_model, "optimizer_configuration")
-        assert created_model.optimizer_configuration is not None
-        assert len(created_model.optimizer_configuration) > 0
+        # Test configure_optimizers method
+        optimizers, schedulers = model.configure_optimizers()
+
+        assert len(optimizers) == 1
+        assert isinstance(optimizers[0], torch.optim.Optimizer)
+        assert len(schedulers) > 0
+        assert isinstance(schedulers, list)
+
+        # Check that parameter groups are properly configured
+        param_groups = optimizers[0].param_groups
+        assert len(param_groups) > 0
 
     @pytest.mark.parametrize(
         ("model_name", "label_info"),
@@ -85,15 +91,13 @@ class TestRFDETR:
             ("rfdetr_base", 10),
         ],
     )
-    def test_loss_computation(self, model_name: str, label_info: int, fxt_data_module) -> None:
+    def test_loss_computation(self, model_name: str, label_info: int, fxt_detection_batch) -> None:
         """Test RF-DETR loss computation in training mode."""
         input_sizes = {
             "rfdetr_nano": (384, 384),
             "rfdetr_small": (512, 512),
             "rfdetr_base": (560, 560),
         }
-        input_size = input_sizes[model_name]
-
         model = RFDETR(
             model_name=model_name,
             label_info=label_info,
@@ -101,16 +105,15 @@ class TestRFDETR:
 
         # Move model to CPU for unit tests
         model = model.cpu()
-
+        input_size = input_sizes[model_name]
         # Get data batch
-        data = next(iter(fxt_data_module.train_dataloader()))
-        data.images = torch.randn(2, 3, *input_size)
+        fxt_detection_batch.images = torch.randn(2, 3, *input_size)
 
         # Set model to training mode
         model.train()
 
         # Forward pass should return loss dictionary
-        output = model(data)
+        output = model(fxt_detection_batch)
 
         # Check that output contains loss components
         assert isinstance(output, dict)
@@ -123,7 +126,7 @@ class TestRFDETR:
             "rfdetr_base",
         ],
     )
-    def test_predict(self, model_name: str, fxt_data_module) -> None:
+    def test_predict(self, model_name: str, fxt_detection_batch) -> None:
         """Test RF-DETR prediction in evaluation mode."""
         input_sizes = {
             "rfdetr_nano": (384, 384),
@@ -141,14 +144,13 @@ class TestRFDETR:
         model = model.cpu()
 
         # Get data batch
-        data = next(iter(fxt_data_module.train_dataloader()))
-        data.images = torch.randn(2, 3, *input_size)
+        fxt_detection_batch.images = torch.randn(2, 3, *input_size)
 
         # Set model to evaluation mode
         model.eval()
 
         # Forward pass should return predictions
-        output = model(data)
+        output = model(fxt_detection_batch)
 
         # Check that output is OTXPredBatch
         assert isinstance(output, OTXPredBatch)
@@ -185,41 +187,18 @@ class TestRFDETR:
         output = model.forward_for_tracing(torch.randn(1, 3, *input_size))
         assert len(output) == 3  # Should return boxes, labels, scores
 
-    def test_export_explain_mode(self) -> None:
-        """Test RF-DETR export with explain mode."""
-        model = RFDETR(
-            model_name="rfdetr_base",
-            label_info=3,
-        )
-
-        # Move model to CPU for unit tests
-        model = model.cpu()
-
-        # Set model to evaluation mode with explain mode
-        model.eval()
-        model.explain_mode = True
-
-        # Test export forward pass with explain mode
-        output = model.forward_for_tracing(torch.randn(1, 3, 560, 560))
-        assert isinstance(output, dict)
-        assert "bboxes" in output
-        assert "labels" in output
-        assert "scores" in output
-        assert "feature_vector" in output
-        assert "saliency_map" in output
-
     def test_multi_scale_training(self) -> None:
         """Test RF-DETR with multi-scale training enabled."""
         model = RFDETR(
-            model_name="rfdetr_nano",  # Use smaller model for faster test
+            model_name="rfdetr_nano",
             label_info=3,
             multi_scale=True,
         )
 
         # Move model to CPU for unit tests
         model = model.cpu()
-
+        model = model.train()
         # Multi-scale should be enabled in the detector
-        assert model.model.multi_scale is True
+        assert model.multi_scale is True
         assert isinstance(model.model.scales, list)
         assert len(model.model.scales) > 0

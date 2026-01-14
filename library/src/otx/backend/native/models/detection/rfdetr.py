@@ -92,7 +92,6 @@ class RFDETR(DFine):
         torch_compile: bool = False,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
     ) -> None:
-        self.multi_scale = multi_scale
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
@@ -102,6 +101,7 @@ class RFDETR(DFine):
             metric=metric,
             torch_compile=torch_compile,
             tile_config=tile_config,
+            multi_scale=multi_scale,
         )
 
     def _create_model(self, num_classes: int | None = None) -> RFDETRDetector:
@@ -191,35 +191,11 @@ class RFDETR(DFine):
                     raise TypeError(msg)
             return losses
 
-        original_sizes = [img_info.img_shape for img_info in inputs.imgs_info]  # type: ignore[union-attr]
-        scores, bboxes, labels, _ = self.model.postprocess(outputs, original_sizes)
-
-        if self.explain_mode:
-            if not isinstance(outputs, dict):
-                msg = f"Model output should be a dict, but got {type(outputs)}."
-                raise ValueError(msg)
-
-            if "feature_vector" not in outputs:
-                msg = "No feature vector in the model output."
-                raise ValueError(msg)
-
-            if "saliency_map" not in outputs:
-                msg = "No saliency maps in the model output."
-                raise ValueError(msg)
-
-            return OTXPredBatch(
-                batch_size=len(outputs),
-                images=inputs.images,
-                imgs_info=inputs.imgs_info,
-                scores=scores,
-                bboxes=bboxes,
-                labels=labels,
-                feature_vector=[feature_vector.unsqueeze(0) for feature_vector in outputs["feature_vector"]],
-                saliency_map=[saliency_map.to(torch.float32) for saliency_map in outputs["saliency_map"]],
-            )
+        image_shapes = [img_info.img_shape for img_info in inputs.imgs_info]  # type: ignore[union-attr]
+        scores, bboxes, labels, _ = self.model.postprocess(outputs, image_shapes)
 
         return OTXPredBatch(
-            batch_size=len(outputs),
+            batch_size=inputs.batch_size,
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=scores,
@@ -269,16 +245,10 @@ class RFDETR(DFine):
     def forward_for_tracing(self, inputs: torch.Tensor) -> tuple[torch.Tensor, ...] | dict[str, Any]:
         """Forward function for export."""
         self.model.lwdetr.export()
-        outputs = self.model.export(inputs, explain_mode=self.explain_mode)
         if self.explain_mode:
-            return {
-                "bboxes": outputs["bboxes"],
-                "labels": outputs["labels"],
-                "scores": outputs["scores"],
-                "feature_vector": outputs["feature_vector"],
-                "saliency_map": outputs["saliency_map"],
-            }
-        return outputs[:3]  # bboxes, labels, scores
+            msg = "Explain mode is not supported for RF-DETR export."
+            raise ValueError(msg)
+        return self.model.export(inputs)[:3]  # bboxes, labels, scores
 
     @property
     def _exporter(self) -> OTXModelExporter:

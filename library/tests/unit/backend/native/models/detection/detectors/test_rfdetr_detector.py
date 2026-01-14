@@ -5,6 +5,8 @@
 
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 import pytest
 import torch
 from torch import nn
@@ -28,6 +30,7 @@ class DummyLWDETR(nn.Module):
         return {
             "pred_boxes": torch.rand(batch, 300, 4),
             "pred_logits": torch.rand(batch, 300, self.num_classes),
+            "pred_masks": torch.rand(batch, 300, 16, 16),
         }
 
     def export(self):
@@ -42,7 +45,7 @@ class DummyLWDETR(nn.Module):
             return (
                 torch.rand(batch, 300, 4),  # pred_boxes
                 torch.rand(batch, 300, self.num_classes),  # pred_logits
-                None,  # pred_masks
+                torch.rand(batch, 300, 16, 16),  # pred_masks
             )
         return self.forward(x, targets)
 
@@ -98,6 +101,7 @@ class DummyPostprocessor:
                 "scores": torch.rand(100),
                 "boxes": torch.rand(100, 4) * 640,
                 "labels": torch.randint(0, 10, (100,)),
+                "masks": torch.randint(0, 2, (100, 1, 16, 16)),
             }
             for _ in range(batch)
         ]
@@ -109,14 +113,19 @@ class TestRFDETRDetector:
     @pytest.fixture
     def rfdetr_detector(self) -> RFDETRDetector:
         """Create RFDETRDetector instance for testing."""
+        rfdetr_args = SimpleNamespace(
+            resolution=560,
+            expanded_scales=[0.5, 1.0, 1.5],
+            patch_size=16,
+            num_windows=4,
+        )
         return RFDETRDetector(
             lwdetr_model=DummyLWDETR(num_classes=10),
             criterion=DummyCriterion(),
             postprocessor=DummyPostprocessor(),
-            optimizer_configuration=None,
+            rfdetr_args=rfdetr_args,
             input_size=560,
             multi_scale=False,
-            group_detr=13,
         )
 
     @pytest.fixture
@@ -147,105 +156,68 @@ class TestRFDETRDetector:
     def test_init(self, rfdetr_detector: RFDETRDetector) -> None:
         """Test RFDETRDetector initialization."""
         assert rfdetr_detector.input_size == 560
-        assert rfdetr_detector.multi_scale is False
-        assert rfdetr_detector.group_detr == 13
+        # multi_scale is represented via the scales list
+        assert isinstance(rfdetr_detector.scales, list)
         assert rfdetr_detector.lwdetr is not None
         assert rfdetr_detector.criterion is not None
         assert rfdetr_detector.postprocessor is not None
 
     def test_init_with_multi_scale(self) -> None:
         """Test RFDETRDetector initialization with multi-scale training."""
+        rfdetr_args = SimpleNamespace(
+            resolution=560,
+            expanded_scales=[0.5, 1.0, 1.5],
+            patch_size=16,
+            num_windows=4,
+        )
         detector = RFDETRDetector(
             lwdetr_model=DummyLWDETR(),
             criterion=DummyCriterion(),
             postprocessor=DummyPostprocessor(),
+            rfdetr_args=rfdetr_args,
             input_size=560,
             multi_scale=True,
-            group_detr=13,
         )
-        assert detector.multi_scale is True
         assert len(detector.scales) > 0
 
     def test_generate_scales(self, rfdetr_detector: RFDETRDetector) -> None:
         """Test scale generation for multi-scale training."""
-        scales = rfdetr_detector._generate_scales(560)
-        assert isinstance(scales, list)
-        assert len(scales) > 0
-        assert 560 in scales  # Base size should be in scales
+        # Ensure that scales is a list even when multi_scale is False
+        assert isinstance(rfdetr_detector.scales, list)
 
     def test_postprocess(self, rfdetr_detector: RFDETRDetector) -> None:
         """Test postprocess method."""
         outputs = {
             "pred_logits": torch.randn(2, 300, 10),
             "pred_boxes": torch.randn(2, 300, 4),
+            "pred_masks": torch.randn(2, 300, 16, 16),
         }
         original_sizes = [(640, 640), (640, 640)]
-
-        scores, boxes, labels = rfdetr_detector.postprocess(outputs, original_sizes)
+        scores, boxes, labels, masks = rfdetr_detector.postprocess(outputs, original_sizes)
 
         assert isinstance(scores, list)
         assert isinstance(boxes, list)
         assert isinstance(labels, list)
+        assert isinstance(masks, list)
         assert len(scores) == 2
         assert len(boxes) == 2
         assert len(labels) == 2
+        assert len(masks) == 2
 
     def test_export(self, rfdetr_detector: RFDETRDetector, images: torch.Tensor) -> None:
         """Test export method."""
         rfdetr_detector.eval()
-        batch_img_metas = [{"img_shape": (560, 560)}, {"img_shape": (560, 560)}]
+        # Ensure underlying model is set to export mode if required
+        if hasattr(rfdetr_detector.lwdetr, "export"):
+            rfdetr_detector.lwdetr.export()
 
-        result = rfdetr_detector.export(images, batch_img_metas, explain_mode=False)
+        result = rfdetr_detector.export(images)
 
-        # Check that export mode was enabled on lwdetr
-        assert rfdetr_detector.lwdetr._export_mode is True
+        # Check that export returned expected tuple
         assert isinstance(result, tuple)
-        assert len(result) == 3
-        boxes, labels, scores = result
+        assert len(result) == 4
+        boxes, labels, scores, masks = result
         assert boxes.shape[0] == 2
         assert labels.shape[0] == 2
         assert scores.shape[0] == 2
-
-    def test_export_explain_mode(self, rfdetr_detector: RFDETRDetector) -> None:
-        """Test export method with explain mode."""
-        rfdetr_detector.eval()
-
-        # Set up explainability functions
-        rfdetr_detector.feature_vector_fn = lambda _: torch.ones(1, 128)
-        rfdetr_detector.explain_fn = lambda _: torch.ones(1, 10, 7, 7)
-
-        images = torch.randn(1, 3, 560, 560)
-        batch_img_metas = [{"img_shape": (560, 560)}]
-
-        result = rfdetr_detector.export(images, batch_img_metas, explain_mode=True)
-
-        assert isinstance(result, dict)
-        assert "bboxes" in result
-        assert "labels" in result
-        assert "scores" in result
-        assert "feature_vector" in result
-        assert "saliency_map" in result
-
-    def test_optimizer_configuration(self) -> None:
-        """Test that optimizer configuration is properly stored."""
-        optimizer_config = [
-            {"params": r"^(?=.*backbone).*$", "lr": 0.0001},
-            {"params": r"^(?=.*decoder).*$", "lr": 0.001},
-        ]
-
-        detector = RFDETRDetector(
-            lwdetr_model=DummyLWDETR(),
-            criterion=DummyCriterion(),
-            postprocessor=DummyPostprocessor(),
-            optimizer_configuration=optimizer_config,
-            input_size=560,
-            multi_scale=False,
-            group_detr=13,
-        )
-
-        assert detector.optimizer_configuration == optimizer_config
-
-    def test_explainability_functions_default_none(self, rfdetr_detector: RFDETRDetector) -> None:
-        """Test that explainability functions are None by default."""
-        assert rfdetr_detector.feature_vector_fn is None
-        assert rfdetr_detector.explain_fn is None
+        assert masks.shape[0] == 2

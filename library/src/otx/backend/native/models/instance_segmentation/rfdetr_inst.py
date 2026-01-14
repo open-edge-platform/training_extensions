@@ -254,6 +254,11 @@ class RFDETRInst(OTXInstanceSegModel):
                         torch.zeros((0, img_info.img_shape[0], img_info.img_shape[1]), dtype=torch.bool)  # type: ignore[union-attr,call-overload]
                     )
                 )
+
+        if self.explain_mode:
+            msg = "Explain mode is not supported for RF-DETR model."
+            raise ValueError(msg)
+
         return OTXPredBatch(
             batch_size=len(scores_list),
             images=inputs.images,
@@ -306,7 +311,7 @@ class RFDETRInst(OTXInstanceSegModel):
     def forward_for_tracing(self, inputs: torch.Tensor) -> tuple[torch.Tensor, ...] | dict[str, Any]:
         """Forward function for export."""
         self.model.lwdetr.export()
-        return self.model.export(inputs, explain_mode=self.explain_mode)
+        return self.model.export(inputs)
 
     @property
     def _exporter(self) -> OTXModelExporter:

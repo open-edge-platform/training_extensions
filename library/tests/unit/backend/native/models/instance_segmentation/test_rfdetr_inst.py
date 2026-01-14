@@ -156,30 +156,6 @@ class TestRFDETRInst:
         # Should return boxes, labels, scores, masks
         assert len(output) == 4
 
-    def test_export_explain_mode(self) -> None:
-        """Test RF-DETR instance segmentation export with explain mode."""
-        model = RFDETRInst(
-            model_name="rfdetr_seg_preview",
-            label_info=3,
-        )
-
-        # Move model to CPU for unit tests
-        model = model.cpu()
-
-        # Set model to evaluation mode with explain mode
-        model.eval()
-        model.explain_mode = True
-
-        # Test export forward pass with explain mode
-        output = model.forward_for_tracing(torch.randn(1, 3, 432, 432))
-        assert isinstance(output, dict)
-        assert "bboxes" in output
-        assert "labels" in output
-        assert "scores" in output
-        assert "masks" in output
-        assert "feature_vector" in output
-        assert "saliency_map" in output
-
     def test_customize_inputs(self, fxt_instance_seg_batch) -> None:
         """Test input customization for RF-DETR format."""
         model = RFDETRInst(
