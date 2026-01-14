@@ -10,13 +10,22 @@ from copy import deepcopy
 import numpy as np
 import pytest
 import torch
+from datumaro.experimental.fields import ImageInfo as DmImageInfo
 from torch import LongTensor
 from torchvision import tv_tensors
+from torchvision.transforms import v2 as tvt_v2
 from torchvision.transforms.v2 import ToDtype
 from torchvision.transforms.v2 import functional as F  # noqa: N812
 
-from otx.data.entity.base import ImageInfo
-from otx.data.entity.torch import OTXDataBatch, OTXDataItem
+from otx.data.entity.sample import (
+    ClassificationSample,
+    DetectionSample,
+    InstanceSegmentationSample,
+    KeypointSample,
+    OTXSample,
+    SegmentationSample,
+)
+from otx.data.entity.torch import OTXDataBatch
 from otx.data.transform_libs.torchvision import (
     CachedMixUp,
     CachedMosaic,
@@ -53,48 +62,48 @@ class MockVideo:
 
 
 @pytest.fixture
-def seg_data_entity() -> OTXDataItem:
+def seg_data_entity() -> SegmentationSample:
+    from datumaro.experimental.fields import ImageInfo as DmImageInfo
+
     masks = torch.randint(low=0, high=2, size=(1, 112, 224), dtype=torch.uint8)
-    return OTXDataItem(
+    return SegmentationSample(
         image=tv_tensors.Image(torch.randint(low=0, high=256, size=(3, 112, 224), dtype=torch.uint8)),
-        img_info=ImageInfo(img_idx=0, img_shape=(112, 224), ori_shape=(112, 224)),
+        dm_image_info=DmImageInfo(height=112, width=224),
         masks=tv_tensors.Mask(masks),
-        label=LongTensor([1]),
     )
 
 
 @pytest.fixture
-def det_data_entity() -> OTXDataItem:
-    return OTXDataItem(
+def det_data_entity() -> DetectionSample:
+    from datumaro.experimental.fields import ImageInfo as DmImageInfo
+
+    return DetectionSample(
         image=tv_tensors.Image(torch.randint(low=0, high=256, size=(3, 112, 224), dtype=torch.uint8)),
-        img_info=ImageInfo(img_idx=0, img_shape=(112, 224), ori_shape=(112, 224)),
-        bboxes=tv_tensors.BoundingBoxes(data=torch.Tensor([0, 0, 50, 50]), format="xywh", canvas_size=(112, 224)),
+        dm_image_info=DmImageInfo(height=112, width=224),
+        bboxes=np.array([[0, 0, 50, 50]], dtype=np.float32),
         label=LongTensor([1]),
     )
 
 
 @pytest.fixture
-def det_data_entity_with_masks() -> OTXDataItem:
+def det_data_entity_with_masks() -> InstanceSegmentationSample:
     """Create a data entity with masks for testing."""
+    from datumaro.experimental.fields import ImageInfo as DmImageInfo
+
     img_size = (112, 224)
     fake_image = torch.randint(low=0, high=256, size=(3, *img_size), dtype=torch.uint8)
-    fake_image_info = ImageInfo(img_idx=0, img_shape=img_size, ori_shape=img_size)
-    fake_bboxes = tv_tensors.BoundingBoxes(
-        data=torch.Tensor([[10, 10, 50, 50], [60, 60, 100, 100]]),
-        format="xyxy",
-        canvas_size=img_size,
-    )
+    fake_bboxes = np.array([[10, 10, 50, 50], [60, 60, 100, 100]], dtype=np.float32)
     fake_labels = LongTensor([1, 2])
 
     # Create meaningful masks that correspond to the bounding boxes
-    masks = torch.zeros(size=(2, *img_size), dtype=torch.bool)
-    masks[0, 10:50, 10:50] = True  # First mask
-    masks[1, 60:100, 60:100] = True  # Second mask
+    masks = torch.zeros(size=(2, *img_size), dtype=torch.uint8)
+    masks[0, 10:50, 10:50] = 1  # First mask
+    masks[1, 60:100, 60:100] = 1  # Second mask
     fake_masks = tv_tensors.Mask(masks)
 
-    return OTXDataItem(
+    return InstanceSegmentationSample(
         image=tv_tensors.Image(fake_image),
-        img_info=fake_image_info,
+        dm_image_info=DmImageInfo(height=img_size[0], width=img_size[1]),
         bboxes=fake_bboxes,
         label=fake_labels,
         masks=fake_masks,
@@ -102,81 +111,24 @@ def det_data_entity_with_masks() -> OTXDataItem:
 
 
 @pytest.fixture
-def det_data_entity_empty_masks() -> OTXDataItem:
+def det_data_entity_empty_masks() -> InstanceSegmentationSample:
     """Create a data entity with empty masks for testing."""
+    from datumaro.experimental.fields import ImageInfo as DmImageInfo
+
     img_size = (112, 224)
     fake_image = torch.randint(low=0, high=256, size=(3, *img_size), dtype=torch.uint8)
-    fake_image_info = ImageInfo(img_idx=0, img_shape=img_size, ori_shape=img_size)
-    fake_bboxes = tv_tensors.BoundingBoxes(data=torch.Tensor([[10, 10, 50, 50]]), format="xyxy", canvas_size=img_size)
+    fake_bboxes = np.array([[10, 10, 50, 50]], dtype=np.float32)
     fake_labels = LongTensor([1])
 
     # Create empty masks
     fake_masks = tv_tensors.Mask(torch.zeros(size=(0, *img_size), dtype=torch.uint8))
 
-    return OTXDataItem(
+    return InstanceSegmentationSample(
         image=tv_tensors.Image(fake_image),
-        img_info=fake_image_info,
+        dm_image_info=DmImageInfo(height=img_size[0], width=img_size[1]),
         bboxes=fake_bboxes,
         label=fake_labels,
         masks=fake_masks,
-    )
-
-
-@pytest.fixture
-def det_data_entity_with_polygons() -> OTXDataItem:
-    """Create a data entity with polygons for testing."""
-    img_size = (112, 224)
-    fake_image = torch.randint(low=0, high=256, size=(3, *img_size), dtype=torch.uint8)
-    fake_image_info = ImageInfo(img_idx=0, img_shape=img_size, ori_shape=img_size)
-    fake_bboxes = tv_tensors.BoundingBoxes(
-        data=torch.Tensor([[10, 10, 50, 50], [60, 60, 100, 100]]),
-        format="xyxy",
-        canvas_size=img_size,
-    )
-    fake_labels = LongTensor([1, 2])
-
-    # Create meaningful masks that correspond to the bounding boxes
-    masks = torch.zeros(size=(2, *img_size), dtype=torch.bool)
-    masks[0, 10:50, 10:50] = True  # First mask
-    masks[1, 60:100, 60:100] = True  # Second mask
-    fake_masks = tv_tensors.Mask(masks)
-
-    # Create corresponding polygons
-    fake_polygons = np.array(
-        [
-            np.array([[10, 10], [50, 10], [50, 50], [10, 50]]),  # Rectangle polygon for first object
-            np.array([[60, 60], [100, 60], [100, 100], [60, 100]]),  # Rectangle polygon for second object
-        ]
-    )
-
-    return OTXDataItem(
-        image=tv_tensors.Image(fake_image),
-        img_info=fake_image_info,
-        bboxes=fake_bboxes,
-        label=fake_labels,
-        masks=fake_masks,
-        polygons=fake_polygons,
-    )
-
-
-@pytest.fixture
-def det_data_entity_empty_polygons() -> OTXDataItem:
-    """Create a data entity with empty polygons for testing."""
-    img_size = (112, 224)
-    fake_image = torch.randint(low=0, high=256, size=(3, *img_size), dtype=torch.uint8)
-    fake_image_info = ImageInfo(img_idx=0, img_shape=img_size, ori_shape=img_size)
-    fake_bboxes = tv_tensors.BoundingBoxes(data=torch.Tensor([[10, 10, 50, 50]]), format="xyxy", canvas_size=img_size)
-    fake_labels = LongTensor([1])
-
-    # Create empty polygons
-    fake_polygons = []
-
-    return OTXDataItem(
-        image=tv_tensors.Image(fake_image),
-        img_info=fake_image_info,
-        bboxes=fake_bboxes,
-        label=fake_labels,
-        polygons=fake_polygons,
     )
 
 
@@ -185,7 +137,7 @@ class TestMinIoURandomCrop:
     def min_iou_random_crop(self) -> MinIoURandomCrop:
         return MinIoURandomCrop(is_numpy_to_tvtensor=False)
 
-    def test_forward(self, min_iou_random_crop: MinIoURandomCrop, det_data_entity: OTXDataItem) -> None:
+    def test_forward(self, min_iou_random_crop: MinIoURandomCrop, det_data_entity: DetectionSample) -> None:
         """Test forward."""
         results = min_iou_random_crop(deepcopy(det_data_entity))
 
@@ -214,7 +166,7 @@ class TestResize:
     def test_forward_only_image(
         self,
         resize: Resize,
-        fxt_det_data_entity: tuple[tuple, OTXDataItem, OTXDataBatch],
+        fxt_det_data_entity: tuple[tuple, OTXSample, OTXDataBatch],
         keep_ratio: bool,
         expected_shape: tuple,
         expected_scale_factor: tuple,
@@ -246,14 +198,14 @@ class TestResize:
             (False, (128, 96)),
         ],
     )
-    def test_forward_bboxes_masks_polygons(
+    def test_forward_bboxes_masks(
         self,
         resize: Resize,
-        fxt_inst_seg_data_entity: tuple[tuple, OTXDataItem, OTXDataBatch],
+        fxt_inst_seg_data_entity: tuple[tuple, OTXSample, OTXDataBatch],
         keep_ratio: bool,
         expected_shape: tuple,
     ) -> None:
-        """Test forward with bboxes, masks, and polygons."""
+        """Test forward with bboxes and masks."""
         resize.transform_bbox = True
         resize.transform_mask = True
         entity = deepcopy(fxt_inst_seg_data_entity[0])
@@ -268,14 +220,6 @@ class TestResize:
             == fxt_inst_seg_data_entity[0].bboxes * torch.tensor(results.img_info.scale_factor[::-1] * 2),
         )
         assert results.masks.shape[1:] == expected_shape
-        assert all(
-            [  # noqa: C419
-                np.all(
-                    rp == fp * np.array([results.img_info.scale_factor[::-1]]),
-                )
-                for rp, fp in zip(results.polygons, fxt_inst_seg_data_entity[0].polygons)
-            ],
-        )
 
 
 class TestRandomFlip:
@@ -286,7 +230,7 @@ class TestRandomFlip:
     def test_forward(
         self,
         random_flip: RandomFlip,
-        fxt_inst_seg_data_entity: tuple[tuple, OTXDataItem, OTXDataBatch],
+        fxt_inst_seg_data_entity: tuple[tuple, OTXSample, OTXDataBatch],
     ) -> None:
         """Test forward."""
         entity = deepcopy(fxt_inst_seg_data_entity[0])
@@ -305,24 +249,13 @@ class TestRandomFlip:
         # test masks
         assert torch.all(tv_tensors.Mask(results.masks).flip(-1) == fxt_inst_seg_data_entity[0].masks)
 
-        # test polygons
-        def revert_hflip(polygon: np.ndarray, width: int) -> np.ndarray:
-            polygon[:, 0] = width - polygon[:, 0]
-            return polygon
-
-        width = results.img_info.img_shape[1]
-        polygons_results = deepcopy(results.polygons)
-        polygons_results = [revert_hflip(polygon, width) for polygon in polygons_results]
-        for polygon, expected_polygon in zip(polygons_results, fxt_inst_seg_data_entity[0].polygons):
-            assert np.all(polygon == expected_polygon)
-
 
 class TestPhotoMetricDistortion:
     @pytest.fixture
     def photo_metric_distortion(self) -> PhotoMetricDistortion:
         return PhotoMetricDistortion(is_numpy_to_tvtensor=False)
 
-    def test_forward(self, photo_metric_distortion: PhotoMetricDistortion, det_data_entity: OTXDataItem) -> None:
+    def test_forward(self, photo_metric_distortion: PhotoMetricDistortion, det_data_entity: DetectionSample) -> None:
         """Test forward."""
         results = photo_metric_distortion(deepcopy(det_data_entity))
 
@@ -342,14 +275,6 @@ class TestRandomAffine:
     def random_affine_without_mask_transform(self) -> RandomAffine:
         return RandomAffine(transform_mask=False, is_numpy_to_tvtensor=False)
 
-    @pytest.fixture
-    def random_affine_with_polygon_transform(self) -> RandomAffine:
-        return RandomAffine(transform_polygon=True, is_numpy_to_tvtensor=False)
-
-    @pytest.fixture
-    def random_affine_with_mask_and_polygon_transform(self) -> RandomAffine:
-        return RandomAffine(transform_mask=True, transform_polygon=True, mask_fill_value=0, is_numpy_to_tvtensor=False)
-
     def test_init_invalid_translate_ratio(self) -> None:
         with pytest.raises(ValueError):  # noqa: PT011
             RandomAffine(max_translate_ratio=1.5)
@@ -362,7 +287,7 @@ class TestRandomAffine:
         with pytest.raises(ValueError):  # noqa: PT011
             RandomAffine(scaling_ratio_range=(0, 0.5))
 
-    def test_forward(self, random_affine: RandomAffine, det_data_entity: OTXDataItem) -> None:
+    def test_forward(self, random_affine: RandomAffine, det_data_entity: DetectionSample) -> None:
         """Test forward."""
         results = random_affine(deepcopy(det_data_entity))
 
@@ -373,7 +298,7 @@ class TestRandomAffine:
         assert results.img_info.img_shape == results.image.shape[:2]
 
     def test_segmentation_transform(
-        self, random_affine_with_mask_transform: RandomAffine, seg_data_entity: OTXDataItem
+        self, random_affine_with_mask_transform: RandomAffine, seg_data_entity: SegmentationSample
     ) -> None:
         """Test forward for segmentation task."""
         original_entity = deepcopy(seg_data_entity)
@@ -383,15 +308,12 @@ class TestRandomAffine:
         assert results.masks is not None
         assert results.masks.shape[0] > 0  # Should have masks
         assert results.masks.shape[1:] == results.image.shape[:2]  # Same spatial dimensions as image
-
-        # Check that the number of masks matches the number of remaining bboxes and labels
-        assert results.masks.shape[0] == results.label.shape[0]
         assert isinstance(results.masks, tv_tensors.Mask)
 
     def test_forward_with_masks_transform_enabled(
         self,
         random_affine_with_mask_transform: RandomAffine,
-        det_data_entity_with_masks: OTXDataItem,
+        det_data_entity_with_masks: InstanceSegmentationSample,
     ) -> None:
         """Test forward with masks when transform_mask is True."""
         original_entity = deepcopy(det_data_entity_with_masks)
@@ -415,158 +337,10 @@ class TestRandomAffine:
         assert results.masks.dtype == torch.bool
         assert isinstance(results.masks, tv_tensors.Mask)
 
-    def test_forward_with_polygons_transform_enabled(
-        self,
-        random_affine_with_polygon_transform: RandomAffine,
-        det_data_entity_with_polygons: OTXDataItem,
-    ) -> None:
-        """Test forward with polygons when transform_polygon is True."""
-        original_entity = deepcopy(det_data_entity_with_polygons)
-        results = random_affine_with_polygon_transform(original_entity)
-
-        # Check that polygons are present and transformed
-        assert hasattr(results, "polygons")
-        assert results.polygons is not None
-        assert len(results.polygons) > 0  # Should have polygons
-
-        # Check that the number of polygons matches the number of remaining bboxes and labels
-        assert len(results.polygons) == results.bboxes.shape[0]
-        assert len(results.polygons) == results.label.shape[0]
-
-        # Check that polygons are still valid (even number of coordinates)
-        for polygon in results.polygons:
-            assert polygon.shape[1] == 2  # Should have (x,y) coordinates
-            assert polygon.shape[0] >= 3  # Should have at least 3 points
-
-    def test_forward_with_masks_and_polygons_transform_enabled(
-        self,
-        random_affine_with_mask_and_polygon_transform: RandomAffine,
-        det_data_entity_with_polygons: OTXDataItem,
-    ) -> None:
-        """Test forward with both masks and polygons when both transforms are enabled."""
-        original_entity = deepcopy(det_data_entity_with_polygons)
-        results = random_affine_with_mask_and_polygon_transform(original_entity)
-
-        # Check that both masks and polygons are present and transformed
-        assert hasattr(results, "masks")
-        assert hasattr(results, "polygons")
-        assert results.masks is not None
-        assert results.polygons is not None
-
-        # Check consistency between masks, polygons, bboxes, and labels
-        assert results.masks.shape[0] == results.bboxes.shape[0]
-        assert len(results.polygons) == results.bboxes.shape[0]
-        assert results.masks.shape[0] == results.label.shape[0]
-        assert len(results.polygons) == results.label.shape[0]
-
-    def test_forward_with_empty_polygons(
-        self,
-        random_affine_with_polygon_transform: RandomAffine,
-        det_data_entity_empty_polygons: OTXDataItem,
-    ) -> None:
-        """Test forward with empty polygons."""
-        original_entity = deepcopy(det_data_entity_empty_polygons)
-        results = random_affine_with_polygon_transform(original_entity)
-
-        # Check that empty polygons are handled correctly
-        assert hasattr(results, "polygons")
-        assert results.polygons is not None
-        assert len(results.polygons) == 0  # Should still be empty
-
-    def test_forward_without_polygons(
-        self,
-        random_affine_with_polygon_transform: RandomAffine,
-        det_data_entity: OTXDataItem,
-    ) -> None:
-        """Test forward when entity has no polygons attribute."""
-        original_entity = deepcopy(det_data_entity)
-        # Ensure no polygons attribute
-        if hasattr(original_entity, "polygons"):
-            delattr(original_entity, "polygons")
-
-        results = random_affine_with_polygon_transform(original_entity)
-
-        # Should work normally without polygons
-        assert results.image.shape[:2] == (112, 224)
-        assert results.label.shape[0] == results.bboxes.shape[0]
-        assert not hasattr(results, "polygons") or results.polygons is None or len(results.polygons) == 0
-
-    def test_polygon_filtering_consistency(
-        self,
-        det_data_entity_with_polygons: OTXDataItem,
-    ) -> None:
-        """Test that polygons are filtered consistently with bboxes."""
-        # Create a transform that might filter out some bboxes
-        transform = RandomAffine(
-            transform_polygon=True,
-            bbox_clip_border=True,
-            max_rotate_degree=30,
-            max_translate_ratio=0.3,
-            scaling_ratio_range=(0.5, 1.5),
-            max_shear_degree=10,
-        )
-
-        original_entity = deepcopy(det_data_entity_with_polygons)
-        original_num_polygons = len(original_entity.polygons)
-
-        results = transform(original_entity)
-
-        # Check that the number of polygons matches the number of valid bboxes and labels
-        assert len(results.polygons) == results.bboxes.shape[0]
-        assert len(results.polygons) == results.label.shape[0]
-
-        # The number of polygons might be reduced due to filtering
-        assert len(results.polygons) <= original_num_polygons
-
-    def test_polygon_coordinates_validity(
-        self,
-        random_affine_with_polygon_transform: RandomAffine,
-        det_data_entity_with_polygons: OTXDataItem,
-    ) -> None:
-        """Test that transformed polygon coordinates are valid."""
-        original_entity = deepcopy(det_data_entity_with_polygons)
-        results = random_affine_with_polygon_transform(original_entity)
-
-        # Check that all polygon coordinates are within image bounds
-        height, width = results.image.shape[:2]
-
-        for polygon in results.polygons:
-            # Check that x coordinates are within [0, width]
-            assert np.all(polygon[:, 0] >= 0)
-            assert np.all(polygon[:, 0] <= width)
-
-            # Check that y coordinates are within [0, height]
-            assert np.all(polygon[:, 1] >= 0)
-            assert np.all(polygon[:, 1] <= height)
-
-    @pytest.mark.parametrize("transform_polygon", [True, False])
-    def test_polygon_transform_parameter_effect(
-        self,
-        det_data_entity_with_polygons: OTXDataItem,
-        transform_polygon: bool,
-    ) -> None:
-        """Test that the transform_polygon parameter controls polygon transformation."""
-        transform = RandomAffine(
-            transform_polygon=transform_polygon,
-            max_rotate_degree=0,
-            max_translate_ratio=0.1,
-            scaling_ratio_range=(1.0, 1.0),
-            max_shear_degree=0,
-        )
-
-        original_entity = deepcopy(det_data_entity_with_polygons)
-        results = transform(original_entity)
-
-        # Regardless of transform_polygon value, polygons should be present and properly managed
-        assert hasattr(results, "polygons")
-        if len(original_entity.polygons) > 0:
-            assert results.polygons is not None
-            assert len(results.polygons) == results.bboxes.shape[0]
-
     def test_forward_with_masks_transform_disabled(
         self,
         random_affine_without_mask_transform: RandomAffine,
-        det_data_entity_with_masks: OTXDataItem,
+        det_data_entity_with_masks: InstanceSegmentationSample,
     ) -> None:
         """Test forward with masks when transform_mask is False."""
         original_entity = deepcopy(det_data_entity_with_masks)
@@ -588,7 +362,7 @@ class TestRandomAffine:
     def test_forward_with_empty_masks(
         self,
         random_affine_with_mask_transform: RandomAffine,
-        det_data_entity_empty_masks: OTXDataItem,
+        det_data_entity_empty_masks: InstanceSegmentationSample,
     ) -> None:
         """Test forward with empty masks."""
         original_entity = deepcopy(det_data_entity_empty_masks)
@@ -600,27 +374,9 @@ class TestRandomAffine:
         assert results.masks.shape[0] == 0  # Should still be empty
         assert results.masks.shape[1:] == results.image.shape[:2]  # Same spatial dimensions
 
-    def test_forward_without_masks(
-        self,
-        random_affine_with_mask_transform: RandomAffine,
-        det_data_entity: OTXDataItem,
-    ) -> None:
-        """Test forward when entity has no masks attribute."""
-        original_entity = deepcopy(det_data_entity)
-        # Ensure no masks attribute
-        if hasattr(original_entity, "masks"):
-            delattr(original_entity, "masks")
-
-        results = random_affine_with_mask_transform(original_entity)
-
-        # Should work normally without masks
-        assert results.image.shape[:2] == (112, 224)
-        assert results.label.shape[0] == results.bboxes.shape[0]
-        assert not hasattr(results, "masks") or results.masks is None
-
     def test_mask_fill_value_applied(
         self,
-        det_data_entity_with_masks: OTXDataItem,
+        det_data_entity_with_masks: InstanceSegmentationSample,
         repeat: int = 10,
     ) -> None:
         """Test that mask_fill_value is applied correctly."""
@@ -649,7 +405,7 @@ class TestRandomAffine:
 
     def test_mask_consistency_with_image_transform(
         self,
-        det_data_entity_with_masks: OTXDataItem,
+        det_data_entity_with_masks: InstanceSegmentationSample,
     ) -> None:
         """Test that masks and images are transformed consistently."""
         # Create a transform with fixed parameters for reproducibility
@@ -675,7 +431,7 @@ class TestRandomAffine:
 
     def test_mask_bbox_filtering_consistency(
         self,
-        det_data_entity_with_masks: OTXDataItem,
+        det_data_entity_with_masks: InstanceSegmentationSample,
     ) -> None:
         """Test that masks are filtered consistently with bboxes."""
         # Create a transform that might filter out some bboxes
@@ -718,7 +474,7 @@ class TestCachedMosaic:
     def test_forward_pop_small_cache(
         self,
         cached_mosaic: CachedMosaic,
-        fxt_inst_seg_data_entity: tuple[tuple, OTXDataItem, OTXDataBatch],
+        fxt_inst_seg_data_entity: tuple[tuple, OTXSample, OTXDataBatch],
     ) -> None:
         """Test forward for popping cache."""
         cached_mosaic.max_cached_images = 4
@@ -737,7 +493,7 @@ class TestCachedMosaic:
     def test_forward(
         self,
         cached_mosaic: CachedMosaic,
-        fxt_inst_seg_data_entity: tuple[tuple, OTXDataItem, OTXDataBatch],
+        fxt_inst_seg_data_entity: tuple[tuple, OTXSample, OTXDataBatch],
     ) -> None:
         """Test forward."""
         entity = deepcopy(fxt_inst_seg_data_entity[0])
@@ -772,7 +528,7 @@ class TestCachedMixUp:
     def test_forward_pop_small_cache(
         self,
         cached_mixup: CachedMixUp,
-        fxt_inst_seg_data_entity: tuple[tuple, OTXDataItem, OTXDataBatch],
+        fxt_inst_seg_data_entity: tuple[tuple, OTXSample, OTXDataBatch],
     ) -> None:
         """Test forward for popping cache."""
         cached_mixup.max_cached_images = 1  # force to set to 1 for this test
@@ -791,7 +547,7 @@ class TestCachedMixUp:
     def test_forward(
         self,
         cached_mixup: CachedMixUp,
-        fxt_inst_seg_data_entity: tuple[tuple, OTXDataItem, OTXDataBatch],
+        fxt_inst_seg_data_entity: tuple[tuple, OTXSample, OTXDataBatch],
     ) -> None:
         """Test forward."""
         entity = deepcopy(fxt_inst_seg_data_entity[0])
@@ -814,7 +570,7 @@ class TestYOLOXHSVRandomAug:
     def yolox_hsv_random_aug(self) -> YOLOXHSVRandomAug:
         return YOLOXHSVRandomAug(is_numpy_to_tvtensor=False)
 
-    def test_forward(self, yolox_hsv_random_aug: YOLOXHSVRandomAug, det_data_entity: OTXDataItem) -> None:
+    def test_forward(self, yolox_hsv_random_aug: YOLOXHSVRandomAug, det_data_entity: DetectionSample) -> None:
         """Test forward."""
         results = yolox_hsv_random_aug(deepcopy(det_data_entity))
 
@@ -827,7 +583,7 @@ class TestYOLOXHSVRandomAug:
 class TestPad:
     def test_forward(
         self,
-        fxt_inst_seg_data_entity: tuple[tuple, OTXDataItem, OTXDataBatch],
+        fxt_inst_seg_data_entity: tuple[tuple, OTXSample, OTXDataBatch],
     ) -> None:
         entity = deepcopy(fxt_inst_seg_data_entity[0])
 
@@ -879,7 +635,7 @@ class TestRandomResize:
         transform_str = str(transform)
         assert isinstance(transform_str, str)
 
-    def test_forward(self, fxt_inst_seg_data_entity: tuple[tuple, OTXDataItem, OTXDataBatch]):
+    def test_forward(self, fxt_inst_seg_data_entity: tuple[tuple, OTXSample, OTXDataBatch]):
         entity = deepcopy(fxt_inst_seg_data_entity[0])
 
         # choose target scale from init when override is True
@@ -954,38 +710,37 @@ class TestRandomResize:
 
 class TestRandomCrop:
     @pytest.fixture
-    def entity(self) -> OTXDataItem:
-        return OTXDataItem(
-            image=torch.randn((3, 24, 32), dtype=torch.float32),
-            img_info=ImageInfo(img_idx=0, img_shape=(24, 32), ori_shape=(24, 32)),
+    def entity(self) -> ClassificationSample:
+        from datumaro.experimental.fields import ImageInfo as DmImageInfo
+
+        return ClassificationSample(
+            image=tv_tensors.Image(torch.randn((3, 24, 32), dtype=torch.float32)),
+            dm_image_info=DmImageInfo(height=24, width=32),
+            label=torch.LongTensor([0]),
         )
 
     @pytest.fixture
-    def det_entity(self) -> OTXDataItem:
-        return OTXDataItem(
-            image=torch.randn((3, 10, 10), dtype=torch.float32),
-            img_info=ImageInfo(img_idx=0, img_shape=(10, 10), ori_shape=(10, 10)),
-            bboxes=tv_tensors.BoundingBoxes(
-                np.array([[0, 0, 7, 7], [2, 3, 9, 9]], dtype=np.float32),
-                format="xyxy",
-                canvas_size=(10, 10),
-            ),
+    def det_entity(self) -> DetectionSample:
+        from datumaro.experimental.fields import ImageInfo as DmImageInfo
+
+        return DetectionSample(
+            image=tv_tensors.Image(torch.randn((3, 10, 10), dtype=torch.float32)),
+            dm_image_info=DmImageInfo(height=10, width=10),
+            bboxes=np.array([[0, 0, 7, 7], [2, 3, 9, 9]], dtype=np.float32),
             label=torch.LongTensor([0, 1]),
         )
 
     @pytest.fixture
-    def iseg_entity(self) -> OTXDataItem:
-        return OTXDataItem(
-            image=torch.randn((3, 10, 10), dtype=torch.float32),
-            img_info=ImageInfo(img_idx=0, img_shape=(10, 10), ori_shape=(10, 10)),
-            bboxes=tv_tensors.BoundingBoxes(
-                np.array([[0, 0, 7, 7], [2, 3, 9, 9]], dtype=np.float32),
-                format="xyxy",
-                canvas_size=(10, 10),
-            ),
+    def iseg_entity(self) -> InstanceSegmentationSample:
+        from datumaro.experimental.fields import ImageInfo as DmImageInfo
+
+        masks = tv_tensors.Mask(np.zeros((2, 10, 10), np.uint8))
+        return InstanceSegmentationSample(
+            image=tv_tensors.Image(torch.randn((3, 10, 10), dtype=torch.float32)),
+            dm_image_info=DmImageInfo(height=10, width=10),
+            bboxes=np.array([[0, 0, 7, 7], [2, 3, 9, 9]], dtype=np.float32),
             label=torch.LongTensor([0, 1]),
-            masks=tv_tensors.Mask(np.zeros((2, 10, 10), np.uint8)),
-            polygons=np.array([np.array([[0, 0], [0, 7], [7, 7], [7, 0]]), np.array([[2, 3], [2, 9], [9, 9], [9, 3]])]),
+            masks=masks,
         )
 
     def test_init_invalid_crop_type(self) -> None:
@@ -1051,8 +806,8 @@ class TestRandomCrop:
         assert 32 * 0.8 <= w <= 32
         assert results.img_info.img_shape == results.image.shape[:2]
 
-    def test_forward_bboxes_labels_masks_polygons(self, iseg_entity) -> None:
-        # test with bboxes, labels, masks, and polygons
+    def test_forward_bboxes_labels_masks(self, iseg_entity) -> None:
+        # test with bboxes, labels, and masks
         transform = RandomCrop(
             crop_size=(7, 5),
             allow_negative_crop=False,
@@ -1074,25 +829,7 @@ class TestRandomCrop:
         # test recompute_bbox = True
         iseg_entity.bboxes = tv_tensors.wrap(torch.tensor([[0.1, 0.1, 0.2, 0.2]]), like=iseg_entity.bboxes)
         iseg_entity.label = torch.LongTensor([0])
-        iseg_entity.polygons = None
         target_gt_bboxes = np.zeros((1, 4), dtype=np.float32)
-        transform = RandomCrop(
-            crop_size=(10, 11),
-            allow_negative_crop=False,
-            recompute_bbox=True,
-            bbox_clip_border=True,
-            is_numpy_to_tvtensor=False,
-        )
-        results = transform(deepcopy(iseg_entity))
-
-        assert np.all(results.bboxes.numpy() == target_gt_bboxes)
-
-    def test_forward_recompute_bbox_from_polygon(self, iseg_entity) -> None:
-        # test recompute_bbox = True
-        iseg_entity.bboxes = tv_tensors.wrap(torch.tensor([[0.1, 0.1, 0.2, 0.2]]), like=iseg_entity.bboxes)
-        iseg_entity.label = torch.LongTensor([0])
-        iseg_entity.masks = tv_tensors.Mask(np.zeros((0, *iseg_entity.img_info.img_shape), dtype=bool))
-        target_gt_bboxes = np.array([[0.0, 0.0, 7.0, 7.0]], dtype=np.float32)
         transform = RandomCrop(
             crop_size=(10, 11),
             allow_negative_crop=False,
@@ -1161,17 +898,15 @@ class TestRandomCrop:
 
 class TestTopdownAffine:
     @pytest.fixture
-    def keypoint_det_entity(self) -> OTXDataItem:
-        return OTXDataItem(
-            image=torch.randint(0, 255, size=(3, 10, 10), dtype=torch.float32),
-            img_info=ImageInfo(img_idx=0, img_shape=(10, 10), ori_shape=(10, 10)),
-            bboxes=tv_tensors.BoundingBoxes(
-                np.array([[0, 0, 7, 7]], dtype=np.float32),
-                format="xyxy",
-                canvas_size=(10, 10),
-            ),
+    def keypoint_det_entity(self) -> KeypointSample:
+        from datumaro.experimental.fields import ImageInfo as DmImageInfo
+
+        keypoints_data = torch.tensor([[0, 4, 1], [4, 2, 1], [2, 6, 1], [6, 0, 0]], dtype=torch.float32)
+        return KeypointSample(
+            image=tv_tensors.Image(torch.randint(0, 255, size=(3, 10, 10), dtype=torch.uint8)),
+            dm_image_info=DmImageInfo(height=10, width=10),
+            keypoints=keypoints_data,
             label=torch.LongTensor([0]),
-            keypoints=tv_tensors.TVTensor(np.array([[0, 4, 1], [4, 2, 1], [2, 6, 1], [6, 0, 0]])),
         )
 
     def test_forward(self, keypoint_det_entity) -> None:
@@ -1182,6 +917,280 @@ class TestTopdownAffine:
         )
         results = transform(deepcopy(keypoint_det_entity))
         assert results.keypoints.shape == (4, 3)
+
+
+class TestCompose:
+    """Test Compose class with native torchvision transforms."""
+
+    @pytest.fixture
+    def basic_entity(self) -> DetectionSample:
+        """Create a basic data entity for testing."""
+        img_size = (64, 128)
+        return DetectionSample(
+            image=tv_tensors.Image(torch.randint(low=0, high=256, size=(3, *img_size), dtype=torch.uint8)),
+            dm_image_info=DmImageInfo(height=img_size[0], width=img_size[1]),
+            bboxes=np.array([[10, 10, 50, 50]], dtype=np.float32),
+            label=LongTensor([1]),
+        )
+
+    @pytest.fixture
+    def entity_with_masks(self) -> InstanceSegmentationSample:
+        """Create entity with masks."""
+        img_size = (64, 128)
+        masks = torch.zeros(size=(1, *img_size), dtype=torch.uint8)
+        masks[0, 10:50, 10:50] = 1
+        return InstanceSegmentationSample(
+            image=tv_tensors.Image(torch.randint(low=0, high=256, size=(3, *img_size), dtype=torch.uint8)),
+            dm_image_info=DmImageInfo(height=img_size[0], width=img_size[1]),
+            bboxes=np.array([[10, 10, 50, 50]], dtype=np.float32),
+            label=LongTensor([1]),
+            masks=tv_tensors.Mask(masks),
+        )
+
+    def test_compose_with_single_native_transform(self, basic_entity: DetectionSample) -> None:
+        """Test Compose with a single native torchvision transform."""
+
+        transform = Compose(
+            [
+                tvt_v2.Resize(size=(128, 256)),
+            ]
+        )
+
+        result = transform(basic_entity)
+
+        assert result is not None
+        assert result.image.shape[1:] == (128, 256)
+        assert result.img_info.img_shape == (128, 256)
+        assert result.img_info.ori_shape == (64, 128)
+
+    def test_compose_with_mixed_transforms(self, basic_entity: DetectionSample) -> None:
+        """Test Compose with both native and OTX transforms."""
+        transform = Compose(
+            [
+                Resize(scale=(128, 256), is_numpy_to_tvtensor=True),
+                tvt_v2.RandomHorizontalFlip(p=1.0),
+                Pad(size=(140, 300), is_numpy_to_tvtensor=True),
+            ]
+        )
+
+        result = transform(deepcopy(basic_entity))
+
+        assert result is not None
+        assert result.image.shape[1:] == (140, 300)
+        assert result.img_info.img_shape == (140, 300)
+        assert result.img_info.ori_shape == (64, 128)
+
+    def test_compose_native_transform_image_only(self, basic_entity: DetectionSample) -> None:
+        """Test that native transforms only affect image when appropriate."""
+        original_bboxes = basic_entity.bboxes.clone()
+        original_label = basic_entity.label.clone()
+
+        transform = Compose(
+            [
+                tvt_v2.ColorJitter(brightness=0.5, contrast=0.5),
+            ]
+        )
+
+        result = transform(deepcopy(basic_entity))
+
+        # Bboxes and labels should remain unchanged
+        assert torch.equal(result.bboxes, original_bboxes)
+        assert torch.equal(result.label, original_label)
+        assert result.img_info.ori_shape == (64, 128)
+        assert result.img_info.img_shape == (64, 128)
+
+    def test_compose_native_geometric_transform(self, entity_with_masks: InstanceSegmentationSample) -> None:
+        """Test native geometric transforms affect both image and annotations."""
+        transform = Compose(
+            [
+                tvt_v2.Resize(size=(128, 256)),
+            ]
+        )
+
+        result = transform(deepcopy(entity_with_masks))
+
+        assert result.image.shape[1:] == (128, 256)
+        assert result.bboxes.canvas_size == (128, 256)
+        assert result.img_info.img_shape == (128, 256)
+        assert result.img_info.ori_shape == (64, 128)
+        assert result.masks.shape[1:] == (128, 256)
+
+    def test_compose_returns_none_on_empty_crop(self, basic_entity: DetectionSample) -> None:
+        """Test that Compose properly handles None returns from transforms."""
+        # Create entity with bbox that won't survive crop
+        entity = deepcopy(basic_entity)
+        entity.bboxes = tv_tensors.BoundingBoxes(
+            data=torch.Tensor([[0, 0, 5, 5]]),
+            format="xyxy",
+            canvas_size=(64, 128),
+        )
+
+        transform = Compose(
+            [
+                RandomCrop(
+                    crop_size=(10, 10),
+                    allow_negative_crop=False,
+                    is_numpy_to_tvtensor=False,
+                ),
+            ]
+        )
+
+        result = transform(entity)
+        # Result might be None if crop doesn't contain bbox
+        assert result is None
+
+    def test_compose_img_info_update_with_resize(self, basic_entity: DetectionSample) -> None:
+        """Test img_info is properly updated with native Resize."""
+        original_shape = basic_entity.img_info.img_shape
+        target_size = (96, 192)
+
+        transform = Compose(
+            [
+                tvt_v2.Resize(size=target_size),
+            ]
+        )
+
+        result = transform(deepcopy(basic_entity))
+
+        # Check img_info is updated
+        assert result.img_info.img_shape == target_size
+        assert result.img_info.ori_shape == original_shape
+        assert result.img_info.scale_factor == (
+            target_size[0] / original_shape[0],
+            target_size[1] / original_shape[1],
+        )
+        assert result.image.shape[1:] == target_size
+
+    def test_compose_img_info_update_with_crop(self, basic_entity: DetectionSample) -> None:
+        """Test img_info is properly updated with native RandomCrop."""
+        # Use a large enough crop to ensure it contains the bbox
+        crop_size = (50, 100)
+
+        transform = Compose(
+            [
+                tvt_v2.RandomCrop(size=crop_size),
+            ]
+        )
+
+        result = transform(deepcopy(basic_entity))
+
+        # Check img_info reflects crop
+        assert result.img_info.img_shape == crop_size
+        assert result.image.shape[1:] == crop_size
+
+    def test_compose_img_info_with_padding(self, basic_entity: DetectionSample) -> None:
+        """Test img_info.padding is set correctly with Pad transform."""
+        target_size = (100, 200)
+
+        transform = Compose(
+            [
+                Pad(size=target_size, is_numpy_to_tvtensor=True),
+            ]
+        )
+
+        result = transform(deepcopy(basic_entity))
+
+        # Check padding info
+        assert hasattr(result.img_info, "padding")
+        assert result.img_info.img_shape == target_size
+        assert result.image.shape[1:] == target_size
+
+    def test_compose_img_info_chained_transforms(self, basic_entity: DetectionSample) -> None:
+        """Test img_info updates correctly through multiple transforms."""
+        transform = Compose(
+            [
+                Resize(scale=(100, 200), is_numpy_to_tvtensor=True),
+                Pad(size=(120, 240), is_numpy_to_tvtensor=True),
+                tvt_v2.Resize(size=(80, 160)),
+            ]
+        )
+
+        result = transform(deepcopy(basic_entity))
+
+        # Final img_info should reflect last transform
+        assert result.img_info.img_shape == (80, 160)
+        assert result.image.shape[1:] == (80, 160)
+        assert result.img_info.ori_shape == (64, 128)
+        assert result.img_info.scale_factor == (
+            80 / 64,
+            160 / 128,
+        )
+
+    def test_compose_label_key_mapping(self, basic_entity: DetectionSample) -> None:
+        """Test that 'label' is correctly mapped to 'labels' for native transforms."""
+        # Create a transform that requires labels key
+        transform = Compose(
+            [
+                tvt_v2.Resize(size=(128, 256)),
+            ]
+        )
+
+        result = transform(deepcopy(basic_entity))
+
+        # Label should still be accessible as 'label' attribute
+        assert hasattr(result, "label")
+        assert hasattr(result, "bboxes")
+        assert torch.equal(result.label, basic_entity.label)
+        assert result.bboxes.shape[0] == basic_entity.bboxes.shape[0]
+        assert result.bboxes.canvas_size == (128, 256)
+
+    def test_compose_classification(self) -> None:
+        """Test fast path when only image is present."""
+        # Create entity with only image
+        entity = ClassificationSample(
+            image=tv_tensors.Image(torch.randint(low=0, high=256, size=(3, 64, 128), dtype=torch.uint8)),
+            dm_image_info=DmImageInfo(height=64, width=128),
+            label=torch.LongTensor([0]),
+        )
+
+        transform = Compose(
+            [
+                tvt_v2.ColorJitter(brightness=0.5),
+                tvt_v2.RandomHorizontalFlip(p=1.0),
+                tvt_v2.Resize(size=(224, 224)),
+            ]
+        )
+
+        result = transform(entity)
+
+        assert result.image.shape == (3, 224, 224)
+        assert result.img_info.img_shape == (224, 224)
+        assert result.img_info.ori_shape == (64, 128)
+        assert result.label.shape == entity.label.shape
+        assert torch.equal(result.label, entity.label)
+
+    def test_compose_preserves_non_transformable_attrs(self, basic_entity: DetectionSample) -> None:
+        """Test that non-transformable attributes are preserved."""
+        # Add custom attribute
+        basic_entity.custom_attr = "test_value"
+
+        transform = Compose(
+            [
+                tvt_v2.Resize(size=(128, 256)),
+            ]
+        )
+
+        result = transform(deepcopy(basic_entity))
+
+        # Custom attribute should be preserved
+        assert hasattr(result, "custom_attr")
+        assert result.custom_attr == "test_value"
+
+    def test_compose_native_transform_with_multiple_inputs(self, entity_with_masks: InstanceSegmentationSample) -> None:
+        """Test native transform handles multiple transformable inputs correctly."""
+        transform = Compose(
+            [
+                tvt_v2.Resize(size=(100, 200)),
+                tvt_v2.RandomHorizontalFlip(p=1.0),
+            ]
+        )
+
+        result = transform(deepcopy(entity_with_masks))
+
+        # All transformable fields should be transformed
+        assert result.image.shape[1:] == (100, 200)
+        assert result.bboxes.canvas_size == (100, 200)
+        assert result.masks.shape[1:] == (100, 200)
 
 
 class TestRandomGaussianNoise:
