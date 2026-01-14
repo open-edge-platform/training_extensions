@@ -9,7 +9,6 @@ from typing import Any
 import numpy as np
 from loguru import logger
 from model_api.models.result import Result
-from paho.mqtt.enums import CallbackAPIVersion
 
 from app.models import MqttSinkConfig
 
@@ -17,8 +16,10 @@ from .base import BaseDispatcher
 
 try:
     import paho.mqtt.client as mqtt
+    from paho.mqtt.enums import CallbackAPIVersion
 except ImportError:
     mqtt = None  # type: ignore[assignment]
+    CallbackAPIVersion = None  # type: ignore[assignment]
 
 MAX_RETRIES = 3
 RETRY_DELAY = 1
