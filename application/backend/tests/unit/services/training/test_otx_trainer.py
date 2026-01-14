@@ -166,7 +166,7 @@ class TestOTXTrainerPrepareWeights:
             parent_model_revision_id=parent_model_revision_id,
         )
         expected_weights_path = (
-            tmp_path / "projects" / str(project_id) / "models" / str(parent_model_revision_id) / "model.pth"
+            tmp_path / "projects" / str(project_id) / "models" / str(parent_model_revision_id) / "model.ckpt"
         )
         expected_weights_path.parent.mkdir(parents=True, exist_ok=True)
         expected_weights_path.touch()
@@ -195,7 +195,7 @@ class TestOTXTrainerPrepareWeights:
             parent_model_revision_id=parent_model_revision_id,
         )
         expected_weights_path = (
-            tmp_path / "projects" / str(project_id) / "models" / str(parent_model_revision_id) / "model.pth"
+            tmp_path / "projects" / str(project_id) / "models" / str(parent_model_revision_id) / "model.ckpt"
         )
         otx_trainer = fxt_otx_trainer()
 
@@ -643,6 +643,7 @@ class TestOTXTrainerTrainModel:
                         weights_path=weights_path,
                         model_id=model_id,
                         device=geti_device,
+                        has_parent_revision=True,
                     )
 
         # Assert
@@ -663,6 +664,7 @@ class TestOTXTrainerTrainModel:
         assert engine_call_kwargs["data"] == mock_datamodule
         assert engine_call_kwargs["work_dir"] == f"./otx-workspace-{model_id}"
         assert engine_call_kwargs["device"] == otx_device
+        assert engine_call_kwargs["checkpoint"] == weights_path
 
         # Verify training was started
         mock_otx_engine.train.assert_called_once()
