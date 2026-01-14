@@ -29,7 +29,7 @@ export const Settings = () => {
                 <Tooltip>Settings</Tooltip>
             </TooltipTrigger>
             {(close) => (
-                <Dialog height={'40rem'} UNSAFE_className={styles.settingsDialog}>
+                <Dialog UNSAFE_className={styles.settingsDialog}>
                     <Heading>
                         <Flex justifyContent={'space-between'} alignItems={'center'}>
                             <Text>Settings</Text>
