@@ -71,8 +71,6 @@ jobs:
 
       - name: Install dependencies
         uses: ./.github/actions/install-dependencies
-        with:
-          python-version: "3.13"
 
       - name: Install OpenCV dependencies
         run: |

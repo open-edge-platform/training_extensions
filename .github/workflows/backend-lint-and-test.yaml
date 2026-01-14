@@ -70,7 +70,6 @@ jobs:
         uses: ./.github/actions/install-dependencies
         with:
           uv-cache-dependency-glob: 'application/backend/uv.lock'
-          python-version: "3.13"
 
       - name: Install OpenCV dependencies
         run: |
