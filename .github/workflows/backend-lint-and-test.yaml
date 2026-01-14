@@ -144,7 +144,7 @@ jobs:
         run: |
           uv run pytest tests/unit
 
-      # Skipping tests de to docker set up requirements on Windows runners
+      # Skipping tests due to docker set up requirements on Windows runners
       - name: Run integration tests
         working-directory: application/backend
         run: |
