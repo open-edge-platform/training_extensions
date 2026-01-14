@@ -370,11 +370,11 @@ class OTXTrainer(Trainer):
         )
         logger.info("Model exported to OpenVINO format: {}", exported_ov_model_path)
 
-        logger.info("Exporting the model to ONNX format (FP32 precision)...")
+        logger.info("Exporting the model to ONNX format (FP16 precision)...")
         exported_onnx_model_path = otx_engine.export(
             checkpoint=model_checkpoint_path,
             export_format=OTXExportFormatType.ONNX,
-            export_precision=OTXPrecisionType.FP32,
+            export_precision=OTXPrecisionType.FP16,
         )
         logger.info("Model exported to ONNX format: {}", exported_onnx_model_path)
         return ExportedModels(openvino_model_path=exported_ov_model_path, onnx_model_path=exported_onnx_model_path)
