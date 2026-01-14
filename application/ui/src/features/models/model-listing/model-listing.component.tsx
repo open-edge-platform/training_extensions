@@ -1,7 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Divider, View } from '@geti/ui';
+import { useState } from 'react';
+
+import { Divider, Flex, View } from '@geti/ui';
 
 import { GroupModelsContainer } from './components/group-models-container.component';
 import { Header } from './components/header.component';
@@ -23,6 +25,22 @@ export const ModelListing = ({
     onSortChange,
     onPinActiveToggle,
 }: ModelListingProps) => {
+    const [expandedModelIds, setExpandedModelIds] = useState<Set<string>>(new Set());
+
+    const handleExpandModel = (modelId: string) => {
+        setExpandedModelIds((prev) => {
+            const newExpandedModelIds = new Set(prev);
+
+            if (newExpandedModelIds.has(modelId)) {
+                newExpandedModelIds.delete(modelId);
+            } else {
+                newExpandedModelIds.add(modelId);
+            }
+
+            return newExpandedModelIds;
+        });
+    };
+
     return (
         <View padding={'size-300'}>
             <Header
@@ -34,15 +52,19 @@ export const ModelListing = ({
 
             <Divider size={'S'} marginY={'size-300'} />
 
-            {groupedModels.map(({ group, models }, index) => (
-                <GroupModelsContainer
-                    key={'id' in group ? group.id : `${group.name}-${index}`}
-                    groupBy={groupBy}
-                    group={group}
-                    models={models}
-                    sortBy={sortBy}
-                />
-            ))}
+            <Flex direction={'column'} gap={'size-300'}>
+                {groupedModels.map(({ group, models }, index) => (
+                    <GroupModelsContainer
+                        key={'id' in group ? group.id : `${group.name}-${index}`}
+                        groupBy={groupBy}
+                        group={group}
+                        models={models}
+                        sortBy={sortBy}
+                        expandedModelIds={expandedModelIds}
+                        onExpandModel={handleExpandModel}
+                    />
+                ))}
+            </Flex>
         </View>
     );
 };

@@ -7,18 +7,21 @@ import { MoreMenu } from '@geti/ui/icons';
 import { SchemaModelView } from '../../../../api/openapi-spec';
 import { ReactComponent as StartIcon } from '../../../../assets/icons/start.svg';
 import { useGetActiveModelId } from '../../hooks/api/use-get-active-model-id.hook';
+import { useGetModel } from '../../hooks/api/use-get-model.hook';
 import { GRID_COLUMNS } from '../constants';
 import { AccuracyIndicator } from '../model-variants/accuracy-indicator.component';
 import { formatTrainingDateTime } from '../utils/date-formatting';
 
 interface ModelRowProps {
     model: SchemaModelView;
+    onExpandModel: (modelId: string) => void;
 }
 
-export const ModelRow = ({ model }: ModelRowProps) => {
+export const ModelRow = ({ model, onExpandModel }: ModelRowProps) => {
     const activeModelId = useGetActiveModelId();
 
     const trainingEndTime = model.training_info.end_time;
+    const parentRevisionModel = useGetModel(model.parent_revision);
 
     return (
         <Grid columns={GRID_COLUMNS} alignItems={'center'} width={'100%'}>
@@ -46,10 +49,19 @@ export const ModelRow = ({ model }: ModelRowProps) => {
                         color: 'var(--spectrum-global-color-gray-700)',
                     }}
                 >
-                    {model.parent_revision ? (
+                    {parentRevisionModel ? (
                         <>
                             Fine-tuned from{' '}
-                            <Link UNSAFE_style={{ textDecoration: 'none' }}>{model.parent_revision}</Link>
+                            <Link
+                                UNSAFE_style={{ textDecoration: 'none' }}
+                                onPress={() => {
+                                    if (parentRevisionModel.id) {
+                                        onExpandModel(parentRevisionModel.id);
+                                    }
+                                }}
+                            >
+                                {parentRevisionModel.name}
+                            </Link>
                         </>
                     ) : null}
                 </Text>
