@@ -5,7 +5,8 @@ import io
 import zipfile
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Body, Depends, HTTPException, status
+from fastapi.openapi.models import Example
 from fastapi.responses import StreamingResponse
 
 from app.api.dependencies import get_model_service, get_project
@@ -95,6 +96,51 @@ def download_model_binary(
             media_type="application/zip",
             headers={"Content-Disposition": f'attachment; filename="{filename}"'},
         )
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+UPDATE_MODEL_BODY_DESCRIPTION = """
+Update name of model revision.
+"""
+UPDATE_MODEL_BODY_EXAMPLES = {
+    "name": Example(
+        summary="Update model name",
+        description="Change the name of the model",
+        value={
+            "name": "new_model_name",
+        },
+    ),
+}
+
+
+@router.patch(
+    "/{model_id}",
+    response_model=ModelView,
+    responses={
+        status.HTTP_200_OK: {"description": "Model successfully renamed"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project or model ID"},
+        status.HTTP_404_NOT_FOUND: {"description": "Project or model not found"},
+    },
+)
+def rename_model(
+    project: Annotated[ProjectView, Depends(get_project)],
+    model_id: ModelID,
+    model_metadata: Annotated[
+        dict,
+        Body(
+            description=UPDATE_MODEL_BODY_DESCRIPTION,
+            openapi_examples=UPDATE_MODEL_BODY_EXAMPLES,
+        ),
+    ],
+    model_service: Annotated[ModelService, Depends(get_model_service)],
+) -> ModelView:
+    """Rename a model"""
+    try:
+        model_revision = model_service.rename_model(
+            project_id=project.id, model_id=model_id, model_metadata=model_metadata
+        )
+        return ModelView.model_validate(model_revision, from_attributes=True)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
