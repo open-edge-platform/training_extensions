@@ -6,6 +6,7 @@ from uuid import uuid4
 
 import pytest
 from fastapi import status
+from otx.types.export import OTXExportFormatType
 
 from app.api.dependencies import get_model_service
 from app.api.schemas import ModelView
@@ -112,34 +113,55 @@ class TestModelEndpoints:
         assert str(err) == response.json()["detail"]
         fxt_model_service.delete_model.assert_called_once_with(project_id=fxt_get_project.id, model_id=model_id)
 
-    def test_download_model_binary_success(self, fxt_get_project, fxt_model, fxt_model_service, fxt_client, tmp_path):
+    @pytest.mark.parametrize(
+        "model_format, model_precision",
+        [
+            (OTXExportFormatType.OPENVINO, "fp16"),
+            (OTXExportFormatType.ONNX, "fp32"),
+        ],
+    )
+    def test_download_model_binary_success(
+        self, model_format, model_precision, fxt_get_project, fxt_model, fxt_model_service, fxt_client, tmp_path
+    ):
         import zipfile
         from io import BytesIO
 
         # Create mock model files
         model_dir = tmp_path / "models" / str(fxt_model.id)
         model_dir.mkdir(parents=True)
-        xml_content = "<xml>model data</xml>"
         bin_content = b"binary model data"
-        (model_dir / "model.xml").write_text(xml_content)
-        (model_dir / "model.bin").write_bytes(bin_content)
+        if model_format == OTXExportFormatType.OPENVINO:
+            xml_content = "<xml>model data</xml>"
+            (model_dir / "model.xml").write_text(xml_content)
+            (model_dir / "model.bin").write_bytes(bin_content)
+        else:
+            (model_dir / "model.onnx").write_bytes(bin_content)
 
         fxt_model_service.get_model_files_path.return_value = model_dir
 
-        response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models/{fxt_model.id}/binary")
+        response = fxt_client.get(
+            f"/api/projects/{fxt_get_project.id}/models/{fxt_model.id}/binary?format={model_format.value}"
+        )
 
         assert response.status_code == status.HTTP_200_OK
         assert response.headers["content-type"] == "application/zip"
         assert "content-disposition" in response.headers
-        assert f"model-{fxt_model.id}-fp16.zip" in response.headers["content-disposition"]
+        assert (
+            f"model-{fxt_model.id}-{model_format.name.lower()}-{model_precision}.zip"
+            in response.headers["content-disposition"]
+        )
 
         # Verify zip file contents
         zip_data = BytesIO(response.content)
         with zipfile.ZipFile(zip_data, "r") as zip_file:
-            assert "model.xml" in zip_file.namelist()
-            assert "model.bin" in zip_file.namelist()
-            assert zip_file.read("model.xml").decode() == xml_content
-            assert zip_file.read("model.bin") == bin_content
+            if model_format == OTXExportFormatType.OPENVINO:
+                assert "model.xml" in zip_file.namelist()
+                assert "model.bin" in zip_file.namelist()
+                assert zip_file.read("model.xml").decode() == xml_content
+                assert zip_file.read("model.bin") == bin_content
+            else:
+                assert "model.onnx" in zip_file.namelist()
+                assert zip_file.read("model.onnx") == bin_content
 
         fxt_model_service.get_model_files_path.assert_called_once_with(
             project_id=fxt_get_project.id, model_id=fxt_model.id
