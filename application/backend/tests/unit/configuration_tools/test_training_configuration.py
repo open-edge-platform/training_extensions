@@ -123,7 +123,7 @@ class TestTrainingConfiguration:
                         filtering=Filtering(
                             min_annotation_pixels=MinAnnotationPixels(
                                 enable=True,
-                                value=0,  # Invalid: must be > 0
+                                value=0,  # Invalid: must be > 0  # pyrefly: ignore[bad-argument-type]
                             ),
                             max_annotation_pixels=MaxAnnotationPixels(),
                             min_annotation_objects=MinAnnotationObjects(),
