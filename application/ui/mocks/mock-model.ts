@@ -13,6 +13,7 @@ export const getMockedModel = (overrides: Partial<SchemaModelView> = {}): Schema
         label_schema_revision: {},
         configuration: {},
     },
+    variants: [],
     files_deleted: false,
     ...overrides,
 });
