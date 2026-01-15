@@ -11,8 +11,6 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Any
 
-from otx.types.transformer_libs import TransformLibType
-
 
 @dataclass
 class IntensityConfig:
@@ -102,9 +100,6 @@ class SubsetConfig:
     augmentations_cpu: list[dict[str, Any]] = field(default_factory=list)
     augmentations_gpu: list[dict[str, Any]] = field(default_factory=list)
     intensity: IntensityConfig = field(default_factory=IntensityConfig)
-    # DEPRECATED: Legacy fields for backward compatibility during transition
-    transforms: list[dict[str, Any]] = field(default_factory=list)
-    transform_lib_type: TransformLibType = TransformLibType.TORCHVISION
     num_workers: int = 2
     sampler: SamplerConfig = field(default_factory=SamplerConfig)
     to_tv_image: bool = True

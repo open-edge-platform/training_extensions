@@ -26,6 +26,7 @@ from lightning.pytorch.plugins.precision import MixedPrecision
 
 from otx.backend.native.callbacks.adaptive_train_scheduling import AdaptiveTrainScheduling
 from otx.backend.native.callbacks.aug_scheduler import AugmentationSchedulerCallback
+from otx.backend.native.callbacks.gpu_augmentation import GPUAugmentationCallback
 from otx.backend.native.callbacks.gpu_mem_monitor import GPUMemMonitor
 from otx.backend.native.callbacks.iteration_timer import IterationTimer
 from otx.backend.native.models.base import DataInputParams, OTXModel
@@ -980,10 +981,42 @@ class OTXEngine(Engine):
         if not has_callback(GPUMemMonitor):
             callbacks.append(GPUMemMonitor())
 
+        # Add GPU augmentation callback if GPU augmentations are configured
+        if not has_callback(GPUAugmentationCallback):
+            gpu_aug_callback = self._build_gpu_augmentation_callback()
+            if gpu_aug_callback is not None:
+                callbacks.append(gpu_aug_callback)
+
         self._cache.args["callbacks"] = callbacks + config_callbacks
 
         # Setup DataAugSwitch with shared multiprocessing.Value
         self._setup_augmentation_scheduler()
+
+    def _build_gpu_augmentation_callback(self) -> GPUAugmentationCallback | None:
+        """Build GPU augmentation callback from datamodule configs.
+
+        Returns:
+            GPUAugmentationCallback if GPU augmentations are configured, None otherwise.
+        """
+        train_config = self._datamodule.train_subset
+        val_config = self._datamodule.val_subset
+
+        # Check if any GPU augmentations are configured
+        has_train_gpu_augs = (
+            train_config and hasattr(train_config, "augmentations_gpu") and train_config.augmentations_gpu
+        )
+        has_val_gpu_augs = val_config and hasattr(val_config, "augmentations_gpu") and val_config.augmentations_gpu
+
+        if not has_train_gpu_augs and not has_val_gpu_augs:
+            return None
+
+        logging.info("Building GPU augmentation callback with Kornia augmentations")
+        return GPUAugmentationCallback(
+            train_config=train_config if has_train_gpu_augs else None,
+            val_config=val_config if has_val_gpu_augs else None,
+            apply_on_val=True,
+            apply_on_test=True,
+        )
 
     def _setup_augmentation_scheduler(self) -> None:
         """Set up shared memory for DataAugSwitch and AugmentationSchedulerCallback.

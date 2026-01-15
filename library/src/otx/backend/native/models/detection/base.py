@@ -35,7 +35,6 @@ from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
     from datumaro.experimental.fields import TileInfo
-    from kornia.augmentation.container import AugmentationSequential
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
 
     from otx.backend.native.models.detection.detectors import SingleStageDetector
@@ -74,9 +73,6 @@ class OTXDetectionModel(OTXModel):
         label_info: LabelInfoTypes | int | Sequence,
         data_input_params: DataInputParams | dict | None = None,
         model_name: str = "otx_detection_model",
-        apply_gpu_transforms: bool = True,
-        batch_train_transforms: AugmentationSequential | Compose | None = None,
-        batch_val_transforms: AugmentationSequential | Compose | None = None,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MeanAveragePrecisionFMeasureCallable,
@@ -88,9 +84,6 @@ class OTXDetectionModel(OTXModel):
             label_info=label_info,
             data_input_params=data_input_params,
             model_name=model_name,
-            apply_gpu_transforms=apply_gpu_transforms,
-            batch_train_transforms=batch_train_transforms,
-            batch_val_transforms=batch_val_transforms,
             optimizer=optimizer,
             scheduler=scheduler,
             metric=metric,

@@ -24,7 +24,6 @@ from otx.config.data import TileConfig
 from otx.data.entity.base import ImageInfo, OTXBatchLossEntity
 from otx.data.entity.tile import OTXTileBatchDataEntity
 from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
-from otx.data.transform_libs.torchvision import Compose
 from otx.metrics import MetricInput
 from otx.metrics.dice import SegmCallable
 from otx.types.export import TaskLevelExportParameters
@@ -33,7 +32,6 @@ from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
     from datumaro.experimental.fields import TileInfo
-    from kornia.augmentation.container import AugmentationSequential
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from torch import Tensor
 
@@ -62,9 +60,6 @@ class OTXSegmentationModel(OTXModel):
         label_info: LabelInfoTypes | int | Sequence,
         data_input_params: DataInputParams | None = None,
         model_name: str = "otx_segmentation_model",
-        apply_gpu_transforms: bool = True,
-        batch_train_transforms: AugmentationSequential | Compose | None = None,
-        batch_val_transforms: AugmentationSequential | Compose | None = None,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = SegmCallable,  # type: ignore[assignment]
@@ -75,9 +70,6 @@ class OTXSegmentationModel(OTXModel):
             label_info=label_info,
             data_input_params=data_input_params,
             model_name=model_name,
-            apply_gpu_transforms=apply_gpu_transforms,
-            batch_train_transforms=batch_train_transforms,
-            batch_val_transforms=batch_val_transforms,
             optimizer=optimizer,
             scheduler=scheduler,
             metric=metric,

@@ -15,7 +15,6 @@ from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING, Any, Callable, Literal, Sequence
 
 import torch
-from kornia.augmentation.container import AugmentationSequential
 from lightning import LightningModule, Trainer
 from torch import Tensor, nn
 from torch.optim.lr_scheduler import ConstantLR
@@ -156,12 +155,6 @@ class OTXModel(LightningModule):
                 If None is given, default parameters for the specific model will be used.
                 Defaults to None.
             model_name (str, optional): Name of the model. Defaults to "OTXModel".
-            apply_gpu_transforms (bool, optional): Flag to indicate whether to apply GPU transforms.
-                It is recommended to use GPU transforms. Defaults to True.
-            batch_train_transforms (AugmentationSequential | Compose | None): GPU transforms for training applied directly to the batch.
-                If None is given, default augmentation pipeline for the model will be used.
-            batch_val_transforms (AugmentationSequential | Compose | None): GPU transforms for validation / testing applied directly to the batch.
-                If None is given, default augmentation pipeline for the model will be used. Typically just normalization.
             optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
             scheduler (LRSchedulerCallable | LRSchedulerListCallable): Callable for the learning rate scheduler.
                 Defaults to DefaultSchedulerCallable.
@@ -279,7 +272,6 @@ class OTXModel(LightningModule):
             When torch_compile is enabled and stage is "fit", compiles the model for
             optimized performance with appropriate logging level adjustments.
         """
-        self._apply_batch_augmentations(self.batch_val_transforms, batch)
         preds = self.forward(inputs=batch)
 
         if isinstance(preds, OTXBatchLossEntity):
@@ -662,14 +654,6 @@ class OTXModel(LightningModule):
         """Model forward function for tile task."""
         raise NotImplementedError
 
-    @property
-    def transforms(self) -> AugmentationSequential:
-        """Kornia Image Transforms (DEPRECATED).
-
-        Use augmentation_config instead for new code.
-        """
-        return AugmentationSequential()
-
     def register_load_state_dict_pre_hook(self, model_classes: list[str], ckpt_classes: list[str]) -> None:
         """Register load_state_dict_pre_hook.
 
@@ -747,26 +731,6 @@ class OTXModel(LightningModule):
         msg = "Optimization is not implemented for torch models"
         raise NotImplementedError(msg)
 
-    def _move_model_tensors_to_device_and_dtype(self, device: str, dtype: torch.dtype | None = None) -> nn.Module:
-        """Move model and all cached tensors to the specified device and dtype.
-
-        This base implementation simply moves the model to the device.
-        Subclasses can override this to handle model-specific cached tensors
-        (like anchors in detection models) that are not moved by model.to().
-
-        Args:
-            device: Target device ('cpu', 'cuda', etc.)
-            dtype: Target dtype for floating-point tensors. If None, dtype is not changed.
-                   Note: Integer tensors (used for indexing) should not be converted.
-
-        Returns:
-            The model moved to the specified device.
-        """
-        model = self.model.to(device)
-        if dtype is not None:
-            model = model.to(dtype)
-        return model
-
     def export(
         self,
         output_dir: Path,
@@ -790,8 +754,7 @@ class OTXModel(LightningModule):
         # Move model to CPU with FP32 for export to avoid device/dtype mismatch with TorchScript tracing
         # AMP training may leave internal tensors in FP16, which breaks TorchScript check_trace
         original_device = next(self.model.parameters()).device
-        original_dtype = next(self.model.parameters()).dtype
-        self.model = self._move_model_tensors_to_device_and_dtype("cpu", torch.float32)
+        self.model = self.model.cpu()
 
         orig_forward = self.forward
         orig_trainer = self._trainer  # type: ignore[has-type]
@@ -810,8 +773,7 @@ class OTXModel(LightningModule):
             self.train(mode)
             self.forward = orig_forward  # type: ignore[method-assign]
             self._trainer = orig_trainer
-            # Restore model to original device and dtype
-            self.model = self._move_model_tensors_to_device_and_dtype(str(original_device), original_dtype)
+            self.model.to(original_device)
 
     @property
     def _exporter(self) -> OTXModelExporter:
@@ -937,7 +899,6 @@ class OTXModel(LightningModule):
 
         self._tile_config = tile_config
 
-    @abstractmethod
     def get_dummy_input(self, batch_size: int = 1) -> OTXDataBatch:
         """Generates a dummy input, suitable for launching forward() on it.
 
@@ -947,6 +908,7 @@ class OTXModel(LightningModule):
         Returns:
             TorchDataBatch: A batch containing randomly generated inference data.
         """
+        raise NotImplementedError
 
     @staticmethod
     def _dispatch_label_info(label_info: LabelInfoTypes) -> LabelInfo:
