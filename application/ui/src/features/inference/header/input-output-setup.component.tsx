@@ -19,7 +19,7 @@ import {
 } from '@geti/ui';
 
 import { ReactComponent as Camera } from '../../../assets/icons/camera.svg';
-import { SinkOptions } from '../sinks/sink-options';
+import { SinkActions } from '../sinks/sink-actions.component';
 import { SourceActions } from '../sources/source-actions.component';
 
 const paddingStyle = {
@@ -56,7 +56,7 @@ export const InputOutputSetup = () => {
                             <Item key='sinks'>
                                 <View marginTop={'size-200'}>
                                     <Suspense fallback={<Loading size='M' />}>
-                                        <SinkOptions />
+                                        <SinkActions />
                                     </Suspense>
                                 </View>
                             </Item>

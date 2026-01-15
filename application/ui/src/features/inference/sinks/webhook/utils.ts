@@ -1,0 +1,39 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
+import { getObjectFromFormData, SinkOutputFormats, WebhookHttpMethod, WebhookSinkConfig } from '../utils';
+
+export type Pair = Record<Fields, string>;
+
+export enum Fields {
+    KEY = 'key',
+    VALUE = 'value',
+}
+
+export const getPairsFromObject = (obj: Record<string, string>): Pair[] => {
+    return Object.entries(obj).map(([key, value]) => ({ key, value }));
+};
+
+export const getWebhookInitialConfig = (): WebhookSinkConfig => ({
+    id: '',
+    name: '',
+    timeout: 0,
+    sink_type: 'webhook',
+    rate_limit: 0,
+    webhook_url: '',
+    http_method: WebhookHttpMethod.POST,
+    output_formats: [],
+    headers: {},
+});
+
+export const webhookBodyFormatter = (formData: FormData): WebhookSinkConfig => ({
+    id: String(formData.get('id')),
+    name: String(formData.get('name')),
+    headers: getObjectFromFormData(formData.getAll('headers-keys'), formData.getAll('headers-values')),
+    timeout: Number(formData.get('timeout')),
+    sink_type: 'webhook',
+    rate_limit: Number(formData.get('rate_limit')),
+    webhook_url: String(formData.get('webhook_url')),
+    http_method: formData.get('http_method') as WebhookHttpMethod,
+    output_formats: formData.getAll('output_formats') as SinkOutputFormats,
+});
