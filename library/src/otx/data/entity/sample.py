@@ -224,7 +224,7 @@ class InstanceSegmentationSample(OTXSample):
     image: tv_tensors.Image | np.ndarray | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
     bboxes: np.ndarray | tv_tensors.BoundingBoxes = bbox_field(dtype=pl.Float32())
     masks: tv_tensors.Mask = instance_mask_field(dtype=pl.UInt8())
-    label: torch.Tensor = label_field(is_list=True)
+    label: torch.Tensor = label_field(dtype=pl.UInt8(), is_list=True)
     dm_image_info: DmImageInfo = image_info_field()
 
     def __post_init__(self) -> None:
@@ -252,7 +252,7 @@ class KeypointSample(OTXSample):
 
     subset: Subset = subset_field()
     image: tv_tensors.Image | np.ndarray | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
-    label: torch.Tensor = label_field(pl.UInt8(), is_list=True)
+    label: torch.Tensor = label_field(dtype=pl.UInt8(), is_list=True)
     keypoints: torch.Tensor = keypoints_field()
     dm_image_info: DmImageInfo = image_info_field()
 
