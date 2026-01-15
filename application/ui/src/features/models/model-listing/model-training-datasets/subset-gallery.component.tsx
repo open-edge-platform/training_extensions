@@ -64,7 +64,7 @@ export const SubsetGallery = ({
                         contentElement={() => (
                             <MediaThumbnail
                                 alt={item.name}
-                                url={getThumbnailUrl(projectId, String(item.id))}
+                                url={getThumbnailUrl(projectId, item.id)}
                                 // TODO: leverage onDoubleClick to open a dialog
                             />
                         )}

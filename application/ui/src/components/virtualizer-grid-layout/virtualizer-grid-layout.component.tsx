@@ -51,7 +51,7 @@ export const VirtualizerGridLayout = <T extends GridItem>({
     contentItem,
     onSelectionChange,
     getItemId = (item) => item.id,
-    getItemTextValue = (item) => item.id,
+    getItemTextValue = (item) => String(item.id),
 }: VirtualizerGridLayoutProps<T>) => {
     const ref = useRef<HTMLDivElement | null>(null);
 
