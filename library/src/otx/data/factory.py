@@ -10,9 +10,8 @@ from typing import TYPE_CHECKING
 from datumaro.experimental.legacy import convert_from_legacy
 
 from otx.types.task import OTXTaskType
-from otx.types.transformer_libs import TransformLibType
 
-from .augmentation.pipeline import CPUAugmentationPipeline, build_cpu_augmentation_pipeline
+from .augmentation.pipeline import CPUAugmentationPipeline
 from .dataset.base import OTXDataset, Transforms
 
 if TYPE_CHECKING:
@@ -47,13 +46,7 @@ class TransformLibFactory:
         """
         # New path: use augmentations_cpu if provided
         if config.augmentations_cpu:
-            return build_cpu_augmentation_pipeline(config)
-
-        # Legacy path: use transforms with TorchVisionTransformLib
-        if config.transform_lib_type == TransformLibType.TORCHVISION:
-            from .transform_libs.torchvision import TorchVisionTransformLib
-
-            return TorchVisionTransformLib.generate(config)
+            return CPUAugmentationPipeline.from_config(config)
 
         raise NotImplementedError(config.transform_lib_type)
 

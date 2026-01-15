@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, Any, Sequence
 
 import torch
 from torch import Tensor
-import kornia
 
 from otx.backend.native.exporter.base import OTXModelExporter
 from otx.backend.native.exporter.native import OTXNativeModelExporter
@@ -24,10 +23,6 @@ from otx.metrics.accuracy import (
 from otx.types.export import TaskLevelExportParameters
 from otx.types.label import LabelInfoTypes
 from otx.types.task import OTXTaskType
-from kornia.augmentation.container import AugmentationSequential
-from kornia.augmentation import Normalize
-from kornia.augmentation.auto import AutoAugment
-from torchvision.transforms.v2 import Compose
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -45,12 +40,6 @@ class OTXMulticlassClsModel(OTXModel):
         data_input_params (DataInputParams | None, optional): Parameters for the image data preprocessing.
             If None is given, default parameters for the specific model will be used.
         model_name (str, optional): Name of the model. Defaults to "multiclass_classification_model".
-        apply_gpu_transforms (bool, optional): Flag to indicate whether to apply GPU transforms.
-            It is recommended to use GPU transforms. Defaults to True.
-        batch_train_transforms (AugmentationSequential | Compose | None): GPU transforms for training applied directly to the batch.
-            If None is given, default augmentation pipeline for the model will be used.
-        batch_val_transforms (AugmentationSequential | Compose | None): GPU transforms for validation / testing applied directly to the batch.
-            If None is given, default augmentation pipeline for the model will be used. Typically just normalization.
         optimizer (OptimizerCallable, optional): Callable for the optimizer. Defaults to DefaultOptimizerCallable.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Callable for the learning rate scheduler.
         Defaults to DefaultSchedulerCallable.
@@ -63,9 +52,6 @@ class OTXMulticlassClsModel(OTXModel):
         label_info: LabelInfoTypes | int | Sequence,
         data_input_params: DataInputParams | None = None,
         model_name: str = "multiclass_classification_model",
-        apply_gpu_transforms: bool = True,
-        batch_train_transforms: AugmentationSequential | Compose | None = None,
-        batch_val_transforms: AugmentationSequential | Compose | None = None,
         freeze_backbone: bool = False,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
@@ -76,9 +62,6 @@ class OTXMulticlassClsModel(OTXModel):
             label_info=label_info,
             data_input_params=data_input_params,
             model_name=model_name,
-            apply_gpu_transforms=apply_gpu_transforms,
-            batch_train_transforms=batch_train_transforms,
-            batch_val_transforms=batch_val_transforms,
             optimizer=optimizer,
             scheduler=scheduler,
             metric=metric,
@@ -139,9 +122,11 @@ class OTXMulticlassClsModel(OTXModel):
 
     @property
     def _default_train_transforms(self):
-        return AugmentationSequential(kornia.augmentation.RandomHorizontalFlip(),
-                                      kornia.augmentation.ColorJiggle(0.1, 0.1, 0.1, 0.1),
-                                      Normalize(self.data_input_params.mean, self.data_input_params.std))
+        return AugmentationSequential(
+            kornia.augmentation.RandomHorizontalFlip(),
+            kornia.augmentation.ColorJiggle(0.1, 0.1, 0.1, 0.1),
+            Normalize(self.data_input_params.mean, self.data_input_params.std),
+        )
 
     @property
     def _export_parameters(self) -> TaskLevelExportParameters:

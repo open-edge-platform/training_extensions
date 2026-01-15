@@ -16,9 +16,10 @@ from torch.utils.data import DataLoader, RandomSampler
 from torchvision.transforms.v2 import Normalize
 
 from otx.config.data import SubsetConfig, TileConfig
+from otx.data.augmentation import CPUAugmentationPipeline
 from otx.data.dataset.tile import OTXTileDatasetFactory
 from otx.data.factory import OTXDatasetFactory
-from otx.data.transform_libs.torchvision import Compose, TorchVisionTransformLib
+from otx.data.transform_libs.torchvision import Compose
 from otx.data.utils import adapt_tile_config, get_adaptive_num_workers, instantiate_sampler
 from otx.data.utils.pre_filtering import pre_filtering
 from otx.types.device import DeviceType
@@ -119,8 +120,12 @@ class OTXDataModule(LightningDataModule):
                 if subset_cfg.input_size is None:
                     subset_cfg.input_size = input_size  # type: ignore[assignment]
 
-        # Extract mean and std from Normalize transform (transforms can be None)
-        norm_params = self.extract_normalization_params(getattr(self.train_subset, "transforms", None))
+        # Extract mean and std from Normalize transform
+        # Check augmentations_cpu first (new design), then fall back to transforms (legacy)
+        transforms_source = getattr(self.train_subset, "augmentations_cpu", None) or getattr(
+            self.train_subset, "transforms", None
+        )
+        norm_params = self.extract_normalization_params(transforms_source)
         if norm_params is None:
             self.input_mean, self.input_std = None, (1.0, 1.0, 1.0)
         else:
@@ -190,32 +195,38 @@ class OTXDataModule(LightningDataModule):
 
     @classmethod
     def extract_normalization_params(
-        cls, transforms_source: Sequence[dict[str, Any]] | Compose | None
-    ) -> tuple[tuple[float, float, float], tuple[float, float, float]]:
+        cls,
+        transforms_source: Sequence[dict[str, Any]] | Compose | CPUAugmentationPipeline | None,
+    ) -> tuple[tuple[float, float, float], tuple[float, float, float]] | None:
         """Extract mean and std from the dataset transforms.
 
         Specifically, this method looks for a Normalize transform in the provided transforms, and extracts
         the mean and std values used for normalization.
-        If not found, it returns default values of mean=(0.0, 0.0, 0.0) and std=(1.0, 1.0, 1.0).
+        If not found, it returns None.
 
         Args:
             transforms_source: Transforms applied to the dataset.
-                Should be specified as an iterable of transform descriptors (jsonargparse-like) or a Compose object
+                Should be specified as an iterable of transform descriptors (jsonargparse-like),
+                a Compose object, or a CPUAugmentationPipeline.
 
         Returns:
-            Tuple of (mean, std) tuples.
+            Tuple of (mean, std) tuples, or None if no Normalize transform is found.
         """
         mean: tuple[float, float, float] | None = None
         std: tuple[float, float, float] | None = None
 
         if transforms_source is None:
-            return mean, std
-        if hasattr(transforms_source, "__iter__"):
+            return None
+
+        # Handle CPUAugmentationPipeline
+        if isinstance(transforms_source, CPUAugmentationPipeline):
+            transforms_iterable = transforms_source.augmentations
+        elif hasattr(transforms_source, "__iter__"):
             transforms_iterable = transforms_source
         elif isinstance(transforms_source, Compose):
             transforms_iterable = transforms_source.transforms
         else:
-            msg = f"Transforms should be given as an iterable or a Compose object, got {type(transforms_source)}"
+            msg = f"Transforms should be given as an iterable, Compose, or CPUAugmentationPipeline, got {type(transforms_source)}"
             raise TypeError(msg)
 
         for transform in transforms_iterable:
@@ -230,6 +241,9 @@ class OTXDataModule(LightningDataModule):
                 mean = transform.mean
                 std = transform.std
                 break
+
+        if mean is None or std is None:
+            return None
 
         if len(mean) != 3 or len(std) != 3:
             msg = f"Expected mean and std to have length 3, got mean={mean}, std={std}"
@@ -435,7 +449,7 @@ class OTXDataModule(LightningDataModule):
                 msg = "input size is not specified in both the config file and the DataModule constructor."
                 raise ValueError(msg)
             subset_config_dict = SubsetConfig(**subset_config_dict)
-            subset_config_dict.transforms = TorchVisionTransformLib.generate(subset_config_dict)
+            subset_config_dict.augmentations_cpu = CPUAugmentationPipeline.from_config(subset_config_dict)
             subset_dicts[subset_key] = subset_config_dict
         return subset_dicts
 
@@ -464,7 +478,7 @@ class OTXDataModule(LightningDataModule):
             "persistent_workers": config.num_workers > 0,
             "sampler": sampler,
             "shuffle": sampler is None,
-            "prefetch_factor": 2,
+            "prefetch_factor": 2 if config.num_workers > 0 else None,
         }
 
         tile_config = self.tile_config

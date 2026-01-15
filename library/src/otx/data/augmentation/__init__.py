@@ -8,9 +8,12 @@ This module provides a two-stage augmentation pipeline:
 - GPU stage: Batch-level augmentations via Lightning Callback (Kornia)
 """
 
-from otx.data.augmentation.pipeline import CPUAugmentationPipeline, build_cpu_augmentation_pipeline
+from otx.data.augmentation.pipeline import (
+    CPUAugmentationPipeline,
+    GPUAugmentationPipeline,
+)
 
 __all__ = [
     "CPUAugmentationPipeline",
-    "build_cpu_augmentation_pipeline",
+    "GPUAugmentationPipeline",
 ]
