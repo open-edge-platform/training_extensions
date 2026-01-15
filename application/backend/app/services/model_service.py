@@ -57,6 +57,28 @@ class ModelService(BaseSessionManagedService):
             raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
         return ModelRevision.model_validate(model_rev_db)
 
+    def get_model_variants(self, project_id: UUID, model_id: UUID) -> list[dict]:
+        """
+        Get all variants and their information of a model.
+
+        Args:
+            project_id (UUID): The unique identifier of the project whose models to get.
+            model_id (UUID): The unique identifier of the model to retrieve variants for.
+
+        Returns:
+            list[dict]: A list of the models variants.
+        """
+        model_files_path = self.get_model_files_path(project_id=project_id, model_id=model_id)
+        ov_size = (model_files_path / "model.bin").stat().st_size + (model_files_path / "model.xml").stat().st_size
+        onnx_size = (model_files_path / "model.onnx").stat().st_size
+        pytorch_size = (model_files_path / "model.ckpt").stat().st_size
+
+        openvino_variant = {"format": "OpenVINO", "precision": "FP16", "weights_size": ov_size}
+        onnx_variant = {"format": "ONNX", "precision": "FP16", "weights_size": onnx_size}
+        pytorch_variant = {"format": "PyTorch", "precision": "FP32", "weights_size": pytorch_size}
+
+        return [openvino_variant, onnx_variant, pytorch_variant]
+
     def rename_model(self, project_id: UUID, model_id: UUID, model_metadata: dict[str, str]) -> ModelRevision:
         """
         Rename a model revision.

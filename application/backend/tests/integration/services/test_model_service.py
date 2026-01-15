@@ -56,6 +56,23 @@ class TestModelServiceIntegration:
         assert model is not None
         assert model.id == fxt_model_id
 
+    def test_get_model_variants(
+        self, tmp_path: Path, fxt_project_id: UUID, fxt_model_id: UUID, fxt_model_service: ModelService
+    ):
+        """Test retrieving model variants."""
+        model_vars_path = tmp_path / "projects" / str(fxt_project_id) / "models" / str(fxt_model_id)
+        model_vars_path.mkdir(parents=True, exist_ok=True)
+        (model_vars_path / "model.xml").touch()
+        (model_vars_path / "model.bin").touch()
+        (model_vars_path / "model.onnx").touch()
+        (model_vars_path / "model.ckpt").touch()
+
+        variants = fxt_model_service.get_model_variants(fxt_project_id, fxt_model_id)
+        for variant in variants:
+            assert hasattr(variant, "format")
+            assert hasattr(variant, "precision")
+            assert hasattr(variant, "weights_size")
+
     def test_update_model(self, fxt_project_id: UUID, fxt_model_id: UUID, fxt_model_service: ModelService):
         """Test updating name of a model by ID."""
         new_model_name = "This is a new model name"

@@ -1,7 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, call
 from uuid import uuid4
 
 import pytest
@@ -35,12 +35,19 @@ def fxt_model_service() -> MagicMock:
 class TestModelEndpoints:
     def test_list_model_success(self, fxt_model, fxt_get_project, fxt_model_service, fxt_client):
         fxt_model_service.list_models.return_value = [fxt_model] * 2
+        fxt_model_service.get_model_variants.side_effect = [[], []]
 
         response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models")
 
         assert response.status_code == status.HTTP_200_OK
         assert len(response.json()) == 2
         fxt_model_service.list_models.assert_called_once_with(fxt_get_project.id)
+        fxt_model_service.get_model_variants.assert_has_calls(
+            [
+                call(project_id=fxt_get_project.id, model_id=fxt_model.id),
+                call(project_id=fxt_get_project.id, model_id=fxt_model.id),
+            ]
+        )
 
     def test_list_model_project_not_found(self, fxt_model, fxt_get_project, fxt_model_service, fxt_client):
         project_id = uuid4()
@@ -59,11 +66,15 @@ class TestModelEndpoints:
 
     def test_get_model_success(self, fxt_model, fxt_get_project, fxt_model_service, fxt_client):
         fxt_model_service.get_model.return_value = fxt_model
+        fxt_model_service.get_model_variants.return_value = []
 
         response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models/{fxt_model.id}")
 
         assert response.status_code == status.HTTP_200_OK
         fxt_model_service.get_model.assert_called_once_with(project_id=fxt_get_project.id, model_id=fxt_model.id)
+        fxt_model_service.get_model_variants.assert_called_once_with(
+            project_id=fxt_get_project.id, model_id=fxt_model.id
+        )
 
     @pytest.mark.parametrize(
         "http_method, service_method",

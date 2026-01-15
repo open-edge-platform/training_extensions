@@ -33,7 +33,11 @@ def list_models(
 ) -> list[ModelView]:
     """Get all models in a project."""
     try:
-        return [ModelView.model_validate(obj, from_attributes=True) for obj in model_service.list_models(project.id)]
+        model_views = []
+        for model_revision in model_service.list_models(project.id):
+            model_variants = model_service.get_model_variants(project_id=project.id, model_id=model_revision.id)
+            model_views.append(model_revision.model_dump() | {"variants": model_variants})
+        return [ModelView.model_validate(model_view, from_attributes=True) for model_view in model_views]
     except ResourceNotFoundError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
 
@@ -55,7 +59,9 @@ def get_model(
     """Get a specific model by ID."""
     try:
         model_revision = model_service.get_model(project_id=project.id, model_id=model_id)
-        return ModelView.model_validate(model_revision, from_attributes=True)
+        model_variants = model_service.get_model_variants(project_id=project.id, model_id=model_id)
+        model_view = model_revision.model_dump() | {"variants": model_variants}
+        return ModelView.model_validate(model_view, from_attributes=True)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
