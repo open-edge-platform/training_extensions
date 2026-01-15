@@ -50,7 +50,7 @@ export const Mqtt = ({ defaultState }: MqttProps) => {
                     Auth Required
                 </Switch>
             </Flex>
-            <OutputFormats config={defaultState.output_formats} />{' '}
+            <OutputFormats config={defaultState.output_formats} />
         </Flex>
     );
 };
