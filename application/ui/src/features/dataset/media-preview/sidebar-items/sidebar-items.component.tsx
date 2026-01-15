@@ -5,9 +5,9 @@ import { useRef } from 'react';
 
 import { Size, useUnwrapDOMRef, View } from '@geti/ui';
 
+import { VirtualizerGridLayout } from '../../../../components/virtualizer-grid-layout/virtualizer-grid-layout.component';
 import type { DatasetItem } from '../../../../constants/shared-types';
 import { useSelectedData } from '../../selected-data-provider.component';
-import { VirtualizerGridLayout } from '../../virtualizer-grid-layout/virtualizer-grid-layout.component';
 import { SidebarMediaItem } from './sidebar-media-item.component';
 import { useKeyboardNavigation } from './use-keyboard-navigation.hook';
 
