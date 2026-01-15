@@ -98,7 +98,7 @@ cuda = [
     "torchvision==0.24.1+cu128"
 ]
 xpu = [
-    "torch==2.9.0+xpu", # torch 2.9.1 with torchvision==0.24.1 is currently 
+    "torch==2.9.0+xpu", # torch 2.9.1 with torchvision==0.24.1 is currently
                         # unstable resulting in an error with torchvision ops.
     "pytorch-triton-xpu==3.5.0",
     "torchvision==0.24.0+xpu"
