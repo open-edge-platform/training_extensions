@@ -1,6 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import dayjs from 'dayjs';
+
 import type { SchemaModelView } from '../../../../api/openapi-spec';
 import type { GroupedModels } from '../types';
 
@@ -8,19 +10,11 @@ const formatDatasetStartTime = (dateString: string | null | undefined): string =
     if (!dateString) return '-';
 
     try {
-        const date = new Date(dateString);
-        const formattedDate = date.toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-        });
-        const formattedTime = date.toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true,
-        });
+        const date = dayjs(dateString);
 
-        return `Created ${formattedDate}, ${formattedTime}`;
+        if (!date.isValid()) return '-';
+
+        return `Created ${date.format('DD MMM YYYY, hh:mm A')}`;
     } catch {
         return '-';
     }
