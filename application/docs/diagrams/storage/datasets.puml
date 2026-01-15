@@ -1,8 +1,34 @@
 @startuml
 
+' Media related tables
+
+class media << (T,#FFAAAA) >> {
+  id : UUID
+  project_id : UUID
+  type : TEXT
+  name : TEXT
+  format : TEXT
+  width : INTEGER
+  height : INTEGER
+  size : INTEGER
+}
+
+class videos << (T,#FFAAAA) >> {
+  id : UUID
+  type : TEXT
+  fps : INTEGER
+  frames_count : INTEGER
+}
+
+class video_frames << (T,#FFAAAA) >> {
+  id : UUID
+  type : TEXT
+  timestamp : INTEGER
+}
+
 ' Dataset-related tables
 class dataset_items << (T,#FFAAAA) >> {
-  id : UUID
+  media_id : UUID
   project_id : UUID
   name : TEXT
   format : TEXT
@@ -18,7 +44,7 @@ class dataset_items << (T,#FFAAAA) >> {
 }
 
 class dataset_items_tags << (T,#FFAAAA) >> {
-  dataset_item_id : UUID
+  media_id : UUID
   tag : TEXT
 }
 
@@ -31,7 +57,7 @@ class dataset_views << (T,#FFAAAA) >> {
 
 class dataset_views_items << (T,#FFAAAA) >> {
   dataset_view_id : UUID
-  dataset_item_id : UUID
+  media_id : UUID
 }
 
 dataset_views ||---o{ dataset_views_items
@@ -46,13 +72,13 @@ class dataset_revisions << (T,#FFAAAA) >> {
 object MediaBinary {
   <i>format</i> : jpg / png
   <i>prefix</i> : projects/{project_id}/dataset/
-  <i>filename</i> : {dataset_item_id}.{format}
+  <i>filename</i> : {media_id}.{format}
 }
 
 object MediaThumbnail {
   <i>format</i> : jpg
   <i>prefix</i> : projects/{project_id}/dataset/
-  <i>filename</i> : {dataset_item_id}-thumb.jpg
+  <i>filename</i> : {media_id}-thumb.jpg
 }
 
 object DatasetRevision {
@@ -60,10 +86,6 @@ object DatasetRevision {
   <i>prefix</i> : projects/{project_id}/dataset_revisions/{revision_id}/
   <i>filename</i> : <shard_idx>.arrow
 }
-
-dataset_items ||---|| MediaBinary
-
-dataset_items ||---|| MediaThumbnail
 
 dataset_revisions ||---|| DatasetRevision
 
@@ -75,6 +97,15 @@ class projects << (T,#CCCCCC) >> {
 projects ||---o{ dataset_items
 projects ||---o{ dataset_views
 projects ||---o{ dataset_revisions
+projects ||---o{ media
+
+dataset_items ||---|| media
+
+media ||---o| videos
+media ||---o| video_frames
+media ||---|| MediaBinary
+media ||---|| MediaThumbnail
+videos ||---o{ video_frames
 
 class model_revisions << (T,#CCCCCC) >> {
   id : UUID

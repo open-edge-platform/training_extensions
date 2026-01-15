@@ -2,6 +2,8 @@
 
 ![Full ER diagram with all entities](media/er/full.svg)
 
+TODO: update
+
 In Geti Tune, a _project_ (`Project`) represents the machine learning problem that the user wants to solve,
 and at the same time serves as a container for all the assets related to it (datasets, models, ...)
 
