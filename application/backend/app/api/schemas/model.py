@@ -55,17 +55,17 @@ class ModelView(BaseIDModel):
                     {
                         "format": "OpenVINO",
                         "precision": "FP16",
-                        "weights_size": "123456",
+                        "weights_size": 123456,
                     },
                     {
                         "format": "ONNX",
                         "precision": "FP16",
-                        "weights_size": "123456",
+                        "weights_size": 123456,
                     },
                     {
                         "format": "PyTorch",
                         "precision": "FP32",
-                        "weights_size": "123456",
+                        "weights_size": 123456,
                     },
                 ],
                 "files_deleted": False,
