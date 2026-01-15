@@ -18,5 +18,5 @@ export const HOTKEYS = {
     autoSegmentation: 's',
     polygonTool: 'p',
     selectAllAnnotations: `${CTRL_OR_COMMAND_KEY}+a`,
-    delectAllAnnotations: `${CTRL_OR_COMMAND_KEY}+d`,
+    deselectAllAnnotations: `${CTRL_OR_COMMAND_KEY}+d`,
 } as const;

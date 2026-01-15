@@ -81,7 +81,7 @@ export const SelectableAnnotation = ({ children }: { children: ReactNode }) => {
     );
 
     useHotkeys(
-        HOTKEYS.delectAllAnnotations,
+        HOTKEYS.deselectAllAnnotations,
         (event) => {
             event.preventDefault();
 
