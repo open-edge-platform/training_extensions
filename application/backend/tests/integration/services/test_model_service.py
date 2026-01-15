@@ -69,8 +69,8 @@ class TestModelServiceIntegration:
 
         variants = fxt_model_service.get_model_variants(fxt_project_id, fxt_model_id)
         for variant in variants:
-            assert variant.get("format") in ["OpenVINO", "ONNX", "PyTorch"]
-            assert variant.get("precision") in ["FP16", "FP32"]
+            assert variant.get("format") in ["openvino", "onnx", "pytorch"]
+            assert variant.get("precision") in ["fp16", "fp32"]
             assert variant.get("weights_size") == 0  # Files are empty, so size is 0
 
     def test_update_model(self, fxt_project_id: UUID, fxt_model_id: UUID, fxt_model_service: ModelService):

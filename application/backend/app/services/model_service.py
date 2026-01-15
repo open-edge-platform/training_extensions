@@ -74,9 +74,9 @@ class ModelService(BaseSessionManagedService):
         pytorch_size = (model_files_path / "model.ckpt").stat().st_size
 
         # Hardcoded precision info for now
-        openvino_variant = {"format": "OpenVINO", "precision": "FP16", "weights_size": ov_size}
-        onnx_variant = {"format": "ONNX", "precision": "FP16", "weights_size": onnx_size}
-        pytorch_variant = {"format": "PyTorch", "precision": "FP32", "weights_size": pytorch_size}
+        openvino_variant = {"format": "openvino", "precision": "fp16", "weights_size": ov_size}
+        onnx_variant = {"format": "onnx", "precision": "fp16", "weights_size": onnx_size}
+        pytorch_variant = {"format": "pytorch", "precision": "fp32", "weights_size": pytorch_size}
 
         return [openvino_variant, onnx_variant, pytorch_variant]
 
