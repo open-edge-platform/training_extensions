@@ -10,8 +10,8 @@ from app.models import TrainingInfo
 
 
 class ModelVariant(BaseIDModel):
-    format: str = Field(..., description="Model format, e.g., 'OpenVINO', 'ONNX', 'PyTorch'")
-    precision: str = Field(..., description="Model precision, e.g., 'FP16', 'FP32'")
+    format: str = Field(..., description="Model format, e.g., 'openvino', 'onnx', 'pytorch'")
+    precision: str = Field(..., description="Model precision, e.g., 'fp16', 'fp32'")
     weights_size: int = Field(..., description="Size of the model weights file in bytes")
 
 
@@ -53,18 +53,18 @@ class ModelView(BaseIDModel):
                 },
                 "variants": [
                     {
-                        "format": "OpenVINO",
-                        "precision": "FP16",
+                        "format": "openvino",
+                        "precision": "fp16",
                         "weights_size": 123456,
                     },
                     {
-                        "format": "ONNX",
-                        "precision": "FP16",
+                        "format": "onnx",
+                        "precision": "fp16",
                         "weights_size": 123456,
                     },
                     {
-                        "format": "PyTorch",
-                        "precision": "FP32",
+                        "format": "pytorch",
+                        "precision": "fp32",
                         "weights_size": 123456,
                     },
                 ],
