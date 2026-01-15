@@ -3,12 +3,12 @@
 
 import { CanceledIcon, CheckCircleOutlined } from '@geti/ui/icons';
 
-import { AnnotationStatus } from '../selected-data-provider.component';
+import { MediaItemState } from '../../../components/virtualizer-grid-layout/virtualizer-grid-layout.component';
 
 import classes from './annotation-state-icon.module.scss';
 
 type AnnotationStatusIconProps = {
-    state: AnnotationStatus | undefined;
+    state: MediaItemState | undefined;
 };
 
 export const AnnotationStatusIcon = ({ state }: AnnotationStatusIconProps) => {

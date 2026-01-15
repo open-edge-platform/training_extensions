@@ -3,7 +3,10 @@
 
 import { Key, Selection } from '@geti/ui';
 
-import { AnnotationStatus, MediaState } from '../../selected-data-provider.component';
+import {
+    MediaItemState,
+    MediaStateMap,
+} from '../../../../components/virtualizer-grid-layout/virtualizer-grid-layout.component';
 
 export const toggleMultipleSelection =
     (items: Key[]) =>
@@ -23,7 +26,7 @@ export const toggleMultipleSelection =
     };
 
 export const updateSelectedKeysTo =
-    (selectedKeys: Selection, annotationState: AnnotationStatus) => (map: MediaState) => {
+    (selectedKeys: Selection, annotationState: MediaItemState) => (map: MediaStateMap) => {
         const newMap = new Map(map.entries());
 
         if (selectedKeys === 'all') {

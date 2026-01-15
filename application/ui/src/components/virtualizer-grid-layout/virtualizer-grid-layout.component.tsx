@@ -13,7 +13,7 @@ import classes from './virtualizer-grid-layout.module.scss';
 
 type AriaComponentsListBoxProps = ComponentProps<typeof AriaComponentsListBox>;
 
-export type MediaItemState = 'accepted' | 'rejected' | undefined;
+export type MediaItemState = 'accepted' | 'rejected';
 export type MediaStateMap = Map<string, MediaItemState>;
 
 interface GridItem {

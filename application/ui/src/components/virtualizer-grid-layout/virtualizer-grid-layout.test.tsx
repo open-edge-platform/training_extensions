@@ -47,7 +47,7 @@ describe('VirtualizerGridLayout', () => {
                 layoutOptions={mockedLayoutOptions}
                 isLoadingMore={false}
                 onLoadMore={vi.fn()}
-                contentItem={(item) => <div>{item.name}</div>}
+                contentItem={() => <div></div>}
             />
         );
         expect(screen.queryAllByRole('option')).toHaveLength(0);
