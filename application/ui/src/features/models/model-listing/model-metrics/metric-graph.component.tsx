@@ -48,8 +48,14 @@ export const MetricGraph = <T extends Record<string, unknown>>({
                     </Menu>
                 </MenuTrigger>
             </Flex>
-            <View paddingY={'size-200'} paddingX={'size-550'} backgroundColor={'gray-50'}>
-                <ResponsiveContainer width='100%' height={268}>
+            <View
+                flex={1}
+                paddingY={'size-200'}
+                paddingX={'size-550'}
+                backgroundColor={'gray-50'}
+                minHeight={'size-3400'}
+            >
+                <ResponsiveContainer width='100%' height='100%'>
                     <AreaChart data={data} margin={{ top: 35, bottom: 35, left: 20 }}>
                         <CartesianGrid />
                         <XAxis

@@ -1,16 +1,17 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, dimensionValue, Flex, Grid, Item, Link, Menu, MenuTrigger, Tag, Text } from '@geti/ui';
+import { ActionButton, dimensionValue, Flex, Grid, Item, Menu, MenuTrigger, Text } from '@geti/ui';
 import { MoreMenu } from '@geti/ui/icons';
 
 import { SchemaModelView } from '../../../../api/openapi-spec';
-import { ReactComponent as StartIcon } from '../../../../assets/icons/start.svg';
 import { useGetModel } from '../../hooks/api/use-get-model.hook';
 import { GRID_COLUMNS } from '../constants';
 import { AccuracyIndicator } from '../model-variants/accuracy-indicator.component';
 import { useModelListing } from '../provider/model-listing-provider';
 import { formatTrainingDateTime } from '../utils/date-formatting';
+import { ActiveModelTag } from './active-model-tag.component';
+import { ParentRevisionModel } from './parent-revision-model.component';
 
 interface ModelRowProps {
     model: SchemaModelView;
@@ -29,18 +30,7 @@ export const ModelRow = ({ model }: ModelRowProps) => {
                     <Text UNSAFE_style={{ fontSize: dimensionValue('font-size-200') }}>
                         {model.name ?? 'Unnamed Model'}
                     </Text>
-                    {model.id === activeModelId && (
-                        <Tag
-                            prefix={<StartIcon />}
-                            style={{
-                                backgroundColor: 'var(--energy-blue)',
-                                color: 'var(--spectrum-global-color-gray-50)',
-                                borderRadius: dimensionValue('size-50'),
-                                padding: `${dimensionValue('size-25')} ${dimensionValue('size-50')}`,
-                            }}
-                            text={'Active'}
-                        />
-                    )}
+                    {model.id === activeModelId && <ActiveModelTag />}
                 </Flex>
                 <Text
                     UNSAFE_style={{
@@ -49,19 +39,11 @@ export const ModelRow = ({ model }: ModelRowProps) => {
                     }}
                 >
                     {parentRevisionModel?.data ? (
-                        <>
-                            Fine-tuned from{' '}
-                            <Link
-                                UNSAFE_style={{ textDecoration: 'none' }}
-                                onPress={() => {
-                                    if (parentRevisionModel.data.id) {
-                                        onExpandModel(parentRevisionModel.data.id);
-                                    }
-                                }}
-                            >
-                                {parentRevisionModel.data.name}
-                            </Link>
-                        </>
+                        <ParentRevisionModel
+                            id={parentRevisionModel.data.id}
+                            name={parentRevisionModel.data.name}
+                            onExpandModel={onExpandModel}
+                        />
                     ) : null}
                 </Text>
             </Flex>

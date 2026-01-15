@@ -22,7 +22,7 @@ export const GroupModelsContainer = ({ group, models }: GroupModelsContainerProp
     const { expandedModelIds, onExpandModel } = useModelListing();
 
     return (
-        <Flex direction={'column'} UNSAFE_className={classes.datasetWrapper}>
+        <Flex direction={'column'} UNSAFE_className={classes.groupModelsContainer}>
             <GroupHeader data={group} />
             <ModelsTableHeader />
 
