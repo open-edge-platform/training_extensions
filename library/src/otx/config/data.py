@@ -15,6 +15,31 @@ from otx.types.transformer_libs import TransformLibType
 
 
 @dataclass
+class IntensityConfig:
+    """Configuration for high-bit-depth intensity mapping.
+
+    Used for medical imaging where inputs may be uint16 (0-65535).
+
+    Attributes:
+        storage_dtype: Input storage dtype ("uint8", "uint16", "int16", "float32").
+        max_value: Maximum input value for scaling. None = auto (255 for uint8, 65535 for uint16).
+        mode: Intensity mapping mode ("scale_to_unit", "window", "percentile").
+        window_center: Center of intensity window (for mode="window").
+        window_width: Width of intensity window (for mode="window").
+        percentile_low: Low percentile for clipping (for mode="percentile").
+        percentile_high: High percentile for clipping (for mode="percentile").
+    """
+
+    storage_dtype: str = "uint8"
+    max_value: float | None = None
+    mode: str = "scale_to_unit"
+    window_center: float | None = None
+    window_width: float | None = None
+    percentile_low: float = 1.0
+    percentile_high: float = 99.0
+
+
+@dataclass
 class SamplerConfig:
     """Configuration class for defining the sampler used in the data loading process.
 
@@ -38,30 +63,35 @@ class SubsetConfig:
     Attributes:
         batch_size (int): Batch size produced by the dataloader.
         subset_name (str): Datumaro Dataset's subset name for this subset config.
-        transforms (list[dict[str, Any]] | Compose): List of transforms to apply.
-            For `TransformLibType.TORCHVISION`, accepts a list of `torchvision.transforms.v2.*` objects
-            or a `torchvision.transforms.v2.Compose` object.
-        transform_lib_type (TransformLibType): Specifies the transform library type used.
+        transforms (list[dict[str, Any]] | Compose): [DEPRECATED] Legacy transforms field.
+            Use augmentations_cpu instead for new implementations.
+        augmentations_cpu (list[dict[str, Any]]): CPU-stage augmentations using torchvision.transforms.v2.
+            These run in Dataset workers before collate. Must output fixed-size tensors for batching.
+            Examples: Resize, RandomResizedCrop, intensity mapping transforms.
+        augmentations_gpu (list[dict[str, Any]]): GPU-stage augmentations using Kornia.
+            These run after batch transfer to GPU via Lightning Callback.
+            Examples: RandomHorizontalFlip, ColorJiggle, Normalize.
+        intensity (IntensityConfig): High-bit-depth intensity mapping configuration.
+        transform_lib_type (TransformLibType): [DEPRECATED] Specifies the transform library type used.
         num_workers (int): Number of worker processes for the dataloader.
         sampler (SamplerConfig): Sampler configuration for the dataloader.
-        to_tv_image (bool): Whether to convert images to torch tensors.
+        to_tv_image (bool): [DEPRECATED] Whether to convert images to torch tensors.
         input_size (tuple[int, int] | None): Input size expected by the model.
-            If `$(input_size)` is present in transforms, it will be replaced with this value.
+            If `$(input_size)` is present in augmentations, it will be replaced with this value.
 
     Example:
         ```python
         train_subset_config = SubsetConfig(
             batch_size=64,
             subset_name="train",
-            transforms=v2.Compose(
-                [
-                    v2.RandomResizedCrop(size=(224, 224), antialias=True),
-                    v2.RandomHorizontalFlip(p=0.5),
-                    v2.ToDtype(torch.float32, scale=True),
-                    v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-                ],
-            ),
-            transform_lib_type=TransformLibType.TORCHVISION,
+            augmentations_cpu=[
+                {"class_path": "torchvision.transforms.v2.RandomResizedCrop", "init_args": {"size": (224, 224)}},
+            ],
+            augmentations_gpu=[
+                {"class_path": "kornia.augmentation.RandomHorizontalFlip", "init_args": {"p": 0.5}},
+                {"class_path": "kornia.augmentation.Normalize", "init_args": {"mean": [0.485, 0.456, 0.406],
+                                                                              "std": [0.229, 0.224, 0.225]}},
+            ],
             num_workers=2,
         )
         ```
@@ -69,6 +99,10 @@ class SubsetConfig:
 
     batch_size: int = 6
     subset_name: str = "train"
+    augmentations_cpu: list[dict[str, Any]] = field(default_factory=list)
+    augmentations_gpu: list[dict[str, Any]] = field(default_factory=list)
+    intensity: IntensityConfig = field(default_factory=IntensityConfig)
+    # DEPRECATED: Legacy fields for backward compatibility during transition
     transforms: list[dict[str, Any]] = field(default_factory=list)
     transform_lib_type: TransformLibType = TransformLibType.TORCHVISION
     num_workers: int = 2

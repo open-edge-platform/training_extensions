@@ -9,7 +9,6 @@ from abc import abstractmethod
 from collections.abc import Iterable
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Callable, Iterator, List, Union
-from torchvision.transforms.v2.functional import to_dtype, to_image
 
 import cv2
 import numpy as np
@@ -18,6 +17,7 @@ from datumaro.components.annotation import AnnotationType
 from datumaro.util.image import IMAGE_BACKEND, IMAGE_COLOR_CHANNEL, ImageBackend
 from datumaro.util.image import ImageColorChannel as DatumaroImageColorChannel
 from torch.utils.data import Dataset
+from torchvision.transforms.v2.functional import to_dtype, to_image
 
 from otx.data.entity.torch import OTXDataItem
 from otx.data.transform_libs.torchvision import Compose
@@ -29,8 +29,12 @@ if TYPE_CHECKING:
     from datumaro import Dataset as DmDataset
     from datumaro import Image
 
+    from otx.data.augmentation.pipeline import CPUAugmentationPipeline
 
-Transforms = Union[Compose, Callable, List[Callable], dict[str, Compose | Callable | List[Callable]]]
+
+Transforms = Union[
+    Compose, Callable, List[Callable], dict[str, Compose | Callable | List[Callable]], "CPUAugmentationPipeline"
+]
 
 
 @contextmanager
@@ -109,14 +113,38 @@ class OTXDataset(Dataset):
         return np.random.default_rng().integers(0, len(self))
 
     def _apply_transforms(self, entity: OTXDataItem) -> OTXDataItem | None:
+        """Apply transforms to the data entity.
+
+        Supports both:
+        - New CPUAugmentationPipeline (from augmentations_cpu)
+        - Legacy Compose/callable transforms
+
+        Args:
+            entity: OTXDataItem to transform.
+
+        Returns:
+            Transformed OTXDataItem or None if transform returns None.
+        """
         if self.transforms is None:
             return entity
+
+        # New path: CPUAugmentationPipeline
+        from otx.data.augmentation.pipeline import CPUAugmentationPipeline
+
+        if isinstance(self.transforms, CPUAugmentationPipeline):
+            return self.transforms(entity)
+
+        # Legacy path: Compose
         if isinstance(self.transforms, Compose):
             if self.to_tv_image:
                 entity = entity.to_tv_image()
             return self.transforms(entity)
+
+        # Legacy path: Iterable of transforms
         if isinstance(self.transforms, Iterable):
             return self._iterable_transforms(entity)
+
+        # Legacy path: Single callable
         if callable(self.transforms):
             return self.transforms(entity)
 

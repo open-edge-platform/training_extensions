@@ -11,6 +11,7 @@ from otx.types.image import ImageColorChannel
 from otx.types.task import OTXTaskType
 from otx.types.transformer_libs import TransformLibType
 
+from .augmentation.pipeline import CPUAugmentationPipeline, build_cpu_augmentation_pipeline
 from .dataset.base import OTXDataset, Transforms
 
 if TYPE_CHECKING:
@@ -23,11 +24,30 @@ __all__ = ["OTXDatasetFactory", "TransformLibFactory"]
 
 
 class TransformLibFactory:
-    """Factory class for transform."""
+    """Factory class for transform.
+
+    This factory supports both legacy transforms and new augmentations_cpu field.
+    Priority: augmentations_cpu > transforms (legacy).
+    """
 
     @classmethod
-    def generate(cls: type[TransformLibFactory], config: SubsetConfig) -> Transforms:
-        """Create transforms from factory."""
+    def generate(cls: type[TransformLibFactory], config: SubsetConfig) -> Transforms | CPUAugmentationPipeline:
+        """Create transforms from factory.
+
+        If config.augmentations_cpu is set, uses the new CPUAugmentationPipeline.
+        Otherwise falls back to legacy TorchVisionTransformLib for backward compatibility.
+
+        Args:
+            config: SubsetConfig with transforms or augmentations_cpu.
+
+        Returns:
+            Either CPUAugmentationPipeline (new) or Compose (legacy).
+        """
+        # New path: use augmentations_cpu if provided
+        if config.augmentations_cpu:
+            return build_cpu_augmentation_pipeline(config)
+
+        # Legacy path: use transforms with TorchVisionTransformLib
         if config.transform_lib_type == TransformLibType.TORCHVISION:
             from .transform_libs.torchvision import TorchVisionTransformLib
 

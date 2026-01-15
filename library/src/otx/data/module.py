@@ -124,8 +124,12 @@ class OTXDataModule(LightningDataModule):
                 if subset_cfg.input_size is None:
                     subset_cfg.input_size = input_size  # type: ignore[assignment]
 
-        # Extract mean and std from Normalize transform
-        self.input_mean, self.input_std = self.extract_normalization_params(self.train_subset.transforms)
+        # Extract mean and std from Normalize transform (transforms can be None)
+        norm_params = self.extract_normalization_params(getattr(self.train_subset, "transforms", None))
+        if norm_params is None:
+            self.input_mean, self.input_std = None, (1.0, 1.0, 1.0)
+        else:
+            self.input_mean, self.input_std = norm_params
         self.input_size = input_size
 
         if self.tile_config.enable_tiler and self.tile_config.enable_adaptive_tiling:
@@ -202,8 +206,8 @@ class OTXDataModule(LightningDataModule):
         Returns:
             Tuple of (mean, std) tuples.
         """
-        mean = None
-        std = None
+        mean: tuple[float, float, float] | None = None
+        std: tuple[float, float, float] | None = None
 
         if transforms_source is not None:
             for transform in transforms_source:
@@ -219,7 +223,10 @@ class OTXDataModule(LightningDataModule):
                     std = transform.std
                     break
 
-        return mean, std
+        if mean is None and std is None:
+            return None
+        # std should never be None - ensure default
+        return mean, std or (1.0, 1.0, 1.0)
 
     @classmethod
     def from_otx_datasets(
@@ -344,8 +351,8 @@ class OTXDataModule(LightningDataModule):
 
         # Extract normalization parameters from train dataset transforms if available
         instance.input_mean, instance.input_std = instance.extract_normalization_params(
-            instance.train_subset.transforms
-        )
+            getattr(instance.train_subset, "transforms", None)
+        ) or (None, (1.0, 1.0, 1.0))
 
         # Save hyperparameters
         instance.save_hyperparameters(

@@ -109,7 +109,7 @@ class OTXMulticlassClsDataset(OTXDataset):
             raise ValueError(msg)
 
         entity = OTXDataItem(
-            image=image,
+            image=img_data,
             label=torch.as_tensor(label_anns, dtype=torch.long),
             img_info=ImageInfo(
                 img_idx=index,
@@ -118,12 +118,17 @@ class OTXMulticlassClsDataset(OTXDataset):
                 image_color_channel=self.image_color_channel,
             ),
         )
-        entity = self._apply_transforms(entity)
+        transformed_entity = self._apply_transforms(entity)
 
-        image = entity.image
-        image.clamp_(0, 1)
+        # _apply_transforms may return None (some transforms can drop samples).
+        if transformed_entity is None:
+            return None
 
-        return entity
+        # Ensure image values are in valid range
+        if getattr(transformed_entity, "image", None) is not None:
+            transformed_entity.image.clamp_(0, 1)
+
+        return transformed_entity
 
     @property
     def task_type(self) -> OTXTaskType:
