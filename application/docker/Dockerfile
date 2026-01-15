@@ -3,7 +3,7 @@
 ##############
 # Backend base
 ##############
-FROM python:3.13-slim@sha256:baf66684c5fcafbda38a54b227ee30ec41e40af1e4073edee3a7110a417756ba AS backend-base
+FROM python:3.13-slim@sha256:6ef0353fbbf46d0755063135b1a093d319929bca496c387afac53f512bd9350d AS backend-base
 
 # uv / uvx
 COPY --from=docker.io/astral/uv:0.9.7@sha256:ba4857bf2a068e9bc0e64eed8563b065908a4cd6bfb66b531a9c424c8e25e142 /uv /uvx /bin/
@@ -61,7 +61,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 ##################
 # Geti UI packages
 ##################
-FROM node:24-alpine3.22@sha256:4f4a059445c5a6ef2b9d169d9afde176301263178141fc05ba657dab1c84f9a7 AS geti-ui-packages
+FROM node:24-alpine3.22@sha256:6f96670faefc1ec23520ce30e453e85bfdb94a43b49b7aac2b0d3ac3a902bf2f AS geti-ui-packages
 
 WORKDIR /home/application/ui/
 RUN apk add --no-cache git=2.49.1-r0
@@ -71,7 +71,7 @@ RUN npm run clone-geti-ui-packages
 #############
 # Web UI deps
 #############
-FROM node:24-alpine3.22@sha256:4f4a059445c5a6ef2b9d169d9afde176301263178141fc05ba657dab1c84f9a7 AS web-ui-base
+FROM node:24-alpine3.22@sha256:6f96670faefc1ec23520ce30e453e85bfdb94a43b49b7aac2b0d3ac3a902bf2f AS web-ui-base
 
 WORKDIR /home/application/ui/
 
@@ -99,7 +99,7 @@ RUN npm run build
 #########################
 # Base for CPU, GPU and XPU runtime images
 #########################
-FROM python:3.13-slim@sha256:baf66684c5fcafbda38a54b227ee30ec41e40af1e4073edee3a7110a417756ba AS runtime-base
+FROM python:3.13-slim@sha256:6ef0353fbbf46d0755063135b1a093d319929bca496c387afac53f512bd9350d AS runtime-base
 
 ARG STATIC_FILES_DIR=""
 ENV STATIC_FILES_DIR=${STATIC_FILES_DIR}
