@@ -49,9 +49,7 @@ class TestSSD:
 
     def test_save_and_load_anchors(self, fxt_checkpoint) -> None:
         loaded_model = SSD.load_from_checkpoint(
-            checkpoint_path=fxt_checkpoint,
-            model_name="ssd_mobilenetv2",
-            label_info=3,
+            checkpoint_path=fxt_checkpoint, model_name="ssd_mobilenetv2", label_info=3, weights_only=False
         )
 
         assert loaded_model.model.bbox_head.anchor_generator.widths[0][0] == 40
