@@ -5,6 +5,7 @@ import { Item, TabList, TabPanels, Tabs, Text } from '@geti/ui';
 
 import type { SchemaModelView } from '../../../../api/openapi-spec';
 import { ModelMetrics } from '../model-metrics/model-metrics.component';
+import { ModelTrainingDatasets } from '../model-training-datasets/model-training-datasets.component';
 import { ModelTrainingParameters } from '../model-training-parameters/model-training-parameters.component';
 import { ModelVariantsTabs } from '../model-variants/model-variant-tabs.component';
 
@@ -48,7 +49,7 @@ export const ModelDetailsTabs = ({ model }: ModelDetailsTabsProps) => {
                     <ModelTrainingParameters />
                 </Item>
                 <Item key='datasets'>
-                    <Text>Training datasets content</Text>
+                    <ModelTrainingDatasets />
                 </Item>
             </TabPanels>
         </Tabs>
