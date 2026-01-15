@@ -47,13 +47,13 @@ callbacks:
 
 overrides:
   reset:
-    - data.train_subset.transforms
+    - data.train_subset.augmentations_cpu
 
   max_epochs: 90
 
   data:
     train_subset:
-      transforms:
+      augmentations_cpu:
         - class_path: otx.data.transform_libs.torchvision.EfficientNetRandomCrop
           init_args:
             scale: $(input_size)
@@ -106,7 +106,7 @@ overrides:
             probability: 0.5
         - class_path: torchvision.transforms.v2.ToDtype
           init_args:
-            dtype: ${as_torch_dtype:torch.float32}
+            dtype: torch.float32
             scale: false
         - class_path: otx.data.transform_libs.torchvision.RandomGaussianNoise
           enable: false
