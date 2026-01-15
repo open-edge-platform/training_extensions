@@ -9,7 +9,7 @@ import { $api } from '../../../../api/client';
 import { AddMediaButton } from '../../../../components/add-media-button/add-media-button.component';
 import { CheckboxInput } from '../../../../components/checkbox-input/checkbox-input.component';
 import type { DatasetItem } from '../../../../constants/shared-types';
-import { TrainModel } from '../../../models/train-model/train-model';
+import { TrainModelOld } from '../../../models/train-model-old/train-model-old';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
 import { useSelectedData } from '../../selected-data-provider.component';
 import { toggleMultipleSelection, updateSelectedKeysTo } from './util';
@@ -83,7 +83,7 @@ export const Toolbar = ({ items }: ToolbarProps) => {
                 <Heading level={1}>Data collection</Heading>
                 <ButtonGroup>
                     <AddMediaButton onFilesSelected={handleAddMediaItem} />
-                    <TrainModel />
+                    <TrainModelOld />
                 </ButtonGroup>
             </Flex>
 

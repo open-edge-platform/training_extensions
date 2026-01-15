@@ -7,7 +7,7 @@ import { Button } from '@geti/ui';
 
 import { TrainModelDialog } from './train-model-dialog.component';
 
-export const TrainModel = () => {
+export const TrainModelOld = () => {
     const [isTrainingDialogOpen, setIsTrainingDialogOpen] = useState<boolean>(false);
 
     return (
