@@ -10,18 +10,25 @@ import { expect, test as testBase } from '@playwright/test';
 import { HttpResponse } from 'msw';
 
 import { handlers, http } from '../src/api/utils';
+import { StreamPage } from './inference/stream-page';
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
 
 interface Fixtures {
     network: NetworkFixture;
+    streamPage: StreamPage;
 }
 
 const test = testBase.extend<Fixtures>({
     network: createNetworkFixture({
         initialHandlers: [
             ...handlers,
+            http.get('/health', ({ response }) => {
+                return response(200).json({
+                    status: 'ok',
+                });
+            }),
             http.get('/api/system/metrics/memory', ({ response }) => {
                 return response(200).json({});
             }),
@@ -35,7 +42,7 @@ const test = testBase.extend<Fixtures>({
                     source: null,
                     sink: null,
                     model: null,
-                    data_collection_policies: [],
+                    device: 'cpu',
                 });
             }),
             http.post('/api/projects/{project_id}/pipeline:enable', () => {
@@ -78,6 +85,10 @@ const test = testBase.extend<Fixtures>({
             }),
         ],
     }),
+    streamPage: async ({ page }, use) => {
+        const streamPage = new StreamPage(page);
+        await use(streamPage);
+    },
 });
 
 export { expect, http, test };

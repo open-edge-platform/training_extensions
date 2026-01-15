@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Item, Key, Picker } from '@geti/ui';
-import type { Label } from 'src/constants/shared-types';
+
+import type { Label } from '../../../../constants/shared-types';
 
 type LabelPickerProps = {
     labels: Label[];

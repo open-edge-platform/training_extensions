@@ -12,19 +12,28 @@ services:
     image: geti-tune-${AI_DEVICE:-cpu}:${TAG:-latest}
     restart: unless-stopped
     build:
-      context: ..
-      dockerfile: docker/Dockerfile
+      context: ../..
+      dockerfile: application/docker/Dockerfile
       target: geti-tune-${AI_DEVICE:-cpu}
+      args:
+        - ASSET_PREFIX=/html
+        - STATIC_FILES_DIR=/application/html
+        - PUBLIC_API_BASE_URL=${PUBLIC_API_BASE_URL:-/}
       <<: *proxies
-    working_dir: /app
+    working_dir: /application/backend
     environment:
       - AI_DEVICE=${AI_DEVICE} # choose between 'cpu' (default), 'xpu', 'gpu'
+      - ICE_SERVERS=${ICE_SERVERS} # JSON array of STUN/TURN servers for WebRTC, e.g. '[{"urls":"stun:stun.l.google.com:19302"},{"urls": "turn:' + COTURN-EXTERNAL-IP + ':' + COTURN-PORT + '?transport=tcp", "username": "user", "credential": "password"}]'
+      - WEBRTC_ADVERTISE_IP=${WEBRTC_ADVERTISE_IP}
     volumes:
-      - ../backend/data/:/app/data/
-      - ../backend/logs/:/app/logs/
+      - ../backend/data/:/application/data/
+      - ../backend/logs/:/application/logs/
+    sysctls:
+      net.ipv4.ip_local_port_range: "${WEBRTC_PORT_START:-50000} ${WEBRTC_PORT_END:-51000}"
     ports:
-      - "80:80"
-    # Map all host devices to provide access to webcams and other attached devices
+      - "7860:7860"
+      - "${WEBRTC_PORT_START:-50000}-${WEBRTC_PORT_END:-51000}:${WEBRTC_PORT_START:-50000}-${WEBRTC_PORT_END:-51000}/udp"
+    # Map all host devices to provide access to USB cameras and other attached devices
     privileged: true
     devices:
       - /dev:/dev
@@ -32,7 +41,7 @@ services:
   mosquitto:
     profiles:
       - mqtt
-    image: eclipse-mosquitto:2.0@sha256:d219d3a72847f3aed6a1d66975972d3b17f86e39e8f6f6b86b4088b879c1a2d6
+    image: eclipse-mosquitto:2.0@sha256:077fe4ff4c49df1e860c98335c77dda08360629e0e2a718147027e4db3eace9d
     restart: unless-stopped
     ports:
       - "1883:1883"
@@ -48,7 +57,7 @@ services:
   mqtt-web-ui:
     profiles:
       - mqtt
-    image: emqx/mqttx-web@sha256:0ed144681abc73235a01f13b47643ce970bf1e7d4884a19a83b76da36d8a8f5c
+    image: emqx/mqttx-web@sha256:52899b451627e7592ff440f9d5a040a2e80a81f414937affb3d3920914c34850
     restart: unless-stopped
     environment:
       - MQTT_BROKER_HOST=mosquitto
@@ -57,3 +66,19 @@ services:
       - mosquitto
     ports:
       - "8081:80"
+
+  coturn-server:
+    profiles:
+      - coturn
+    image: quay.io/coturn/coturn
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - -n
+      - --listening-port=${COTURN_PORT:-443}
+      - --external-ip=${COTURN_EXTERNAL_IP} # python -c "import socket; s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM); s.connect(('8.8.8.8',80)); print(s.getsockname()[0]); s.close()"
+      - --realm=realm
+      - --user=user:password
+      - --no-udp
+      - --log-file=stdout
+      - --verbose

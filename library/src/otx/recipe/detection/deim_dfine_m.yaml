@@ -54,6 +54,7 @@ callbacks:
   - class_path: otx.backend.native.callbacks.aug_scheduler.AugmentationSchedulerCallback
     init_args:
       data_aug_switch:
+        class_path: otx.backend.native.callbacks.aug_scheduler.DataAugSwitch
         init_args:
           policy_epochs: [4, 40, 72]
           policies:

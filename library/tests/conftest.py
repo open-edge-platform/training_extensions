@@ -2,13 +2,14 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
+import multiprocessing
 from collections import defaultdict
 from pathlib import Path
 
+import numpy as np
 import pytest
 import torch
 import yaml
-from datumaro import Polygon
 from torch import LongTensor
 from torchvision import tv_tensors
 from torchvision.tv_tensors import Image, Mask
@@ -20,6 +21,47 @@ from otx.types.label import HLabelInfo, LabelInfo, NullLabelInfo, SegLabelInfo
 from otx.types.task import OTXTaskType
 from otx.utils.device import is_xpu_available
 from tests.utils import ExportCase2Test
+
+
+@pytest.fixture(scope="session", autouse=True)
+def setup_test_environment():
+    """Initialize test environment safely to prevent segfaults.
+
+    This fixture:
+    - Sets multiprocessing method to 'spawn'
+    - Disables CUDA for unit tests
+    - Cleans up PyTorch internals on teardown
+    - Ensures tests run from the correct directory (library root)
+    """
+    import os
+
+    # Save the current working directory
+    original_cwd = Path.cwd()
+
+    # Find the library root directory (where pyproject.toml is located)
+    tests_dir = Path(__file__).parent
+    library_root = tests_dir.parent
+
+    # Change to library root if not already there
+    if Path.cwd() != library_root:
+        os.chdir(library_root)
+
+    # Set multiprocessing method if not already set
+    if multiprocessing.get_start_method(allow_none=True) is None:
+        multiprocessing.set_start_method("spawn", force=True)
+
+    yield
+
+    # Restore original working directory
+    os.chdir(original_cwd)
+
+    # Force cleanup to prevent segfaults during pytest teardown
+    try:
+        torch._C._jit_clear_class_registry()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+    except Exception:  # noqa: S110
+        pass  # Ignore cleanup errors
 
 
 def pytest_addoption(parser: pytest):
@@ -266,7 +308,9 @@ def fxt_inst_seg_data_entity() -> tuple[tuple, OTXDataItem, OTXDataBatch]:
     fake_bboxes = tv_tensors.BoundingBoxes(data=torch.Tensor([0, 0, 5, 5]), format="xyxy", canvas_size=(10, 10))
     fake_labels = LongTensor([1])
     fake_masks = Mask(torch.randint(low=0, high=255, size=(1, *img_size), dtype=torch.uint8))
-    fake_polygons = [Polygon(points=[1, 1, 2, 2, 3, 3, 4, 4])]
+    fake_polygons = np.empty(shape=(1,), dtype=object)
+    fake_polygons[0] = np.array([[1, 1], [2, 2], [3, 3], [4, 4]])
+
     # define data entity
     single_data_entity = OTXDataItem(
         image=fake_image,

@@ -4,11 +4,25 @@
 """Rotated Detection Prediction Mixin."""
 
 import cv2
+import numpy as np
 import torch
-from datumaro import Polygon
 from torchvision import tv_tensors
 
 from otx.data.entity.torch.torch import OTXPredBatch
+
+
+def get_polygon_area(points: np.ndarray) -> float:
+    """Calculate polygon area using the shoelace formula.
+
+    Args:
+        points: Array of polygon vertices with shape (N, 2)
+
+    Returns:
+        float: Area of the polygon
+    """
+    x = points[:, 0]
+    y = points[:, 1]
+    return 0.5 * np.abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
 
 
 def convert_masks_to_rotated_predictions(preds: OTXPredBatch) -> OTXPredBatch:
@@ -58,8 +72,10 @@ def convert_masks_to_rotated_predictions(preds: OTXPredBatch) -> OTXPredBatch:
             for contour, hierarchy in zip(contours, hierarchies[0]):
                 if hierarchy[3] != -1 or len(contour) <= 2:
                     continue
-                rbox_points = Polygon(cv2.boxPoints(cv2.minAreaRect(contour)).reshape(-1))
-                rbox_polygons.append((rbox_points, rbox_points.get_area()))
+                # Get rotated bounding box points and convert to ragged array format
+                box_points = cv2.boxPoints(cv2.minAreaRect(contour)).astype(np.float32)
+                area = get_polygon_area(box_points)
+                rbox_polygons.append((box_points, area))
 
             if rbox_polygons:
                 rbox_polygons.sort(key=lambda x: x[1], reverse=True)

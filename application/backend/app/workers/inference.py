@@ -8,9 +8,11 @@ from multiprocessing.synchronize import Event as EventClass
 from multiprocessing.synchronize import Lock
 from typing import Any
 
+import cv2
 from loguru import logger
 from loguru._logger import Logger as LoguruLogger
-from model_api.models import DetectionResult, Model
+from model_api.models import Model
+from model_api.models.result import Result
 
 from app.services import ActiveModelService, MetricsService
 from app.services.active_model_service import LoadedModel
@@ -25,7 +27,7 @@ class InferenceWorkerConfig:
     frame_queue: mp.Queue
     pred_queue: mp.Queue
     stop_event: EventClass
-    model_reload_event: EventClass
+    model_reload_event: EventClass | None
     shm_name: str
     shm_lock: Lock
     logger_: LoguruLogger
@@ -56,9 +58,9 @@ class InferenceWorker(BaseProcessWorker):
     def setup(self) -> None:
         super().setup()
         self._metrics_service = MetricsService(self._shm_name, self._shm_lock)
-        self._model_service = ActiveModelService(get_settings().data_dir, self._model_reload_event)
+        self._model_service = ActiveModelService(get_settings().data_dir)
 
-    def _on_inference_completed(self, inf_result: DetectionResult, userdata: dict[str, Any]) -> None:
+    def _on_inference_completed(self, inf_result: Result, userdata: dict[str, Any]) -> None:
         start_time = float(userdata["inference_start_time"])
         model_id = userdata["model_id"]
         self._metrics_service.record_inference_end(model_id=model_id, start_time=start_time)  # type: ignore
@@ -96,7 +98,7 @@ class InferenceWorker(BaseProcessWorker):
         clear the event until the latest model is loaded.
         """
         # If no reload requested, return current model
-        if not self._model_reload_event.is_set():
+        if self._model_reload_event is None or not self._model_reload_event.is_set():
             return self._model_service.get_loaded_inference_model()  # type: ignore
 
         # Process reload requests - keep reloading until event stabilizes
@@ -125,7 +127,7 @@ class InferenceWorker(BaseProcessWorker):
 
                     inference_start_time = self._metrics_service.record_inference_start()  # type: ignore
                     model.infer_async(
-                        item.frame_data,
+                        cv2.cvtColor(item.frame_data, cv2.COLOR_BGR2RGB),  # models expect RGB input
                         user_data={
                             "stream_data": item,
                             "model_id": self._loaded_model.id,

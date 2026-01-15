@@ -4,18 +4,21 @@ import os
 from collections.abc import Generator
 from pathlib import Path
 from typing import Annotated
-from uuid import UUID
 
 from fastapi import Depends, HTTPException, Request, UploadFile, status
 from sqlalchemy.orm import Session
 
+from app.api.validators import DatasetRevisionID, ProjectID, SinkID, SourceID
 from app.core.jobs.control_plane import JobQueue
 from app.db import get_db_session
-from app.models import Sink, Source
+from app.models import Project, Sink, Source
+from app.models.dataset_revision import DatasetRevision
 from app.scheduler import Scheduler
-from app.schemas import ProjectView
 from app.services import (
+    BaseWeightsService,
+    DatasetRevisionService,
     DatasetService,
+    LabelService,
     MetricsService,
     ModelService,
     PipelineMetricsService,
@@ -26,96 +29,32 @@ from app.services import (
     SourceUpdateService,
     SystemService,
 )
-from app.services.base_weights_service import BaseWeightsService
 from app.services.data_collect import DataCollector
 from app.services.event.event_bus import EventBus
-from app.services.label_service import LabelService
 from app.services.training_configuration_service import TrainingConfigurationService
 from app.webrtc.manager import WebRTCManager
-
-
-def is_valid_uuid(identifier: str) -> bool:
-    """
-    Check if a given string identifier is formatted as a valid UUID.
-
-    Args:
-        identifier: String to check for UUID validity.
-
-    Returns:
-        bool: True if the string is a valid UUID, False otherwise.
-
-    Example:
-        >>> is_valid_uuid("550e8400-e29b-41d4-a716-446655440000")
-        True
-        >>> is_valid_uuid("invalid-uuid")
-        False
-
-    Note:
-        This function only validates the UUID format, not whether the UUID
-        actually exists in any system or database.
-    """
-    try:
-        UUID(identifier)
-    except ValueError:
-        return False
-    return True
 
 
 def get_file_name_and_extension(file: UploadFile) -> tuple[str, str]:
     """Return the file name and extension"""
     if not file.filename:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File name cannot be empty.")
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="File name cannot be empty.")
     full_name = file.filename.strip()
     if not full_name:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File name cannot be empty.")
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="File name cannot be empty.")
     file_name, file_ext = os.path.splitext(full_name)
     file_name = file_name.strip()  # remove whitespace characters between the basename and the extension
     file_ext = file_ext[1:]  # remove leading dot in the extension
     if not file_ext:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File extension cannot be empty.")
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="File extension cannot be empty.")
     return file_name, file_ext
 
 
 def get_file_size(file: UploadFile) -> int:
     """Return the file size in bytes"""
     if not file.size:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File size should be defined.")
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="File size should be defined.")
     return file.size
-
-
-def get_source_id(source_id: str) -> UUID:
-    """Initializes and validates a source ID"""
-    if not is_valid_uuid(source_id):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid source ID")
-    return UUID(source_id)
-
-
-def get_project_id(project_id: str) -> UUID:
-    """Initializes and validates a project ID"""
-    if not is_valid_uuid(project_id):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid project ID")
-    return UUID(project_id)
-
-
-def get_sink_id(sink_id: str) -> UUID:
-    """Initializes and validates a sink ID"""
-    if not is_valid_uuid(sink_id):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid sink ID")
-    return UUID(sink_id)
-
-
-def get_model_id(model_id: str) -> UUID:
-    """Initializes and validates a model ID"""
-    if not is_valid_uuid(model_id):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid model ID")
-    return UUID(model_id)
-
-
-def get_dataset_item_id(dataset_item_id: str) -> UUID:
-    """Initializes and validates a dataset item ID"""
-    if not is_valid_uuid(dataset_item_id):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid dataset item ID")
-    return UUID(dataset_item_id)
 
 
 def get_db() -> Generator[Session]:
@@ -130,13 +69,18 @@ def get_scheduler(request: Request) -> Scheduler:
 
 
 def get_data_dir(request: Request) -> Path:
-    """Provides the data directory path from settings."""
+    """Provides the path to the folder that stores the projects data. This path is defined in the app settings."""
     return request.app.state.settings.data_dir
 
 
 def get_job_dir(request: Request) -> Path:
-    """Provides the job log directory path from settings."""
+    """Provides the path to the folder where the jobs logs are saved. This path is defined in the app settings."""
     return request.app.state.settings.job_dir
+
+
+def get_ice_servers(request: Request) -> list[dict]:
+    """Provides the ICE servers from settings."""
+    return request.app.state.settings.ice_servers
 
 
 def get_event_bus(request: Request) -> EventBus:
@@ -168,12 +112,18 @@ def get_source_update_service(
     return SourceUpdateService(event_bus=event_bus, db_session=db)
 
 
+def get_system_service() -> SystemService:
+    """Provides a SystemService instance for system-level operations."""
+    return SystemService()
+
+
 def get_pipeline_service(
     event_bus: Annotated[EventBus, Depends(get_event_bus)],
     db: Annotated[Session, Depends(get_db)],
+    system_service: Annotated[SystemService, Depends(get_system_service)],
 ) -> PipelineService:
     """Provides a PipelineService instance ."""
-    return PipelineService(event_bus=event_bus, db_session=db)
+    return PipelineService(event_bus=event_bus, db_session=db, system_service=system_service)
 
 
 def get_pipeline_metrics_service(
@@ -187,16 +137,12 @@ def get_pipeline_metrics_service(
     )
 
 
-def get_system_service() -> SystemService:
-    """Provides a SystemService instance for system-level operations."""
-    return SystemService()
-
-
 def get_model_service(
+    data_dir: Annotated[Path, Depends(get_data_dir)],
     db: Annotated[Session, Depends(get_db)],
 ) -> ModelService:
     """Provides a ModelService instance with the model reload event from the scheduler."""
-    return ModelService(db_session=db)
+    return ModelService(data_dir=data_dir, db_session=db)
 
 
 def get_webrtc_manager(request: Request) -> WebRTCManager:
@@ -230,10 +176,18 @@ def get_dataset_service(
     return DatasetService(data_dir=data_dir, label_service=label_service, db_session=db)
 
 
+def get_dataset_revision_service(
+    data_dir: Annotated[Path, Depends(get_data_dir)],
+    db: Annotated[Session, Depends(get_db)],
+) -> DatasetRevisionService:
+    """Provides a DatasetRevisionService instance."""
+    return DatasetRevisionService(data_dir=data_dir, db_session=db)
+
+
 def get_project(
-    project_id: Annotated[UUID, Depends(get_project_id)],
+    project_id: ProjectID,
     project_service: Annotated[ProjectService, Depends(get_project_service)],
-) -> ProjectView:
+) -> Project:
     """Provides a ProjectView instance for request scoped project."""
     try:
         return project_service.get_project_by_id(project_id)
@@ -242,7 +196,7 @@ def get_project(
 
 
 def get_sink(
-    sink_id: Annotated[UUID, Depends(get_sink_id)],
+    sink_id: SinkID,
     sink_service: Annotated[SinkService, Depends(get_sink_service)],
 ) -> Sink:
     """Provides a Sink instance for request scoped sink."""
@@ -253,7 +207,7 @@ def get_sink(
 
 
 def get_source(
-    source_id: Annotated[UUID, Depends(get_source_id)],
+    source_id: SourceID,
     source_update_service: Annotated[SourceUpdateService, Depends(get_source_update_service)],
 ) -> Source:
     """Provides a Source instance for request scoped source."""
@@ -269,10 +223,25 @@ def get_base_weights_service(data_dir: Annotated[Path, Depends(get_data_dir)]) -
 
 
 def get_job_queue(request: Request) -> JobQueue:
-    """Provides the global JobQueue instance from FastAPI application's state."""
+    """
+    Provides the global JobQueue instance from FastAPI application's state.
+    The JobQueue is responsible for managing job submissions and tracking job statuses.
+    """
     return request.app.state.job_queue
 
 
 def get_training_configuration_service(db: Annotated[Session, Depends(get_db)]) -> TrainingConfigurationService:
     """Provides a TrainingConfigurationService instance for managing training configurations."""
     return TrainingConfigurationService(db_session=db)
+
+
+def get_dataset_revision(
+    project_id: ProjectID,
+    dataset_revision_id: DatasetRevisionID,
+    dataset_revision_service: Annotated[DatasetRevisionService, Depends(get_dataset_revision_service)],
+) -> DatasetRevision:
+    """Provides a DatasetService instance."""
+    try:
+        return dataset_revision_service.get_dataset_revision(project_id=project_id, revision_id=dataset_revision_id)
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

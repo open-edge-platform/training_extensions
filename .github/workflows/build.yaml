@@ -17,7 +17,7 @@ on:
 permissions: {} # No permissions by default on workflow level
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.after }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -31,13 +31,13 @@ jobs:
       run_workflow: ${{ steps.run_workflow.outputs.run }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
 
       - name: Get all paths that should trigger the workflow
         id: changed-files-yaml
-        uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v47.0.0
+        uses: tj-actions/changed-files@e0021407031f5be11a464abee9a0776171c79891 # v47.0.1
         with:
           files_yaml: |
             test:
@@ -67,17 +67,17 @@ jobs:
       contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
 
       - name: Initial cleanup
-        uses: open-edge-platform/geti-ci/actions/cleanup-runner@b7d997c1651b1e1b99a280033bd268b55ccb7923
+        uses: open-edge-platform/geti-ci/actions/cleanup-runner@d30e32248aa6bd06adeda7129b50a38bdbceca12
         with:
           type: "initial"
 
       - name: Pre-build cleanup
-        uses: open-edge-platform/geti-ci/actions/cleanup-runner@b7d997c1651b1e1b99a280033bd268b55ccb7923
+        uses: open-edge-platform/geti-ci/actions/cleanup-runner@d30e32248aa6bd06adeda7129b50a38bdbceca12
         with:
           type: "pre-build"
 
@@ -86,7 +86,7 @@ jobs:
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
-        uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f # v5.8.0
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
         with:
           tags: |
             type=sha
@@ -115,7 +115,7 @@ jobs:
           echo "Testing container with tag: $FIRST_TAG for device: $DEVICE"
 
           # Start the container in detached mode
-          CONTAINER_ID=$(docker run -d --rm -v .:/app/data -p 80:80 geti-tune-${DEVICE}:${FIRST_TAG})
+          CONTAINER_ID=$(docker run -d --rm -v .:/app/data -p 7860:7860 geti-tune-${DEVICE}:${FIRST_TAG})
           echo "Started container: $CONTAINER_ID"
 
           # Function to cleanup container on exit
@@ -125,7 +125,7 @@ jobs:
           }
           trap cleanup EXIT
 
-          TEST_URL="geti-tune.localhost"
+          TEST_URL="localhost:7860"
           # Wait for container to be ready (max 60 seconds)
           echo "Waiting for container to be ready..."
           for i in {1..12}; do
@@ -174,7 +174,7 @@ jobs:
             IMAGE="geti-tune-${DEVICE}:${TAG}"
             if docker image inspect "$IMAGE" >/dev/null 2>&1; then
               size_bytes=$(docker image inspect "$IMAGE" --format='{{.Size}}')
-              size_readable=$(numfmt --to=iec --format "%.1f" "$size_bytes")
+              size_readable=$(numfmt --to=si --format "%.2f" "$size_bytes")
               echo "| $IMAGE | $size_readable |" >> image-sizes/${DEVICE}.md
             fi
           done
@@ -184,7 +184,7 @@ jobs:
 
       - name: Upload image sizes
         if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: image-sizes-${{ matrix.device }}
           path: application/docker/image-sizes/${{ matrix.device }}.md
@@ -219,7 +219,7 @@ jobs:
     continue-on-error: true
     steps:
       - name: Download all image size artifacts
-        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           pattern: image-sizes-*
           merge-multiple: true

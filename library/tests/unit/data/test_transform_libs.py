@@ -13,12 +13,9 @@ from omegaconf import OmegaConf
 from torchvision.transforms import v2
 
 from otx.config.data import SubsetConfig
-from otx.data.dataset.classification import HLabelInfo
-from otx.data.dataset.instance_segmentation import OTXInstanceSegDataset
 from otx.data.transform_libs.torchvision import (
     TorchVisionTransformLib,
 )
-from otx.types.image import ImageColorChannel
 
 
 class TestTorchVisionTransformLib:
@@ -58,33 +55,6 @@ class TestTorchVisionTransformLib:
                 transforms=[instantiate_class(args=(), init=transform) for transform in created.transforms],
             )
         return created
-
-    def test_transform(
-        self,
-        mocker,
-        fxt_config,
-        fxt_dataset_and_data_entity_cls,
-        fxt_mock_dm_subset,
-        fxt_mock_hlabelinfo,
-    ) -> None:
-        transform = TorchVisionTransformLib.generate(fxt_config)
-        assert isinstance(transform, v2.Compose)
-
-        dataset_cls, data_entity_cls, kwargs = fxt_dataset_and_data_entity_cls
-        if dataset_cls == OTXInstanceSegDataset:
-            pytest.skip(
-                "Instance segmentation task are not suitible for torchvision transform",
-            )
-        mocker.patch.object(HLabelInfo, "from_dm_label_groups", return_value=fxt_mock_hlabelinfo)
-        dataset = dataset_cls(
-            dm_subset=fxt_mock_dm_subset,
-            transforms=transform,
-            **kwargs,
-        )
-        dataset.num_classes = 1
-
-        item = dataset[0]
-        assert isinstance(item, data_entity_cls)
 
     def test_transform_enable_flag(self) -> None:
         prefix = "torchvision.transforms.v2"
@@ -169,49 +139,3 @@ class TestTorchVisionTransformLib:
     def test_eval_input_size_str_wrong_value(self, input_str):
         with pytest.raises(SyntaxError):
             assert TorchVisionTransformLib._eval_input_size_str(input_str)
-
-    @pytest.fixture(params=["RGB", "BGR"])
-    def fxt_image_color_channel(self, request) -> ImageColorChannel:
-        return ImageColorChannel(request.param)
-
-    def test_image_info(
-        self,
-        mocker,
-        fxt_config,
-        fxt_dataset_and_data_entity_cls,
-        fxt_mock_dm_subset,
-        fxt_image_color_channel,
-        fxt_mock_hlabelinfo,
-    ) -> None:
-        transform = TorchVisionTransformLib.generate(fxt_config)
-        assert isinstance(transform, v2.Compose)
-
-        dataset_cls, data_entity_cls, kwargs = fxt_dataset_and_data_entity_cls
-        if dataset_cls == OTXInstanceSegDataset:
-            pytest.skip(
-                "Instance segmentation task are not suitible for torchvision transform",
-            )
-        mocker.patch.object(HLabelInfo, "from_dm_label_groups", return_value=fxt_mock_hlabelinfo)
-        dataset = dataset_cls(
-            dm_subset=fxt_mock_dm_subset,
-            transforms=transform,
-            image_color_channel=fxt_image_color_channel,
-            **kwargs,
-        )
-        dataset.num_classes = 1
-
-        item = dataset[0]
-        assert item.img_info.img_shape == item.image.shape[1:]
-
-        if fxt_image_color_channel == ImageColorChannel.RGB:
-            r_pixel = 255.0 * (0.229 * item.image[0, 0, 0] + 0.485)
-            g_pixel = 255.0 * (0.224 * item.image[1, 0, 0] + 0.456)
-            b_pixel = 255.0 * (0.225 * item.image[2, 0, 0] + 0.406)
-        else:
-            b_pixel = 255.0 * (0.229 * item.image[0, 0, 0] + 0.485)
-            g_pixel = 255.0 * (0.224 * item.image[1, 0, 0] + 0.456)
-            r_pixel = 255.0 * (0.225 * item.image[2, 0, 0] + 0.406)
-
-        assert torch.allclose(r_pixel, torch.tensor(2.0))
-        assert torch.allclose(g_pixel, torch.tensor(1.0))
-        assert torch.allclose(b_pixel, torch.tensor(0.0))

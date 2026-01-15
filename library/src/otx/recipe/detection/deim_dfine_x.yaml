@@ -40,8 +40,8 @@ callbacks:
       mode: max
       patience: 10
       min_delta: 0.001
-      warmup_iters: 30
-      warmup_epochs: 3
+      warmup_iters: 40
+      warmup_epochs: 10
   - class_path: lightning.pytorch.callbacks.ModelCheckpoint
     init_args:
       dirpath: "" # use engine.work_dir

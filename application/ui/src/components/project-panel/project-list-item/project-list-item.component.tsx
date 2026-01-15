@@ -15,8 +15,8 @@ import {
     type TextFieldRef,
 } from '@geti/ui';
 import { useNavigate } from 'react-router';
-import type { SchemaProjectView } from 'src/api/openapi-spec';
 
+import type { SchemaProjectView } from '../../../api/openapi-spec';
 import { paths } from '../../../constants/paths';
 
 import styles from './project-list-item.module.scss';

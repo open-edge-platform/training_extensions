@@ -5,14 +5,17 @@
 
 import math
 
+import numpy as np
 import pytest
+from datumaro import Image
 from datumaro.components.annotation import Label
 from datumaro.components.dataset import Dataset as DmDataset
 from datumaro.components.dataset_base import DatasetItem
+from datumaro.experimental.legacy import convert_from_legacy
 
+from otx.data.dataset import OTXMulticlassClsDataset
 from otx.data.dataset.base import OTXDataset
 from otx.data.samplers.balanced_sampler import BalancedSampler
-from otx.data.utils import get_idx_list_per_classes
 
 
 @pytest.fixture
@@ -21,7 +24,7 @@ def fxt_imbalanced_dataset() -> OTXDataset:
         DatasetItem(
             id=f"item00{i}_0",
             subset="train",
-            media=None,
+            media=Image.from_numpy(data=np.zeros((10, 10, 3), dtype=np.uint8)),
             annotations=[
                 Label(label=0),
             ],
@@ -31,7 +34,7 @@ def fxt_imbalanced_dataset() -> OTXDataset:
         DatasetItem(
             id=f"item00{i}_1",
             subset="train",
-            media=None,
+            media=Image.from_numpy(data=np.zeros((10, 10, 3), dtype=np.uint8)),
             annotations=[
                 Label(label=1),
             ],
@@ -40,10 +43,7 @@ def fxt_imbalanced_dataset() -> OTXDataset:
     ]
 
     dm_dataset = DmDataset.from_iterable(dataset_items, categories=["0", "1"])
-    return OTXDataset(
-        dm_subset=dm_dataset.get_subset("train"),
-        transforms=[],
-    )
+    return OTXMulticlassClsDataset(dm_subset=convert_from_legacy(dm_dataset.get_subset("train")), transforms=[])
 
 
 class TestBalancedSampler:
@@ -81,7 +81,7 @@ class TestBalancedSampler:
 
     def test_compute_class_statistics(self, fxt_imbalanced_dataset):
         # Compute class statistics
-        stats = get_idx_list_per_classes(fxt_imbalanced_dataset.dm_subset)
+        stats = fxt_imbalanced_dataset.get_idx_list_per_classes()
 
         # Check the expected results
         assert stats == {0: list(range(100)), 1: list(range(100, 108))}
@@ -90,7 +90,7 @@ class TestBalancedSampler:
         batch_size = 4
         sampler = BalancedSampler(fxt_imbalanced_dataset)
 
-        stats = get_idx_list_per_classes(fxt_imbalanced_dataset.dm_subset)
+        stats = fxt_imbalanced_dataset.get_idx_list_per_classes()
         class_0_idx = stats[0]
         class_1_idx = stats[1]
         list_iter = list(iter(sampler))

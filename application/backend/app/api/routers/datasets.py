@@ -8,7 +8,7 @@ from fastapi import APIRouter, Body, Depends, File, HTTPException, Query, Upload
 from fastapi.openapi.models import Example
 from starlette.responses import FileResponse
 
-from app.api.dependencies import get_dataset_item_id, get_dataset_service, get_file_name_and_extension, get_project
+from app.api.dependencies import get_dataset_service, get_file_name_and_extension, get_project
 from app.api.schemas.dataset_item import (
     DatasetItemAnnotations,
     DatasetItemAssignSubset,
@@ -16,9 +16,9 @@ from app.api.schemas.dataset_item import (
     DatasetItemView,
     SetDatasetItemAnnotations,
 )
+from app.api.validators import DatasetItemID
 from app.core.models import Pagination
-from app.models import DatasetItemAnnotationStatus, DatasetItemSubset
-from app.schemas import ProjectView
+from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Project
 from app.services import DatasetService, ResourceNotFoundError
 from app.services.dataset_service import (
     AnnotationValidationError,
@@ -33,34 +33,62 @@ DEFAULT_DATASET_ITEMS_NUMBER_RETURNED = 10
 MAX_DATASET_ITEMS_NUMBER_RETURNED = 100
 
 SET_DATASET_ITEM_ANNOTATIONS_BODY_EXAMPLES = {
-    "full_image": Example(
-        summary="Full image annotation",
+    "single_label": Example(
+        summary="Single label (multiclass classification)",
         value={
             "annotations": [
                 {"labels": [{"id": "d476573e-d43c-42a6-9327-199a9aa75c33"}], "shape": {"type": "full_image"}}
             ],
         },
     ),
-    "rectangle": Example(
-        summary="Rectangle annotation",
+    "multi_label": Example(
+        summary="Multiple labels (multilabel classification)",
+        value={
+            "annotations": [
+                {
+                    "labels": [
+                        {"id": "d476573e-d43c-42a6-9327-199a9aa75c33"},
+                        {"id": "bbb782b7-8322-44e8-b6a9-90a5c9ee4bad"},
+                    ],
+                    "shape": {"type": "full_image"},
+                },
+            ],
+        },
+    ),
+    "bounding_boxes": Example(
+        summary="Bounding boxes (detection)",
         value={
             "annotations": [
                 {
                     "labels": [{"id": "d476573e-d43c-42a6-9327-199a9aa75c33"}],
                     "shape": {"type": "rectangle", "x": 10, "y": 20, "width": 100, "height": 200},
-                }
+                },
+                {
+                    "labels": [{"id": "bbb782b7-8322-44e8-b6a9-90a5c9ee4bad"}],
+                    "shape": {"type": "rectangle", "x": 150, "y": 250, "width": 80, "height": 120},
+                },
             ],
         },
     ),
-    "polygon": Example(
-        summary="Polygon annotation",
+    "polygons": Example(
+        summary="Polygons (segmentation)",
         value={
             "annotations": [
                 {
                     "labels": [{"id": "d476573e-d43c-42a6-9327-199a9aa75c33"}],
                     "shape": {"type": "polygon", "points": [[10, 20], [20, 60], [30, 40]]},
-                }
+                },
+                {
+                    "labels": [{"id": "bbb782b7-8322-44e8-b6a9-90a5c9ee4bad"}],
+                    "shape": {"type": "polygon", "points": [[150, 250], [180, 300], [200, 280]]},
+                },
             ],
+        },
+    ),
+    "empty": Example(
+        summary="No objects (detection / segmentation)",
+        value={
+            "annotations": [],
         },
     ),
 }
@@ -72,11 +100,11 @@ SET_DATASET_ITEM_ANNOTATIONS_BODY_EXAMPLES = {
     response_model=DatasetItemView,
     responses={
         status.HTTP_201_CREATED: {"description": "Dataset item created"},
-        status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Invalid image has been uploaded"},
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {"description": "Invalid image has been uploaded"},
     },
 )
 def add_dataset_item(
-    project: Annotated[ProjectView, Depends(get_project)],
+    project: Annotated[Project, Depends(get_project)],
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
     file_name_and_extension: Annotated[tuple[str, str], Depends(get_file_name_and_extension)],
     file: Annotated[UploadFile, File()],
@@ -93,7 +121,9 @@ def add_dataset_item(
         )
         return DatasetItemView.model_validate(dataset_item, from_attributes=True)
     except InvalidImageError:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid image has been uploaded.")
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Invalid image has been uploaded."
+        )
 
 
 @router.get(
@@ -103,7 +133,7 @@ def add_dataset_item(
     },
 )
 def list_dataset_items(  # noqa: PLR0913
-    project: Annotated[ProjectView, Depends(get_project)],
+    project: Annotated[Project, Depends(get_project)],
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
     limit: Annotated[int, Query(ge=1, le=MAX_DATASET_ITEMS_NUMBER_RETURNED)] = DEFAULT_DATASET_ITEMS_NUMBER_RETURNED,
     offset: Annotated[int, Query(ge=0)] = 0,
@@ -116,7 +146,7 @@ def list_dataset_items(  # noqa: PLR0913
     """List the available dataset items and their metadata. This endpoint supports pagination."""
     if start_date is not None and end_date is not None and start_date > end_date:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Start date must be before end date."
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Start date must be before end date."
         )
     total = dataset_service.count_dataset_items(
         project=project,
@@ -158,8 +188,8 @@ def list_dataset_items(  # noqa: PLR0913
     },
 )
 def get_dataset_item(
-    project: Annotated[ProjectView, Depends(get_project)],
-    dataset_item_id: Annotated[UUID, Depends(get_dataset_item_id)],
+    project: Annotated[Project, Depends(get_project)],
+    dataset_item_id: DatasetItemID,
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
 ) -> DatasetItemView:
     """Get information about a specific dataset item"""
@@ -179,8 +209,8 @@ def get_dataset_item(
     },
 )
 def get_dataset_item_binary(
-    project: Annotated[ProjectView, Depends(get_project)],
-    dataset_item_id: Annotated[UUID, Depends(get_dataset_item_id)],
+    project: Annotated[Project, Depends(get_project)],
+    dataset_item_id: DatasetItemID,
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
 ) -> FileResponse:
     """Get dataset item binary content"""
@@ -202,8 +232,8 @@ def get_dataset_item_binary(
     },
 )
 def get_dataset_item_thumbnail(
-    project: Annotated[ProjectView, Depends(get_project)],
-    dataset_item_id: Annotated[UUID, Depends(get_dataset_item_id)],
+    project: Annotated[Project, Depends(get_project)],
+    dataset_item_id: DatasetItemID,
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
 ) -> FileResponse:
     """Get dataset item thumbnail binary content"""
@@ -226,8 +256,8 @@ def get_dataset_item_thumbnail(
     },
 )
 def delete_dataset_item(
-    project: Annotated[ProjectView, Depends(get_project)],
-    dataset_item_id: Annotated[UUID, Depends(get_dataset_item_id)],
+    project: Annotated[Project, Depends(get_project)],
+    dataset_item_id: DatasetItemID,
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
 ) -> None:
     """Delete an item from the dataset"""
@@ -247,8 +277,8 @@ def delete_dataset_item(
     },
 )
 def set_dataset_item_annotations(
-    project: Annotated[ProjectView, Depends(get_project)],
-    dataset_item_id: Annotated[UUID, Depends(get_dataset_item_id)],
+    project: Annotated[Project, Depends(get_project)],
+    dataset_item_id: DatasetItemID,
     dataset_item_annotations: Annotated[
         SetDatasetItemAnnotations, Body(openapi_examples=SET_DATASET_ITEM_ANNOTATIONS_BODY_EXAMPLES)
     ],
@@ -257,7 +287,11 @@ def set_dataset_item_annotations(
     """Set dataset item annotations"""
     try:
         dataset_item = dataset_service.set_dataset_item_annotations(
-            project=project, dataset_item_id=dataset_item_id, annotations=dataset_item_annotations.annotations
+            project=project,
+            dataset_item_id=dataset_item_id,
+            annotations=dataset_item_annotations.annotations,
+            # Annotations submitted via API are considered user-reviewed, unlike auto-generated predictions
+            user_reviewed=True,
         )
         return DatasetItemAnnotations(
             annotations=dataset_item.annotation_data,  # type: ignore[arg-type]
@@ -282,8 +316,8 @@ def set_dataset_item_annotations(
     },
 )
 def get_dataset_item_annotations(
-    project: Annotated[ProjectView, Depends(get_project)],
-    dataset_item_id: Annotated[UUID, Depends(get_dataset_item_id)],
+    project: Annotated[Project, Depends(get_project)],
+    dataset_item_id: DatasetItemID,
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
 ) -> DatasetItemAnnotations:
     """Get the dataset item annotations"""
@@ -312,8 +346,8 @@ def get_dataset_item_annotations(
     },
 )
 def delete_dataset_item_annotation(
-    project: Annotated[ProjectView, Depends(get_project)],
-    dataset_item_id: Annotated[UUID, Depends(get_dataset_item_id)],
+    project: Annotated[Project, Depends(get_project)],
+    dataset_item_id: DatasetItemID,
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
 ) -> None:
     """Delete dataset item annotations"""
@@ -331,12 +365,12 @@ def delete_dataset_item_annotation(
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid dataset item ID or project ID"},
         status.HTTP_404_NOT_FOUND: {"description": "Dataset item or project not found"},
         status.HTTP_409_CONFLICT: {"description": "Dataset item already has a subset assigned"},
-        status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Invalid subset"},
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {"description": "Invalid subset"},
     },
 )
 def assign_dataset_item_subset(
-    project: Annotated[ProjectView, Depends(get_project)],
-    dataset_item_id: Annotated[UUID, Depends(get_dataset_item_id)],
+    project: Annotated[Project, Depends(get_project)],
+    dataset_item_id: DatasetItemID,
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
     subset_config: Annotated[DatasetItemAssignSubset, Body()],
 ) -> DatasetItemView:

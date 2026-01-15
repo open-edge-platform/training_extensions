@@ -3,33 +3,46 @@
 """Test of custom algo modules of OTX Detection task."""
 
 import pytest
-from torchvision.transforms.v2 import Resize
+import torch
+from torchvision import tv_tensors
 
-from otx.config.data import SubsetConfig
-from otx.data.module import OTXDataModule
-from otx.types.task import OTXTaskType
+from otx.data.entity.base import ImageInfo
+from otx.data.entity.torch import OTXDataBatch
 
 
 @pytest.fixture
-def fxt_data_module():
-    return OTXDataModule(
-        task=OTXTaskType.DETECTION,
-        data_format="coco_instances",
-        data_root="tests/assets/car_tree_bug",
-        input_size=(320, 320),
-        train_subset=SubsetConfig(
-            batch_size=2,
-            subset_name="train",
-            transforms=[Resize(320)],
+def fxt_detection_batch(batch_size: int = 2) -> OTXDataBatch:
+    """Create a mock detection batch for testing."""
+    images = [torch.randn(3, 640, 640), torch.randn(3, 640, 640)]
+
+    # Create bounding boxes and labels for each image
+    bboxes = [
+        tv_tensors.BoundingBoxes(
+            torch.tensor([[100, 100, 300, 300], [200, 200, 400, 400]], dtype=torch.float32),
+            format=tv_tensors.BoundingBoxFormat.XYXY,
+            canvas_size=(640, 640),
         ),
-        val_subset=SubsetConfig(
-            batch_size=2,
-            subset_name="val",
-            transforms=[Resize(320)],
+        tv_tensors.BoundingBoxes(
+            torch.tensor([[150, 150, 350, 350]], dtype=torch.float32),
+            format=tv_tensors.BoundingBoxFormat.XYXY,
+            canvas_size=(640, 640),
         ),
-        test_subset=SubsetConfig(
-            batch_size=2,
-            subset_name="test",
-            transforms=[Resize(320)],
-        ),
+    ]
+
+    labels = [
+        torch.tensor([0, 1], dtype=torch.long),
+        torch.tensor([2], dtype=torch.long),
+    ]
+
+    imgs_info = [
+        ImageInfo(img_idx=0, img_shape=(640, 640), ori_shape=(640, 640)),
+        ImageInfo(img_idx=1, img_shape=(640, 640), ori_shape=(640, 640)),
+    ]
+
+    return OTXDataBatch(
+        batch_size=batch_size,
+        images=images,
+        bboxes=bboxes,
+        labels=labels,
+        imgs_info=imgs_info,
     )

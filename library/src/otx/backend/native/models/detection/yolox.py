@@ -150,12 +150,12 @@ class YOLOX(OTXDetectionModel):
             resize_mode=resize_mode,
             pad_value=114,
             swap_rgb=swap_rgb,
-            via_onnx=True,
+            via_onnx=False,
             onnx_export_configuration={
                 "input_names": ["image"],
                 "output_names": ["boxes", "labels"],
                 "export_params": True,
-                "opset_version": 11,
+                "opset_version": 18,
                 "dynamic_axes": {
                     "image": {0: "batch"},
                     "boxes": {0: "batch", 1: "num_dets"},

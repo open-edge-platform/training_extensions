@@ -6,9 +6,9 @@ from loguru import logger
 from app.models import Source, SourceType
 from app.stream.images_folder_stream import ImagesFolderStream
 from app.stream.ip_camera_stream import IPCameraStream
+from app.stream.usb_camera_stream import USBCameraStream
 from app.stream.video_file_stream import VideoFileStream
 from app.stream.video_stream import VideoStream
-from app.stream.webcam_stream import WebcamStream
 
 
 class VideoStreamService:
@@ -19,8 +19,8 @@ class VideoStreamService:
         match input_config.source_type:
             case SourceType.DISCONNECTED:
                 video_stream = None
-            case SourceType.WEBCAM:
-                video_stream = WebcamStream(
+            case SourceType.USB_CAMERA:
+                video_stream = USBCameraStream(
                     device_id=input_config.config_data.device_id, codec=input_config.config_data.codec
                 )
             case SourceType.IP_CAMERA:

@@ -106,6 +106,7 @@ class DEIMDFine(RTDETR):
         decoder = DFINETransformer(
             model_name=self.model_name,
             num_classes=num_classes,
+            eval_spatial_size=self.data_input_params.input_size,
         )
         criterion = DEIMCriterion(
             weight_dict={

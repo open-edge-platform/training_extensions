@@ -3,44 +3,59 @@
 
 from uuid import UUID
 
+from loguru import logger
 from sqlalchemy.orm import Session
 
 from app.db.schema import PipelineDB
+from app.models import Pipeline, PipelineStatus
 from app.repositories import PipelineRepository
-from app.schemas import PipelineStatus, PipelineView
 from app.services.base import ResourceNotFoundError, ResourceType
 from app.services.event.event_bus import EventBus, EventType
-from app.services.mappers import PipelineMapper
 from app.services.parent_process_guard import parent_process_only
+
+from .system_service import DEFAULT_DEVICE, SystemService
 
 MSG_ERR_DELETE_RUNNING_PIPELINE = "Cannot delete a running pipeline."
 
 
 class PipelineService:
-    def __init__(self, event_bus: EventBus, db_session: Session) -> None:
+    def __init__(self, event_bus: EventBus, db_session: Session, system_service: SystemService) -> None:
         self._event_bus: EventBus = event_bus
         self._db_session: Session = db_session
+        self._system_service: SystemService = system_service
 
-    def create_pipeline(self, project_id: UUID) -> PipelineView:
+    def create_pipeline(self, project_id: UUID) -> Pipeline:
         pipeline_repo = PipelineRepository(self._db_session)
         pipeline_db = PipelineDB(
             project_id=str(project_id),
         )
-        return PipelineMapper.to_schema(pipeline_repo.save(pipeline_db))
+        created = pipeline_repo.save(pipeline_db)
+        return Pipeline.model_validate(created)
 
-    def get_active_pipeline(self) -> PipelineView | None:
+    def get_active_pipeline(self) -> Pipeline | None:
         """Retrieve an active pipeline."""
         pipeline_repo = PipelineRepository(self._db_session)
-        pipeline = pipeline_repo.get_active_pipeline()
-        return PipelineMapper.to_schema(pipeline) if pipeline is not None else None
+        pipeline_db = pipeline_repo.get_active_pipeline()
+        if pipeline_db is None:
+            return None
 
-    def get_pipeline_by_id(self, project_id: UUID) -> PipelineView:
+        if not self._system_service.validate_device(pipeline_db.device):
+            logger.warning(
+                "The configured device '{}' is not available for pipeline '{}'. Falling back to 'cpu'.",
+                pipeline_db.device,
+                pipeline_db.project_id,
+            )
+            pipeline_db.device = DEFAULT_DEVICE
+            pipeline_repo.update(pipeline_db)
+        return Pipeline.model_validate(pipeline_db)
+
+    def get_pipeline_by_id(self, project_id: UUID) -> Pipeline:
         """Retrieve a pipeline by project ID."""
         pipeline_repo = PipelineRepository(self._db_session)
-        pipeline = pipeline_repo.get_by_id(str(project_id))
-        if not pipeline:
+        pipeline_db = pipeline_repo.get_by_id(str(project_id))
+        if not pipeline_db:
             raise ResourceNotFoundError(ResourceType.PIPELINE, str(project_id))
-        return PipelineMapper.to_schema(pipeline)
+        return Pipeline.model_validate(pipeline_db)
 
     def is_running(self, project_id: UUID) -> bool:
         """Retrieve a pipeline status by project ID."""
@@ -48,20 +63,35 @@ class PipelineService:
         return pipeline_repo.is_running(str(project_id))
 
     @parent_process_only
-    def update_pipeline(self, project_id: UUID, partial_config: dict) -> PipelineView:
+    def update_pipeline(self, project_id: UUID, partial_config: dict) -> Pipeline:
         """Update an existing pipeline."""
         pipeline = self.get_pipeline_by_id(project_id)
-        to_update = type(pipeline).model_validate(pipeline.model_copy(update=partial_config))
+        base = pipeline.model_dump()
+        to_update = type(pipeline).model_validate({**base, **partial_config})
         pipeline_repo = PipelineRepository(self._db_session)
-        updated = PipelineMapper.to_schema(pipeline_repo.update(PipelineMapper.from_schema(to_update)))
+        to_update_db = PipelineDB(
+            project_id=str(to_update.project_id),
+            source_id=str(to_update.source_id) if to_update.source_id else None,
+            sink_id=str(to_update.sink_id) if to_update.sink_id else None,
+            model_revision_id=str(to_update.model_id) if to_update.model_id else None,
+            is_running=to_update.status.as_bool,
+            data_collection=to_update.data_collection.model_dump(),
+            device=to_update.device,
+        )
+        pipeline_db = pipeline_repo.update(to_update_db)
+        updated = Pipeline.model_validate(pipeline_db)
         if pipeline.status == PipelineStatus.RUNNING and updated.status == PipelineStatus.RUNNING:
             # If the pipeline source_id or sink_id is being updated while running
             if pipeline.source.id != updated.source.id:  # type: ignore[union-attr] # source is always there for running pipeline
                 self._event_bus.emit_event(EventType.SOURCE_CHANGED)
             if pipeline.sink_id != updated.sink_id:  # type: ignore[union-attr] # sink is always there for running pipeline
                 self._event_bus.emit_event(EventType.SINK_CHANGED)
-            if pipeline.data_collection_policies != updated.data_collection_policies:
+            if pipeline.data_collection != updated.data_collection:
                 self._event_bus.emit_event(EventType.PIPELINE_DATASET_COLLECTION_POLICIES_CHANGED)
+            if pipeline.device != updated.device:
+                self._event_bus.emit_event(EventType.INFERENCE_DEVICE_CHANGED)
+            if pipeline.model_id != updated.model_revision.id:  # type: ignore[union-attr] # model_revision is always there for running pipeline
+                self._event_bus.emit_event(EventType.MODEL_CHANGED)
         elif pipeline.status != updated.status:
             # If the pipeline is being activated or stopped
             self._event_bus.emit_event(EventType.PIPELINE_STATUS_CHANGED)

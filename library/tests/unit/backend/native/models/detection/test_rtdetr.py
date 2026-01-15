@@ -22,7 +22,7 @@ class TestRTDETR:
         model = RTDETR(
             model_name="rtdetr_18",
             label_info=label_info,
-            data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         )
         model.model.load_from = None
         model.train()
@@ -34,10 +34,10 @@ class TestRTDETR:
         inputs = OTXDataBatch(
             batch_size=2,
             imgs_info=[
-                ImageInfo(img_idx=0, img_shape=(640, 640), ori_shape=(640, 640)),
-                ImageInfo(img_idx=1, img_shape=(640, 640), ori_shape=(640, 640)),
+                ImageInfo(img_idx=0, img_shape=(320, 320), ori_shape=(320, 320)),
+                ImageInfo(img_idx=1, img_shape=(320, 320), ori_shape=(320, 320)),
             ],
-            images=torch.randn(2, 3, 640, 640),
+            images=torch.randn(2, 3, 320, 320),
             bboxes=[
                 torch.tensor([[0.2739, 0.2848, 0.3239, 0.3348], [0.1652, 0.1109, 0.2152, 0.1609]]),
                 torch.tensor(
@@ -120,17 +120,17 @@ class TestRTDETR:
             RTDETR(
                 model_name="rtdetr_18",
                 label_info=3,
-                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+                data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
             ),
             RTDETR(
                 model_name="rtdetr_50",
                 label_info=3,
-                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+                data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
             ),
             RTDETR(
                 model_name="rtdetr_101",
                 label_info=3,
-                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+                data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
             ),
         ],
     )
@@ -147,3 +147,6 @@ class TestRTDETR:
         model.model.training = False  # do not calculate loss
         model.model(x)
         assert cnt.frame_count == 1
+
+        # Reset dynamo state
+        torch._dynamo.reset()

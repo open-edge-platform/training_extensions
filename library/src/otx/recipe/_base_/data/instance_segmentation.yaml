@@ -2,9 +2,7 @@ task: INSTANCE_SEGMENTATION
 input_size:
   - 1024
   - 1024
-image_color_channel: RGB
 data_format: coco_instances
-include_polygons: true
 unannotated_items_ratio: 0.0
 train_subset:
   subset_name: train

@@ -1,5 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+import os
 import tempfile
 from unittest.mock import MagicMock
 from uuid import uuid4
@@ -8,11 +9,10 @@ import pytest
 from fastapi import status
 
 from app.api.dependencies import get_data_collector, get_label_service
+from app.api.schemas import LabelView, PatchLabels, ProjectView, TaskView
+from app.api.schemas.label import LabelCreate, LabelEdit, LabelRemove
 from app.main import app
-from app.models import Label
-from app.schemas import LabelView, PatchLabels, ProjectView
-from app.schemas.label import LabelCreate, LabelEdit, LabelRemove
-from app.schemas.project import TaskType, TaskView
+from app.models import Label, TaskType
 from app.services import ResourceInUseError, ResourceNotFoundError, ResourceType, ResourceWithIdAlreadyExistsError
 from app.services.data_collect import DataCollector
 from app.services.label_service import DuplicateLabelsError, LabelService
@@ -102,7 +102,7 @@ class TestProjectEndpoints:
     def test_create_project_invalid(self, fxt_project_service, fxt_client):
         response = fxt_client.post("/api/projects", json={"name": "New Pipeline", "attr": "invalid"})
 
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
         fxt_project_service.create_project.assert_not_called()
 
     def test_delete_project_success(self, fxt_project, fxt_project_service, fxt_client):
@@ -291,12 +291,18 @@ class TestProjectEndpoints:
         fxt_project_service.get_project_by_id.assert_not_called()
 
     def test_get_project_thumbnail(self, fxt_project, fxt_project_service, fxt_client):
-        with tempfile.NamedTemporaryFile(suffix=".jpg") as tmp_file:
-            fxt_project_service.get_project_thumbnail_path.return_value = tmp_file.name
-            response = fxt_client.get(f"/api/projects/{str(fxt_project.id)}/thumbnail")
+        tmp_file_path = None
+        try:
+            with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp_file:
+                tmp_file_path = tmp_file.name
+                fxt_project_service.get_project_thumbnail_path.return_value = tmp_file_path
+                response = fxt_client.get(f"/api/projects/{str(fxt_project.id)}/thumbnail")
 
-        assert response.status_code == status.HTTP_200_OK
-        fxt_project_service.get_project_thumbnail_path.assert_called_once()
+            assert response.status_code == status.HTTP_200_OK
+            fxt_project_service.get_project_thumbnail_path.assert_called_once()
+        finally:
+            if tmp_file_path and os.path.exists(tmp_file_path):
+                os.unlink(tmp_file_path)
 
     def test_get_project_thumbnail_none(self, fxt_project, fxt_project_service, fxt_client):
         fxt_project_service.get_project_thumbnail_path.return_value = None

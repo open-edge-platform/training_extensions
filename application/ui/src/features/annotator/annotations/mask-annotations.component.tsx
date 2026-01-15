@@ -4,7 +4,7 @@
 import { ReactNode, useId } from 'react';
 
 import type { Annotation } from '../types';
-import { AnnotationShapeWithLabels } from './annotation-shape-with-labels.component';
+import { AnnotationShapeRenderer } from './annotation-shape-renderer.component';
 
 type MaskAnnotationsProps = {
     annotations: Annotation[];
@@ -34,7 +34,7 @@ export const MaskAnnotations = ({ annotations, children, width, height, isEnable
                             transitionDelay: isEnabled ? '0s' : '.25s',
                         }}
                     >
-                        <AnnotationShapeWithLabels annotation={annotation} />
+                        <AnnotationShapeRenderer annotation={annotation} />
                     </g>
                 ))}
             </mask>

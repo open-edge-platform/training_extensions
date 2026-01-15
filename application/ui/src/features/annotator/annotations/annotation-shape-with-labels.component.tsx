@@ -4,8 +4,8 @@
 import { Key } from 'react';
 
 import polylabel from 'polylabel';
-import type { Label } from 'src/constants/shared-types';
 
+import type { Label } from '../../../constants/shared-types';
 import { useAnnotationActions } from '../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotationVisibility } from '../../../shared/annotator/annotation-visibility-provider.component';
 import type { Annotation, Polygon } from '../types';

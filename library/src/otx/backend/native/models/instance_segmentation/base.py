@@ -18,8 +18,6 @@ from torch import Tensor
 from torchmetrics import Metric, MetricCollection
 from torchvision import tv_tensors
 from torchvision.models.detection.image_list import ImageList
-from kornia.geometry.boxes import Boxes
-from kornia.augmentation.container import AugmentationSequential
 
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel
 from otx.backend.native.models.instance_segmentation.segmentors.maskrcnn_tv import MaskRCNN
@@ -42,6 +40,7 @@ from otx.types.label import LabelInfoTypes
 from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
+    from datumaro.experimental.fields import TileInfo
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from torch import nn
 
@@ -63,12 +62,6 @@ class OTXInstanceSegModel(OTXModel):
         data_input_params (DataInputParams | None, optional): Parameters for the image data preprocessing.
             If None is given, default parameters for the specific model will be used.
         model_name (str, optional): Name of the model. Defaults to "inst_segm_model".
-        apply_gpu_transforms (bool, optional): Flag to indicate whether to apply GPU transforms.
-            It is recommended to use GPU transforms. Defaults to True.
-        batch_train_transforms (AugmentationSequential | Compose | None): GPU transforms for training applied directly to the batch.
-            If None is given, default augmentation pipeline for the model will be used.
-        batch_val_transforms (AugmentationSequential | Compose | None): GPU transforms for validation / testing applied directly to the batch.
-            If None is given, default augmentation pipeline for the model will be used. Typically just normalization.
         optimizer (OptimizerCallable, optional): Optimizer for the model. Defaults to DefaultOptimizerCallable.
         scheduler (LRSchedulerCallable | LRSchedulerListCallable, optional): Scheduler for the model.
             Defaults to DefaultSchedulerCallable.
@@ -85,8 +78,6 @@ class OTXInstanceSegModel(OTXModel):
         data_input_params: DataInputParams | None = None,
         model_name: str = "inst_segm_model",
         apply_gpu_transforms: bool = True,
-        batch_train_transforms: AugmentationSequential | Compose | None = None,
-        batch_val_transforms: AugmentationSequential | Compose | None = None,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MaskRLEMeanAPFMeasureCallable,
@@ -98,8 +89,6 @@ class OTXInstanceSegModel(OTXModel):
             data_input_params=data_input_params,
             model_name=model_name,
             apply_gpu_transforms=apply_gpu_transforms,
-            batch_train_transforms=batch_train_transforms,
-            batch_val_transforms=batch_val_transforms,
             optimizer=optimizer,
             scheduler=scheduler,
             metric=metric,
@@ -221,21 +210,21 @@ class OTXInstanceSegModel(OTXModel):
             TorchPredBatch: Merged instance segmentation prediction.
         """
         tile_preds: list[OTXPredBatch] = []
-        tile_attrs: list[list[dict[str, int | str]]] = []
+        tile_infos: list[list[TileInfo]] = []
         merger = InstanceSegTileMerge(
             inputs.imgs_info,
             self.num_classes,
             self.tile_config,
             self.explain_mode,
         )
-        for batch_tile_attrs, batch_tile_input in inputs.unbind():
+        for batch_tile_infos, batch_tile_input in inputs.unbind():
             output = self.forward_explain(batch_tile_input) if self.explain_mode else self.forward(batch_tile_input)
             if isinstance(output, OTXBatchLossEntity):
                 msg = "Loss output is not supported for tile merging"
                 raise TypeError(msg)
             tile_preds.append(output)
-            tile_attrs.append(batch_tile_attrs)
-        pred_entities = merger.merge(tile_preds, tile_attrs)
+            tile_infos.append(batch_tile_infos)
+        pred_entities = merger.merge(tile_preds, tile_infos)
 
         pred_entity = OTXPredBatch(
             batch_size=inputs.batch_size,
@@ -419,7 +408,9 @@ class OTXInstanceSegModel(OTXModel):
             labels.append(_labels[filtered_idx])
 
             if _masks is not None:
-                masks.append(_masks[filtered_idx])
+                # Ensure filtered_idx is on the same device as masks
+                mask_filtered_idx = tuple(idx.to(_masks.device) for idx in filtered_idx)
+                masks.append(_masks[mask_filtered_idx])
             if _polygons is not None:
                 polygons.append(_polygons[filtered_idx])
 
@@ -471,7 +462,7 @@ class OTXInstanceSegModel(OTXModel):
 
             rles = (
                 [encode_rle(mask) for mask in masks.data]
-                if len(masks)
+                if masks is not None
                 else polygon_to_rle(polygons, *imgs_info.ori_shape)  # type: ignore[union-attr,arg-type]
             )
             target_info.append(
@@ -628,18 +619,6 @@ class OTXInstanceSegModel(OTXModel):
         func_type = types.MethodType
         self.model.forward = func_type(self.original_model_forward, self.model)
         self.original_model_forward = None
-
-    @staticmethod
-    @torch.no_grad()
-    def _apply_batch_augmentations(augmentations_pipeline: AugmentationSequential | Compose | None, batch: OTXDataBatch) -> None:
-        if augmentations_pipeline is not None:
-            # Convert bounding boxes to Kornia Boxes [N, 4, 2]
-            kornia_boxes = Boxes.from_tensor(batch.bboxes, mode='xyxy')
-            breakpoint()
-            batch.images, kornia_boxes, masks = augmentations_pipeline(batch.images, kornia_boxes, batch.masks)
-            batch.bboxes = kornia_boxes.to_tensor(mode='xyxy')
-            breakpoint()
-            batch.masks = masks
 
     @property
     def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:
