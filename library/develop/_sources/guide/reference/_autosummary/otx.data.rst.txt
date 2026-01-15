@@ -1,0 +1,37 @@
+otx.data
+========
+
+.. automodule:: otx.data
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      OTXDataModule
+      OTXDetectionDataset
+      OTXHlabelClsDataset
+      OTXInstanceSegDataset
+      OTXKeypointDetectionDataset
+      OTXMulticlassClsDataset
+      OTXMultilabelClsDataset
+      OTXSegmentationDataset
+      OTXTileDatasetFactory
+   
+   
+
+   
+   
+   
+
+
+
