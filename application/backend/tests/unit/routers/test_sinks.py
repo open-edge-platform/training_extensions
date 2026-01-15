@@ -93,13 +93,13 @@ class TestSinkEndpoints:
     def test_create_sink_disconnected_fails(self, fxt_sink_service, fxt_client):
         response = fxt_client.post("/api/sinks", json={"sink_type": SinkType.DISCONNECTED, "name": "Disconnected Sink"})
 
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
         fxt_sink_service.create_sink.assert_not_called()
 
     def test_create_sink_validation_error(self, fxt_sink_service, fxt_client):
         response = fxt_client.post("/api/sinks", json={"name": ""})
 
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
         fxt_sink_service.create_sink.assert_not_called()
 
     def test_create_sink_exists(self, fxt_folder_sink_create, fxt_sink_service, fxt_client):
@@ -264,5 +264,5 @@ class TestSinkEndpoints:
 
         response = fxt_client.post("/api/sinks:import", files=files)
 
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
         fxt_sink_service.create_sink.assert_not_called()

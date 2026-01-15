@@ -52,9 +52,17 @@ class TestEngine:
         mock_get_ov_model.return_value = mock_model
         fxt_engine._model = fxt_engine._auto_configurator.get_ov_model("model.xml")
 
+        # Mock the dataloader to avoid actual data processing
+        mock_dataloader = MagicMock()
+        mock_batch = MagicMock()
+        mock_dataloader.__iter__ = MagicMock(return_value=iter([mock_batch]))
+        mock_dataloader.__len__ = MagicMock(return_value=1)
+        mocker.patch.object(fxt_engine.datamodule, "test_dataloader", return_value=mock_dataloader)
+
         # Correct label_info from the checkpoint
         mock_model.label_info = fxt_engine.datamodule.label_info
         mock_model.prepare_metric_inputs = mocker.MagicMock(return_value={"preds": [1], "target": [1]})
+        mock_model.compute_metrics = mocker.MagicMock(return_value={})
         fxt_engine.test(metric=MagicMock())
 
         mock_model.label_info = NullLabelInfo()
@@ -76,8 +84,16 @@ class TestEngine:
             "otx.backend.native.models.utils.xai_utils.process_saliency_maps_in_pred_entity",
         )
         fxt_engine._derive_task_from_ir = MagicMock(return_value="MULTI_LABEL_CLS")
-        mocker.patch("otx.backend.openvino.engine.AutoConfigurator.get_ov_model", return_value=MagicMock())
+        mock_model = MagicMock()
+        mocker.patch("otx.backend.openvino.engine.AutoConfigurator.get_ov_model", return_value=mock_model)
         fxt_engine._model = fxt_engine._auto_configurator.get_ov_model("model.xml")
+
+        # Mock the dataloader to avoid actual data processing
+        mock_dataloader = MagicMock()
+        mock_batch = MagicMock()
+        mock_dataloader.__iter__ = MagicMock(return_value=iter([mock_batch]))
+        mock_dataloader.__len__ = MagicMock(return_value=1)
+        mocker.patch.object(fxt_engine.datamodule, "test_dataloader", return_value=mock_dataloader)
 
         # Correct label_info from the checkpoint
         fxt_engine._model.label_info = fxt_engine.datamodule.label_info

@@ -11,10 +11,9 @@ from typing import TYPE_CHECKING
 import torch
 from torch.utils.data import Sampler
 
-from otx.data.utils import get_idx_list_per_classes
-
 if TYPE_CHECKING:
     from otx.data.dataset.base import OTXDataset
+    from otx.data.dataset.base import OTXDataset as OTXDatasetNew
 
 
 class BalancedSampler(Sampler):
@@ -43,7 +42,7 @@ class BalancedSampler(Sampler):
 
     def __init__(
         self,
-        dataset: OTXDataset,
+        dataset: OTXDataset | OTXDatasetNew,
         efficient_mode: bool = False,
         num_replicas: int = 1,
         rank: int = 0,
@@ -61,7 +60,8 @@ class BalancedSampler(Sampler):
         super().__init__(dataset)
 
         # img_indices: dict[label: list[idx]]
-        ann_stats = get_idx_list_per_classes(dataset.dm_subset)
+        ann_stats = dataset.get_idx_list_per_classes()
+
         self.img_indices = {k: torch.tensor(v, dtype=torch.int64) for k, v in ann_stats.items() if len(v) > 0}
         self.num_cls = len(self.img_indices.keys())
         self.data_length = len(self.dataset)

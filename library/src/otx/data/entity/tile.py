@@ -11,14 +11,16 @@ from typing import TYPE_CHECKING, Sequence
 import torch
 from torchvision import tv_tensors
 
-from otx.data.entity.torch import OTXDataBatch, OTXDataItem
+from otx.data.entity.sample import OTXSample
+from otx.data.entity.torch import OTXDataBatch
 from otx.data.entity.utils import stack_batch
 from otx.types.task import OTXTaskType
 
 from .base import ImageInfo
 
 if TYPE_CHECKING:
-    from datumaro import Polygon
+    import numpy as np
+    from datumaro.experimental.fields import TileInfo
     from torch import LongTensor
 
 
@@ -29,13 +31,11 @@ class TileDataEntity:
     Attributes:
         num_tiles (int): The number of tiles.
         entity_list (Sequence[OTXDataEntity]): A list of OTXDataEntity.
-        tile_attr_list (list[dict[str, int | str]]): The tile attributes including tile index and tile RoI information.
         ori_img_info (ImageInfo): The image information about the original image.
     """
 
     num_tiles: int
-    entity_list: Sequence[OTXDataItem]
-    tile_attr_list: list[dict[str, int | str]]
+    entity_list: Sequence[OTXSample]
     ori_img_info: ImageInfo
 
     @property
@@ -73,18 +73,16 @@ class OTXTileBatchDataEntity:
         batch_size (int): The size of the batch.
         batch_tiles (list[list[tv_tensors.Image]]): The batch of tile images.
         batch_tile_img_infos (list[list[ImageInfo]]): The batch of tiles image information.
-        batch_tile_attr_list (list[list[dict[str, int | str]]]):
-            The batch of tile attributes including tile index and tile RoI information.
         imgs_info (list[ImageInfo]): The image information about the original image.
     """
 
     batch_size: int
     batch_tiles: list[list[tv_tensors.Image]]
     batch_tile_img_infos: list[list[ImageInfo]]
-    batch_tile_attr_list: list[TileAttrDictList]
+    batch_tile_tile_infos: list[list[TileInfo]]
     imgs_info: list[ImageInfo]
 
-    def unbind(self) -> list[tuple[TileAttrDictList, OTXDataBatch]]:
+    def unbind(self) -> list[tuple[list[TileInfo], OTXDataBatch]]:
         """Unbind batch data entity."""
         raise NotImplementedError
 
@@ -101,30 +99,29 @@ class TileBatchDetDataEntity(OTXTileBatchDataEntity):
     bboxes: list[tv_tensors.BoundingBoxes]
     labels: list[LongTensor]
 
-    def unbind(self) -> list[tuple[TileAttrDictList, OTXDataBatch]]:
+    def unbind(self) -> list[tuple[list[TileInfo], OTXDataBatch]]:
         """Unbind batch data entity for detection task."""
         tiles = [tile for tiles in self.batch_tiles for tile in tiles]
-        tile_infos = [tile_info for tile_infos in self.batch_tile_img_infos for tile_info in tile_infos]
-        tile_attr_list = [tile_attr for tile_attrs in self.batch_tile_attr_list for tile_attr in tile_attrs]
-
-        batch_tile_attr_list = [
-            tile_attr_list[i : i + self.batch_size] for i in range(0, len(tile_attr_list), self.batch_size)
-        ]
+        tile_img_infos = [tile_info for tile_infos in self.batch_tile_img_infos for tile_info in tile_infos]
+        tile_tile_infos = [tile_info for tile_infos in self.batch_tile_tile_infos for tile_info in tile_infos]
 
         batch_data_entities = []
         for i in range(0, len(tiles), self.batch_size):
             stacked_images, updated_img_info = stack_batch(
                 tiles[i : i + self.batch_size],
-                tile_infos[i : i + self.batch_size],
+                tile_img_infos[i : i + self.batch_size],
             )
             batch_data_entities.append(
-                OTXDataBatch(
-                    batch_size=self.batch_size,
-                    images=stacked_images,
-                    imgs_info=updated_img_info,
-                ),
+                (
+                    tile_tile_infos[i : i + self.batch_size],
+                    OTXDataBatch(
+                        batch_size=self.batch_size,
+                        images=stacked_images,
+                        imgs_info=updated_img_info,
+                    ),
+                )
             )
-        return list(zip(batch_tile_attr_list, batch_data_entities, strict=True))
+        return batch_data_entities
 
     @classmethod
     def collate_fn(cls, batch_entities: list[TileDetDataEntity]) -> TileBatchDetDataEntity:
@@ -135,8 +132,8 @@ class TileBatchDetDataEntity(OTXTileBatchDataEntity):
 
         for tile_entity in batch_entities:
             for entity in tile_entity.entity_list:
-                if not isinstance(entity, OTXDataItem):
-                    msg = "All entities should be OTXDataItem before collate_fn()"
+                if not isinstance(entity, OTXSample):
+                    msg = "All entities should be OTXSample before collate_fn()"
                     raise TypeError(msg)
                 if entity.img_info is None:
                     msg = "All entities should have img_info, but found None"
@@ -146,10 +143,11 @@ class TileBatchDetDataEntity(OTXTileBatchDataEntity):
             batch_size=batch_size,
             batch_tiles=[[entity.image for entity in tile_entity.entity_list] for tile_entity in batch_entities],
             batch_tile_img_infos=[
-                [entity.img_info for entity in tile_entity.entity_list if isinstance(entity.img_info, ImageInfo)]
-                for tile_entity in batch_entities
+                [entity.img_info for entity in tile_entity.entity_list] for tile_entity in batch_entities
             ],
-            batch_tile_attr_list=[tile_entity.tile_attr_list for tile_entity in batch_entities],
+            batch_tile_tile_infos=[
+                [entity.tile for entity in tile_entity.entity_list] for tile_entity in batch_entities
+            ],
             imgs_info=[tile_entity.ori_img_info for tile_entity in batch_entities],
             bboxes=[tile_entity.ori_bboxes for tile_entity in batch_entities],
             labels=[tile_entity.ori_labels for tile_entity in batch_entities],
@@ -164,13 +162,13 @@ class TileInstSegDataEntity(TileDataEntity):
         ori_bboxes (tv_tensors.BoundingBoxes): The bounding boxes of the original image.
         ori_labels (LongTensor): The labels of the original image.
         ori_masks (tv_tensors.Mask): The masks of the original image.
-        ori_polygons (list[Polygon]): The polygons of the original image.
+        ori_polygons (list[np.ndarray]): The polygons of the original image as arrays shaped (K, 2).
     """
 
     ori_bboxes: tv_tensors.BoundingBoxes
     ori_labels: LongTensor
     ori_masks: tv_tensors.Mask
-    ori_polygons: list[Polygon]
+    ori_polygons: list[np.ndarray]
 
     @property
     def task(self) -> OTXTaskType:
@@ -186,32 +184,32 @@ class TileBatchInstSegDataEntity(OTXTileBatchDataEntity):
         bboxes (list[tv_tensors.BoundingBoxes]): The bounding boxes of the original image.
         labels (list[LongTensor]): The labels of the original image.
         masks (list[tv_tensors.Mask]): The masks of the original image.
-        polygons (list[list[Polygon]]): The polygons of the original image.
+        polygons (list[list[np.ndarray]]): The polygons of the original image as arrays shaped (K, 2).
     """
 
     bboxes: list[tv_tensors.BoundingBoxes]
     labels: list[LongTensor]
     masks: list[tv_tensors.Mask]
-    polygons: list[list[Polygon]]
+    polygons: list[list[np.ndarray]]
 
     def unbind(self) -> list[tuple[TileAttrDictList, OTXDataBatch]]:
         """Unbind batch data entity for instance segmentation task."""
         tiles = [tile for tiles in self.batch_tiles for tile in tiles]
-        tile_infos = [tile_info for tile_infos in self.batch_tile_img_infos for tile_info in tile_infos]
-        tile_attr_list = [tile_attr for tile_attrs in self.batch_tile_attr_list for tile_attr in tile_attrs]
+        tile_img_infos = [tile_info for tile_infos in self.batch_tile_img_infos for tile_info in tile_infos]
+        tile_tile_infos = [tile_info for tile_infos in self.batch_tile_tile_infos for tile_info in tile_infos]
 
-        batch_tile_attr_list = [
-            tile_attr_list[i : i + self.batch_size] for i in range(0, len(tile_attr_list), self.batch_size)
-        ]
         batch_data_entities = [
-            OTXDataBatch(
-                batch_size=self.batch_size,
-                images=tiles[i : i + self.batch_size],
-                imgs_info=tile_infos[i : i + self.batch_size],
+            (
+                tile_tile_infos[i : i + self.batch_size],
+                OTXDataBatch(
+                    batch_size=self.batch_size,
+                    images=tiles[i : i + self.batch_size],
+                    imgs_info=tile_img_infos[i : i + self.batch_size],
+                ),
             )
             for i in range(0, len(tiles), self.batch_size)
         ]
-        return list(zip(batch_tile_attr_list, batch_data_entities, strict=True))
+        return list(batch_data_entities)
 
     @classmethod
     def collate_fn(cls, batch_entities: list[TileInstSegDataEntity]) -> TileBatchInstSegDataEntity:
@@ -222,8 +220,8 @@ class TileBatchInstSegDataEntity(OTXTileBatchDataEntity):
 
         for tile_entity in batch_entities:
             for entity in tile_entity.entity_list:
-                if not isinstance(entity, OTXDataItem):
-                    msg = "All entities should be OTXDataItem before collate_fn()"
+                if not isinstance(entity, OTXSample):
+                    msg = "All entities should be OTXSample before collate_fn()"
                     raise TypeError(msg)
                 if entity.img_info is None:
                     msg = "All entities should have img_info, but found None"
@@ -236,7 +234,9 @@ class TileBatchInstSegDataEntity(OTXTileBatchDataEntity):
                 [entity.img_info for entity in tile_entity.entity_list if isinstance(entity.img_info, ImageInfo)]
                 for tile_entity in batch_entities
             ],
-            batch_tile_attr_list=[tile_entity.tile_attr_list for tile_entity in batch_entities],
+            batch_tile_tile_infos=[
+                [entity.tile for entity in tile_entity.entity_list] for tile_entity in batch_entities
+            ],
             imgs_info=[tile_entity.ori_img_info for tile_entity in batch_entities],
             bboxes=[tile_entity.ori_bboxes for tile_entity in batch_entities],
             labels=[tile_entity.ori_labels for tile_entity in batch_entities],
@@ -274,22 +274,22 @@ class TileBatchSegDataEntity(OTXTileBatchDataEntity):
     def unbind(self) -> list[tuple[list[dict[str, int | str]], OTXDataBatch]]:
         """Unbind batch data entity for semantic segmentation task."""
         tiles = [tile for tiles in self.batch_tiles for tile in tiles]
-        tile_infos = [tile_info for tile_infos in self.batch_tile_img_infos for tile_info in tile_infos]
-        tile_attr_list = [tile_attr for tile_attrs in self.batch_tile_attr_list for tile_attr in tile_attrs]
+        tile_img_infos = [tile_info for tile_infos in self.batch_tile_img_infos for tile_info in tile_infos]
+        tile_tile_infos = [tile_info for tile_infos in self.batch_tile_tile_infos for tile_info in tile_infos]
 
-        batch_tile_attr_list = [
-            tile_attr_list[i : i + self.batch_size] for i in range(0, len(tile_attr_list), self.batch_size)
-        ]
         batch_data_entities = [
-            OTXDataBatch(
-                batch_size=self.batch_size,
-                images=tv_tensors.wrap(torch.stack(tiles[i : i + self.batch_size]), like=tiles[0]),
-                imgs_info=tile_infos[i : i + self.batch_size],
-                masks=[torch.empty((1, 1, 1)) for _ in range(self.batch_size)],
+            (
+                tile_tile_infos[i : i + self.batch_size],
+                OTXDataBatch(
+                    batch_size=self.batch_size,
+                    images=tv_tensors.wrap(torch.stack(tiles[i : i + self.batch_size]), like=tiles[0]),
+                    imgs_info=tile_img_infos[i : i + self.batch_size],
+                    masks=[torch.empty((1, 1, 1)) for _ in range(self.batch_size)],
+                ),
             )
             for i in range(0, len(tiles), self.batch_size)
         ]
-        return list(zip(batch_tile_attr_list, batch_data_entities))
+        return list(batch_data_entities)
 
     @classmethod
     def collate_fn(cls, batch_entities: list[TileSegDataEntity]) -> TileBatchSegDataEntity:
@@ -300,8 +300,8 @@ class TileBatchSegDataEntity(OTXTileBatchDataEntity):
 
         for tile_entity in batch_entities:
             for entity in tile_entity.entity_list:
-                if not isinstance(entity, OTXDataItem):
-                    msg = "All entities should be OTXDataItem before collate_fn()"
+                if not isinstance(entity, OTXSample):
+                    msg = "All entities should be OTXSample before collate_fn()"
                     raise TypeError(msg)
                 if entity.img_info is None:
                     msg = "All entities should have img_info, but found None"
@@ -311,10 +311,11 @@ class TileBatchSegDataEntity(OTXTileBatchDataEntity):
             batch_size=batch_size,
             batch_tiles=[[entity.image for entity in tile_entity.entity_list] for tile_entity in batch_entities],
             batch_tile_img_infos=[
-                [entity.img_info for entity in tile_entity.entity_list if isinstance(entity.img_info, ImageInfo)]
-                for tile_entity in batch_entities
+                [entity.img_info for entity in tile_entity.entity_list] for tile_entity in batch_entities
             ],
-            batch_tile_attr_list=[tile_entity.tile_attr_list for tile_entity in batch_entities],
+            batch_tile_tile_infos=[
+                [entity.tile for entity in tile_entity.entity_list] for tile_entity in batch_entities
+            ],
             imgs_info=[tile_entity.ori_img_info for tile_entity in batch_entities],
             masks=[tile_entity.ori_masks for tile_entity in batch_entities],
         )

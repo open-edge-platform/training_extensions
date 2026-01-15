@@ -275,7 +275,6 @@ def dfine_weighting_function(reg_max: int, up: Tensor, reg_scale: Tensor) -> Ten
         reg_scale (Tensor): Controls the curvature of the Weighting Function.
                         Larger values result in flatter weights near the central axis W(reg_max/2)=0
                         and steeper weights at both ends.
-        deploy (bool): If True, uses deployment mode settings.
 
     Returns:
         Tensor: Sequence of Weighting Function.

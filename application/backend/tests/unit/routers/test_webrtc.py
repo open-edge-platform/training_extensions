@@ -6,9 +6,9 @@ from unittest.mock import MagicMock
 import pytest
 from fastapi import status
 
-from app.api.dependencies import get_webrtc_manager
+from app.api.dependencies import get_ice_servers, get_webrtc_manager
 from app.main import app
-from app.schemas.webrtc import Answer, InputData, Offer
+from app.models.webrtc import Answer, InputData, Offer
 from app.webrtc.manager import WebRTCManager
 
 
@@ -51,7 +51,7 @@ class TestWebRTCEndpoints:
 
     def test_create_webrtc_offer_invalid_payload(self, fxt_client):
         resp = fxt_client.post("/api/webrtc/offer", json={"sdp": 123})
-        assert resp.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert resp.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
     def test_webrtc_input_hook_success(self, fxt_client, fxt_webrtc_manager, fxt_input_data):
         resp = fxt_client.post("/api/webrtc/input_hook", json=fxt_input_data.model_dump(mode="json"))
@@ -60,4 +60,24 @@ class TestWebRTCEndpoints:
 
     def test_webrtc_input_hook_invalid_payload(self, fxt_client, fxt_webrtc_manager):
         resp = fxt_client.post("/api/webrtc/input_hook", json={"wrong": "field"})
-        assert resp.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert resp.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+
+    def test_get_webrtc_config_empty(self, fxt_client):
+        app.dependency_overrides[get_ice_servers] = lambda: []  # noqa: PIE807
+        resp = fxt_client.get("/api/webrtc/config")
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.json() == {"iceServers": []}
+
+    def test_get_webrtc_config_with_servers(self, fxt_client):
+        app.dependency_overrides[get_ice_servers] = lambda: [
+            {"urls": "turn:192.168.1.100:443?transport=tcp", "username": "user", "credential": "password"},
+            {"urls": "stun:stun.example.com:3478"},
+        ]
+        resp = fxt_client.get("/api/webrtc/config")
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.json() == {
+            "iceServers": [
+                {"urls": "turn:192.168.1.100:443?transport=tcp", "username": "user", "credential": "password"},
+                {"urls": "stun:stun.example.com:3478", "username": None, "credential": None},
+            ]
+        }

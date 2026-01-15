@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, ClassVar, Literal
-import kornia as K
 
 from otx.backend.native.exporter.base import OTXModelExporter
 from otx.backend.native.exporter.native import OTXNativeModelExporter
@@ -188,7 +187,7 @@ class ATSS(OTXDetectionModel):
             resize_mode="standard",
             pad_value=0,
             swap_rgb=False,
-            via_onnx=True,  # Currently ATSS should be exported through ONNX
+            via_onnx=False,
             onnx_export_configuration={
                 "input_names": ["image"],
                 "output_names": ["boxes", "labels"],

@@ -12,7 +12,6 @@ from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any
 
 import torch
-import kornia
 import torch.nn.functional as f
 from torchvision import tv_tensors
 
@@ -21,11 +20,11 @@ from otx.backend.native.exporter.native import OTXNativeModelExporter
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel
 from otx.backend.native.schedulers import LRSchedulerListCallable
 from otx.backend.native.tools.tile_merge import SegmentationTileMerge
-from kornia.augmentation.container import AugmentationSequential
 from otx.config.data import TileConfig
 from otx.data.entity.base import ImageInfo, OTXBatchLossEntity
 from otx.data.entity.tile import OTXTileBatchDataEntity
 from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
+from otx.data.transform_libs.torchvision import Compose
 from otx.metrics import MetricInput
 from otx.metrics.dice import SegmCallable
 from otx.types.export import TaskLevelExportParameters
@@ -33,6 +32,8 @@ from otx.types.label import LabelInfo, LabelInfoTypes, SegLabelInfo
 from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
+    from datumaro.experimental.fields import TileInfo
+    from kornia.augmentation.container import AugmentationSequential
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
     from torch import Tensor
 
@@ -229,15 +230,15 @@ class OTXSegmentationModel(OTXModel):
             raise NotImplementedError(msg)
 
         tile_preds: list[OTXPredBatch] = []
-        tile_attrs: list[list[dict[str, int | str]]] = []
+        tile_infos: list[list[TileInfo]] = []
         merger = SegmentationTileMerge(
             inputs.imgs_info,
             self.num_classes,
             self.tile_config,
             self.explain_mode,
         )
-        for batch_tile_attrs, batch_tile_input in inputs.unbind():
-            tile_size = batch_tile_attrs[0]["tile_size"]
+        for batch_tile_infos, batch_tile_input in inputs.unbind():
+            tile_size = (batch_tile_infos[0].height, batch_tile_infos[0].width)
             output = self.model(
                 inputs=batch_tile_input.images,
                 img_metas=batch_tile_input.imgs_info,
@@ -251,8 +252,8 @@ class OTXSegmentationModel(OTXModel):
                 msg = "Loss output is not supported for tile merging"
                 raise TypeError(msg)
             tile_preds.append(output)
-            tile_attrs.append(batch_tile_attrs)
-        pred_entities = merger.merge(tile_preds, tile_attrs)
+            tile_infos.append(batch_tile_infos)
+        pred_entities = merger.merge(tile_preds, tile_infos)
 
         pred_entity = OTXPredBatch(
             batch_size=inputs.batch_size,
@@ -303,19 +304,6 @@ class OTXSegmentationModel(OTXModel):
                 ),
             )
         return OTXDataBatch(batch_size, images, imgs_info=infos, masks=[])  # type: ignore[arg-type]
-
-    @staticmethod
-    @torch.no_grad()
-    def _apply_batch_augmentations(augmentations_pipeline: AugmentationSequential | Compose | None, batch: OTXDataBatch) -> None:
-        if augmentations_pipeline is not None:
-            batch.images, batch.masks = augmentations_pipeline(batch.images, batch.masks)
-
-    @property
-    def _default_train_transforms(self):
-        return AugmentationSequential(
-                                      kornia.augmentation.ColorJiggle(0.1, 0.1, 0.1, 0.1),
-                                      kornia.augmentation.RandomHorizontalFlip(),
-                                      kornia.augmentation.Normalize(self.data_input_params.mean, self.data_input_params.std), data_keys=["input", "mask"], keepdim=True)
 
     @property
     def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:

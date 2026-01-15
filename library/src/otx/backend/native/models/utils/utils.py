@@ -70,14 +70,30 @@ def load_checkpoint(
     map_location: str = "cpu",
     strict: bool = False,
     prefix: str = "",
+    key_mapping: dict[str, str] | None = None,
 ) -> None:
-    """Load state dict from path of checkpoint and dump to model."""
+    """Load state dict from path of checkpoint and dump to model.
+
+    Args:
+        model: The PyTorch model to load the checkpoint into.
+        checkpoint: Path or URL to the checkpoint file.
+        map_location: Device to map tensors to. Defaults to "cpu".
+        strict: Whether to strictly enforce key matching. Defaults to False.
+        prefix: Prefix to strip from state dict keys. Defaults to "".
+        key_mapping: Dictionary mapping old key names to new key names
+            for remapping pretrained weights with different parameter names.
+            Example: {"patch_embed.proj": "patch_embed.projection"} will remap
+            any key containing "patch_embed.proj" (e.g., "patch_embed.proj.weight") to
+            "patch_embed.projection.weight".
+            Defaults to None.
+    """
     if Path(checkpoint).exists():
         load_checkpoint_to_model(
             model,
             torch.load(checkpoint, map_location),
             strict=strict,
             prefix=prefix,
+            key_mapping=key_mapping,
         )
     else:
         load_checkpoint_to_model(
@@ -85,6 +101,7 @@ def load_checkpoint(
             load_from_http(checkpoint, map_location),
             strict=strict,
             prefix=prefix,
+            key_mapping=key_mapping,
         )
 
 
@@ -203,11 +220,47 @@ def load_state_dict(module: nn.Module, state_dict: OrderedDict, strict: bool = F
         warn("\n".join(err_msg), stacklevel=1)
 
 
+def remap_state_dict_keys(
+    state_dict: dict[str, Any],
+    key_mapping: dict[str, str],
+) -> dict[str, Any]:
+    """Remap state dict keys based on provided mapping.
+
+    Args:
+        state_dict: Original state dictionary.
+        key_mapping: Dictionary mapping old key names to new key names.
+            Supports exact matches and prefix matching with wildcards.
+            Example: {"patch_embed.proj": "patch_embed.projection"}
+
+    Returns:
+        State dict with remapped keys.
+    """
+    new_state_dict = OrderedDict()
+
+    for key, value in state_dict.items():
+        new_key = key
+
+        # Check for exact match first
+        if key in key_mapping:
+            new_key = key_mapping[key]
+        else:
+            # Check for prefix matches (e.g., "old_prefix" -> "new_prefix")
+            for old_pattern, new_pattern in key_mapping.items():
+                if old_pattern in key:
+                    new_key = key.replace(old_pattern, new_pattern, 1)
+                    break
+
+        new_state_dict[new_key] = value
+
+    return new_state_dict
+
+
 def load_checkpoint_to_model(
     model: nn.Module,
     checkpoint: dict,
     strict: bool = False,
     prefix: str = "",
+    key_mapping: dict[str, str] | None = None,
 ) -> None:
     """Loads a checkpoint dictionary into a PyTorch model.
 
@@ -218,6 +271,12 @@ def load_checkpoint_to_model(
         checkpoint (dict): The checkpoint dictionary containing the model's state_dict.
         strict (bool, optional): Whether to strictly enforce that the keys in the checkpoint match the keys
             in the model's state_dict. Defaults to False.
+        prefix (str, optional): Prefix to strip from state dict keys. Defaults to "".
+        key_mapping (dict[str, str] | None, optional): Dictionary mapping old key names to new key names
+            for remapping pretrained weights with different parameter names.
+            Example: {"patch_embed.proj": "patch_embed.projection"} will remap
+            "patch_embed.proj.weight" to "patch_embed.projection.weight".
+            Defaults to None.
 
     Returns:
         None
@@ -233,6 +292,10 @@ def load_checkpoint_to_model(
     metadata = getattr(state_dict, "_metadata", OrderedDict())
     for p, r in [(r"^module\.", ""), (rf"^{prefix}\.", "")]:
         state_dict = OrderedDict({re.sub(p, r, k): v for k, v in state_dict.items()})
+
+    # Remap keys if mapping is provided
+    if key_mapping is not None:
+        state_dict = remap_state_dict_keys(state_dict, key_mapping)
 
     # Keep metadata in state_dict
     state_dict._metadata = metadata  # noqa: SLF001

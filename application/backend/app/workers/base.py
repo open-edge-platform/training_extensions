@@ -78,9 +78,11 @@ class BaseProcessWorker(mp.Process, StoppableMixin, ABC):
         """Allocate resources. Called once in the child process."""
         from app.core.logging import setup_logging
 
+        settings = get_settings()
         log_config = LogConfig(
             log_file=f"{self.ROLE.lower()}.log",
-            log_folder=str(get_settings().worker_dir),
+            log_folder=str(settings.worker_dir),
+            level=settings.log_level,
         )
         setup_logging(log_config)
 

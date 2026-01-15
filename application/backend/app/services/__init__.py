@@ -11,6 +11,7 @@ from .base import (
     ResourceWithNameAlreadyExistsError,
 )
 from .base_weights_service import BaseWeightsService
+from .dataset_revision_service import DatasetRevisionService
 from .dataset_service import DatasetService
 from .dispatch_service import DispatchService
 from .label_service import LabelService
@@ -22,12 +23,14 @@ from .project_service import ProjectService
 from .sink_service import SinkService
 from .source_service import SourceService, SourceUpdateService
 from .system_service import SystemService
+from .training_configuration_service import TrainingConfigurationService
 from .video_stream_service import VideoStreamService
 
 __all__ = [
     "ActiveModelService",
     "BaseSessionManagedService",
     "BaseWeightsService",
+    "DatasetRevisionService",
     "DatasetService",
     "DispatchService",
     "LabelService",
@@ -46,5 +49,6 @@ __all__ = [
     "SourceService",
     "SourceUpdateService",
     "SystemService",
+    "TrainingConfigurationService",
     "VideoStreamService",
 ]

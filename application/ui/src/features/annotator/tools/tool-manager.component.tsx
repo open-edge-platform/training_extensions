@@ -3,6 +3,7 @@
 
 import { useAnnotator } from '../../../shared/annotator/annotator-provider.component';
 import { BoundingBoxTool } from './bounding-box-tool/bounding-box-tool.component';
+import { PolygonTool } from './polygon-tool/polygon-tool.component';
 import { SegmentAnythingTool } from './segment-anything-tool/segment-anything-tool.component';
 
 export const ToolManager = () => {
@@ -17,7 +18,7 @@ export const ToolManager = () => {
     }
 
     if (activeTool === 'polygon') {
-        return <div>Polygon Tool</div>;
+        return <PolygonTool />;
     }
 
     return null;

@@ -54,13 +54,34 @@ overrides:
         - class_path: otx.data.transform_libs.torchvision.Resize
           init_args:
             scale: $(input_size)
+        - class_path: otx.data.transform_libs.torchvision.Pad
+          init_args:
+            size: $(input_size)
+            pad_val:
+              img: 0
+              mask: 255
+            transform_mask: true
     val_subset:
       transforms:
         - class_path: otx.data.transform_libs.torchvision.Resize
           init_args:
             scale: $(input_size)
+        - class_path: otx.data.transform_libs.torchvision.Pad
+          init_args:
+            size: $(input_size)
+            pad_val:
+              img: 0
+              mask: 255
+            transform_mask: true
     test_subset:
       transforms:
         - class_path: otx.data.transform_libs.torchvision.Resize
           init_args:
             scale: $(input_size)
+        - class_path: otx.data.transform_libs.torchvision.Pad
+          init_args:
+            size: $(input_size)
+            pad_val:
+              img: 0
+              mask: 255
+            transform_mask: true

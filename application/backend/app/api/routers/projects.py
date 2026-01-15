@@ -4,15 +4,16 @@
 """Endpoints for managing projects"""
 
 from typing import Annotated
-from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends, status
 from fastapi.exceptions import HTTPException
 from fastapi.openapi.models import Example
 from starlette.responses import FileResponse
 
-from app.api.dependencies import get_data_collector, get_label_service, get_project, get_project_id, get_project_service
-from app.schemas import LabelView, PatchLabels, ProjectCreate, ProjectUpdateName, ProjectView
+from app.api.dependencies import get_data_collector, get_label_service, get_project, get_project_service
+from app.api.schemas import LabelView, PatchLabels, ProjectCreate, ProjectUpdateName, ProjectView
+from app.api.validators import ProjectID
+from app.models import Label, Task
 from app.services import (
     LabelService,
     ProjectService,
@@ -77,7 +78,7 @@ CREATE_PROJECT_BODY_EXAMPLES = {
     responses={
         status.HTTP_201_CREATED: {"description": "Project successfully created"},
         status.HTTP_409_CONFLICT: {"description": "Project already exists or labels have duplicated names or hotkeys"},
-        status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Invalid request body"},
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {"description": "Invalid request body"},
     },
 )
 def create_project(
@@ -88,7 +89,13 @@ def create_project(
 ) -> ProjectView:
     """Create and configure a new project"""
     try:
-        return project_service.create_project(project_config)
+        task = Task(
+            exclusive_labels=project_config.task.exclusive_labels,
+            task_type=project_config.task.task_type,
+            labels=[Label.model_validate(label) for label in project_config.task.labels],
+        )
+        created_project = project_service.create_project(project_config.id, project_config.name, task)
+        return ProjectView.model_validate(created_project, from_attributes=True)
     except (ResourceWithIdAlreadyExistsError, DuplicateLabelsError) as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
@@ -102,7 +109,7 @@ def create_project(
 )
 def list_projects(project_service: Annotated[ProjectService, Depends(get_project_service)]) -> list[ProjectView]:
     """List the available projects"""
-    return project_service.list_projects()
+    return [ProjectView.model_validate(proj, from_attributes=True) for proj in project_service.list_projects()]
 
 
 @router.get(
@@ -115,12 +122,13 @@ def list_projects(project_service: Annotated[ProjectService, Depends(get_project
     },
 )
 def get_project_by_id(
-    project_id: Annotated[UUID, Depends(get_project_id)],
+    project_id: ProjectID,
     project_service: Annotated[ProjectService, Depends(get_project_service)],
 ) -> ProjectView:
     """Get info about a given project"""
     try:
-        return project_service.get_project_by_id(project_id)
+        project = project_service.get_project_by_id(project_id)
+        return ProjectView.model_validate(project, from_attributes=True)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -135,13 +143,14 @@ def get_project_by_id(
     },
 )
 def rename_project(
-    project_id: Annotated[UUID, Depends(get_project_id)],
+    project_id: ProjectID,
     project_update_name: Annotated[ProjectUpdateName, Body(description="Updated project name")],
     project_service: Annotated[ProjectService, Depends(get_project_service)],
 ) -> ProjectView:
     """Rename a project"""
     try:
-        return project_service.update_project_name(project_id, project_update_name.name)
+        updated = project_service.update_project_name(project_id, project_update_name.name)
+        return ProjectView.model_validate(updated, from_attributes=True)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -159,7 +168,7 @@ def rename_project(
     },
 )
 def delete_project(
-    project_id: Annotated[UUID, Depends(get_project_id)],
+    project_id: ProjectID,
     project_service: Annotated[ProjectService, Depends(get_project_service)],
 ) -> None:
     """Delete a project. Project with a running pipeline cannot be deleted."""
@@ -244,8 +253,7 @@ def update_labels(
     },
 )
 def get_project_thumbnail(
-    project_id: Annotated[UUID, Depends(get_project_id)],
-    project_service: Annotated[ProjectService, Depends(get_project_service)],
+    project_id: ProjectID, project_service: Annotated[ProjectService, Depends(get_project_service)]
 ) -> FileResponse:
     """Get the project's thumbnail image"""
     try:
@@ -266,7 +274,7 @@ def get_project_thumbnail(
     },
 )
 def capture_next_pipeline_frame(
-    project_id: Annotated[UUID, Depends(get_project_id)],
+    project_id: ProjectID,
     project_service: Annotated[ProjectService, Depends(get_project_service)],
     data_collector: Annotated[DataCollector, Depends(get_data_collector)],
 ) -> None:

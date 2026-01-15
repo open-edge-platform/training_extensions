@@ -4,9 +4,9 @@
 * @samet-akcay @leoll2 @Radwan-Ibrahim
 
 # CI and security
-.github/workflows/ @kamillipka @mramotowski @ivanzati @AlexanderBarabanov
-renovate.json5 @kamillipka @mramotowski @ivanzati @AlexanderBarabanov
-security.md @kamillipka @mramotowski @ivanzati @AlexanderBarabanov
+.github/workflows/ @open-edge-platform/geti-ci-maintain
+.github/renovate.json5 @open-edge-platform/geti-ci-maintain
+security.md @open-edge-platform/geti-ci-maintain
 
 # Library (OTX)
 library/ @open-edge-platform/training_extensions-lib-write

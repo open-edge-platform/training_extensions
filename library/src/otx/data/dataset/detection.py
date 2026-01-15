@@ -7,24 +7,17 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import numpy as np
-import torch
-from datumaro import Bbox, Image
-from torchvision import tv_tensors
-
-from otx.data.entity.base import ImageInfo
-from otx.data.entity.torch import OTXDataItem
-from otx.types import OTXTaskType
-from otx.types.image import ImageColorChannel
-
-from .base import OTXDataset, Transforms
-from .mixins import DataAugSwitchMixin
+from otx import OTXTaskType
+from otx.data.dataset.base import OTXDataset, Transforms
+from otx.data.dataset.mixins import DataAugSwitchMixin
+from otx.data.entity.sample import DetectionSample
+from otx.types.label import LabelInfo
 
 if TYPE_CHECKING:
-    from datumaro import Dataset as DmDataset
+    from datumaro.experimental import Dataset
 
 
-class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):  # type: ignore[misc]
+class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):
     """OTX Dataset for object detection tasks.
 
     This dataset handles object detection where each image contains multiple objects with
@@ -35,7 +28,6 @@ class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):  # type: ignore[misc]
         dm_subset (DmDataset): Datumaro dataset subset containing the data items.
         transforms (Transforms | None, optional): Transform operations to apply to the data items.
         max_refetch (int): Maximum number of retries when fetching a data item fails.
-        image_color_channel (ImageColorChannel): Color channel format for images (RGB, BGR, etc.).
         stack_images (bool): Whether to stack images in batch processing.
         to_tv_image (bool): Whether to convert images to torchvision format.
         data_format (str): Format of the source data (e.g., "coco", "pascal_voc").
@@ -45,76 +37,56 @@ class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):  # type: ignore[misc]
         >>> dataset = OTXDetectionDataset(
         ...     dm_subset=my_dm_subset,
         ...     transforms=my_transforms,
-        ...     image_color_channel=ImageColorChannel.RGB
         ... )
         >>> item = dataset[0]  # Get first item with bounding boxes
     """
 
     def __init__(
         self,
-        dm_subset: DmDataset,
+        dm_subset: Dataset,
         transforms: Transforms | None = None,
         max_refetch: int = 1000,
-        image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
         stack_images: bool = True,
         to_tv_image: bool = True,
         data_format: str = "",
     ) -> None:
+        sample_type = DetectionSample
+        dm_subset = dm_subset.convert_to_schema(sample_type)
         super().__init__(
             dm_subset=dm_subset,
+            sample_type=sample_type,
             transforms=transforms,
             max_refetch=max_refetch,
-            image_color_channel=image_color_channel,
             stack_images=stack_images,
             to_tv_image=to_tv_image,
             data_format=data_format,
         )
 
-    def _get_item_impl(self, index: int) -> OTXDataItem | None:
-        """Get a single data item from the dataset.
+        labels = list(dm_subset.schema.attributes["label"].categories.labels)
+        self.label_info = LabelInfo(
+            label_names=labels,
+            label_groups=[labels],
+            label_ids=[str(i) for i in range(len(labels))],
+        )
+
+    def get_idx_list_per_classes(self, use_string_label: bool = False) -> dict[int | str, list[int]]:
+        """Get a dictionary mapping class labels (string or int) to lists of samples.
 
         Args:
-            index: Index of the item to retrieve.
-
-        Returns:
-            OTXDataItem or None: The processed data item with image, bounding boxes, and labels,
-                or None if the item could not be processed.
+            use_string_label (bool): If True, use string class labels as keys.
+                If False, use integer indices as keys.
         """
-        item = self.dm_subset[index]
-        img = item.media_as(Image)
-        ignored_labels: list[int] = []  # This should be assigned form item
-        img_data, img_shape, _ = self._get_img_data_and_shape(img)
-
-        bbox_anns = [ann for ann in item.annotations if isinstance(ann, Bbox)]
-
-        bboxes = (
-            np.stack([ann.points for ann in bbox_anns], axis=0).astype(np.float32)
-            if len(bbox_anns) > 0
-            else np.zeros((0, 4), dtype=np.float32)
-        )
-
-        entity = OTXDataItem(
-            image=img_data,
-            img_info=ImageInfo(
-                img_idx=index,
-                img_shape=img_shape,
-                ori_shape=img_shape,
-                image_color_channel=self.image_color_channel,
-                ignored_labels=ignored_labels,
-            ),
-            bboxes=tv_tensors.BoundingBoxes(
-                bboxes,
-                format=tv_tensors.BoundingBoxFormat.XYXY,
-                canvas_size=img_shape,
-                dtype=torch.float32,
-            ),
-            label=torch.as_tensor([ann.label for ann in bbox_anns], dtype=torch.long),
-        )
-        # Apply augmentation switch if available
-        if self.has_dynamic_augmentation:
-            self._apply_augmentation_switch()
-
-        return self._apply_transforms(entity)
+        idx_list_per_classes: dict[int | str, list[int]] = {}
+        for idx in range(len(self)):
+            item = self.dm_subset[idx]
+            labels = item.label.tolist()
+            if use_string_label:
+                labels = [self.label_info.label_names[label] for label in labels]
+            for label in labels:
+                if label not in idx_list_per_classes:
+                    idx_list_per_classes[label] = []
+                idx_list_per_classes[label].append(idx)
+        return idx_list_per_classes
 
     @property
     def task_type(self) -> OTXTaskType:

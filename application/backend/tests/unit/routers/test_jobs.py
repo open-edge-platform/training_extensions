@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import asyncio
 from collections.abc import Callable
+from pathlib import Path
 from unittest.mock import Mock
 from uuid import UUID, uuid4
 
@@ -9,13 +10,13 @@ import pytest
 from starlette import status
 
 from app.api.dependencies import get_data_dir, get_job_dir, get_job_queue
-from app.core.jobs import Job, JobParams, JobQueue, JobStatus
+from app.api.schemas.job import JobRequest, TrainingRequestParams
+from app.core.jobs import JobQueue
 from app.core.jobs.control_plane import CancellationResult
+from app.core.jobs.models import Job, JobStatus, JobType, TrainingJob, TrainingJobParams
 from app.main import app
-from app.models import TaskType
-from app.schemas import ProjectView
-from app.schemas.job import JobRequest, JobType, TrainingRequestParams
-from app.schemas.project import TaskView
+from app.models import Project, Task, TaskType
+from app.models.system import DeviceInfo, DeviceType
 
 
 @pytest.fixture
@@ -30,12 +31,23 @@ def fxt_job() -> Callable[[UUID | None, JobStatus, float], Job]:
     def job_factory(
         job_id: UUID | None = None, job_status: JobStatus = JobStatus.RUNNING, progress: float = 50.0
     ) -> Job:
-        return Job(
-            id=job_id or uuid4(),
+        job_id_ = job_id or uuid4()
+        project_id_ = uuid4()
+        return TrainingJob(
+            id=job_id_,
+            project_id=project_id_,
+            log_dir=Path(""),
+            data_dir=Path(""),
             status=job_status,
             progress=100.0 if job_status >= JobStatus.DONE else progress,
             job_type=JobType.TRAIN,
-            params=JobParams(),
+            params=TrainingJobParams(
+                device=DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None),
+                job_id=job_id_,
+                project_id=project_id_,
+                model_architecture_id="TestArch",
+                task=Task(task_type=TaskType.CLASSIFICATION, exclusive_labels=True),
+            ),
         )
 
     return job_factory
@@ -45,8 +57,8 @@ class TestJobEndpoints:
     def test_submit_train_job(self, tmp_path, fxt_client, fxt_jobs_queue, fxt_project_service):
         app.dependency_overrides[get_job_dir] = lambda: tmp_path / "logs" / "jobs"
         app.dependency_overrides[get_data_dir] = lambda: tmp_path / "data"
-        project = Mock(spec=ProjectView)
-        project.task = Mock(spec=TaskView)
+        project = Mock(spec=Project)
+        project.task = Mock(spec=Task)
         project.task.task_type = TaskType.CLASSIFICATION
         project.task.exclusive_labels = True
         fxt_project_service.get_project_by_id.return_value = project
@@ -54,6 +66,7 @@ class TestJobEndpoints:
             project_id=uuid4(),
             job_type=JobType.TRAIN,
             parameters=TrainingRequestParams(
+                device="cpu",
                 model_architecture_id="YOLOv8",
                 parent_model_revision_id=uuid4(),
             ),

@@ -31,7 +31,7 @@ export const DeleteMediaItem = ({ itemsIds = [], onDeleted }: DeleteMediaItemPro
             const { dataset_item_id: itemId } = path;
 
             toast({
-                id: itemId,
+                id: String(itemId),
                 type: 'error',
                 message: `Failed to delete, ${error?.detail}`,
             });

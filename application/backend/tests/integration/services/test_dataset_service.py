@@ -12,10 +12,17 @@ from PIL import Image
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.db.schema import DatasetItemDB, DatasetItemLabelDB, DatasetRevisionDB, PipelineDB
-from app.models import DatasetItemAnnotation, DatasetItemAnnotationStatus, DatasetItemSubset, LabelReference, Rectangle
-from app.schemas import PipelineView, ProjectView
-from app.services import LabelService, PipelineService, ProjectService
+from app.db.schema import DatasetItemDB, DatasetItemLabelDB, PipelineDB
+from app.models import (
+    DatasetItemAnnotation,
+    DatasetItemAnnotationStatus,
+    DatasetItemSubset,
+    LabelReference,
+    Pipeline,
+    Project,
+    Rectangle,
+)
+from app.services import LabelService, PipelineService, ProjectService, SystemService
 from app.services.base import ResourceNotFoundError, ResourceType
 from app.services.dataset_service import (
     DatasetItemFilters,
@@ -33,9 +40,17 @@ def fxt_event_bus() -> EventBus:
 
 
 @pytest.fixture
-def fxt_pipeline_service(fxt_event_bus: EventBus, db_session: Session) -> PipelineService:
+def fxt_system_service() -> SystemService:
+    """Fixture to create a SystemService instance."""
+    return SystemService()
+
+
+@pytest.fixture
+def fxt_pipeline_service(
+    fxt_event_bus: EventBus, db_session: Session, fxt_system_service: SystemService
+) -> PipelineService:
     """Fixture to create a PipelineService instance."""
-    return PipelineService(event_bus=fxt_event_bus, db_session=db_session)
+    return PipelineService(event_bus=fxt_event_bus, db_session=db_session, system_service=fxt_system_service)
 
 
 @pytest.fixture
@@ -77,8 +92,8 @@ def fxt_project_with_pipeline(
     fxt_db_sinks,
     fxt_db_models,
     db_session,
-) -> tuple[ProjectView, PipelineView]:
-    """Fixture to create a ProjectView."""
+) -> tuple[Project, Pipeline]:
+    """Fixture to create a Project."""
 
     db_project = fxt_db_projects[0]
     db_session.add(db_project)
@@ -104,7 +119,7 @@ def fxt_project_with_pipeline(
 
 
 @pytest.fixture
-def fxt_project_with_dataset_items(fxt_project_with_pipeline, db_session) -> tuple[ProjectView, list[DatasetItemDB]]:
+def fxt_project_with_dataset_items(fxt_project_with_pipeline, db_session) -> tuple[Project, list[DatasetItemDB]]:
     project, _ = fxt_project_with_pipeline
 
     configs = [
@@ -139,7 +154,7 @@ def fxt_project_with_dataset_items(fxt_project_with_pipeline, db_session) -> tup
 @pytest.fixture
 def fxt_project_with_annotation_status_items(
     fxt_project_with_pipeline, db_session
-) -> tuple[ProjectView, list[DatasetItemDB]]:
+) -> tuple[Project, list[DatasetItemDB]]:
     """Fixture with dataset items covering all annotation statuses."""
     project, _ = fxt_project_with_pipeline
 
@@ -265,7 +280,7 @@ def fxt_annotations() -> Callable[[UUID], list[DatasetItemAnnotation]]:
 @pytest.fixture
 def fxt_project_with_labeled_dataset_items(
     fxt_project_with_pipeline, db_session
-) -> tuple[ProjectView, list[DatasetItemDB]]:
+) -> tuple[Project, list[DatasetItemDB]]:
     """Fixture to create a project with multiple labeled dataset items for testing label filtering."""
     project, _ = fxt_project_with_pipeline
 
@@ -339,7 +354,7 @@ def fxt_project_with_labeled_dataset_items(
 
 
 @pytest.fixture
-def fxt_project_with_subset_items(fxt_project_with_pipeline, db_session) -> tuple[ProjectView, list[DatasetItemDB]]:
+def fxt_project_with_subset_items(fxt_project_with_pipeline, db_session) -> tuple[Project, list[DatasetItemDB]]:
     """Fixture with dataset items covering all subset types."""
     project, _ = fxt_project_with_pipeline
 
@@ -465,7 +480,7 @@ class TestDatasetServiceIntegration:
         self,
         tmp_path: Path,
         fxt_dataset_service: DatasetService,
-        fxt_project_with_pipeline: tuple[ProjectView, PipelineView],
+        fxt_project_with_pipeline: tuple[Project, Pipeline],
         fxt_annotations: Callable[[UUID], list[DatasetItemAnnotation]],
         db_session: Session,
         format: DatasetItemSubset,
@@ -533,7 +548,7 @@ class TestDatasetServiceIntegration:
     def test_create_dataset_item_invalid_image(
         self,
         fxt_dataset_service: DatasetService,
-        fxt_project_with_pipeline: tuple[ProjectView, PipelineView],
+        fxt_project_with_pipeline: tuple[Project, Pipeline],
         db_session: Session,
     ) -> None:
         """Test creating a dataset item with invalid image."""
@@ -567,7 +582,7 @@ class TestDatasetServiceIntegration:
     def test_count_dataset_items(
         self,
         fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[ProjectView, list[DatasetItemDB]],
+        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
         db_session: Session,
         start_date,
         start_date_out_of_range,
@@ -602,7 +617,7 @@ class TestDatasetServiceIntegration:
     def test_list_dataset_items(
         self,
         fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[ProjectView, list[DatasetItemDB]],
+        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
         limit,
         limit_out_of_range,
         offset,
@@ -634,7 +649,7 @@ class TestDatasetServiceIntegration:
     def test_get_dataset_item_by_id(
         self,
         fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[ProjectView, list[DatasetItemDB]],
+        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
     ):
         """Test retrieving a dataset item by ID."""
         project, db_dataset_items = fxt_project_with_dataset_items
@@ -651,7 +666,7 @@ class TestDatasetServiceIntegration:
     def test_get_dataset_item_by_id_not_found(
         self,
         fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[ProjectView, list[DatasetItemDB]],
+        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
     ):
         """Test retrieving a non-existent dataset item raises error."""
         project, db_dataset_items = fxt_project_with_dataset_items
@@ -667,7 +682,7 @@ class TestDatasetServiceIntegration:
         self,
         tmp_path: Path,
         fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[ProjectView, list[DatasetItemDB]],
+        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
     ):
         """Test retrieving a dataset item binary path by ID."""
         project, db_dataset_items = fxt_project_with_dataset_items
@@ -684,7 +699,7 @@ class TestDatasetServiceIntegration:
     def test_get_dataset_item_binary_path_by_id_not_found(
         self,
         fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[ProjectView, list[DatasetItemDB]],
+        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
     ):
         """Test retrieving a non-existent dataset item binary path raises error."""
         project, db_dataset_items = fxt_project_with_dataset_items
@@ -702,7 +717,7 @@ class TestDatasetServiceIntegration:
         self,
         tmp_path: Path,
         fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[ProjectView, list[DatasetItemDB]],
+        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
     ):
         """Test retrieving a dataset item thumbnail path by ID."""
         project, db_dataset_items = fxt_project_with_dataset_items
@@ -719,7 +734,7 @@ class TestDatasetServiceIntegration:
     def test_get_dataset_item_thumbnail_path_by_id_not_found(
         self,
         fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[ProjectView, list[DatasetItemDB]],
+        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
     ):
         """Test retrieving a non-existent dataset item thumbnail path raises error."""
         project, db_dataset_items = fxt_project_with_dataset_items
@@ -734,7 +749,7 @@ class TestDatasetServiceIntegration:
     def test_delete_dataset_item(
         self,
         fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[ProjectView, list[DatasetItemDB]],
+        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
         fxt_projects_dir: Path,
         db_session: Session,
     ):
@@ -762,7 +777,7 @@ class TestDatasetServiceIntegration:
     def test_delete_dataset_item_not_found(
         self,
         fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[ProjectView, list[DatasetItemDB]],
+        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
     ):
         """Test deleting a non-existent dataset item raises error."""
         project, db_dataset_items = fxt_project_with_dataset_items
@@ -778,8 +793,9 @@ class TestDatasetServiceIntegration:
         "item_idx, label_idx",
         [
             (0, 0),  # Set annotation with new label to unannotated item
-            (1, 0),  # Set annotation with existing label on already annotated item
-            (1, 1),  # Set annotation with new label to already annotated item
+            (2, 0),  # Set annotation with existing label on already reviewed item
+            (2, 1),  # Set annotation with new label to already reviewed item
+            (5, 1),  # Set annotation with new label to an item to review
         ],
     )
     def test_set_dataset_item_annotations(
@@ -787,12 +803,12 @@ class TestDatasetServiceIntegration:
         item_idx: int,
         label_idx: int,
         fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[ProjectView, list[DatasetItemDB]],
+        fxt_project_with_annotation_status_items: tuple[Project, list[DatasetItemDB]],
         fxt_annotations: Callable[[UUID], list[DatasetItemAnnotation]],
         db_session: Session,
     ):
         """Test setting a dataset item annotation."""
-        project, db_dataset_items = fxt_project_with_dataset_items
+        project, db_dataset_items = fxt_project_with_annotation_status_items
         label_id = str(project.task.labels[label_idx].id)
         dataset_item_id = db_dataset_items[item_idx].id
         annotations = fxt_annotations(project.task.labels[label_idx].id)
@@ -800,11 +816,13 @@ class TestDatasetServiceIntegration:
             project=project,
             dataset_item_id=UUID(dataset_item_id),
             annotations=annotations,
+            user_reviewed=True,
         )
 
         dataset_item = db_session.get(DatasetItemDB, dataset_item_id)
         assert dataset_item is not None
         assert dataset_item.annotation_data is not None
+        assert dataset_item.user_reviewed is True
         assert [
             DatasetItemAnnotation.model_validate(annotation) for annotation in dataset_item.annotation_data
         ] == annotations
@@ -821,7 +839,7 @@ class TestDatasetServiceIntegration:
     def test_set_dataset_item_annotations_not_found(
         self,
         fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[ProjectView, list[DatasetItemDB]],
+        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
         fxt_annotations: Callable[[UUID], list[DatasetItemAnnotation]],
     ):
         """Test setting a dataset item annotation for a non-existent dataset item."""
@@ -834,6 +852,7 @@ class TestDatasetServiceIntegration:
                 project=project,
                 dataset_item_id=non_existent_id,
                 annotations=annotations,
+                user_reviewed=True,
             )
 
         assert excinfo.value.resource_type == ResourceType.DATASET_ITEM
@@ -842,7 +861,7 @@ class TestDatasetServiceIntegration:
     def test_delete_dataset_item_annotations(
         self,
         fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[ProjectView, list[DatasetItemDB]],
+        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
         db_session: Session,
     ):
         """Test deleting a dataset item annotation."""
@@ -863,7 +882,7 @@ class TestDatasetServiceIntegration:
     def test_delete_dataset_item_annotations_not_found(
         self,
         fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[ProjectView, list[DatasetItemDB]],
+        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
     ):
         """Test deleting a dataset item annotation."""
         project, db_dataset_items = fxt_project_with_dataset_items
@@ -881,7 +900,7 @@ class TestDatasetServiceIntegration:
     def test_assign_dataset_item_subset_not_found(
         self,
         fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[ProjectView, list[DatasetItemDB]],
+        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
     ):
         """Test assigning a subset to a dataset item."""
         project, db_dataset_items = fxt_project_with_dataset_items
@@ -903,7 +922,7 @@ class TestDatasetServiceIntegration:
     def test_assign_dataset_item_subset_already_assigned(
         self,
         fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[ProjectView, list[DatasetItemDB]],
+        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
         subset,
     ):
         """Test assigning a subset to a dataset item."""
@@ -922,7 +941,7 @@ class TestDatasetServiceIntegration:
     def test_assign_dataset_item(
         self,
         fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[ProjectView, list[DatasetItemDB]],
+        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
         subset,
     ):
         """Test assigning a subset to a dataset item."""
@@ -948,7 +967,7 @@ class TestDatasetServiceIntegration:
     def test_count_dataset_items_with_annotation_status(
         self,
         fxt_dataset_service: DatasetService,
-        fxt_project_with_annotation_status_items: tuple[ProjectView, list[DatasetItemDB]],
+        fxt_project_with_annotation_status_items: tuple[Project, list[DatasetItemDB]],
         annotation_status: str | None,
         expected_count: int,
     ) -> None:
@@ -971,7 +990,7 @@ class TestDatasetServiceIntegration:
     def test_list_dataset_items_with_annotation_status(
         self,
         fxt_dataset_service: DatasetService,
-        fxt_project_with_annotation_status_items: tuple[ProjectView, list[DatasetItemDB]],
+        fxt_project_with_annotation_status_items: tuple[Project, list[DatasetItemDB]],
         annotation_status: DatasetItemAnnotationStatus | None,
         expected_names: list[str],
     ) -> None:
@@ -1003,7 +1022,7 @@ class TestDatasetServiceIntegration:
     def test_list_dataset_items_with_annotation_status_pagination(
         self,
         fxt_dataset_service: DatasetService,
-        fxt_project_with_annotation_status_items: tuple[ProjectView, list[DatasetItemDB]],
+        fxt_project_with_annotation_status_items: tuple[Project, list[DatasetItemDB]],
         annotation_status: DatasetItemAnnotationStatus | None,
         limit: int,
         offset: int,
@@ -1026,7 +1045,7 @@ class TestDatasetServiceIntegration:
     def test_list_dataset_items_annotation_status_combined_with_dates(
         self,
         fxt_dataset_service: DatasetService,
-        fxt_project_with_annotation_status_items: tuple[ProjectView, list[DatasetItemDB]],
+        fxt_project_with_annotation_status_items: tuple[Project, list[DatasetItemDB]],
     ) -> None:
         """Test annotation_status filter combined with date filters."""
         project, db_dataset_items = fxt_project_with_annotation_status_items
@@ -1058,7 +1077,7 @@ class TestDatasetServiceIntegration:
     def test_annotation_status_filter_verifies_data_correctness(
         self,
         fxt_dataset_service: DatasetService,
-        fxt_project_with_annotation_status_items: tuple[ProjectView, list[DatasetItemDB]],
+        fxt_project_with_annotation_status_items: tuple[Project, list[DatasetItemDB]],
     ) -> None:
         """Test that annotation_status filter returns items with correct properties."""
         project, db_dataset_items = fxt_project_with_annotation_status_items
@@ -1101,7 +1120,7 @@ class TestDatasetServiceIntegration:
     def test_list_dataset_items_filter_by_single_label(
         self,
         fxt_dataset_service: DatasetService,
-        fxt_project_with_labeled_dataset_items: tuple[ProjectView, list[DatasetItemDB]],
+        fxt_project_with_labeled_dataset_items: tuple[Project, list[DatasetItemDB]],
     ):
         """Test listing dataset items filtered by a single label."""
         project, db_dataset_items = fxt_project_with_labeled_dataset_items
@@ -1122,7 +1141,7 @@ class TestDatasetServiceIntegration:
     def test_list_dataset_items_filter_by_multiple_labels(
         self,
         fxt_dataset_service: DatasetService,
-        fxt_project_with_labeled_dataset_items: tuple[ProjectView, list[DatasetItemDB]],
+        fxt_project_with_labeled_dataset_items: tuple[Project, list[DatasetItemDB]],
     ):
         """Test listing dataset items filtered by multiple labels (OR logic)."""
         project, db_dataset_items = fxt_project_with_labeled_dataset_items
@@ -1144,7 +1163,7 @@ class TestDatasetServiceIntegration:
     def test_list_dataset_items_filter_by_nonexistent_label(
         self,
         fxt_dataset_service: DatasetService,
-        fxt_project_with_labeled_dataset_items: tuple[ProjectView, list[DatasetItemDB]],
+        fxt_project_with_labeled_dataset_items: tuple[Project, list[DatasetItemDB]],
     ):
         """Test listing dataset items filtered by a nonexistent label."""
         project, db_dataset_items = fxt_project_with_labeled_dataset_items
@@ -1163,7 +1182,7 @@ class TestDatasetServiceIntegration:
     def test_count_dataset_items_filter_by_single_label(
         self,
         fxt_dataset_service: DatasetService,
-        fxt_project_with_labeled_dataset_items: tuple[ProjectView, list[DatasetItemDB]],
+        fxt_project_with_labeled_dataset_items: tuple[Project, list[DatasetItemDB]],
     ):
         """Test counting dataset items filtered by a single label."""
         project, db_dataset_items = fxt_project_with_labeled_dataset_items
@@ -1180,7 +1199,7 @@ class TestDatasetServiceIntegration:
     def test_count_dataset_items_filter_by_multiple_labels(
         self,
         fxt_dataset_service: DatasetService,
-        fxt_project_with_labeled_dataset_items: tuple[ProjectView, list[DatasetItemDB]],
+        fxt_project_with_labeled_dataset_items: tuple[Project, list[DatasetItemDB]],
     ):
         """Test counting dataset items filtered by multiple labels (OR logic)."""
         project, db_dataset_items = fxt_project_with_labeled_dataset_items
@@ -1198,7 +1217,7 @@ class TestDatasetServiceIntegration:
     def test_list_dataset_items_no_label_filter(
         self,
         fxt_dataset_service: DatasetService,
-        fxt_project_with_labeled_dataset_items: tuple[ProjectView, list[DatasetItemDB]],
+        fxt_project_with_labeled_dataset_items: tuple[Project, list[DatasetItemDB]],
     ):
         """Test listing dataset items without label filter returns all items."""
         project, db_dataset_items = fxt_project_with_labeled_dataset_items
@@ -1223,7 +1242,7 @@ class TestDatasetServiceIntegration:
     def test_count_dataset_items_with_subset(
         self,
         fxt_dataset_service: DatasetService,
-        fxt_project_with_subset_items: tuple[ProjectView, list[DatasetItemDB]],
+        fxt_project_with_subset_items: tuple[Project, list[DatasetItemDB]],
         subset: str | None,
         expected_count: int,
     ) -> None:
@@ -1259,7 +1278,7 @@ class TestDatasetServiceIntegration:
     def test_list_dataset_items_with_subset(
         self,
         fxt_dataset_service: DatasetService,
-        fxt_project_with_subset_items: tuple[ProjectView, list[DatasetItemDB]],
+        fxt_project_with_subset_items: tuple[Project, list[DatasetItemDB]],
         subset: str | None,
         expected_names: list[str],
     ) -> None:
@@ -1294,7 +1313,7 @@ class TestDatasetServiceIntegration:
     def test_list_dataset_items_with_subset_pagination(
         self,
         fxt_dataset_service: DatasetService,
-        fxt_project_with_subset_items: tuple[ProjectView, list[DatasetItemDB]],
+        fxt_project_with_subset_items: tuple[Project, list[DatasetItemDB]],
         subset: str | None,
         limit: int,
         offset: int,
@@ -1317,7 +1336,7 @@ class TestDatasetServiceIntegration:
     def test_subset_filter_verifies_data_correctness(
         self,
         fxt_dataset_service: DatasetService,
-        fxt_project_with_subset_items: tuple[ProjectView, list[DatasetItemDB]],
+        fxt_project_with_subset_items: tuple[Project, list[DatasetItemDB]],
     ) -> None:
         """Test that subset filter returns items with correct subset values."""
         project, db_dataset_items = fxt_project_with_subset_items
@@ -1373,23 +1392,3 @@ class TestDatasetServiceIntegration:
         assert len(testing_items) == 1
         for item in testing_items:
             assert item.subset == DatasetItemSubset.TESTING
-
-    def test_save_revision(
-        self,
-        fxt_projects_dir: Path,
-        fxt_dataset_service: DatasetService,
-        fxt_project_with_subset_items: tuple[ProjectView, list[DatasetItemDB]],
-        db_session: Session,
-    ) -> None:
-        """Test saving a dataset revision."""
-        project, db_dataset_items = fxt_project_with_subset_items
-        dataset = fxt_dataset_service.get_dm_dataset(project.id, project.task, DatasetItemAnnotationStatus.REVIEWED)
-
-        revision_id = fxt_dataset_service.save_revision(
-            project_id=project.id,
-            dataset=dataset,
-        )
-
-        # Verify that a revision entry was created
-        assert db_session.get(DatasetRevisionDB, str(revision_id)) is not None
-        assert (fxt_projects_dir / str(project.id) / "dataset_revisions" / str(revision_id) / "dataset.zip").exists()

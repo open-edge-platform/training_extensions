@@ -1,0 +1,84 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+from enum import StrEnum
+from typing import Any
+from uuid import UUID
+
+from pydantic import AliasChoices, Field, model_validator
+
+from .base import BaseEntity
+from .data_collection_policy import DataCollectionConfig, DataCollectionPolicy
+from .model_revision import ModelRevision
+from .sink import Sink
+from .source import Source
+
+
+class PipelineStatus(StrEnum):
+    IDLE = "idle"
+    RUNNING = "running"
+
+    @classmethod
+    def from_bool(cls, is_running: bool) -> "PipelineStatus":
+        return cls.RUNNING if is_running else cls.IDLE
+
+    @property
+    def as_bool(self) -> bool:
+        return self == PipelineStatus.RUNNING
+
+
+class Pipeline(BaseEntity):
+    """
+    Represents a data processing pipeline within a project.
+
+    A pipeline connects a data source, a model revision, and a sink to process and output data.
+    It manages the flow of data through the system and tracks the pipeline's operational state.
+
+    Attributes:
+        project_id: UUID of the project this pipeline belongs to.
+        source: The data source configuration, None if disconnected.
+        sink: The data sink configuration, None if disconnected.
+        model_revision: The model revision to use for processing, None if no model is selected.
+        source_id: UUID reference to the source entity.
+        sink_id: UUID reference to the sink entity.
+        model_id: UUID reference to the model revision entity.
+        status: Current operational status of the pipeline (IDLE or RUNNING).
+        data_collection: Configuration for data collection including max dataset size and policies.
+        device: The device used for model inference (e.g., 'cpu', 'xpu', 'cuda', 'xpu-1', etc.).
+
+    Raises:
+        ValueError: If attempting to set status to RUNNING when source, sink, or model is not configured.
+    """
+
+    project_id: UUID
+    source: Source | None = None
+    sink: Sink | None = None
+    model_revision: ModelRevision | None = None
+    source_id: UUID | None = None
+    sink_id: UUID | None = None
+    model_id: UUID | None = Field(default=None, validation_alias=AliasChoices("model_revision_id", "model_id"))
+    status: PipelineStatus = PipelineStatus.IDLE
+    data_collection: DataCollectionConfig = Field(default_factory=DataCollectionConfig)
+    device: str = Field(default="cpu", pattern=r"^(cpu|xpu|cuda)(-\d+)?$")
+
+    @property
+    def data_collection_policies(self) -> list[DataCollectionPolicy]:
+        """Backward-compatible property to access data collection policies."""
+        return self.data_collection.policies
+
+    @model_validator(mode="before")
+    def set_status_from_is_running(cls, data: Any) -> Any:
+        if hasattr(data, "is_running") and not hasattr(data, "status"):
+            status = PipelineStatus.from_bool(getattr(data, "is_running"))
+            d = data.__dict__.copy()
+            d["status"] = status
+            return d
+        return data
+
+    @model_validator(mode="after")
+    def validate_running_status(self) -> "Pipeline":
+        if self.status == PipelineStatus.RUNNING and any(
+            x is None for x in (self.source_id, self.sink_id, self.model_id)
+        ):
+            raise ValueError("Pipeline cannot be in 'running' state when source, sink, or model is not configured.")
+        return self

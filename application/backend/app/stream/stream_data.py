@@ -29,7 +29,7 @@ class StreamData:
     """
 
     # available after 'stream loading' stage
-    frame_data: np.ndarray  # frame loaded as numpy array
+    frame_data: np.ndarray  # frame loaded as numpy array (HWC, BGR format)
     timestamp: float  # timestamp of the frame (epoch)
     source_metadata: dict[str, Any]  # unstructured metadata about the source of the frame (camera ID, video file, etc.)
 

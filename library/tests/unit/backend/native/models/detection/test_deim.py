@@ -87,7 +87,7 @@ class TestDEIMDFine:
             ("deim_dfine_hgnetv2_x", 20),
         ],
     )
-    def test_loss_computation(self, model_name: str, label_info: int, fxt_data_module) -> None:
+    def test_loss_computation(self, model_name: str, label_info: int, fxt_detection_batch) -> None:
         """Test DEIM DFine loss computation in training mode."""
         model = DEIMDFine(
             model_name=model_name,
@@ -95,15 +95,11 @@ class TestDEIMDFine:
             data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         )
 
-        # Get data batch
-        data = next(iter(fxt_data_module.train_dataloader()))
-        data.images = torch.randn(2, 3, 640, 640)
-
         # Set model to training mode
         model.train()
 
         # Forward pass should return loss dictionary
-        output = model(data)
+        output = model(fxt_detection_batch)
 
         # Check that output contains expected DEIM loss components
         assert isinstance(output, dict)
@@ -123,23 +119,18 @@ class TestDEIMDFine:
             "deim_dfine_hgnetv2_x",
         ],
     )
-    def test_predict(self, model_name: str, fxt_data_module) -> None:
+    def test_predict(self, model_name: str, fxt_detection_batch) -> None:
         """Test DEIM DFine prediction in evaluation mode."""
         model = DEIMDFine(
             model_name=model_name,
             label_info=3,
             data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         )
-
-        # Get data batch
-        data = next(iter(fxt_data_module.train_dataloader()))
-        data.images = torch.randn(2, 3, 640, 640)
-
         # Set model to evaluation mode
         model.eval()
 
         # Forward pass should return predictions
-        output = model(data)
+        output = model(fxt_detection_batch)
 
         # Check that output is OTXPredBatch
         assert isinstance(output, OTXPredBatch)

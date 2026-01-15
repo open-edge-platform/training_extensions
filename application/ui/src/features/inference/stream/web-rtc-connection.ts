@@ -61,7 +61,11 @@ export class WebRTCConnection {
         }
 
         this.updateStatus('connecting');
-        this.peerConnection = new RTCPeerConnection();
+        const iceServers = await this.fetchIceServers();
+        const rtcConfig: RTCConfiguration = {
+            iceServers,
+        };
+        this.peerConnection = new RTCPeerConnection(rtcConfig);
         this.timeoutId = setTimeout(() => {
             console.warn('Connection is taking longer than usual. Are you on a VPN?');
         }, CONNECTION_TIMEOUT);
@@ -264,5 +268,20 @@ export class WebRTCConnection {
                 webrtc_id: this.webrtcId,
             },
         });
+    }
+
+    private async fetchIceServers() {
+        try {
+            const { data } = await fetchClient.GET('/api/webrtc/config');
+            if (!data) {
+                console.warn('No ICE server data received.');
+                return [];
+            }
+            console.info('ICE servers:', data.iceServers);
+            return data.iceServers as RTCIceServer[];
+        } catch (err) {
+            console.error('Error fetching ICE servers:', err);
+            return [];
+        }
     }
 }

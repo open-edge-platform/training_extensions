@@ -5,9 +5,9 @@ import { useState } from 'react';
 
 import { DialogContainer, Size } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-import type { DatasetItem } from 'src/constants/shared-types';
 
 import { CheckboxInput } from '../../../components/checkbox-input/checkbox-input.component';
+import type { DatasetItem } from '../../../constants/shared-types';
 import { MediaPreview } from '../media-preview/media-preview.component';
 import { useSelectedData } from '../selected-data-provider.component';
 import { VirtualizerGridLayout } from '../virtualizer-grid-layout/virtualizer-grid-layout.component';

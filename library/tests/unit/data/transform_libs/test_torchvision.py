@@ -10,7 +10,6 @@ from copy import deepcopy
 import numpy as np
 import pytest
 import torch
-from datumaro import Polygon
 from torch import LongTensor
 from torchvision import tv_tensors
 from torchvision.transforms.v2 import ToDtype
@@ -143,10 +142,12 @@ def det_data_entity_with_polygons() -> OTXDataItem:
     fake_masks = tv_tensors.Mask(masks)
 
     # Create corresponding polygons
-    fake_polygons = [
-        Polygon(points=[10, 10, 50, 10, 50, 50, 10, 50]),  # Rectangle polygon for first object
-        Polygon(points=[60, 60, 100, 60, 100, 100, 60, 100]),  # Rectangle polygon for second object
-    ]
+    fake_polygons = np.array(
+        [
+            np.array([[10, 10], [50, 10], [50, 50], [10, 50]]),  # Rectangle polygon for first object
+            np.array([[60, 60], [100, 60], [100, 100], [60, 100]]),  # Rectangle polygon for second object
+        ]
+    )
 
     return OTXDataItem(
         image=tv_tensors.Image(fake_image),
@@ -270,8 +271,7 @@ class TestResize:
         assert all(
             [  # noqa: C419
                 np.all(
-                    np.array(rp.points).reshape(-1, 2)
-                    == np.array(fp.points).reshape(-1, 2) * np.array([results.img_info.scale_factor[::-1]]),
+                    rp == fp * np.array([results.img_info.scale_factor[::-1]]),
                 )
                 for rp, fp in zip(results.polygons, fxt_inst_seg_data_entity[0].polygons)
             ],
@@ -306,15 +306,15 @@ class TestRandomFlip:
         assert torch.all(tv_tensors.Mask(results.masks).flip(-1) == fxt_inst_seg_data_entity[0].masks)
 
         # test polygons
-        def revert_hflip(polygon: list[float], width: int) -> list[float]:
-            p = np.asarray(polygon.points)
-            p[0::2] = width - p[0::2]
-            return p.tolist()
+        def revert_hflip(polygon: np.ndarray, width: int) -> np.ndarray:
+            polygon[:, 0] = width - polygon[:, 0]
+            return polygon
 
         width = results.img_info.img_shape[1]
         polygons_results = deepcopy(results.polygons)
-        polygons_results = [Polygon(points=revert_hflip(polygon, width)) for polygon in polygons_results]
-        assert polygons_results == fxt_inst_seg_data_entity[0].polygons
+        polygons_results = [revert_hflip(polygon, width) for polygon in polygons_results]
+        for polygon, expected_polygon in zip(polygons_results, fxt_inst_seg_data_entity[0].polygons):
+            assert np.all(polygon == expected_polygon)
 
 
 class TestPhotoMetricDistortion:
@@ -435,8 +435,8 @@ class TestRandomAffine:
 
         # Check that polygons are still valid (even number of coordinates)
         for polygon in results.polygons:
-            assert len(polygon.points) % 2 == 0  # Should have even number of coordinates
-            assert len(polygon.points) >= 6  # Should have at least 3 points (6 coordinates)
+            assert polygon.shape[1] == 2  # Should have (x,y) coordinates
+            assert polygon.shape[0] >= 3  # Should have at least 3 points
 
     def test_forward_with_masks_and_polygons_transform_enabled(
         self,
@@ -531,15 +531,13 @@ class TestRandomAffine:
         height, width = results.image.shape[:2]
 
         for polygon in results.polygons:
-            points = np.array(polygon.points).reshape(-1, 2)
-
             # Check that x coordinates are within [0, width]
-            assert np.all(points[:, 0] >= 0)
-            assert np.all(points[:, 0] <= width)
+            assert np.all(polygon[:, 0] >= 0)
+            assert np.all(polygon[:, 0] <= width)
 
             # Check that y coordinates are within [0, height]
-            assert np.all(points[:, 1] >= 0)
-            assert np.all(points[:, 1] <= height)
+            assert np.all(polygon[:, 1] >= 0)
+            assert np.all(polygon[:, 1] <= height)
 
     @pytest.mark.parametrize("transform_polygon", [True, False])
     def test_polygon_transform_parameter_effect(
@@ -987,7 +985,7 @@ class TestRandomCrop:
             ),
             label=torch.LongTensor([0, 1]),
             masks=tv_tensors.Mask(np.zeros((2, 10, 10), np.uint8)),
-            polygons=[Polygon(points=[0, 0, 0, 7, 7, 7, 7, 0]), Polygon(points=[2, 3, 2, 9, 9, 9, 9, 3])],
+            polygons=np.array([np.array([[0, 0], [0, 7], [7, 7], [7, 0]]), np.array([[2, 3], [2, 9], [9, 9], [9, 3]])]),
         )
 
     def test_init_invalid_crop_type(self) -> None:

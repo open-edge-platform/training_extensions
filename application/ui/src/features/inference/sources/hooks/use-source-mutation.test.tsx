@@ -7,13 +7,13 @@ import { TestProviders } from 'test-utils/render';
 
 import { http } from '../../../../api/utils';
 import { server } from '../../../../msw-node-setup';
-import { WebcamSourceConfig } from '../util';
+import { USBCameraSourceConfig } from '../util';
 import { useSourceMutation } from './use-source-mutation.hook';
 
-const mockedSource: WebcamSourceConfig = {
+const mockedSource: USBCameraSourceConfig = {
     id: 'original-id',
     name: 'Mock Source',
-    source_type: 'webcam' as const,
+    source_type: 'usb_camera' as const,
     device_id: 0,
 };
 

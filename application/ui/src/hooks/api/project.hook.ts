@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-import { $api } from 'src/api/client';
+
+import { $api } from '../../api/client';
 
 export const useProjects = () => {
     return $api.useSuspenseQuery('get', '/api/projects');

@@ -35,7 +35,6 @@ class RTMPose(OTXKeypointDetectionModel):
         "rtmpose_tiny": "https://download.openmmlab.com/mmpose/v1/projects/rtmposev1/cspnext-tiny_udp-aic-coco_210e-256x192-cbed682d_20230130.pth",
     }
 
-
     def __init__(
         self,
         label_info: LabelInfoTypes,
@@ -119,6 +118,7 @@ class RTMPose(OTXKeypointDetectionModel):
                     "pred_y": {0: "batch"},
                 },
                 "autograd_inlining": False,
+                "opset_version": 18,
             },
             output_names=["pred_x", "pred_y"],
         )

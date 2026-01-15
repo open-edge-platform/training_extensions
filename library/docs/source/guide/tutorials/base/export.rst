@@ -12,14 +12,11 @@ Export
 
     "export" method should be implemented within a framework engine like OTXEngine to be able to export the model. Optimization and validation steps are required to use OVEngine.
 
-1. Activate the virtual environment
-created in the previous step.
+1. Activate the virtual environment created in the previous step.
 
 .. code-block:: shell
 
-    source .otx/bin/activate
-    # or by this line, if you created an environment, using tox
-    . venv/otx/bin/activate
+    source .venv/bin/activate
 
 2. ``otx export`` returns an ``.onnx``, ``openvino.xml(.bin)`` and ``.zip``
 exportable code with demo depending on the export type passed to CLI or API.

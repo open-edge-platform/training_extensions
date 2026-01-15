@@ -1,0 +1,9 @@
+.tabs {
+    div[class*='spectrum-Tabs-selectionIndicator'] {
+        display: none;
+    }
+}
+
+.tabPanels {
+    border: 0 !important;
+}

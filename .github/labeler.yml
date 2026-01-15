@@ -32,11 +32,11 @@ BUILD:
       - any-glob-to-any-file:
           - ".ci/**/*"
           - ".github/**/*"
-          - ".pre-commit-config.yaml"
-          - "markdownlint.rb"
+          - "**/.pre-commit-config.yaml"
           - "**/pyproject.toml"
           - "**/tox.ini"
           - "**/Dockerfile"
+          - "markdownlint.yaml"
           - "MANIFEST.in"
 
 DEPENDENCY:

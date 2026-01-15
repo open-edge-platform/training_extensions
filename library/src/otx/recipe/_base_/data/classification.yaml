@@ -2,7 +2,6 @@ task: MULTI_CLASS_CLS
 input_size:
   - 224
   - 224
-image_color_channel: RGB
 data_format: imagenet_with_subset_dirs
 unannotated_items_ratio: 0.0
 train_subset:

@@ -3,7 +3,6 @@
 
 import os
 from dataclasses import dataclass
-from multiprocessing.synchronize import Event as EventClass
 from pathlib import Path
 from uuid import UUID
 
@@ -11,10 +10,13 @@ from loguru import logger
 from model_api.models import Model
 
 from app.db.engine import get_db_session
+from app.models.model_activation import ModelActivationState
 from app.repositories import ModelRevisionRepository
-from app.schemas.model_activation import ModelActivationState
+from app.repositories.active_model_repo import ActiveModelRepo
 
-MODELAPI_DEVICE = os.getenv("MODELAPI_DEVICE", "AUTO")
+# It's safer to default to CPU since inference with other devices sometimes results in degraded prediction quality
+# See for example: https://github.com/open-edge-platform/model_api/issues/460
+MODELAPI_DEVICE = os.getenv("MODELAPI_DEVICE", "CPU")
 MODELAPI_NSTREAMS = os.getenv("MODELAPI_NSTREAMS", "2")
 
 
@@ -31,9 +33,8 @@ class ActiveModelService:
     Used exclusively by the InferenceWorker process.
     """
 
-    def __init__(self, data_dir: Path, mp_model_reload_event: EventClass) -> None:
+    def __init__(self, data_dir: Path) -> None:
         self.projects_dir = data_dir / "projects"
-        self._mp_model_reload_event = mp_model_reload_event
         self._model_activation_state: ModelActivationState = self._load_state()
         self._loaded_model: LoadedModel | None = None
 
@@ -41,12 +42,19 @@ class ActiveModelService:
     def _load_state() -> ModelActivationState:
         """Load the state from the file if it exists, otherwise initialize an empty state"""
         with get_db_session() as db:
-            repo = ModelRevisionRepository(db)
-            active_model = repo.get_active_revision()
-            available_models = repo.list_all()
+            active_model_repo = ActiveModelRepo(db=db)
+            active_model = active_model_repo.get_active_revision()
+            if active_model is None:
+                return ModelActivationState(
+                    project_id=None,
+                    active_model_id=None,
+                    available_models=[],
+                )
+            model_rev_repo = ModelRevisionRepository(project_id=str(active_model.project_id), db=db)
+            available_models = model_rev_repo.list_all()
             return ModelActivationState(
-                project_id=UUID(active_model.project_id) if active_model is not None else None,
-                active_model_id=UUID(active_model.id) if active_model is not None else None,
+                project_id=UUID(active_model.project_id),
+                active_model_id=UUID(active_model.id),
                 available_models=[UUID(m.id) for m in available_models],
             )
 

@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from functools import partial
 
-import torch.nn.functional as F  # noqa: N812
+import torch.nn.functional as f
 from torch import Tensor, nn
 
 from otx.backend.native.models.common.losses.utils import weighted_loss
@@ -45,10 +45,10 @@ def quality_focal_loss_tensor_target(
         raise ValueError(msg)
     if activated:
         pred_sigmoid = pred
-        loss_function = F.binary_cross_entropy
+        loss_function = f.binary_cross_entropy
     else:
         pred_sigmoid = pred.sigmoid()
-        loss_function = F.binary_cross_entropy_with_logits
+        loss_function = f.binary_cross_entropy_with_logits
 
     scale_factor = pred_sigmoid
     target = target.type_as(pred)
@@ -89,7 +89,7 @@ def quality_focal_loss(pred: Tensor, target: Tensor, beta: float = 2.0) -> Tenso
     pred_sigmoid = pred.sigmoid()
     scale_factor = pred_sigmoid
     zerolabel = scale_factor.new_zeros(pred.shape)
-    loss = F.binary_cross_entropy_with_logits(pred, zerolabel, reduction="none") * scale_factor.pow(
+    loss = f.binary_cross_entropy_with_logits(pred, zerolabel, reduction="none") * scale_factor.pow(
         beta,
     )
 
@@ -99,7 +99,7 @@ def quality_focal_loss(pred: Tensor, target: Tensor, beta: float = 2.0) -> Tenso
     pos_label = label[pos].long()
     # positives are supervised by bbox quality (IoU) score
     scale_factor = score[pos] - pred_sigmoid[pos, pos_label]
-    loss[pos, pos_label] = F.binary_cross_entropy_with_logits(
+    loss[pos, pos_label] = f.binary_cross_entropy_with_logits(
         pred[pos, pos_label],
         score[pos],
         reduction="none",
@@ -134,7 +134,7 @@ def quality_focal_loss_with_prob(pred: Tensor, target: Tensor, beta: float = 2.0
     pred_sigmoid = pred
     scale_factor = pred_sigmoid
     zerolabel = scale_factor.new_zeros(pred.shape)
-    loss = F.binary_cross_entropy(pred, zerolabel, reduction="none") * scale_factor.pow(beta)
+    loss = f.binary_cross_entropy(pred, zerolabel, reduction="none") * scale_factor.pow(beta)
 
     # FG cat_id: [0, num_classes -1], BG cat_id: num_classes
     bg_class_ind = pred.size(1)
@@ -142,7 +142,7 @@ def quality_focal_loss_with_prob(pred: Tensor, target: Tensor, beta: float = 2.0
     pos_label = label[pos].long()
     # positives are supervised by bbox quality (IoU) score
     scale_factor = score[pos] - pred_sigmoid[pos, pos_label]
-    loss[pos, pos_label] = F.binary_cross_entropy(
+    loss[pos, pos_label] = f.binary_cross_entropy(
         pred[pos, pos_label],
         score[pos],
         reduction="none",

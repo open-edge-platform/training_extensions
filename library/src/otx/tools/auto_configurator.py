@@ -335,14 +335,12 @@ class AutoConfigurator:
         subset_config.transform_lib_type = ov_config[f"{subset}_subset"]["transform_lib_type"]
         subset_config.transforms = ov_config[f"{subset}_subset"]["transforms"]
         subset_config.to_tv_image = ov_config[f"{subset}_subset"]["to_tv_image"]
-        datamodule.image_color_channel = ov_config["image_color_channel"]
         datamodule.tile_config.enable_tiler = False
         msg = (
             f"For OpenVINO IR models, Update the following {subset} \n"
             f"\t transforms: {subset_config.transforms} \n"
             f"\t transform_lib_type: {subset_config.transform_lib_type} \n"
             f"\t batch_size: {subset_config.batch_size} \n"
-            f"\t image_color_channel: {datamodule.image_color_channel} \n"
             "And the tiler is disabled."
         )
         warn(msg, stacklevel=1)
@@ -355,8 +353,6 @@ class AutoConfigurator:
             test_subset=datamodule.test_subset,
             input_size=datamodule.input_size,
             tile_config=datamodule.tile_config,
-            image_color_channel=datamodule.image_color_channel,
-            include_polygons=datamodule.include_polygons,
             ignore_index=datamodule.ignore_index,
             unannotated_items_ratio=datamodule.unannotated_items_ratio,
             auto_num_workers=datamodule.auto_num_workers,

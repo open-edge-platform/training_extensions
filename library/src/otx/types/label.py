@@ -5,15 +5,15 @@
 
 from __future__ import annotations
 
-import copy
 import json
 from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING, Any
 
-from datumaro.components.annotation import GroupType
-
 if TYPE_CHECKING:
-    from datumaro import Label, LabelCategories
+    from datumaro.experimental.categories import (
+        HierarchicalLabelCategories,
+        HierarchicalLabelCategory,
+    )
 
 __all__ = [
     "HLabelInfo",
@@ -31,6 +31,16 @@ class LabelInfo:
     label_names: list[str]
     label_ids: list[str]
     label_groups: list[list[str]]
+
+    def __eq__(self, other: object) -> bool:
+        """Compare two LabelInfo objects, normalizing list/tuple differences."""
+        if not isinstance(other, LabelInfo):
+            return NotImplemented
+        return (
+            list(self.label_names) == list(other.label_names)
+            and list(self.label_ids) == list(other.label_ids)
+            and [list(g) for g in self.label_groups] == [list(g) for g in other.label_groups]
+        )
 
     @property
     def num_classes(self) -> int:
@@ -59,62 +69,6 @@ class LabelInfo:
         return cls(
             label_names=label_names,
             label_groups=[label_names],
-            label_ids=label_ids,
-        )
-
-    @classmethod
-    def from_dm_label_groups(cls, dm_label_categories: LabelCategories) -> LabelInfo:
-        """Create this object from the datumaro label groups.
-
-        Args:
-            dm_label_categories (LabelCategories): The label category information from Datumaro.
-
-        Returns:
-            LabelInfo(
-                label_names=["Heart_King", "Heart_Queen", "Spade_King", "Spade_Jack"]
-                label_groups=[["Heart_King", "Heart_Queen"], ["Spade_King", "Spade_Jack"]]
-            )
-
-        """
-        label_names = [item.name for item in dm_label_categories.items]
-        label_groups = [label_group.labels for label_group in dm_label_categories.label_groups]
-        if len(label_groups) == 0:  # Single-label classification
-            label_groups = [label_names]
-
-        return LabelInfo(
-            label_names=label_names,
-            label_groups=label_groups,
-            label_ids=[str(i) for i in range(len(label_names))],
-        )
-
-    @classmethod
-    def from_dm_label_groups_arrow(cls, dm_label_categories: LabelCategories) -> LabelInfo:
-        """Overload to support datumaro's arrow format."""
-        label_names = []
-        for item in dm_label_categories.items:
-            for attr in item.attributes:
-                if attr.startswith("__name__"):
-                    label_names.append(attr[len("__name__") :])
-                    break
-
-        if len(label_names) != len(dm_label_categories.items):
-            msg = "Wrong arrow format: can not extract label names from attributes"
-            raise ValueError(msg)
-
-        id_to_name_mapping = {item.name: label_names[i] for i, item in enumerate(dm_label_categories.items)}
-
-        for label_group in dm_label_categories.label_groups:
-            label_group.labels = [id_to_name_mapping.get(label, label) for label in label_group.labels]
-
-        label_groups = [label_group.labels for label_group in dm_label_categories.label_groups]
-        if len(label_groups) == 0:  # Single-label classification
-            label_groups = [label_names]
-
-        label_ids = [item.name for item in dm_label_categories.items]
-
-        return LabelInfo(
-            label_names=label_names,
-            label_groups=label_groups,
             label_ids=label_ids,
         )
 
@@ -163,7 +117,6 @@ class HLabelInfo(LabelInfo):
     Args:
         num_multiclass_heads: The number of multiclass heads in the hierarchy.
         num_multilabel_classes: The number of multilabel classes.
-        head_to_logits_range: The logit range for each head as a dictionary mapping
                             head indices to (start, end) tuples.
         num_single_label_classes: The number of single label classes.
         class_to_group_idx: Dictionary mapping class names to (head_index, label_index)
@@ -204,20 +157,20 @@ class HLabelInfo(LabelInfo):
     head_idx_to_logits_range: dict[str, tuple[int, int]]
     num_single_label_classes: int
     class_to_group_idx: dict[str, tuple[int, int]]
-    all_groups: list[list[str]]
+    all_groups: list[tuple[str, ...]]
     label_to_idx: dict[str, int]
     label_tree_edges: list[list[str]]
     empty_multiclass_head_indices: list[int]
 
     @classmethod
-    def from_dm_label_groups(cls, dm_label_categories: LabelCategories) -> HLabelInfo:
+    def from_dm_label_groups(cls, dm_label_categories: HierarchicalLabelCategories) -> HLabelInfo:
         """Generate HLabelData from the Datumaro LabelCategories.
 
         Args:
             dm_label_categories (LabelCategories): the label categories of datumaro.
         """
 
-        def get_exclusive_group_info(exclusive_groups: list[Label | list[Label]]) -> dict[str, Any]:
+        def get_exclusive_group_info(exclusive_groups: list[tuple[str, ...]]) -> dict[str, Any]:
             """Get exclusive group information."""
             last_logits_pos = 0
             num_single_label_classes = 0
@@ -239,7 +192,7 @@ class HLabelInfo(LabelInfo):
             }
 
         def get_single_label_group_info(
-            single_label_groups: list[Label | list[Label]],
+            single_label_groups: list,
             num_exclusive_groups: int,
         ) -> dict[str, Any]:
             """Get single label group information."""
@@ -263,30 +216,28 @@ class HLabelInfo(LabelInfo):
             class_to_idx.update(single_label_ctoi)
             return class_to_idx
 
-        def get_label_tree_edges(dm_label_items: list[LabelCategories]) -> list[list[str]]:
+        def get_label_tree_edges(dm_label_items: tuple[HierarchicalLabelCategory, ...]) -> list[list[str]]:
             """Get label tree edges information. Each edges represent [child, parent]."""
             return [[item.name, item.parent] for item in dm_label_items if item.parent != ""]
 
         def convert_labels_if_needed(
-            dm_label_categories: LabelCategories,
+            dm_label_categories: HierarchicalLabelCategories,
             label_names: list[str],
-        ) -> list[list[str]]:
+        ) -> list[tuple[str, ...]]:
             # Check if the labels need conversion and create name to ID mapping if required
             name_to_id_mapping = None
             for label_group in dm_label_categories.label_groups:
                 if label_group.labels and label_group.labels[0] not in label_names:
                     name_to_id_mapping = {
-                        attr[len("__name__") :]: category.name
-                        for category in dm_label_categories.items
-                        for attr in category.attributes
-                        if attr.startswith("__name__")
+                        category.label_semantics["name"]: category.name for category in dm_label_categories.items
                     }
-                    break
 
             # If mapping exists, update the labels
             if name_to_id_mapping:
                 for label_group in dm_label_categories.label_groups:
-                    label_group.labels = [name_to_id_mapping.get(label, label) for label in label_group.labels]
+                    object.__setattr__(
+                        label_group, "labels", [name_to_id_mapping.get(label, label) for label in label_group.labels]
+                    )
 
             # Retrieve all label groups after conversion
             return [group.labels for group in dm_label_categories.label_groups]
@@ -311,7 +262,7 @@ class HLabelInfo(LabelInfo):
 
         return HLabelInfo(
             label_names=label_names,
-            label_groups=exclusive_groups + single_label_groups,
+            label_groups=exclusive_groups + single_label_groups,  # type: ignore[arg-type]
             num_multiclass_heads=exclusive_group_info["num_multiclass_heads"],
             num_multilabel_classes=single_label_group_info["num_multilabel_classes"],
             head_idx_to_logits_range=exclusive_group_info["head_idx_to_logits_range"],
@@ -323,57 +274,6 @@ class HLabelInfo(LabelInfo):
             empty_multiclass_head_indices=[],  # consider the label removing case
             label_ids=[str(i) for i in range(len(label_names))],
         )
-
-    @classmethod
-    def from_dm_label_groups_arrow(cls, dm_label_categories: LabelCategories) -> HLabelInfo:
-        """Generate HLabelData from the Datumaro LabelCategories. Arrow-specific implementation.
-
-        Args:
-            dm_label_categories (LabelCategories): the label categories of datumaro.
-        """
-        dm_label_categories = copy.deepcopy(dm_label_categories)
-
-        empty_label_name = None
-        for label_group in dm_label_categories.label_groups:
-            if label_group.group_type == GroupType.RESTRICTED:
-                empty_label_name = label_group.labels[0]
-
-        dm_label_categories.label_groups = [
-            group for group in dm_label_categories.label_groups if group.group_type != GroupType.RESTRICTED
-        ]
-
-        empty_label_id = None
-        label_names = []
-        for item in dm_label_categories.items:
-            for attr in item.attributes:
-                if attr.startswith("__name__"):
-                    name = attr[len("__name__") :]
-                    if name == empty_label_name:
-                        empty_label_id = item.name
-                    label_names.append(name)
-                    break
-
-        if len(label_names) != len(dm_label_categories.items):
-            msg = "Wrong arrow file: can not extract label names from attributes"
-            raise ValueError(msg)
-
-        if empty_label_name is not None:
-            label_names.remove(empty_label_name)
-        dm_label_categories.items = [item for item in dm_label_categories.items if item.name != empty_label_id]
-        label_ids = [item.name for item in dm_label_categories.items]
-
-        id_to_name_mapping = {item.name: label_names[i] for i, item in enumerate(dm_label_categories.items)}
-
-        for i, item in enumerate(dm_label_categories.items):
-            item.name = label_names[i]
-            item.parent = id_to_name_mapping.get(item.parent, item.parent)
-
-        for label_group in dm_label_categories.label_groups:
-            label_group.labels = [id_to_name_mapping.get(label, label) for label in label_group.labels]
-
-        obj = cls.from_dm_label_groups(dm_label_categories)
-        obj.label_ids = label_ids
-        return obj
 
     def as_head_config_dict(self) -> dict[str, Any]:
         """Return a dictionary including params needed to configure the HLabel MMPretrained head network."""

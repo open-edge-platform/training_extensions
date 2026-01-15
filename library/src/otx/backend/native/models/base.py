@@ -15,15 +15,12 @@ from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING, Any, Callable, Literal, Sequence
 
 import torch
-import kornia
-from datumaro import LabelCategories
+from kornia.augmentation.container import AugmentationSequential
 from lightning import LightningModule, Trainer
 from torch import Tensor, nn
 from torch.optim.lr_scheduler import ConstantLR
 from torch.optim.sgd import SGD
 from torchmetrics import Metric, MetricCollection
-from kornia.augmentation.container import AugmentationSequential
-from torchvision.transforms.v2 import Compose
 
 from otx import __version__
 from otx.backend.native.optimizers.callable import OptimizerCallableSupportAdaptiveBS
@@ -142,9 +139,6 @@ class OTXModel(LightningModule):
         label_info: LabelInfoTypes | int | Sequence,
         data_input_params: DataInputParams | dict | None = None,
         model_name: str = "OTXModel",
-        apply_gpu_transforms: bool = True,
-        batch_train_transforms: AugmentationSequential | Compose | None = None,
-        batch_val_transforms: AugmentationSequential | Compose | None = None,
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = NullMetricCallable,
@@ -193,15 +187,6 @@ class OTXModel(LightningModule):
             tile_config = TileConfig(**tile_config)
         self._tile_config = tile_config.clone()
 
-        # Augmentation configuration
-        if apply_gpu_transforms:
-            self.batch_train_transforms, self.batch_val_transforms = self._configure_batch_augmentation(batch_train_transforms, batch_val_transforms)
-            self.batch_train_transforms.to(self.device)
-            self.batch_val_transforms.to(self.device)
-        else:
-            self.batch_train_transforms = None
-            self.batch_val_transforms = None
-
         self.save_hyperparameters(
             logger=False,
             ignore=["optimizer", "scheduler", "metric", "label_info", "tile_config", "data_input_params"],
@@ -209,7 +194,6 @@ class OTXModel(LightningModule):
 
     def training_step(self, batch: OTXDataBatch, batch_idx: int) -> Tensor:
         """Step for model training."""
-        self._apply_batch_augmentations(self.batch_train_transforms, batch)
         train_loss = self.forward(inputs=batch)
         if train_loss is None:
             msg = "Loss is None."
@@ -264,7 +248,6 @@ class OTXModel(LightningModule):
             Updates test metrics based on the prediction results and batch data.
             Handles both single dictionary and list of dictionaries for metric inputs.
         """
-        self._apply_batch_augmentations(self.batch_val_transforms, batch)
         preds = self.forward(inputs=batch)
 
         if isinstance(preds, OTXBatchLossEntity):
@@ -423,76 +406,6 @@ class OTXModel(LightningModule):
 
         self._metric = metric.to(self.device)
 
-    def _configure_batch_augmentation(
-        self,
-        batch_train_transforms: AugmentationSequential | Compose | None = None,
-        batch_val_transforms: AugmentationSequential | Compose | None = None,
-    ) -> tuple[AugmentationSequential, AugmentationSequential]:
-        """Configure batch augmentation.
-
-        Args:
-            batch_train_transforms (AugmentationSequential, optional): batch train transforms
-            batch_val_transforms (AugmentationSequential, optional): batch val transforms
-
-        Returns:
-            GPU augmentation pipeline or None
-        """
-        if batch_train_transforms is not None:
-            if not ensure_callable(batch_train_transforms):
-                msg = "Batch train transforms should be callable. " \
-                "Please use kornia AugmentationSequential or torchvision Compose"
-
-                raise TypeError(msg)
-
-        if batch_val_transforms is not None:
-            if not ensure_callable(batch_val_transforms):
-                msg = "Batch val transforms should be callable. " \
-                "Please use kornia AugmentationSequential or torchvision Compose"
-
-                raise TypeError(msg)
-
-        train_aug_pipeline = batch_train_transforms if batch_train_transforms is not None else self._default_train_transforms
-        val_aug_pipeline = batch_val_transforms if batch_val_transforms is not None else self._default_val_transforms
-
-        return train_aug_pipeline, val_aug_pipeline
-
-    @staticmethod
-    @torch.no_grad()
-    def _apply_batch_augmentations(augmentations_pipeline: AugmentationSequential | Compose | None, batch: OTXDataBatch) -> None:
-        if augmentations_pipeline is not None:
-            batch.images = augmentations_pipeline(batch.images)
-
-    @property
-    def _default_train_transforms(self):
-        if self.task == OTXTaskType.DETECTION:
-            data_keys = ["input", "bbox"]
-        elif self.task == OTXTaskType.SEMANTIC_SEGMENTATION:
-            data_keys = ["input", "mask"]
-        elif self.task == OTXTaskType.INSTANCE_SEGMENTATION:
-            data_keys = ["input", "bbox", "mask"]
-        elif self.task == OTXTaskType.KEYPOINT_DETECTION:
-            data_keys = ["input", "keypoints"]
-        else:
-            data_keys = ["input"]
-
-        return AugmentationSequential(kornia.augmentation.RandomHorizontalFlip(),
-                                      kornia.augmentation.Normalize(self.data_input_params.mean, self.data_input_params.std), data_keys=data_keys, keepdim=True)
-
-    @property
-    def _default_val_transforms(self):
-        if self.task == OTXTaskType.DETECTION:
-            data_keys = ["input", "bbox"]
-        elif self.task == OTXTaskType.SEMANTIC_SEGMENTATION:
-            data_keys = ["input", "mask"]
-        elif self.task == OTXTaskType.INSTANCE_SEGMENTATION:
-            data_keys = ["input", "bbox", "mask"]
-        elif self.task == OTXTaskType.KEYPOINT_DETECTION:
-            data_keys = ["input", "keypoints"]
-        else:
-            data_keys = ["input"]
-
-        return AugmentationSequential(kornia.augmentation.Normalize(self.data_input_params.mean, self.data_input_params.std), data_keys=data_keys, keepdim=True)
-
     @property
     def metric(self) -> Metric | MetricCollection:
         """Metric module for this OTX model."""
@@ -612,11 +525,6 @@ class OTXModel(LightningModule):
         else:
             state_dict = ckpt
         return super().load_state_dict(state_dict, *args, **kwargs)
-
-    @staticmethod
-    def get_ckpt_label_info_v1(ckpt: dict) -> LabelInfo:
-        """Generate label info from OTX v1 checkpoint."""
-        return LabelInfo.from_dm_label_groups(LabelCategories.from_iterable(ckpt["labels"].keys()))
 
     @property
     def label_info(self) -> LabelInfo:
@@ -839,6 +747,26 @@ class OTXModel(LightningModule):
         msg = "Optimization is not implemented for torch models"
         raise NotImplementedError(msg)
 
+    def _move_model_tensors_to_device_and_dtype(self, device: str, dtype: torch.dtype | None = None) -> nn.Module:
+        """Move model and all cached tensors to the specified device and dtype.
+
+        This base implementation simply moves the model to the device.
+        Subclasses can override this to handle model-specific cached tensors
+        (like anchors in detection models) that are not moved by model.to().
+
+        Args:
+            device: Target device ('cpu', 'cuda', etc.)
+            dtype: Target dtype for floating-point tensors. If None, dtype is not changed.
+                   Note: Integer tensors (used for indexing) should not be converted.
+
+        Returns:
+            The model moved to the specified device.
+        """
+        model = self.model.to(device)
+        if dtype is not None:
+            model = model.to(dtype)
+        return model
+
     def export(
         self,
         output_dir: Path,
@@ -859,6 +787,11 @@ class OTXModel(LightningModule):
         """
         mode = self.training
         self.eval()
+        # Move model to CPU with FP32 for export to avoid device/dtype mismatch with TorchScript tracing
+        # AMP training may leave internal tensors in FP16, which breaks TorchScript check_trace
+        original_device = next(self.model.parameters()).device
+        original_dtype = next(self.model.parameters()).dtype
+        self.model = self._move_model_tensors_to_device_and_dtype("cpu", torch.float32)
 
         orig_forward = self.forward
         orig_trainer = self._trainer  # type: ignore[has-type]
@@ -877,6 +810,8 @@ class OTXModel(LightningModule):
             self.train(mode)
             self.forward = orig_forward  # type: ignore[method-assign]
             self._trainer = orig_trainer
+            # Restore model to original device and dtype
+            self.model = self._move_model_tensors_to_device_and_dtype(str(original_device), original_dtype)
 
     @property
     def _exporter(self) -> OTXModelExporter:
@@ -1073,7 +1008,8 @@ class OTXModel(LightningModule):
             raise ValueError(msg)
 
         if data_input_params.input_size is not None and (
-            data_input_params.input_size[0] % self.input_size_multiplier != 0 or data_input_params.input_size[1] % self.input_size_multiplier != 0
+            data_input_params.input_size[0] % self.input_size_multiplier != 0
+            or data_input_params.input_size[1] % self.input_size_multiplier != 0
         ):
             msg = f"Input size should be a multiple of {self.input_size_multiplier}, but got {data_input_params.input_size} instead."
             raise ValueError(msg)

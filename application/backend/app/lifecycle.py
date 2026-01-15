@@ -10,23 +10,31 @@ from functools import partial
 from multiprocessing.synchronize import Condition
 from pathlib import Path
 
+from aiortc import RTCConfiguration, RTCIceServer
 from fastapi import FastAPI
 from loguru import logger
 
 from app.core.jobs import JobController, JobQueue, ProcessRunnerFactory
-from app.core.logging import setup_logging, setup_uvicorn_logging
+from app.core.jobs.models import JobType
+from app.core.logging import LogConfig, setup_logging, setup_uvicorn_logging
 from app.core.run import Runnable, RunnableFactory
 from app.db import MigrationManager, get_db_session
 from app.scheduler import Scheduler
-from app.schemas.job import JobType
-from app.services import DatasetService, LabelService, ModelService
+from app.services import (
+    DatasetRevisionService,
+    DatasetService,
+    LabelService,
+    ModelService,
+    TrainingConfigurationService,
+)
 from app.services.base_weights_service import BaseWeightsService
 from app.services.data_collect import DataCollector
 from app.services.event.event_bus import EventBus
 from app.services.training import OTXTrainer
+from app.services.training.otx_trainer import TrainingDependencies
 from app.services.training.subset_assignment import SubsetAssigner, SubsetService
 from app.settings import get_settings
-from app.webrtc.manager import WebRTCManager
+from app.webrtc import SDPHandler, WebRTCManager, WebRTCSettings
 
 
 def setup_job_controller(data_dir: Path, max_parallel_jobs: int) -> tuple[JobQueue, JobController]:
@@ -46,23 +54,21 @@ def setup_job_controller(data_dir: Path, max_parallel_jobs: int) -> tuple[JobQue
     """
     q = JobQueue()
     job_runnable_factory = RunnableFactory[JobType, Runnable]()
-    base_weights_service = BaseWeightsService(data_dir=data_dir)
-    subset_service = SubsetService()
-    subset_assigner = SubsetAssigner()
-    label_service = LabelService()
-    model_service = ModelService()
-    dataset_service = DatasetService(data_dir=data_dir, label_service=label_service)
     job_runnable_factory.register(
         JobType.TRAIN,
         partial(
             OTXTrainer,
-            base_weights_service=base_weights_service,
-            subset_service=subset_service,
-            subset_assigner=subset_assigner,
-            dataset_service=dataset_service,
-            model_service=model_service,
-            data_dir=data_dir,
-            db_session_factory=get_db_session,
+            training_deps=TrainingDependencies(
+                base_weights_service=BaseWeightsService(data_dir=data_dir),
+                subset_service=SubsetService(),
+                subset_assigner=SubsetAssigner(),
+                dataset_service=DatasetService(data_dir=data_dir, label_service=LabelService()),
+                dataset_revision_service=DatasetRevisionService(data_dir=data_dir),
+                model_service=ModelService(data_dir=data_dir),
+                training_configuration_service=TrainingConfigurationService(),
+                data_dir=data_dir,
+                db_session_factory=get_db_session,
+            ),
         ),
     )
     process_runner_factory = ProcessRunnerFactory(job_runnable_factory)
@@ -82,7 +88,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     logger.info("Starting {} application...", settings.app_name)
 
     # Setup logging
-    setup_logging()
+    setup_logging(config=LogConfig(level=settings.log_level))
     setup_uvicorn_logging(settings.log_level)
 
     # Initialize database
@@ -93,8 +99,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
 
     # Condition to notify processes about source updates
     source_changed_condition: Condition = mp.Condition()
+    # Event to signal that the model has to be reloaded
+    model_reload_event = mp.Event()
 
-    event_bus = EventBus(source_changed_condition=source_changed_condition)
+    event_bus = EventBus(source_changed_condition=source_changed_condition, model_reload_event=model_reload_event)
     app.state.event_bus = event_bus
 
     data_collector = DataCollector(data_dir=settings.data_dir, event_bus=event_bus)
@@ -105,7 +113,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     app_scheduler.start_workers()
     app.state.scheduler = app_scheduler
 
-    webrtc_manager = WebRTCManager(app_scheduler.rtc_stream_queue)
+    webrtc_settings = WebRTCSettings(
+        config=RTCConfiguration(iceServers=[RTCIceServer(**server) for server in settings.ice_servers]),
+        advertise_ip=settings.webrtc_advertise_ip,
+    )
+    sdp_handler = SDPHandler()
+    webrtc_manager = WebRTCManager(app_scheduler.rtc_stream_queue, webrtc_settings, sdp_handler)
     app.state.webrtc_manager = webrtc_manager
     logger.info("Application startup completed")
 

@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { isEmpty } from 'lodash-es';
-import type { components } from 'src/api/openapi-spec';
+
+import type { components } from '../api/openapi-spec';
 
 type Pipeline = components['schemas']['PipelineView'];
 export const useIsPipelineConfigured = (pipeline: Pipeline) => {

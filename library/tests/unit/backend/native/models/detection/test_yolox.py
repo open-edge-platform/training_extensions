@@ -20,19 +20,19 @@ class TestYOLOX:
         otx_yolox_l = YOLOX(
             model_name="yolox_l",
             label_info=3,
-            data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         )
         assert isinstance(otx_yolox_l.model.backbone, CSPDarknetModule)
         assert isinstance(otx_yolox_l.model.neck, YOLOXPAFPNModule)
         assert isinstance(otx_yolox_l.model.bbox_head, YOLOXHeadModule)
-        assert otx_yolox_l.data_input_params.input_size == (640, 640)
+        assert otx_yolox_l.data_input_params.input_size == (320, 320)
 
         otx_yolox_tiny = YOLOX(
             model_name="yolox_tiny",
             label_info=3,
-            data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         )
-        assert otx_yolox_tiny.data_input_params.input_size == (640, 640)
+        assert otx_yolox_tiny.data_input_params.input_size == (320, 320)
 
         otx_yolox_tiny = YOLOX(
             model_name="yolox_tiny",
@@ -45,7 +45,7 @@ class TestYOLOX:
         otx_yolox_l = YOLOX(
             model_name="yolox_l",
             label_info=3,
-            data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         )
         otx_yolox_l_exporter = otx_yolox_l._exporter
         assert isinstance(otx_yolox_l_exporter, OTXNativeModelExporter)
@@ -54,7 +54,7 @@ class TestYOLOX:
         otx_yolox_tiny = YOLOX(
             model_name="yolox_tiny",
             label_info=3,
-            data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+            data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
         )
         otx_yolox_tiny_exporter = otx_yolox_tiny._exporter
         assert isinstance(otx_yolox_tiny_exporter, OTXNativeModelExporter)
@@ -66,29 +66,27 @@ class TestYOLOX:
             YOLOX(
                 model_name="yolox_tiny",
                 label_info=3,
-                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+                data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
             ),
             YOLOX(
                 model_name="yolox_s",
                 label_info=3,
-                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+                data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
             ),
             YOLOX(
                 model_name="yolox_l",
                 label_info=3,
-                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+                data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
             ),
             YOLOX(
                 model_name="yolox_x",
                 label_info=3,
-                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+                data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
             ),
         ],
     )
-    def test_loss(self, model, fxt_data_module):
-        data = next(iter(fxt_data_module.train_dataloader()))
-        data.images = [torch.randn(3, 32, 32), torch.randn(3, 48, 48)]
-        output = model(data)
+    def test_loss(self, model, fxt_detection_batch):
+        output = model(fxt_detection_batch)
         assert "loss_cls" in output
         assert "loss_bbox" in output
         assert "loss_obj" in output
@@ -99,30 +97,28 @@ class TestYOLOX:
             YOLOX(
                 model_name="yolox_tiny",
                 label_info=3,
-                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+                data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
             ),
             YOLOX(
                 model_name="yolox_s",
                 label_info=3,
-                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+                data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
             ),
             YOLOX(
                 model_name="yolox_l",
                 label_info=3,
-                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+                data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
             ),
             YOLOX(
                 model_name="yolox_x",
                 label_info=3,
-                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+                data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
             ),
         ],
     )
-    def test_predict(self, model, fxt_data_module):
-        data = next(iter(fxt_data_module.train_dataloader()))
-        data.images = [torch.randn(3, 32, 32), torch.randn(3, 48, 48)]
+    def test_predict(self, model, fxt_detection_batch):
         model.eval()
-        output = model(data)
+        output = model(fxt_detection_batch)
         assert isinstance(output, OTXPredBatch)
 
     @pytest.mark.parametrize(
@@ -131,22 +127,22 @@ class TestYOLOX:
             YOLOX(
                 model_name="yolox_tiny",
                 label_info=3,
-                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+                data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
             ),
             YOLOX(
                 model_name="yolox_s",
                 label_info=3,
-                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+                data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
             ),
             YOLOX(
                 model_name="yolox_l",
                 label_info=3,
-                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+                data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
             ),
             YOLOX(
                 model_name="yolox_x",
                 label_info=3,
-                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+                data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
             ),
         ],
     )
@@ -165,22 +161,22 @@ class TestYOLOX:
             YOLOX(
                 model_name="yolox_tiny",
                 label_info=3,
-                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+                data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
             ),
             YOLOX(
                 model_name="yolox_s",
                 label_info=3,
-                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+                data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
             ),
             YOLOX(
                 model_name="yolox_l",
                 label_info=3,
-                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+                data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
             ),
             YOLOX(
                 model_name="yolox_x",
                 label_info=3,
-                data_input_params=DataInputParams((640, 640), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+                data_input_params=DataInputParams((320, 320), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
             ),
         ],
     )
@@ -196,3 +192,6 @@ class TestYOLOX:
         x = torch.randn(1, 3, *model.data_input_params.input_size)
         model.model(x)
         assert cnt.frame_count == 1
+
+        # Reset dynamo state
+        torch._dynamo.reset()

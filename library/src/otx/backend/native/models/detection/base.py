@@ -13,11 +13,9 @@ from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Callable, Iterator, Literal, Sequence
 
 import torch
+from kornia.geometry.boxes import Boxes
 from torchmetrics import Metric, MetricCollection
 from torchvision import tv_tensors
-import kornia
-from kornia.geometry.boxes import Boxes
-from kornia.augmentation.container import AugmentationSequential
 
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel
 from otx.backend.native.models.utils.utils import InstanceData
@@ -36,6 +34,8 @@ from otx.types.label import LabelInfoTypes
 from otx.types.task import OTXTaskType
 
 if TYPE_CHECKING:
+    from datumaro.experimental.fields import TileInfo
+    from kornia.augmentation.container import AugmentationSequential
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
 
     from otx.backend.native.models.detection.detectors import SingleStageDetector
@@ -281,21 +281,21 @@ class OTXDetectionModel(OTXModel):
             DetBatchPredEntity: Merged detection prediction.
         """
         tile_preds: list[OTXPredBatch] = []
-        tile_attrs: list[list[dict[str, int | str]]] = []
+        tile_infos: list[list[TileInfo]] = []
         merger = DetectionTileMerge(
             inputs.imgs_info,
             self.num_classes,
             self.tile_config,
             self.explain_mode,
         )
-        for batch_tile_attrs, batch_tile_input in inputs.unbind():
+        for batch_tile_infos, batch_tile_input in inputs.unbind():
             output = self.forward_explain(batch_tile_input) if self.explain_mode else self.forward(batch_tile_input)
             if isinstance(output, OTXBatchLossEntity):
                 msg = "Loss output is not supported for tile merging"
                 raise TypeError(msg)
             tile_preds.append(output)
-            tile_attrs.append(batch_tile_attrs)
-        pred_entities = merger.merge(tile_preds, tile_attrs)
+            tile_infos.append(batch_tile_infos)
+        pred_entities = merger.merge(tile_preds, tile_infos)
 
         pred_entity = OTXPredBatch(
             batch_size=inputs.batch_size,
@@ -555,12 +555,14 @@ class OTXDetectionModel(OTXModel):
 
     @staticmethod
     @torch.no_grad()
-    def _apply_batch_augmentations(augmentations_pipeline: AugmentationSequential | Compose | None, batch: OTXDataBatch) -> None:
+    def _apply_batch_augmentations(
+        augmentations_pipeline: AugmentationSequential | Compose | None, batch: OTXDataBatch
+    ) -> None:
         if augmentations_pipeline is not None:
             # Convert bounding boxes to Kornia Boxes [N, 4, 2]
-            kornia_boxes = Boxes.from_tensor(batch.bboxes, mode='xyxy')
+            kornia_boxes = Boxes.from_tensor(batch.bboxes, mode="xyxy")
             batch.images, kornia_boxes = augmentations_pipeline(batch.images, kornia_boxes)
-            batch.bboxes = kornia_boxes.to_tensor(mode='xyxy')
+            batch.bboxes = kornia_boxes.to_tensor(mode="xyxy")
 
     @property
     def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:

@@ -3,8 +3,8 @@
 
 import { Grid, minmax, RadioGroup, repeat } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-import { $api } from 'src/api/client';
 
+import { $api } from '../../../../api/client';
 import { ModelType } from './model-type.component';
 
 interface ModelTypesListProps {

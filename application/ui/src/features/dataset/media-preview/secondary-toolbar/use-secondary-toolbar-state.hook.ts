@@ -3,10 +3,11 @@
 
 import { Key } from 'react';
 
-import type { Label } from 'src/constants/shared-types';
-import { useProjectLabels } from 'src/features/annotator/hooks/use-project-labels.hook';
-import { useAnnotationActions } from 'src/shared/annotator/annotation-actions-provider.component';
-import { useSelectedAnnotations } from 'src/shared/annotator/select-annotation-provider.component';
+import { useProjectLabels } from 'hooks/use-project-labels.hook';
+
+import type { Label } from '../../../../constants/shared-types';
+import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
+import { useSelectedAnnotations } from '../../../../shared/annotator/select-annotation-provider.component';
 
 export const useSecondaryToolbarState = () => {
     const { selectedAnnotations } = useSelectedAnnotations();
@@ -50,32 +51,11 @@ export const useSecondaryToolbarState = () => {
         updateAnnotations(updatedAnnotations);
     };
 
-    const toggleLabels = (labelId: Key | null) => {
-        const selectedLabel = projectLabels.find((label) => label.id === labelId);
-
-        if (!selectedLabel) {
-            return;
-        }
-
-        const labelIsAssignedToEveryAnnotation = annotationsToUpdate.every((annotation) =>
-            annotation.labels?.some((label) => label.id === labelId)
-        );
-
-        if (labelIsAssignedToEveryAnnotation) {
-            removeLabels(labelId);
-        } else {
-            addLabels(labelId);
-        }
-    };
-
     return {
         isHidden,
 
         projectLabels,
-        toggleLabels,
         addLabels,
         removeLabels,
-
-        annotationsToUpdate,
     };
 };

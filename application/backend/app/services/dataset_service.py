@@ -13,12 +13,11 @@ from uuid import UUID, uuid4
 
 import datumaro.experimental as dm
 import numpy as np
-from datumaro.experimental.export_import import export_dataset
 from loguru import logger
 from PIL import Image, UnidentifiedImageError
 from sqlalchemy.orm import Session
 
-from app.db.schema import DatasetItemDB, DatasetRevisionDB
+from app.db.schema import DatasetItemDB
 from app.models import (
     DatasetItem,
     DatasetItemAnnotation,
@@ -27,11 +26,12 @@ from app.models import (
     FullImage,
     Label,
     Polygon,
+    Project,
     Rectangle,
+    Task,
     TaskType,
 )
-from app.repositories import DatasetItemRepository, DatasetRevisionRepository
-from app.schemas.project import ProjectBase, ProjectView, TaskBase
+from app.repositories import DatasetItemRepository
 from app.services.datumaro_converter import convert_dataset
 from app.utils.images import crop_to_thumbnail
 
@@ -114,7 +114,7 @@ class DatasetService(BaseSessionManagedService):
 
     def create_dataset_item(  # noqa: PLR0913
         self,
-        project: ProjectView,
+        project: Project,
         name: str,
         format: str,
         data: Image.Image | np.ndarray | BinaryIO | BytesIO,
@@ -173,7 +173,7 @@ class DatasetService(BaseSessionManagedService):
 
     def count_dataset_items(
         self,
-        project: ProjectView,
+        project: Project,
         start_date: datetime | None = None,
         end_date: datetime | None = None,
         annotation_status: str | None = None,
@@ -231,12 +231,12 @@ class DatasetService(BaseSessionManagedService):
         dataset_item = self.get_dataset_item_by_id(project_id=project_id, dataset_item_id=dataset_item_id)
         return self.get_dataset_item_binary_path(project_id=project_id, dataset_item=dataset_item)
 
-    def get_dataset_item_thumbnail_path_by_id(self, project: ProjectView, dataset_item_id: UUID) -> Path | str:
+    def get_dataset_item_thumbnail_path_by_id(self, project: Project, dataset_item_id: UUID) -> Path | str:
         """Get a dataset item thumbnail binary content by its ID"""
         dataset_item = self.get_dataset_item_by_id(project_id=project.id, dataset_item_id=dataset_item_id)
         return self.projects_dir / f"{project.id}/dataset/{dataset_item.id}-thumb.jpg"
 
-    def delete_dataset_item(self, project: ProjectView, dataset_item_id: UUID) -> None:
+    def delete_dataset_item(self, project: Project, dataset_item_id: UUID) -> None:
         """Delete a dataset item by its ID"""
         dataset_item = self.get_dataset_item_by_id(project_id=project.id, dataset_item_id=dataset_item_id)
         repo = DatasetItemRepository(project_id=str(project.id), db=self.db_session)
@@ -262,7 +262,7 @@ class DatasetService(BaseSessionManagedService):
                     raise AnnotationValidationError(f"Label {str(annotation_label.id)} is not found in the project.")
 
     @staticmethod
-    def _validate_annotations(annotations: list[DatasetItemAnnotation], project: ProjectBase) -> None:  # noqa: C901
+    def _validate_annotations(annotations: list[DatasetItemAnnotation], project: Project) -> None:  # noqa: C901
         match project.task.task_type:
             case TaskType.CLASSIFICATION:
                 if len(annotations) > 1:
@@ -309,9 +309,20 @@ class DatasetService(BaseSessionManagedService):
                         raise AnnotationValidationError("Polygon points are out of bounds")
 
     def set_dataset_item_annotations(
-        self, project: ProjectView, dataset_item_id: UUID, annotations: list[DatasetItemAnnotation]
+        self, project: Project, dataset_item_id: UUID, annotations: list[DatasetItemAnnotation], user_reviewed: bool
     ) -> DatasetItem:
-        """Set dataset item annotations"""
+        """
+        Set dataset item annotations
+
+        Args:
+            project: The project to which the dataset item belongs.
+            dataset_item_id: The ID of the dataset item.
+            annotations: The list of annotations to set. Overwrites existing annotations, if any.
+            user_reviewed: Whether the annotations have been reviewed by a user.
+
+        Returns:
+            The updated dataset item.
+        """
         labels = self._label_service.list_all(project_id=project.id)
         DatasetService._validate_annotations_labels(annotations=annotations, labels=labels)
         DatasetService._validate_annotations(annotations=annotations, project=project)
@@ -324,6 +335,7 @@ class DatasetService(BaseSessionManagedService):
         result = repo.set_annotation_data(
             obj_id=str(dataset_item_id),
             annotation_data=[annotation.model_dump(mode="json") for annotation in annotations],
+            user_reviewed=user_reviewed,
         )
         if not result:
             raise ResourceNotFoundError(ResourceType.DATASET_ITEM, str(dataset_item_id))
@@ -334,7 +346,7 @@ class DatasetService(BaseSessionManagedService):
         )
         return self.get_dataset_item_by_id(project_id=project.id, dataset_item_id=dataset_item_id)
 
-    def delete_dataset_item_annotations(self, project: ProjectView, dataset_item_id: UUID) -> None:
+    def delete_dataset_item_annotations(self, project: Project, dataset_item_id: UUID) -> None:
         """Delete the dataset item annotations"""
         repo = DatasetItemRepository(project_id=str(project.id), db=self.db_session)
         updated = repo.delete_annotation_data(obj_id=str(dataset_item_id))
@@ -356,7 +368,7 @@ class DatasetService(BaseSessionManagedService):
         return self.get_dataset_item_by_id(project_id=project_id, dataset_item_id=dataset_item_id)
 
     def get_dm_dataset(
-        self, project_id: UUID, task: TaskBase, annotation_status: DatasetItemAnnotationStatus | None
+        self, project_id: UUID, task: Task, annotation_status: DatasetItemAnnotationStatus | None
     ) -> dm.Dataset:
         def _get_dataset_items(offset: int, limit: int) -> list[DatasetItem]:
             return self.list_dataset_items(
@@ -374,33 +386,3 @@ class DatasetService(BaseSessionManagedService):
             get_dataset_items=_get_dataset_items,
             get_image_path=_get_image_path,
         )
-
-    def save_revision(self, project_id: UUID, dataset: dm.Dataset) -> UUID:
-        """
-        Saves the dataset as a new revision.
-
-        Creates a new dataset revision entry in the database and exports the dataset
-        to a zip file in the project's revisions directory.
-
-        Args:
-            project_id: The UUID of the project to save the revision for.
-            dataset: The Datumaro dataset to export.
-
-        Returns:
-            UUID: The UUID of the newly created dataset revision.
-        """
-        revision_repo = DatasetRevisionRepository(db=self.db_session)
-        revision_db = revision_repo.save(
-            DatasetRevisionDB(
-                project_id=str(project_id),
-            )
-        )
-        revision_path = self.projects_dir / str(project_id) / "dataset_revisions" / revision_db.id
-        logger.info("Saving dataset revision '{}' to '{}'", revision_db.id, revision_path)
-        export_dataset(
-            dataset=dataset,
-            output_path=revision_path,
-            export_images=True,
-            as_zip=True,
-        )
-        return UUID(revision_db.id)

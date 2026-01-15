@@ -1,7 +1,6 @@
 task: KEYPOINT_DETECTION
 data_format: coco_person_keypoints
 unannotated_items_ratio: 0.0
-image_color_channel: RGB
 input_size:
   - 512
   - 512
@@ -15,10 +14,30 @@ train_subset:
       init_args:
         input_size: $(input_size)
         probability: 1.0
+    - class_path: otx.data.transform_libs.torchvision.RandomGaussianBlur
+      enable: false
+      init_args:
+        kernel_size: 5
+        sigma:
+          - 0.1
+          - 2.0
+        probability: 0.5
+    - class_path: torchvision.transforms.v2.ToDtype
+      init_args:
+        dtype: ${as_torch_dtype:torch.float32}
+    - class_path: otx.data.transform_libs.torchvision.RandomGaussianNoise
+      enable: false
+      init_args:
+        mean: 0.0
+        sigma: 0.1
+        probability: 0.5
+    - class_path: torchvision.transforms.v2.Normalize
+      init_args:
+        mean: [123.675, 116.28, 103.53]
+        std: [58.395, 57.12, 57.375]
   sampler:
     class_path: torch.utils.data.RandomSampler
     init_args: null
-
 val_subset:
   subset_name: val
   batch_size: 32
@@ -34,10 +53,16 @@ val_subset:
       init_args:
         size: $(input_size)
         pad_val: 0
+    - class_path: torchvision.transforms.v2.ToDtype
+      init_args:
+        dtype: ${as_torch_dtype:torch.float32}
+    - class_path: torchvision.transforms.v2.Normalize
+      init_args:
+        mean: [123.675, 116.28, 103.53]
+        std: [58.395, 57.12, 57.375]
   sampler:
     class_path: torch.utils.data.RandomSampler
     init_args: null
-
 test_subset:
   subset_name: test
   batch_size: 32
@@ -53,6 +78,13 @@ test_subset:
       init_args:
         size: $(input_size)
         pad_val: 0
+    - class_path: torchvision.transforms.v2.ToDtype
+      init_args:
+        dtype: ${as_torch_dtype:torch.float32}
+    - class_path: torchvision.transforms.v2.Normalize
+      init_args:
+        mean: [123.675, 116.28, 103.53]
+        std: [58.395, 57.12, 57.375]
   sampler:
     class_path: torch.utils.data.RandomSampler
     init_args: null
