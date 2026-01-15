@@ -8,9 +8,16 @@ import type { components } from '../../../api/openapi-spec';
 export type LocalFolderSinkConfig = components['schemas']['FolderSinkConfigView'];
 export type MqttSinkConfig = components['schemas']['MqttSinkConfigView'];
 export type WebhookSinkConfig = components['schemas']['WebhookSinkConfigView'];
+export type DisconnectedSinkConfig = components['schemas']['RosSinkConfigView'];
+export type RosSinkConfig = components['schemas']['RosSinkConfigView'];
 export type SinkOutputFormats = LocalFolderSinkConfig['output_formats'];
 
-export type SinkConfig = LocalFolderSinkConfig | MqttSinkConfig | WebhookSinkConfig;
+export type SinkConfig =
+    | LocalFolderSinkConfig
+    | MqttSinkConfig
+    | WebhookSinkConfig
+    | DisconnectedSinkConfig
+    | RosSinkConfig;
 
 export enum SinkType {
     FOLDER = 'folder',
