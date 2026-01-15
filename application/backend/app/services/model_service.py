@@ -4,6 +4,7 @@
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
+from typing import cast
 from uuid import UUID
 
 from loguru import logger
@@ -139,9 +140,9 @@ class ModelService(BaseSessionManagedService):
 
         # Mark as deleted in the database
         model_rev_repo = ModelRevisionRepository(project_id=str(project_id), db=self.db_session)
-        model_rev_db = model_rev_repo.get_by_id(str(model_id))  # model_revision is present as model_files_path exists
-        model_rev_db.files_deleted = True  # type: ignore[union-attr]
-        model_rev_repo.update(model_rev_db)  # type: ignore[arg-type]
+        model_rev_db = cast(ModelRevisionDB, model_rev_repo.get_by_id(str(model_id)))
+        model_rev_db.files_deleted = True
+        model_rev_repo.update(model_rev_db)
 
     def list_models(self, project_id: UUID) -> list[ModelRevision]:
         """
