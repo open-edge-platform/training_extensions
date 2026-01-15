@@ -91,7 +91,6 @@ def _create_detection_labels(project_id: str | UUID) -> list[LabelDB]:
         LabelDB(project_id=project_id, name="Diamonds", color="#baa3b3", hotkey="d"),
         LabelDB(project_id=project_id, name="Spades", color="#000702", hotkey="s"),
         LabelDB(project_id=project_id, name="Hearts", color="#1f016b", hotkey="h"),
-        LabelDB(project_id=project_id, name="No_object", color="#565a84", hotkey="n"),
     ]
 
 
@@ -107,7 +106,6 @@ def _create_segmentation_labels(project_id: str | UUID) -> list[LabelDB]:
     """
     return [
         LabelDB(project_id=project_id, name="Fish", color="#2d6311", hotkey="f"),
-        LabelDB(project_id=project_id, name="Empty", color="#565a84", hotkey="e"),
     ]
 
 

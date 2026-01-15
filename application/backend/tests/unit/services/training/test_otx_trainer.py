@@ -3,7 +3,7 @@
 
 from collections.abc import Callable
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, call, patch
 from uuid import uuid4
 
 import pytest
@@ -30,7 +30,7 @@ from app.services import (
     TrainingConfigurationService,
 )
 from app.services.base_weights_service import BaseWeightsService
-from app.services.training.otx_trainer import OTXTrainer, TrainingDependencies
+from app.services.training.otx_trainer import ExportedModels, OTXTrainer, TrainingDependencies
 from app.services.training.subset_assignment import (
     DatasetItemWithLabels,
     SubsetAssigner,
@@ -166,7 +166,7 @@ class TestOTXTrainerPrepareWeights:
             parent_model_revision_id=parent_model_revision_id,
         )
         expected_weights_path = (
-            tmp_path / "projects" / str(project_id) / "models" / str(parent_model_revision_id) / "model.pth"
+            tmp_path / "projects" / str(project_id) / "models" / str(parent_model_revision_id) / "model.ckpt"
         )
         expected_weights_path.parent.mkdir(parents=True, exist_ok=True)
         expected_weights_path.touch()
@@ -195,7 +195,7 @@ class TestOTXTrainerPrepareWeights:
             parent_model_revision_id=parent_model_revision_id,
         )
         expected_weights_path = (
-            tmp_path / "projects" / str(project_id) / "models" / str(parent_model_revision_id) / "model.pth"
+            tmp_path / "projects" / str(project_id) / "models" / str(parent_model_revision_id) / "model.ckpt"
         )
         otx_trainer = fxt_otx_trainer()
 
@@ -643,6 +643,7 @@ class TestOTXTrainerTrainModel:
                         weights_path=weights_path,
                         model_id=model_id,
                         device=geti_device,
+                        has_parent_revision=True,
                     )
 
         # Assert
@@ -663,6 +664,7 @@ class TestOTXTrainerTrainModel:
         assert engine_call_kwargs["data"] == mock_datamodule
         assert engine_call_kwargs["work_dir"] == f"./otx-workspace-{model_id}"
         assert engine_call_kwargs["device"] == otx_device
+        assert engine_call_kwargs["checkpoint"] == weights_path
 
         # Verify training was started
         mock_otx_engine.train.assert_called_once()
@@ -712,27 +714,40 @@ class TestOTXTrainerExportModel:
         fxt_otx_trainer: Callable[[], OTXTrainer],
         tmp_path: Path,
     ):
-        """Test successful model export to OpenVINO format."""
+        """Test successful model export to OpenVINO and ONNX format."""
         # Arrange
         otx_trainer = fxt_otx_trainer()
         mock_otx_engine = Mock()
         model_checkpoint_path = tmp_path / "best_checkpoint.ckpt"
         model_checkpoint_path.touch()
-        expected_export_path = tmp_path / "exported_model"
-        mock_otx_engine.export.return_value = expected_export_path
+        expected_ov_export_path = tmp_path / "exported_openvino_model"
+        expected_onnx_export_path = tmp_path / "exported_onnx_model"
+        mock_otx_engine.export.side_effect = [expected_ov_export_path, expected_onnx_export_path]
 
         # Act
-        exported_path = otx_trainer.export_model(
-            otx_engine=mock_otx_engine, model_checkpoint_path=model_checkpoint_path
+        exported_paths = otx_trainer.export_model(
+            otx_engine=mock_otx_engine,
+            model_checkpoint_path=model_checkpoint_path,
         )
 
         # Assert
-        mock_otx_engine.export.assert_called_once_with(
-            checkpoint=model_checkpoint_path,
-            export_format=OTXExportFormatType.OPENVINO,
-            export_precision=OTXPrecisionType.FP16,
+        assert mock_otx_engine.export.call_count == 2
+        mock_otx_engine.export.assert_has_calls(
+            calls=[
+                call(
+                    checkpoint=model_checkpoint_path,
+                    export_format=OTXExportFormatType.OPENVINO,
+                    export_precision=OTXPrecisionType.FP16,
+                ),
+                call(
+                    checkpoint=model_checkpoint_path,
+                    export_format=OTXExportFormatType.ONNX,
+                    export_precision=OTXPrecisionType.FP16,
+                ),
+            ]
         )
-        assert exported_path == expected_export_path
+        assert exported_paths.openvino_model_path == expected_ov_export_path
+        assert exported_paths.onnx_model_path == expected_onnx_export_path
 
 
 class TestOTXTrainerStoreModelArtifacts:
@@ -773,8 +788,15 @@ class TestOTXTrainerStoreModelArtifacts:
         exported_model_path = otx_work_dir / "exported_model.pth"
         model_xml_path = exported_model_path.with_suffix(".xml")
         model_bin_path = exported_model_path.with_suffix(".bin")
+        model_onnx_path = exported_model_path.with_suffix(".onnx")
         model_xml_path.write_text("xml content")
         model_bin_path.write_text("bin content")
+        model_onnx_path.write_text("onnx content")
+
+        exported_model_paths = ExportedModels(
+            openvino_model_path=exported_model_path,
+            onnx_model_path=exported_model_path,
+        )
 
         # Create metrics directory
         metrics_dir = otx_work_dir / "csv"
@@ -786,7 +808,7 @@ class TestOTXTrainerStoreModelArtifacts:
             training_params=training_params,
             otx_work_dir=otx_work_dir,
             trained_model_path=trained_model_path,
-            exported_model_path=exported_model_path,
+            exported_model_paths=exported_model_paths,
         )
 
         # Assert
@@ -799,6 +821,10 @@ class TestOTXTrainerStoreModelArtifacts:
         assert (model_dir / "model.xml").read_text() == "xml content"
         assert (model_dir / "model.bin").exists()
         assert (model_dir / "model.bin").read_text() == "bin content"
+
+        # Check ONNX file was copied
+        assert (model_dir / "model.onnx").exists()
+        assert (model_dir / "model.onnx").read_text() == "onnx content"
 
         # Check metrics were moved
         assert (model_dir / "metrics").exists()

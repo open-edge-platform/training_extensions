@@ -1,10 +1,13 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { KeyboardEvent, MouseEvent, ReactNode, useEffect, useRef } from 'react';
+import { MouseEvent, ReactNode, useEffect, useRef } from 'react';
+
+import { useHotkeys } from 'react-hotkeys-hook';
 
 import { useAnnotationActions } from '../../../shared/annotator/annotation-actions-provider.component';
 import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
+import { HOTKEYS } from '../../dataset/media-preview/primary-toolbar/hotkeys/hotkeys-definition';
 import { drawingStyles } from '../tools/polygon-tool/utils';
 import { useAnnotation } from './annotation-context';
 
@@ -44,29 +47,55 @@ export const SelectableAnnotation = ({ children }: { children: ReactNode }) => {
         });
     };
 
-    const handleKeyDown = (event: KeyboardEvent<SVGElement>) => {
-        if (event.key === 'Backspace') {
+    const handleDeleteAnnotations = () => {
+        if (selectedAnnotations.size === 0) {
+            return;
+        }
+
+        const annotationsToDelete = Array.from(selectedAnnotations);
+
+        setSelectedAnnotations(new Set());
+        deleteAnnotations(annotationsToDelete);
+    };
+
+    useHotkeys(HOTKEYS.deleteAnnotation, () => {
+        // Focus the parent SVG container to keep focus within the annotation area
+        const parentSvg = elementRef.current?.closest('svg');
+        if (parentSvg) {
+            (parentSvg as SVGSVGElement).focus();
+        }
+
+        handleDeleteAnnotations();
+    });
+
+    useHotkeys(
+        HOTKEYS.selectAllAnnotations,
+        (event) => {
             event.preventDefault();
 
-            // Focus the parent SVG container to keep focus within the annotation area
-            const parentSvg = elementRef.current?.closest('svg');
-            if (parentSvg) {
-                (parentSvg as SVGSVGElement).focus();
-            }
+            setSelectedAnnotations((prev) => {
+                return new Set([...prev, annotation.id]);
+            });
+        },
+        [setSelectedAnnotations]
+    );
 
-            const annotationsToDelete = Array.from(selectedAnnotations);
+    useHotkeys(
+        HOTKEYS.deselectAllAnnotations,
+        (event) => {
+            event.preventDefault();
 
-            setSelectedAnnotations(new Set());
-
-            deleteAnnotations(annotationsToDelete);
-        }
-    };
+            setSelectedAnnotations(() => {
+                return new Set();
+            });
+        },
+        [setSelectedAnnotations]
+    );
 
     return (
         <g
             ref={elementRef}
             tabIndex={isSelected ? 0 : -1}
-            onKeyDown={handleKeyDown}
             onClick={handleSelectAnnotation}
             style={{
                 ...drawingStyles(annotation.labels[0]),

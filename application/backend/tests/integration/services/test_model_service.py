@@ -56,6 +56,20 @@ class TestModelServiceIntegration:
         assert model is not None
         assert model.id == fxt_model_id
 
+    def test_update_model(self, fxt_project_id: UUID, fxt_model_id: UUID, fxt_model_service: ModelService):
+        """Test updating name of a model by ID."""
+        new_model_name = "This is a new model name"
+        model_metadata = {"name": new_model_name}
+        model_from_get_before_update = fxt_model_service.get_model(fxt_project_id, fxt_model_id)
+        model_from_update = fxt_model_service.rename_model(
+            project_id=fxt_project_id, model_id=fxt_model_id, model_metadata=model_metadata
+        )
+        model_from_get_after_update = fxt_model_service.get_model(fxt_project_id, fxt_model_id)
+
+        assert model_from_update.name == new_model_name
+        assert model_from_get_before_update.name != new_model_name
+        assert model_from_get_after_update.name == new_model_name
+
     @pytest.mark.parametrize("model_operation", ["get_model", "delete_model"])
     def test_non_existent_model(self, model_operation, fxt_project_id, fxt_db_projects, fxt_model_service, db_session):
         """Test retrieving a non-existent model raises error."""

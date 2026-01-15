@@ -1,8 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Button, dimensionValue, Flex, Grid, Heading, Item, Menu, MenuTrigger, Text } from '@geti/ui';
-import { Image, MoreMenu, Tag } from '@geti/ui/icons';
+import { Button, dimensionValue, Flex, Grid, Heading, Text } from '@geti/ui';
+import { Image, Tag } from '@geti/ui/icons';
 
 import type { DatasetGroup } from '../../types';
 import { ThreeSectionRange } from '../three-section-range.component';
@@ -25,16 +25,6 @@ export const DatasetGroupHeader = ({ dataset }: DatasetGroupHeaderProps) => {
                 <Heading level={2} UNSAFE_style={{ fontSize: dimensionValue('size-300') }}>
                     {dataset.name}
                 </Heading>
-                <MenuTrigger onOpenChange={() => {}}>
-                    <ActionButton isQuiet>
-                        <MoreMenu />
-                    </ActionButton>
-                    <Menu>
-                        <Item key='rename'>Rename</Item>
-                        <Item key='delete'>Delete</Item>
-                        <Item key='export'>Export</Item>
-                    </Menu>
-                </MenuTrigger>
             </Flex>
             <Text
                 UNSAFE_style={{

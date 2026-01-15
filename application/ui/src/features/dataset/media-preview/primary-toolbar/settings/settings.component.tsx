@@ -1,36 +1,49 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Divider } from '@geti/ui';
-import { Adjustments, Invisible, LabelGroup, Visible } from '@geti/ui/icons';
+import {
+    ActionButton,
+    Content,
+    Dialog,
+    DialogTrigger,
+    Divider,
+    Flex,
+    Heading,
+    Text,
+    Tooltip,
+    TooltipTrigger,
+} from '@geti/ui';
+import { Adjustments, Close } from '@geti/ui/icons';
 
-import { IconWrapper } from '../../../../../components/icon-wrapper/icon-wrapper.component';
-import { useAnnotationVisibility } from '../../../../../shared/annotator/annotation-visibility-provider.component';
-import { ZoomFitScreen } from '../zoom/zoom-fit-screen.component';
-import { ZoomSelector } from '../zoom/zoom-selector.component';
+import { CanvasSettings } from './canvas-settings.component';
+
+import styles from './settings.module.scss';
 
 export const Settings = () => {
-    const { isVisible, toggleVisibility, isFocussed, toggleFocus } = useAnnotationVisibility();
-
     return (
-        <>
-            <IconWrapper onPress={toggleVisibility}>{isVisible ? <Visible /> : <Invisible />}</IconWrapper>
-
-            <IconWrapper>
-                <Adjustments />
-            </IconWrapper>
-
-            <Divider size='S' />
-
-            <ZoomSelector />
-
-            <Divider size='S' />
-
-            <IconWrapper onPress={toggleFocus} isSelected={isFocussed}>
-                <LabelGroup />
-            </IconWrapper>
-
-            <ZoomFitScreen />
-        </>
+        <DialogTrigger type={'popover'} hideArrow placement={'right'}>
+            <TooltipTrigger>
+                <ActionButton isQuiet aria-label={'Settings'}>
+                    <Adjustments />
+                </ActionButton>
+                <Tooltip>Settings</Tooltip>
+            </TooltipTrigger>
+            {(close) => (
+                <Dialog UNSAFE_className={styles.settingsDialog}>
+                    <Heading>
+                        <Flex justifyContent={'space-between'} alignItems={'center'}>
+                            <Text>Settings</Text>
+                            <ActionButton isQuiet onPress={close} aria-label={'Close settings'}>
+                                <Close />
+                            </ActionButton>
+                        </Flex>
+                    </Heading>
+                    <Divider size={'S'} />
+                    <Content>
+                        <CanvasSettings />
+                    </Content>
+                </Dialog>
+            )}
+        </DialogTrigger>
     );
 };

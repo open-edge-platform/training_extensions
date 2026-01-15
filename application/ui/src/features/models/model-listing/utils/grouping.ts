@@ -1,8 +1,24 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import dayjs from 'dayjs';
+
 import type { SchemaModelView } from '../../../../api/openapi-spec';
 import type { GroupedModels } from '../types';
+
+const formatDatasetStartTime = (dateString: string | null | undefined): string => {
+    if (!dateString) return '-';
+
+    try {
+        const date = dayjs(dateString);
+
+        if (!date.isValid()) return '-';
+
+        return `Created ${date.format('DD MMM YYYY, hh:mm A')}`;
+    } catch {
+        return '-';
+    }
+};
 
 export const groupModelsByDataset = (models: SchemaModelView[]): GroupedModels[] => {
     const groups: Record<string, GroupedModels> = {}; // datasetId -> models
@@ -16,10 +32,11 @@ export const groupModelsByDataset = (models: SchemaModelView[]): GroupedModels[]
             groups[datasetId] = {
                 group: {
                     id: datasetId,
-                    name: `Dataset #${datasetId}`,
-                    createdAt: 'Created 01 Oct 2025, 11:07 AM',
+                    name: `Dataset #${datasetId.slice(0, 8)}`,
+                    createdAt: formatDatasetStartTime(model.training_info.start_time),
                     labelCount,
-                    imageCount: 3600,
+                    // TODO: Replace with actual dataset info when available from API
+                    imageCount: 0,
                     trainingSubsets: {
                         training: 70,
                         validation: 20,
