@@ -93,6 +93,14 @@ class TestModelEndpoints:
         assert response.status_code == status.HTTP_204_NO_CONTENT
         fxt_model_service.delete_model.assert_called_once_with(project_id=fxt_get_project.id, model_id=fxt_model.id)
 
+    def test_delete_model_files_only_success(self, fxt_get_project, fxt_model, fxt_model_service, fxt_client):
+        response = fxt_client.delete(f"/api/projects/{fxt_get_project.id}/models/{fxt_model.id}?files_only=true")
+
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        fxt_model_service.delete_model_files.assert_called_once_with(
+            project_id=fxt_get_project.id, model_id=fxt_model.id
+        )
+
     def test_delete_model_not_found(self, fxt_get_project, fxt_model_service, fxt_client):
         model_id = uuid4()
         fxt_model_service.delete_model.side_effect = ResourceNotFoundError(ResourceType.MODEL, str(model_id))
