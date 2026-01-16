@@ -6,7 +6,7 @@ import { ReactNode, useState } from 'react';
 import { Button, Flex, Grid, RadioGroup } from '@geti/ui';
 
 import { type ModelArchitecture as ModelArchitectureType } from '../../../../constants/shared-types';
-import { useGetActiveModelId } from '../../hooks/api/use-get-active-model-id.hook';
+import { useGetActiveModelArchitectureId } from '../../hooks/api/use-get-active-model-architecture-id.hook';
 import { useGetTaskModelArchitectures } from '../../hooks/api/use-get-model-architectures.hook';
 import { ModelArchitectureCard } from './model-architecture/model-architecture.component';
 
@@ -38,19 +38,20 @@ const ModelArchitecturesList = ({
 };
 
 interface ModelArchitectureProps {
-    activeModelId: string | undefined;
+    activeModelArchitectureId: string | undefined;
     modelArchitecture: ModelArchitectureType;
     selectedModelArchitectureId: string | null;
     onSelectedModelArchitectureIdChange: (modelArchitectureId: string | null) => void;
 }
 
 const ModelArchitecture = ({
-    activeModelId,
+    activeModelArchitectureId,
     modelArchitecture,
     onSelectedModelArchitectureIdChange,
     selectedModelArchitectureId,
 }: ModelArchitectureProps) => {
     const isSelected = modelArchitecture.id === selectedModelArchitectureId;
+    const isActive = activeModelArchitectureId === modelArchitecture.id;
 
     return (
         <ModelArchitectureCard
@@ -59,9 +60,12 @@ const ModelArchitecture = ({
             isSelected={isSelected}
             onSelect={() => onSelectedModelArchitectureIdChange(modelArchitecture.id)}
         >
-            <Flex alignItems={'center'} justifyContent={'space-between'}>
-                <ModelArchitectureCard.Name />
-                <ModelArchitectureCard.Description />
+            <Flex direction={'column'} width={'100%'} minWidth={0} gap={'size-100'}>
+                {isActive && <ModelArchitectureCard.Active />}
+                <Flex alignItems={'center'} justifyContent={'space-between'}>
+                    <ModelArchitectureCard.Name />
+                    <ModelArchitectureCard.Description />
+                </Flex>
             </Flex>
             <ModelArchitectureCard.Parameters />
         </ModelArchitectureCard>
@@ -69,14 +73,14 @@ const ModelArchitecture = ({
 };
 
 interface AllModelArchitecturesProps {
-    activeModelId: string | undefined;
+    activeModelArchitectureId: string | undefined;
     modelArchitectures: ModelArchitectureType[];
     selectedModelArchitectureId: string | null;
     onSelectedModelArchitectureIdChange: (modelArchitectureId: string | null) => void;
 }
 
 const AllModelArchitectures = ({
-    activeModelId,
+    activeModelArchitectureId,
     modelArchitectures,
     onSelectedModelArchitectureIdChange,
     selectedModelArchitectureId,
@@ -90,7 +94,7 @@ const AllModelArchitectures = ({
             {modelArchitectures.map((modelArchitecture) => (
                 <ModelArchitecture
                     key={modelArchitecture.id}
-                    activeModelId={activeModelId}
+                    activeModelArchitectureId={activeModelArchitectureId}
                     modelArchitecture={modelArchitecture}
                     selectedModelArchitectureId={selectedModelArchitectureId}
                     onSelectedModelArchitectureIdChange={onSelectedModelArchitectureIdChange}
@@ -101,19 +105,20 @@ const AllModelArchitectures = ({
 };
 
 interface RecommendedModelArchitectureProps {
-    activeModelId: string | undefined;
+    activeModelArchitectureId: string | undefined;
     modelArchitecture: ModelArchitectureType;
     selectedModelArchitectureId: string | null;
     onSelectedModelArchitectureIdChange: (modelArchitectureId: string | null) => void;
 }
 
 const RecommendedModelArchitecture = ({
-    activeModelId,
+    activeModelArchitectureId,
     modelArchitecture,
     selectedModelArchitectureId,
     onSelectedModelArchitectureIdChange,
 }: RecommendedModelArchitectureProps) => {
     const isSelected = modelArchitecture.id === selectedModelArchitectureId;
+    const isActive = activeModelArchitectureId === modelArchitecture.id;
 
     return (
         <ModelArchitectureCard
@@ -121,7 +126,10 @@ const RecommendedModelArchitecture = ({
             isSelected={isSelected}
             onSelect={() => onSelectedModelArchitectureIdChange(modelArchitecture.id)}
         >
-            <ModelArchitectureCard.Name />
+            <Flex width={'100%'} minWidth={0} direction={'column'} gap={'size-100'}>
+                {isActive && <ModelArchitectureCard.Active />}
+                <ModelArchitectureCard.Name />
+            </Flex>
             <ModelArchitectureCard.Parameters />
             <ModelArchitectureCard.Divider />
             <ModelArchitectureCard.ExpandedDescription />
@@ -130,14 +138,14 @@ const RecommendedModelArchitecture = ({
 };
 
 interface RecommendedModelArchitectures {
-    activeModelId: string | undefined;
+    activeModelArchitectureId: string | undefined;
     modelArchitectures: ModelArchitectureType[];
     selectedModelArchitectureId: string | null;
     onSelectedModelArchitectureIdChange: (modelArchitectureId: string | null) => void;
 }
 
 const RecommendedModelArchitectures = ({
-    activeModelId,
+    activeModelArchitectureId,
     modelArchitectures,
     onSelectedModelArchitectureIdChange,
     selectedModelArchitectureId,
@@ -151,7 +159,7 @@ const RecommendedModelArchitectures = ({
             {modelArchitectures.map((modelArchitecture) => (
                 <RecommendedModelArchitecture
                     key={modelArchitecture.id}
-                    activeModelId={activeModelId}
+                    activeModelArchitectureId={activeModelArchitectureId}
                     modelArchitecture={modelArchitecture}
                     selectedModelArchitectureId={selectedModelArchitectureId}
                     onSelectedModelArchitectureIdChange={onSelectedModelArchitectureIdChange}
@@ -176,13 +184,13 @@ export const ModelArchitecturesListContainer = ({
 }: ModelArchitecturesListContainer) => {
     const { data } = useGetTaskModelArchitectures();
     const [showMore, setShowMore] = useState<boolean>(false);
-    const activeModelId = useGetActiveModelId();
+    const activeModelArchitectureId = useGetActiveModelArchitectureId();
 
     if (showMore) {
         return (
             <Flex direction={'column'} minHeight={0} gap={'size-300'}>
                 <AllModelArchitectures
-                    activeModelId={activeModelId}
+                    activeModelArchitectureId={activeModelArchitectureId}
                     modelArchitectures={data.model_architectures}
                     selectedModelArchitectureId={selectedModelArchitectureId}
                     onSelectedModelArchitectureIdChange={onSelectedModelArchitectureIdChange}
@@ -199,7 +207,7 @@ export const ModelArchitecturesListContainer = ({
     return (
         <Flex direction={'column'} minHeight={0} gap={'size-300'}>
             <RecommendedModelArchitectures
-                activeModelId={activeModelId}
+                activeModelArchitectureId={activeModelArchitectureId}
                 modelArchitectures={recommendedArchitectures}
                 selectedModelArchitectureId={selectedModelArchitectureId}
                 onSelectedModelArchitectureIdChange={onSelectedModelArchitectureIdChange}

@@ -3,12 +3,25 @@
 
 import { createContext, ReactNode, useContext } from 'react';
 
-import { Content, ContextualHelp, Divider, Radio, Text } from '@geti/ui';
+import { Content, ContextualHelp, Divider, Heading, Radio, Text, View } from '@geti/ui';
 import { clsx } from 'clsx';
 
 import { type ModelArchitecture as ModelArchitectureType } from '../../../../../constants/shared-types';
 
 import styles from './model-architecture.module.scss';
+
+const ActiveModelArchitecture = () => {
+    return (
+        <View
+            alignSelf={'start'}
+            UNSAFE_className={styles.activeModelArchitecture}
+            paddingX={'size-50'}
+            borderRadius={'regular'}
+        >
+            <Text>Active model</Text>
+        </View>
+    );
+};
 
 const ModelArchitectureExpandedDescription = () => {
     const { modelArchitecture } = useModelArchitecture();
@@ -21,6 +34,7 @@ const ModelArchitectureDescription = () => {
 
     return (
         <ContextualHelp variant='info'>
+            <Heading>{modelArchitecture.name}</Heading>
             <Content>
                 <Text>{modelArchitecture.description}</Text>
             </Content>
@@ -110,3 +124,4 @@ ModelArchitectureCard.Parameters = ModelArchitectureParameters;
 ModelArchitectureCard.Divider = ModelArchitectureDivider;
 ModelArchitectureCard.ExpandedDescription = ModelArchitectureExpandedDescription;
 ModelArchitectureCard.Description = ModelArchitectureDescription;
+ModelArchitectureCard.Active = ActiveModelArchitecture;

@@ -4,7 +4,7 @@
 import { useMemo } from 'react';
 
 import { Model } from '../../../../constants/shared-types';
-import { useGetActiveModelId } from '../../hooks/api/use-get-active-model-id.hook';
+import { useGetActiveModelArchitectureId } from '../../hooks/api/use-get-active-model-architecture-id.hook';
 import { GroupByMode, GroupedModels, SortBy } from '../types';
 import { filterBySearch, groupModels, pinModel, removeEmpty, sortGroupedModels } from '../utils/model-transforms';
 
@@ -22,7 +22,7 @@ type UseGroupedModelsOptions = {
 // - Pinning the active model to the top of its group if the pinActive option is enabled
 export const useGroupedModels = (models: Model[] | undefined, options: UseGroupedModelsOptions): GroupedModels[] => {
     const { groupBy, sortBy, pinActive, searchBy } = options;
-    const activeModelId = useGetActiveModelId();
+    const activeModelId = useGetActiveModelArchitectureId();
 
     return useMemo(() => {
         if (!models) return [];

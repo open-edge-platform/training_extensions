@@ -3,7 +3,7 @@
 
 import { createContext, ReactNode, useContext, useState } from 'react';
 
-import { useGetActiveModelId } from '../../hooks/api/use-get-active-model-id.hook';
+import { useGetActiveModelArchitectureId } from '../../hooks/api/use-get-active-model-architecture-id.hook';
 import { useGetModels } from '../../hooks/api/use-get-models.hook';
 import { useGroupedModels } from '../hooks/use-grouped-models.hook';
 import type { GroupByMode, GroupedModels, SortBy } from '../types';
@@ -39,7 +39,7 @@ export const ModelListingProvider = ({ children }: ModelListingProviderProps) =>
     const [expandedModelIds, setExpandedModelIds] = useState<Set<string>>(new Set());
     const [searchBy, setSearchBy] = useState<string>('');
 
-    const activeModelId = useGetActiveModelId();
+    const activeModelId = useGetActiveModelArchitectureId();
     const { data: models } = useGetModels();
     const groupedModels = useGroupedModels(models, { groupBy, sortBy, pinActive, searchBy });
 

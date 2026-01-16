@@ -19,9 +19,18 @@
     background-color: #0C1E29;
 }
 
-.modelArchitectureName span[class*='spectrum-Radio-label'] {
-    font-weight: 500;
-    font-size: var(--spectrum-global-dimension-font-size-300);
+.modelArchitectureName {
+    width: 100%;
+    min-width: 0;
+
+    & span[class*='spectrum-Radio-label'] {
+        font-weight: 500;
+        font-size: var(--spectrum-global-dimension-font-size-300);
+        width: 100%;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+    }
 }
 
 .modelArchitectureNameSelected span[class*='spectrum-Radio-label'] {
@@ -37,4 +46,9 @@
 
 .modelArchitectureExpandedDescription {
     font-size: var(--spectrum-global-dimension-font-size-75);
+}
+
+.activeModelArchitecture {
+    background-color: var(--energy-blue);
+    color: var(--spectrum-global-color-gray-50);
 }
