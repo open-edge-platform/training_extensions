@@ -46,6 +46,12 @@ export enum PointerIconsOffset {
     MagneticLassoClose = '0 0',
 }
 
+export interface MouseEventHandlers {
+    onPointerUp: (event: PointerEvent<SVGSVGElement>) => void;
+    onPointerDown: (event: PointerEvent<SVGSVGElement>) => void;
+    onPointerMove: (event: PointerEvent<SVGSVGElement>) => void;
+}
+
 export const TOOL_ICON: Record<PolygonMode, { icon: PointerIcons; offset: PointerIconsOffset }> = {
     [PolygonMode.Lasso]: { icon: PointerIcons.Lasso, offset: PointerIconsOffset.Lasso },
     [PolygonMode.Eraser]: { icon: PointerIcons.Eraser, offset: PointerIconsOffset.Eraser },
@@ -135,12 +141,6 @@ export const leftRightMouseButtonHandler =
         leftMouseButtonHandler(leftCallback)(event);
         rightMouseButtonHandler(rightCallback)(event);
     };
-
-export interface MouseEventHandlers {
-    onPointerUp: (event: PointerEvent<SVGSVGElement>) => void;
-    onPointerDown: (event: PointerEvent<SVGSVGElement>) => void;
-    onPointerMove: (event: PointerEvent<SVGSVGElement>) => void;
-}
 
 export const removeEmptySegments =
     (...newSegments: Point[][]) =>
