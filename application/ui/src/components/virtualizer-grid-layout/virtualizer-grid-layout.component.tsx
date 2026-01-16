@@ -7,14 +7,12 @@ import { AriaComponentsListBox, GridLayout, ListBoxItem, Loading, View, Virtuali
 import { useLoadMore } from '@react-aria/utils';
 import { GridLayoutOptions } from 'react-aria-components';
 
+import { MediaStateMap } from '../../constants/shared-types';
 import { useGetTargetPosition } from './use-get-target-position.hook';
 
 import classes from './virtualizer-grid-layout.module.scss';
 
 type AriaComponentsListBoxProps = ComponentProps<typeof AriaComponentsListBox>;
-
-export type MediaItemState = 'accepted' | 'rejected';
-export type MediaStateMap = Map<string, MediaItemState>;
 
 interface GridItem {
     id: string;
@@ -33,7 +31,6 @@ interface VirtualizerGridLayoutProps<T extends GridItem>
     onLoadMore: () => void;
     contentItem: (item: T) => ReactNode;
     getItemId?: (item: T) => string | number;
-    getItemTextValue?: (item: T) => string;
 }
 
 const MIN_SPACE = 18; // default value for GridLayoutOptions.minSpace.height
@@ -51,7 +48,6 @@ export const VirtualizerGridLayout = <T extends GridItem>({
     contentItem,
     onSelectionChange,
     getItemId = (item) => item.id,
-    getItemTextValue = (item) => String(item.id),
 }: VirtualizerGridLayoutProps<T>) => {
     const ref = useRef<HTMLDivElement | null>(null);
 
@@ -87,7 +83,7 @@ export const VirtualizerGridLayout = <T extends GridItem>({
                             <ListBoxItem
                                 id={itemId}
                                 key={`${ariaLabel}-${itemId}-${index}`}
-                                textValue={getItemTextValue(item)}
+                                textValue={String(itemId)}
                                 className={classes.mediaItem}
                                 data-accepted={itemState === 'accepted'}
                                 data-rejected={itemState === 'rejected'}

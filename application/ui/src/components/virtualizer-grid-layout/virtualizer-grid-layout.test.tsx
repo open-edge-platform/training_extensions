@@ -5,7 +5,8 @@ import { render, screen } from '@testing-library/react';
 import { getMultipleMockedMediaItems } from 'mocks/mock-media-item';
 import { Size } from 'react-aria-components';
 
-import { MediaStateMap, VirtualizerGridLayout } from './virtualizer-grid-layout.component';
+import { MediaStateMap } from '../../constants/shared-types';
+import { VirtualizerGridLayout } from './virtualizer-grid-layout.component';
 
 // required configuration; otherwise, the list renders empty
 const mockedLayoutOptions = {

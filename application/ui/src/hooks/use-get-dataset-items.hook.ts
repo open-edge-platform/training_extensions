@@ -16,7 +16,7 @@ export const useGetDatasetItems = (options?: UseGetDatasetItemsOptions) => {
     const project_id = useProjectIdentifier();
     const subset = options?.subset;
 
-    const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = $api.useInfiniteQuery(
+    const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isPending } = $api.useInfiniteQuery(
         'get',
         '/api/projects/{project_id}/dataset/items',
         {
@@ -46,5 +46,5 @@ export const useGetDatasetItems = (options?: UseGetDatasetItemsOptions) => {
     const items = data?.pages.flatMap((page) => page.items) ?? [];
     const totalCount = data?.pages[0]?.pagination?.total ?? 0;
 
-    return { items, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, totalCount };
+    return { items, fetchNextPage, hasNextPage, isFetchingNextPage, isPending, totalCount };
 };

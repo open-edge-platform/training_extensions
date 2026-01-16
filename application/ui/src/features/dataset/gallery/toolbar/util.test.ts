@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { MediaStateMap } from '../../../../components/virtualizer-grid-layout/virtualizer-grid-layout.component';
+import { MediaStateMap } from '../../../../constants/shared-types';
 import { toggleMultipleSelection, updateSelectedKeysTo } from './util';
 
 describe('toggleMultipleSelection', () => {

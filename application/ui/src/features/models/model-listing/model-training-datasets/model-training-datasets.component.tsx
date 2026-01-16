@@ -36,7 +36,7 @@ const BoxActions = () => {
 };
 
 const SubsetBox = ({ title, subsetSplit, subset }: SubsetBoxProps) => {
-    const { items, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, totalCount } = useGetDatasetItems({
+    const { items, fetchNextPage, hasNextPage, isFetchingNextPage, isPending, totalCount } = useGetDatasetItems({
         subset,
     });
 
@@ -49,7 +49,7 @@ const SubsetBox = ({ title, subsetSplit, subset }: SubsetBoxProps) => {
             minHeight={'size-5000'}
             justifyContent={'center'}
         >
-            <Flex UNSAFE_className={styles.boxHeading} alignItems={'center'}>
+            <Flex UNSAFE_className={styles.boxHeading} justifyContent={'space-between'} alignItems={'center'}>
                 <Flex gap={'size-100'} alignItems={'center'}>
                     <Heading level={5}>
                         {title} {subsetSplit}%
@@ -65,7 +65,7 @@ const SubsetBox = ({ title, subsetSplit, subset }: SubsetBoxProps) => {
                     fetchNextPage={fetchNextPage}
                     hasNextPage={hasNextPage}
                     isFetchingNextPage={isFetchingNextPage}
-                    isLoading={isLoading}
+                    isLoading={isPending}
                 />
             </Content>
         </Flex>
