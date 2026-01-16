@@ -6,8 +6,6 @@ import { ReactNode, useState } from 'react';
 import { Button, Flex, Grid, RadioGroup } from '@geti/ui';
 
 import { type ModelArchitecture as ModelArchitectureType } from '../../../../constants/shared-types';
-import { useGetActiveModelArchitectureId } from '../../hooks/api/use-get-active-model-architecture-id.hook';
-import { useGetTaskModelArchitectures } from '../../hooks/api/use-get-model-architectures.hook';
 import { ModelArchitectureCard } from './model-architecture/model-architecture.component';
 
 import styles from './model-architectures-list.module.scss';

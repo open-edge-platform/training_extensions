@@ -3,12 +3,12 @@
 
 import { Item, Picker } from '@geti/ui';
 
-import type { TrainingDevices } from '../../../constants/shared-types';
+import type { DeviceType, TrainingDevices } from '../../../constants/shared-types';
 
 interface SelectTrainingDeviceProps {
     trainingDevices: TrainingDevices[];
-    selectedTrainingDevice: string | null;
-    onSelectedTrainingDeviceChange: (trainingDeviceId: string | null) => void;
+    selectedTrainingDevice: DeviceType | null;
+    onSelectedTrainingDeviceChange: (trainingDeviceId: DeviceType | null) => void;
 }
 
 export const SelectTrainingDevice = ({
@@ -22,7 +22,7 @@ export const SelectTrainingDevice = ({
             items={trainingDevices}
             label={'Select training device'}
             selectedKey={selectedTrainingDevice}
-            onSelectionChange={(key) => onSelectedTrainingDeviceChange(String(key))}
+            onSelectionChange={(key) => onSelectedTrainingDeviceChange(key as DeviceType)}
         >
             {(item) => <Item key={item.type}>{item.name}</Item>}
         </Picker>

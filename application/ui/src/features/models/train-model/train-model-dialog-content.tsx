@@ -5,6 +5,7 @@ import { Divider, Flex, View } from '@geti/ui';
 
 import type {
     DatasetRevision,
+    DeviceType,
     ModelArchitecture as ModelArchitectureType,
     TrainingDevices,
 } from '../../../constants/shared-types';
@@ -19,8 +20,8 @@ interface TrainModelDialogContentProps {
     onSelectedModelArchitectureIdChange: (modelArchitectureId: string | null) => void;
 
     trainingDevices: TrainingDevices[];
-    selectedTrainingDevice: string | null;
-    onSelectedTrainingDeviceChange: (trainingDeviceId: string | null) => void;
+    selectedTrainingDevice: DeviceType | null;
+    onSelectedTrainingDeviceChange: (trainingDeviceId: DeviceType | null) => void;
 
     datasetRevisions: DatasetRevision[];
     selectedDatasetRevision: string | null;
@@ -63,7 +64,7 @@ export const TrainModelDialogContent = ({
                     <SelectDatasetRevision
                         datasetRevisions={datasetRevisions}
                         selectedDatasetRevision={selectedDatasetRevision}
-                        onSelectedDatasetRevision={onSelectedDatasetRevisionChange}
+                        onSelectedDatasetRevisionChange={onSelectedDatasetRevisionChange}
                     />
                 </Flex>
             </Flex>

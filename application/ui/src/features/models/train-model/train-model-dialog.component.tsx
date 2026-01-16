@@ -1,38 +1,65 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState } from 'react';
+import { Button, ButtonGroup, Content, Dialog, Divider, Flex, Heading, Link, Text, toast } from '@geti/ui';
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
-import { Button, ButtonGroup, Content, Dialog, Divider, Heading } from '@geti/ui';
-
-import { useGetActiveModelArchitectureId } from '../hooks/api/use-get-active-model-architecture-id.hook';
-import { useGetDatasetRevisions } from '../hooks/api/use-get-dataset-revisions';
-import { useGetTaskModelArchitectures } from '../hooks/api/use-get-model-architectures.hook';
-import { useGetTrainingDevices } from '../hooks/api/use-get-training-devices';
+import { paths } from '../../../constants/paths';
+import { useTrainModelMutation } from '../hooks/api/use-train-model-mutation';
 import { TrainModelDialogContent } from './train-model-dialog-content';
+import { useTrainModel } from './use-train-model';
 
 interface TrainModelDialogProps {
     onClose: () => void;
 }
 
 export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
-    const { data } = useGetTaskModelArchitectures();
-    const { data: trainingDevices } = useGetTrainingDevices();
-    const { data: datasetRevisions } = useGetDatasetRevisions();
-    const activeModelArchitectureId = useGetActiveModelArchitectureId();
+    const {
+        trainingDevices,
+        selectedTrainingDevice,
+        onSelectedTrainingDeviceChange,
+        onSelectedModelArchitectureIdChange,
+        selectedModelArchitectureId,
+        modelArchitectures,
+        selectedDatasetRevision,
+        onSelectedDatasetRevisionChange,
+        datasetRevisions,
+        activeModelArchitectureId,
+        isStartButtonDisabled,
+    } = useTrainModel();
+    const trainModelMutation = useTrainModelMutation();
+    const projectId = useProjectIdentifier();
 
-    const [selectedModelArchitectureId, setSelectedModelArchitectureId] = useState<string | null>(
-        activeModelArchitectureId ?? null
-    );
+    const trainModel = () => {
+        if (selectedTrainingDevice === null || selectedDatasetRevision === null || selectedModelArchitectureId === null)
+            return;
 
-    const [selectedTrainingDevice, setSelectedTrainingDevice] = useState<string | null>(
-        trainingDevices?.at(0)?.type ?? null
-    );
-    const [selectedDatasetRevision, setSelectedDatasetRevision] = useState<string | null>(
-        datasetRevisions?.at(0)?.id ?? null
-    );
+        trainModelMutation.mutate(
+            {
+                device: selectedTrainingDevice,
+                datasetRevisionId: selectedDatasetRevision,
+                modelArchitectureId: selectedModelArchitectureId,
+            },
+            () => {
+                onClose();
 
-    const isStartButtonDisabled = selectedModelArchitectureId === null;
+                toast({
+                    message: (
+                        <Flex alignItems={'center'} gap={'size-50'} wrap={'wrap'}>
+                            <Text>
+                                Model training started successfully.{' '}
+                                <Link href={paths.project.models({ projectId })} UNSAFE_style={{ color: '#fff' }}>
+                                    Open models screen to see progress.
+                                </Link>
+                            </Text>
+                        </Flex>
+                    ),
+                    type: 'success',
+                    duration: Infinity,
+                });
+            }
+        );
+    };
 
     return (
         <Dialog width={'70vw'}>
@@ -42,14 +69,14 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
                 <TrainModelDialogContent
                     trainingDevices={trainingDevices}
                     selectedTrainingDevice={selectedTrainingDevice}
-                    onSelectedTrainingDeviceChange={setSelectedTrainingDevice}
+                    onSelectedTrainingDeviceChange={onSelectedTrainingDeviceChange}
                     datasetRevisions={datasetRevisions}
                     selectedDatasetRevision={selectedDatasetRevision}
-                    onSelectedDatasetRevisionChange={setSelectedDatasetRevision}
+                    onSelectedDatasetRevisionChange={onSelectedDatasetRevisionChange}
                     activeModelArchitectureId={activeModelArchitectureId}
-                    modelArchitectures={data.model_architectures}
+                    modelArchitectures={modelArchitectures}
                     selectedModelArchitectureId={selectedModelArchitectureId}
-                    onSelectedModelArchitectureIdChange={setSelectedModelArchitectureId}
+                    onSelectedModelArchitectureIdChange={onSelectedModelArchitectureIdChange}
                 />
             </Content>
             <Divider size={'S'} />
@@ -57,7 +84,7 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
                 <Button variant={'secondary'} onPress={onClose}>
                     Cancel
                 </Button>
-                <Button variant={'accent'} onPress={onClose} isDisabled={isStartButtonDisabled}>
+                <Button variant={'accent'} onPress={trainModel} isDisabled={isStartButtonDisabled}>
                     Start
                 </Button>
             </ButtonGroup>

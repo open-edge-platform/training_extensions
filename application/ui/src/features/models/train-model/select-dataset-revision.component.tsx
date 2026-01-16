@@ -8,13 +8,13 @@ import { DatasetRevision } from '../../../constants/shared-types';
 interface SelectDatasetRevisionProps {
     datasetRevisions: DatasetRevision[];
     selectedDatasetRevision: string | null;
-    onSelectedDatasetRevision: (datasetRevision: string) => void;
+    onSelectedDatasetRevisionChange: (datasetRevision: string) => void;
 }
 
 export const SelectDatasetRevision = ({
     datasetRevisions,
     selectedDatasetRevision,
-    onSelectedDatasetRevision,
+    onSelectedDatasetRevisionChange,
 }: SelectDatasetRevisionProps) => {
     return (
         <Picker
@@ -22,7 +22,7 @@ export const SelectDatasetRevision = ({
             items={datasetRevisions}
             label={'Select dataset revision'}
             selectedKey={selectedDatasetRevision}
-            onSelectionChange={(key) => onSelectedDatasetRevision(String(key))}
+            onSelectionChange={(key) => onSelectedDatasetRevisionChange(String(key))}
         >
             {(item) => <Item key={item.id}>{item.name}</Item>}
         </Picker>

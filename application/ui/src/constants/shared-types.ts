@@ -12,8 +12,10 @@ export type DatasetSubset = components['schemas']['DatasetItemSubset'];
 export type MediaItemState = 'accepted' | 'rejected';
 export type MediaStateMap = Map<string, MediaItemState>;
 
+export type DeviceType = components['schemas']['DeviceType'];
+
 export type TrainingDevices = {
-    type: components['schemas']['DeviceType'];
+    type: DeviceType;
     name: string;
 };
 
