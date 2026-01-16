@@ -6,13 +6,7 @@ import { Search } from '@geti/ui/icons';
 
 export const EmptySearchResults = () => {
     return (
-        <Flex
-            direction={'column'}
-            alignItems={'center'}
-            justifyContent={'center'}
-            gap={'size-200'}
-            marginY={'size-1300'}
-        >
+        <Flex direction={'column'} alignItems={'center'} justifyContent={'center'} gap={'size-200'} height={'100%'}>
             <Search />
             <Heading level={3}>No models found</Heading>
         </Flex>
