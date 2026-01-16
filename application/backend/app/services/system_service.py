@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 import platform
 import re
-from collections import defaultdict
 
 import cv2
 import psutil
@@ -178,13 +177,4 @@ class SystemService:
         if (backend := CV2_BACKENDS.get(platform.system())) is None:
             raise RuntimeError(f"Unsupported platform: {platform.system()}")
 
-        cameras: list[CameraInfo] = []
-        name_counts: dict[str, int] = defaultdict(int)
-
-        for cam in enumerate_cameras(backend):
-            name = cam.name
-            if count := name_counts[name]:
-                name = f"{name} ({count})"
-            name_counts[cam.name] += 1
-            cameras.append(CameraInfo(index=cam.index, name=name))
-        return cameras
+        return [CameraInfo(index=cam.index, name=f"{cam.name} [{cam.index}]") for cam in enumerate_cameras(backend)]
