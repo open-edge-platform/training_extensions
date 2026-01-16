@@ -14,7 +14,7 @@ interface ExpandableSearchProps {
     onChange: (value: string) => void;
 }
 
-const autoFocus = (ref: TextFieldRef<HTMLInputElement> | null) => {
+const focusInputRef = (ref: TextFieldRef<HTMLInputElement> | null) => {
     if (ref === null) return;
 
     ref.focus();
@@ -42,7 +42,7 @@ export const ExpandableSearch = ({ value, onChange }: ExpandableSearchProps) => 
             {isExpanded ? (
                 <SearchField
                     value={value}
-                    ref={autoFocus}
+                    ref={focusInputRef}
                     onChange={onChange}
                     onBlur={handleBlur}
                     placeholder='Search models...'
