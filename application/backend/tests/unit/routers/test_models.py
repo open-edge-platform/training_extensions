@@ -35,11 +35,16 @@ class TestModelEndpoints:
     def test_list_model_success(self, fxt_model, fxt_get_project, fxt_model_service, fxt_client):
         fxt_model_service.list_models.return_value = [fxt_model] * 2
 
-        response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models")
+        dataset_revision_id = uuid4()
+        response = fxt_client.get(
+            f"/api/projects/{fxt_get_project.id}/models?dataset_revision_id={dataset_revision_id}"
+        )
 
         assert response.status_code == status.HTTP_200_OK
         assert len(response.json()) == 2
-        fxt_model_service.list_models.assert_called_once_with(fxt_get_project.id)
+        fxt_model_service.list_models.assert_called_once_with(
+            project_id=fxt_get_project.id, dataset_revision_id=dataset_revision_id
+        )
 
     def test_list_model_project_not_found(self, fxt_model, fxt_get_project, fxt_model_service, fxt_client):
         project_id = uuid4()
@@ -48,7 +53,7 @@ class TestModelEndpoints:
         response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models")
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
-        fxt_model_service.list_models.assert_called_once_with(fxt_get_project.id)
+        fxt_model_service.list_models.assert_called_once_with(project_id=fxt_get_project.id, dataset_revision_id=None)
 
     def test_list_model_invalid_id(self, fxt_model, fxt_model_service, fxt_client):
         response = fxt_client.get("/api/projects/invalid-id/models")
