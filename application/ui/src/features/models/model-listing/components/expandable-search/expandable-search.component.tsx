@@ -5,7 +5,6 @@ import { useState } from 'react';
 
 import { ActionButton, Flex, SearchField, TextFieldRef } from '@geti/ui';
 import { Search } from '@geti/ui/icons';
-import { clsx } from 'clsx';
 
 import classes from './expandable-search.module.scss';
 
@@ -38,7 +37,7 @@ export const ExpandableSearch = ({ value, onChange }: ExpandableSearchProps) => 
     };
 
     return (
-        <Flex UNSAFE_className={clsx(classes.container, { [classes.expanded]: isExpanded })}>
+        <Flex>
             {isExpanded ? (
                 <SearchField
                     value={value}

@@ -3,13 +3,13 @@
 
 import { Disclosure, DisclosurePanel, DisclosureTitle, Flex } from '@geti/ui';
 
-import { SchemaModelView } from '../../../../api/openapi-spec';
-import { ModelDetailsTabs } from '../model-details/model-details-tabs.component';
-import { useModelListing } from '../provider/model-listing-provider';
-import { ArchitectureGroup, DatasetGroup } from '../types';
-import { GroupHeader } from './group-headers/group-header.component';
-import { ModelRow } from './model-row.component';
-import { ModelsTableHeader } from './models-table-header.component';
+import { SchemaModelView } from '../../../../../api/openapi-spec';
+import { ModelDetailsTabs } from '../../model-details/model-details-tabs.component';
+import { useModelListing } from '../../provider/model-listing-provider';
+import { ArchitectureGroup, DatasetGroup } from '../../types';
+import { GroupHeader } from '../group-headers/group-header.component';
+import { ModelRow } from '../model-row/model-row.component';
+import { ModelsTableHeader } from '../models-table-header.component';
 
 import classes from './group-models-container.module.scss';
 

@@ -3,8 +3,8 @@
 
 import { Divider, Flex } from '@geti/ui';
 
-import { EmptySearchResults } from './components/empty-search-results.component';
-import { GroupModelsContainer } from './components/group-models-container.component';
+import { EmptySearchResults } from './components/expandable-search/empty-search-results.component';
+import { GroupModelsContainer } from './components/group-models-container/group-models-container.component';
 import { Header } from './components/header.component';
 import { useModelListing } from './provider/model-listing-provider';
 
