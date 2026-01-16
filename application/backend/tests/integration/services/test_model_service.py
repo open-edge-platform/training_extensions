@@ -115,6 +115,27 @@ class TestModelServiceIntegration:
         assert db_session.get(ModelRevisionDB, str(fxt_model_id)) is None
         assert not model_rev_path.exists()
 
+    def test_delete_model_only_files(
+        self,
+        tmp_path: Path,
+        fxt_project_id: UUID,
+        fxt_model_id: UUID,
+        fxt_model_service: ModelService,
+        db_session: Session,
+    ):
+        """Test that deleting only model files removes only filesystem artifacts."""
+        model_rev_path = tmp_path / "projects" / str(fxt_project_id) / "models" / str(fxt_model_id)
+        model_rev_path.mkdir(parents=True, exist_ok=True)
+        (model_rev_path / "model.xml").touch()
+        (model_rev_path / "model.bin").touch()
+
+        fxt_model_service.delete_model_files(project_id=fxt_project_id, model_id=fxt_model_id)
+
+        model_db = db_session.get(ModelRevisionDB, str(fxt_model_id))
+        assert model_db is not None
+        assert model_db.files_deleted is True
+        assert not model_rev_path.exists()
+
     def test_delete_model_with_files_no_permission(
         self,
         tmp_path: Path,

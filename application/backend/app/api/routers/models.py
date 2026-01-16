@@ -171,10 +171,14 @@ def delete_model(
     project: Annotated[ProjectView, Depends(get_project)],
     model_id: ModelID,
     model_service: Annotated[ModelService, Depends(get_model_service)],
+    files_only: Annotated[bool, Query()] = False,
 ) -> None:
     """Delete a model from a project."""
     try:
-        model_service.delete_model(project_id=project.id, model_id=model_id)
+        if files_only:
+            model_service.delete_model_files(project_id=project.id, model_id=model_id)
+        else:
+            model_service.delete_model(project_id=project.id, model_id=model_id)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ResourceInUseError as e:

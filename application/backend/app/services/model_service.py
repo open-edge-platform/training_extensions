@@ -4,6 +4,7 @@
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
+from typing import cast
 from uuid import UUID
 
 from loguru import logger
@@ -115,6 +116,33 @@ class ModelService(BaseSessionManagedService):
                 raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
         except IntegrityError:
             raise ResourceInUseError(ResourceType.MODEL, str(model_id))
+
+    @parent_process_only
+    def delete_model_files(self, project_id: UUID, model_id: UUID) -> None:
+        """
+        Delete only the model files from disk, keeping the model revision record in the database and setting its
+        files_deleted flag to True.
+
+        Args:
+            project_id (UUID): The unique identifier of the project.
+            model_id (UUID): The unique identifier of the model.
+        """
+        try:
+            model_files_path = self.get_model_files_path(project_id=project_id, model_id=model_id)
+        except FileNotFoundError:
+            return
+        except ResourceNotFoundError:
+            return
+
+        # Delete model files from disk
+        shutil.rmtree(model_files_path)
+        logger.info("Deleted model files at '{}'", model_files_path)
+
+        # Mark as deleted in the database
+        model_rev_repo = ModelRevisionRepository(project_id=str(project_id), db=self.db_session)
+        model_rev_db = cast(ModelRevisionDB, model_rev_repo.get_by_id(str(model_id)))
+        model_rev_db.files_deleted = True
+        model_rev_repo.update(model_rev_db)
 
     def list_models(self, project_id: UUID) -> list[ModelRevision]:
         """
