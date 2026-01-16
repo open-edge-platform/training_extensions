@@ -153,4 +153,4 @@ class TestModelManifest:
                 failonmissingfiles=True,
                 none_behavior=hiyapyco.NONE_BEHAVIOR_OVERRIDE,
             )
-            assert model_manifest == ModelManifest(**mock_yaml_result)
+            assert model_manifest == ModelManifest(**mock_yaml_result)  # pyrefly: ignore[bad-argument-type]

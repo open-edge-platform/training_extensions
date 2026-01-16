@@ -103,7 +103,7 @@ class InstanceSegmentationSample(Sample):
     subset: Subset = subset_field()
 
 
-def convert_to_dm_subset(subset: DatasetItemSubset | None) -> Subset | None:
+def convert_to_dm_subset(subset: DatasetItemSubset) -> Subset:
     """
     Convert DatasetItemSubset to Datumaro Subset
     Args:
@@ -114,8 +114,6 @@ def convert_to_dm_subset(subset: DatasetItemSubset | None) -> Subset | None:
     Raises:
         ValueError: If subset type cannot be mapped to Datumaro Subset
     """
-    if subset is None:
-        return Subset.UNASSIGNED
     match subset:
         case DatasetItemSubset.TRAINING:
             return Subset.TRAINING

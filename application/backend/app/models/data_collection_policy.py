@@ -7,7 +7,6 @@ from pydantic import BaseModel, Field, TypeAdapter
 
 
 class DataCollectionPolicyBase(BaseModel):
-    type: str
     enabled: bool = True
 
 

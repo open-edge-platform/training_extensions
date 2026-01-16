@@ -168,9 +168,11 @@ class TestTrainingConfigurationService:
         )
         assert isinstance(training_configuration, TrainingConfiguration)
         assert training_configuration != fxt_training_configuration
-        assert training_configuration.hyperparameters.dataset_preparation.augmentation.topdown_affine.enable is True
-        assert training_configuration.hyperparameters.dataset_preparation.augmentation.topdown_affine.probability == 0.5
-        assert training_configuration.hyperparameters.training.max_epochs == 999
+        augm_parameters = training_configuration.hyperparameters.dataset_preparation.augmentation
+        assert augm_parameters.topdown_affine.enable is True  # pyrefly: ignore[missing-attribute]
+        assert augm_parameters.topdown_affine.probability == 0.5  # pyrefly: ignore[missing-attribute]
+        training_params = training_configuration.hyperparameters.training
+        assert training_params.max_epochs == 999  # pyrefly: ignore[missing-attribute]
         assert training_configuration.hyperparameters.evaluation.metric == "new_metric"
         assert training_configuration.global_parameters.dataset_preparation.subset_split.training == 70
         assert training_configuration.global_parameters.dataset_preparation.subset_split.validation == 15
@@ -215,9 +217,11 @@ class TestTrainingConfigurationService:
         )
         assert isinstance(training_configuration, TrainingConfiguration)
         assert training_configuration != fxt_training_configuration
-        assert training_configuration.hyperparameters.dataset_preparation.augmentation.topdown_affine.enable is True
-        assert training_configuration.hyperparameters.dataset_preparation.augmentation.topdown_affine.probability == 0.5
-        assert training_configuration.hyperparameters.training.max_epochs == 999
+        augm_parameters = training_configuration.hyperparameters.dataset_preparation.augmentation
+        assert augm_parameters.topdown_affine.enable is True  # pyrefly: ignore[missing-attribute]
+        assert augm_parameters.topdown_affine.probability == 0.5  # pyrefly: ignore[missing-attribute]
+        training_params = training_configuration.hyperparameters.training
+        assert training_params.max_epochs == 999  # pyrefly: ignore[missing-attribute]
         assert training_configuration.hyperparameters.evaluation.metric == "new_metric"
         assert training_configuration.global_parameters.dataset_preparation.subset_split.training == 60
         assert training_configuration.global_parameters.dataset_preparation.subset_split.validation == 10

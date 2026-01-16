@@ -92,5 +92,5 @@ class DatasetItem(BaseEntity):
     user_reviewed: bool
     prediction_model_id: UUID | None
     source_id: UUID | None
-    subset: DatasetItemSubset | None
+    subset: DatasetItemSubset = DatasetItemSubset.UNASSIGNED
     subset_assigned_at: datetime | None

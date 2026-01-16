@@ -52,12 +52,12 @@ dev = [
     "time-machine~=2.19.0",
 ]
 lint = [
-    "mypy~=1.16.1",
     "ruff==0.11.13",
     "import-linter==2.3",
     "types-aiofiles~=25.1.0",  # should match aiofiles version
     "types-requests~=2.32.4",
     "types-pyyaml~=6.0.12",  # should match pyyaml version
+    "pyrefly~=0.47.0",
 ]
 
 [tool.uv]
@@ -157,13 +157,11 @@ layers = [
     "app.utils",
 ]
 
-[tool.mypy]
-python_version = "3.13"
-ignore_missing_imports = true
-show_error_codes = true
-disable_error_code = ["prop-decorator"] # Ignore error due to https://github.com/python/mypy/issues/14461
-
 [tool.pytest.ini_options]
 pythonpath = [
     "."
 ]
+
+[tool.pyrefly]
+python-version = "3.13.0"
+ignore-missing-imports = ["*"]

@@ -104,11 +104,11 @@ jobs:
         run: |
           uv run lint-imports
 
-      - name: Check source code with mypy
+      - name: Check source code with Pyrefly
         if: matrix.os == 'ubuntu-latest'
         working-directory: application/backend
         run: |
-          uv run mypy . --config-file=pyproject.toml
+          uv run pyrefly check
 
       - name: Run unit tests
         working-directory: application/backend
