@@ -1,6 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from collections.abc import Sequence
+from typing import cast
 
 import cv2
 import numpy as np
@@ -16,6 +17,8 @@ def _convert_classification_prediction(
 ) -> list[DatasetItemAnnotation]:
     predicted_labels: list[LabelReference] = []
     predicted_confidences: list[float] = []
+    if prediction.top_labels is None:
+        raise RuntimeError("The prediction is malformed because it does not contain labels")
     for predicted_label in prediction.top_labels:
         label_name = predicted_label.name
         label = next((label for label in labels if label.name == label_name), None)
@@ -100,7 +103,9 @@ def get_confidence_scores(prediction: Result) -> list[float]:
         case InstanceSegmentationResult() | DetectionResult():
             return prediction.scores.tolist()
         case ClassificationResult():
-            return [label.confidence for label in prediction.top_labels]
+            if prediction.top_labels is None:
+                raise RuntimeError("The prediction is malformed because it does not contain labels")
+            return [cast(float, label.confidence) for label in prediction.top_labels]
     return []
 
 

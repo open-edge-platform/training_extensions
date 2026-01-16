@@ -2,18 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Flex, Grid, Item, Picker, Text, ToggleButton } from '@geti/ui';
-import { Search } from '@geti/ui/icons';
 
+import { useModelListing } from '../provider/model-listing-provider';
 import type { GroupByMode, SortBy } from '../types';
+import { ExpandableSearch } from './expandable-search.component';
 
-interface HeaderProps {
-    groupBy?: GroupByMode;
-    onGroupByChange: (groupBy: GroupByMode) => void;
-    onSortChange: (sortBy: SortBy) => void;
-    onPinActiveToggle: () => void;
-}
+export const Header = () => {
+    const { groupBy, onGroupByChange, onSortChange, onPinActiveToggle, searchBy, onSearchChange } = useModelListing();
 
-export const Header = ({ groupBy, onGroupByChange, onSortChange, onPinActiveToggle }: HeaderProps) => {
     return (
         <Grid columns={['auto auto 1fr auto']} gap={'size-100'} alignItems={'center'}>
             <Text>Models</Text>
@@ -51,7 +47,7 @@ export const Header = ({ groupBy, onGroupByChange, onSortChange, onPinActiveTogg
             </Flex>
 
             <Flex>
-                <Search />
+                <ExpandableSearch value={searchBy} onChange={onSearchChange} />
             </Flex>
         </Grid>
     );

@@ -3,6 +3,7 @@
 
 from datetime import UTC, datetime
 from enum import IntEnum, StrEnum
+from typing import Generic, TypeVar
 
 from pydantic import BaseModel
 
@@ -33,9 +34,12 @@ class JobParams(BaseModel):
     pass
 
 
-class Job(BaseIDModel):
+JobParamsT = TypeVar("JobParamsT", bound=JobParams)
+
+
+class Job(BaseIDModel, Generic[JobParamsT]):
     job_type: JobType
-    params: JobParams  # parameters of the job to be serialized and send to a runnable context
+    params: JobParamsT  # parameters of the job to be serialized and send to a runnable context
     status: JobStatus = JobStatus.PENDING
     submitted_at: float = now_utc_ts()
     updated_at: float = now_utc_ts()

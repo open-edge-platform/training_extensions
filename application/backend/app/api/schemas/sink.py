@@ -168,13 +168,12 @@ SinkView = Annotated[
 SinkViewAdapter: TypeAdapter[SinkView] = TypeAdapter(SinkView)
 
 
-class BasicSinkConfigCreate(BaseIDNameModel):
-    sink_type: SinkType
+class BaseSinkConfigCreate(BaseIDNameModel):
     rate_limit: float | None = None
     output_formats: list[OutputFormat]
 
 
-class FolderSinkConfigCreate(BasicSinkConfigCreate):
+class FolderSinkConfigCreate(BaseSinkConfigCreate):
     sink_type: Literal[SinkType.FOLDER]
     folder_path: str
 
@@ -183,7 +182,7 @@ class FolderSinkConfigCreate(BasicSinkConfigCreate):
         return FolderConfig(folder_path=self.folder_path)
 
 
-class MqttSinkConfigCreate(BasicSinkConfigCreate):
+class MqttSinkConfigCreate(BaseSinkConfigCreate):
     sink_type: Literal[SinkType.MQTT]
     broker_host: str
     broker_port: int
@@ -200,7 +199,7 @@ class MqttSinkConfigCreate(BasicSinkConfigCreate):
         )
 
 
-class RosSinkConfigCreate(BasicSinkConfigCreate):
+class RosSinkConfigCreate(BaseSinkConfigCreate):
     sink_type: Literal[SinkType.ROS]
     topic: str
 
@@ -209,7 +208,7 @@ class RosSinkConfigCreate(BasicSinkConfigCreate):
         return RosConfig(topic=self.topic)
 
 
-class WebhookSinkConfigCreate(BasicSinkConfigCreate):
+class WebhookSinkConfigCreate(BaseSinkConfigCreate):
     sink_type: Literal[SinkType.WEBHOOK]
     webhook_url: str
     http_method: HttpMethod

@@ -94,7 +94,7 @@
 | `DELETE` | `/api/projects/<id>/dataset/views/<id>/items` | items ids or filter | -             | Remove items from a dataset view |
 | `DELETE` | `/api/projects/<id>/dataset/views/<id>`       | -                   | -             | Delete a dataset view            |
 
-## Models
+### Models
 
 | Method   | Path                                          | Payload | Return         | Description                            |
 | -------- | --------------------------------------------- | ------- | -------------- | -------------------------------------- |
@@ -115,9 +115,21 @@
 
 ## Jobs
 
-| Method   | Path                           | Payload             | Return       | Description                                       |
-| -------- | ------------------------------ | ------------------- | ------------ | ------------------------------------------------- |
-| `POST`   | `/api/projects/<id>/jobs`      | job type and params | job id       | Create and submit a new job                       |
-| `GET`    | `/api/projects/<id>/jobs`      | -                   | list of jobs | List the jobs in a project (scheduled or running) |
-| `GET`    | `/api/projects/<id>/jobs/<id>` | -                   | job info     | Get info about a specific job                     |
-| `DELETE` | `/api/projects/<id>/jobs/<id>` | -                   | -            | Cancel a job                                      |
+| Method | Path                    | Payload              | Return       | Description                                        |
+| ------ | ----------------------- | -------------------- | ------------ | -------------------------------------------------- |
+| `POST` | `/api/jobs`             | job type and params  | job id       | Create and submit a new job                        |
+| `GET`  | `/api/jobs`             | -                    | list of jobs | List the jobs in a project (scheduled or running)  |
+| `GET`  | `/api/jobs/<id>`        | -                    | job info     | Get info about a specific job                      |
+| `POST` | `/api/jobs/<id>:cancel` | -                    | -            | Cancel a job                                       |
+| `GET`  | `/api/jobs/<id>/status` | -                    | job status   | Stream real-time status updates for a specific job |
+| `GET`  | `/api/jobs/<id>/logs`   | -                    | job logs     | Stream real-time log output for a specific job     |
+
+Job types:
+
+- `train`
+- `prepare_dataset_for_import`
+- `import_dataset_to_existing_project`
+- `import_dataset_as_new_project`
+- `export_dataset`
+- `stage_dataset`
+

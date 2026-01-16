@@ -18,7 +18,7 @@ def test_get_confidence_scores_classification() -> None:
             model_api.models.result.Label(id=1, name="cat", confidence=0.81),
             model_api.models.result.Label(id=2, name="dog", confidence=0.63),
         ],
-        raw_scores=[0.19, 0.81],
+        raw_scores=np.array([0.19, 0.81]),
         saliency_map=None,
         feature_vector=None,
     )

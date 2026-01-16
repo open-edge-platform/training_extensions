@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { MediaState } from '../../selected-data-provider.component';
+import { MediaStateMap } from '../../../../constants/shared-types';
 import { toggleMultipleSelection, updateSelectedKeysTo } from './util';
 
 describe('toggleMultipleSelection', () => {
@@ -35,7 +35,7 @@ describe('toggleMultipleSelection', () => {
 describe('updateSelectedKeysTo', () => {
     it('returns a new map with updated annotationState for each selected key', () => {
         const selectedKeys = new Set(['1', '2']);
-        const initialMap: MediaState = new Map([
+        const initialMap: MediaStateMap = new Map([
             ['1', 'accepted'],
             ['2', 'accepted'],
         ]);
@@ -50,7 +50,7 @@ describe('updateSelectedKeysTo', () => {
 
     it('returns a new map with all entries if selectedKeys is "all"', () => {
         const selectedKeys = 'all';
-        const initialMap: MediaState = new Map([
+        const initialMap: MediaStateMap = new Map([
             ['1', 'accepted'],
             ['2', 'accepted'],
         ]);

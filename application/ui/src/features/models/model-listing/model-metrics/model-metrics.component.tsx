@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Divider, Flex, Link, Text } from '@geti/ui';
+import { Divider, Flex, Text } from '@geti/ui';
 
 import { ModelMetricsGraphs } from './model-metrics-graphs.component';
 
@@ -59,8 +59,6 @@ export const ModelMetrics = () => {
             </Flex>
 
             <ModelMetricsGraphs lossData={mockLossData} accuracyData={mockAccuracyData} />
-
-            <Link UNSAFE_style={{ textDecoration: 'none' }}>See more</Link>
         </Flex>
     );
 };

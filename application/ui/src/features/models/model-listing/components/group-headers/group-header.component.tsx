@@ -1,16 +1,18 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import type { ArchitectureGroup, DatasetGroup, GroupByMode } from '../../types';
+import { useModelListing } from '../../provider/model-listing-provider';
+import type { ArchitectureGroup, DatasetGroup } from '../../types';
 import { ArchitectureGroupHeader } from './architecture-group-header.component';
 import { DatasetGroupHeader } from './dataset-group-header.component';
 
 type GroupHeaderProps = {
-    groupBy: GroupByMode;
     data: DatasetGroup | ArchitectureGroup;
 };
 
-export const GroupHeader = ({ groupBy, data }: GroupHeaderProps) => {
+export const GroupHeader = ({ data }: GroupHeaderProps) => {
+    const { groupBy } = useModelListing();
+
     if (groupBy === 'dataset') {
         return <DatasetGroupHeader dataset={data as DatasetGroup} />;
     }
