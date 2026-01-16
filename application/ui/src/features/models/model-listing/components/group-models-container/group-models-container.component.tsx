@@ -8,7 +8,7 @@ import { ModelDetailsTabs } from '../../model-details/model-details-tabs.compone
 import { useModelListing } from '../../provider/model-listing-provider';
 import { ArchitectureGroup, DatasetGroup } from '../../types';
 import { GroupHeader } from '../group-headers/group-header.component';
-import { ModelRow } from '../model-row/model-row.component';
+import { ModelRowContainer } from '../model-row/model-row.container';
 import { ModelsTableHeader } from '../models-table-header.component';
 
 import classes from './group-models-container.module.scss';
@@ -35,7 +35,7 @@ export const GroupModelsContainer = ({ group, models }: GroupModelsContainerProp
                     onExpandedChange={() => model.id && onExpandModel(model.id)}
                 >
                     <DisclosureTitle UNSAFE_className={classes.disclosureItem}>
-                        <ModelRow model={model} />
+                        <ModelRowContainer model={model} />
                     </DisclosureTitle>
                     <DisclosurePanel>
                         <ModelDetailsTabs model={model} />

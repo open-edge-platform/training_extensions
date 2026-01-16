@@ -68,6 +68,7 @@ export const ModelRow = ({
                     <MoreMenu />
                 </ActionButton>
                 <Menu onAction={handleModelAction}>
+                    <Item key='rename'>Rename</Item>
                     <Item key='delete'>Delete</Item>
                     <Item key='export'>Export</Item>
                 </Menu>
