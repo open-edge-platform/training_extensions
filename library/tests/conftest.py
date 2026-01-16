@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
-import multiprocessing
 from collections import defaultdict
 from pathlib import Path
 
@@ -45,10 +44,6 @@ def setup_test_environment():
     # Change to library root if not already there
     if Path.cwd() != library_root:
         os.chdir(library_root)
-
-    # Set multiprocessing method if not already set
-    if multiprocessing.get_start_method(allow_none=True) is None:
-        multiprocessing.set_start_method("spawn", force=True)
 
     yield
 
