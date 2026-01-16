@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Flex, Heading, Item, Menu, MenuTrigger, View } from '@geti/ui';
+import { ActionButton, dimensionValue, Flex, Heading, Item, Menu, MenuTrigger, View } from '@geti/ui';
 import { MoreMenu } from '@geti/ui/icons';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
@@ -34,7 +34,7 @@ export const MetricGraph = <T extends Record<string, unknown>>({
                 alignItems={'center'}
                 UNSAFE_style={{
                     backgroundColor: 'var(--spectrum-global-color-gray-200)',
-                    padding: 'var(--spectrum-global-dimension-size-50) var(--spectrum-global-dimension-size-200)',
+                    padding: `${dimensionValue('size-50')} ${dimensionValue('size-200')}`,
                 }}
             >
                 <Heading level={5}>{title}</Heading>
@@ -78,9 +78,9 @@ export const MetricGraph = <T extends Record<string, unknown>>({
                             type='linear'
                             dataKey={dataKey}
                             name={yAxisLabel}
-                            stroke='#00C7FD'
+                            stroke='var(--energy-blue)'
                             strokeWidth={2}
-                            fill='#00C7FD'
+                            fill='var(--energy-blue)'
                             fillOpacity={0.3}
                         />
                     </AreaChart>
