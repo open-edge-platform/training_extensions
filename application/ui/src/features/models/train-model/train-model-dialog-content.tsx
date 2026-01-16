@@ -1,11 +1,13 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Suspense } from 'react';
+import { Divider, Flex, View } from '@geti/ui';
 
-import { Divider, Flex, Loading, View } from '@geti/ui';
-
-import type { ModelArchitecture as ModelArchitectureType, TrainingDevices } from '../../../constants/shared-types';
+import type {
+    DatasetRevision,
+    ModelArchitecture as ModelArchitectureType,
+    TrainingDevices,
+} from '../../../constants/shared-types';
 import { ModelArchitecturesListContainer } from './model-architectures-list/model-architectures-list.component';
 import { SelectDatasetRevision } from './select-dataset-revision.component';
 import { SelectTrainingDevice } from './select-training-device.component';
@@ -19,12 +21,20 @@ interface TrainModelDialogContentProps {
     trainingDevices: TrainingDevices[];
     selectedTrainingDevice: string | null;
     onSelectedTrainingDeviceChange: (trainingDeviceId: string | null) => void;
+
+    datasetRevisions: DatasetRevision[];
+    selectedDatasetRevision: string | null;
+    onSelectedDatasetRevisionChange: (datasetRevisionId: string | null) => void;
 }
 
 export const TrainModelDialogContent = ({
     trainingDevices,
     onSelectedTrainingDeviceChange,
     selectedTrainingDevice,
+
+    datasetRevisions,
+    onSelectedDatasetRevisionChange,
+    selectedDatasetRevision,
 
     modelArchitectures,
     activeModelArchitectureId,
@@ -50,7 +60,11 @@ export const TrainModelDialogContent = ({
                         selectedTrainingDevice={selectedTrainingDevice}
                         onSelectedTrainingDeviceChange={onSelectedTrainingDeviceChange}
                     />
-                    <SelectDatasetRevision />
+                    <SelectDatasetRevision
+                        datasetRevisions={datasetRevisions}
+                        selectedDatasetRevision={selectedDatasetRevision}
+                        onSelectedDatasetRevision={onSelectedDatasetRevisionChange}
+                    />
                 </Flex>
             </Flex>
         </View>

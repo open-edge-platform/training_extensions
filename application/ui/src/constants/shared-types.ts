@@ -16,3 +16,8 @@ export type TrainingDevices = {
     type: components['schemas']['DeviceType'];
     name: string;
 };
+
+export type DatasetRevision = {
+    id: string;
+    name: string;
+};

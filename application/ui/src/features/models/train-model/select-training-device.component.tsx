@@ -18,6 +18,7 @@ export const SelectTrainingDevice = ({
 }: SelectTrainingDeviceProps) => {
     return (
         <Picker
+            flex={1}
             items={trainingDevices}
             label={'Select training device'}
             selectedKey={selectedTrainingDevice}

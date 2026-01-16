@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Button, ButtonGroup, Content, Dialog, Divider, Heading } from '@geti/ui';
 
 import { useGetActiveModelArchitectureId } from '../hooks/api/use-get-active-model-architecture-id.hook';
+import { useGetDatasetRevisions } from '../hooks/api/use-get-dataset-revisions';
 import { useGetTaskModelArchitectures } from '../hooks/api/use-get-model-architectures.hook';
 import { useGetTrainingDevices } from '../hooks/api/use-get-training-devices';
 import { TrainModelDialogContent } from './train-model-dialog-content';
@@ -17,6 +18,7 @@ interface TrainModelDialogProps {
 export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
     const { data } = useGetTaskModelArchitectures();
     const { data: trainingDevices } = useGetTrainingDevices();
+    const { data: datasetRevisions } = useGetDatasetRevisions();
     const activeModelArchitectureId = useGetActiveModelArchitectureId();
 
     const [selectedModelArchitectureId, setSelectedModelArchitectureId] = useState<string | null>(
@@ -25,6 +27,9 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
 
     const [selectedTrainingDevice, setSelectedTrainingDevice] = useState<string | null>(
         trainingDevices?.at(0)?.type ?? null
+    );
+    const [selectedDatasetRevision, setSelectedDatasetRevision] = useState<string | null>(
+        datasetRevisions?.at(0)?.id ?? null
     );
 
     const isStartButtonDisabled = selectedModelArchitectureId === null;
@@ -38,6 +43,9 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
                     trainingDevices={trainingDevices}
                     selectedTrainingDevice={selectedTrainingDevice}
                     onSelectedTrainingDeviceChange={setSelectedTrainingDevice}
+                    datasetRevisions={datasetRevisions}
+                    selectedDatasetRevision={selectedDatasetRevision}
+                    onSelectedDatasetRevisionChange={setSelectedDatasetRevision}
                     activeModelArchitectureId={activeModelArchitectureId}
                     modelArchitectures={data.model_architectures}
                     selectedModelArchitectureId={selectedModelArchitectureId}
