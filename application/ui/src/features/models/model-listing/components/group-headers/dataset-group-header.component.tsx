@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, dimensionValue, Flex, Grid, Heading, Text } from '@geti/ui';
+import { dimensionValue, Flex, Grid, Heading, Text } from '@geti/ui';
 import { Image, Tag } from '@geti/ui/icons';
 
 import { TrainModel } from '../../../train-model/train-model';
