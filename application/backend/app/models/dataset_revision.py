@@ -20,4 +20,5 @@ class DatasetRevision(BaseEntity):
 
     id: UUID
     project_id: UUID
+    name: str
     files_deleted: bool
