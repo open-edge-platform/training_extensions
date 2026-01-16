@@ -119,7 +119,7 @@ class ClassificationSample(OTXSample):
     subset: Subset = subset_field()
 
     image: tv_tensors.Image | np.ndarray | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
-    label: torch.Tensor = label_field(pl.Int32())
+    label: torch.Tensor = label_field(pl.UInt8())
     dm_image_info: DmImageInfo = image_info_field()
 
     def __post_init__(self) -> None:
@@ -137,7 +137,7 @@ class ClassificationMultiLabelSample(OTXSample):
     """ClassificationMultiLabelSample is a base class for OTX multi label classification items."""
 
     image: tv_tensors.Image | np.ndarray | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
-    label: np.ndarray | torch.Tensor = label_field(pl.Int32(), multi_label=True)
+    label: np.ndarray | torch.Tensor = label_field(pl.UInt8(), multi_label=True)
     dm_image_info: DmImageInfo = image_info_field()
 
     def __post_init__(self) -> None:
@@ -155,7 +155,7 @@ class ClassificationHierarchicalSample(OTXSample):
     """ClassificationHierarchicalSample is a base class for OTX hierarchical classification items."""
 
     image: tv_tensors.Image | np.ndarray | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
-    label: np.ndarray | torch.Tensor = label_field(pl.Int32(), is_list=True)
+    label: np.ndarray | torch.Tensor = label_field(pl.UInt8(), is_list=True)
     dm_image_info: DmImageInfo = image_info_field()
 
     def __post_init__(self) -> None:
@@ -175,7 +175,7 @@ class DetectionSample(OTXSample):
     image: tv_tensors.Image | np.ndarray | torch.Tensor = image_field(
         dtype=pl.UInt8(), format="BGR", channels_first=True
     )
-    label: torch.Tensor = label_field(pl.Int32(), is_list=True)
+    label: torch.Tensor = label_field(pl.UInt8(), is_list=True)
     bboxes: np.ndarray | tv_tensors.BoundingBoxes = bbox_field(dtype=pl.Float32())
     dm_image_info: DmImageInfo = image_info_field()
 
@@ -252,7 +252,7 @@ class KeypointSample(OTXSample):
 
     subset: Subset = subset_field()
     image: tv_tensors.Image | np.ndarray | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
-    label: torch.Tensor = label_field(pl.Int32(), is_list=True)
+    label: torch.Tensor = label_field(pl.UInt8(), is_list=True)
     keypoints: torch.Tensor = keypoints_field()
     dm_image_info: DmImageInfo = image_info_field()
 

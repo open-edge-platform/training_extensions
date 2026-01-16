@@ -3,19 +3,29 @@
 
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
-import { $api } from '../../../api/client';
+import { $api } from '../api/client';
+import { DatasetSubset } from '../constants/shared-types';
 
-const datasetItemsLimit = 20;
+const DATASET_ITEMS_LIMIT = 20;
 
-export const useGetDatasetItems = () => {
+interface UseGetDatasetItemsOptions {
+    subset?: DatasetSubset;
+}
+
+export const useGetDatasetItems = (options?: UseGetDatasetItemsOptions) => {
     const project_id = useProjectIdentifier();
+    const subset = options?.subset;
 
-    const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = $api.useInfiniteQuery(
+    const query = subset
+        ? { offset: 0, limit: DATASET_ITEMS_LIMIT, subset }
+        : { offset: 0, limit: DATASET_ITEMS_LIMIT };
+
+    const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isPending } = $api.useInfiniteQuery(
         'get',
         '/api/projects/{project_id}/dataset/items',
         {
             params: {
-                query: { offset: 0, limit: datasetItemsLimit },
+                query,
                 path: { project_id },
             },
         },
@@ -32,12 +42,13 @@ export const useGetDatasetItems = () => {
                     return undefined;
                 }
 
-                return pagination.offset + datasetItemsLimit;
+                return pagination.offset + DATASET_ITEMS_LIMIT;
             },
         }
     );
 
     const items = data?.pages.flatMap((page) => page.items) ?? [];
+    const totalCount = data?.pages[0]?.pagination?.total ?? 0;
 
-    return { items, fetchNextPage, hasNextPage, isFetchingNextPage };
+    return { items, fetchNextPage, hasNextPage, isFetchingNextPage, isPending, totalCount };
 };

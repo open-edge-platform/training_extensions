@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, Grid, Link, Text, View } from '@geti/ui';
+import { Flex, Grid, Text, View } from '@geti/ui';
 
 import classes from './three-section-range.module.scss';
 
@@ -20,7 +20,7 @@ export const ThreeSectionRange = ({ trainingValue, validationValue, testingValue
 
     return (
         <Flex alignItems={'center'} width={'100%'}>
-            <Link UNSAFE_className={classes.label}>TRAINING SUBSETS</Link>
+            <Text UNSAFE_className={classes.label}>TRAINING SUBSETS</Text>
 
             <Grid
                 columns={gridColumns}

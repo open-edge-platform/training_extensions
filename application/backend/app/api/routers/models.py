@@ -8,6 +8,7 @@ from typing import Annotated
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from fastapi.openapi.models import Example
 from fastapi.responses import StreamingResponse
+from otx.types.export import OTXExportFormatType
 
 from app.api.dependencies import get_model_service, get_project
 from app.api.schemas import ModelView, ProjectView
@@ -69,7 +70,7 @@ def get_model(
 @router.get(
     "/{model_id}/binary",
     responses={
-        status.HTTP_200_OK: {"description": "Model weights in OpenVINO format (zip archive)"},
+        status.HTTP_200_OK: {"description": "Model weights in either OpenVINO or ONNX format (zip archive)"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid project or model ID"},
         status.HTTP_404_NOT_FOUND: {"description": "Project or model not found"},
     },
@@ -78,8 +79,9 @@ def download_model_binary(
     project: Annotated[ProjectView, Depends(get_project)],
     model_id: ModelID,
     model_service: Annotated[ModelService, Depends(get_model_service)],
+    format: Annotated[OTXExportFormatType, Query()] = OTXExportFormatType.OPENVINO,
 ) -> StreamingResponse:
-    """Download trained model weights in OpenVINO format as a zip archive containing model.xml and model.bin files."""
+    """Download trained model weights in OpenVINO or ONNX format as a zip archive"""
     try:
         # Verify the model exists and get the model directory
         model_dir = model_service.get_model_files_path(project_id=project.id, model_id=model_id)
@@ -87,16 +89,24 @@ def download_model_binary(
         # Create an in-memory zip file
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as zip_file:
-            xml_file = model_dir / "model.xml"
-            bin_file = model_dir / "model.bin"
-
-            zip_file.write(xml_file, arcname="model.xml")
-            zip_file.write(bin_file, arcname="model.bin")
+            if format == OTXExportFormatType.OPENVINO:
+                xml_file = model_dir / "model.xml"
+                bin_file = model_dir / "model.bin"
+                zip_file.write(xml_file, arcname="model.xml")
+                zip_file.write(bin_file, arcname="model.bin")
+            elif format == OTXExportFormatType.ONNX:
+                onnx_file = model_dir / "model.onnx"
+                zip_file.write(onnx_file, arcname="model.onnx")
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Unsupported model format: {format}",
+                )
 
         zip_buffer.seek(0)
 
-        # Assume FP16 precision by default
-        filename = f"model-{model_id}-fp16.zip"
+        precision = "fp16" if format == OTXExportFormatType.OPENVINO else "fp32"
+        filename = f"model-{model_id}-{format.name.lower()}-{precision}.zip"
 
         return StreamingResponse(
             zip_buffer,
@@ -168,10 +178,14 @@ def delete_model(
     project: Annotated[ProjectView, Depends(get_project)],
     model_id: ModelID,
     model_service: Annotated[ModelService, Depends(get_model_service)],
+    files_only: Annotated[bool, Query()] = False,
 ) -> None:
     """Delete a model from a project."""
     try:
-        model_service.delete_model(project_id=project.id, model_id=model_id)
+        if files_only:
+            model_service.delete_model_files(project_id=project.id, model_id=model_id)
+        else:
+            model_service.delete_model(project_id=project.id, model_id=model_id)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ResourceInUseError as e:

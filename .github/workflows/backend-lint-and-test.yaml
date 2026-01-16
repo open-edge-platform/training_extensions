@@ -55,7 +55,11 @@ jobs:
           fi
 
   python-checks:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: ["ubuntu-latest", "windows-latest"]
+    name: python-${{ matrix.os }}-checks
+    runs-on: ${{ matrix.os }}
     needs: check_paths
     if: needs.check_paths.outputs.run_workflow == 'true'
     permissions:
@@ -74,6 +78,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install OpenCV dependencies
+        if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -87,17 +92,20 @@ jobs:
           uv sync --frozen --extra cpu --extra mqtt
 
       - name: Check formatting with ruff
+        if: matrix.os == 'ubuntu-latest'
         working-directory: application/backend
         run: |
           uv run ruff check --output-format=github .
           uv run ruff format --check .
 
       - name: Check imports with import-linter
+        if: matrix.os == 'ubuntu-latest'
         working-directory: application/backend
         run: |
           uv run lint-imports
 
       - name: Check source code with mypy
+        if: matrix.os == 'ubuntu-latest'
         working-directory: application/backend
         run: |
           uv run mypy . --config-file=pyproject.toml
@@ -107,10 +115,17 @@ jobs:
         run: |
           uv run pytest tests/unit
 
-      - name: Run integration tests
+      - name: Run ubuntu integration tests
+        if: matrix.os == 'ubuntu-latest'
         working-directory: application/backend
         run: |
           uv run pytest tests/integration
+
+      - name: Run windows integration tests # Skip tests with docker issues on Windows
+        if: matrix.os == 'windows-latest'
+        working-directory: application/backend
+        run: |
+          uv run pytest --ignore=tests/integration/stream/test_ip_camera_stream.py --ignore=tests/integration/services/dispatchers/test_mqtt.py tests/integration
 
   required_check:
     name: Required Check backend-lint-and-test

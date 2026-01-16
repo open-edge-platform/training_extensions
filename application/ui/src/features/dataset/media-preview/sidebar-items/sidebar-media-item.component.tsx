@@ -5,11 +5,11 @@ import { View } from '@geti/ui';
 import { Accept, Search } from '@geti/ui/icons';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
+import { MediaItem } from '../../../../components/media-item/media-item.component';
+import { MediaThumbnail } from '../../../../components/media-thumbnail/media-thumbnail.component';
 import type { DatasetItem } from '../../../../constants/shared-types';
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
-import { MediaItem } from '../../gallery/media-item.component';
-import { MediaThumbnail } from '../../gallery/media-thumbnail.component';
-import { getThumbnailUrl } from '../../gallery/utils';
+import { getThumbnailUrl } from '../../../../shared/media-url.utils';
 
 import classes from './sidebar-media-item.module.scss';
 

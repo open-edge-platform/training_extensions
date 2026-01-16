@@ -7,15 +7,15 @@ import { DialogContainer, Size } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { CheckboxInput } from '../../../components/checkbox-input/checkbox-input.component';
+import { MediaItem } from '../../../components/media-item/media-item.component';
+import { MediaThumbnail } from '../../../components/media-thumbnail/media-thumbnail.component';
+import { VirtualizerGridLayout } from '../../../components/virtualizer-grid-layout/virtualizer-grid-layout.component';
 import type { DatasetItem } from '../../../constants/shared-types';
+import { getThumbnailUrl } from '../../../shared/media-url.utils';
 import { MediaPreview } from '../media-preview/media-preview.component';
 import { useSelectedData } from '../selected-data-provider.component';
-import { VirtualizerGridLayout } from '../virtualizer-grid-layout/virtualizer-grid-layout.component';
 import { AnnotationStatusIcon } from './annotation-state-icon.component';
 import { DeleteMediaItem } from './delete-media-item/delete-media-item.component';
-import { MediaItem } from './media-item.component';
-import { MediaThumbnail } from './media-thumbnail.component';
-import { getThumbnailUrl } from './utils';
 
 import classes from './gallery.module.scss';
 

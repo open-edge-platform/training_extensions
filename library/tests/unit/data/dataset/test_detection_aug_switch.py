@@ -277,3 +277,18 @@ class TestOTXDetectionDatasetWithAugSwitch:
         assert callable(detection_dataset.set_data_aug_switch)
         assert callable(detection_dataset._apply_augmentation_switch)
         assert isinstance(detection_dataset.has_dynamic_augmentation, bool)
+
+    def test_transforms_pipeline_switch(self, detection_dataset, data_aug_switch, mocker):
+        """Test that augmentation switch is triggered during data retrieval."""
+        switcher = mocker.patch("otx.data.dataset.detection.OTXDetectionDataset._apply_augmentation_switch")
+        detection_dataset.set_data_aug_switch(data_aug_switch)
+        detection_dataset.augmentations = Compose(
+            [
+                ToDtype(dtype=torch.float32),
+            ]
+        )
+
+        item = next(iter(detection_dataset))
+        # Ensure that the item is processed without errors
+        assert item is not None
+        assert switcher.called

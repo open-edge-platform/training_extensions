@@ -88,6 +88,11 @@ class OTXDetectionDataset(OTXDataset, DataAugSwitchMixin):
                 idx_list_per_classes[label].append(idx)
         return idx_list_per_classes
 
+    def _apply_transforms(self, entity: DetectionSample) -> DetectionSample | None:
+        if self.has_dynamic_augmentation:
+            self._apply_augmentation_switch()
+        return super()._apply_transforms(entity)
+
     @property
     def task_type(self) -> OTXTaskType:
         """OTX Task Type for the dataset.

@@ -64,6 +64,7 @@ callbacks:
                 - class_path: otx.data.transform_libs.torchvision.Resize
                   init_args:
                     scale: [640, 640]
+                    transform_bbox: true
                     keep_ratio: false
                 - class_path: otx.data.transform_libs.torchvision.RandomFlip
                   init_args:

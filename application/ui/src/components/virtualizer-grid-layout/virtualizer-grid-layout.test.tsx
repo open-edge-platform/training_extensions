@@ -5,7 +5,7 @@ import { render, screen } from '@testing-library/react';
 import { getMultipleMockedMediaItems } from 'mocks/mock-media-item';
 import { Size } from 'react-aria-components';
 
-import { MediaState } from '../selected-data-provider.component';
+import { MediaStateMap } from '../../constants/shared-types';
 import { VirtualizerGridLayout } from './virtualizer-grid-layout.component';
 
 // required configuration; otherwise, the list renders empty
@@ -25,7 +25,7 @@ describe('VirtualizerGridLayout', () => {
             <VirtualizerGridLayout
                 items={mockedItems}
                 ariaLabel={'test list'}
-                mediaState={{ get: vi.fn() } as unknown as MediaState}
+                mediaState={new Map() as MediaStateMap}
                 selectionMode={'single'}
                 layoutOptions={mockedLayoutOptions}
                 isLoadingMore={false}
@@ -43,12 +43,12 @@ describe('VirtualizerGridLayout', () => {
             <VirtualizerGridLayout
                 items={[]}
                 ariaLabel={'empty list'}
-                mediaState={{ get: vi.fn() } as unknown as MediaState}
+                mediaState={new Map() as MediaStateMap}
                 selectionMode={'single'}
                 layoutOptions={mockedLayoutOptions}
                 isLoadingMore={false}
                 onLoadMore={vi.fn()}
-                contentItem={(item) => <div>{item.name}</div>}
+                contentItem={() => <div></div>}
             />
         );
         expect(screen.queryAllByRole('option')).toHaveLength(0);
@@ -60,7 +60,7 @@ describe('VirtualizerGridLayout', () => {
             <VirtualizerGridLayout
                 items={mockedItems}
                 ariaLabel={'loading list'}
-                mediaState={{ get: vi.fn() } as unknown as MediaState}
+                mediaState={new Map() as MediaStateMap}
                 selectionMode={'single'}
                 layoutOptions={mockedLayoutOptions}
                 isLoadingMore={true}
