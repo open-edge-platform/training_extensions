@@ -3,7 +3,7 @@
 
 import { createContext, ReactNode, useContext } from 'react';
 
-import { Divider, Radio, Text } from '@geti/ui';
+import { Content, ContextualHelp, Divider, Radio, Text } from '@geti/ui';
 import { clsx } from 'clsx';
 
 import { type ModelArchitecture as ModelArchitectureType } from '../../../../../constants/shared-types';
@@ -14,6 +14,18 @@ const ModelArchitectureExpandedDescription = () => {
     const { modelArchitecture } = useModelArchitecture();
 
     return <Text UNSAFE_className={styles.modelArchitectureExpandedDescription}>{modelArchitecture.description}</Text>;
+};
+
+const ModelArchitectureDescription = () => {
+    const { modelArchitecture } = useModelArchitecture();
+
+    return (
+        <ContextualHelp variant='info'>
+            <Content>
+                <Text>{modelArchitecture.description}</Text>
+            </Content>
+        </ContextualHelp>
+    );
 };
 
 const ModelArchitectureDivider = () => {
@@ -65,17 +77,25 @@ export const useModelArchitecture = () => {
 
 interface ModelArchitectureProps {
     isSelected: boolean;
+    isCompact?: boolean;
     children: ReactNode;
     onSelect: () => void;
     modelArchitecture: ModelArchitectureType;
 }
 
-export const ModelArchitecture = ({ isSelected, children, onSelect, modelArchitecture }: ModelArchitectureProps) => {
+export const ModelArchitectureCard = ({
+    isSelected,
+    isCompact,
+    children,
+    onSelect,
+    modelArchitecture,
+}: ModelArchitectureProps) => {
     return (
         <ModelArchitectureContext value={{ isSelected, modelArchitecture }}>
             <div
                 className={clsx(styles.modelArchitectureContainer, {
                     [styles.modelArchitectureSelected]: isSelected,
+                    [styles.modelArchitectureCompact]: isCompact,
                 })}
                 onClick={onSelect}
             >
@@ -85,7 +105,8 @@ export const ModelArchitecture = ({ isSelected, children, onSelect, modelArchite
     );
 };
 
-ModelArchitecture.Name = ModelArchitectureName;
-ModelArchitecture.Parameters = ModelArchitectureParameters;
-ModelArchitecture.Divider = ModelArchitectureDivider;
-ModelArchitecture.ExpandedDescription = ModelArchitectureExpandedDescription;
+ModelArchitectureCard.Name = ModelArchitectureName;
+ModelArchitectureCard.Parameters = ModelArchitectureParameters;
+ModelArchitectureCard.Divider = ModelArchitectureDivider;
+ModelArchitectureCard.ExpandedDescription = ModelArchitectureExpandedDescription;
+ModelArchitectureCard.Description = ModelArchitectureDescription;

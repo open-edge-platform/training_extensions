@@ -10,6 +10,10 @@
     cursor: pointer;
 }
 
+.modelArchitectureCompact {
+    grid-row: span 2;
+}
+
 .modelArchitectureSelected {
     border: var(--spectrum-alias-border-size-thick) solid var(--energy-blue);
     background-color: #0C1E29;

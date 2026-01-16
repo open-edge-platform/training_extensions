@@ -5,7 +5,7 @@ import { Suspense } from 'react';
 
 import { Divider, Flex, Loading, View } from '@geti/ui';
 
-import { ModelArchitecturesList } from './model-architectures-list/model-architectures-list.component';
+import { ModelArchitecturesListContainer } from './model-architectures-list/model-architectures-list.component';
 import { SelectDatasetRevision } from './select-dataset-revision.component';
 import { SelectTrainingDevice } from './select-training-device.component';
 
@@ -23,7 +23,7 @@ export const TrainModelDialogContent = ({
             <Flex height={'100%'} direction={'column'} gap={'size-300'}>
                 <Suspense fallback={<Loading mode={'inline'} />}>
                     <View flex={1} minHeight={0} overflow={'auto'}>
-                        <ModelArchitecturesList
+                        <ModelArchitecturesListContainer
                             selectedModelArchitectureId={selectedModelArchitectureId}
                             onSelectedModelArchitectureIdChange={onSelectedModelArchitectureIdChange}
                         />
