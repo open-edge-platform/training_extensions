@@ -93,6 +93,7 @@ class DatasetRevisionDB(BaseID):
     __table_args__ = (Index("idx_dataset_revisions_project", "project_id"),)
 
     project_id: Mapped[str] = mapped_column(Text, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
     files_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
 
 
