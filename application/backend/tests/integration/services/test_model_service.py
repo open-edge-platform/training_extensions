@@ -85,6 +85,7 @@ class TestModelServiceIntegration:
         # Add finalizer to cleanup test data
         def cleanup():
             db_session.delete(model)
+            db_session.flush()
             db_session.delete(dataset_revision)
             db_session.flush()
 
