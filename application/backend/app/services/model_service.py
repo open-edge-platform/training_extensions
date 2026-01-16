@@ -153,16 +153,15 @@ class ModelService(BaseSessionManagedService):
             project_id (UUID): The unique identifier of the project.
             model_id (UUID): The unique identifier of the model.
         """
-        try:
-            model_files_path = self.get_model_files_path(project_id=project_id, model_id=model_id)
-        except FileNotFoundError:
-            return
-        except ResourceNotFoundError:
-            return
+        for model_format in ModelFormat:
+            exists, _ = self.get_model_binary_files(project_id=project_id, model_id=model_id, format=model_format)
 
-        # Delete model files from disk
-        shutil.rmtree(model_files_path)
-        logger.info("Deleted model files at '{}'", model_files_path)
+            # Delete model files from disk, if at least 1 model file is present
+            if exists:
+                path = self._projects_dir / str(project_id) / "models" / str(model_id)
+                shutil.rmtree(path)
+                logger.info("Deleted model files at '{}'", path)
+                break
 
         # Mark as deleted in the database
         model_rev_repo = ModelRevisionRepository(project_id=str(project_id), db=self.db_session)
@@ -243,13 +242,9 @@ class ModelService(BaseSessionManagedService):
         """
         model_revision = self.get_model(project_id=project_id, model_id=model_id)
         if model_revision.files_deleted:
-            raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
+            return False, ()
 
         model_dir = self._projects_dir / str(project_id) / "models" / str(model_id)
-        if not model_dir.exists():
-            logger.error("Model directory not found: {}", model_dir)
-            raise FileNotFoundError
-
         xml_file = model_dir / "model.xml"
         bin_file = model_dir / "model.bin"
         onnx_file = model_dir / "model.onnx"
