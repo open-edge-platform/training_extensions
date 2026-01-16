@@ -57,7 +57,7 @@ export const groupModelsByArchitecture = (models: SchemaModelView[]): GroupedMod
     const groups: Record<string, GroupedModels> = {}; // architecture -> models
 
     models.forEach((model) => {
-        const arch = model.architecture;
+        const arch = model.architecture ?? 'Unknown';
 
         if (!groups[arch]) {
             groups[arch] = {

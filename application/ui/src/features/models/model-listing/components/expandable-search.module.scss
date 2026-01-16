@@ -1,0 +1,22 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
+.container {
+    overflow: hidden;
+}
+
+.searchField {
+    animation: expand 0.2s ease-out forwards;
+}
+
+@keyframes expand {
+    from {
+        width: 0;
+        opacity: 0;
+    }
+
+    to {
+        width: var(--spectrum-global-dimension-size-2400);
+        opacity: 1;
+    }
+}
