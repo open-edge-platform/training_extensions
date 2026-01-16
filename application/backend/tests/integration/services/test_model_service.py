@@ -7,6 +7,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.db.schema import ModelRevisionDB, ProjectDB
+from app.models.model_revision import ModelFormat
 from app.services import ModelService, ResourceNotFoundError, ResourceType
 from tests.integration.project_factory import ProjectTestDataFactory
 
@@ -157,3 +158,35 @@ class TestModelServiceIntegration:
         finally:
             # Cleanup: restore permissions so pytest can clean up temp directory
             model_rev_path.chmod(0o755)
+
+    @pytest.mark.parametrize(
+        "model_format, expected_files",
+        [
+            (ModelFormat.OPENVINO, ["model.xml", "model.bin"]),
+            (ModelFormat.ONNX, ["model.onnx"]),
+            (ModelFormat.PYTORCH, ["model.ckpt"]),
+        ],
+    )
+    def test_get_model_binary_files(
+        self,
+        model_format,
+        expected_files,
+        tmp_path: Path,
+        fxt_project_id: UUID,
+        fxt_model_id: UUID,
+        fxt_model_service: ModelService,
+    ):
+        """Test retrieving model binary files."""
+        model_dir = tmp_path / "projects" / str(fxt_project_id) / "models" / str(fxt_model_id)
+        model_dir.mkdir(parents=True)
+        (model_dir / "model.xml").touch()
+        (model_dir / "model.bin").touch()
+        (model_dir / "model.onnx").touch()
+        (model_dir / "model.ckpt").touch()
+
+        files_exist, paths = fxt_model_service.get_model_binary_files(
+            project_id=fxt_project_id, model_id=fxt_model_id, format=model_format
+        )
+        assert files_exist is True
+        expected_paths = tuple(model_dir / file for file in expected_files)
+        assert paths == expected_paths

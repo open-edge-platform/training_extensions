@@ -6,12 +6,12 @@ from uuid import uuid4
 
 import pytest
 from fastapi import status
-from otx.types.export import OTXExportFormatType
 
 from app.api.dependencies import get_model_service
 from app.api.schemas import ModelView
 from app.main import app
 from app.models import TrainingInfo, TrainingStatus
+from app.models.model_revision import ModelFormat
 from app.services import ModelService, ResourceInUseError, ResourceNotFoundError, ResourceType
 
 
@@ -127,8 +127,9 @@ class TestModelEndpoints:
     @pytest.mark.parametrize(
         "model_format, model_precision",
         [
-            (OTXExportFormatType.OPENVINO, "fp16"),
-            (OTXExportFormatType.ONNX, "fp32"),
+            (ModelFormat.OPENVINO, "fp16"),
+            (ModelFormat.ONNX, "fp16"),
+            (ModelFormat.PYTORCH, "fp32"),
         ],
     )
     def test_download_model_binary_success(
@@ -141,14 +142,16 @@ class TestModelEndpoints:
         model_dir = tmp_path / "models" / str(fxt_model.id)
         model_dir.mkdir(parents=True)
         bin_content = b"binary model data"
-        if model_format == OTXExportFormatType.OPENVINO:
+        if model_format == ModelFormat.OPENVINO:
             xml_content = "<xml>model data</xml>"
             (model_dir / "model.xml").write_text(xml_content)
             (model_dir / "model.bin").write_bytes(bin_content)
-        else:
+        elif model_format == ModelFormat.ONNX:
             (model_dir / "model.onnx").write_bytes(bin_content)
+        elif model_format == ModelFormat.PYTORCH:
+            (model_dir / "model.ckpt").write_bytes(bin_content)
 
-        fxt_model_service.get_model_files_path.return_value = model_dir
+        fxt_model_service.get_model_binary_files.return_value = True, tuple(model_dir.glob("*"))
 
         response = fxt_client.get(
             f"/api/projects/{fxt_get_project.id}/models/{fxt_model.id}/binary?format={model_format.value}"
@@ -158,34 +161,41 @@ class TestModelEndpoints:
         assert response.headers["content-type"] == "application/zip"
         assert "content-disposition" in response.headers
         assert (
-            f"model-{fxt_model.id}-{model_format.name.lower()}-{model_precision}.zip"
+            f"model-{fxt_model.id}-{model_format.value}-{model_precision}.zip"
             in response.headers["content-disposition"]
         )
 
         # Verify zip file contents
         zip_data = BytesIO(response.content)
         with zipfile.ZipFile(zip_data, "r") as zip_file:
-            if model_format == OTXExportFormatType.OPENVINO:
+            if model_format == ModelFormat.OPENVINO:
                 assert "model.xml" in zip_file.namelist()
                 assert "model.bin" in zip_file.namelist()
                 assert zip_file.read("model.xml").decode() == xml_content
                 assert zip_file.read("model.bin") == bin_content
-            else:
+            elif model_format == ModelFormat.ONNX:
                 assert "model.onnx" in zip_file.namelist()
                 assert zip_file.read("model.onnx") == bin_content
+            elif model_format == ModelFormat.PYTORCH:
+                assert "model.ckpt" in zip_file.namelist()
+                assert zip_file.read("model.ckpt") == bin_content
 
-        fxt_model_service.get_model_files_path.assert_called_once_with(
-            project_id=fxt_get_project.id, model_id=fxt_model.id
+        fxt_model_service.get_model_binary_files.assert_called_once_with(
+            project_id=fxt_get_project.id,
+            model_id=fxt_model.id,
+            format=model_format,
         )
 
     def test_download_model_binary_not_found(self, fxt_get_project, fxt_model_service, fxt_client):
         model_id = uuid4()
-        fxt_model_service.get_model_files_path.side_effect = ResourceNotFoundError(ResourceType.MODEL, str(model_id))
+        fxt_model_service.get_model_binary_files.side_effect = ResourceNotFoundError(ResourceType.MODEL, str(model_id))
 
         response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models/{model_id}/binary")
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
-        fxt_model_service.get_model_files_path.assert_called_once_with(project_id=fxt_get_project.id, model_id=model_id)
+        fxt_model_service.get_model_binary_files.assert_called_once_with(
+            project_id=fxt_get_project.id, model_id=model_id, format=ModelFormat.OPENVINO
+        )
 
     def test_download_model_binary_invalid_id(self, fxt_get_project, fxt_model_service, fxt_client):
         response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models/invalid-id/binary")
