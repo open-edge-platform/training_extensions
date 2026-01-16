@@ -14,6 +14,8 @@ interface TrainModelDialogProps {
 export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
     const [selectedModelArchitectureId, setSelectedModelArchitectureId] = useState<string | null>(null);
 
+    const isStartButtonDisabled = selectedModelArchitectureId === null;
+
     return (
         <Dialog width={'80vw'}>
             <Heading>Select a model to train</Heading>
@@ -29,7 +31,7 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
                 <Button variant={'secondary'} onPress={onClose}>
                     Cancel
                 </Button>
-                <Button variant={'accent'} onPress={onClose}>
+                <Button variant={'accent'} onPress={onClose} isDisabled={isStartButtonDisabled}>
                     Start
                 </Button>
             </ButtonGroup>

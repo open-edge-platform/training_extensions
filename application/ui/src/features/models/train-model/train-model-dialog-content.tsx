@@ -19,13 +19,15 @@ export const TrainModelDialogContent = ({
     onSelectedModelArchitectureIdChange,
 }: TrainModelDialogContentProps) => {
     return (
-        <View padding={'size-300'} backgroundColor={'gray-50'}>
+        <View padding={'size-300'} backgroundColor={'gray-50'} height={'100%'}>
             <Flex height={'100%'} direction={'column'} gap={'size-300'}>
                 <Suspense fallback={<Loading mode={'inline'} />}>
-                    <ModelArchitecturesList
-                        selectedModelArchitectureId={selectedModelArchitectureId}
-                        onSelectedModelArchitectureIdChange={onSelectedModelArchitectureIdChange}
-                    />
+                    <View flex={1} minHeight={0} overflow={'auto'}>
+                        <ModelArchitecturesList
+                            selectedModelArchitectureId={selectedModelArchitectureId}
+                            onSelectedModelArchitectureIdChange={onSelectedModelArchitectureIdChange}
+                        />
+                    </View>
                 </Suspense>
 
                 <Divider size={'S'} width={'100%'} />

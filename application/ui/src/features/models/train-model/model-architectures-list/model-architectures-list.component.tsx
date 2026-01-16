@@ -26,13 +26,14 @@ const RecommendedModelArchitecture = ({
 
     return (
         <ModelArchitecture
+            modelArchitecture={modelArchitecture}
             isSelected={isSelected}
             onSelect={() => onSelectedModelArchitectureIdChange(modelArchitecture.id)}
         >
-            <ModelArchitecture.Name name={modelArchitecture.name} isSelected={isSelected} id={modelArchitecture.id} />
-            <ModelArchitecture.Parameters numberOfParameters={modelArchitecture.stats.trainable_parameters} />
+            <ModelArchitecture.Name />
+            <ModelArchitecture.Parameters />
             <ModelArchitecture.Divider />
-            <ModelArchitecture.ExpandedDescription description={modelArchitecture.description} />
+            <ModelArchitecture.ExpandedDescription />
         </ModelArchitecture>
     );
 };
@@ -88,9 +89,16 @@ export const ModelArchitecturesList = ({
 
     if (showMore) {
         return (
-            <Grid>
-                <></>
-            </Grid>
+            <Flex direction={'column'} flex={1} minHeight={0} gap={'size-300'}>
+                <RecommendedModelArchitectures
+                    modelArchitectures={data.model_architectures}
+                    selectedModelArchitectureId={selectedModelArchitectureId}
+                    onSelectedModelArchitectureIdChange={onSelectedModelArchitectureIdChange}
+                />
+                <Button alignSelf={'start'} variant={'primary'} onPress={() => setShowMore(false)}>
+                    Show less
+                </Button>
+            </Flex>
         );
     }
 

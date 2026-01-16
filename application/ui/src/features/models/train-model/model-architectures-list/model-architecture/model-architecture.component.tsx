@@ -1,72 +1,87 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ReactNode } from 'react';
+import { createContext, ReactNode, useContext } from 'react';
 
 import { Divider, Radio, Text } from '@geti/ui';
 import { clsx } from 'clsx';
 
+import { type ModelArchitecture as ModelArchitectureType } from '../../../../../constants/shared-types';
+
 import styles from './model-architecture.module.scss';
 
-interface ModelArchitectureExpandedDescriptionProps {
-    description: string;
-}
+const ModelArchitectureExpandedDescription = () => {
+    const { modelArchitecture } = useModelArchitecture();
 
-const ModelArchitectureExpandedDescription = ({ description }: ModelArchitectureExpandedDescriptionProps) => {
-    return <Text UNSAFE_className={styles.modelArchitectureExpandedDescription}>{description}</Text>;
+    return <Text UNSAFE_className={styles.modelArchitectureExpandedDescription}>{modelArchitecture.description}</Text>;
 };
 
 const ModelArchitectureDivider = () => {
     return <Divider size={'S'} />;
 };
 
-interface ModelArchitectureParametersProps {
-    numberOfParameters: number;
-    license?: string;
-}
+const ModelArchitectureParameters = () => {
+    const { modelArchitecture } = useModelArchitecture();
 
-const ModelArchitectureParameters = ({
-    numberOfParameters,
-    license = 'Apache 2.0',
-}: ModelArchitectureParametersProps) => {
     return (
         <ul className={styles.modelArchitectureParameters}>
-            <li>Number of parameters: {numberOfParameters} Milions</li>
-            <li>License: {license}</li>
+            <li>Number of parameters: {modelArchitecture.stats.trainable_parameters} Millions</li>
+            <li>License: Apache 2.0</li>
         </ul>
     );
 };
 
-interface ModelArchitectureName {
-    name: string;
-    id: string;
-    isSelected: boolean;
-}
+const ModelArchitectureName = () => {
+    const { modelArchitecture, isSelected } = useModelArchitecture();
 
-const ModelArchitectureName = ({ name, id, isSelected }: ModelArchitectureName) => {
     return (
-        <Radio value={id} UNSAFE_className={styles.modelArchitectureName}>
-            {name}
+        <Radio
+            value={modelArchitecture.id}
+            UNSAFE_className={clsx(styles.modelArchitectureName, {
+                [styles.modelArchitectureNameSelected]: isSelected,
+            })}
+        >
+            {modelArchitecture.name}
         </Radio>
     );
+};
+
+interface ModelArchitectureContextProps {
+    isSelected: boolean;
+    modelArchitecture: ModelArchitectureType;
+}
+
+const ModelArchitectureContext = createContext<ModelArchitectureContextProps | null>(null);
+
+export const useModelArchitecture = () => {
+    const context = useContext(ModelArchitectureContext);
+
+    if (context === null) {
+        throw new Error('useModelArchitecture was used outside of ModelArchitectureProvider');
+    }
+
+    return context;
 };
 
 interface ModelArchitectureProps {
     isSelected: boolean;
     children: ReactNode;
     onSelect: () => void;
+    modelArchitecture: ModelArchitectureType;
 }
 
-export const ModelArchitecture = ({ isSelected, children, onSelect }: ModelArchitectureProps) => {
+export const ModelArchitecture = ({ isSelected, children, onSelect, modelArchitecture }: ModelArchitectureProps) => {
     return (
-        <div
-            className={clsx(styles.modelArchitectureContainer, {
-                [styles.modelArchitectureSelected]: isSelected,
-            })}
-            onClick={onSelect}
-        >
-            {children}
-        </div>
+        <ModelArchitectureContext value={{ isSelected, modelArchitecture }}>
+            <div
+                className={clsx(styles.modelArchitectureContainer, {
+                    [styles.modelArchitectureSelected]: isSelected,
+                })}
+                onClick={onSelect}
+            >
+                {children}
+            </div>
+        </ModelArchitectureContext>
     );
 };
 

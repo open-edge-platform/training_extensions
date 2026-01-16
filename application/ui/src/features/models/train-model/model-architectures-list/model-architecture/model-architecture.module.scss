@@ -20,6 +20,10 @@
     font-size: var(--spectrum-global-dimension-font-size-300);
 }
 
+.modelArchitectureNameSelected span[class*='spectrum-Radio-label'] {
+    color: var(--energy-blue);
+}
+
 .modelArchitectureParameters {
     list-style-type: disc;
     padding-inline-start: var(--spectrum-global-dimension-size-350);
