@@ -4,6 +4,7 @@
 import { Button, dimensionValue, Flex, Grid, Heading, Text } from '@geti/ui';
 import { Image, Tag } from '@geti/ui/icons';
 
+import { TrainModel } from '../../../train-model/train-model';
 import type { DatasetGroup } from '../../types';
 import { ThreeSectionRange } from '../three-section-range.component';
 
@@ -50,7 +51,7 @@ export const DatasetGroupHeader = ({ dataset }: DatasetGroupHeaderProps) => {
             />
 
             <Flex>
-                <Button variant='primary'>Train model</Button>
+                <TrainModel />
             </Flex>
         </Grid>
     );
