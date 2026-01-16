@@ -5,6 +5,9 @@ import { useState } from 'react';
 
 import { Button, ButtonGroup, Content, Dialog, Divider, Heading } from '@geti/ui';
 
+import { useGetActiveModelArchitectureId } from '../hooks/api/use-get-active-model-architecture-id.hook';
+import { useGetTaskModelArchitectures } from '../hooks/api/use-get-model-architectures.hook';
+import { useGetTrainingDevices } from '../hooks/api/use-get-training-devices';
 import { TrainModelDialogContent } from './train-model-dialog-content';
 
 interface TrainModelDialogProps {
@@ -12,16 +15,31 @@ interface TrainModelDialogProps {
 }
 
 export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
-    const [selectedModelArchitectureId, setSelectedModelArchitectureId] = useState<string | null>(null);
+    const { data } = useGetTaskModelArchitectures();
+    const { data: trainingDevices } = useGetTrainingDevices();
+    const activeModelArchitectureId = useGetActiveModelArchitectureId();
+
+    const [selectedModelArchitectureId, setSelectedModelArchitectureId] = useState<string | null>(
+        activeModelArchitectureId ?? null
+    );
+
+    const [selectedTrainingDevice, setSelectedTrainingDevice] = useState<string | null>(
+        trainingDevices?.at(0)?.type ?? null
+    );
 
     const isStartButtonDisabled = selectedModelArchitectureId === null;
 
     return (
-        <Dialog width={'80vw'}>
+        <Dialog width={'70vw'}>
             <Heading>Select a model to train</Heading>
             <Divider size={'S'} />
             <Content>
                 <TrainModelDialogContent
+                    trainingDevices={trainingDevices}
+                    selectedTrainingDevice={selectedTrainingDevice}
+                    onSelectedTrainingDeviceChange={setSelectedTrainingDevice}
+                    activeModelArchitectureId={activeModelArchitectureId}
+                    modelArchitectures={data.model_architectures}
                     selectedModelArchitectureId={selectedModelArchitectureId}
                     onSelectedModelArchitectureIdChange={setSelectedModelArchitectureId}
                 />

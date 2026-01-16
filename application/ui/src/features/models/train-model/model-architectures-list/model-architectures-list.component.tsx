@@ -174,24 +174,26 @@ const getRecommendedArchitectures = (modelArchitectures: ModelArchitectureType[]
 };
 
 interface ModelArchitecturesListContainer {
+    activeModelArchitectureId: string | undefined;
+    modelArchitectures: ModelArchitectureType[];
     selectedModelArchitectureId: string | null;
     onSelectedModelArchitectureIdChange: (modelArchitectureId: string | null) => void;
 }
 
 export const ModelArchitecturesListContainer = ({
+    modelArchitectures,
+    activeModelArchitectureId,
     selectedModelArchitectureId,
     onSelectedModelArchitectureIdChange,
 }: ModelArchitecturesListContainer) => {
-    const { data } = useGetTaskModelArchitectures();
     const [showMore, setShowMore] = useState<boolean>(false);
-    const activeModelArchitectureId = useGetActiveModelArchitectureId();
 
     if (showMore) {
         return (
             <Flex direction={'column'} minHeight={0} gap={'size-300'}>
                 <AllModelArchitectures
                     activeModelArchitectureId={activeModelArchitectureId}
-                    modelArchitectures={data.model_architectures}
+                    modelArchitectures={modelArchitectures}
                     selectedModelArchitectureId={selectedModelArchitectureId}
                     onSelectedModelArchitectureIdChange={onSelectedModelArchitectureIdChange}
                 />
@@ -202,7 +204,7 @@ export const ModelArchitecturesListContainer = ({
         );
     }
 
-    const recommendedArchitectures = getRecommendedArchitectures(data.model_architectures);
+    const recommendedArchitectures = getRecommendedArchitectures(modelArchitectures);
 
     return (
         <Flex direction={'column'} minHeight={0} gap={'size-300'}>
