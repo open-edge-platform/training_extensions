@@ -10,6 +10,7 @@ import { AddMediaButton } from '../../../../components/add-media-button/add-medi
 import { CheckboxInput } from '../../../../components/checkbox-input/checkbox-input.component';
 import type { DatasetItem } from '../../../../constants/shared-types';
 import { TrainModelOld } from '../../../models/train-model-old/train-model-old';
+import { TrainModel } from '../../../models/train-model/train-model.component';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
 import { useSelectedData } from '../../selected-data-provider.component';
 import { toggleMultipleSelection, updateSelectedKeysTo } from './util';
@@ -84,6 +85,7 @@ export const Toolbar = ({ items }: ToolbarProps) => {
                 <ButtonGroup>
                     <AddMediaButton onFilesSelected={handleAddMediaItem} />
                     <TrainModelOld />
+                    <TrainModel />
                 </ButtonGroup>
             </Flex>
 
