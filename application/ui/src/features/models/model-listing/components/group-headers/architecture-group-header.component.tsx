@@ -1,8 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, dimensionValue, Flex, Heading, Item, Menu, MenuTrigger, Text } from '@geti/ui';
-import { MoreMenu, VideoThumb } from '@geti/ui/icons';
+import { dimensionValue, Flex, Heading, Text } from '@geti/ui';
+import { VideoThumb } from '@geti/ui/icons';
 
 import type { ArchitectureGroup } from '../../types';
 
@@ -21,16 +21,6 @@ export const ArchitectureGroupHeader = ({ architecture }: ArchitectureGroupHeade
                 <VideoThumb />
                 <Text>{architecture.recommendedFor}</Text>
             </Flex>
-
-            <MenuTrigger>
-                <ActionButton isQuiet>
-                    <MoreMenu />
-                </ActionButton>
-                <Menu>
-                    <Item key='export'>Export all</Item>
-                    <Item key='delete'>Delete all</Item>
-                </Menu>
-            </MenuTrigger>
         </Flex>
     );
 };

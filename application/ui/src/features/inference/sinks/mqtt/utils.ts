@@ -1,0 +1,28 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
+import { MqttSinkConfig, SinkOutputFormats } from '../utils';
+
+export const getMqttInitialConfig = (): MqttSinkConfig => ({
+    id: '',
+    name: '',
+    topic: '',
+    sink_type: 'mqtt',
+    rate_limit: 0,
+    broker_host: '',
+    broker_port: 0,
+    auth_required: false,
+    output_formats: [],
+});
+
+export const mqttBodyFormatter = (formData: FormData): MqttSinkConfig => ({
+    id: String(formData.get('id')),
+    name: String(formData.get('name')),
+    topic: String(formData.get('topic')),
+    sink_type: 'mqtt',
+    rate_limit: formData.get('rate_limit') ? Number(formData.get('rate_limit')) : 0,
+    broker_host: String(formData.get('broker_host')),
+    broker_port: formData.get('broker_port') ? Number(formData.get('broker_port')) : 0,
+    auth_required: formData.get('auth_required') === 'on' ? true : false,
+    output_formats: formData.getAll('output_formats') as SinkOutputFormats,
+});

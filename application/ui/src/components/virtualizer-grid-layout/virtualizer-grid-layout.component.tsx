@@ -7,30 +7,35 @@ import { AriaComponentsListBox, GridLayout, ListBoxItem, Loading, View, Virtuali
 import { useLoadMore } from '@react-aria/utils';
 import { GridLayoutOptions } from 'react-aria-components';
 
-import type { components } from '../../../api/openapi-spec';
-import { MediaState } from '../selected-data-provider.component';
+import { MediaStateMap } from '../../constants/shared-types';
 import { useGetTargetPosition } from './use-get-target-position.hook';
 
 import classes from './virtualizer-grid-layout.module.scss';
 
-type Item = components['schemas']['DatasetItemView'];
 type AriaComponentsListBoxProps = ComponentProps<typeof AriaComponentsListBox>;
 
-interface VirtualizerGridLayoutProps extends Pick<AriaComponentsListBoxProps, 'selectedKeys' | 'onSelectionChange'> {
-    items: Item[];
+interface GridItem {
+    id: string;
+    [key: string]: unknown;
+}
+
+interface VirtualizerGridLayoutProps<T extends GridItem>
+    extends Pick<AriaComponentsListBoxProps, 'selectedKeys' | 'onSelectionChange'> {
+    items: T[];
     ariaLabel: string;
-    mediaState: MediaState;
+    mediaState?: MediaStateMap;
     scrollToIndex?: number;
     selectionMode: 'single' | 'multiple' | 'none';
     layoutOptions: GridLayoutOptions;
     isLoadingMore: boolean;
     onLoadMore: () => void;
-    contentItem: (item: Item) => ReactNode;
+    contentItem: (item: T) => ReactNode;
+    getItemId?: (item: T) => string | number;
 }
 
 const MIN_SPACE = 18; // default value for GridLayoutOptions.minSpace.height
 
-export const VirtualizerGridLayout = ({
+export const VirtualizerGridLayout = <T extends GridItem>({
     items,
     ariaLabel,
     mediaState,
@@ -42,7 +47,8 @@ export const VirtualizerGridLayout = ({
     onLoadMore,
     contentItem,
     onSelectionChange,
-}: VirtualizerGridLayoutProps) => {
+    getItemId = (item) => item.id,
+}: VirtualizerGridLayoutProps<T>) => {
     const ref = useRef<HTMLDivElement | null>(null);
 
     useLoadMore({ isLoading: isLoadingMore, onLoadMore }, ref);
@@ -69,18 +75,23 @@ export const VirtualizerGridLayout = ({
                     selectionMode={selectionMode}
                     onSelectionChange={onSelectionChange}
                 >
-                    {items.map((item, index) => (
-                        <ListBoxItem
-                            id={item.id}
-                            key={`${ariaLabel}-${item.id}-${index}`}
-                            textValue={item.id}
-                            className={classes.mediaItem}
-                            data-accepted={mediaState.get(String(item.id)) === 'accepted'}
-                            data-rejected={mediaState.get(String(item.id)) === 'rejected'}
-                        >
-                            {contentItem(item)}
-                        </ListBoxItem>
-                    ))}
+                    {items.map((item, index) => {
+                        const itemId = getItemId(item);
+                        const itemState = mediaState?.get(String(itemId));
+
+                        return (
+                            <ListBoxItem
+                                id={itemId}
+                                key={`${ariaLabel}-${itemId}-${index}`}
+                                textValue={String(itemId)}
+                                className={classes.mediaItem}
+                                data-accepted={itemState === 'accepted'}
+                                data-rejected={itemState === 'rejected'}
+                            >
+                                {contentItem(item)}
+                            </ListBoxItem>
+                        );
+                    })}
                     {isLoadingMore && (
                         <ListBoxItem id={'loader'} textValue={'loading'}>
                             <Loading mode='overlay' />

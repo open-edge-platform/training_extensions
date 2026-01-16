@@ -56,6 +56,20 @@ class TestModelServiceIntegration:
         assert model is not None
         assert model.id == fxt_model_id
 
+    def test_update_model(self, fxt_project_id: UUID, fxt_model_id: UUID, fxt_model_service: ModelService):
+        """Test updating name of a model by ID."""
+        new_model_name = "This is a new model name"
+        model_metadata = {"name": new_model_name}
+        model_from_get_before_update = fxt_model_service.get_model(fxt_project_id, fxt_model_id)
+        model_from_update = fxt_model_service.rename_model(
+            project_id=fxt_project_id, model_id=fxt_model_id, model_metadata=model_metadata
+        )
+        model_from_get_after_update = fxt_model_service.get_model(fxt_project_id, fxt_model_id)
+
+        assert model_from_update.name == new_model_name
+        assert model_from_get_before_update.name != new_model_name
+        assert model_from_get_after_update.name == new_model_name
+
     @pytest.mark.parametrize("model_operation", ["get_model", "delete_model"])
     def test_non_existent_model(self, model_operation, fxt_project_id, fxt_db_projects, fxt_model_service, db_session):
         """Test retrieving a non-existent model raises error."""
@@ -99,6 +113,27 @@ class TestModelServiceIntegration:
         fxt_model_service.delete_model(project_id=fxt_project_id, model_id=fxt_model_id)
 
         assert db_session.get(ModelRevisionDB, str(fxt_model_id)) is None
+        assert not model_rev_path.exists()
+
+    def test_delete_model_only_files(
+        self,
+        tmp_path: Path,
+        fxt_project_id: UUID,
+        fxt_model_id: UUID,
+        fxt_model_service: ModelService,
+        db_session: Session,
+    ):
+        """Test that deleting only model files removes only filesystem artifacts."""
+        model_rev_path = tmp_path / "projects" / str(fxt_project_id) / "models" / str(fxt_model_id)
+        model_rev_path.mkdir(parents=True, exist_ok=True)
+        (model_rev_path / "model.xml").touch()
+        (model_rev_path / "model.bin").touch()
+
+        fxt_model_service.delete_model_files(project_id=fxt_project_id, model_id=fxt_model_id)
+
+        model_db = db_session.get(ModelRevisionDB, str(fxt_model_id))
+        assert model_db is not None
+        assert model_db.files_deleted is True
         assert not model_rev_path.exists()
 
     def test_delete_model_with_files_no_permission(

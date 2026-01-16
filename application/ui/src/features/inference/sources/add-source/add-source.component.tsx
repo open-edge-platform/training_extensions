@@ -5,6 +5,7 @@ import { ReactNode } from 'react';
 
 import { Button, Flex, Form } from '@geti/ui';
 
+import { useConnectSourceToPipeline } from '../../../../hooks/api/pipeline.hook';
 import { useSourceAction } from '../hooks/use-source-action.hook';
 import { SourceConfig } from '../util';
 
@@ -21,10 +22,15 @@ export const AddSource = <T extends SourceConfig>({
     bodyFormatter,
     componentFields,
 }: AddSourceProps<T>) => {
+    const connectToPipelineMutation = useConnectSourceToPipeline();
+
     const [state, submitAction, isPending] = useSourceAction({
         config,
         isNewSource: true,
-        onSaved,
+        onSaved: async (sourceId) => {
+            await connectToPipelineMutation(sourceId);
+            onSaved();
+        },
         bodyFormatter,
     });
 
@@ -34,7 +40,7 @@ export const AddSource = <T extends SourceConfig>({
                 <>{componentFields(state)}</>
 
                 <Button type='submit' isDisabled={isPending} UNSAFE_style={{ maxWidth: 'fit-content' }}>
-                    Apply
+                    Add & Connect
                 </Button>
             </Flex>
         </Form>

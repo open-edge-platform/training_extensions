@@ -23,7 +23,7 @@ export const allowPanning = (onPointerDown?: OnPointerDown): OnPointerDown | und
 };
 
 export const DEFAULT_ANNOTATION_STYLES = {
-    fillOpacity: 0.4,
+    fillOpacity: 'var(--annotation-fill-opacity)',
     fill: 'var(--annotation-fill)',
     stroke: 'var(--annotation-stroke)',
     strokeLinecap: 'round',

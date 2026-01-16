@@ -8,4 +8,6 @@ export type ToolType = 'selection' | 'bounding-box' | 'polygon' | 'sam';
 export interface ToolConfig {
     type: ToolType;
     icon: ComponentType<SVGProps<SVGSVGElement>>;
+    hotkey: string;
+    label: string;
 }

@@ -46,8 +46,10 @@ class MqttDispatcher(BaseDispatcher):
         """
         try:
             import paho.mqtt.client
+            import paho.mqtt.enums
 
             self.mqtt_cl = paho.mqtt.client
+            self.mqtt_enums = paho.mqtt.enums
         except ImportError:
             raise ImportError("Package 'paho-mqtt' is required for MQTT dispatcher. Please install with extra 'mqtt'.")
 
@@ -68,7 +70,9 @@ class MqttDispatcher(BaseDispatcher):
 
     def _create_default_client(self) -> "mqtt_cl.Client":
         client_id = f"dispatcher_{int(time.time())}"
-        client = self.mqtt_cl.Client(client_id=client_id)
+        client = self.mqtt_cl.Client(
+            callback_api_version=self.mqtt_enums.CallbackAPIVersion.VERSION2, client_id=client_id
+        )
         client.on_connect = self._on_connect
         client.on_disconnect = self._on_disconnect
         if self.username is not None and self.password is not None:
@@ -91,7 +95,14 @@ class MqttDispatcher(BaseDispatcher):
                 time.sleep(RETRY_DELAY * (attempt + 1))
         raise ConnectionError("Failed to connect to MQTT broker")
 
-    def _on_connect(self, _client: "mqtt_cl.Client", _userdata: Any, _flags: dict[str, int], rc: int):
+    def _on_connect(
+        self,
+        _client: "mqtt_cl.Client",
+        _userdata: Any,
+        _flags: "mqtt_cl.ConnectFlags",
+        rc: "mqtt_cl.ReasonCode",
+        _properties: "mqtt_cl.Properties | None",
+    ):
         if rc == 0:
             self._connected = True
             self._connection_event.set()
@@ -99,7 +110,14 @@ class MqttDispatcher(BaseDispatcher):
         else:
             logger.error("MQTT connect failed with code {}", rc)
 
-    def _on_disconnect(self, _client: "mqtt_cl.Client", _userdata: Any, rc: int):
+    def _on_disconnect(
+        self,
+        _client: "mqtt_cl.Client",
+        _userdata: Any,
+        _flags: "mqtt_cl.DisconnectFlags",
+        rc: "mqtt_cl.ReasonCode",
+        _properties: "mqtt_cl.Properties | None",
+    ):
         self._connected = False
         self._connection_event.clear()
         logger.warning("MQTT disconnected (rc={})", rc)

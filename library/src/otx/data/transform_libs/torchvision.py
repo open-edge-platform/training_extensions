@@ -2745,17 +2745,24 @@ class Compose(tvt_v2.Compose):
         return module.startswith("torchvision.")
 
     def _apply_native_transform(self, transform: tvt_v2.Transform, inputs: OTXDataItem) -> OTXDataItem:
-        """Apply native torchvision transform only to image-related fields."""
-        # Build a dict of transformable fields
-        transformable = {}
+        """Apply native torchvision transform only to image-related fields.
+
+        TorchVision v2 expects standard field names like `boxes`/`labels`; we
+        map to those before calling the transform and map back afterward.
+        We also keep `img_info` in sync when the image size changes.
+        """
+        # Build a dict of transformable fields with torchvision-friendly keys
+        transformable: dict[str, Any] = {}
         if (image := getattr(inputs, "image", None)) is not None:
             transformable["image"] = image
         if (masks := getattr(inputs, "masks", None)) is not None:
             transformable["masks"] = masks
         if (bboxes := getattr(inputs, "bboxes", None)) is not None:
-            transformable["bboxes"] = bboxes
+            transformable["boxes"] = bboxes
         if (label := getattr(inputs, "label", None)) is not None:
             transformable["labels"] = label
+        if (img_info := getattr(inputs, "img_info", None)) is not None:
+            transformable["img_info"] = img_info
 
         if not transformable:
             return inputs
@@ -2769,13 +2776,15 @@ class Compose(tvt_v2.Compose):
             result = transform(transformable)
             if isinstance(result, dict):
                 for key, value in result.items():
-                    # Map 'labels' back to 'label' for OTXDataItem
-                    attr_name = "label" if key == "labels" else key
-                    setattr(inputs, attr_name, value)
+                    if key == "boxes":
+                        inputs.bboxes = value
+                    elif key == "labels":
+                        inputs.label = value
+                    else:
+                        setattr(inputs, key, value)
             else:
                 # Single result, assume it's the image
                 inputs.image = result
-
         return inputs
 
     def forward(self, *inputs: OTXDataItem) -> OTXDataItem | None:

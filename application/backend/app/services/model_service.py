@@ -4,6 +4,7 @@
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
+from typing import cast
 from uuid import UUID
 
 from loguru import logger
@@ -57,6 +58,32 @@ class ModelService(BaseSessionManagedService):
             raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
         return ModelRevision.model_validate(model_rev_db)
 
+    def rename_model(self, project_id: UUID, model_id: UUID, model_metadata: dict[str, str]) -> ModelRevision:
+        """
+        Rename a model revision.
+
+        Args:
+            project_id (UUID): The unique identifier of the project whose models to get.
+            model_id (UUID): The unique identifier of the model to retrieve.
+            model_metadata: Dict containing updated model revision name
+
+        Returns:
+            ModelRevision: The model revision object containing the model's updated information.
+
+        Raises:
+            ResourceNotFoundError: If no model with the given model_id is found.
+        """
+        model_rev_repo = ModelRevisionRepository(project_id=str(project_id), db=self.db_session)
+        model_rev_db = model_rev_repo.get_by_id(str(model_id))
+        if not model_rev_db:
+            raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
+
+        new_name = model_metadata.get("name")
+        if new_name is not None:
+            model_rev_db.name = new_name
+            model_rev_repo.update(model_rev_db)
+        return ModelRevision.model_validate(model_rev_db)
+
     @parent_process_only
     def delete_model(self, project_id: UUID, model_id: UUID) -> None:
         """
@@ -89,6 +116,33 @@ class ModelService(BaseSessionManagedService):
                 raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
         except IntegrityError:
             raise ResourceInUseError(ResourceType.MODEL, str(model_id))
+
+    @parent_process_only
+    def delete_model_files(self, project_id: UUID, model_id: UUID) -> None:
+        """
+        Delete only the model files from disk, keeping the model revision record in the database and setting its
+        files_deleted flag to True.
+
+        Args:
+            project_id (UUID): The unique identifier of the project.
+            model_id (UUID): The unique identifier of the model.
+        """
+        try:
+            model_files_path = self.get_model_files_path(project_id=project_id, model_id=model_id)
+        except FileNotFoundError:
+            return
+        except ResourceNotFoundError:
+            return
+
+        # Delete model files from disk
+        shutil.rmtree(model_files_path)
+        logger.info("Deleted model files at '{}'", model_files_path)
+
+        # Mark as deleted in the database
+        model_rev_repo = ModelRevisionRepository(project_id=str(project_id), db=self.db_session)
+        model_rev_db = cast(ModelRevisionDB, model_rev_repo.get_by_id(str(model_id)))
+        model_rev_db.files_deleted = True
+        model_rev_repo.update(model_rev_db)
 
     def list_models(self, project_id: UUID) -> list[ModelRevision]:
         """
