@@ -40,7 +40,7 @@ class ClassificationSample(Sample):
 
     image: str = image_path_field()
     image_info: ImageInfo = image_info_field()
-    label: int = label_field(dtype=pl.Int32(), is_list=False)
+    label: int = label_field(dtype=pl.UInt8(), is_list=False)
     confidence: float | None = numeric_field(dtype=pl.Float32())
     subset: Subset = subset_field()
 
@@ -58,7 +58,7 @@ class MultilabelClassificationSample(Sample):
 
     image: str = image_path_field()
     image_info: ImageInfo = image_info_field()
-    label: NDArrayInt = label_field(dtype=pl.Int32(), multi_label=True)
+    label: NDArrayInt = label_field(dtype=pl.UInt8(), multi_label=True)
     confidence: NDArrayFloat32 | None = numeric_field(dtype=pl.Float32(), is_list=True)
     subset: Subset = subset_field()
 
@@ -78,7 +78,7 @@ class DetectionSample(Sample):
     image: str = image_path_field()
     image_info: ImageInfo = image_info_field()
     bboxes: NDArrayInt = bbox_field(dtype=pl.Int32())
-    label: NDArrayInt = label_field(dtype=pl.Int32(), is_list=True)
+    label: NDArrayInt = label_field(dtype=pl.UInt8(), is_list=True)
     confidence: NDArrayFloat32 | None = numeric_field(dtype=pl.Float32(), is_list=True)
     subset: Subset = subset_field()
 
@@ -98,7 +98,7 @@ class InstanceSegmentationSample(Sample):
     image: str = image_path_field()
     image_info: ImageInfo = image_info_field()
     polygons: NDArrayFloat32 = polygon_field(dtype=pl.Float32())  # Ragged array (num_polygons, num_vertices, 2)
-    label: NDArrayInt = label_field(dtype=pl.Int32(), is_list=True)
+    label: NDArrayInt = label_field(dtype=pl.UInt8(), is_list=True)
     confidence: NDArrayFloat32 | None = numeric_field(dtype=pl.Float32(), is_list=True)
     subset: Subset = subset_field()
 
