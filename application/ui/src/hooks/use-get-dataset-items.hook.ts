@@ -16,12 +16,16 @@ export const useGetDatasetItems = (options?: UseGetDatasetItemsOptions) => {
     const project_id = useProjectIdentifier();
     const subset = options?.subset;
 
+    const query = subset
+        ? { offset: 0, limit: DATASET_ITEMS_LIMIT, subset }
+        : { offset: 0, limit: DATASET_ITEMS_LIMIT };
+
     const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isPending } = $api.useInfiniteQuery(
         'get',
         '/api/projects/{project_id}/dataset/items',
         {
             params: {
-                query: { offset: 0, limit: DATASET_ITEMS_LIMIT, ...(subset && { subset }) },
+                query,
                 path: { project_id },
             },
         },
