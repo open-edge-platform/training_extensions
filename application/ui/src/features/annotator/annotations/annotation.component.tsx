@@ -8,13 +8,15 @@ import { EditableAnnotation } from './editable-annotation.component';
 import { SelectableAnnotation } from './selectable-annotation.component';
 
 interface AnnotationProps {
+    width: number;
+    height: number;
     annotation: AnnotationType;
 }
-export const Annotation = ({ annotation }: AnnotationProps) => {
+export const Annotation = ({ width, height, annotation }: AnnotationProps) => {
     return (
         <AnnotationContext.Provider value={annotation}>
             <SelectableAnnotation>
-                <EditableAnnotation>
+                <EditableAnnotation width={width} height={height}>
                     <AnnotationShapeRenderer annotation={annotation} />
                 </EditableAnnotation>
             </SelectableAnnotation>

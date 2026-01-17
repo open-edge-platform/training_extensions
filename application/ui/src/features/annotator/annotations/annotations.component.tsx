@@ -47,7 +47,7 @@ export const Annotations = ({ annotations, width, height, isFocussed }: Annotati
             {!isEmpty(annotations) && (
                 <MaskAnnotations annotations={annotations} width={width} height={height} isEnabled={isFocussed}>
                     {annotations.map((annotation) => (
-                        <Annotation annotation={annotation} key={annotation.id} />
+                        <Annotation key={annotation.id} annotation={annotation} width={width} height={height} />
                     ))}
                 </MaskAnnotations>
             )}

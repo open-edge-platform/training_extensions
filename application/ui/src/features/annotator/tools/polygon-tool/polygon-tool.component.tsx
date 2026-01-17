@@ -87,7 +87,7 @@ export const PolygonTool = ({ mainMode }: PolygonToolProps) => {
 
     const optimizePolygonOrSegments = async (iPolygon: Polygon): Promise<Polygon> => {
         if (isNil(worker)) {
-            return Promise.reject();
+            return Promise.reject(new Error('Intelligent scissors worker not initialized'));
         }
 
         const lastSegment = differenceWith(iPolygon.points, segments.flat(), isEqual);
