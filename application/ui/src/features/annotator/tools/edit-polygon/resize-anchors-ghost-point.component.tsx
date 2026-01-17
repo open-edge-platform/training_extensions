@@ -84,17 +84,15 @@ export const ResizeAnchorsGhostPoint = ({
                         />
                         {ghostPointRef.current === undefined ||
                         ghostPoint === undefined ||
-                        ghostPoint.idx - 1 !== idx ? (
-                            <></>
-                        ) : (
+                        ghostPoint.idx - 1 !== idx ? null : (
                             <ResizeAnchor
                                 zoom={zoom}
                                 cursor='default'
+                                strokeWidth={0}
                                 x={ghostPoint.point.x}
                                 y={ghostPoint.point.y}
                                 onComplete={onComplete}
                                 fill={'var(--energy-blue)'}
-                                strokeWidth={0}
                                 label={`Add a point between point ${idx} and ${idx + 1}`}
                                 moveAnchorTo={(x: number, y: number) => {
                                     updateGhostPoint({ ...ghostPoint, point: { x, y } });
