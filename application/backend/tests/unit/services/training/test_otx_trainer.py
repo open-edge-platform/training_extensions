@@ -9,7 +9,9 @@ from uuid import uuid4
 import pytest
 import torch
 from datumaro.experimental.fields import Subset
-from otx.metrics.mean_ap import MeanAPCallable
+from otx.metrics.accuracy import MultiClassClsMetricCallable, MultiLabelClsMetricCallable
+from otx.metrics.mean_ap import MaskRLEMeanAPCallable, MeanAPCallable
+from otx.metrics.types import MetricCallable
 from otx.tools.converter import GetiConfigConverter
 from otx.types.export import OTXExportFormatType
 from otx.types.precision import OTXPrecisionType
@@ -688,8 +690,20 @@ class TestOTXTrainerTrainModel:
 class TestOTXTrainerEvaluateModel:
     """Tests for the OTXTrainer.evaluate_model method."""
 
+    @pytest.mark.parametrize(
+        "task_type,exclusive_labels,metric_callable",
+        [
+            (TaskType.CLASSIFICATION, True, MultiClassClsMetricCallable),
+            (TaskType.CLASSIFICATION, False, MultiLabelClsMetricCallable),
+            (TaskType.DETECTION, False, MeanAPCallable),
+            (TaskType.INSTANCE_SEGMENTATION, False, MaskRLEMeanAPCallable),
+        ],
+    )
     def test_evaluate_model(
         self,
+        task_type: TaskType,
+        exclusive_labels: bool,
+        metric_callable: MetricCallable,
         fxt_otx_trainer: Callable[[], OTXTrainer],
         tmp_path: Path,
         fxt_model_service: Mock,
@@ -714,7 +728,7 @@ class TestOTXTrainerEvaluateModel:
             model_id=model_id,
             project_id=project_id,
             model_architecture_id="Object_Detection_YOLOX_S",
-            task=Task(task_type=TaskType.DETECTION),
+            task=Task(task_type=task_type, exclusive_labels=exclusive_labels),
         )
 
         # Act
@@ -727,7 +741,7 @@ class TestOTXTrainerEvaluateModel:
         )
 
         # Assert
-        mock_otx_engine.test.assert_called_once_with(checkpoint=model_checkpoint_path, metric=MeanAPCallable)
+        mock_otx_engine.test.assert_called_once_with(checkpoint=model_checkpoint_path, metric=metric_callable)
         fxt_model_service.set_db_session.assert_called_once()
         actual_call = fxt_model_service.save_evaluation_result.call_args[0][0]
 
