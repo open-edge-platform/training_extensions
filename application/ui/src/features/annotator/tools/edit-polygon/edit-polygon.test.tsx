@@ -78,15 +78,6 @@ const renderApp = async (
             </CanvasSettingsProvider>
         </AnnotationVisibilityProvider>
     );
-    /* return render(
-        <AnnotatorProvider mediaItem={getMockedMediaItem({})}>
-            <AnnotationVisibilityProvider>
-                <CanvasSettingsProvider>
-                    <EditPolygon annotation={annotation} zoom={1} />
-                </CanvasSettingsProvider>
-            </AnnotationVisibilityProvider>
-        </AnnotatorProvider>
-    ); */
 };
 
 describe('EditPolygonTool', () => {
