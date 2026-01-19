@@ -485,7 +485,6 @@ class OTXTrainer(Trainer):
             task=task,
             model_revision_id=training_params.model_id,
             dataset_revision_id=dataset_info.revision_id,
-            model_dir=model_dir,
         )
         exported_model_paths = self.export_model(otx_engine=otx_engine, model_checkpoint_path=trained_model_path)
         self.store_model_artifacts(
