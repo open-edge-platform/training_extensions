@@ -21,6 +21,7 @@ export const getMockedModel = (overrides: Partial<SchemaModelView> = {}): Schema
         end_time: '2025-01-10T12:30:00.000000+00:00',
         dataset_revision_id: '3c6c6d38-1cd8-4458-b759-b9880c048b78',
     },
+    variants: [],
     files_deleted: false,
     ...overrides,
 });
