@@ -61,7 +61,7 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
     };
 
     return (
-        <Dialog width={'70vw'}>
+        <Dialog width={'60vw'}>
             <Heading>Select a model to train</Heading>
             <Divider size={'S'} />
             <Content>
