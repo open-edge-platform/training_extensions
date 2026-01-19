@@ -246,7 +246,7 @@ class TestHyperparameters:
     )
     def test_validation_errors(self, hyperparams_dict) -> None:
         """Test that validation errors in nested models are properly caught"""
-        with pytest.raises((ValidationError, ValueError)):
+        with pytest.raises((ValidationError, ValueError)):  # pyrefly: ignore[no-matching-overload]
             Hyperparameters.model_validate(hyperparams_dict)
 
     def test_partial_hyperparameters(self) -> None:
@@ -285,11 +285,9 @@ class TestHyperparameters:
         )
 
         # Verify that nested fields are set correctly
-        assert nested_partial_hyperparams.dataset_preparation.augmentation.random_resize_crop.crop_ratio_range == [
-            0.2,
-            0.75,
-        ]
-        assert nested_partial_hyperparams.dataset_preparation.augmentation.random_resize_crop.enable is None
+        crop_params = nested_partial_hyperparams.dataset_preparation.augmentation.random_resize_crop
+        assert crop_params.crop_ratio_range == [0.2, 0.75]  # pyrefly: ignore[missing-attribute]
+        assert crop_params.enable is None  # pyrefly: ignore[missing-attribute]
 
         # Test with a full configuration
         full_hyperparams = Hyperparameters(

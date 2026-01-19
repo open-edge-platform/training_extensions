@@ -16,12 +16,14 @@ interface ModelListingContextValue {
     expandedModelIds: Set<string>;
     activeModelId: string | undefined;
     groupedModels: GroupedModels[];
+    searchBy: string;
 
     // Actions
     onGroupByChange: (mode: GroupByMode) => void;
     onSortChange: (key: SortBy) => void;
     onPinActiveToggle: () => void;
     onExpandModel: (modelId: string) => void;
+    onSearchChange: (query: string) => void;
 }
 
 const ModelListingContext = createContext<ModelListingContextValue | null>(null);
@@ -35,10 +37,11 @@ export const ModelListingProvider = ({ children }: ModelListingProviderProps) =>
     const [sortBy, setSortBy] = useState<SortBy>('score');
     const [pinActive, setPinActive] = useState<boolean>(false);
     const [expandedModelIds, setExpandedModelIds] = useState<Set<string>>(new Set());
+    const [searchBy, setSearchBy] = useState<string>('');
 
     const activeModelId = useGetActiveModelId();
     const { data: models } = useGetModels();
-    const groupedModels = useGroupedModels(models, { groupBy, sortBy, pinActive });
+    const groupedModels = useGroupedModels(models, { groupBy, sortBy, pinActive, searchBy });
 
     const onGroupByChange = (mode: GroupByMode) => {
         setGroupBy(mode);
@@ -50,6 +53,10 @@ export const ModelListingProvider = ({ children }: ModelListingProviderProps) =>
 
     const onPinActiveToggle = () => {
         setPinActive((prev) => !prev);
+    };
+
+    const onSearchChange = (query: string) => {
+        setSearchBy(query);
     };
 
     const onExpandModel = (modelId: string) => {
@@ -73,10 +80,12 @@ export const ModelListingProvider = ({ children }: ModelListingProviderProps) =>
         expandedModelIds,
         activeModelId,
         groupedModels,
+        searchBy,
         onGroupByChange,
         onSortChange,
         onPinActiveToggle,
         onExpandModel,
+        onSearchChange,
     };
 
     return <ModelListingContext.Provider value={value}>{children}</ModelListingContext.Provider>;

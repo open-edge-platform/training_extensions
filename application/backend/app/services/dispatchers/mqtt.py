@@ -4,7 +4,7 @@
 import json
 import threading
 import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from loguru import logger
@@ -14,12 +14,11 @@ from app.models import MqttSinkConfig
 
 from .base import BaseDispatcher
 
-try:
-    import paho.mqtt.client as mqtt
-    import paho.mqtt.enums as mqtt_enums
-except ImportError:
-    mqtt = None  # type: ignore[assignment]
-    mqtt_enums = None  # type: ignore[assignment]
+if TYPE_CHECKING:
+    try:
+        import paho.mqtt.client as mqtt_cl
+    except ImportError:
+        raise ImportError("Package 'paho-mqtt' is required for type checking. Please install it through extra 'mqtt'.")
 
 MAX_RETRIES = 3
 RETRY_DELAY = 1
@@ -30,7 +29,7 @@ class MqttDispatcher(BaseDispatcher):
     def __init__(
         self,
         output_config: MqttSinkConfig,
-        mqtt_client: "mqtt.Client | None" = None,
+        mqtt_client: "mqtt_cl.Client | None" = None,
         track_messages: bool | None = False,
     ) -> None:
         """
@@ -45,8 +44,14 @@ class MqttDispatcher(BaseDispatcher):
             ImportError: If paho-mqtt is not installed
             ConnectionError: If unable to connect to MQTT broker
         """
-        if mqtt is None:
-            raise ImportError("paho-mqtt is required for MQTT dispatcher.")
+        try:
+            import paho.mqtt.client
+            import paho.mqtt.enums
+
+            self.mqtt_cl = paho.mqtt.client
+            self.mqtt_enums = paho.mqtt.enums
+        except ImportError:
+            raise ImportError("Package 'paho-mqtt' is required for MQTT dispatcher. Please install with extra 'mqtt'.")
 
         super().__init__(output_config)
         self.broker_host = output_config.config_data.broker_host
@@ -63,9 +68,11 @@ class MqttDispatcher(BaseDispatcher):
         self.client = mqtt_client or self._create_default_client()
         self._connect()
 
-    def _create_default_client(self) -> "mqtt.Client":
+    def _create_default_client(self) -> "mqtt_cl.Client":
         client_id = f"dispatcher_{int(time.time())}"
-        client = mqtt.Client(callback_api_version=mqtt_enums.CallbackAPIVersion.VERSION2, client_id=client_id)
+        client = self.mqtt_cl.Client(
+            callback_api_version=self.mqtt_enums.CallbackAPIVersion.VERSION2, client_id=client_id
+        )
         client.on_connect = self._on_connect
         client.on_disconnect = self._on_disconnect
         if self.username is not None and self.password is not None:
@@ -90,11 +97,11 @@ class MqttDispatcher(BaseDispatcher):
 
     def _on_connect(
         self,
-        _client: "mqtt.Client",
+        _client: "mqtt_cl.Client",
         _userdata: Any,
-        _flags: "mqtt.ConnectFlags",
-        rc: "mqtt.ReasonCode",
-        _properties: "mqtt.Properties | None",
+        _flags: "mqtt_cl.ConnectFlags",
+        rc: "mqtt_cl.ReasonCode",
+        _properties: "mqtt_cl.Properties | None",
     ):
         if rc == 0:
             self._connected = True
@@ -105,11 +112,11 @@ class MqttDispatcher(BaseDispatcher):
 
     def _on_disconnect(
         self,
-        _client: "mqtt.Client",
+        _client: "mqtt_cl.Client",
         _userdata: Any,
-        _flags: "mqtt.DisconnectFlags",
-        rc: "mqtt.ReasonCode",
-        _properties: "mqtt.Properties | None",
+        _flags: "mqtt_cl.DisconnectFlags",
+        rc: "mqtt_cl.ReasonCode",
+        _properties: "mqtt_cl.Properties | None",
     ):
         self._connected = False
         self._connection_event.clear()
@@ -129,10 +136,10 @@ class MqttDispatcher(BaseDispatcher):
 
         try:
             result = self.client.publish(topic, json.dumps(payload))
-            if result.rc == mqtt.MQTT_ERR_SUCCESS and self._track_messages:
+            if result.rc == self.mqtt_cl.MQTT_ERR_SUCCESS and self._track_messages:
                 self._published_messages.append({"topic": topic, "payload": payload})
-            if result.rc != mqtt.MQTT_ERR_SUCCESS:
-                logger.error("Publish failed: {}", mqtt.error_string(result.rc))
+            if result.rc != self.mqtt_cl.MQTT_ERR_SUCCESS:
+                logger.error("Publish failed: {}", self.mqtt_cl.error_string(result.rc))
         except ValueError:
             logger.exception("Invalid payload for MQTT publish")
 
@@ -149,10 +156,10 @@ class MqttDispatcher(BaseDispatcher):
 
     def close(self) -> None:
         err = self.client.loop_stop()
-        if err != mqtt.MQTT_ERR_SUCCESS:
-            logger.warning("Error stopping MQTT loop: {}", mqtt.error_string(err))
+        if err != self.mqtt_cl.MQTT_ERR_SUCCESS:
+            logger.warning("Error stopping MQTT loop: {}", self.mqtt_cl.error_string(err))
         err = self.client.disconnect()
-        if err != mqtt.MQTT_ERR_SUCCESS:
-            logger.warning("Error disconnecting MQTT client: {}", mqtt.error_string(err))
+        if err != self.mqtt_cl.MQTT_ERR_SUCCESS:
+            logger.warning("Error disconnecting MQTT client: {}", self.mqtt_cl.error_string(err))
         self._connected = False
         self._connection_event.clear()

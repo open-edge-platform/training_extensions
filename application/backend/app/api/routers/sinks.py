@@ -159,8 +159,10 @@ def update_sink(
     if "sink_type" in sink_config:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The 'sink_type' field cannot be changed")
     try:
-        updated_sink: Sink = sink.model_copy(update=sink_config)
-        updated_sink.config_data = updated_sink.config_data.model_copy(update=sink_config)
+        updated_sink = sink.model_copy(update=sink_config)
+        updated_sink.config_data = updated_sink.config_data.model_copy(  # pyrefly: ignore[bad-assignment]
+            update=sink_config
+        )
         sink = sink_service.update_sink(
             sink=sink,
             new_name=updated_sink.name,

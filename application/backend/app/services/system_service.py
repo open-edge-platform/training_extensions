@@ -1,8 +1,9 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
+import platform
 import re
 
+import cv2
 import psutil
 import torch
 from cv2_enumerate_cameras import enumerate_cameras
@@ -11,6 +12,11 @@ from app.models.system import CameraInfo, DeviceInfo, DeviceType
 
 DEVICE_PATTERN = re.compile(r"^(cpu|xpu|cuda)(-(\d+))?$")
 DEFAULT_DEVICE = "cpu"
+CV2_BACKENDS = {
+    "Windows": cv2.CAP_MSMF,
+    "Linux": cv2.CAP_V4L2,
+    "Darwin": cv2.CAP_AVFOUNDATION,
+}
 
 
 class SystemService:
@@ -162,8 +168,12 @@ class SystemService:
     def get_camera_devices() -> list[CameraInfo]:
         """
         Get available camera devices.
+        Camera names are formatted as "<camera_name> [<index>]".
 
         Returns:
             list[CameraInfo]: List of available camera devices
         """
-        return [CameraInfo(index=camera.index, name=camera.name) for camera in enumerate_cameras()]
+        if (backend := CV2_BACKENDS.get(platform.system())) is None:
+            raise RuntimeError(f"Unsupported platform: {platform.system()}")
+
+        return [CameraInfo(index=cam.index, name=f"{cam.name} [{cam.index}]") for cam in enumerate_cameras(backend)]

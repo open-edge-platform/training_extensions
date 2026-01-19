@@ -279,6 +279,7 @@ class TestDatasetRevisionServiceIntegration:
         assert revision is not None
         assert revision.id == revision_id
         assert revision.project_id == project.id
+        assert revision.name == f"Dataset ({str(revision.id).split('-')[0]})"
         assert revision.files_deleted is False
 
     def test_get_dataset_revision_not_found(
@@ -418,6 +419,7 @@ class TestDatasetRevisionServiceIntegration:
         db_revision = DatasetRevisionDB(
             id=str(revision_id),
             project_id=str(project.id),
+            name=f"Dataset ({str(revision_id).split('-')[0]})",
             files_deleted=False,
         )
         db_session.add(db_revision)

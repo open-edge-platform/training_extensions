@@ -31,7 +31,6 @@ class TrainingRequestParams(BaseModel):
 
 
 class BaseJobRequest(BaseModel):
-    job_type: JobType = Field(..., description="Type of the job to be created")
     project_id: UUID = Field(..., description="ID of the project associated with the job")
 
 
