@@ -1,20 +1,12 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import { useProject } from 'hooks/api/project.hook';
 
 import { $api } from '../../../../api/client';
 
-const useCurrentProject = () => {
-    const projectId = useProjectIdentifier();
-
-    return $api.useSuspenseQuery('get', '/api/projects/{project_id}', {
-        params: { path: { project_id: projectId } },
-    });
-};
-
 export const useGetTaskModelArchitectures = () => {
-    const { data: projectData } = useCurrentProject();
+    const { data: projectData } = useProject();
 
     return $api.useSuspenseQuery('get', '/api/model_architectures', {
         params: {
