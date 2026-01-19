@@ -219,7 +219,7 @@ class TestModelServiceIntegration:
     ):
         """Test saving evaluation results to the database succeeds."""
         # Arrange
-        dataset_revision = DatasetRevisionDB(project_id=str(fxt_project_id))
+        dataset_revision = DatasetRevisionDB(project_id=str(fxt_project_id), name="test")
         db_session.add(dataset_revision)
         db_session.flush()
 

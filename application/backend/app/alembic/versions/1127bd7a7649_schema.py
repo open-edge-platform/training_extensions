@@ -1,8 +1,8 @@
 """schema
 
-Revision ID: ce7c6d4ae91b
+Revision ID: 1127bd7a7649
 Revises:
-Create Date: 2026-01-16 16:05:31.230207
+Create Date: 2026-01-19 17:06:35.524887
 
 """
 
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "ce7c6d4ae91b"
+revision: str = "1127bd7a7649"
 down_revision: str | Sequence[str] | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -59,6 +59,7 @@ def upgrade() -> None:
     op.create_table(
         "dataset_revisions",
         sa.Column("project_id", sa.Text(), nullable=False),
+        sa.Column("name", sa.String(length=255), nullable=False),
         sa.Column("files_deleted", sa.Boolean(), nullable=False),
         sa.Column("id", sa.Text(), nullable=False),
         sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
@@ -109,15 +110,9 @@ def upgrade() -> None:
         sa.Column("id", sa.Text(), nullable=False),
         sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.Column("updated_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
-        sa.ForeignKeyConstraint(
-            ["parent_revision"],
-            ["model_revisions.id"],
-        ),
+        sa.ForeignKeyConstraint(["parent_revision"], ["model_revisions.id"]),
         sa.ForeignKeyConstraint(["project_id"], ["projects.id"], ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(
-            ["training_dataset_id"],
-            ["dataset_revisions.id"],
-        ),
+        sa.ForeignKeyConstraint(["training_dataset_id"], ["dataset_revisions.id"]),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index("idx_model_revisions_architecture", "model_revisions", ["project_id", "architecture"], unique=False)
