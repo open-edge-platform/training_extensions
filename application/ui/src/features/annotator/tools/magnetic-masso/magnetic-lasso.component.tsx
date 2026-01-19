@@ -12,7 +12,7 @@ import { useZoom } from '../../../../components/zoom/zoom.provider';
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
 import { Point } from '../../../../shared/types';
-import { runWhen, runWhenTruthy } from '../../utils';
+import { isNonEmptyArray } from '../../../../shared/util';
 import { usePolygonConfig } from '../hooks/use-polygon-config.hook';
 import { PolygonDraw } from '../polygon-tool/polygon-draw.component';
 import {
@@ -138,27 +138,26 @@ export const MagneticLasso = () => {
             toast({ message: 'Failed to select the shape boundaries, could you please try again?', type: 'error' });
         },
 
-        onSuccess: runWhenTruthy((newPoints: Point[]) => {
-            if (isMounted && !isEmpty(newPoints)) {
+        onSuccess: (newPoints?: Point[]) => {
+            if (isMounted && isNonEmptyArray(newPoints)) {
                 setLassoSegment(newPoints);
                 setPointerLine(() => [...segments.flat(), ...lassoSegment]);
             }
-        }),
+        },
 
         onSettled: () => {
             isLoading.current = false;
         },
     });
 
-    const setBuildMapAndSegment = (predicate: (point: Point) => boolean) =>
-        runWhen(predicate)((point: Point) => {
-            setLassoSegment([]);
-            setSegments(addFirstPointOrNewOne(point));
+    const setBuildMapAndSegment = (point: Point) => {
+        setLassoSegment([]);
+        setSegments(addFirstPointOrNewOne(point));
 
-            isLoading.current = true;
-            buildMapPoint.current = point;
-            worker?.buildMap(point);
-        });
+        isLoading.current = true;
+        buildMapPoint.current = point;
+        worker?.buildMap(point);
+    };
 
     const onPointerDown = leftRightMouseButtonHandler(
         setPointFromEvent((point: Point): void => {
@@ -168,9 +167,9 @@ export const MagneticLasso = () => {
 
             isPointerDown.current = true;
 
-            const hasNotBuildMapOrIsDifferent = () => !buildMapPoint.current || !isEqual(buildMapPoint.current, point);
-
-            setBuildMapAndSegment(hasNotBuildMapOrIsDifferent)(point);
+            if (!buildMapPoint.current || !isEqual(buildMapPoint.current, point)) {
+                setBuildMapAndSegment(point);
+            }
         }),
         () => {
             setMode(PolygonMode.Eraser);
@@ -205,7 +204,9 @@ export const MagneticLasso = () => {
     const onPointerUp = setPointFromEvent((point: Point): void => {
         const canBeClosed = canPathBeClosed(point);
 
-        setBuildMapAndSegment(() => isFreeDrawingAndPathCannotBeClosed(canBeClosed))(point);
+        if (isFreeDrawingAndPathCannotBeClosed(canBeClosed)) {
+            setBuildMapAndSegment(point);
+        }
 
         if (canBeClosed) {
             complete();

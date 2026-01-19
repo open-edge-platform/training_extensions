@@ -3,8 +3,6 @@
 
 import type { PointerEvent, SVGProps } from 'react';
 
-import { isFunction, isNil, negate } from 'lodash-es';
-
 import { isLeftButton, isWheelButton } from '../../shared/buttons-utils';
 
 type OnPointerDown = SVGProps<SVGElement>['onPointerDown'];
@@ -34,17 +32,3 @@ export const DEFAULT_ANNOTATION_STYLES = {
     strokeDasharray: 0,
     strokeOpacity: 'var(--annotation-border-opacity, 1)',
 } satisfies SVGProps<SVGElement>;
-
-export const runWhen =
-    <T>(predicate: (...args: T[]) => boolean) =>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (whenTrueFn: (...args: any[]) => void, whenFalseFn?: (...args: any[]) => void) =>
-    (...args: T[]): void => {
-        if (predicate(...args)) {
-            whenTrueFn(...args);
-        } else {
-            isFunction(whenFalseFn) && whenFalseFn(...args);
-        }
-    };
-
-export const runWhenTruthy = runWhen(negate(isNil));
