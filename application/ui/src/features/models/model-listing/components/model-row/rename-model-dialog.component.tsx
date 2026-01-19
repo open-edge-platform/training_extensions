@@ -15,13 +15,10 @@ export const RenameModelDialog = ({ currentName, onRename, onClose }: RenameMode
     const [newName, setNewName] = useState(currentName);
 
     const isValid = newName.trim().length > 0;
+    const hasSameName = newName.trim() === currentName;
 
     const handleRename = () => {
-        if (isValid && newName !== currentName) {
-            onRename(newName.trim());
-        }
-
-        onClose();
+        onRename(newName.trim());
     };
 
     return (
@@ -35,7 +32,7 @@ export const RenameModelDialog = ({ currentName, onRename, onClose }: RenameMode
                 <Button variant='secondary' onPress={onClose}>
                     Cancel
                 </Button>
-                <Button variant='accent' onPress={handleRename} isDisabled={!isValid}>
+                <Button variant='accent' onPress={handleRename} isDisabled={!isValid || hasSameName}>
                     Rename
                 </Button>
             </ButtonGroup>

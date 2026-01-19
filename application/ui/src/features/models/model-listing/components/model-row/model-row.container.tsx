@@ -44,14 +44,21 @@ export const ModelRowContainer = ({ model }: ModelRowContainerProps) => {
     };
 
     const handleRename = (newName: string) => {
-        renameModelMutation?.mutate({
-            params: { path: { project_id: projectId, model_id: model.id } },
-            body: { name: newName },
-        });
+        renameModelMutation.mutate(
+            {
+                params: { path: { project_id: projectId, model_id: model.id } },
+                body: { name: newName },
+            },
+            {
+                onSuccess: () => {
+                    setIsRenameDialogOpen(false);
+                },
+            }
+        );
     };
 
     const handleDelete = () => {
-        deleteModelMutation?.mutate({ params: { path: { project_id: projectId, model_id: model.id } } });
+        deleteModelMutation.mutate({ params: { path: { project_id: projectId, model_id: model.id } } });
     };
 
     return (
