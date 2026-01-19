@@ -5,10 +5,6 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { $api } from '../../../../api/client';
 
-export const useGetModelArchitectures = () => {
-    return $api.useSuspenseQuery('get', '/api/model_architectures');
-};
-
 const useCurrentProject = () => {
     const projectId = useProjectIdentifier();
 
