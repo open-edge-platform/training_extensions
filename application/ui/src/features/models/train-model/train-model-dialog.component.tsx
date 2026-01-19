@@ -55,7 +55,6 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
                         </Flex>
                     ),
                     type: 'success',
-                    duration: Infinity,
                 });
             }
         );
