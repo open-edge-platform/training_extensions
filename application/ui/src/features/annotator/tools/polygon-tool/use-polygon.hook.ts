@@ -6,8 +6,8 @@ import { PointerEvent, useEffect, useRef } from 'react';
 import { getIntersectionPoint } from '@geti/smart-tools/utils';
 import { isEmpty } from 'lodash-es';
 
+import { Point, Polygon } from '../../../../shared/types';
 import { SetStateWrapper } from '../../../dataset/media-preview/primary-toolbar/undo-redo/use-undo-redo-state';
-import { Point, Polygon } from '../../types';
 import {
     deleteSegments,
     ERASER_FIELD_DEFAULT_RADIUS,

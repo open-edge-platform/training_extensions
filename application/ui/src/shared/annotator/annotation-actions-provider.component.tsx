@@ -10,9 +10,9 @@ import { v4 as uuid } from 'uuid';
 import { $api } from '../../api/client';
 import type { components } from '../../api/openapi-spec';
 import type { DatasetItem, Label } from '../../constants/shared-types';
-import type { Annotation, Shape } from '../../features/annotator/types';
 import { UndoRedoProvider } from '../../features/dataset/media-preview/primary-toolbar/undo-redo/undo-redo-provider.component';
 import useUndoRedoState from '../../features/dataset/media-preview/primary-toolbar/undo-redo/use-undo-redo-state';
+import type { Annotation, Shape } from '../types';
 
 type ServerAnnotation = components['schemas']['DatasetItemAnnotation-Input'];
 
