@@ -3,39 +3,45 @@
 
 import { useState } from 'react';
 
-import { Button, ButtonGroup, Content, Dialog, Divider, Heading, TextField } from '@geti/ui';
+import { Button, ButtonGroup, Content, Dialog, Divider, Form, Heading, TextField } from '@geti/ui';
 
 interface RenameModelDialogProps {
     currentName: string;
     onRename: (newName: string) => void;
     onClose: () => void;
+    isPending?: boolean;
 }
 
-export const RenameModelDialog = ({ currentName, onRename, onClose }: RenameModelDialogProps) => {
+export const RenameModelDialog = ({ currentName, onRename, onClose, isPending }: RenameModelDialogProps) => {
     const [newName, setNewName] = useState(currentName);
 
-    const isValid = newName.trim().length > 0;
     const hasSameName = newName.trim() === currentName;
 
-    const handleRename = () => {
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+
         onRename(newName.trim());
     };
 
     return (
         <Dialog>
             <Heading>Rename Model</Heading>
+
             <Divider />
+
             <Content>
-                <TextField label='Model name' value={newName} onChange={setNewName} width='100%' />
+                <Form onSubmit={handleSubmit} validationBehavior={'native'}>
+                    <TextField label='Model name' value={newName} onChange={setNewName} width='100%' isRequired />
+                    <ButtonGroup align={'end'} marginTop={'size-300'}>
+                        <Button variant='secondary' onPress={onClose}>
+                            Cancel
+                        </Button>
+                        <Button variant='accent' type='submit' isPending={isPending} isDisabled={hasSameName}>
+                            Rename
+                        </Button>
+                    </ButtonGroup>
+                </Form>
             </Content>
-            <ButtonGroup>
-                <Button variant='secondary' onPress={onClose}>
-                    Cancel
-                </Button>
-                <Button variant='accent' onPress={handleRename} isDisabled={!isValid || hasSameName}>
-                    Rename
-                </Button>
-            </ButtonGroup>
         </Dialog>
     );
 };

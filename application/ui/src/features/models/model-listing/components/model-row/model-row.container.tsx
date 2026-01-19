@@ -75,6 +75,7 @@ export const ModelRowContainer = ({ model }: ModelRowContainerProps) => {
                     <RenameModelDialog
                         currentName={model.name ?? ''}
                         onRename={handleRename}
+                        isPending={renameModelMutation.isPending}
                         onClose={() => setIsRenameDialogOpen(false)}
                     />
                 )}
