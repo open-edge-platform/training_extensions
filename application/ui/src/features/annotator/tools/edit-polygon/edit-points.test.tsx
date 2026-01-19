@@ -8,7 +8,7 @@ import { ReactNode } from 'react';
 import { ThemeProvider } from '@geti/ui/theme';
 import { fireEvent, render, screen } from '@testing-library/react';
 
-import { Polygon } from '../../types';
+import { Polygon } from '../../../../shared/types';
 import { EditPoints } from './edit-points.component';
 
 const renderEditPoints = (element: ReactNode) => {

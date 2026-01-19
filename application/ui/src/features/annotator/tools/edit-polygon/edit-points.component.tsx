@@ -3,10 +3,10 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-import { ResizeAnchor } from '@geti/smart-tools';
 import { isEmpty } from 'lodash-es';
 
 import { useEventListener } from '../../../../hooks/event-listener.hook';
+import { ResizeAnchor } from '../../../../shared/annotator/resize-anchor.component';
 import { isKeyboardDelete } from '../utils';
 import { ResizeAnchorsGhostPoint } from './resize-anchors-ghost-point.component';
 import { EditPointsProps, selectAnchorPointLabel } from './utils';
@@ -76,7 +76,7 @@ export const EditPoints = ({ zoom, shape, addPoint, onComplete, moveAnchorTo, re
                 return (
                     <g
                         key={idx}
-                        onClick={(event) => {
+                        onPointerDown={(event) => {
                             event.stopPropagation();
                             selectAnchorPoint(idx, event.shiftKey);
                         }}
@@ -91,7 +91,6 @@ export const EditPoints = ({ zoom, shape, addPoint, onComplete, moveAnchorTo, re
                         <ResizeAnchor
                             {...point}
                             zoom={zoom}
-                            stroke='transparent'
                             onComplete={onComplete}
                             fill={isSelected ? 'var(--energy-blue)' : undefined}
                             label={`Resize polygon ${idx} anchor`}

@@ -3,7 +3,7 @@
 
 import { useState, type PointerEvent, type RefObject } from 'react';
 
-import type { Point } from '../../../types';
+import type { Point } from '../../../../../shared/types';
 import { getRelativePoint } from './utils';
 
 interface UseCrosshair {

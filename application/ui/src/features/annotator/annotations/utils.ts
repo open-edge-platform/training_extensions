@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import type { Annotation, Point } from '../types';
+import type { Annotation, Point } from '../../../shared/types';
 
 export const getFormattedPoints = (points: Point[]): string => {
     return points.map(({ x, y }) => `${x},${y}`).join(' ');

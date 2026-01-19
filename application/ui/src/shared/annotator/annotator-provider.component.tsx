@@ -8,7 +8,7 @@ import { useProjectLabels } from 'hooks/use-project-labels.hook';
 import type { DatasetItem, Label } from '../../constants/shared-types';
 import { useLoadImageQuery } from '../../features/annotator/hooks/use-load-image-query.hook';
 import type { ToolType } from '../../features/annotator/tools/interface';
-import type { RegionOfInterest } from '../../features/annotator/types';
+import type { RegionOfInterest } from '../types';
 
 type AnnotatorContext = {
     // Tools

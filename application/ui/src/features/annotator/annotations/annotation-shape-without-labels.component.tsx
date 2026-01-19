@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useAnnotationVisibility } from '../../../shared/annotator/annotation-visibility-provider.component';
-import { Annotation } from '../types';
+import { Annotation } from '../../../shared/types';
 import { AnnotationShape } from './annotation-shape.component';
 
 interface AnnotationShapeWithoutLabelsProps {
