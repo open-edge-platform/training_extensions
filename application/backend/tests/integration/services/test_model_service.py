@@ -61,6 +61,7 @@ class TestModelServiceIntegration:
         dataset_revision = DatasetRevisionDB(
             id=str(dataset_revision_id),
             project_id=str(fxt_project_id),
+            name="Test Dataset",
             files_deleted=False,
         )
         db_session.add(dataset_revision)
