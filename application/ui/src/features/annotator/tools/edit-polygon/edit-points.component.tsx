@@ -80,6 +80,9 @@ export const EditPoints = ({ zoom, shape, addPoint, onComplete, moveAnchorTo, re
                             event.stopPropagation();
                             selectAnchorPoint(idx, event.shiftKey);
                         }}
+                        onClick={(event) => {
+                            event.stopPropagation();
+                        }}
                         aria-label={label}
                         aria-selected={isSelected}
                         onContextMenu={(event) => {

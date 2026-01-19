@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { isPolygonValid } from '@geti/smart-tools/utils';
 
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
+import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
 import { Annotation, Polygon } from '../../../../shared/types';
 import { AnnotationShapeRenderer } from '../../annotations/annotation-shape-renderer.component';
 import { TranslateShape } from '../edit-bounding-box/translate-shape.component';
@@ -14,12 +15,11 @@ import { EditPoints } from './edit-points.component';
 
 interface EditPolygonProps {
     zoom: number;
-    width: number;
-    height: number;
     annotation: Annotation & { shape: { type: 'polygon' } };
 }
 
-export const EditPolygon = ({ annotation, width, height, zoom }: EditPolygonProps) => {
+export const EditPolygon = ({ annotation, zoom }: EditPolygonProps) => {
+    const { roi } = useAnnotator();
     const isAddPoint = useRef(false);
     const [shape, setShape] = useState(annotation.shape);
     const { updateAnnotations, deleteAnnotations } = useAnnotationActions();
@@ -30,7 +30,6 @@ export const EditPolygon = ({ annotation, width, height, zoom }: EditPolygonProp
     // a new point is considered "in-between," and so it gets removed,
     // to avoid losing points we need not to use it when adding new ones
     const onComplete = (newShape: Polygon) => {
-        const roi = { x: 0, y: 0, width, height };
         const finalShape = isAddPoint.current ? newShape : removeOffLimitPointsPolygon(newShape, roi);
 
         if (isPolygonValid({ shapeType: 'polygon', points: finalShape.points })) {

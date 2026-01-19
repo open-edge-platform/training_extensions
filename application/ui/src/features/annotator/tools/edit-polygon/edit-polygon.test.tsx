@@ -15,6 +15,13 @@ import { EditPolygon } from './edit-polygon.component';
 
 const mockROI = { x: 0, y: 0, width: 1000, height: 1000 };
 
+vi.mock('../../../../shared/annotator/annotator-provider.component', async (importActual) => {
+    const actual = await importActual<typeof import('../../../../shared/annotator/annotator-provider.component')>();
+    return {
+        ...actual,
+        useAnnotator: vi.fn(() => ({ roi: mockROI })),
+    };
+});
 vi.mock('../utils', async (importActual) => {
     const actual = await importActual<typeof import('../utils')>();
     return {
@@ -67,10 +74,19 @@ const renderApp = async (
     return render(
         <AnnotationVisibilityProvider>
             <CanvasSettingsProvider>
-                <EditPolygon annotation={annotation} zoom={1} width={mockROI.width} height={mockROI.height} />
+                <EditPolygon annotation={annotation} zoom={1} />
             </CanvasSettingsProvider>
         </AnnotationVisibilityProvider>
     );
+    /* return render(
+        <AnnotatorProvider mediaItem={getMockedMediaItem({})}>
+            <AnnotationVisibilityProvider>
+                <CanvasSettingsProvider>
+                    <EditPolygon annotation={annotation} zoom={1} />
+                </CanvasSettingsProvider>
+            </AnnotationVisibilityProvider>
+        </AnnotatorProvider>
+    ); */
 };
 
 describe('EditPolygonTool', () => {
@@ -255,7 +271,7 @@ describe('EditPolygonTool', () => {
             await renderApp(mockAnnotation);
 
             const pointToRemove = screen.getByLabelText('Click to select point 0');
-            fireEvent.click(pointToRemove);
+            fireEvent.pointerDown(pointToRemove);
 
             expect(pointToRemove).toHaveAttribute('aria-selected', 'true');
             fireEvent.keyDown(document.body, { key: 'Delete', keyCode: 46, code: 'Delete' });
@@ -282,16 +298,16 @@ describe('EditPolygonTool', () => {
             const pointToRemove1 = screen.getByLabelText('Click to select point 1');
             const pointToRemove2 = screen.getByLabelText('Click to select point 2');
 
-            fireEvent.click(pointToRemove0);
+            fireEvent.pointerDown(pointToRemove0);
             expect(pointToRemove0).toHaveAttribute('aria-selected', 'true');
 
-            fireEvent.click(pointToRemove1);
+            fireEvent.pointerDown(pointToRemove1);
             expect(pointToRemove0).toHaveAttribute('aria-selected', 'false');
             expect(pointToRemove1).toHaveAttribute('aria-selected', 'true');
 
-            fireEvent.click(pointToRemove0, { shiftKey: true });
-            fireEvent.click(pointToRemove1, { shiftKey: true });
-            fireEvent.click(pointToRemove2, { shiftKey: true });
+            fireEvent.pointerDown(pointToRemove0, { shiftKey: true });
+            fireEvent.pointerDown(pointToRemove1, { shiftKey: true });
+            fireEvent.pointerDown(pointToRemove2, { shiftKey: true });
 
             expect(pointToRemove0).toHaveAttribute('aria-selected', 'true');
             expect(pointToRemove1).toHaveAttribute('aria-selected', 'false');
@@ -317,14 +333,14 @@ describe('EditPolygonTool', () => {
             await renderApp(annotation);
 
             const pointToRemove = screen.getByLabelText('Click to select point 0');
-            fireEvent.click(pointToRemove);
+            fireEvent.pointerDown(pointToRemove);
             expect(pointToRemove).toHaveAttribute('aria-selected', 'true');
 
             const otherPointToRemove = screen.getByLabelText('Shift click to select point 1');
-            fireEvent.click(otherPointToRemove, { shiftKey: true });
+            fireEvent.pointerDown(otherPointToRemove, { shiftKey: true });
             expect(otherPointToRemove).toHaveAttribute('aria-selected', 'true');
 
-            fireEvent.click(screen.getByLabelText('Shift click to select point 2'), { shiftKey: true });
+            fireEvent.pointerDown(screen.getByLabelText('Shift click to select point 2'), { shiftKey: true });
 
             fireEvent.keyDown(document.body, { key: 'Delete', keyCode: 46, code: 'Delete' });
 

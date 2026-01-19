@@ -47,7 +47,7 @@ describe('EditPoints', () => {
         const point = screen.getByLabelText(`Click to select point ${pointIndex}`);
         expect(point).toHaveAttribute('aria-selected', 'false');
 
-        fireEvent.click(point);
+        fireEvent.pointerDown(point);
 
         expect(point).toHaveAttribute('aria-selected', 'true');
 
@@ -75,8 +75,8 @@ describe('EditPoints', () => {
         expect(pointOne).toHaveAttribute('aria-selected', 'false');
         expect(pointTwo).toHaveAttribute('aria-selected', 'false');
 
-        fireEvent.click(pointOne, { shiftKey: true });
-        fireEvent.click(pointTwo, { shiftKey: true });
+        fireEvent.pointerDown(pointOne, { shiftKey: true });
+        fireEvent.pointerDown(pointTwo, { shiftKey: true });
 
         expect(pointOne).toHaveAttribute('aria-selected', 'true');
         expect(pointTwo).toHaveAttribute('aria-selected', 'true');

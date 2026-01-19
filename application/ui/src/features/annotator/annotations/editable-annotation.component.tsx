@@ -11,12 +11,10 @@ import { useAnnotation } from './annotation-context';
 import { isPolygon, isRectangle } from './utils';
 
 interface EditAnnotationProps {
-    width: number;
-    height: number;
     children: ReactNode;
 }
 
-export const EditableAnnotation = ({ width, height, children }: EditAnnotationProps) => {
+export const EditableAnnotation = ({ children }: EditAnnotationProps) => {
     const { scale } = useZoom();
     const annotation = useAnnotation();
     const { selectedAnnotations } = useSelectedAnnotations();
@@ -25,7 +23,7 @@ export const EditableAnnotation = ({ width, height, children }: EditAnnotationPr
 
     if (isSelected && selectedAnnotations.size === 1) {
         if (isPolygon(annotation)) {
-            return <EditPolygon annotation={annotation} zoom={scale} width={width} height={height} />;
+            return <EditPolygon annotation={annotation} zoom={scale} />;
         }
 
         if (isRectangle(annotation)) {
