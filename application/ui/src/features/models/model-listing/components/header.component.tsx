@@ -5,7 +5,7 @@ import { Flex, Grid, Item, Picker, Text, ToggleButton } from '@geti/ui';
 
 import { useModelListing } from '../provider/model-listing-provider';
 import type { GroupByMode, SortBy } from '../types';
-import { ExpandableSearch } from './expandable-search.component';
+import { ExpandableSearch } from './expandable-search/expandable-search.component';
 
 export const Header = () => {
     const { groupBy, onGroupByChange, onSortChange, onPinActiveToggle, searchBy, onSearchChange } = useModelListing();

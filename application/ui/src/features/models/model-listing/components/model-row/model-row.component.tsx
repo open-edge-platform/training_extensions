@@ -1,27 +1,32 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, dimensionValue, Flex, Grid, Item, Menu, MenuTrigger, Text } from '@geti/ui';
+import { ActionButton, dimensionValue, Flex, Grid, Item, Key, Menu, MenuTrigger, Text } from '@geti/ui';
 import { MoreMenu } from '@geti/ui/icons';
 
-import { SchemaModelView } from '../../../../api/openapi-spec';
-import { useGetModel } from '../../hooks/api/use-get-model.hook';
-import { GRID_COLUMNS } from '../constants';
-import { AccuracyIndicator } from '../model-variants/accuracy-indicator.component';
-import { useModelListing } from '../provider/model-listing-provider';
-import { formatTrainingDateTime } from '../utils/date-formatting';
-import { ActiveModelTag } from './active-model-tag.component';
-import { ParentRevisionModel } from './parent-revision-model.component';
+import { SchemaModelView } from '../../../../../api/openapi-spec';
+import { GRID_COLUMNS } from '../../constants';
+import { AccuracyIndicator } from '../../model-variants/accuracy-indicator.component';
+import { formatTrainingDateTime } from '../../utils/date-formatting';
+import { ActiveModelTag } from '../active-model-tag.component';
+import { ParentRevisionModel } from '../parent-revision-model.component';
 
-interface ModelRowProps {
+type ModelRowProps = {
     model: SchemaModelView;
-}
+    activeModelId?: string;
+    parentRevisionModel?: SchemaModelView;
+    onExpandModel: (modelId: string) => void;
+    onModelAction: (key: Key) => void;
+};
 
-export const ModelRow = ({ model }: ModelRowProps) => {
-    const { activeModelId, onExpandModel } = useModelListing();
-
+export const ModelRow = ({
+    model,
+    activeModelId,
+    parentRevisionModel,
+    onExpandModel,
+    onModelAction,
+}: ModelRowProps) => {
     const trainingEndTime = model.training_info.end_time;
-    const parentRevisionModel = useGetModel(model.parent_revision);
 
     return (
         <Grid columns={GRID_COLUMNS} alignItems={'center'} width={'100%'}>
@@ -38,10 +43,10 @@ export const ModelRow = ({ model }: ModelRowProps) => {
                         color: 'var(--spectrum-global-color-gray-700)',
                     }}
                 >
-                    {parentRevisionModel?.data ? (
+                    {parentRevisionModel ? (
                         <ParentRevisionModel
-                            id={parentRevisionModel.data.id}
-                            name={parentRevisionModel.data.name}
+                            id={parentRevisionModel.id}
+                            name={parentRevisionModel.name}
                             onExpandModel={onExpandModel}
                         />
                     ) : null}
@@ -62,7 +67,8 @@ export const ModelRow = ({ model }: ModelRowProps) => {
                 <ActionButton isQuiet>
                     <MoreMenu />
                 </ActionButton>
-                <Menu>
+                <Menu onAction={onModelAction}>
+                    <Item key='rename'>Rename</Item>
                     <Item key='delete'>Delete</Item>
                     <Item key='export'>Export</Item>
                 </Menu>
