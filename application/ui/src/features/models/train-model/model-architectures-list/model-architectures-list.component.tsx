@@ -6,6 +6,8 @@ import { ReactNode, useState } from 'react';
 import { Button, Flex, Grid, RadioGroup } from '@geti/ui';
 
 import { type ModelArchitecture as ModelArchitectureType } from '../../../../constants/shared-types';
+import { SortModelArchitectures } from '../sort-model-architectures/sort-model-architectures.component';
+import { SORT_OPTIONS, SORTING_HANDLERS, SortingOptions } from '../sort-model-architectures/utils';
 import { ModelArchitectureCard } from './model-architecture/model-architecture.component';
 
 import styles from './model-architectures-list.module.scss';
@@ -83,22 +85,28 @@ const AllModelArchitectures = ({
     onSelectedModelArchitectureIdChange,
     selectedModelArchitectureId,
 }: AllModelArchitecturesProps) => {
+    const [sortBy, setSortBy] = useState<SortingOptions>(SortingOptions.RELEVANCE_ASC);
+    const sortedModelArchitectures = SORTING_HANDLERS[sortBy](modelArchitectures);
+
     return (
-        <ModelArchitecturesList
-            selectedModelArchitectureId={selectedModelArchitectureId}
-            onSelectedModelArchitectureIdChange={onSelectedModelArchitectureIdChange}
-            ariaLabel={'Recommended model architectures'}
-        >
-            {modelArchitectures.map((modelArchitecture) => (
-                <ModelArchitecture
-                    key={modelArchitecture.id}
-                    activeModelArchitectureId={activeModelArchitectureId}
-                    modelArchitecture={modelArchitecture}
-                    selectedModelArchitectureId={selectedModelArchitectureId}
-                    onSelectedModelArchitectureIdChange={onSelectedModelArchitectureIdChange}
-                />
-            ))}
-        </ModelArchitecturesList>
+        <Flex direction={'column'} gap={'size-200'}>
+            <SortModelArchitectures sortBy={sortBy} onSort={setSortBy} items={SORT_OPTIONS} />
+            <ModelArchitecturesList
+                selectedModelArchitectureId={selectedModelArchitectureId}
+                onSelectedModelArchitectureIdChange={onSelectedModelArchitectureIdChange}
+                ariaLabel={'ALL model architectures'}
+            >
+                {sortedModelArchitectures.map((modelArchitecture) => (
+                    <ModelArchitecture
+                        key={modelArchitecture.id}
+                        activeModelArchitectureId={activeModelArchitectureId}
+                        modelArchitecture={modelArchitecture}
+                        selectedModelArchitectureId={selectedModelArchitectureId}
+                        onSelectedModelArchitectureIdChange={onSelectedModelArchitectureIdChange}
+                    />
+                ))}
+            </ModelArchitecturesList>
+        </Flex>
     );
 };
 
