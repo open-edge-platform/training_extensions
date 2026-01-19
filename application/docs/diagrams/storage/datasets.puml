@@ -11,18 +11,16 @@ class media << (T,#FFAAAA) >> {
   width : INTEGER
   height : INTEGER
   size : INTEGER
-}
-
-class videos << (T,#FFAAAA) >> {
-  id : UUID
-  type : TEXT
+  --
   fps : INTEGER
   frames_count : INTEGER
+  --
+  source_id : UUID
 }
 
 class video_frames << (T,#FFAAAA) >> {
-  id : UUID
-  type : TEXT
+  media_id : UUID
+  video_id : UUID
   timestamp : INTEGER
 }
 
@@ -38,7 +36,6 @@ class dataset_items << (T,#FFAAAA) >> {
   annotation_data : JSON
   user_reviewed : BOOLEAN
   prediction_model_id : UUID
-  source_id : UUID
   subset : TEXT
   subset_assigned_at : TIMESTAMP
 }
@@ -101,11 +98,11 @@ projects ||---o{ media
 
 dataset_items ||---|| media
 
-media ||---o| videos
+
 media ||---o| video_frames
+media ||---o{ video_frames
 media ||---|| MediaBinary
 media ||---|| MediaThumbnail
-videos ||---o{ video_frames
 
 class model_revisions << (T,#CCCCCC) >> {
   id : UUID

@@ -71,18 +71,19 @@ table(media) {
   width : INTEGER NOT NULL
   height : INTEGER NOT NULL
   size : INTEGER NOT NULL
-}
-
-table(videos) {
-  fk(media_id) : UUID NOT NULL
   --
   'Video related details
-  fps : INTEGER NOT NULL
-  frames_count : INTEGER NOT NULL
+  fps : INTEGER NULLABLE
+  frames_count : INTEGER NULLABLE
+  --
+  ' Source details
+  source_id : UUID
 }
 
 table(video_frames) {
+  ' Reference to a media record with type 'video_frame' containing all the attributes and metadata of the video frame itself
   fk(media_id) : UUID NOT NULL
+  ' Reference to the video media record this frame belongs to with certain timestamp
   fk(video_id) : UUID NOT NULL
   --
   'Video frame related details
@@ -104,9 +105,6 @@ table(dataset_items) {
   annotation_data : JSON
   user_reviewed : BOOLEAN NOT NULL
   prediction_model_id : UUID
-  --
-  ' Source details
-  source_id : UUID
   --
   'ML details
   subset : TEXT NOT NULL
@@ -234,10 +232,10 @@ model_revisions ||---o| ModelTrainingMetrics
 
 
 media ||---o| dataset_items
-media ||---o| videos
 media ||---o| video_frames
+media ||---o{ video_frames
 media ||---|| MediaBinary
 media ||---|| MediaThumbnail
-videos ||---o{ video_frames
+media ||---o| sources
 
 @enduml

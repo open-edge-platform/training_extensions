@@ -17,8 +17,8 @@ elements, edit annotations and other attributes.
 
 In Geti Tune, a _media_ refers to the actual image or video file that contains visual content. Media files are the raw
 data that the system processes, analyzes, and displays. They can be in various formats such as JPEG, PNG, MP4, etc.
-Video frame is also considered a media and is stored as an individual image file and cannot be annotated.
-Video itself cannot be annotated, only its frames can.
+Video frame is also considered a media and is stored as an individual image file and can be annotated.
+Video itself cannot be annotated, only its frames can. Media can have a reference to its source, such as a camera for example.
 
 A _dataset item_, on the other hand, is a more comprehensive entity that includes not only the media itself but also
 additional metadata and annotations associated with that media. Dataset items are the units of data that are used
@@ -26,7 +26,6 @@ within the context of a dataset for machine learning tasks. Each dataset item ty
 - The media file (image or video frame). Video CANNOT have a dataset item associated with it.
 - Annotations: Labels, bounding boxes, segmentation masks, or other forms of annotations that describe the content of the media.
 - Metadata: Additional information such as timestamps, source information, tags, and other relevant attributes.
-- Source reference: Information about where the media originated from (optionally).
 - Subset assignment: Information about whether the item belongs to the training, validation, or testing subset of the dataset.
 - Other relevant properties that may be needed for dataset management and processing.
 
@@ -109,11 +108,9 @@ The database saves the relevant information in the following tables:
 
 - `media`: contains all media records, for images, videos & video frames. Each record is identified by a unique id
   and contains metadata about the media (filename, format, size, shape, etc.).
-- `videos`: contains one record for each video, identified by a media id. Video share the id with corresponding `media` record. 
-  Each record contains metadata about the video (fps, frame count) in addition to base media metadata.
 - `video_frames`: contains one record for each video frame, identified by a media id. Video frame share the id with corresponding `media` record. 
-  Each record contains metadata about the video frame (timestamp) in addition to base media metadata.
-  Additionally, it has a reference to the source video (video media id) it was extracted from.
+  Each record contains metadata about the video frame (timestamp).
+  Additionally, it has a reference to the source video (video_id) it was extracted from.
 - `dataset_items`: contains one record for each dataset item, identified by a unique id. The record contains
   metadata about the media (filename, format, size, shape), the annotation data in JSON format (more details
   [here](#annotations-as-json) and information about the subset assignment (training, validation or testing).
