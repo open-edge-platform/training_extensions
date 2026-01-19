@@ -14,7 +14,7 @@ interface ModelListingContextValue {
     sortBy: SortBy;
     pinActive: boolean;
     expandedModelIds: Set<string>;
-    activeModelId: string | undefined;
+    activeModelArchitectureId: string | undefined;
     groupedModels: GroupedModels[];
     searchBy: string;
 
@@ -39,7 +39,7 @@ export const ModelListingProvider = ({ children }: ModelListingProviderProps) =>
     const [expandedModelIds, setExpandedModelIds] = useState<Set<string>>(new Set());
     const [searchBy, setSearchBy] = useState<string>('');
 
-    const activeModelId = useGetActiveModelArchitectureId();
+    const activeModelArchitectureId = useGetActiveModelArchitectureId();
     const { data: models } = useGetModels();
     const groupedModels = useGroupedModels(models, { groupBy, sortBy, pinActive, searchBy });
 
@@ -78,7 +78,7 @@ export const ModelListingProvider = ({ children }: ModelListingProviderProps) =>
         sortBy,
         pinActive,
         expandedModelIds,
-        activeModelId,
+        activeModelArchitectureId,
         groupedModels,
         searchBy,
         onGroupByChange,

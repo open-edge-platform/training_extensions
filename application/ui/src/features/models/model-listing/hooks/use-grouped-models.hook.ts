@@ -22,7 +22,7 @@ type UseGroupedModelsOptions = {
 // - Pinning the active model to the top of its group if the pinActive option is enabled
 export const useGroupedModels = (models: Model[] | undefined, options: UseGroupedModelsOptions): GroupedModels[] => {
     const { groupBy, sortBy, pinActive, searchBy } = options;
-    const activeModelId = useGetActiveModelArchitectureId();
+    const activeModelArchitectureId = useGetActiveModelArchitectureId();
 
     return useMemo(() => {
         if (!models) return [];
@@ -30,8 +30,8 @@ export const useGroupedModels = (models: Model[] | undefined, options: UseGroupe
         const filtered = filterBySearch(models, searchBy);
         const grouped = groupModels(filtered, groupBy);
         const sorted = sortGroupedModels(grouped, sortBy);
-        const pinned = pinModel(sorted, pinActive ? activeModelId : undefined);
+        const pinned = pinModel(sorted, pinActive ? activeModelArchitectureId : undefined);
 
         return removeEmpty(pinned);
-    }, [models, groupBy, sortBy, pinActive, activeModelId, searchBy]);
+    }, [models, groupBy, sortBy, pinActive, activeModelArchitectureId, searchBy]);
 };

@@ -13,7 +13,7 @@ import { ParentRevisionModel } from '../parent-revision-model.component';
 
 type ModelRowProps = {
     model: SchemaModelView;
-    activeModelId?: string;
+    activeModelArchitectureId?: string;
     parentRevisionModel?: SchemaModelView;
     onExpandModel: (modelId: string) => void;
     onModelAction: (key: Key) => void;
@@ -21,7 +21,7 @@ type ModelRowProps = {
 
 export const ModelRow = ({
     model,
-    activeModelId,
+    activeModelArchitectureId,
     parentRevisionModel,
     onExpandModel,
     onModelAction,
@@ -35,7 +35,7 @@ export const ModelRow = ({
                     <Text UNSAFE_style={{ fontSize: dimensionValue('font-size-200') }}>
                         {model.name ?? 'Unnamed Model'}
                     </Text>
-                    {model.id === activeModelId && <ActiveModelTag />}
+                    {model.id === activeModelArchitectureId && <ActiveModelTag />}
                 </Flex>
                 <Text
                     UNSAFE_style={{
