@@ -3,11 +3,7 @@
 
 import { $api } from '../../../../api/client';
 
-export const useDeleteModel = (modelId: string | null | undefined) => {
-    if (!modelId) {
-        return undefined;
-    }
-
+export const useDeleteModel = () => {
     return $api.useMutation('delete', '/api/projects/{project_id}/models/{model_id}', {
         meta: {
             invalidateQueries: [['get', '/api/projects/{project_id}/models']],

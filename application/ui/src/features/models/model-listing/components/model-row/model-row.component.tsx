@@ -16,7 +16,7 @@ type ModelRowProps = {
     activeModelId?: string;
     parentRevisionModel?: SchemaModelView;
     onExpandModel: (modelId: string) => void;
-    handleModelAction: (key: Key) => void;
+    onModelAction: (key: Key) => void;
 };
 
 export const ModelRow = ({
@@ -24,7 +24,7 @@ export const ModelRow = ({
     activeModelId,
     parentRevisionModel,
     onExpandModel,
-    handleModelAction,
+    onModelAction,
 }: ModelRowProps) => {
     const trainingEndTime = model.training_info.end_time;
 
@@ -67,7 +67,7 @@ export const ModelRow = ({
                 <ActionButton isQuiet>
                     <MoreMenu />
                 </ActionButton>
-                <Menu onAction={handleModelAction}>
+                <Menu onAction={onModelAction}>
                     <Item key='rename'>Rename</Item>
                     <Item key='delete'>Delete</Item>
                     <Item key='export'>Export</Item>

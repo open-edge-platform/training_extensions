@@ -28,8 +28,8 @@ export const ModelRowContainer = ({ model }: ModelRowContainerProps) => {
     const projectId = useProjectIdentifier();
     const { activeModelId, onExpandModel } = useModelListing();
     const parentRevisionModel = useGetModel(model.parent_revision);
-    const deleteModelMutation = useDeleteModel(model.id);
-    const renameModelMutation = useRenameModel(model.id);
+    const deleteModelMutation = useDeleteModel();
+    const renameModelMutation = useRenameModel();
     const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
@@ -61,7 +61,7 @@ export const ModelRowContainer = ({ model }: ModelRowContainerProps) => {
                 activeModelId={activeModelId}
                 parentRevisionModel={parentRevisionModel?.data}
                 onExpandModel={onExpandModel}
-                handleModelAction={handleAction}
+                onModelAction={handleAction}
             />
             <DialogContainer onDismiss={() => setIsRenameDialogOpen(false)}>
                 {isRenameDialogOpen && (

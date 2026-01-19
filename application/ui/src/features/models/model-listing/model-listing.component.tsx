@@ -20,7 +20,9 @@ export const ModelListing = () => {
             UNSAFE_style={{ padding: 'var(--spectrum-global-dimension-size-300)' }}
         >
             <Header />
+
             <Divider size={'S'} marginY={'size-300'} />
+
             {hasNoResults ? (
                 <Flex direction={'column'} flex={1}>
                     <EmptySearchResults />
