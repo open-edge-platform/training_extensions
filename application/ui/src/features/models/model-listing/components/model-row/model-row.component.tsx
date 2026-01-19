@@ -15,8 +15,8 @@ type ModelRowProps = {
     model: SchemaModelView;
     activeModelArchitectureId?: string;
     parentRevisionModel?: SchemaModelView;
-    onExpandModel: (modelId: string) => void;
-    onModelAction: (key: Key) => void;
+    onExpandModel?: (modelId: string) => void;
+    onModelAction?: (key: Key) => void;
 };
 
 export const ModelRow = ({
@@ -63,16 +63,18 @@ export const ModelRow = ({
 
             <AccuracyIndicator accuracy={72} />
 
-            <MenuTrigger>
-                <ActionButton isQuiet>
-                    <MoreMenu />
-                </ActionButton>
-                <Menu onAction={onModelAction}>
-                    <Item key='rename'>Rename</Item>
-                    <Item key='delete'>Delete</Item>
-                    <Item key='export'>Export</Item>
-                </Menu>
-            </MenuTrigger>
+            {onModelAction ? (
+                <MenuTrigger>
+                    <ActionButton isQuiet>
+                        <MoreMenu />
+                    </ActionButton>
+                    <Menu onAction={onModelAction}>
+                        <Item key='rename'>Rename</Item>
+                        <Item key='delete'>Delete</Item>
+                        <Item key='export'>Export</Item>
+                    </Menu>
+                </MenuTrigger>
+            ) : null}
         </Grid>
     );
 };
