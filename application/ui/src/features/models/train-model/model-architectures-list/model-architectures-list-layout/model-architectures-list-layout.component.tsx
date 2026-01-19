@@ -7,12 +7,12 @@ import { Grid, RadioGroup } from '@geti/ui';
 
 import styles from './model-architectures-list-layout.module.scss';
 
-interface ModelArchitecturesListLayoutProps {
+type ModelArchitecturesListLayoutProps = {
     selectedModelArchitectureId: string | null;
     onSelectedModelArchitectureIdChange: (modelArchitectureId: string | null) => void;
     ariaLabel: string;
     children: ReactNode;
-}
+};
 
 export const ModelArchitecturesListLayout = ({
     selectedModelArchitectureId,

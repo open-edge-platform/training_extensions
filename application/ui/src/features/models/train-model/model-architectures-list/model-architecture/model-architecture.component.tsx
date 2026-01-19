@@ -72,10 +72,10 @@ const ModelArchitectureName = () => {
     );
 };
 
-interface ModelArchitectureContextProps {
+type ModelArchitectureContextProps = {
     isSelected: boolean;
     modelArchitecture: ModelArchitectureType;
-}
+};
 
 const ModelArchitectureContext = createContext<ModelArchitectureContextProps | null>(null);
 
@@ -89,13 +89,13 @@ export const useModelArchitecture = () => {
     return context;
 };
 
-interface ModelArchitectureProps {
+type ModelArchitectureProps = {
     isSelected: boolean;
     isCompact?: boolean;
     children: ReactNode;
     onSelect: () => void;
     modelArchitecture: ModelArchitectureType;
-}
+};
 
 export const ModelArchitectureCard = ({
     isSelected,

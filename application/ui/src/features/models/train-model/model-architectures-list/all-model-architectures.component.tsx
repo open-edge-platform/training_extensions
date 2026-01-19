@@ -11,12 +11,12 @@ import { SORT_OPTIONS, SORTING_HANDLERS, SortingOptions } from '../sort-model-ar
 import { ModelArchitectureCard } from './model-architecture/model-architecture.component';
 import { ModelArchitecturesListLayout } from './model-architectures-list-layout/model-architectures-list-layout.component';
 
-interface ModelArchitectureProps {
+type ModelArchitectureProps = {
     activeModelArchitectureId: string | undefined;
     modelArchitecture: ModelArchitectureType;
     selectedModelArchitectureId: string | null;
     onSelectedModelArchitectureIdChange: (modelArchitectureId: string | null) => void;
-}
+};
 
 const ModelArchitecture = ({
     activeModelArchitectureId,
@@ -46,12 +46,12 @@ const ModelArchitecture = ({
     );
 };
 
-interface AllModelArchitecturesProps {
+type AllModelArchitecturesProps = {
     activeModelArchitectureId: string | undefined;
     modelArchitectures: ModelArchitectureType[];
     selectedModelArchitectureId: string | null;
     onSelectedModelArchitectureIdChange: (modelArchitectureId: string | null) => void;
-}
+};
 
 export const AllModelArchitectures = ({
     activeModelArchitectureId,

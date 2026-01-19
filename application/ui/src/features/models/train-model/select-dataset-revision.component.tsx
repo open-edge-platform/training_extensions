@@ -5,11 +5,11 @@ import { Item, Picker } from '@geti/ui';
 
 import { DatasetRevision } from '../../../constants/shared-types';
 
-interface SelectDatasetRevisionProps {
+type SelectDatasetRevisionProps = {
     datasetRevisions: DatasetRevision[];
     selectedDatasetRevision: string | null;
     onSelectedDatasetRevisionChange: (datasetRevision: string) => void;
-}
+};
 
 export const SelectDatasetRevision = ({
     datasetRevisions,

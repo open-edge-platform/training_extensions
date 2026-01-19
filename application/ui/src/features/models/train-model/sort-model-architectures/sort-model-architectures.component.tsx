@@ -8,24 +8,24 @@ import { SortingOptions } from './utils';
 
 import styles from './sort-model-architectures.module.scss';
 
-interface SortItemType {
+type SortItemType = {
     key: string;
     name: string;
-}
+};
 
-interface SortWidgetProps {
+type SortWidgetProps = {
     sortBy: SortingOptions;
     onSort: (option: SortingOptions) => void;
     items: SortItemType[][];
     ariaLabel?: string;
-}
+};
 
-interface SortItemProps {
+type SortItemProps = {
     item: {
         key: string;
         name: string;
     };
-}
+};
 
 const SortModelArchitectureItem = ({ item }: SortItemProps) => {
     return (

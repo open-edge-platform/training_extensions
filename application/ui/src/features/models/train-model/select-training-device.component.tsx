@@ -5,11 +5,11 @@ import { Item, Picker } from '@geti/ui';
 
 import type { DeviceType, TrainingDevices } from '../../../constants/shared-types';
 
-interface SelectTrainingDeviceProps {
+type SelectTrainingDeviceProps = {
     trainingDevices: TrainingDevices[];
     selectedTrainingDevice: DeviceType | null;
     onSelectedTrainingDeviceChange: (trainingDeviceId: DeviceType | null) => void;
-}
+};
 
 export const SelectTrainingDevice = ({
     trainingDevices,

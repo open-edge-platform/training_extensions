@@ -9,9 +9,9 @@ import { useTrainModelMutation } from '../hooks/api/use-train-model-mutation';
 import { TrainModelDialogContent } from './train-model-dialog-content';
 import { useTrainModel } from './use-train-model';
 
-interface TrainModelDialogProps {
+type TrainModelDialogProps = {
     onClose: () => void;
-}
+};
 
 export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
     const {

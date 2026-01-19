@@ -13,7 +13,7 @@ import { ModelArchitecturesList } from './model-architectures-list/model-archite
 import { SelectDatasetRevision } from './select-dataset-revision.component';
 import { SelectTrainingDevice } from './select-training-device.component';
 
-interface TrainModelDialogContentProps {
+type TrainModelDialogContentProps = {
     activeModelArchitectureId: string | undefined;
     modelArchitectures: ModelArchitectureType[];
     selectedModelArchitectureId: string | null;
@@ -26,7 +26,7 @@ interface TrainModelDialogContentProps {
     datasetRevisions: DatasetRevision[];
     selectedDatasetRevision: string | null;
     onSelectedDatasetRevisionChange: (datasetRevisionId: string | null) => void;
-}
+};
 
 export const TrainModelDialogContent = ({
     trainingDevices,

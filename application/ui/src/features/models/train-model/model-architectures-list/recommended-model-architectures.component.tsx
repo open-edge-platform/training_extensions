@@ -7,12 +7,12 @@ import type { ModelArchitecture as ModelArchitectureType } from '../../../../con
 import { ModelArchitectureCard } from './model-architecture/model-architecture.component';
 import { ModelArchitecturesListLayout } from './model-architectures-list-layout/model-architectures-list-layout.component';
 
-interface RecommendedModelArchitectureProps {
+type RecommendedModelArchitectureProps = {
     activeModelArchitectureId: string | undefined;
     modelArchitecture: ModelArchitectureType;
     selectedModelArchitectureId: string | null;
     onSelectedModelArchitectureIdChange: (modelArchitectureId: string | null) => void;
-}
+};
 
 const RecommendedModelArchitecture = ({
     activeModelArchitectureId,
@@ -40,19 +40,19 @@ const RecommendedModelArchitecture = ({
     );
 };
 
-interface RecommendedModelArchitectures {
+type RecommendedModelArchitecturesProps = {
     activeModelArchitectureId: string | undefined;
     modelArchitectures: ModelArchitectureType[];
     selectedModelArchitectureId: string | null;
     onSelectedModelArchitectureIdChange: (modelArchitectureId: string | null) => void;
-}
+};
 
 export const RecommendedModelArchitectures = ({
     activeModelArchitectureId,
     modelArchitectures,
     onSelectedModelArchitectureIdChange,
     selectedModelArchitectureId,
-}: RecommendedModelArchitectures) => {
+}: RecommendedModelArchitecturesProps) => {
     return (
         <ModelArchitecturesListLayout
             selectedModelArchitectureId={selectedModelArchitectureId}
