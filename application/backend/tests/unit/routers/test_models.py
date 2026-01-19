@@ -165,7 +165,7 @@ class TestModelEndpoints:
             if model_format == OTXExportFormatType.OPENVINO:
                 assert "model.xml" in zip_file.namelist()
                 assert "model.bin" in zip_file.namelist()
-                assert zip_file.read("model.xml").decode() == xml_content
+                assert zip_file.read("model.xml").decode() == xml_content  # pyrefly: ignore[unbound-name]
                 assert zip_file.read("model.bin") == bin_content
             else:
                 assert "model.onnx" in zip_file.namelist()

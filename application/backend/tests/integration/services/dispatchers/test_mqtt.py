@@ -156,8 +156,8 @@ class TestMqttDispatcher:
     def test_init_missing_paho_mqtt(self, mqtt_config):
         """Test initialization fails when paho-mqtt is not available."""
         with (
-            patch("app.services.dispatchers.mqtt.mqtt", None),
-            pytest.raises(ImportError, match="paho-mqtt is required"),
+            patch.dict("sys.modules", {"paho.mqtt.client": None}),
+            pytest.raises(ImportError, match="'paho-mqtt' is required"),
         ):
             MqttDispatcher(mqtt_config)
 

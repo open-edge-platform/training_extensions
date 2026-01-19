@@ -336,7 +336,7 @@ def fxt_project_with_labeled_dataset_items(
 
     db_dataset_items = []
     for config in configs:
-        dataset_item = DatasetItemDB(**config)
+        dataset_item = DatasetItemDB(**config)  # pyrefly: ignore[bad-unpacking]
         dataset_item.project_id = str(project.id)
         dataset_item.created_at = datetime.fromisoformat("2025-02-01T00:00:00Z")
         db_dataset_items.append(dataset_item)

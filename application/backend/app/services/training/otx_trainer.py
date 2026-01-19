@@ -206,7 +206,9 @@ class OTXTrainer(Trainer):
             subset_cfg_data["input_size"] = training_config["data"]["input_size"]
             sampler_cfg_data = subset_cfg_data.pop("sampler", {})
             subset_config = SubsetConfig(sampler=SamplerConfig(**sampler_cfg_data), **subset_cfg_data)
-            subset_config.transforms = TorchVisionTransformLib.generate(subset_config)
+            subset_config.transforms = TorchVisionTransformLib.generate(  # pyrefly: ignore[bad-assignment]
+                subset_config
+            )
             return subset_config
 
         with self._db_session_factory() as db:
@@ -237,15 +239,15 @@ class OTXTrainer(Trainer):
             logger.info("Preparing {} instances for each subset", otx_dataset_class.__name__)
             otx_training_dataset = otx_dataset_class(
                 dm_subset=dm_training_dataset,
-                transforms=train_subset_config.transforms,
+                transforms=train_subset_config.transforms,  # pyrefly: ignore[bad-argument-type]
             )
             otx_validation_dataset = otx_dataset_class(
                 dm_subset=dm_validation_dataset,
-                transforms=val_subset_config.transforms,
+                transforms=val_subset_config.transforms,  # pyrefly: ignore[bad-argument-type]
             )
             otx_testing_dataset = otx_dataset_class(
                 dm_subset=dm_testing_dataset,
-                transforms=test_subset_config.transforms,
+                transforms=test_subset_config.transforms,  # pyrefly: ignore[bad-argument-type]
             )
 
             # Store the dataset as a new revision
@@ -320,7 +322,7 @@ class OTXTrainer(Trainer):
         model_cfg = training_config["model"]
         model_cfg["init_args"]["label_info"] = otx_datamodule.label_info.label_names
         model_cfg["init_args"]["data_input_params"] = DataInputParams(
-            input_size=otx_datamodule.input_size,
+            input_size=cast(tuple[int, int], otx_datamodule.input_size),
             mean=otx_datamodule.input_mean,
             std=otx_datamodule.input_std,
         ).as_dict()
@@ -358,7 +360,7 @@ class OTXTrainer(Trainer):
             max_epochs=training_config["max_epochs"],
             precision=training_config["precision"],
             callbacks=callbacks_list,
-            **train_kwargs,
+            **train_kwargs,  # pyrefly: ignore[bad-argument-type]
         )
         trained_model_path = Path(otx_engine.work_dir) / "best_checkpoint.ckpt"
         logger.info("Model training completed. Trained model saved at {}", trained_model_path)

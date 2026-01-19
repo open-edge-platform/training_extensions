@@ -64,7 +64,7 @@ class ThreadRun(Runner[Job, ExecutionEvent]):
                 # Continue polling if no events available
                 continue
 
-    async def stop(self, graceful_timeout: float = 6.0, _term_timeout: float = 3.0, _kill_timeout: float = 1.0) -> None:
+    async def stop(self, graceful_timeout: float = 6.0, term_timeout: float = 3.0, kill_timeout: float = 1.0) -> None:  # noqa: ARG002
         """Stop the runner by setting the cancellation event."""
         self._cancel_event.set()
 
@@ -103,7 +103,7 @@ class ThreadRun(Runner[Job, ExecutionEvent]):
             def __init__(self, runner: "ThreadRun"):
                 self.runner = runner
 
-            def report(self, message: str = "training", progress: float = 0.0):
+            def report(self, message: str = "training", progress: float = 0.0):  # pyrefly: ignore[bad-override]
                 if not self.runner._cancel_event.is_set():
                     self.runner._event_queue.put(Progress(message, progress))
 
