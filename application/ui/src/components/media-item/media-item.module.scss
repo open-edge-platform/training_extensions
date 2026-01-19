@@ -29,15 +29,8 @@
     right: var(--spectrum-global-dimension-size-50);
 }
 
-[data-hovered],
-[data-selected],
-[data-accepted='true'],
-[data-rejected='true'] {
+div[class*='mediaItem']:is([data-hovered], [data-selected], [data-accepted='true'], [data-rejected='true']) {
     .floatingContainer {
         opacity: 1;
     }
-}
-
-[role='option'] {
-    background-color: var(--spectrum-gray-100);
 }
