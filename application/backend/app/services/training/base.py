@@ -39,7 +39,7 @@ def step(name: str) -> Callable[[Callable[..., T]], Callable[..., T]]:
             try:
                 result = func(self, *args, **kwargs)
             except Exception:
-                self.report_progress(f"Failed: {name}")
+                self.report_progress(f"Failed: {name}", exc=True)
                 raise
             self.report_progress(f"Completed: {name}")
             return result
@@ -67,9 +67,12 @@ class Trainer(Runnable, ABC):
     def _get_training_params(ctx: ExecutionContext) -> TrainingJobParams:
         return TrainingJobParams.model_validate_json(ctx.payload)
 
-    def report_progress(self, msg: str = "", percent: float = 0.0) -> None:
+    def report_progress(self, msg: str = "", percent: float = 0.0, exc: bool = False) -> None:
         if self._ctx is not None:
-            logger.info(msg)
+            if exc:
+                logger.exception(msg)
+            else:
+                logger.info(msg)
             self._ctx.report(msg, percent)
 
     def heartbeat(self) -> None:
