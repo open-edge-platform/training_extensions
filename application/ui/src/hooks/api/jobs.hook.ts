@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import { getMockedJob } from 'mocks/mock-job';
 
 import { $api } from '../../api/client';
 
@@ -18,8 +19,14 @@ export const useGetCurrentTrainingJob = () => {
     const activeJobs = useListJobs();
 
     const activeTrainingJob = activeJobs.data?.find(
-        (job) => job.metadata.project.id === projectId && job.status === 'RUNNING' && job.job_type === 'train'
+        (job) => job.metadata.project.id === projectId && job.status === 'running' && job.job_type === 'train'
     );
 
+    return getMockedJob();
+
     return activeTrainingJob;
+};
+
+export const useCancelJob = () => {
+    return $api.useMutation('post', '/api/jobs/{job_id}:cancel');
 };
