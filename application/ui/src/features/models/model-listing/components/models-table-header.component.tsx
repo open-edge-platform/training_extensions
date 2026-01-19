@@ -25,6 +25,7 @@ export const ModelsTableHeader = () => {
             columns={GRID_COLUMNS}
             alignItems={'center'}
             width={'100%'}
+            columnGap={'size-200'}
             UNSAFE_style={{
                 backgroundColor: 'var(--spectrum-global-color-gray-200)',
                 padding: `${dimensionValue('size-150')} ${dimensionValue('size-600')}

@@ -29,7 +29,7 @@ export const ModelRow = ({
     const trainingEndTime = model.training_info.end_time;
 
     return (
-        <Grid columns={GRID_COLUMNS} alignItems={'center'} width={'100%'}>
+        <Grid columns={GRID_COLUMNS} alignItems={'center'} width={'100%'} columnGap={'size-200'}>
             <Flex direction={'column'} gap={'size-50'}>
                 <Flex alignItems={'center'} gap={'size-100'}>
                     <Text UNSAFE_style={{ fontSize: dimensionValue('font-size-200') }}>
@@ -49,7 +49,9 @@ export const ModelRow = ({
                             name={parentRevisionModel.name}
                             onExpandModel={onExpandModel}
                         />
-                    ) : null}
+                    ) : (
+                        <div />
+                    )}
                 </Text>
             </Flex>
 

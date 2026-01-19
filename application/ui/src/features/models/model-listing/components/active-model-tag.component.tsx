@@ -14,6 +14,7 @@ export const ActiveModelTag = () => {
                 color: 'var(--spectrum-global-color-gray-50)',
                 borderRadius: dimensionValue('size-50'),
                 padding: `${dimensionValue('size-25')} ${dimensionValue('size-50')}`,
+                fontWeight: 'normal',
             }}
             text={'Active'}
         />
