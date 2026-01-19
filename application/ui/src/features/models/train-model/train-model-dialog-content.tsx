@@ -9,7 +9,7 @@ import type {
     ModelArchitecture as ModelArchitectureType,
     TrainingDevices,
 } from '../../../constants/shared-types';
-import { ModelArchitecturesListContainer } from './model-architectures-list/model-architectures-list.component';
+import { ModelArchitecturesList } from './model-architectures-list/model-architectures-list.component';
 import { SelectDatasetRevision } from './select-dataset-revision.component';
 import { SelectTrainingDevice } from './select-training-device.component';
 
@@ -46,7 +46,7 @@ export const TrainModelDialogContent = ({
         <View padding={'size-300'} backgroundColor={'gray-50'} height={'100%'}>
             <Flex height={'100%'} direction={'column'} gap={'size-300'}>
                 <View flex={1} minHeight={0} overflow={'auto'}>
-                    <ModelArchitecturesListContainer
+                    <ModelArchitecturesList
                         modelArchitectures={modelArchitectures}
                         activeModelArchitectureId={activeModelArchitectureId}
                         selectedModelArchitectureId={selectedModelArchitectureId}
