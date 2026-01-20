@@ -13,6 +13,11 @@ import { useCreateProject } from '../../../hooks/api/project.hook';
 import { LabelSelection } from '../label-selection/label-selection.component';
 import type { TaskType } from '../task-selection/interface';
 import { TASK_OPTIONS, TaskSelection } from '../task-selection/task-selection.component';
+import { isClassificationTask } from '../task-type-guards';
+import {
+    ClassificationTaskSelection,
+    ClassificationTaskType,
+} from './classification-label-selection/classification-task-type-selection.component';
 import { validateProjectName } from './validator';
 
 import styles from './create-project-form.module.scss';
@@ -27,6 +32,8 @@ export const CreateProjectForm = ({ projects }: CreateProjectFormProps) => {
     const numberOfProjects = projects.length;
     const [name, setName] = useState<string>(`Project #${numberOfProjects + 1}`);
     const selectedTaskOption = TASK_OPTIONS.find((task) => task.value === selectedTask);
+
+    const [classificationTaskType, setClassificationTaskType] = useState<ClassificationTaskType>('multi-label');
 
     const navigate = useNavigate();
     const createProjectMutation = useCreateProject();
@@ -105,6 +112,13 @@ export const CreateProjectForm = ({ projects }: CreateProjectFormProps) => {
                     </Text>
 
                     <TaskSelection selectedTask={selectedTask} setSelectedTask={setSelectedTask} />
+
+                    {isClassificationTask(selectedTask) && (
+                        <ClassificationTaskSelection
+                            selectedType={classificationTaskType}
+                            onSelectedTypeChange={setClassificationTaskType}
+                        />
+                    )}
 
                     {selectedTask !== null && (
                         <Flex direction={'column'} alignItems={'center'} gap={'size-350'}>
