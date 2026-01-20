@@ -22,8 +22,8 @@ from otx.backend.native.schedulers import LRSchedulerListCallable
 from otx.backend.native.tools.tile_merge import SegmentationTileMerge
 from otx.config.data import TileConfig
 from otx.data.entity.base import ImageInfo, OTXBatchLossEntity
+from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
 from otx.data.entity.tile import OTXTileBatchDataEntity
-from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
 from otx.metrics import MetricInput
 from otx.metrics.dice import SegmCallable
 from otx.types.export import TaskLevelExportParameters
@@ -78,7 +78,7 @@ class OTXSegmentationModel(OTXModel):
             tile_config=tile_config,
         )
 
-    def _customize_inputs(self, entity: OTXDataBatch) -> dict[str, Any]:
+    def _customize_inputs(self, entity: OTXSampleBatch) -> dict[str, Any]:
         if self.training:
             mode = "loss"
         elif self.explain_mode:
@@ -92,8 +92,8 @@ class OTXSegmentationModel(OTXModel):
     def _customize_outputs(
         self,
         outputs: Any,  # noqa: ANN401
-        inputs: OTXDataBatch,
-    ) -> OTXPredBatch | OTXBatchLossEntity:
+        inputs: OTXSampleBatch,
+    ) -> OTXPredictionBatch | OTXBatchLossEntity:
         if self.training:
             if not isinstance(outputs, dict):
                 raise TypeError(outputs)
@@ -112,7 +112,7 @@ class OTXSegmentationModel(OTXModel):
             for mask in preds
         ]
 
-        return OTXPredBatch(
+        return OTXPredictionBatch(
             batch_size=len(preds),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
@@ -158,8 +158,8 @@ class OTXSegmentationModel(OTXModel):
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: OTXPredBatch,  # type: ignore[override]
-        inputs: OTXDataBatch,  # type: ignore[override]
+        preds: OTXPredictionBatch,  # type: ignore[override]
+        inputs: OTXSampleBatch,  # type: ignore[override]
     ) -> MetricInput:
         """Convert prediction and input entities to a format suitable for metric computation.
 
@@ -209,7 +209,7 @@ class OTXSegmentationModel(OTXModel):
             return label_info
         raise TypeError(label_info)
 
-    def forward_tiles(self, inputs: OTXTileBatchDataEntity) -> OTXPredBatch:
+    def forward_tiles(self, inputs: OTXTileBatchDataEntity) -> OTXPredictionBatch:
         """Unpack segmentation tiles.
 
         Args:
@@ -222,7 +222,7 @@ class OTXSegmentationModel(OTXModel):
             msg = "Explain mode is not supported for tiling"
             raise NotImplementedError(msg)
 
-        tile_preds: list[OTXPredBatch] = []
+        tile_preds: list[OTXPredictionBatch] = []
         tile_infos: list[list[TileInfo]] = []
         merger = SegmentationTileMerge(
             inputs.imgs_info,
@@ -248,7 +248,7 @@ class OTXSegmentationModel(OTXModel):
             tile_infos.append(batch_tile_infos)
         pred_entities = merger.merge(tile_preds, tile_infos)
 
-        pred_entity = OTXPredBatch(
+        pred_entity = OTXPredictionBatch(
             batch_size=inputs.batch_size,
             images=torch.stack([pred_entity.image for pred_entity in pred_entities]),
             imgs_info=[pred_entity.img_info for pred_entity in pred_entities],
@@ -271,11 +271,11 @@ class OTXSegmentationModel(OTXModel):
         outputs = self.model(inputs=image, mode="tensor")
         return torch.softmax(outputs, dim=1)
 
-    def forward_explain(self, inputs: OTXDataBatch) -> OTXPredBatch:
+    def forward_explain(self, inputs: OTXSampleBatch) -> OTXPredictionBatch:
         """Model forward explain function."""
         outputs = self.model(inputs=inputs.images, mode="explain")
 
-        return OTXPredBatch(
+        return OTXPredictionBatch(
             batch_size=len(outputs["preds"]),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
@@ -284,7 +284,7 @@ class OTXSegmentationModel(OTXModel):
             feature_vector=outputs["feature_vector"],
         )
 
-    def get_dummy_input(self, batch_size: int = 1) -> OTXDataBatch:  # type: ignore[override]
+    def get_dummy_input(self, batch_size: int = 1) -> OTXSampleBatch:  # type: ignore[override]
         """Returns a dummy input for semantic segmentation model."""
         images = torch.rand(self.data_input_params.as_ncwh(batch_size))
         infos = []
@@ -296,7 +296,7 @@ class OTXSegmentationModel(OTXModel):
                     ori_shape=img.shape,
                 ),
             )
-        return OTXDataBatch(batch_size, images, imgs_info=infos, masks=[])  # type: ignore[arg-type]
+        return OTXSampleBatch(batch_size, images, imgs_info=infos, masks=[])  # type: ignore[arg-type]
 
     @property
     def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:

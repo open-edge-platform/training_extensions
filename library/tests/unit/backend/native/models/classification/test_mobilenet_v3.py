@@ -10,7 +10,7 @@ from otx.backend.native.models.classification.hlabel_models.mobilenet_v3 import 
 from otx.backend.native.models.classification.multiclass_models.mobilenet_v3 import MobileNetV3MulticlassCls
 from otx.backend.native.models.classification.multilabel_models.mobilenet_v3 import MobileNetV3MultilabelCls
 from otx.data.entity.base import OTXBatchLossEntity
-from otx.data.entity.torch import OTXPredBatch
+from otx.data.entity.sample import OTXPredictionBatch
 
 
 @pytest.fixture
@@ -40,7 +40,7 @@ class TestMobileNetV3MulticlassCls:
 
         fxt_multi_class_cls_model.training = False
         preds = fxt_multi_class_cls_model._customize_outputs(outputs, fxt_multiclass_cls_batch_data_entity)
-        assert isinstance(preds, OTXPredBatch)
+        assert isinstance(preds, OTXPredictionBatch)
 
     @pytest.mark.parametrize("explain_mode", [True, False])
     def test_predict_step(self, fxt_multi_class_cls_model, fxt_multiclass_cls_batch_data_entity, explain_mode):
@@ -48,7 +48,7 @@ class TestMobileNetV3MulticlassCls:
         fxt_multi_class_cls_model.explain_mode = explain_mode
         outputs = fxt_multi_class_cls_model.predict_step(batch=fxt_multiclass_cls_batch_data_entity, batch_idx=0)
 
-        assert isinstance(outputs, OTXPredBatch)
+        assert isinstance(outputs, OTXPredictionBatch)
         assert outputs.has_xai_outputs == explain_mode
 
     def test_set_input_size(self):
@@ -110,7 +110,7 @@ class TestMobileNetV3MultilabelCls:
 
         fxt_multi_label_cls_model.training = False
         preds = fxt_multi_label_cls_model._customize_outputs(outputs, fxt_multilabel_cls_batch_data_entity)
-        assert isinstance(preds, OTXPredBatch)
+        assert isinstance(preds, OTXPredictionBatch)
 
     @pytest.mark.parametrize("explain_mode", [True, False])
     def test_predict_step(self, fxt_multi_label_cls_model, fxt_multilabel_cls_batch_data_entity, explain_mode):
@@ -118,7 +118,7 @@ class TestMobileNetV3MultilabelCls:
         fxt_multi_label_cls_model.explain_mode = explain_mode
         outputs = fxt_multi_label_cls_model.predict_step(batch=fxt_multilabel_cls_batch_data_entity, batch_idx=0)
 
-        assert isinstance(outputs, OTXPredBatch)
+        assert isinstance(outputs, OTXPredictionBatch)
         assert outputs.has_xai_outputs == explain_mode
 
     def test_set_input_size(self):
@@ -180,7 +180,7 @@ class TestMobileNetV3HLabelCls:
 
         fxt_h_label_cls_model.training = False
         preds = fxt_h_label_cls_model._customize_outputs(outputs, fxt_hlabel_cls_batch_data_entity)
-        assert isinstance(preds, OTXPredBatch)
+        assert isinstance(preds, OTXPredictionBatch)
 
     @pytest.mark.parametrize("explain_mode", [True, False])
     def test_predict_step(self, fxt_h_label_cls_model, fxt_hlabel_cls_batch_data_entity, explain_mode):
@@ -188,7 +188,7 @@ class TestMobileNetV3HLabelCls:
         fxt_h_label_cls_model.explain_mode = explain_mode
         outputs = fxt_h_label_cls_model.predict_step(batch=fxt_hlabel_cls_batch_data_entity, batch_idx=0)
 
-        assert isinstance(outputs, OTXPredBatch)
+        assert isinstance(outputs, OTXPredictionBatch)
         assert outputs.has_xai_outputs == explain_mode
 
     def test_set_input_size(self, fxt_hlabel_data):

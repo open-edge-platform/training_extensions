@@ -12,8 +12,7 @@ import torch
 from datumaro.experimental import Dataset
 
 from otx.data.dataset.base import OTXDataset, _default_collate_fn
-from otx.data.entity.sample import OTXSample
-from otx.data.entity.torch.torch import OTXDataBatch
+from otx.data.entity.sample import OTXSample, OTXSampleBatch
 
 
 class TestDefaultCollateFn:
@@ -43,7 +42,7 @@ class TestDefaultCollateFn:
         items = [sample1, sample2]
         result = _default_collate_fn(items)
 
-        assert isinstance(result, OTXDataBatch)
+        assert isinstance(result, OTXSampleBatch)
         assert result.batch_size == 2
         assert isinstance(result.images, torch.Tensor)
         assert result.images.shape == (2, 3, 224, 224)

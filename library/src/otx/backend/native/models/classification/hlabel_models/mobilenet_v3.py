@@ -23,7 +23,7 @@ from otx.backend.native.models.classification.losses.asymmetric_angular_loss_wit
 from otx.backend.native.models.classification.necks.gap import GlobalAveragePooling
 from otx.backend.native.schedulers import LRSchedulerListCallable
 from otx.data.entity.base import OTXBatchLossEntity
-from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
+from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
 from otx.metrics import MetricInput
 from otx.metrics.accuracy import HLabelClsMetricCallable
 from otx.types.label import HLabelInfo
@@ -81,7 +81,7 @@ class MobileNetV3HLabelCls(OTXHlabelClsModel):
             multilabel_loss=AsymmetricAngularLossWithIgnore(gamma_pos=0.0, gamma_neg=1.0, reduction="sum"),
         )
 
-    def _customize_inputs(self, inputs: OTXDataBatch) -> dict[str, Any]:
+    def _customize_inputs(self, inputs: OTXSampleBatch) -> dict[str, Any]:
         if self.training:
             mode = "loss"
         elif self.explain_mode:
@@ -99,8 +99,8 @@ class MobileNetV3HLabelCls(OTXHlabelClsModel):
     def _customize_outputs(
         self,
         outputs: Any,  # noqa: ANN401
-        inputs: OTXDataBatch,
-    ) -> OTXPredBatch | OTXBatchLossEntity:
+        inputs: OTXSampleBatch,
+    ) -> OTXPredictionBatch | OTXBatchLossEntity:
         if self.training:
             return OTXBatchLossEntity(loss=outputs)
 
@@ -112,7 +112,7 @@ class MobileNetV3HLabelCls(OTXHlabelClsModel):
             scores = outputs
             labels = outputs.argmax(-1, keepdim=True)
 
-        return OTXPredBatch(
+        return OTXPredictionBatch(
             batch_size=inputs.batch_size,
             images=inputs.images,
             imgs_info=inputs.imgs_info,
@@ -122,8 +122,8 @@ class MobileNetV3HLabelCls(OTXHlabelClsModel):
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: OTXPredBatch,
-        inputs: OTXDataBatch,
+        preds: OTXPredictionBatch,
+        inputs: OTXSampleBatch,
     ) -> MetricInput:
         hlabel_info: HLabelInfo = self.label_info  # type: ignore[assignment]
 

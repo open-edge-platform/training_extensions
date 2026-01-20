@@ -9,7 +9,7 @@ from torchvision import tv_tensors
 from otx.backend.native.models.keypoint_detection.heads.rtmcc_head import RTMCCHead
 from otx.backend.native.models.keypoint_detection.losses.kl_discret_loss import KLDiscretLoss
 from otx.data.entity.base import ImageInfo
-from otx.data.entity.torch import OTXDataBatch
+from otx.data.entity.sample import OTXSampleBatch
 
 
 class TestRTMCCHead:
@@ -27,7 +27,7 @@ class TestRTMCCHead:
         keypoints = torch.randn((batch_size, 17, 2))
         keypoints_visible = torch.randint(0, 1, (batch_size, 17))
         keypoints = torch.cat([keypoints, keypoints_visible.unsqueeze(-1)], dim=-1)
-        return OTXDataBatch(
+        return OTXSampleBatch(
             batch_size=batch_size,
             images=tv_tensors.Image(data=torch.randn((batch_size, 3, 192, 256))),
             imgs_info=img_infos,

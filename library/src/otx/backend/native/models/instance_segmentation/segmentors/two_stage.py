@@ -13,7 +13,7 @@ import torch
 from torch import Tensor, nn
 
 from otx.backend.native.models.utils.utils import InstanceData
-from otx.data.entity.torch import OTXDataBatch
+from otx.data.entity.sample import OTXSampleBatch
 
 
 class TwoStageDetector(nn.Module):
@@ -147,7 +147,7 @@ class TwoStageDetector(nn.Module):
             x = self.neck(x)
         return x
 
-    def loss(self, batch_inputs: OTXDataBatch) -> dict[str, Tensor]:
+    def loss(self, batch_inputs: OTXSampleBatch) -> dict[str, Tensor]:
         """Calculate losses from a batch of inputs and data samples.
 
         Args:
@@ -159,7 +159,7 @@ class TwoStageDetector(nn.Module):
         x = self.extract_feat(batch_inputs.images)
 
         # Copy data entity and set gt_labels to 0 in RPN
-        rpn_entity = OTXDataBatch(
+        rpn_entity = OTXSampleBatch(
             images=torch.empty(0, 1, 0, 0),
             batch_size=batch_inputs.batch_size,
             imgs_info=batch_inputs.imgs_info,  # type: ignore[union-attr]
@@ -213,7 +213,7 @@ class TwoStageDetector(nn.Module):
 
     def predict(
         self,
-        entity: OTXDataBatch,
+        entity: OTXSampleBatch,
         rescale: bool = True,
     ) -> list[InstanceData]:
         """Predict results from a batch of inputs and data samples with post-processing."""

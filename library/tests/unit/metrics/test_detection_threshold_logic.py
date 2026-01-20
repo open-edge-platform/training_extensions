@@ -12,7 +12,7 @@ from torchvision import tv_tensors
 from otx.backend.native.models.base import DataInputParams
 from otx.backend.native.models.detection.base import OTXDetectionModel
 from otx.data.entity.base import ImageInfo
-from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
+from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
 from otx.metrics.fmeasure import FMeasure
 from otx.types.label import LabelInfo
 
@@ -56,7 +56,7 @@ def detection_model():
 @pytest.fixture
 def sample_predictions():
     """Create sample prediction data."""
-    return OTXPredBatch(
+    return OTXPredictionBatch(
         batch_size=2,
         images=[torch.rand(3, 416, 416), torch.rand(3, 416, 416)],
         imgs_info=[
@@ -91,7 +91,7 @@ def sample_predictions():
 @pytest.fixture
 def sample_batch():
     """Create sample input batch."""
-    return OTXDataBatch(
+    return OTXSampleBatch(
         batch_size=2,
         images=[torch.rand(3, 416, 416), torch.rand(3, 416, 416)],
         imgs_info=[
@@ -213,7 +213,7 @@ class TestFilterOutputsByThreshold:
 
     def test_filtering_with_none_outputs(self, detection_model):
         """Test filtering when outputs have None values."""
-        preds_with_none = OTXPredBatch(
+        preds_with_none = OTXPredictionBatch(
             batch_size=1,
             images=[torch.rand(3, 416, 416)],
             imgs_info=[ImageInfo(img_idx=0, img_shape=(3, 416, 416), ori_shape=(3, 416, 416))],
@@ -231,7 +231,7 @@ class TestFilterOutputsByThreshold:
 
     def test_filtering_empty_predictions(self, detection_model):
         """Test filtering with empty prediction lists."""
-        empty_preds = OTXPredBatch(
+        empty_preds = OTXPredictionBatch(
             batch_size=2,
             images=[torch.rand(3, 416, 416), torch.rand(3, 416, 416)],
             imgs_info=[
@@ -428,7 +428,7 @@ class TestIntegration:
             "_convert_pred_entity_to_compute_metric",
         ) as mock_convert:
             # Setup sample predictions with scores above and below threshold
-            test_preds = OTXPredBatch(
+            test_preds = OTXPredictionBatch(
                 batch_size=1,
                 images=[torch.rand(3, 416, 416)],
                 imgs_info=[ImageInfo(img_idx=0, img_shape=(3, 416, 416), ori_shape=(3, 416, 416))],

@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any
 import torch
 
 from otx.backend.openvino.models.base import OVModel
-from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
+from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
 from otx.metrics import MetricCallable, MetricInput
 from otx.metrics.pck import PCKMeasureCallable
 from otx.types.task import OTXTaskType
@@ -64,16 +64,16 @@ class OVKeypointDetectionModel(OVModel):
     def _customize_outputs(
         self,
         outputs: list[DetectedKeypoints],
-        inputs: OTXDataBatch,
-    ) -> OTXPredBatch:
+        inputs: OTXSampleBatch,
+    ) -> OTXPredictionBatch:
         """Customize the outputs of the model for keypoint detection.
 
         Args:
             outputs (list[DetectedKeypoints]): List of detected keypoints from the model.
-            inputs (OTXDataBatch): Input batch containing images and metadata.
+            inputs (OTXSampleBatch): Input batch containing images and metadata.
 
         Returns:
-            OTXPredBatch: A batch containing processed keypoints, scores, and other metadata.
+            OTXPredictionBatch: A batch containing processed keypoints, scores, and other metadata.
         """
         keypoints = []
         scores = []
@@ -86,7 +86,7 @@ class OVKeypointDetectionModel(OVModel):
             keypoints.append(visible_keypoints)
             scores.append(score)
 
-        return OTXPredBatch(
+        return OTXPredictionBatch(
             batch_size=len(outputs),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
@@ -110,16 +110,16 @@ class OVKeypointDetectionModel(OVModel):
 
     def prepare_metric_inputs(  # type: ignore[override]
         self,
-        preds: OTXPredBatch,
-        inputs: OTXDataBatch,
+        preds: OTXPredictionBatch,
+        inputs: OTXSampleBatch,
     ) -> MetricInput:
         """Prepare inputs for metric computation.
 
         Converts prediction and input entities to a format suitable for metric evaluation.
 
         Args:
-            preds (OTXPredBatch): The predicted batch entity containing predicted keypoints.
-            inputs (OTXDataBatch): The input batch entity containing ground truth keypoints.
+            preds (OTXPredictionBatch): The predicted batch entity containing predicted keypoints.
+            inputs (OTXSampleBatch): The input batch entity containing ground truth keypoints.
 
         Returns:
             MetricInput: A dictionary containing 'preds' and 'target' keys

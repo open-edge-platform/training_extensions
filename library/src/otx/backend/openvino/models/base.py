@@ -22,7 +22,7 @@ from torch import Tensor
 from otx.data.entity.base import (
     ImageInfo,
 )
-from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
+from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
 from otx.metrics import NullMetricCallable
 from otx.types.label import LabelInfo
 from otx.types.task import OTXTaskType
@@ -142,11 +142,11 @@ class OVModel:
 
         return Model.create_model(model_adapter, model_type=self.model_type, configuration=self.model_api_configuration)
 
-    def _customize_inputs(self, entity: OTXDataBatch) -> dict[str, Any]:
+    def _customize_inputs(self, entity: OTXSampleBatch) -> dict[str, Any]:
         """Customize the input data for the model.
 
         Args:
-            entity (OTXDataBatch): Input data batch.
+            entity (OTXSampleBatch): Input data batch.
 
         Returns:
             dict[str, Any]: Customized input data.
@@ -157,32 +157,32 @@ class OVModel:
     def _customize_outputs(
         self,
         outputs: list[Result],
-        inputs: OTXDataBatch,
-    ) -> OTXPredBatch:
+        inputs: OTXSampleBatch,
+    ) -> OTXPredictionBatch:
         """Customize the model outputs to OTX format.
 
         Args:
             outputs (list[Result]): The model outputs.
-            inputs (OTXDataBatch): The input batch entity.
+            inputs (OTXSampleBatch): The input batch entity.
 
         Returns:
-            OTXPredBatch: The customized prediction batch entity.
+            OTXPredictionBatch: The customized prediction batch entity.
         """
-        return OTXPredBatch(
+        return OTXPredictionBatch(
             batch_size=len(outputs),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
         )
 
-    def forward(self, inputs: OTXDataBatch, async_inference: bool = True) -> OTXPredBatch:
+    def forward(self, inputs: OTXSampleBatch, async_inference: bool = True) -> OTXPredictionBatch:
         """Perform forward pass of the model.
 
         Args:
-            inputs (OTXDataBatch): Input data batch.
+            inputs (OTXSampleBatch): Input data batch.
             async_inference (bool): Whether to use asynchronous inference.
 
         Returns:
-            OTXPredBatch: Model predictions.
+            OTXPredictionBatch: Model predictions.
         """
         async_inference = async_inference and self.async_inference
         numpy_inputs = self._customize_inputs(inputs)["inputs"]
@@ -251,11 +251,11 @@ class OVModel:
 
         return output_model_path
 
-    def transform_fn(self, data_batch: OTXDataBatch) -> np.array:
+    def transform_fn(self, data_batch: OTXSampleBatch) -> np.array:
         """Transform data for PTQ.
 
         Args:
-            data_batch (OTXDataBatch): Input data batch.
+            data_batch (OTXSampleBatch): Input data batch.
 
         Returns:
             np.array: Transformed data.
@@ -305,14 +305,14 @@ class OVModel:
 
     def prepare_metric_inputs(
         self,
-        preds: OTXPredBatch,
-        inputs: OTXDataBatch,
+        preds: OTXPredictionBatch,
+        inputs: OTXSampleBatch,
     ) -> MetricInput:
         """Prepare inputs for metric computation.
 
         Args:
-            preds (OTXPredBatch): Predicted batch entity.
-            inputs (OTXDataBatch): Input batch entity.
+            preds (OTXPredictionBatch): Predicted batch entity.
+            inputs (OTXSampleBatch): Input batch entity.
 
         Returns:
             MetricInput: Dictionary containing predictions and targets.
@@ -413,14 +413,14 @@ class OVModel:
         msg = "Cannot construct LabelInfo from OpenVINO IR. Please check this model is trained by OTX."
         raise ValueError(msg)
 
-    def get_dummy_input(self, batch_size: int = 1) -> OTXDataBatch:
+    def get_dummy_input(self, batch_size: int = 1) -> OTXSampleBatch:
         """Generate a dummy input for the model.
 
         Args:
             batch_size (int): Batch size for the dummy input.
 
         Returns:
-            OTXDataBatch: Dummy input data.
+            OTXSampleBatch: Dummy input data.
         """
         images = [torch.rand(3, 224, 224) for _ in range(batch_size)]
         infos = []
@@ -432,7 +432,7 @@ class OVModel:
                     ori_shape=img.shape,
                 ),
             )
-        return OTXDataBatch(batch_size=batch_size, images=images, imgs_info=infos)
+        return OTXSampleBatch(batch_size=batch_size, images=images, imgs_info=infos)
 
     def __call__(self, *args, **kwds):
         """Call the model for inference.

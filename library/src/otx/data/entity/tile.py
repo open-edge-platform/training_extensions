@@ -11,8 +11,7 @@ from typing import TYPE_CHECKING, Sequence
 import torch
 from torchvision import tv_tensors
 
-from otx.data.entity.sample import OTXSample
-from otx.data.entity.torch import OTXDataBatch
+from otx.data.entity.sample import OTXSample, OTXSampleBatch
 from otx.data.entity.utils import stack_batch
 from otx.types.task import OTXTaskType
 
@@ -82,7 +81,7 @@ class OTXTileBatchDataEntity:
     batch_tile_tile_infos: list[list[TileInfo]]
     imgs_info: list[ImageInfo]
 
-    def unbind(self) -> list[tuple[list[TileInfo], OTXDataBatch]]:
+    def unbind(self) -> list[tuple[list[TileInfo], OTXSampleBatch]]:
         """Unbind batch data entity."""
         raise NotImplementedError
 
@@ -99,7 +98,7 @@ class TileBatchDetDataEntity(OTXTileBatchDataEntity):
     bboxes: list[tv_tensors.BoundingBoxes]
     labels: list[LongTensor]
 
-    def unbind(self) -> list[tuple[list[TileInfo], OTXDataBatch]]:
+    def unbind(self) -> list[tuple[list[TileInfo], OTXSampleBatch]]:
         """Unbind batch data entity for detection task."""
         tiles = [tile for tiles in self.batch_tiles for tile in tiles]
         tile_img_infos = [tile_info for tile_infos in self.batch_tile_img_infos for tile_info in tile_infos]
@@ -114,7 +113,7 @@ class TileBatchDetDataEntity(OTXTileBatchDataEntity):
             batch_data_entities.append(
                 (
                     tile_tile_infos[i : i + self.batch_size],
-                    OTXDataBatch(
+                    OTXSampleBatch(
                         batch_size=self.batch_size,
                         images=stacked_images,
                         imgs_info=updated_img_info,
@@ -192,7 +191,7 @@ class TileBatchInstSegDataEntity(OTXTileBatchDataEntity):
     masks: list[tv_tensors.Mask]
     polygons: list[list[np.ndarray]]
 
-    def unbind(self) -> list[tuple[TileAttrDictList, OTXDataBatch]]:
+    def unbind(self) -> list[tuple[TileAttrDictList, OTXSampleBatch]]:
         """Unbind batch data entity for instance segmentation task."""
         tiles = [tile for tiles in self.batch_tiles for tile in tiles]
         tile_img_infos = [tile_info for tile_infos in self.batch_tile_img_infos for tile_info in tile_infos]
@@ -201,7 +200,7 @@ class TileBatchInstSegDataEntity(OTXTileBatchDataEntity):
         batch_data_entities = [
             (
                 tile_tile_infos[i : i + self.batch_size],
-                OTXDataBatch(
+                OTXSampleBatch(
                     batch_size=self.batch_size,
                     images=tiles[i : i + self.batch_size],
                     imgs_info=tile_img_infos[i : i + self.batch_size],
@@ -271,7 +270,7 @@ class TileBatchSegDataEntity(OTXTileBatchDataEntity):
 
     masks: list[tv_tensors.Mask]
 
-    def unbind(self) -> list[tuple[list[dict[str, int | str]], OTXDataBatch]]:
+    def unbind(self) -> list[tuple[list[dict[str, int | str]], OTXSampleBatch]]:
         """Unbind batch data entity for semantic segmentation task."""
         tiles = [tile for tiles in self.batch_tiles for tile in tiles]
         tile_img_infos = [tile_info for tile_infos in self.batch_tile_img_infos for tile_info in tile_infos]
@@ -280,7 +279,7 @@ class TileBatchSegDataEntity(OTXTileBatchDataEntity):
         batch_data_entities = [
             (
                 tile_tile_infos[i : i + self.batch_size],
-                OTXDataBatch(
+                OTXSampleBatch(
                     batch_size=self.batch_size,
                     images=tv_tensors.wrap(torch.stack(tiles[i : i + self.batch_size]), like=tiles[0]),
                     imgs_info=tile_img_infos[i : i + self.batch_size],

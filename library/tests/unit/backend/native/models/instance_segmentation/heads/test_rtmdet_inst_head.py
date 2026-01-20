@@ -19,7 +19,7 @@ from otx.backend.native.models.common.utils.samplers import PseudoSampler
 from otx.backend.native.models.instance_segmentation.heads.rtmdet_inst_head import RTMDetInstHead
 from otx.backend.native.models.modules.norm import build_norm_layer
 from otx.data.entity.base import ImageInfo
-from otx.data.entity.torch import OTXDataBatch
+from otx.data.entity.sample import OTXSampleBatch
 
 
 def set_mock_sampling_results_list(batch_size: int) -> list[Mock]:
@@ -129,7 +129,7 @@ class TestRTMDetInsHead:
         polygons[0] = np.array([[0, 0], [0, 1], [1, 1], [1, 0]])
         polygons[1] = np.array([[0, 0], [0, 1], [1, 1], [1, 0]])
 
-        entity = OTXDataBatch(
+        entity = OTXSampleBatch(
             batch_size=2,
             images=[torch.randn(3, 640, 640), torch.randn(3, 640, 640)],
             imgs_info=[

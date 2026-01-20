@@ -12,7 +12,7 @@ from model_api.tilers import InstanceSegmentationTiler
 from torchvision import tv_tensors
 
 from otx.backend.openvino.models.base import OVModel
-from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
+from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
 from otx.data.utils.structures.mask.mask_util import encode_rle, polygon_to_rle
 from otx.metrics import MetricInput
 from otx.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
@@ -108,16 +108,16 @@ class OVInstanceSegmentationModel(OVModel):
     def _customize_outputs(
         self,
         outputs: list[InstanceSegmentationResult],
-        inputs: OTXDataBatch,
-    ) -> OTXPredBatch:
+        inputs: OTXSampleBatch,
+    ) -> OTXPredictionBatch:
         """Customize the model outputs for OTX compatibility.
 
         Args:
             outputs (list[InstanceSegmentationResult]): Model outputs.
-            inputs (OTXDataBatch): Input data batch.
+            inputs (OTXSampleBatch): Input data batch.
 
         Returns:
-            OTXPredBatch: Customized predictions batch.
+            OTXPredictionBatch: Customized predictions batch.
         """
         bboxes = []
         scores = []
@@ -146,7 +146,7 @@ class OVInstanceSegmentationModel(OVModel):
                 predicted_s_maps.append(image_map)
 
             predicted_f_vectors = [out.feature_vector[0] for out in outputs]
-            return OTXPredBatch(
+            return OTXPredictionBatch(
                 batch_size=len(outputs),
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
@@ -158,7 +158,7 @@ class OVInstanceSegmentationModel(OVModel):
                 feature_vector=predicted_f_vectors,
             )
 
-        return OTXPredBatch(
+        return OTXPredictionBatch(
             batch_size=len(outputs),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
@@ -170,8 +170,8 @@ class OVInstanceSegmentationModel(OVModel):
 
     def prepare_metric_inputs(
         self,
-        preds: OTXPredBatch,  # type: ignore[override]
-        inputs: OTXDataBatch,  # type: ignore[override]
+        preds: OTXPredictionBatch,  # type: ignore[override]
+        inputs: OTXSampleBatch,  # type: ignore[override]
     ) -> MetricInput:
         """Prepare inputs for metric computation.
 
@@ -179,8 +179,8 @@ class OVInstanceSegmentationModel(OVModel):
         and caches the ground truth for the current batch.
 
         Args:
-            preds (OTXPredBatch): Current batch predictions.
-            inputs (OTXDataBatch): Current batch ground-truth inputs.
+            preds (OTXPredictionBatch): Current batch predictions.
+            inputs (OTXSampleBatch): Current batch ground-truth inputs.
 
         Returns:
             MetricInput: Dictionary containing predictions and ground truth.

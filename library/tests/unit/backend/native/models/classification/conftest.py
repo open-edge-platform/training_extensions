@@ -11,7 +11,7 @@ from omegaconf import DictConfig
 from torchvision import tv_tensors
 
 from otx.data.entity.base import ImageInfo
-from otx.data.entity.torch import OTXDataBatch
+from otx.data.entity.sample import OTXSampleBatch
 from otx.types.label import HLabelInfo
 
 
@@ -211,12 +211,12 @@ def fxt_hlabel_cifar() -> HLabelInfo:
 
 
 @pytest.fixture
-def fxt_multiclass_cls_batch_data_entity() -> OTXDataBatch:
+def fxt_multiclass_cls_batch_data_entity() -> OTXSampleBatch:
     batch_size = 2
     random_tensor = torch.randn((batch_size, 3, 224, 224))
     tv_tensor = tv_tensors.Image(data=random_tensor)
     img_infos = [ImageInfo(img_idx=i, img_shape=(224, 224), ori_shape=(224, 224)) for i in range(batch_size)]
-    return OTXDataBatch(
+    return OTXSampleBatch(
         batch_size=batch_size,
         images=tv_tensor,
         imgs_info=img_infos,
@@ -228,8 +228,8 @@ def fxt_multiclass_cls_batch_data_entity() -> OTXDataBatch:
 def fxt_multilabel_cls_batch_data_entity(
     fxt_multiclass_cls_batch_data_entity,
     fxt_multilabel_labelinfo,
-) -> OTXDataBatch:
-    return OTXDataBatch(
+) -> OTXSampleBatch:
+    return OTXSampleBatch(
         batch_size=fxt_multiclass_cls_batch_data_entity.batch_size,
         images=fxt_multiclass_cls_batch_data_entity.images,
         imgs_info=fxt_multiclass_cls_batch_data_entity.imgs_info,
@@ -241,8 +241,8 @@ def fxt_multilabel_cls_batch_data_entity(
 
 
 @pytest.fixture
-def fxt_hlabel_cls_batch_data_entity(fxt_multilabel_cls_batch_data_entity) -> OTXDataBatch:
-    return OTXDataBatch(**asdict(fxt_multilabel_cls_batch_data_entity))
+def fxt_hlabel_cls_batch_data_entity(fxt_multilabel_cls_batch_data_entity) -> OTXSampleBatch:
+    return OTXSampleBatch(**asdict(fxt_multilabel_cls_batch_data_entity))
 
 
 @pytest.fixture

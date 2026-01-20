@@ -12,7 +12,7 @@ from model_api.tilers import DetectionTiler
 from torchvision import tv_tensors
 
 from otx.backend.openvino.models.base import OVModel
-from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
+from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
 from otx.metrics import MetricCallable, MetricInput
 from otx.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 from otx.types.task import OTXTaskType
@@ -60,16 +60,16 @@ class OVDetectionModel(OVModel):
         Customize the outputs of the model to match the expected format.
 
             outputs (list[DetectionResult]): List of detection results from the model.
-            inputs (OTXDataBatch): Input batch containing image and metadata.
+            inputs (OTXSampleBatch): Input batch containing image and metadata.
 
-            OTXPredBatch: A batch of predictions including bounding boxes, scores, labels,
+            OTXPredictionBatch: A batch of predictions including bounding boxes, scores, labels,
             and optionally saliency maps and feature vectors.
         ...
 
         Prepare inputs for metric computation.
 
-            preds (OTXPredBatch): Predicted batch containing bounding boxes, scores, and labels.
-            inputs (OTXDataBatch): Input batch containing ground truth bounding boxes and labels.
+            preds (OTXPredictionBatch): Predicted batch containing bounding boxes, scores, and labels.
+            inputs (OTXSampleBatch): Input batch containing ground truth bounding boxes and labels.
 
             MetricInput: A dictionary with 'preds' and 'target' keys containing
             the predicted and ground truth bounding boxes and labels.
@@ -138,17 +138,17 @@ class OVDetectionModel(OVModel):
     def _customize_outputs(
         self,
         outputs: list[DetectionResult],
-        inputs: OTXDataBatch,
-    ) -> OTXPredBatch:
+        inputs: OTXSampleBatch,
+    ) -> OTXPredictionBatch:
         """Customize the outputs of the detection model.
 
         Args:
             outputs (list[DetectionResult]): A list of detection results containing bounding boxes,
                 scores, labels, saliency maps, and feature vectors.
-            inputs (OTXDataBatch): A batch of input data containing images and their metadata.
+            inputs (OTXSampleBatch): A batch of input data containing images and their metadata.
 
         Returns:
-            OTXPredBatch: A batch of predictions containing processed bounding boxes, scores, labels,
+            OTXPredictionBatch: A batch of predictions containing processed bounding boxes, scores, labels,
             and optionally saliency maps and feature vectors.
 
         Notes:
@@ -190,7 +190,7 @@ class OVDetectionModel(OVModel):
 
             # Squeeze dim 2D => 1D, (1, internal_dim) => (internal_dim)
             predicted_f_vectors = [out.feature_vector[0] for out in outputs]
-            return OTXPredBatch(
+            return OTXPredictionBatch(
                 batch_size=len(outputs),
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
@@ -201,7 +201,7 @@ class OVDetectionModel(OVModel):
                 feature_vector=predicted_f_vectors,
             )
 
-        return OTXPredBatch(
+        return OTXPredictionBatch(
             batch_size=len(outputs),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
@@ -212,14 +212,14 @@ class OVDetectionModel(OVModel):
 
     def prepare_metric_inputs(
         self,
-        preds: OTXPredBatch,  # type: ignore[override]
-        inputs: OTXDataBatch,  # type: ignore[override]
+        preds: OTXPredictionBatch,  # type: ignore[override]
+        inputs: OTXSampleBatch,  # type: ignore[override]
     ) -> MetricInput:
         """Convert prediction and input entities to a format suitable for metric computation.
 
         Args:
-            preds (OTXPredBatch): The predicted batch entity containing predicted bboxes.
-            inputs (OTXDataBatch): The input batch entity containing ground truth bboxes.
+            preds (OTXPredictionBatch): The predicted batch entity containing predicted bboxes.
+            inputs (OTXSampleBatch): The input batch entity containing ground truth bboxes.
 
         Returns:
             MetricInput: A dictionary contains 'preds' and 'target' keys

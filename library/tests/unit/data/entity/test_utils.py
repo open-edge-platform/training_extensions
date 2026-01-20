@@ -4,13 +4,13 @@
 
 import torch
 
-from otx.data.entity import ImageInfo, OTXDataBatch
+from otx.data.entity import ImageInfo, OTXSampleBatch
 from otx.data.entity.utils import stack_batch
 
 
 def test_stack_batch():
     # Create a sample entity with tensor images
-    entity = OTXDataBatch(
+    entity = OTXSampleBatch(
         batch_size=3,
         images=[
             torch.tensor([[[1, 2], [3, 4], [5, 6]]], dtype=torch.uint8),

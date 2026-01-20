@@ -8,7 +8,7 @@ import numpy as np
 import torch
 from torchvision import tv_tensors
 
-from otx.data.entity.torch.torch import OTXPredBatch
+from otx.data.entity.sample import OTXPredictionBatch
 
 
 def get_polygon_area(points: np.ndarray) -> float:
@@ -25,17 +25,17 @@ def get_polygon_area(points: np.ndarray) -> float:
     return 0.5 * np.abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
 
 
-def convert_masks_to_rotated_predictions(preds: OTXPredBatch) -> OTXPredBatch:
+def convert_masks_to_rotated_predictions(preds: OTXPredictionBatch) -> OTXPredictionBatch:
     """Convert masks to rotated bounding boxes and polygons.
 
     This function processes the predictions from an instance segmentation model,
     extracting rotated bounding boxes and polygons from the masks.
 
     Args:
-        preds (OTXPredBatch): The predictions from the instance segmentation model.
+        preds (OTXPredictionBatch): The predictions from the instance segmentation model.
 
     Returns:
-        OTXPredBatch: The predictions with rotated bounding boxes and polygons.
+        OTXPredictionBatch: The predictions with rotated bounding boxes and polygons.
     """
     batch_scores = []
     batch_bboxes = []
@@ -97,7 +97,7 @@ def convert_masks_to_rotated_predictions(preds: OTXPredBatch) -> OTXPredBatch:
         batch_polygons.append(polygons)
         batch_masks.append(masks)
 
-    return OTXPredBatch(
+    return OTXPredictionBatch(
         batch_size=preds.batch_size,
         images=preds.images,
         imgs_info=preds.imgs_info,
@@ -112,6 +112,6 @@ def convert_masks_to_rotated_predictions(preds: OTXPredBatch) -> OTXPredBatch:
 class RotatedPredictMixin:
     """Mixin class for rotated detection prediction."""
 
-    def rotated_predict_step(self, preds: OTXPredBatch) -> OTXPredBatch:
+    def rotated_predict_step(self, preds: OTXPredictionBatch) -> OTXPredictionBatch:
         """Perform prediction step for rotated detection."""
         return convert_masks_to_rotated_predictions(preds)

@@ -17,8 +17,7 @@ from otx import LabelInfo, NullLabelInfo
 if TYPE_CHECKING:
     from datumaro.experimental import Dataset
 
-from otx.data.entity.sample import OTXSample
-from otx.data.entity.torch.torch import OTXDataBatch
+from otx.data.entity.sample import OTXSample, OTXSampleBatch
 from otx.data.transform_libs.torchvision import Compose
 from otx.types import OTXTaskType
 
@@ -55,8 +54,8 @@ def _ensure_chw_format(img: torch.Tensor) -> torch.Tensor:
     return img
 
 
-def _default_collate_fn(items: list[OTXSample]) -> OTXDataBatch:
-    """Collate OTXSample items into an OTXDataBatch.
+def _default_collate_fn(items: list[OTXSample]) -> OTXSampleBatch:
+    """Collate OTXSample items into an OTXSampleBatch.
 
     Args:
         items: List of OTXSample items to batch
@@ -92,7 +91,7 @@ def _default_collate_fn(items: list[OTXSample]) -> OTXDataBatch:
     else:
         images = image_tensors
 
-    return OTXDataBatch(
+    return OTXSampleBatch(
         batch_size=len(items),
         images=images,
         labels=[item.label for item in items] if items[0].label is not None else None,

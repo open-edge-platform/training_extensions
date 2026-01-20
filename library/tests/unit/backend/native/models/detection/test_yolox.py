@@ -12,7 +12,7 @@ from otx.backend.native.models.detection.backbones.csp_darknet import CSPDarknet
 from otx.backend.native.models.detection.heads.yolox_head import YOLOXHeadModule
 from otx.backend.native.models.detection.necks.yolox_pafpn import YOLOXPAFPNModule
 from otx.backend.native.models.detection.yolox import YOLOX
-from otx.data.entity.torch import OTXPredBatch
+from otx.data.entity.sample import OTXPredictionBatch
 
 
 class TestYOLOX:
@@ -119,7 +119,7 @@ class TestYOLOX:
     def test_predict(self, model, fxt_detection_batch):
         model.eval()
         output = model(fxt_detection_batch)
-        assert isinstance(output, OTXPredBatch)
+        assert isinstance(output, OTXPredictionBatch)
 
     @pytest.mark.parametrize(
         "model",
