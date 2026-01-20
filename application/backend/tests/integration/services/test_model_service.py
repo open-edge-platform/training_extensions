@@ -6,7 +6,7 @@ from uuid import UUID, uuid4
 import pytest
 from sqlalchemy.orm import Session
 
-from app.db.schema import DatasetRevisionDB, EvaluationDB, ModelRevisionDB, ProjectDB
+from app.db.schema import DatasetRevisionDB, EvaluationDB, MetricScoreDB, ModelRevisionDB, ProjectDB
 from app.models import DatasetItemSubset, EvaluationResult
 from app.models.model_revision import ModelFormat
 from app.services import ModelService, ResourceNotFoundError, ResourceType
@@ -245,3 +245,41 @@ class TestModelServiceIntegration:
         assert metrics_dict["accuracy"] == 0.95
         assert metrics_dict["f1_score"] == 0.89
         assert metrics_dict["precision"] == 0.92
+
+    def test_get_evaluation_results(
+        self, fxt_model_id: UUID, fxt_project_id: UUID, fxt_model_service: ModelService, db_session: Session
+    ):
+        """Test retrieving evaluation results from the database succeeds."""
+        # Arrange
+        dataset_revision = DatasetRevisionDB(id=str(uuid4()), project_id=str(fxt_project_id), name="test")
+        evaluation = EvaluationDB(
+            id=str(uuid4()),
+            dataset_revision_id=dataset_revision.id,
+            model_revision_id=str(fxt_model_id),
+            subset=DatasetItemSubset.TESTING,
+        )
+        metrics = [
+            MetricScoreDB(metric="accuracy", score=0.95),
+            MetricScoreDB(metric="f1_score", score=0.89),
+            MetricScoreDB(metric="precision", score=0.92),
+        ]
+        evaluation.metric_scores = metrics
+        db_session.add(dataset_revision)
+        db_session.flush()
+        db_session.add(evaluation)
+        db_session.flush()
+
+        # Act
+        evaluation_results = fxt_model_service.get_evaluation_results(fxt_model_id)
+
+        # Assert
+        assert evaluation_results[0] is not None
+        evaluation_result = evaluation_results[0]
+        assert evaluation_result.model_revision_id == fxt_model_id
+        assert evaluation_result.dataset_revision_id == UUID(dataset_revision.id)
+        assert evaluation_result.subset == DatasetItemSubset.TESTING
+        assert evaluation_result.metrics == {
+            "accuracy": 0.95,
+            "f1_score": 0.89,
+            "precision": 0.92,
+        }
