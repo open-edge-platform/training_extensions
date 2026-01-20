@@ -86,13 +86,10 @@ jobs:
           uv run ruff check --output-format=github .
           uv run ruff format --check .
 
-      # TODO: remove 'continue-on-error' after addressing all mypy issues
-      # https://github.com/open-edge-platform/training_extensions/issues/5006
-      - name: Check source code with mypy
-        continue-on-error: true
+      - name: Check source code with Pyrefly
         working-directory: library
         run: |
-          uv run mypy src/otx
+          uv run pyrefly check --baseline=pyrefly-baseline.json
 
   unit-tests:
     runs-on: [self-hosted, linux, x64, dev, dmount]

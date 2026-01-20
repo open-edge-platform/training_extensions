@@ -25,6 +25,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
     "datumaro[experimental] @ git+https://github.com/open-edge-platform/datumaro.git@develop",
@@ -71,7 +72,6 @@ dev = [
 
 lint = [
     "ruff==0.11.13",
-    "mypy~=1.6.1",
     "attrs",
     "types-PyYAML~=6.0.12",
     "types-aiofiles",
@@ -81,7 +81,8 @@ lint = [
     "types_futures",
     "types-setuptools",
     "types-python-dateutil",
-    "tokenize-rt==3.2.0"
+    "tokenize-rt==3.2.0",
+    "pyrefly~=0.48.2",
 ]
 
 [project.optional-dependencies]
@@ -206,14 +207,6 @@ omit = [
     "config.py",
     "config-3.py",
 ]
-
-
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# MYPY CONFIGURATION.                                                         #
-[tool.mypy]
-python_version = "3.13"
-ignore_missing_imports = true
-show_error_codes = true
 
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -426,3 +419,7 @@ markers = [
     "xpu",  # mark tests which require Intel dGPU,
 ]
 python_files = "tests/**/*.py"
+
+[tool.pyrefly]
+python-version = "3.10.0"
+ignore-missing-imports = ["*"]
