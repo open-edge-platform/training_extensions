@@ -3,14 +3,14 @@
 
 import type { Dispatch, SetStateAction } from 'react';
 
-import { Flex, Heading, Image, Radio, RadioGroup, Text, View } from '@geti/ui';
+import { Flex, Grid, Heading, Image, Radio, RadioGroup, Text, View } from '@geti/ui';
 
 import thumbnailUrl from '../../../assets/mocked-project-thumbnail.png';
 import type { TaskOption, TaskType } from './interface';
 
 import classes from './task-selection.module.scss';
 
-const TASK_OPTIONS: TaskOption[] = [
+export const TASK_OPTIONS: TaskOption[] = [
     {
         id: 'detection_task',
         imageSrc: thumbnailUrl,
@@ -41,14 +41,15 @@ type TaskOptionProps = {
     taskOption: TaskOption;
     onPress: () => void;
 };
+
 const Option = ({ taskOption, onPress }: TaskOptionProps) => {
     return (
         <div onClick={onPress} className={classes.option} aria-label={`Task option: ${taskOption.title}`}>
-            <View maxWidth={'344px'}>
-                <Image height={'size-3000'} width={'size-3600'} src={taskOption.imageSrc} alt={taskOption.title} />
+            <View>
+                <Image height={'size-2400'} width={'100%'} src={taskOption.imageSrc} alt={taskOption.title} />
             </View>
 
-            <View padding={'size-300'} backgroundColor={'gray-100'}>
+            <View padding={'size-300'}>
                 <Flex justifyContent={'space-between'} alignItems={'center'}>
                     <Heading level={2} UNSAFE_className={classes.title}>
                         {taskOption.title}
@@ -71,6 +72,7 @@ export const TaskSelection = ({ selectedTask, setSelectedTask }: TaskSelectionPr
         <Flex direction={'column'} gap={'size-300'} alignItems={'center'}>
             <RadioGroup
                 aria-label='Task selection'
+                width={'100%'}
                 value={selectedTaskOption?.value}
                 onChange={(value: string) => {
                     const option = TASK_OPTIONS.find((taskOption) => taskOption.value === value);
@@ -78,7 +80,15 @@ export const TaskSelection = ({ selectedTask, setSelectedTask }: TaskSelectionPr
                     if (option) setSelectedTask(option.value);
                 }}
             >
-                <Flex justifyContent={'center'} gap={'size-300'}>
+                <Grid
+                    columns={
+                        'repeat(3, minmax(min(100%, var(--spectrum-global-dimension-size-3000)), ' +
+                        'var(--spectrum-global-dimension-size-4600)))'
+                    }
+                    gap={'size-500'}
+                    width={'100%'}
+                    justifyContent={'center'}
+                >
                     {TASK_OPTIONS.map((taskOption) => (
                         <Option
                             key={taskOption.value}
@@ -88,14 +98,8 @@ export const TaskSelection = ({ selectedTask, setSelectedTask }: TaskSelectionPr
                             }}
                         />
                     ))}
-                </Flex>
+                </Grid>
             </RadioGroup>
-
-            <Flex>
-                <Text UNSAFE_style={{ color: 'var(--spectrum-global-color-gray-700)' }}>
-                    {`What objects should the model learn to ${selectedTaskOption?.verb}?`}
-                </Text>
-            </Flex>
         </Flex>
     );
 };

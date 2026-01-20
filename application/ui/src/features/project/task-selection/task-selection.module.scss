@@ -2,10 +2,11 @@
     color: var(--spectrum-global-color-gray-900);
     font-weight: 500;
     line-height: var(--spectrum-global-dimension-size-350);
+    font-size: var(--spectrum-global-dimension-size-250);
 }
 
 .description {
-    color: var(--spectrum-global-color-gray-900);
+    color: var(--spectrum-global-color-gray-700);
     display: block;
     max-width: var(--spectrum-global-dimension-size-2400);
     margin-top: var(--spectrum-global-dimension-size-200);
@@ -14,22 +15,18 @@
 .option {
     cursor: pointer;
     position: relative;
-    border: var(--spectrum-global-dimension-size-25) solid transparent;
+    overflow: hidden;
+    border: var(--spectrum-global-dimension-size-25) solid var(--spectrum-global-color-gray-200);
+    border-radius: var(--spectrum-alias-border-radius-regular);
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    background-color: var(--spectrum-global-color-gray-100);
 
     &:has(:checked) {
         border-color: var(--energy-blue);
     }
 
-    &:has(:checked):after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: rgba(0, 199, 253, 1);
-        opacity: 0.1;
+    &:has(:checked) {
+        background-color: var(--selection-dark-blue);
     }
 
     &:has(:checked) [class*='spectrum-Radio-button']:before {

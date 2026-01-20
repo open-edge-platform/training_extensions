@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Grid, View } from '@geti/ui';
+import { View } from '@geti/ui';
 
 import { CreateProjectForm } from '../../features/project/create/create-project-form';
 import { useProjectsQuery } from '../../hooks/api/project.hook';
@@ -13,9 +13,7 @@ export const CreateProject = () => {
 
     return (
         <View UNSAFE_className={backgroundStyles.projectBackground} height='100%' width='100%'>
-            <Grid rows={['auto', '1fr', 'auto']} height='100%' width='100%'>
-                <CreateProjectForm projects={projects} />
-            </Grid>
+            <CreateProjectForm projects={projects} />
         </View>
     );
 };
