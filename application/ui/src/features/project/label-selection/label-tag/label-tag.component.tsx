@@ -16,7 +16,6 @@ type LabelTagProps = {
 const LabelTagContent = ({ label, onDelete }: LabelTagProps) => {
     return (
         <Flex
-            aria-label={`Label ${label.name}`}
             alignItems={'center'}
             gap={'size-100'}
             UNSAFE_style={{ '--labelColor': label.color }}

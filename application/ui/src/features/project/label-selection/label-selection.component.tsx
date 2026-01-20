@@ -131,7 +131,7 @@ export const LabelSelection = ({ labels, setLabels }: LabelSelectionProps) => {
     };
 
     const handleAddItem = (label: Label) => {
-        setLabels((prevLabels) => [...prevLabels, label]);
+        setLabels([...labels, label]);
     };
 
     return (
