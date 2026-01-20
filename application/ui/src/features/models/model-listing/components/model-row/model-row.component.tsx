@@ -4,20 +4,25 @@
 import { ActionButton, dimensionValue, Flex, Grid, Item, Key, Menu, MenuTrigger, Tag, Text } from '@geti/ui';
 import { MoreMenu } from '@geti/ui/icons';
 
-import { SchemaModelView } from '../../../../../api/openapi-spec';
 import { ReactComponent as ThumbsUp } from '../../../../../assets/icons/thumbs-up.svg';
+import { Model } from '../../../../../constants/shared-types';
 import { GRID_COLUMNS } from '../../constants';
 import { AccuracyIndicator } from '../../model-variants/accuracy-indicator.component';
 import { formatTrainingDateTime } from '../../utils/date-formatting';
+import { formatModelSize } from '../../utils/format-model-size';
 import { ActiveModelTag } from '../active-model-tag.component';
 import { ParentRevisionModel } from '../parent-revision-model.component';
 
 type ModelRowProps = {
-    model: SchemaModelView;
+    model: Model;
     activeModelArchitectureId?: string;
-    parentRevisionModel?: SchemaModelView;
+    parentRevisionModel?: Model;
     onExpandModel?: (modelId: string) => void;
     onModelAction?: (key: Key) => void;
+};
+
+const getTotalModelSize = (model: Model): number => {
+    return (model.variants ?? []).reduce((total, variant) => total + (variant.weights_size ?? 0), 0);
 };
 
 export const ModelRow = ({
@@ -28,6 +33,7 @@ export const ModelRow = ({
     onModelAction,
 }: ModelRowProps) => {
     const trainingEndTime = model.training_info.end_time;
+    const totalSize = getTotalModelSize(model);
 
     return (
         <Grid columns={GRID_COLUMNS} alignItems={'center'} width={'100%'} columnGap={'size-200'}>
@@ -42,6 +48,7 @@ export const ModelRow = ({
                     UNSAFE_style={{
                         fontSize: dimensionValue('font-size-75'),
                         color: 'var(--spectrum-global-color-gray-700)',
+                        fontWeight: '400',
                     }}
                 >
                     {parentRevisionModel ? (
@@ -77,7 +84,9 @@ export const ModelRow = ({
                 />
             </Flex>
 
-            <Text UNSAFE_style={{ fontSize: dimensionValue('font-size-75'), fontWeight: '400' }}>500 MB</Text>
+            <Text UNSAFE_style={{ fontSize: dimensionValue('font-size-75'), fontWeight: '400' }}>
+                {totalSize > 0 ? formatModelSize(totalSize) : '-'}
+            </Text>
 
             <AccuracyIndicator accuracy={72} />
 
