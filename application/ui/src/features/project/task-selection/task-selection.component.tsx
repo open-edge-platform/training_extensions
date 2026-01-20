@@ -6,7 +6,8 @@ import type { Dispatch, SetStateAction } from 'react';
 import { Flex, Grid, Heading, Image, Radio, RadioGroup, Text, View } from '@geti/ui';
 
 import thumbnailUrl from '../../../assets/mocked-project-thumbnail.png';
-import type { TaskOption, TaskType } from './interface';
+import { TaskType } from '../../../constants/shared-types';
+import type { TaskOption } from './interface';
 
 import classes from './task-selection.module.scss';
 

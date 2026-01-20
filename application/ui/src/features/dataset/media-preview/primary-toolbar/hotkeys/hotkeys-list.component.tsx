@@ -3,8 +3,8 @@
 
 import { Divider, Grid, Keyboard, Text } from '@geti/ui';
 
+import { getHotkey, HOTKEYS } from '../../../../../shared/hotkeys-definition';
 import { useAvailableTools } from '../../../../annotator/tools/annotator-tools/use-available-tools';
-import { COMMAND_KEY, HOTKEYS } from './hotkeys-definition';
 
 interface HotkeyItemProps {
     hotkeyName: string;
@@ -18,14 +18,6 @@ const HotkeyItem = ({ hotkeyName, hotkey }: HotkeyItemProps) => {
             <Keyboard>{hotkey}</Keyboard>
         </>
     );
-};
-
-export const getHotkey = (key: string): string => {
-    if (key.includes(COMMAND_KEY)) {
-        return key.replace(COMMAND_KEY, 'cmd').toLocaleUpperCase();
-    }
-
-    return key.toLocaleUpperCase();
 };
 
 export const HotkeysList = () => {

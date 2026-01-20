@@ -26,3 +26,5 @@ export type DatasetRevision = {
 };
 
 export type Project = components['schemas']['ProjectView'];
+
+export type TaskType = 'detection' | 'instance_segmentation' | 'classification';
