@@ -10,12 +10,11 @@ import backgroundStyles from '../../features/project/project-background.module.s
 
 export const CreateProject = () => {
     const { data: projects = [] } = useProjectsQuery();
-    const numberOfProjects = projects.length;
 
     return (
         <View UNSAFE_className={backgroundStyles.projectBackground} height='100%' width='100%'>
             <Grid rows={['auto', '1fr', 'auto']} height='100%' width='100%'>
-                <CreateProjectForm numberOfProjects={numberOfProjects} />
+                <CreateProjectForm projects={projects} />
             </Grid>
         </View>
     );

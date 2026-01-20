@@ -62,15 +62,16 @@ const Option = ({ taskOption, onPress }: TaskOptionProps) => {
     );
 };
 
-type TaskSelectionProps = { selectedTask: TaskType; setSelectedTask: Dispatch<SetStateAction<TaskType>> };
+type TaskSelectionProps = { selectedTask: TaskType | null; setSelectedTask: Dispatch<SetStateAction<TaskType | null>> };
+
 export const TaskSelection = ({ selectedTask, setSelectedTask }: TaskSelectionProps) => {
-    const selectedTaskOption = TASK_OPTIONS.find((task) => task.value === selectedTask) || TASK_OPTIONS[0];
+    const selectedTaskOption = TASK_OPTIONS.find((task) => task.value === selectedTask);
 
     return (
         <Flex direction={'column'} gap={'size-300'} alignItems={'center'}>
             <RadioGroup
                 aria-label='Task selection'
-                value={selectedTaskOption.value}
+                value={selectedTaskOption?.value}
                 onChange={(value: string) => {
                     const option = TASK_OPTIONS.find((taskOption) => taskOption.value === value);
 
@@ -92,7 +93,7 @@ export const TaskSelection = ({ selectedTask, setSelectedTask }: TaskSelectionPr
 
             <Flex>
                 <Text UNSAFE_style={{ color: 'var(--spectrum-global-color-gray-700)' }}>
-                    {`What objects should the model learn to ${selectedTaskOption.verb}?`}
+                    {`What objects should the model learn to ${selectedTaskOption?.verb}?`}
                 </Text>
             </Flex>
         </Flex>
