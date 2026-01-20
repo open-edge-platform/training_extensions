@@ -4,7 +4,7 @@
 import { dimensionValue, Flex, Grid, Heading, Text } from '@geti/ui';
 import { Image, Tag } from '@geti/ui/icons';
 
-import { TrainModel } from '../../../train-model/train-model';
+import { TrainModel } from '../../../train-model/train-model.component';
 import type { DatasetGroup } from '../../types';
 import { ThreeSectionRange } from '../three-section-range/three-section-range.component';
 

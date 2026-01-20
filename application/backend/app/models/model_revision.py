@@ -39,6 +39,20 @@ class TrainingInfo(BaseEntity):
     end_time: datetime | None = None
     dataset_revision_id: UUID | None = None
 
+    @model_validator(mode="before")
+    @classmethod
+    def populate_training_info(cls, data: object) -> object:
+        if isinstance(data, ModelRevisionDB):
+            return {
+                "status": data.training_status,
+                "label_schema_revision": data.label_schema_revision,
+                "configuration": data.training_configuration,
+                "start_time": data.training_started_at,
+                "end_time": data.training_finished_at,
+                "dataset_revision_id": data.training_dataset_id,
+            }
+        return data
+
 
 class ModelRevision(BaseEntity):
     """
