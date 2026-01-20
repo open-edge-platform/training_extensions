@@ -57,7 +57,7 @@ export const TrainingModelRow = ({ job, onCancel }: TrainingModelRowProps) => {
                 width={'100%'}
                 columnGap={'size-200'}
                 UNSAFE_style={{
-                    padding: `${dimensionValue('size-150')} ${dimensionValue('size-600')}
+                    padding: `${dimensionValue('size-150')} ${dimensionValue('size-250')}
                         ${dimensionValue('size-150')} ${dimensionValue('size-1000')}`,
                 }}
             >
