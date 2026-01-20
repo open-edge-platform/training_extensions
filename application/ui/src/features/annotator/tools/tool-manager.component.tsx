@@ -3,7 +3,7 @@
 
 import { useAnnotator } from '../../../shared/annotator/annotator-provider.component';
 import { BoundingBoxTool } from './bounding-box-tool/bounding-box-tool.component';
-import { MagneticLasso } from './magnetic-masso/magnetic-lasso.component';
+import { MagneticLasso } from './magnetic-lasso/magnetic-lasso.component';
 import { PolygonTool } from './polygon-tool/polygon-tool.component';
 import { SegmentAnythingTool } from './segment-anything-tool/segment-anything-tool.component';
 

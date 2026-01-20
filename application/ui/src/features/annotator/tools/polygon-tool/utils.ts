@@ -8,7 +8,7 @@ import { isEmpty, isEqual, isNil, negate } from 'lodash-es';
 
 import { Label } from '../../../../constants/shared-types';
 import { isEraserOrRightButton, isLeftButton } from '../../../../shared/buttons-utils';
-import { Point, Polygon } from '../../../../shared/types';
+import { Point, Polygon as PolygonType } from '../../../../shared/types';
 import { DEFAULT_ANNOTATION_STYLES } from '../../utils';
 import { PointerType } from '../utils';
 
@@ -155,12 +155,12 @@ export const isCloseMode = (mode: PolygonMode | null) => {
     return [PolygonMode.PolygonClose, PolygonMode.LassoClose, PolygonMode.MagneticLassoClose].includes(mode);
 };
 
-export const isPolygonReadyToClose = (currentPolygon: Polygon | null): currentPolygon is Polygon => {
+export const isPolygonReadyToClose = (currentPolygon: PolygonType | null): currentPolygon is PolygonType => {
     if (isNil(currentPolygon)) {
         return false;
     }
 
-    currentPolygon.points.pop();
+    const pointsWithoutLast = currentPolygon.points.slice(0, -1);
 
-    return isPolygonValid({ shapeType: 'polygon', points: currentPolygon.points });
+    return isPolygonValid({ shapeType: 'polygon', points: pointsWithoutLast });
 };
