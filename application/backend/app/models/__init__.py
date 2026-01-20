@@ -15,6 +15,7 @@ from .dataset_item import (
     DatasetItemFormat,
     DatasetItemSubset,
 )
+from .evaluation import EvaluationResult
 from .label import Label, LabelReference
 from .model_revision import ModelRevision, TrainingInfo, TrainingStatus
 from .pipeline import Pipeline, PipelineStatus
@@ -55,6 +56,7 @@ __all__ = [
     "DatasetItemSubset",
     "DisconnectedSinkConfig",
     "DisconnectedSourceConfig",
+    "EvaluationResult",
     "FixedRateDataCollectionPolicy",
     "FolderSinkConfig",
     "FullImage",

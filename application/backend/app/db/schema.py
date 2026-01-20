@@ -148,3 +148,25 @@ class TrainingConfigurationDB(BaseID):
     configuration_data: Mapped[dict] = mapped_column(JSON, nullable=False)
 
     project = relationship("ProjectDB")
+
+
+class EvaluationDB(BaseID):
+    __tablename__ = "evaluations"
+
+    model_revision_id: Mapped[str] = mapped_column(Text, ForeignKey("model_revisions.id", ondelete="CASCADE"))
+    dataset_revision_id: Mapped[str] = mapped_column(
+        Text, ForeignKey("dataset_revisions.id", ondelete="CASCADE"), nullable=False
+    )
+    subset: Mapped[str] = mapped_column(String(20), nullable=False)
+
+    metric_scores = relationship("MetricScoreDB", back_populates="evaluation")
+
+
+class MetricScoreDB(BaseID):
+    __tablename__ = "metric_scores"
+
+    evaluation_id: Mapped[str] = mapped_column(Text, ForeignKey("evaluations.id", ondelete="CASCADE"))
+    metric: Mapped[str] = mapped_column(String(255), nullable=False)
+    score: Mapped[float] = mapped_column(Float, nullable=False)
+
+    evaluation = relationship("EvaluationDB", back_populates="metric_scores")

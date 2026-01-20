@@ -6,7 +6,8 @@ from uuid import UUID, uuid4
 import pytest
 from sqlalchemy.orm import Session
 
-from app.db.schema import ModelRevisionDB, ProjectDB
+from app.db.schema import DatasetRevisionDB, EvaluationDB, ModelRevisionDB, ProjectDB
+from app.models import DatasetItemSubset, EvaluationResult
 from app.models.model_revision import ModelFormat
 from app.services import ModelService, ResourceNotFoundError, ResourceType
 from tests.integration.project_factory import ProjectTestDataFactory
@@ -211,3 +212,36 @@ class TestModelServiceIntegration:
         assert files_exist is True
         expected_paths = tuple(model_dir / file for file in expected_files)
         assert paths == expected_paths
+
+    def test_save_evaluation_result(
+        self, fxt_model_id: UUID, fxt_project_id: UUID, fxt_model_service: ModelService, db_session: Session
+    ):
+        """Test saving evaluation results to the database succeeds."""
+        # Arrange
+        dataset_revision = DatasetRevisionDB(project_id=str(fxt_project_id), name="test")
+        db_session.add(dataset_revision)
+        db_session.flush()
+
+        evaluation_result = EvaluationResult(
+            model_revision_id=fxt_model_id,
+            dataset_revision_id=UUID(dataset_revision.id),
+            subset=DatasetItemSubset.TESTING,
+            metrics={"accuracy": 0.95, "f1_score": 0.89, "precision": 0.92},
+        )
+
+        # Act
+        fxt_model_service.save_evaluation_result(evaluation_result)
+
+        # Assert
+        saved_evaluation = db_session.query(EvaluationDB).filter_by(model_revision_id=str(fxt_model_id)).first()
+
+        assert saved_evaluation is not None
+        assert saved_evaluation.model_revision_id == str(fxt_model_id)
+        assert saved_evaluation.dataset_revision_id == str(dataset_revision.id)
+        assert saved_evaluation.subset == DatasetItemSubset.TESTING
+        assert len(saved_evaluation.metric_scores) == 3
+
+        metrics_dict = {m.metric: m.score for m in saved_evaluation.metric_scores}
+        assert metrics_dict["accuracy"] == 0.95
+        assert metrics_dict["f1_score"] == 0.89
+        assert metrics_dict["precision"] == 0.92
