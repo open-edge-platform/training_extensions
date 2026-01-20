@@ -5,6 +5,8 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from app.models import DatasetItemSubset
+
 
 class EvaluationResult(BaseModel):
     """
@@ -16,13 +18,13 @@ class EvaluationResult(BaseModel):
     Attributes:
         model_revision_id: Unique identifier of the model revision being evaluated.
         dataset_revision_id: Unique identifier of the dataset revision used for evaluation.
-        subset: The dataset subset used for evaluation (e.g., "train", "val", "test").
+        subset: The dataset subset used for evaluation (e.g., "training", "validation", "testing").
         metrics: Dictionary mapping metric names to their corresponding float scores
                  (e.g., {"accuracy": 0.95, "f1_score": 0.87}).
     """
 
     model_revision_id: UUID
     dataset_revision_id: UUID
-    subset: str
+    subset: DatasetItemSubset
 
     metrics: dict[str, float]

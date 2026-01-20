@@ -37,7 +37,7 @@ from sqlalchemy.orm import Session
 
 from app.core.jobs.models import TrainingJobParams
 from app.core.run import ExecutionContext
-from app.models import DatasetItemAnnotationStatus, EvaluationResult, Task, TaskType, TrainingStatus
+from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, EvaluationResult, Task, TaskType, TrainingStatus
 from app.models.system import DeviceInfo, DeviceType
 from app.models.training_configuration.configuration import TrainingConfiguration
 from app.services import (
@@ -387,7 +387,7 @@ class OTXTrainer(Trainer):
                 EvaluationResult(
                     model_revision_id=model_revision_id,
                     dataset_revision_id=dataset_revision_id,
-                    subset=Subset.TESTING.name,
+                    subset=DatasetItemSubset.TESTING,
                     metrics={item[0].split("/")[1]: item[1].item() for item in metrics.items()},
                 )
             )

@@ -8,7 +8,6 @@ from uuid import uuid4
 
 import pytest
 import torch
-from datumaro.experimental.fields import Subset
 from otx.metrics.accuracy import MultiClassClsMetricCallable, MultiLabelClsMetricCallable
 from otx.metrics.mean_ap import MaskRLEMeanAPCallable, MeanAPCallable
 from otx.metrics.types import MetricCallable
@@ -747,7 +746,7 @@ class TestOTXTrainerEvaluateModel:
 
         assert actual_call.model_revision_id == model_id
         assert actual_call.dataset_revision_id == dataset_revision_id
-        assert actual_call.subset == Subset.TESTING.name
+        assert actual_call.subset == DatasetItemSubset.TESTING
         assert actual_call.metrics == pytest.approx(
             {
                 "accuracy": 0.85,

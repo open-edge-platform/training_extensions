@@ -4,11 +4,10 @@ from pathlib import Path
 from uuid import UUID, uuid4
 
 import pytest
-from datumaro.experimental.fields import Subset
 from sqlalchemy.orm import Session
 
 from app.db.schema import DatasetRevisionDB, EvaluationDB, ModelRevisionDB, ProjectDB
-from app.models import EvaluationResult
+from app.models import DatasetItemSubset, EvaluationResult
 from app.models.model_revision import ModelFormat
 from app.services import ModelService, ResourceNotFoundError, ResourceType
 from tests.integration.project_factory import ProjectTestDataFactory
@@ -226,7 +225,7 @@ class TestModelServiceIntegration:
         evaluation_result = EvaluationResult(
             model_revision_id=fxt_model_id,
             dataset_revision_id=UUID(dataset_revision.id),
-            subset=Subset.TESTING.name,
+            subset=DatasetItemSubset.TESTING,
             metrics={"accuracy": 0.95, "f1_score": 0.89, "precision": 0.92},
         )
 
@@ -239,7 +238,7 @@ class TestModelServiceIntegration:
         assert saved_evaluation is not None
         assert saved_evaluation.model_revision_id == str(fxt_model_id)
         assert saved_evaluation.dataset_revision_id == str(dataset_revision.id)
-        assert saved_evaluation.subset == Subset.TESTING.name
+        assert saved_evaluation.subset == DatasetItemSubset.TESTING
         assert len(saved_evaluation.metric_scores) == 3
 
         metrics_dict = {m.metric: m.score for m in saved_evaluation.metric_scores}
