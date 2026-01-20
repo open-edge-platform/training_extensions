@@ -20,6 +20,7 @@ import { Add } from '@geti/ui/icons';
 import { v4 as uuid } from 'uuid';
 
 import type { Label } from '../../../constants/shared-types';
+import { HotkeyField } from './hotkey-field.component';
 import { LabelTag } from './label-tag/label-tag.component';
 import { validateLabel } from './validator';
 
@@ -94,12 +95,9 @@ const CreateLabel = ({ labels, onCreate }: CreateLabelProps) => {
                 />
             </View>
             <View>
-                <TextField
-                    aria-label={'Hotkey input'}
-                    placeholder={'Hotkey'}
-                    value={newLabel?.hotkey ?? undefined}
-                    onChange={(newHotkey) => setNewLabel((prevLabel) => ({ ...prevLabel, hotkey: newHotkey }))}
-                    width={'100%'}
+                <HotkeyField
+                    hotkey={newLabel.hotkey}
+                    onHotkeyChange={(newHotkey) => setNewLabel((prevLabel) => ({ ...prevLabel, hotkey: newHotkey }))}
                 />
             </View>
 
