@@ -58,7 +58,7 @@ export const TrainingModelRow = ({ job, onCancel }: TrainingModelRowProps) => {
                 <Flex alignItems={'start'} direction={'column'} gap={'size-100'}>
                     <Text UNSAFE_className={classes.smallText}>{job.metadata.model.architecture}</Text>
                     {/* TODO: Speed is hardcoded for now, once the backend is update we need to update this */}
-                    <Tag prefix={<ThumbsUp />} text={'Speed'} className={classes.speedTag} />
+                    <Tag prefix={<ThumbsUp />} text={'Speed'} className={classes.recommendedForTag} />
                 </Flex>
 
                 <Text UNSAFE_className={classes.smallText}>...</Text>
