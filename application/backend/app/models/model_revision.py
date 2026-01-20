@@ -43,6 +43,7 @@ class TrainingInfo(BaseEntity):
                 "configuration": data.training_configuration,
                 "start_time": data.training_started_at,
                 "end_time": data.training_finished_at,
+                "dataset_revision_id": data.training_dataset_id,
             }
         return data
 
