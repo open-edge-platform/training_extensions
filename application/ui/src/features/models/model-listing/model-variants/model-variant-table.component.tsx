@@ -34,10 +34,10 @@ export const ModelVariantTable = ({ model, format }: ModelVariantTableProps) => 
     return (
         <TableView aria-label={`Model variants for ${model.id}`} overflowMode={'wrap'} density={'compact'}>
             <TableHeader>
-                <Column isRowHeader>Format</Column>
-                <Column isRowHeader>License</Column>
-                <Column isRowHeader>Precision</Column>
-                <Column isRowHeader>Size</Column>
+                <Column isRowHeader>ARCHITECTURE</Column>
+                <Column isRowHeader>LICENSE</Column>
+                <Column isRowHeader>PRECISION</Column>
+                <Column isRowHeader>SIZE</Column>
                 <Column align='end'>
                     <></>
                 </Column>
@@ -45,7 +45,7 @@ export const ModelVariantTable = ({ model, format }: ModelVariantTableProps) => 
             <TableBody items={variants}>
                 {(variant) => (
                     <Row key={variant.id ?? `${variant.format}-${variant.precision}`}>
-                        <Cell>{variant.format.toUpperCase()}</Cell>
+                        <Cell>{model.architecture}</Cell>
                         <Cell>Apache 2.0</Cell>
                         <Cell>{variant.precision.toUpperCase()}</Cell>
                         <Cell>{formatModelSize(variant.weights_size)}</Cell>
