@@ -5,6 +5,7 @@ import { ActionButton, Flex, PressableElement, Text, Tooltip, TooltipTrigger } f
 import { Cross } from '@geti/ui/icons';
 
 import { Label } from '../../../../constants/shared-types';
+import { formatHotkeyForDisplay } from '../../../../shared/hotkeys-definition';
 
 import styles from './label-tag.module.scss';
 
@@ -42,7 +43,7 @@ export const LabelTag = ({ label, onDelete }: LabelTagProps) => {
                     <LabelTagContent label={label} onDelete={onDelete} />
                 </PressableElement>
                 <Tooltip>
-                    <Text>{label.hotkey}</Text>
+                    <Text>{formatHotkeyForDisplay(label.hotkey)}</Text>
                 </Tooltip>
             </TooltipTrigger>
         );

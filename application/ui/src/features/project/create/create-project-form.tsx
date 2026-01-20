@@ -126,7 +126,7 @@ export const CreateProjectForm = ({ projects }: CreateProjectFormProps) => {
                                     {`What objects should the model learn to ${selectedTaskOption?.verb}?`}
                                 </Text>
                             </Flex>
-                            <LabelSelection labels={labels} setLabels={setLabels} />
+                            <LabelSelection labels={labels} setLabels={setLabels} taskType={selectedTask} />
                         </Flex>
                     )}
                 </Flex>

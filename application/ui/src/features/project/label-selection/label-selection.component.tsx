@@ -19,10 +19,11 @@ import {
 import { Add } from '@geti/ui/icons';
 import { v4 as uuid } from 'uuid';
 
-import type { Label } from '../../../constants/shared-types';
+import type { Label, TaskType } from '../../../constants/shared-types';
+import { TASK_HOTKEYS } from '../../../shared/hotkeys-definition';
 import { HotkeyField } from './hotkey-field.component';
 import { LabelTag } from './label-tag/label-tag.component';
-import { validateLabel } from './validator';
+import { validateLabelName } from './validator';
 
 const PRESET_COLORS = ['#E91E63', '#9C27B0', '#2196F3', '#4CAF50', '#FFEB3B', '#FF9800', '#000000'];
 
@@ -50,13 +51,18 @@ const getInitialLabel = (): Label => ({ id: uuid(), color: getRandomColor(), nam
 export type CreateLabelProps = {
     onCreate: (label: Label) => void;
     labels: Label[];
+    taskType: TaskType;
 };
 
-const CreateLabel = ({ labels, onCreate }: CreateLabelProps) => {
+const CreateLabel = ({ labels, onCreate, taskType }: CreateLabelProps) => {
     const [newLabel, setNewLabel] = useState<Label>(getInitialLabel);
     const isDirty = useRef<boolean>(false);
 
-    const validationResult = isDirty.current ? validateLabel(newLabel, labels) : undefined;
+    const labelsHotkeys = labels.map((label) => label.hotkey).filter((hotkey) => hotkey != null);
+    const appHotkeys = Object.values(TASK_HOTKEYS[taskType]);
+    const allHotkeys = [...labelsHotkeys, ...appHotkeys];
+
+    const validationResult = isDirty.current ? validateLabelName(newLabel, labels) : undefined;
     const isCreateLabelDisabled = validationResult !== undefined;
 
     const createLabel = () => {
@@ -98,6 +104,7 @@ const CreateLabel = ({ labels, onCreate }: CreateLabelProps) => {
                 <HotkeyField
                     hotkey={newLabel.hotkey}
                     onHotkeyChange={(newHotkey) => setNewLabel((prevLabel) => ({ ...prevLabel, hotkey: newHotkey }))}
+                    allHotkeys={allHotkeys}
                 />
             </View>
 
@@ -116,9 +123,10 @@ const CreateLabel = ({ labels, onCreate }: CreateLabelProps) => {
 type LabelSelectionProps = {
     labels: Label[];
     setLabels: Dispatch<SetStateAction<Label[]>>;
+    taskType: TaskType;
 };
 
-export const LabelSelection = ({ labels, setLabels }: LabelSelectionProps) => {
+export const LabelSelection = ({ labels, setLabels, taskType }: LabelSelectionProps) => {
     const handleDeleteItem = (id: string) => {
         const newLabels = labels.filter((label) => label.id !== id);
         setLabels(newLabels);
@@ -141,7 +149,7 @@ export const LabelSelection = ({ labels, setLabels }: LabelSelectionProps) => {
             gap={'size-300'}
             UNSAFE_style={{ overflow: 'auto' }}
         >
-            <CreateLabel onCreate={handleAddItem} labels={labels} />
+            <CreateLabel onCreate={handleAddItem} labels={labels} taskType={taskType} />
             <Flex gap={'size-100'} width={'100%'} wrap={'wrap'}>
                 {labels.map((label) => (
                     <LabelTag key={label.id} label={label} onDelete={handleDeleteItem} />

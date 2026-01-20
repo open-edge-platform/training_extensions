@@ -70,15 +70,45 @@ export const TASK_HOTKEYS = {
  *
  * @example
  * ```typescript
- * getHotkey('meta+z') // Returns 'CMD+Z' on macOS
- * getHotkey('ctrl+z') // Returns 'CTRL+Z' on Windows/Linux
- * getHotkey('a') // Returns 'A'
+ * formatHotkeyForDisplay('meta+z') // Returns 'CMD+Z' on macOS
+ * formatHotkeyForDisplay('ctrl+z') // Returns 'CTRL+Z' on Windows/Linux
+ * formatHotkeyForDisplay('a') // Returns 'A'
  * ```
  */
-export const getHotkey = (key: string): string => {
+export const formatHotkeyForDisplay = (key: string): string => {
     if (key.includes(COMMAND_KEY)) {
         return key.replace(COMMAND_KEY, 'cmd').toLocaleUpperCase();
     }
 
     return key.toLocaleUpperCase();
+};
+
+/**
+ * Converts a hotkey string to the appropriate format for the current operating system.
+ * Replaces 'ctrl' with 'meta' on macOS, or 'meta' with 'ctrl' on Windows/Linux.
+ *
+ * @param key - The hotkey string to convert (e.g., 'ctrl+z' or 'meta+z')
+ * @returns The OS-specific hotkey string (e.g., 'meta+z' on macOS or 'ctrl+z' on Windows/Linux)
+ *
+ * @example
+ * ```typescript
+ * // On macOS:
+ * convertHotkeyToOSFormat('ctrl+z') // Returns 'meta+z'
+ * convertHotkeyToOSFormat('meta+z') // Returns 'meta+z'
+ *
+ * // On Windows/Linux:
+ * convertHotkeyToOSFormat('meta+z') // Returns 'ctrl+z'
+ * convertHotkeyToOSFormat('ctrl+z') // Returns 'ctrl+z'
+ * ```
+ */
+export const convertHotkeyToOSFormat = (key: string): string => {
+    if (isMac() && key.includes(CTRL_KEY)) {
+        return key.replace(CTRL_KEY, COMMAND_KEY);
+    }
+
+    if (!isMac() && key.includes(COMMAND_KEY)) {
+        return key.replace(COMMAND_KEY, CTRL_KEY);
+    }
+
+    return key;
 };

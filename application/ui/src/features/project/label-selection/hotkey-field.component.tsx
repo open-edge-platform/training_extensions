@@ -5,12 +5,16 @@ import { KeyboardEvent } from 'react';
 
 import { TextField } from '@geti/ui';
 
+import { formatHotkeyForDisplay } from '../../../shared/hotkeys-definition';
+import { validateLabelHotkey } from './validator';
+
 type HotkeyFieldProps = {
     hotkey: string | null | undefined;
     onHotkeyChange: (hotkey: string | null) => void;
+    allHotkeys: string[];
 };
 
-export const HotkeyField = ({ hotkey, onHotkeyChange }: HotkeyFieldProps) => {
+export const HotkeyField = ({ hotkey, onHotkeyChange, allHotkeys }: HotkeyFieldProps) => {
     const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
         event.preventDefault();
 
@@ -24,24 +28,28 @@ export const HotkeyField = ({ hotkey, onHotkeyChange }: HotkeyFieldProps) => {
         // Build the hotkey string
         const modifiers: string[] = [];
         if (ctrlKey) modifiers.push('ctrl');
-        if (metaKey) modifiers.push('cmd');
+        if (metaKey) modifiers.push('meta');
         if (altKey) modifiers.push('alt');
         if (shiftKey) modifiers.push('shift');
 
-        const keyUpperCased = key.toUpperCase();
-
-        const hotkeyString = modifiers.length > 0 ? `${modifiers.join('+')}+${keyUpperCased}` : keyUpperCased;
+        const hotkeyString = modifiers.length > 0 ? `${modifiers.join('+')}+${key}` : key;
 
         onHotkeyChange(hotkeyString);
     };
+
+    const validationResult = hotkey == null ? undefined : validateLabelHotkey(hotkey, allHotkeys);
+
+    const formatedHotkey = hotkey == null ? undefined : formatHotkeyForDisplay(hotkey);
 
     return (
         <TextField
             aria-label={'Hotkey input'}
             placeholder={'Hotkey'}
-            value={hotkey?.toUpperCase() ?? undefined}
+            value={formatedHotkey}
             onKeyDown={handleKeyDown}
             width={'100%'}
+            errorMessage={validationResult}
+            validationState={validationResult === undefined ? undefined : 'invalid'}
         />
     );
 };

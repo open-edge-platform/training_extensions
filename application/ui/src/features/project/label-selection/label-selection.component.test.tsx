@@ -6,14 +6,23 @@ import userEvent from '@testing-library/user-event';
 import { getMockedLabel } from 'mocks/mock-labels';
 import { fireEvent, render, screen } from 'test-utils/render';
 
+import { Label, TaskType } from '../../../constants/shared-types';
 import { LabelSelection } from './label-selection.component';
 
 const mockLabels = [getMockedLabel({ id: 'id-1', name: 'Car' })];
 
-const App = ({ labels = mockLabels, setLabels = vi.fn() }) => {
+const App = ({
+    labels = mockLabels,
+    setLabels = vi.fn(),
+    taskType = 'detection',
+}: {
+    labels?: Label[];
+    setLabels?: () => void;
+    taskType?: TaskType;
+}) => {
     return (
         <>
-            <LabelSelection labels={labels} setLabels={setLabels} />
+            <LabelSelection labels={labels} setLabels={setLabels} taskType={taskType} />
             <Toast />
         </>
     );
