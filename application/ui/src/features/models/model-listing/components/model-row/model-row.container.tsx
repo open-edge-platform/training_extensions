@@ -26,7 +26,7 @@ type ModelRowContainerProps = {
 
 export const ModelRowContainer = ({ model }: ModelRowContainerProps) => {
     const projectId = useProjectIdentifier();
-    const { activeModelId, onExpandModel } = useModelListing();
+    const { activeModelArchitectureId, onExpandModel } = useModelListing();
     const parentRevisionModel = useGetModel(model.parent_revision);
     const deleteModelMutation = useDeleteModel();
     const renameModelMutation = useRenameModel();
@@ -65,7 +65,7 @@ export const ModelRowContainer = ({ model }: ModelRowContainerProps) => {
         <>
             <ModelRow
                 model={model}
-                activeModelId={activeModelId}
+                activeModelArchitectureId={activeModelArchitectureId}
                 parentRevisionModel={parentRevisionModel?.data}
                 onExpandModel={onExpandModel}
                 onModelAction={handleAction}
