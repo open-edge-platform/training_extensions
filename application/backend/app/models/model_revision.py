@@ -12,8 +12,14 @@ from app.models.base import BaseEntity
 
 
 class ModelFormat(StrEnum):
-    OPENVINO = "openvino_ir"
+    OPENVINO = "openvino"
     ONNX = "onnx"
+    PYTORCH = "pytorch"
+
+
+class ModelPrecision(StrEnum):
+    FP16 = "fp16"
+    FP32 = "fp32"
 
 
 class TrainingStatus(StrEnum):

@@ -6,8 +6,8 @@ import { PointerEvent, SVGProps } from 'react';
 import { isEmpty, isEqual, negate } from 'lodash-es';
 
 import { Label } from '../../../../constants/shared-types';
-import { isEraserOrRightButton, isLeftButton } from '../../buttons-utils';
-import { Point } from '../../types';
+import { isEraserOrRightButton, isLeftButton } from '../../../../shared/buttons-utils';
+import { Point } from '../../../../shared/types';
 import { DEFAULT_ANNOTATION_STYLES } from '../../utils';
 import { PointerType } from '../utils';
 

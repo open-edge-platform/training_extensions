@@ -14,8 +14,8 @@ import { differenceWith, isEmpty, isEqual, isNil } from 'lodash-es';
 import { useZoom } from '../../../../components/zoom/zoom.provider';
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
+import { Point, Polygon } from '../../../../shared/types';
 import useUndoRedoState from '../../../dataset/media-preview/primary-toolbar/undo-redo/use-undo-redo-state';
-import { Point, Polygon } from '../../types';
 import { SvgToolCanvas } from '../svg-tool-canvas.component';
 import { convertToolShapeToGetiShape, getRelativePoint } from '../utils';
 import { PolygonDraw } from './polygon-draw.component';
@@ -87,7 +87,7 @@ export const PolygonTool = ({ mainMode }: PolygonToolProps) => {
 
     const optimizePolygonOrSegments = async (iPolygon: Polygon): Promise<Polygon> => {
         if (isNil(worker)) {
-            return Promise.reject();
+            return Promise.reject(new Error('Intelligent scissors worker not initialized'));
         }
 
         const lastSegment = differenceWith(iPolygon.points, segments.flat(), isEqual);

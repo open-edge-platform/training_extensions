@@ -7,6 +7,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.db.schema import ModelRevisionDB, ProjectDB
+from app.models.model_revision import ModelFormat
 from app.services import ModelService, ResourceNotFoundError, ResourceType
 from tests.integration.project_factory import ProjectTestDataFactory
 
@@ -55,6 +56,23 @@ class TestModelServiceIntegration:
 
         assert model is not None
         assert model.id == fxt_model_id
+
+    def test_get_model_variants(
+        self, tmp_path: Path, fxt_project_id: UUID, fxt_model_id: UUID, fxt_model_service: ModelService
+    ):
+        """Test retrieving model variants."""
+        model_vars_path = tmp_path / "projects" / str(fxt_project_id) / "models" / str(fxt_model_id)
+        model_vars_path.mkdir(parents=True, exist_ok=True)
+        (model_vars_path / "model.xml").touch()
+        (model_vars_path / "model.bin").touch()
+        (model_vars_path / "model.onnx").touch()
+        (model_vars_path / "model.ckpt").touch()
+
+        variants = fxt_model_service.get_model_variants(fxt_project_id, fxt_model_id)
+        for variant in variants:
+            assert variant.get("format") in ["openvino", "onnx", "pytorch"]
+            assert variant.get("precision") in ["fp16", "fp32"]
+            assert variant.get("weights_size") == 0  # Files are empty, so size is 0
 
     def test_update_model(self, fxt_project_id: UUID, fxt_model_id: UUID, fxt_model_service: ModelService):
         """Test updating name of a model by ID."""
@@ -161,3 +179,35 @@ class TestModelServiceIntegration:
         finally:
             # Cleanup: restore permissions so pytest can clean up temp directory
             model_rev_path.chmod(0o755)
+
+    @pytest.mark.parametrize(
+        "model_format, expected_files",
+        [
+            (ModelFormat.OPENVINO, ["model.xml", "model.bin"]),
+            (ModelFormat.ONNX, ["model.onnx"]),
+            (ModelFormat.PYTORCH, ["model.ckpt"]),
+        ],
+    )
+    def test_get_model_binary_files(
+        self,
+        model_format,
+        expected_files,
+        tmp_path: Path,
+        fxt_project_id: UUID,
+        fxt_model_id: UUID,
+        fxt_model_service: ModelService,
+    ):
+        """Test retrieving model binary files."""
+        model_dir = tmp_path / "projects" / str(fxt_project_id) / "models" / str(fxt_model_id)
+        model_dir.mkdir(parents=True)
+        (model_dir / "model.xml").touch()
+        (model_dir / "model.bin").touch()
+        (model_dir / "model.onnx").touch()
+        (model_dir / "model.ckpt").touch()
+
+        files_exist, paths = fxt_model_service.get_model_binary_files(
+            project_id=fxt_project_id, model_id=fxt_model_id, format=model_format
+        )
+        assert files_exist is True
+        expected_paths = tuple(model_dir / file for file in expected_files)
+        assert paths == expected_paths

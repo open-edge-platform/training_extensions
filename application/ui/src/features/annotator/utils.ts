@@ -3,7 +3,7 @@
 
 import type { PointerEvent, SVGProps } from 'react';
 
-import { isLeftButton, isWheelButton } from './buttons-utils';
+import { isLeftButton, isWheelButton } from '../../shared/buttons-utils';
 
 type OnPointerDown = SVGProps<SVGElement>['onPointerDown'];
 export const allowPanning = (onPointerDown?: OnPointerDown): OnPointerDown | undefined => {

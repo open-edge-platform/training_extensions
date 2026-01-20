@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import type { components } from '../../api/openapi-spec';
+import type { components } from '../api/openapi-spec';
 
 export interface RegionOfInterest {
     x: number;

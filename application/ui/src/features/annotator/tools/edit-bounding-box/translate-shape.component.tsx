@@ -3,8 +3,8 @@
 
 import { ReactNode } from 'react';
 
+import type { Annotation as AnnotationType } from '../../../../shared/types';
 import { useTranslate } from '../../hooks/use-translate.hook';
-import type { Annotation as AnnotationType } from '../../types';
 import { allowPanning } from '../../utils';
 
 const STROKE_WIDTH = 2;

@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import type { Rect as RectInterface } from '../types';
+import type { Rect as RectInterface } from '../../../shared/types';
 
 interface RectangleProps {
     rect: RectInterface;

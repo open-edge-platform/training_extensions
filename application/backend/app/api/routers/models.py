@@ -2,18 +2,19 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import io
+import os
 import zipfile
 from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from fastapi.openapi.models import Example
 from fastapi.responses import StreamingResponse
-from otx.types.export import OTXExportFormatType
 
 from app.api.dependencies import get_model_service, get_project
 from app.api.schemas import ModelView, ProjectView
 from app.api.validators import ModelID
-from app.services import ModelService, ResourceInUseError, ResourceNotFoundError
+from app.models.model_revision import ModelFormat
+from app.services import ModelService, ResourceInUseError, ResourceNotFoundError, ResourceType
 
 router = APIRouter(prefix="/api/projects/{project_id}/models", tags=["Models"])
 
@@ -33,7 +34,11 @@ def list_models(
 ) -> list[ModelView]:
     """Get all models in a project."""
     try:
-        return [ModelView.model_validate(obj, from_attributes=True) for obj in model_service.list_models(project.id)]
+        model_views = []
+        for model_revision in model_service.list_models(project.id):
+            model_variants = model_service.get_model_variants(project_id=project.id, model_id=model_revision.id)
+            model_views.append(model_revision.model_dump() | {"variants": model_variants})
+        return [ModelView.model_validate(model_view, from_attributes=True) for model_view in model_views]
     except ResourceNotFoundError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
 
@@ -55,7 +60,9 @@ def get_model(
     """Get a specific model by ID."""
     try:
         model_revision = model_service.get_model(project_id=project.id, model_id=model_id)
-        return ModelView.model_validate(model_revision, from_attributes=True)
+        model_variants = model_service.get_model_variants(project_id=project.id, model_id=model_id)
+        model_view = model_revision.model_dump() | {"variants": model_variants}
+        return ModelView.model_validate(model_view, from_attributes=True)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -72,34 +79,29 @@ def download_model_binary(
     project: Annotated[ProjectView, Depends(get_project)],
     model_id: ModelID,
     model_service: Annotated[ModelService, Depends(get_model_service)],
-    format: Annotated[OTXExportFormatType, Query()] = OTXExportFormatType.OPENVINO,
+    format: Annotated[ModelFormat, Query()] = ModelFormat.OPENVINO,
 ) -> StreamingResponse:
-    """Download trained model weights in OpenVINO or ONNX format as a zip archive"""
+    """Download trained model weights in a desired format as a zip archive"""
     try:
-        # Verify the model exists and get the model directory
-        model_dir = model_service.get_model_files_path(project_id=project.id, model_id=model_id)
+        files_exist, paths = model_service.get_model_binary_files(
+            project_id=project.id, model_id=model_id, format=format
+        )
+        if not files_exist:
+            raise ResourceNotFoundError(
+                resource_type=ResourceType.MODEL,
+                resource_id=f"{model_id} with format {format.value}",
+            )
 
         # Create an in-memory zip file
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as zip_file:
-            if format == OTXExportFormatType.OPENVINO:
-                xml_file = model_dir / "model.xml"
-                bin_file = model_dir / "model.bin"
-                zip_file.write(xml_file, arcname="model.xml")
-                zip_file.write(bin_file, arcname="model.bin")
-            elif format == OTXExportFormatType.ONNX:
-                onnx_file = model_dir / "model.onnx"
-                zip_file.write(onnx_file, arcname="model.onnx")
-            else:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Unsupported model format: {format}",
-                )
+            for path in paths:
+                zip_file.write(path, arcname=os.path.split(path)[1])
 
         zip_buffer.seek(0)
 
-        precision = "fp16" if format == OTXExportFormatType.OPENVINO else "fp32"
-        filename = f"model-{model_id}-{format.name.lower()}-{precision}.zip"
+        precision = "fp16" if format != ModelFormat.PYTORCH else "fp32"
+        filename = f"model-{model_id}-{format.value}-{precision}.zip"
 
         return StreamingResponse(
             zip_buffer,
