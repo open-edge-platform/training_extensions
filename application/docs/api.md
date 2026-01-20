@@ -57,14 +57,15 @@
 
 ## Media
 
-| Method   | Path                                              | Payload | Return                | Description                                     |
-| -------- |---------------------------------------------------| ------- |-----------------------|-------------------------------------------------|
-| `GET`    | `/api/projects/<id>/dataset/media`                | -       | list of dataset media | List the dataset media (images and videos)      |
-| `GET`    | `/api/projects/<id>/dataset/media/<id>`           | -       | dataset media info    | Get info about a dataset media                 |
-| `GET`    | `/api/projects/<id>/dataset/media/<id>/binary`    | -       | binary                | Get the image data of a dataset item (full res) |
-| `GET`    | `/api/projects/<id>/dataset/media/<id>/thumbnail` | -       | binary                | Get the thumbnail of a dataset item             |
-| `POST`   | `/api/projects/<id>/dataset/media`                | binary  | media info            | Upload an image or a video to the dataset       |
-| `DELETE` | `/api/projects/<id>/dataset/media/<id>`           | -       | -                     | Delete a dataset media                           |
+| Method   | Path                                              | Payload | Return                         | Description                                     |
+| -------- |---------------------------------------------------| ------- |--------------------------------|-------------------------------------------------|
+| `GET`    | `/api/projects/<id>/dataset/media`                | -       | list of dataset media          | List the dataset media (images and videos)      |
+| `GET`    | `/api/projects/<id>/dataset/media/<id>`           | -       | dataset media info             | Get info about a dataset media                  |
+| `GET`    | `/api/projects/<id>/dataset/media/<id>/frames`    | -       | list of annotated video frames | List the annotated video frames                  |
+| `GET`    | `/api/projects/<id>/dataset/media/<id>/binary`    | -       | binary                         | Get the image data of a dataset item (full res) |
+| `GET`    | `/api/projects/<id>/dataset/media/<id>/thumbnail` | -       | binary                         | Get the thumbnail of a dataset item             |
+| `POST`   | `/api/projects/<id>/dataset/media`                | binary  | media info                     | Upload an image or a video to the dataset       |
+| `DELETE` | `/api/projects/<id>/dataset/media/<id>`           | -       | -                              | Delete a dataset media                          |
 
 ### Annotations
 
