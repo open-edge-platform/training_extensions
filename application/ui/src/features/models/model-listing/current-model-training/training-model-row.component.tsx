@@ -5,6 +5,7 @@ import { Button, dimensionValue, Divider, Flex, Grid, Loading, Tag, Text } from 
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 
+import { ReactComponent as ThumbsUp } from '../../../../assets/icons/thumbs-up.svg';
 import { Job } from '../../../../constants/shared-types';
 import { GRID_COLUMNS } from '../constants';
 import { BottomProgressBar } from './bottom-progress-bar.component';
@@ -89,9 +90,21 @@ export const TrainingModelRow = ({ job, onCancel }: TrainingModelRowProps) => {
 
                 <Text UNSAFE_style={{ fontSize: dimensionValue('font-size-75') }}>...</Text>
 
-                <Text UNSAFE_style={{ fontSize: dimensionValue('font-size-75') }}>
-                    {job.metadata.model.architecture}
-                </Text>
+                <Flex alignItems={'start'} direction={'column'} gap={'size-100'}>
+                    <Text UNSAFE_style={{ fontSize: dimensionValue('font-size-75') }}>
+                        {job.metadata.model.architecture}
+                    </Text>
+                    {/* TODO: Speed is hardcoded for now, once the backend is update we need to update this */}
+                    <Tag
+                        prefix={<ThumbsUp />}
+                        text={'Speed'}
+                        style={{
+                            borderRadius: dimensionValue('size-50'),
+                            backgroundColor: 'var(--spectrum-global-color-gray-300)',
+                            color: 'var(--spectrum-global-color-gray-700)',
+                        }}
+                    />
+                </Flex>
 
                 <Text UNSAFE_style={{ fontSize: dimensionValue('font-size-75') }}>...</Text>
 

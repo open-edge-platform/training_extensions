@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-import { getMockedJob } from 'mocks/mock-job';
 
 import { $api } from '../../api/client';
 
@@ -21,8 +20,6 @@ export const useGetCurrentTrainingJob = () => {
     const activeTrainingJob = activeJobs.data?.find(
         (job) => job.metadata.project.id === projectId && job.status === 'running' && job.job_type === 'train'
     );
-
-    return getMockedJob();
 
     return activeTrainingJob;
 };
