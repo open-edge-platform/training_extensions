@@ -23,7 +23,7 @@ type CreateProjectFormProps = {
 
 export const CreateProjectForm = ({ projects }: CreateProjectFormProps) => {
     const [selectedTask, setSelectedTask] = useState<TaskType | null>(null);
-    const [labels, setLabels] = useState<Label[]>([{ id: uuid(), color: '#F20004', name: 'Object' }]);
+    const [labels, setLabels] = useState<Label[]>([]);
     const numberOfProjects = projects.length;
     const [name, setName] = useState<string>(`Project #${numberOfProjects + 1}`);
     const selectedTaskOption = TASK_OPTIONS.find((task) => task.value === selectedTask);
@@ -36,7 +36,8 @@ export const CreateProjectForm = ({ projects }: CreateProjectFormProps) => {
         projects.map((project) => project.name)
     );
 
-    const isCreateProjectDisabled = selectedTask === null || validationErrorMessage !== undefined;
+    const isCreateProjectDisabled =
+        selectedTask === null || validationErrorMessage !== undefined || labels.length === 0;
 
     const createProject = (e: FormEvent) => {
         e.preventDefault();
