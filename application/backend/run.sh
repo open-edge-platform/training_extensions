@@ -43,70 +43,57 @@ fi
 # URLs and target paths
 DETECTION_VIDEO_URL="https://storage.geti.intel.com/test-data/geti-tune/media/card-video.mp4"
 DETECTION_VIDEO_TARGET="data/media/card-video.mp4"
-DETECTION_MODEL_XML_URL="https://storage.geti.intel.com/test-data/geti-tune/models/ssd-card-detection.xml"
-DETECTION_MODEL_BIN_URL="https://storage.geti.intel.com/test-data/geti-tune/models/ssd-card-detection.bin"
+DETECTION_MODEL_BASE_URL="https://storage.geti.intel.com/test-data/geti-tune/models/yolox-s-cards-detection"
 DETECTION_MODEL_TARGET_DIR="data/projects/9d6af8e8-6017-4ebe-9126-33aae739c5fa/models/977eeb18-eaac-449d-bc80-e340fbe052ad"
-DETECTION_MODEL_XML_TARGET="$DETECTION_MODEL_TARGET_DIR/model.xml"
-DETECTION_MODEL_BIN_TARGET="$DETECTION_MODEL_TARGET_DIR/model.bin"
 
 SEGMENTATION_VIDEO_URL="https://storage.geti.intel.com/test-data/geti-tune/media/fish-video.mp4"
 SEGMENTATION_VIDEO_TARGET="data/media/fish-video.mp4"
-SEGMENTATION_MODEL_XML_URL="https://storage.geti.intel.com/test-data/geti-tune/models/rtmdet-tiny-fish-segmentation.xml"
-SEGMENTATION_MODEL_BIN_URL="https://storage.geti.intel.com/test-data/geti-tune/models/rtmdet-tiny-fish-segmentation.bin"
+SEGMENTATION_MODEL_BASE_URL="https://storage.geti.intel.com/test-data/geti-tune/models/rtmdet-tiny-fish-segmentation"
 SEGMENTATION_MODEL_TARGET_DIR="data/projects/a1b2c3d4-e5f6-7890-abcd-ef1234567890/models/c3d4e5f6-a7b8-9012-cdef-123456789012"
-SEGMENTATION_MODEL_XML_TARGET="$SEGMENTATION_MODEL_TARGET_DIR/model.xml"
-SEGMENTATION_MODEL_BIN_TARGET="$SEGMENTATION_MODEL_TARGET_DIR/model.bin"
+
+# Model file extensions to download
+MODEL_EXTENSIONS=("xml" "bin" "onnx" "ckpt")
+
+# Video URLs and targets
+declare -A VIDEO_URLS=(
+  ["$DETECTION_VIDEO_TARGET"]="$DETECTION_VIDEO_URL"
+  ["$SEGMENTATION_VIDEO_TARGET"]="$SEGMENTATION_VIDEO_URL"
+)
+
+# Model base URLs and target directories
+declare -A MODEL_CONFIGS=(
+  ["$DETECTION_MODEL_TARGET_DIR"]="$DETECTION_MODEL_BASE_URL"
+  ["$SEGMENTATION_MODEL_TARGET_DIR"]="$SEGMENTATION_MODEL_BASE_URL"
+)
 
 if [[ "$DOWNLOAD_FILES" == "true" ]]; then
   echo "Downloading required files if not present..."
-  # Download detection video
-  if [ ! -f "$DETECTION_VIDEO_TARGET" ]; then
-    mkdir -p "$(dirname "$DETECTION_VIDEO_TARGET")"
-    echo "Downloading test video..."
-    curl -fL "$DETECTION_VIDEO_URL" -o "$DETECTION_VIDEO_TARGET"
-  else
-    echo "Test video already exists at $DETECTION_VIDEO_TARGET"
-  fi
-  # Download segmentation video
-  if [ ! -f "$SEGMENTATION_VIDEO_TARGET" ]; then
-    mkdir -p "$(dirname "$SEGMENTATION_VIDEO_TARGET")"
-    echo "Downloading test video..."
-    curl -fL "$SEGMENTATION_VIDEO_URL" -o "$SEGMENTATION_VIDEO_TARGET"
-  else
-    echo "Test video already exists at $SEGMENTATION_VIDEO_TARGET"
-  fi
-  # Download detection model XML
-  if [ ! -f "$DETECTION_MODEL_XML_TARGET" ]; then
-    mkdir -p "$DETECTION_MODEL_TARGET_DIR"
-    echo "Downloading model XML..."
-    curl -fL "$DETECTION_MODEL_XML_URL" -o "$DETECTION_MODEL_XML_TARGET"
-  else
-    echo "Model XML already exists at $DETECTION_MODEL_XML_TARGET"
-  fi
-  # Download segmentation model XML
-  if [ ! -f "$SEGMENTATION_MODEL_XML_TARGET" ]; then
-    mkdir -p "$SEGMENTATION_MODEL_TARGET_DIR"
-    echo "Downloading model XML..."
-    curl -fL "$SEGMENTATION_MODEL_XML_URL" -o "$SEGMENTATION_MODEL_XML_TARGET"
-  else
-    echo "Model XML already exists at $SEGMENTATION_MODEL_XML_TARGET"
-  fi
-  # Download detection model BIN
-  if [ ! -f "$DETECTION_MODEL_BIN_TARGET" ]; then
-    mkdir -p "$DETECTION_MODEL_TARGET_DIR"
-    echo "Downloading model BIN..."
-    curl -fL "$DETECTION_MODEL_BIN_URL" -o "$DETECTION_MODEL_BIN_TARGET"
-  else
-    echo "Model BIN already exists at $DETECTION_MODEL_BIN_TARGET"
-  fi
-  # Download segmentation model BIN
-  if [ ! -f "$SEGMENTATION_MODEL_BIN_TARGET" ]; then
-    mkdir -p "$SEGMENTATION_MODEL_TARGET_DIR"
-    echo "Downloading model BIN..."
-    curl -fL "$SEGMENTATION_MODEL_BIN_URL" -o "$SEGMENTATION_MODEL_BIN_TARGET"
-  else
-    echo "Model BIN already exists at $SEGMENTATION_MODEL_BIN_TARGET"
-  fi
+
+  # Download videos
+  for target in "${!VIDEO_URLS[@]}"; do
+    if [ ! -f "$target" ]; then
+      mkdir -p "$(dirname "$target")"
+      echo "Downloading video to $target..."
+      curl -fL "${VIDEO_URLS[$target]}" -o "$target"
+    else
+      echo "Video already exists at $target"
+    fi
+  done
+
+  # Download model files
+  for target_dir in "${!MODEL_CONFIGS[@]}"; do
+    mkdir -p "$target_dir"
+    base_url="${MODEL_CONFIGS[$target_dir]}"
+    for ext in "${MODEL_EXTENSIONS[@]}"; do
+      MODEL_FILE="$target_dir/model.$ext"
+      if [ ! -f "$MODEL_FILE" ]; then
+        echo "Downloading model .$ext file to $target_dir..."
+        curl -fL "$base_url.$ext" -o "$MODEL_FILE"
+      else
+        echo "Model .$ext file already exists at $MODEL_FILE"
+      fi
+    done
+  done
 fi
 
 echo "Starting FastAPI server..."
