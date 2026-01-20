@@ -6,7 +6,7 @@ import { Link } from '@geti/ui';
 type ParentRevisionModelProps = {
     id: string | undefined;
     name: string;
-    onExpandModel: (id: string) => void;
+    onExpandModel?: (id: string) => void;
 };
 
 export const ParentRevisionModel = ({ id, name, onExpandModel }: ParentRevisionModelProps) => {
@@ -17,7 +17,7 @@ export const ParentRevisionModel = ({ id, name, onExpandModel }: ParentRevisionM
                 UNSAFE_style={{ textDecoration: 'none' }}
                 onPress={() => {
                     if (id) {
-                        onExpandModel(id);
+                        onExpandModel?.(id);
                     }
                 }}
             >
