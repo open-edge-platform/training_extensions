@@ -46,6 +46,7 @@ class TestModelEndpoints:
         assert len(response.json()) == 2
         fxt_model_service.list_models.assert_called_once_with(
             project_id=fxt_get_project.id, dataset_revision_id=dataset_revision_id
+        )
         fxt_model_service.get_model_variants.assert_has_calls(
             [
                 call(project_id=fxt_get_project.id, model_id=fxt_model.id),
