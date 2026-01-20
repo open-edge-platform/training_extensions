@@ -13,7 +13,7 @@ export const InferenceDevices = () => {
     const { data: devices } = $api.useSuspenseQuery('get', '/api/system/devices/inference');
     const { data: pipeline } = usePipeline();
     const projectId = useProjectIdentifier();
-    const [selectedKey, setSelectedKey] = useState<Key | null>(pipeline.device.toLowerCase() ?? null);
+    const [selectedKey, setSelectedKey] = useState<Key | null>(pipeline.device);
 
     const updatePipeline = $api.useMutation('patch', '/api/projects/{project_id}/pipeline', {
         meta: {
@@ -22,7 +22,7 @@ export const InferenceDevices = () => {
         onError: (error) => {
             if (error) {
                 toast({ type: 'error', message: String(error.detail) });
-                setSelectedKey(pipeline.device.toLowerCase() ?? null);
+                setSelectedKey(pipeline.device);
             }
         },
     });
@@ -43,7 +43,7 @@ export const InferenceDevices = () => {
 
     return (
         <Picker
-            maxWidth={'size-3000'}
+            maxWidth='size-3000'
             label='Inference Compute: '
             aria-label='inference compute'
             labelAlign='end'

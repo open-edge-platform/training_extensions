@@ -15,7 +15,7 @@ import { InferenceDevices } from './inference-devices.component';
 vi.mock('hooks/use-project-identifier.hook', () => ({ useProjectIdentifier: () => '123' }));
 
 const mockPipeline = getMockedPipeline({
-    device: 'CPU',
+    device: 'cpu',
 });
 
 const mockDevices = [
@@ -80,7 +80,7 @@ describe('InferenceDevices', () => {
     });
 
     it('reverts selection on error', async () => {
-        renderApp(500, mockDevices, { ...mockPipeline, device: 'CPU' });
+        renderApp(500, mockDevices, { ...mockPipeline, device: 'cpu' });
 
         expect(await screen.findByLabelText('inference compute')).toHaveTextContent('CPU');
 
