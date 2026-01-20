@@ -1,0 +1,56 @@
+.modelArchitectureContainer {
+    padding: var(--spectrum-global-dimension-size-300);
+    border: var(--spectrum-alias-border-size-thick) solid transparent;
+    background-color: var(--spectrum-global-color-gray-200);
+    display: grid;
+    grid-template-rows: subgrid;
+    grid-row: span 4;
+    gap: var(--spectrum-global-dimension-size-200);
+    transition:
+        border-color 0.3s ease-in-out,
+        background-color 0.3s ease-in-out;
+    cursor: pointer;
+}
+
+.modelArchitectureCompact {
+    grid-row: span 2;
+}
+
+.modelArchitectureSelected {
+    border: var(--spectrum-alias-border-size-thick) solid var(--energy-blue);
+    background-color: var(--selection-dark-blue);
+}
+
+.modelArchitectureName {
+    width: 100%;
+    min-width: 0;
+
+    & span[class*='spectrum-Radio-label'] {
+        font-weight: 500;
+        font-size: var(--spectrum-global-dimension-font-size-300);
+        width: 100%;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+}
+
+.modelArchitectureNameSelected span[class*='spectrum-Radio-label'] {
+    color: var(--energy-blue);
+}
+
+.modelArchitectureParameters {
+    list-style-type: disc;
+    padding-inline-start: var(--spectrum-global-dimension-size-350);
+    font-size: var(--spectrum-global-dimension-font-size-75);
+    line-height: var(--spectrum-global-dimension-size-300);
+}
+
+.modelArchitectureExpandedDescription {
+    font-size: var(--spectrum-global-dimension-font-size-75);
+}
+
+.activeModelArchitecture {
+    background-color: var(--energy-blue);
+    color: var(--spectrum-global-color-gray-50);
+}

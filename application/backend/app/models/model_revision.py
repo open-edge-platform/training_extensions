@@ -12,8 +12,14 @@ from app.models.base import BaseEntity
 
 
 class ModelFormat(StrEnum):
-    OPENVINO = "openvino_ir"
+    OPENVINO = "openvino"
     ONNX = "onnx"
+    PYTORCH = "pytorch"
+
+
+class ModelPrecision(StrEnum):
+    FP16 = "fp16"
+    FP32 = "fp32"
 
 
 class TrainingStatus(StrEnum):
@@ -32,6 +38,20 @@ class TrainingInfo(BaseEntity):
     start_time: datetime | None = None
     end_time: datetime | None = None
     dataset_revision_id: UUID | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def populate_training_info(cls, data: object) -> object:
+        if isinstance(data, ModelRevisionDB):
+            return {
+                "status": data.training_status,
+                "label_schema_revision": data.label_schema_revision,
+                "configuration": data.training_configuration,
+                "start_time": data.training_started_at,
+                "end_time": data.training_finished_at,
+                "dataset_revision_id": data.training_dataset_id,
+            }
+        return data
 
 
 class ModelRevision(BaseEntity):

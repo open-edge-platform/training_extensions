@@ -12,7 +12,7 @@ export const useGetModel = (modelId: string | null | undefined) => {
         return undefined;
     }
 
-    return $api.useSuspenseQuery('get', '/api/projects/{project_id}/models/{model_id}', {
+    return $api.useQuery('get', '/api/projects/{project_id}/models/{model_id}', {
         params: { path: { project_id: projectId, model_id: modelId } },
     });
 };

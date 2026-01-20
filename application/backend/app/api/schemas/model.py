@@ -9,13 +9,20 @@ from app.core.models import BaseIDModel
 from app.models import TrainingInfo
 
 
+class ModelVariant(BaseIDModel):
+    format: str = Field(..., description="Model format, e.g., 'openvino', 'onnx', 'pytorch'")
+    precision: str = Field(..., description="Model precision, e.g., 'fp16', 'fp32'")
+    weights_size: int = Field(..., description="Size of the model weights file in bytes")
+
+
 class ModelView(BaseIDModel):
-    """Represents a model revision with its architecture, parent revision, training info, and file status."""
+    """Represents a model revision with its architecture, parent revision, training info, variants, and file status."""
 
     name: str = Field(..., description="User friendly model name")
     architecture: str = Field(..., description="Model architecture name")
     parent_revision: UUID | None = Field(None, description="Parent model revision ID")
     training_info: TrainingInfo = Field(..., description="Information about the training process")
+    variants: list[ModelVariant] = Field(description="Variants of the model", default=[])
     files_deleted: bool = Field(description="Indicates if model files have been deleted", default=False)
 
     model_config = {
@@ -44,6 +51,23 @@ class ModelView(BaseIDModel):
                     },
                     "configuration": {},
                 },
+                "variants": [
+                    {
+                        "format": "openvino",
+                        "precision": "fp16",
+                        "weights_size": 123456,
+                    },
+                    {
+                        "format": "onnx",
+                        "precision": "fp16",
+                        "weights_size": 123456,
+                    },
+                    {
+                        "format": "pytorch",
+                        "precision": "fp32",
+                        "weights_size": 123456,
+                    },
+                ],
                 "files_deleted": False,
             }
         }

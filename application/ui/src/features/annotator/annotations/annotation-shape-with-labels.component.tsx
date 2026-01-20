@@ -8,7 +8,7 @@ import polylabel from 'polylabel';
 import type { Label } from '../../../constants/shared-types';
 import { useAnnotationActions } from '../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotationVisibility } from '../../../shared/annotator/annotation-visibility-provider.component';
-import type { Annotation, Polygon } from '../types';
+import type { Annotation, Polygon } from '../../../shared/types';
 import { AnnotationLabels } from './annotation-labels.component';
 import { AnnotationShape } from './annotation-shape.component';
 

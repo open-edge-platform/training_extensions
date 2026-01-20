@@ -57,7 +57,7 @@ class TestStepDecorator:
 
         assert trainer.report_progress.call_count == 2
         trainer.report_progress.assert_any_call("Starting: Failing Step")
-        trainer.report_progress.assert_any_call("Failed: Failing Step")
+        trainer.report_progress.assert_any_call("Failed: Failing Step", exc=True)
 
     def test_step_decorator_preserves_exception(self):
         """Test that the decorator re-raises the original exception."""

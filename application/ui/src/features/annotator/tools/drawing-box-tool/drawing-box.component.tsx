@@ -8,9 +8,9 @@ import { useEventListener } from 'hooks/event-listener.hook';
 
 import selectionCursor from '../../../../assets/icons/selection.svg?url';
 import { Label } from '../../../../constants/shared-types';
-import { isLeftButton } from '../../buttons-utils';
+import { isLeftButton } from '../../../../shared/buttons-utils';
+import type { Point, Rect as RectInterface, RegionOfInterest } from '../../../../shared/types';
 import { Rectangle } from '../../shapes/rectangle.component';
-import type { Point, Rect as RectInterface, RegionOfInterest } from '../../types';
 import { DEFAULT_ANNOTATION_STYLES } from '../../utils';
 import { SvgToolCanvas } from '../svg-tool-canvas.component';
 import { getRelativePoint, PointerType } from '../utils';
