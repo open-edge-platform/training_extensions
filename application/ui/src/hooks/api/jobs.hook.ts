@@ -6,7 +6,11 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { $api } from '../../api/client';
 
 export const useSubmitJob = () => {
-    return $api.useMutation('post', '/api/jobs');
+    return $api.useMutation('post', '/api/jobs', {
+        meta: {
+            invalidateQueries: [['get', '/api/jobs']],
+        },
+    });
 };
 
 export const useListJobs = () => {
