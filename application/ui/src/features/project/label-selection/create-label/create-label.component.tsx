@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 
 import {
     ActionButton,
@@ -15,9 +15,11 @@ import {
     SpectrumColorPickerProps,
     TextField,
     TextFieldRef,
+    useUnwrapDOMRef,
     View,
 } from '@geti/ui';
 import { Add } from '@geti/ui/icons';
+import { useEventListener } from 'hooks/event-listener.hook';
 import { v4 as uuid } from 'uuid';
 
 import type { Label, TaskType } from '../../../../constants/shared-types';
@@ -56,8 +58,9 @@ export type CreateLabelProps = {
 
 export const CreateLabel = ({ labels, onCreate, taskType }: CreateLabelProps) => {
     const [newLabel, setNewLabel] = useState<Label>(getInitialLabel);
-    const ref = useRef<DOMRefValue<HTMLDivElement>>(null);
+    const containerRef = useRef<DOMRefValue<HTMLDivElement>>(null);
     const inputRef = useRef<TextFieldRef<HTMLInputElement>>(null);
+    const inputRefUnwrapped = useUnwrapDOMRef(inputRef);
 
     const labelsHotkeys = labels.map((label) => label.hotkey).filter((hotkey) => hotkey != null);
     const appHotkeys = Object.values(TASK_HOTKEYS[taskType]);
@@ -66,40 +69,27 @@ export const CreateLabel = ({ labels, onCreate, taskType }: CreateLabelProps) =>
     const validationResult = validateLabelName(newLabel, labels);
     const isCreateLabelDisabled = newLabel.name.trim().length === 0 || validationResult !== undefined;
 
-    const createLabel = useCallback(() => {
+    const createLabel = () => {
         if (isCreateLabelDisabled) return;
 
         onCreate({ ...newLabel, name: newLabel.name.trim() });
         setNewLabel(getInitialLabel);
-    }, [onCreate, newLabel, isCreateLabelDisabled]);
+    };
 
-    useEffect(() => {
-        const node = ref.current?.UNSAFE_getDOMNode();
-        if (node == null) return;
+    useEventListener(
+        'keydown',
+        (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                event.stopImmediatePropagation();
 
-        const abortController = new AbortController();
+                createLabel();
 
-        node.addEventListener(
-            'keydown',
-            (event) => {
-                if (event.key === 'Enter') {
-                    event.preventDefault();
-                    event.stopImmediatePropagation();
-
-                    createLabel();
-
-                    inputRef.current?.focus();
-                }
-            },
-            {
-                signal: abortController.signal,
+                inputRef.current?.focus();
             }
-        );
-
-        return () => {
-            abortController.abort();
-        };
-    }, [createLabel]);
+        },
+        inputRefUnwrapped
+    );
 
     return (
         <Grid
@@ -108,20 +98,20 @@ export const CreateLabel = ({ labels, onCreate, taskType }: CreateLabelProps) =>
             maxWidth={'640px'}
             width={'100%'}
             alignItems={'start'}
-            ref={ref}
+            ref={containerRef}
         >
             <ColorPicker
                 onChange={(newColor) => {
                     setNewLabel((prevLabel) => ({ ...prevLabel, color: newColor.toString() }));
                 }}
-                value={newLabel?.color}
+                value={newLabel.color}
             />
             <View>
                 <TextField
                     ref={inputRef}
                     aria-label={'Create label input'}
                     placeholder={'Create label'}
-                    value={newLabel?.name}
+                    value={newLabel.name}
                     onChange={(newName) => setNewLabel((prevLabel) => ({ ...prevLabel, name: newName }))}
                     errorMessage={validationResult}
                     validationState={validationResult === undefined ? undefined : 'invalid'}
@@ -140,7 +130,7 @@ export const CreateLabel = ({ labels, onCreate, taskType }: CreateLabelProps) =>
                 isQuiet
                 onPress={createLabel}
                 isDisabled={isCreateLabelDisabled}
-                aria-label={`Create label ${newLabel?.name}`}
+                aria-label={`Create label ${newLabel.name}`}
             >
                 <Add />
             </ActionButton>

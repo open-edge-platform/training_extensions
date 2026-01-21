@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Dispatch, SetStateAction, useCallback } from 'react';
+import { Dispatch, SetStateAction } from 'react';
 
 import { Flex, toast } from '@geti/ui';
 
@@ -25,12 +25,9 @@ export const LabelSelection = ({ labels, setLabels, taskType }: LabelSelectionPr
         }
     };
 
-    const handleAddItem = useCallback(
-        (label: Label) => {
-            setLabels([...labels, label]);
-        },
-        [labels, setLabels]
-    );
+    const handleAddItem = (label: Label) => {
+        setLabels([...labels, label]);
+    };
 
     return (
         <Flex
