@@ -76,26 +76,15 @@ entity(Media) {
   width : INTEGER
   height : INTEGER
   size : INTEGER
-}
-
-entity(Video) {
-  pk(media_id) : UUID
+' Video specific fields
   fps : INTEGER
   frame_count : INTEGER
-}
-
-entity(VideoFrame) {
-  pk(media_id) : UUID
+' Video frame specific field
   timestamp: INTEGER
 }
 
 entity(DatasetItem) {
   pk(id) : UUID
-  name : TEXT
-  format : TEXT
-  width : INTEGER
-  height : INTEGER
-  size : INTEGER
   subset : TEXT
   tags : LIST[TEXT]
 }
@@ -140,9 +129,6 @@ InferencePipeline ||--|| ModelRevision : "A pipeline uses\n one model\n for infe
 Dataset ||---o{ DatasetItem: "The dataset is \n the set of all \n items of the project"
 Dataset ||---o{ Media: "The dataset contains \n all \n media of the project"
 Dataset ||---o{ DatasetView
-Media ||---o{ Video: "The media might be a video"
-Media ||---o{ VideoFrame: "The media might be a video frame"
-Video ||---o{ VideoFrame: "The video contains \n extracted video frames"
 DatasetItem ||--o| Annotation : "Every media has an annotation,\n or a model-generated prediction,\n or it is unannotated"
 DatasetItem }o---o| "Source " : "Each media is acquired\n from a source, or\n uploaded by the user"
 DatasetItem ||---o| "Media" : "Dataset item refers \n to a certain media (except video)"

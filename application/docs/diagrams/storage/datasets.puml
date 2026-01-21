@@ -19,20 +19,15 @@ class media << (T,#FFAAAA) >> {
 }
 
 class video_frames << (T,#FFAAAA) >> {
-  media_id : UUID
+  id : UUID
   video_id : UUID
   timestamp : INTEGER
 }
 
 ' Dataset-related tables
 class dataset_items << (T,#FFAAAA) >> {
-  media_id : UUID
+  id : UUID
   project_id : UUID
-  name : TEXT
-  format : TEXT
-  width : INTEGER
-  height : INTEGER
-  size : INTEGER
   annotation_data : JSON
   user_reviewed : BOOLEAN
   prediction_model_id : UUID
@@ -41,7 +36,7 @@ class dataset_items << (T,#FFAAAA) >> {
 }
 
 class dataset_items_tags << (T,#FFAAAA) >> {
-  media_id : UUID
+  dataset_item_id : UUID
   tag : TEXT
 }
 
@@ -54,7 +49,7 @@ class dataset_views << (T,#FFAAAA) >> {
 
 class dataset_views_items << (T,#FFAAAA) >> {
   dataset_view_id : UUID
-  media_id : UUID
+  dataset_item_id : UUID
 }
 
 dataset_views ||---o{ dataset_views_items
@@ -69,13 +64,13 @@ class dataset_revisions << (T,#FFAAAA) >> {
 object MediaBinary {
   <i>format</i> : jpg / png
   <i>prefix</i> : projects/{project_id}/dataset/
-  <i>filename</i> : {media_id}.{format}
+  <i>filename</i> : {id}.{format}
 }
 
 object MediaThumbnail {
   <i>format</i> : jpg
   <i>prefix</i> : projects/{project_id}/dataset/
-  <i>filename</i> : {media_id}-thumb.jpg
+  <i>filename</i> : {id}-thumb.jpg
 }
 
 object DatasetRevision {

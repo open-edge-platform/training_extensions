@@ -82,7 +82,7 @@ table(media) {
 
 table(video_frames) {
   ' Reference to a media record with type 'video_frame' containing all the attributes and metadata of the video frame itself
-  fk(media_id) : UUID NOT NULL
+  fk(id) : UUID NOT NULL
   ' Reference to the video media record this frame belongs to with certain timestamp
   fk(video_id) : UUID NOT NULL
   --
@@ -91,15 +91,8 @@ table(video_frames) {
 }
 
 table(dataset_items) {
-  fk(media_id) : UUID NOT NULL
+  fk(id) : UUID NOT NULL
   fk(project_id) : UUID NOT NULL
-  --
-  'Media-related details
-  name : TEXT NOT NULL
-  format : TEXT NOT NULL
-  width : INTEGER NOT NULL
-  height : INTEGER NOT NULL
-  size : INTEGER NOT NULL
   --
   'Annotation details
   annotation_data : JSON
@@ -112,7 +105,7 @@ table(dataset_items) {
 }
 
 table(dataset_items_tags) {
-  fk(media_id) : UUID NOT NULL
+  fk(dataset_item_id) : UUID NOT NULL
   tag : TEXT NOT NULL
 }
 
@@ -123,7 +116,7 @@ table(dataset_views) {
 
 table(dataset_views_items) {
   fk(dataset_view_id) : UUID NOT NULL
-  fk(media_id) : UUID NOT NULL
+  fk(dataset_item_id) : UUID NOT NULL
 }
 
 table(dataset_revisions) {
@@ -171,13 +164,13 @@ table(metric_scores) {
 object MediaBinary {
   <i>format</i> : jpg / png
   <i>prefix</i> : projects/{project_id}/dataset/
-  <i>filename</i> : {media_id}.{format}
+  <i>filename</i> : {id}.{format}
 }
 
 object MediaThumbnail {
   <i>format</i> : jpg
   <i>prefix</i> : projects/{project_id}/dataset/
-  <i>filename</i> : {media_id}-thumb.jpg
+  <i>filename</i> : {id}-thumb.jpg
 }
 
 object ModelBinary {
