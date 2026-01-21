@@ -46,7 +46,7 @@ def list_models(
 
 @router.get(
     "/{model_id}",
-    response_model=ModelView,
+    response_model=ExtendedModelView,
     responses={
         status.HTTP_200_OK: {"description": "Model found"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid project or model ID"},
@@ -57,7 +57,7 @@ def get_model(
     project: Annotated[ProjectView, Depends(get_project)],
     model_id: ModelID,
     model_service: Annotated[ModelService, Depends(get_model_service)],
-) -> ModelView:
+) -> ExtendedModelView:
     """Get a specific model by ID."""
     try:
         model_revision = model_service.get_model(project_id=project.id, model_id=model_id)
