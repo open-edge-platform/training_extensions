@@ -5,8 +5,8 @@ import { KeyboardEvent } from 'react';
 
 import { TextField } from '@geti/ui';
 
-import { formatHotkeyForDisplay } from '../../../shared/hotkeys-definition';
-import { validateLabelHotkey } from './validator';
+import { formatHotkeyForDisplay } from '../../../../shared/hotkeys-definition';
+import { validateLabelHotkey } from '../validator';
 
 type HotkeyFieldProps = {
     hotkey: string | null | undefined;
