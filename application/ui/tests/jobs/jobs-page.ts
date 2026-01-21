@@ -3,11 +3,13 @@
 
 import { Page } from '@playwright/test';
 
+import { paths } from '../../src/constants/paths';
+
 export class JobsPage {
     constructor(private page: Page) {}
 
     async goto(projectId: string = 'id-1') {
-        await this.page.goto(`/projects/${projectId}/models`);
+        await this.page.goto(paths.project.models({ projectId }));
     }
 
     getCurrentTrainingSection() {

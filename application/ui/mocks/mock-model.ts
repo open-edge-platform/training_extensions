@@ -1,9 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import type { SchemaExtendedModelView, SchemaModelView } from '../src/api/openapi-spec';
+import { ExtendedModel, Model } from '../src/constants/shared-types';
 
-export const getMockedModel = (overrides: Partial<SchemaModelView> = {}): SchemaModelView => ({
+export const getMockedModel = (overrides: Partial<Model> = {}): Model => ({
     id: '76e07d18-196e-4e33-bf98-ac1d35dca4cb',
     name: 'Object_Detection_YOLOX_X (76e07d18)',
     architecture: 'Object_Detection_YOLOX_X',
@@ -26,7 +26,7 @@ export const getMockedModel = (overrides: Partial<SchemaModelView> = {}): Schema
     ...overrides,
 });
 
-export const getMockedExtendedModel = (overrides: Partial<SchemaExtendedModelView> = {}): SchemaExtendedModelView => ({
+export const getMockedExtendedModel = (overrides: Partial<ExtendedModel> = {}): ExtendedModel => ({
     ...getMockedModel(overrides),
     evaluations: [
         {
