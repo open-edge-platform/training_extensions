@@ -1,17 +1,13 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { useSubmitJob } from 'hooks/api/jobs.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
-import { $api } from '../../../../api/client';
 import { DeviceType } from '../../../../constants/shared-types';
 
 export const useTrainModelMutation = () => {
-    const trainModelMutation = $api.useMutation('post', '/api/jobs', {
-        meta: {
-            invalidateQueries: [['get', '/api/jobs']],
-        },
-    });
+    const trainModelMutation = useSubmitJob();
     const projectIdentifier = useProjectIdentifier();
 
     const trainModel = (

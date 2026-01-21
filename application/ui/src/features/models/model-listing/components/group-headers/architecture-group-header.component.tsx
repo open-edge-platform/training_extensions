@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { dimensionValue, Flex, Heading, Text } from '@geti/ui';
-import { VideoThumb } from '@geti/ui/icons';
 
+import { ReactComponent as ThumbsUp } from '../../../../../assets/icons/thumbs-up.svg';
 import type { ArchitectureGroup } from '../../types';
 
 type ArchitectureGroupHeaderProps = {
@@ -18,7 +18,7 @@ export const ArchitectureGroupHeader = ({ architecture }: ArchitectureGroupHeade
             </Heading>
 
             <Flex alignItems={'center'} gap={'size-100'}>
-                <VideoThumb />
+                <ThumbsUp />
                 <Text>{architecture.recommendedFor}</Text>
             </Flex>
         </Flex>

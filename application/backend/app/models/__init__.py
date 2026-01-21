@@ -1,6 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+from .base import BaseEntity
 from .data_collection_policy import (
     ConfidenceThresholdDataCollectionPolicy,
     DataCollectionConfig,
@@ -45,6 +46,7 @@ from .source import (
 from .task import Task, TaskType
 
 __all__ = [
+    "BaseEntity",
     "ConfidenceThresholdDataCollectionPolicy",
     "DataCollectionConfig",
     "DataCollectionPolicy",
