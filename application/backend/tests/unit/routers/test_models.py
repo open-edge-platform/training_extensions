@@ -10,7 +10,7 @@ from fastapi import status
 from app.api.dependencies import get_model_service
 from app.api.schemas import ModelView
 from app.main import app
-from app.models import TrainingInfo, TrainingStatus
+from app.models import DatasetItemSubset, EvaluationResult, TrainingInfo, TrainingStatus
 from app.models.model_revision import ModelFormat
 from app.services import ModelService, ResourceInUseError, ResourceNotFoundError, ResourceType
 
@@ -67,6 +67,14 @@ class TestModelEndpoints:
     def test_get_model_success(self, fxt_model, fxt_get_project, fxt_model_service, fxt_client):
         fxt_model_service.get_model.return_value = fxt_model
         fxt_model_service.get_model_variants.return_value = []
+        fxt_model_service.get_evaluation_results.return_value = [
+            EvaluationResult(
+                model_revision_id=fxt_model.id,
+                dataset_revision_id=uuid4(),
+                subset=DatasetItemSubset.TRAINING,
+                metrics={"accuracy": 0.95, "f1_score": 0.87},
+            )
+        ]
 
         response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models/{fxt_model.id}")
 
@@ -75,6 +83,7 @@ class TestModelEndpoints:
         fxt_model_service.get_model_variants.assert_called_once_with(
             project_id=fxt_get_project.id, model_id=fxt_model.id
         )
+        fxt_model_service.get_evaluation_results.assert_called_once_with(model_id=fxt_model.id)
 
     @pytest.mark.parametrize(
         "http_method, service_method",

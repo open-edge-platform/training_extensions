@@ -5,6 +5,7 @@ from uuid import UUID
 
 from pydantic import Field
 
+from app.api.schemas.evaluation import EvaluationView
 from app.core.models import BaseIDModel
 from app.models import TrainingInfo
 
@@ -69,6 +70,78 @@ class ModelView(BaseIDModel):
                     },
                 ],
                 "files_deleted": False,
+            }
+        }
+    }
+
+
+class ExtendedModelView(ModelView):
+    evaluations: list[EvaluationView] = Field(..., description="List of metrics computed per evaluation")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "id": "76e07d18-196e-4e33-bf98-ac1d35dca4cb",
+                "name": "Object_Detection_YOLOX_X (76e07d18)",
+                "architecture": "Object_Detection_YOLOX_X",
+                "parent_revision": "06091f82-5506-41b9-b97f-c761380df870",
+                "training_info": {
+                    "status": "in_progress",
+                    "start_time": "2021-06-29T16:24:30.928000+00:00",
+                    "end_time": "2021-06-29T16:24:30.928000+00:00",
+                    "dataset_revision_id": "3c6c6d38-1cd8-4458-b759-b9880c048b78",
+                    "label_schema_revision": {
+                        "labels": [
+                            {
+                                "id": "a22d82ba-afa9-4d6e-bbc1-8c8e4002ec29",
+                                "name": "cat",
+                            },
+                            {
+                                "id": "8aa85368-11ba-4507-88f2-6a6704d78ef5",
+                                "name": "dog",
+                            },
+                        ]
+                    },
+                    "configuration": {},
+                },
+                "variants": [
+                    {
+                        "format": "openvino",
+                        "precision": "fp16",
+                        "weights_size": 123456,
+                    },
+                    {
+                        "format": "onnx",
+                        "precision": "fp16",
+                        "weights_size": 123456,
+                    },
+                    {
+                        "format": "pytorch",
+                        "precision": "fp32",
+                        "weights_size": 123456,
+                    },
+                ],
+                "files_deleted": False,
+                "evaluations": [
+                    {
+                        "dataset_revision_id": "3c6c6d38-1cd8-4458-b759-b9880c048b78",
+                        "subset": "testing",
+                        "metrics": [
+                            {
+                                "name": "accuracy",
+                                "value": 0.97,
+                            },
+                            {
+                                "name": "precision",
+                                "value": 0.98,
+                            },
+                            {
+                                "name": "recall",
+                                "value": 0.94,
+                            },
+                        ],
+                    }
+                ],
             }
         }
     }
