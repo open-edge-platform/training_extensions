@@ -25,7 +25,7 @@ interface ModelVariantTableProps {
 }
 
 export const ModelVariantTable = ({ model, format }: ModelVariantTableProps) => {
-    const variants = (model.variants ?? []).filter((variant) => variant.format.toLowerCase() === format);
+    const variants = (model.variants ?? []).filter((variant) => variant.format === format);
 
     if (variants.length === 0) {
         return null;
