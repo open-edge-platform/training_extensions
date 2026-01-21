@@ -3,102 +3,18 @@
 
 import { Suspense } from 'react';
 
-import { Button, Divider, Flex, StatusLight, Text, View } from '@geti/ui';
-import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-import { isEmpty } from 'lodash-es';
+import { Divider, Flex, View } from '@geti/ui';
 
-import { $api } from '../../../api/client';
-import { useWebRTCConnection } from '../stream/web-rtc-connection-provider';
+import { ActiveModel } from './active-model.component';
+import { InferenceDevices } from './inference-devices.component';
 import { InputOutputSetup } from './input-output-setup.component';
 import { PipelineSwitch } from './pipeline-toggle.component';
-
-const ActiveModel = () => {
-    const projectId = useProjectIdentifier();
-
-    const modelsQuery = $api.useSuspenseQuery('get', '/api/projects/{project_id}/models', {
-        params: { path: { project_id: projectId } },
-    });
-
-    return (
-        <Flex gap='size-50' alignItems='center'>
-            <Text
-                UNSAFE_style={{
-                    color: 'var(--spectrum-global-color-gray-900)',
-                }}
-            >
-                Model:
-            </Text>
-            <Text
-                UNSAFE_style={{
-                    color: 'var(--spectrum-global-color-gray-700)',
-                }}
-            >
-                {!isEmpty(modelsQuery.data) ? modelsQuery.data[0].architecture : 'Unknown'}
-            </Text>
-        </Flex>
-    );
-};
-
-const WebRTCConnectionStatus = () => {
-    const { status, stop } = useWebRTCConnection();
-
-    switch (status) {
-        case 'idle':
-            return (
-                <Flex
-                    gap='size-100'
-                    alignItems={'center'}
-                    UNSAFE_style={{
-                        '--spectrum-gray-visual-color': 'var(--spectrum-global-color-gray-500)',
-                    }}
-                >
-                    <StatusLight role={'status'} aria-label='Idle' variant='neutral'>
-                        Idle
-                    </StatusLight>
-                </Flex>
-            );
-        case 'connecting':
-            return (
-                <Flex gap='size-100' alignItems={'center'}>
-                    <StatusLight role={'status'} aria-label='Connecting' variant='info'>
-                        Connecting
-                    </StatusLight>
-                </Flex>
-            );
-        case 'disconnected':
-            return (
-                <Flex gap='size-100' alignItems={'center'}>
-                    <StatusLight role={'status'} aria-label='Disconnected' variant='negative'>
-                        Disconnected
-                    </StatusLight>
-                </Flex>
-            );
-        case 'failed':
-            return (
-                <Flex gap='size-100' alignItems={'center'}>
-                    <StatusLight role={'status'} aria-label='Failed' variant='negative'>
-                        Failed
-                    </StatusLight>
-                </Flex>
-            );
-        case 'connected':
-            return (
-                <Flex gap='size-200' alignItems={'center'}>
-                    <StatusLight role={'status'} aria-label='Connected' variant='positive'>
-                        Connected
-                    </StatusLight>
-                    <Button onPress={stop} variant='secondary'>
-                        Stop
-                    </Button>
-                </Flex>
-            );
-    }
-};
+import { WebRTCConnectionStatus } from './web-rtc-connection-status.component';
 
 export const Header = () => {
     return (
         <View
-            backgroundColor={'gray-100'}
+            backgroundColor='gray-100'
             gridArea='toolbar'
             padding='size-200'
             UNSAFE_style={{
@@ -116,6 +32,8 @@ export const Header = () => {
                 <WebRTCConnectionStatus />
 
                 <Divider orientation='vertical' size='S' />
+
+                <InferenceDevices />
 
                 <Flex marginStart='auto'>
                     <PipelineSwitch />
