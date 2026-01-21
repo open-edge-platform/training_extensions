@@ -245,7 +245,7 @@ def get_dataset_item_thumbnail(
         buffer.seek(0)
         return StreamingResponse(
             buffer,
-            media_type="image/png",
+            media_type="image/jpeg",
             headers={
                 "Content-Disposition": f"inline; filename={dataset_item_id}.jpeg",
                 "Cache-Control": "public, max-age=31536000",
