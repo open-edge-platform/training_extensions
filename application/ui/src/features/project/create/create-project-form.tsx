@@ -75,12 +75,7 @@ export const CreateProjectForm = ({ projects }: CreateProjectFormProps) => {
     };
 
     return (
-        <Form
-            onSubmit={createProject}
-            validationBehavior={'native'}
-            UNSAFE_className={styles.formContent}
-            height={'100%'}
-        >
+        <Form onSubmit={createProject} validationBehavior={'native'} height={'100%'}>
             <Flex
                 flex={1}
                 minHeight={0}

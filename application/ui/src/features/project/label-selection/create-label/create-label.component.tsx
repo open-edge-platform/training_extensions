@@ -17,6 +17,7 @@ import {
     View,
 } from '@geti/ui';
 import { Add } from '@geti/ui/icons';
+import { TextFieldRef } from '@react-types/textfield';
 import { v4 as uuid } from 'uuid';
 
 import type { Label, TaskType } from '../../../../constants/shared-types';
@@ -45,7 +46,7 @@ const ColorPicker = ({ onChange, value }: SpectrumColorPickerProps) => {
     );
 };
 
-const getInitialLabel = (): Label => ({ id: uuid(), color: getRandomColor(), name: '' });
+const getInitialLabel = (): Label => ({ id: uuid(), color: getRandomColor(), name: '', hotkey: null });
 
 export type CreateLabelProps = {
     onCreate: (label: Label) => void;
@@ -56,6 +57,7 @@ export type CreateLabelProps = {
 export const CreateLabel = ({ labels, onCreate, taskType }: CreateLabelProps) => {
     const [newLabel, setNewLabel] = useState<Label>(getInitialLabel);
     const ref = useRef<DOMRefValue<HTMLDivElement>>(null);
+    const inputRef = useRef<TextFieldRef<HTMLInputElement>>(null);
 
     const labelsHotkeys = labels.map((label) => label.hotkey).filter((hotkey) => hotkey != null);
     const appHotkeys = Object.values(TASK_HOTKEYS[taskType]);
@@ -67,7 +69,7 @@ export const CreateLabel = ({ labels, onCreate, taskType }: CreateLabelProps) =>
     const createLabel = useCallback(() => {
         if (isCreateLabelDisabled) return;
 
-        onCreate(newLabel);
+        onCreate({ ...newLabel, name: newLabel.name.trim() });
         setNewLabel(getInitialLabel);
     }, [onCreate, newLabel, isCreateLabelDisabled]);
 
@@ -82,8 +84,11 @@ export const CreateLabel = ({ labels, onCreate, taskType }: CreateLabelProps) =>
             (event) => {
                 if (event.key === 'Enter') {
                     event.preventDefault();
+                    event.stopImmediatePropagation();
 
                     createLabel();
+
+                    inputRef.current?.focus();
                 }
             },
             {
@@ -113,6 +118,7 @@ export const CreateLabel = ({ labels, onCreate, taskType }: CreateLabelProps) =>
             />
             <View>
                 <TextField
+                    ref={inputRef}
                     aria-label={'Create label input'}
                     placeholder={'Create label'}
                     value={newLabel?.name}
