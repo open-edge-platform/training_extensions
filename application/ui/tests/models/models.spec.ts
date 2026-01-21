@@ -60,7 +60,7 @@ test.describe('Models', () => {
                 return HttpResponse.json(mockedModels);
             }),
             http.get('/api/projects/{project_id}/models/{model_id}', ({ params }) => {
-                const foundModel = mockedModels.find((m) => m.id === params.model_id);
+                const foundModel = mockedModels.find((model) => model.id === params.model_id);
 
                 if (foundModel) {
                     return HttpResponse.json(getMockedExtendedModel(foundModel));
@@ -70,7 +70,7 @@ test.describe('Models', () => {
             }),
             http.patch('/api/projects/{project_id}/models/{model_id}', async ({ request, params }) => {
                 const body = (await request.json()) as { name: string };
-                const model = mockedModels.find((m) => m.id === params.model_id);
+                const model = mockedModels.find((model) => model.id === params.model_id);
 
                 if (model) {
                     return HttpResponse.json({ ...model, name: body.name });
@@ -174,29 +174,45 @@ test.describe('Models', () => {
         expect(modelNames[0]).toContain('YOLOX Model v1');
     });
 
-    test('can rename a model', async ({ modelsPage, page }) => {
+    test('can rename a model', async ({ modelsPage, network }) => {
+        network.use(
+            http.patch('/api/projects/{project_id}/models/{model_id}', async ({ request }) => {
+                const body = (await request.json()) as { name: string };
+
+                return HttpResponse.json(getMockedModel({ id: 'model-1', name: body.name }));
+            }),
+            http.get('/api/projects/{project_id}/models', () => {
+                return HttpResponse.json([
+                    getMockedModel({ id: 'model-1', name: 'Renamed Model' }),
+                    ...mockedModels.slice(1),
+                ]);
+            })
+        );
+
         await modelsPage.goto();
 
         await modelsPage.openModelMenu();
-
-        await expect(page.getByRole('menuitem', { name: 'Rename' })).toBeVisible();
         await modelsPage.clickRenameAction();
-
         await modelsPage.renameModel('Renamed Model');
 
-        await expect(page.getByRole('dialog')).toBeHidden();
+        await expect(modelsPage.getModelByName('Renamed Model')).toBeVisible();
     });
 
-    test('can delete a model', async ({ modelsPage, page }) => {
+    test('can delete a model', async ({ modelsPage, network }) => {
         await modelsPage.goto();
 
+        await expect(modelsPage.getModelByName('YOLOX Model v1')).toBeVisible();
+
+        network.use(
+            http.get('/api/projects/{project_id}/models', () => {
+                return HttpResponse.json(mockedModels.slice(1));
+            })
+        );
+
         await modelsPage.openModelMenu();
-
-        await expect(page.getByRole('menuitem', { name: 'Delete' })).toBeVisible();
         await modelsPage.clickDeleteAction();
-
         await modelsPage.confirmDelete();
 
-        await expect(page.getByRole('alertdialog')).toBeHidden();
+        await expect(modelsPage.getModelByName('YOLOX Model v1')).toBeHidden();
     });
 });

@@ -72,8 +72,10 @@ export class ModelsPage {
     }
 
     async renameModel(newName: string) {
-        await this.page.getByRole('textbox').fill(newName);
-        await this.page.getByRole('button', { name: 'Rename' }).click();
+        const textbox = this.page.getByRole('textbox', { name: 'Model name' });
+
+        await textbox.fill(newName);
+        await textbox.press('Enter');
     }
 
     async confirmDelete() {
