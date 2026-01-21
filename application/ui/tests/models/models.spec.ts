@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { getMockedModel } from 'mocks/mock-model';
+import { getMockedExtendedModel, getMockedModel } from 'mocks/mock-model';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 
@@ -63,7 +63,7 @@ test.describe('Models', () => {
                 const foundModel = mockedModels.find((m) => m.id === params.model_id);
 
                 if (foundModel) {
-                    return HttpResponse.json(foundModel);
+                    return HttpResponse.json(getMockedExtendedModel(foundModel));
                 }
 
                 return new HttpResponse(null, { status: 404 });
