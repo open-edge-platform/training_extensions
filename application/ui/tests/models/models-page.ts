@@ -52,11 +52,11 @@ export class ModelsPage {
     }
 
     getModelByName(name: string) {
-        return this.page.locator('[data-testid^="model-disclosure-"]').filter({ hasText: name });
+        return this.page.getByTestId('model-name').filter({ hasText: name });
     }
 
     async expandModel(name: string) {
-        await this.getModelByName(name).locator('button').first().click();
+        await this.getModelByName(name).click();
     }
 
     async openModelMenu() {

@@ -41,7 +41,9 @@ export const ModelRow = ({
         <Grid columns={GRID_COLUMNS} alignItems={'center'} width={'100%'} columnGap={'size-200'}>
             <Flex direction={'column'} gap={'size-50'}>
                 <Flex alignItems={'center'} gap={'size-100'}>
-                    <Text UNSAFE_className={styles.modelName}>{model.name ?? 'Unnamed Model'}</Text>
+                    <Text UNSAFE_className={styles.modelName} data-testid={'model-name'}>
+                        {model.name ?? 'Unnamed Model'}
+                    </Text>
                     {model.id === activeModelArchitectureId && <ActiveModelTag />}
                 </Flex>
                 <Text UNSAFE_className={styles.secondaryText}>
