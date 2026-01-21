@@ -10,8 +10,6 @@ export class ModelsPage {
 
     async goto(projectId: string = 'id-1') {
         await this.page.goto(paths.project.models({ projectId }));
-
-        await this.getModelsCount();
     }
 
     getGroupByPicker() {
