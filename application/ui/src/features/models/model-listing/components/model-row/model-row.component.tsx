@@ -23,10 +23,6 @@ type ModelRowProps = {
     onModelAction?: (key: Key) => void;
 };
 
-const getTotalModelSize = (model: Model): number => {
-    return (model.variants ?? []).reduce((total, variant) => total + (variant.weights_size ?? 0), 0);
-};
-
 export const ModelRow = ({
     model,
     activeModelArchitectureId,
@@ -35,7 +31,7 @@ export const ModelRow = ({
     onModelAction,
 }: ModelRowProps) => {
     const trainingEndTime = model.training_info.end_time;
-    const totalSize = getTotalModelSize(model);
+    const totalSize = model.size;
 
     return (
         <Grid columns={GRID_COLUMNS} alignItems={'center'} width={'100%'} columnGap={'size-200'}>
