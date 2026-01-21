@@ -365,7 +365,7 @@ class TestDatasetItemEndpoints:
         response = fxt_client.get(f"/api/projects/{str(uuid4())}/dataset/items/{str(dataset_item_id)}/thumbnail")
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.headers["content-type"] == "image/png"
+        assert response.headers["content-type"] == "image/jpeg"
         fxt_dataset_service.generate_dataset_item_thumbnail.assert_called_once_with(
             project=fxt_get_project, dataset_item_id=dataset_item_id
         )
