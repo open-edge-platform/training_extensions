@@ -62,6 +62,21 @@ const test = testBase.extend<Fixtures>({
                     },
                 ]);
             }),
+            http.get('/api/projects/{project_id}', () => {
+                return HttpResponse.json({
+                    id: '123',
+                    name: 'Test Project',
+                    task: {
+                        task_type: 'detection',
+                        exclusive_labels: false,
+                        labels: [
+                            { id: '1', color: 'red', name: 'person' },
+                            { id: '2', color: 'blue', name: 'car' },
+                        ],
+                    },
+                    active_pipeline: true,
+                });
+            }),
             http.delete('/api/projects/{project_id}', () => {
                 return HttpResponse.json(null, { status: 204 });
             }),
