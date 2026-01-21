@@ -71,13 +71,13 @@ export const ModelRow = ({
 
             {onModelAction ? (
                 <MenuTrigger>
-                    <ActionButton isQuiet>
+                    <ActionButton isQuiet aria-label={'Model actions'}>
                         <MoreMenu />
                     </ActionButton>
-                    <Menu onAction={onModelAction}>
-                        <Item key='rename'>Rename</Item>
-                        <Item key='delete'>Delete</Item>
-                        <Item key='export'>Export</Item>
+                    <Menu onAction={onModelAction} aria-label={'Model actions menu'}>
+                        <Item key={'rename'}>Rename</Item>
+                        <Item key={'delete'}>Delete</Item>
+                        <Item key={'export'}>Export</Item>
                     </Menu>
                 </MenuTrigger>
             ) : null}
