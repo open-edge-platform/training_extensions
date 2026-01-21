@@ -6,7 +6,7 @@ from uuid import uuid4
 import pytest
 from sqlalchemy.orm import Session
 
-from app.db.schema import DatasetItemDB
+from app.db.schema import MediaDB
 from app.models import (
     DatasetItem,
     DatasetItemAnnotation,
@@ -21,7 +21,7 @@ from app.models import (
     TaskType,
 )
 from app.repositories import DatasetItemRepository
-from app.services import DatasetService, LabelService
+from app.services import DatasetService, LabelService, MediaService
 from app.services.dataset_service import AnnotationValidationError
 
 
@@ -29,12 +29,13 @@ class TestDatasetServiceUnit:
     """Unit tests for DatasetService."""
 
     @pytest.fixture
-    def fxt_dataset_service(self, tmp_path):
+    def fxt_dataset_service(self):
         db_session = MagicMock(spec=Session)
         label_service = MagicMock(spec=LabelService)
+        media_service = MagicMock(spec=MediaService)
         return DatasetService(
-            data_dir=tmp_path,
             label_service=label_service,
+            media_service=media_service,
             db_session=db_session,
         )
 
@@ -101,14 +102,14 @@ class TestDatasetServiceUnit:
             DatasetService._validate_annotations_labels(annotations=annotations, labels=labels)
 
     def test_validate_annotations_coordinates_rectangle(self) -> None:
-        dataset_item = DatasetItemDB(name="test", format="jpg", width=100, height=50, size=1024)
+        media = MediaDB(name="test", format="jpg", width=100, height=50, size=1024)
         annotations = [
             DatasetItemAnnotation(
                 labels=[LabelReference(id=uuid4())],
                 shape=Rectangle(type="rectangle", x=0, y=0, width=10, height=10),
             )
         ]
-        DatasetService._validate_annotations_coordinates(annotations=annotations, dataset_item=dataset_item)
+        DatasetService._validate_annotations_coordinates(annotations=annotations, media=media)
 
     @pytest.mark.parametrize(
         "x, y, width, height",
@@ -120,7 +121,7 @@ class TestDatasetServiceUnit:
         ],
     )
     def test_validate_annotations_coordinates_invalid_rectangle(self, x, y, width, height):
-        dataset_item = DatasetItemDB(name="test", format="jpg", width=100, height=50, size=1024)
+        media = MediaDB(name="test", format="jpg", width=100, height=50, size=1024)
         annotations = [
             DatasetItemAnnotation(
                 labels=[LabelReference(id=uuid4())],
@@ -128,17 +129,17 @@ class TestDatasetServiceUnit:
             )
         ]
         with pytest.raises(AnnotationValidationError):
-            DatasetService._validate_annotations_coordinates(annotations=annotations, dataset_item=dataset_item)
+            DatasetService._validate_annotations_coordinates(annotations=annotations, media=media)
 
     def test_validate_annotations_coordinates_polygon(self) -> None:
-        dataset_item = DatasetItemDB(name="test", format="jpg", width=100, height=50, size=1024)
+        media = MediaDB(name="test", format="jpg", width=100, height=50, size=1024)
         annotations = [
             DatasetItemAnnotation(
                 labels=[LabelReference(id=uuid4())],
                 shape=Polygon(type="polygon", points=[Point(x=0, y=0), Point(x=10, y=10)]),
             )
         ]
-        DatasetService._validate_annotations_coordinates(annotations=annotations, dataset_item=dataset_item)
+        DatasetService._validate_annotations_coordinates(annotations=annotations, media=media)
 
     @pytest.mark.parametrize(
         "x, y",
@@ -148,7 +149,7 @@ class TestDatasetServiceUnit:
         ],
     )
     def test_validate_annotations_coordinates_invalid_polygon(self, x, y):
-        dataset_item = DatasetItemDB(name="test", format="jpg", width=100, height=50, size=1024)
+        media = MediaDB(name="test", format="jpg", width=100, height=50, size=1024)
         annotations = [
             DatasetItemAnnotation(
                 labels=[LabelReference(id=uuid4())],
@@ -156,7 +157,7 @@ class TestDatasetServiceUnit:
             )
         ]
         with pytest.raises(AnnotationValidationError):
-            DatasetService._validate_annotations_coordinates(annotations=annotations, dataset_item=dataset_item)
+            DatasetService._validate_annotations_coordinates(annotations=annotations, media=media)
 
     def test_validate_annotations_multilabel_classification(self, fxt_multilabel_classification_project) -> None:
         annotations = [

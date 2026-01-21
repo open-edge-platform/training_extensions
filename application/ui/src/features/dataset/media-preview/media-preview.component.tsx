@@ -9,7 +9,7 @@ import { isObject } from 'lodash-es';
 
 import { $api } from '../../../api/client';
 import { ZoomProvider } from '../../../components/zoom/zoom.provider';
-import type { DatasetItem } from '../../../constants/shared-types';
+import type { Media } from '../../../constants/shared-types';
 import { useGetDatasetItems } from '../../../hooks/use-get-dataset-items.hook';
 import { AnnotationActionsProvider } from '../../../shared/annotator/annotation-actions-provider.component';
 import { AnnotationVisibilityProvider } from '../../../shared/annotator/annotation-visibility-provider.component';
@@ -29,9 +29,9 @@ const isUnannotatedError = (error: unknown): boolean => {
 };
 
 type MediaPreviewProps = {
-    mediaItem: DatasetItem;
+    mediaItem: Media;
     close: () => void;
-    onSelectedMediaItem: (item: DatasetItem) => void;
+    onSelectedMediaItem: (item: Media) => void;
 };
 
 const CanvasAreaLoading = () => (

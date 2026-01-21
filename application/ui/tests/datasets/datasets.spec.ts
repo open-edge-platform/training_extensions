@@ -14,7 +14,7 @@ const totalElements = mockedItems.length + mockedItems2.length + mockedItems3.le
 test.describe('Dataset', () => {
     test.beforeEach(({ network }) => {
         network.use(
-            http.get('/api/projects/{project_id}/dataset/items', ({ query }) => {
+            http.get('/api/projects/{project_id}/dataset/media', ({ query }) => {
                 const offset = Number(query.get('offset') ?? 0);
                 const limit = Number(query.get('limit'));
                 const items = offset === 0 ? mockedItems : offset === 20 ? mockedItems2 : mockedItems3;

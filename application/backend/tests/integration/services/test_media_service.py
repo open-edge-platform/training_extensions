@@ -1,32 +1,22 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-from collections.abc import Callable
+import os.path
 from datetime import datetime
+from io import BytesIO
 from pathlib import Path
 from typing import Any
 from uuid import UUID, uuid4
 
 import pytest
-from sqlalchemy import func, select
+from PIL import Image
 from sqlalchemy.orm import Session
 
 from app.db.schema import DatasetItemDB, DatasetItemLabelDB, MediaDB, PipelineDB
-from app.models import (
-    DatasetItem,
-    DatasetItemAnnotation,
-    DatasetItemAnnotationStatus,
-    DatasetItemSubset,
-    LabelReference,
-    Media,
-    Pipeline,
-    Project,
-    Rectangle,
-)
+from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, MediaFormat, Pipeline, Project
 from app.services import LabelService, PipelineService, ProjectService, SystemService
 from app.services.base import ResourceNotFoundError, ResourceType
-from app.services.dataset_service import DatasetItemFilters, DatasetService, SubsetAlreadyAssignedError
 from app.services.event.event_bus import EventBus
-from app.services.media_service import MediaService
+from app.services.media_service import InvalidImageError, MediaFilters, MediaService
 
 
 @pytest.fixture
@@ -56,15 +46,6 @@ def fxt_label_service(db_session: Session) -> LabelService:
 
 
 @pytest.fixture
-def fxt_media_service(
-    fxt_projects_dir: Path,
-    db_session: Session,
-) -> MediaService:
-    """Fixture to create a MediaService instance."""
-    return MediaService(data_dir=fxt_projects_dir.parent, db_session=db_session)
-
-
-@pytest.fixture
 def fxt_project_service(
     fxt_projects_dir: Path, db_session: Session, fxt_pipeline_service: PipelineService, fxt_label_service: LabelService
 ) -> ProjectService:
@@ -78,13 +59,12 @@ def fxt_project_service(
 
 
 @pytest.fixture
-def fxt_dataset_service(
-    fxt_label_service: LabelService,
-    fxt_media_service: MediaService,
+def fxt_media_service(
+    fxt_projects_dir: Path,
     db_session: Session,
-) -> DatasetService:
-    """Fixture to create a DatasetService instance."""
-    return DatasetService(label_service=fxt_label_service, media_service=fxt_media_service, db_session=db_session)
+) -> MediaService:
+    """Fixture to create a MediaService instance."""
+    return MediaService(data_dir=fxt_projects_dir.parent, db_session=db_session)
 
 
 @pytest.fixture
@@ -124,55 +104,24 @@ def fxt_project_with_pipeline(
 
 
 @pytest.fixture
-def fxt_project_with_dataset_items(fxt_project_with_pipeline, db_session) -> tuple[Project, list[DatasetItemDB]]:
+def fxt_project_with_media(fxt_project_with_pipeline, db_session) -> tuple[Project, list[MediaDB]]:
     project, _ = fxt_project_with_pipeline
 
-    configs: list[tuple[dict[str, Any], dict[str, Any]]] = [
-        (
-            {"type": "image", "name": "test1", "format": "jpg", "size": 1024, "width": 1024, "height": 768},
-            {"subset": "unassigned"},
-        ),
-        (
-            {
-                "type": "image",
-                "name": "test2",
-                "format": "jpg",
-                "size": 1024,
-                "width": 1024,
-                "height": 768,
-            },
-            {
-                "subset": "unassigned",
-                "annotation_data": [
-                    {"labels": [{"id": str(project.task.labels[0].id)}], "shape": {"type": "full_image"}}
-                ],
-            },
-        ),
-        (
-            {"type": "image", "name": "test3", "format": "jpg", "size": 1024, "width": 1024, "height": 768},
-            {"subset": "training"},
-        ),
+    configs = [
+        {"type": "image", "name": "test1", "format": "jpg", "size": 1024, "width": 1024, "height": 768},
+        {"type": "image", "name": "test2", "format": "jpg", "size": 1024, "width": 1024, "height": 768},
+        {"type": "image", "name": "test3", "format": "jpg", "size": 1024, "width": 1024, "height": 768},
     ]
 
-    db_dataset_items = []
-    for media_config, dataset_item_config in configs:
-        media = MediaDB(**media_config)
-        media.project_id = str(project.id)
-        db_session.add(media)
-        db_session.flush()
-
-        dataset_item = DatasetItemDB(**dataset_item_config)
-        dataset_item.id = str(media.id)
-        dataset_item.project_id = str(project.id)
-        dataset_item.created_at = datetime.fromisoformat("2025-02-01T00:00:00Z")
-        db_dataset_items.append(dataset_item)
-    db_session.add_all(db_dataset_items)
+    db_media_list = []
+    for config in configs:
+        db_media = MediaDB(**config)
+        db_media.project_id = str(project.id)
+        db_media.created_at = datetime.fromisoformat("2025-02-01T00:00:00Z")
+        db_media_list.append(db_media)
+    db_session.add_all(db_media_list)
     db_session.flush()
-    # Link label to dataset item with annotation
-    db_session.add(DatasetItemLabelDB(dataset_item_id=db_dataset_items[1].id, label_id=str(project.task.labels[0].id)))
-    db_session.flush()
-
-    return project, db_dataset_items
+    return project, db_media_list
 
 
 @pytest.fixture
@@ -241,21 +190,26 @@ def fxt_project_with_annotation_status_items(
         ),
     ]
 
-    db_dataset_items = [*unannotated_items, *reviewed_items, *to_review_items]
-    for idx, dataset_item in enumerate(db_dataset_items):
-        db_media = MediaDB(
-            type="image",
-            name=f"{dataset_item.subset}${idx}",
-            format="jpg",
-            size=1024,
-            width=1024,
-            height=768,
-            project_id=str(project.id),
-            created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
-        )
-        db_session.add(db_media)
-        db_session.flush()
-        dataset_item.id = db_media.id
+    db_dataset_items = []
+    for list, name in zip(
+        [unannotated_items, reviewed_items, to_review_items], ["unannotated", "reviewed", "to_review"]
+    ):
+        for idx, dataset_item in enumerate(list):
+            db_media = MediaDB(
+                type="image",
+                name=f"{name}{idx + 1}",
+                format="jpg",
+                size=1024,
+                width=1024,
+                height=768,
+                project_id=str(project.id),
+                created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
+            )
+            db_session.add(db_media)
+            db_session.flush()
+
+            dataset_item.id = db_media.id
+            db_dataset_items.append(dataset_item)
 
     db_session.add_all(db_dataset_items)
     db_session.flush()
@@ -266,19 +220,6 @@ def fxt_project_with_annotation_status_items(
     db_session.flush()
 
     return project, db_dataset_items
-
-
-@pytest.fixture
-def fxt_annotations() -> Callable[[UUID], list[DatasetItemAnnotation]]:
-    def _create_annotations(label_id: UUID) -> list[DatasetItemAnnotation]:
-        return [
-            DatasetItemAnnotation(
-                labels=[LabelReference(id=label_id)],
-                shape=Rectangle(type="rectangle", x=0, y=0, width=10, height=10),
-            )
-        ]
-
-    return _create_annotations
 
 
 @pytest.fixture
@@ -449,21 +390,23 @@ def fxt_project_with_subset_items(fxt_project_with_pipeline, db_session) -> tupl
             created_at=datetime.fromisoformat("2025-02-08T00:00:00Z"),
         ),
     ]
-    db_dataset_items = [*unassigned_items, *training_items, *validation_items, *testing_items]
-    for idx, dataset_item in enumerate(db_dataset_items):
-        db_media = MediaDB(
-            type="image",
-            name=f"{dataset_item.subset}{idx + 1}",
-            format="jpg",
-            size=1024,
-            width=1024,
-            height=768,
-            project_id=str(project.id),
-            created_at=datetime.fromisoformat("2025-02-08T00:00:00Z"),
-        )
-        db_session.add(db_media)
-        db_session.flush()
-        dataset_item.id = db_media.id
+    db_dataset_items = []
+    for list in [unassigned_items, training_items, validation_items, testing_items]:
+        for idx, dataset_item in enumerate(list):
+            db_media = MediaDB(
+                type="image",
+                name=f"{dataset_item.subset}{idx + 1}",
+                format="jpg",
+                size=1024,
+                width=1024,
+                height=768,
+                project_id=str(project.id),
+                created_at=datetime.fromisoformat("2025-02-08T00:00:00Z"),
+            )
+            db_session.add(db_media)
+            db_session.flush()
+            dataset_item.id = db_media.id
+            db_dataset_items.append(dataset_item)
 
     db_session.add_all(db_dataset_items)
     db_session.flush()
@@ -471,71 +414,72 @@ def fxt_project_with_subset_items(fxt_project_with_pipeline, db_session) -> tupl
     return project, db_dataset_items
 
 
-class TestDatasetServiceIntegration:
-    """Integration tests for DatasetService."""
+class TestMediaServiceIntegration:
+    """Integration tests for MediaService."""
 
-    @pytest.mark.parametrize("use_pipeline_model", [True, False])
-    @pytest.mark.parametrize("user_reviewed", [True, False])
-    def test_create_dataset_item(
+    @pytest.mark.parametrize("use_pipeline_source", [True, False])
+    @pytest.mark.parametrize("format", ["jpg", "png"])
+    def test_create_media(
         self,
-        fxt_dataset_service: DatasetService,
+        tmp_path: Path,
         fxt_media_service: MediaService,
         fxt_project_with_pipeline: tuple[Project, Pipeline],
-        fxt_annotations: Callable[[UUID], list[DatasetItemAnnotation]],
         db_session: Session,
-        user_reviewed: bool,
-        use_pipeline_model: bool,
+        format: MediaFormat,
+        use_pipeline_source: bool,
     ) -> None:
-        """Test creating a dataset item."""
+        """Test creating a media."""
+        image = Image.new("RGB", (1024, 768))
+
         project, pipeline = fxt_project_with_pipeline
-        label_id = project.task.labels[0].id
 
-        db_media = MediaDB(
-            type="image",
+        created_media = fxt_media_service.create_image(
+            project=project,
             name="test",
-            format="jpg",
-            size=1024,
-            width=1024,
-            height=768,
-            project_id=str(project.id),
-        )
-        db_session.add(db_media)
-        db_session.flush()
-        media = Media.model_validate(db_media, from_attributes=True)
-
-        created_dataset_item = fxt_dataset_service.create_dataset_item(
-            project=project,
-            media=media,
-            user_reviewed=user_reviewed,
-            prediction_model_id=pipeline.model_id if use_pipeline_model else None,
-            annotations=fxt_annotations(label_id) if not user_reviewed else None,
+            format=format,
+            data=image,
+            source_id=pipeline.source_id if use_pipeline_source else None,
         )
 
-        dataset_item = db_session.get(DatasetItemDB, str(created_dataset_item.id))
-        assert dataset_item is not None
+        media = db_session.get(MediaDB, str(created_media.id))
+        assert media is not None
         assert (
-            dataset_item.id == str(created_dataset_item.id)
-            and dataset_item.project_id == str(project.id)
-            and dataset_item.id == str(media.id)
-            and dataset_item.user_reviewed == user_reviewed
-            and dataset_item.subset == DatasetItemSubset.UNASSIGNED
-            and dataset_item.subset_assigned_at is None
+            media.id == str(created_media.id)
+            and media.project_id == str(project.id)
+            and media.type == "image"
+            and media.name == "test"
+            and media.format == format
+            and media.width == 1024
+            and media.height == 768
         )
-        if use_pipeline_model:
-            assert dataset_item.prediction_model_id == str(pipeline.model_id)
+        if use_pipeline_source:
+            assert media.source_id == str(pipeline.source_id)
         else:
-            assert dataset_item.prediction_model_id is None
-        if not user_reviewed:
-            assert dataset_item.annotation_data == [
-                {
-                    "shape": {"type": "rectangle", "x": 0, "y": 0, "width": 10, "height": 10},
-                    "labels": [{"id": str(label_id)}],
-                    "confidences": None,
-                }
-            ]
-            assert db_session.get(DatasetItemLabelDB, (str(created_dataset_item.id), str(label_id))) is not None
-        else:
-            assert dataset_item.annotation_data is None
+            assert media.source_id is None
+
+        binary_file_path = tmp_path / f"projects/{project.id}/dataset/{created_media.id}.{format}"
+        assert os.path.exists(binary_file_path)
+        assert created_media.size == os.path.getsize(binary_file_path)
+
+        thumbnail_file_path = tmp_path / f"projects/{project.id}/dataset/{created_media.id}-thumb.jpg"
+        assert os.path.exists(thumbnail_file_path)
+
+    def test_create_media_invalid_image(
+        self,
+        fxt_media_service: MediaService,
+        fxt_project_with_pipeline: tuple[Project, Pipeline],
+        db_session: Session,
+    ) -> None:
+        """Test creating a media with invalid image."""
+        project, _ = fxt_project_with_pipeline
+
+        with pytest.raises(InvalidImageError):
+            fxt_media_service.create_image(
+                project=project,
+                name="test",
+                format="jpg",
+                data=BytesIO(b"123"),
+            )
 
     @pytest.mark.parametrize(
         "start_date, start_date_out_of_range",
@@ -553,22 +497,22 @@ class TestDatasetServiceIntegration:
             (datetime.fromisoformat("2025-01-01T00:00:00Z"), True),
         ],
     )
-    def test_count_dataset_items(
+    def test_count_media(
         self,
-        fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
+        fxt_media_service: MediaService,
+        fxt_project_with_media: tuple[Project, list[MediaDB]],
         db_session: Session,
         start_date,
         start_date_out_of_range,
         end_date,
         end_date_out_of_range,
     ) -> None:
-        """Test counting dataset items."""
-        project, db_dataset_items = fxt_project_with_dataset_items
+        """Test counting media."""
+        project, db_media_list = fxt_project_with_media
 
-        count = fxt_dataset_service.count_dataset_items(project=project, start_date=start_date, end_date=end_date)
+        count = fxt_media_service.count_media(project=project, start_date=start_date, end_date=end_date)
 
-        assert count == 0 if start_date_out_of_range or end_date_out_of_range else len(db_dataset_items)
+        assert count == 0 if start_date_out_of_range or end_date_out_of_range else len(db_media_list)
 
     @pytest.mark.parametrize("limit, limit_out_of_range", [(10, False), (0, True)])
     @pytest.mark.parametrize("offset, offset_out_of_range", [(0, False), (10, True)])
@@ -588,10 +532,10 @@ class TestDatasetServiceIntegration:
             (datetime.fromisoformat("2025-01-01T00:00:00Z"), True),
         ],
     )
-    def test_list_dataset_items(
+    def test_list_media(
         self,
-        fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
+        fxt_media_service: MediaService,
+        fxt_project_with_media: tuple[Project, list[MediaDB]],
         limit,
         limit_out_of_range,
         offset,
@@ -601,12 +545,12 @@ class TestDatasetServiceIntegration:
         end_date,
         end_date_out_of_range,
     ) -> None:
-        """Test listing dataset items."""
-        project, db_dataset_items = fxt_project_with_dataset_items
+        """Test listing media."""
+        project, db_media_list = fxt_project_with_media
 
-        dataset_items = fxt_dataset_service.list_dataset_items(
+        media_list = fxt_media_service.list_media(
             project_id=project.id,
-            filters=DatasetItemFilters(
+            filters=MediaFilters(
                 limit=limit,
                 offset=offset,
                 start_date=start_date,
@@ -615,257 +559,143 @@ class TestDatasetServiceIntegration:
         )
 
         assert (
-            len(dataset_items) == 0
+            len(media_list) == 0
             if start_date_out_of_range or end_date_out_of_range or limit_out_of_range or offset_out_of_range
-            else len(db_dataset_items)
+            else len(db_media_list)
         )
 
-    @pytest.mark.parametrize("limit, limit_out_of_range", [(10, False), (0, True)])
-    @pytest.mark.parametrize("offset, offset_out_of_range", [(0, False), (10, True)])
-    @pytest.mark.parametrize(
-        "start_date, start_date_out_of_range",
-        [
-            (None, False),
-            (datetime.fromisoformat("2025-01-01T00:00:00Z"), False),
-            (datetime.fromisoformat("2025-02-02T00:00:00Z"), True),
-        ],
-    )
-    @pytest.mark.parametrize(
-        "end_date, end_date_out_of_range",
-        [
-            (None, False),
-            (datetime.fromisoformat("2025-02-02T00:00:00Z"), False),
-            (datetime.fromisoformat("2025-01-01T00:00:00Z"), True),
-        ],
-    )
-    def test_list_dataset_items_with_media(
+    def test_get_media_by_id(
         self,
-        fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
-        limit,
-        limit_out_of_range,
-        offset,
-        offset_out_of_range,
-        start_date,
-        start_date_out_of_range,
-        end_date,
-        end_date_out_of_range,
-    ) -> None:
-        """Test listing dataset items with corresponding media."""
-        project, db_dataset_items = fxt_project_with_dataset_items
+        fxt_media_service: MediaService,
+        fxt_project_with_media: tuple[Project, list[MediaDB]],
+    ):
+        """Test retrieving a media by ID."""
+        project, db_media_list = fxt_project_with_media
 
-        list = fxt_dataset_service.list_dataset_items_with_media(
-            project_id=project.id,
-            filters=DatasetItemFilters(
-                limit=limit,
-                offset=offset,
-                start_date=start_date,
-                end_date=end_date,
-            ),
+        fetched_media = fxt_media_service.get_media_by_id(project_id=project.id, media_id=UUID(db_media_list[0].id))
+
+        assert str(fetched_media.id) == db_media_list[0].id and fetched_media.name == db_media_list[0].name
+
+    def test_get_media_by_id_not_found(
+        self,
+        fxt_media_service: MediaService,
+        fxt_project_with_media: tuple[Project, list[MediaDB]],
+    ):
+        """Test retrieving a non-existent media raises error."""
+        project, db_media_list = fxt_project_with_media
+        non_existent_id = uuid4()
+
+        with pytest.raises(ResourceNotFoundError) as excinfo:
+            fxt_media_service.get_media_by_id(project_id=project.id, media_id=non_existent_id)
+
+        assert excinfo.value.resource_type == ResourceType.MEDIA
+        assert excinfo.value.resource_id == str(non_existent_id)
+
+    def test_get_media_binary_path_by_id(
+        self,
+        tmp_path: Path,
+        fxt_media_service: MediaService,
+        fxt_project_with_media: tuple[Project, list[MediaDB]],
+    ):
+        """Test retrieving a media binary path by ID."""
+        project, db_media_list = fxt_project_with_media
+
+        media_binary_path = fxt_media_service.get_media_binary_path_by_id(
+            project_id=project.id, media_id=UUID(db_media_list[0].id)
         )
 
         assert (
-            len(list) == 0
-            if start_date_out_of_range or end_date_out_of_range or limit_out_of_range or offset_out_of_range
-            else len(db_dataset_items)
-        )
-        for dataset_item, media in list:
-            assert isinstance(dataset_item, DatasetItem) and isinstance(media, Media)
-
-    def test_get_dataset_item_by_id(
-        self,
-        fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
-    ):
-        """Test retrieving a dataset item by ID."""
-        project, db_dataset_items = fxt_project_with_dataset_items
-
-        fetched_dataset_item = fxt_dataset_service.get_dataset_item_by_id(
-            project_id=project.id, dataset_item_id=UUID(db_dataset_items[0].id)
+            media_binary_path
+            == tmp_path / f"projects/{str(project.id)}/dataset/{db_media_list[0].id}.{db_media_list[0].format}"
         )
 
-        assert str(fetched_dataset_item.id) == db_dataset_items[0].id
-
-    def test_get_dataset_item_by_id_not_found(
+    def test_get_media_binary_path_by_id_not_found(
         self,
-        fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
+        fxt_media_service: MediaService,
+        fxt_project_with_media: tuple[Project, list[MediaDB]],
     ):
-        """Test retrieving a non-existent dataset item raises error."""
-        project, db_dataset_items = fxt_project_with_dataset_items
+        """Test retrieving a non-existent media binary path raises error."""
+        project, db_media_list = fxt_project_with_media
         non_existent_id = uuid4()
 
         with pytest.raises(ResourceNotFoundError) as excinfo:
-            fxt_dataset_service.get_dataset_item_by_id(project_id=project.id, dataset_item_id=non_existent_id)
+            fxt_media_service.get_media_binary_path_by_id(project_id=project.id, media_id=non_existent_id)
 
-        assert excinfo.value.resource_type == ResourceType.DATASET_ITEM
+        assert excinfo.value.resource_type == ResourceType.MEDIA
         assert excinfo.value.resource_id == str(non_existent_id)
 
-    @pytest.mark.parametrize(
-        "item_idx, label_idx",
-        [
-            (0, 0),  # Set annotation with new label to unannotated item
-            (2, 0),  # Set annotation with existing label on already reviewed item
-            (2, 1),  # Set annotation with new label to already reviewed item
-            (5, 1),  # Set annotation with new label to an item to review
-        ],
-    )
-    def test_set_dataset_item_annotations(
+    def test_get_media_thumbnail_path_by_id(
         self,
-        item_idx: int,
-        label_idx: int,
-        fxt_dataset_service: DatasetService,
-        fxt_project_with_annotation_status_items: tuple[Project, list[DatasetItemDB]],
-        fxt_annotations: Callable[[UUID], list[DatasetItemAnnotation]],
+        tmp_path: Path,
+        fxt_media_service: MediaService,
+        fxt_project_with_media: tuple[Project, list[MediaDB]],
+    ):
+        """Test retrieving a media thumbnail path by ID."""
+        project, db_media_list = fxt_project_with_media
+
+        media_binary_path = fxt_media_service.get_media_thumbnail_path_by_id(
+            project=project, media_id=UUID(db_media_list[0].id)
+        )
+
+        assert media_binary_path == tmp_path / f"projects/{str(project.id)}/dataset/{db_media_list[0].id}-thumb.jpg"
+
+    def test_get_media_thumbnail_path_by_id_not_found(
+        self,
+        fxt_media_service: MediaService,
+        fxt_project_with_media: tuple[Project, list[MediaDB]],
+    ):
+        """Test retrieving a non-existent media thumbnail path raises error."""
+        project, db_media_list = fxt_project_with_media
+        non_existent_id = uuid4()
+
+        with pytest.raises(ResourceNotFoundError) as excinfo:
+            fxt_media_service.get_media_thumbnail_path_by_id(project=project, media_id=non_existent_id)
+
+        assert excinfo.value.resource_type == ResourceType.MEDIA
+        assert excinfo.value.resource_id == str(non_existent_id)
+
+    def test_delete_media(
+        self,
+        fxt_media_service: MediaService,
+        fxt_project_with_media: tuple[Project, list[MediaDB]],
+        fxt_projects_dir: Path,
         db_session: Session,
     ):
-        """Test setting a dataset item annotation."""
-        project, db_dataset_items = fxt_project_with_annotation_status_items
-        label_id = str(project.task.labels[label_idx].id)
-        dataset_item_id = db_dataset_items[item_idx].id
-        annotations = fxt_annotations(project.task.labels[label_idx].id)
-        fxt_dataset_service.set_dataset_item_annotations(
-            project=project,
-            dataset_item_id=UUID(dataset_item_id),
-            annotations=annotations,
-            user_reviewed=True,
-        )
+        """Test deleting a media."""
+        project, db_media_list = fxt_project_with_media
 
-        dataset_item = db_session.get(DatasetItemDB, dataset_item_id)
-        assert dataset_item is not None
-        assert dataset_item.annotation_data is not None
-        assert dataset_item.user_reviewed is True
-        assert [
-            DatasetItemAnnotation.model_validate(annotation) for annotation in dataset_item.annotation_data
-        ] == annotations
-        assert (
-            db_session.scalar(
-                select(func.count())
-                .select_from(DatasetItemLabelDB)
-                .where(DatasetItemLabelDB.dataset_item_id == dataset_item_id)
-            )
-            == 1
-        )
-        assert db_session.get(DatasetItemLabelDB, (dataset_item_id, label_id)) is not None
+        dataset_dir = fxt_projects_dir / str(project.id) / "dataset"
+        dataset_dir.mkdir(parents=True, exist_ok=True)
 
-    def test_set_dataset_item_annotations_not_found(
+        binary_path = dataset_dir / f"{db_media_list[0].id}.{db_media_list[0].format}"
+        binary_path.touch()
+        assert os.path.exists(binary_path)
+
+        thumbnail_path = dataset_dir / f"{db_media_list[0].id}-thumb.jpg"
+        thumbnail_path.touch()
+        assert os.path.exists(thumbnail_path)
+
+        """Test deleting a media."""
+        fxt_media_service.delete_media(project=project, media_id=UUID(db_media_list[0].id))
+
+        assert db_session.get(MediaDB, db_media_list[0].id) is None
+        assert not os.path.exists(binary_path)
+        assert not os.path.exists(thumbnail_path)
+
+    def test_delete_media_not_found(
         self,
-        fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
-        fxt_annotations: Callable[[UUID], list[DatasetItemAnnotation]],
+        fxt_media_service: MediaService,
+        fxt_project_with_media: tuple[Project, list[MediaDB]],
     ):
-        """Test setting a dataset item annotation for a non-existent dataset item."""
-        project, db_dataset_items = fxt_project_with_dataset_items
+        """Test deleting a non-existent media raises error."""
+        project, db_media_list = fxt_project_with_media
+
         non_existent_id = uuid4()
-        annotations = fxt_annotations(project.task.labels[0].id)
-
         with pytest.raises(ResourceNotFoundError) as excinfo:
-            fxt_dataset_service.set_dataset_item_annotations(
-                project=project,
-                dataset_item_id=non_existent_id,
-                annotations=annotations,
-                user_reviewed=True,
-            )
+            fxt_media_service.delete_media(project=project, media_id=non_existent_id)
 
-        assert excinfo.value.resource_type == ResourceType.DATASET_ITEM
+        assert excinfo.value.resource_type == ResourceType.MEDIA
         assert excinfo.value.resource_id == str(non_existent_id)
-
-    def test_delete_dataset_item_annotations(
-        self,
-        fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
-        db_session: Session,
-    ):
-        """Test deleting a dataset item annotation."""
-        project, db_dataset_items = fxt_project_with_dataset_items
-        item_label_id = (db_dataset_items[1].id, str(project.task.labels[0].id))
-        assert db_session.get(DatasetItemLabelDB, item_label_id) is not None
-
-        fxt_dataset_service.delete_dataset_item_annotations(
-            project=project,
-            dataset_item_id=UUID(db_dataset_items[1].id),
-        )
-
-        dataset_item = db_session.get(DatasetItemDB, db_dataset_items[1].id)
-        assert dataset_item is not None
-        assert dataset_item.annotation_data is None
-        assert db_session.get(DatasetItemLabelDB, item_label_id) is None
-
-    def test_delete_dataset_item_annotations_not_found(
-        self,
-        fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
-    ):
-        """Test deleting a dataset item annotation."""
-        project, db_dataset_items = fxt_project_with_dataset_items
-        non_existent_id = uuid4()
-
-        with pytest.raises(ResourceNotFoundError) as excinfo:
-            fxt_dataset_service.delete_dataset_item_annotations(
-                project=project,
-                dataset_item_id=non_existent_id,
-            )
-
-        assert excinfo.value.resource_type == ResourceType.DATASET_ITEM
-        assert excinfo.value.resource_id == str(non_existent_id)
-
-    def test_assign_dataset_item_subset_not_found(
-        self,
-        fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
-    ):
-        """Test assigning a subset to a dataset item."""
-        project, db_dataset_items = fxt_project_with_dataset_items
-        non_existent_id = uuid4()
-
-        with pytest.raises(ResourceNotFoundError) as excinfo:
-            fxt_dataset_service.assign_dataset_item_subset(
-                project_id=project.id,
-                dataset_item_id=non_existent_id,
-                subset=DatasetItemSubset.TRAINING,
-            )
-
-        assert excinfo.value.resource_type == ResourceType.DATASET_ITEM
-        assert excinfo.value.resource_id == str(non_existent_id)
-
-    @pytest.mark.parametrize(
-        "subset", [DatasetItemSubset.TRAINING, DatasetItemSubset.TESTING, DatasetItemSubset.VALIDATION]
-    )
-    def test_assign_dataset_item_subset_already_assigned(
-        self,
-        fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
-        subset,
-    ):
-        """Test assigning a subset to a dataset item."""
-        project, db_dataset_items = fxt_project_with_dataset_items
-
-        with pytest.raises(SubsetAlreadyAssignedError):
-            fxt_dataset_service.assign_dataset_item_subset(
-                project_id=project.id,
-                dataset_item_id=UUID(db_dataset_items[2].id),
-                subset=subset,
-            )
-
-    @pytest.mark.parametrize(
-        "subset", [DatasetItemSubset.TRAINING, DatasetItemSubset.TESTING, DatasetItemSubset.VALIDATION]
-    )
-    def test_assign_dataset_item(
-        self,
-        fxt_dataset_service: DatasetService,
-        fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
-        subset,
-    ):
-        """Test assigning a subset to a dataset item."""
-        project, db_dataset_items = fxt_project_with_dataset_items
-
-        returned_dataset_item = fxt_dataset_service.assign_dataset_item_subset(
-            project_id=project.id,
-            dataset_item_id=UUID(db_dataset_items[0].id),
-            subset=subset,
-        )
-
-        assert str(returned_dataset_item.id) == db_dataset_items[0].id and returned_dataset_item.subset == subset
 
     @pytest.mark.parametrize(
         "annotation_status, expected_count",
@@ -876,17 +706,17 @@ class TestDatasetServiceIntegration:
             ("to_review", 2),  # 2 to_review items
         ],
     )
-    def test_count_dataset_items_with_annotation_status(
+    def test_count_media_with_annotation_status(
         self,
-        fxt_dataset_service: DatasetService,
+        fxt_media_service: MediaService,
         fxt_project_with_annotation_status_items: tuple[Project, list[DatasetItemDB]],
         annotation_status: str | None,
         expected_count: int,
     ) -> None:
-        """Test counting dataset items with annotation_status filter."""
+        """Test counting media with annotation_status filter."""
         project, db_dataset_items = fxt_project_with_annotation_status_items
 
-        count = fxt_dataset_service.count_dataset_items(project=project, annotation_status=annotation_status)
+        count = fxt_media_service.count_media(project=project, annotation_status=annotation_status)
 
         assert count == expected_count
 
@@ -899,24 +729,26 @@ class TestDatasetServiceIntegration:
             (DatasetItemAnnotationStatus.TO_REVIEW, ["to_review1", "to_review2"]),
         ],
     )
-    def test_list_dataset_items_with_annotation_status(
+    def test_list_media_with_annotation_status(
         self,
-        fxt_dataset_service: DatasetService,
+        fxt_media_service: MediaService,
         fxt_project_with_annotation_status_items: tuple[Project, list[DatasetItemDB]],
         annotation_status: DatasetItemAnnotationStatus | None,
         expected_names: list[str],
     ) -> None:
-        """Test listing dataset items with annotation_status filter."""
+        """Test listing media with annotation_status filter."""
         project, db_dataset_items = fxt_project_with_annotation_status_items
 
-        dataset_items = fxt_dataset_service.list_dataset_items(
+        media_list = fxt_media_service.list_media(
             project_id=project.id,
-            filters=DatasetItemFilters(
+            filters=MediaFilters(
                 annotation_status=annotation_status,
             ),
         )
 
-        assert len(dataset_items) == len(expected_names)
+        assert len(media_list) == len(expected_names)
+        actual_names = sorted([media.name for media in media_list])
+        assert actual_names == sorted(expected_names)
 
     @pytest.mark.parametrize(
         "annotation_status, limit, offset, expected_count",
@@ -929,209 +761,202 @@ class TestDatasetServiceIntegration:
             (DatasetItemAnnotationStatus.TO_REVIEW, 10, 0, 2),  # All to_review items
         ],
     )
-    def test_list_dataset_items_with_annotation_status_pagination(
+    def test_list_media_with_annotation_status_pagination(
         self,
-        fxt_dataset_service: DatasetService,
+        fxt_media_service: MediaService,
         fxt_project_with_annotation_status_items: tuple[Project, list[DatasetItemDB]],
         annotation_status: DatasetItemAnnotationStatus | None,
         limit: int,
         offset: int,
         expected_count: int,
     ) -> None:
-        """Test listing dataset items with annotation_status filter and pagination."""
+        """Test listing media with annotation_status filter and pagination."""
         project, db_dataset_items = fxt_project_with_annotation_status_items
 
-        dataset_items = fxt_dataset_service.list_dataset_items(
+        media_list = fxt_media_service.list_media(
             project_id=project.id,
-            filters=DatasetItemFilters(
+            filters=MediaFilters(
                 limit=limit,
                 offset=offset,
                 annotation_status=annotation_status,
             ),
         )
 
-        assert len(dataset_items) == expected_count
+        assert len(media_list) == expected_count
 
-    def test_list_dataset_items_annotation_status_combined_with_dates(
+    def test_list_media_annotation_status_combined_with_dates(
         self,
-        fxt_dataset_service: DatasetService,
+        fxt_media_service: MediaService,
         fxt_project_with_annotation_status_items: tuple[Project, list[DatasetItemDB]],
     ) -> None:
         """Test annotation_status filter combined with date filters."""
         project, db_dataset_items = fxt_project_with_annotation_status_items
 
         # All reviewed items within date range
-        dataset_items = fxt_dataset_service.list_dataset_items(
+        media_list = fxt_media_service.list_media(
             project_id=project.id,
-            filters=DatasetItemFilters(
+            filters=MediaFilters(
                 start_date=datetime.fromisoformat("2025-01-01T00:00:00Z"),
                 end_date=datetime.fromisoformat("2025-02-02T00:00:00Z"),
                 annotation_status=DatasetItemAnnotationStatus.REVIEWED,
             ),
         )
-        assert len(dataset_items) == 3
-        assert all(item.user_reviewed for item in dataset_items)
-        assert all(item.annotation_data is not None for item in dataset_items)
+        assert len(media_list) == 3
 
         # No items outside date range
-        dataset_items = fxt_dataset_service.list_dataset_items(
+        media_list = fxt_media_service.list_media(
             project_id=project.id,
-            filters=DatasetItemFilters(
+            filters=MediaFilters(
                 start_date=datetime.fromisoformat("2025-03-01T00:00:00Z"),
                 end_date=datetime.fromisoformat("2025-03-31T00:00:00Z"),
                 annotation_status=DatasetItemAnnotationStatus.UNANNOTATED,
             ),
         )
-        assert len(dataset_items) == 0
+        assert len(media_list) == 0
 
     def test_annotation_status_filter_verifies_data_correctness(
         self,
-        fxt_dataset_service: DatasetService,
+        fxt_media_service: MediaService,
         fxt_project_with_annotation_status_items: tuple[Project, list[DatasetItemDB]],
     ) -> None:
         """Test that annotation_status filter returns items with correct properties."""
         project, db_dataset_items = fxt_project_with_annotation_status_items
 
-        # Unannotated items should have no annotation_data
-        unannotated_items = fxt_dataset_service.list_dataset_items(
+        unannotated_items = fxt_media_service.list_media(
             project_id=project.id,
-            filters=DatasetItemFilters(
+            filters=MediaFilters(
                 annotation_status=DatasetItemAnnotationStatus.UNANNOTATED,
             ),
         )
         assert len(unannotated_items) == 2
-        for item in unannotated_items:
-            assert item.annotation_data is None
 
-        # Reviewed items should have annotation_data and user_reviewed=True
-        reviewed_items = fxt_dataset_service.list_dataset_items(
+        reviewed_media = fxt_media_service.list_media(
             project_id=project.id,
-            filters=DatasetItemFilters(
+            filters=MediaFilters(
                 annotation_status=DatasetItemAnnotationStatus.REVIEWED,
             ),
         )
-        assert len(reviewed_items) == 3
-        for item in reviewed_items:
-            assert item.annotation_data is not None
-            assert item.user_reviewed is True
+        assert len(reviewed_media) == 3
 
-        # To review items should have annotation_data and user_reviewed=False
-        to_review_items = fxt_dataset_service.list_dataset_items(
+        to_review_media = fxt_media_service.list_media(
             project_id=project.id,
-            filters=DatasetItemFilters(
+            filters=MediaFilters(
                 annotation_status=DatasetItemAnnotationStatus.TO_REVIEW,
             ),
         )
-        assert len(to_review_items) == 2
-        for item in to_review_items:
-            assert item.annotation_data is not None
-            assert item.user_reviewed is False
+        assert len(to_review_media) == 2
 
-    def test_list_dataset_items_filter_by_single_label(
+    def test_list_media_filter_by_single_label(
         self,
-        fxt_dataset_service: DatasetService,
+        fxt_media_service: MediaService,
         fxt_project_with_labeled_dataset_items: tuple[Project, list[DatasetItemDB]],
     ):
-        """Test listing dataset items filtered by a single label."""
+        """Test listing media filtered by a single label."""
         project, db_dataset_items = fxt_project_with_labeled_dataset_items
         label_0_id = project.task.labels[0].id
 
-        # Filter by label_0 - should return items 1 and 3 (item_label_0 and item_both_labels)
-        dataset_items = fxt_dataset_service.list_dataset_items(
+        # Filter by label_0 - should return media 1 and 3 (item_label_0 and item_both_labels)
+        media_list = fxt_media_service.list_media(
             project_id=project.id,
-            filters=DatasetItemFilters(
+            filters=MediaFilters(
                 label_ids=[label_0_id],
             ),
         )
 
-        assert len(dataset_items) == 2
+        assert len(media_list) == 2
+        item_names = {item.name for item in media_list}
+        assert item_names == {"item_label_0", "item_both_labels"}
 
-    def test_list_dataset_items_filter_by_multiple_labels(
+    def test_list_media_filter_by_multiple_labels(
         self,
-        fxt_dataset_service: DatasetService,
+        fxt_media_service: MediaService,
         fxt_project_with_labeled_dataset_items: tuple[Project, list[DatasetItemDB]],
     ):
-        """Test listing dataset items filtered by multiple labels (OR logic)."""
+        """Test listing media filtered by multiple labels (OR logic)."""
         project, db_dataset_items = fxt_project_with_labeled_dataset_items
         label_0_id = project.task.labels[0].id
         label_1_id = project.task.labels[1].id
 
         # Filter by label_0 OR label_1 - should return items 1, 2, and 3
-        dataset_items = fxt_dataset_service.list_dataset_items(
+        media_list = fxt_media_service.list_media(
             project_id=project.id,
-            filters=DatasetItemFilters(
+            filters=MediaFilters(
                 label_ids=[label_0_id, label_1_id],
             ),
         )
 
-        assert len(dataset_items) == 3
+        assert len(media_list) == 3
+        item_names = {item.name for item in media_list}
+        assert item_names == {"item_label_0", "item_label_1", "item_both_labels"}
 
-    def test_list_dataset_items_filter_by_nonexistent_label(
+    def test_list_media_filter_by_nonexistent_label(
         self,
-        fxt_dataset_service: DatasetService,
+        fxt_media_service: MediaService,
         fxt_project_with_labeled_dataset_items: tuple[Project, list[DatasetItemDB]],
     ):
-        """Test listing dataset items filtered by a nonexistent label."""
+        """Test listing media filtered by a nonexistent label."""
         project, db_dataset_items = fxt_project_with_labeled_dataset_items
         nonexistent_label_id = uuid4()
 
         # Filter by nonexistent label - should return empty list
-        dataset_items = fxt_dataset_service.list_dataset_items(
+        media_list = fxt_media_service.list_media(
             project_id=project.id,
-            filters=DatasetItemFilters(
+            filters=MediaFilters(
                 label_ids=[nonexistent_label_id],
             ),
         )
 
-        assert len(dataset_items) == 0
+        assert len(media_list) == 0
 
-    def test_count_dataset_items_filter_by_single_label(
+    def test_count_media_filter_by_single_label(
         self,
-        fxt_dataset_service: DatasetService,
+        fxt_media_service: MediaService,
         fxt_project_with_labeled_dataset_items: tuple[Project, list[DatasetItemDB]],
     ):
-        """Test counting dataset items filtered by a single label."""
+        """Test counting media filtered by a single label."""
         project, db_dataset_items = fxt_project_with_labeled_dataset_items
         label_0_id = project.task.labels[0].id
 
-        # Count items with label_0 - should return 2
-        count = fxt_dataset_service.count_dataset_items(
+        # Count media with label_0 - should return 2
+        count = fxt_media_service.count_media(
             project=project,
             label_ids=[label_0_id],
         )
 
         assert count == 2
 
-    def test_count_dataset_items_filter_by_multiple_labels(
+    def test_count_media_filter_by_multiple_labels(
         self,
-        fxt_dataset_service: DatasetService,
+        fxt_media_service: MediaService,
         fxt_project_with_labeled_dataset_items: tuple[Project, list[DatasetItemDB]],
     ):
-        """Test counting dataset items filtered by multiple labels (OR logic)."""
+        """Test counting media filtered by multiple labels (OR logic)."""
         project, db_dataset_items = fxt_project_with_labeled_dataset_items
         label_0_id = project.task.labels[0].id
         label_1_id = project.task.labels[1].id
 
-        # Count items with label_0 OR label_1 - should return 3
-        count = fxt_dataset_service.count_dataset_items(
+        # Count media with label_0 OR label_1 - should return 3
+        count = fxt_media_service.count_media(
             project=project,
             label_ids=[label_0_id, label_1_id],
         )
 
         assert count == 3
 
-    def test_list_dataset_items_no_label_filter(
+    def test_list_media_no_label_filter(
         self,
-        fxt_dataset_service: DatasetService,
+        fxt_media_service: MediaService,
         fxt_project_with_labeled_dataset_items: tuple[Project, list[DatasetItemDB]],
     ):
-        """Test listing dataset items without label filter returns all items."""
+        """Test listing media without label filter returns all items."""
         project, db_dataset_items = fxt_project_with_labeled_dataset_items
 
         # No filter - should return all 4 items
-        dataset_items = fxt_dataset_service.list_dataset_items(project_id=project.id)
+        media_list = fxt_media_service.list_media(project_id=project.id)
 
-        assert len(dataset_items) == 4
+        assert len(media_list) == 4
+        item_names = {item.name for item in media_list}
+        assert item_names == {"item_no_labels", "item_label_0", "item_label_1", "item_both_labels"}
 
     @pytest.mark.parametrize(
         "subset, expected_count",
@@ -1143,17 +968,17 @@ class TestDatasetServiceIntegration:
             ("testing", 1),  # 1 testing item
         ],
     )
-    def test_count_dataset_items_with_subset(
+    def test_count_media_with_subset(
         self,
-        fxt_dataset_service: DatasetService,
+        fxt_media_service: MediaService,
         fxt_project_with_subset_items: tuple[Project, list[DatasetItemDB]],
         subset: str | None,
         expected_count: int,
     ) -> None:
-        """Test counting dataset items with subset filter."""
+        """Test counting media with subset filter."""
         project, db_dataset_items = fxt_project_with_subset_items
 
-        count = fxt_dataset_service.count_dataset_items(project=project, subset=subset)
+        count = fxt_media_service.count_media(project=project, subset=subset)
 
         assert count == expected_count
 
@@ -1179,26 +1004,28 @@ class TestDatasetServiceIntegration:
             ("testing", ["testing1"]),
         ],
     )
-    def test_list_dataset_items_with_subset(
+    def test_list_media_with_subset(
         self,
-        fxt_dataset_service: DatasetService,
+        fxt_media_service: MediaService,
         fxt_project_with_subset_items: tuple[Project, list[DatasetItemDB]],
         subset: str | None,
         expected_names: list[str],
     ) -> None:
-        """Test listing dataset items with subset filter."""
+        """Test listing media with subset filter."""
         project, db_dataset_items = fxt_project_with_subset_items
 
-        dataset_items = fxt_dataset_service.list_dataset_items(
+        media_list = fxt_media_service.list_media(
             project_id=project.id,
-            filters=DatasetItemFilters(
+            filters=MediaFilters(
                 limit=20,
                 offset=0,
                 subset=subset,
             ),
         )
 
-        assert len(dataset_items) == len(expected_names)
+        assert len(media_list) == len(expected_names)
+        actual_names = sorted([item.name for item in media_list])
+        assert actual_names == sorted(expected_names)
 
     @pytest.mark.parametrize(
         "subset, limit, offset, expected_count",
@@ -1212,85 +1039,77 @@ class TestDatasetServiceIntegration:
             ("testing", 10, 0, 1),  # All testing items
         ],
     )
-    def test_list_dataset_items_with_subset_pagination(
+    def test_list_media_with_subset_pagination(
         self,
-        fxt_dataset_service: DatasetService,
+        fxt_media_service: MediaService,
         fxt_project_with_subset_items: tuple[Project, list[DatasetItemDB]],
         subset: str | None,
         limit: int,
         offset: int,
         expected_count: int,
     ) -> None:
-        """Test listing dataset items with subset filter and pagination."""
+        """Test listing media with subset filter and pagination."""
         project, db_dataset_items = fxt_project_with_subset_items
 
-        dataset_items = fxt_dataset_service.list_dataset_items(
+        media_list = fxt_media_service.list_media(
             project_id=project.id,
-            filters=DatasetItemFilters(
+            filters=MediaFilters(
                 limit=limit,
                 offset=offset,
                 subset=subset,
             ),
         )
 
-        assert len(dataset_items) == expected_count
+        assert len(media_list) == expected_count
 
     def test_subset_filter_verifies_data_correctness(
         self,
-        fxt_dataset_service: DatasetService,
+        fxt_media_service: MediaService,
         fxt_project_with_subset_items: tuple[Project, list[DatasetItemDB]],
     ) -> None:
-        """Test that subset filter returns items with correct subset values."""
+        """Test that subset filter returns media with correct subset values."""
         project, db_dataset_items = fxt_project_with_subset_items
 
         # Unassigned items should have subset=unassigned
-        unassigned_items = fxt_dataset_service.list_dataset_items(
+        unassigned_items = fxt_media_service.list_media(
             project_id=project.id,
-            filters=DatasetItemFilters(
+            filters=MediaFilters(
                 limit=20,
                 offset=0,
                 subset="unassigned",
             ),
         )
         assert len(unassigned_items) == 2
-        for item in unassigned_items:
-            assert item.subset == DatasetItemSubset.UNASSIGNED
 
         # Training items should have subset=training
-        training_items = fxt_dataset_service.list_dataset_items(
+        training_items = fxt_media_service.list_media(
             project_id=project.id,
-            filters=DatasetItemFilters(
+            filters=MediaFilters(
                 limit=20,
                 offset=0,
                 subset="training",
             ),
         )
         assert len(training_items) == 3
-        for item in training_items:
-            assert item.subset == DatasetItemSubset.TRAINING
 
         # Validation items should have subset=validation
-        validation_items = fxt_dataset_service.list_dataset_items(
+        validation_items = fxt_media_service.list_media(
             project_id=project.id,
-            filters=DatasetItemFilters(
+            filters=MediaFilters(
                 limit=20,
                 offset=0,
                 subset="validation",
             ),
         )
         assert len(validation_items) == 2
-        for item in validation_items:
-            assert item.subset == DatasetItemSubset.VALIDATION
 
         # Testing items should have subset=testing
-        testing_items = fxt_dataset_service.list_dataset_items(
+        testing_items = fxt_media_service.list_media(
             project_id=project.id,
-            filters=DatasetItemFilters(
+            filters=MediaFilters(
                 limit=20,
                 offset=0,
                 subset="testing",
             ),
         )
         assert len(testing_items) == 1
-        for item in testing_items:
-            assert item.subset == DatasetItemSubset.TESTING

@@ -22,7 +22,7 @@ describe('DeleteMediaItem', () => {
         const mockedOnDeleted = vitest.fn();
 
         server.use(
-            http.delete('/api/projects/{project_id}/dataset/items/{dataset_item_id}', () => {
+            http.delete('/api/projects/{project_id}/dataset/media/{media_id}', () => {
                 return HttpResponse.json(null, { status: 204 });
             })
         );
@@ -45,9 +45,9 @@ describe('DeleteMediaItem', () => {
         const mockedOnDeleted = vitest.fn();
 
         server.use(
-            http.delete('/api/projects/{project_id}/dataset/items/{dataset_item_id}', ({ params }) => {
-                const { dataset_item_id } = params;
-                return dataset_item_id === itemToDelete
+            http.delete('/api/projects/{project_id}/dataset/media/{media_id}', ({ params }) => {
+                const { media_id } = params;
+                return media_id === itemToDelete
                     ? HttpResponse.json(null, { status: 204 })
                     : // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                       // @ts-expect-error

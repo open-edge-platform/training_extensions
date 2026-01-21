@@ -83,6 +83,23 @@ def upgrade() -> None:
         sa.UniqueConstraint("project_id", "name", name="uq_project_label_name"),
     )
     op.create_table(
+        "media",
+        sa.Column("project_id", sa.Text(), nullable=False),
+        sa.Column("type", sa.String(length=50), nullable=False),
+        sa.Column("name", sa.String(length=255), nullable=False),
+        sa.Column("format", sa.String(length=50), nullable=False),
+        sa.Column("width", sa.Integer(), nullable=False),
+        sa.Column("height", sa.Integer(), nullable=False),
+        sa.Column("size", sa.Integer(), nullable=False),
+        sa.Column("source_id", sa.Text(), nullable=True),
+        sa.Column("id", sa.Text(), nullable=False),
+        sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
+        sa.Column("updated_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
+        sa.ForeignKeyConstraint(["project_id"], ["projects.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(["source_id"], ["sources.id"], ondelete="SET NULL"),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_table(
         "training_configurations",
         sa.Column("project_id", sa.Text(), nullable=False),
         sa.Column("model_architecture_id", sa.String(length=255), nullable=True),
@@ -110,9 +127,15 @@ def upgrade() -> None:
         sa.Column("id", sa.Text(), nullable=False),
         sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.Column("updated_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
-        sa.ForeignKeyConstraint(["parent_revision"], ["model_revisions.id"]),
+        sa.ForeignKeyConstraint(
+            ["parent_revision"],
+            ["model_revisions.id"],
+        ),
         sa.ForeignKeyConstraint(["project_id"], ["projects.id"], ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(["training_dataset_id"], ["dataset_revisions.id"]),
+        sa.ForeignKeyConstraint(
+            ["training_dataset_id"],
+            ["dataset_revisions.id"],
+        ),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index("idx_model_revisions_architecture", "model_revisions", ["project_id", "architecture"], unique=False)
@@ -121,24 +144,18 @@ def upgrade() -> None:
     )
     op.create_table(
         "dataset_items",
+        sa.Column("id", sa.Text(), nullable=False),
         sa.Column("project_id", sa.Text(), nullable=False),
-        sa.Column("name", sa.String(length=255), nullable=False),
-        sa.Column("format", sa.String(length=50), nullable=False),
-        sa.Column("width", sa.Integer(), nullable=False),
-        sa.Column("height", sa.Integer(), nullable=False),
-        sa.Column("size", sa.Integer(), nullable=False),
         sa.Column("annotation_data", sa.JSON(), nullable=True),
         sa.Column("user_reviewed", sa.Boolean(), nullable=False),
         sa.Column("prediction_model_id", sa.Text(), nullable=True),
-        sa.Column("source_id", sa.Text(), nullable=True),
         sa.Column("subset", sa.String(length=20), nullable=False),
         sa.Column("subset_assigned_at", sa.DateTime(), nullable=True),
-        sa.Column("id", sa.Text(), nullable=False),
         sa.Column("created_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.Column("updated_at", sa.DateTime(), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
+        sa.ForeignKeyConstraint(["id"], ["media.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["prediction_model_id"], ["model_revisions.id"], ondelete="SET NULL"),
         sa.ForeignKeyConstraint(["project_id"], ["projects.id"], ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(["source_id"], ["sources.id"], ondelete="SET NULL"),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index("idx_dataset_items_user_reviewed", "dataset_items", ["project_id", "user_reviewed"], unique=False)
@@ -210,6 +227,7 @@ def downgrade() -> None:
     op.drop_index("idx_model_revisions_architecture", table_name="model_revisions")
     op.drop_table("model_revisions")
     op.drop_table("training_configurations")
+    op.drop_table("media")
     op.drop_table("labels")
     op.drop_index("idx_dataset_revisions_project", table_name="dataset_revisions")
     op.drop_table("dataset_revisions")

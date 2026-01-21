@@ -7,7 +7,7 @@ from sqlalchemy import CursorResult, Select, delete, func, select, update
 from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.orm import Session
 
-from app.db.schema import DatasetItemDB, DatasetItemLabelDB
+from app.db.schema import DatasetItemDB, DatasetItemLabelDB, MediaDB
 from app.models import DatasetItemAnnotationStatus, DatasetItemSubset
 
 
@@ -103,18 +103,29 @@ class DatasetItemRepository:
         stmt = stmt.order_by(DatasetItemDB.created_at.desc()).offset(offset).limit(limit)
         return list(self.db.scalars(stmt).all())
 
-    def get_earliest(self) -> DatasetItemDB | None:
-        """
-        Get the earliest dataset item based on creation date.
-
-        This method efficiently uses the multicolumn index on (project_id, created_at)
-        for optimal query performance.
-
-        Returns:
-            The earliest DatasetItemDB instance or None if no items exist.
-        """
-        stmt = self._base_select().order_by(DatasetItemDB.created_at.asc()).limit(1)
-        return self.db.scalar(stmt)
+    def list_items_with_media(
+        self,
+        limit: int,
+        offset: int,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+        annotation_status: str | None = None,
+        label_ids: list[str] | None = None,
+        subset: str | None = None,
+    ) -> list[tuple[DatasetItemDB, MediaDB]]:
+        stmt = (
+            select(DatasetItemDB, MediaDB)
+            .where(DatasetItemDB.project_id == self.project_id)
+            .join(MediaDB)
+            .where(MediaDB.id == DatasetItemDB.id, MediaDB.project_id == DatasetItemDB.project_id)
+        )
+        stmt = self._apply_date_filters(stmt, start_date, end_date)
+        stmt = self._apply_annotation_status_filter(stmt, annotation_status)
+        stmt = self._apply_subset_filter(stmt, subset)
+        if label_ids:
+            stmt = stmt.join(DatasetItemLabelDB).where(DatasetItemLabelDB.label_id.in_(label_ids)).distinct()
+        stmt = stmt.order_by(DatasetItemDB.created_at.desc()).offset(offset).limit(limit)
+        return [(dataset_item, media) for (dataset_item, media) in self.db.execute(stmt).all()]
 
     def get_by_id(self, obj_id: str) -> DatasetItemDB | None:
         stmt = self._base_select().where(DatasetItemDB.id == obj_id)

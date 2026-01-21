@@ -22,7 +22,7 @@ export const useGetDatasetItems = (options?: UseGetDatasetItemsOptions) => {
 
     const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isPending } = $api.useInfiniteQuery(
         'get',
-        '/api/projects/{project_id}/dataset/items',
+        '/api/projects/{project_id}/dataset/media',
         {
             params: {
                 query,

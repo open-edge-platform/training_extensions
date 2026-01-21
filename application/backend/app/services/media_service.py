@@ -1,0 +1,198 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+import os
+import os.path
+from dataclasses import dataclass
+from datetime import datetime
+from io import BytesIO
+from pathlib import Path
+from typing import BinaryIO
+from uuid import UUID, uuid4
+
+import numpy as np
+from loguru import logger
+from PIL import Image, UnidentifiedImageError
+from sqlalchemy.orm import Session
+
+from app.db.schema import MediaDB
+from app.models import DatasetItemAnnotationStatus, Media, MediaType, Project
+from app.repositories import MediaRepository
+from app.utils.images import crop_to_thumbnail
+
+from .base import BaseSessionManagedService, ResourceNotFoundError, ResourceType
+
+DEFAULT_THUMBNAIL_SIZE = 256
+
+
+class InvalidImageError(Exception):
+    """Exception raised when invalid image is used to create a media."""
+
+    def __init__(self, message: str | None = None):
+        msg = message or "Invalid image has been passed while creating a media."
+        super().__init__(msg)
+
+
+@dataclass(frozen=True)
+class MediaFilters:
+    limit: int = 20
+    offset: int = 0
+    start_date: datetime | None = None
+    end_date: datetime | None = None
+    annotation_status: DatasetItemAnnotationStatus | None = None
+    label_ids: list[UUID] | None = None
+    subset: str | None = None
+
+
+class MediaService(BaseSessionManagedService):
+    def __init__(self, data_dir: Path, db_session: Session | None = None) -> None:
+        super().__init__(db_session)
+
+        self.projects_dir = data_dir / "projects"
+
+    @staticmethod
+    def _read_image_from_ndarray(data: np.ndarray) -> Image.Image:
+        return Image.fromarray(data)
+
+    @staticmethod
+    def _read_image_from_binary(data: BinaryIO | BytesIO) -> Image.Image:
+        data.seek(0)
+        try:
+            return Image.open(data)
+        except UnidentifiedImageError:
+            raise InvalidImageError
+
+    @staticmethod
+    def _generate_and_save_thumbnail(image: Image.Image, path: Path) -> None:
+        try:
+            thumbnail_image = crop_to_thumbnail(
+                image=image, target_width=DEFAULT_THUMBNAIL_SIZE, target_height=DEFAULT_THUMBNAIL_SIZE
+            )
+            if thumbnail_image.mode in ("RGBA", "P"):
+                thumbnail_image = thumbnail_image.convert("RGB")
+            thumbnail_image.save(path)
+        except Exception:
+            logger.exception("Failed to generate thumbnail image")
+
+    def create_image(
+        self,
+        project: Project,
+        name: str,
+        format: str,
+        data: Image.Image | np.ndarray | BinaryIO | BytesIO,
+        source_id: UUID | None = None,
+    ) -> Media:
+        """Creates a new media"""
+        media_id = uuid4()
+        match data:
+            case Image.Image():
+                image = data
+            case np.ndarray():
+                image = self._read_image_from_ndarray(data)
+            case _:
+                image = self._read_image_from_binary(data)
+
+        dataset_dir = self.projects_dir / f"{project.id}/dataset"
+        dataset_dir.mkdir(parents=True, exist_ok=True)
+        binary_path = dataset_dir / f"{media_id}.{format}"
+        image.save(binary_path)
+
+        MediaService._generate_and_save_thumbnail(image, dataset_dir / f"{media_id}-thumb.jpg")
+
+        media = MediaDB(
+            id=str(media_id),
+            project_id=str(project.id),
+            type=MediaType.IMAGE,
+            name=name,
+            format=format,
+            width=image.width,
+            height=image.height,
+            size=os.path.getsize(binary_path),
+            source_id=str(source_id) if source_id is not None else None,
+        )
+
+        repo = MediaRepository(project_id=str(project.id), db=self.db_session)
+        db_media = repo.save(media)
+        return Media.model_validate(db_media)
+
+    def count_media(
+        self,
+        project: Project,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+        annotation_status: str | None = None,
+        label_ids: list[UUID] | None = None,
+        subset: str | None = None,
+    ) -> int:
+        """Get number of available media (within date range if specified)"""
+        repo = MediaRepository(project_id=str(project.id), db=self.db_session)
+        label_ids_str = [str(label_id) for label_id in label_ids] if label_ids else None
+        return repo.count(
+            start_date=start_date,
+            end_date=end_date,
+            annotation_status=annotation_status,
+            label_ids=label_ids_str,
+            subset=subset,
+        )
+
+    def list_media(
+        self,
+        project_id: UUID,
+        filters: MediaFilters | None = None,
+    ) -> list[Media]:
+        """Get information about available media"""
+        if filters is None:
+            filters = MediaFilters()
+        repo = MediaRepository(project_id=str(project_id), db=self.db_session)
+        label_ids_str = [str(label_id) for label_id in filters.label_ids] if filters.label_ids else None
+        return [
+            Media.model_validate(db)
+            for db in repo.list_items(
+                limit=filters.limit,
+                offset=filters.offset,
+                start_date=filters.start_date,
+                end_date=filters.end_date,
+                annotation_status=filters.annotation_status,
+                label_ids=label_ids_str,
+                subset=filters.subset,
+            )
+        ]
+
+    def get_media_by_id(self, project_id: UUID, media_id: UUID) -> Media:
+        """Get a media by its ID"""
+        repo = MediaRepository(project_id=str(project_id), db=self.db_session)
+        db_media = repo.get_by_id(str(media_id))
+        if not db_media:
+            raise ResourceNotFoundError(ResourceType.MEDIA, str(media_id))
+        return Media.model_validate(db_media)
+
+    def get_media_binary_path(self, project_id: UUID, media: MediaDB | Media) -> Path:
+        dataset_dir = self.projects_dir / f"{project_id}/dataset"
+        return dataset_dir / f"{media.id}.{media.format}"
+
+    def get_media_binary_path_by_id(self, project_id: UUID, media_id: UUID) -> Path | str:
+        """Get a media binary content by its ID"""
+        media = self.get_media_by_id(project_id=project_id, media_id=media_id)
+        return self.get_media_binary_path(project_id=project_id, media=media)
+
+    def get_media_thumbnail_path_by_id(self, project: Project, media_id: UUID) -> Path | str:
+        """Get a media thumbnail binary content by its ID"""
+        media = self.get_media_by_id(project_id=project.id, media_id=media_id)
+        return self.projects_dir / f"{project.id}/dataset/{media.id}-thumb.jpg"
+
+    def delete_media(self, project: Project, media_id: UUID) -> None:
+        """Delete a media by its ID"""
+        media = self.get_media_by_id(project_id=project.id, media_id=media_id)
+        repo = MediaRepository(project_id=str(project.id), db=self.db_session)
+
+        dataset_dir = self.projects_dir / f"{project.id}/dataset"
+        try:
+            os.remove(dataset_dir / f"{media.id}.{media.format}")
+        except FileNotFoundError:
+            logger.warning("Media {} binary was not found during deletion", media_id)
+        try:
+            os.remove(dataset_dir / f"{media_id}-thumb.jpg")
+        except FileNotFoundError:
+            logger.warning("Media {} thumbnail was not found during deletion", media_id)
+
+        repo.delete(obj_id=str(media.id))
