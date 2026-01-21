@@ -4,6 +4,7 @@
 import { Suspense } from 'react';
 
 import { Flex, Grid, Item, Loading, TabList, Tabs, View } from '@geti/ui';
+import { useProject } from 'hooks/api/project.hook';
 import { Outlet, useLocation } from 'react-router';
 import { Link } from 'react-router-dom';
 
@@ -89,6 +90,8 @@ const getFirstPathSegment = (path: string): string => {
 
 export const Layout = () => {
     const { pathname } = useLocation();
+    // We want to check if the project exists before rendering the layout. If it doesn't, error boundary will catch it.
+    useProject();
 
     return (
         <Tabs aria-label='Header navigation' selectedKey={getFirstPathSegment(pathname)}>

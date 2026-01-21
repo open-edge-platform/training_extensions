@@ -1,6 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { useQueryClient } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { $api } from '../../api/client';
@@ -34,7 +35,21 @@ export const usePatchProject = () => {
 };
 
 export const useDeleteProject = () => {
+    const queryClient = useQueryClient();
+
     return $api.useMutation('delete', '/api/projects/{project_id}', {
         meta: { invalidateQueries: [['get', '/api/projects']] },
+        onSuccess: async (
+            _,
+            {
+                params: {
+                    path: { project_id },
+                },
+            }
+        ) => {
+            return queryClient.removeQueries({
+                queryKey: ['get', '/api/projects/{project_id}', { params: { path: { project_id } } }],
+            });
+        },
     });
 };

@@ -23,7 +23,7 @@ const Redirect = () => {
     const { data: projects } = useProjects();
 
     // No projects -> Go to create project
-    if (!projects || projects.length === 0) {
+    if (projects.length === 0) {
         path = paths.project.new({});
 
         // Only 1 project -> Redirect to the inference page
@@ -97,6 +97,10 @@ export const router = createBrowserRouter([
                         element: <Models />,
                     },
                 ],
+            },
+            {
+                path: '*',
+                element: <Redirect />,
             },
         ],
     },
