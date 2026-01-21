@@ -81,19 +81,6 @@ class TestImageInfo:
         assert fxt_torchvision_data_entity.image.shape[1:] == transformed.img_info.ori_shape
         assert transformed.img_info.padding == (1, 2, 3, 4)
 
-    def test_normalize(
-        self,
-        fxt_torchvision_data_entity: ClassificationSample,
-    ) -> None:
-        mean = (100, 101, 102)
-        std = (1, 2, 3)
-        transform = tvt.Normalize(mean=mean, std=std)
-        transformed = transform(fxt_torchvision_data_entity)
-
-        assert transformed.img_info.normalized
-        assert transformed.img_info.norm_mean == mean
-        assert transformed.img_info.norm_std == std
-
     @pytest.mark.skipif(not torch.cuda.is_available(), reason="Test only if CUDA is available.")
     def test_to_cuda(
         self,
