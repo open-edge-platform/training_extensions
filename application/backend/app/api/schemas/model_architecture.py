@@ -8,6 +8,31 @@ from app.models import TaskType
 from app.supported_models.model_manifest import Capabilities, ModelManifestDeprecationStatus, ModelStats
 
 
+class ModelArchitectureCategory:
+    BALANCE = "balance"
+    SPEED = "speed"
+    ACCURACY = "accuracy"
+
+
+RECOMMENDED_MODEL_ARCHITECTURES = {
+    TaskType.CLASSIFICATION: {
+        ModelArchitectureCategory.BALANCE: "Custom_Image_Classification_EfficinetNet-B0",
+        ModelArchitectureCategory.ACCURACY: "Custom_Image_Classification_EfficientNet-V2-S",
+        ModelArchitectureCategory.SPEED: "Custom_Image_Classification_MobileNet-V3-large-1x",
+    },
+    TaskType.DETECTION: {
+        ModelArchitectureCategory.BALANCE: "Custom_Object_Detection_Gen3_ATSS",
+        ModelArchitectureCategory.ACCURACY: "Object_Detection_DFine_X",
+        ModelArchitectureCategory.SPEED: "Object_Detection_YOLOX_S",
+    },
+    TaskType.INSTANCE_SEGMENTATION: {
+        ModelArchitectureCategory.BALANCE: "Custom_Instance_Segmentation_MaskRCNN_ResNet50_v2",
+        ModelArchitectureCategory.ACCURACY: "Custom_Counting_Instance_Segmentation_MaskRCNN_SwinT_FP16",
+        ModelArchitectureCategory.SPEED: "Custom_Counting_Instance_Segmentation_MaskRCNN_EfficientNetB2B",
+    },
+}
+
+
 class ModelArchitectureView(BaseModel):
     """Simplified model architecture information for API responses"""
 
@@ -24,11 +49,23 @@ class ModelArchitectureView(BaseModel):
     )
 
 
+class TopPicks(BaseModel):
+    """Top picks for model architectures based on categories"""
+
+    balance: str = Field(title="Balance Model", description="Model architecture that balances accuracy and speed")
+    speed: str = Field(title="Speed Model", description="Model architecture optimized for speed")
+    accuracy: str = Field(title="Accuracy Model", description="Model architecture optimized for accuracy")
+
+
 class ModelArchitectures(BaseModel):
     """Model architectures response"""
 
     model_architectures: list[ModelArchitectureView] = Field(
         title="Model Architectures", description="List of available model architectures"
+    )
+
+    top_picks: TopPicks | None = Field(
+        title="Top Picks", description="Recommended model architectures for different categories"
     )
 
     model_config = {
@@ -49,7 +86,12 @@ class ModelArchitectures(BaseModel):
                         },
                         "support_status": "active",
                     },
-                ]
+                ],
+                "top_picks": {
+                    "balance": "Custom_Object_Detection_Gen3_ATSS",
+                    "speed": "Object_Detection_YOLOX_S",
+                    "accuracy": "Object_Detection_DFine_X",
+                },
             }
         }
     }
