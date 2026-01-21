@@ -3,7 +3,7 @@
 
 import { Suspense } from 'react';
 
-import { Divider, Flex, View } from '@geti/ui';
+import { Divider, Flex, Loading, View } from '@geti/ui';
 
 import { ActiveModel } from './active-model.component';
 import { InferenceDevices } from './inference-devices.component';
@@ -33,7 +33,9 @@ export const Header = () => {
 
                 <Divider orientation='vertical' size='S' />
 
-                <InferenceDevices />
+                <Suspense fallback={<Loading />}>
+                    <InferenceDevices />
+                </Suspense>
 
                 <Flex marginStart='auto'>
                     <PipelineSwitch />
