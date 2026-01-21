@@ -31,6 +31,7 @@ export const Annotations = ({ annotations, width, height, isFocussed }: Annotati
 
     return (
         <svg
+            id={'annotations-canvas-tools'}
             aria-label={'annotations'}
             width={width}
             height={height}
