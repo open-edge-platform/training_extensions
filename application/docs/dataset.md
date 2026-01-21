@@ -17,20 +17,23 @@ elements, edit annotations and other attributes.
 
 In Geti Tune, a _media_ refers to the actual image or video file that contains visual content. Media files are the raw
 data that the system processes, analyzes, and displays. They can be in various formats such as JPEG, PNG, MP4, etc.
-Video frame is also considered a media and is stored as an individual image file and can be annotated.
-Video itself cannot be annotated, only its frames can. Media can have a reference to its source, such as a camera for example.
+Images and video frames can be annotated. When a frame is annotated, Geti Tune extracts it 
+from the video, assigns it an id, and saves it as an image; the extracted frame can also be
+considered a media, supporting all the operations that are normally possible for images.
+A media may have a reference to a source, e.g. the camera from which it was acquired.
 
-A _dataset item_, on the other hand, is a more comprehensive entity that includes not only the media itself but also
-additional metadata and annotations associated with that media. Dataset items are the units of data that are used
-within the context of a dataset for machine learning tasks. Each dataset item typically contains:
-- The media file (image or video frame). Video CANNOT have a dataset item associated with it.
+A _dataset item_, on the other hand, is the fundamental unit of a machine learning dataset.
+Each dataset item corresponds to an annotated image or video frame, enriched with metadata  that is relevant for ML tasks. 
+Each dataset item typically contains:
+- A reference to the media file (image or video frame). Video CANNOT have a dataset item associated with it.
 - Annotations: Labels, bounding boxes, segmentation masks, or other forms of annotations that describe the content of the media.
 - Metadata: Additional information such as timestamps, source information, tags, and other relevant attributes.
 - Subset assignment: Information about whether the item belongs to the training, validation, or testing subset of the dataset.
 - Other relevant properties that may be needed for dataset management and processing.
 
 Dataset item and media are closely related, but they serve different purposes within the Geti Tune ecosystem.
-Dataset item and media share the same unique identifier (UUID), which allows for easy correlation between them.
+A dataset item shares the same unique identifier (UUID) with the media it refers to, which allows easy correlation.
+In other words, the id of a dataset item always corresponds to the id of an image or an extracted video frame.
 
 ### Data flow
 
