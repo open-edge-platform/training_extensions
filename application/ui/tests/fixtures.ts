@@ -83,6 +83,12 @@ const test = testBase.extend<Fixtures>({
                     headers: { 'content-type': 'image/png' },
                 });
             }),
+            http.get('/api/system/devices/inference', ({ response }) => {
+                return response(200).json([
+                    { type: 'cpu', name: 'CPU' },
+                    { type: 'xpu', name: 'XPU' },
+                ]);
+            }),
         ],
     }),
     streamPage: async ({ page }, use) => {

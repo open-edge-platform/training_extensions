@@ -2,17 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Flex, Text } from '@geti/ui';
-import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isEmpty } from 'lodash-es';
 
-import { $api } from '../../../api/client';
+import { useGetActiveModelArchitectureId } from '../../models/hooks/api/use-get-active-model-architecture-id.hook';
 
 export const ActiveModel = () => {
-    const projectId = useProjectIdentifier();
-
-    const modelsQuery = $api.useSuspenseQuery('get', '/api/projects/{project_id}/models', {
-        params: { path: { project_id: projectId } },
-    });
+    const activeModelArchitectureId = useGetActiveModelArchitectureId();
 
     return (
         <Flex gap='size-50' alignItems='center'>
@@ -28,7 +23,7 @@ export const ActiveModel = () => {
                     color: 'var(--spectrum-global-color-gray-700)',
                 }}
             >
-                {!isEmpty(modelsQuery.data) ? modelsQuery.data[0].architecture : 'Unknown'}
+                {isEmpty(activeModelArchitectureId) ? 'Unknown' : activeModelArchitectureId}
             </Text>
         </Flex>
     );

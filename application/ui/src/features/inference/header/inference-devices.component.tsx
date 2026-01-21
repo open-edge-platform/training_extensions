@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { Item, Key, Picker, toast } from '@geti/ui';
 
 import { $api } from '../../../api/client';
-import { usePipeline } from '../../../hooks/api/pipeline.hook';
+import { usePatchPipeline, usePipeline } from '../../../hooks/api/pipeline.hook';
 import { useProjectIdentifier } from '../../../hooks/use-project-identifier.hook';
 
 export const InferenceDevices = () => {
@@ -14,18 +14,7 @@ export const InferenceDevices = () => {
     const { data: pipeline } = usePipeline();
     const projectId = useProjectIdentifier();
     const [selectedKey, setSelectedKey] = useState<Key | null>(pipeline.device);
-
-    const updatePipeline = $api.useMutation('patch', '/api/projects/{project_id}/pipeline', {
-        meta: {
-            invalidateQueries: [['get', '/api/projects/{project_id}/pipeline']],
-        },
-        onError: (error) => {
-            if (error) {
-                toast({ type: 'error', message: String(error.detail) });
-                setSelectedKey(pipeline.device);
-            }
-        },
-    });
+    const updatePipeline = usePatchPipeline();
 
     const options = devices.map((device) => ({ id: device.type, name: device.name }));
 
@@ -35,10 +24,20 @@ export const InferenceDevices = () => {
         }
 
         setSelectedKey(key);
-        updatePipeline.mutate({
-            params: { path: { project_id: projectId } },
-            body: { device: key },
-        });
+        updatePipeline.mutate(
+            {
+                params: { path: { project_id: projectId } },
+                body: { device: key },
+            },
+            {
+                onError: (error) => {
+                    if (error) {
+                        toast({ type: 'error', message: String(error.detail) });
+                        setSelectedKey(pipeline.device);
+                    }
+                },
+            }
+        );
     };
 
     return (
