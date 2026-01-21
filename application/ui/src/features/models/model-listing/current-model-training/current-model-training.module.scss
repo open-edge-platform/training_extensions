@@ -1,0 +1,45 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
+.grid {
+    padding: var(--spectrum-global-dimension-size-150) var(--spectrum-global-dimension-size-250)
+        var(--spectrum-global-dimension-size-150) var(--spectrum-global-dimension-size-1000);
+}
+
+.modelName {
+    font-size: var(--spectrum-global-dimension-font-size-200);
+    padding-right: var(--spectrum-global-dimension-size-100);
+}
+
+.trainingTag {
+    background-color: var(--energy-blue);
+    color: var(--spectrum-global-color-gray-50);
+    border-radius: var(--spectrum-global-dimension-size-50);
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    padding: var(--spectrum-global-dimension-size-25) var(--spectrum-global-dimension-size-50);
+}
+
+.statusTag {
+    background-color: var(--energy-blue-shade-2);
+    color: var(--spectrum-global-color-gray-800);
+    border-radius: var(--spectrum-global-dimension-size-50);
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    padding: var(--spectrum-global-dimension-size-25) var(--spectrum-global-dimension-size-50);
+}
+
+.metaText {
+    font-size: var(--spectrum-global-dimension-font-size-75);
+    color: var(--spectrum-global-color-gray-700);
+}
+
+.smallText {
+    font-size: var(--spectrum-global-dimension-font-size-75);
+}
+
+.recommendedForTag {
+    border-radius: var(--spectrum-global-dimension-size-50);
+    background-color: var(--spectrum-global-color-gray-300);
+    color: var(--spectrum-global-color-gray-700);
+}

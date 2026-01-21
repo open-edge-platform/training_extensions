@@ -43,6 +43,7 @@
         "lodash-es": "~4.17.21",
         "openapi-fetch": "~0.14.0",
         "openapi-react-query": "~0.5.0",
+        "pretty-bytes": "^7.1.0",
         "react": "~19.1.1",
         "react-aria-components": "^1.11.0",
         "react-dom": "~19.1.1",
