@@ -29,5 +29,9 @@ export const useGetCurrentTrainingJob = () => {
 };
 
 export const useCancelJob = () => {
-    return $api.useMutation('post', '/api/jobs/{job_id}:cancel');
+    return $api.useMutation('post', '/api/jobs/{job_id}:cancel', {
+        meta: {
+            invalidateQueries: [['get', '/api/jobs']],
+        },
+    });
 };

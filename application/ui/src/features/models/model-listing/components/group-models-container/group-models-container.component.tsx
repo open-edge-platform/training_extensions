@@ -33,6 +33,7 @@ export const GroupModelsContainer = ({ group, models }: GroupModelsContainerProp
                     UNSAFE_className={classes.disclosure}
                     isExpanded={model.id ? expandedModelIds.has(model.id) : false}
                     onExpandedChange={() => model.id && onExpandModel(model.id)}
+                    data-testid={`model-disclosure-${model.id}`}
                 >
                     <DisclosureTitle UNSAFE_className={classes.disclosureItem}>
                         <ModelRowContainer model={model} />

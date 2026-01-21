@@ -11,6 +11,8 @@ import { HttpResponse } from 'msw';
 
 import { handlers, http } from '../src/api/utils';
 import { StreamPage } from './inference/stream-page';
+import { JobsPage } from './jobs/jobs-page';
+import { ModelsPage } from './models/models-page';
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -18,6 +20,8 @@ const dirname = path.dirname(filename);
 interface Fixtures {
     network: NetworkFixture;
     streamPage: StreamPage;
+    modelsPage: ModelsPage;
+    jobsPage: JobsPage;
 }
 
 const test = testBase.extend<Fixtures>({
@@ -108,7 +112,18 @@ const test = testBase.extend<Fixtures>({
     }),
     streamPage: async ({ page }, use) => {
         const streamPage = new StreamPage(page);
+
         await use(streamPage);
+    },
+    modelsPage: async ({ page }, use) => {
+        const modelsPage = new ModelsPage(page);
+
+        await use(modelsPage);
+    },
+    jobsPage: async ({ page }, use) => {
+        const jobsPage = new JobsPage(page);
+
+        await use(jobsPage);
     },
 });
 
