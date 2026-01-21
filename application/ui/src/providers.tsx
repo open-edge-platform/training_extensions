@@ -26,8 +26,6 @@ declare module '@tanstack/react-query' {
 export const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
-            gcTime: 30 * 60 * 1000,
-            staleTime: 5 * 60 * 1000,
             retry: false,
         },
         mutations: {
