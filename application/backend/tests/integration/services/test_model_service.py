@@ -118,6 +118,21 @@ class TestModelServiceIntegration:
             assert variant.get("precision") in ["fp16", "fp32"]
             assert variant.get("weights_size") == 0  # Files are empty, so size is 0
 
+    def test_get_model_size_in_bytes(
+        self, tmp_path: Path, fxt_project_id: UUID, fxt_model_id: UUID, fxt_model_service: ModelService
+    ):
+        """Test retrieving total model size in bytes."""
+        model_size_path = tmp_path / "projects" / str(fxt_project_id) / "models" / str(fxt_model_id)
+        model_size_path.mkdir(parents=True, exist_ok=True)
+        (model_size_path / "model.xml").write_bytes(b"x" * 100)
+        (model_size_path / "model.bin").write_bytes(b"x" * 200)
+        (model_size_path / "model.onnx").write_bytes(b"x" * 300)
+        (model_size_path / "model.ckpt").write_bytes(b"x" * 400)
+
+        total_size = fxt_model_service.get_model_size_in_bytes(fxt_project_id, fxt_model_id)
+
+        assert total_size == 100 + 200 + 300 + 400
+
     def test_update_model(self, fxt_project_id: UUID, fxt_model_id: UUID, fxt_model_service: ModelService):
         """Test updating name of a model by ID."""
         new_model_name = "This is a new model name"

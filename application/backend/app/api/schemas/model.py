@@ -25,6 +25,7 @@ class ModelView(BaseIDModel):
     training_info: TrainingInfo = Field(..., description="Information about the training process")
     variants: list[ModelVariant] = Field(description="Variants of the model", default=[])
     files_deleted: bool = Field(description="Indicates if model files have been deleted", default=False)
+    size: int = Field(description="Total size of model and all its files in bytes")
 
     model_config = {
         "json_schema_extra": {
@@ -70,6 +71,7 @@ class ModelView(BaseIDModel):
                     },
                 ],
                 "files_deleted": False,
+                "size": 370368,
             }
         }
     }
@@ -122,6 +124,7 @@ class ExtendedModelView(ModelView):
                     },
                 ],
                 "files_deleted": False,
+                "size": 370368,
                 "evaluations": [
                     {
                         "dataset_revision_id": "3c6c6d38-1cd8-4458-b759-b9880c048b78",
