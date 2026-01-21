@@ -16,12 +16,12 @@ import {
 } from '@geti/ui';
 import { DownloadIcon, MoreMenu } from '@geti/ui/icons';
 
-import { Model } from '../../../../constants/shared-types';
+import { Model, ModelFormat } from '../../../../constants/shared-types';
 import { formatModelSize } from '../utils/format-model-size';
 
 interface ModelVariantTableProps {
     model: Model;
-    format: 'openvino' | 'pytorch' | 'onnx';
+    format: ModelFormat;
 }
 
 export const ModelVariantTable = ({ model, format }: ModelVariantTableProps) => {

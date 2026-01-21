@@ -7,6 +7,7 @@ export type Label = components['schemas']['LabelView'];
 export type DatasetItem = components['schemas']['DatasetItemView'];
 export type Model = components['schemas']['ModelView'];
 export type ModelArchitecture = components['schemas']['ModelArchitectureView'];
+export type ModelFormat = components['schemas']['ModelFormat'];
 export type DatasetSubset = components['schemas']['DatasetItemSubset'];
 export type Job = components['schemas']['JobView'];
 
