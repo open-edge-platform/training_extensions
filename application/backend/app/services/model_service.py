@@ -169,7 +169,7 @@ class ModelService(BaseSessionManagedService):
         model_rev_db.files_deleted = True
         model_rev_repo.update(model_rev_db)
 
-    def list_models(self, project_id: UUID) -> list[ModelRevision]:
+    def list_models(self, project_id: UUID, dataset_revision_id: UUID | None = None) -> list[ModelRevision]:
         """
         Get information about all available model revisions in a project.
 
@@ -179,13 +179,19 @@ class ModelService(BaseSessionManagedService):
 
         Args:
             project_id (UUID): The unique identifier of the project whose models to list.
+            dataset_revision_id (UUID | None, optional): The unique identifier of the dataset revision to filter on.
 
         Returns:
             list[ModelRevision]: A list of model revision objects representing all model
-                revisions in the project. Returns an empty list if the project has no models.
+                revisions in the project, optionally filtered on dataset revision.
+                Returns an empty list if the project has no models.
         """
         model_rev_repo = ModelRevisionRepository(project_id=str(project_id), db=self.db_session)
-        return [ModelRevision.model_validate(model_rev_db) for model_rev_db in model_rev_repo.list_all()]
+        training_dataset_id = str(dataset_revision_id) if dataset_revision_id is not None else None
+        return [
+            ModelRevision.model_validate(model_rev_db)
+            for model_rev_db in model_rev_repo.list_all(training_dataset_id=training_dataset_id)
+        ]
 
     def create_revision(self, metadata: ModelRevisionMetadata) -> None:
         """

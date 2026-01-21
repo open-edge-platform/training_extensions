@@ -51,6 +51,49 @@ class TestModelServiceIntegration:
         for idx in range(len(model_ids)):
             assert fxt_db_models[idx].id in model_ids
 
+    def test_list_models_with_dataset_revision(
+        self,
+        request: pytest.FixtureRequest,
+        db_session: Session,
+        fxt_project_id: UUID,
+        fxt_model_service: ModelService,
+    ):
+        # Create a dataset revision
+        dataset_revision_id = uuid4()
+        dataset_revision = DatasetRevisionDB(
+            id=str(dataset_revision_id),
+            project_id=str(fxt_project_id),
+            name="Test Dataset",
+            files_deleted=False,
+        )
+        db_session.add(dataset_revision)
+        db_session.flush()
+
+        # Add an extra model that is linked to the dataset revision
+        model_id = uuid4()
+        model = ModelRevisionDB(
+            id=str(model_id),
+            name="TestModel",
+            project_id=str(fxt_project_id),
+            architecture="TestArch",
+            parent_revision=None,
+            training_status="not_started",
+            training_configuration={},
+            training_dataset_id=str(dataset_revision_id),
+            label_schema_revision={},
+        )
+        db_session.add(model)
+        db_session.flush()
+
+        # Call list_models with dataset_revision_id and without
+        dataset_models = fxt_model_service.list_models(fxt_project_id, dataset_revision_id=dataset_revision_id)
+        all_models = fxt_model_service.list_models(fxt_project_id)
+
+        # Only the model linked to the dataset revision should be returned
+        assert len(all_models) == 3
+        assert len(dataset_models) == 1
+        assert str(dataset_models[0].id) == str(model_id)
+
     def test_get_model(self, fxt_project_id: UUID, fxt_model_id: UUID, fxt_model_service: ModelService):
         """Test retrieving a model by ID."""
         model = fxt_model_service.get_model(fxt_project_id, fxt_model_id)

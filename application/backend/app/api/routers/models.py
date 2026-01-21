@@ -13,7 +13,7 @@ from fastapi.responses import StreamingResponse
 from app.api.dependencies import get_model_service, get_project
 from app.api.schemas import EvaluationView, MetricView, ModelView, ProjectView
 from app.api.schemas.model import ExtendedModelView
-from app.api.validators import ModelID
+from app.api.validators import DatasetRevisionID, ModelID
 from app.models.model_revision import ModelFormat
 from app.services import ModelService, ResourceInUseError, ResourceNotFoundError, ResourceType
 
@@ -32,11 +32,15 @@ router = APIRouter(prefix="/api/projects/{project_id}/models", tags=["Models"])
 def list_models(
     project: Annotated[ProjectView, Depends(get_project)],
     model_service: Annotated[ModelService, Depends(get_model_service)],
+    dataset_revision_id: Annotated[
+        DatasetRevisionID | None,
+        Query(description="Dataset revision id for optional filtering"),
+    ] = None,
 ) -> list[ModelView]:
-    """Get all models in a project."""
+    """Get all models in a project, optionally filtered by dataset revision."""
     try:
         model_views = []
-        for model_revision in model_service.list_models(project.id):
+        for model_revision in model_service.list_models(project_id=project.id, dataset_revision_id=dataset_revision_id):
             model_variants = model_service.get_model_variants(project_id=project.id, model_id=model_revision.id)
             model_views.append(model_revision.model_dump() | {"variants": model_variants})
         return [ModelView.model_validate(model_view, from_attributes=True) for model_view in model_views]
