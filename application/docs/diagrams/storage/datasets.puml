@@ -13,7 +13,7 @@ class media << (T,#FFAAAA) >> {
   size : INTEGER
   --
   fps : INTEGER
-  frames_count : INTEGER
+  frame_count : INTEGER
   --
   source_id : UUID
 }

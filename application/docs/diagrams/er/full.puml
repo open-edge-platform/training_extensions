@@ -81,7 +81,7 @@ entity(Media) {
 entity(Video) {
   pk(media_id) : UUID
   fps : INTEGER
-  frames_count : INTEGER
+  frame_count : INTEGER
 }
 
 entity(VideoFrame) {

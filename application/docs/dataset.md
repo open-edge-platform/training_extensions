@@ -18,7 +18,7 @@ elements, edit annotations and other attributes.
 In Geti Tune, a _media_ refers to the actual image or video file that contains visual content. Media files are the raw
 data that the system processes, analyzes, and displays. They can be in various formats such as JPEG, PNG, MP4, etc.
 Images and video frames can be annotated. When a frame is annotated, Geti Tune extracts it 
-from the video, assigns it an id, and saves it as an image; the extracted frame can also be
+from the video, assigns it an ID, and saves it as an image; the extracted frame can also be
 considered a media, supporting all the operations that are normally possible for images.
 A media may have a reference to a source, e.g. the camera from which it was acquired.
 
@@ -33,7 +33,7 @@ Each dataset item typically contains:
 
 Dataset item and media are closely related, but they serve different purposes within the Geti Tune ecosystem.
 A dataset item shares the same unique identifier (UUID) with the media it refers to, which allows easy correlation.
-In other words, the id of a dataset item always corresponds to the id of an image or an extracted video frame.
+In other words, the ID of a dataset item always corresponds to the id of an image or an extracted video frame.
 
 ### Data flow
 
@@ -111,7 +111,7 @@ The database saves the relevant information in the following tables:
 
 - `media`: contains all media records, for images, videos & video frames. Each record is identified by a unique id
   and contains metadata about the media (filename, format, size, shape, etc.).
-- `video_frames`: contains one record for each video frame, identified by a media id. Video frame share the id with corresponding `media` record. 
+- `video_frames`: contains one record for each video frame, identified by a media id. Video frame shares the id with corresponding `media` record. 
   Each record contains metadata about the video frame (timestamp).
   Additionally, it has a reference to the source video (video_id) it was extracted from.
 - `dataset_items`: contains one record for each dataset item, identified by a unique id. The record contains

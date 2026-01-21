@@ -74,7 +74,7 @@ table(media) {
   --
   'Video related details
   fps : INTEGER NULLABLE
-  frames_count : INTEGER NULLABLE
+  frame_count : INTEGER NULLABLE
   --
   ' Source details
   source_id : UUID
