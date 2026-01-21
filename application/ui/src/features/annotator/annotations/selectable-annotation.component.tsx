@@ -6,6 +6,7 @@ import { MouseEvent, ReactNode, useEffect, useRef } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 
 import { useAnnotationActions } from '../../../shared/annotator/annotation-actions-provider.component';
+import { useAnnotator } from '../../../shared/annotator/annotator-provider.component';
 import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
 import { HOTKEYS } from '../../../shared/hotkeys-definition';
 import { drawingStyles } from '../tools/polygon-tool/utils';
@@ -14,6 +15,7 @@ import { useAnnotation } from './annotation-context';
 export const SelectableAnnotation = ({ children }: { children: ReactNode }) => {
     const annotation = useAnnotation();
     const { deleteAnnotations } = useAnnotationActions();
+    const { setSelectedLabelId } = useAnnotator();
     const { setSelectedAnnotations, selectedAnnotations } = useSelectedAnnotations();
     const elementRef = useRef<SVGGElement>(null);
 
@@ -28,7 +30,10 @@ export const SelectableAnnotation = ({ children }: { children: ReactNode }) => {
     }, [isSelected]);
 
     const handleSelectAnnotation = (event: MouseEvent<SVGElement>) => {
+        const annotationLabelId = annotation.labels[0].id;
         const hasShiftPressed = event.shiftKey;
+
+        setSelectedLabelId(annotationLabelId);
 
         setSelectedAnnotations((selected) => {
             if (!hasShiftPressed) {

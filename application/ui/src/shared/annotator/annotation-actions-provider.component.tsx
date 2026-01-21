@@ -89,7 +89,7 @@ export const AnnotationActionsProvider = ({
     }, [initialAnnotationsDTO, project?.task?.labels]);
 
     const updateAnnotations = (updatedAnnotations: Annotation[]) => {
-        const updatedMap = new Map(updatedAnnotations.map((ann) => [ann.id, ann]));
+        const updatedMap = new Map(updatedAnnotations.map((annotation) => [annotation.id, annotation]));
 
         setAnnotations((prevAnnotations) =>
             prevAnnotations.map((annotation) => updatedMap.get(annotation.id) ?? annotation)
