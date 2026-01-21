@@ -2,9 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { toast } from '@geti/ui';
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isEmpty } from 'lodash-es';
+import { useNavigate } from 'react-router';
 
 import type { SchemaProjectView } from '../../api/openapi-spec';
+import { paths } from '../../constants/paths';
 import { useDeleteProject, usePatchProject } from '../../hooks/api/project.hook';
 import { ProjectListItem } from './project-list-item/project-list-item.component';
 
@@ -19,6 +22,8 @@ interface ProjectListProps {
 export const ProjectsList = ({ projects, setProjectInEdition, projectIdInEdition }: ProjectListProps) => {
     const deleteProjectMutation = useDeleteProject();
     const patchProjectMutation = usePatchProject();
+    const navigate = useNavigate();
+    const projectIdentifier = useProjectIdentifier();
 
     const updateProjectName = (id: string, name: string): void => {
         patchProjectMutation.mutate(
@@ -46,6 +51,12 @@ export const ProjectsList = ({ projects, setProjectInEdition, projectIdInEdition
             {
                 onSuccess: () => {
                     toast({ type: 'success', message: 'Project deleted successfully' });
+
+                    if (projects.length === 1) {
+                        navigate(paths.project.new({}));
+                    } else if (id === projectIdentifier) {
+                        navigate(paths.project.index({}));
+                    }
                 },
             }
         );
