@@ -31,7 +31,7 @@ from otx.data.entity.base import ImageInfo, OTXBatchLossEntity
 from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
 from otx.data.entity.tile import OTXTileBatchDataEntity
 from otx.data.entity.utils import stack_batch
-from otx.data.utils.structures.mask.mask_util import encode_rle, polygon_to_rle
+from otx.data.utils.structures.mask.mask_util import encode_rle
 from otx.metrics import MetricInput
 from otx.metrics.fmeasure import FMeasure
 from otx.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
@@ -233,7 +233,6 @@ class OTXInstanceSegModel(OTXModel):
             bboxes=[pred_entity.bboxes for pred_entity in pred_entities],
             labels=[pred_entity.label for pred_entity in pred_entities],
             masks=[pred_entity.masks for pred_entity in pred_entities],
-            polygons=[pred_entity.polygons for pred_entity in pred_entities],  # type: ignore[misc]
         )
         if self.explain_mode:
             pred_entity.saliency_map = [pred_entity.saliency_map for pred_entity in pred_entities]
@@ -392,13 +391,11 @@ class OTXInstanceSegModel(OTXModel):
         bboxes = []
         labels = []
         masks = []
-        polygons = []
 
         for i in range(len(outputs.imgs_info)):  # type: ignore[arg-type]
             _scores = outputs.scores[i] if outputs.scores is not None else None
             _bboxes = outputs.bboxes[i] if outputs.bboxes is not None else None
             _masks = outputs.masks[i] if outputs.masks is not None else None
-            _polygons = outputs.polygons[i] if outputs.polygons is not None else None
             _labels = outputs.labels[i] if outputs.labels is not None else None
 
             filtered_idx = torch.where(_scores > self.best_confidence_threshold)
@@ -410,14 +407,11 @@ class OTXInstanceSegModel(OTXModel):
                 # Ensure filtered_idx is on the same device as masks
                 mask_filtered_idx = tuple(idx.to(_masks.device) for idx in filtered_idx)
                 masks.append(_masks[mask_filtered_idx])
-            if _polygons is not None:
-                polygons.append(_polygons[filtered_idx])
 
         outputs.scores = scores
         outputs.bboxes = bboxes
         outputs.labels = labels
         outputs.masks = masks
-        outputs.polygons = polygons
         return outputs
 
     def _convert_pred_entity_to_compute_metric(
@@ -453,17 +447,15 @@ class OTXInstanceSegModel(OTXModel):
                 },
             )
         for i in range(len(inputs.imgs_info)):  # type: ignore[arg-type]
-            imgs_info = inputs.imgs_info[i] if inputs.imgs_info is not None else None
+            inputs.imgs_info[i] if inputs.imgs_info is not None else None
             bboxes = inputs.bboxes[i] if inputs.bboxes is not None else None
             masks = inputs.masks[i] if inputs.masks is not None else None
-            polygons = inputs.polygons[i] if inputs.polygons is not None else None
             labels = inputs.labels[i] if inputs.labels is not None else None
 
-            rles = (
-                [encode_rle(mask) for mask in masks.data]
-                if masks is not None
-                else polygon_to_rle(polygons, *imgs_info.ori_shape)  # type: ignore[union-attr,arg-type]
-            )
+            if masks is None:
+                msg = "Masks are required for metric computation"
+                raise ValueError(msg)
+            rles = [encode_rle(mask) for mask in masks.data]
             target_info.append(
                 {
                     "boxes": bboxes.data,

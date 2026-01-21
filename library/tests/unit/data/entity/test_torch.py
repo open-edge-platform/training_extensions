@@ -29,7 +29,6 @@ class TestCollateFn:
             sample.label = LongTensor([1])
             sample.masks = None
             sample.keypoints = None
-            sample.polygons = None
             samples.append(sample)
 
         data_batch = collate_fn(samples)

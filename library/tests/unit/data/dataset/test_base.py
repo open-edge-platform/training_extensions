@@ -27,7 +27,6 @@ class TestDefaultCollateFn:
         sample1.masks = None
         sample1.bboxes = None
         sample1.keypoints = None
-        sample1.polygons = None
         sample1.img_info = None
 
         sample2 = Mock(spec=OTXSample)
@@ -36,7 +35,6 @@ class TestDefaultCollateFn:
         sample2.masks = None
         sample2.bboxes = None
         sample2.keypoints = None
-        sample2.polygons = None
         sample2.img_info = None
 
         items = [sample1, sample2]
@@ -57,7 +55,6 @@ class TestDefaultCollateFn:
         sample1.masks = None
         sample1.bboxes = None
         sample1.keypoints = None
-        sample1.polygons = None
         sample1.img_info = None
 
         sample2 = Mock(spec=OTXSample)
@@ -66,7 +63,6 @@ class TestDefaultCollateFn:
         sample2.masks = None
         sample2.bboxes = None
         sample2.keypoints = None
-        sample2.polygons = None
         sample2.img_info = None
 
         items = [sample1, sample2]

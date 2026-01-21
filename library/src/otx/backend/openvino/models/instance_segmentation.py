@@ -13,7 +13,7 @@ from torchvision import tv_tensors
 
 from otx.backend.openvino.models.base import OVModel
 from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
-from otx.data.utils.structures.mask.mask_util import encode_rle, polygon_to_rle
+from otx.data.utils.structures.mask.mask_util import encode_rle
 from otx.metrics import MetricInput
 from otx.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
 from otx.types.label import LabelInfo
@@ -200,11 +200,10 @@ class OVInstanceSegmentationModel(OVModel):
         ]
 
         for idx in range(len(inputs.labels)):  # type: ignore[arg-type]
-            rles = (
-                [encode_rle(mask) for mask in inputs.masks[idx].data]
-                if inputs.masks is not None and len(inputs.masks[idx]) > 0
-                else polygon_to_rle(inputs.polygons[idx], *inputs.imgs_info[idx].ori_shape)  # type: ignore[index,union-attr]
-            )
+            if inputs.masks is None or len(inputs.masks[idx]) == 0:
+                msg = "Masks are required for metric computation"
+                raise ValueError(msg)
+            rles = [encode_rle(mask) for mask in inputs.masks[idx].data]
             target_info.append(
                 {
                     "boxes": inputs.bboxes[idx].data if inputs.bboxes is not None else torch.empty((0, 4)),

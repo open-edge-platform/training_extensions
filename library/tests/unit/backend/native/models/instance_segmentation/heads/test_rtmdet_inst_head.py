@@ -139,7 +139,6 @@ class TestRTMDetInsHead:
             bboxes=[torch.randn(2, 4), torch.randn(3, 4)],
             labels=[torch.randint(0, 3, (2,)), torch.randint(0, 3, (3,))],
             masks=[torch.zeros(2, 640, 640), torch.zeros(3, 640, 640)],
-            polygons=polygons,
         )
 
         results = rtmdet_ins_head.prepare_loss_inputs(x, entity)

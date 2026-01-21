@@ -98,9 +98,6 @@ def _default_collate_fn(items: list[OTXSample]) -> OTXSampleBatch:
         masks=[item.masks for item in items] if any(item.masks is not None for item in items) else None,
         bboxes=[item.bboxes for item in items] if any(item.bboxes is not None for item in items) else None,
         keypoints=[item.keypoints for item in items] if any(item.keypoints is not None for item in items) else None,
-        polygons=[item.polygons for item in items if item.polygons is not None]
-        if any(item.polygons is not None for item in items)
-        else None,
         imgs_info=[item.img_info for item in items] if any(item.img_info is not None for item in items) else None,
     )
 

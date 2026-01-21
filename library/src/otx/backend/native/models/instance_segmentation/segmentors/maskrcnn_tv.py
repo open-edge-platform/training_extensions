@@ -43,7 +43,6 @@ class MaskRCNN(_MaskRCNN):
                 bboxes = entity.bboxes[i] if entity.bboxes is not None else None
                 labels = entity.labels[i] if entity.labels is not None else None
                 masks = entity.masks[i] if entity.masks is not None else None
-                polygons = entity.polygons[i] if entity.polygons is not None else None
                 # NOTE: shift labels by 1 as 0 is reserved for background
                 _labels = labels + 1 if len(labels) else labels
                 targets.append(
@@ -51,7 +50,6 @@ class MaskRCNN(_MaskRCNN):
                         "boxes": bboxes,
                         "labels": _labels,
                         "masks": masks,
-                        "polygons": polygons,
                     },
                 )
 

@@ -35,13 +35,11 @@ def unpack_inst_seg_entity(entity: OTXSampleBatch) -> tuple:
     batch_img_metas = []
     img_infos = entity.imgs_info
     masks = entity.masks
-    polygons = entity.polygons
     bboxes = entity.bboxes
     labels = entity.labels
     for index in range(len(img_infos)):  # type: ignore[union-attr,arg-type]
         img_info = img_infos[index]  # type: ignore[index]
         mask = masks[index] if masks is not None else None
-        polygon = polygons[index] if polygons is not None else None
         bbox = bboxes[index] if bboxes is not None else None
         label = labels[index] if labels is not None else None
         metainfo = {
@@ -53,12 +51,10 @@ def unpack_inst_seg_entity(entity: OTXSampleBatch) -> tuple:
         }
         batch_img_metas.append(metainfo)
 
-        gt_masks = mask if mask is not None else polygon
-
         batch_gt_instances.append(
             InstanceData(
                 metainfo=metainfo,
-                masks=gt_masks,
+                masks=mask,
                 bboxes=bbox,
                 labels=label,
             ),

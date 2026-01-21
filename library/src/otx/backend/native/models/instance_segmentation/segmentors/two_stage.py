@@ -166,7 +166,6 @@ class TwoStageDetector(nn.Module):
             bboxes=batch_inputs.bboxes,
             masks=batch_inputs.masks,
             labels=[torch.zeros_like(labels) for labels in batch_inputs.labels],  # type: ignore[union-attr]
-            polygons=batch_inputs.polygons,
         )
 
         cls_reg_targets, bbox_preds, cls_scores, rpn_results_list = self.rpn_head.prepare_loss_inputs(

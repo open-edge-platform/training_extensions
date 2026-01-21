@@ -6,9 +6,8 @@ import multiprocessing
 from collections import defaultdict
 from dataclasses import dataclass, fields
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-import numpy as np
 import pytest
 import torch
 import yaml
@@ -25,6 +24,9 @@ from otx.types.task import OTXTaskType
 from otx.utils.device import is_xpu_available
 from tests.utils import ExportCase2Test
 
+if TYPE_CHECKING:
+    import numpy as np
+
 
 @dataclass
 class MockSample:
@@ -39,7 +41,6 @@ class MockSample:
     masks: Any | None = None
     bboxes: tv_tensors.BoundingBoxes | None = None
     keypoints: torch.Tensor | None = None
-    polygons: np.ndarray | None = None
 
 
 def _mocksample_flatten(sample: MockSample) -> tuple[list[Any], dict[str, Any]]:
@@ -344,8 +345,6 @@ def fxt_inst_seg_data_entity() -> tuple[tuple, MockSample, OTXSampleBatch]:
     fake_bboxes = tv_tensors.BoundingBoxes(data=torch.Tensor([0, 0, 5, 5]), format="xyxy", canvas_size=(10, 10))
     fake_labels = LongTensor([1])
     fake_masks = Mask(torch.randint(low=0, high=255, size=(1, *img_size), dtype=torch.uint8))
-    fake_polygons = np.empty(shape=(1,), dtype=object)
-    fake_polygons[0] = np.array([[1, 1], [2, 2], [3, 3], [4, 4]])
 
     # define data entity
     single_data_entity = MockSample(
@@ -354,7 +353,6 @@ def fxt_inst_seg_data_entity() -> tuple[tuple, MockSample, OTXSampleBatch]:
         bboxes=fake_bboxes,
         masks=fake_masks,
         label=fake_labels,
-        polygons=fake_polygons,
     )
     batch_data_entity = OTXSampleBatch(
         batch_size=1,
@@ -363,7 +361,6 @@ def fxt_inst_seg_data_entity() -> tuple[tuple, MockSample, OTXSampleBatch]:
         bboxes=[fake_bboxes],
         labels=[fake_labels],
         masks=[fake_masks],
-        polygons=[fake_polygons],
     )
     batch_pred_data_entity = OTXPredictionBatch(
         batch_size=1,
@@ -372,7 +369,6 @@ def fxt_inst_seg_data_entity() -> tuple[tuple, MockSample, OTXSampleBatch]:
         bboxes=[fake_bboxes],
         labels=[fake_labels],
         masks=[fake_masks],
-        polygons=[fake_polygons],
     )
 
     return single_data_entity, batch_pred_data_entity, batch_data_entity

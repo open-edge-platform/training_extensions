@@ -274,7 +274,6 @@ def collate_fn(samples: list[OTXSample]) -> OTXSampleBatch:
         bboxes=[sample.bboxes for sample in samples],
         keypoints=[sample.keypoints for sample in samples],
         masks=[sample.masks for sample in samples],
-        polygons=[sample.polygons for sample in samples],  # type: ignore[misc]
         imgs_info=[sample.img_info for sample in samples],
     )
 
@@ -290,7 +289,6 @@ class OTXSampleBatch:
         masks: List of masks, optional.
         bboxes: List of bounding boxes, optional.
         keypoints: List of keypoint tensors, optional.
-        polygons: List of polygon arrays, optional.
         imgs_info: Sequence of image information, optional.
     """
 
@@ -300,7 +298,6 @@ class OTXSampleBatch:
     masks: list[Mask] | None = None
     bboxes: list[BoundingBoxes] | None = None
     keypoints: list[torch.Tensor] | None = None
-    polygons: list[np.ndarray] | None = None
     imgs_info: Sequence[ImageInfo | None] | None = None  # TODO(ashwinvaidya17): revisit
 
     def __post_init__(self) -> None:
@@ -318,8 +315,6 @@ class OTXSampleBatch:
             self._validate_keypoints(self.keypoints)
         if self.masks is not None:
             self._validate_masks(self.masks)
-        if self.polygons is not None:
-            self._validate_polygons(self.polygons)
         if self.imgs_info is not None:
             self._validate_imgs_info(self.imgs_info)
         self._validate_batch_size(self.batch_size)
@@ -431,24 +426,6 @@ class OTXSampleBatch:
             return
         if not isinstance(first_non_none, torch.Tensor):
             msg = f"Masks batch must be a list of torch tensors. Got {type(first_non_none)}"
-            raise TypeError(msg)
-
-    @staticmethod
-    def _validate_polygons(polygons_batch: list[np.ndarray | None]) -> None:
-        """Validate the polygons batch."""
-        if all(polygon is None for polygon in polygons_batch):
-            return
-        first_non_none = next((poly for poly in polygons_batch if poly is not None), None)
-        if first_non_none is None:
-            return
-        if not isinstance(first_non_none, np.ndarray):
-            msg = "Polygons batch must be a list of np.ndarray of np.ndarray"
-            raise TypeError(msg)
-        if len(first_non_none) == 0:
-            msg = f"Polygons batch must not be empty. Got {polygons_batch}"
-            raise ValueError(msg)
-        if not isinstance(first_non_none[0], np.ndarray):
-            msg = "Polygons batch must be a list of np.ndarray of np.ndarray"
             raise TypeError(msg)
 
     @staticmethod
@@ -604,7 +581,6 @@ class OTXPrediction:
         masks: The predicted masks, optional.
         bboxes: The predicted bounding boxes, optional.
         keypoints: The predicted keypoints, optional.
-        polygons: The predicted polygons, optional.
         scores: The prediction scores, optional.
         feature_vector: The feature vector for XAI, optional.
         saliency_map: The saliency map for XAI, optional.
@@ -616,7 +592,6 @@ class OTXPrediction:
     masks: Mask | None = None
     bboxes: BoundingBoxes | None = None
     keypoints: torch.Tensor | None = None
-    polygons: np.ndarray | None = None
     scores: torch.Tensor | None = None
     feature_vector: torch.Tensor | None = None
     saliency_map: torch.Tensor | None = None

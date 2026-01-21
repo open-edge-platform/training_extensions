@@ -26,21 +26,20 @@ def get_polygon_area(points: np.ndarray) -> float:
 
 
 def convert_masks_to_rotated_predictions(preds: OTXPredictionBatch) -> OTXPredictionBatch:
-    """Convert masks to rotated bounding boxes and polygons.
+    """Convert masks to rotated bounding boxes.
 
     This function processes the predictions from an instance segmentation model,
-    extracting rotated bounding boxes and polygons from the masks.
+    extracting rotated bounding boxes from the masks.
 
     Args:
         preds (OTXPredictionBatch): The predictions from the instance segmentation model.
 
     Returns:
-        OTXPredictionBatch: The predictions with rotated bounding boxes and polygons.
+        OTXPredictionBatch: The predictions with rotated bounding boxes.
     """
     batch_scores = []
     batch_bboxes = []
     batch_labels = []
-    batch_polygons = []
     batch_masks = []
 
     for field_name, field in zip(
@@ -58,7 +57,7 @@ def convert_masks_to_rotated_predictions(preds: OTXPredictionBatch) -> OTXPredic
         preds.labels,  # type: ignore[arg-type]
         preds.masks,  # type: ignore[arg-type]
     ):
-        boxes, scores, labels, masks, polygons = [], [], [], [], []
+        boxes, scores, labels, masks = [], [], [], []
 
         for bbox, score, label, mask in zip(pred_bboxes, pred_scores, pred_labels, pred_masks):
             if mask.sum() == 0:
@@ -68,18 +67,17 @@ def convert_masks_to_rotated_predictions(preds: OTXPredictionBatch) -> OTXPredic
             if hierarchies is None:
                 continue
 
-            rbox_polygons = []
+            # Find the largest contour for the rotated bounding box
+            valid_contours = []
             for contour, hierarchy in zip(contours, hierarchies[0]):
                 if hierarchy[3] != -1 or len(contour) <= 2:
                     continue
-                # Get rotated bounding box points and convert to ragged array format
                 box_points = cv2.boxPoints(cv2.minAreaRect(contour)).astype(np.float32)
                 area = get_polygon_area(box_points)
-                rbox_polygons.append((box_points, area))
+                valid_contours.append((box_points, area))
 
-            if rbox_polygons:
-                rbox_polygons.sort(key=lambda x: x[1], reverse=True)
-                polygons.append(rbox_polygons[0][0])
+            if valid_contours:
+                valid_contours.sort(key=lambda x: x[1], reverse=True)
                 scores.append(score)
                 boxes.append(bbox)
                 labels.append(label)
@@ -94,7 +92,6 @@ def convert_masks_to_rotated_predictions(preds: OTXPredictionBatch) -> OTXPredic
         batch_scores.append(scores)
         batch_bboxes.append(boxes)
         batch_labels.append(labels)
-        batch_polygons.append(polygons)
         batch_masks.append(masks)
 
     return OTXPredictionBatch(
@@ -104,7 +101,6 @@ def convert_masks_to_rotated_predictions(preds: OTXPredictionBatch) -> OTXPredic
         scores=batch_scores,
         bboxes=batch_bboxes,
         masks=batch_masks,
-        polygons=batch_polygons,
         labels=batch_labels,
     )
 
