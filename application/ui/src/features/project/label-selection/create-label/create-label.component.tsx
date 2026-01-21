@@ -113,7 +113,6 @@ export const CreateLabel = ({ labels, onCreate, taskType }: CreateLabelProps) =>
             />
             <View>
                 <TextField
-                    isRequired
                     aria-label={'Create label input'}
                     placeholder={'Create label'}
                     value={newLabel?.name}
