@@ -82,10 +82,6 @@ export class ModelsPage {
         await this.page.getByRole('button', { name: 'Delete' }).click();
     }
 
-    async getModelsCount() {
-        return this.getModelRows().count();
-    }
-
     async getModelNamesInOrder() {
         const rows = this.getModelRows();
         const names = await rows.locator('[class*="modelName"]').allTextContents();
