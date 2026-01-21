@@ -77,7 +77,7 @@ class TestModelServiceIntegration:
             project_id=str(fxt_project_id),
             architecture="TestArch",
             parent_revision=None,
-            training_status="NOT_STARTED",
+            training_status="not_started",
             training_configuration={},
             training_dataset_id=str(dataset_revision_id),
             label_schema_revision={},
