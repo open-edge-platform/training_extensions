@@ -1,0 +1,19 @@
+.labelTag {
+    --colorWithHighContrast: lch(from var(--labelColor) calc((50 - l) * infinity) 0 0);
+
+    padding: var(--spectrum-global-dimension-size-100) var(--spectrum-global-dimension-size-200);
+    background-color: var(--labelColor);
+    border-radius: var(--spectrum-alias-border-radius-regular);
+    color: var(--colorWithHighContrast);
+}
+
+.deleteLabel {
+    svg {
+        fill: var(--colorWithHighContrast) !important;
+    }
+
+    &:hover {
+        background-color: hsl(from var(--labelColor) h s calc(l - 5)) !important;
+        border-color: hsl(from var(--labelColor) h s calc(l - 10)) !important;
+    }
+}
