@@ -3,6 +3,7 @@
 
 import shutil
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 from typing import cast
 from uuid import UUID
@@ -94,11 +95,17 @@ class ModelService(BaseSessionManagedService):
         Returns:
             int: Total size of the model and all its files in bytes.
         """
+
+        @lru_cache
+        def _cached_model_size_in_bytes(_model_path: Path) -> int:
+            return sum(f.stat().st_size for f in _model_path.glob("**/*") if f.is_file())
+
         model_revision = self.get_model(project_id=project_id, model_id=model_id)
         if model_revision.files_deleted:
             return 0
+
         model_path = self._projects_dir / str(project_id) / "models" / str(model_id)
-        return sum(f.stat().st_size for f in model_path.glob("**/*") if f.is_file())
+        return _cached_model_size_in_bytes(_model_path=model_path)
 
     def rename_model(self, project_id: UUID, model_id: UUID, model_metadata: dict[str, str]) -> ModelRevision:
         """
