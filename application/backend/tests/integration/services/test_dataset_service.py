@@ -713,35 +713,43 @@ class TestDatasetServiceIntegration:
         assert excinfo.value.resource_type == ResourceType.DATASET_ITEM
         assert excinfo.value.resource_id == str(non_existent_id)
 
-    def test_get_dataset_item_thumbnail_path_by_id(
+    def test_generate_dataset_item_thumbnail(
         self,
         tmp_path: Path,
+        fxt_projects_dir: Path,
         fxt_dataset_service: DatasetService,
         fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
     ):
-        """Test retrieving a dataset item thumbnail path by ID."""
+        """Test generating a dataset item thumbnail returns a PIL Image."""
         project, db_dataset_items = fxt_project_with_dataset_items
+        dataset_item = db_dataset_items[0]
 
-        dataset_item_binary_path = fxt_dataset_service.get_dataset_item_thumbnail_path_by_id(
-            project=project, dataset_item_id=UUID(db_dataset_items[0].id)
+        # Create the dataset directory and a test image file
+        dataset_dir = tmp_path / fxt_projects_dir / str(project.id) / "dataset"
+        dataset_dir.mkdir(parents=True, exist_ok=True)
+        image_path = dataset_dir / f"{dataset_item.id}.{dataset_item.format}"
+        test_image = Image.new("RGB", (1024, 768), color="red")
+        test_image.save(image_path)
+
+        thumbnail = fxt_dataset_service.generate_dataset_item_thumbnail(
+            project=project, dataset_item_id=UUID(dataset_item.id)
         )
 
-        assert (
-            dataset_item_binary_path
-            == tmp_path / f"projects/{str(project.id)}/dataset/{db_dataset_items[0].id}-thumb.jpg"
-        )
+        assert isinstance(thumbnail, Image.Image)
+        assert thumbnail.width == 64
+        assert thumbnail.height == 64
 
-    def test_get_dataset_item_thumbnail_path_by_id_not_found(
+    def test_generate_dataset_item_thumbnail_not_found(
         self,
         fxt_dataset_service: DatasetService,
         fxt_project_with_dataset_items: tuple[Project, list[DatasetItemDB]],
     ):
-        """Test retrieving a non-existent dataset item thumbnail path raises error."""
+        """Test generating a thumbnail for a non-existent dataset item raises error."""
         project, db_dataset_items = fxt_project_with_dataset_items
         non_existent_id = uuid4()
 
         with pytest.raises(ResourceNotFoundError) as excinfo:
-            fxt_dataset_service.get_dataset_item_thumbnail_path_by_id(project=project, dataset_item_id=non_existent_id)
+            fxt_dataset_service.generate_dataset_item_thumbnail(project=project, dataset_item_id=non_existent_id)
 
         assert excinfo.value.resource_type == ResourceType.DATASET_ITEM
         assert excinfo.value.resource_id == str(non_existent_id)
