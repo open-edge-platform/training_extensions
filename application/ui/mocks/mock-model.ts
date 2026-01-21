@@ -8,6 +8,7 @@ export const getMockedModel = (overrides: Partial<SchemaModelView> = {}): Schema
     name: 'Object_Detection_YOLOX_X (76e07d18)',
     architecture: 'Object_Detection_YOLOX_X',
     parent_revision: null,
+    size: 1048576,
     training_info: {
         status: 'successful',
         label_schema_revision: {

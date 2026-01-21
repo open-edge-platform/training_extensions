@@ -42,7 +42,8 @@ def list_models(
         model_views = []
         for model_revision in model_service.list_models(project_id=project.id, dataset_revision_id=dataset_revision_id):
             model_variants = model_service.get_model_variants(project_id=project.id, model_id=model_revision.id)
-            model_views.append(model_revision.model_dump() | {"variants": model_variants})
+            model_size = model_service.get_model_size_in_bytes(project_id=project.id, model_id=model_revision.id)
+            model_views.append(model_revision.model_dump() | {"variants": model_variants} | {"size": model_size})
         return [ModelView.model_validate(model_view, from_attributes=True) for model_view in model_views]
     except ResourceNotFoundError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
@@ -66,6 +67,7 @@ def get_model(
     try:
         model_revision = model_service.get_model(project_id=project.id, model_id=model_id)
         model_variants = model_service.get_model_variants(project_id=project.id, model_id=model_id)
+        model_size = model_service.get_model_size_in_bytes(project_id=project.id, model_id=model_id)
         evaluations = [
             EvaluationView(
                 dataset_revision_id=ev.dataset_revision_id,
@@ -74,7 +76,12 @@ def get_model(
             )
             for ev in model_service.get_evaluation_results(model_id=model_id)
         ]
-        model_view = model_revision.model_dump() | {"variants": model_variants} | {"evaluations": evaluations}
+        model_view = (
+            model_revision.model_dump()
+            | {"variants": model_variants}
+            | {"size": model_size}
+            | {"evaluations": evaluations}
+        )
         return ExtendedModelView.model_validate(model_view, from_attributes=True)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
