@@ -1,12 +1,13 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from datetime import datetime
+from io import BytesIO
 from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends, File, HTTPException, Query, UploadFile, status
 from fastapi.openapi.models import Example
-from starlette.responses import FileResponse
+from starlette.responses import FileResponse, StreamingResponse
 
 from app.api.dependencies import get_dataset_service, get_file_name_and_extension, get_project
 from app.api.schemas.dataset_item import (
@@ -235,13 +236,21 @@ def get_dataset_item_thumbnail(
     project: Annotated[Project, Depends(get_project)],
     dataset_item_id: DatasetItemID,
     dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
-) -> FileResponse:
+) -> StreamingResponse:
     """Get dataset item thumbnail binary content"""
     try:
-        thumbnail_path = dataset_service.get_dataset_item_thumbnail_path_by_id(
-            project=project, dataset_item_id=dataset_item_id
+        thumbnail = dataset_service.generate_dataset_item_thumbnail(project=project, dataset_item_id=dataset_item_id)
+        buffer = BytesIO()
+        thumbnail.save(buffer, format="JPEG")
+        buffer.seek(0)
+        return StreamingResponse(
+            buffer,
+            media_type="image/jpeg",
+            headers={
+                "Content-Disposition": f"inline; filename={dataset_item_id}.jpeg",
+                "Cache-Control": "public, max-age=31536000",
+            },
         )
-        return FileResponse(path=thumbnail_path)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 

@@ -236,6 +236,19 @@ class DatasetService(BaseSessionManagedService):
         dataset_item = self.get_dataset_item_by_id(project_id=project.id, dataset_item_id=dataset_item_id)
         return self.projects_dir / f"{project.id}/dataset/{dataset_item.id}-thumb.jpg"
 
+    def generate_dataset_item_thumbnail(self, project: Project, dataset_item_id: UUID) -> Image.Image:
+        """Regenerate a dataset item thumbnail by its ID"""
+        dataset_item = self.get_dataset_item_by_id(project_id=project.id, dataset_item_id=dataset_item_id)
+        dataset_dir = self.projects_dir / f"{project.id}/dataset"
+        binary_path = dataset_dir / f"{dataset_item.id}.{dataset_item.format}"
+        try:
+            with Image.open(binary_path) as image:
+                thumbnail = crop_to_thumbnail(image=image, target_width=64, target_height=64)
+        except UnidentifiedImageError:
+            logger.error("Failed to open image {} for thumbnail generation", binary_path)
+            raise InvalidImageError("Failed to open image for thumbnail generation.")
+        return thumbnail
+
     def delete_dataset_item(self, project: Project, dataset_item_id: UUID) -> None:
         """Delete a dataset item by its ID"""
         dataset_item = self.get_dataset_item_by_id(project_id=project.id, dataset_item_id=dataset_item_id)

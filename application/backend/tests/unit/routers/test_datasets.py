@@ -255,7 +255,7 @@ class TestDatasetItemEndpoints:
             (
                 "get",
                 f"/api/projects/{uuid4()}/dataset/items/invalid-id/thumbnail",
-                "get_dataset_item_thumbnail_path_by_id",
+                "generate_dataset_item_thumbnail",
             ),
             ("delete", f"/api/projects/{uuid4()}/dataset/items/invalid-id", "delete_dataset_item"),
             ("post", f"/api/projects/{uuid4()}/dataset/items/invalid-id/annotations", "set_dataset_item_annotations"),
@@ -342,36 +342,33 @@ class TestDatasetItemEndpoints:
 
     def test_get_dataset_item_thumbnail_not_found(self, fxt_get_project, fxt_dataset_service, fxt_client):
         dataset_item_id = uuid4()
-        fxt_dataset_service.get_dataset_item_thumbnail_path_by_id.side_effect = ResourceNotFoundError(
+        fxt_dataset_service.generate_dataset_item_thumbnail.side_effect = ResourceNotFoundError(
             ResourceType.DATASET_ITEM, str(dataset_item_id)
         )
 
         response = fxt_client.get(f"/api/projects/{str(uuid4())}/dataset/items/{str(dataset_item_id)}/thumbnail")
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
-        fxt_dataset_service.get_dataset_item_thumbnail_path_by_id.assert_called_once_with(
+        fxt_dataset_service.generate_dataset_item_thumbnail.assert_called_once_with(
             project=fxt_get_project, dataset_item_id=dataset_item_id
         )
 
     def test_get_dataset_item_thumbnail_success(self, fxt_get_project, fxt_dataset_service, fxt_client):
+        from PIL import Image
+
         dataset_item_id = uuid4()
 
-        tmp_file_path = None
-        try:
-            with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp_file:
-                temp_file_path = tmp_file.name
-                fxt_dataset_service.get_dataset_item_thumbnail_path_by_id.return_value = temp_file_path
-                response = fxt_client.get(
-                    f"/api/projects/{str(uuid4())}/dataset/items/{str(dataset_item_id)}/thumbnail"
-                )
+        # Create a test PIL Image to return from the mock
+        test_image = Image.new("RGB", (64, 64), color="blue")
+        fxt_dataset_service.generate_dataset_item_thumbnail.return_value = test_image
 
-            assert response.status_code == status.HTTP_200_OK
-            fxt_dataset_service.get_dataset_item_thumbnail_path_by_id.assert_called_once_with(
-                project=fxt_get_project, dataset_item_id=dataset_item_id
-            )
-        finally:
-            if tmp_file_path and os.path.exists(tmp_file_path):
-                os.unlink(tmp_file_path)
+        response = fxt_client.get(f"/api/projects/{str(uuid4())}/dataset/items/{str(dataset_item_id)}/thumbnail")
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.headers["content-type"] == "image/jpeg"
+        fxt_dataset_service.generate_dataset_item_thumbnail.assert_called_once_with(
+            project=fxt_get_project, dataset_item_id=dataset_item_id
+        )
 
     def test_delete_dataset_item_not_found(self, fxt_get_project, fxt_dataset_service, fxt_client):
         dataset_item_id = uuid4()
