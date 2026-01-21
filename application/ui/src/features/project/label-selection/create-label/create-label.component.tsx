@@ -14,10 +14,10 @@ import {
     ColorPicker as SpectrumColorPicker,
     SpectrumColorPickerProps,
     TextField,
+    TextFieldRef,
     View,
 } from '@geti/ui';
 import { Add } from '@geti/ui/icons';
-import { TextFieldRef } from '@react-types/textfield';
 import { v4 as uuid } from 'uuid';
 
 import type { Label, TaskType } from '../../../../constants/shared-types';
