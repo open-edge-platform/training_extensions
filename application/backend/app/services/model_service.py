@@ -11,11 +11,11 @@ from loguru import logger
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.db.schema import ModelRevisionDB
-from app.models import ModelRevision, TrainingStatus
+from app.db.schema import EvaluationDB, MetricScoreDB, ModelRevisionDB
+from app.models import DatasetItemSubset, EvaluationResult, ModelRevision, TrainingStatus
 from app.models.model_revision import ModelFormat, ModelPrecision
 from app.models.training_configuration.configuration import TrainingConfiguration
-from app.repositories import LabelRepository, ModelRevisionRepository
+from app.repositories import EvaluationRepository, LabelRepository, ModelRevisionRepository
 
 from .base import BaseSessionManagedService, ResourceInUseError, ResourceNotFoundError, ResourceType
 from .parent_process_guard import parent_process_only
@@ -258,3 +258,29 @@ class ModelService(BaseSessionManagedService):
             return True, (ckpt_file,)
 
         return False, ()
+
+    def save_evaluation_result(self, result: EvaluationResult) -> None:
+        evaluation_db = EvaluationDB(
+            model_revision_id=str(result.model_revision_id),
+            dataset_revision_id=str(result.dataset_revision_id),
+            subset=result.subset,
+        )
+        metrics_db = [MetricScoreDB(metric=item[0], score=item[1]) for item in result.metrics.items()]
+        evaluation_db.metric_scores = metrics_db
+
+        evaluation_repo = EvaluationRepository(self.db_session)
+        evaluation_repo.save(evaluation_db)
+
+    def get_evaluation_results(self, model_id: UUID) -> list[EvaluationResult]:
+        evaluation_repo = EvaluationRepository(self.db_session)
+        evaluations = evaluation_repo.list_by_model_id(str(model_id))
+
+        return [
+            EvaluationResult(
+                model_revision_id=UUID(e.model_revision_id),
+                dataset_revision_id=UUID(e.dataset_revision_id),
+                subset=DatasetItemSubset(e.subset),
+                metrics={m.metric: m.score for m in e.metric_scores},
+            )
+            for e in evaluations
+        ]

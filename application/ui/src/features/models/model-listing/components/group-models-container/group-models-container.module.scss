@@ -3,7 +3,7 @@
 }
 
 .disclosure {
-    background-color: var(--spectrum-global-color-gray-200);
+    background-color: var(--spectrum-global-color-gray-75);
 
     &[class*='is-expanded'] {
         background-color: var(--spectrum-global-color-gray-50);

@@ -7,6 +7,10 @@ from unittest.mock import Mock, call, patch
 from uuid import uuid4
 
 import pytest
+import torch
+from otx.metrics.accuracy import MultiClassClsMetricCallable, MultiLabelClsMetricCallable
+from otx.metrics.mean_ap import MaskRLEMeanAPCallable, MeanAPCallable
+from otx.metrics.types import MetricCallable
 from otx.tools.converter import GetiConfigConverter
 from otx.types.export import OTXExportFormatType
 from otx.types.precision import OTXPrecisionType
@@ -685,25 +689,72 @@ class TestOTXTrainerTrainModel:
 class TestOTXTrainerEvaluateModel:
     """Tests for the OTXTrainer.evaluate_model method."""
 
+    @pytest.mark.parametrize(
+        "task_type,exclusive_labels,metric_callable",
+        [
+            (TaskType.CLASSIFICATION, True, MultiClassClsMetricCallable),
+            (TaskType.CLASSIFICATION, False, MultiLabelClsMetricCallable),
+            (TaskType.DETECTION, False, MeanAPCallable),
+            (TaskType.INSTANCE_SEGMENTATION, False, MaskRLEMeanAPCallable),
+        ],
+    )
     def test_evaluate_model(
         self,
+        task_type: TaskType,
+        exclusive_labels: bool,
+        metric_callable: MetricCallable,
         fxt_otx_trainer: Callable[[], OTXTrainer],
         tmp_path: Path,
+        fxt_model_service: Mock,
     ):
         """Test successful model evaluation on the testing set."""
         # Arrange
         otx_trainer = fxt_otx_trainer()
+        project_id = uuid4()
+        model_id = uuid4()
+        dataset_revision_id = uuid4()
         mock_otx_engine = Mock()
-        mock_datamodule = Mock()
-        mock_otx_engine._datamodule = mock_datamodule
+        mock_otx_engine.test.return_value = {
+            "test/accuracy": torch.tensor(0.85),
+            "test/precision": torch.tensor(0.82),
+            "test/recall": torch.tensor(0.88),
+        }
         model_checkpoint_path = tmp_path / "best_checkpoint.ckpt"
         model_checkpoint_path.touch()
 
+        training_params = TrainingJobParams(
+            device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
+            model_id=model_id,
+            project_id=project_id,
+            model_architecture_id="Object_Detection_YOLOX_S",
+            task=Task(task_type=task_type, exclusive_labels=exclusive_labels),
+        )
+
         # Act
-        otx_trainer.evaluate_model(otx_engine=mock_otx_engine, model_checkpoint_path=model_checkpoint_path)
+        otx_trainer.evaluate_model(
+            otx_engine=mock_otx_engine,
+            model_checkpoint_path=model_checkpoint_path,
+            task=training_params.task,
+            model_revision_id=model_id,
+            dataset_revision_id=dataset_revision_id,
+        )
 
         # Assert
-        mock_otx_engine.test.assert_called_once_with(checkpoint=model_checkpoint_path, datamodule=mock_datamodule)
+        mock_otx_engine.test.assert_called_once_with(checkpoint=model_checkpoint_path, metric=metric_callable)
+        fxt_model_service.set_db_session.assert_called_once()
+        actual_call = fxt_model_service.save_evaluation_result.call_args[0][0]
+
+        assert actual_call.model_revision_id == model_id
+        assert actual_call.dataset_revision_id == dataset_revision_id
+        assert actual_call.subset == DatasetItemSubset.TESTING
+        assert actual_call.metrics == pytest.approx(
+            {
+                "accuracy": 0.85,
+                "precision": 0.82,
+                "recall": 0.88,
+            },
+            rel=1e-6,
+        )
 
 
 class TestOTXTrainerExportModel:
@@ -764,14 +815,6 @@ class TestOTXTrainerStoreModelArtifacts:
         project_id = uuid4()
         model_id = uuid4()
 
-        training_params = TrainingJobParams(
-            device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
-            model_id=model_id,
-            project_id=project_id,
-            model_architecture_id="Object_Detection_YOLOX_S",
-            task=Task(task_type=TaskType.DETECTION),
-        )
-
         # Create model directory structure
         model_dir = tmp_path / "projects" / str(project_id) / "models" / str(model_id)
         model_dir.mkdir(parents=True)
@@ -805,7 +848,7 @@ class TestOTXTrainerStoreModelArtifacts:
 
         # Act
         otx_trainer.store_model_artifacts(
-            training_params=training_params,
+            model_dir=model_dir,
             otx_work_dir=otx_work_dir,
             trained_model_path=trained_model_path,
             exported_model_paths=exported_model_paths,

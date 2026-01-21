@@ -118,7 +118,7 @@ def seed(with_model: bool) -> None:
             video_path="data/media/card-video.mp4",
             sink_id=folders.id,
             model_id="977eeb18-eaac-449d-bc80-e340fbe052ad",
-            model_architecture="Custom_Object_Detection_Gen3_SSD",
+            model_architecture="Object_Detection_YOLOX_S",
             labels=detection_labels,
         )
 

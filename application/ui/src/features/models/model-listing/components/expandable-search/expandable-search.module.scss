@@ -7,16 +7,18 @@
 
 .searchField {
     animation: expand 0.2s ease-out forwards;
+    will-change: opacity, transform;
+    transform-origin: right center;
 }
 
 @keyframes expand {
     from {
-        width: 0;
         opacity: 0;
+        transform: scaleX(0);
     }
 
     to {
-        width: var(--spectrum-global-dimension-size-2400);
         opacity: 1;
+        transform: scaleX(1);
     }
 }

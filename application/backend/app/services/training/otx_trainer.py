@@ -25,6 +25,9 @@ from otx.data.dataset import (
 from otx.data.dataset.base import OTXDataset
 from otx.data.module import OTXDataModule
 from otx.data.transform_libs.torchvision import TorchVisionTransformLib
+from otx.metrics import MetricCallable
+from otx.metrics.accuracy import MultiClassClsMetricCallable, MultiLabelClsMetricCallable
+from otx.metrics.mean_ap import MaskRLEMeanAPCallable, MeanAPCallable
 from otx.tools.converter import GetiConfigConverter
 from otx.types.device import DeviceType as OTXDeviceType
 from otx.types.export import OTXExportFormatType
@@ -34,7 +37,7 @@ from sqlalchemy.orm import Session
 
 from app.core.jobs.models import TrainingJobParams
 from app.core.run import ExecutionContext
-from app.models import DatasetItemAnnotationStatus, Task, TaskType, TrainingStatus
+from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, EvaluationResult, Task, TaskType, TrainingStatus
 from app.models.system import DeviceInfo, DeviceType
 from app.models.training_configuration.configuration import TrainingConfiguration
 from app.services import (
@@ -367,11 +370,27 @@ class OTXTrainer(Trainer):
         return trained_model_path, otx_engine
 
     @step("Evaluate Model")
-    def evaluate_model(self, otx_engine: OTXEngine, model_checkpoint_path: Path) -> None:
+    def evaluate_model(
+        self,
+        otx_engine: OTXEngine,
+        model_checkpoint_path: Path,
+        task: Task,
+        model_revision_id: UUID,
+        dataset_revision_id: UUID,
+    ) -> None:
         """Evaluate the trained model on the testing set"""
-        # TODO evaluate with custom metric and save evaluation results (#4869)
         logger.info("Evaluating the model on the testing set...")
-        otx_engine.test(checkpoint=model_checkpoint_path, datamodule=otx_engine._datamodule)
+        metrics = otx_engine.test(checkpoint=model_checkpoint_path, metric=self.__get_metric_by_task(task))
+        with self._db_session_factory() as db:
+            self._model_service.set_db_session(db)
+            self._model_service.save_evaluation_result(
+                EvaluationResult(
+                    model_revision_id=model_revision_id,
+                    dataset_revision_id=dataset_revision_id,
+                    subset=DatasetItemSubset.TESTING,
+                    metrics={item[0].split("/")[1]: item[1].item() for item in metrics.items()},
+                )
+            )
 
     @step("Export Model")
     def export_model(self, otx_engine: OTXEngine, model_checkpoint_path: Path) -> ExportedModels:
@@ -396,17 +415,12 @@ class OTXTrainer(Trainer):
     @step("Store Model Artifacts")
     def store_model_artifacts(
         self,
-        training_params: TrainingJobParams,
+        model_dir: Path,
         otx_work_dir: Path,
         trained_model_path: Path,
         exported_model_paths: ExportedModels,
     ) -> None:
         """Store the selected training artifacts (model binary, metrics, ...) and cleanup the rest"""
-        model_dir = self.__base_model_path(
-            data_dir=self._data_dir,
-            project_id=cast(UUID, training_params.project_id),
-            model_id=training_params.model_id,
-        )
         # Store the Pytorch model checkpoint and the OpenVINO exported model files
         model_ckpt_source_path = trained_model_path
         model_xml_source_path = exported_model_paths.openvino_model_path.with_suffix(".xml")
@@ -440,6 +454,11 @@ class OTXTrainer(Trainer):
         if project_id is None:
             raise ValueError("Project ID must be provided in training parameters")
         task = training_params.task
+        model_dir = self.__base_model_path(
+            data_dir=self._data_dir,
+            project_id=project_id,
+            model_id=training_params.model_id,
+        )
 
         weights_path = self.prepare_weights(training_params=training_params)
         training_config, otx_training_config = self.prepare_training_configuration(
@@ -460,11 +479,17 @@ class OTXTrainer(Trainer):
             device=training_params.device,
             has_parent_revision=training_params.parent_model_revision_id is not None,
         )
-        self.evaluate_model(otx_engine=otx_engine, model_checkpoint_path=trained_model_path)
+        self.evaluate_model(
+            otx_engine=otx_engine,
+            model_checkpoint_path=trained_model_path,
+            task=task,
+            model_revision_id=training_params.model_id,
+            dataset_revision_id=dataset_info.revision_id,
+        )
         exported_model_paths = self.export_model(otx_engine=otx_engine, model_checkpoint_path=trained_model_path)
         self.store_model_artifacts(
+            model_dir=model_dir,
             otx_work_dir=Path(otx_engine.work_dir),
-            training_params=training_params,
             trained_model_path=trained_model_path,
             exported_model_paths=exported_model_paths,
         )
@@ -493,6 +518,21 @@ class OTXTrainer(Trainer):
                 return OTXTaskType.DETECTION
             case TaskType.INSTANCE_SEGMENTATION:
                 return OTXTaskType.INSTANCE_SEGMENTATION
+            case _:
+                raise ValueError(f"Unsupported task type: {task.task_type}")
+
+    @classmethod
+    def __get_metric_by_task(cls, task: Task) -> MetricCallable:
+        """Map internal Task to Metric."""
+        match task.task_type:
+            case TaskType.CLASSIFICATION:
+                if task.exclusive_labels:
+                    return MultiClassClsMetricCallable
+                return MultiLabelClsMetricCallable
+            case TaskType.DETECTION:
+                return MeanAPCallable
+            case TaskType.INSTANCE_SEGMENTATION:
+                return MaskRLEMeanAPCallable
             case _:
                 raise ValueError(f"Unsupported task type: {task.task_type}")
 

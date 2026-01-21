@@ -11,7 +11,8 @@ from fastapi.openapi.models import Example
 from fastapi.responses import StreamingResponse
 
 from app.api.dependencies import get_model_service, get_project
-from app.api.schemas import ModelView, ProjectView
+from app.api.schemas import EvaluationView, MetricView, ModelView, ProjectView
+from app.api.schemas.model import ExtendedModelView
 from app.api.validators import ModelID
 from app.models.model_revision import ModelFormat
 from app.services import ModelService, ResourceInUseError, ResourceNotFoundError, ResourceType
@@ -45,7 +46,7 @@ def list_models(
 
 @router.get(
     "/{model_id}",
-    response_model=ModelView,
+    response_model=ExtendedModelView,
     responses={
         status.HTTP_200_OK: {"description": "Model found"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid project or model ID"},
@@ -56,13 +57,21 @@ def get_model(
     project: Annotated[ProjectView, Depends(get_project)],
     model_id: ModelID,
     model_service: Annotated[ModelService, Depends(get_model_service)],
-) -> ModelView:
+) -> ExtendedModelView:
     """Get a specific model by ID."""
     try:
         model_revision = model_service.get_model(project_id=project.id, model_id=model_id)
         model_variants = model_service.get_model_variants(project_id=project.id, model_id=model_id)
-        model_view = model_revision.model_dump() | {"variants": model_variants}
-        return ModelView.model_validate(model_view, from_attributes=True)
+        evaluations = [
+            EvaluationView(
+                dataset_revision_id=ev.dataset_revision_id,
+                subset=ev.subset.value,
+                metrics=[MetricView(name=m[0], value=m[1]) for m in ev.metrics.items()],
+            )
+            for ev in model_service.get_evaluation_results(model_id=model_id)
+        ]
+        model_view = model_revision.model_dump() | {"variants": model_variants} | {"evaluations": evaluations}
+        return ExtendedModelView.model_validate(model_view, from_attributes=True)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
