@@ -30,10 +30,10 @@ export const SelectableAnnotation = ({ children }: { children: ReactNode }) => {
     }, [isSelected]);
 
     const handleSelectAnnotation = (event: MouseEvent<SVGElement>) => {
-        const annotationLabelId = annotation.labels[0].id;
+        const annotationLabelId = annotation.labels[0]?.id;
         const hasShiftPressed = event.shiftKey;
 
-        setSelectedLabelId(annotationLabelId);
+        setSelectedLabelId(annotationLabelId ?? null);
 
         setSelectedAnnotations((selected) => {
             if (!hasShiftPressed) {
@@ -103,7 +103,7 @@ export const SelectableAnnotation = ({ children }: { children: ReactNode }) => {
             tabIndex={isSelected ? 0 : -1}
             onClick={handleSelectAnnotation}
             style={{
-                ...drawingStyles(annotation.labels[0]),
+                ...drawingStyles(annotation?.labels?.[0] ?? null),
                 ...selectionStyles,
                 zIndex: 999,
                 outline: 'none',
