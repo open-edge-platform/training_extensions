@@ -102,7 +102,6 @@ class OVSegmentationModel(OVModel):
             [out.feature_vector for out in outputs] if outputs and outputs[0].feature_vector.size != 1 else []
         )
         return OTXPredictionBatch(
-            batch_size=len(outputs),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=[],

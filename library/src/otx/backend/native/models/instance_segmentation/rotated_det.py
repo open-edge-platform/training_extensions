@@ -95,7 +95,6 @@ def convert_masks_to_rotated_predictions(preds: OTXPredictionBatch) -> OTXPredic
         batch_masks.append(masks)
 
     return OTXPredictionBatch(
-        batch_size=preds.batch_size,
         images=preds.images,
         imgs_info=preds.imgs_info,
         scores=batch_scores,

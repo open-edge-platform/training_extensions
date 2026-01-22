@@ -61,8 +61,6 @@ def register_pytree_node(cls: type[Sample]) -> type[Sample]:
         kwargs = dict(zip(context, values))
         # Extract _img_info to set after construction (since __post_init__ would overwrite it)
         img_info = kwargs.pop("_img_info", None)
-        # Remove _transforms as it's not a constructor argument
-        kwargs.pop("_transforms", None)
         obj = cls(**kwargs)
         # Restore _img_info if it was present (preserves transformed img_info)
         if img_info is not None:
@@ -268,7 +266,6 @@ def collate_fn(samples: list[OTXSample]) -> OTXSampleBatch:
         images = [sample.image for sample in samples]
 
     return OTXSampleBatch(
-        batch_size=len(samples),
         images=images,
         labels=[sample.label for sample in samples],
         bboxes=[sample.bboxes for sample in samples],
@@ -283,7 +280,6 @@ class OTXSampleBatch:
     """OTX sample batch implementation.
 
     Attributes:
-        batch_size: The number of samples in the batch.
         images: The batch of images as a tensor or list of tensors.
         labels: List of label tensors, optional.
         masks: List of masks, optional.
@@ -292,13 +288,19 @@ class OTXSampleBatch:
         imgs_info: Sequence of image information, optional.
     """
 
-    batch_size: int  # TODO(ashwinvaidya17): Remove this
     images: torch.Tensor | list[torch.Tensor]
     labels: list[torch.Tensor] | None = None
     masks: list[Mask] | None = None
     bboxes: list[BoundingBoxes] | None = None
     keypoints: list[torch.Tensor] | None = None
-    imgs_info: Sequence[ImageInfo | None] | None = None  # TODO(ashwinvaidya17): revisit
+    imgs_info: Sequence[ImageInfo | None] | None = None
+
+    @property
+    def batch_size(self) -> int:
+        """Get the number of samples in the batch."""
+        if isinstance(self.images, torch.Tensor):
+            return self.images.shape[0]
+        return len(self.images)
 
     def __post_init__(self) -> None:
         """Validate the batch after initialization."""
@@ -317,7 +319,6 @@ class OTXSampleBatch:
             self._validate_masks(self.masks)
         if self.imgs_info is not None:
             self._validate_imgs_info(self.imgs_info)
-        self._validate_batch_size(self.batch_size)
 
     @staticmethod
     def _validate_images(image_batch: torch.Tensor | list[torch.Tensor]) -> None:
@@ -440,13 +441,6 @@ class OTXSampleBatch:
             msg = "Image info batch must be a list of otx.data.entity.ImageInfo"
             raise TypeError(msg)
 
-    @staticmethod
-    def _validate_batch_size(batch_size: int) -> None:
-        """Validate the batch size."""
-        if not isinstance(batch_size, int):
-            msg = "Batch size must be an integer"
-            raise TypeError(msg)
-
     def pin_memory(self) -> OTXSampleBatch:
         """Pin memory for member tensor variables."""
         # https://github.com/pytorch/pytorch/issues/116403
@@ -560,11 +554,7 @@ class OTXPredictionBatch(OTXSampleBatch):
 
     @property
     def has_xai_outputs(self) -> bool:
-        """Check if the batch has XAI outputs.
-
-        Necessary for compatibility with tests.
-        """
-        # TODO(ashwinvaidya17): the tests should directly refer to saliency map.
+        """Check if the batch has XAI outputs (saliency maps)."""
         return self.saliency_map is not None and len(self.saliency_map) > 0
 
 

@@ -305,7 +305,6 @@ class OVEngine(Engine):
                     msg = "The input data should be a list of numpy arrays."
                     raise TypeError(msg)
                 customized_inputs = OTXSampleBatch(
-                    batch_size=len(datamodule),
                     images=[torch.tensor(img) for img in datamodule],
                     imgs_info=[
                         ImageInfo(img_idx=i, ori_shape=img.shape, img_shape=img.shape)

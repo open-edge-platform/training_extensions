@@ -169,7 +169,6 @@ class OVModel:
             OTXPredictionBatch: The customized prediction batch entity.
         """
         return OTXPredictionBatch(
-            batch_size=len(outputs),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
         )
@@ -432,7 +431,7 @@ class OVModel:
                     ori_shape=img.shape,
                 ),
             )
-        return OTXSampleBatch(batch_size=batch_size, images=images, imgs_info=infos)
+        return OTXSampleBatch(images=images, imgs_info=infos)
 
     def __call__(self, *args, **kwds):
         """Call the model for inference.

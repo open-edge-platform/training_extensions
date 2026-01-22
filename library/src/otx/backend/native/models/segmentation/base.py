@@ -113,7 +113,6 @@ class OTXSegmentationModel(OTXModel):
         ]
 
         return OTXPredictionBatch(
-            batch_size=len(preds),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=[],
@@ -249,7 +248,6 @@ class OTXSegmentationModel(OTXModel):
         pred_entities = merger.merge(tile_preds, tile_infos)
 
         pred_entity = OTXPredictionBatch(
-            batch_size=inputs.batch_size,
             images=torch.stack([pred_entity.image for pred_entity in pred_entities]),
             imgs_info=[pred_entity.img_info for pred_entity in pred_entities],
             masks=[pred_entity.masks for pred_entity in pred_entities],
@@ -276,7 +274,6 @@ class OTXSegmentationModel(OTXModel):
         outputs = self.model(inputs=inputs.images, mode="explain")
 
         return OTXPredictionBatch(
-            batch_size=len(outputs["preds"]),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=[],
@@ -296,7 +293,7 @@ class OTXSegmentationModel(OTXModel):
                     ori_shape=img.shape,
                 ),
             )
-        return OTXSampleBatch(batch_size, images, imgs_info=infos, masks=[])  # type: ignore[arg-type]
+        return OTXSampleBatch(images=images, imgs_info=infos, masks=[])  # type: ignore[arg-type]
 
     @property
     def _default_preprocessing_params(self) -> DataInputParams | dict[str, DataInputParams]:

@@ -99,7 +99,6 @@ class OTXMulticlassClsModel(OTXModel):
 
         if self.explain_mode:
             return OTXPredictionBatch(
-                batch_size=inputs.batch_size,
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
                 labels=list(outputs["labels"]),
@@ -114,7 +113,6 @@ class OTXMulticlassClsModel(OTXModel):
         preds = logits.argmax(-1, keepdim=True).unbind(0)
 
         return OTXPredictionBatch(
-            batch_size=inputs.batch_size,
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             labels=list(preds),
@@ -165,7 +163,7 @@ class OTXMulticlassClsModel(OTXModel):
         """Returns a dummy input for classification model."""
         images = torch.stack([torch.rand(3, *self.data_input_params.input_size) for _ in range(batch_size)])
         labels = [torch.LongTensor([0])] * batch_size
-        return OTXSampleBatch(batch_size=batch_size, images=images, labels=labels)
+        return OTXSampleBatch(images=images, labels=labels)
 
     def forward_for_tracing(self, image: Tensor) -> Tensor | dict[str, Tensor]:
         """Model forward function used for the model tracing during model exportation."""
@@ -176,7 +174,6 @@ class OTXMulticlassClsModel(OTXModel):
         outputs = self.model(images=inputs.images, mode="explain")
 
         return OTXPredictionBatch(
-            batch_size=inputs.batch_size,
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             labels=list(outputs["preds"]),

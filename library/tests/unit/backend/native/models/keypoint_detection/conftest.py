@@ -29,7 +29,6 @@ def fxt_keypoint_det_batch_data_entity() -> OTXSampleBatch:
     labels = torch.ones(batch_size, dtype=torch.long)
 
     return OTXSampleBatch(
-        batch_size=2,
         images=tv_tensor,
         imgs_info=img_infos,
         bboxes=[bboxes for _ in range(batch_size)],

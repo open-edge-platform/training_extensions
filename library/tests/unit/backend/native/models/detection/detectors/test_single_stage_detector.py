@@ -50,7 +50,6 @@ class TestSingleStageDetector:
     def batch(self):
         inputs = torch.randn(1, 3, 32, 32)
         return OTXPredictionBatch(
-            batch_size=1,
             imgs_info=ImageInfo(img_idx=0, img_shape=(32, 32), ori_shape=(32, 32)),
             images=inputs,
             bboxes=[torch.tensor([[0.5, 0.5, 0.5, 0.5]])],

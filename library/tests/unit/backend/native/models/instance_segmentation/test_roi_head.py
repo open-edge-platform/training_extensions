@@ -23,7 +23,6 @@ from otx.data.entity.sample import OTXSampleBatch
 @pytest.fixture
 def fxt_inst_seg_batch_entity() -> OTXSampleBatch:
     return OTXSampleBatch(
-        batch_size=1,
         images=[torch.empty((3, 480, 480))],
         bboxes=[torch.Tensor([[0.0, 0.0, 240, 240], [240, 240, 480, 480]])],
         labels=[torch.LongTensor([0, 1])],
@@ -42,7 +41,6 @@ def fxt_inst_seg_batch_entity() -> OTXSampleBatch:
 @pytest.fixture
 def fxt_inst_seg_batch_entity_with_ignored_label() -> OTXSampleBatch:
     return OTXSampleBatch(
-        batch_size=1,
         images=[torch.empty((3, 480, 480))],
         bboxes=[torch.Tensor([[0.0, 0.0, 240, 240], [240, 240, 480, 480]])],
         labels=[torch.LongTensor([0, 1])],

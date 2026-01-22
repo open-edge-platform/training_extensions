@@ -161,7 +161,6 @@ class TwoStageDetector(nn.Module):
         # Copy data entity and set gt_labels to 0 in RPN
         rpn_entity = OTXSampleBatch(
             images=torch.empty(0, 1, 0, 0),
-            batch_size=batch_inputs.batch_size,
             imgs_info=batch_inputs.imgs_info,  # type: ignore[union-attr]
             bboxes=batch_inputs.bboxes,
             masks=batch_inputs.masks,

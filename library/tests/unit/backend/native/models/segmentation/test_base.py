@@ -32,7 +32,6 @@ class TestOTXSegmentationModel:
     @pytest.fixture
     def batch_data_entity(self):
         return OTXSampleBatch(
-            batch_size=2,
             images=torch.randn(2, 3, 224, 224),
             imgs_info=[],
             masks=[torch.randn(1, 224, 224), torch.randn(1, 224, 224)],

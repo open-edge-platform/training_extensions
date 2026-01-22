@@ -255,7 +255,6 @@ class MaskRCNNTV(OTXInstanceSegModel):
             feature_vector = outputs["feature_vector"].detach().cpu().numpy()
 
             return OTXPredictionBatch(
-                batch_size=len(outputs),
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
                 scores=scores,
@@ -267,7 +266,6 @@ class MaskRCNNTV(OTXInstanceSegModel):
             )
 
         return OTXPredictionBatch(
-            batch_size=len(outputs),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=scores,

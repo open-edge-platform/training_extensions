@@ -89,7 +89,6 @@ class OVMultilabelClassificationModel(OVModel):
             # Squeeze dim 2D => 1D, (1, internal_dim) => (internal_dim)
             predicted_f_vectors = [out.feature_vector[0] for out in outputs]
             return OTXPredictionBatch(
-                batch_size=len(outputs),
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
                 scores=pred_scores,
@@ -99,7 +98,6 @@ class OVMultilabelClassificationModel(OVModel):
             )
 
         return OTXPredictionBatch(
-            batch_size=len(outputs),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=pred_scores,

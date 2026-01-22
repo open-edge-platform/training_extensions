@@ -119,7 +119,6 @@ class OTXKeypointDetectionModel(OTXModel):
             scores.append(score)
 
         return OTXPredictionBatch(
-            batch_size=len(outputs),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             keypoints=keypoints,
@@ -192,8 +191,7 @@ class OTXKeypointDetectionModel(OTXModel):
             )
 
         return OTXSampleBatch(
-            batch_size,
-            images,
+            images=images,
             labels=[],
             bboxes=[],
             keypoints=[],

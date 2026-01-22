@@ -236,13 +236,11 @@ def fxt_multi_class_cls_data_entity() -> tuple[MockSample, OTXSampleBatch, OTXSa
     # define data entity
     single_data_entity = MockSample(image=fake_images[0], img_info=fake_image_info, label=fake_labels)
     batch_data_entity = OTXSampleBatch(
-        batch_size=1,
         images=fake_images,
         imgs_info=[fake_image_info],
         labels=[fake_labels],
     )
     batch_pred_data_entity = OTXPredictionBatch(
-        batch_size=1,
         images=fake_images,
         imgs_info=[fake_image_info],
         labels=[fake_labels],
@@ -262,13 +260,11 @@ def fxt_multi_label_cls_data_entity() -> tuple[MockSample, OTXSampleBatch, OTXSa
     # define data entity
     single_data_entity = MockSample(image=fake_images[0], img_info=fake_image_info, label=fake_labels)
     batch_data_entity = OTXSampleBatch(
-        batch_size=1,
         images=fake_images,
         imgs_info=[fake_image_info],
         labels=[fake_labels],
     )
     batch_pred_data_entity = OTXPredictionBatch(
-        batch_size=1,
         images=fake_images,
         imgs_info=[fake_image_info],
         labels=[fake_labels],
@@ -288,13 +284,11 @@ def fxt_h_label_cls_data_entity() -> tuple[MockSample, OTXSampleBatch, OTXPredic
     # define data entity
     single_data_entity = MockSample(image=fake_images[0], img_info=fake_image_info, label=fake_labels)
     batch_data_entity = OTXSampleBatch(
-        batch_size=1,
         images=fake_images,
         imgs_info=[fake_image_info],
         labels=[fake_labels],
     )
     batch_pred_data_entity = OTXPredictionBatch(
-        batch_size=1,
         images=fake_images,
         imgs_info=[fake_image_info],
         labels=[fake_labels],
@@ -319,14 +313,12 @@ def fxt_det_data_entity() -> tuple[tuple, MockSample, OTXSampleBatch]:
         label=fake_labels,
     )
     batch_data_entity = OTXSampleBatch(
-        batch_size=1,
         images=[Image(fake_image)],
         imgs_info=[fake_image_info],
         bboxes=[fake_bboxes],
         labels=[fake_labels],
     )
     batch_pred_data_entity = OTXPredictionBatch(
-        batch_size=1,
         images=[Image(fake_image)],
         imgs_info=[fake_image_info],
         bboxes=[fake_bboxes],
@@ -355,7 +347,6 @@ def fxt_inst_seg_data_entity() -> tuple[tuple, MockSample, OTXSampleBatch]:
         label=fake_labels,
     )
     batch_data_entity = OTXSampleBatch(
-        batch_size=1,
         images=[Image(data=fake_image)],
         imgs_info=[fake_image_info],
         bboxes=[fake_bboxes],
@@ -363,7 +354,6 @@ def fxt_inst_seg_data_entity() -> tuple[tuple, MockSample, OTXSampleBatch]:
         masks=[fake_masks],
     )
     batch_pred_data_entity = OTXPredictionBatch(
-        batch_size=1,
         images=[Image(data=fake_image)],
         imgs_info=[fake_image_info],
         bboxes=[fake_bboxes],
@@ -387,13 +377,11 @@ def fxt_seg_data_entity() -> tuple[tuple, MockSample, OTXSampleBatch]:
         masks=fake_masks,
     )
     batch_data_entity = OTXSampleBatch(
-        batch_size=1,
         images=[Image(data=torch.from_numpy(fake_image))],
         imgs_info=[fake_image_info],
         masks=[fake_masks],
     )
     batch_pred_data_entity = OTXPredictionBatch(
-        batch_size=1,
         images=[Image(data=torch.from_numpy(fake_image))],
         imgs_info=[fake_image_info],
         masks=[fake_masks],

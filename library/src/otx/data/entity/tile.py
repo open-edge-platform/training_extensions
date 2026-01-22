@@ -113,7 +113,6 @@ class TileBatchDetDataEntity(OTXTileBatchDataEntity):
                 (
                     tile_tile_infos[i : i + self.batch_size],
                     OTXSampleBatch(
-                        batch_size=self.batch_size,
                         images=stacked_images,
                         imgs_info=updated_img_info,
                     ),
@@ -196,7 +195,6 @@ class TileBatchInstSegDataEntity(OTXTileBatchDataEntity):
             (
                 tile_tile_infos[i : i + self.batch_size],
                 OTXSampleBatch(
-                    batch_size=self.batch_size,
                     images=tiles[i : i + self.batch_size],
                     imgs_info=tile_img_infos[i : i + self.batch_size],
                 ),
@@ -274,7 +272,6 @@ class TileBatchSegDataEntity(OTXTileBatchDataEntity):
             (
                 tile_tile_infos[i : i + self.batch_size],
                 OTXSampleBatch(
-                    batch_size=self.batch_size,
                     images=tv_tensors.wrap(torch.stack(tiles[i : i + self.batch_size]), like=tiles[0]),
                     imgs_info=tile_img_infos[i : i + self.batch_size],
                     masks=[torch.empty((1, 1, 1)) for _ in range(self.batch_size)],

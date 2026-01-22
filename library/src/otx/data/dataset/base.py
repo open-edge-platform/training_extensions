@@ -99,7 +99,6 @@ def _default_collate_fn(items: list[OTXSample]) -> OTXSampleBatch:
         images = image_tensors
 
     return OTXSampleBatch(
-        batch_size=len(items),
         images=images,
         labels=_collect_optional_attr(items, "label"),
         masks=_collect_optional_attr(items, "masks"),

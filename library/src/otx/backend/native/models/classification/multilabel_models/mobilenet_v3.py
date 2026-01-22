@@ -113,7 +113,6 @@ class MobileNetV3MultilabelCls(OTXMultilabelClsModel):
         scores = torch.unbind(logits, 0)
 
         return OTXPredictionBatch(
-            batch_size=inputs.batch_size,
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=list(scores),

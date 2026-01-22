@@ -87,7 +87,6 @@ class OVKeypointDetectionModel(OVModel):
             scores.append(score)
 
         return OTXPredictionBatch(
-            batch_size=len(outputs),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             keypoints=keypoints,

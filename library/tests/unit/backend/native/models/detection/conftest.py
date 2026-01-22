@@ -40,7 +40,6 @@ def fxt_detection_batch(batch_size: int = 2) -> OTXSampleBatch:
     ]
 
     return OTXSampleBatch(
-        batch_size=batch_size,
         images=images,
         bboxes=bboxes,
         labels=labels,

@@ -165,7 +165,6 @@ class OTXHlabelClsModel(OTXModel):
 
         if self.explain_mode:
             return OTXPredictionBatch(
-                batch_size=inputs.batch_size,
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
                 labels=list(labels),
@@ -175,7 +174,6 @@ class OTXHlabelClsModel(OTXModel):
             )
 
         return OTXPredictionBatch(
-            batch_size=inputs.batch_size,
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             labels=list(labels),
@@ -247,14 +245,13 @@ class OTXHlabelClsModel(OTXModel):
         """Returns a dummy input for classification OV model."""
         images = torch.stack([torch.rand(3, *self.data_input_params.input_size) for _ in range(batch_size)])
         labels = [torch.LongTensor([0])] * batch_size
-        return OTXSampleBatch(batch_size=batch_size, images=images, labels=labels)
+        return OTXSampleBatch(images=images, labels=labels)
 
     def forward_explain(self, inputs: OTXSampleBatch) -> OTXPredictionBatch:
         """Model forward explain function."""
         outputs = self.model(images=inputs.images, mode="explain")
 
         return OTXPredictionBatch(
-            batch_size=inputs.batch_size,
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             labels=list(outputs["preds"]),

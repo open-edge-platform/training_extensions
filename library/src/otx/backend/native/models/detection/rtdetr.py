@@ -201,7 +201,6 @@ class RTDETR(OTXDetectionModel):
                 raise ValueError(msg)
 
             return OTXPredictionBatch(
-                batch_size=len(outputs),
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
                 scores=scores,
@@ -212,7 +211,6 @@ class RTDETR(OTXDetectionModel):
             )
 
         return OTXPredictionBatch(
-            batch_size=len(outputs),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=scores,

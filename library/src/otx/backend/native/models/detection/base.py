@@ -243,7 +243,6 @@ class OTXDetectionModel(OTXModel):
                 raise ValueError(msg)
 
             return OTXPredictionBatch(
-                batch_size=len(predictions),
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
                 scores=scores,
@@ -257,7 +256,6 @@ class OTXDetectionModel(OTXModel):
             )
 
         return OTXPredictionBatch(
-            batch_size=len(predictions),
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=scores,
@@ -292,7 +290,6 @@ class OTXDetectionModel(OTXModel):
         pred_entities = merger.merge(tile_preds, tile_infos)
 
         pred_entity = OTXPredictionBatch(
-            batch_size=inputs.batch_size,
             images=[pred_entity.image for pred_entity in pred_entities],
             imgs_info=[pred_entity.img_info for pred_entity in pred_entities],
             scores=[pred_entity.scores for pred_entity in pred_entities],
@@ -425,7 +422,7 @@ class OTXDetectionModel(OTXModel):
                     ori_shape=img.shape,
                 ),
             )
-        return OTXSampleBatch(batch_size, images, imgs_info=infos)  # type: ignore[arg-type]
+        return OTXSampleBatch(images=images, imgs_info=infos)
 
     def forward_explain(self, inputs: OTXSampleBatch | OTXTileBatchDataEntity) -> OTXPredictionBatch:
         """Model forward function."""

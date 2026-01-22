@@ -113,7 +113,6 @@ class MobileNetV3HLabelCls(OTXHlabelClsModel):
             labels = outputs.argmax(-1, keepdim=True)
 
         return OTXPredictionBatch(
-            batch_size=inputs.batch_size,
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=list(scores),

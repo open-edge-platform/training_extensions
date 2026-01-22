@@ -57,7 +57,6 @@ def detection_model():
 def sample_predictions():
     """Create sample prediction data."""
     return OTXPredictionBatch(
-        batch_size=2,
         images=[torch.rand(3, 416, 416), torch.rand(3, 416, 416)],
         imgs_info=[
             ImageInfo(img_idx=0, img_shape=(3, 416, 416), ori_shape=(3, 416, 416)),
@@ -92,7 +91,6 @@ def sample_predictions():
 def sample_batch():
     """Create sample input batch."""
     return OTXSampleBatch(
-        batch_size=2,
         images=[torch.rand(3, 416, 416), torch.rand(3, 416, 416)],
         imgs_info=[
             ImageInfo(img_idx=0, img_shape=(3, 416, 416), ori_shape=(3, 416, 416)),
@@ -214,7 +212,6 @@ class TestFilterOutputsByThreshold:
     def test_filtering_with_none_outputs(self, detection_model):
         """Test filtering when outputs have None values."""
         preds_with_none = OTXPredictionBatch(
-            batch_size=1,
             images=[torch.rand(3, 416, 416)],
             imgs_info=[ImageInfo(img_idx=0, img_shape=(3, 416, 416), ori_shape=(3, 416, 416))],
             scores=None,
@@ -232,7 +229,6 @@ class TestFilterOutputsByThreshold:
     def test_filtering_empty_predictions(self, detection_model):
         """Test filtering with empty prediction lists."""
         empty_preds = OTXPredictionBatch(
-            batch_size=2,
             images=[torch.rand(3, 416, 416), torch.rand(3, 416, 416)],
             imgs_info=[
                 ImageInfo(img_idx=0, img_shape=(3, 416, 416), ori_shape=(3, 416, 416)),
@@ -429,7 +425,6 @@ class TestIntegration:
         ) as mock_convert:
             # Setup sample predictions with scores above and below threshold
             test_preds = OTXPredictionBatch(
-                batch_size=1,
                 images=[torch.rand(3, 416, 416)],
                 imgs_info=[ImageInfo(img_idx=0, img_shape=(3, 416, 416), ori_shape=(3, 416, 416))],
                 scores=[torch.tensor([0.9, 0.5, 0.3])],  # Only 0.9 should remain after filtering
