@@ -1,12 +1,15 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { useState } from 'react';
+
 import { Button, ButtonGroup, Content, Dialog, Divider, Flex, Heading, Link, Text, toast } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { paths } from '../../../constants/paths';
 import { useTrainModelMutation } from '../hooks/api/use-train-model-mutation';
-import { TrainModelDialogContent } from './train-model-dialog-content';
+import { BasicTrainModelContent } from './basic-train-model-content.component';
+import { TrainModelDialogLayout } from './train-model-dialog-layout';
 import { useTrainModel } from './train-model-provider.component';
 
 type TrainModelDialogProps = {
@@ -17,6 +20,7 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
     const { selectedTrainingDevice, selectedModelArchitectureId, selectedDatasetRevision } = useTrainModel();
     const trainModelMutation = useTrainModelMutation();
     const projectId = useProjectIdentifier();
+    const [isAdvancedSettingsOpen, setIsAdvancedSettingsOpen] = useState<boolean>(false);
 
     const isStartButtonDisabled =
         selectedModelArchitectureId === null || selectedTrainingDevice === null || selectedDatasetRevision === null;
@@ -55,12 +59,17 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
             <Heading>Select a model to train</Heading>
             <Divider size={'S'} />
             <Content>
-                <TrainModelDialogContent />
+                <TrainModelDialogLayout>
+                    {isAdvancedSettingsOpen ? <></> : <BasicTrainModelContent />}
+                </TrainModelDialogLayout>
             </Content>
             <Divider size={'S'} />
             <ButtonGroup>
                 <Button variant={'secondary'} onPress={onClose}>
                     Cancel
+                </Button>
+                <Button variant={'secondary'} onPress={() => setIsAdvancedSettingsOpen((prevState) => !prevState)}>
+                    {isAdvancedSettingsOpen ? 'Back' : 'Advanced settings'}
                 </Button>
                 <Button variant={'accent'} onPress={trainModel} isDisabled={isStartButtonDisabled}>
                     Start

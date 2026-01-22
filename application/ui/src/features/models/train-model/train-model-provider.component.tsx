@@ -11,9 +11,11 @@ import {
     RecommendedModelArchitectures,
     TrainingDevice,
 } from '../../../constants/shared-types';
+import { TrainingConfiguration } from '../configuration.interface';
 import { useGetActiveModelArchitectureId } from '../hooks/api/use-get-active-model-architecture-id.hook';
 import { useGetDatasetRevisions } from '../hooks/api/use-get-dataset-revisions';
 import { useGetTaskModelArchitectures } from '../hooks/api/use-get-model-architectures.hook';
+import { useGetTrainingConfiguration } from '../hooks/api/use-get-training-configuration';
 import { useGetTrainingDevices } from '../hooks/api/use-get-training-devices';
 
 type TrainModelContextProps = {
@@ -31,6 +33,9 @@ type TrainModelContextProps = {
     datasetRevisions: DatasetRevision[];
     selectedDatasetRevision: string | null;
     onSelectDatasetRevision: (datasetRevision: string | null) => void;
+
+    trainingConfiguration: TrainingConfiguration | undefined;
+    onTrainingConfigurationChange: (trainingConfiguration: TrainingConfiguration) => void;
 };
 
 const TrainModelContext = createContext<TrainModelContextProps | null>(null);
@@ -69,6 +74,7 @@ export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
     const { data } = useGetTaskModelArchitectures();
     const { data: trainingDevices } = useGetTrainingDevices();
     const { data: datasetRevisions } = useGetDatasetRevisions();
+
     const activeModelArchitectureId = useGetActiveModelArchitectureId();
 
     const modelArchitectures: ModelArchitectureWithPerformanceCategory[] = getModelArchitectures(
@@ -83,6 +89,9 @@ export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
     const [selectedModelArchitectureId, setSelectedModelArchitectureId] = useState<string | null>(
         activeModelArchitecture?.id ?? null
     );
+
+    const [trainingConfiguration, setTrainingConfiguration, defaultTrainingConfiguration] =
+        useGetTrainingConfiguration(selectedModelArchitectureId);
 
     const [selectedTrainingDevice, setSelectedTrainingDevice] = useState<DeviceType | null>(
         trainingDevices?.at(0)?.type ?? null
@@ -108,6 +117,9 @@ export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
                 datasetRevisions,
                 selectedDatasetRevision,
                 onSelectDatasetRevision: setSelectedDatasetRevision,
+
+                trainingConfiguration,
+                onTrainingConfigurationChange: setTrainingConfiguration,
             }}
         >
             {children}
