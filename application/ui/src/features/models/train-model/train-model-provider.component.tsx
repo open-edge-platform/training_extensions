@@ -7,6 +7,7 @@ import {
     DatasetRevision,
     DeviceType,
     ModelArchitecture,
+    ModelArchitectureWithPerformanceCategory,
     RecommendedModelArchitectures,
     TrainingDevice,
 } from '../../../constants/shared-types';
@@ -16,8 +17,7 @@ import { useGetTaskModelArchitectures } from '../hooks/api/use-get-model-archite
 import { useGetTrainingDevices } from '../hooks/api/use-get-training-devices';
 
 type TrainModelContextProps = {
-    modelArchitectures: ModelArchitecture[];
-    recommendedModelArchitectures: RecommendedModelArchitectures | null;
+    modelArchitectures: ModelArchitectureWithPerformanceCategory[];
 
     activeModelArchitectureId: string | undefined;
 
@@ -39,11 +39,42 @@ type TrainModelProviderProps = {
     children: ReactNode;
 };
 
+const getModelArchitectures = (
+    modelArchitectures: ModelArchitecture[],
+    recommendedModelArchitectures: RecommendedModelArchitectures | null
+): ModelArchitectureWithPerformanceCategory[] => {
+    if (recommendedModelArchitectures === null) {
+        return modelArchitectures;
+    }
+
+    // Recommended architectures have the shape like { balance: "id-1", speed: "id-2", accuracy: "id-3" }
+    // Here we need to convert it to { "id-1": "balance", "id-2": "speed", "id-3": "accuracy" }
+    const swappedRecommendedModelArchitectures = Object.fromEntries(
+        Object.entries(recommendedModelArchitectures).map(([key, value]) => [value, key])
+    );
+
+    return modelArchitectures.map((modelArchitecture) => {
+        if (swappedRecommendedModelArchitectures[modelArchitecture.id] === undefined) {
+            return modelArchitecture;
+        }
+
+        return {
+            ...modelArchitecture,
+            performanceCategory: swappedRecommendedModelArchitectures[modelArchitecture.id],
+        };
+    });
+};
+
 export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
     const { data } = useGetTaskModelArchitectures();
     const { data: trainingDevices } = useGetTrainingDevices();
     const { data: datasetRevisions } = useGetDatasetRevisions();
     const activeModelArchitectureId = useGetActiveModelArchitectureId();
+
+    const modelArchitectures: ModelArchitectureWithPerformanceCategory[] = getModelArchitectures(
+        data.model_architectures,
+        data.top_picks
+    );
 
     const activeModelArchitecture = data.model_architectures.find(
         (modelArchitecture) => modelArchitecture.id === activeModelArchitectureId
@@ -63,8 +94,7 @@ export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
     return (
         <TrainModelContext
             value={{
-                modelArchitectures: data.model_architectures,
-                recommendedModelArchitectures: data.top_picks,
+                modelArchitectures,
 
                 activeModelArchitectureId,
 
