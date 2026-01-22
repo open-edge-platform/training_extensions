@@ -44,13 +44,13 @@ export const ExpandableSearch = ({ value, onChange }: ExpandableSearchProps) => 
                     ref={focusInputRef}
                     onChange={onChange}
                     onBlur={handleBlur}
-                    placeholder='Search models...'
+                    placeholder={'Search models...'}
                     aria-label={'Search models'}
                     UNSAFE_className={classes.searchField}
                     width={'size-2400'}
                 />
             ) : (
-                <ActionButton isQuiet onPress={handleToggle} aria-label={'Search'}>
+                <ActionButton isQuiet onPress={handleToggle} aria-label={'Search models'}>
                     <Search />
                 </ActionButton>
             )}

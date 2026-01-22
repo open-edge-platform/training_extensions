@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-export type TaskType = 'detection' | 'instance_segmentation' | 'classification';
+import { TaskType } from '../../../constants/shared-types';
 
 export type TaskOption = {
     id: string;

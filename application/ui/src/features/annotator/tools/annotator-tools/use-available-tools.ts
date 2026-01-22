@@ -4,7 +4,7 @@
 import { BoundingBox, Polygon, SegmentAnythingIcon, Selector } from '@geti/ui/icons';
 import { useProjectTask } from 'hooks/use-project-task.hook';
 
-import { HOTKEYS } from '../../../dataset/media-preview/primary-toolbar/hotkeys/hotkeys-definition';
+import { HOTKEYS } from '../../../../shared/hotkeys-definition';
 import { ToolConfig } from '../interface';
 
 const SELECTION_TOOL_CONFIG: ToolConfig = {

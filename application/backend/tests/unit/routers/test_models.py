@@ -22,6 +22,7 @@ def fxt_model() -> ModelView:
         name="Object_Detection_YOLOX (id-short)",
         architecture="Object_Detection_YOLOX",
         training_info=TrainingInfo(status=TrainingStatus.NOT_STARTED, label_schema_revision={}, configuration={}),  # type: ignore
+        size=0,
     )  # type: ignore
 
 

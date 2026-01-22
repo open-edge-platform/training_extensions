@@ -180,6 +180,19 @@ class MediaService(BaseSessionManagedService):
         media = self.get_media_by_id(project_id=project.id, media_id=media_id)
         return self.projects_dir / f"{project.id}/dataset/{media.id}-thumb.jpg"
 
+    def generate_media_thumbnail(self, project: Project, media_id: UUID) -> Image.Image:
+        """Regenerate a media thumbnail by its ID"""
+        media = self.get_media_by_id(project_id=project.id, media_id=media_id)
+        dataset_dir = self.projects_dir / f"{project.id}/dataset"
+        binary_path = dataset_dir / f"{media.id}.{media.format}"
+        try:
+            with Image.open(binary_path) as image:
+                thumbnail = crop_to_thumbnail(image=image, target_width=64, target_height=64)
+        except UnidentifiedImageError:
+            logger.error("Failed to open image {} for thumbnail generation", binary_path)
+            raise InvalidImageError("Failed to open image for thumbnail generation.")
+        return thumbnail
+
     def delete_media(self, project: Project, media_id: UUID) -> None:
         """Delete a media by its ID"""
         media = self.get_media_by_id(project_id=project.id, media_id=media_id)

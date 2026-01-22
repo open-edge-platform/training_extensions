@@ -31,10 +31,14 @@ export const ModelVariantsTabs = ({ model }: ModelVariantsTabsProps) => {
             </TabList>
             <TabPanels width={0} minWidth={'100%'} UNSAFE_className={classes.tabPanels}>
                 <Item key='openvino'>
-                    <ModelVariantTable model={model} />
+                    <ModelVariantTable model={model} format='openvino' />
                 </Item>
-                <Item key='pytorch'>Pytorch table here</Item>
-                <Item key='onnx'>Onnx table here</Item>
+                <Item key='pytorch'>
+                    <ModelVariantTable model={model} format='pytorch' />
+                </Item>
+                <Item key='onnx'>
+                    <ModelVariantTable model={model} format='onnx' />
+                </Item>
             </TabPanels>
         </Tabs>
     );

@@ -10,7 +10,10 @@ import { expect, test as testBase } from '@playwright/test';
 import { HttpResponse } from 'msw';
 
 import { handlers, http } from '../src/api/utils';
+import { BoundingBoxToolPage } from './annotator/bounding-box-tool-page';
 import { StreamPage } from './inference/stream-page';
+import { JobsPage } from './jobs/jobs-page';
+import { ModelsPage } from './models/models-page';
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -18,6 +21,9 @@ const dirname = path.dirname(filename);
 interface Fixtures {
     network: NetworkFixture;
     streamPage: StreamPage;
+    modelsPage: ModelsPage;
+    jobsPage: JobsPage;
+    boundingBoxTool: BoundingBoxToolPage;
 }
 
 const test = testBase.extend<Fixtures>({
@@ -62,6 +68,21 @@ const test = testBase.extend<Fixtures>({
                     },
                 ]);
             }),
+            http.get('/api/projects/{project_id}', () => {
+                return HttpResponse.json({
+                    id: '123',
+                    name: 'Test Project',
+                    task: {
+                        task_type: 'detection',
+                        exclusive_labels: false,
+                        labels: [
+                            { id: '1', color: 'red', name: 'person' },
+                            { id: '2', color: 'blue', name: 'car' },
+                        ],
+                    },
+                    active_pipeline: true,
+                });
+            }),
             http.delete('/api/projects/{project_id}', () => {
                 return HttpResponse.json(null, { status: 204 });
             }),
@@ -93,7 +114,22 @@ const test = testBase.extend<Fixtures>({
     }),
     streamPage: async ({ page }, use) => {
         const streamPage = new StreamPage(page);
+
         await use(streamPage);
+    },
+    modelsPage: async ({ page }, use) => {
+        const modelsPage = new ModelsPage(page);
+
+        await use(modelsPage);
+    },
+    jobsPage: async ({ page }, use) => {
+        const jobsPage = new JobsPage(page);
+
+        await use(jobsPage);
+    },
+    boundingBoxTool: async ({ page }, use) => {
+        const boundingBoxTool = new BoundingBoxToolPage(page);
+        await use(boundingBoxTool);
     },
 });
 

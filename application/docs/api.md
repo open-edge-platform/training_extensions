@@ -55,24 +55,32 @@
 | ------ | ------------------------------------- | ------- | ------------ | ------------------------------------------------ |
 | `GET`  | `/api/projects/<id>/pipeline/metrics` | -       | metrics info | Get inference metrics (latency, throughput, ...) |
 
-## Datasets
+## Media
 
-| Method   | Path                                              | Payload | Return                | Description                                        |
-| -------- | ------------------------------------------------- | ------- | --------------------- | -------------------------------------------------- |
-| `GET`    | `/api/projects/<id>/dataset/items`                | -       | list of dataset items | List the dataset items (option 'with_annotations') |
-| `GET`    | `/api/projects/<id>/dataset/items/<id>`           | -       | dataset item info     | Get info about a dataset item                      |
-| `GET`    | `/api/projects/<id>/dataset/items/<id>/binary`    | -       | binary                | Get the image data of a dataset item (full res)    |
-| `GET`    | `/api/projects/<id>/dataset/items/<id>/thumbnail` | -       | binary                | Get the thumbnail of a dataset item                |
-| `POST`   | `/api/projects/<id>/dataset/items`                | binary  | media info            | Upload an image to the dataset                     |
-| `DELETE` | `/api/projects/<id>/dataset/items/<id>`           | -       | -                     | Delete a dataset item                              |
+| Method   | Path                                              | Payload | Return                         | Description                                |
+| -------- |---------------------------------------------------| ------- |--------------------------------|--------------------------------------------|
+| `GET`    | `/api/projects/<id>/dataset/media`                | -       | list of dataset media          | List the dataset media (images and videos) |
+| `GET`    | `/api/projects/<id>/dataset/media/<id>`           | -       | dataset media info             | Get info about a dataset media             |
+| `GET`    | `/api/projects/<id>/dataset/media/<id>/frames`    | -       | list of annotated video frames | List the annotated video frames            |
+| `GET`    | `/api/projects/<id>/dataset/media/<id>/binary`    | -       | binary                         | Get the image data of a media (full res)   |
+| `GET`    | `/api/projects/<id>/dataset/media/<id>/thumbnail` | -       | binary                         | Get the thumbnail of a media        |
+| `POST`   | `/api/projects/<id>/dataset/media`                | binary  | media info                     | Upload an image or a video to the dataset  |
+| `DELETE` | `/api/projects/<id>/dataset/media/<id>`           | -       | -                              | Delete a dataset media                     |
 
 ### Annotations
 
 | Method   | Path                                                | Payload         | Return          | Description                               |
 | -------- | --------------------------------------------------- | --------------- | --------------- | ----------------------------------------- |
-| `GET`    | `/api/projects/<id>/dataset/items/<id>/annotations` | -               | annotation info | Get the annotation/prediction for a media |
-| `POST`   | `/api/projects/<id>/dataset/items/<id>/annotations` | annotation info | annotation info | Annotate a media                          |
-| `DELETE` | `/api/projects/<id>/dataset/items/<id>/annotations` | -               | -               | Delete the annotation for a media         |
+| `GET`    | `/api/projects/<id>/dataset/media/<id>/annotations` | -               | annotation info | Get the annotation/prediction for a media |
+| `POST`   | `/api/projects/<id>/dataset/media/<id>/annotations` | annotation info | annotation info | Annotate a media                          |
+| `DELETE` | `/api/projects/<id>/dataset/media/<id>/annotations` | -               | -               | Delete the annotation for a media         |
+
+## Dataset items
+
+| Method   | Path                                              | Payload | Return                | Description                                        |
+| -------- | ------------------------------------------------- | ------- | --------------------- | -------------------------------------------------- |
+| `GET`    | `/api/projects/<id>/dataset/items`                | -       | list of dataset items | List the dataset items (option 'with_annotations') |
+| `GET`    | `/api/projects/<id>/dataset/items/<id>`           | -       | dataset item info     | Get info about a dataset item                      |
 
 ### Tags
 

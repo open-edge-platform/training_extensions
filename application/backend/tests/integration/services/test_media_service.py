@@ -654,6 +654,45 @@ class TestMediaServiceIntegration:
         assert excinfo.value.resource_type == ResourceType.MEDIA
         assert excinfo.value.resource_id == str(non_existent_id)
 
+    def test_generate_media_thumbnail(
+        self,
+        tmp_path: Path,
+        fxt_projects_dir: Path,
+        fxt_media_service: MediaService,
+        fxt_project_with_media: tuple[Project, list[MediaDB]],
+    ):
+        """Test generating a dataset item thumbnail returns a PIL Image."""
+        project, db_media_list = fxt_project_with_media
+        media = db_media_list[0]
+
+        # Create the dataset directory and a test image file
+        dataset_dir = tmp_path / fxt_projects_dir / str(project.id) / "dataset"
+        dataset_dir.mkdir(parents=True, exist_ok=True)
+        image_path = dataset_dir / f"{media.id}.{media.format}"
+        test_image = Image.new("RGB", (1024, 768), color="red")
+        test_image.save(image_path)
+
+        thumbnail = fxt_media_service.generate_media_thumbnail(project=project, media_id=UUID(media.id))
+
+        assert isinstance(thumbnail, Image.Image)
+        assert thumbnail.width == 64
+        assert thumbnail.height == 64
+
+    def test_generate_media_thumbnail_not_found(
+        self,
+        fxt_media_service: MediaService,
+        fxt_project_with_media: tuple[Project, list[MediaDB]],
+    ):
+        """Test generating a thumbnail for a non-existent dataset item raises error."""
+        project, db_media_list = fxt_project_with_media
+        non_existent_id = uuid4()
+
+        with pytest.raises(ResourceNotFoundError) as excinfo:
+            fxt_media_service.generate_media_thumbnail(project=project, media_id=non_existent_id)
+
+        assert excinfo.value.resource_type == ResourceType.MEDIA
+        assert excinfo.value.resource_id == str(non_existent_id)
+
     def test_delete_media(
         self,
         fxt_media_service: MediaService,

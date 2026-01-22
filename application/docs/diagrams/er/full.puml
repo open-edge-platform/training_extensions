@@ -68,13 +68,23 @@ entity(DatasetRevision) {
   ...
 }
 
-entity(DatasetItem) {
+entity(Media) {
   pk(id) : UUID
+  type : TEXT
   name : TEXT
   format : TEXT
   width : INTEGER
   height : INTEGER
   size : INTEGER
+' Video specific fields
+  fps : INTEGER
+  frame_count : INTEGER
+' Video frame specific field
+  timestamp: INTEGER
+}
+
+entity(DatasetItem) {
+  pk(id) : UUID
   subset : TEXT
   tags : LIST[TEXT]
 }
@@ -116,10 +126,12 @@ InferencePipeline }o--|| Sink : "A pipeline has one sink"
 InferencePipeline ||--o{ DataCollectionPolicy : "A pipeline may collect data\n based on multiple criteria"
 InferencePipeline ||--|| ModelRevision : "A pipeline uses\n one model\n for inference"
 
-Dataset ||---o{ DatasetItem: "The dataset is \n the set of all \n media of the project"
+Dataset ||---o{ DatasetItem: "The dataset is \n the set of all \n items of the project"
+Dataset ||---o{ Media: "The dataset contains \n all \n media of the project"
 Dataset ||---o{ DatasetView
 DatasetItem ||--o| Annotation : "Every media has an annotation,\n or a model-generated prediction,\n or it is unannotated"
 DatasetItem }o---o| "Source " : "Each media is acquired\n from a source, or\n uploaded by the user"
+DatasetItem ||---o| "Media" : "Dataset item refers \n to a certain media (except video)"
 DatasetView ||---o{ DatasetItem: "A view is a set of media\n filtered by some criteria"
 
 ModelRevision ||---o{ ModelRevision : "New revisions are created\n after fine-tuning the weights \n of the parent revision"

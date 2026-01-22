@@ -60,7 +60,7 @@ export const ResizeAnchor = ({
         >
             <rect
                 fillOpacity={1.0}
-                transform-origin={`${x}px ${y}px`}
+                style={{ transformOrigin: `${x}px ${y}px` }}
                 x={x - size / 2}
                 y={y - size / 2}
                 width={size}
