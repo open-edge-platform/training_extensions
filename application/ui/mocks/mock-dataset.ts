@@ -3,15 +3,15 @@
 
 import { components } from '../src/api/openapi-spec';
 
-type DatasetItemView = components['schemas']['DatasetItemView'];
+type MediaView = components['schemas']['MediaView'];
 
-export const mockedDatasetItem = (props: Partial<DatasetItemView> = {}): DatasetItemView => ({
+export const mockedMedia = (props: Partial<MediaView> = {}): MediaView => ({
     id: 'item-1',
+    type: 'image',
     name: 'item-1.jpg',
     format: 'jpg',
     width: 0,
     height: 0,
     size: 0,
-    subset: 'unassigned',
     ...props,
 });
