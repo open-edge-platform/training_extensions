@@ -26,23 +26,29 @@ export const GroupModelsContainer = ({ group, models }: GroupModelsContainerProp
             <GroupHeader data={group} />
             <ModelsTableHeader />
 
-            {models.map((model) => (
-                <Disclosure
-                    key={model.id}
-                    isQuiet
-                    UNSAFE_className={classes.disclosure}
-                    isExpanded={model.id ? expandedModelIds.has(model.id) : false}
-                    onExpandedChange={() => model.id && onExpandModel(model.id)}
-                    data-testid={`model-disclosure-${model.id}`}
-                >
-                    <DisclosureTitle UNSAFE_className={classes.disclosureItem}>
-                        <ModelRowContainer model={model} />
-                    </DisclosureTitle>
-                    <DisclosurePanel>
-                        <ModelDetailsTabs model={model} />
-                    </DisclosurePanel>
-                </Disclosure>
-            ))}
+            {models.map((model) => {
+                const modelId = model.id;
+
+                if (!modelId) return null;
+
+                return (
+                    <Disclosure
+                        key={modelId}
+                        isQuiet
+                        UNSAFE_className={classes.disclosure}
+                        isExpanded={expandedModelIds.has(modelId)}
+                        onExpandedChange={() => onExpandModel(modelId)}
+                        data-testid={`model-disclosure-${modelId}`}
+                    >
+                        <DisclosureTitle UNSAFE_className={classes.disclosureItem}>
+                            <ModelRowContainer model={model} />
+                        </DisclosureTitle>
+                        <DisclosurePanel>
+                            <ModelDetailsTabs modelId={modelId} />
+                        </DisclosurePanel>
+                    </Disclosure>
+                );
+            })}
         </Flex>
     );
 };
