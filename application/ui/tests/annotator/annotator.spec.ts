@@ -72,24 +72,24 @@ test('Annotator', async ({ page, boundingBoxTool }) => {
 
     await test.step('Change label selection', async () => {
         await page.getByRole('img', { name: 'annotations' }).click();
-        await page.getByRole('button', { name: 'blue-label Label Picker' }).click();
-        await page.getByTestId('popover').getByText('red-label').click();
+        await page.getByRole('button', { name: `${blueLabel.name} Label Picker` }).click();
+        await page.getByTestId('popover').getByText(redLabel.name).click();
     });
 
     await test.step('Draw a second annotation', async () => {
         await boundingBoxTool.selectTool();
         await boundingBoxTool.drawBoundingBox({ x: 300, y: 200, width: 150, height: 150 });
 
-        await expect(page.getByLabel(`label ${blueLabel.name}`).nth(1)).toBeInViewport();
+        await expect(page.getByLabel(`label ${redLabel.name}`).nth(1)).toBeInViewport();
     });
 
     await test.step('label picker updates based on selected annotation', async () => {
         await page.getByRole('button', { name: 'selection tool' }).click();
 
-        await page.getByLabel('annotation rect').nth(2).click();
-        await expect(page.getByRole('button', { name: 'blue-label Label Picker' })).toBeInViewport();
+        await page.getByLabel('annotation rect').nth(3).click();
+        await expect(page.getByRole('button', { name: `${redLabel.name} Label Picker` })).toBeInViewport();
 
         await page.getByLabel('annotation rect').nth(2).click();
-        await expect(page.getByRole('button', { name: 'red-label Label Picker' })).toBeInViewport();
+        await expect(page.getByRole('button', { name: `${blueLabel.name} Label Picker` })).toBeInViewport();
     });
 });

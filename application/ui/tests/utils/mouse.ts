@@ -9,7 +9,7 @@ type Relative = (x: number, y: number) => { x: number; y: number };
 
 export const withRelative = async (page: Page): Promise<Relative> => {
     const zoom = await getZoomLevel(page);
-    const rect = (await page.locator('id=annotations-canvas-tools').boundingBox()) ?? { x: 0, y: 0 };
+    const rect = (await page.getByTestId('annotations-canvas-tools').boundingBox()) ?? { x: 0, y: 0 };
 
     const relative = (x: number, y: number): ReturnType<Relative> => {
         return { x: x * zoom + rect.x, y: y * zoom + rect.y };
