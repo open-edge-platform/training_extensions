@@ -52,7 +52,7 @@ class FixedRatePolicyChecker(PolicyChecker):
         self.min_interval = 1.0 / policy.rate
         self.last_collect_time = 0.0
 
-    def should_collect(self, timestamp: float, confidence_scores: list[float]) -> bool:  # noqa: ARG002
+    def should_collect(self, timestamp: float, confidence_scores: list[float]) -> bool:
         time_since_last = timestamp - self.last_collect_time
         if time_since_last < self.min_interval:
             return False
