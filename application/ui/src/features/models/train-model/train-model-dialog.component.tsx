@@ -22,8 +22,7 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
         selectedModelArchitectureId === null || selectedTrainingDevice === null || selectedDatasetRevision === null;
 
     const trainModel = () => {
-        if (selectedTrainingDevice === null || selectedDatasetRevision === null || selectedModelArchitectureId === null)
-            return;
+        if (isStartButtonDisabled) return;
 
         trainModelMutation.mutate(
             {
