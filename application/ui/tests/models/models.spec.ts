@@ -129,8 +129,8 @@ test.describe('Models', () => {
 
         await modelsPage.selectGroupBy('architecture');
 
-        await expect(page.getByRole('heading', { name: 'Object_Detection_YOLOX_X' })).toBeVisible();
-        await expect(page.getByRole('heading', { name: 'Object_Detection_SSD' })).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Object_Detection_YOLOX_X', exact: true })).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Object_Detection_SSD', exact: true })).toBeVisible();
     });
 
     test('can change sort order', async ({ modelsPage }) => {
