@@ -49,18 +49,18 @@ const getModelArchitectures = (
 
     // Recommended architectures have the shape like { balance: "id-1", speed: "id-2", accuracy: "id-3" }
     // Here we need to convert it to { "id-1": "balance", "id-2": "speed", "id-3": "accuracy" }
-    const swappedRecommendedModelArchitectures = Object.fromEntries(
+    const recommendedArchitectureIdToCategory = Object.fromEntries(
         Object.entries(recommendedModelArchitectures).map(([key, value]) => [value, key])
     );
 
     return modelArchitectures.map((modelArchitecture) => {
-        if (swappedRecommendedModelArchitectures[modelArchitecture.id] === undefined) {
+        if (recommendedArchitectureIdToCategory[modelArchitecture.id] === undefined) {
             return modelArchitecture;
         }
 
         return {
             ...modelArchitecture,
-            performanceCategory: swappedRecommendedModelArchitectures[modelArchitecture.id],
+            performanceCategory: recommendedArchitectureIdToCategory[modelArchitecture.id],
         };
     });
 };
