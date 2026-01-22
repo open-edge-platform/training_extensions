@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import type { SchemaModelView } from '../../../api/openapi-spec';
+import { Model } from '../../../constants/shared-types';
 
 export type GroupByMode = 'dataset' | 'architecture';
 
@@ -27,5 +27,5 @@ export type ArchitectureGroup = {
 
 export type GroupedModels = {
     group: DatasetGroup | ArchitectureGroup;
-    models: SchemaModelView[];
+    models: Model[];
 };

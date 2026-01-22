@@ -3,8 +3,8 @@
 
 import { partition } from 'lodash-es';
 
-import { Model } from '../../../../constants/shared-types';
-import { GroupByMode, GroupedModels, SortBy } from '../types';
+import type { Model } from '../../../../constants/shared-types';
+import type { GroupByMode, GroupedModels, SortBy } from '../types';
 import { groupModelsByArchitecture, groupModelsByDataset } from './grouping';
 import { sortModels } from './sorting';
 

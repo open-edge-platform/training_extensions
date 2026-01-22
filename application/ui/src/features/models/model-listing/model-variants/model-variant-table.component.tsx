@@ -14,8 +14,7 @@ interface ModelVariantTableProps {
 }
 
 export const ModelVariantTable = ({ model, format }: ModelVariantTableProps) => {
-    const modelId = model.id ?? '';
-    const { downloadModel, isDownloading } = useDownloadModel(modelId);
+    const { downloadModel, isDownloading } = useDownloadModel(model.id);
     const variants = (model.variants ?? []).filter((variant) => variant.format === format);
 
     if (variants.length === 0) {

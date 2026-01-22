@@ -3,7 +3,7 @@
 
 import { Disclosure, DisclosurePanel, DisclosureTitle, Flex } from '@geti/ui';
 
-import { SchemaModelView } from '../../../../../api/openapi-spec';
+import type { Model } from '../../../../../constants/shared-types';
 import { ModelDetailsTabs } from '../../model-details/model-details-tabs.component';
 import { useModelListing } from '../../provider/model-listing-provider';
 import { ArchitectureGroup, DatasetGroup } from '../../types';
@@ -15,7 +15,7 @@ import classes from './group-models-container.module.scss';
 
 interface GroupModelsContainerProps {
     group: DatasetGroup | ArchitectureGroup;
-    models: SchemaModelView[];
+    models: Model[];
 }
 
 export const GroupModelsContainer = ({ group, models }: GroupModelsContainerProps) => {
@@ -28,8 +28,6 @@ export const GroupModelsContainer = ({ group, models }: GroupModelsContainerProp
 
             {models.map((model) => {
                 const modelId = model.id;
-
-                if (!modelId) return null;
 
                 return (
                     <Disclosure
