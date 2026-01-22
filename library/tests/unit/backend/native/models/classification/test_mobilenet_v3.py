@@ -49,7 +49,7 @@ class TestMobileNetV3MulticlassCls:
         outputs = fxt_multi_class_cls_model.predict_step(batch=fxt_multiclass_cls_batch_data_entity, batch_idx=0)
 
         assert isinstance(outputs, OTXPredictionBatch)
-        assert outputs.has_xai_outputs == explain_mode
+        assert (outputs.saliency_map is not None and len(outputs.saliency_map) > 0) == explain_mode
 
     def test_set_input_size(self):
         data_input_params = DataInputParams((300, 300), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0))
@@ -119,7 +119,7 @@ class TestMobileNetV3MultilabelCls:
         outputs = fxt_multi_label_cls_model.predict_step(batch=fxt_multilabel_cls_batch_data_entity, batch_idx=0)
 
         assert isinstance(outputs, OTXPredictionBatch)
-        assert outputs.has_xai_outputs == explain_mode
+        assert (outputs.saliency_map is not None and len(outputs.saliency_map) > 0) == explain_mode
 
     def test_set_input_size(self):
         data_input_params = DataInputParams((300, 300), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0))
@@ -189,7 +189,7 @@ class TestMobileNetV3HLabelCls:
         outputs = fxt_h_label_cls_model.predict_step(batch=fxt_hlabel_cls_batch_data_entity, batch_idx=0)
 
         assert isinstance(outputs, OTXPredictionBatch)
-        assert outputs.has_xai_outputs == explain_mode
+        assert (outputs.saliency_map is not None and len(outputs.saliency_map) > 0) == explain_mode
 
     def test_set_input_size(self, fxt_hlabel_data):
         data_input_params = DataInputParams((300, 300), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0))

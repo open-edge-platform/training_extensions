@@ -552,11 +552,6 @@ class OTXPredictionBatch(OTXSampleBatch):
             msg = "Feature vector must have 2 dimensions"
             raise ValueError(msg)
 
-    @property
-    def has_xai_outputs(self) -> bool:
-        """Check if the batch has XAI outputs (saliency maps)."""
-        return self.saliency_map is not None and len(self.saliency_map) > 0
-
 
 @dataclass
 class OTXPrediction:

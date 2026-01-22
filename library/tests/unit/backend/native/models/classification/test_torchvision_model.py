@@ -106,7 +106,7 @@ class TestOTXTVModel:
         outputs = fxt_tv_model.predict_step(batch=fxt_multiclass_cls_batch_data_entity, batch_idx=0)
 
         assert isinstance(outputs, OTXPredictionBatch)
-        assert outputs.has_xai_outputs == explain_mode
+        assert (outputs.saliency_map is not None and len(outputs.saliency_map) > 0) == explain_mode
         if explain_mode:
             assert outputs.feature_vector[0].ndim == 2
             assert outputs.saliency_map[0].ndim == 3

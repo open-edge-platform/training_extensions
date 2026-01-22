@@ -49,7 +49,7 @@ class TestTimmModelForMulticlassCls:
         outputs = fxt_multi_class_cls_model.predict_step(batch=fxt_multiclass_cls_batch_data_entity, batch_idx=0)
 
         assert isinstance(outputs, OTXPredictionBatch)
-        assert outputs.has_xai_outputs == explain_mode
+        assert (outputs.saliency_map is not None and len(outputs.saliency_map) > 0) == explain_mode
 
     def test_freeze_backbone(self):
         data_input_params = DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0))
@@ -109,7 +109,7 @@ class TestTimmModelForMultilabelCls:
         outputs = fxt_multi_label_cls_model.predict_step(batch=fxt_multilabel_cls_batch_data_entity, batch_idx=0)
 
         assert isinstance(outputs, OTXPredictionBatch)
-        assert outputs.has_xai_outputs == explain_mode
+        assert (outputs.saliency_map is not None and len(outputs.saliency_map) > 0) == explain_mode
 
     def test_freeze_backbone(self):
         data_input_params = DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0))
@@ -169,7 +169,7 @@ class TestTimmModelForHLabelCls:
         outputs = fxt_h_label_cls_model.predict_step(batch=fxt_hlabel_cls_batch_data_entity, batch_idx=0)
 
         assert isinstance(outputs, OTXPredictionBatch)
-        assert outputs.has_xai_outputs == explain_mode
+        assert (outputs.saliency_map is not None and len(outputs.saliency_map) > 0) == explain_mode
 
     def test_freeze_backbone(self, fxt_hlabel_cifar):
         data_input_params = DataInputParams((224, 224), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0))
