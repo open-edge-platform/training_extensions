@@ -16,8 +16,9 @@ export type MediaItemState = 'accepted' | 'rejected';
 export type MediaStateMap = Map<string, MediaItemState>;
 
 export type DeviceType = components['schemas']['DeviceType'];
+export type RecommendedModelArchitectures = components['schemas']['TopPicks'];
 
-export type TrainingDevices = {
+export type TrainingDevice = {
     type: DeviceType;
     name: string;
 };

@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Button, Flex } from '@geti/ui';
 
 import { type ModelArchitecture as ModelArchitectureType } from '../../../../constants/shared-types';
+import { useTrainModel } from '../train-model-provider.component';
 import { AllModelArchitectures } from './all-model-architectures.component';
 import { RecommendedModelArchitectures } from './recommended-model-architectures.component';
 
@@ -13,20 +14,10 @@ const getRecommendedArchitectures = (modelArchitectures: ModelArchitectureType[]
     return modelArchitectures.slice(0, 3);
 };
 
-type ModelArchitecturesListProps = {
-    activeModelArchitectureId: string | undefined;
-    modelArchitectures: ModelArchitectureType[];
-    selectedModelArchitectureId: string | null;
-    onSelectedModelArchitectureIdChange: (modelArchitectureId: string | null) => void;
-};
-
-export const ModelArchitecturesList = ({
-    modelArchitectures,
-    activeModelArchitectureId,
-    selectedModelArchitectureId,
-    onSelectedModelArchitectureIdChange,
-}: ModelArchitecturesListProps) => {
+export const ModelArchitecturesList = () => {
     const [showMore, setShowMore] = useState<boolean>(false);
+    const { activeModelArchitectureId, modelArchitectures, selectedModelArchitectureId, onSelectModelArchitectureId } =
+        useTrainModel();
 
     if (showMore) {
         return (
@@ -35,7 +26,7 @@ export const ModelArchitecturesList = ({
                     activeModelArchitectureId={activeModelArchitectureId}
                     modelArchitectures={modelArchitectures}
                     selectedModelArchitectureId={selectedModelArchitectureId}
-                    onSelectedModelArchitectureIdChange={onSelectedModelArchitectureIdChange}
+                    onSelectedModelArchitectureIdChange={onSelectModelArchitectureId}
                 />
                 <Button alignSelf={'start'} variant={'primary'} onPress={() => setShowMore(false)}>
                     Show less
@@ -52,7 +43,7 @@ export const ModelArchitecturesList = ({
                 activeModelArchitectureId={activeModelArchitectureId}
                 modelArchitectures={recommendedArchitectures}
                 selectedModelArchitectureId={selectedModelArchitectureId}
-                onSelectedModelArchitectureIdChange={onSelectedModelArchitectureIdChange}
+                onSelectedModelArchitectureIdChange={onSelectModelArchitectureId}
             />
             <Button alignSelf={'start'} variant={'primary'} onPress={() => setShowMore(true)}>
                 Show more
