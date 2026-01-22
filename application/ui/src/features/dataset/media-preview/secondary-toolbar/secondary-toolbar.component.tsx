@@ -1,13 +1,14 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, ButtonGroup, dimensionValue, Flex, Grid } from '@geti/ui';
+import { Button, ButtonGroup, dimensionValue, Flex, Grid, Key } from '@geti/ui';
 import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { isEmpty } from 'lodash-es';
 
 import type { DatasetItem } from '../../../../constants/shared-types';
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
+import { useSelectedAnnotations } from '../../../../shared/annotator/select-annotation-provider.component';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
 import { LabelPicker } from './label-picker.component';
 import { useSecondaryToolbarState } from './use-secondary-toolbar-state.hook';
@@ -33,9 +34,10 @@ const invalidateMediaItemAnnotations = (queryClient: QueryClient) => {
 
 export const SecondaryToolbar = ({ items, mediaItem, onClose, onSelectedMediaItem }: SecondaryToolbarProps) => {
     const queryClient = useQueryClient();
-    const { annotations, isSaving, submitAnnotations } = useAnnotationActions();
-    const { selectedLabel, setSelectedLabelId } = useAnnotator();
+    const { selectedAnnotations } = useSelectedAnnotations();
     const { isHidden, projectLabels } = useSecondaryToolbarState();
+    const { selectedLabel, setSelectedLabelId } = useAnnotator();
+    const { annotations, isSaving, updateAnnotations, submitAnnotations } = useAnnotationActions();
 
     const hasAnnotations = !isEmpty(annotations);
     const selectedIndex = items.findIndex((item) => item.id === mediaItem.id);
@@ -57,6 +59,18 @@ export const SecondaryToolbar = ({ items, mediaItem, onClose, onSelectedMediaIte
         onSelectedMediaItem(items[nextItem]);
     };
 
+    const handleSelect = (value: Key | null) => {
+        const label = projectLabels.find(({ id }) => id === value);
+        const labels = label ? [label] : [];
+
+        const updatedAnnotations = annotations
+            .filter((annotation) => selectedAnnotations.has(annotation.id))
+            .map((annotation) => ({ ...annotation, labels }));
+
+        updateAnnotations(updatedAnnotations);
+        setSelectedLabelId(label?.id ?? null);
+    };
+
     return (
         <Flex
             height={'100%'}
@@ -66,11 +80,7 @@ export const SecondaryToolbar = ({ items, mediaItem, onClose, onSelectedMediaIte
         >
             <Grid width={'100%'} UNSAFE_className={classes.toolbarGrid} isHidden={isHidden}>
                 <Flex width={'100%'} UNSAFE_className={classes.toolbarSection} justifyContent={'space-between'}>
-                    <LabelPicker
-                        selectedLabel={selectedLabel}
-                        labels={projectLabels}
-                        onSelect={(value) => setSelectedLabelId(value !== null ? String(value) : null)}
-                    />
+                    <LabelPicker selectedLabel={selectedLabel} labels={projectLabels} onSelect={handleSelect} />
 
                     <ButtonGroup>
                         <DeleteMediaItem
