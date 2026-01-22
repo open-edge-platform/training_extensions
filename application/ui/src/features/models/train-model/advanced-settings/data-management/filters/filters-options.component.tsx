@@ -26,13 +26,13 @@ const FilterOptionTooltip: FC<FilterOptionTooltipProps> = ({ description }) => {
 
 const FilterOption: FC<FilterOptionProps> = ({ option, onOptionChange }) => {
     const [enableParameter, configParameter] = option;
-    const { name, description, minValue, maxValue, value } = configParameter;
+    const { name, description, min_value, max_value, value } = configParameter;
     const isUnlimited = !enableParameter.value;
 
     const handleRest = () => {
         onOptionChange([
-            { ...enableParameter, value: enableParameter.defaultValue },
-            { ...configParameter, value: configParameter.defaultValue },
+            { ...enableParameter, value: enableParameter.default_value },
+            { ...configParameter, value: configParameter.default_value },
         ]);
     };
 
@@ -54,8 +54,8 @@ const FilterOption: FC<FilterOptionProps> = ({ option, onOptionChange }) => {
             <Flex gap={'size-200'} gridColumn={'2/3'}>
                 <NumberField
                     aria-label={`Change ${name}`}
-                    minValue={minValue ?? undefined}
-                    maxValue={maxValue ?? undefined}
+                    minValue={min_value ?? undefined}
+                    maxValue={max_value ?? undefined}
                     step={1}
                     value={value}
                     isDisabled={isUnlimited}

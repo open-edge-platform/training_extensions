@@ -119,10 +119,10 @@ export const EnumParameterField = ({
         });
     };
 
-    if (parameter.allowedValues.length < 4) {
+    if (parameter.allowed_values.length < 4) {
         return (
             <ToggleButtons
-                options={parameter.allowedValues}
+                options={parameter.allowed_values}
                 selectedOption={parameter.value}
                 onOptionChange={handleChange}
                 isDisabled={isDisabled}
@@ -130,7 +130,7 @@ export const EnumParameterField = ({
         );
     }
 
-    const items = parameter.allowedValues.map((value) => ({ value }));
+    const items = parameter.allowed_values.map((value) => ({ value }));
 
     return (
         <Picker
@@ -164,8 +164,8 @@ const ParameterField: FC<ParameterFieldProps> = ({ parameter, onChange, isDisabl
         return (
             <NumberParameterField
                 value={parameter.value}
-                minValue={parameter.minValue}
-                maxValue={parameter.maxValue}
+                minValue={parameter.min_value}
+                maxValue={parameter.max_value}
                 onChange={handleChange}
                 type={parameter.type}
                 isDisabled={isDisabled}
@@ -185,7 +185,7 @@ const ParameterField: FC<ParameterFieldProps> = ({ parameter, onChange, isDisabl
         return (
             <RangeParameterField
                 value={parameter.value}
-                defaultValue={parameter.defaultValue}
+                defaultValue={parameter.default_value}
                 onChange={handleChange}
                 type={parameter.type}
                 isDisabled={isDisabled}
@@ -219,7 +219,7 @@ export const Parameter = ({ parameter, onChange, isDisabled, marginStart, isRead
     }
 
     const handleReset = () => {
-        onChange({ ...parameter, value: parameter.defaultValue } as ConfigurationParameter);
+        onChange({ ...parameter, value: parameter.default_value } as ConfigurationParameter);
     };
 
     return (

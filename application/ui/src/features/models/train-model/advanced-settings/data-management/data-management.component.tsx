@@ -20,7 +20,7 @@ type DataManagementProps = {
 };
 
 const getAugmentationParameters = (configuration: TrainingConfiguration) => {
-    const augmentation = structuredClone(configuration.datasetPreparation.augmentation);
+    const augmentation = structuredClone(configuration.dataset_preparation.augmentation);
 
     delete augmentation['tiling'];
 
@@ -33,16 +33,16 @@ export const DataManagement = ({
     defaultTrainingConfiguration,
 }: DataManagementProps) => {
     const augmentationParameters = getAugmentationParameters(trainingConfiguration);
-    const subsetSplitParameters = trainingConfiguration.datasetPreparation.subsetSplit;
-    const filteringParameters = trainingConfiguration.datasetPreparation.filtering;
-    const tilingParameters = trainingConfiguration.datasetPreparation.augmentation.tiling;
+    const subsetSplitParameters = trainingConfiguration.dataset_preparation.subset_split;
+    const filteringParameters = trainingConfiguration.dataset_preparation.filtering;
+    const tilingParameters = trainingConfiguration.dataset_preparation.augmentation.tiling;
 
     return (
         <View>
             {!isEmpty(subsetSplitParameters) && (
                 <TrainingSubsets
-                    defaultSubsetParameters={defaultTrainingConfiguration.datasetPreparation.subsetSplit}
-                    subsetsParameters={trainingConfiguration.datasetPreparation.subsetSplit}
+                    defaultSubsetParameters={defaultTrainingConfiguration.dataset_preparation.subset_split}
+                    subsetsParameters={trainingConfiguration.dataset_preparation.subset_split}
                     onUpdateTrainingConfiguration={onUpdateTrainingConfiguration}
                 />
             )}

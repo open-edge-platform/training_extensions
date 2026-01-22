@@ -1,5 +1,5 @@
-// Copyright (C) 2022-2025 Intel Corporation
-// LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
 
 import { useState } from 'react';
 
@@ -13,7 +13,7 @@ import {
 import { providersRender as render } from '../../../../../../../../test-utils/required-providers-render';
 import { Filters } from './filters.component';
 
-type FiltersParameters = TrainingConfiguration['datasetPreparation']['filtering'];
+type FiltersParameters = TrainingConfiguration['dataset_preparation']['filtering'];
 
 const getToggleFilter = (filterName: string) => {
     return screen.getByRole('checkbox', { name: `Toggle ${filterName}` });
@@ -114,10 +114,10 @@ describe('Filters', () => {
     const App = (props: { filtersParameters: FiltersParameters } = { filtersParameters }) => {
         const [trainingConfiguration, setTrainingConfiguration] = useState<TrainingConfiguration | undefined>(() =>
             getMockedTrainingConfiguration({
-                datasetPreparation: {
+                dataset_preparation: {
                     filtering: props.filtersParameters,
                     augmentation: {},
-                    subsetSplit: [],
+                    subset_split: [],
                 },
             })
         );
@@ -130,7 +130,7 @@ describe('Filters', () => {
 
         return (
             <Filters
-                filtersConfiguration={trainingConfiguration?.datasetPreparation.filtering ?? props.filtersParameters}
+                filtersConfiguration={trainingConfiguration?.dataset_preparation.filtering ?? props.filtersParameters}
                 onUpdateTrainingConfiguration={handleUpdateTrainingConfiguration}
             />
         );

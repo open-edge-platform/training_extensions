@@ -77,7 +77,7 @@ const SingleLearningParameter = ({
         const handleLearningRateReset = () => {
             handleChange({
                 ...parameter,
-                value: parameter.defaultValue,
+                value: parameter.default_value,
             });
         };
 
@@ -95,8 +95,8 @@ const SingleLearningParameter = ({
                         name={parameter.name}
                         type={parameter.type}
                         step={LEARNING_RATE_STEP}
-                        maxValue={parameter.maxValue}
-                        minValue={parameter.minValue}
+                        maxValue={parameter.max_value}
+                        minValue={parameter.min_value}
                     />
                 </Parameter.Layout>
             </Parameters.Container>

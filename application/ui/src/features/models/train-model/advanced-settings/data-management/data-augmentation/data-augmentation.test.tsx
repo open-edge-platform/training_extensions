@@ -1,5 +1,5 @@
-// Copyright (C) 2022-2025 Intel Corporation
-// LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
 
 import { useState } from 'react';
 
@@ -14,7 +14,7 @@ import {
 import { providersRender as render } from '../../../../../../../../test-utils/required-providers-render';
 import { DataAugmentation } from './data-augmentation.component';
 
-type DataAugmentationParameters = TrainingConfiguration['datasetPreparation']['augmentation'];
+type DataAugmentationParameters = TrainingConfiguration['dataset_preparation']['augmentation'];
 
 const getToggleEnableParameter = (name: string) => {
     return screen.getByRole('switch', { name: `Toggle ${name}` });
@@ -105,9 +105,9 @@ describe('DataAugmentation', () => {
     const App = (props: { dataAugmentationParameters: DataAugmentationParameters }) => {
         const [trainingConfiguration, setTrainingConfiguration] = useState<TrainingConfiguration | undefined>(() =>
             getMockedTrainingConfiguration({
-                datasetPreparation: {
+                dataset_preparation: {
                     filtering: {},
-                    subsetSplit: [],
+                    subset_split: [],
                     augmentation: props.dataAugmentationParameters,
                 },
             })
@@ -120,7 +120,7 @@ describe('DataAugmentation', () => {
         };
         return (
             <DataAugmentation
-                parameters={trainingConfiguration?.datasetPreparation.augmentation ?? props.dataAugmentationParameters}
+                parameters={trainingConfiguration?.dataset_preparation.augmentation ?? props.dataAugmentationParameters}
                 onUpdateTrainingConfiguration={handleUpdateTrainingConfiguration}
             />
         );

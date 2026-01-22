@@ -8,10 +8,12 @@ import { Flex, NumberField, Slider } from '@geti/ui';
 import { NumberParameter } from '../../../configuration.interface';
 import { getFloatingPointStep } from '../utils';
 
-type NumberGroupParamsProps = Pick<NumberParameter, 'type' | 'value' | 'minValue' | 'maxValue' | 'name'> & {
+type NumberGroupParamsProps = Pick<NumberParameter, 'type' | 'value' | 'name'> & {
     onChange: (value: number) => void;
     isDisabled?: boolean;
     step?: number;
+    minValue: NumberParameter['min_value'];
+    maxValue: NumberParameter['max_value'];
 };
 
 const DEFAULT_INT_STEP = 1;

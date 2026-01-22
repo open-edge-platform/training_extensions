@@ -1,5 +1,5 @@
-// Copyright (C) 2022-2025 Intel Corporation
-// LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
 
 import { useState } from 'react';
 
@@ -13,7 +13,7 @@ import {
 import { providersRender as render } from '../../../../../../../../test-utils/required-providers-render';
 import { TrainingSubsets } from './training-subsets.component';
 
-type SubsetsParameters = TrainingConfiguration['datasetPreparation']['subsetSplit'];
+type SubsetsParameters = TrainingConfiguration['dataset_preparation']['subset_split'];
 
 const expectSubsetSizes = ({
     trainingSize,
@@ -118,8 +118,8 @@ describe('TrainingSubsets', () => {
     }) => {
         const [trainingConfiguration, setTrainingConfiguration] = useState<TrainingConfiguration | undefined>(() =>
             getMockedTrainingConfiguration({
-                datasetPreparation: {
-                    subsetSplit: subsetParameters,
+                dataset_preparation: {
+                    subset_split: subsetParameters,
                     filtering: {},
                     augmentation: {},
                 },
@@ -135,7 +135,7 @@ describe('TrainingSubsets', () => {
         return (
             <TrainingSubsets
                 hasSupportedModels={hasSupportedModels}
-                subsetsParameters={trainingConfiguration?.datasetPreparation.subsetSplit ?? subsetParameters}
+                subsetsParameters={trainingConfiguration?.dataset_preparation.subset_split ?? subsetParameters}
                 defaultSubsetParameters={subsetParameters}
                 onUpdateTrainingConfiguration={handleUpdateTrainingConfiguration}
             />

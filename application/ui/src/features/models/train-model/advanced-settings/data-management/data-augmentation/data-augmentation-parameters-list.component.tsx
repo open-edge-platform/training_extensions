@@ -6,7 +6,7 @@ import { Flex } from '@geti/ui';
 import { ConfigurationParameter, TrainingConfiguration } from '../../../../configuration.interface';
 import { Parameters } from '../../ui/parameters.component';
 
-export type DataAugmentationParameters = TrainingConfiguration['datasetPreparation']['augmentation'];
+export type DataAugmentationParameters = TrainingConfiguration['dataset_preparation']['augmentation'];
 
 type DataAugmentationParametersListProps = {
     parameters: DataAugmentationParameters;
@@ -26,7 +26,7 @@ export const DataAugmentationParametersList = ({
             if (!config) return undefined;
 
             const newConfig = structuredClone(config);
-            newConfig.datasetPreparation.augmentation[key] = config.datasetPreparation.augmentation[key].map(
+            newConfig.dataset_preparation.augmentation[key] = config.dataset_preparation.augmentation[key].map(
                 (parameter) => (parameter.key === inputParameter.key ? inputParameter : parameter)
             );
 

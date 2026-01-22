@@ -8,6 +8,7 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { paths } from '../../../constants/paths';
 import { useTrainModelMutation } from '../hooks/api/use-train-model-mutation';
+import { AdvancedSettings } from './advanced-settings/advanced-settings.component';
 import { BasicTrainModelContent } from './basic-train-model-content.component';
 import { TrainModelDialogLayout } from './train-model-dialog-layout';
 import { useTrainModel } from './train-model-provider.component';
@@ -60,7 +61,7 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
             <Divider size={'S'} />
             <Content>
                 <TrainModelDialogLayout>
-                    {isAdvancedSettingsOpen ? <></> : <BasicTrainModelContent />}
+                    {isAdvancedSettingsOpen ? <AdvancedSettings /> : <BasicTrainModelContent />}
                 </TrainModelDialogLayout>
             </Content>
             <Divider size={'S'} />

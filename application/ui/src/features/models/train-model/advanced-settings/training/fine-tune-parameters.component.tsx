@@ -51,7 +51,12 @@ export const FineTuneParameters = ({
                     tasks.
                 </Accordion.Description>
                 <Accordion.Divider marginY={'size-250'} />
-                <RadioGroup label={'Training weights'} value={trainingWeight} onChange={handleTrainingWeightsChange}>
+                <RadioGroup
+                    label={'Training weights'}
+                    value={trainingWeight}
+                    onChange={handleTrainingWeightsChange}
+                    isEmphasized
+                >
                     <Radio value={TRAINING_WEIGHTS.PREVIOUS_TRAINING_WEIGHTS}>
                         Previous training weights - fine-tune the previous version of your model
                     </Radio>

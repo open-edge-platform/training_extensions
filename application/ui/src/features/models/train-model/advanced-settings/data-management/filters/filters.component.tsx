@@ -8,7 +8,7 @@ import { Accordion } from '../../ui/accordion/accordion.component';
 import { isBoolParameter, isNumberParameter } from '../../utils';
 import { FilterOption, FiltersOptions } from './filters-options.component';
 
-type FiltersConfiguration = TrainingConfiguration['datasetPreparation']['filtering'];
+type FiltersConfiguration = TrainingConfiguration['dataset_preparation']['filtering'];
 
 type FiltersProps = {
     filtersConfiguration: FiltersConfiguration;
@@ -36,8 +36,8 @@ export const Filters = ({ filtersConfiguration, onUpdateTrainingConfiguration }:
 
             const newConfig = structuredClone(prevConfig);
 
-            newConfig.datasetPreparation.filtering = Object.entries(
-                prevConfig.datasetPreparation.filtering
+            newConfig.dataset_preparation.filtering = Object.entries(
+                prevConfig.dataset_preparation.filtering
             ).reduce<FiltersConfiguration>((acc, [key, parameters]) => {
                 const [enableParameterLocal, configParameterLocal] = parameters;
 

@@ -1,5 +1,5 @@
-// Copyright (C) 2022-2025 Intel Corporation
-// LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
 
 import { useState } from 'react';
 
@@ -15,7 +15,7 @@ import { TILING_MODES } from './tiling-modes.component';
 import { Tiling } from './tiling.component';
 import { getTilingMode, TILING_AUTOMATIC_DESCRIPTION, TILING_OFF_DESCRIPTION } from './utils';
 
-type TilingParameters = TrainingConfiguration['datasetPreparation']['augmentation']['tiling'];
+type TilingParameters = TrainingConfiguration['dataset_preparation']['augmentation']['tiling'];
 
 describe('getTilingMode', () => {
     it('tiling is off when when enable tiling parameter is false', () => {
@@ -131,9 +131,9 @@ describe('Tiling', () => {
     const App = (props: { tilingParameters: TilingParameters }) => {
         const [trainingConfiguration, setTrainingConfiguration] = useState<TrainingConfiguration | undefined>(() =>
             getMockedTrainingConfiguration({
-                datasetPreparation: {
+                dataset_preparation: {
                     filtering: {},
-                    subsetSplit: [],
+                    subset_split: [],
                     augmentation: {
                         tiling: props.tilingParameters,
                     },
@@ -150,7 +150,7 @@ describe('Tiling', () => {
         return (
             <Tiling
                 tilingParameters={
-                    trainingConfiguration?.datasetPreparation.augmentation.tiling ?? props.tilingParameters
+                    trainingConfiguration?.dataset_preparation.augmentation.tiling ?? props.tilingParameters
                 }
                 onUpdateTrainingConfiguration={handleUpdateTrainingConfiguration}
             />

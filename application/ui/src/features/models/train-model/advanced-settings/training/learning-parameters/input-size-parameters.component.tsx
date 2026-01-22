@@ -17,7 +17,7 @@ const InputSizeParameter = ({ parameter, onChange, isReadOnly }: InputSizeParame
         return <span aria-label={parameter.name}>{parameter.value}</span>;
     }
 
-    const items = parameter.allowedValues.map((value) => ({ value }));
+    const items = parameter.allowed_values.map((value) => ({ value }));
 
     const handleSelectionChange = (value: string) => {
         onChange({
@@ -92,10 +92,10 @@ export const InputSizeParameters = ({
             const newConfig = structuredClone(config);
             newConfig.training = config.training.map((trainingParameter) => {
                 if (trainingParameter.key === inputSizeWidthParameter.key) {
-                    return { ...inputSizeWidthParameter, value: inputSizeWidthParameter.defaultValue };
+                    return { ...inputSizeWidthParameter, value: inputSizeWidthParameter.default_value };
                 }
                 if (trainingParameter.key === inputSizeHeightParameter.key) {
-                    return { ...inputSizeHeightParameter, value: inputSizeHeightParameter.defaultValue };
+                    return { ...inputSizeHeightParameter, value: inputSizeHeightParameter.default_value };
                 }
                 return trainingParameter;
             });

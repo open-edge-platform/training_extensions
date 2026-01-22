@@ -66,8 +66,8 @@ const ConfidenceThreshold = ({
                         <NumberParameterField
                             name={manualParameter.name}
                             value={manualParameter.value}
-                            minValue={manualParameter.minValue}
-                            maxValue={manualParameter.maxValue}
+                            minValue={manualParameter.min_value}
+                            maxValue={manualParameter.max_value}
                             onChange={onChange}
                             type={manualParameter.type}
                         />

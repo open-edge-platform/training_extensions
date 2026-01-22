@@ -4,7 +4,7 @@
 import { NumberParameter, TrainingConfiguration } from '../../../../configuration.interface';
 import { isNumberParameter } from '../../utils';
 
-type SubsetSplitParameters = TrainingConfiguration['datasetPreparation']['subsetSplit'];
+type SubsetSplitParameters = TrainingConfiguration['dataset_preparation']['subset_split'];
 
 const getDatasetSize = (subsetSplitParameters: SubsetSplitParameters): number => {
     const datasetSize = subsetSplitParameters.find((parameter) => parameter.key === 'dataset_size');
@@ -40,7 +40,7 @@ export const TEST_SUBSET_KEY = 'test';
 export const VALIDATION_SUBSET_KEY = 'validation';
 export const TRAINING_SUBSET_KEY = 'training';
 
-export const getSubsets = (subsetsParameters: TrainingConfiguration['datasetPreparation']['subsetSplit']) => {
+export const getSubsets = (subsetsParameters: TrainingConfiguration['dataset_preparation']['subset_split']) => {
     const validationSubset = subsetsParameters.find(
         (parameter) => parameter.key === VALIDATION_SUBSET_KEY
     ) as NumberParameter;

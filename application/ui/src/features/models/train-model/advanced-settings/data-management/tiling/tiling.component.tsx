@@ -48,10 +48,10 @@ export const Tiling = ({ tilingParameters, onUpdateTrainingConfiguration }: Tili
 
             return {
                 ...config,
-                datasetPreparation: {
-                    ...config.datasetPreparation,
+                dataset_preparation: {
+                    ...config.dataset_preparation,
                     augmentation: {
-                        ...config.datasetPreparation.augmentation,
+                        ...config.dataset_preparation.augmentation,
                         tiling: updatedTilingParameters,
                     },
                 },

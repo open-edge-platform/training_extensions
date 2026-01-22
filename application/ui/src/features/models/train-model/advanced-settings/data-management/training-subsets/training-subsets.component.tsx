@@ -131,7 +131,7 @@ const SubsetsDistribution = ({
     );
 };
 
-type SubsetsParameters = TrainingConfiguration['datasetPreparation']['subsetSplit'];
+type SubsetsParameters = TrainingConfiguration['dataset_preparation']['subset_split'];
 
 type TrainingSubsetsProps = {
     defaultSubsetParameters: SubsetsParameters;
@@ -203,7 +203,7 @@ export const TrainingSubsets = ({
                 [TEST_SUBSET_KEY]: testSubsetValue,
             };
 
-            newConfig.datasetPreparation.subsetSplit = config.datasetPreparation.subsetSplit.map((parameter) => {
+            newConfig.dataset_preparation.subset_split = config.dataset_preparation.subset_split.map((parameter) => {
                 if ([TRAINING_SUBSET_KEY, TEST_SUBSET_KEY, VALIDATION_SUBSET_KEY].includes(parameter.key)) {
                     return {
                         ...parameter,
@@ -220,8 +220,8 @@ export const TrainingSubsets = ({
 
     const handleSubsetsConfigurationReset = (): void => {
         setSubsetsDistribution([
-            trainingSubset.defaultValue,
-            trainingSubset.defaultValue + validationSubset.defaultValue,
+            trainingSubset.default_value,
+            trainingSubset.default_value + validationSubset.default_value,
         ]);
 
         onUpdateTrainingConfiguration((config) => {
@@ -229,11 +229,11 @@ export const TrainingSubsets = ({
 
             const newConfig = structuredClone(config);
 
-            newConfig.datasetPreparation.subsetSplit = config.datasetPreparation.subsetSplit.map((parameter) => {
+            newConfig.dataset_preparation.subset_split = config.dataset_preparation.subset_split.map((parameter) => {
                 if ([VALIDATION_SUBSET_KEY, TEST_SUBSET_KEY, TRAINING_SUBSET_KEY].includes(parameter.key)) {
                     return {
                         ...parameter,
-                        value: parameter.defaultValue,
+                        value: parameter.default_value,
                     } as ConfigurationParameter;
                 }
 

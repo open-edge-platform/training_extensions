@@ -32,7 +32,7 @@ export const isEnumParameter = (input: unknown): input is EnumConfigurationParam
     return (
         isObject(input) &&
         get(input, 'type') === 'enum' &&
-        get(input, 'allowedValues') !== undefined &&
+        get(input, 'allowed_values') !== undefined &&
         get(input, 'value') !== undefined
     );
 };
