@@ -17,13 +17,9 @@ export const useDownloadModel = (modelId: string) => {
             const format = variables.params.query?.format;
 
             const link = document.createElement('a');
-
             link.href = url;
             link.download = format ? `model-${modelId}-${format}.zip` : `model-${modelId}.zip`;
-
-            document.body.appendChild(link);
             link.click();
-            document.body.removeChild(link);
 
             URL.revokeObjectURL(url);
 
