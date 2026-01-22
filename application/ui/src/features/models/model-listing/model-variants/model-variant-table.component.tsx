@@ -1,30 +1,21 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-    ActionButton,
-    Cell,
-    Column,
-    Flex,
-    Item,
-    Menu,
-    MenuTrigger,
-    Row,
-    TableBody,
-    TableHeader,
-    TableView,
-} from '@geti/ui';
-import { DownloadIcon, MoreMenu } from '@geti/ui/icons';
+import { ActionButton, Cell, Column, Flex, Row, TableBody, TableHeader, TableView } from '@geti/ui';
+import { DownloadIcon } from '@geti/ui/icons';
 
-import { Model, ModelFormat } from '../../../../constants/shared-types';
+import type { ExtendedModel, ModelFormat } from '../../../../constants/shared-types';
+import { useDownloadModel } from '../../hooks/api/use-download-model.hook';
 import { formatModelSize } from '../utils/format-model-size';
 
 interface ModelVariantTableProps {
-    model: Model;
+    model: ExtendedModel;
     format: ModelFormat;
 }
 
 export const ModelVariantTable = ({ model, format }: ModelVariantTableProps) => {
+    const modelId = model.id ?? '';
+    const { downloadModel, isDownloading } = useDownloadModel(modelId);
     const variants = (model.variants ?? []).filter((variant) => variant.format === format);
 
     if (variants.length === 0) {
@@ -51,19 +42,14 @@ export const ModelVariantTable = ({ model, format }: ModelVariantTableProps) => 
                         <Cell>{formatModelSize(variant.weights_size)}</Cell>
                         <Cell>
                             <Flex gap={'size-100'} justifyContent='end' alignItems='center'>
-                                <ActionButton isQuiet aria-label={`Download ${variant.format} model`}>
+                                <ActionButton
+                                    isQuiet
+                                    aria-label={`Download ${variant.format} model`}
+                                    isDisabled={isDownloading}
+                                    onPress={() => downloadModel(variant.format as ModelFormat)}
+                                >
                                     <DownloadIcon />
                                 </ActionButton>
-
-                                <MenuTrigger>
-                                    <ActionButton isQuiet>
-                                        <MoreMenu />
-                                    </ActionButton>
-                                    <Menu>
-                                        <Item key='delete'>Delete</Item>
-                                        <Item key='export'>Export</Item>
-                                    </Menu>
-                                </MenuTrigger>
                             </Flex>
                         </Cell>
                     </Row>

@@ -8,6 +8,7 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { SchemaModelView } from '../../../../../api/openapi-spec';
 import { useDeleteModel } from '../../../hooks/api/use-delete-model.hook';
+import { useDownloadModel } from '../../../hooks/api/use-download-model.hook';
 import { useGetModel } from '../../../hooks/api/use-get-model.hook';
 import { useRenameModel } from '../../../hooks/api/use-rename-model.hook';
 import { useModelListing } from '../../provider/model-listing-provider';
@@ -30,6 +31,8 @@ export const ModelRowContainer = ({ model }: ModelRowContainerProps) => {
     const parentRevisionModel = useGetModel(model.parent_revision);
     const deleteModelMutation = useDeleteModel();
     const renameModelMutation = useRenameModel();
+    const { downloadModel } = useDownloadModel(model.id ?? '');
+
     const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
@@ -39,7 +42,7 @@ export const ModelRowContainer = ({ model }: ModelRowContainerProps) => {
         } else if (key === MODEL_ACTIONS.RENAME) {
             setIsRenameDialogOpen(true);
         } else if (key === MODEL_ACTIONS.EXPORT) {
-            // TODO: Implement export functionality
+            downloadModel();
         }
     };
 
