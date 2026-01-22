@@ -35,7 +35,16 @@ type TrainModelContextProps = {
     onSelectDatasetRevision: (datasetRevision: string | null) => void;
 
     trainingConfiguration: TrainingConfiguration | undefined;
-    onTrainingConfigurationChange: (trainingConfiguration: TrainingConfiguration) => void;
+    defaultTrainingConfiguration: TrainingConfiguration | undefined;
+    onUpdateTrainingConfiguration: (
+        updateFunction: (config: TrainingConfiguration | undefined) => TrainingConfiguration | undefined
+    ) => void;
+
+    isReshufflingSubsetsEnabled: boolean;
+    onReshufflingSubsetsEnabledChange: (reshufflingSubsetsEnabled: boolean) => void;
+
+    trainFromScratch: boolean;
+    onTrainFromScratchChange: (trainFromScratch: boolean) => void;
 };
 
 const TrainModelContext = createContext<TrainModelContextProps | null>(null);
@@ -100,6 +109,9 @@ export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
         datasetRevisions?.at(0)?.id ?? null
     );
 
+    const [isReshufflingSubsetsEnabled, setIsReshufflingSubsetsEnabled] = useState<boolean>(false);
+    const [trainFromScratch, setTrainFromScratch] = useState<boolean>(false);
+
     return (
         <TrainModelContext
             value={{
@@ -119,7 +131,14 @@ export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
                 onSelectDatasetRevision: setSelectedDatasetRevision,
 
                 trainingConfiguration,
-                onTrainingConfigurationChange: setTrainingConfiguration,
+                defaultTrainingConfiguration,
+                onUpdateTrainingConfiguration: setTrainingConfiguration,
+
+                trainFromScratch,
+                onTrainFromScratchChange: setTrainFromScratch,
+
+                isReshufflingSubsetsEnabled,
+                onReshufflingSubsetsEnabledChange: setIsReshufflingSubsetsEnabled,
             }}
         >
             {children}

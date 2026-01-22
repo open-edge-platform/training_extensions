@@ -37,5 +37,5 @@ export const useGetTrainingConfiguration = (modelArchitectureId: string | null) 
         }
     }, [data]);
 
-    return [trainingConfiguration, setTrainingConfiguration, data] as const;
+    return [trainingConfiguration, setTrainingConfiguration, data as TrainingConfiguration | undefined] as const;
 };

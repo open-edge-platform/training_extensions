@@ -1,0 +1,13 @@
+.rangeSlider {
+    div[class*='spectrum-Slider-track']:nth-of-type(3)::before {
+        background-color: var(--energy-blue) !important;
+    }
+
+    div[class*='spectrum-Slider-handle'] {
+        border-color: var(--energy-blue) !important;
+    }
+
+    div[class*='spectrum-Slider-handle']:hover {
+        border-color: var(--energy-blue-light) !important;
+    }
+}

@@ -1,0 +1,10 @@
+.accordionChevronIcon {
+    & svg[class*='spectrum-Accordion-itemIndicator'] {
+        display: none;
+    }
+
+    & button[class*='spectrum-Accordion-itemHeader'] {
+        padding-inline: 0;
+        background-color: unset !important;
+    }
+}
