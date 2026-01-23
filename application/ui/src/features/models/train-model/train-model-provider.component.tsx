@@ -3,6 +3,8 @@
 
 import { createContext, ReactNode, use, useState } from 'react';
 
+import { isEqual } from 'lodash-es';
+
 import {
     DatasetRevision,
     DeviceType,
@@ -18,6 +20,7 @@ import { useGetTaskModelArchitectures } from '../hooks/api/use-get-model-archite
 import { useGetModelsQuery } from '../hooks/api/use-get-models.hook';
 import { useGetTrainingConfiguration } from '../hooks/api/use-get-training-configuration';
 import { useGetTrainingDevices } from '../hooks/api/use-get-training-devices';
+import { areSubsetsSizesValid } from './advanced-settings/data-management/training-subsets/utils';
 
 type TrainModelContextProps = {
     modelArchitectures: ModelArchitectureWithPerformanceCategory[];
@@ -48,6 +51,8 @@ type TrainModelContextProps = {
     onTrainFromScratchChange: (trainFromScratch: boolean) => void;
 
     hasSupportedModels: boolean;
+
+    isValidConfiguration: (isAdvancedMode: boolean) => boolean;
 };
 
 const TrainModelContext = createContext<TrainModelContextProps | null>(null);
@@ -125,6 +130,35 @@ export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
 
     const hasSupportedModels = modelsByArchitecture.length > 0;
 
+    const isValidConfiguration = (isAdvancedMode: boolean) => {
+        if (
+            selectedModelArchitectureId === null ||
+            selectedTrainingDevice === null ||
+            selectedDatasetRevision === null
+        ) {
+            return false;
+        }
+
+        if (!isAdvancedMode) {
+            return true;
+        }
+
+        if (trainingConfiguration === undefined || defaultTrainingConfiguration === undefined) {
+            return false;
+        }
+
+        if (
+            !isEqual(
+                trainingConfiguration.dataset_preparation.subset_split,
+                defaultTrainingConfiguration.dataset_preparation.subset_split
+            )
+        ) {
+            return areSubsetsSizesValid(trainingConfiguration.dataset_preparation.subset_split);
+        }
+
+        return true;
+    };
+
     return (
         <TrainModelContext
             value={{
@@ -154,6 +188,8 @@ export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
                 onReshufflingSubsetsEnabledChange: setIsReshufflingSubsetsEnabled,
 
                 hasSupportedModels,
+
+                isValidConfiguration,
             }}
         >
             {children}

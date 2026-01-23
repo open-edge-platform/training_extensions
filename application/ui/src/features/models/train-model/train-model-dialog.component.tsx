@@ -18,16 +18,17 @@ type TrainModelDialogProps = {
 };
 
 export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
-    const { selectedTrainingDevice, selectedModelArchitectureId, selectedDatasetRevision } = useTrainModel();
+    const { selectedTrainingDevice, selectedModelArchitectureId, selectedDatasetRevision, isValidConfiguration } =
+        useTrainModel();
     const trainModelMutation = useTrainModelMutation();
     const projectId = useProjectIdentifier();
     const [isAdvancedSettingsOpen, setIsAdvancedSettingsOpen] = useState<boolean>(false);
 
-    const isStartButtonDisabled =
-        selectedModelArchitectureId === null || selectedTrainingDevice === null || selectedDatasetRevision === null;
+    const isStartButtonDisabled = !isValidConfiguration(isAdvancedSettingsOpen);
 
     const trainModel = () => {
-        if (isStartButtonDisabled) return;
+        if (selectedTrainingDevice === null || selectedDatasetRevision === null || selectedModelArchitectureId === null)
+            return;
 
         trainModelMutation.mutate(
             {
@@ -56,7 +57,7 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
     };
 
     return (
-        <Dialog width={'60vw'}>
+        <Dialog width={'60vw'} height={isAdvancedSettingsOpen ? '80vh' : undefined}>
             <Heading>Select a model to train</Heading>
             <Divider size={'S'} />
             <Content>
