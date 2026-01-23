@@ -7,7 +7,7 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { MediaItem } from '../../../../components/media-item/media-item.component';
 import { MediaThumbnail } from '../../../../components/media-thumbnail/media-thumbnail.component';
 import { VirtualizerGridLayout } from '../../../../components/virtualizer-grid-layout/virtualizer-grid-layout.component';
-import type { Media } from '../../../../constants/shared-types';
+import type { DatasetItem } from '../../../../constants/shared-types';
 import { getDatasetRevisionThumbnailUrl } from '../../../../shared/media-url.utils';
 
 const layoutOptions = {
@@ -18,7 +18,7 @@ const layoutOptions = {
 };
 
 type SubsetGalleryProps = {
-    items: Media[];
+    items: DatasetItem[];
     datasetRevisionId: string;
     fetchNextPage: () => void;
     hasNextPage: boolean;
@@ -65,7 +65,7 @@ export const SubsetGallery = ({
                     <MediaItem
                         contentElement={() => (
                             <MediaThumbnail
-                                alt={item.name}
+                                alt={item.id}
                                 url={getDatasetRevisionThumbnailUrl(projectId, datasetRevisionId, item.id)}
                                 // TODO: leverage onDoubleClick to open a dialog
                             />
