@@ -94,6 +94,11 @@ jobs:
       matrix:
         ai-device: [xpu]
     steps:
+      - name: Runner cleanup
+        uses: open-edge-platform/geti-ci/actions/cleanup-runner@d30e32248aa6bd06adeda7129b50a38bdbceca12
+        with:
+          type: "initial"
+
       - name: Checkout code
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
