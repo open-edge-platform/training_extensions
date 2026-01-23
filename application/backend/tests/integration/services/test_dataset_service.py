@@ -241,21 +241,23 @@ def fxt_project_with_annotation_status_items(
         ),
     ]
 
-    db_dataset_items = [*unannotated_items, *reviewed_items, *to_review_items]
-    for idx, dataset_item in enumerate(db_dataset_items):
-        db_media = MediaDB(
-            type="image",
-            name=f"{dataset_item.subset}${idx}",
-            format="jpg",
-            size=1024,
-            width=1024,
-            height=768,
-            project_id=str(project.id),
-            created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
-        )
-        db_session.add(db_media)
-        db_session.flush()
-        dataset_item.id = db_media.id
+    db_dataset_items = []
+    for list in [*unannotated_items, *reviewed_items, *to_review_items]:
+        for idx, dataset_item in enumerate(list):
+            db_media = MediaDB(
+                type="image",
+                name=f"{dataset_item.subset}{idx + 1}",
+                format="jpg",
+                size=1024,
+                width=1024,
+                height=768,
+                project_id=str(project.id),
+                created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
+            )
+            db_session.add(db_media)
+            db_session.flush()
+            dataset_item.id = db_media.id
+            db_dataset_items.append(dataset_item)
 
     db_session.add_all(db_dataset_items)
     db_session.flush()

@@ -48,7 +48,6 @@ def add_media(
             name=name,
             format=format,
         )
-        print(media)
         dataset_service.create_dataset_item(
             project=project,
             media=media,
