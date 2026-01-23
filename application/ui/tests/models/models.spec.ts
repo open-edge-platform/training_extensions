@@ -15,7 +15,6 @@ const mockedModels = [
         training_info: {
             status: 'successful',
             label_schema_revision: { labels: [] },
-            configuration: {},
             start_time: '2025-01-10T10:00:00.000000+00:00',
             end_time: '2025-01-10T12:30:00.000000+00:00',
             dataset_revision_id: 'dataset-1',
@@ -29,7 +28,6 @@ const mockedModels = [
         training_info: {
             status: 'successful',
             label_schema_revision: { labels: [] },
-            configuration: {},
             start_time: '2025-01-11T10:00:00.000000+00:00',
             end_time: '2025-01-11T14:00:00.000000+00:00',
             dataset_revision_id: 'dataset-1',
@@ -42,7 +40,6 @@ const mockedModels = [
         training_info: {
             status: 'successful',
             label_schema_revision: { labels: [] },
-            configuration: {},
             start_time: '2025-01-12T08:00:00.000000+00:00',
             end_time: '2025-01-12T10:00:00.000000+00:00',
             dataset_revision_id: 'dataset-2',
@@ -70,10 +67,10 @@ test.describe('Models', () => {
             }),
             http.patch('/api/projects/{project_id}/models/{model_id}', async ({ request, params }) => {
                 const body = (await request.json()) as { name: string };
-                const model = mockedModels.find((model) => model.id === params.model_id);
+                const foundModel = mockedModels.find((model) => model.id === params.model_id);
 
-                if (model) {
-                    return HttpResponse.json({ ...model, name: body.name });
+                if (foundModel) {
+                    return HttpResponse.json({ ...foundModel, name: body.name });
                 }
 
                 return new HttpResponse(null, { status: 404 });
@@ -129,8 +126,8 @@ test.describe('Models', () => {
 
         await modelsPage.selectGroupBy('architecture');
 
-        await expect(page.getByRole('heading', { name: 'Object_Detection_YOLOX_X', level: 2 })).toBeVisible();
-        await expect(page.getByRole('heading', { name: 'Object_Detection_SSD', level: 2 })).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Object_Detection_YOLOX_X', exact: true })).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Object_Detection_SSD', exact: true })).toBeVisible();
     });
 
     test('can change sort order', async ({ modelsPage }) => {
@@ -160,6 +157,7 @@ test.describe('Models', () => {
                         name: 'YOLOX Model v1',
                         architecture: 'Object_Detection_YOLOX_X',
                         files_deleted: false,
+                        evaluations: [],
                     },
                     device: 'cpu',
                 });

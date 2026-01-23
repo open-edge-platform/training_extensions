@@ -3,7 +3,7 @@
 
 import dayjs from 'dayjs';
 
-import type { SchemaModelView } from '../../../../api/openapi-spec';
+import type { Model } from '../../../../constants/shared-types';
 import type { GroupedModels } from '../types';
 
 const formatDatasetStartTime = (dateString: string | null | undefined): string => {
@@ -20,7 +20,7 @@ const formatDatasetStartTime = (dateString: string | null | undefined): string =
     }
 };
 
-export const groupModelsByDataset = (models: SchemaModelView[]): GroupedModels[] => {
+export const groupModelsByDataset = (models: Model[]): GroupedModels[] => {
     const groups: Record<string, GroupedModels> = {}; // datasetId -> models
 
     models.forEach((model) => {
@@ -53,7 +53,7 @@ export const groupModelsByDataset = (models: SchemaModelView[]): GroupedModels[]
     return Object.values(groups);
 };
 
-export const groupModelsByArchitecture = (models: SchemaModelView[]): GroupedModels[] => {
+export const groupModelsByArchitecture = (models: Model[]): GroupedModels[] => {
     const groups: Record<string, GroupedModels> = {}; // architecture -> models
 
     models.forEach((model) => {

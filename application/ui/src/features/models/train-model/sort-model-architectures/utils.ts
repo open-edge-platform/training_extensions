@@ -3,7 +3,7 @@
 
 import { orderBy } from 'lodash-es';
 
-import { ModelArchitecture } from '../../../../constants/shared-types';
+import { ModelArchitectureWithPerformanceCategory } from '../../../../constants/shared-types';
 
 export const SortingOptions = {
     RELEVANCE_ASC: 'relevance-asc',
@@ -20,22 +20,15 @@ export const SortingOptions = {
 
 export type SortingOptions = (typeof SortingOptions)[keyof typeof SortingOptions];
 
-type SortingHandler = (modelArchitectures: ModelArchitecture[]) => ModelArchitecture[];
+type SortingHandler = (
+    modelArchitectures: ModelArchitectureWithPerformanceCategory[]
+) => ModelArchitectureWithPerformanceCategory[];
 
 export const SORTING_HANDLERS: Record<SortingOptions, SortingHandler> = {
-    // TODO: Update once backend supports recommended model architectures
-    [SortingOptions.RELEVANCE_DESC]: (modelArchitectures) => modelArchitectures,
-    /*orderBy(
-            modelArchitectures,
-            (modelArchitecture) => modelArchitecture.performanceCategory === PerformanceCategory.OTHER,
-            'desc'
-        ),*/
-    [SortingOptions.RELEVANCE_ASC]: (modelArchitectures) => modelArchitectures,
-    /*orderBy(
-            modelArchitectures,
-            (modelArchitecture) => modelArchitecture.performanceCategory === PerformanceCategory.OTHER,
-            'asc'
-        ),*/
+    [SortingOptions.RELEVANCE_DESC]: (modelArchitectures) =>
+        orderBy(modelArchitectures, (modelArchitecture) => modelArchitecture.performanceCategory === undefined, 'desc'),
+    [SortingOptions.RELEVANCE_ASC]: (modelArchitectures) =>
+        orderBy(modelArchitectures, (modelArchitecture) => modelArchitecture.performanceCategory === undefined, 'asc'),
     [SortingOptions.ACCURACY_ASC]: (modelArchitectures) =>
         orderBy(modelArchitectures, (modelArchitecture) => modelArchitecture.stats.performance_ratings.accuracy, 'asc'),
     [SortingOptions.ACCURACY_DESC]: (modelArchitectures) =>

@@ -51,12 +51,7 @@ export const SourceMenu = ({ id, name, isConnected, onEdit }: SourceMenuProps) =
                 type: 'success',
                 message: `Successfully connected to "${name}".`,
             });
-        } catch (_error) {
-            toast({
-                type: 'error',
-                message: `Failed to connect to "${name}".`,
-            });
-        }
+        } catch (_error) {}
     };
 
     const removeSource = $api.useMutation('delete', '/api/sources/{source_id}', {
@@ -73,12 +68,7 @@ export const SourceMenu = ({ id, name, isConnected, onEdit }: SourceMenuProps) =
                 type: 'success',
                 message: `${name} has been removed successfully!`,
             });
-        } catch (_error) {
-            toast({
-                type: 'error',
-                message: `Failed to remove "${name}".`,
-            });
-        }
+        } catch (_error) {}
     };
 
     return (

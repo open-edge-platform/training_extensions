@@ -5,7 +5,7 @@ import { Button, ButtonGroup, dimensionValue, Flex, Grid, Key } from '@geti/ui';
 import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { isEmpty } from 'lodash-es';
 
-import type { DatasetItem } from '../../../../constants/shared-types';
+import type { Media } from '../../../../constants/shared-types';
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
 import { useSelectedAnnotations } from '../../../../shared/annotator/select-annotation-provider.component';
@@ -16,10 +16,10 @@ import { useSecondaryToolbarState } from './use-secondary-toolbar-state.hook';
 import classes from '../media-preview.module.scss';
 
 type SecondaryToolbarProps = {
-    items: DatasetItem[];
-    mediaItem: DatasetItem;
+    items: Media[];
+    mediaItem: Media;
     onClose: () => void;
-    onSelectedMediaItem: (item: DatasetItem) => void;
+    onSelectedMediaItem: (item: Media) => void;
 };
 
 const getNextItem = (totalItems: number, newIndex: number) => {

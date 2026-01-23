@@ -1,7 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from unittest.mock import Mock
+from unittest.mock import Mock, call
 
 import pytest
 
@@ -12,7 +12,8 @@ from app.services.training.base import Trainer, step
 class TestStepDecorator:
     """Test suite for the @step decorator."""
 
-    def test_step_calls_report_progress_on_success(self):
+    @pytest.mark.parametrize("percent", [None, 50])
+    def test_step_calls_report_progress_on_success(self, percent):
         """Test that the decorator calls report_progress when the step starts and completes."""
 
         # Arrange
@@ -20,7 +21,7 @@ class TestStepDecorator:
             def run(self, ctx: ExecutionContext) -> None:
                 pass
 
-            @step("Test Step")
+            @step("Test Step", percent)
             def test_method(self) -> str:
                 return "result"
 
@@ -32,9 +33,10 @@ class TestStepDecorator:
 
         # Assert
         assert result == "result"
-        assert trainer.report_progress.call_count == 2
-        trainer.report_progress.assert_any_call("Starting: Test Step")
-        trainer.report_progress.assert_any_call("Completed: Test Step")
+        assert trainer.report_progress.call_args_list == [
+            call("Started: Test Step"),
+            call("Completed: Test Step", percent=percent),
+        ]
 
     def test_step_decorator_reports_failure_on_exception(self):
         """Test that the decorator reports failure when an exception occurs."""
@@ -55,9 +57,10 @@ class TestStepDecorator:
         with pytest.raises(ValueError, match="Test error"):
             trainer.failing_method()
 
-        assert trainer.report_progress.call_count == 2
-        trainer.report_progress.assert_any_call("Starting: Failing Step")
-        trainer.report_progress.assert_any_call("Failed: Failing Step", exc=True)
+        assert trainer.report_progress.call_args_list == [
+            call("Started: Failing Step"),
+            call("Failed: Failing Step", exc=True),
+        ]
 
     def test_step_decorator_preserves_exception(self):
         """Test that the decorator re-raises the original exception."""

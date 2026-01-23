@@ -9,7 +9,7 @@ import { v4 as uuid } from 'uuid';
 
 import { $api } from '../../api/client';
 import type { components } from '../../api/openapi-spec';
-import type { DatasetItem, Label } from '../../constants/shared-types';
+import type { Label, Media } from '../../constants/shared-types';
 import { UndoRedoProvider } from '../../features/dataset/media-preview/primary-toolbar/undo-redo/undo-redo-provider.component';
 import useUndoRedoState from '../../features/dataset/media-preview/primary-toolbar/undo-redo/use-undo-redo-state';
 import type { Annotation, Shape } from '../types';
@@ -58,7 +58,7 @@ type AnnotationActionsProviderProps = {
     children: ReactNode;
     initialAnnotationsDTO?: ServerAnnotation[];
     isUserReviewed?: boolean;
-    mediaItem: DatasetItem;
+    mediaItem: Media;
 };
 
 export const AnnotationActionsProvider = ({
@@ -82,9 +82,7 @@ export const AnnotationActionsProvider = ({
 
         const localAnnotations = mapServerAnnotationsToLocal(initialAnnotationsDTO, projectLabels);
 
-        if (localAnnotations.length > 0) {
-            undoRedoActions.reset(localAnnotations);
-        }
+        undoRedoActions.reset(localAnnotations);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [initialAnnotationsDTO, project?.task?.labels]);
 

@@ -7,7 +7,7 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { MediaItem } from '../../../../components/media-item/media-item.component';
 import { MediaThumbnail } from '../../../../components/media-thumbnail/media-thumbnail.component';
 import { VirtualizerGridLayout } from '../../../../components/virtualizer-grid-layout/virtualizer-grid-layout.component';
-import type { DatasetItem } from '../../../../constants/shared-types';
+import type { Media } from '../../../../constants/shared-types';
 import { getThumbnailUrl } from '../../../../shared/media-url.utils';
 
 const layoutOptions = {
@@ -18,7 +18,7 @@ const layoutOptions = {
 };
 
 type SubsetGalleryProps = {
-    items: DatasetItem[];
+    items: Media[];
     fetchNextPage: () => void;
     hasNextPage: boolean;
     isFetchingNextPage: boolean;

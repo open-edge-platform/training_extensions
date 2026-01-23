@@ -24,14 +24,9 @@ import { v4 as uuid } from 'uuid';
 
 import type { Label, TaskType } from '../../../../constants/shared-types';
 import { TASK_HOTKEYS } from '../../../../shared/hotkeys-definition';
+import { DISTINCT_COLORS, getRandomDistinctColor } from '../../../annotator/label-utils';
 import { validateLabelName } from '../validator';
 import { HotkeyField } from './hotkey-field.component';
-
-const PRESET_COLORS = ['#E91E63', '#9C27B0', '#2196F3', '#4CAF50', '#FFEB3B', '#FF9800', '#000000'];
-
-const getRandomColor = () => {
-    return PRESET_COLORS[Math.floor(Math.random() * PRESET_COLORS.length)];
-};
 
 const ColorPicker = ({ onChange, value }: SpectrumColorPickerProps) => {
     return (
@@ -39,7 +34,7 @@ const ColorPicker = ({ onChange, value }: SpectrumColorPickerProps) => {
             <Flex direction='column' gap='size-300'>
                 <ColorEditor />
                 <ColorSwatchPicker>
-                    {PRESET_COLORS.map((color) => {
+                    {DISTINCT_COLORS.map((color) => {
                         return <ColorSwatch color={color} key={color} />;
                     })}
                 </ColorSwatchPicker>
@@ -48,7 +43,7 @@ const ColorPicker = ({ onChange, value }: SpectrumColorPickerProps) => {
     );
 };
 
-const getInitialLabel = (): Label => ({ id: uuid(), color: getRandomColor(), name: '', hotkey: null });
+const getInitialLabel = (): Label => ({ id: uuid(), color: getRandomDistinctColor(), name: '', hotkey: null });
 
 export type CreateLabelProps = {
     onCreate: (label: Label) => void;
@@ -102,7 +97,7 @@ export const CreateLabel = ({ labels, onCreate, taskType }: CreateLabelProps) =>
         >
             <ColorPicker
                 onChange={(newColor) => {
-                    setNewLabel((prevLabel) => ({ ...prevLabel, color: newColor.toString() }));
+                    setNewLabel((prevLabel) => ({ ...prevLabel, color: newColor.toString('hex') }));
                 }}
                 value={newLabel.color}
             />

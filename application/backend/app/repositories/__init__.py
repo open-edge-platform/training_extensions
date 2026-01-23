@@ -5,6 +5,7 @@ from .dataset_item_repo import DatasetItemRepository
 from .dataset_revision_repo import DatasetRevisionRepository
 from .evaluation_repo import EvaluationRepository
 from .label_repo import LabelRepository
+from .media_repo import MediaRepository
 from .model_revision_repo import ModelRevisionRepository
 from .pipeline_repo import PipelineRepository
 from .project_repo import ProjectRepository
@@ -16,6 +17,7 @@ __all__ = [
     "DatasetRevisionRepository",
     "EvaluationRepository",
     "LabelRepository",
+    "MediaRepository",
     "ModelRevisionRepository",
     "PipelineRepository",
     "ProjectRepository",

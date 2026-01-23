@@ -50,6 +50,7 @@ from app.services import (
 )
 
 from .base import Trainer, step
+from .progress import TrainingProgressCallback
 from .subset_assignment import SplitRatios, SubsetAssigner, SubsetService
 
 MODEL_WEIGHTS_PATH = "model_weights_path"
@@ -200,7 +201,7 @@ class OTXTrainer(Trainer):
 
             return training_config, otx_training_config
 
-    @step("Create Training Dataset")
+    @step("Create Training Dataset", 10)
     def create_training_dataset(self, project_id: UUID, task: Task, training_config: dict) -> DatasetInfo:
         """Create datasets for training, validation, and testing."""
 
@@ -290,7 +291,7 @@ class OTXTrainer(Trainer):
                 )
             )
 
-    @step("Train Model")
+    @step("Train Model", 80)
     def train_model(
         self,
         training_config: dict,
@@ -355,6 +356,7 @@ class OTXTrainer(Trainer):
         parser.add_argument("--callbacks", type=list[Callback])
         parsed_callbacks_cfg = parser.parse_object({"callbacks": callbacks_cfg})
         callbacks_list = parser.instantiate_classes(parsed_callbacks_cfg).get("callbacks", [])
+        callbacks_list.append(TrainingProgressCallback(self.report_progress, min_p=10, max_p=80))
 
         # Start training
         logger.info("Starting the training loop (model_id={})", model_id)
@@ -369,7 +371,7 @@ class OTXTrainer(Trainer):
         logger.info("Model training completed. Trained model saved at {}", trained_model_path)
         return trained_model_path, otx_engine
 
-    @step("Evaluate Model")
+    @step("Evaluate Model", 95)
     def evaluate_model(
         self,
         otx_engine: OTXEngine,
@@ -412,7 +414,7 @@ class OTXTrainer(Trainer):
         logger.info("Model exported to ONNX format: {}", exported_onnx_model_path)
         return ExportedModels(openvino_model_path=exported_ov_model_path, onnx_model_path=exported_onnx_model_path)
 
-    @step("Store Model Artifacts")
+    @step("Store Model Artifacts", 100)
     def store_model_artifacts(
         self,
         model_dir: Path,

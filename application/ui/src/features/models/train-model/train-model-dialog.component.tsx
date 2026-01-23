@@ -7,32 +7,22 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { paths } from '../../../constants/paths';
 import { useTrainModelMutation } from '../hooks/api/use-train-model-mutation';
 import { TrainModelDialogContent } from './train-model-dialog-content';
-import { useTrainModel } from './use-train-model';
+import { useTrainModel } from './train-model-provider.component';
 
 type TrainModelDialogProps = {
     onClose: () => void;
 };
 
 export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
-    const {
-        trainingDevices,
-        selectedTrainingDevice,
-        onSelectedTrainingDeviceChange,
-        onSelectedModelArchitectureIdChange,
-        selectedModelArchitectureId,
-        modelArchitectures,
-        selectedDatasetRevision,
-        onSelectedDatasetRevisionChange,
-        datasetRevisions,
-        activeModelArchitectureId,
-        isStartButtonDisabled,
-    } = useTrainModel();
+    const { selectedTrainingDevice, selectedModelArchitectureId, selectedDatasetRevision } = useTrainModel();
     const trainModelMutation = useTrainModelMutation();
     const projectId = useProjectIdentifier();
 
+    const isStartButtonDisabled =
+        selectedModelArchitectureId === null || selectedTrainingDevice === null || selectedDatasetRevision === null;
+
     const trainModel = () => {
-        if (selectedTrainingDevice === null || selectedDatasetRevision === null || selectedModelArchitectureId === null)
-            return;
+        if (isStartButtonDisabled) return;
 
         trainModelMutation.mutate(
             {
@@ -61,22 +51,11 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
     };
 
     return (
-        <Dialog width={'60vw'}>
+        <Dialog width={'75vw'}>
             <Heading>Select a model to train</Heading>
             <Divider size={'S'} />
             <Content>
-                <TrainModelDialogContent
-                    trainingDevices={trainingDevices}
-                    selectedTrainingDevice={selectedTrainingDevice}
-                    onSelectedTrainingDeviceChange={onSelectedTrainingDeviceChange}
-                    datasetRevisions={datasetRevisions}
-                    selectedDatasetRevision={selectedDatasetRevision}
-                    onSelectedDatasetRevisionChange={onSelectedDatasetRevisionChange}
-                    activeModelArchitectureId={activeModelArchitectureId}
-                    modelArchitectures={modelArchitectures}
-                    selectedModelArchitectureId={selectedModelArchitectureId}
-                    onSelectedModelArchitectureIdChange={onSelectedModelArchitectureIdChange}
-                />
+                <TrainModelDialogContent />
             </Content>
             <Divider size={'S'} />
             <ButtonGroup>
