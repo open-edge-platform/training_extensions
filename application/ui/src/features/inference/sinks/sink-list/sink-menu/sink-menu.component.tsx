@@ -21,12 +21,14 @@ export const SinkMenu = ({ id, name, isConnected, onEdit }: SinkMenuProps) => {
     const removeSink = $api.useMutation('delete', '/api/sinks/{sink_id}', {
         meta: {
             invalidateQueries: [['get', '/api/sinks']],
+            errorMessage: `Failed to remove "${name}".`,
         },
     });
 
     const updatePipeline = $api.useMutation('patch', '/api/projects/{project_id}/pipeline', {
         meta: {
             invalidateQueries: [['get', '/api/projects/{project_id}/pipeline']],
+            errorMessage: `Failed to connect to "${name}".`,
         },
     });
 
@@ -55,12 +57,7 @@ export const SinkMenu = ({ id, name, isConnected, onEdit }: SinkMenuProps) => {
                 type: 'success',
                 message: `Successfully connected to "${name}"`,
             });
-        } catch (_error) {
-            toast({
-                type: 'error',
-                message: `Failed to connect to "${name}".`,
-            });
-        }
+        } catch (_error) {}
     };
 
     const handleDelete = async () => {
@@ -71,12 +68,7 @@ export const SinkMenu = ({ id, name, isConnected, onEdit }: SinkMenuProps) => {
                 type: 'success',
                 message: `${name} has been removed successfully!`,
             });
-        } catch (_error) {
-            toast({
-                type: 'error',
-                message: `Failed to remove "${name}".`,
-            });
-        }
+        } catch (_error) {}
     };
 
     return (

@@ -37,6 +37,7 @@ export const SourceMenu = ({ id, name, isConnected, onEdit }: SourceMenuProps) =
                 ['get', '/api/sources'],
                 ['get', '/api/projects/{project_id}/pipeline'],
             ],
+            errorMessage: `Failed to connect to "${name}".`,
         },
     });
 
@@ -51,12 +52,7 @@ export const SourceMenu = ({ id, name, isConnected, onEdit }: SourceMenuProps) =
                 type: 'success',
                 message: `Successfully connected to "${name}".`,
             });
-        } catch (_error) {
-            toast({
-                type: 'error',
-                message: `Failed to connect to "${name}".`,
-            });
-        }
+        } catch (_error) {}
     };
 
     const removeSource = $api.useMutation('delete', '/api/sources/{source_id}', {
