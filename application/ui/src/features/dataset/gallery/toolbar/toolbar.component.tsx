@@ -8,14 +8,14 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { $api } from '../../../../api/client';
 import { AddMediaButton } from '../../../../components/add-media-button/add-media-button.component';
 import { CheckboxInput } from '../../../../components/checkbox-input/checkbox-input.component';
-import type { DatasetItem } from '../../../../constants/shared-types';
+import type { Media } from '../../../../constants/shared-types';
 import { TrainModel } from '../../../models/train-model/train-model.component';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
 import { useSelectedData } from '../../selected-data-provider.component';
 import { toggleMultipleSelection, updateSelectedKeysTo } from './util';
 
 type ToolbarProps = {
-    items: DatasetItem[];
+    items: Media[];
 };
 
 export const Toolbar = ({ items }: ToolbarProps) => {
@@ -23,7 +23,7 @@ export const Toolbar = ({ items }: ToolbarProps) => {
     const queryClient = useQueryClient();
     const { selectedKeys, setSelectedKeys, setMediaState, toggleSelectedKeys } = useSelectedData();
 
-    const addItemMutation = $api.useMutation('post', '/api/projects/{project_id}/dataset/items');
+    const addItemMutation = $api.useMutation('post', '/api/projects/{project_id}/dataset/media');
 
     const totalSelectedElements = selectedKeys instanceof Set ? selectedKeys.size : 0;
     const hasSelectedElements = totalSelectedElements > 0;
@@ -62,7 +62,7 @@ export const Toolbar = ({ items }: ToolbarProps) => {
         const failed = promises.filter((result) => result.status === 'rejected').length;
 
         await queryClient.invalidateQueries({
-            queryKey: ['get', '/api/projects/{project_id}/dataset/items'],
+            queryKey: ['get', '/api/projects/{project_id}/dataset/media'],
         });
 
         if (failed === 0) {

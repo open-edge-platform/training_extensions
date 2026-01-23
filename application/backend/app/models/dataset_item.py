@@ -11,13 +11,6 @@ from .label import LabelReference
 from .shape import Shape
 
 
-class DatasetItemFormat(StrEnum):
-    """Format of the image related to the dataset item."""
-
-    JPG = "jpg"
-    PNG = "png"
-
-
 class DatasetItemSubset(StrEnum):
     """Subset of the dataset item."""
 
@@ -65,32 +58,20 @@ class DatasetItem(BaseEntity):
     DatasetItem represents an individual item within a dataset.
 
     Attributes:
-        id: Unique identifier for the dataset item.
+        id: Unique identifier for the dataset item, is equal to the corresponding media.
         project_id: Identifier of the project to which the dataset item belongs.
-        name: Name of the dataset item.
-        format: Format of the dataset item (e.g., JPG, PNG).
-        width: Width of the dataset item in pixels.
-        height: Height of the dataset item in pixels.
-        size: Size of the dataset item in bytes.
         annotation_data: List of annotations associated with the dataset item.
         user_reviewed: Indicates whether the dataset item has been reviewed by a user,
             namely if its annotation has been created/accepted by a human or if it is just a raw model prediction.
         prediction_model_id: Identifier of the model that generated predictions for this dataset item, if applicable.
-        source_id: Identifier of the source from which the dataset item was acquired, if applicable.
         subset: Subset to which the dataset item belongs (e.g., training, validation, testing).
         subset_assigned_at: Timestamp indicating when the dataset item was assigned to its subset.
     """
 
     id: UUID
     project_id: UUID
-    name: str
-    format: DatasetItemFormat
-    width: int
-    height: int
-    size: int
     annotation_data: list[DatasetItemAnnotation] | None
     user_reviewed: bool
     prediction_model_id: UUID | None
-    source_id: UUID | None
     subset: DatasetItemSubset = DatasetItemSubset.UNASSIGNED
     subset_assigned_at: datetime | None

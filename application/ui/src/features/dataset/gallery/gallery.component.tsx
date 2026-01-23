@@ -10,7 +10,7 @@ import { CheckboxInput } from '../../../components/checkbox-input/checkbox-input
 import { MediaItem } from '../../../components/media-item/media-item.component';
 import { MediaThumbnail } from '../../../components/media-thumbnail/media-thumbnail.component';
 import { VirtualizerGridLayout } from '../../../components/virtualizer-grid-layout/virtualizer-grid-layout.component';
-import type { DatasetItem } from '../../../constants/shared-types';
+import type { Media } from '../../../constants/shared-types';
 import { getThumbnailUrl } from '../../../shared/media-url.utils';
 import { MediaPreview } from '../media-preview/media-preview.component';
 import { useSelectedData } from '../selected-data-provider.component';
@@ -20,7 +20,7 @@ import { DeleteMediaItem } from './delete-media-item/delete-media-item.component
 import classes from './gallery.module.scss';
 
 type GalleryProps = {
-    items: DatasetItem[];
+    items: Media[];
     fetchNextPage: () => void;
     hasNextPage: boolean;
     isFetchingNextPage: boolean;
@@ -35,7 +35,7 @@ const layoutOptions = {
 export const Gallery = ({ items, hasNextPage, isFetchingNextPage, fetchNextPage }: GalleryProps) => {
     const project_id = useProjectIdentifier();
 
-    const [selectedMediaItem, setSelectedMediaItem] = useState<null | DatasetItem>(null);
+    const [selectedMediaItem, setSelectedMediaItem] = useState<null | Media>(null);
     const { selectedKeys, mediaState, setSelectedKeys, toggleSelectedKeys } = useSelectedData();
 
     const isSetSelectedKeys = selectedKeys instanceof Set;

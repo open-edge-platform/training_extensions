@@ -96,7 +96,7 @@ const test = testBase.extend<Fixtures>({
                 // Schema is empty, so we return an empty object
                 return response(200).json({} as never);
             }),
-            http.get('/api/projects/{project_id}/dataset/items/{dataset_item_id}/thumbnail', ({}) => {
+            http.get('/api/projects/{project_id}/dataset/media/{media_id}/thumbnail', ({}) => {
                 const sampleImagePath = path.resolve(dirname, './assets/candy-thumbnail.png');
                 const sampleImageBuffer = fs.readFileSync(sampleImagePath);
 

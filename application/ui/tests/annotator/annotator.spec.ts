@@ -6,8 +6,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import { expect } from '@playwright/test';
-import { mockedDatasetItem } from 'mocks/mock-dataset';
 import { getMockedLabel } from 'mocks/mock-labels';
+import { mockedMedia } from 'mocks/mock-media';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 
@@ -35,13 +35,13 @@ test.beforeEach(async ({ network, page }) => {
         http.get('/api/projects/{project_id}', () => {
             return HttpResponse.json(mockedProject);
         }),
-        http.get('/api/projects/{project_id}/dataset/items', () => {
+        http.get('/api/projects/{project_id}/dataset/media', () => {
             return HttpResponse.json({
-                items: [mockedDatasetItem({ width: 1000, height: 750 })],
+                items: [mockedMedia({ width: 1000, height: 750 })],
                 pagination: { offset: 0, limit: 20, count: 1, total: 1 },
             });
         }),
-        http.get('/api/projects/{project_id}/dataset/items/{dataset_item_id}/binary', async () => {
+        http.get('/api/projects/{project_id}/dataset/media/{media_id}/binary', async () => {
             return HttpResponse.arrayBuffer(candyPngBuffer.buffer, {
                 headers: { 'Content-Type': 'image/png' },
             });

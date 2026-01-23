@@ -36,6 +36,7 @@ from app.api.routers import (
     dataset_revisions,
     datasets,
     jobs,
+    media,
     model_architectures,
     models,
     pipelines,
@@ -76,6 +77,7 @@ app.add_middleware(  # TODO restrict settings in production
 app.include_router(dataset_revisions.router)
 app.include_router(datasets.router)
 app.include_router(jobs.router)
+app.include_router(media.router)
 app.include_router(model_architectures.router)
 app.include_router(models.router)
 app.include_router(pipelines.router)
