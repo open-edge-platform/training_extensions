@@ -8,6 +8,7 @@ import { DeviceType } from '../../../../constants/shared-types';
 
 export const useTrainModelMutation = () => {
     const trainModelMutation = useSubmitJob();
+
     const projectIdentifier = useProjectIdentifier();
 
     const trainModel = (
@@ -19,7 +20,7 @@ export const useTrainModelMutation = () => {
             modelArchitectureId: string;
             datasetRevisionId: string;
         },
-        onSuccess?: () => void
+        { onSuccess, onError }: { onSuccess?: () => void; onError?: () => void } = {}
     ) => {
         trainModelMutation.mutate(
             {
@@ -36,6 +37,7 @@ export const useTrainModelMutation = () => {
             },
             {
                 onSuccess,
+                onError,
             }
         );
     };

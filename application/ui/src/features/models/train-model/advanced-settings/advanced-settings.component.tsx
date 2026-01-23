@@ -5,7 +5,7 @@ import { ReactNode } from 'react';
 
 import { Item, TabList, TabPanels, Tabs, Text, View } from '@geti/ui';
 
-import { useTrainModel } from '../train-model-provider.component';
+import { useTrainModelState } from '../train-model-provider.component';
 import { DataManagement } from './data-management/data-management.component';
 import { Training } from './training/training.component';
 
@@ -40,7 +40,7 @@ export const AdvancedSettings = () => {
         isReshufflingSubsetsEnabled,
         onReshufflingSubsetsEnabledChange,
         hasSupportedModels,
-    } = useTrainModel();
+    } = useTrainModelState();
 
     // Just for type safety
     if (trainingConfiguration === undefined || defaultTrainingConfiguration === undefined) {

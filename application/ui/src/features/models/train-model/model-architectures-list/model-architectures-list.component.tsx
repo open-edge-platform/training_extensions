@@ -6,7 +6,7 @@ import { ReactNode, useState } from 'react';
 import { Button, Flex } from '@geti/ui';
 
 import { ModelArchitectureWithPerformanceCategory } from '../../../../constants/shared-types';
-import { useTrainModel } from '../train-model-provider.component';
+import { useTrainModelState } from '../train-model-provider.component';
 import { AllModelArchitectures } from './all-model-architectures.component';
 import { RecommendedModelArchitectures } from './recommended-model-architectures.component';
 
@@ -44,7 +44,7 @@ const ModelArchitecturesContainer = ({ children, onShowMore, showMore }: ModelAr
 export const ModelArchitecturesList = () => {
     const [showMore, setShowMore] = useState<boolean>(false);
     const { activeModelArchitectureId, modelArchitectures, selectedModelArchitectureId, onSelectModelArchitectureId } =
-        useTrainModel();
+        useTrainModelState();
 
     if (showMore) {
         return (

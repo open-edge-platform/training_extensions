@@ -52,7 +52,10 @@ type TrainModelContextProps = {
 
     hasSupportedModels: boolean;
 
-    isValidConfiguration: (isAdvancedMode: boolean) => boolean;
+    isValidConfiguration: () => boolean;
+
+    isAdvancedSettingsMode: boolean;
+    onAdvancedSettingsModeChange: (isAdvancedSettingsMode: boolean) => void;
 };
 
 const TrainModelContext = createContext<TrainModelContextProps | null>(null);
@@ -125,12 +128,13 @@ export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
 
     const [isReshufflingSubsetsEnabled, setIsReshufflingSubsetsEnabled] = useState<boolean>(false);
     const [trainFromScratch, setTrainFromScratch] = useState<boolean>(false);
+    const [isAdvancedSettingsMode, setIsAdvancedSettingsMode] = useState<boolean>(false);
 
     const modelsByArchitecture = useModelsByArchitectureId(selectedModelArchitectureId);
 
     const hasSupportedModels = modelsByArchitecture.length > 0;
 
-    const isValidConfiguration = (isAdvancedMode: boolean) => {
+    const isValidConfiguration = () => {
         if (
             selectedModelArchitectureId === null ||
             selectedTrainingDevice === null ||
@@ -139,7 +143,7 @@ export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
             return false;
         }
 
-        if (!isAdvancedMode) {
+        if (!isAdvancedSettingsMode) {
             return true;
         }
 
@@ -190,6 +194,9 @@ export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
                 hasSupportedModels,
 
                 isValidConfiguration,
+
+                isAdvancedSettingsMode,
+                onAdvancedSettingsModeChange: setIsAdvancedSettingsMode,
             }}
         >
             {children}
@@ -197,7 +204,7 @@ export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
     );
 };
 
-export const useTrainModel = () => {
+export const useTrainModelState = () => {
     const context = use(TrainModelContext);
 
     if (context === null) {
