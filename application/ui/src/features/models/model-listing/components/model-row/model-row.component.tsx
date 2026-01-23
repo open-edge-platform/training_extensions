@@ -5,7 +5,7 @@ import { ActionButton, Flex, Grid, Item, Key, Menu, MenuTrigger, Tag, Text } fro
 import { MoreMenu } from '@geti/ui/icons';
 
 import { ReactComponent as ThumbsUp } from '../../../../../assets/icons/thumbs-up.svg';
-import { Model } from '../../../../../constants/shared-types';
+import type { Model } from '../../../../../constants/shared-types';
 import { GRID_COLUMNS } from '../../constants';
 import { AccuracyIndicator } from '../../model-variants/accuracy-indicator.component';
 import { formatTrainingDateTime } from '../../utils/date-formatting';
