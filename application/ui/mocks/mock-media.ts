@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Media } from '../src/constants/shared-types';
+import type { Media } from '../src/constants/shared-types';
 
 export const mockedMedia = (props: Partial<Media> = {}): Media => ({
     id: 'item-1',

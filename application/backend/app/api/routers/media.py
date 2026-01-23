@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from datetime import datetime
@@ -30,6 +30,7 @@ MAX_MEDIA_NUMBER_RETURNED = 100
     responses={
         status.HTTP_201_CREATED: {"description": "Media created"},
         status.HTTP_422_UNPROCESSABLE_CONTENT: {"description": "Invalid media has been uploaded"},
+        status.HTTP_404_NOT_FOUND: {"description": "Project not found"},
     },
 )
 def add_media(
@@ -64,6 +65,7 @@ def add_media(
     "",
     responses={
         status.HTTP_200_OK: {"description": "List of available media", "model": MediaWithPagination},
+        status.HTTP_404_NOT_FOUND: {"description": "Project not found"},
     },
 )
 def list_media(  # noqa: PLR0913
