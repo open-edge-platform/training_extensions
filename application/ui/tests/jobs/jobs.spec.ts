@@ -9,7 +9,7 @@ import { expect, http, test } from '../fixtures';
 const mockedTrainingJob = getMockedJob({
     job_id: 'job-1',
     job_type: 'train',
-    status: 'running',
+    status: 'RUNNING',
     progress: 45,
     message: 'Training in progress...',
     metadata: {

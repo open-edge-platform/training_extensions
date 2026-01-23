@@ -21,9 +21,7 @@ export const useGetCurrentTrainingJob = () => {
     const projectId = useProjectIdentifier();
     const activeJobs = $api.useQuery('get', '/api/jobs', undefined, {
         refetchInterval: (query) => {
-            const hasActiveJob = query.state.data?.some(
-                (job) => job.status === 'RUNNING' || job.status === 'PENDING' || job.status === 'CANCELLING'
-            );
+            const hasActiveJob = query.state.data?.some((job) => job.status === 'RUNNING' || job.status === 'PENDING');
 
             return hasActiveJob ? 5000 : false;
         },

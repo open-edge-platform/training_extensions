@@ -84,7 +84,7 @@ export const AnnotationActionsProvider = ({
 
         undoRedoActions.reset(localAnnotations);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [initialAnnotationsDTO, project?.task?.labels, mediaItem.id]);
+    }, [initialAnnotationsDTO, project?.task?.labels]);
 
     const updateAnnotations = (updatedAnnotations: Annotation[]) => {
         const updatedMap = new Map(updatedAnnotations.map((annotation) => [annotation.id, annotation]));

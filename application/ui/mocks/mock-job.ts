@@ -18,7 +18,7 @@ export const getMockedJob = (job?: Partial<Job>): Job => {
                 dataset_revision_id: '6f9f9g61-4fg1-7781-e082-e1113f371e01',
             },
         },
-        status: 'running',
+        status: 'RUNNING',
         progress: 45,
         message: 'Training in progress...',
         error: null,
