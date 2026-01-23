@@ -7,6 +7,7 @@ import { AlertDialog, DialogContainer, Key } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { Model } from '../../../../../constants/shared-types';
+import { usePatchPipeline } from '../../../../../hooks/api/pipeline.hook';
 import { useDeleteModel } from '../../../hooks/api/use-delete-model.hook';
 import { useDownloadModel } from '../../../hooks/api/use-download-model.hook';
 import { useGetModel } from '../../../hooks/api/use-get-model.hook';
@@ -16,6 +17,7 @@ import { ModelRow } from './model-row.component';
 import { RenameModelDialog } from './rename-model-dialog.component';
 
 const MODEL_ACTIONS = {
+    ACTIVE: 'active',
     RENAME: 'rename',
     DELETE: 'delete',
     EXPORT: 'export',
@@ -31,13 +33,19 @@ export const ModelRowContainer = ({ model }: ModelRowContainerProps) => {
     const { data: parentRevisionModel } = useGetModel(model.parent_revision);
     const deleteModelMutation = useDeleteModel();
     const renameModelMutation = useRenameModel();
+    const patchPipelineMutation = usePatchPipeline();
     const { downloadModel } = useDownloadModel(model.id);
 
     const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
     const handleAction = (key: Key) => {
-        if (key === MODEL_ACTIONS.DELETE) {
+        if (key === MODEL_ACTIONS.ACTIVE) {
+            patchPipelineMutation.mutate({
+                params: { path: { project_id: projectId } },
+                body: { model_id: model.id },
+            });
+        } else if (key === MODEL_ACTIONS.DELETE) {
             setIsDeleteDialogOpen(true);
         } else if (key === MODEL_ACTIONS.RENAME) {
             setIsRenameDialogOpen(true);
