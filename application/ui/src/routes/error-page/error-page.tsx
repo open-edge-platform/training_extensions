@@ -3,10 +3,10 @@
 
 import { Button, Heading, IllustratedMessage, View } from '@geti/ui';
 import { NotFound } from '@geti/ui/icons';
-import { isObject, isString } from 'lodash-es';
 import { isRouteErrorResponse, useRouteError } from 'react-router';
 
 import { paths } from '../../constants/paths';
+import { isErrorWithDetail } from '../../utils';
 import { redirectTo } from '../utils';
 
 const useErrorMessage = () => {
@@ -42,7 +42,7 @@ const useErrorMessage = () => {
         return error.message;
     }
 
-    if (isObject(error) && 'detail' in error && isString(error.detail)) {
+    if (isErrorWithDetail(error)) {
         return error.detail;
     }
 
