@@ -37,7 +37,6 @@ export const SourceMenu = ({ id, name, isConnected, onEdit }: SourceMenuProps) =
                 ['get', '/api/sources'],
                 ['get', '/api/projects/{project_id}/pipeline'],
             ],
-            errorMessage: `Failed to connect to "${name}".`,
         },
     });
 
@@ -69,12 +68,7 @@ export const SourceMenu = ({ id, name, isConnected, onEdit }: SourceMenuProps) =
                 type: 'success',
                 message: `${name} has been removed successfully!`,
             });
-        } catch (_error) {
-            toast({
-                type: 'error',
-                message: `Failed to remove "${name}".`,
-            });
-        }
+        } catch (_error) {}
     };
 
     return (

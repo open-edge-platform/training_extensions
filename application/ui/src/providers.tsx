@@ -16,7 +16,6 @@ type PathsWithMethod<M extends HttpMethod> = {
 type QueryKey = [HttpMethod, PathsWithMethod<HttpMethod>];
 type MutationMeta = {
     invalidateQueries?: QueryKey[];
-    errorMessage?: string;
 };
 
 declare module '@tanstack/react-query' {
@@ -27,11 +26,7 @@ declare module '@tanstack/react-query' {
 
 const TOAST_DURATION = 5000;
 
-const getErrorMessage = (error: unknown, customMessage?: string): string => {
-    if (customMessage) {
-        return customMessage;
-    }
-
+const getErrorMessage = (error: unknown): string => {
     if (error && typeof error === 'object') {
         if ('detail' in error && typeof error.detail === 'string') {
             return error.detail;
@@ -69,10 +64,10 @@ export const queryClient = new QueryClient({
                 });
             }
         },
-        onError: (error, _variables, _context, mutation) => {
+        onError: (error) => {
             toast({
                 type: 'error',
-                message: getErrorMessage(error, mutation.meta?.errorMessage),
+                message: getErrorMessage(error),
                 duration: TOAST_DURATION,
             });
         },
