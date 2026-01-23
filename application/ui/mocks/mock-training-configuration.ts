@@ -10,7 +10,7 @@ import {
 } from '../src/features/models/configuration.interface';
 
 export function getMockedConfigurationParameter(
-    parameter: Partial<EnumConfigurationParameter> & Required<Pick<ConfigurationParameter, 'type'>>
+    parameter: Partial<EnumConfigurationParameter> & Required<Pick<EnumConfigurationParameter, 'type'>>
 ): EnumConfigurationParameter;
 export function getMockedConfigurationParameter(
     parameter: Partial<NumberParameter> & Required<Pick<NumberParameter, 'type'>>
