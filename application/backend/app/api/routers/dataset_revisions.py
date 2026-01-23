@@ -3,7 +3,7 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from starlette.responses import FileResponse
 
 from app.api.dependencies import get_dataset_revision, get_dataset_revision_service, get_project
@@ -12,14 +12,15 @@ from app.api.schemas.dataset_item import (
     DatasetRevisionItemsWithPagination,
     DatasetRevisionItemView,
 )
+from app.api.schemas.dataset_revision import DatasetRevisionView
 from app.api.validators import DatasetItemID, DatasetRevisionID
 from app.core.models import Pagination
 from app.models import DatasetItemSubset, Project
 from app.models.dataset_revision import DatasetRevision
-from app.services import DatasetRevisionService
+from app.services import DatasetRevisionService, ResourceNotFoundError
 
 router = APIRouter(
-    prefix="/api/projects/{project_id}/dataset_revisions/{dataset_revision_id}",
+    prefix="/api/projects/{project_id}/dataset_revisions",
     tags=["Dataset Revisions"],
 )
 
@@ -28,7 +29,61 @@ MAX_DATASET_ITEMS_NUMBER_RETURNED = 100
 
 
 @router.get(
-    "/items",
+    "",
+    response_model=list[DatasetRevisionView],
+    responses={
+        status.HTTP_200_OK: {"description": "List of available models"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID"},
+        status.HTTP_404_NOT_FOUND: {"description": "Project not found"},
+    },
+)
+def list_dataset_revisions(
+    project: Annotated[Project, Depends(get_project)],
+    dataset_revision_service: Annotated[DatasetRevisionService, Depends(get_dataset_revision_service)],
+) -> list[DatasetRevisionView]:
+    """Get all models in a project, optionally filtered by dataset revision."""
+    try:
+        dataset_revision_views = []
+        for dataset_revision in dataset_revision_service.list_dataset_revisions(project_id=project.id):
+            item_counts = dataset_revision_service.count_items_by_subset(
+                project_id=project.id, dataset_revision_id=dataset_revision.id
+            )
+            dataset_revision_views.append(dataset_revision.model_dump() | {"item_counts": item_counts})
+        return [
+            DatasetRevisionView.model_validate(dataset_revision_view, from_attributes=True)
+            for dataset_revision_view in dataset_revision_views
+        ]
+    except ResourceNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+
+
+@router.get(
+    "/{dataset_revision_id}",
+    response_model=DatasetRevisionView,
+    responses={
+        status.HTTP_200_OK: {"description": "Model found"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project or model ID"},
+        status.HTTP_404_NOT_FOUND: {"description": "Project or model not found"},
+    },
+)
+def get_dataset_revision_details(
+    project: Annotated[Project, Depends(get_project)],
+    dataset_revision: Annotated[DatasetRevision, Depends(get_dataset_revision)],
+    dataset_revision_service: Annotated[DatasetRevisionService, Depends(get_dataset_revision_service)],
+) -> DatasetRevisionView:
+    """Get a specific model by ID."""
+    try:
+        item_counts = dataset_revision_service.count_items_by_subset(
+            project_id=project.id, dataset_revision_id=dataset_revision.id
+        )
+        dataset_revision_view = dataset_revision.model_dump() | {"item_counts": item_counts}
+        return DatasetRevisionView.model_validate(dataset_revision_view, from_attributes=True)
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.get(
+    "/{dataset_revision_id}/items",
     responses={
         status.HTTP_200_OK: {
             "description": "List of dataset items in the revision",
@@ -66,7 +121,7 @@ def list_dataset_revision_items(
 
 
 @router.get(
-    "/items/{dataset_item_id}",
+    "/{dataset_revision_id}/items/{dataset_item_id}",
     responses={
         status.HTTP_200_OK: {"description": "Dataset revision item found", "model": DatasetRevisionItemView},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid dataset item ID or revision ID"},
@@ -90,7 +145,7 @@ def get_dataset_revision_item(
 
 
 @router.get(
-    "/items/{dataset_item_id}/binary",
+    "/{dataset_revision_id}/items/{dataset_item_id}/binary",
     responses={
         status.HTTP_200_OK: {"description": "Dataset item binary found"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid dataset item ID or revision ID"},
@@ -113,7 +168,7 @@ def get_dataset_revision_item_binary(
 
 
 @router.get(
-    "/items/{dataset_item_id}/thumbnail",
+    "/{dataset_revision_id}/items/{dataset_item_id}/thumbnail",
     responses={
         status.HTTP_200_OK: {"description": "Dataset item thumbnail found"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid dataset item ID or revision ID"},
@@ -137,7 +192,7 @@ def get_dataset_revision_item_thumbnail(
 
 
 @router.delete(
-    "",
+    "/{dataset_revision_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
         status.HTTP_204_NO_CONTENT: {"description": "Dataset revision files deleted"},
