@@ -36,6 +36,7 @@ def fxt_model_service() -> MagicMock:
 class TestModelEndpoints:
     def test_list_model_success(self, fxt_model, fxt_get_project, fxt_model_service, fxt_client):
         fxt_model_service.list_models.return_value = [fxt_model] * 2
+        fxt_model_service.get_model_size_in_bytes.side_effect = [1024] * 2
         fxt_model_service.get_model_variants.side_effect = [[], []]
 
         dataset_revision_id = uuid4()
@@ -47,6 +48,12 @@ class TestModelEndpoints:
         assert len(response.json()) == 2
         fxt_model_service.list_models.assert_called_once_with(
             project_id=fxt_get_project.id, dataset_revision_id=dataset_revision_id
+        )
+        fxt_model_service.get_model_size_in_bytes.assert_has_calls(
+            [
+                call(project_id=fxt_get_project.id, model_id=fxt_model.id),
+                call(project_id=fxt_get_project.id, model_id=fxt_model.id),
+            ]
         )
         fxt_model_service.get_model_variants.assert_has_calls(
             [
@@ -72,12 +79,16 @@ class TestModelEndpoints:
 
     def test_get_model_success(self, fxt_model, fxt_get_project, fxt_model_service, fxt_client):
         fxt_model_service.get_model.return_value = fxt_model
+        fxt_model_service.get_model_size_in_bytes.return_value = 1024
         fxt_model_service.get_model_variants.return_value = []
 
         response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models/{fxt_model.id}")
 
         assert response.status_code == status.HTTP_200_OK
         fxt_model_service.get_model.assert_called_once_with(project_id=fxt_get_project.id, model_id=fxt_model.id)
+        fxt_model_service.get_model_size_in_bytes.assert_called_once_with(
+            project_id=fxt_get_project.id, model_id=fxt_model.id
+        )
         fxt_model_service.get_model_variants.assert_called_once_with(
             project_id=fxt_get_project.id, model_id=fxt_model.id
         )
@@ -87,6 +98,7 @@ class TestModelEndpoints:
         [
             ("get", "get_model"),
             ("delete", "delete_model"),
+            ("patch", "rename_model"),
         ],
     )
     def test_model_invalid_ids(self, http_method, service_method, fxt_get_project, fxt_model_service, fxt_client):
@@ -216,3 +228,34 @@ class TestModelEndpoints:
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         fxt_model_service.get_model.assert_not_called()
+
+    def test_rename_model_success(self, fxt_model, fxt_get_project, fxt_model_service, fxt_client):
+        fxt_model_service.rename_model.return_value = fxt_model
+        fxt_model_service.get_model_size_in_bytes.return_value = 1024
+        fxt_model_service.get_model_variants.return_value = []
+
+        response = fxt_client.patch(
+            f"/api/projects/{fxt_get_project.id}/models/{fxt_model.id}", json={"name": "New name"}
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        fxt_model_service.rename_model.assert_called_once_with(
+            project_id=fxt_get_project.id, model_id=fxt_model.id, model_metadata={"name": "New name"}
+        )
+        fxt_model_service.get_model_size_in_bytes.assert_called_once_with(
+            project_id=fxt_get_project.id, model_id=fxt_model.id
+        )
+        fxt_model_service.get_model_variants.assert_called_once_with(
+            project_id=fxt_get_project.id, model_id=fxt_model.id
+        )
+
+    def test_rename_model_not_found(self, fxt_get_project, fxt_model_service, fxt_client):
+        model_id = uuid4()
+        fxt_model_service.rename_model.side_effect = ResourceNotFoundError(ResourceType.MODEL, str(model_id))
+
+        response = fxt_client.patch(f"/api/projects/{fxt_get_project.id}/models/{model_id}", json={"name": "New name"})
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        fxt_model_service.rename_model.assert_called_once_with(
+            project_id=fxt_get_project.id, model_id=model_id, model_metadata={"name": "New name"}
+        )

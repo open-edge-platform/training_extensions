@@ -159,7 +159,10 @@ def rename_model(
         model_revision = model_service.rename_model(
             project_id=project.id, model_id=model_id, model_metadata=model_metadata
         )
-        return ModelView.model_validate(model_revision, from_attributes=True)
+        model_variants = model_service.get_model_variants(project_id=project.id, model_id=model_id)
+        model_size = model_service.get_model_size_in_bytes(project_id=project.id, model_id=model_id)
+        model_view = model_revision.model_dump() | {"variants": model_variants} | {"size": model_size}
+        return ModelView.model_validate(model_view, from_attributes=True)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
