@@ -82,9 +82,7 @@ export const AnnotationActionsProvider = ({
 
         const localAnnotations = mapServerAnnotationsToLocal(initialAnnotationsDTO, projectLabels);
 
-        if (localAnnotations.length > 0) {
-            undoRedoActions.reset(localAnnotations);
-        }
+        undoRedoActions.reset(localAnnotations);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [initialAnnotationsDTO, project?.task?.labels]);
 
