@@ -2,9 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { screen } from '@testing-library/react';
+import { render } from 'test-utils/render';
+import { vi } from 'vitest';
 
-import { TrainingConfiguration } from '../../../../../../../core/configurable-parameters/services/configuration.interface';
-import { providersRender as render } from '../../../../../../../test-utils/required-providers-render';
+import { TrainingConfiguration } from '../../../configuration.interface';
 import { Training } from './training.component';
 
 const baseConfig: TrainingConfiguration = {
@@ -15,9 +16,9 @@ const baseConfig: TrainingConfiguration = {
             type: 'int',
             description: 'Maximum number of training epochs to run',
             value: 100,
-            defaultValue: 100,
-            minValue: 0,
-            maxValue: null,
+            default_value: 100,
+            min_value: 0,
+            max_value: null,
         },
     ],
     dataset_preparation: {
@@ -25,7 +26,6 @@ const baseConfig: TrainingConfiguration = {
         augmentation: {},
         filtering: {},
     },
-    taskId: '',
     evaluation: [],
 };
 
@@ -34,12 +34,12 @@ describe('Training component', () => {
         render(
             <Training
                 trainFromScratch={false}
-                onTrainFromScratchChange={jest.fn()}
+                onTrainFromScratchChange={vi.fn()}
                 defaultTrainingConfiguration={baseConfig}
                 trainingConfiguration={baseConfig}
-                onUpdateTrainingConfiguration={jest.fn()}
+                onUpdateTrainingConfiguration={vi.fn()}
                 isReshufflingSubsetsEnabled={true}
-                onReshufflingSubsetsEnabledChange={jest.fn()}
+                onReshufflingSubsetsEnabledChange={vi.fn()}
             />
         );
 
@@ -50,12 +50,12 @@ describe('Training component', () => {
         render(
             <Training
                 trainFromScratch={false}
-                onTrainFromScratchChange={jest.fn()}
+                onTrainFromScratchChange={vi.fn()}
                 trainingConfiguration={{ ...baseConfig, training: [] }}
                 defaultTrainingConfiguration={{ ...baseConfig, training: [] }}
-                onUpdateTrainingConfiguration={jest.fn()}
+                onUpdateTrainingConfiguration={vi.fn()}
                 isReshufflingSubsetsEnabled={true}
-                onReshufflingSubsetsEnabledChange={jest.fn()}
+                onReshufflingSubsetsEnabledChange={vi.fn()}
             />
         );
 
