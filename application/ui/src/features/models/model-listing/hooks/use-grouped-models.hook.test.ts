@@ -44,7 +44,6 @@ describe('useGroupedModels', () => {
                         status: 'successful',
                         dataset_revision_id: 'dataset-1',
                         label_schema_revision: {},
-                        configuration: {},
                     },
                 }),
                 getMockedModel({
@@ -53,7 +52,6 @@ describe('useGroupedModels', () => {
                         status: 'successful',
                         dataset_revision_id: 'dataset-1',
                         label_schema_revision: {},
-                        configuration: {},
                     },
                 }),
                 getMockedModel({
@@ -62,7 +60,6 @@ describe('useGroupedModels', () => {
                         status: 'successful',
                         dataset_revision_id: 'dataset-2',
                         label_schema_revision: {},
-                        configuration: {},
                     },
                 }),
             ];
