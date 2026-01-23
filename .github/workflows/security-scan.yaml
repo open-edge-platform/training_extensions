@@ -99,11 +99,6 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install dependencies
-        uses: ./.github/actions/install-dependencies
-        with:
-          cleanup-runner: "true"
-
       - name: Build and run docker image
         working-directory: application/docker
         id: run-image
