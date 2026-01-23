@@ -40,7 +40,7 @@ export const SourceMenu = ({ id, name, isConnected, onEdit }: SourceMenuProps) =
         },
     });
 
-    const handleConnect = async () => {
+    const handleConnect = () => {
         updatePipeline.mutate(
             {
                 params: { path: { project_id } },
@@ -63,7 +63,7 @@ export const SourceMenu = ({ id, name, isConnected, onEdit }: SourceMenuProps) =
         },
     });
 
-    const handleDelete = async () => {
+    const handleDelete = () => {
         removeSource.mutate(
             { params: { path: { source_id: id } } },
             {

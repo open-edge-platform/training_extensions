@@ -44,7 +44,7 @@ export const SinkMenu = ({ id, name, isConnected, onEdit }: SinkMenuProps) => {
         }
     };
 
-    const handleConnect = async () => {
+    const handleConnect = () => {
         updatePipeline.mutate(
             {
                 params: { path: { project_id } },
@@ -61,11 +61,11 @@ export const SinkMenu = ({ id, name, isConnected, onEdit }: SinkMenuProps) => {
         );
     };
 
-    const handleDelete = async () => {
+    const handleDelete = () => {
         removeSink.mutate(
             { params: { path: { sink_id: id } } },
             {
-                onSuccess: async () => {
+                onSuccess: () => {
                     toast({
                         type: 'success',
                         message: `${name} has been removed successfully!`,
