@@ -1,3 +1,16 @@
+# Security scan workflow
+#
+# This workflow performs security scanning using multiple tools to identify vulnerabilities,
+# secrets, configuration issues, and code quality problems across the entire codebase.
+# It also scans GitHub Actions workflows for potential security issues.
+#
+# Security Tools:
+# - Zizmor: GitHub Actions workflow security scanner
+# - Bandit: Python security linter
+# - Trivy: Vulnerability and misconfiguration scanner
+# - ZAP: Dynamic application security testing (DAST) tool
+# - Schemathesis: API fuzz testing tool
+
 name: "Security scan"
 
 on:
@@ -71,3 +84,144 @@ jobs:
           format: "sarif"
           timeout: "15m"
           ignore_unfixed: "false"
+
+  dast-scan:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        ai-device: [xpu]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install dependencies
+        uses: ./.github/actions/install-dependencies
+        with:
+          cleanup-runner: "true"
+
+      - name: Build and run docker image
+        working-directory: application/docker
+        id: run-image
+        env:
+          AI_DEVICE: ${{ matrix.ai-device }}
+        run: |
+          docker compose up
+          CONTAINER_ID=$(docker ps -qf "ancestor=geti-tune-${AI_DEVICE:-cpu}")
+          echo "Started container: $CONTAINER_ID"
+          echo "CONTAINER_ID=$CONTAINER_ID" >> $GITHUB_ENV
+
+          TEST_URL="localhost:7860"
+          # Wait for container to be ready (max 60 seconds)
+          echo "Waiting for container to be ready..."
+          for i in {1..12}; do
+              if curl -sf $TEST_URL/health > /dev/null 2>&1; then
+                  echo "✅ Health check passed!"
+                  break
+              fi
+              if [ $i -eq 12 ]; then
+                  echo "❌ Health check failed after 60 seconds"
+                  docker logs $CONTAINER_ID
+                  exit 1
+              fi
+              echo "Attempt $i/12 - waiting 5 seconds..."
+              sleep 5
+          done
+
+          EXPECTED_TITLE="Geti Tune"
+          echo "Checking HTML title..."
+
+          HTML_CONTENT=$(curl -sf $TEST_URL)
+          if echo "$HTML_CONTENT" | grep -q "<title>.*$EXPECTED_TITLE.*</title>"; then
+              echo "✅ HTML title check passed - found: $EXPECTED_TITLE"
+          else
+              echo "❌ HTML title check failed - expected title '$EXPECTED_TITLE' not found"
+              echo "Actual HTML content:"
+              echo "$HTML_CONTENT"
+              exit 1
+          fi
+
+          echo "All checks passed successfully!"
+
+      - name: Run ZAP API Scan
+        uses: zaproxy/action-api-scan@5158fe4d9d8fcc75ea204db81317cce7f9e5453d # v0.10.0
+        with:
+          target: 'http://localhost:7860/api/openapi.json'
+          format: 'openapi'
+          cmd_options: '-a'
+          allow_issue_writing: false
+          fail_action: false
+          artifact_name: zapapi
+
+      - name: Run ZAP Full Scan
+        uses: zaproxy/action-full-scan@3c58388149901b9a03b7718852c5ba889646c27c # v0.13.0
+        with:
+          target: 'http://localhost:7860'
+          cmd_options: '-a -j'
+          allow_issue_writing: false
+          fail_action: false
+          artifact_name: zapfull
+
+      - name: Run Schemathesis Scan
+        uses: schemathesis/action@1f15936316e0742005bf69657b5909ac68f04cb3 # v2
+        continue-on-error: true
+        with:
+          schema: 'http://localhost:7860/api/openapi.json'
+          args: >-
+            --continue-on-failure
+            --report-dir schemathesis-report
+            --report junit
+            --report-junit-path schemathesis-report/junit.xml
+
+      - name: Upload Schemathesis report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: schemathesis-report-${{ matrix.ai-device }}
+          path: schemathesis-report/junit.xml
+
+      - name: Re-check container health after testing
+        if: always()
+        run: |
+          TEST_URL="localhost:7860"
+
+          echo "Running post-scan health check..."
+          if curl -sf $TEST_URL/health > /dev/null 2>&1; then
+              echo "✅ Post-scan health check passed!"
+          else
+              echo "❌ Post-scan health check failed"
+              echo "=== Container logs ==="
+              docker logs $CONTAINER_ID || true
+              exit 1
+          fi
+
+      - name: Save container logs to file
+        if: always()
+        run: |
+          mkdir -p dast-scan-logs
+          if [ -n "$CONTAINER_ID" ]; then
+            echo "Saving logs for container $CONTAINER_ID"
+            docker logs "$CONTAINER_ID" > dast-scan-logs/container-$CONTAINER_ID.log 2>&1 || true
+          else
+            echo "CONTAINER_ID not set; attempting to capture any matching container logs" > dast-scan-logs/container-lookup.log
+            docker ps --filter "ancestor=geti-tune-${{ matrix.ai-device }}" --format "{{.ID}} {{.Image}}" >> dast-scan-logs/container-lookup.log || true
+          fi
+
+      - name: Upload container logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: container-logs
+          path: dast-scan-logs/
+
+      - name: Stop and Cleanup Container
+        if: always()
+        run: |
+          if [ -n "${CONTAINER_ID}" ]; then
+            echo "Stopping container ${CONTAINER_ID}..."
+            docker stop ${CONTAINER_ID}
+          fi
