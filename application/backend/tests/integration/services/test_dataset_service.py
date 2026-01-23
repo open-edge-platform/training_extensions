@@ -242,7 +242,7 @@ def fxt_project_with_annotation_status_items(
     ]
 
     db_dataset_items = []
-    for list in [*unannotated_items, *reviewed_items, *to_review_items]:
+    for list in [unannotated_items, reviewed_items, to_review_items]:
         for idx, dataset_item in enumerate(list):
             db_media = MediaDB(
                 type="image",
