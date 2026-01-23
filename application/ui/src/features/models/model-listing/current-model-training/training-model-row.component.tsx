@@ -67,7 +67,7 @@ export const TrainingModelRow = ({ job, onCancel }: TrainingModelRowProps) => {
 
                 {onCancel ? (
                     <Button
-                        isDisabled={job.status !== 'running'}
+                        isDisabled={job.status !== 'RUNNING'}
                         variant={'negative'}
                         onPress={onCancel}
                         aria-label={'Cancel training job'}

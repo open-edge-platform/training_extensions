@@ -19,10 +19,18 @@ export const useListJobs = () => {
 
 export const useGetCurrentTrainingJob = () => {
     const projectId = useProjectIdentifier();
-    const activeJobs = useListJobs();
+    const activeJobs = $api.useQuery('get', '/api/jobs', undefined, {
+        refetchInterval: (query) => {
+            const hasActiveJob = query.state.data?.some(
+                (job) => job.status === 'RUNNING' || job.status === 'PENDING' || job.status === 'CANCELLING'
+            );
+
+            return hasActiveJob ? 5000 : false;
+        },
+    });
 
     const activeTrainingJob = activeJobs.data?.find(
-        (job) => job.metadata.project.id === projectId && job.status === 'running' && job.job_type === 'train'
+        (job) => job.metadata.project.id === projectId && job.status === 'RUNNING' && job.job_type === 'train'
     );
 
     return activeTrainingJob;
