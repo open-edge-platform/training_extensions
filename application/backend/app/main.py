@@ -33,6 +33,7 @@ from fastapi.staticfiles import StaticFiles
 from loguru import logger
 
 from app.api.routers import (
+    dataset_ie,
     dataset_revisions,
     datasets,
     jobs,
@@ -74,6 +75,7 @@ app.add_middleware(  # TODO restrict settings in production
 )
 
 # Include all API routers from the routers package
+app.include_router(dataset_ie.router)
 app.include_router(dataset_revisions.router)
 app.include_router(datasets.router)
 app.include_router(jobs.router)
