@@ -5,13 +5,13 @@ import type { RefObject } from 'react';
 
 import { useEventListener } from 'hooks/event-listener.hook';
 
-import type { DatasetItem } from '../../../../constants/shared-types';
+import type { Media } from '../../../../constants/shared-types';
 
 export type UseKeyboardNavigationProps = {
     ref: RefObject<HTMLElement | null>;
-    items: DatasetItem[];
+    items: Media[];
     selectedIndex: number;
-    onSelectedMediaItem: (item: DatasetItem) => void;
+    onSelectedMediaItem: (item: Media) => void;
 };
 
 export const useKeyboardNavigation = ({

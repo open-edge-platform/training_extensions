@@ -3,13 +3,13 @@
 
 import { API_BASE_URL } from '../api/client';
 
-const getDatasetItemBaseUrl = (projectId: string, itemId: string) =>
-    `${API_BASE_URL}/api/projects/${projectId}/dataset/items/${itemId}`;
+const getMediaBaseUrl = (projectId: string, itemId: string) =>
+    `${API_BASE_URL}/api/projects/${projectId}/dataset/media/${itemId}`;
 
 export const getThumbnailUrl = (projectId: string, itemId: string) => {
-    return `${getDatasetItemBaseUrl(projectId, itemId)}/thumbnail`;
+    return `${getMediaBaseUrl(projectId, itemId)}/thumbnail`;
 };
 
 export const getMediaBinaryUrl = (projectId: string, itemId: string) => {
-    return `${getDatasetItemBaseUrl(projectId, itemId)}/binary`;
+    return `${getMediaBaseUrl(projectId, itemId)}/binary`;
 };
