@@ -34,7 +34,7 @@ export const ModelVariantTable = ({ model, format }: ModelVariantTableProps) => 
             </TableHeader>
             <TableBody items={variants}>
                 {(variant) => (
-                    <Row key={variant.id ?? `${variant.format}-${variant.precision}`}>
+                    <Row key={`${variant.format}-${variant.precision}`}>
                         <Cell>{model.architecture}</Cell>
                         <Cell>Apache 2.0</Cell>
                         <Cell>{variant.precision.toUpperCase()}</Cell>

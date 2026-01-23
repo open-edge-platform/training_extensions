@@ -20,9 +20,9 @@ export const getMockedPipeline = (customPipeline?: Partial<SchemaPipelineView>):
             training_info: {
                 status: 'successful' as const,
                 label_schema_revision: {},
-                configuration: {},
             },
             files_deleted: false,
+            evaluations: [],
         },
         sink: {
             id: 'sink-id',

@@ -11,7 +11,7 @@ from fastapi.openapi.models import Example
 from fastapi.responses import StreamingResponse
 
 from app.api.dependencies import get_model_service, get_project
-from app.api.schemas import EvaluationView, MetricView, ModelView, ProjectView
+from app.api.schemas import ModelView, ProjectView
 from app.api.schemas.model import ExtendedModelView
 from app.api.validators import DatasetRevisionID, ModelID
 from app.models.model_revision import ModelFormat
@@ -68,20 +68,7 @@ def get_model(
         model_revision = model_service.get_model(project_id=project.id, model_id=model_id)
         model_variants = model_service.get_model_variants(project_id=project.id, model_id=model_id)
         model_size = model_service.get_model_size_in_bytes(project_id=project.id, model_id=model_id)
-        evaluations = [
-            EvaluationView(
-                dataset_revision_id=ev.dataset_revision_id,
-                subset=ev.subset.value,
-                metrics=[MetricView(name=m[0], value=m[1]) for m in ev.metrics.items()],
-            )
-            for ev in model_service.get_evaluation_results(model_id=model_id)
-        ]
-        model_view = (
-            model_revision.model_dump()
-            | {"variants": model_variants}
-            | {"size": model_size}
-            | {"evaluations": evaluations}
-        )
+        model_view = model_revision.model_dump() | {"variants": model_variants} | {"size": model_size}
         return ExtendedModelView.model_validate(model_view, from_attributes=True)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
@@ -172,7 +159,10 @@ def rename_model(
         model_revision = model_service.rename_model(
             project_id=project.id, model_id=model_id, model_metadata=model_metadata
         )
-        return ModelView.model_validate(model_revision, from_attributes=True)
+        model_variants = model_service.get_model_variants(project_id=project.id, model_id=model_id)
+        model_size = model_service.get_model_size_in_bytes(project_id=project.id, model_id=model_id)
+        model_view = model_revision.model_dump() | {"variants": model_variants} | {"size": model_size}
+        return ModelView.model_validate(model_view, from_attributes=True)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 

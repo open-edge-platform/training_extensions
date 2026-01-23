@@ -15,7 +15,6 @@ const mockedModels = [
         training_info: {
             status: 'successful',
             label_schema_revision: { labels: [] },
-            configuration: {},
             start_time: '2025-01-10T10:00:00.000000+00:00',
             end_time: '2025-01-10T12:30:00.000000+00:00',
             dataset_revision_id: 'dataset-1',
@@ -29,7 +28,6 @@ const mockedModels = [
         training_info: {
             status: 'successful',
             label_schema_revision: { labels: [] },
-            configuration: {},
             start_time: '2025-01-11T10:00:00.000000+00:00',
             end_time: '2025-01-11T14:00:00.000000+00:00',
             dataset_revision_id: 'dataset-1',
@@ -42,7 +40,6 @@ const mockedModels = [
         training_info: {
             status: 'successful',
             label_schema_revision: { labels: [] },
-            configuration: {},
             start_time: '2025-01-12T08:00:00.000000+00:00',
             end_time: '2025-01-12T10:00:00.000000+00:00',
             dataset_revision_id: 'dataset-2',
@@ -160,6 +157,7 @@ test.describe('Models', () => {
                         name: 'YOLOX Model v1',
                         architecture: 'Object_Detection_YOLOX_X',
                         files_deleted: false,
+                        evaluations: [],
                     },
                     device: 'cpu',
                 });
