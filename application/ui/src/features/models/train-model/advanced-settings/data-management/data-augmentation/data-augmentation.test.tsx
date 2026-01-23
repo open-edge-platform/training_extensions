@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ReactNode, useState } from 'react';
+import { useState } from 'react';
 
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';

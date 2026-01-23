@@ -1,7 +1,8 @@
-// Copyright (C) 2022-2025 Intel Corporation
-// LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
 
-import { getMockedConfigurationParameter } from '../../../../../../../../test-utils/mocked-items-factory/mocked-configuration-parameters';
+import { getMockedConfigurationParameter } from 'mocks/mock-training-configuration';
+
 import { areSubsetsSizesValid, getSubsetsSizes } from './utils';
 
 describe('getSubsetsSizes', () => {
@@ -97,9 +98,9 @@ describe('areSubsetsSizesValid', () => {
                 name: 'Training percentage',
                 value: 70,
                 description: 'Percentage of data to use for training',
-                defaultValue: 70,
-                maxValue: 100,
-                minValue: 1,
+                default_value: 70,
+                max_value: 100,
+                min_value: 1,
             }),
             getMockedConfigurationParameter({
                 key: 'validation',
@@ -107,9 +108,9 @@ describe('areSubsetsSizesValid', () => {
                 name: 'Validation percentage',
                 value: 20,
                 description: 'Percentage of data to use for validation',
-                defaultValue: 20,
-                maxValue: 100,
-                minValue: 1,
+                default_value: 20,
+                max_value: 100,
+                min_value: 1,
             }),
             getMockedConfigurationParameter({
                 key: 'test',
@@ -117,9 +118,9 @@ describe('areSubsetsSizesValid', () => {
                 name: 'Test percentage',
                 value: 10,
                 description: 'Percentage of data to use for testing',
-                defaultValue: 10,
-                maxValue: 100,
-                minValue: 1,
+                default_value: 10,
+                max_value: 100,
+                min_value: 1,
             }),
             getMockedConfigurationParameter({
                 type: 'int',
@@ -138,9 +139,9 @@ describe('areSubsetsSizesValid', () => {
                 name: 'Training percentage',
                 value: 70,
                 description: 'Percentage of data to use for training',
-                defaultValue: 70,
-                maxValue: 100,
-                minValue: 1,
+                default_value: 70,
+                max_value: 100,
+                min_value: 1,
             }),
             getMockedConfigurationParameter({
                 key: 'validation',
@@ -148,9 +149,9 @@ describe('areSubsetsSizesValid', () => {
                 name: 'Validation percentage',
                 value: 20,
                 description: 'Percentage of data to use for validation',
-                defaultValue: 20,
-                maxValue: 100,
-                minValue: 1,
+                default_value: 20,
+                max_value: 100,
+                min_value: 1,
             }),
             getMockedConfigurationParameter({
                 key: 'test',
@@ -158,9 +159,9 @@ describe('areSubsetsSizesValid', () => {
                 name: 'Test percentage',
                 value: 10,
                 description: 'Percentage of data to use for testing',
-                defaultValue: 10,
-                maxValue: 100,
-                minValue: 1,
+                default_value: 10,
+                max_value: 100,
+                min_value: 1,
             }),
             getMockedConfigurationParameter({
                 type: 'int',
@@ -180,9 +181,9 @@ describe('areSubsetsSizesValid', () => {
                     name: 'Training percentage',
                     value: 70,
                     description: 'Percentage of data to use for training',
-                    defaultValue: 70,
-                    maxValue: 100,
-                    minValue: 1,
+                    default_value: 70,
+                    max_value: 100,
+                    min_value: 1,
                 }),
                 getMockedConfigurationParameter({
                     key: 'validation',
@@ -190,9 +191,9 @@ describe('areSubsetsSizesValid', () => {
                     name: 'Validation percentage',
                     value: 20,
                     description: 'Percentage of data to use for validation',
-                    defaultValue: 20,
-                    maxValue: 100,
-                    minValue: 1,
+                    default_value: 20,
+                    max_value: 100,
+                    min_value: 1,
                 }),
                 getMockedConfigurationParameter({
                     key: 'test',
@@ -200,9 +201,9 @@ describe('areSubsetsSizesValid', () => {
                     name: 'Test percentage',
                     value: 10,
                     description: 'Percentage of data to use for testing',
-                    defaultValue: 10,
-                    maxValue: 100,
-                    minValue: 1,
+                    default_value: 10,
+                    max_value: 100,
+                    min_value: 1,
                 }),
             ])
         ).toBe(false);
@@ -216,9 +217,9 @@ describe('areSubsetsSizesValid', () => {
                 name: 'Training percentage',
                 value: 0,
                 description: 'Percentage of data to use for training',
-                defaultValue: 70,
-                maxValue: 100,
-                minValue: 1,
+                default_value: 70,
+                max_value: 100,
+                min_value: 1,
             }),
             getMockedConfigurationParameter({
                 key: 'validation',
@@ -226,9 +227,9 @@ describe('areSubsetsSizesValid', () => {
                 name: 'Validation percentage',
                 value: 20,
                 description: 'Percentage of data to use for validation',
-                defaultValue: 20,
-                maxValue: 100,
-                minValue: 1,
+                default_value: 20,
+                max_value: 100,
+                min_value: 1,
             }),
             getMockedConfigurationParameter({
                 key: 'test',
@@ -236,9 +237,9 @@ describe('areSubsetsSizesValid', () => {
                 name: 'Test percentage',
                 value: 10,
                 description: 'Percentage of data to use for testing',
-                defaultValue: 10,
-                maxValue: 100,
-                minValue: 1,
+                default_value: 10,
+                max_value: 100,
+                min_value: 1,
             }),
             getMockedConfigurationParameter({
                 type: 'int',
