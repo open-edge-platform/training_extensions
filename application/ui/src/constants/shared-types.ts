@@ -8,6 +8,9 @@ export type DatasetItem = components['schemas']['DatasetItemView'];
 export type Model = components['schemas']['ModelView'];
 export type ExtendedModel = components['schemas']['ExtendedModelView'];
 export type ModelArchitecture = components['schemas']['ModelArchitectureView'];
+
+export type ModelArchitectureWithPerformanceCategory = ModelArchitecture & { performanceCategory?: string };
+
 export type ModelFormat = components['schemas']['ModelFormat'];
 export type DatasetSubset = components['schemas']['DatasetItemSubset'];
 export type Job = components['schemas']['JobView'];
@@ -16,8 +19,9 @@ export type MediaItemState = 'accepted' | 'rejected';
 export type MediaStateMap = Map<string, MediaItemState>;
 
 export type DeviceType = components['schemas']['DeviceType'];
+export type RecommendedModelArchitectures = components['schemas']['TopPicks'];
 
-export type TrainingDevices = {
+export type TrainingDevice = {
     type: DeviceType;
     name: string;
 };

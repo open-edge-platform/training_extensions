@@ -6,6 +6,7 @@ import { Suspense } from 'react';
 import { Button, DialogTrigger, Loading, View } from '@geti/ui';
 
 import { TrainModelDialog } from './train-model-dialog.component';
+import { TrainModelProvider } from './train-model-provider.component';
 
 export const TrainModel = () => {
     return (
@@ -19,7 +20,9 @@ export const TrainModel = () => {
                         </View>
                     }
                 >
-                    <TrainModelDialog onClose={close} />
+                    <TrainModelProvider>
+                        <TrainModelDialog onClose={close} />
+                    </TrainModelProvider>
                 </Suspense>
             )}
         </DialogTrigger>
