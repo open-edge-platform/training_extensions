@@ -103,7 +103,7 @@ export const SelectableAnnotation = ({ children }: { children: ReactNode }) => {
             tabIndex={isSelected ? 0 : -1}
             onClick={handleSelectAnnotation}
             style={{
-                ...drawingStyles(annotation?.labels?.[0] ?? null),
+                ...drawingStyles(annotation.labels?.[0] ?? null),
                 ...selectionStyles,
                 zIndex: 999,
                 outline: 'none',
