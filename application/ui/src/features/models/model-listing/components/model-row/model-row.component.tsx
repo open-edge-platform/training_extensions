@@ -73,7 +73,7 @@ export const ModelRow = ({
                         <MoreMenu />
                     </ActionButton>
                     <Menu onAction={onModelAction} aria-label={'Model actions menu'}>
-                        <Item key={'active'}>Set as Active</Item>
+                        <Item key={'active'}>Set as active</Item>
                         <Item key={'rename'}>Rename</Item>
                         <Item key={'delete'}>Delete</Item>
                         <Item key={'export'}>Export</Item>
