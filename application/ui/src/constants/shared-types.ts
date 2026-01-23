@@ -5,6 +5,8 @@ import type { components } from '../api/openapi-spec';
 
 export type Label = components['schemas']['LabelView'];
 export type DatasetItem = components['schemas']['DatasetItemView'];
+
+// TODO: Update these types once the backend spec makes 'id' required
 export type Model = components['schemas']['ModelView'] & { id: string };
 export type ExtendedModel = components['schemas']['ExtendedModelView'] & { id: string };
 export type ModelArchitecture = components['schemas']['ModelArchitectureView'];
