@@ -1,11 +1,11 @@
-// Copyright (C) 2022-2025 Intel Corporation
-// LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
 
 import { useState } from 'react';
 
 import { fireEvent, screen } from '@testing-library/react';
+import { render } from 'test-utils/render';
 
-import { providersRender as render } from '../../../../../../../test-utils/required-providers-render';
 import { FineTuneParameters } from './fine-tune-parameters.component';
 
 describe('FineTuneParameters', () => {
