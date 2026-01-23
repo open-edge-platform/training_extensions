@@ -41,17 +41,20 @@ export const SourceMenu = ({ id, name, isConnected, onEdit }: SourceMenuProps) =
     });
 
     const handleConnect = async () => {
-        try {
-            await updatePipeline.mutateAsync({
+        updatePipeline.mutate(
+            {
                 params: { path: { project_id } },
                 body: { source_id: id },
-            });
-
-            toast({
-                type: 'success',
-                message: `Successfully connected to "${name}".`,
-            });
-        } catch (_error) {}
+            },
+            {
+                onSuccess: () => {
+                    toast({
+                        type: 'success',
+                        message: `Successfully connected to "${name}".`,
+                    });
+                },
+            }
+        );
     };
 
     const removeSource = $api.useMutation('delete', '/api/sources/{source_id}', {
@@ -61,14 +64,17 @@ export const SourceMenu = ({ id, name, isConnected, onEdit }: SourceMenuProps) =
     });
 
     const handleDelete = async () => {
-        try {
-            await removeSource.mutateAsync({ params: { path: { source_id: id } } });
-
-            toast({
-                type: 'success',
-                message: `${name} has been removed successfully!`,
-            });
-        } catch (_error) {}
+        removeSource.mutate(
+            { params: { path: { source_id: id } } },
+            {
+                onSuccess: () => {
+                    toast({
+                        type: 'success',
+                        message: `${name} has been removed successfully!`,
+                    });
+                },
+            }
+        );
     };
 
     return (
