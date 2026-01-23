@@ -1,17 +1,15 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState } from 'react';
+import { ReactNode, useState } from 'react';
 
-import { fireEvent, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { getMockedConfigurationParameter, getMockedTrainingConfiguration } from 'mocks/mock-training-configuration';
+import { TestProviders } from 'test-utils/render';
 
-import { TrainingConfiguration } from '../../../../../../../../core/configurable-parameters/services/configuration.interface';
-import { isBoolParameter } from '../../../../../../../../core/configurable-parameters/utils';
-import {
-    getMockedConfigurationParameter,
-    getMockedTrainingConfiguration,
-} from '../../../../../../../../test-utils/mocked-items-factory/mocked-configuration-parameters';
-import { providersRender as render } from '../../../../../../../../test-utils/required-providers-render';
+import { TrainingConfiguration } from '../../../../configuration.interface';
+import { isBoolParameter } from '../../utils';
 import { DataAugmentation } from './data-augmentation.component';
 
 type DataAugmentationParameters = TrainingConfiguration['dataset_preparation']['augmentation'];
@@ -20,12 +18,16 @@ const getToggleEnableParameter = (name: string) => {
     return screen.getByRole('switch', { name: `Toggle ${name}` });
 };
 
-const toggleParameter = (name: string) => {
-    fireEvent.click(getToggleEnableParameter(name));
+const toggleParameter = async (name: string) => {
+    await userEvent.click(getToggleEnableParameter(name));
 };
 
 const getParameter = (name: string) => {
     return screen.getByRole('textbox', { name: `Change ${name}` });
+};
+
+const renderApp = (ui: ReactNode) => {
+    return render(<TestProviders>{ui}</TestProviders>);
 };
 
 describe('DataAugmentation', () => {
@@ -37,7 +39,7 @@ describe('DataAugmentation', () => {
                 name: 'Enable center crop',
                 value: true,
                 description: 'Whether to apply center cropping to the image',
-                defaultValue: true,
+                default_value: true,
             }),
             getMockedConfigurationParameter({
                 key: 'ratio',
@@ -45,9 +47,9 @@ describe('DataAugmentation', () => {
                 name: 'Crop ratio',
                 value: 0.6,
                 description: 'Ratio of original dimensions to keep when cropping',
-                defaultValue: 1,
-                maxValue: null,
-                minValue: 0,
+                default_value: 1,
+                max_value: null,
+                min_value: 0,
             }),
         ],
         random_affine: [
@@ -57,7 +59,7 @@ describe('DataAugmentation', () => {
                 name: 'Enable random affine',
                 value: true,
                 description: 'Whether to apply random affine transformations to the image',
-                defaultValue: true,
+                default_value: true,
             }),
             getMockedConfigurationParameter({
                 key: 'degrees',
@@ -65,9 +67,9 @@ describe('DataAugmentation', () => {
                 name: 'Rotation degrees',
                 value: 15,
                 description: 'Maximum rotation angle in degrees',
-                defaultValue: 0,
-                maxValue: null,
-                minValue: 0,
+                default_value: 0,
+                max_value: null,
+                min_value: 0,
             }),
             getMockedConfigurationParameter({
                 key: 'translate_x',
@@ -75,9 +77,9 @@ describe('DataAugmentation', () => {
                 name: 'Horizontal translation',
                 value: 0,
                 description: 'Maximum horizontal translation as a fraction of image width',
-                defaultValue: 0,
-                maxValue: null,
-                minValue: 0,
+                default_value: 0,
+                max_value: null,
+                min_value: 0,
             }),
             getMockedConfigurationParameter({
                 key: 'translate_y',
@@ -85,9 +87,9 @@ describe('DataAugmentation', () => {
                 name: 'Vertical translation',
                 value: 0,
                 description: 'Maximum vertical translation as a fraction of image height',
-                defaultValue: 0,
-                maxValue: null,
-                minValue: 0,
+                default_value: 0,
+                max_value: null,
+                min_value: 0,
             }),
             getMockedConfigurationParameter({
                 key: 'scale',
@@ -95,9 +97,9 @@ describe('DataAugmentation', () => {
                 name: 'Scale factor',
                 value: 1,
                 description: 'Scaling factor for the image during affine transformation',
-                defaultValue: 1,
-                maxValue: null,
-                minValue: 0,
+                default_value: 1,
+                max_value: null,
+                min_value: 0,
             }),
         ],
     } satisfies DataAugmentationParameters;
@@ -118,6 +120,7 @@ describe('DataAugmentation', () => {
         ) => {
             setTrainingConfiguration(updateFunction);
         };
+
         return (
             <DataAugmentation
                 parameters={trainingConfiguration?.dataset_preparation.augmentation ?? props.dataAugmentationParameters}
@@ -126,8 +129,8 @@ describe('DataAugmentation', () => {
         );
     };
 
-    it('tag displays "Yes" when at least one data augmentation parameter is enabled, "No" otherwise', () => {
-        render(<App dataAugmentationParameters={dataAugmentationParameters} />);
+    it('tag displays "Yes" when at least one data augmentation parameter is enabled, "No" otherwise', async () => {
+        renderApp(<App dataAugmentationParameters={dataAugmentationParameters} />);
 
         const enableCenterCrop = dataAugmentationParameters.center_crop[0];
         const enableRandomAffine = dataAugmentationParameters.random_affine[0];
@@ -135,18 +138,20 @@ describe('DataAugmentation', () => {
         expect(getToggleEnableParameter(enableCenterCrop.name)).toBeChecked();
         expect(screen.getByLabelText('Data augmentation tag')).toHaveTextContent('Yes');
 
-        toggleParameter(enableCenterCrop.name);
-        toggleParameter(enableRandomAffine.name);
+        await toggleParameter(enableCenterCrop.name);
+        await toggleParameter(enableRandomAffine.name);
 
         expect(getToggleEnableParameter(enableCenterCrop.name)).not.toBeChecked();
         expect(getToggleEnableParameter(enableRandomAffine.name)).not.toBeChecked();
         expect(screen.getByLabelText('Data augmentation tag')).toHaveTextContent('No');
     });
 
-    it('disables all data augmentation parameters when the "Enable" parameter is false, otherwise are enabled', () => {
-        render(<App dataAugmentationParameters={dataAugmentationParameters} />);
+    it('disables all data augmentation parameters when the "Enable" parameter is false, otherwise are enabled', async () => {
+        renderApp(<App dataAugmentationParameters={dataAugmentationParameters} />);
 
-        Object.values(dataAugmentationParameters).forEach((parametersGroup) => {
+        const parameters = Object.values(dataAugmentationParameters);
+
+        for (const parametersGroup of parameters) {
             const enableParameter = parametersGroup[0];
             expect(getToggleEnableParameter(enableParameter.name)).toBeChecked();
 
@@ -156,40 +161,41 @@ describe('DataAugmentation', () => {
                 expect(getParameter(parameter.name)).toBeEnabled();
             });
 
-            toggleParameter(enableParameter.name);
+            await toggleParameter(enableParameter.name);
             expect(getToggleEnableParameter(enableParameter.name)).not.toBeChecked();
 
             restOfParameters.forEach((parameter) => {
                 expect(getParameter(parameter.name)).toBeDisabled();
             });
-        });
+        }
     });
 
-    it('updates parameters and resets them to default properly', () => {
-        render(<App dataAugmentationParameters={dataAugmentationParameters} />);
+    it('updates parameters and resets them to default properly', async () => {
+        renderApp(<App dataAugmentationParameters={dataAugmentationParameters} />);
 
         const parameters = Object.values(dataAugmentationParameters).flat();
-        parameters.forEach((parameter) => {
+
+        for (const parameter of parameters) {
             if (isBoolParameter(parameter)) {
                 expect(getToggleEnableParameter(parameter.name)).toBeChecked();
 
-                toggleParameter(parameter.name);
+                await toggleParameter(parameter.name);
 
                 expect(getToggleEnableParameter(parameter.name)).not.toBeChecked();
 
-                fireEvent.click(screen.getByRole('button', { name: `Reset ${parameter.name}` }));
+                await userEvent.click(screen.getByRole('button', { name: `Reset ${parameter.name}` }));
                 expect(getToggleEnableParameter(parameter.name)).toBeChecked();
             } else {
                 expect(getParameter(parameter.name)).toHaveValue(parameter.value.toString());
 
-                fireEvent.click(screen.getByRole('button', { name: `Increase Change ${parameter.name}` }));
+                await userEvent.click(screen.getByRole('button', { name: `Increase Change ${parameter.name}` }));
 
                 expect(getParameter(parameter.name)).toHaveValue((Number(parameter.value) + 0.1).toString());
 
-                fireEvent.click(screen.getByRole('button', { name: `Reset ${parameter.name}` }));
+                await userEvent.click(screen.getByRole('button', { name: `Reset ${parameter.name}` }));
 
-                expect(getParameter(parameter.name)).toHaveValue(parameter.defaultValue.toString());
+                expect(getParameter(parameter.name)).toHaveValue(parameter.default_value.toString());
             }
-        });
+        }
     });
 });
