@@ -7,6 +7,7 @@ import duration from 'dayjs/plugin/duration';
 
 import { ReactComponent as ThumbsUp } from '../../../../assets/icons/thumbs-up.svg';
 import { Job } from '../../../../constants/shared-types';
+import { useGetModels } from '../../hooks/api/use-get-models.hook';
 import { GRID_COLUMNS } from '../constants';
 import { BottomProgressBar } from './bottom-progress-bar.component';
 
@@ -28,7 +29,9 @@ const StatusTag = ({ status }: { status: string }) => (
 );
 
 export const TrainingModelRow = ({ job, onCancel }: TrainingModelRowProps) => {
-    const modelName = job.metadata.model.id.slice(0, 5) || 'Unnamed Model';
+    const { data: models } = useGetModels();
+    const trainingModel = models?.find((model) => model.id === job.metadata.model.id);
+    const modelName = trainingModel?.name || job.metadata.model.id;
 
     return (
         <BottomProgressBar progress={job.progress}>
@@ -67,7 +70,7 @@ export const TrainingModelRow = ({ job, onCancel }: TrainingModelRowProps) => {
 
                 {onCancel ? (
                     <Button
-                        isDisabled={job.status !== 'running'}
+                        isDisabled={job.status !== 'RUNNING'}
                         variant={'negative'}
                         onPress={onCancel}
                         aria-label={'Cancel training job'}

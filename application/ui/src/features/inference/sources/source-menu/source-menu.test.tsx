@@ -103,7 +103,9 @@ describe('SourceMenu', () => {
             await userEvent.click(screen.getByRole('button', { name: /source menu/i }));
             await userEvent.click(screen.getByRole('menuitem', { name: /Connect/i }));
 
-            await expect(await screen.findByLabelText('toast')).toHaveTextContent(`Failed to connect to "${name}"`);
+            await expect(await screen.findByLabelText('toast')).toHaveTextContent(
+                'An unexpected error occurred. Please try again.'
+            );
         });
     });
 });

@@ -12,7 +12,7 @@
 }
 
 .trainingTag {
-    background-color: var(--energy-blue);
+    background-color: var(--energy-blue) !important;
     color: var(--spectrum-global-color-gray-50);
     border-radius: var(--spectrum-global-dimension-size-50);
     border-top-right-radius: 0;
