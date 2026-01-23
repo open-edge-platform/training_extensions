@@ -4,7 +4,7 @@
 import { ActionButton, Content, Flex, Heading, Text } from '@geti/ui';
 import { Filter, GridSmall, Search, SortUpDown } from '@geti/ui/icons';
 
-import { DatasetSubset } from '../../../../constants/shared-types';
+import type { DatasetSubset } from '../../../../constants/shared-types';
 import { useGetDatasetItems } from '../../../../hooks/use-get-dataset-items.hook';
 import { SubsetGallery } from './subset-gallery.component';
 

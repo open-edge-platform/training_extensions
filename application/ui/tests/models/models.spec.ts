@@ -70,10 +70,10 @@ test.describe('Models', () => {
             }),
             http.patch('/api/projects/{project_id}/models/{model_id}', async ({ request, params }) => {
                 const body = (await request.json()) as { name: string };
-                const model = mockedModels.find((model) => model.id === params.model_id);
+                const foundModel = mockedModels.find((model) => model.id === params.model_id);
 
-                if (model) {
-                    return HttpResponse.json({ ...model, name: body.name });
+                if (foundModel) {
+                    return HttpResponse.json({ ...foundModel, name: body.name });
                 }
 
                 return new HttpResponse(null, { status: 404 });
@@ -129,8 +129,8 @@ test.describe('Models', () => {
 
         await modelsPage.selectGroupBy('architecture');
 
-        await expect(page.getByRole('heading', { name: 'Object_Detection_YOLOX_X', level: 2 })).toBeVisible();
-        await expect(page.getByRole('heading', { name: 'Object_Detection_SSD', level: 2 })).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Object_Detection_YOLOX_X', exact: true })).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Object_Detection_SSD', exact: true })).toBeVisible();
     });
 
     test('can change sort order', async ({ modelsPage }) => {
