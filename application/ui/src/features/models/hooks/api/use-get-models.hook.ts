@@ -14,3 +14,11 @@ export const useGetModels = (): UseQueryResult<Model[]> => {
         params: { path: { project_id: projectId } },
     }) as UseQueryResult<Model[]>;
 };
+
+export const useGetModelsQuery = () => {
+    const projectId = useProjectIdentifier();
+
+    return $api.useQuery('get', '/api/projects/{project_id}/models', {
+        params: { path: { project_id: projectId } },
+    });
+};

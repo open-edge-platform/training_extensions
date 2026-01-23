@@ -4,13 +4,10 @@
 import { useState } from 'react';
 
 import { fireEvent, screen, within } from '@testing-library/react';
+import { getMockedConfigurationParameter, getMockedTrainingConfiguration } from 'mocks/mock-training-configuration';
+import { render } from 'test-utils/render';
 
-import { TrainingConfiguration } from '../../../../../../../../core/configurable-parameters/services/configuration.interface';
-import {
-    getMockedConfigurationParameter,
-    getMockedTrainingConfiguration,
-} from '../../../../../../../../test-utils/mocked-items-factory/mocked-configuration-parameters';
-import { providersRender as render } from '../../../../../../../../test-utils/required-providers-render';
+import { TrainingConfiguration } from '../../../../configuration.interface';
 import { TrainingSubsets } from './training-subsets.component';
 
 type SubsetsParameters = TrainingConfiguration['dataset_preparation']['subset_split'];
@@ -54,9 +51,9 @@ describe('TrainingSubsets', () => {
             name: 'Training percentage',
             value: 70,
             description: 'Percentage of data to use for training',
-            defaultValue: 70,
-            maxValue: 100,
-            minValue: 1,
+            default_value: 70,
+            max_value: 100,
+            min_value: 1,
         }),
         getMockedConfigurationParameter({
             key: 'validation',
@@ -64,9 +61,9 @@ describe('TrainingSubsets', () => {
             name: 'Validation percentage',
             value: 20,
             description: 'Percentage of data to use for validation',
-            defaultValue: 20,
-            maxValue: 100,
-            minValue: 1,
+            default_value: 20,
+            max_value: 100,
+            min_value: 1,
         }),
         getMockedConfigurationParameter({
             key: 'test',
@@ -74,9 +71,9 @@ describe('TrainingSubsets', () => {
             name: 'Test percentage',
             value: 10,
             description: 'Percentage of data to use for testing',
-            defaultValue: 10,
-            maxValue: 100,
-            minValue: 1,
+            default_value: 10,
+            max_value: 100,
+            min_value: 1,
         }),
         getMockedConfigurationParameter({
             key: 'auto_selection',
@@ -84,7 +81,7 @@ describe('TrainingSubsets', () => {
             name: 'Auto selection',
             value: true,
             description: 'Whether to automatically select data for each subset',
-            defaultValue: true,
+            default_value: true,
         }),
         getMockedConfigurationParameter({
             key: 'remixing',
@@ -92,7 +89,7 @@ describe('TrainingSubsets', () => {
             name: 'Remixing',
             value: false,
             description: 'Whether to remix data between subsets',
-            defaultValue: false,
+            default_value: false,
         }),
         getMockedConfigurationParameter({
             key: 'dataset_size',
@@ -100,9 +97,9 @@ describe('TrainingSubsets', () => {
             name: 'Dataset size',
             value: 99,
             description: 'Total size of the dataset (read-only parameter, not configurable by users)',
-            defaultValue: 99,
-            maxValue: null,
-            minValue: 0,
+            default_value: 99,
+            max_value: null,
+            min_value: 0,
         }),
     ] satisfies SubsetsParameters;
 
@@ -212,9 +209,9 @@ describe('TrainingSubsets', () => {
                 name: 'Training percentage',
                 value: 70,
                 description: 'Percentage of data to use for training',
-                defaultValue: 70,
-                maxValue: 100,
-                minValue: 1,
+                default_value: 70,
+                max_value: 100,
+                min_value: 1,
             }),
             getMockedConfigurationParameter({
                 key: 'validation',
@@ -222,9 +219,9 @@ describe('TrainingSubsets', () => {
                 name: 'Validation percentage',
                 value: 20,
                 description: 'Percentage of data to use for validation',
-                defaultValue: 20,
-                maxValue: 100,
-                minValue: 1,
+                default_value: 20,
+                max_value: 100,
+                min_value: 1,
             }),
             getMockedConfigurationParameter({
                 key: 'test',
@@ -232,9 +229,9 @@ describe('TrainingSubsets', () => {
                 name: 'Test percentage',
                 value: 10,
                 description: 'Percentage of data to use for testing',
-                defaultValue: 10,
-                maxValue: 100,
-                minValue: 1,
+                default_value: 10,
+                max_value: 100,
+                min_value: 1,
             }),
             getMockedConfigurationParameter({
                 key: 'auto_selection',
@@ -242,7 +239,7 @@ describe('TrainingSubsets', () => {
                 name: 'Auto selection',
                 value: true,
                 description: 'Whether to automatically select data for each subset',
-                defaultValue: true,
+                default_value: true,
             }),
             getMockedConfigurationParameter({
                 key: 'remixing',
@@ -250,7 +247,7 @@ describe('TrainingSubsets', () => {
                 name: 'Remixing',
                 value: false,
                 description: 'Whether to remix data between subsets',
-                defaultValue: false,
+                default_value: false,
             }),
             getMockedConfigurationParameter({
                 key: 'dataset_size',
@@ -258,9 +255,9 @@ describe('TrainingSubsets', () => {
                 name: 'Dataset size',
                 value: 6,
                 description: 'Total size of the dataset (read-only parameter, not configurable by users)',
-                defaultValue: 6,
-                maxValue: null,
-                minValue: 0,
+                default_value: 6,
+                max_value: null,
+                min_value: 0,
             }),
         ];
         const [_, mockedValidationSubset, mockedTestSubset] = mockedSubsetsParameters;

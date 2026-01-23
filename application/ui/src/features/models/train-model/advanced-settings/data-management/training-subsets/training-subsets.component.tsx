@@ -135,7 +135,7 @@ type SubsetsParameters = TrainingConfiguration['dataset_preparation']['subset_sp
 
 type TrainingSubsetsProps = {
     defaultSubsetParameters: SubsetsParameters;
-
+    hasSupportedModels: boolean;
     subsetsParameters: SubsetsParameters;
     onUpdateTrainingConfiguration: (
         updateFunction: (config: TrainingConfiguration | undefined) => TrainingConfiguration | undefined
@@ -174,6 +174,7 @@ export const TrainingSubsets = ({
     defaultSubsetParameters,
     subsetsParameters,
     onUpdateTrainingConfiguration,
+    hasSupportedModels,
 }: TrainingSubsetsProps) => {
     const { trainingSubset, validationSubset } = getSubsets(subsetsParameters);
 
@@ -251,7 +252,7 @@ export const TrainingSubsets = ({
     );
 
     const subsetsSizesInvalid = areTrainingSubsetParametersChanged && !areSubsetsSizesValid(subsetsParameters);
-    const isChangedDistributionWarningVisible = areTrainingSubsetParametersChanged;
+    const isChangedDistributionWarningVisible = hasSupportedModels && areTrainingSubsetParametersChanged;
 
     return (
         <Accordion>

@@ -39,6 +39,7 @@ export const AdvancedSettings = () => {
         onTrainFromScratchChange,
         isReshufflingSubsetsEnabled,
         onReshufflingSubsetsEnabledChange,
+        hasSupportedModels,
     } = useTrainModel();
 
     // Just for type safety
@@ -51,6 +52,7 @@ export const AdvancedSettings = () => {
             name: 'Data management',
             children: (
                 <DataManagement
+                    hasSupportedModels={hasSupportedModels}
                     trainingConfiguration={trainingConfiguration}
                     onUpdateTrainingConfiguration={onUpdateTrainingConfiguration}
                     defaultTrainingConfiguration={defaultTrainingConfiguration}

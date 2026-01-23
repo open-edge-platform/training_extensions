@@ -15,6 +15,7 @@ import { TrainingConfiguration } from '../configuration.interface';
 import { useGetActiveModelArchitectureId } from '../hooks/api/use-get-active-model-architecture-id.hook';
 import { useGetDatasetRevisions } from '../hooks/api/use-get-dataset-revisions';
 import { useGetTaskModelArchitectures } from '../hooks/api/use-get-model-architectures.hook';
+import { useGetModelsQuery } from '../hooks/api/use-get-models.hook';
 import { useGetTrainingConfiguration } from '../hooks/api/use-get-training-configuration';
 import { useGetTrainingDevices } from '../hooks/api/use-get-training-devices';
 
@@ -45,6 +46,8 @@ type TrainModelContextProps = {
 
     trainFromScratch: boolean;
     onTrainFromScratchChange: (trainFromScratch: boolean) => void;
+
+    hasSupportedModels: boolean;
 };
 
 const TrainModelContext = createContext<TrainModelContextProps | null>(null);
@@ -77,6 +80,12 @@ const getModelArchitectures = (
             performanceCategory: recommendedArchitectureIdToCategory[modelArchitecture.id],
         };
     });
+};
+
+const useModelsByArchitectureId = (modelArchitectureId: string | null) => {
+    const { data } = useGetModelsQuery();
+
+    return (data ?? []).filter((model) => model.architecture === modelArchitectureId);
 };
 
 export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
@@ -112,6 +121,10 @@ export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
     const [isReshufflingSubsetsEnabled, setIsReshufflingSubsetsEnabled] = useState<boolean>(false);
     const [trainFromScratch, setTrainFromScratch] = useState<boolean>(false);
 
+    const modelsByArchitecture = useModelsByArchitectureId(selectedModelArchitectureId);
+
+    const hasSupportedModels = modelsByArchitecture.length > 0;
+
     return (
         <TrainModelContext
             value={{
@@ -139,6 +152,8 @@ export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
 
                 isReshufflingSubsetsEnabled,
                 onReshufflingSubsetsEnabledChange: setIsReshufflingSubsetsEnabled,
+
+                hasSupportedModels,
             }}
         >
             {children}
