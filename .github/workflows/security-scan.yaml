@@ -110,7 +110,7 @@ jobs:
         env:
           AI_DEVICE: ${{ matrix.ai-device }}
         run: |
-          docker compose up
+          docker compose up -d
           CONTAINER_ID=$(docker ps -qf "ancestor=geti-tune-${AI_DEVICE:-cpu}")
           echo "Started container: $CONTAINER_ID"
           echo "CONTAINER_ID=$CONTAINER_ID" >> $GITHUB_ENV
@@ -178,7 +178,7 @@ jobs:
             --report-junit-path schemathesis-report/junit.xml
 
       - name: Upload Schemathesis report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         if: always()
         with:
           name: schemathesis-report-${{ matrix.ai-device }}
@@ -212,7 +212,7 @@ jobs:
           fi
 
       - name: Upload container logs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         if: always()
         with:
           name: container-logs
@@ -220,8 +220,9 @@ jobs:
 
       - name: Stop and Cleanup Container
         if: always()
+        working-directory: application/docker
         run: |
           if [ -n "${CONTAINER_ID}" ]; then
             echo "Stopping container ${CONTAINER_ID}..."
-            docker stop ${CONTAINER_ID}
+            docker compose down
           fi
