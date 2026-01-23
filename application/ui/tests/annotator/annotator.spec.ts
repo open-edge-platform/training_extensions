@@ -6,8 +6,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import { expect } from '@playwright/test';
-import { mockedMedia } from 'mocks/mock-dataset';
 import { getMockedLabel } from 'mocks/mock-labels';
+import { mockedMedia } from 'mocks/mock-media';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 
