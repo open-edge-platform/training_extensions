@@ -3,7 +3,9 @@
 
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
+
+from app.models import EvaluationResult
 
 
 class MetricView(BaseModel):
@@ -67,3 +69,20 @@ class EvaluationView(BaseModel):
             }
         }
     }
+
+    @model_validator(mode="before")
+    @classmethod
+    def populate_metrics(cls, data: object) -> object:
+        if isinstance(data, EvaluationResult):
+            return {
+                "dataset_revision_id": data.dataset_revision_id,
+                "subset": data.subset.value,
+                "metrics": [MetricView(name=m[0], value=m[1]) for m in data.metrics.items()],
+            }
+        if isinstance(data, dict):
+            return {
+                "dataset_revision_id": data["dataset_revision_id"],
+                "subset": data["subset"].value,
+                "metrics": [MetricView(name=m[0], value=m[1]) for m in data["metrics"].items()],
+            }
+        return data

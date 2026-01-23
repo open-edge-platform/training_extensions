@@ -51,8 +51,8 @@ describe('ProjectDetails', () => {
                         training_info: {
                             status: 'successful' as const,
                             label_schema_revision: {},
-                            configuration: {},
                         },
+                        evaluations: [],
                         files_deleted: false,
                     },
                     sink: {

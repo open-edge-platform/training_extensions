@@ -86,6 +86,7 @@ class ModelRevisionDB(BaseID):
     files_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
 
     project = relationship("ProjectDB", back_populates="model_revisions")
+    evaluations = relationship("EvaluationDB", back_populates="model_revision")
 
 
 class DatasetRevisionDB(BaseID):
@@ -169,6 +170,7 @@ class EvaluationDB(BaseID):
     subset: Mapped[str] = mapped_column(String(20), nullable=False)
 
     metric_scores = relationship("MetricScoreDB", back_populates="evaluation")
+    model_revision = relationship("ModelRevisionDB", back_populates="evaluations")
 
 
 class MetricScoreDB(BaseID):

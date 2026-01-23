@@ -3,20 +3,20 @@
 
 from uuid import UUID
 
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 from app.api.schemas.evaluation import EvaluationView
-from app.core.models import BaseIDModel
+from app.core.models import BaseRequiredIDModel
 from app.models import TrainingInfo
 
 
-class ModelVariant(BaseIDModel):
+class ModelVariant(BaseModel):
     format: str = Field(..., description="Model format, e.g., 'openvino', 'onnx', 'pytorch'")
     precision: str = Field(..., description="Model precision, e.g., 'fp16', 'fp32'")
     weights_size: int = Field(..., description="Size of the model weights file in bytes")
 
 
-class ModelView(BaseIDModel):
+class ModelView(BaseRequiredIDModel):
     """Represents a model revision with its architecture, parent revision, training info, variants, and file status."""
 
     name: str = Field(..., description="User friendly model name")
@@ -24,6 +24,7 @@ class ModelView(BaseIDModel):
     parent_revision: UUID | None = Field(None, description="Parent model revision ID")
     training_info: TrainingInfo = Field(..., description="Information about the training process")
     variants: list[ModelVariant] = Field(description="Variants of the model", default=[])
+    evaluations: list[EvaluationView] = Field(description="List of evaluations with metrics", default=[])
     files_deleted: bool = Field(description="Indicates if model files have been deleted", default=False)
     size: int = Field(description="Total size of model and all its files in bytes")
 
@@ -51,7 +52,6 @@ class ModelView(BaseIDModel):
                             },
                         ]
                     },
-                    "configuration": {},
                 },
                 "variants": [
                     {
@@ -70,6 +70,26 @@ class ModelView(BaseIDModel):
                         "weights_size": 123456,
                     },
                 ],
+                "evaluations": [
+                    {
+                        "dataset_revision_id": "3c6c6d38-1cd8-4458-b759-b9880c048b78",
+                        "subset": "testing",
+                        "metrics": [
+                            {
+                                "name": "accuracy",
+                                "value": 0.97,
+                            },
+                            {
+                                "name": "precision",
+                                "value": 0.98,
+                            },
+                            {
+                                "name": "recall",
+                                "value": 0.94,
+                            },
+                        ],
+                    }
+                ],
                 "files_deleted": False,
                 "size": 370368,
             }
@@ -78,7 +98,7 @@ class ModelView(BaseIDModel):
 
 
 class ExtendedModelView(ModelView):
-    evaluations: list[EvaluationView] = Field(..., description="List of metrics computed per evaluation")
+    training_configuration: dict = Field(default_factory=dict)
 
     model_config = {
         "json_schema_extra": {
@@ -104,7 +124,6 @@ class ExtendedModelView(ModelView):
                             },
                         ]
                     },
-                    "configuration": {},
                 },
                 "variants": [
                     {
@@ -123,8 +142,6 @@ class ExtendedModelView(ModelView):
                         "weights_size": 123456,
                     },
                 ],
-                "files_deleted": False,
-                "size": 370368,
                 "evaluations": [
                     {
                         "dataset_revision_id": "3c6c6d38-1cd8-4458-b759-b9880c048b78",
@@ -145,6 +162,9 @@ class ExtendedModelView(ModelView):
                         ],
                     }
                 ],
+                "files_deleted": False,
+                "size": 370368,
+                "training_configuration": {},
             }
         }
     }
