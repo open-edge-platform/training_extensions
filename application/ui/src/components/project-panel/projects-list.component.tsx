@@ -3,7 +3,7 @@
 
 import { toast } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-import { isEmpty } from 'lodash-es';
+import { isEmpty, isObject, isString } from 'lodash-es';
 import { useNavigate } from 'react-router';
 
 import type { SchemaProjectView } from '../../api/openapi-spec';
@@ -57,6 +57,15 @@ export const ProjectsList = ({ projects, setProjectInEdition, projectIdInEdition
                     } else if (id === projectIdentifier) {
                         navigate(paths.project.index({}));
                     }
+                },
+                onError: (error) => {
+                    let message = 'Failed to delete project';
+
+                    if (isObject(error) && 'detail' in error && isString(error.detail)) {
+                        message = error.detail;
+                    }
+
+                    toast({ type: 'error', message });
                 },
             }
         );
