@@ -19,6 +19,7 @@ from app.services import (
     DatasetRevisionService,
     DatasetService,
     LabelService,
+    MediaService,
     MetricsService,
     ModelService,
     PipelineMetricsService,
@@ -167,13 +168,21 @@ def get_project_service(
     )
 
 
-def get_dataset_service(
+def get_media_service(
     data_dir: Annotated[Path, Depends(get_data_dir)],
+    db: Annotated[Session, Depends(get_db)],
+) -> MediaService:
+    """Provides a MediaService instance."""
+    return MediaService(data_dir=data_dir, db_session=db)
+
+
+def get_dataset_service(
     label_service: Annotated[LabelService, Depends(get_label_service)],
+    media_service: Annotated[MediaService, Depends(get_media_service)],
     db: Annotated[Session, Depends(get_db)],
 ) -> DatasetService:
     """Provides a DatasetService instance."""
-    return DatasetService(data_dir=data_dir, label_service=label_service, db_session=db)
+    return DatasetService(label_service=label_service, media_service=media_service, db_session=db)
 
 
 def get_dataset_revision_service(

@@ -12,13 +12,13 @@ import time_machine
 from app.models import (
     ConfidenceThresholdDataCollectionPolicy,
     DatasetItemAnnotation,
-    DatasetItemFormat,
     FixedRateDataCollectionPolicy,
     FullImage,
     Label,
     LabelReference,
+    MediaFormat,
 )
-from app.services import DatasetService, LabelService
+from app.services import DatasetService, LabelService, MediaService
 from app.services.data_collect.data_collector import (
     ConfidenceThresholdPolicyChecker,
     DataCollector,
@@ -136,6 +136,8 @@ class TestDataCollectorUnit:
         frame_data = np.random.randint(low=0, high=255, size=(100, 100), dtype=np.uint8)
         inference_data = MagicMock()
 
+        media = MagicMock()
+
         now = datetime.timestamp(datetime.now())
 
         policy_checker = MagicMock()
@@ -148,12 +150,14 @@ class TestDataCollectorUnit:
 
         # Act
         with (
+            patch.object(MediaService, "create_image") as mock_create_image,
             patch.object(DatasetService, "create_dataset_item") as mock_create_dataset_item,
             patch.object(LabelService, "list_all", return_value=[label]) as mock_list_all,
             patch(
                 "app.services.data_collect.data_collector.convert_prediction", return_value=annotations
             ) as mock_convert_prediction,
         ):
+            mock_create_image.return_value = media
             fxt_data_collector.collect(
                 timestamp=now,
                 frame_data=frame_data,
@@ -165,13 +169,17 @@ class TestDataCollectorUnit:
         mock_convert_prediction.assert_called_once_with(
             labels=[label], frame_data=ANY, prediction=inference_data.prediction
         )
+        mock_create_image.assert_called_once_with(
+            project=project,
+            data=ANY,
+            name="1735689601_0000",
+            format=MediaFormat.JPG,
+            source_id=pipeline.source_id,
+        )
         mock_create_dataset_item.assert_called_once_with(
             project=project,
-            name="1735689601_0000",
-            format=DatasetItemFormat.JPG,
-            data=ANY,
+            media=media,
             user_reviewed=False,
-            source_id=pipeline.source_id,
             prediction_model_id=inference_data.model_id,
             annotations=annotations,
         )
@@ -189,6 +197,8 @@ class TestDataCollectorUnit:
         frame_data = np.random.randint(low=0, high=255, size=(100, 100), dtype=np.uint8)
         inference_data = MagicMock()
 
+        media = MagicMock()
+
         now = datetime.timestamp(datetime.now())
 
         policy_checker = MagicMock()
@@ -201,12 +211,14 @@ class TestDataCollectorUnit:
 
         # Act
         with (
+            patch.object(MediaService, "create_image") as mock_create_image,
             patch.object(DatasetService, "create_dataset_item") as mock_create_dataset_item,
             patch.object(LabelService, "list_all", return_value=[label]) as mock_list_all,
             patch(
                 "app.services.data_collect.data_collector.convert_prediction", return_value=annotations
             ) as mock_convert_prediction,
         ):
+            mock_create_image.return_value = media
             fxt_data_collector.collect(
                 timestamp=now,
                 frame_data=frame_data,
@@ -218,13 +230,17 @@ class TestDataCollectorUnit:
         mock_convert_prediction.assert_called_once_with(
             labels=[label], frame_data=ANY, prediction=inference_data.prediction
         )
+        mock_create_image.assert_called_once_with(
+            project=project,
+            data=ANY,
+            name="1735689601_0000",
+            format=MediaFormat.JPG,
+            source_id=pipeline.source_id,
+        )
         mock_create_dataset_item.assert_called_once_with(
             project=project,
-            name="1735689601_0000",
-            format=DatasetItemFormat.JPG,
-            data=ANY,
+            media=media,
             user_reviewed=False,
-            source_id=pipeline.source_id,
             prediction_model_id=inference_data.model_id,
             annotations=annotations,
         )
@@ -279,6 +295,8 @@ class TestDataCollectorUnit:
         frame_data = np.random.randint(low=0, high=255, size=(100, 100), dtype=np.uint8)
         inference_data = MagicMock()
 
+        media = MagicMock()
+
         now = datetime.timestamp(datetime.now())
 
         policy_checker = MagicMock()
@@ -291,6 +309,7 @@ class TestDataCollectorUnit:
 
         # Act
         with (
+            patch.object(MediaService, "create_image") as mock_create_image,
             patch.object(DatasetService, "create_dataset_item") as mock_create_dataset_item,
             patch.object(DatasetService, "count_dataset_items", return_value=50) as mock_count_dataset_items,
             patch.object(LabelService, "list_all", return_value=[label]) as mock_list_all,
@@ -298,6 +317,7 @@ class TestDataCollectorUnit:
                 "app.services.data_collect.data_collector.convert_prediction", return_value=annotations
             ) as mock_convert_prediction,
         ):
+            mock_create_image.return_value = media
             fxt_data_collector.collect(
                 timestamp=now,
                 frame_data=frame_data,
@@ -309,3 +329,4 @@ class TestDataCollectorUnit:
         mock_list_all.assert_called_once_with(project_id=project.id)
         mock_convert_prediction.assert_called_once()
         mock_create_dataset_item.assert_called_once()
+        mock_create_image.assert_called_once()

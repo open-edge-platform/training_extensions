@@ -9,15 +9,10 @@ from .data_collection_policy import (
     DataCollectionPolicyAdapter,
     FixedRateDataCollectionPolicy,
 )
-from .dataset_item import (
-    DatasetItem,
-    DatasetItemAnnotation,
-    DatasetItemAnnotationStatus,
-    DatasetItemFormat,
-    DatasetItemSubset,
-)
+from .dataset_item import DatasetItem, DatasetItemAnnotation, DatasetItemAnnotationStatus, DatasetItemSubset
 from .evaluation import EvaluationResult
 from .label import Label, LabelReference
+from .media import Media, MediaFormat, MediaType
 from .model_revision import ModelRevision, TrainingInfo, TrainingStatus
 from .pipeline import Pipeline, PipelineStatus
 from .project import Project
@@ -54,7 +49,6 @@ __all__ = [
     "DatasetItem",
     "DatasetItemAnnotation",
     "DatasetItemAnnotationStatus",
-    "DatasetItemFormat",
     "DatasetItemSubset",
     "DisconnectedSinkConfig",
     "DisconnectedSourceConfig",
@@ -66,6 +60,9 @@ __all__ = [
     "ImagesFolderSourceConfig",
     "Label",
     "LabelReference",
+    "Media",
+    "MediaFormat",
+    "MediaType",
     "ModelRevision",
     "MqttSinkConfig",
     "OutputFormat",
