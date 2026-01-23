@@ -3,10 +3,10 @@
 
 import { ReactNode, useState } from 'react';
 
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { getMockedConfigurationParameter, getMockedTrainingConfiguration } from 'mocks/mock-training-configuration';
-import { TestProviders } from 'test-utils/render';
+import { render } from 'test-utils/render';
 
 import { TrainingConfiguration } from '../../../../configuration.interface';
 import { isBoolParameter } from '../../utils';
@@ -24,10 +24,6 @@ const toggleParameter = async (name: string) => {
 
 const getParameter = (name: string) => {
     return screen.getByRole('textbox', { name: `Change ${name}` });
-};
-
-const renderApp = (ui: ReactNode) => {
-    return render(<TestProviders>{ui}</TestProviders>);
 };
 
 describe('DataAugmentation', () => {
@@ -130,7 +126,7 @@ describe('DataAugmentation', () => {
     };
 
     it('tag displays "Yes" when at least one data augmentation parameter is enabled, "No" otherwise', async () => {
-        renderApp(<App dataAugmentationParameters={dataAugmentationParameters} />);
+        render(<App dataAugmentationParameters={dataAugmentationParameters} />);
 
         const enableCenterCrop = dataAugmentationParameters.center_crop[0];
         const enableRandomAffine = dataAugmentationParameters.random_affine[0];
@@ -147,7 +143,7 @@ describe('DataAugmentation', () => {
     });
 
     it('disables all data augmentation parameters when the "Enable" parameter is false, otherwise are enabled', async () => {
-        renderApp(<App dataAugmentationParameters={dataAugmentationParameters} />);
+        render(<App dataAugmentationParameters={dataAugmentationParameters} />);
 
         const parameters = Object.values(dataAugmentationParameters);
 
@@ -171,7 +167,7 @@ describe('DataAugmentation', () => {
     });
 
     it('updates parameters and resets them to default properly', async () => {
-        renderApp(<App dataAugmentationParameters={dataAugmentationParameters} />);
+        render(<App dataAugmentationParameters={dataAugmentationParameters} />);
 
         const parameters = Object.values(dataAugmentationParameters).flat();
 
