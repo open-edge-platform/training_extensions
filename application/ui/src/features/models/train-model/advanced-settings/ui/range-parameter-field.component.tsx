@@ -10,7 +10,7 @@ import { getFloatingPointStep } from '../utils';
 
 import classes from './range-parameter-field.module.scss';
 
-type RangeParameterFieldProps = Pick<ArrayParameter, 'type' | 'value' | 'name'> & {
+type RangeParameterFieldProps = Pick<ArrayParameter, 'value' | 'name'> & {
     onChange: (value: number[]) => void;
     isDisabled?: boolean;
     step?: number;

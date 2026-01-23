@@ -1,19 +1,20 @@
-// Copyright (C) 2022-2025 Intel Corporation
-// LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
 
 import { fireEvent, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { render } from 'test-utils/render';
+import { vi } from 'vitest';
 
-import { providersRender as render } from '../../../../../../../test-utils/required-providers-render';
 import { RangeParameterField } from './range-parameter-field.component';
 
 describe('RangeParameterField', () => {
     const defaultValue = [0.5, 1.5];
     const name = 'Scaling ratio range';
-    const onChange = jest.fn();
+    const onChange = vi.fn();
 
     beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     const renderApp = ({ value = defaultValue, isDisabled = false }: { value?: number[]; isDisabled?: boolean }) => {
@@ -23,7 +24,6 @@ describe('RangeParameterField', () => {
                 value={value}
                 onChange={onChange}
                 name={name}
-                type={'array'}
                 isDisabled={isDisabled}
                 step={0.001}
             />

@@ -187,7 +187,6 @@ const ParameterField: FC<ParameterFieldProps> = ({ parameter, onChange, isDisabl
                 value={parameter.value}
                 defaultValue={parameter.default_value}
                 onChange={handleChange}
-                type={parameter.type}
                 isDisabled={isDisabled}
                 name={parameter.name}
             />
