@@ -82,11 +82,9 @@ export const AnnotationActionsProvider = ({
 
         const localAnnotations = mapServerAnnotationsToLocal(initialAnnotationsDTO, projectLabels);
 
-        if (localAnnotations.length > 0) {
-            undoRedoActions.reset(localAnnotations);
-        }
+        undoRedoActions.reset(localAnnotations);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [initialAnnotationsDTO, project?.task?.labels]);
+    }, [initialAnnotationsDTO, project?.task?.labels, mediaItem.id]);
 
     const updateAnnotations = (updatedAnnotations: Annotation[]) => {
         const updatedMap = new Map(updatedAnnotations.map((annotation) => [annotation.id, annotation]));
