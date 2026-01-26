@@ -4,7 +4,7 @@
 import { useSubmitJob } from 'hooks/api/jobs.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
-import { DeviceType } from '../../../../constants/shared-types';
+import type { DeviceType } from '../../../../constants/shared-types';
 
 export const useTrainModelMutation = () => {
     const trainModelMutation = useSubmitJob();

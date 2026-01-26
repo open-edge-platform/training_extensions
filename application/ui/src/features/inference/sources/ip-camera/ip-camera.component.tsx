@@ -3,7 +3,7 @@
 
 import { Flex, Switch, TextField } from '@geti/ui';
 
-import { IPCameraSourceConfig } from '../util';
+import type { IPCameraSourceConfig } from '../../../../constants/shared-types';
 
 type IpCameraProps = {
     defaultState?: IPCameraSourceConfig;

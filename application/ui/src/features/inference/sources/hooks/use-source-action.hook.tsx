@@ -6,7 +6,7 @@ import { useActionState } from 'react';
 import { toast } from '@geti/ui';
 import { isFunction } from 'lodash-es';
 
-import { SourceConfig } from '../util';
+import type { SourceConfigPayload } from '../../../../constants/shared-types';
 import { useSourceMutation } from './use-source-mutation.hook';
 
 interface useSourceActionProps<T> {
@@ -16,7 +16,7 @@ interface useSourceActionProps<T> {
     bodyFormatter: (formData: FormData) => T;
 }
 
-export const useSourceAction = <T extends SourceConfig>({
+export const useSourceAction = <T extends SourceConfigPayload>({
     config,
     isNewSource,
     onSaved,

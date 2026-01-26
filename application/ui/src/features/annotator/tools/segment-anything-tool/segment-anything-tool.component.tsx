@@ -6,7 +6,7 @@ import { PointerEvent, useRef, useState } from 'react';
 import { clampPointBetweenImage } from '@geti/smart-tools/utils';
 
 import { useZoom } from '../../../../components/zoom/zoom.provider';
-import { Label } from '../../../../constants/shared-types';
+import type { Label } from '../../../../constants/shared-types';
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
 import type { Annotation, RegionOfInterest, Shape } from '../../../../shared/types';

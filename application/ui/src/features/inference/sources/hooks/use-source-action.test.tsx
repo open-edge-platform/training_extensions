@@ -8,8 +8,8 @@ import { HttpResponse } from 'msw';
 import { screen, TestProviders } from 'test-utils/render';
 
 import { http } from '../../../../api/utils';
+import type { ImagesFolderSourceConfig } from '../../../../constants/shared-types';
 import { server } from '../../../../msw-node-setup';
-import { ImagesFolderSourceConfig } from '../util';
 import { useSourceAction } from './use-source-action.hook';
 
 vi.mock('react-router', async (importOriginal) => {

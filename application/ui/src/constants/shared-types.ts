@@ -34,3 +34,18 @@ export type DatasetRevision = {
 export type Project = components['schemas']['ProjectView'];
 
 export type TaskType = 'detection' | 'instance_segmentation' | 'classification';
+
+export type ImagesFolderSourceConfig = components['schemas']['ImagesFolderSourceConfigView'];
+export type IPCameraSourceConfig = components['schemas']['IPCameraSourceConfigView'];
+export type USBCameraSourceConfig = components['schemas']['USBCameraSourceConfigView'];
+export type VideoFileSourceConfig = components['schemas']['VideoFileSourceConfigView'];
+export type DisconnectedSourceConfig = components['schemas']['DisconnectedSourceConfigView'];
+
+export type SourceConfig =
+    | DisconnectedSourceConfig
+    | USBCameraSourceConfig
+    | IPCameraSourceConfig
+    | VideoFileSourceConfig
+    | ImagesFolderSourceConfig;
+
+export type SourceConfigPayload = Exclude<SourceConfig, DisconnectedSourceConfig>;

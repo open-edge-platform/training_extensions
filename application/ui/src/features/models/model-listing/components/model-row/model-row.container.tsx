@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { AlertDialog, DialogContainer, Key } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
-import { Model } from '../../../../../constants/shared-types';
+import type { Model } from '../../../../../constants/shared-types';
 import { usePatchPipeline } from '../../../../../hooks/api/pipeline.hook';
 import { useDeleteModel } from '../../../hooks/api/use-delete-model.hook';
 import { useDownloadModel } from '../../../hooks/api/use-download-model.hook';
