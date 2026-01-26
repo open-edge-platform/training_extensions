@@ -4,6 +4,7 @@
 import { createContext, ReactNode, useContext, useState, type Dispatch, type SetStateAction } from 'react';
 
 import { useProjectLabels } from 'hooks/use-project-labels.hook';
+import { useSelectedProject } from 'hooks/use-selected-project';
 
 import type { Label, Media } from '../../constants/shared-types';
 import { useLoadImageQuery } from '../../features/annotator/hooks/use-load-image-query.hook';
@@ -31,8 +32,10 @@ export const AnnotatorProviderContext = createContext<AnnotatorContext | null>(n
 
 const useSelectedLabel = () => {
     const labels = useProjectLabels();
-
-    const [selectedLabelId, setSelectedLabelId] = useState<string | null>(labels.length === 0 ? null : labels[0].id);
+    const project = useSelectedProject();
+    const hasDefaultLabel = project.task.task_type !== 'classification';
+    const defaultLabel = hasDefaultLabel && labels.length > 0 ? labels[0].id : null;
+    const [selectedLabelId, setSelectedLabelId] = useState<string | null>(defaultLabel);
 
     const selectedLabel: Label | null = labels.find(({ id }) => id === selectedLabelId) ?? null;
 
