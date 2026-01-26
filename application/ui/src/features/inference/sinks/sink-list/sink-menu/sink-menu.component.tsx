@@ -44,39 +44,35 @@ export const SinkMenu = ({ id, name, isConnected, onEdit }: SinkMenuProps) => {
         }
     };
 
-    const handleConnect = async () => {
-        try {
-            updatePipeline.mutate(
-                {
-                    params: { path: { project_id } },
-                    body: { sink_id: id },
+    const handleConnect = () => {
+        updatePipeline.mutate(
+            {
+                params: { path: { project_id } },
+                body: { sink_id: id },
+            },
+            {
+                onSuccess: () => {
+                    toast({
+                        type: 'success',
+                        message: `Successfully connected to "${name}"`,
+                    });
                 },
-                {
-                    onSuccess: () => {
-                        toast({
-                            type: 'success',
-                            message: `Successfully connected to "${name}"`,
-                        });
-                    },
-                }
-            );
-        } catch (_error) {}
+            }
+        );
     };
 
-    const handleDelete = async () => {
-        try {
-            removeSink.mutate(
-                { params: { path: { sink_id: id } } },
-                {
-                    onSuccess: async () => {
-                        toast({
-                            type: 'success',
-                            message: `${name} has been removed successfully!`,
-                        });
-                    },
-                }
-            );
-        } catch (_error) {}
+    const handleDelete = () => {
+        removeSink.mutate(
+            { params: { path: { sink_id: id } } },
+            {
+                onSuccess: () => {
+                    toast({
+                        type: 'success',
+                        message: `${name} has been removed successfully!`,
+                    });
+                },
+            }
+        );
     };
 
     return (

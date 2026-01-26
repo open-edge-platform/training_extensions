@@ -71,6 +71,10 @@ export class ModelsPage {
         await this.page.getByRole('menuitem', { name: 'Delete' }).click();
     }
 
+    async clickSetActiveAction() {
+        await this.page.getByRole('menuitem', { name: 'Set as active' }).click();
+    }
+
     async renameModel(newName: string) {
         const textbox = this.page.getByRole('textbox', { name: 'Model name' });
 
