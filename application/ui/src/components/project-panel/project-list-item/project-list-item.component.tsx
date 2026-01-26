@@ -129,7 +129,7 @@ export const ProjectListItem = ({ project, isInEditMode, onBlur, onRename, onDel
     };
 
     const handleNavigateToProject = () => {
-        navigate(paths.project.details({ projectId: project.id }));
+        navigate(paths.project.inference({ projectId: project.id }));
     };
 
     return (
