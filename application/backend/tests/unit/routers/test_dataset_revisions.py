@@ -14,8 +14,9 @@ from app.api.dependencies import get_data_dir, get_dataset_revision, get_dataset
 from app.api.schemas.dataset_item import DatasetItemSubset
 from app.api.schemas.dataset_revision import DatasetRevisionView, ItemCount
 from app.main import app
-from app.models import DatasetItem, DatasetRevision, MediaFormat
+from app.models import DatasetItem, DatasetRevision
 from app.models.dataset_revision import DatasetRevisionCounts
+from app.models.media import ImageFormat
 from app.services import DatasetRevisionService, ResourceNotFoundError, ResourceType
 
 
@@ -194,7 +195,7 @@ class TestDatasetRevisionItemEndpoints:
         fxt_dataset_revision_service.get_dataset_revision.return_value = MagicMock(id=fxt_dataset_revision_id)
         mock_item_data = {
             "id": str(fxt_dataset_item.id),
-            "format": MediaFormat.JPG.value,
+            "format": ImageFormat.JPG.value,
             "width": 1024,
             "height": 768,
             "subset": fxt_dataset_item.subset.value,
@@ -231,7 +232,7 @@ class TestDatasetRevisionItemEndpoints:
         fxt_dataset_revision_service.get_dataset_revision.return_value = MagicMock(id=fxt_dataset_revision_id)
         mock_item_data = {
             "id": str(fxt_dataset_item.id),
-            "format": MediaFormat.JPG.value,
+            "format": ImageFormat.JPG.value,
             "width": 1024,
             "height": 768,
             "subset": fxt_dataset_item.subset.value,
@@ -269,7 +270,7 @@ class TestDatasetRevisionItemEndpoints:
         fxt_dataset_revision_service.get_dataset_revision.return_value = MagicMock(id=fxt_dataset_revision_id)
         mock_item_data = {
             "id": str(fxt_dataset_item.id),
-            "format": MediaFormat.JPG.value,
+            "format": ImageFormat.JPG.value,
             "width": 1024,
             "height": 768,
             "subset": fxt_dataset_item.subset.value,
@@ -325,7 +326,7 @@ class TestDatasetRevisionItemEndpoints:
         fxt_dataset_revision_service.get_dataset_revision.return_value = MagicMock(id=fxt_dataset_revision_id)
         mock_item_data = {
             "id": str(fxt_dataset_item.id),
-            "format": MediaFormat.JPG.value,
+            "format": ImageFormat.JPG.value,
             "width": 1024,
             "height": 768,
             "subset": fxt_dataset_item.subset.value,

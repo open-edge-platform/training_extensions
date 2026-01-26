@@ -121,8 +121,10 @@ class MediaDB(BaseID):
     type: Mapped[str] = mapped_column(String(50), nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     format: Mapped[str] = mapped_column(String(50), nullable=False)
-    width: Mapped[int] = mapped_column(Integer, nullable=False)
-    height: Mapped[int] = mapped_column(Integer, nullable=False)
+    width: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
+    height: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
+    fps: Mapped[float | None] = mapped_column(Integer, nullable=True, default=None)
+    frame_count: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
     size: Mapped[int] = mapped_column(Integer, nullable=False)
     source_id: Mapped[str | None] = mapped_column(Text, ForeignKey("sources.id", ondelete="SET NULL"), nullable=True)
 

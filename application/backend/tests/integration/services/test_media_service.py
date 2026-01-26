@@ -1,6 +1,10 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+import io
 import os.path
+import shutil
+import subprocess
+from collections.abc import Callable
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
@@ -12,7 +16,8 @@ from PIL import Image
 from sqlalchemy.orm import Session
 
 from app.db.schema import DatasetItemDB, DatasetItemLabelDB, MediaDB, PipelineDB
-from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, MediaFormat, Pipeline, Project
+from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Pipeline, Project
+from app.models.media import ImageFormat, VideoFormat
 from app.services import LabelService, PipelineService, ProjectService, SystemService
 from app.services.base import ResourceNotFoundError, ResourceType
 from app.services.event.event_bus import EventBus
@@ -111,6 +116,7 @@ def fxt_project_with_media(fxt_project_with_pipeline, db_session) -> tuple[Proje
         {"type": "image", "name": "test1", "format": "jpg", "size": 1024, "width": 1024, "height": 768},
         {"type": "image", "name": "test2", "format": "jpg", "size": 1024, "width": 1024, "height": 768},
         {"type": "image", "name": "test3", "format": "jpg", "size": 1024, "width": 1024, "height": 768},
+        {"type": "video", "name": "test4", "format": "avi", "size": 1024},
     ]
 
     db_media_list = []
@@ -414,18 +420,58 @@ def fxt_project_with_subset_items(fxt_project_with_pipeline, db_session) -> tupl
     return project, db_dataset_items
 
 
+def _ensure_ffmpeg():
+    """Ensure ffmpeg is available on PATH; skip test if not."""
+    exe = shutil.which("ffmpeg")
+    if exe is None:
+        pytest.skip("ffmpeg not found in PATH; skipping video related tests")
+    return exe
+
+
+@pytest.fixture
+def fxt_video_data() -> Callable[[Path], None]:
+    ffmpeg = _ensure_ffmpeg()
+
+    def _generate_video_file(path: Path) -> None:
+        # Build color source: black frames with size & fps
+        lavfi = f"color=c=black:s={640}x{480}:r={25}"
+
+        cmd = [
+            ffmpeg,
+            "-y",
+            "-hide_banner",
+            "-loglevel",
+            "error",  # keep CI logs clean; change to 'info' for debugging
+            "-f",
+            "lavfi",
+            "-i",
+            lavfi,
+            "-t",
+            "4",
+            "-c:v",
+            "mpeg4",
+            str(path),
+        ]
+        # Run ffmpeg
+        proc = subprocess.run(cmd, capture_output=True, text=True, check=False)
+        if proc.returncode != 0:
+            raise RuntimeError(f"ffmpeg failed:\nCMD: {' '.join(cmd)}\nSTDERR:\n{proc.stderr}")
+
+    return _generate_video_file
+
+
 class TestMediaServiceIntegration:
     """Integration tests for MediaService."""
 
     @pytest.mark.parametrize("use_pipeline_source", [True, False])
-    @pytest.mark.parametrize("format", ["jpg", "png"])
-    def test_create_media(
+    @pytest.mark.parametrize("format", ImageFormat)
+    def test_create_image(
         self,
         tmp_path: Path,
         fxt_media_service: MediaService,
         fxt_project_with_pipeline: tuple[Project, Pipeline],
         db_session: Session,
-        format: MediaFormat,
+        format: ImageFormat,
         use_pipeline_source: bool,
     ) -> None:
         """Test creating a media."""
@@ -464,6 +510,55 @@ class TestMediaServiceIntegration:
         thumbnail_file_path = tmp_path / f"projects/{project.id}/dataset/{created_media.id}-thumb.jpg"
         assert os.path.exists(thumbnail_file_path)
 
+    @pytest.mark.parametrize("use_pipeline_source", [True, False])
+    @pytest.mark.parametrize("format", VideoFormat)
+    def test_create_video(
+        self,
+        tmp_path: Path,
+        fxt_media_service: MediaService,
+        fxt_project_with_pipeline: tuple[Project, Pipeline],
+        db_session: Session,
+        format: VideoFormat,
+        use_pipeline_source: bool,
+    ) -> None:
+        """Test creating a video."""
+
+        data = io.BytesIO(b"213412341234")
+
+        project, pipeline = fxt_project_with_pipeline
+
+        created_media = fxt_media_service.create_video(
+            project=project,
+            name="test",
+            format=format,
+            data=data,
+            source_id=pipeline.source_id if use_pipeline_source else None,
+        )
+
+        media = db_session.get(MediaDB, str(created_media.id))
+        assert media is not None
+        assert (
+            media.id == str(created_media.id)
+            and media.project_id == str(project.id)
+            and media.type == "video"
+            and media.name == "test"
+            and media.format == format
+            and media.width is None  # Do not calculate width on video upload
+            and media.height is None  # Do not calculate height on video upload
+        )
+        if use_pipeline_source:
+            assert media.source_id == str(pipeline.source_id)
+        else:
+            assert media.source_id is None
+
+        binary_file_path = tmp_path / f"projects/{project.id}/dataset/{created_media.id}.{format}"
+        assert os.path.exists(binary_file_path)
+        assert created_media.size == os.path.getsize(binary_file_path)
+
+        # Do not generate thumbnail on video upload
+        thumbnail_file_path = tmp_path / f"projects/{project.id}/dataset/{created_media.id}-thumb.jpg"
+        assert not os.path.exists(thumbnail_file_path)
+
     def test_create_media_invalid_image(
         self,
         fxt_media_service: MediaService,
@@ -477,7 +572,7 @@ class TestMediaServiceIntegration:
             fxt_media_service.create_image(
                 project=project,
                 name="test",
-                format="jpg",
+                format=ImageFormat.JPG,
                 data=BytesIO(b"123"),
             )
 
@@ -654,14 +749,14 @@ class TestMediaServiceIntegration:
         assert excinfo.value.resource_type == ResourceType.MEDIA
         assert excinfo.value.resource_id == str(non_existent_id)
 
-    def test_generate_media_thumbnail(
+    def test_generate_image_thumbnail(
         self,
         tmp_path: Path,
         fxt_projects_dir: Path,
         fxt_media_service: MediaService,
         fxt_project_with_media: tuple[Project, list[MediaDB]],
     ):
-        """Test generating a dataset item thumbnail returns a PIL Image."""
+        """Test generating an image thumbnail returns a PIL Image."""
         project, db_media_list = fxt_project_with_media
         media = db_media_list[0]
 
@@ -675,8 +770,34 @@ class TestMediaServiceIntegration:
         thumbnail = fxt_media_service.generate_media_thumbnail(project=project, media_id=UUID(media.id))
 
         assert isinstance(thumbnail, Image.Image)
-        assert thumbnail.width == 64
-        assert thumbnail.height == 64
+        assert thumbnail.width == 256
+        assert thumbnail.height == 256
+
+    def test_generate_video_thumbnail(
+        self,
+        tmp_path: Path,
+        fxt_video_data: Callable[[Path], None],
+        fxt_projects_dir: Path,
+        fxt_media_service: MediaService,
+        fxt_project_with_media: tuple[Project, list[MediaDB]],
+    ):
+        """Test generating a video thumbnail returns a PIL Image."""
+        project, db_media_list = fxt_project_with_media
+        media = db_media_list[3]
+
+        # Create the dataset directory and a test video file
+        dataset_dir = tmp_path / fxt_projects_dir / str(project.id) / "dataset"
+        dataset_dir.mkdir(parents=True, exist_ok=True)
+        video_path = dataset_dir / f"{media.id}.{media.format}"
+
+        # Generate video
+        fxt_video_data(video_path)
+
+        thumbnail = fxt_media_service.generate_media_thumbnail(project=project, media_id=UUID(media.id))
+
+        assert isinstance(thumbnail, Image.Image)
+        assert thumbnail.width == 256
+        assert thumbnail.height == 256
 
     def test_generate_media_thumbnail_not_found(
         self,

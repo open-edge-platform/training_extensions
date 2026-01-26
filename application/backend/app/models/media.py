@@ -13,7 +13,18 @@ class ImageFormat(StrEnum):
     PNG = "png"
 
 
-MediaFormat = ImageFormat
+class VideoFormat(StrEnum):
+    """Format of the video."""
+
+    MP4 = "mp4"
+    AVI = "avi"
+    MKV = "mkv"
+    MOV = "mov"
+    WEBM = "webm"
+    M4V = "m4v"
+
+
+MediaFormat = ImageFormat | VideoFormat
 
 
 class MediaType(StrEnum):
@@ -37,6 +48,8 @@ class Media(BaseEntity):
         width: Width of the media in pixels.
         height: Height of the media in pixels.
         size: Size of the media in bytes.
+        fps: Video fps (applicable only for video media).
+        frame_count: Total number of frames (applicable only for video media).
         source_id: Identifier of the source from which the media was acquired, if applicable.
     """
 
@@ -45,7 +58,9 @@ class Media(BaseEntity):
     project_id: UUID
     name: str
     format: MediaFormat
-    width: int
-    height: int
+    width: int | None
+    height: int | None
     size: int
+    fps: float | None
+    frame_count: int | None
     source_id: UUID | None

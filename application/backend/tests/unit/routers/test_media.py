@@ -14,22 +14,42 @@ from fastapi import status
 from app.api.dependencies import get_dataset_service, get_media_service
 from app.api.schemas.media import MediaView
 from app.main import app
-from app.models import DatasetItemAnnotationStatus, Media, MediaFormat, MediaType
+from app.models import DatasetItemAnnotationStatus, Media, MediaType
+from app.models.media import ImageFormat, VideoFormat
 from app.services import DatasetService, MediaService, ResourceNotFoundError, ResourceType
 from app.services.media_service import MediaFilters
 
 
 @pytest.fixture
-def fxt_media():
+def fxt_image_media():
     return Media(
         id=uuid4(),
         type=MediaType.IMAGE,
         project_id=uuid4(),
-        name="test_media",
-        format=MediaFormat.JPG,
+        name="test_image",
+        format=ImageFormat.JPG,
         width=1024,
         height=768,
         size=2048,
+        fps=None,
+        frame_count=None,
+        source_id=uuid4(),
+    )
+
+
+@pytest.fixture
+def fxt_video_media():
+    return Media(
+        id=uuid4(),
+        type=MediaType.VIDEO,
+        project_id=uuid4(),
+        name="test_video",
+        format=VideoFormat.MP4,
+        width=None,
+        height=None,
+        size=2048,
+        fps=None,
+        frame_count=None,
         source_id=uuid4(),
     )
 
@@ -48,32 +68,39 @@ def fxt_dataset_service() -> MagicMock:
     return dataset_service
 
 
-def test_convert_media_to_view(fxt_media) -> None:
-    view = MediaView.model_validate(fxt_media, from_attributes=True)
+@pytest.mark.parametrize("media_name", ["fxt_image_media", "fxt_video_media"])
+def test_convert_image_to_view(request, media_name) -> None:
+    media = request.getfixturevalue(media_name)
+    view = MediaView.model_validate(media, from_attributes=True)
     assert view == MediaView(
-        id=fxt_media.id,
-        name=fxt_media.name,
-        type=fxt_media.type,
-        format=fxt_media.format,
-        width=fxt_media.width,
-        height=fxt_media.height,
-        size=fxt_media.size,
-        source_id=fxt_media.source_id,
+        id=media.id,
+        name=media.name,
+        type=media.type,
+        format=media.format,
+        width=media.width,
+        height=media.height,
+        size=media.size,
+        fps=media.fps,
+        frame_count=media.frame_count,
+        source_id=media.source_id,
     )
 
 
 class TestMediaEndpoints:
-    def test_create_image_no_file(self, fxt_get_project, fxt_media, fxt_media_service, fxt_dataset_service, fxt_client):
-        fxt_media_service.create_image.return_value = fxt_media
-
+    def test_create_media_no_file(
+        self, fxt_get_project, fxt_image_media, fxt_media_service, fxt_dataset_service, fxt_client
+    ):
         response = fxt_client.post(f"/api/projects/{uuid4()}/dataset/media")
 
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
         fxt_media_service.create_image.assert_not_called()
+        fxt_media_service.create_video.assert_not_called()
         fxt_dataset_service.create_dataset_item.assert_not_called()
 
-    def test_create_image_success(self, fxt_get_project, fxt_media, fxt_media_service, fxt_dataset_service, fxt_client):
-        fxt_media_service.create_image.return_value = fxt_media
+    def test_create_image_success(
+        self, fxt_get_project, fxt_image_media, fxt_media_service, fxt_dataset_service, fxt_client
+    ):
+        fxt_media_service.create_image.return_value = fxt_image_media
 
         response = fxt_client.post(
             f"/api/projects/{str(uuid4())}/dataset/media",
@@ -85,11 +112,13 @@ class TestMediaEndpoints:
             "type": "image",
             "format": "jpg",
             "height": 768,
-            "id": str(fxt_media.id),
-            "name": "test_media",
+            "id": str(fxt_image_media.id),
+            "name": "test_image",
             "size": 2048,
-            "source_id": str(fxt_media.source_id),
+            "source_id": str(fxt_image_media.source_id),
             "width": 1024,
+            "fps": None,
+            "frame_count": None,
         }
         fxt_media_service.create_image.assert_called_once_with(
             project=fxt_get_project,
@@ -99,13 +128,48 @@ class TestMediaEndpoints:
         )
         fxt_dataset_service.create_dataset_item.assert_called_once_with(
             project=fxt_get_project,
-            media=fxt_media,
+            media=fxt_image_media,
             user_reviewed=True,
         )
 
-    def test_list_media(self, fxt_get_project, fxt_media, fxt_media_service, fxt_client):
-        fxt_media_service.count_media.return_value = 1
-        fxt_media_service.list_media.return_value = [fxt_media]
+    def test_create_video_success(
+        self, fxt_get_project, fxt_video_media, fxt_media_service, fxt_dataset_service, fxt_client
+    ):
+        fxt_media_service.create_video.return_value = fxt_video_media
+
+        response = fxt_client.post(
+            f"/api/projects/{str(uuid4())}/dataset/media",
+            files={"file": ("test_file.mp4", BytesIO(b"123"), "video/mp4")},
+        )
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.json() == {
+            "type": "video",
+            "format": "mp4",
+            "height": None,
+            "id": str(fxt_video_media.id),
+            "name": "test_video",
+            "size": 2048,
+            "source_id": str(fxt_video_media.source_id),
+            "width": None,
+            "fps": None,
+            "frame_count": None,
+        }
+        fxt_media_service.create_video.assert_called_once_with(
+            project=fxt_get_project,
+            data=ANY,
+            name="test_file",
+            format="mp4",
+        )
+        fxt_dataset_service.create_dataset_item.assert_called_once_with(
+            project=fxt_get_project,
+            media=fxt_video_media,
+            user_reviewed=True,
+        )
+
+    def test_list_media(self, fxt_get_project, fxt_image_media, fxt_video_media, fxt_media_service, fxt_client):
+        fxt_media_service.count_media.return_value = 2
+        fxt_media_service.list_media.return_value = [fxt_image_media, fxt_video_media]
 
         response = fxt_client.get(f"/api/projects/{str(uuid4())}/dataset/media")
 
@@ -125,9 +189,11 @@ class TestMediaEndpoints:
             ),
         )
 
-    def test_list_media_filtering_and_pagination(self, fxt_get_project, fxt_media, fxt_media_service, fxt_client):
-        fxt_media_service.count_media.return_value = 1
-        fxt_media_service.list_media.return_value = [fxt_media]
+    def test_list_media_filtering_and_pagination(
+        self, fxt_get_project, fxt_image_media, fxt_video_media, fxt_media_service, fxt_client
+    ):
+        fxt_media_service.count_media.return_value = 2
+        fxt_media_service.list_media.return_value = [fxt_image_media, fxt_video_media]
 
         response = fxt_client.get(
             f"/api/projects/{str(uuid4())}/dataset/media?limit=50&offset=2&start_date=2025-01-09T00:00:00Z&end_date=2025-12-31T23:59:59Z"
@@ -187,10 +253,10 @@ class TestMediaEndpoints:
         ],
     )
     def test_list_media_with_annotation_status(
-        self, fxt_get_project, fxt_media, fxt_media_service, fxt_client, annotation_status
+        self, fxt_get_project, fxt_image_media, fxt_video_media, fxt_media_service, fxt_client, annotation_status
     ):
-        fxt_media_service.count_media.return_value = 1
-        fxt_media_service.list_media.return_value = [fxt_media]
+        fxt_media_service.count_media.return_value = 2
+        fxt_media_service.list_media.return_value = [fxt_image_media, fxt_video_media]
 
         response = fxt_client.get(f"/api/projects/{str(uuid4())}/dataset/media?annotation_status={annotation_status}")
 
@@ -217,9 +283,11 @@ class TestMediaEndpoints:
         )
 
     @pytest.mark.parametrize("subset", ["unassigned", "training", "validation", "testing"])
-    def test_list_media_with_subset(self, fxt_get_project, fxt_media, fxt_media_service, fxt_client, subset):
-        fxt_media_service.count_media.return_value = 1
-        fxt_media_service.list_media.return_value = [fxt_media]
+    def test_list_media_with_subset(
+        self, fxt_get_project, fxt_image_media, fxt_video_media, fxt_media_service, fxt_client, subset
+    ):
+        fxt_media_service.count_media.return_value = 2
+        fxt_media_service.list_media.return_value = [fxt_image_media, fxt_video_media]
 
         response = fxt_client.get(f"/api/projects/{str(uuid4())}/dataset/media?subset={subset}")
 
@@ -273,23 +341,27 @@ class TestMediaEndpoints:
         assert response.status_code == status.HTTP_404_NOT_FOUND
         fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media_id)
 
-    def test_get_media_success(self, fxt_get_project, fxt_media, fxt_media_service, fxt_client):
-        fxt_media_service.get_media_by_id.return_value = fxt_media
+    @pytest.mark.parametrize("media_name", ["fxt_image_media", "fxt_video_media"])
+    def test_get_media_success(self, request, media_name, fxt_get_project, fxt_media_service, fxt_client):
+        media = request.getfixturevalue(media_name)
+        fxt_media_service.get_media_by_id.return_value = media
 
-        response = fxt_client.get(f"/api/projects/{str(uuid4())}/dataset/media/{str(fxt_media.id)}")
+        response = fxt_client.get(f"/api/projects/{str(uuid4())}/dataset/media/{str(media.id)}")
 
         assert response.status_code == status.HTTP_200_OK
         assert response.json() == {
-            "type": "image",
-            "format": "jpg",
-            "height": 768,
-            "id": str(fxt_media.id),
-            "name": "test_media",
-            "size": 2048,
-            "source_id": str(fxt_media.source_id),
-            "width": 1024,
+            "type": media.type,
+            "format": media.format,
+            "height": media.height,
+            "id": str(media.id),
+            "name": media.name,
+            "size": media.size,
+            "source_id": str(media.source_id),
+            "width": media.width,
+            "fps": media.fps,
+            "frame_count": media.frame_count,
         }
-        fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=fxt_media.id)
+        fxt_media_service.get_media_by_id.assert_called_once_with(project_id=fxt_get_project.id, media_id=media.id)
 
     def test_get_media_binary_not_found(self, fxt_get_project, fxt_media_service, fxt_client):
         media_id = uuid4()

@@ -218,7 +218,7 @@ def convert_classification_dataset(
     def _convert_sample(
         dataset_item: DatasetItem, media: Media, image_path: str, project_labels_ids: list[UUID]
     ) -> ClassificationSample | None:
-        if dataset_item.annotation_data is None:
+        if dataset_item.annotation_data is None or media.width is None or media.height is None:
             return None
         try:
             annotation = dataset_item.annotation_data[0]  # classification -> only one shape (annotation)
@@ -262,7 +262,7 @@ def convert_multilabel_classification_dataset(
     def _convert_sample(
         dataset_item: DatasetItem, media: Media, image_path: str, project_labels_ids: list[UUID]
     ) -> MultilabelClassificationSample | None:
-        if dataset_item.annotation_data is None:
+        if dataset_item.annotation_data is None or media.width is None or media.height is None:
             return None
         try:
             annotation = dataset_item.annotation_data[0]  # classification -> only one shape (annotation)
@@ -307,7 +307,7 @@ def convert_detection_dataset(
     def _convert_sample(
         dataset_item: DatasetItem, media: Media, image_path: str, project_labels_ids: list[UUID]
     ) -> DetectionSample | None:
-        if dataset_item.annotation_data is None:
+        if dataset_item.annotation_data is None or media.width is None or media.height is None:
             return None
         coords = [
             convert_rectangle(annotation.shape)
@@ -379,7 +379,7 @@ def convert_instance_segmentation_dataset(
     def _convert_sample(
         dataset_item: DatasetItem, media: Media, image_path: str, project_labels_ids: list[UUID]
     ) -> InstanceSegmentationSample | None:
-        if dataset_item.annotation_data is None:
+        if dataset_item.annotation_data is None or media.width is None or media.height is None:
             return None
         polygons = [
             convert_polygon(annotation.shape)

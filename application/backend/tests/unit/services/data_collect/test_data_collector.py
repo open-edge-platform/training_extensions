@@ -16,8 +16,8 @@ from app.models import (
     FullImage,
     Label,
     LabelReference,
-    MediaFormat,
 )
+from app.models.media import ImageFormat
 from app.services import DatasetService, LabelService, MediaService
 from app.services.data_collect.data_collector import (
     ConfidenceThresholdPolicyChecker,
@@ -173,7 +173,7 @@ class TestDataCollectorUnit:
             project=project,
             data=ANY,
             name="1735689601_0000",
-            format=MediaFormat.JPG,
+            format=ImageFormat.JPG,
             source_id=pipeline.source_id,
         )
         mock_create_dataset_item.assert_called_once_with(
@@ -234,7 +234,7 @@ class TestDataCollectorUnit:
             project=project,
             data=ANY,
             name="1735689601_0000",
-            format=MediaFormat.JPG,
+            format=ImageFormat.JPG,
             source_id=pipeline.source_id,
         )
         mock_create_dataset_item.assert_called_once_with(

@@ -15,9 +15,11 @@ class MediaView(BaseRequiredIDNameModel):
 
     type: MediaType
     format: MediaFormat
-    width: int
-    height: int
+    width: int | None
+    height: int | None
     size: int
+    fps: float | None
+    frame_count: int | None
     source_id: UUID | None = None
 
     model_config = {
