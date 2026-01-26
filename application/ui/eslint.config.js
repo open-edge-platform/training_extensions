@@ -10,6 +10,8 @@ import sharedEslintConfig from '@geti/config/lint';
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
+const currentYear = new Date().getFullYear();
+const allowedYears = Array.from({ length: Math.max(currentYear - 2025 + 1, 1) }, (_, index) => 2025 + index);
 const compat = new FlatCompat({
     baseDirectory: dirname,
     recommendedConfig: js.configs.recommended,
@@ -55,7 +57,12 @@ export default [
             'header/header': [
                 'warn',
                 'line',
-                [' Copyright (C) 2025 Intel Corporation', ' SPDX-License-Identifier: Apache-2.0'],
+                [
+                    new RegExp(
+                        ` Copyright \\(C\\) ((?:${allowedYears.join('|')})|2025-(?:${allowedYears.join('|')})) Intel Corporation`
+                    ),
+                    ' SPDX-License-Identifier: Apache-2.0'
+                ],
             ],
         },
     },
