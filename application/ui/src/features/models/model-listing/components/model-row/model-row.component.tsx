@@ -58,7 +58,7 @@ export const ModelRow = ({
             <Text UNSAFE_className={styles.dateText}>{formatTrainingDateTime(trainingEndTime)}</Text>
 
             <Flex alignItems={'start'} direction={'column'} gap={'size-100'}>
-                <Text UNSAFE_className={styles.smallText}>{model.architecture}</Text>
+                <Text UNSAFE_className={styles.smallText}>{model.architecture} (Apache 2.0)</Text>
                 {/* TODO: Speed is hardcoded for now, once the backend is update we need to update this */}
                 <Tag prefix={<ThumbsUp />} text={'Speed'} className={styles.recommendedForTag} />
             </Flex>
@@ -76,7 +76,6 @@ export const ModelRow = ({
                         <Item key={'active'}>Set as active</Item>
                         <Item key={'rename'}>Rename</Item>
                         <Item key={'delete'}>Delete</Item>
-                        <Item key={'export'}>Export</Item>
                     </Menu>
                 </MenuTrigger>
             ) : null}

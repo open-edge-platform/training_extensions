@@ -41,7 +41,9 @@ export const AddMediaButton = ({ onFilesSelected, multiple = true }: AddMediaBut
                 style={{ display: 'none' }}
                 aria-label={'Upload media files'}
             />
-            <Button onPress={handleClick}>Upload Files</Button>
+            <Button variant={'secondary'} onPress={handleClick}>
+                Upload Files
+            </Button>
         </>
     );
 };

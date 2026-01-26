@@ -5,6 +5,8 @@ import { useEffect, useState } from 'react';
 
 import { Button, Flex, Loading, toast, View } from '@geti/ui';
 import { Play } from '@geti/ui/icons';
+import { useEnablePipeline } from 'hooks/api/pipeline.hook';
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { Stream } from './stream';
 import { useWebRTCConnection } from './web-rtc-connection-provider';
@@ -14,6 +16,13 @@ import classes from './stream.module.scss';
 export const StreamContainer = () => {
     const [size, setSize] = useState({ height: 608, width: 892 });
     const { start, status } = useWebRTCConnection();
+    const enablePipelineMutation = useEnablePipeline();
+    const projectId = useProjectIdentifier();
+
+    const handleStartStream = () => {
+        start();
+        enablePipelineMutation.mutate({ params: { path: { project_id: projectId } } });
+    };
 
     useEffect(() => {
         if (status === 'failed') {
@@ -27,7 +36,11 @@ export const StreamContainer = () => {
                 <div className={classes.canvasContainer}>
                     <View backgroundColor={'gray-200'} width='90%' height='90%'>
                         <Flex alignItems={'center'} justifyContent={'center'} height='100%'>
-                            <Button onPress={start} UNSAFE_className={classes.playButton} aria-label={'Start stream'}>
+                            <Button
+                                onPress={handleStartStream}
+                                UNSAFE_className={classes.playButton}
+                                aria-label={'Start stream'}
+                            >
                                 <Play width='128px' height='128px' />
                             </Button>
                         </Flex>

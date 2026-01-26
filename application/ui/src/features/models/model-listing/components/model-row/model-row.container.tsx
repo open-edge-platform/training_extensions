@@ -9,7 +9,6 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import type { Model } from '../../../../../constants/shared-types';
 import { usePatchPipeline } from '../../../../../hooks/api/pipeline.hook';
 import { useDeleteModel } from '../../../hooks/api/use-delete-model.hook';
-import { useDownloadModel } from '../../../hooks/api/use-download-model.hook';
 import { useGetModel } from '../../../hooks/api/use-get-model.hook';
 import { useRenameModel } from '../../../hooks/api/use-rename-model.hook';
 import { useModelListing } from '../../provider/model-listing-provider';
@@ -34,7 +33,6 @@ export const ModelRowContainer = ({ model }: ModelRowContainerProps) => {
     const deleteModelMutation = useDeleteModel();
     const renameModelMutation = useRenameModel();
     const patchPipelineMutation = usePatchPipeline();
-    const { downloadModel } = useDownloadModel(model.id);
 
     const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -49,8 +47,6 @@ export const ModelRowContainer = ({ model }: ModelRowContainerProps) => {
             setIsDeleteDialogOpen(true);
         } else if (key === MODEL_ACTIONS.RENAME) {
             setIsRenameDialogOpen(true);
-        } else if (key === MODEL_ACTIONS.EXPORT) {
-            downloadModel();
         }
     };
 
