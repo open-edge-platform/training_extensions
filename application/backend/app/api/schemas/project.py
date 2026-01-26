@@ -12,9 +12,10 @@ from .label import LabelCreate, LabelView
 
 
 class TaskBase(BaseModel):
-    task_type: TaskType = Field(description="Task type (classification, detection or segmentation).")
+    task_type: TaskType = Field(description="Task type (classification, detection or instance_segmentation).")
     exclusive_labels: bool = Field(
-        default=False, description="Whether labels are exclusive (e.g. classification) or not (e.g. detection)."
+        default=False,
+        description="Whether labels are exclusive (multi class classification) or not (multi label classification).",
     )
 
 

@@ -1,0 +1,91 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+from typing import Literal
+from uuid import UUID
+
+from pydantic import BaseModel, Field, model_validator
+
+from app.core.jobs.models import JobType, TrainingJob
+
+from .base import BaseJobRequest
+
+
+class TrainingRequestParams(BaseModel):
+    """Request parameters for the training job"""
+
+    device: str = Field(..., description="Device identifier for training (e.g., 'cpu', 'xpu-0', 'cuda-1')")
+    model_architecture_id: str = Field(..., description="Model architecture identifier")
+    parent_model_revision_id: UUID | None = Field(
+        None, description="Parent model revision ID for fine-tuning, null for training from scratch"
+    )
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "device": "xpu-0",
+                "model_architecture_id": "Custom_Object_Detection_Gen3_ATSS",
+                "parent_model_revision_id": "ef3983f1-cef0-4ebe-91db-7330f1dd6e27",
+            }
+        }
+    }
+
+
+class TrainingRequest(BaseJobRequest):
+    """Request schema for training a new model."""
+
+    job_type: Literal[JobType.TRAIN]
+    parameters: TrainingRequestParams = Field(..., description="Parameters required for the training job")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "job_type": "train",
+                "project_id": "7b073838-99d3-42ff-9018-4e901eb047fc",
+                "parameters": {
+                    "model_architecture_id": "Custom_Object_Detection_Gen3_ATSS",
+                    "parent_model_revision_id": "ef3983f1-cef0-4ebe-91db-7330f1dd6e27",
+                    "device": "xpu-0",
+                },
+            }
+        }
+    }
+
+
+class ProjectMetadata(BaseModel):
+    """Metadata about a project."""
+
+    id: UUID = Field(..., description="Project identifier")
+
+
+class ModelMetadata(BaseModel):
+    """Metadata about a model."""
+
+    id: UUID = Field(..., description="Model identifier")
+    architecture: str = Field(..., description="Model architecture identifier")
+    parent_revision_id: UUID | None = Field(
+        None, description="Parent model revision ID for fine-tuning, null if trained from scratch"
+    )
+    dataset_revision_id: UUID = Field(..., description="Dataset revision ID used for training")
+
+
+class TrainingMetadata(BaseModel):
+    """Metadata associated with a training job."""
+
+    project: ProjectMetadata = Field(..., description="Project associated with the training job")
+    model: ModelMetadata = Field(..., description="Model being trained")
+
+    @model_validator(mode="before")
+    @classmethod
+    def populate_metadata(cls, data: object) -> object:
+        if isinstance(data, TrainingJob):
+            return {
+                "project": ProjectMetadata(id=data.project_id),
+                "model": ModelMetadata(
+                    id=data.params.model_id,
+                    architecture=data.params.model_architecture_id,
+                    parent_revision_id=data.params.parent_model_revision_id,
+                    dataset_revision_id=UUID("00000000-0000-0000-0000-000000000000"),  # TODO set correct value
+                ),
+            }
+        return data
