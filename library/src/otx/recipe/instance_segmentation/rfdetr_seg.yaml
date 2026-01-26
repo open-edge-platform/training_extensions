@@ -3,7 +3,7 @@ task: INSTANCE_SEGMENTATION
 model:
   class_path: otx.backend.native.models.instance_segmentation.RFDETRInst
   init_args:
-    model_name: rfdetr_seg_preview
+    model_name: rfdetr_seg_m
     label_info: 91
     multi_scale: true
 

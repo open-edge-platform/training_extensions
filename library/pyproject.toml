@@ -51,7 +51,7 @@ dependencies = [
     "numpy>=2.0",
     "tensorboard==2.20.0",
     "tensorboardx==2.6.4",
-    "rfdetr==1.3.0",
+    "rfdetr==1.4.0.post0",
     "aiohttp==3.13.3",
     "certifi>=2024.7.4",
     "filelock>=3.20.3",

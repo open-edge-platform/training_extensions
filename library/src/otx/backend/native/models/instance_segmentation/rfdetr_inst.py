@@ -8,7 +8,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 import torch
-from rfdetr import RFDETRSegPreview
+from rfdetr import RFDETRSegMedium
 from rfdetr.main import populate_args
 from rfdetr.models.lwdetr import build_criterion_and_postprocessors
 from rfdetr.util.get_param_dicts import get_param_dict
@@ -68,7 +68,7 @@ class RFDETRInst(OTXInstanceSegModel):
         self,
         label_info: LabelInfoTypes,
         data_input_params: DataInputParams | None = None,
-        model_name: Literal["rfdetr_seg_preview"] = "rfdetr_seg_preview",
+        model_name: Literal["rfdetr_seg_m"] = "rfdetr_seg_m",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MaskRLEMeanAPFMeasureCallable,
@@ -106,7 +106,7 @@ class RFDETRInst(OTXInstanceSegModel):
         num_classes = num_classes if num_classes is not None else self.num_classes
 
         # Create RF-DETR Segmentation model with segmentation_head=True
-        detector = RFDETRSegPreview(num_classes=num_classes, pretrain_weights=None)
+        detector = RFDETRSegMedium(num_classes=num_classes, pretrain_weights=None)
 
         # Reinitialize detection head for our num_classes
         detector.model.reinitialize_detection_head(num_classes)
