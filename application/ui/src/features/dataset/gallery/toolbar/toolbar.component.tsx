@@ -18,6 +18,24 @@ type ToolbarProps = {
     items: Media[];
 };
 
+type AnnotateButtonProps = {
+    item: Media | undefined;
+};
+
+const AnnotateButton = ({ item }: AnnotateButtonProps) => {
+    const { onSelectedMediaItemChange } = useSelectedData();
+
+    if (item === undefined) {
+        return null;
+    }
+
+    return (
+        <Button variant={'primary'} onPress={() => onSelectedMediaItemChange(item)}>
+            Annotate
+        </Button>
+    );
+};
+
 export const Toolbar = ({ items }: ToolbarProps) => {
     const projectId = useProjectIdentifier();
     const queryClient = useQueryClient();
@@ -84,6 +102,7 @@ export const Toolbar = ({ items }: ToolbarProps) => {
                 <ButtonGroup>
                     <AddMediaButton onFilesSelected={handleAddMediaItem} />
                     <TrainModel />
+                    <AnnotateButton item={items.at(0)} />
                 </ButtonGroup>
             </Flex>
 

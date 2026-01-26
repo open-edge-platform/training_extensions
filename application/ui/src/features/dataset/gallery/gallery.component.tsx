@@ -1,8 +1,6 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState } from 'react';
-
 import { DialogContainer, Size } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
@@ -35,8 +33,14 @@ const layoutOptions = {
 export const Gallery = ({ items, hasNextPage, isFetchingNextPage, fetchNextPage }: GalleryProps) => {
     const project_id = useProjectIdentifier();
 
-    const [selectedMediaItem, setSelectedMediaItem] = useState<null | Media>(null);
-    const { selectedKeys, mediaState, setSelectedKeys, toggleSelectedKeys } = useSelectedData();
+    const {
+        selectedKeys,
+        mediaState,
+        setSelectedKeys,
+        toggleSelectedKeys,
+        selectedMediaItem,
+        onSelectedMediaItemChange,
+    } = useSelectedData();
 
     const isSetSelectedKeys = selectedKeys instanceof Set;
 
@@ -59,7 +63,7 @@ export const Gallery = ({ items, hasNextPage, isFetchingNextPage, fetchNextPage 
                             <MediaThumbnail
                                 alt={item.name}
                                 url={getThumbnailUrl(project_id, String(item.id))}
-                                onDoubleClick={() => setSelectedMediaItem(item)}
+                                onDoubleClick={() => onSelectedMediaItemChange(item)}
                             />
                         )}
                         topLeftElement={() => (
@@ -77,12 +81,12 @@ export const Gallery = ({ items, hasNextPage, isFetchingNextPage, fetchNextPage 
                 )}
             />
 
-            <DialogContainer onDismiss={() => setSelectedMediaItem(null)}>
+            <DialogContainer onDismiss={() => onSelectedMediaItemChange(null)}>
                 {selectedMediaItem !== null && (
                     <MediaPreview
                         mediaItem={selectedMediaItem}
-                        close={() => setSelectedMediaItem(null)}
-                        onSelectedMediaItem={setSelectedMediaItem}
+                        close={() => onSelectedMediaItemChange(null)}
+                        onSelectedMediaItem={onSelectedMediaItemChange}
                     />
                 )}
             </DialogContainer>

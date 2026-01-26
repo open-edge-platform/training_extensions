@@ -46,7 +46,7 @@ export const SidebarItems = ({
         ref: unwrapRef,
         items,
         selectedIndex,
-        onSelectedMediaItem,
+        onSelectedMediaItemChange: onSelectedMediaItem,
     });
 
     return (
