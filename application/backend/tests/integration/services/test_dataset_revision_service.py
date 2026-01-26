@@ -129,7 +129,7 @@ def fxt_project_with_subset_items(fxt_project_with_pipeline, db_session) -> tupl
             width=1024,
             height=768,
             subset=DatasetItemSubset.UNASSIGNED,
-            user_reviewed=False,
+            user_reviewed=True,
             project_id=str(project.id),
             created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
         ),
@@ -140,7 +140,7 @@ def fxt_project_with_subset_items(fxt_project_with_pipeline, db_session) -> tupl
             width=1024,
             height=768,
             subset=DatasetItemSubset.UNASSIGNED,
-            user_reviewed=False,
+            user_reviewed=True,
             project_id=str(project.id),
             created_at=datetime.fromisoformat("2025-02-02T00:00:00Z"),
         ),
@@ -155,7 +155,7 @@ def fxt_project_with_subset_items(fxt_project_with_pipeline, db_session) -> tupl
             width=1024,
             height=768,
             subset=DatasetItemSubset.TRAINING,
-            user_reviewed=False,
+            user_reviewed=True,
             project_id=str(project.id),
             created_at=datetime.fromisoformat("2025-02-03T00:00:00Z"),
         ),
@@ -166,7 +166,7 @@ def fxt_project_with_subset_items(fxt_project_with_pipeline, db_session) -> tupl
             width=1024,
             height=768,
             subset=DatasetItemSubset.TRAINING,
-            user_reviewed=False,
+            user_reviewed=True,
             project_id=str(project.id),
             created_at=datetime.fromisoformat("2025-02-04T00:00:00Z"),
         ),
@@ -177,7 +177,7 @@ def fxt_project_with_subset_items(fxt_project_with_pipeline, db_session) -> tupl
             width=1024,
             height=768,
             subset=DatasetItemSubset.TRAINING,
-            user_reviewed=False,
+            user_reviewed=True,
             project_id=str(project.id),
             created_at=datetime.fromisoformat("2025-02-05T00:00:00Z"),
         ),
@@ -192,7 +192,7 @@ def fxt_project_with_subset_items(fxt_project_with_pipeline, db_session) -> tupl
             width=1024,
             height=768,
             subset=DatasetItemSubset.VALIDATION,
-            user_reviewed=False,
+            user_reviewed=True,
             project_id=str(project.id),
             created_at=datetime.fromisoformat("2025-02-06T00:00:00Z"),
         ),
@@ -203,7 +203,7 @@ def fxt_project_with_subset_items(fxt_project_with_pipeline, db_session) -> tupl
             width=1024,
             height=768,
             subset=DatasetItemSubset.VALIDATION,
-            user_reviewed=False,
+            user_reviewed=True,
             project_id=str(project.id),
             created_at=datetime.fromisoformat("2025-02-07T00:00:00Z"),
         ),
@@ -218,7 +218,7 @@ def fxt_project_with_subset_items(fxt_project_with_pipeline, db_session) -> tupl
             width=1024,
             height=768,
             subset=DatasetItemSubset.TESTING,
-            user_reviewed=False,
+            user_reviewed=True,
             project_id=str(project.id),
             created_at=datetime.fromisoformat("2025-02-08T00:00:00Z"),
         ),
@@ -229,6 +229,75 @@ def fxt_project_with_subset_items(fxt_project_with_pipeline, db_session) -> tupl
     db_session.flush()
 
     return project, db_dataset_items
+
+
+@pytest.fixture
+def fxt_project_with_subset_items_on_disk(
+    fxt_projects_dir, fxt_project_with_pipeline, db_session, fxt_label_service
+) -> tuple[Project, list[DatasetItemDB]]:
+    """Fixture with dataset items covering all subset types and annotation data."""
+    project, _ = fxt_project_with_pipeline
+
+    # Get the first label for annotation
+    label = fxt_label_service.list_all(project_id=project.id)[0]
+    label_id = str(label.id)
+
+    def annotation():
+        # Rectangle annotation with one label
+        return [
+            {
+                "shape": {
+                    "type": "rectangle",
+                    "x": 10,
+                    "y": 10,
+                    "width": 100,
+                    "height": 100,
+                },
+                "labels": [{"id": label_id, "name": label.name, "color": label.color}],
+            }
+        ]
+
+    def make_item(name, subset, created_at):
+        return DatasetItemDB(
+            name=name,
+            format="jpg",
+            size=1024,
+            width=1024,
+            height=768,
+            subset=subset,
+            user_reviewed=True,
+            project_id=str(project.id),
+            created_at=created_at,
+            annotation_data=annotation(),
+        )
+
+    dataset_items = [
+        make_item("unassigned1", DatasetItemSubset.UNASSIGNED, datetime.fromisoformat("2025-02-01T00:00:00Z")),
+        make_item("unassigned2", DatasetItemSubset.UNASSIGNED, datetime.fromisoformat("2025-02-02T00:00:00Z")),
+        make_item("training1", DatasetItemSubset.TRAINING, datetime.fromisoformat("2025-02-03T00:00:00Z")),
+        make_item("training2", DatasetItemSubset.TRAINING, datetime.fromisoformat("2025-02-04T00:00:00Z")),
+        make_item("training3", DatasetItemSubset.TRAINING, datetime.fromisoformat("2025-02-05T00:00:00Z")),
+        make_item("validation1", DatasetItemSubset.VALIDATION, datetime.fromisoformat("2025-02-06T00:00:00Z")),
+        make_item("validation2", DatasetItemSubset.VALIDATION, datetime.fromisoformat("2025-02-07T00:00:00Z")),
+        make_item("testing1", DatasetItemSubset.TESTING, datetime.fromisoformat("2025-02-08T00:00:00Z")),
+    ]
+
+    db_session.add_all(dataset_items)
+    db_session.flush()
+
+    # Create images directory
+    images_dir = fxt_projects_dir / str(project.id) / "dataset"
+    images_dir.mkdir(parents=True, exist_ok=True)
+
+    def create_item(item: DatasetItemDB) -> None:
+        # Create dummy image file
+        image_path = images_dir / f"{item.id}.{item.format}"
+        image_path.write_bytes(b"\x00")  # 1-byte dummy file
+
+    for dataset_item in dataset_items:
+        create_item(dataset_item)
+
+    return project, dataset_items
 
 
 class TestDatasetRevisionServiceIntegration:
@@ -308,6 +377,7 @@ class TestDatasetRevisionServiceIntegration:
         """Test getting a dataset revision with wrong project ID raises error."""
         project, db_dataset_items = fxt_project_with_subset_items
         dataset = fxt_dataset_service.get_dm_dataset(project.id, project.task, DatasetItemAnnotationStatus.REVIEWED)
+        breakpoint()
 
         # Save a revision for the project
         revision_id = fxt_dataset_revision_service.save_revision(
@@ -322,6 +392,39 @@ class TestDatasetRevisionServiceIntegration:
 
         assert excinfo.value.resource_type == ResourceType.DATASET_REVISION
         assert excinfo.value.resource_id == str(revision_id)
+
+    def test_count_items_by_subset(
+        self,
+        fxt_projects_dir: Path,
+        fxt_dataset_service: DatasetService,
+        fxt_dataset_revision_service: DatasetRevisionService,
+        fxt_project_with_subset_items_on_disk: tuple[Project, list[DatasetItemDB]],
+    ) -> None:
+        """Test counting dataset items by subset."""
+        # Create non-empty dataset in memory
+        project, _ = fxt_project_with_subset_items_on_disk
+        dataset = fxt_dataset_service.get_dm_dataset(
+            project.id, project.task, annotation_status=DatasetItemAnnotationStatus.REVIEWED
+        )
+        assert len(dataset) > 0
+
+        # Create a non-empty parquet file on disk
+        revision_id = fxt_dataset_revision_service.save_revision(
+            project_id=project.id,
+            dataset=dataset,
+        )
+        revision_path = fxt_projects_dir / str(project.id) / "dataset_revisions" / str(revision_id)
+        assert revision_path.exists()
+        assert (revision_path / "data.parquet").exists()
+
+        # Count items in each subset
+        counts = fxt_dataset_revision_service.count_items_by_subset(project.id, revision_id)
+
+        assert counts[DatasetItemSubset.UNASSIGNED.name] == 2
+        assert counts[DatasetItemSubset.TRAINING.name] == 3
+        assert counts[DatasetItemSubset.VALIDATION.name] == 2
+        assert counts[DatasetItemSubset.TESTING.name] == 1
+        assert counts["total"] == 8
 
     def test_delete_dataset_revision_files(
         self,

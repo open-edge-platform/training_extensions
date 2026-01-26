@@ -180,7 +180,7 @@ class DatasetRevisionService(BaseSessionManagedService):
         parquet_path = self._get_revision_parquet_path(project_id, dataset_revision_id)
         lf = pl.scan_parquet(parquet_path)
         subset_counts = lf.group_by("subset").len().collect()
-        counts = {row["subset"]: row["count"] for row in subset_counts.to_dicts()}
+        counts = {row["subset"]: row["len"] for row in subset_counts.to_dicts()}
         total = sum(counts.values())
         counts["total"] = total
         return counts
