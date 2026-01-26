@@ -46,7 +46,9 @@ dependencies = [
     "openvino-model-api @ git+https://github.com/open-edge-platform/model_api.git",
     "onnx==1.20.1",
     "onnxconverter-common==1.16.0",
-    "onnxscript",
+    # NOTE: install onnxscript from a specific commit due to a bug in 0.5.7 for Python 3.14.
+    #  Once 0.6 is released, we can switch back to the official pypi package.
+    "onnxscript @ git+https://github.com/microsoft/onnxscript.git@519ef5a6963c3eaf246fa6e1ad5bbe5993a08c5e",
     "nncf==2.18.0",
     "numpy>=2.0",
     "pyyaml==6.0.3",

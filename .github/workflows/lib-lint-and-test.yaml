@@ -76,6 +76,8 @@ jobs:
 
       - name: Installing dependencies
         working-directory: library
+        env:
+          GIT_LFS_SKIP_SMUDGE: "1" # Skip downloading LFS files for deps installed via git
         run: |
           uv lock --check
           uv sync --frozen
@@ -131,6 +133,8 @@ jobs:
 
       - name: Installing dependencies
         working-directory: library
+        env:
+          GIT_LFS_SKIP_SMUDGE: "1" # Skip downloading LFS files for deps installed via git
         run: |
           uv lock --check
           uv sync --frozen
@@ -197,6 +201,8 @@ jobs:
 
       - name: Installing dependencies
         working-directory: library
+        env:
+          GIT_LFS_SKIP_SMUDGE: "1" # Skip downloading LFS files for deps installed via git
         run: |
           uv lock --check
           uv sync --frozen --extra cuda

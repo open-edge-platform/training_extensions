@@ -2107,8 +2107,8 @@ wheels = [
 
 [[package]]
 name = "onnxscript"
-version = "0.5.7"
-source = { registry = "https://pypi.org/simple" }
+version = "0.6.0.dev20260123"
+source = { git = "https://github.com/microsoft/onnxscript.git?rev=519ef5a6963c3eaf246fa6e1ad5bbe5993a08c5e#519ef5a6963c3eaf246fa6e1ad5bbe5993a08c5e" }
 dependencies = [
     { name = "ml-dtypes", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
     { name = "numpy", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
@@ -2116,10 +2116,6 @@ dependencies = [
     { name = "onnx-ir", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
     { name = "packaging", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
     { name = "typing-extensions", marker = "(extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-3-otx-xpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/2c/f8/358a7d982ea51bc1b0c264f29c08adf096c62ba9f258ba13c954b41c46f5/onnxscript-0.5.7.tar.gz", hash = "sha256:480d572451bc233ed7f742b5005cb0c899594b2fdc28e15167dab26f7fd777ad", size = 596306, upload-time = "2025-12-16T20:47:15.762Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/f6/ec/1656ea93be1e50baf429c20603dce249fa3571f3a180407cee79b1afa013/onnxscript-0.5.7-py3-none-any.whl", hash = "sha256:f94a66059c56d13b44908e9b7fd9dae4b4faa6681c784f3fd4c29cfa863e454e", size = 693353, upload-time = "2025-12-16T20:47:17.897Z" },
 ]
 
 [[package]]
@@ -2267,7 +2263,7 @@ requires-dist = [
     { name = "omegaconf", specifier = "==2.3.0" },
     { name = "onnx", specifier = "==1.20.1" },
     { name = "onnxconverter-common", specifier = "==1.16.0" },
-    { name = "onnxscript" },
+    { name = "onnxscript", git = "https://github.com/microsoft/onnxscript.git?rev=519ef5a6963c3eaf246fa6e1ad5bbe5993a08c5e" },
     { name = "openvino", specifier = "==2025.4.1" },
     { name = "openvino-model-api", git = "https://github.com/open-edge-platform/model_api.git" },
     { name = "pydata-sphinx-theme", marker = "extra == 'docs'", specifier = "==0.12.0" },
@@ -3679,17 +3675,17 @@ dependencies = [
     { name = "typing-extensions", marker = "(sys_platform == 'linux' and extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (sys_platform == 'win32' and extra == 'extra-3-otx-cpu' and extra == 'extra-9-geti-tune-cpu') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-cuda') or (extra == 'extra-3-otx-cpu' and extra == 'extra-3-otx-xpu') or (extra == 'extra-3-otx-cuda' and extra == 'extra-3-otx-xpu') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-cuda') or (extra == 'extra-9-geti-tune-cpu' and extra == 'extra-9-geti-tune-xpu') or (extra == 'extra-9-geti-tune-cuda' and extra == 'extra-9-geti-tune-xpu')" },
 ]
 wheels = [
-    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313-linux_aarch64.whl" },
-    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313-linux_s390x.whl" },
-    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313-manylinux_2_28_aarch64.whl" },
-    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313-manylinux_2_28_x86_64.whl" },
-    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313-win_amd64.whl" },
-    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313-win_arm64.whl" },
-    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313t-linux_aarch64.whl" },
-    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313t-linux_s390x.whl" },
-    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313t-manylinux_2_28_aarch64.whl" },
-    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313t-manylinux_2_28_x86_64.whl" },
-    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313t-win_amd64.whl" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313-linux_aarch64.whl", hash = "sha256:fd215f3d0f681905c5b56b0630a3d666900a37fcc3ca5b937f95275c66f9fd9c" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313-linux_s390x.whl", hash = "sha256:170a0623108055be5199370335cf9b41ba6875b3cb6f086db4aee583331a4899" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:e51994492cdb76edce29da88de3672a3022f9ef0ffd90345436948d4992be2c7" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:8d316e5bf121f1eab1147e49ad0511a9d92e4c45cc357d1ab0bee440da71a095" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313-win_amd64.whl", hash = "sha256:b719da5af01b59126ac13eefd6ba3dd12d002dc0e8e79b8b365e55267a8189d3" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313-win_arm64.whl", hash = "sha256:b67d91326e4ed9eccbd6b7d84ed7ffa43f93103aa3f0b24145f3001f3b11b714" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313t-linux_aarch64.whl", hash = "sha256:5af75e5f49de21b0bdf7672bc27139bd285f9e8dbcabe2d617a2eb656514ac36" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313t-linux_s390x.whl", hash = "sha256:ba51ef01a510baf8fff576174f702c47e1aa54389a9f1fba323bb1a5003ff0bf" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313t-manylinux_2_28_aarch64.whl", hash = "sha256:0fedcb1a77e8f2aaf7bfd21591bf6d1e0b207473268c9be16b17cb7783253969" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313t-manylinux_2_28_x86_64.whl", hash = "sha256:106dd1930cb30a4a337366ba3f9b25318ebf940f51fd46f789281dd9e736bdc4" },
+    { url = "https://download.pytorch.org/whl/cpu/torch-2.10.0%2Bcpu-cp313-cp313t-win_amd64.whl", hash = "sha256:eb1bde1ce198f05c8770017de27e001d404499cf552aaaa014569eff56ca25c0" },
 ]
 
 [[package]]
