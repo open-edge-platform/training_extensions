@@ -95,6 +95,7 @@ class TestWebRTCManager:
         assert "test_id" not in fxt_manager._pcs
         assert not fxt_manager._frame_broadcaster.is_registered("test_id")
 
+    @pytest.mark.asyncio
     def test_set_input_stores_data(self, fxt_manager):
         data = InputData(webrtc_id="test_id", conf_threshold=0.5)
         fxt_manager.set_input(data)

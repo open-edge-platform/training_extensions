@@ -1,5 +1,5 @@
 default_language_version:
-  python: python3.13 # Should match the Python version used by the app (set in backend/pyproject.toml)
+  python: python3.14 # Should match the Python version used by the app (set in backend/pyproject.toml)
 
 repos:
   - repo: https://github.com/astral-sh/uv-pre-commit
