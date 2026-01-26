@@ -25,12 +25,12 @@ type AnnotateButtonProps = {
 const AnnotateButton = ({ item }: AnnotateButtonProps) => {
     const { onSelectedMediaItemChange } = useSelectedData();
 
-    if (item === undefined) {
-        return null;
-    }
-
     return (
-        <Button variant={'primary'} onPress={() => onSelectedMediaItemChange(item)}>
+        <Button
+            variant={'primary'}
+            onPress={() => item !== undefined && onSelectedMediaItemChange(item)}
+            isDisabled={item === undefined}
+        >
             Annotate
         </Button>
     );
