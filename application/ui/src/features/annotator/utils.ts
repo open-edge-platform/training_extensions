@@ -3,7 +3,7 @@
 
 import type { PointerEvent, SVGProps } from 'react';
 
-import { isLeftButton, isWheelButton } from './buttons-utils';
+import { isLeftButton, isWheelButton } from '../../shared/buttons-utils';
 
 type OnPointerDown = SVGProps<SVGElement>['onPointerDown'];
 export const allowPanning = (onPointerDown?: OnPointerDown): OnPointerDown | undefined => {
@@ -23,7 +23,7 @@ export const allowPanning = (onPointerDown?: OnPointerDown): OnPointerDown | und
 };
 
 export const DEFAULT_ANNOTATION_STYLES = {
-    fillOpacity: 0.4,
+    fillOpacity: 'var(--annotation-fill-opacity)',
     fill: 'var(--annotation-fill)',
     stroke: 'var(--annotation-stroke)',
     strokeLinecap: 'round',

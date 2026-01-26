@@ -1,73 +1,34 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useMemo, useState } from 'react';
+import { Flex } from '@geti/ui';
 
-import { Divider, View } from '@geti/ui';
-
-import type { SchemaModelView } from '../../../api/openapi-spec';
-import { GroupModelsContainer } from './group-models-container.component';
-import { Header } from './header.component';
-import type { GroupByMode, SortBy } from './types';
-import { groupModelsByArchitecture, groupModelsByDataset } from './utils/grouping';
-import { sortModels } from './utils/sorting';
-
-// TODO: Replace with actual API data
-const mockModels: SchemaModelView[] = [
-    {
-        id: 'Amazing model',
-        architecture: 'YOLOX',
-        parent_revision: null,
-        training_info: {
-            status: 'successful',
-            label_schema_revision: {},
-            configuration: {},
-        },
-        files_deleted: false,
-    },
-    {
-        id: 'Beautiful model',
-        architecture: 'ResNet',
-        parent_revision: null,
-        training_info: {
-            status: 'successful',
-            label_schema_revision: {},
-            configuration: {},
-        },
-        files_deleted: false,
-    },
-];
+import { EmptySearchResults } from './components/expandable-search/empty-search-results.component';
+import { GroupModelsContainer } from './components/group-models-container/group-models-container.component';
+import { useModelListing } from './provider/model-listing-provider';
 
 export const ModelListing = () => {
-    const [groupBy, setGroupBy] = useState<GroupByMode>('dataset');
-    const [sortBy, setSortBy] = useState<SortBy>('score');
+    const { groupedModels, searchBy } = useModelListing();
 
-    const groupedModels = useMemo(() => {
-        const groups = groupBy === 'dataset' ? groupModelsByDataset(mockModels) : groupModelsByArchitecture(mockModels);
-
-        return groups.map((group) => ({ ...group, models: sortModels(group.models, sortBy) }));
-    }, [groupBy, sortBy]);
+    const hasNoResults = groupedModels.length === 0 && searchBy.length > 0;
 
     return (
-        <View padding={'size-300'}>
-            <Header
-                groupBy={groupBy}
-                onGroupByChange={setGroupBy}
-                onSortChange={(key) => setSortBy(key as SortBy)}
-                onPinActiveToggle={() => {}}
-            />
-
-            <Divider size={'S'} marginY={'size-300'} />
-
-            {groupedModels.map(({ group, models }, index) => (
-                <GroupModelsContainer
-                    key={'id' in group ? group.id : `${group.name}-${index}`}
-                    groupBy={groupBy}
-                    group={group}
-                    models={models}
-                    sortBy={sortBy}
-                />
-            ))}
-        </View>
+        <>
+            {hasNoResults ? (
+                <Flex direction={'column'} flex={1}>
+                    <EmptySearchResults />
+                </Flex>
+            ) : (
+                <Flex direction={'column'} gap={'size-300'} flex={1}>
+                    {groupedModels.map(({ group, models }, index) => (
+                        <GroupModelsContainer
+                            key={'id' in group ? group.id : `${group.name}-${index}`}
+                            group={group}
+                            models={models}
+                        />
+                    ))}
+                </Flex>
+            )}
+        </>
     );
 };

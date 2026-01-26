@@ -6,8 +6,8 @@ import { HttpResponse } from 'msw';
 import { TestProviders } from 'test-utils/render';
 
 import { http } from '../../../../api/utils';
+import type { USBCameraSourceConfig } from '../../../../constants/shared-types';
 import { server } from '../../../../msw-node-setup';
-import { USBCameraSourceConfig } from '../util';
 import { useSourceMutation } from './use-source-mutation.hook';
 
 const mockedSource: USBCameraSourceConfig = {

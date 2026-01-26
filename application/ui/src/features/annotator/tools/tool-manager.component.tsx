@@ -3,6 +3,7 @@
 
 import { useAnnotator } from '../../../shared/annotator/annotator-provider.component';
 import { BoundingBoxTool } from './bounding-box-tool/bounding-box-tool.component';
+import { MagneticLasso } from './magnetic-lasso/magnetic-lasso.component';
 import { PolygonTool } from './polygon-tool/polygon-tool.component';
 import { SegmentAnythingTool } from './segment-anything-tool/segment-anything-tool.component';
 
@@ -19,6 +20,10 @@ export const ToolManager = () => {
 
     if (activeTool === 'polygon') {
         return <PolygonTool />;
+    }
+
+    if (activeTool === 'magnetic-lasso') {
+        return <MagneticLasso />;
     }
 
     return null;

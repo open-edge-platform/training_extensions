@@ -10,6 +10,7 @@ from functools import partial
 from multiprocessing.synchronize import Condition
 from pathlib import Path
 
+from aiortc import RTCConfiguration, RTCIceServer
 from fastapi import FastAPI
 from loguru import logger
 
@@ -23,6 +24,7 @@ from app.services import (
     DatasetRevisionService,
     DatasetService,
     LabelService,
+    MediaService,
     ModelService,
     TrainingConfigurationService,
 )
@@ -33,7 +35,7 @@ from app.services.training import OTXTrainer
 from app.services.training.otx_trainer import TrainingDependencies
 from app.services.training.subset_assignment import SubsetAssigner, SubsetService
 from app.settings import get_settings
-from app.webrtc.manager import WebRTCManager
+from app.webrtc import SDPHandler, WebRTCManager, WebRTCSettings
 
 
 def setup_job_controller(data_dir: Path, max_parallel_jobs: int) -> tuple[JobQueue, JobController]:
@@ -61,7 +63,9 @@ def setup_job_controller(data_dir: Path, max_parallel_jobs: int) -> tuple[JobQue
                 base_weights_service=BaseWeightsService(data_dir=data_dir),
                 subset_service=SubsetService(),
                 subset_assigner=SubsetAssigner(),
-                dataset_service=DatasetService(data_dir=data_dir, label_service=LabelService()),
+                dataset_service=DatasetService(
+                    label_service=LabelService(), media_service=MediaService(data_dir=data_dir)
+                ),
                 dataset_revision_service=DatasetRevisionService(data_dir=data_dir),
                 model_service=ModelService(data_dir=data_dir),
                 training_configuration_service=TrainingConfigurationService(),
@@ -112,7 +116,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     app_scheduler.start_workers()
     app.state.scheduler = app_scheduler
 
-    webrtc_manager = WebRTCManager(app_scheduler.rtc_stream_queue)
+    webrtc_settings = WebRTCSettings(
+        config=RTCConfiguration(iceServers=[RTCIceServer(**server) for server in settings.ice_servers]),
+        advertise_ip=settings.webrtc_advertise_ip,
+    )
+    sdp_handler = SDPHandler()
+    webrtc_manager = WebRTCManager(app_scheduler.rtc_stream_queue, webrtc_settings, sdp_handler)
     app.state.webrtc_manager = webrtc_manager
     logger.info("Application startup completed")
 

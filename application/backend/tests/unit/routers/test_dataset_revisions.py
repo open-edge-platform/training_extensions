@@ -12,7 +12,7 @@ from fastapi import status
 from app.api.dependencies import get_dataset_revision_service
 from app.api.schemas.dataset_item import DatasetItemSubset
 from app.main import app
-from app.models import DatasetItem, DatasetItemFormat
+from app.models import DatasetItem, MediaFormat
 from app.services import DatasetRevisionService, ResourceNotFoundError, ResourceType
 
 
@@ -26,14 +26,8 @@ def fxt_dataset_item():
     return DatasetItem(
         id=uuid4(),
         project_id=uuid4(),
-        name="test_dataset_item",
-        format=DatasetItemFormat.JPG,
-        width=1024,
-        height=768,
-        size=2048,
         annotation_data=None,
         prediction_model_id=uuid4(),
-        source_id=uuid4(),
         subset=DatasetItemSubset.TRAINING,
         user_reviewed=False,
         subset_assigned_at=None,
@@ -71,10 +65,10 @@ class TestDatasetRevisionItemEndpoints:
         fxt_dataset_revision_service.get_dataset_revision.return_value = MagicMock(id=fxt_dataset_revision_id)
         mock_item_data = {
             "id": str(fxt_dataset_item.id),
-            "name": fxt_dataset_item.name,
-            "format": fxt_dataset_item.format.value,
-            "width": fxt_dataset_item.width,
-            "height": fxt_dataset_item.height,
+            "name": "test_dataset_item",
+            "format": MediaFormat.JPG.value,
+            "width": 1024,
+            "height": 768,
             "subset": fxt_dataset_item.subset.value,
         }
         fxt_dataset_revision_service.list_dataset_revision_items.return_value = ([mock_item_data], 1)
@@ -110,10 +104,10 @@ class TestDatasetRevisionItemEndpoints:
         fxt_dataset_revision_service.get_dataset_revision.return_value = MagicMock(id=fxt_dataset_revision_id)
         mock_item_data = {
             "id": str(fxt_dataset_item.id),
-            "name": fxt_dataset_item.name,
-            "format": fxt_dataset_item.format.value,
-            "width": fxt_dataset_item.width,
-            "height": fxt_dataset_item.height,
+            "name": "test_dataset_item",
+            "format": MediaFormat.JPG.value,
+            "width": 1024,
+            "height": 768,
             "subset": fxt_dataset_item.subset.value,
         }
         fxt_dataset_revision_service.list_dataset_revision_items.return_value = ([mock_item_data], 100)
@@ -149,10 +143,10 @@ class TestDatasetRevisionItemEndpoints:
         fxt_dataset_revision_service.get_dataset_revision.return_value = MagicMock(id=fxt_dataset_revision_id)
         mock_item_data = {
             "id": str(fxt_dataset_item.id),
-            "name": fxt_dataset_item.name,
-            "format": fxt_dataset_item.format.value,
-            "width": fxt_dataset_item.width,
-            "height": fxt_dataset_item.height,
+            "name": "test_dataset_item",
+            "format": MediaFormat.JPG.value,
+            "width": 1024,
+            "height": 768,
             "subset": fxt_dataset_item.subset.value,
         }
         fxt_dataset_revision_service.list_dataset_revision_items.return_value = ([mock_item_data], 1)
@@ -206,10 +200,10 @@ class TestDatasetRevisionItemEndpoints:
         fxt_dataset_revision_service.get_dataset_revision.return_value = MagicMock(id=fxt_dataset_revision_id)
         mock_item_data = {
             "id": str(fxt_dataset_item.id),
-            "name": fxt_dataset_item.name,
-            "format": fxt_dataset_item.format.value,
-            "width": fxt_dataset_item.width,
-            "height": fxt_dataset_item.height,
+            "name": "test_dataset_item",
+            "format": MediaFormat.JPG.value,
+            "width": 1024,
+            "height": 768,
             "subset": fxt_dataset_item.subset.value,
         }
         fxt_dataset_revision_service.get_dataset_revision_item.return_value = mock_item_data

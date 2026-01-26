@@ -3,8 +3,8 @@
 
 import { PointerEvent, useRef } from 'react';
 
-import { isLeftButton } from '../buttons-utils';
-import type { Point } from '../types';
+import { isLeftButton } from '../../../shared/buttons-utils';
+import type { Point } from '../../../shared/types';
 
 type UseTranslateProps = {
     zoom: number;

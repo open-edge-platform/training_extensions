@@ -152,11 +152,11 @@ SourceView = Annotated[
 SourceViewAdapter: TypeAdapter[SourceView] = TypeAdapter(SourceView)
 
 
-class BasicSourceConfigCreate(BaseIDNameModel):
-    source_type: SourceType
+class BaseSourceConfigCreate(BaseIDNameModel):
+    pass
 
 
-class USBCameraSourceConfigCreate(BasicSourceConfigCreate):
+class USBCameraSourceConfigCreate(BaseSourceConfigCreate):
     source_type: Literal[SourceType.USB_CAMERA]
     device_id: int
     codec: str | None = None
@@ -166,7 +166,7 @@ class USBCameraSourceConfigCreate(BasicSourceConfigCreate):
         return USBCameraConfig(device_id=self.device_id, codec=self.codec)
 
 
-class IPCameraSourceConfigCreate(BasicSourceConfigCreate):
+class IPCameraSourceConfigCreate(BaseSourceConfigCreate):
     source_type: Literal[SourceType.IP_CAMERA]
     stream_url: str
     auth_required: bool = False
@@ -176,7 +176,7 @@ class IPCameraSourceConfigCreate(BasicSourceConfigCreate):
         return IPCameraConfig(stream_url=self.stream_url, auth_required=self.auth_required)
 
 
-class VideoFileSourceConfigCreate(BasicSourceConfigCreate):
+class VideoFileSourceConfigCreate(BaseSourceConfigCreate):
     source_type: Literal[SourceType.VIDEO_FILE]
     video_path: str
 
@@ -185,7 +185,7 @@ class VideoFileSourceConfigCreate(BasicSourceConfigCreate):
         return VideoFileConfig(video_path=self.video_path)
 
 
-class ImagesFolderSourceConfigCreate(BasicSourceConfigCreate):
+class ImagesFolderSourceConfigCreate(BaseSourceConfigCreate):
     source_type: Literal[SourceType.IMAGES_FOLDER]
     images_folder_path: str
     ignore_existing_images: bool

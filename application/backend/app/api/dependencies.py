@@ -19,6 +19,7 @@ from app.services import (
     DatasetRevisionService,
     DatasetService,
     LabelService,
+    MediaService,
     MetricsService,
     ModelService,
     PipelineMetricsService,
@@ -76,6 +77,11 @@ def get_data_dir(request: Request) -> Path:
 def get_job_dir(request: Request) -> Path:
     """Provides the path to the folder where the jobs logs are saved. This path is defined in the app settings."""
     return request.app.state.settings.job_dir
+
+
+def get_ice_servers(request: Request) -> list[dict]:
+    """Provides the ICE servers from settings."""
+    return request.app.state.settings.ice_servers
 
 
 def get_event_bus(request: Request) -> EventBus:
@@ -162,13 +168,21 @@ def get_project_service(
     )
 
 
-def get_dataset_service(
+def get_media_service(
     data_dir: Annotated[Path, Depends(get_data_dir)],
+    db: Annotated[Session, Depends(get_db)],
+) -> MediaService:
+    """Provides a MediaService instance."""
+    return MediaService(data_dir=data_dir, db_session=db)
+
+
+def get_dataset_service(
     label_service: Annotated[LabelService, Depends(get_label_service)],
+    media_service: Annotated[MediaService, Depends(get_media_service)],
     db: Annotated[Session, Depends(get_db)],
 ) -> DatasetService:
     """Provides a DatasetService instance."""
-    return DatasetService(data_dir=data_dir, label_service=label_service, db_session=db)
+    return DatasetService(label_service=label_service, media_service=media_service, db_session=db)
 
 
 def get_dataset_revision_service(

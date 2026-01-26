@@ -46,10 +46,14 @@ JobID = Annotated[UUID, Depends(lambda job_id: validate_uuid_param(job_id, "job_
 SourceID = Annotated[UUID, Depends(lambda source_id: validate_uuid_param(source_id, "source_id"))]
 SinkID = Annotated[UUID, Depends(lambda sink_id: validate_uuid_param(sink_id, "sink_id"))]
 ProjectID = Annotated[UUID, Depends(lambda project_id: validate_uuid_param(project_id, "project_id"))]
+MediaID = Annotated[UUID, Depends(lambda media_id: validate_uuid_param(media_id, "media_id"))]
 ModelID = Annotated[UUID, Depends(lambda model_id: validate_uuid_param(model_id, "model_id"))]
 DatasetItemID = Annotated[
     UUID, Depends(lambda dataset_item_id: validate_uuid_param(dataset_item_id, "dataset_item_id"))
 ]
 DatasetRevisionID = Annotated[
     UUID, Depends(lambda dataset_revision_id: validate_uuid_param(dataset_revision_id, "dataset_revision_id"))
+]
+StagedDatasetID = Annotated[
+    UUID, Depends(lambda staged_dataset_id: validate_uuid_param(staged_dataset_id, "staged_dataset_id"))
 ]

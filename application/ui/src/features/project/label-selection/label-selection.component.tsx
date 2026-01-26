@@ -1,121 +1,32 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import type { Dispatch, SetStateAction } from 'react';
+import { Dispatch, SetStateAction } from 'react';
 
-import {
-    ActionButton,
-    Button,
-    ColorEditor,
-    ColorSwatch,
-    ColorSwatchPicker,
-    Flex,
-    Grid,
-    ColorPicker as SpectrumColorPicker,
-    SpectrumColorPickerProps,
-    Text,
-    toast,
-} from '@geti/ui';
-import { Add, Delete } from '@geti/ui/icons';
-import { v4 as uuid } from 'uuid';
+import { Flex, toast } from '@geti/ui';
 
-import type { Label } from '../../../constants/shared-types';
-import type { LabelItemProps } from './interface';
-
-import classes from './label-selection.module.scss';
-
-const PRESET_COLORS = ['#E91E63', '#9C27B0', '#2196F3', '#4CAF50', '#FFEB3B', '#FF9800', '#000000'];
-
-const getRandomColor = () => {
-    return PRESET_COLORS[Math.floor(Math.random() * PRESET_COLORS.length)];
-};
-
-const ColorPicker = ({ onChange, value }: SpectrumColorPickerProps) => {
-    return (
-        <SpectrumColorPicker value={value} onChange={onChange} rounding={'none'}>
-            <Flex direction='column' gap='size-300'>
-                <ColorEditor />
-                <ColorSwatchPicker>
-                    {PRESET_COLORS.map((color) => {
-                        return <ColorSwatch color={color} key={color} />;
-                    })}
-                </ColorSwatchPicker>
-            </Flex>
-        </SpectrumColorPicker>
-    );
-};
-
-const LabelInput = ({ value, onChange }: { value: string; onChange: (newValue: string) => void }) => {
-    return (
-        <input
-            name={`Label input for ${value}`}
-            aria-label={`Label input for ${value}`}
-            className={classes.labelInput}
-            type='text'
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-        />
-    );
-};
-
-const LabelItem = ({ label, onDelete, onUpdate }: LabelItemProps) => {
-    const { id, name, color } = label;
-
-    return (
-        <Grid columns={['size-400', '1fr', 'size-400']} gap={'size-50'} maxWidth={'640px'} width={'100%'} id={id}>
-            <ColorPicker
-                onChange={(newColor) => {
-                    onUpdate({ ...label, color: newColor.toString() });
-                }}
-                value={color ?? undefined}
-            />
-            <LabelInput
-                value={name}
-                onChange={(newName) => {
-                    onUpdate({ ...label, name: newName });
-                }}
-            />
-            <Flex justifyContent={'center'} alignItems={'center'}>
-                <ActionButton
-                    aria-label={`Delete label ${name}`}
-                    onPress={() => onDelete(id)}
-                    UNSAFE_className={classes.deleteButton}
-                >
-                    <Delete fill='white' />
-                </ActionButton>
-            </Flex>
-        </Grid>
-    );
-};
+import type { Label, TaskType } from '../../../constants/shared-types';
+import { CreateLabel } from './create-label/create-label.component';
+import { LabelTag } from './label-tag/label-tag.component';
 
 type LabelSelectionProps = {
     labels: Label[];
     setLabels: Dispatch<SetStateAction<Label[]>>;
+    taskType: TaskType;
 };
-export const LabelSelection = ({ labels, setLabels }: LabelSelectionProps) => {
+
+export const LabelSelection = ({ labels, setLabels, taskType }: LabelSelectionProps) => {
     const handleDeleteItem = (id: string) => {
-        if (labels.length > 1) {
-            setLabels(labels.filter((label) => label.id !== id));
-        } else {
+        const newLabels = labels.filter((label) => label.id !== id);
+        setLabels(newLabels);
+
+        if (newLabels.length === 0) {
             toast({ type: 'info', message: 'At least one object is required' });
         }
     };
 
-    const handleAddItem = () => {
-        setLabels([
-            ...labels,
-            {
-                id: uuid(),
-                color: getRandomColor(),
-                name: 'Object',
-            },
-        ]);
-    };
-
-    const handleUpdateItem = (updatedLabel: Label) => {
-        const updatedLabels = labels.map((label) => (label.id === updatedLabel.id ? updatedLabel : label));
-
-        setLabels(updatedLabels);
+    const handleAddItem = (label: Label) => {
+        setLabels([...labels, label]);
     };
 
     return (
@@ -127,24 +38,11 @@ export const LabelSelection = ({ labels, setLabels }: LabelSelectionProps) => {
             gap={'size-300'}
             UNSAFE_style={{ overflow: 'auto' }}
         >
-            <Flex direction={'column'} alignItems={'center'} gap={'size-100'} width={'100%'}>
-                {labels.map((label) => {
-                    return (
-                        <LabelItem
-                            key={label.id}
-                            label={label}
-                            onDelete={handleDeleteItem}
-                            onUpdate={handleUpdateItem}
-                        />
-                    );
-                })}
-            </Flex>
-
-            <Flex gap={'size-200'}>
-                <Button width={'size-2000'} variant={'secondary'} onPress={handleAddItem}>
-                    <Text>Add next object</Text>
-                    <Add fill='white' />
-                </Button>
+            <CreateLabel onCreate={handleAddItem} labels={labels} taskType={taskType} />
+            <Flex gap={'size-100'} width={'100%'} wrap={'wrap'}>
+                {labels.map((label) => (
+                    <LabelTag key={label.id} label={label} onDelete={handleDeleteItem} />
+                ))}
             </Flex>
         </Flex>
     );

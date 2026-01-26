@@ -3,10 +3,14 @@
 
 from collections.abc import Callable
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, call, patch
 from uuid import uuid4
 
 import pytest
+import torch
+from otx.metrics.accuracy import MultiClassClsMetricCallable, MultiLabelClsMetricCallable
+from otx.metrics.mean_ap import MaskRLEMeanAPCallable, MeanAPCallable
+from otx.metrics.types import MetricCallable
 from otx.tools.converter import GetiConfigConverter
 from otx.types.export import OTXExportFormatType
 from otx.types.precision import OTXPrecisionType
@@ -30,7 +34,7 @@ from app.services import (
     TrainingConfigurationService,
 )
 from app.services.base_weights_service import BaseWeightsService
-from app.services.training.otx_trainer import OTXTrainer, TrainingDependencies
+from app.services.training.otx_trainer import ExportedModels, OTXTrainer, TrainingDependencies
 from app.services.training.subset_assignment import (
     DatasetItemWithLabels,
     SubsetAssigner,
@@ -166,7 +170,7 @@ class TestOTXTrainerPrepareWeights:
             parent_model_revision_id=parent_model_revision_id,
         )
         expected_weights_path = (
-            tmp_path / "projects" / str(project_id) / "models" / str(parent_model_revision_id) / "model.pth"
+            tmp_path / "projects" / str(project_id) / "models" / str(parent_model_revision_id) / "model.ckpt"
         )
         expected_weights_path.parent.mkdir(parents=True, exist_ok=True)
         expected_weights_path.touch()
@@ -195,7 +199,7 @@ class TestOTXTrainerPrepareWeights:
             parent_model_revision_id=parent_model_revision_id,
         )
         expected_weights_path = (
-            tmp_path / "projects" / str(project_id) / "models" / str(parent_model_revision_id) / "model.pth"
+            tmp_path / "projects" / str(project_id) / "models" / str(parent_model_revision_id) / "model.ckpt"
         )
         otx_trainer = fxt_otx_trainer()
 
@@ -539,10 +543,21 @@ class TestOTXTrainerPrepareModel:
 class TestOTXTrainerTrainModel:
     """Tests for the OTXTrainer.train_model method."""
 
+    @pytest.mark.parametrize(
+        "geti_device,otx_device",
+        [
+            (DeviceInfo(type=DeviceType.CPU, name="Intel Core", index=None, memory=None), "cpu"),
+            (DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", index=0, memory=123), "xpu"),
+            (DeviceInfo(type=DeviceType.CUDA, name="NVIDIA RTX 3090", index=1, memory=123), "gpu"),
+        ],
+        ids=["CPU", "XPU (Intel GPU)", "CUDA (NVIDIA GPU)"],
+    )
     def test_train_model(
         self,
         fxt_otx_trainer: Callable[[], OTXTrainer],
         tmp_path: Path,
+        geti_device: DeviceInfo,
+        otx_device: str,
     ):
         """Test successful model training."""
         # Arrange
@@ -631,7 +646,8 @@ class TestOTXTrainerTrainModel:
                         dataset_info=mock_dataset_info,
                         weights_path=weights_path,
                         model_id=model_id,
-                        device=DeviceInfo(type=DeviceType.CPU, name="CPU", memory=None, index=None),
+                        device=geti_device,
+                        has_parent_revision=True,
                     )
 
         # Assert
@@ -651,12 +667,18 @@ class TestOTXTrainerTrainModel:
         assert engine_call_kwargs["model"] == mock_otx_model
         assert engine_call_kwargs["data"] == mock_datamodule
         assert engine_call_kwargs["work_dir"] == f"./otx-workspace-{model_id}"
+        assert engine_call_kwargs["device"] == otx_device
+        assert engine_call_kwargs["checkpoint"] == weights_path
 
         # Verify training was started
         mock_otx_engine.train.assert_called_once()
         train_call_kwargs = mock_otx_engine.train.call_args.kwargs
         assert train_call_kwargs["max_epochs"] == 10
         assert train_call_kwargs["precision"] == "32"
+        if geti_device.type == DeviceType.CPU or not geti_device.index:
+            assert "devices" not in train_call_kwargs
+        else:
+            assert train_call_kwargs["devices"] == [geti_device.index]
         assert "callbacks" in train_call_kwargs
 
         # Verify return values
@@ -667,25 +689,72 @@ class TestOTXTrainerTrainModel:
 class TestOTXTrainerEvaluateModel:
     """Tests for the OTXTrainer.evaluate_model method."""
 
+    @pytest.mark.parametrize(
+        "task_type,exclusive_labels,metric_callable",
+        [
+            (TaskType.CLASSIFICATION, True, MultiClassClsMetricCallable),
+            (TaskType.CLASSIFICATION, False, MultiLabelClsMetricCallable),
+            (TaskType.DETECTION, False, MeanAPCallable),
+            (TaskType.INSTANCE_SEGMENTATION, False, MaskRLEMeanAPCallable),
+        ],
+    )
     def test_evaluate_model(
         self,
+        task_type: TaskType,
+        exclusive_labels: bool,
+        metric_callable: MetricCallable,
         fxt_otx_trainer: Callable[[], OTXTrainer],
         tmp_path: Path,
+        fxt_model_service: Mock,
     ):
         """Test successful model evaluation on the testing set."""
         # Arrange
         otx_trainer = fxt_otx_trainer()
+        project_id = uuid4()
+        model_id = uuid4()
+        dataset_revision_id = uuid4()
         mock_otx_engine = Mock()
-        mock_datamodule = Mock()
-        mock_otx_engine._datamodule = mock_datamodule
+        mock_otx_engine.test.return_value = {
+            "test/accuracy": torch.tensor(0.85),
+            "test/precision": torch.tensor(0.82),
+            "test/recall": torch.tensor(0.88),
+        }
         model_checkpoint_path = tmp_path / "best_checkpoint.ckpt"
         model_checkpoint_path.touch()
 
+        training_params = TrainingJobParams(
+            device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
+            model_id=model_id,
+            project_id=project_id,
+            model_architecture_id="Object_Detection_YOLOX_S",
+            task=Task(task_type=task_type, exclusive_labels=exclusive_labels),
+        )
+
         # Act
-        otx_trainer.evaluate_model(otx_engine=mock_otx_engine, model_checkpoint_path=model_checkpoint_path)
+        otx_trainer.evaluate_model(
+            otx_engine=mock_otx_engine,
+            model_checkpoint_path=model_checkpoint_path,
+            task=training_params.task,
+            model_revision_id=model_id,
+            dataset_revision_id=dataset_revision_id,
+        )
 
         # Assert
-        mock_otx_engine.test.assert_called_once_with(checkpoint=model_checkpoint_path, datamodule=mock_datamodule)
+        mock_otx_engine.test.assert_called_once_with(checkpoint=model_checkpoint_path, metric=metric_callable)
+        fxt_model_service.set_db_session.assert_called_once()
+        actual_call = fxt_model_service.save_evaluation_result.call_args[0][0]
+
+        assert actual_call.model_revision_id == model_id
+        assert actual_call.dataset_revision_id == dataset_revision_id
+        assert actual_call.subset == DatasetItemSubset.TESTING
+        assert actual_call.metrics == pytest.approx(
+            {
+                "accuracy": 0.85,
+                "precision": 0.82,
+                "recall": 0.88,
+            },
+            rel=1e-6,
+        )
 
 
 class TestOTXTrainerExportModel:
@@ -696,27 +765,40 @@ class TestOTXTrainerExportModel:
         fxt_otx_trainer: Callable[[], OTXTrainer],
         tmp_path: Path,
     ):
-        """Test successful model export to OpenVINO format."""
+        """Test successful model export to OpenVINO and ONNX format."""
         # Arrange
         otx_trainer = fxt_otx_trainer()
         mock_otx_engine = Mock()
         model_checkpoint_path = tmp_path / "best_checkpoint.ckpt"
         model_checkpoint_path.touch()
-        expected_export_path = tmp_path / "exported_model"
-        mock_otx_engine.export.return_value = expected_export_path
+        expected_ov_export_path = tmp_path / "exported_openvino_model"
+        expected_onnx_export_path = tmp_path / "exported_onnx_model"
+        mock_otx_engine.export.side_effect = [expected_ov_export_path, expected_onnx_export_path]
 
         # Act
-        exported_path = otx_trainer.export_model(
-            otx_engine=mock_otx_engine, model_checkpoint_path=model_checkpoint_path
+        exported_paths = otx_trainer.export_model(
+            otx_engine=mock_otx_engine,
+            model_checkpoint_path=model_checkpoint_path,
         )
 
         # Assert
-        mock_otx_engine.export.assert_called_once_with(
-            checkpoint=model_checkpoint_path,
-            export_format=OTXExportFormatType.OPENVINO,
-            export_precision=OTXPrecisionType.FP16,
+        assert mock_otx_engine.export.call_count == 2
+        mock_otx_engine.export.assert_has_calls(
+            calls=[
+                call(
+                    checkpoint=model_checkpoint_path,
+                    export_format=OTXExportFormatType.OPENVINO,
+                    export_precision=OTXPrecisionType.FP16,
+                ),
+                call(
+                    checkpoint=model_checkpoint_path,
+                    export_format=OTXExportFormatType.ONNX,
+                    export_precision=OTXPrecisionType.FP16,
+                ),
+            ]
         )
-        assert exported_path == expected_export_path
+        assert exported_paths.openvino_model_path == expected_ov_export_path
+        assert exported_paths.onnx_model_path == expected_onnx_export_path
 
 
 class TestOTXTrainerStoreModelArtifacts:
@@ -732,14 +814,6 @@ class TestOTXTrainerStoreModelArtifacts:
         otx_trainer = fxt_otx_trainer()
         project_id = uuid4()
         model_id = uuid4()
-
-        training_params = TrainingJobParams(
-            device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
-            model_id=model_id,
-            project_id=project_id,
-            model_architecture_id="Object_Detection_YOLOX_S",
-            task=Task(task_type=TaskType.DETECTION),
-        )
 
         # Create model directory structure
         model_dir = tmp_path / "projects" / str(project_id) / "models" / str(model_id)
@@ -757,8 +831,15 @@ class TestOTXTrainerStoreModelArtifacts:
         exported_model_path = otx_work_dir / "exported_model.pth"
         model_xml_path = exported_model_path.with_suffix(".xml")
         model_bin_path = exported_model_path.with_suffix(".bin")
+        model_onnx_path = exported_model_path.with_suffix(".onnx")
         model_xml_path.write_text("xml content")
         model_bin_path.write_text("bin content")
+        model_onnx_path.write_text("onnx content")
+
+        exported_model_paths = ExportedModels(
+            openvino_model_path=exported_model_path,
+            onnx_model_path=exported_model_path,
+        )
 
         # Create metrics directory
         metrics_dir = otx_work_dir / "csv"
@@ -767,10 +848,10 @@ class TestOTXTrainerStoreModelArtifacts:
 
         # Act
         otx_trainer.store_model_artifacts(
-            training_params=training_params,
+            model_dir=model_dir,
             otx_work_dir=otx_work_dir,
             trained_model_path=trained_model_path,
-            exported_model_path=exported_model_path,
+            exported_model_paths=exported_model_paths,
         )
 
         # Assert
@@ -783,6 +864,10 @@ class TestOTXTrainerStoreModelArtifacts:
         assert (model_dir / "model.xml").read_text() == "xml content"
         assert (model_dir / "model.bin").exists()
         assert (model_dir / "model.bin").read_text() == "bin content"
+
+        # Check ONNX file was copied
+        assert (model_dir / "model.onnx").exists()
+        assert (model_dir / "model.onnx").read_text() == "onnx content"
 
         # Check metrics were moved
         assert (model_dir / "metrics").exists()

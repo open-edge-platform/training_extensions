@@ -1,6 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { toast } from '@geti/ui';
 import { ThemeProvider } from '@geti/ui/theme';
 import { MutationCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from 'react-router';
@@ -23,11 +24,29 @@ declare module '@tanstack/react-query' {
     }
 }
 
+const TOAST_DURATION = 5000;
+
+const getErrorMessage = (error: unknown): string => {
+    if (error && typeof error === 'object') {
+        if ('detail' in error && typeof error.detail === 'string') {
+            return error.detail;
+        }
+
+        if ('message' in error && typeof error.message === 'string') {
+            if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+                return 'Network error. Please check your connection and try again.';
+            }
+
+            return error.message;
+        }
+    }
+
+    return 'An unexpected error occurred. Please try again.';
+};
+
 export const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
-            gcTime: 30 * 60 * 1000,
-            staleTime: 5 * 60 * 1000,
             retry: false,
         },
         mutations: {
@@ -44,6 +63,13 @@ export const queryClient = new QueryClient({
                     queryClient.invalidateQueries({ queryKey });
                 });
             }
+        },
+        onError: (error) => {
+            toast({
+                type: 'error',
+                message: getErrorMessage(error),
+                duration: TOAST_DURATION,
+            });
         },
     }),
 });

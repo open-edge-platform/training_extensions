@@ -3,7 +3,7 @@
 
 import shutil
 from pathlib import Path
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import datumaro.experimental as dm
 import polars as pl
@@ -40,9 +40,14 @@ class DatasetRevisionService(BaseSessionManagedService):
             UUID: The UUID of the newly created dataset revision.
         """
         revision_repo = DatasetRevisionRepository(db=self.db_session)
+        dataset_revision_id = str(uuid4())
+        short_id = dataset_revision_id.split("-")[0]
+        dataset_name = f"Dataset ({short_id})"
         revision_db = revision_repo.save(
             DatasetRevisionDB(
+                id=dataset_revision_id,
                 project_id=str(project_id),
+                name=dataset_name,
             )
         )
         revision_path = self.projects_dir / str(project_id) / "dataset_revisions" / revision_db.id
@@ -87,6 +92,7 @@ class DatasetRevisionService(BaseSessionManagedService):
             DatasetRevisionDB(
                 id=str(dataset_revision.id),
                 project_id=str(dataset_revision.project_id),
+                name=dataset_revision.name,
                 files_deleted=dataset_revision.files_deleted,
             )
         )

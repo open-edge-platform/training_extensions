@@ -258,5 +258,5 @@ class TestSystemService:
             camera_devices = fxt_system_service.get_camera_devices()
 
             assert len(camera_devices) == 1
-            assert camera_devices[0].name == "Integrated Camera"
+            assert camera_devices[0].name == "Integrated Camera [1400]"
             assert camera_devices[0].index == 1400

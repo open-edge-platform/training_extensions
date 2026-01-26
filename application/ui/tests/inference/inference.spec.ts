@@ -21,6 +21,14 @@ test.beforeEach(({ network }) => {
         http.get('/api/sinks', () => {
             return HttpResponse.json([]);
         }),
+        http.get('/api/system/devices/camera', () => {
+            return HttpResponse.json([
+                {
+                    index: 1,
+                    name: 'FaceTime HD Camera',
+                },
+            ]);
+        }),
         http.post('/api/sources', () => {
             return HttpResponse.json(
                 {
@@ -227,10 +235,12 @@ test('Inference', async ({ streamPage, page, network }) => {
         await page.goto('/projects/id-1/inference');
 
         await page.getByRole('button', { name: 'Pipeline configuration' }).click();
+        await page.getByRole('button', { name: 'Add new source' }).click();
         await page.getByRole('button', { name: 'Webcam' }).click();
 
-        await page.locator('input[name="name"]').fill('New Webcam');
-        await page.getByLabel('webcam device id').fill('1');
+        await page.getByRole('textbox', { name: 'Name' }).fill('New Webcam');
+        await page.getByRole('button', { name: 'Camera list' }).click();
+        await page.getByLabel('FaceTime HD Camera', { exact: true }).click();
 
         network.use(
             http.get('/api/sources', () => {
@@ -245,19 +255,20 @@ test('Inference', async ({ streamPage, page, network }) => {
             })
         );
 
-        await page.getByRole('button', { name: 'Apply' }).click();
+        await page.getByRole('button', { name: 'Add & Connect' }).click();
 
         // Click outside the dialog to close it
         await page.click('body', { position: { x: 10, y: 10 } });
 
         await page.getByRole('button', { name: 'Pipeline configuration' }).click();
 
-        await expect(page.locator('input[name="name"]')).toHaveValue('New Webcam');
-        await expect(page.locator('input[name="device_id"]')).toHaveValue('1');
+        await expect(page.getByText('New Webcam')).toBeVisible();
+        await expect(page.getByText('Device: FaceTime HD Camera')).toBeVisible();
 
         // Go to output tab
         await page.getByLabel('Dataset import tabs').getByText('Output').click();
 
+        await page.getByRole('button', { name: 'Add new sink' }).click();
         await page.getByRole('button', { name: 'Folder' }).click();
         await page.locator('input[name="name"]').fill('New Folder');
         await page.locator('input[aria-roledescription="Number field"]').fill('5');
@@ -280,7 +291,7 @@ test('Inference', async ({ streamPage, page, network }) => {
             })
         );
 
-        await page.getByRole('button', { name: 'Apply' }).click();
+        await page.getByRole('button', { name: 'Add & Connect' }).click();
 
         // Click outside the dialog to close it
         await page.click('body', { position: { x: 10, y: 10 } });
@@ -288,10 +299,9 @@ test('Inference', async ({ streamPage, page, network }) => {
         await page.getByRole('button', { name: 'Pipeline configuration' }).click();
         await page.getByLabel('Dataset import tabs').getByText('Output').click();
 
-        await expect(page.locator('input[name="name"]')).toHaveValue('New Folder');
-
-        await expect(page.locator('input[aria-roledescription="Number field"]')).toHaveValue('5');
-        await expect(page.locator('input[name="folder_path"]')).toHaveValue('some/path');
-        await expect(page.locator('input[name="output_formats"][value="predictions"]')).toBeChecked();
+        await expect(page.getByText('New Folder')).toBeVisible();
+        await expect(page.getByText('Folder path: some/path')).toBeVisible();
+        await expect(page.getByText('Rate limit: 5')).toBeVisible();
+        await expect(page.getByText('Output formats: predictions')).toBeVisible();
     });
 });

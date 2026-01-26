@@ -1,20 +1,20 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { getMultipleMockedMediaItems } from 'mocks/mock-media-item';
+import { getMultipleMockedMedia } from 'mocks/mock-media';
 import { HttpResponse } from 'msw';
 
 import { expect, http, test } from '../fixtures';
 
-const mockedItems = getMultipleMockedMediaItems(20, '1');
-const mockedItems2 = getMultipleMockedMediaItems(20, '2');
-const mockedItems3 = getMultipleMockedMediaItems(20, '3');
+const mockedItems = getMultipleMockedMedia(20, '1');
+const mockedItems2 = getMultipleMockedMedia(20, '2');
+const mockedItems3 = getMultipleMockedMedia(20, '3');
 const totalElements = mockedItems.length + mockedItems2.length + mockedItems3.length;
 
 test.describe('Dataset', () => {
     test.beforeEach(({ network }) => {
         network.use(
-            http.get('/api/projects/{project_id}/dataset/items', ({ query }) => {
+            http.get('/api/projects/{project_id}/dataset/media', ({ query }) => {
                 const offset = Number(query.get('offset') ?? 0);
                 const limit = Number(query.get('limit'));
                 const items = offset === 0 ? mockedItems : offset === 20 ? mockedItems2 : mockedItems3;

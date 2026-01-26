@@ -9,6 +9,7 @@ from uuid import UUID
 
 import aiofiles
 from fastapi import APIRouter, Body, Depends, HTTPException, status
+from loguru import logger
 from sse_starlette.sse import EventSourceResponse, ServerSentEvent
 
 from app.api.dependencies import get_data_dir, get_job_dir, get_job_queue, get_project_service, get_system_service
@@ -126,8 +127,14 @@ async def cancel_job(job_id: JobID, job_queue: Annotated[JobQueue, Depends(get_j
                 raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Job already completed or cancelled")
             case CancellationResult.PENDING_CANCELLED | CancellationResult.RUNNING_CANCELLING:
                 if not job:
+                    logger.error("Can't locate job {} after cancellation", job_id)
                     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Job not found")
                 return JobView.of(job)
+            case _:
+                logger.error("Unexpected cancellation result: {}", result)
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error while processing job cancellation"
+                )
     except ValueError:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Unable to cancel job")
 

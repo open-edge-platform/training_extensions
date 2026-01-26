@@ -7,12 +7,13 @@ from uuid import UUID, uuid4
 import pytest
 from sqlalchemy.orm import Session
 
-from app.db.schema import DatasetItemDB, DatasetRevisionDB, PipelineDB
+from app.db.schema import DatasetItemDB, DatasetRevisionDB, MediaDB, PipelineDB
 from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Pipeline, Project
 from app.services import (
     DatasetRevisionService,
     DatasetService,
     LabelService,
+    MediaService,
     PipelineService,
     ProjectService,
     SystemService,
@@ -48,6 +49,12 @@ def fxt_label_service(db_session: Session) -> LabelService:
 
 
 @pytest.fixture
+def fxt_media_service(fxt_projects_dir: Path, db_session: Session) -> MediaService:
+    """Fixture to create a MediaService instance."""
+    return MediaService(data_dir=fxt_projects_dir.parent, db_session=db_session)
+
+
+@pytest.fixture
 def fxt_project_service(
     fxt_projects_dir: Path, db_session: Session, fxt_pipeline_service: PipelineService, fxt_label_service: LabelService
 ) -> ProjectService:
@@ -71,12 +78,12 @@ def fxt_dataset_revision_service(
 
 @pytest.fixture
 def fxt_dataset_service(
-    fxt_projects_dir: Path,
     fxt_label_service: LabelService,
+    fxt_media_service: MediaService,
     db_session: Session,
 ) -> DatasetService:
     """Fixture to create a DatasetService instance."""
-    return DatasetService(fxt_projects_dir.parent, fxt_label_service, db_session=db_session)
+    return DatasetService(label_service=fxt_label_service, media_service=fxt_media_service, db_session=db_session)
 
 
 @pytest.fixture
@@ -116,119 +123,49 @@ def fxt_project_with_pipeline(
 
 
 @pytest.fixture
-def fxt_project_with_subset_items(fxt_project_with_pipeline, db_session) -> tuple[Project, list[DatasetItemDB]]:
+def fxt_project_with_subset_items(
+    fxt_project_with_pipeline, db_session
+) -> tuple[Project, list[tuple[MediaDB, DatasetItemDB]]]:
     """Fixture with dataset items covering all subset types."""
     project, _ = fxt_project_with_pipeline
 
-    # Unassigned items
-    unassigned_items = [
-        DatasetItemDB(
-            name="unassigned1",
-            format="jpg",
-            size=1024,
-            width=1024,
-            height=768,
-            subset=DatasetItemSubset.UNASSIGNED,
-            user_reviewed=False,
-            project_id=str(project.id),
-            created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
-        ),
-        DatasetItemDB(
-            name="unassigned2",
-            format="jpg",
-            size=1024,
-            width=1024,
-            height=768,
-            subset=DatasetItemSubset.UNASSIGNED,
-            user_reviewed=False,
-            project_id=str(project.id),
-            created_at=datetime.fromisoformat("2025-02-02T00:00:00Z"),
-        ),
+    distribution = [
+        (DatasetItemSubset.UNASSIGNED, 2),
+        (DatasetItemSubset.TRAINING, 3),
+        (DatasetItemSubset.VALIDATION, 2),
+        (DatasetItemSubset.TESTING, 1),
     ]
 
-    # Training items
-    training_items = [
-        DatasetItemDB(
-            name="training1",
-            format="jpg",
-            size=1024,
-            width=1024,
-            height=768,
-            subset=DatasetItemSubset.TRAINING,
-            user_reviewed=False,
-            project_id=str(project.id),
-            created_at=datetime.fromisoformat("2025-02-03T00:00:00Z"),
-        ),
-        DatasetItemDB(
-            name="training2",
-            format="jpg",
-            size=1024,
-            width=1024,
-            height=768,
-            subset=DatasetItemSubset.TRAINING,
-            user_reviewed=False,
-            project_id=str(project.id),
-            created_at=datetime.fromisoformat("2025-02-04T00:00:00Z"),
-        ),
-        DatasetItemDB(
-            name="training3",
-            format="jpg",
-            size=1024,
-            width=1024,
-            height=768,
-            subset=DatasetItemSubset.TRAINING,
-            user_reviewed=False,
-            project_id=str(project.id),
-            created_at=datetime.fromisoformat("2025-02-05T00:00:00Z"),
-        ),
-    ]
+    db_media_and_dataset_items = []
+    for subset, item_count in distribution:
+        for idx in range(item_count):
+            db_media = MediaDB(
+                type="image",
+                name=f"{subset.value}{idx + 1}",
+                format="jpg",
+                size=1024,
+                width=1024,
+                height=768,
+                project_id=str(project.id),
+                created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
+            )
+            db_session.add(db_media)
+            db_session.flush()
 
-    # Validation items
-    validation_items = [
-        DatasetItemDB(
-            name="validation1",
-            format="jpg",
-            size=1024,
-            width=1024,
-            height=768,
-            subset=DatasetItemSubset.VALIDATION,
-            user_reviewed=False,
-            project_id=str(project.id),
-            created_at=datetime.fromisoformat("2025-02-06T00:00:00Z"),
-        ),
-        DatasetItemDB(
-            name="validation2",
-            format="jpg",
-            size=1024,
-            width=1024,
-            height=768,
-            subset=DatasetItemSubset.VALIDATION,
-            user_reviewed=False,
-            project_id=str(project.id),
-            created_at=datetime.fromisoformat("2025-02-07T00:00:00Z"),
-        ),
-    ]
+            dataset_item = DatasetItemDB(
+                subset=subset,
+                user_reviewed=False,
+                project_id=str(project.id),
+                created_at=datetime.fromisoformat("2025-02-01T00:00:00Z"),
+            )
+            dataset_item.id = db_media.id
 
-    # Testing items
-    testing_items = [
-        DatasetItemDB(
-            name="testing1",
-            format="jpg",
-            size=1024,
-            width=1024,
-            height=768,
-            subset=DatasetItemSubset.TESTING,
-            user_reviewed=False,
-            project_id=str(project.id),
-            created_at=datetime.fromisoformat("2025-02-08T00:00:00Z"),
-        ),
-    ]
+            db_session.add(dataset_item)
+            db_session.flush()
 
-    db_dataset_items = [*unassigned_items, *training_items, *validation_items, *testing_items]
-    db_session.add_all(db_dataset_items)
-    db_session.flush()
+            db_media_and_dataset_items.append((db_media, dataset_item))
 
-    return project, db_dataset_items
+    return project, db_media_and_dataset_items
 
 
 class TestDatasetRevisionServiceIntegration:
@@ -243,7 +180,7 @@ class TestDatasetRevisionServiceIntegration:
         db_session: Session,
     ) -> None:
         """Test saving a dataset revision."""
-        project, db_dataset_items = fxt_project_with_subset_items
+        project, _ = fxt_project_with_subset_items
         dataset = fxt_dataset_service.get_dm_dataset(project.id, project.task, DatasetItemAnnotationStatus.REVIEWED)
 
         revision_id = fxt_dataset_revision_service.save_revision(
@@ -264,7 +201,7 @@ class TestDatasetRevisionServiceIntegration:
         db_session: Session,
     ) -> None:
         """Test getting a dataset revision."""
-        project, db_dataset_items = fxt_project_with_subset_items
+        project, _ = fxt_project_with_subset_items
         dataset = fxt_dataset_service.get_dm_dataset(project.id, project.task, DatasetItemAnnotationStatus.REVIEWED)
 
         # Save a revision
@@ -279,6 +216,7 @@ class TestDatasetRevisionServiceIntegration:
         assert revision is not None
         assert revision.id == revision_id
         assert revision.project_id == project.id
+        assert revision.name == f"Dataset ({str(revision.id).split('-')[0]})"
         assert revision.files_deleted is False
 
     def test_get_dataset_revision_not_found(
@@ -305,7 +243,7 @@ class TestDatasetRevisionServiceIntegration:
         db_session: Session,
     ) -> None:
         """Test getting a dataset revision with wrong project ID raises error."""
-        project, db_dataset_items = fxt_project_with_subset_items
+        project, _ = fxt_project_with_subset_items
         dataset = fxt_dataset_service.get_dm_dataset(project.id, project.task, DatasetItemAnnotationStatus.REVIEWED)
 
         # Save a revision for the project
@@ -331,7 +269,7 @@ class TestDatasetRevisionServiceIntegration:
         db_session: Session,
     ) -> None:
         """Test deleting dataset revision files."""
-        project, db_dataset_items = fxt_project_with_subset_items
+        project, _ = fxt_project_with_subset_items
         dataset = fxt_dataset_service.get_dm_dataset(project.id, project.task, DatasetItemAnnotationStatus.REVIEWED)
 
         # Save a revision
@@ -380,7 +318,7 @@ class TestDatasetRevisionServiceIntegration:
         db_session: Session,
     ) -> None:
         """Test deleting dataset revision files that are already deleted is idempotent."""
-        project, db_dataset_items = fxt_project_with_subset_items
+        project, _ = fxt_project_with_subset_items
         dataset = fxt_dataset_service.get_dm_dataset(project.id, project.task, DatasetItemAnnotationStatus.REVIEWED)
 
         # Save a revision
@@ -418,6 +356,7 @@ class TestDatasetRevisionServiceIntegration:
         db_revision = DatasetRevisionDB(
             id=str(revision_id),
             project_id=str(project.id),
+            name=f"Dataset ({str(revision_id).split('-')[0]})",
             files_deleted=False,
         )
         db_session.add(db_revision)

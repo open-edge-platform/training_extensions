@@ -1,77 +1,58 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-    ActionButton,
-    Button,
-    Cell,
-    Column,
-    Flex,
-    Item,
-    Menu,
-    MenuTrigger,
-    Row,
-    TableBody,
-    TableHeader,
-    TableView,
-} from '@geti/ui';
-import { DownloadIcon, MoreMenu } from '@geti/ui/icons';
+import { ActionButton, Cell, Column, Flex, Row, TableBody, TableHeader, TableView } from '@geti/ui';
+import { DownloadIcon } from '@geti/ui/icons';
 
-import type { SchemaModelView } from '../../../../api/openapi-spec';
+import type { ExtendedModel, ModelFormat } from '../../../../constants/shared-types';
+import { useDownloadModel } from '../../hooks/api/use-download-model.hook';
+import { formatModelSize } from '../utils/format-model-size';
 
 interface ModelVariantTableProps {
-    model: SchemaModelView;
+    model: ExtendedModel;
+    format: ModelFormat;
 }
 
-export const ModelVariantTable = ({ model }: ModelVariantTableProps) => {
-    // TODO: Replace with dynamic data
+export const ModelVariantTable = ({ model, format }: ModelVariantTableProps) => {
+    const { downloadModel, isDownloading } = useDownloadModel(model.id);
+    const variants = (model.variants ?? []).filter((variant) => variant.format === format);
+
+    if (variants.length === 0) {
+        return null;
+    }
 
     return (
         <TableView aria-label={`Model variants for ${model.id}`} overflowMode={'wrap'} density={'compact'}>
             <TableHeader>
-                <Column isRowHeader>Optimized models</Column>
-                <Column isRowHeader>License</Column>
-                <Column isRowHeader>Precision</Column>
-                <Column isRowHeader>Accuracy</Column>
-                <Column isRowHeader>Size</Column>
+                <Column isRowHeader>ARCHITECTURE</Column>
+                <Column isRowHeader>LICENSE</Column>
+                <Column isRowHeader>PRECISION</Column>
+                <Column isRowHeader>SIZE</Column>
                 <Column align='end'>
                     <></>
                 </Column>
             </TableHeader>
-            <TableBody>
-                <Row>
-                    <Cell>MobileNetV2-ATSS OpenVINO FP16</Cell>
-                    <Cell>Apache 2.0</Cell>
-                    <Cell>FP16</Cell>
-                    <Cell>95%</Cell>
-                    <Cell>335.81 MB</Cell>
-                    <Cell>
-                        <Flex gap={'size-100'} justifyContent='end' alignItems='center'>
-                            <ActionButton isQuiet>
-                                <DownloadIcon />
-                            </ActionButton>
-                            <MenuTrigger>
-                                <ActionButton isQuiet>
-                                    <MoreMenu />
+            <TableBody items={variants}>
+                {(variant) => (
+                    <Row key={`${variant.format}-${variant.precision}`}>
+                        <Cell>{model.architecture}</Cell>
+                        <Cell>Apache 2.0</Cell>
+                        <Cell>{variant.precision.toUpperCase()}</Cell>
+                        <Cell>{formatModelSize(variant.weights_size)}</Cell>
+                        <Cell>
+                            <Flex gap={'size-100'} justifyContent='end' alignItems='center'>
+                                <ActionButton
+                                    isQuiet
+                                    aria-label={`Download ${variant.format} model`}
+                                    isDisabled={isDownloading}
+                                    onPress={() => downloadModel(variant.format as ModelFormat)}
+                                >
+                                    <DownloadIcon />
                                 </ActionButton>
-                                <Menu>
-                                    <Item key='delete'>Delete</Item>
-                                    <Item key='export'>Export</Item>
-                                </Menu>
-                            </MenuTrigger>
-                        </Flex>
-                    </Cell>
-                </Row>
-                <Row>
-                    <Cell>MobileNetV2-ATSS OpenVINO FP16</Cell>
-                    <Cell>Apache 2.0</Cell>
-                    <Cell>FP16</Cell>
-                    <Cell>95%</Cell>
-                    <Cell>335.81 MB</Cell>
-                    <Cell>
-                        <Button variant='primary'>Start quantization</Button>
-                    </Cell>
-                </Row>
+                            </Flex>
+                        </Cell>
+                    </Row>
+                )}
             </TableBody>
         </TableView>
     );

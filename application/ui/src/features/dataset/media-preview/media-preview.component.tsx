@@ -9,14 +9,16 @@ import { isObject } from 'lodash-es';
 
 import { $api } from '../../../api/client';
 import { ZoomProvider } from '../../../components/zoom/zoom.provider';
-import type { DatasetItem } from '../../../constants/shared-types';
+import type { Media } from '../../../constants/shared-types';
+import { useGetDatasetItems } from '../../../hooks/use-get-dataset-items.hook';
 import { AnnotationActionsProvider } from '../../../shared/annotator/annotation-actions-provider.component';
 import { AnnotationVisibilityProvider } from '../../../shared/annotator/annotation-visibility-provider.component';
 import { AnnotatorProvider } from '../../../shared/annotator/annotator-provider.component';
 import { SelectAnnotationProvider } from '../../../shared/annotator/select-annotation-provider.component';
-import { AnnotatorCanvas } from '../../annotator/annotator-canvas';
-import { useGetDatasetItems } from '../gallery/use-get-dataset-items.hook';
+import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
 import { PrimaryToolbar } from './primary-toolbar/primary-toolbar.component';
+import { AnnotatorCanvasSettings } from './primary-toolbar/settings/annotator-canvas-settings.component';
+import { CanvasSettingsProvider } from './primary-toolbar/settings/canvas-settings-provider.component';
 import { SecondaryToolbar } from './secondary-toolbar/secondary-toolbar.component';
 import { SidebarItems } from './sidebar-items/sidebar-items.component';
 
@@ -27,9 +29,9 @@ const isUnannotatedError = (error: unknown): boolean => {
 };
 
 type MediaPreviewProps = {
-    mediaItem: DatasetItem;
+    mediaItem: Media;
     close: () => void;
-    onSelectedMediaItem: (item: DatasetItem) => void;
+    onSelectedMediaItem: (item: Media) => void;
 };
 
 const CanvasAreaLoading = () => (
@@ -83,21 +85,25 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                                 <SelectAnnotationProvider>
                                     <AnnotationVisibilityProvider>
                                         <AnnotatorProvider mediaItem={mediaItem}>
-                                            <View gridArea={'toolbar'}>
-                                                <PrimaryToolbar />
-                                            </View>
+                                            <CanvasSettingsProvider>
+                                                <View gridArea={'toolbar'}>
+                                                    <PrimaryToolbar />
+                                                </View>
 
-                                            <View gridArea={'header'}>
-                                                <SecondaryToolbar
-                                                    items={items}
-                                                    onClose={close}
-                                                    mediaItem={mediaItem}
-                                                    onSelectedMediaItem={onSelectedMediaItem}
-                                                />
-                                            </View>
-                                            <View gridArea={'canvas'} overflow={'hidden'}>
-                                                <AnnotatorCanvas mediaItem={mediaItem} />
-                                            </View>
+                                                <View gridArea={'header'}>
+                                                    <SecondaryToolbar
+                                                        items={items}
+                                                        onClose={close}
+                                                        mediaItem={mediaItem}
+                                                        onSelectedMediaItem={onSelectedMediaItem}
+                                                    />
+                                                </View>
+                                                <View gridArea={'canvas'} overflow={'hidden'}>
+                                                    <AnnotatorCanvasSettings>
+                                                        <AnnotatorCanvas mediaItem={mediaItem} />
+                                                    </AnnotatorCanvasSettings>
+                                                </View>
+                                            </CanvasSettingsProvider>
                                         </AnnotatorProvider>
                                     </AnnotationVisibilityProvider>
                                 </SelectAnnotationProvider>

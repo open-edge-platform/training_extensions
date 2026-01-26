@@ -11,7 +11,8 @@ build-backend = "setuptools.build_meta"
 name = "otx"
 dynamic = ["version"]
 description = "OpenVINO™ Training Extensions: Train, Evaluate, Optimize, Deploy Computer Vision Models via OpenVINO™"
-readme = "README.md"
+# TODO restore after creating a proper README file for the library
+# readme = "README.md"
 requires-python = ">=3.10,<3.14"
 license = "Apache-2.0"
 authors = [
@@ -40,10 +41,10 @@ dependencies = [
     "setuptools==78.1.1",
     "lightning==2.6.0",
     "torchmetrics==1.8.2",
-    "pytorchcv==0.0.67",
+    "pytorchcv==0.0.74",
     "timm==1.0.3",
-    "openvino==2025.3",
-    "openvino-model-api==0.3.0.4",
+    "openvino==2025.4.1",
+    "openvino-model-api @ git+https://github.com/open-edge-platform/model_api.git",
     "onnx==1.19.1",
     "onnxconverter-common==1.16.0",
     "onnxscript",
@@ -94,20 +95,19 @@ lint = [
 cpu = [
     # Note: platform-specific wheels are only available for Linux and Windows.
     # For macOS, there is only one version of torch (default) available via PyPI.
-    "torch==2.9.1+cpu ; sys_platform == 'linux' or sys_platform == 'win32'",
-    "torchvision==0.24.1+cpu ; sys_platform == 'linux' or sys_platform == 'win32'",
-    "torch==2.9.1 ; sys_platform != 'linux' and sys_platform != 'win32'",
-    "torchvision==0.24.1 ; sys_platform != 'linux' and sys_platform != 'win32'"
+    "torch==2.10.0+cpu ; sys_platform == 'linux' or sys_platform == 'win32'",
+    "torchvision==0.25.0+cpu ; sys_platform == 'linux' or sys_platform == 'win32'",
+    "torch==2.10.0 ; sys_platform != 'linux' and sys_platform != 'win32'",
+    "torchvision==0.25.0 ; sys_platform != 'linux' and sys_platform != 'win32'"
 ]
 cuda = [
-    "torch==2.9.1+cu128",
-    "torchvision==0.24.1+cu128"
+    "torch==2.10.0+cu128",
+    "torchvision==0.25.0+cu128"
 ]
 xpu = [
-    "torch==2.9.0+xpu", # torch 2.9.1 with torchvision==0.24.1 is currently
-                        # unstable resulting in an error with torchvision ops.
-    "pytorch-triton-xpu==3.5.0",
-    "torchvision==0.24.0+xpu"
+    "torch==2.10.0+xpu",
+    "triton-xpu==3.6.0",
+    "torchvision==0.25.0+xpu"
 ]
 
 docs = [
@@ -138,6 +138,7 @@ Repository = "https://github.com/open-edge-platform/training_extensions/"
 
 [tool.uv]
 default-groups = ["dev", "lint"]
+override-dependencies = ["torch==2.10.0"]
 conflicts = [
     [
         { extra = "cpu" },
@@ -154,7 +155,7 @@ torch = [
     { index = "torch-xpu", extra = "xpu"},
     { index = "torch-cuda", extra = "cuda"},
 ]
-pytorch-triton-xpu = [
+triton-xpu = [
     { index = "torch-xpu", extra = "xpu"},
 ]
 torchvision = [
@@ -187,7 +188,6 @@ include-package-data = true
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["otx*"]
-
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # COVERAGE CONFIGURATION.                                                     #

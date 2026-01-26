@@ -12,12 +12,12 @@ class TestModelArchitecturesEndpoint:
 
     def test_get_all_model_architectures(self, fxt_client: TestClient):
         """Test getting all model architectures without filtering."""
-        response = fxt_client.get("/api/model_architectures")
+        response = fxt_client.get("/api/model_architectures?task=detection")
         assert response.status_code == status.HTTP_200_OK
 
         data = response.json()
         assert "model_architectures" in data
-        assert len(data["model_architectures"]) == 20
+        assert len(data["model_architectures"]) == 11
 
         # Verify structure of first detection model
         detection_model = next(
@@ -47,12 +47,19 @@ class TestModelArchitecturesEndpoint:
         assert detection_model["stats"]["trainable_parameters"] == 3.9
         assert "performance_ratings" in detection_model["stats"]
 
+        # Verify top picks
+        assert "top_picks" in data
+        top_picks = data["top_picks"]
+        assert top_picks["balance"] == "Custom_Object_Detection_Gen3_ATSS"
+        assert top_picks["speed"] == "Object_Detection_YOLOX_S"
+        assert top_picks["accuracy"] == "Object_Detection_DFine_X"
+
     @pytest.mark.parametrize(
         "task_filter, total_models",
         [
-            ("Detection", 11),
-            ("Instance_Segmentation", 4),
-            ("Classification", 5),
+            ("detection", 11),
+            ("instance_segmentation", 4),
+            ("classification", 5),
         ],
     )
     def test_get_model_architectures_various_tasks(self, fxt_client: TestClient, task_filter, total_models):
@@ -68,10 +75,6 @@ class TestModelArchitecturesEndpoint:
             assert model["task"].lower() == task_filter.lower()
 
     def test_get_model_architectures_nonexistent_task_filter(self, fxt_client: TestClient):
-        """Test filtering by a task that doesn't exist returns empty list."""
+        """Test filtering by a task that doesn't exist returns 422."""
         response = fxt_client.get("/api/model_architectures?task=nonexistent")
-        assert response.status_code == status.HTTP_200_OK
-
-        data = response.json()
-        assert "model_architectures" in data
-        assert len(data["model_architectures"]) == 0
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
