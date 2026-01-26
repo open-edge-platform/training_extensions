@@ -1,6 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+from .dataset import StagedDatasetView
 from .evaluation import EvaluationView, MetricView
 from .label import LabelView, PatchLabels
 from .metrics import PipelineMetricsView
@@ -24,6 +25,7 @@ __all__ = [
     "ProjectView",
     "SinkView",
     "SourceView",
+    "StagedDatasetView",
     "TaskView",
     "WebRTCConfigResponse",
     "WebRTCIceServer",
