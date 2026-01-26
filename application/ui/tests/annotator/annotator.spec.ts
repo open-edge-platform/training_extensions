@@ -55,42 +55,54 @@ test.beforeEach(async ({ network, page }) => {
 test.describe('Annotator', () => {
     test('Add and change annotations labels', async ({ page, boundingBoxTool }) => {
         await test.step('Draw an annotation', async () => {
+            await expect(page.getByRole('button', { name: `Label ${redLabel.name}` })).toHaveAttribute(
+                'aria-pressed',
+                'true'
+            );
+
             await boundingBoxTool.selectTool();
             await boundingBoxTool.drawBoundingBox({ x: 100, y: 100, width: 150, height: 150 });
             await expect(page.getByLabel(`label ${redLabel.name}`).nth(1)).toBeInViewport();
         });
 
-        await test.step('Change annotation label', async () => {
+        await test.step('Change annotation label by clicking label badge', async () => {
             await page.getByRole('button', { name: 'selection tool' }).click();
-
             await page.getByLabel('annotation rect').nth(1).click();
-            await page.getByRole('button', { name: `${redLabel.name} Label Picker` }).click();
-            await page.getByTestId('popover').getByText(blueLabel.name).click();
+            await page.getByRole('button', { name: `Label ${blueLabel.name}` }).click();
 
             await expect(page.getByLabel(`label ${blueLabel.name}`).nth(1)).toBeInViewport();
+            await expect(page.getByRole('button', { name: `Label ${blueLabel.name}` })).toHaveAttribute(
+                'aria-pressed',
+                'true'
+            );
         });
 
-        await test.step('Change label selection', async () => {
+        await test.step('Change label selection for new annotations', async () => {
             await page.getByRole('img', { name: 'annotations' }).click();
-            await page.getByRole('button', { name: `${blueLabel.name} Label Picker` }).click();
-            await page.getByTestId('popover').getByText(redLabel.name).click();
+            await page.getByRole('button', { name: `Label ${redLabel.name}` }).click();
+
+            await expect(page.getByRole('button', { name: `Label ${redLabel.name}` })).toHaveAttribute(
+                'aria-pressed',
+                'true'
+            );
         });
 
-        await test.step('Draw a second annotation', async () => {
+        await test.step('Draw a second annotation with selected label', async () => {
+            await page.getByRole('button', { name: `Label ${redLabel.name}` }).click();
             await boundingBoxTool.selectTool();
             await boundingBoxTool.drawBoundingBox({ x: 300, y: 200, width: 150, height: 150 });
 
             await expect(page.getByLabel(`label ${redLabel.name}`).nth(1)).toBeInViewport();
         });
 
-        await test.step('label picker updates based on selected annotation', async () => {
+        await test.step('Verify both annotations have correct labels', async () => {
             await page.getByRole('button', { name: 'selection tool' }).click();
 
-            await page.getByLabel('annotation rect').nth(3).click();
-            await expect(page.getByRole('button', { name: `${redLabel.name} Label Picker` })).toBeInViewport();
-
             await page.getByLabel('annotation rect').nth(2).click();
-            await expect(page.getByRole('button', { name: `${blueLabel.name} Label Picker` })).toBeInViewport();
+            await expect(page.getByLabel(`label ${blueLabel.name}`).nth(1)).toBeInViewport();
+
+            await page.getByLabel('annotation rect').nth(3).click();
+            await expect(page.getByLabel(`label ${redLabel.name}`).nth(1)).toBeInViewport();
         });
     });
 
@@ -119,14 +131,13 @@ test.describe('Annotator', () => {
             await page.getByLabel('Remove red-label').nth(2).click();
         });
 
-        await test.step('change select annotation label', async () => {
+        await test.step('Change selected annotations label using label badge', async () => {
             const container = page.getByLabel('annotation rect');
             await container.nth(5).click({ modifiers: ['Shift'] });
             await container.nth(4).click({ modifiers: ['Shift'] });
             await container.nth(3).click({ modifiers: ['Shift'] });
 
-            await page.getByRole('button', { name: `${redLabel.name} Label Picker` }).click();
-            await page.getByTestId('popover').getByText(blueLabel.name).click();
+            await page.getByRole('button', { name: `Label ${blueLabel.name}` }).click();
 
             // There should be twice the elements, the mask and the annotation itself
             expect(await page.getByLabel(`label ${blueLabel.name} background`).count()).toBe(annotations.length * 2);
