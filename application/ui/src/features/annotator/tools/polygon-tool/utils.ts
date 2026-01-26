@@ -6,7 +6,7 @@ import { PointerEvent, SVGProps } from 'react';
 import { isPolygonValid } from '@geti/smart-tools/utils';
 import { isEmpty, isEqual, isNil, negate } from 'lodash-es';
 
-import { Label } from '../../../../constants/shared-types';
+import type { Label } from '../../../../constants/shared-types';
 import { isEraserOrRightButton, isLeftButton } from '../../../../shared/buttons-utils';
 import { Point, Polygon as PolygonType } from '../../../../shared/types';
 import { DEFAULT_ANNOTATION_STYLES } from '../../utils';
@@ -53,7 +53,7 @@ export interface MouseEventHandlers {
     onPointerMove: (event: PointerEvent<SVGSVGElement>) => void;
 }
 
-export const TOOL_ICON: Record<PolygonMode, { icon: PointerIcons; offset: PointerIconsOffset }> = {
+const TOOL_ICON: Record<PolygonMode, { icon: PointerIcons; offset: PointerIconsOffset }> = {
     [PolygonMode.Lasso]: { icon: PointerIcons.Lasso, offset: PointerIconsOffset.Lasso },
     [PolygonMode.Eraser]: { icon: PointerIcons.Eraser, offset: PointerIconsOffset.Eraser },
     [PolygonMode.Polygon]: { icon: PointerIcons.Polygon, offset: PointerIconsOffset.Polygon },
@@ -118,10 +118,10 @@ const mouseButtonEventValidation =
         }
     };
 
-export const leftMouseButtonHandler = (callback: CallbackPointerVoid): CallbackPointerVoid =>
+const leftMouseButtonHandler = (callback: CallbackPointerVoid): CallbackPointerVoid =>
     mouseButtonEventValidation(callback)(isLeftButton);
 
-export const rightMouseButtonHandler = (callback: CallbackPointerVoid): CallbackPointerVoid =>
+const rightMouseButtonHandler = (callback: CallbackPointerVoid): CallbackPointerVoid =>
     mouseButtonEventValidation(callback)(isEraserOrRightButton);
 
 export const leftRightMouseButtonHandler =

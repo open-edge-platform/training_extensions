@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { MediaStateMap } from '../../../../constants/shared-types';
+import type { MediaStateMap } from '../../../../constants/shared-types';
 import { toggleMultipleSelection, updateSelectedKeysTo } from './util';
 
 describe('toggleMultipleSelection', () => {

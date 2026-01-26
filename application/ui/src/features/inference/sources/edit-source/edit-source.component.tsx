@@ -7,8 +7,8 @@ import { ActionButton, Button, ButtonGroup, Divider, Flex, Form, Text, View } fr
 import { Back } from '@geti/ui/icons';
 import { useConnectSourceToPipeline } from 'hooks/api/pipeline.hook';
 
+import type { SourceConfigPayload } from '../../../../constants/shared-types';
 import { useSourceAction } from '../hooks/use-source-action.hook';
-import { SourceConfig } from '../util';
 
 import classes from './edit-source.module.scss';
 
@@ -20,7 +20,7 @@ interface EditSourceProps<T> {
     bodyFormatter: (formData: FormData) => T;
 }
 
-export const EditSource = <T extends SourceConfig>({
+export const EditSource = <T extends SourceConfigPayload>({
     config,
     onSaved,
     onBackToList,

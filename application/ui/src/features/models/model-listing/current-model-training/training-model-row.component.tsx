@@ -6,7 +6,7 @@ import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 
 import { ReactComponent as ThumbsUp } from '../../../../assets/icons/thumbs-up.svg';
-import { Job } from '../../../../constants/shared-types';
+import type { Job } from '../../../../constants/shared-types';
 import { useGetModels } from '../../hooks/api/use-get-models.hook';
 import { GRID_COLUMNS } from '../constants';
 import { BottomProgressBar } from './bottom-progress-bar.component';
