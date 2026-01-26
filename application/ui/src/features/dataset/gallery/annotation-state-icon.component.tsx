@@ -3,7 +3,7 @@
 
 import { CanceledIcon, CheckCircleOutlined } from '@geti/ui/icons';
 
-import { MediaItemState } from '../../../constants/shared-types';
+import type { MediaItemState } from '../../../constants/shared-types';
 
 import classes from './annotation-state-icon.module.scss';
 

@@ -5,7 +5,7 @@ import { ReactNode, useState } from 'react';
 
 import { Button, Flex } from '@geti/ui';
 
-import { ModelArchitectureWithPerformanceCategory } from '../../../../constants/shared-types';
+import type { ModelArchitectureWithPerformanceCategory } from '../../../../constants/shared-types';
 import { useTrainModel } from '../train-model-provider.component';
 import { AllModelArchitectures } from './all-model-architectures.component';
 import { RecommendedModelArchitectures } from './recommended-model-architectures.component';

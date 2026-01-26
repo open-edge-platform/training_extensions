@@ -303,7 +303,7 @@ const clipperShapeToPolygon = (path: ClipperPoint[]): Polygon => ({
     points: path.map(({ X, Y }) => ({ x: X, y: Y })),
 });
 
-export const getShapesDifference = runUnionOrDifference<Polygon>('difference', clipperShapeToPolygon);
+const getShapesDifference = runUnionOrDifference<Polygon>('difference', clipperShapeToPolygon);
 
 const findBiggerSubPath = (shape: ClipperShape): ClipperPoint[] => {
     const areas = shape.areas();

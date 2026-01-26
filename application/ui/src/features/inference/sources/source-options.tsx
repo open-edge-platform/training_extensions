@@ -8,13 +8,18 @@ import { ReactComponent as Image } from '../../../assets/icons/images-folder.svg
 import { ReactComponent as IpCameraIcon } from '../../../assets/icons/ip-camera.svg';
 import { ReactComponent as Video } from '../../../assets/icons/video-file.svg';
 import { ReactComponent as WebcamIcon } from '../../../assets/icons/webcam.svg';
+import {
+    ImagesFolderSourceConfig,
+    IPCameraSourceConfig,
+    USBCameraSourceConfig,
+    VideoFileSourceConfig,
+} from '../../../constants/shared-types';
 import { AddSource } from './add-source/add-source.component';
 import { DisclosureGroup } from './disclosure-group.component';
 import { ImageFolder } from './image-folder/image-folder.component';
 import { getImagesFolderInitialConfig, imagesFolderBodyFormatter } from './image-folder/utils';
 import { IpCamera } from './ip-camera/ip-camera.component';
 import { getIpCameraInitialConfig, ipCameraBodyFormatter } from './ip-camera/utils';
-import { ImagesFolderSourceConfig, IPCameraSourceConfig, USBCameraSourceConfig, VideoFileSourceConfig } from './util';
 import { getVideoFileInitialConfig, videoFileBodyFormatter } from './video-file/utils';
 import { VideoFile } from './video-file/video-file.component';
 import { getUsbCameraInitialConfig, usbCameraBodyFormatter } from './webcam/utils';

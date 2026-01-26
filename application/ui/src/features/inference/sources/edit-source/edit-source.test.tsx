@@ -5,11 +5,11 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { TestProviders } from 'test-utils/render';
 
+import type { IPCameraSourceConfig } from '../../../../constants/shared-types';
 import { useConnectSourceToPipeline } from '../../../../hooks/api/pipeline.hook';
 import { useSourceMutation } from '../hooks/use-source-mutation.hook';
 import { IpCamera } from '../ip-camera/ip-camera.component';
 import { getIpCameraInitialConfig, ipCameraBodyFormatter } from '../ip-camera/utils';
-import { IPCameraSourceConfig } from '../util';
 import { EditSource } from './edit-source.component';
 
 vi.mock('../hooks/use-source-mutation.hook');
