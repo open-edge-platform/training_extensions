@@ -10,6 +10,7 @@ import { useAnnotationActions } from '../../../../shared/annotator/annotation-ac
 import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
 import { useSelectedAnnotations } from '../../../../shared/annotator/select-annotation-provider.component';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
+import { AnnotationPredictionToggle } from './annotation-prediction-toggle/annotation-prediction-toggle.component';
 import { LabelPicker } from './label-picker.component';
 import { useSecondaryToolbarState } from './use-secondary-toolbar-state.hook';
 
@@ -80,6 +81,8 @@ export const SecondaryToolbar = ({ items, mediaItem, onClose, onSelectedMediaIte
         >
             <Grid width={'100%'} UNSAFE_className={classes.toolbarGrid} isHidden={isHidden}>
                 <Flex width={'100%'} UNSAFE_className={classes.toolbarSection} justifyContent={'space-between'}>
+                    <AnnotationPredictionToggle />
+
                     <LabelPicker selectedLabel={selectedLabel} labels={projectLabels} onSelect={handleSelect} />
 
                     <ButtonGroup>

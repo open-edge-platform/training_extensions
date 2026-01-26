@@ -29,7 +29,7 @@ const mapServerAnnotationsToLocal = (serverAnnotations: ServerAnnotation[], proj
             ...annotation,
             id: uuid(),
             labels,
-        } as Annotation;
+        };
     });
 };
 
