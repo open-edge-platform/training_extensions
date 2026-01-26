@@ -76,6 +76,8 @@ jobs:
 
       - name: Installing dependencies
         working-directory: library
+        env:
+          GIT_LFS_SKIP_SMUDGE: "1" # Skip downloading LFS files for deps installed via git
         run: |
           uv lock --check
           uv sync --frozen
@@ -108,7 +110,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.13"]
+        python-version: ["3.10", "3.14"]
     name: unit-tests-with-Python${{ matrix.python-version }}
     steps:
       - name: Checkout repository
@@ -131,6 +133,8 @@ jobs:
 
       - name: Installing dependencies
         working-directory: library
+        env:
+          GIT_LFS_SKIP_SMUDGE: "1" # Skip downloading LFS files for deps installed via git
         run: |
           uv lock --check
           uv sync --frozen
@@ -166,7 +170,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.13"]
+        python-version: ["3.10", "3.14"]
         task:
           - "multi_class_cls"
           - "multi_label_cls"
@@ -197,6 +201,8 @@ jobs:
 
       - name: Installing dependencies
         working-directory: library
+        env:
+          GIT_LFS_SKIP_SMUDGE: "1" # Skip downloading LFS files for deps installed via git
         run: |
           uv lock --check
           uv sync --frozen --extra cuda
