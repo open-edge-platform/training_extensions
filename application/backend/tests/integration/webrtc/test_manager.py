@@ -89,6 +89,7 @@ class TestWebRTCManager:
         await fxt_manager.cleanup_connection("test_id")
         assert "test_id" not in fxt_manager._pcs
 
+    @pytest.mark.asyncio
     def test_set_input_stores_data(self, fxt_manager):
         data = InputData(webrtc_id="test_id", conf_threshold=0.5)
         fxt_manager.set_input(data)
