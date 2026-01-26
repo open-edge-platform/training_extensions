@@ -213,4 +213,40 @@ test.describe('Models', () => {
 
         await expect(modelsPage.getModelByName('YOLOX Model v1')).toBeHidden();
     });
+
+    test('can set a model as active', async ({ modelsPage, network }) => {
+        let activatedModelId: string | null = null;
+
+        network.use(
+            http.patch('/api/projects/{project_id}/pipeline', async ({ request }) => {
+                const body = (await request.json()) as { model_id: string };
+                activatedModelId = body.model_id;
+                const foundModel = mockedModels.find((model) => model.id === body.model_id);
+
+                return HttpResponse.json({
+                    project_id: 'id-1',
+                    status: 'idle',
+                    source: null,
+                    sink: null,
+                    model: foundModel
+                        ? {
+                              id: foundModel.id,
+                              name: foundModel.name,
+                              architecture: foundModel.architecture,
+                              files_deleted: false,
+                              evaluations: [],
+                          }
+                        : null,
+                    device: 'cpu',
+                });
+            })
+        );
+
+        await modelsPage.goto();
+
+        await modelsPage.openModelMenu();
+        await modelsPage.clickSetActiveAction();
+
+        expect(activatedModelId).toBe('model-1');
+    });
 });

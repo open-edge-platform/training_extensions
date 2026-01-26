@@ -5,7 +5,7 @@ import { ActionButton, Content, Flex, Heading, Text } from '@geti/ui';
 import { Filter, GridSmall, Search, SortUpDown } from '@geti/ui/icons';
 
 import type { DatasetSubset } from '../../../../constants/shared-types';
-import { useGetDatasetItems } from '../../../../hooks/use-get-dataset-items.hook';
+import { useGetDatasetRevisionItems } from '../../../../hooks/use-get-dataset-revision-items.hook';
 import { SubsetGallery } from './subset-gallery.component';
 
 import styles from './model-training-datasets.module.scss';
@@ -14,6 +14,7 @@ type SubsetBoxProps = {
     title: string;
     subsetSplit: number;
     subset: DatasetSubset;
+    datasetRevisionId: string;
 };
 
 const BoxActions = () => {
@@ -35,10 +36,13 @@ const BoxActions = () => {
     );
 };
 
-const SubsetBox = ({ title, subsetSplit, subset }: SubsetBoxProps) => {
-    const { items, fetchNextPage, hasNextPage, isFetchingNextPage, isPending, totalCount } = useGetDatasetItems({
-        subset,
-    });
+const SubsetBox = ({ title, subsetSplit, subset, datasetRevisionId }: SubsetBoxProps) => {
+    const { items, fetchNextPage, hasNextPage, isFetchingNextPage, isPending, totalCount } = useGetDatasetRevisionItems(
+        {
+            datasetRevisionId,
+            subset,
+        }
+    );
 
     return (
         <Flex
@@ -62,6 +66,7 @@ const SubsetBox = ({ title, subsetSplit, subset }: SubsetBoxProps) => {
             <Content UNSAFE_className={styles.boxContent}>
                 <SubsetGallery
                     items={items}
+                    datasetRevisionId={datasetRevisionId}
                     fetchNextPage={fetchNextPage}
                     hasNextPage={hasNextPage}
                     isFetchingNextPage={isFetchingNextPage}
@@ -72,12 +77,21 @@ const SubsetBox = ({ title, subsetSplit, subset }: SubsetBoxProps) => {
     );
 };
 
-export const ModelTrainingDatasets = () => {
+export const ModelTrainingDatasets = ({ datasetRevisionId }: { datasetRevisionId: string | undefined | null }) => {
+    if (!datasetRevisionId) {
+        return <Text>No dataset revision found for this model</Text>;
+    }
+
     return (
         <Flex gap={'size-300'} width={'100%'}>
-            <SubsetBox title={'Training'} subsetSplit={70} subset={'training'} />
-            <SubsetBox title={'Validation'} subsetSplit={20} subset={'validation'} />
-            <SubsetBox title={'Testing'} subsetSplit={10} subset={'testing'} />
+            <SubsetBox title={'Training'} subsetSplit={70} subset={'training'} datasetRevisionId={datasetRevisionId} />
+            <SubsetBox
+                title={'Validation'}
+                subsetSplit={20}
+                subset={'validation'}
+                datasetRevisionId={datasetRevisionId}
+            />
+            <SubsetBox title={'Testing'} subsetSplit={10} subset={'testing'} datasetRevisionId={datasetRevisionId} />
         </Flex>
     );
 };
