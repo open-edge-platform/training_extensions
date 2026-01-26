@@ -17,9 +17,15 @@ interface Options extends RenderOptions {
     path: string;
 }
 
-export const TestProviders = ({ children }: { children: ReactNode }) => {
+export const TestProviders = ({
+    children,
+    client = queryClient,
+}: {
+    children: ReactNode;
+    client?: typeof queryClient;
+}) => {
     return (
-        <QueryClientProvider client={queryClient}>
+        <QueryClientProvider client={client}>
             <ThemeProvider>
                 <Suspense fallback={<IntelBrandedLoading />}>{children}</Suspense>
                 <Toast />

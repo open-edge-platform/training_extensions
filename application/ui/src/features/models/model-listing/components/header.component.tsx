@@ -5,10 +5,11 @@ import { Flex, Grid, Item, Picker, Text, ToggleButton } from '@geti/ui';
 
 import { useModelListing } from '../provider/model-listing-provider';
 import type { GroupByMode, SortBy } from '../types';
-import { ExpandableSearch } from './expandable-search.component';
+import { ExpandableSearch } from './expandable-search/expandable-search.component';
 
 export const Header = () => {
-    const { groupBy, onGroupByChange, onSortChange, onPinActiveToggle, searchBy, onSearchChange } = useModelListing();
+    const { groupBy, sortBy, onGroupByChange, onSortChange, onPinActiveToggle, searchBy, onSearchChange } =
+        useModelListing();
 
     return (
         <Grid columns={['auto auto 1fr auto']} gap={'size-100'} alignItems={'center'}>
@@ -29,7 +30,7 @@ export const Header = () => {
                     placeholder={'Sort by'}
                     width={'size-3000'}
                     aria-label={'Sort models'}
-                    defaultSelectedKey={'trained'}
+                    selectedKey={sortBy}
                     onSelectionChange={(key) => onSortChange(key as SortBy)}
                 >
                     <Item key='name'>Sort: Name</Item>

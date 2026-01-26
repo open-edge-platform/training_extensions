@@ -3,7 +3,7 @@
 
 import { createContext, useContext } from 'react';
 
-import type { Annotation as AnnotationType } from '../types';
+import type { Annotation as AnnotationType } from '../../../shared/types';
 
 const AnnotationContext = createContext<AnnotationType | null>(null);
 

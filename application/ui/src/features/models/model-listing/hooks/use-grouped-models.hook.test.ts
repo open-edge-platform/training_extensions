@@ -8,8 +8,8 @@ import { useGroupedModels } from './use-grouped-models.hook';
 
 const mockActiveModelId = vi.hoisted(() => vi.fn<() => string | undefined>(() => undefined));
 
-vi.mock('../../hooks/api/use-get-active-model-id.hook', () => ({
-    useGetActiveModelId: mockActiveModelId,
+vi.mock('../../hooks/api/use-get-active-model-architecture-id.hook', () => ({
+    useGetActiveModelArchitectureId: mockActiveModelId,
 }));
 
 describe('useGroupedModels', () => {
@@ -44,7 +44,6 @@ describe('useGroupedModels', () => {
                         status: 'successful',
                         dataset_revision_id: 'dataset-1',
                         label_schema_revision: {},
-                        configuration: {},
                     },
                 }),
                 getMockedModel({
@@ -53,7 +52,6 @@ describe('useGroupedModels', () => {
                         status: 'successful',
                         dataset_revision_id: 'dataset-1',
                         label_schema_revision: {},
-                        configuration: {},
                     },
                 }),
                 getMockedModel({
@@ -62,7 +60,6 @@ describe('useGroupedModels', () => {
                         status: 'successful',
                         dataset_revision_id: 'dataset-2',
                         label_schema_revision: {},
-                        configuration: {},
                     },
                 }),
             ];

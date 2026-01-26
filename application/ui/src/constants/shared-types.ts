@@ -4,10 +4,33 @@
 import type { components } from '../api/openapi-spec';
 
 export type Label = components['schemas']['LabelView'];
-export type DatasetItem = components['schemas']['DatasetItemView'];
-export type Model = components['schemas']['ModelView'];
-export type ModelArchitecture = components['schemas']['ModelArchitectureView'];
-export type DatasetSubset = components['schemas']['DatasetItemSubset'];
 
+export type Model = components['schemas']['ModelView'];
+export type ExtendedModel = components['schemas']['ExtendedModelView'];
+export type ModelArchitecture = components['schemas']['ModelArchitectureView'];
+export type ModelArchitectureWithPerformanceCategory = ModelArchitecture & { performanceCategory?: string };
+export type ModelFormat = components['schemas']['ModelFormat'];
+export type RecommendedModelArchitectures = components['schemas']['TopPicks'];
+
+export type Job = components['schemas']['JobView'];
+
+export type Media = components['schemas']['MediaView'];
 export type MediaItemState = 'accepted' | 'rejected';
 export type MediaStateMap = Map<string, MediaItemState>;
+
+export type DeviceType = components['schemas']['DeviceType'];
+export type TrainingDevice = {
+    type: DeviceType;
+    name: string;
+};
+
+export type DatasetSubset = components['schemas']['DatasetItemSubset'];
+export type DatasetItem = components['schemas']['DatasetItemView'];
+export type DatasetRevision = {
+    id: string;
+    name: string;
+};
+
+export type Project = components['schemas']['ProjectView'];
+
+export type TaskType = 'detection' | 'instance_segmentation' | 'classification';

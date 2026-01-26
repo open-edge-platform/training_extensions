@@ -61,9 +61,7 @@ describe('SinkMenu', () => {
             await userEvent.click(screen.getByRole('button', { name: /sink menu/i }));
             await userEvent.click(screen.getByRole('menuitem', { name: /Remove/i }));
 
-            await expect(await screen.findByLabelText('toast')).toHaveTextContent(
-                `${name} has been removed successfully!`
-            );
+            expect(await screen.findByLabelText('toast')).toHaveTextContent(`${name} has been removed successfully!`);
             expect(pipelinePatchSpy).not.toHaveBeenCalled();
         });
 
@@ -90,9 +88,7 @@ describe('SinkMenu', () => {
             await userEvent.click(screen.getByRole('button', { name: /sink menu/i }));
             await userEvent.click(screen.getByRole('menuitem', { name: /Connect/i }));
 
-            await expect(await screen.findByLabelText('toast')).toHaveTextContent(
-                `Successfully connected to "${name}"`
-            );
+            expect(await screen.findByLabelText('toast')).toHaveTextContent(`Successfully connected to "${name}"`);
         });
 
         it('error', async () => {
@@ -103,7 +99,9 @@ describe('SinkMenu', () => {
             await userEvent.click(screen.getByRole('button', { name: /sink menu/i }));
             await userEvent.click(screen.getByRole('menuitem', { name: /Connect/i }));
 
-            await expect(await screen.findByLabelText('toast')).toHaveTextContent(`Failed to connect to "${name}"`);
+            await expect(await screen.findByLabelText('toast')).toHaveTextContent(
+                'An unexpected error occurred. Please try again.'
+            );
         });
 
         it('disabled when sink is connected', async () => {

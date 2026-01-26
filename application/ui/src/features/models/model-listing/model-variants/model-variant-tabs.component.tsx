@@ -3,16 +3,16 @@
 
 import { Item, TabList, TabPanels, Tabs } from '@geti/ui';
 
-import type { SchemaModelView } from '../../../../api/openapi-spec';
 import { ReactComponent as ONNX } from '../../../../assets/icons/onnx-logo.svg';
 import { ReactComponent as OpenVINO } from '../../../../assets/icons/openvino-logo.svg';
 import { ReactComponent as Pytorch } from '../../../../assets/icons/pytorch-logo.svg';
+import type { ExtendedModel } from '../../../../constants/shared-types';
 import { ModelVariantTable } from './model-variant-table.component';
 
 import classes from './model-variant-tabs.module.scss';
 
 type ModelVariantsTabsProps = {
-    model: SchemaModelView;
+    model: ExtendedModel;
 };
 
 export const ModelVariantsTabs = ({ model }: ModelVariantsTabsProps) => {
@@ -31,10 +31,14 @@ export const ModelVariantsTabs = ({ model }: ModelVariantsTabsProps) => {
             </TabList>
             <TabPanels width={0} minWidth={'100%'} UNSAFE_className={classes.tabPanels}>
                 <Item key='openvino'>
-                    <ModelVariantTable model={model} />
+                    <ModelVariantTable model={model} format='openvino' />
                 </Item>
-                <Item key='pytorch'>Pytorch table here</Item>
-                <Item key='onnx'>Onnx table here</Item>
+                <Item key='pytorch'>
+                    <ModelVariantTable model={model} format='pytorch' />
+                </Item>
+                <Item key='onnx'>
+                    <ModelVariantTable model={model} format='onnx' />
+                </Item>
             </TabPanels>
         </Tabs>
     );

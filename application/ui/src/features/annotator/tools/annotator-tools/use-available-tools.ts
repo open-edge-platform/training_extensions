@@ -4,7 +4,7 @@
 import { BoundingBox, Polygon, SegmentAnythingIcon, Selector } from '@geti/ui/icons';
 import { useProjectTask } from 'hooks/use-project-task.hook';
 
-import { HOTKEYS } from '../../../dataset/media-preview/primary-toolbar/hotkeys/hotkeys-definition';
+import { HOTKEYS } from '../../../../shared/hotkeys-definition';
 import { ToolConfig } from '../interface';
 
 const SELECTION_TOOL_CONFIG: ToolConfig = {
@@ -19,23 +19,34 @@ const BOUNDING_BOX_TOOL_CONFIG: ToolConfig = {
     hotkey: HOTKEYS.boundingBoxTool,
     label: 'Bounding box',
 };
-const POLYGON_TOOL_CONFIG: ToolConfig = {
-    type: 'polygon',
-    icon: Polygon,
-    hotkey: HOTKEYS.polygonTool,
-    label: 'Polygon',
-};
 const AUTO_SEGMENTATION_CONFIG: ToolConfig = {
     type: 'sam',
     icon: SegmentAnythingIcon,
     hotkey: HOTKEYS.autoSegmentation,
     label: 'Auto segmentation',
 };
+const POLYGON_TOOL_CONFIG: ToolConfig = {
+    type: 'polygon',
+    icon: Polygon,
+    hotkey: HOTKEYS.polygonTool,
+    label: 'Polygon',
+};
+const MAGNETIC_LASSO_TOOL_CONFIG: ToolConfig = {
+    type: 'magnetic-lasso',
+    icon: Polygon,
+    hotkey: HOTKEYS.magneticLassoTool,
+    label: 'Magnetic Lasso',
+};
 
 const TASK_TOOL_CONFIG: Record<string, ToolConfig[]> = {
     classification: [],
     detection: [SELECTION_TOOL_CONFIG, BOUNDING_BOX_TOOL_CONFIG],
-    instance_segmentation: [SELECTION_TOOL_CONFIG, AUTO_SEGMENTATION_CONFIG, POLYGON_TOOL_CONFIG],
+    instance_segmentation: [
+        SELECTION_TOOL_CONFIG,
+        AUTO_SEGMENTATION_CONFIG,
+        POLYGON_TOOL_CONFIG,
+        MAGNETIC_LASSO_TOOL_CONFIG,
+    ],
 };
 
 export const useAvailableTools = (): ToolConfig[] => {

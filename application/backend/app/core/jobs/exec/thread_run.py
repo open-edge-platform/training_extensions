@@ -64,7 +64,7 @@ class ThreadRun(Runner[Job, ExecutionEvent]):
                 # Continue polling if no events available
                 continue
 
-    async def stop(self, graceful_timeout: float = 6.0, term_timeout: float = 3.0, kill_timeout: float = 1.0) -> None:  # noqa: ARG002
+    async def stop(self, graceful_timeout: float = 6.0, term_timeout: float = 3.0, kill_timeout: float = 1.0) -> None:
         """Stop the runner by setting the cancellation event."""
         self._cancel_event.set()
 

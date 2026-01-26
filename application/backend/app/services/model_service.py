@@ -3,6 +3,7 @@
 
 import shutil
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 from typing import cast
 from uuid import UUID
@@ -11,10 +12,11 @@ from loguru import logger
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.db.schema import ModelRevisionDB
-from app.models import ModelRevision, TrainingStatus
+from app.db.schema import EvaluationDB, MetricScoreDB, ModelRevisionDB
+from app.models import EvaluationResult, ModelRevision, TrainingStatus
+from app.models.model_revision import ModelFormat, ModelPrecision
 from app.models.training_configuration.configuration import TrainingConfiguration
-from app.repositories import LabelRepository, ModelRevisionRepository
+from app.repositories import EvaluationRepository, LabelRepository, ModelRevisionRepository
 
 from .base import BaseSessionManagedService, ResourceInUseError, ResourceNotFoundError, ResourceType
 from .parent_process_guard import parent_process_only
@@ -57,6 +59,53 @@ class ModelService(BaseSessionManagedService):
         if not model_rev_db:
             raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
         return ModelRevision.model_validate(model_rev_db)
+
+    def get_model_variants(self, project_id: UUID, model_id: UUID) -> list[dict]:
+        """
+        Get all variants and their information of a model.
+
+        Args:
+            project_id (UUID): The unique identifier of the project whose models to get.
+            model_id (UUID): The unique identifier of the model to retrieve variants for.
+
+        Returns:
+            list[dict]: A list of the models variants.
+        """
+        model_variants = []
+        for format in ModelFormat:
+            exists, paths = self.get_model_binary_files(project_id=project_id, model_id=model_id, format=format)
+            if exists:
+                model_size = sum(path.stat().st_size for path in paths)
+                model_info = {
+                    "format": format.value,
+                    "precision": ModelPrecision.FP16 if format != ModelFormat.PYTORCH else ModelPrecision.FP32,
+                    "weights_size": model_size,
+                }
+                model_variants.append(model_info)
+
+        return model_variants
+
+    def get_model_size_in_bytes(self, project_id: UUID, model_id: UUID) -> int:
+        """
+        Get the total size of the model and all its files in bytes.
+
+        Args:
+            project_id (UUID): The unique identifier of the project whose models to get.
+            model_id (UUID): The unique identifier of the model to retrieve size for.
+        Returns:
+            int: Total size of the model and all its files in bytes.
+        """
+
+        @lru_cache
+        def _cached_model_size_in_bytes(_model_path: Path) -> int:
+            return sum(f.stat().st_size for f in _model_path.glob("**/*") if f.is_file())
+
+        model_revision = self.get_model(project_id=project_id, model_id=model_id)
+        if model_revision.files_deleted:
+            return 0
+
+        model_path = self._projects_dir / str(project_id) / "models" / str(model_id)
+        return _cached_model_size_in_bytes(_model_path=model_path)
 
     def rename_model(self, project_id: UUID, model_id: UUID, model_metadata: dict[str, str]) -> ModelRevision:
         """
@@ -127,16 +176,15 @@ class ModelService(BaseSessionManagedService):
             project_id (UUID): The unique identifier of the project.
             model_id (UUID): The unique identifier of the model.
         """
-        try:
-            model_files_path = self.get_model_files_path(project_id=project_id, model_id=model_id)
-        except FileNotFoundError:
-            return
-        except ResourceNotFoundError:
-            return
+        for model_format in ModelFormat:
+            exists, _ = self.get_model_binary_files(project_id=project_id, model_id=model_id, format=model_format)
 
-        # Delete model files from disk
-        shutil.rmtree(model_files_path)
-        logger.info("Deleted model files at '{}'", model_files_path)
+            # Delete model files from disk, if at least 1 model file is present
+            if exists:
+                path = self._projects_dir / str(project_id) / "models" / str(model_id)
+                shutil.rmtree(path)
+                logger.info("Deleted model files at '{}'", path)
+                break
 
         # Mark as deleted in the database
         model_rev_repo = ModelRevisionRepository(project_id=str(project_id), db=self.db_session)
@@ -144,7 +192,7 @@ class ModelService(BaseSessionManagedService):
         model_rev_db.files_deleted = True
         model_rev_repo.update(model_rev_db)
 
-    def list_models(self, project_id: UUID) -> list[ModelRevision]:
+    def list_models(self, project_id: UUID, dataset_revision_id: UUID | None = None) -> list[ModelRevision]:
         """
         Get information about all available model revisions in a project.
 
@@ -154,13 +202,19 @@ class ModelService(BaseSessionManagedService):
 
         Args:
             project_id (UUID): The unique identifier of the project whose models to list.
+            dataset_revision_id (UUID | None, optional): The unique identifier of the dataset revision to filter on.
 
         Returns:
             list[ModelRevision]: A list of model revision objects representing all model
-                revisions in the project. Returns an empty list if the project has no models.
+                revisions in the project, optionally filtered on dataset revision.
+                Returns an empty list if the project has no models.
         """
         model_rev_repo = ModelRevisionRepository(project_id=str(project_id), db=self.db_session)
-        return [ModelRevision.model_validate(model_rev_db) for model_rev_db in model_rev_repo.list_all()]
+        training_dataset_id = str(dataset_revision_id) if dataset_revision_id is not None else None
+        return [
+            ModelRevision.model_validate(model_rev_db)
+            for model_rev_db in model_rev_repo.list_all(training_dataset_id=training_dataset_id)
+        ]
 
     def create_revision(self, metadata: ModelRevisionMetadata) -> None:
         """
@@ -196,34 +250,52 @@ class ModelService(BaseSessionManagedService):
             )
         )
 
-    def get_model_files_path(self, project_id: UUID, model_id: UUID) -> Path:
+    def get_model_binary_files(
+        self, project_id: UUID, model_id: UUID, format: ModelFormat
+    ) -> tuple[bool, tuple[Path, ...]]:
         """
-        Get the directory path containing the model files (model.xml and model.bin).
+        Get the paths to the model binary files.
 
         Args:
             project_id (UUID): The unique identifier of the project.
             model_id (UUID): The unique identifier of the model.
+            format (ModelFormat): The format of the model files to retrieve.
 
         Returns:
-            Path: The directory path containing the model files.
+            tuple[bool, tuple[Path, ...]]: A tuple where the first element indicates if the files exist,
+                and the second element is a tuple of Paths to the model files.
 
         Raises:
-            ResourceNotFoundError: If the model directory doesn't exist or required files are missing.
-            FileNotFoundError: If the directories or model files are not found in the expected location.
+            ResourceNotFoundError: If the model has been marked as deleted.
+            FileNotFoundError: If the model directory does not exist.
         """
         model_revision = self.get_model(project_id=project_id, model_id=model_id)
         if model_revision.files_deleted:
-            raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
+            return False, ()
 
         model_dir = self._projects_dir / str(project_id) / "models" / str(model_id)
-        if not model_dir.exists():
-            logger.error("Model directory not found: {}", model_dir)
-            raise FileNotFoundError
-
         xml_file = model_dir / "model.xml"
         bin_file = model_dir / "model.bin"
-        if not xml_file.exists() or not bin_file.exists():
-            logger.error("Model files missing in directory: {}", model_dir)
-            raise FileNotFoundError
+        onnx_file = model_dir / "model.onnx"
+        ckpt_file = model_dir / "model.ckpt"
 
-        return model_dir
+        if format == ModelFormat.OPENVINO and xml_file.exists() and bin_file.exists():
+            return True, (xml_file, bin_file)
+        if format == ModelFormat.ONNX and onnx_file.exists():
+            return True, (onnx_file,)
+        if format == ModelFormat.PYTORCH and ckpt_file.exists():
+            return True, (ckpt_file,)
+
+        return False, ()
+
+    def save_evaluation_result(self, result: EvaluationResult) -> None:
+        evaluation_db = EvaluationDB(
+            model_revision_id=str(result.model_revision_id),
+            dataset_revision_id=str(result.dataset_revision_id),
+            subset=result.subset,
+        )
+        metrics_db = [MetricScoreDB(metric=item[0], score=item[1]) for item in result.metrics.items()]
+        evaluation_db.metric_scores = metrics_db
+
+        evaluation_repo = EvaluationRepository(self.db_session)
+        evaluation_repo.save(evaluation_db)

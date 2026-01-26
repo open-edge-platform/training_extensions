@@ -7,16 +7,16 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { MediaItem } from '../../../../components/media-item/media-item.component';
 import { MediaThumbnail } from '../../../../components/media-thumbnail/media-thumbnail.component';
-import type { DatasetItem } from '../../../../constants/shared-types';
+import type { Media } from '../../../../constants/shared-types';
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
 import { getThumbnailUrl } from '../../../../shared/media-url.utils';
 
 import classes from './sidebar-media-item.module.scss';
 
 type SidebarMediaItemProps = {
-    item: DatasetItem;
+    item: Media;
     isSelected: boolean;
-    onSelectedMediaItem: (item: DatasetItem) => void;
+    onSelectedMediaItem: (item: Media) => void;
 };
 
 export const SidebarMediaItem = ({ item, isSelected, onSelectedMediaItem }: SidebarMediaItemProps) => {

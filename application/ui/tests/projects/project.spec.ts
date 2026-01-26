@@ -18,22 +18,16 @@ const fillProjectForm = async ({
     task: string;
     labelNames: string[];
 }) => {
-    // Edit name
-    await page.getByRole('button', { name: /Project #1/ }).click();
-    await page.getByLabel(/edit project name/).fill(name);
-    await page.getByRole('button', { name: /Confirm/ }).click();
+    // Set the project name
+    await page.getByRole('textbox', { name: 'Project name input' }).fill(name);
 
-    // Edit task
+    // Select task
     await page.getByLabel(task, { exact: true }).click();
 
-    // Edit first label
-    await page.getByLabel('Label input for Object').fill(labelNames[0]);
-
     // Add the rest of the labels
-    for (let i = 1; i < labelNames.length; i++) {
-        await page.getByRole('button', { name: /add next object/i }).click();
-
-        await page.getByLabel('Label input for Object').fill(labelNames[i]);
+    for (let i = 0; i < labelNames.length; i++) {
+        await page.getByRole('textbox', { name: 'Create label input' }).fill(labelNames[i]);
+        await page.getByRole('button', { name: /Create label/ }).click();
     }
 };
 
@@ -126,6 +120,9 @@ test.describe('Project', () => {
                 ]);
             })
         );
+
+        await expect(page.getByText('Person')).toBeVisible();
+        await expect(page.getByText('Animal')).toBeVisible();
 
         await page.getByRole('button', { name: /Create project/ }).click();
 

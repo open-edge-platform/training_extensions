@@ -5,10 +5,10 @@ import { createContext, ReactNode, useContext, useState, type Dispatch, type Set
 
 import { useProjectLabels } from 'hooks/use-project-labels.hook';
 
-import type { DatasetItem, Label } from '../../constants/shared-types';
+import type { Label, Media } from '../../constants/shared-types';
 import { useLoadImageQuery } from '../../features/annotator/hooks/use-load-image-query.hook';
 import type { ToolType } from '../../features/annotator/tools/interface';
-import type { RegionOfInterest } from '../../features/annotator/types';
+import type { RegionOfInterest } from '../types';
 
 type AnnotatorContext = {
     // Tools
@@ -22,7 +22,7 @@ type AnnotatorContext = {
     labels: Label[];
 
     // Media item
-    mediaItem: DatasetItem;
+    mediaItem: Media;
     image: ImageData;
     roi: RegionOfInterest;
 };
@@ -44,7 +44,7 @@ const useSelectedLabel = () => {
     };
 };
 
-export const AnnotatorProvider = ({ mediaItem, children }: { mediaItem: DatasetItem; children: ReactNode }) => {
+export const AnnotatorProvider = ({ mediaItem, children }: { mediaItem: Media; children: ReactNode }) => {
     const [activeTool, setActiveTool] = useState<ToolType>('selection');
 
     const { selectedLabel, selectedLabelId, setSelectedLabelId, labels } = useSelectedLabel();

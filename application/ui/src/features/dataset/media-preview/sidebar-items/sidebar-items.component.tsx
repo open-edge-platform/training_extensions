@@ -6,7 +6,7 @@ import { useRef } from 'react';
 import { Size, useUnwrapDOMRef, View } from '@geti/ui';
 
 import { VirtualizerGridLayout } from '../../../../components/virtualizer-grid-layout/virtualizer-grid-layout.component';
-import type { DatasetItem } from '../../../../constants/shared-types';
+import type { Media } from '../../../../constants/shared-types';
 import { useSelectedData } from '../../selected-data-provider.component';
 import { SidebarMediaItem } from './sidebar-media-item.component';
 import { useKeyboardNavigation } from './use-keyboard-navigation.hook';
@@ -20,12 +20,12 @@ const layoutOptions = {
 };
 
 type SidebarItemsProps = {
-    items: DatasetItem[];
+    items: Media[];
     hasNextPage: boolean;
     isFetchingNextPage: boolean;
-    mediaItem: DatasetItem;
+    mediaItem: Media;
     fetchNextPage: () => void;
-    onSelectedMediaItem: (item: DatasetItem) => void;
+    onSelectedMediaItem: (item: Media) => void;
 };
 
 export const SidebarItems = ({

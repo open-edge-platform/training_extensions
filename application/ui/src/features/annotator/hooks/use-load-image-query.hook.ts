@@ -5,10 +5,10 @@ import { useSuspenseQuery, UseSuspenseQueryResult } from '@tanstack/react-query'
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { API_BASE_URL } from '../../../api/client';
-import type { DatasetItem } from '../../../constants/shared-types';
+import type { Media } from '../../../constants/shared-types';
 import { getImageData, loadImage } from '../tools/utils';
 
-export const useLoadImageQuery = (mediaItem: DatasetItem | undefined): UseSuspenseQueryResult<ImageData, unknown> => {
+export const useLoadImageQuery = (mediaItem: Media | undefined): UseSuspenseQueryResult<ImageData, unknown> => {
     const projectId = useProjectIdentifier();
 
     return useSuspenseQuery({
@@ -18,7 +18,7 @@ export const useLoadImageQuery = (mediaItem: DatasetItem | undefined): UseSuspen
                 throw new Error("Can't fetch undefined media item");
             }
 
-            const imageUrl = `${API_BASE_URL}/api/projects/${projectId}/dataset/items/${mediaItem.id}/binary`;
+            const imageUrl = `${API_BASE_URL}/api/projects/${projectId}/dataset/media/${mediaItem.id}/binary`;
             const image = await loadImage(imageUrl);
 
             return getImageData(image);

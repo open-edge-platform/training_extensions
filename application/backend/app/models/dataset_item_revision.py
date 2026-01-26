@@ -3,7 +3,7 @@
 
 from uuid import UUID
 
-from app.models import DatasetItemFormat, DatasetItemSubset
+from app.models import DatasetItemSubset, MediaFormat
 from app.models.base import BaseEntity
 
 
@@ -22,7 +22,7 @@ class DatasetRevisionItem(BaseEntity):
 
     id: UUID
     name: str
-    format: DatasetItemFormat
+    format: MediaFormat
     width: int
     height: int
     subset: DatasetItemSubset

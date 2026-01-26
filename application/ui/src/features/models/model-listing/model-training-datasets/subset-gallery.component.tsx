@@ -8,7 +8,7 @@ import { MediaItem } from '../../../../components/media-item/media-item.componen
 import { MediaThumbnail } from '../../../../components/media-thumbnail/media-thumbnail.component';
 import { VirtualizerGridLayout } from '../../../../components/virtualizer-grid-layout/virtualizer-grid-layout.component';
 import type { DatasetItem } from '../../../../constants/shared-types';
-import { getThumbnailUrl } from '../../../../shared/media-url.utils';
+import { getDatasetRevisionThumbnailUrl } from '../../../../shared/media-url.utils';
 
 const layoutOptions = {
     minSpace: new Size(4, 4),
@@ -19,6 +19,7 @@ const layoutOptions = {
 
 type SubsetGalleryProps = {
     items: DatasetItem[];
+    datasetRevisionId: string;
     fetchNextPage: () => void;
     hasNextPage: boolean;
     isFetchingNextPage: boolean;
@@ -27,6 +28,7 @@ type SubsetGalleryProps = {
 
 export const SubsetGallery = ({
     items,
+    datasetRevisionId,
     hasNextPage,
     isFetchingNextPage,
     isLoading,
@@ -63,8 +65,8 @@ export const SubsetGallery = ({
                     <MediaItem
                         contentElement={() => (
                             <MediaThumbnail
-                                alt={item.name}
-                                url={getThumbnailUrl(projectId, item.id)}
+                                alt={item.id}
+                                url={getDatasetRevisionThumbnailUrl(projectId, datasetRevisionId, item.id)}
                                 // TODO: leverage onDoubleClick to open a dialog
                             />
                         )}

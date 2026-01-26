@@ -1,8 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { Annotation } from '../../../shared/types';
 import { useCanvasSettings } from '../../dataset/media-preview/primary-toolbar/settings/canvas-settings-provider.component';
-import { Annotation } from '../types';
 import { AnnotationShapeWithLabels } from './annotation-shape-with-labels.component';
 import { AnnotationShapeWithoutLabels } from './annotation-shape-without-labels.component';
 

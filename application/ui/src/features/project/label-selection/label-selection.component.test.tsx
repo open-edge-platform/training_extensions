@@ -2,17 +2,27 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Toast } from '@geti/ui';
+import userEvent from '@testing-library/user-event';
 import { getMockedLabel } from 'mocks/mock-labels';
-import { fireEvent, render, screen, waitFor } from 'test-utils/render';
+import { fireEvent, render, screen } from 'test-utils/render';
 
+import { Label, TaskType } from '../../../constants/shared-types';
 import { LabelSelection } from './label-selection.component';
 
 const mockLabels = [getMockedLabel({ id: 'id-1', name: 'Car' })];
 
-const App = ({ labels = mockLabels, setLabels = vi.fn() }) => {
+const App = ({
+    labels = mockLabels,
+    setLabels = vi.fn(),
+    taskType = 'detection',
+}: {
+    labels?: Label[];
+    setLabels?: () => void;
+    taskType?: TaskType;
+}) => {
     return (
         <>
-            <LabelSelection labels={labels} setLabels={setLabels} />
+            <LabelSelection labels={labels} setLabels={setLabels} taskType={taskType} />
             <Toast />
         </>
     );
@@ -22,19 +32,23 @@ describe('LabelSelection', () => {
     it('renders initial label item', () => {
         render(<App />);
 
-        expect(screen.getByDisplayValue('Car')).toBeInTheDocument();
+        expect(screen.getByText('Car')).toBeInTheDocument();
     });
 
-    it('adds a new label item when "Add next object" is clicked', () => {
+    it('creates a new label item', async () => {
         const mockSetLabels = vi.fn();
         render(<App setLabels={mockSetLabels} />);
 
-        const addButton = screen.getByRole('button', { name: /add next object/i });
+        const addButton = screen.getByRole('button', { name: /create label/i });
+        const input = screen.getByRole('textbox', { name: 'Create label input' });
+        const labelName = 'Object';
+
+        await userEvent.type(input, labelName);
+
         fireEvent.click(addButton);
 
-        expect(screen.getByLabelText('Label input for Car')).toBeInTheDocument();
         expect(mockSetLabels).toHaveBeenCalledWith(
-            expect.arrayContaining([mockLabels[0], expect.objectContaining({ name: 'Object' })])
+            expect.arrayContaining([mockLabels[0], expect.objectContaining({ name: labelName })])
         );
     });
 
@@ -50,38 +64,8 @@ describe('LabelSelection', () => {
         const deleteButtonObject = screen.getByRole('button', { name: /delete label people/i });
         fireEvent.click(deleteButtonObject);
 
-        expect(screen.getByLabelText('Label input for Car')).toBeInTheDocument();
+        expect(screen.getByText('Car')).toBeInTheDocument();
+        expect(screen.getByText('People')).toBeInTheDocument();
         expect(mockSetLabels).toHaveBeenCalledWith(expect.arrayContaining([mockLabels[0]]));
-    });
-
-    it('does not delete the last remaining label item', async () => {
-        render(<App />);
-
-        const deleteButton = screen.getByRole('button', { name: /delete label car/i });
-        fireEvent.click(deleteButton);
-
-        expect(screen.getByLabelText('Label input for Car')).toBeInTheDocument();
-
-        await waitFor(() => {
-            expect(screen.getByText('At least one object is required')).toBeInTheDocument();
-        });
-    });
-
-    it('can edit the label name', () => {
-        const mockSetLabels = vi.fn();
-        render(<App setLabels={mockSetLabels} />);
-
-        const input = screen.getByLabelText('Label input for Car');
-        fireEvent.change(input, { target: { value: 'Truck' } });
-
-        expect(mockSetLabels).toHaveBeenCalledWith(
-            expect.arrayContaining([
-                expect.objectContaining({
-                    id: 'id-1',
-                    name: 'Truck',
-                    color: expect.any(String),
-                }),
-            ])
-        );
     });
 });

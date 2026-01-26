@@ -60,9 +60,10 @@ table(labels) {
   hotkey : TEXT
 }
 
-table(dataset_items) {
+table(media) {
   pk(id) : UUID
   fk(project_id) : UUID NOT NULL
+  type : TEXT NOT NULL
   --
   'Media-related details
   name : TEXT NOT NULL
@@ -71,13 +72,32 @@ table(dataset_items) {
   height : INTEGER NOT NULL
   size : INTEGER NOT NULL
   --
+  'Video related details
+  fps : INTEGER NULLABLE
+  frame_count : INTEGER NULLABLE
+  --
+  ' Source details
+  source_id : UUID
+}
+
+table(video_frames) {
+  ' Reference to a media record with type 'video_frame' containing all the attributes and metadata of the video frame itself
+  fk(id) : UUID NOT NULL
+  ' Reference to the video media record this frame belongs to with certain timestamp
+  fk(video_id) : UUID NOT NULL
+  --
+  'Video frame related details
+  timestamp : INTEGER NOT NULL
+}
+
+table(dataset_items) {
+  fk(id) : UUID NOT NULL
+  fk(project_id) : UUID NOT NULL
+  --
   'Annotation details
   annotation_data : JSON
   user_reviewed : BOOLEAN NOT NULL
   prediction_model_id : UUID
-  --
-  ' Source details
-  source_id : UUID
   --
   'ML details
   subset : TEXT NOT NULL
@@ -144,13 +164,13 @@ table(metric_scores) {
 object MediaBinary {
   <i>format</i> : jpg / png
   <i>prefix</i> : projects/{project_id}/dataset/
-  <i>filename</i> : {dataset_item_id}.{format}
+  <i>filename</i> : {id}.{format}
 }
 
 object MediaThumbnail {
   <i>format</i> : jpg
   <i>prefix</i> : projects/{project_id}/dataset/
-  <i>filename</i> : {dataset_item_id}-thumb.jpg
+  <i>filename</i> : {id}-thumb.jpg
 }
 
 object ModelBinary {
@@ -198,11 +218,17 @@ model_revisions ||---o{ evaluations
 evaluations ||---|{ metric_scores
 evaluations |o---|| dataset_revisions
 
-dataset_items ||---|| MediaBinary
-dataset_items ||---|| MediaThumbnail
 dataset_revisions ||---|| DatasetRevision
 model_revisions ||---o| ModelBinary
 model_revisions ||---o| ModelTrainingLog
 model_revisions ||---o| ModelTrainingMetrics
+
+
+media ||---o| dataset_items
+media ||---o| video_frames
+media ||---o{ video_frames
+media ||---|| MediaBinary
+media ||---|| MediaThumbnail
+media ||---o| sources
 
 @enduml

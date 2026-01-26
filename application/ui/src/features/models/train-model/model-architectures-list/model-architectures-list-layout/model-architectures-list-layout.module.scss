@@ -1,0 +1,4 @@
+.gridLayout {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--spectrum-global-dimension-size-3400)), 1fr));
+    gap: var(--spectrum-global-dimension-size-300);
+}
