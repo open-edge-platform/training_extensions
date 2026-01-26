@@ -3,7 +3,7 @@
 
 import { Suspense } from 'react';
 
-import { Content, Dialog, dimensionValue, Divider, Flex, Grid, Heading, Loading, View } from '@geti/ui';
+import { Content, Dialog, dimensionValue, Flex, Grid, Loading, View } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isObject } from 'lodash-es';
 
@@ -57,11 +57,7 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
     );
 
     return (
-        <Dialog UNSAFE_style={{ width: '95vw', height: '95vh' }}>
-            <Heading>Preview</Heading>
-
-            <Divider />
-
+        <Dialog>
             <Content UNSAFE_style={{ backgroundColor: 'var(--spectrum-global-color-gray-50)' }}>
                 <Grid
                     gap='size-125'

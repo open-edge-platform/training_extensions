@@ -55,16 +55,6 @@ const Header = () => {
                         </Flex>
                     </Item>
                     <Item
-                        textValue='Inference page showing live inference on your project'
-                        key={'inference'}
-                        href={paths.project.inference({ projectId })}
-                    >
-                        <Flex alignItems='center' gap='size-100'>
-                            <LiveFeedIcon style={iconStyles} />
-                            Inference
-                        </Flex>
-                    </Item>
-                    <Item
                         textValue='Models page to visualise your models'
                         key={'models'}
                         href={paths.project.models({ projectId })}
@@ -72,6 +62,16 @@ const Header = () => {
                         <Flex alignItems='center' gap='size-100'>
                             <Webhook style={iconStyles} />
                             Models
+                        </Flex>
+                    </Item>
+                    <Item
+                        textValue='Inference page showing live inference on your project'
+                        key={'inference'}
+                        href={paths.project.inference({ projectId })}
+                    >
+                        <Flex alignItems='center' gap='size-100'>
+                            <LiveFeedIcon style={iconStyles} />
+                            Inference
                         </Flex>
                     </Item>
                 </TabList>

@@ -43,7 +43,6 @@ export const InferenceDevices = () => {
     return (
         <Picker
             maxWidth='size-3000'
-            label='Inference Compute: '
             aria-label='inference compute'
             labelAlign='end'
             labelPosition='side'
