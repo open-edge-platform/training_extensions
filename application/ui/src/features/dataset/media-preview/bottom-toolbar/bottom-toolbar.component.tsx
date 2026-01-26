@@ -23,12 +23,7 @@ export const BottomToolbar = () => {
                 <Flex UNSAFE_className={classes.toolbarSection} gap={'size-100'}>
                     <Text UNSAFE_className={classes.filename}>VID_20210209_160431.jpg (1080x1920 px)</Text>
                     <Tag style={{ backgroundColor: 'var(--coral-shade-1)' }} prefix={<Search />} text={'For Review'} />
-                    <Picker
-                        // selectedKey={selectedLabel?.id}
-                        placeholder={'Select subset'}
-                        // onSelectionChange={onSelect}
-                        aria-label='Subset picker'
-                    >
+                    <Picker placeholder={'Select subset'} aria-label='Subset picker'>
                         <Item>Validation</Item>
                         <Item>Testing</Item>
                         <Item>Training</Item>
