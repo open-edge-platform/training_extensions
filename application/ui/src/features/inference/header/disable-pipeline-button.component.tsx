@@ -5,7 +5,7 @@ import { Button, toast } from '@geti/ui';
 import { useDisablePipeline, usePipeline } from 'hooks/api/pipeline.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
-const useTogglePipeline = () => {
+export const DisablePipelineButton = () => {
     const projectId = useProjectIdentifier();
 
     const pipelineQuery = usePipeline();
@@ -18,30 +18,22 @@ const useTogglePipeline = () => {
         onSuccess: () => {
             toast({
                 type: 'success',
-                message: isPipelineEnabled ? 'Pipeline disabled successfully' : 'Pipeline enabled successfully',
+                message: 'Pipeline disabled successfully',
             });
         },
         onError: () => {
             toast({
                 type: 'error',
-                message: isPipelineEnabled ? 'Failed to disable pipeline' : 'Failed to enable pipeline',
+                message: 'Failed to disable pipeline',
             });
         },
     };
 
-    return {
-        isPipelineEnabled,
-        deactivatePipeline: () => {
-            disablePipelineMutation.mutate(mutationParams, mutationOptions);
-        },
-    };
-};
-
-export const DisablePipelineButton = () => {
-    const { deactivatePipeline, isPipelineEnabled } = useTogglePipeline();
-
     return (
-        <Button isDisabled={!isPipelineEnabled} onPress={deactivatePipeline}>
+        <Button
+            isDisabled={!isPipelineEnabled}
+            onPress={() => disablePipelineMutation.mutate(mutationParams, mutationOptions)}
+        >
             Disable Pipeline
         </Button>
     );
