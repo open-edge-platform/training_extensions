@@ -54,3 +54,6 @@ DatasetItemID = Annotated[
 DatasetRevisionID = Annotated[
     UUID, Depends(lambda dataset_revision_id: validate_uuid_param(dataset_revision_id, "dataset_revision_id"))
 ]
+StagedDatasetID = Annotated[
+    UUID, Depends(lambda staged_dataset_id: validate_uuid_param(staged_dataset_id, "staged_dataset_id"))
+]
