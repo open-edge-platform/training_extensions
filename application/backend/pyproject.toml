@@ -3,7 +3,7 @@ name = "geti-tune"
 version = "0.1.0"
 description = "Geti Tune"
 readme = "readme.md"
-requires-python = ">=3.13,<3.14"
+requires-python = ">=3.14,<3.15"
 
 dependencies = [
     "fastapi[standard]~=0.121.2",
@@ -163,5 +163,5 @@ pythonpath = [
 ]
 
 [tool.pyrefly]
-python-version = "3.13.0"
+python-version = "3.14.0"
 ignore-missing-imports = ["*"]
