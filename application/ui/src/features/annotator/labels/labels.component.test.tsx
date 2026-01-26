@@ -113,9 +113,7 @@ describe('Labels', () => {
 
     it('does not update annotations when no annotations are selected', () => {
         mockSelectedAnnotations.current = new Set();
-        mockAnnotations.current = [
-            { id: 'annotation-1', labels: [mockLabels[0]], shape: { type: 'RECTANGLE' } },
-        ];
+        mockAnnotations.current = [{ id: 'annotation-1', labels: [mockLabels[0]], shape: { type: 'RECTANGLE' } }];
 
         render(<Labels />);
 

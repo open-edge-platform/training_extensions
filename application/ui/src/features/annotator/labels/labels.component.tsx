@@ -26,7 +26,7 @@ const calculateVisibleLabels = (container: HTMLDivElement): number => {
 
     badgeElements.forEach((badge, index) => {
         const badgeWidth = (badge as HTMLElement).offsetWidth;
-        const gap = index > 0  ? BADGE_GAP : 0;
+        const gap = index > 0 ? BADGE_GAP : 0;
 
         if (totalWidth + badgeWidth + gap <= containerWidth - showMoreReservedWidth) {
             totalWidth += badgeWidth + gap;
@@ -115,10 +115,7 @@ export const Labels = () => {
 
     return (
         <div className={classes.wrapper}>
-            <div
-                ref={containerRef}
-                className={clsx(classes.labelsContainer, { [classes.expanded]: isExpanded })}
-            >
+            <div ref={containerRef} className={clsx(classes.labelsContainer, { [classes.expanded]: isExpanded })}>
                 {labels.map((label, index) => (
                     <LabelBadge
                         key={label.id}

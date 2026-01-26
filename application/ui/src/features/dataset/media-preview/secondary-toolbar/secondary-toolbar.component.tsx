@@ -6,8 +6,8 @@ import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { isEmpty } from 'lodash-es';
 
 import type { Media } from '../../../../constants/shared-types';
-import { Labels } from '../../../annotator/labels/labels.component';
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
+import { Labels } from '../../../annotator/labels/labels.component';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
 import { useSecondaryToolbarState } from './use-secondary-toolbar-state.hook';
 
