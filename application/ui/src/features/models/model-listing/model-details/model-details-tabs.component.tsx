@@ -67,7 +67,7 @@ export const ModelDetailsTabs = ({ modelId }: ModelDetailsTabsProps) => {
                     <ModelTrainingParameters />
                 </Item>
                 <Item key='datasets'>
-                    <ModelTrainingDatasets model={model} />
+                    <ModelTrainingDatasets datasetRevisionId={model.training_info.dataset_revision_id} />
                 </Item>
             </TabPanels>
         </Tabs>

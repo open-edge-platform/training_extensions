@@ -4,7 +4,7 @@
 import { ActionButton, Content, Flex, Heading, Text } from '@geti/ui';
 import { Filter, GridSmall, Search, SortUpDown } from '@geti/ui/icons';
 
-import type { DatasetSubset, Model } from '../../../../constants/shared-types';
+import type { DatasetSubset } from '../../../../constants/shared-types';
 import { useGetDatasetRevisionItems } from '../../../../hooks/use-get-dataset-revision-items.hook';
 import { SubsetGallery } from './subset-gallery.component';
 
@@ -77,9 +77,7 @@ const SubsetBox = ({ title, subsetSplit, subset, datasetRevisionId }: SubsetBoxP
     );
 };
 
-export const ModelTrainingDatasets = ({ model }: { model: Model }) => {
-    const datasetRevisionId = model.training_info.dataset_revision_id;
-
+export const ModelTrainingDatasets = ({ datasetRevisionId }: { datasetRevisionId: string | undefined | null }) => {
     if (!datasetRevisionId) {
         return <Text>No dataset revision found for this model</Text>;
     }
