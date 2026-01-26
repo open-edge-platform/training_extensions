@@ -10,7 +10,8 @@ import { useAnnotationActions } from '../../../shared/annotator/annotation-actio
 import { useAnnotationVisibility } from '../../../shared/annotator/annotation-visibility-provider.component';
 import type { Annotation, Polygon } from '../../../shared/types';
 import { AnnotationLabels } from './annotation-labels.component';
-import { AnnotationShape } from './annotation-shape.component';
+import { AnnotationShape } from './annotation-shape/annotation-shape.component';
+import { FullImageShape } from './full-image-shape/full-image-shape.component';
 
 type AnnotationShapeProps = {
     annotation: Annotation;
@@ -29,6 +30,15 @@ export const AnnotationShapeWithLabels = ({ annotation }: AnnotationShapeProps) 
 
         updateAnnotations([updatedAnnotation]);
     };
+
+    if (shape.type === 'full_image') {
+        return (
+            <g>
+                <FullImageShape annotation={annotation} />
+                <AnnotationLabels labels={labels} onRemove={removeLabels} />
+            </g>
+        );
+    }
 
     if (shape.type === 'rectangle') {
         return (

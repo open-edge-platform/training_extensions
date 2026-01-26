@@ -3,12 +3,11 @@
 
 import { createContext, ReactNode, useContext, useState, type Dispatch, type SetStateAction } from 'react';
 
-import { useProjectLabels } from 'hooks/use-project-labels.hook';
-import { useSelectedProject } from 'hooks/use-selected-project';
-
 import type { Label, Media } from '../../constants/shared-types';
 import { useLoadImageQuery } from '../../features/annotator/hooks/use-load-image-query.hook';
 import type { ToolType } from '../../features/annotator/tools/interface';
+import { useProjectLabels } from '../../hooks/use-project-labels.hook';
+import { useSelectedProject } from '../../hooks/use-selected-project.hook';
 import type { RegionOfInterest } from '../types';
 
 type AnnotatorContext = {

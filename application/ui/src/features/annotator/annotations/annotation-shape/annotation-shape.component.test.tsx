@@ -5,7 +5,7 @@ import { screen } from '@testing-library/react';
 import { getMockedAnnotation } from 'mocks/mock-annotation';
 import { render } from 'test-utils/render';
 
-import type { Annotation, Polygon, Rect } from '../../../shared/types';
+import type { Annotation, Polygon, Rect } from '../../../../shared/types';
 import { AnnotationShape } from './annotation-shape.component';
 
 type AnnotationRect = Annotation & { shape: Rect };
