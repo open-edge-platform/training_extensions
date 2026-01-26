@@ -6,10 +6,11 @@ import { Key } from 'react';
 import polylabel from 'polylabel';
 
 import type { Label } from '../../../constants/shared-types';
+import { useSelectedProject } from '../../../hooks/use-selected-project.hook';
 import { useAnnotationActions } from '../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotationVisibility } from '../../../shared/annotator/annotation-visibility-provider.component';
-import type { Annotation, Polygon } from '../../../shared/types';
-import { AnnotationLabels } from './annotation-labels.component';
+import type { Annotation } from '../../../shared/types';
+import { AnnotationLabels } from './annotation-labels/annotation-labels.component';
 import { AnnotationShape } from './annotation-shape/annotation-shape.component';
 import { FullImageShape } from './full-image-shape/full-image-shape.component';
 
@@ -18,17 +19,22 @@ type AnnotationShapeProps = {
 };
 
 export const AnnotationShapeWithLabels = ({ annotation }: AnnotationShapeProps) => {
-    const { shape, labels } = annotation;
+    const selectedProject = useSelectedProject();
     const { isVisible } = useAnnotationVisibility();
-    const { updateAnnotations } = useAnnotationActions();
+    const { updateAnnotations, deleteAnnotations } = useAnnotationActions();
+
+    const { shape, labels } = annotation;
+    const isClassificationProject = selectedProject.task.task_type === 'classification';
 
     const removeLabels = (labelId: Key | null) => {
-        const updatedAnnotation = {
-            ...annotation,
-            labels: annotation.labels.filter((label) => label.id !== labelId) as Label[],
-        };
+        const updatedLabels = annotation.labels.filter((label) => label.id !== labelId) as Label[];
+        const hasNoLabels = updatedLabels.length === 0;
 
-        updateAnnotations([updatedAnnotation]);
+        if (isClassificationProject && hasNoLabels) {
+            deleteAnnotations([annotation.id]);
+        } else {
+            updateAnnotations([{ ...annotation, labels: updatedLabels }]);
+        }
     };
 
     if (shape.type === 'full_image') {
@@ -49,8 +55,7 @@ export const AnnotationShapeWithLabels = ({ annotation }: AnnotationShapeProps) 
         );
     }
 
-    const polygonPoints = (shape as Polygon).points;
-    const polygonCoords = [polygonPoints.map((point) => [point.x, point.y])];
+    const polygonCoords = [shape.points.map((point) => [point.x, point.y])];
     const [labelX, labelY] = polylabel(polygonCoords);
 
     return (

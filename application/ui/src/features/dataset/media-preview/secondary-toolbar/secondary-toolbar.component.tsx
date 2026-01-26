@@ -4,9 +4,10 @@
 import { ActionButton, Button, ButtonGroup, dimensionValue, Flex, Key, Text } from '@geti/ui';
 import { Checkmark, CloseSemiBold } from '@geti/ui/icons';
 import { useQueryClient, type QueryClient } from '@tanstack/react-query';
+import { useSelectedProject } from 'hooks/use-selected-project.hook';
 import { isEmpty } from 'lodash-es';
 
-import type { Media } from '../../../../constants/shared-types';
+import type { Label, Media } from '../../../../constants/shared-types';
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
 import { useSelectedAnnotations } from '../../../../shared/annotator/select-annotation-provider.component';
@@ -17,6 +18,7 @@ import { AnnotatorModes } from './annotator-modes/annotator-modes-toggle.compone
 import type { AnnotatorMode } from './annotator-modes/mode';
 import { LabelPicker } from './label-picker.component';
 import { useSecondaryToolbarState } from './use-secondary-toolbar-state.hook';
+import { toggleLabel } from './util';
 
 import styles from './secondary-toolbar.module.scss';
 
@@ -49,13 +51,24 @@ export const SecondaryToolbar = ({
     onModeChange,
 }: SecondaryToolbarProps) => {
     const queryClient = useQueryClient();
+    const selectedProject = useSelectedProject();
+    const { setMediaState } = useSelectedData();
     const { selectedAnnotations } = useSelectedAnnotations();
     const { projectLabels } = useSecondaryToolbarState();
     const { selectedLabel, setSelectedLabelId } = useAnnotator();
-    const { annotations, isSaving, updateAnnotations, submitAnnotations, submitPredictions } = useAnnotationActions();
-    const { setMediaState } = useSelectedData();
+
+    const {
+        annotations,
+        isSaving,
+        addAnnotations,
+        updateAnnotations,
+        deleteAnnotations,
+        submitAnnotations,
+        submitPredictions,
+    } = useAnnotationActions();
 
     const hasAnnotations = !isEmpty(annotations);
+    const isClassification = selectedProject.task.task_type === 'classification';
     const selectedIndex = items.findIndex((item) => item.id === mediaItem.id);
 
     const handleSubmit = async () => {
@@ -99,10 +112,38 @@ export const SecondaryToolbar = ({
         setSelectedLabelId(label?.id ?? null);
     };
 
+    const handleClassificationSelect = (value: Key | null) => {
+        const label = projectLabels.find(({ id }) => id === value);
+        const labels = label ? [label] : [];
+
+        if (isEmpty(annotations)) {
+            addAnnotations([{ type: 'full_image' }], labels);
+        } else {
+            updateClassificationAnnotations(labels[0]);
+        }
+        setSelectedLabelId(label?.id ?? null);
+    };
+
+    const updateClassificationAnnotations = (newLabel: Label) => {
+        const updatedLabels = annotations.flatMap(toggleLabel(newLabel));
+        const updatedAnnotations = annotations.map((annotation) => ({
+            ...annotation,
+            labels: updatedLabels,
+        }));
+
+        const hasNoLabels = updatedLabels.length === 0;
+
+        if (hasNoLabels) {
+            deleteAnnotations(updatedAnnotations.map(({ id }) => id));
+        } else {
+            updateAnnotations(updatedAnnotations);
+        }
+    };
+
     return (
         <Flex
-            height={'100%'}
             width={'100%'}
+            height={'100%'}
             alignItems={'center'}
             justifyContent={'space-between'}
             UNSAFE_style={{ paddingTop: dimensionValue('size-125') }}
@@ -114,7 +155,11 @@ export const SecondaryToolbar = ({
             </Toolbar.Container>
             <Toolbar.Container>
                 <Toolbar.Section>
-                    <LabelPicker selectedLabel={selectedLabel} labels={projectLabels} onSelect={handleSelect} />
+                    <LabelPicker
+                        labels={projectLabels}
+                        selectedLabel={selectedLabel}
+                        onSelect={isClassification ? handleClassificationSelect : handleSelect}
+                    />
                 </Toolbar.Section>
             </Toolbar.Container>
             <Toolbar.Container>
