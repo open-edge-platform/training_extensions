@@ -3,7 +3,7 @@
 
 import { Suspense } from 'react';
 
-import { Content, Dialog, dimensionValue, Flex, Grid, Loading, View } from '@geti/ui';
+import { Content, Dialog, Flex, Grid, Loading, View } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isObject } from 'lodash-es';
 
@@ -16,6 +16,7 @@ import { AnnotationVisibilityProvider } from '../../../shared/annotator/annotati
 import { AnnotatorProvider } from '../../../shared/annotator/annotator-provider.component';
 import { SelectAnnotationProvider } from '../../../shared/annotator/select-annotation-provider.component';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
+import { BottomToolbar } from './bottom-toolbar/bottom-toolbar.component';
 import { SIDEBAR_WIDTH } from './constants';
 import { PrimaryToolbar } from './primary-toolbar/primary-toolbar.component';
 import { AnnotatorCanvasSettings } from './primary-toolbar/settings/annotator-canvas-settings.component';
@@ -66,11 +67,7 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                     height='100%'
                     rows='auto 1fr auto'
                     columns={`auto 1fr ${SIDEBAR_WIDTH}px`}
-                    UNSAFE_style={{
-                        // Matches grid gap (size-125) to align with the leftmost element
-                        paddingLeft: dimensionValue('size-125'),
-                    }}
-                    areas={['toolbar header aside', 'toolbar canvas aside', 'toolbar footer aside']}
+                    areas={['header header header', 'toolbar canvas aside', 'toolbar bottom aside']}
                 >
                     <AnnotationActionsProvider
                         mediaItem={mediaItem}
@@ -83,10 +80,6 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                                     <AnnotationVisibilityProvider>
                                         <AnnotatorProvider mediaItem={mediaItem}>
                                             <CanvasSettingsProvider>
-                                                <View gridArea={'toolbar'}>
-                                                    <PrimaryToolbar />
-                                                </View>
-
                                                 <View gridArea={'header'}>
                                                     <SecondaryToolbar
                                                         items={items}
@@ -95,6 +88,15 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                                                         onSelectedMediaItem={onSelectedMediaItem}
                                                     />
                                                 </View>
+
+                                                <View gridArea={'toolbar'}>
+                                                    <PrimaryToolbar />
+                                                </View>
+
+                                                <View gridArea={'bottom'}>
+                                                    <BottomToolbar />
+                                                </View>
+
                                                 <View gridArea={'canvas'} overflow={'hidden'}>
                                                     <AnnotatorCanvasSettings>
                                                         <AnnotatorCanvas mediaItem={mediaItem} />

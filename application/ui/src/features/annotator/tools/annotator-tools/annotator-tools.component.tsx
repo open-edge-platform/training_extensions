@@ -11,11 +11,20 @@ export const AnnotatorTools = () => {
     const { activeTool, setActiveTool } = useAnnotator();
 
     const availableTools = useAvailableTools();
+    const selectionTool = availableTools.find((tool) => tool.type === 'selection');
+    const otherTools = availableTools.filter((tool) => tool.type !== 'selection');
 
     return (
         <>
-            <Tools tools={availableTools} activeTool={activeTool} setActiveTool={setActiveTool} />
-            {availableTools.length > 0 && <Divider size='S' />}
+            {selectionTool && (
+                <>
+                    <Tools tools={[selectionTool]} activeTool={activeTool} setActiveTool={setActiveTool} />
+                    {otherTools.length > 0 && <Divider size='S' />}
+                </>
+            )}
+            {otherTools.length > 0 && (
+                <Tools tools={otherTools} activeTool={activeTool} setActiveTool={setActiveTool} />
+            )}
         </>
     );
 };
