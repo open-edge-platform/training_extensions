@@ -16,6 +16,7 @@ import { AnnotationVisibilityProvider } from '../../../shared/annotator/annotati
 import { AnnotatorProvider } from '../../../shared/annotator/annotator-provider.component';
 import { SelectAnnotationProvider } from '../../../shared/annotator/select-annotation-provider.component';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
+import { SIDEBAR_WIDTH } from './constants';
 import { PrimaryToolbar } from './primary-toolbar/primary-toolbar.component';
 import { AnnotatorCanvasSettings } from './primary-toolbar/settings/annotator-canvas-settings.component';
 import { CanvasSettingsProvider } from './primary-toolbar/settings/canvas-settings-provider.component';
@@ -57,14 +58,14 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
     );
 
     return (
-        <Dialog>
-            <Content UNSAFE_style={{ backgroundColor: 'var(--spectrum-global-color-gray-50)' }}>
+        <Dialog UNSAFE_style={{ backgroundColor: 'var(--spectrum-global-color-gray-50)' }}>
+            <Content>
                 <Grid
                     gap='size-125'
                     width='100%'
                     height='100%'
                     rows='auto 1fr auto'
-                    columns='auto 1fr 140px'
+                    columns={`auto 1fr ${SIDEBAR_WIDTH}px`}
                     UNSAFE_style={{
                         // Matches grid gap (size-125) to align with the leftmost element
                         paddingLeft: dimensionValue('size-125'),

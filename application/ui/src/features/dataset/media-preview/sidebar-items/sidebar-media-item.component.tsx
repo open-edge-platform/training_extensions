@@ -20,17 +20,27 @@ type SidebarMediaItemProps = {
 };
 
 export const SidebarMediaItem = ({ item, isSelected, onSelectedMediaItem }: SidebarMediaItemProps) => {
-    const project_id = useProjectIdentifier();
+    const projectId = useProjectIdentifier();
     const { isUserReviewed } = useAnnotationActions();
 
     return (
         <MediaItem
             contentElement={() => (
-                <MediaThumbnail
-                    alt={item.name}
-                    url={getThumbnailUrl(project_id, String(item.id))}
-                    onClick={() => onSelectedMediaItem(item)}
-                />
+                <div
+                    style={{
+                        border: `
+                            var(--spectrum-global-dimension-size-100)
+                            solid
+                            ${isSelected ? '#fff' : 'var(--spectrum-global-color-gray-50)'}
+                        `,
+                    }}
+                >
+                    <MediaThumbnail
+                        alt={item.name}
+                        url={getThumbnailUrl(projectId, String(item.id))}
+                        onClick={() => onSelectedMediaItem(item)}
+                    />
+                </div>
             )}
             bottomRightElement={() => {
                 if (!isSelected) {

@@ -11,7 +11,15 @@ type MediaThumbnailProps = {
 export const MediaThumbnail = ({ onDoubleClick, onClick, url, alt }: MediaThumbnailProps) => {
     return (
         <div onDoubleClick={onDoubleClick} onClick={onClick}>
-            <img src={url} alt={alt} style={{ objectFit: 'cover', width: '100%', height: '100%' }} />
+            <img
+                src={url}
+                alt={alt}
+                style={{
+                    objectFit: 'cover',
+                    width: '100%',
+                    height: '100%',
+                }}
+            />
         </div>
     );
 };
