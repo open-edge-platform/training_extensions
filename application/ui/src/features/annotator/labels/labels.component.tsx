@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { CSSProperties, useEffect, useRef, useState } from 'react';
+import { CSSProperties, useRef, useState } from 'react';
 
 import { ActionButton, Text } from '@geti/ui';
 import { clsx } from 'clsx';
@@ -10,32 +10,9 @@ import type { Label } from '../../../constants/shared-types';
 import { useAnnotationActions } from '../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotator } from '../../../shared/annotator/annotator-provider.component';
 import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
+import { useVisibleLabelsCount } from './use-visible-labels-count.hook';
 
 import classes from './labels.module.scss';
-
-const BADGE_GAP = 8; // size-100 gap
-
-const calculateVisibleLabels = (container: HTMLDivElement): number => {
-    const containerWidth = container.offsetWidth;
-    const badgeElements = container.querySelectorAll('[data-label-badge]');
-    const hiddenElement = container.querySelectorAll(`.${classes.hidden}`).length > 0;
-    // "Show more" button width is 80px when visible, 20px reserved space for smooth transition
-    const showMoreReservedWidth = hiddenElement ? 20 : 80;
-    let totalWidth = 0;
-    let count = 0;
-
-    badgeElements.forEach((badge, index) => {
-        const badgeWidth = (badge as HTMLElement).offsetWidth;
-        const gap = index > 0 ? BADGE_GAP : 0;
-
-        if (totalWidth + badgeWidth + gap <= containerWidth - showMoreReservedWidth) {
-            totalWidth += badgeWidth + gap;
-            count++;
-        }
-    });
-
-    return Math.max(1, count);
-};
 
 interface LabelBadgeProps {
     label: Label;
@@ -68,41 +45,15 @@ export const Labels = () => {
     const { annotations, updateAnnotations } = useAnnotationActions();
 
     const containerRef = useRef<HTMLDivElement>(null);
-    const [collapsedVisibleCount, setCollapsedVisibleCount] = useState(labels.length);
+    const { collapsedVisibleCount } = useVisibleLabelsCount({ containerRef, totalLabels: labels.length });
     const [isExpanded, setIsExpanded] = useState(false);
-
-    useEffect(() => {
-        const updateVisibleCount = () => {
-            const container = containerRef.current;
-            if (!container) return;
-
-            setCollapsedVisibleCount(calculateVisibleLabels(container));
-        };
-
-        const resizeObserver = new ResizeObserver(updateVisibleCount);
-        if (containerRef.current) {
-            resizeObserver.observe(containerRef.current);
-        }
-
-        return () => {
-            resizeObserver.disconnect();
-        };
-    }, [labels]);
 
     const handleLabelClick = (label: Label) => {
         setSelectedLabelId(label.id);
 
         if (selectedAnnotations.size > 0) {
-            const updatedAnnotations = annotations
-                .filter((annotation) => selectedAnnotations.has(annotation.id))
-                .map((annotation) => ({
-                    ...annotation,
-                    labels: [label],
-                }));
-
-            if (updatedAnnotations.length > 0) {
-                updateAnnotations(updatedAnnotations);
-            }
+            const selectedAnnotationsList = annotations.filter((a) => selectedAnnotations.has(a.id));
+            updateAnnotations(selectedAnnotationsList, [label]);
         }
     };
 

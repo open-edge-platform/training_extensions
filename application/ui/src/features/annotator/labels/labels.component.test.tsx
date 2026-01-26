@@ -7,13 +7,6 @@ import { fireEvent, render, screen } from 'test-utils/render';
 import type { Label } from '../../../constants/shared-types';
 import { Labels } from './labels.component';
 
-// Mock ResizeObserver which is not available in jsdom
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-    observe: vi.fn(),
-    unobserve: vi.fn(),
-    disconnect: vi.fn(),
-}));
-
 const mockLabels: Label[] = [
     getMockedLabel({ id: 'label-1', name: 'Person', color: '#FF0000' }),
     getMockedLabel({ id: 'label-2', name: 'Car', color: '#00FF00' }),
@@ -102,13 +95,7 @@ describe('Labels', () => {
         fireEvent.click(carButton);
 
         expect(mockSetSelectedLabelId).toHaveBeenCalledWith('label-2');
-        expect(mockUpdateAnnotations).toHaveBeenCalledWith([
-            {
-                id: 'annotation-1',
-                labels: [mockLabels[1]],
-                shape: { type: 'RECTANGLE' },
-            },
-        ]);
+        expect(mockUpdateAnnotations).toHaveBeenCalledWith([mockAnnotations.current[0]], [mockLabels[1]]);
     });
 
     it('does not update annotations when no annotations are selected', () => {
