@@ -21,7 +21,7 @@ class PrepareImportDatasetRequest(BaseImportDatasetRequest):
     model_config = {
         "json_schema_extra": {
             "example": {
-                "job_type": "train",
+                "job_type": "prepare_dataset_for_import",
                 "staged_dataset_id": "7b073838-99d3-42ff-9018-4e901eb047fc",
             }
         }
