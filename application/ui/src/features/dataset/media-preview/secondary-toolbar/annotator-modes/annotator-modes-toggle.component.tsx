@@ -1,18 +1,18 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ReactNode, useState } from 'react';
+import { ReactNode } from 'react';
 
 import { Flex, View } from '@geti/ui';
 
-import styles from './annotation-prediction-toggle.module.scss';
+import { type AnnotatorMode } from './mode';
 
-type Mode = 'prediction' | 'annotation';
+import styles from './annotator-modes.module.scss';
 
 type ToggleButtonProps = {
     children: ReactNode;
-    selectedMode: Mode;
-    mode: Mode;
+    selectedMode: AnnotatorMode;
+    mode: AnnotatorMode;
     onClick: () => void;
 };
 
@@ -24,16 +24,19 @@ const ToggleButton = ({ children, mode, selectedMode, onClick }: ToggleButtonPro
     );
 };
 
-export const AnnotationPredictionToggle = () => {
-    const [mode, setMode] = useState<Mode>('annotation');
+type AnnotatorModes = {
+    mode: AnnotatorMode;
+    onModeChange: (mode: AnnotatorMode) => void;
+};
 
+export const AnnotatorModes = ({ mode, onModeChange }: AnnotatorModes) => {
     return (
         <View backgroundColor={'gray-200'} padding={'size-50'} borderRadius={'regular'}>
             <Flex width={'100%'} height={'100%'} gap={'size-100'} alignItems={'center'}>
-                <ToggleButton mode={'annotation'} selectedMode={mode} onClick={() => setMode('annotation')}>
+                <ToggleButton mode={'annotation'} selectedMode={mode} onClick={() => onModeChange('annotation')}>
                     Annotation
                 </ToggleButton>
-                <ToggleButton mode={'prediction'} selectedMode={mode} onClick={() => setMode('prediction')}>
+                <ToggleButton mode={'prediction'} selectedMode={mode} onClick={() => onModeChange('prediction')}>
                     Prediction
                 </ToggleButton>
             </Flex>

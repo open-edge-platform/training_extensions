@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Suspense } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 
 import { Content, Dialog, Flex, Grid, Loading, View } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
@@ -9,7 +9,7 @@ import { isObject } from 'lodash-es';
 
 import { $api } from '../../../api/client';
 import { ZoomProvider } from '../../../components/zoom/zoom.provider';
-import type { Media } from '../../../constants/shared-types';
+import type { AnnotationDTO, Media } from '../../../constants/shared-types';
 import { useGetDatasetItems } from '../../../hooks/use-get-dataset-items.hook';
 import { AnnotationActionsProvider } from '../../../shared/annotator/annotation-actions-provider.component';
 import { AnnotationVisibilityProvider } from '../../../shared/annotator/annotation-visibility-provider.component';
@@ -21,6 +21,7 @@ import { SIDEBAR_WIDTH } from './constants';
 import { PrimaryToolbar } from './primary-toolbar/primary-toolbar.component';
 import { AnnotatorCanvasSettings } from './primary-toolbar/settings/annotator-canvas-settings.component';
 import { CanvasSettingsProvider } from './primary-toolbar/settings/canvas-settings-provider.component';
+import { AnnotatorMode } from './secondary-toolbar/annotator-modes/mode';
 import { SecondaryToolbar } from './secondary-toolbar/secondary-toolbar.component';
 import { SidebarItems } from './sidebar-items/sidebar-items.component';
 
@@ -42,12 +43,51 @@ const CanvasAreaLoading = () => (
     </Flex>
 );
 
+const getAnnotations = (
+    mode: AnnotatorMode,
+    isUserReviewed: boolean,
+    annotations: AnnotationDTO[]
+): AnnotationDTO[] => {
+    if (mode === 'annotation' && isUserReviewed) {
+        return annotations;
+    }
+
+    if (mode === 'annotation' && !isUserReviewed) {
+        return [];
+    }
+
+    if (mode === 'prediction' && isUserReviewed) {
+        return [];
+    }
+
+    if (mode === 'prediction' && !isUserReviewed) {
+        return annotations;
+    }
+
+    return [];
+};
+
+const useAnnotatorMode = (isSuccess: boolean, isUserReviewed: boolean) => {
+    const [mode, setMode] = useState<AnnotatorMode>('annotation');
+    const hasRunOnlyForFirstQuery = useRef<boolean>(false);
+
+    useEffect(() => {
+        // For the first query, we want to set the mode based on whether the user has reviewed the media item or not.
+        if (isSuccess && !hasRunOnlyForFirstQuery.current) {
+            hasRunOnlyForFirstQuery.current = true;
+            setMode(isUserReviewed ? 'annotation' : 'prediction');
+        }
+    }, [isSuccess, isUserReviewed]);
+
+    return [mode, setMode] as const;
+};
+
 export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPreviewProps) => {
     const projectId = useProjectIdentifier();
 
     const { items, hasNextPage, isFetchingNextPage, fetchNextPage } = useGetDatasetItems();
 
-    const { data: annotationsData } = $api.useQuery(
+    const { data: annotationsData, isSuccess } = $api.useQuery(
         'get',
         '/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations',
         {
@@ -57,6 +97,10 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
             retry: (_failureCount, error: unknown) => !isUnannotatedError(error),
         }
     );
+
+    const isUserReviewedMedia = annotationsData?.user_reviewed ?? false;
+    const annotationsDTO = annotationsData?.annotations ?? [];
+    const [mode, setMode] = useAnnotatorMode(isSuccess, isUserReviewedMedia);
 
     return (
         <Dialog UNSAFE_style={{ backgroundColor: 'var(--spectrum-global-color-gray-50)' }}>
@@ -71,8 +115,8 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                 >
                     <AnnotationActionsProvider
                         mediaItem={mediaItem}
-                        initialAnnotationsDTO={annotationsData?.annotations ?? []}
-                        isUserReviewed={annotationsData?.user_reviewed ?? false}
+                        initialAnnotationsDTO={getAnnotations(mode, isUserReviewedMedia, annotationsDTO)}
+                        isUserReviewed={isUserReviewedMedia}
                     >
                         <ZoomProvider>
                             <Suspense fallback={<CanvasAreaLoading />}>
@@ -86,6 +130,8 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                                                         onClose={close}
                                                         mediaItem={mediaItem}
                                                         onSelectedMediaItem={onSelectedMediaItem}
+                                                        mode={mode}
+                                                        onModeChange={setMode}
                                                     />
                                                 </View>
 

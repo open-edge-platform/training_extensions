@@ -10,7 +10,8 @@ import { useAnnotationActions } from '../../../../shared/annotator/annotation-ac
 import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
 import { useSelectedAnnotations } from '../../../../shared/annotator/select-annotation-provider.component';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
-import { AnnotationPredictionToggle } from './annotation-prediction-toggle/annotation-prediction-toggle.component';
+import { AnnotatorModes } from './annotator-modes/annotator-modes-toggle.component';
+import type { AnnotatorMode } from './annotator-modes/mode';
 import { LabelPicker } from './label-picker.component';
 import { useSecondaryToolbarState } from './use-secondary-toolbar-state.hook';
 
@@ -21,6 +22,9 @@ type SecondaryToolbarProps = {
     mediaItem: Media;
     onClose: () => void;
     onSelectedMediaItem: (item: Media) => void;
+
+    mode: AnnotatorMode;
+    onModeChange: (mode: AnnotatorMode) => void;
 };
 
 const getNextItem = (totalItems: number, newIndex: number) => {
@@ -33,7 +37,14 @@ const invalidateMediaItemAnnotations = (queryClient: QueryClient) => {
     });
 };
 
-export const SecondaryToolbar = ({ items, mediaItem, onClose, onSelectedMediaItem }: SecondaryToolbarProps) => {
+export const SecondaryToolbar = ({
+    items,
+    mediaItem,
+    onClose,
+    onSelectedMediaItem,
+    mode,
+    onModeChange,
+}: SecondaryToolbarProps) => {
     const queryClient = useQueryClient();
     const { selectedAnnotations } = useSelectedAnnotations();
     const { isHidden, projectLabels } = useSecondaryToolbarState();
@@ -81,7 +92,7 @@ export const SecondaryToolbar = ({ items, mediaItem, onClose, onSelectedMediaIte
         >
             <Grid width={'100%'} UNSAFE_className={classes.toolbarGrid} isHidden={isHidden}>
                 <Flex width={'100%'} UNSAFE_className={classes.toolbarSection} justifyContent={'space-between'}>
-                    <AnnotationPredictionToggle />
+                    <AnnotatorModes mode={mode} onModeChange={onModeChange} />
 
                     <LabelPicker selectedLabel={selectedLabel} labels={projectLabels} onSelect={handleSelect} />
 
