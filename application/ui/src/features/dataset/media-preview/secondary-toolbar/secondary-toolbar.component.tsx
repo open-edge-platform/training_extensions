@@ -1,7 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, ButtonGroup, dimensionValue, Flex, Grid } from '@geti/ui';
+import { ActionButton, Button, ButtonGroup, dimensionValue, Flex, Text } from '@geti/ui';
+import { Checkmark, CloseSemiBold } from '@geti/ui/icons';
 import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { isEmpty } from 'lodash-es';
 
@@ -9,15 +10,21 @@ import type { Media } from '../../../../constants/shared-types';
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
 import { Labels } from '../../../annotator/labels/labels.component';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
+import { Toolbar } from '../toolbar-container/toolbar-container.component';
+import { AnnotatorModes } from './annotator-modes/annotator-modes-toggle.component';
+import type { AnnotatorMode } from './annotator-modes/mode';
 import { useSecondaryToolbarState } from './use-secondary-toolbar-state.hook';
 
-import classes from '../media-preview.module.scss';
+import styles from './secondary-toolbar.module.scss';
 
 type SecondaryToolbarProps = {
     items: Media[];
     mediaItem: Media;
     onClose: () => void;
     onSelectedMediaItem: (item: Media) => void;
+
+    mode: AnnotatorMode;
+    onModeChange: (mode: AnnotatorMode) => void;
 };
 
 const getNextItem = (totalItems: number, newIndex: number) => {
@@ -30,16 +37,27 @@ const invalidateMediaItemAnnotations = (queryClient: QueryClient) => {
     });
 };
 
-export const SecondaryToolbar = ({ items, mediaItem, onClose, onSelectedMediaItem }: SecondaryToolbarProps) => {
+export const SecondaryToolbar = ({
+    items,
+    mediaItem,
+    onClose,
+    onSelectedMediaItem,
+    mode,
+    onModeChange,
+}: SecondaryToolbarProps) => {
     const queryClient = useQueryClient();
     const { isHidden } = useSecondaryToolbarState();
-    const { annotations, isSaving, submitAnnotations } = useAnnotationActions();
+    const { annotations, isSaving, submitAnnotations, submitPredictions } = useAnnotationActions();
 
     const hasAnnotations = !isEmpty(annotations);
     const selectedIndex = items.findIndex((item) => item.id === mediaItem.id);
 
     const handleSubmit = async () => {
-        await submitAnnotations();
+        if (mode === 'annotation') {
+            await submitAnnotations();
+        } else {
+            await submitPredictions();
+        }
 
         const nextItem = getNextItem(items.length - 1, selectedIndex);
         onSelectedMediaItem(items[nextItem]);
@@ -60,11 +78,22 @@ export const SecondaryToolbar = ({ items, mediaItem, onClose, onSelectedMediaIte
             height={'100%'}
             width={'100%'}
             alignItems={'center'}
+            justifyContent={'space-between'}
             UNSAFE_style={{ paddingTop: dimensionValue('size-125') }}
+            isHidden={isHidden}
         >
-            <Grid width={'100%'} UNSAFE_className={classes.toolbarGrid} isHidden={isHidden}>
-                <Flex width={'100%'} UNSAFE_className={classes.toolbarSection} justifyContent={'space-between'}>
+            <Toolbar.Container>
+                <Toolbar.Section>
+                    <AnnotatorModes mode={mode} onModeChange={onModeChange} />
+                </Toolbar.Section>
+            </Toolbar.Container>
+            <Toolbar.Container>
+                <Toolbar.Section>
                     <Labels />
+                </Toolbar.Section>
+            </Toolbar.Container>
+            <Toolbar.Container>
+                <Toolbar.Section>
                     <ButtonGroup>
                         <DeleteMediaItem
                             itemsIds={[String(mediaItem.id)]}
@@ -77,15 +106,29 @@ export const SecondaryToolbar = ({ items, mediaItem, onClose, onSelectedMediaIte
                             marginStart={'size-200'}
                             isDisabled={!hasAnnotations || isSaving}
                         >
-                            Submit
+                            {mode === 'annotation' ? (
+                                'Submit'
+                            ) : (
+                                <>
+                                    <Checkmark />
+                                    <Text>Confirm prediction</Text>
+                                </>
+                            )}
                         </Button>
 
-                        <Button variant='secondary' onPress={onClose} isDisabled={isSaving}>
-                            Close
-                        </Button>
+                        <ActionButton
+                            isQuiet
+                            onPress={onClose}
+                            isDisabled={isSaving}
+                            marginStart={'size-100'}
+                            UNSAFE_className={styles.closeButton}
+                        >
+                            <CloseSemiBold width={14} height={14} />
+                            <Text>Close</Text>
+                        </ActionButton>
                     </ButtonGroup>
-                </Flex>
-            </Grid>
+                </Toolbar.Section>
+            </Toolbar.Container>
         </Flex>
     );
 };

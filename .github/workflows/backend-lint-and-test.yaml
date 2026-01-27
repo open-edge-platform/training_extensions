@@ -73,7 +73,7 @@ jobs:
       - name: Install uv and set the Python version
         uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
         with:
-          version: "0.9.7"
+          version: "0.9.27"
           enable-cache: false
           python-version: "3.13"
 
@@ -87,6 +87,8 @@ jobs:
 
       - name: Prepare venv and install Python dependencies
         working-directory: application/backend
+        env:
+          GIT_LFS_SKIP_SMUDGE: "1" # Skip downloading LFS files for deps installed via git
         run: |
           uv lock --check
           uv sync --frozen --extra cpu --extra mqtt
