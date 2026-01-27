@@ -24,6 +24,7 @@ import { CanvasSettingsProvider } from './primary-toolbar/settings/canvas-settin
 import { AnnotatorMode } from './secondary-toolbar/annotator-modes/mode';
 import { SecondaryToolbar } from './secondary-toolbar/secondary-toolbar.component';
 import { SidebarItems } from './sidebar-items/sidebar-items.component';
+import { getAnnotations } from './utils';
 
 const isUnannotatedError = (error: unknown): boolean => {
     return (
@@ -42,30 +43,6 @@ const CanvasAreaLoading = () => (
         <Loading size='L' mode='inline' />
     </Flex>
 );
-
-const getAnnotations = (
-    mode: AnnotatorMode,
-    isUserReviewed: boolean,
-    annotations: AnnotationDTO[]
-): AnnotationDTO[] => {
-    if (mode === 'annotation' && isUserReviewed) {
-        return annotations;
-    }
-
-    if (mode === 'annotation' && !isUserReviewed) {
-        return [];
-    }
-
-    if (mode === 'prediction' && isUserReviewed) {
-        return [];
-    }
-
-    if (mode === 'prediction' && !isUserReviewed) {
-        return annotations;
-    }
-
-    return [];
-};
 
 const useAnnotatorMode = (isSuccess: boolean, isUserReviewed: boolean) => {
     const [mode, setMode] = useState<AnnotatorMode>('annotation');
