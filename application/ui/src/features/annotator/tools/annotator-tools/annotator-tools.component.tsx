@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Divider } from '@geti/ui';
+import { partition } from 'lodash-es';
 
 import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
 import { Tools } from '../tools.component';
@@ -11,14 +12,13 @@ export const AnnotatorTools = () => {
     const { activeTool, setActiveTool } = useAnnotator();
 
     const availableTools = useAvailableTools();
-    const selectionTool = availableTools.find((tool) => tool.type === 'selection');
-    const otherTools = availableTools.filter((tool) => tool.type !== 'selection');
+    const [selectionTool, otherTools] = partition(availableTools, (tool) => tool.type === 'selection');
 
     return (
         <>
-            {selectionTool && (
+            {selectionTool.length > 0 && (
                 <>
-                    <Tools tools={[selectionTool]} activeTool={activeTool} setActiveTool={setActiveTool} />
+                    <Tools tools={selectionTool} activeTool={activeTool} setActiveTool={setActiveTool} />
                     {otherTools.length > 0 && <Divider size='S' />}
                 </>
             )}

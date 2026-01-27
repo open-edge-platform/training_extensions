@@ -25,16 +25,19 @@
 
     &[data-hovered],
     &[data-selected] {
-        outline: thin solid var(--energy-blue);
+        border-radius: var(--spectrum-global-dimension-size-50);
+        overflow: hidden;
+        outline: var(--spectrum-global-dimension-size-100) solid #fff;
     }
 
     &[data-focus-visible] {
-        outline-width: medium;
+        border-radius: var(--spectrum-global-dimension-size-50);
+        overflow: hidden;
+        outline-width: var(--spectrum-global-dimension-size-100);
     }
 
     img {
         box-sizing: border-box;
-        object-fit: contain;
         width: 100%;
         height: 100%;
     }

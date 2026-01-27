@@ -16,8 +16,6 @@ export const MediaThumbnail = ({ onDoubleClick, onClick, url, alt }: MediaThumbn
                 alt={alt}
                 style={{
                     objectFit: 'cover',
-                    width: '100%',
-                    height: '100%',
                 }}
             />
         </div>

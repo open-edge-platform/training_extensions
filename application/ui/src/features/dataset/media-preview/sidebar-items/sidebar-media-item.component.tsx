@@ -26,21 +26,11 @@ export const SidebarMediaItem = ({ item, isSelected, onSelectedMediaItem }: Side
     return (
         <MediaItem
             contentElement={() => (
-                <div
-                    style={{
-                        border: `
-                            var(--spectrum-global-dimension-size-100)
-                            solid
-                            ${isSelected ? '#fff' : 'var(--spectrum-global-color-gray-50)'}
-                        `,
-                    }}
-                >
-                    <MediaThumbnail
-                        alt={item.name}
-                        url={getThumbnailUrl(projectId, String(item.id))}
-                        onClick={() => onSelectedMediaItem(item)}
-                    />
-                </div>
+                <MediaThumbnail
+                    alt={item.name}
+                    url={getThumbnailUrl(projectId, String(item.id))}
+                    onClick={() => onSelectedMediaItem(item)}
+                />
             )}
             bottomRightElement={() => {
                 if (!isSelected) {
