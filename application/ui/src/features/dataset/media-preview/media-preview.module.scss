@@ -10,4 +10,9 @@
     padding: var(--spectrum-global-dimension-size-100);
     border-radius: var(--spectrum-global-dimension-size-50);
     gap: var(--spectrum-global-dimension-size-50);
+    align-items: center;
+}
+
+.filename {
+    font-size: var(--spectrum-global-dimension-size-150);
 }

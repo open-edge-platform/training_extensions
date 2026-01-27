@@ -40,7 +40,7 @@ const MAGNETIC_LASSO_TOOL_CONFIG: ToolConfig = {
 
 const TASK_TOOL_CONFIG: Record<string, ToolConfig[]> = {
     classification: [],
-    detection: [SELECTION_TOOL_CONFIG, BOUNDING_BOX_TOOL_CONFIG],
+    detection: [SELECTION_TOOL_CONFIG, BOUNDING_BOX_TOOL_CONFIG, AUTO_SEGMENTATION_CONFIG],
     instance_segmentation: [
         SELECTION_TOOL_CONFIG,
         AUTO_SEGMENTATION_CONFIG,
