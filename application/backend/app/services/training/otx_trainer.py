@@ -492,9 +492,6 @@ class OTXTrainer(Trainer):
                 model_revision_id=training_params.model_id,
                 dataset_revision_id=dataset_info.revision_id,
             )
-            self.__update_model_revision_training_status(
-                project_id=project_id, model_id=training_params.model_id, status=TrainingStatus.SUCCESSFUL
-            )
             exported_model_paths = self.export_model(otx_engine=otx_engine, model_checkpoint_path=trained_model_path)
             self.store_model_artifacts(
                 model_dir=model_dir,
@@ -502,8 +499,10 @@ class OTXTrainer(Trainer):
                 trained_model_path=trained_model_path,
                 exported_model_paths=exported_model_paths,
             )
+            self.__update_model_revision_training_status(
+                project_id=project_id, model_id=training_params.model_id, status=TrainingStatus.SUCCESSFUL
+            )
         except Exception:
-            logger.exception("Exception during training")
             self.__update_model_revision_training_status(
                 project_id=project_id, model_id=training_params.model_id, status=TrainingStatus.FAILED
             )
