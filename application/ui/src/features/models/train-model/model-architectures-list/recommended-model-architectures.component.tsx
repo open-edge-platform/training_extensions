@@ -1,44 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex } from '@geti/ui';
-
 import type { ModelArchitecture as ModelArchitectureType } from '../../../../constants/shared-types';
-import { ModelArchitectureCard } from './model-architecture/model-architecture.component';
+import { ModelArchitecture } from './model-architecture.component';
 import { ModelArchitecturesListLayout } from './model-architectures-list-layout/model-architectures-list-layout.component';
-
-type RecommendedModelArchitectureProps = {
-    activeModelArchitectureId: string | undefined;
-    modelArchitecture: ModelArchitectureType;
-    selectedModelArchitectureId: string | null;
-    onSelectedModelArchitectureIdChange: (modelArchitectureId: string | null) => void;
-};
-
-const RecommendedModelArchitecture = ({
-    activeModelArchitectureId,
-    modelArchitecture,
-    selectedModelArchitectureId,
-    onSelectedModelArchitectureIdChange,
-}: RecommendedModelArchitectureProps) => {
-    const isSelected = modelArchitecture.id === selectedModelArchitectureId;
-    const isActive = activeModelArchitectureId === modelArchitecture.id;
-
-    return (
-        <ModelArchitectureCard
-            modelArchitecture={modelArchitecture}
-            isSelected={isSelected}
-            onSelect={() => onSelectedModelArchitectureIdChange(modelArchitecture.id)}
-        >
-            <Flex width={'100%'} minWidth={0} direction={'column'} gap={'size-100'}>
-                {isActive && <ModelArchitectureCard.Active />}
-                <ModelArchitectureCard.Name />
-            </Flex>
-            <ModelArchitectureCard.Parameters />
-            <ModelArchitectureCard.Divider />
-            <ModelArchitectureCard.ExpandedDescription />
-        </ModelArchitectureCard>
-    );
-};
 
 type RecommendedModelArchitecturesProps = {
     activeModelArchitectureId: string | undefined;
@@ -60,7 +25,7 @@ export const RecommendedModelArchitectures = ({
             ariaLabel={'Recommended model architectures'}
         >
             {modelArchitectures.map((modelArchitecture) => (
-                <RecommendedModelArchitecture
+                <ModelArchitecture
                     key={modelArchitecture.id}
                     activeModelArchitectureId={activeModelArchitectureId}
                     modelArchitecture={modelArchitecture}

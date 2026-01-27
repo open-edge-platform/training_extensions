@@ -3,12 +3,12 @@
 
 import { createContext, ReactNode, useContext } from 'react';
 
-import { Content, ContextualHelp, Divider, Heading, Radio, Text, View } from '@geti/ui';
+import { Content, ContextualHelp, Divider, Flex, Heading, Radio, Text, View } from '@geti/ui';
 import { clsx } from 'clsx';
 
 import { type ModelArchitecture as ModelArchitectureType } from '../../../../../constants/shared-types';
 
-import styles from './model-architecture.module.scss';
+import styles from './model-architecture-card.module.scss';
 
 const ActiveModelArchitecture = () => {
     return (
@@ -30,10 +30,10 @@ const ModelArchitectureExpandedDescription = () => {
 };
 
 const ModelArchitectureDescription = () => {
-    const { modelArchitecture } = useModelArchitecture();
+    const { modelArchitecture, isSelected } = useModelArchitecture();
 
     return (
-        <ContextualHelp variant='info'>
+        <ContextualHelp variant='info' UNSAFE_className={clsx({ [styles.description]: isSelected })}>
             <Heading>{modelArchitecture.name}</Heading>
             <Content>
                 <Text>{modelArchitecture.description}</Text>
@@ -61,14 +61,19 @@ const ModelArchitectureName = () => {
     const { modelArchitecture, isSelected } = useModelArchitecture();
 
     return (
-        <Radio
-            value={modelArchitecture.id}
-            UNSAFE_className={clsx(styles.modelArchitectureName, {
-                [styles.modelArchitectureNameSelected]: isSelected,
-            })}
-        >
-            {modelArchitecture.name}
-        </Radio>
+        <Flex justifyContent={'space-between'} alignItems={'center'}>
+            <Radio
+                flex={1}
+                minWidth={0}
+                value={modelArchitecture.id}
+                UNSAFE_className={clsx(styles.modelArchitectureName, {
+                    [styles.modelArchitectureNameSelected]: isSelected,
+                })}
+            >
+                {modelArchitecture.name}
+            </Radio>
+            <ModelArchitectureDescription />
+        </Flex>
     );
 };
 
@@ -91,7 +96,6 @@ export const useModelArchitecture = () => {
 
 type ModelArchitectureProps = {
     isSelected: boolean;
-    isCompact?: boolean;
     children: ReactNode;
     onSelect: () => void;
     modelArchitecture: ModelArchitectureType;
@@ -99,7 +103,6 @@ type ModelArchitectureProps = {
 
 export const ModelArchitectureCard = ({
     isSelected,
-    isCompact,
     children,
     onSelect,
     modelArchitecture,
@@ -109,7 +112,6 @@ export const ModelArchitectureCard = ({
             <div
                 className={clsx(styles.modelArchitectureContainer, {
                     [styles.modelArchitectureSelected]: isSelected,
-                    [styles.modelArchitectureCompact]: isCompact,
                 })}
                 onClick={onSelect}
             >
