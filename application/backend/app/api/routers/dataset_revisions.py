@@ -71,7 +71,7 @@ def get_dataset_revision_details(
     dataset_revision: Annotated[DatasetRevision, Depends(get_dataset_revision)],
     dataset_revision_service: Annotated[DatasetRevisionService, Depends(get_dataset_revision_service)],
 ) -> DatasetRevisionView:
-    """Get a specific dataset revision by ID."""
+    """Get information about a specific dataset revision."""
     try:
         item_counts = dataset_revision_service.count_items_by_subset(
             project_id=project.id, dataset_revision_id=dataset_revision.id
