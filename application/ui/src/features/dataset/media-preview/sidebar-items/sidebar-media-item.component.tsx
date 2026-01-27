@@ -20,7 +20,7 @@ type SidebarMediaItemProps = {
 };
 
 export const SidebarMediaItem = ({ item, isSelected, onSelectedMediaItem }: SidebarMediaItemProps) => {
-    const project_id = useProjectIdentifier();
+    const projectId = useProjectIdentifier();
     const { isUserReviewed } = useAnnotationActions();
 
     return (
@@ -28,7 +28,7 @@ export const SidebarMediaItem = ({ item, isSelected, onSelectedMediaItem }: Side
             contentElement={() => (
                 <MediaThumbnail
                     alt={item.name}
-                    url={getThumbnailUrl(project_id, String(item.id))}
+                    url={getThumbnailUrl(projectId, String(item.id))}
                     onClick={() => onSelectedMediaItem(item)}
                 />
             )}
