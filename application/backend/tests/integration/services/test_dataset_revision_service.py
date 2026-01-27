@@ -170,13 +170,13 @@ def fxt_project_with_subset_items(
 
 @pytest.fixture
 def fxt_project_with_subset_items_on_disk(
-    fxt_projects_dir, fxt_project_with_pipeline, db_session, fxt_label_service
+    fxt_projects_dir, fxt_db_labels, fxt_project_with_pipeline, db_session, fxt_label_service
 ) -> tuple[Project, list[tuple[MediaDB, DatasetItemDB]]]:
     """Fixture with dataset items covering all subset types and annotation data."""
     project, _ = fxt_project_with_pipeline
 
     # Get the first label for annotation
-    label = fxt_label_service.list_all(project_id=project.id)[0]
+    label = fxt_db_labels[0]
     label_id = str(label.id)
 
     def annotation():

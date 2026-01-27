@@ -32,7 +32,7 @@ MAX_DATASET_ITEMS_NUMBER_RETURNED = 100
     "",
     response_model=list[DatasetRevisionView],
     responses={
-        status.HTTP_200_OK: {"description": "List of available models"},
+        status.HTTP_200_OK: {"description": "List of available dataset revisions"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid project ID"},
         status.HTTP_404_NOT_FOUND: {"description": "Project not found"},
     },
@@ -41,7 +41,7 @@ def list_dataset_revisions(
     project: Annotated[Project, Depends(get_project)],
     dataset_revision_service: Annotated[DatasetRevisionService, Depends(get_dataset_revision_service)],
 ) -> list[DatasetRevisionView]:
-    """Get all models in a project, optionally filtered by dataset revision."""
+    """Get all dataset revisions in a project, optionally filtered by dataset revision."""
     try:
         dataset_revision_views = []
         for dataset_revision in dataset_revision_service.list_dataset_revisions(project_id=project.id):
@@ -61,9 +61,9 @@ def list_dataset_revisions(
     "/{dataset_revision_id}",
     response_model=DatasetRevisionView,
     responses={
-        status.HTTP_200_OK: {"description": "Model found"},
-        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project or model ID"},
-        status.HTTP_404_NOT_FOUND: {"description": "Project or model not found"},
+        status.HTTP_200_OK: {"description": "Datset revision found"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project or dataset revision ID"},
+        status.HTTP_404_NOT_FOUND: {"description": "Project or dataset revision not found"},
     },
 )
 def get_dataset_revision_details(
@@ -71,7 +71,7 @@ def get_dataset_revision_details(
     dataset_revision: Annotated[DatasetRevision, Depends(get_dataset_revision)],
     dataset_revision_service: Annotated[DatasetRevisionService, Depends(get_dataset_revision_service)],
 ) -> DatasetRevisionView:
-    """Get a specific model by ID."""
+    """Get a specific dataset revision by ID."""
     try:
         item_counts = dataset_revision_service.count_items_by_subset(
             project_id=project.id, dataset_revision_id=dataset_revision.id

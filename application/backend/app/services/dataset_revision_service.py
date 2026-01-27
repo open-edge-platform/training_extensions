@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import shutil
+from functools import lru_cache
 from pathlib import Path
 from uuid import UUID, uuid4
 
@@ -159,6 +160,7 @@ class DatasetRevisionService(BaseSessionManagedService):
 
         return parquet_path
 
+    @lru_cache(maxsize=64)
     def count_items_by_subset(self, project_id: UUID, dataset_revision_id: UUID) -> dict[str, int]:
         """
         Count the number of dataset items in a dataset revision, grouped by subset.
