@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 import torch
 from torch import Tensor, nn
+from torch.export import Dim
 from torchvision.ops import box_convert
 from torchvision.tv_tensors import BoundingBoxFormat
 
@@ -304,12 +305,7 @@ class RTDETR(OTXDetectionModel):
             onnx_export_configuration={
                 "input_names": ["images"],
                 "output_names": ["bboxes", "labels", "scores"],
-                "dynamic_axes": {
-                    "images": {0: "batch"},
-                    "boxes": {0: "batch", 1: "num_dets"},
-                    "labels": {0: "batch", 1: "num_dets"},
-                    "scores": {0: "batch", 1: "num_dets"},
-                },
+                "dynamic_shapes": {"inputs": {0: Dim("batch")}},
                 "autograd_inlining": False,
                 "opset_version": 18,
             },
