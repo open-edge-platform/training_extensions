@@ -40,7 +40,7 @@ class PipelineView(BaseModel):
                 },
                 "model": {
                     "id": "76e07d18-196e-4e33-bf98-ac1d35dca4cb",
-                    "architecture": "Object_Detection_YOLOX_X",
+                    "architecture": "object-detection-yolox-x",
                     "parent_revision": "06091f82-5506-41b9-b97f-c761380df870",
                     "training_info": {
                         "status": "in_progress",

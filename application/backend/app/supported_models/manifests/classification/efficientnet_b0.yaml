@@ -1,4 +1,4 @@
-id: Custom_Image_Classification_EfficientNet-B0
+id: image-classification-efficientnet-b0
 name: EfficientNet-B0
 
 pretrained_weights:

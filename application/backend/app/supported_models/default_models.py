@@ -33,22 +33,22 @@ class DefaultModels:
 
     default_models_by_task: dict[TaskType, dict[DefaultCategory, str | None]] = {
         TaskType.CLASSIFICATION: {
-            DefaultCategory.DEFAULT: "Custom_Image_Classification_EfficientNet-B0",
-            DefaultCategory.ACCURACY: "Custom_Image_Classification_EfficientNet-V2-S",
-            DefaultCategory.SPEED: "Custom_Image_Classification_MobileNet-V3-large-1x",
-            DefaultCategory.BALANCE: "Custom_Image_Classification_EfficientNet-B0",
+            DefaultCategory.DEFAULT: "image-classification-efficientnet-b0",
+            DefaultCategory.ACCURACY: "image-classification-efficientnet-v2-s",
+            DefaultCategory.SPEED: "image-classification-mobilenet-v3-large",
+            DefaultCategory.BALANCE: "image-classification-efficientnet-b0",
         },
         TaskType.DETECTION: {
-            DefaultCategory.DEFAULT: "Custom_Object_Detection_Gen3_ATSS",
-            DefaultCategory.ACCURACY: "Object_Detection_DFine_X",
-            DefaultCategory.SPEED: "Object_Detection_YOLOX_S",
-            DefaultCategory.BALANCE: "Custom_Object_Detection_Gen3_ATSS",
+            DefaultCategory.DEFAULT: "object-detection-atss-mobilenet-v2",
+            DefaultCategory.ACCURACY: "object-detection-d-fine-x",
+            DefaultCategory.SPEED: "object-detection-yolox-s",
+            DefaultCategory.BALANCE: "object-detection-atss-mobilenet-v2",
         },
         TaskType.INSTANCE_SEGMENTATION: {
-            DefaultCategory.DEFAULT: "Custom_Counting_Instance_Segmentation_MaskRCNN_EfficientNetB2B",
-            DefaultCategory.ACCURACY: "Custom_Counting_Instance_Segmentation_MaskRCNN_SwinT_FP16",
-            DefaultCategory.SPEED: "Custom_Counting_Instance_Segmentation_MaskRCNN_EfficientNetB2B",
-            DefaultCategory.BALANCE: "Custom_Instance_Segmentation_MaskRCNN_ResNet50_v2",
+            DefaultCategory.DEFAULT: "instance-segmentation-mask-rcnn-efficientnet-b2",
+            DefaultCategory.ACCURACY: "instance-segmentation-mask-rcnn-swin-t",
+            DefaultCategory.SPEED: "instance-segmentation-mask-rcnn-efficientnet-b2",
+            DefaultCategory.BALANCE: "instance-segmentation-mask-rcnn-resnet50-v2",
         },
     }
 
@@ -64,7 +64,7 @@ class DefaultModels:
 
         Returns:
             str | None: The name of the recommended model architecture, or None if no model
-                    is available for the given task type (e.g., VISUAL_PROMPTING).
+                    is available for the given task type (e.g., DETECTION).
 
         Raises:
             ValueError: If the task_type is not a supported TaskType value or if the default_type
@@ -162,24 +162,3 @@ class DefaultModels:
             ValueError: If the task_type is not a supported TaskType value.
         """
         return cls.get_model_by_type(task_type, DefaultCategory.BALANCE)
-
-    @classmethod
-    def get_default_models_per_task(cls) -> dict[str, str | None]:
-        """
-        Gets the default model for each task type.
-
-        Returns:
-            dict[str, str | None]: A dictionary mapping task type names (in lowercase)
-            to their default model names. Returns None as value for task types that
-            don't have a default model.
-
-        Example:
-            >>> get_default_models_per_task()
-            {
-                'detection': 'yolox',
-                'classification': 'efficientnet_b0',
-                'segmentation': 'segformer',
-                'visual_prompting': None
-            }
-        """
-        return {task_type.name.lower(): cls.get_default_model(task_type.name.lower()) for task_type in TaskType}
