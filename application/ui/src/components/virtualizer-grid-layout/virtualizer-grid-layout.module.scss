@@ -27,13 +27,13 @@
     &[data-selected] {
         border-radius: var(--spectrum-global-dimension-size-50);
         overflow: hidden;
-        outline: var(--spectrum-global-dimension-size-100) solid #fff;
+        outline: var(--spectrum-global-dimension-size-50) solid var(--energy-blue);
     }
 
     &[data-focus-visible] {
         border-radius: var(--spectrum-global-dimension-size-50);
         overflow: hidden;
-        outline-width: var(--spectrum-global-dimension-size-100);
+        outline-width: var(--spectrum-global-dimension-size-50);
     }
 
     img {
