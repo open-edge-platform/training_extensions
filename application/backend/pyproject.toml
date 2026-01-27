@@ -62,7 +62,7 @@ lint = [
 
 [tool.uv]
 default-groups = ["dev", "lint"]
-required-version = "~=0.9.7"
+required-version = "~=0.9.27"
 conflicts = [
     [
         { extra = "cpu" },

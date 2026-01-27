@@ -179,12 +179,11 @@ class DatasetRevisionService(BaseSessionManagedService):
             dataset_revision_items.append(
                 DatasetRevisionItem.model_validate(
                     {
-                        "id": item["id"],
-                        "name": Path(item["image"]).stem,
+                        "id": UUID(Path(item["image"]).stem),
                         "format": Path(item["image"]).suffix.lstrip("."),
                         "width": item["image_info"]["width"],
                         "height": item["image_info"]["height"],
-                        "subset": item["subset"],
+                        "subset": DatasetItemSubset[item["subset"]],
                     }
                 )
             )
