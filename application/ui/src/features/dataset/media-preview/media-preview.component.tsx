@@ -73,7 +73,7 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                     width='100%'
                     height='100%'
                     rows='auto 1fr auto'
-                    columns={`auto 1fr ${SIDEBAR_WIDTH}px`}
+                    columns={['size-800', '1fr', SIDEBAR_WIDTH]}
                     areas={['header header aside', 'toolbar canvas aside', 'toolbar bottom aside']}
                 >
                     <AnnotationActionsProvider
@@ -99,7 +99,7 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                                                 </View>
 
                                                 <View gridArea={'toolbar'}>
-                                                    <PrimaryToolbar mode={mode} />
+                                                    {mode === 'annotation' && <PrimaryToolbar />}
                                                 </View>
 
                                                 <View gridArea={'bottom'}>

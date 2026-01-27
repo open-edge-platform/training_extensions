@@ -5,15 +5,10 @@ import { Divider } from '@geti/ui';
 import { partition } from 'lodash-es';
 
 import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
-import { AnnotatorMode } from '../../../dataset/media-preview/secondary-toolbar/annotator-modes/mode';
 import { Tools } from '../tools.component';
 import { useAvailableTools } from './use-available-tools';
 
-type AnnotatorToolsProps = {
-    mode: AnnotatorMode;
-};
-
-export const AnnotatorTools = ({ mode }: AnnotatorToolsProps) => {
+export const AnnotatorTools = () => {
     const { activeTool, setActiveTool } = useAnnotator();
 
     const availableTools = useAvailableTools();
@@ -27,7 +22,7 @@ export const AnnotatorTools = ({ mode }: AnnotatorToolsProps) => {
                     {otherTools.length > 0 && <Divider size='S' />}
                 </>
             )}
-            {mode === 'annotation' && otherTools.length > 0 && (
+            {otherTools.length > 0 && (
                 <>
                     <Tools tools={otherTools} activeTool={activeTool} setActiveTool={setActiveTool} />
                     <Divider size='S' />
