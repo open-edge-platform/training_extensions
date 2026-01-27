@@ -15,6 +15,8 @@ export const isPolygon = (annotation: Annotation): annotation is Annotation & { 
     return annotation.shape.type === 'polygon';
 };
 
-export const isPrediction = (label: Pick<AnnotationLabel, 'probability'>) => {
+export const isPrediction = (
+    label: Pick<AnnotationLabel, 'probability'>
+): label is Required<Pick<AnnotationLabel, 'probability'>> => {
     return label.probability !== undefined;
 };
