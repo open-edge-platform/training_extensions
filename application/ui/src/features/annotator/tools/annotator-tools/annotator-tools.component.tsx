@@ -23,7 +23,10 @@ export const AnnotatorTools = () => {
                 </>
             )}
             {otherTools.length > 0 && (
-                <Tools tools={otherTools} activeTool={activeTool} setActiveTool={setActiveTool} />
+                <>
+                    <Tools tools={otherTools} activeTool={activeTool} setActiveTool={setActiveTool} />
+                    <Divider size='S' />
+                </>
             )}
         </>
     );

@@ -7,7 +7,8 @@ import { isEmpty } from 'lodash-es';
 import { v4 as uuid } from 'uuid';
 
 import { useZoom } from '../../../components/zoom/zoom.provider';
-import type { Label } from '../../../constants/shared-types';
+import { AnnotationLabel } from '../../../shared/types';
+import { isPrediction } from './utils';
 
 const labelStyles = (scale: number) => {
     // We need the actual values for calculations:
@@ -45,9 +46,14 @@ const labelStyles = (scale: number) => {
 const placeholderLabel = { id: uuid(), name: 'No label', color: 'var(--annotation-fill)', isPrediction: false };
 
 interface AnnotationLabelsProps {
-    labels: Label[];
+    labels: AnnotationLabel[];
     onRemove: (labelId: string) => void;
 }
+
+const formatPredictionScore = (score: number) => {
+    return new Intl.NumberFormat('en-US', { style: 'percent' }).format(score);
+};
+
 export const AnnotationLabels = ({ labels, onRemove }: AnnotationLabelsProps) => {
     const { scale } = useZoom();
 
@@ -102,7 +108,10 @@ export const AnnotationLabels = ({ labels, onRemove }: AnnotationLabelsProps) =>
     }
 
     return labels.map((label) => {
-        const labelWidth = !isEmpty(label.name) ? calculateLabelWidth(label.name) + closeButtonWidth : 0;
+        const predictionWidth = isPrediction(label) ? 30 : 0;
+        const labelWidth = !isEmpty(label.name)
+            ? calculateLabelWidth(label.name) + predictionWidth + closeButtonWidth
+            : 0;
         const xOffset = fullLengthOfAllLabels;
 
         fullLengthOfAllLabels += labelWidth + gap;
@@ -127,7 +136,7 @@ export const AnnotationLabels = ({ labels, onRemove }: AnnotationLabelsProps) =>
                     fill='#fff'
                     aria-label={`label ${label.name}`}
                 >
-                    {label.name}
+                    {`${label.name} ${isPrediction(label) ? formatPredictionScore(label.probability) : ''}`.trim()}
                 </text>
 
                 {/* Remove button */}

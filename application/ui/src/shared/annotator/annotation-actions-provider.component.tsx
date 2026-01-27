@@ -8,32 +8,30 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { v4 as uuid } from 'uuid';
 
 import { $api } from '../../api/client';
-import type { components } from '../../api/openapi-spec';
-import type { Label, Media } from '../../constants/shared-types';
+import type { AnnotationDTO, Label, Media } from '../../constants/shared-types';
 import { UndoRedoProvider } from '../../features/dataset/media-preview/primary-toolbar/undo-redo/undo-redo-provider.component';
 import useUndoRedoState from '../../features/dataset/media-preview/primary-toolbar/undo-redo/use-undo-redo-state';
 import type { Annotation, Shape } from '../types';
 
-type ServerAnnotation = components['schemas']['DatasetItemAnnotation-Input'];
-
-const mapServerAnnotationsToLocal = (serverAnnotations: ServerAnnotation[], projectLabels: Label[]): Annotation[] => {
+const mapServerAnnotationsToLocal = (serverAnnotations: AnnotationDTO[], projectLabels: Label[]): Annotation[] => {
     const labelMap = new Map(projectLabels.map((label) => [label.id, label]));
 
     return serverAnnotations.map((annotation) => {
         // We only get the ids of the labels
         const labels = (annotation.labels ?? [])
             .map((labelRef) => labelMap.get(labelRef.id))
-            .filter((label): label is Label => label !== undefined);
+            .filter((label): label is Label => label !== undefined)
+            .map((label, idx) => ({ ...label, probability: annotation.confidences?.at(idx) }));
 
         return {
             ...annotation,
             id: uuid(),
             labels,
-        } as Annotation;
+        };
     });
 };
 
-const mapLocalAnnotationsToServer = (localAnnotations: Annotation[]): ServerAnnotation[] => {
+const mapLocalAnnotationsToServer = (localAnnotations: Annotation[]): AnnotationDTO[] => {
     return localAnnotations.map((annotation) => ({
         // We only want to send the ids of the labels
         labels: annotation.labels.map((label) => ({ id: label.id })),
@@ -48,6 +46,7 @@ interface AnnotationsContextValue {
     deleteAnnotations: (annotationIds: string[]) => void;
     updateAnnotations: (updatedAnnotations: Annotation[]) => void;
     submitAnnotations: () => Promise<void>;
+    submitPredictions: () => Promise<void>;
     isUserReviewed: boolean;
     isSaving: boolean;
 }
@@ -56,7 +55,7 @@ const AnnotationsContext = createContext<AnnotationsContextValue | null>(null);
 
 type AnnotationActionsProviderProps = {
     children: ReactNode;
-    initialAnnotationsDTO?: ServerAnnotation[];
+    initialAnnotationsDTO?: AnnotationDTO[];
     isUserReviewed?: boolean;
     mediaItem: Media;
 };
@@ -111,13 +110,25 @@ export const AnnotationActionsProvider = ({
         );
     };
 
+    const saveAnnotations = async (annotationsDTO: AnnotationDTO[]) => {
+        await saveMutation.mutateAsync({
+            params: { path: { dataset_item_id: mediaItem.id, project_id: projectId } },
+            body: { annotations: annotationsDTO },
+        });
+    };
+
     const submitAnnotations = async () => {
         const serverFormattedAnnotations = mapLocalAnnotationsToServer(annotations);
 
-        await saveMutation.mutateAsync({
-            params: { path: { dataset_item_id: mediaItem.id || '', project_id: projectId } },
-            body: { annotations: serverFormattedAnnotations },
-        });
+        await saveAnnotations(serverFormattedAnnotations);
+    };
+
+    const submitPredictions = async () => {
+        const serverFormattedAnnotationsWithoutConfidences: AnnotationDTO[] = mapLocalAnnotationsToServer(
+            annotations
+        ).map(({ confidences, ...restOfAnnotation }) => restOfAnnotation);
+
+        await saveAnnotations(serverFormattedAnnotationsWithoutConfidences);
     };
 
     return (
@@ -133,6 +144,7 @@ export const AnnotationActionsProvider = ({
 
                 // Remote
                 submitAnnotations,
+                submitPredictions,
 
                 isSaving: saveMutation.isPending,
             }}

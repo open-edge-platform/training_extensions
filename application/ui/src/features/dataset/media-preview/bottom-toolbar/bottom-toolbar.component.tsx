@@ -9,37 +9,44 @@ import { Settings } from '../primary-toolbar/settings/settings.component';
 import { ToggleFocus } from '../primary-toolbar/toggle-focus.component';
 import { ZoomFitScreen } from '../primary-toolbar/zoom/zoom-fit-screen.component';
 import { ZoomSelector } from '../primary-toolbar/zoom/zoom-selector.component';
+import { Toolbar } from '../toolbar-container/toolbar-container.component';
 
-import classes from '../media-preview.module.scss';
+import styles from './bottom-toolbar.module.scss';
 
 export const BottomToolbar = () => {
     return (
         <Flex justifyContent={'end'}>
-            <Grid UNSAFE_className={classes.toolbarGrid} autoFlow={'column'} autoColumns={'max-content'}>
-                <Flex UNSAFE_className={classes.toolbarSection}>
-                    <Hotkeys />
-                </Flex>
+            <Toolbar.Container>
+                <Grid autoFlow={'column'} autoColumns={'max-content'} gap={'size-50'}>
+                    <Toolbar.Section>
+                        <Hotkeys />
+                    </Toolbar.Section>
 
-                <Flex UNSAFE_className={classes.toolbarSection} gap={'size-100'}>
-                    <Text UNSAFE_className={classes.filename}>VID_20210209_160431.jpg (1080x1920 px)</Text>
-                    <Tag style={{ backgroundColor: 'var(--coral-shade-1)' }} prefix={<Search />} text={'For Review'} />
-                    <Picker placeholder={'Select subset'} aria-label='Subset picker'>
-                        <Item>Validation</Item>
-                        <Item>Testing</Item>
-                        <Item>Training</Item>
-                    </Picker>
-                </Flex>
+                    <Toolbar.Section>
+                        <Flex gap={'size-100'} alignItems={'center'}>
+                            <Text UNSAFE_className={styles.filename}>VID_20210209_160431.jpg (1080x1920 px)</Text>
+                            <Tag className={styles.forReview} prefix={<Search />} text={'For Review'} />
+                            <Picker placeholder={'Select subset'} aria-label='Subset picker'>
+                                <Item>Validation</Item>
+                                <Item>Testing</Item>
+                                <Item>Training</Item>
+                            </Picker>
+                        </Flex>
+                    </Toolbar.Section>
 
-                <Flex UNSAFE_className={classes.toolbarSection}>
-                    <Settings />
+                    <Toolbar.Section>
+                        <Flex alignItems={'center'}>
+                            <Settings />
 
-                    <ZoomSelector />
+                            <ZoomSelector />
 
-                    <ToggleFocus />
+                            <ToggleFocus />
 
-                    <ZoomFitScreen />
-                </Flex>
-            </Grid>
+                            <ZoomFitScreen />
+                        </Flex>
+                    </Toolbar.Section>
+                </Grid>
+            </Toolbar.Container>
         </Flex>
     );
 };
