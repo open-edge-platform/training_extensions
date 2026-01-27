@@ -68,6 +68,7 @@ export const SecondaryToolbar = ({
     } = useAnnotationActions();
 
     const hasAnnotations = !isEmpty(annotations);
+    const isMultiLabel = selectedProject.task.exclusive_labels == false;
     const isClassification = selectedProject.task.task_type === 'classification';
     const selectedIndex = items.findIndex((item) => item.id === mediaItem.id);
 
@@ -118,20 +119,22 @@ export const SecondaryToolbar = ({
 
         if (isEmpty(annotations)) {
             addAnnotations([{ type: 'full_image' }], labels);
-        } else {
+        } else if (isMultiLabel) {
             updateClassificationAnnotations(labels[0]);
+        } else {
+            updateAnnotations(annotations.map((annotation) => ({ ...annotation, labels })));
         }
+
         setSelectedLabelId(label?.id ?? null);
     };
 
     const updateClassificationAnnotations = (newLabel: Label) => {
-        const updatedLabels = annotations.flatMap(toggleLabel(newLabel));
         const updatedAnnotations = annotations.map((annotation) => ({
             ...annotation,
-            labels: updatedLabels,
+            labels: toggleLabel(newLabel, annotation.labels),
         }));
 
-        const hasNoLabels = updatedLabels.length === 0;
+        const hasNoLabels = updatedAnnotations.every(({ labels }) => isEmpty(labels));
 
         if (hasNoLabels) {
             deleteAnnotations(updatedAnnotations.map(({ id }) => id));

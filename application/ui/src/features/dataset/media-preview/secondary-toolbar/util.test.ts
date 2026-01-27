@@ -18,7 +18,7 @@ describe('secondary toolbar utils', () => {
                 labels: [mockLabel1, mockLabel2],
             });
 
-            const result = toggleLabel(mockLabel3)(annotation);
+            const result = toggleLabel(mockLabel3, annotation.labels);
 
             expect(result).toEqual([mockLabel1, mockLabel2, mockLabel3]);
         });
@@ -28,7 +28,7 @@ describe('secondary toolbar utils', () => {
                 labels: [mockLabel1, mockLabel2, mockLabel3],
             });
 
-            const result = toggleLabel(mockLabel2)(annotation);
+            const result = toggleLabel(mockLabel2, annotation.labels);
 
             expect(result).toEqual([mockLabel1, mockLabel3]);
         });
@@ -36,7 +36,7 @@ describe('secondary toolbar utils', () => {
         it('add label to empty labels array', () => {
             const annotation = getMockedAnnotation({ labels: [] });
 
-            const result = toggleLabel(mockLabel1)(annotation);
+            const result = toggleLabel(mockLabel1, annotation.labels);
 
             expect(result).toEqual([mockLabel1]);
         });
@@ -46,7 +46,7 @@ describe('secondary toolbar utils', () => {
                 labels: [mockLabel1],
             });
 
-            const result = toggleLabel(mockLabel1)(annotation);
+            const result = toggleLabel(mockLabel1, annotation.labels);
 
             expect(result).toEqual([]);
         });
