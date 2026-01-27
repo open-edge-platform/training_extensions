@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Suspense } from 'react';
+import { Suspense, useState } from 'react';
 
 import { Content, Dialog, Flex, Grid, Loading, View } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
@@ -21,8 +21,10 @@ import { SIDEBAR_WIDTH } from './constants';
 import { PrimaryToolbar } from './primary-toolbar/primary-toolbar.component';
 import { AnnotatorCanvasSettings } from './primary-toolbar/settings/annotator-canvas-settings.component';
 import { CanvasSettingsProvider } from './primary-toolbar/settings/canvas-settings-provider.component';
+import { AnnotatorMode } from './secondary-toolbar/annotator-modes/mode';
 import { SecondaryToolbar } from './secondary-toolbar/secondary-toolbar.component';
 import { SidebarItems } from './sidebar-items/sidebar-items.component';
+import { getAnnotations } from './utils';
 
 const isUnannotatedError = (error: unknown): boolean => {
     return (
@@ -45,6 +47,8 @@ const CanvasAreaLoading = () => (
 export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPreviewProps) => {
     const projectId = useProjectIdentifier();
 
+    const [mode, setMode] = useState<AnnotatorMode>('annotation');
+
     const { items, hasNextPage, isFetchingNextPage, fetchNextPage } = useGetDatasetItems();
 
     const { data: annotationsData } = $api.useQuery(
@@ -58,6 +62,9 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
         }
     );
 
+    const isUserReviewedMedia = annotationsData?.user_reviewed ?? false;
+    const annotationsDTO = annotationsData?.annotations ?? [];
+
     return (
         <Dialog UNSAFE_style={{ backgroundColor: 'var(--spectrum-global-color-gray-50)' }}>
             <Content>
@@ -66,13 +73,13 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                     width='100%'
                     height='100%'
                     rows='auto 1fr auto'
-                    columns={`auto 1fr ${SIDEBAR_WIDTH}px`}
-                    areas={['header header header', 'toolbar canvas aside', 'toolbar bottom aside']}
+                    columns={['size-800', '1fr', SIDEBAR_WIDTH]}
+                    areas={['header header aside', 'toolbar canvas aside', 'toolbar bottom aside']}
                 >
                     <AnnotationActionsProvider
                         mediaItem={mediaItem}
-                        initialAnnotationsDTO={annotationsData?.annotations ?? []}
-                        isUserReviewed={annotationsData?.user_reviewed ?? false}
+                        initialAnnotationsDTO={getAnnotations(mode, isUserReviewedMedia, annotationsDTO)}
+                        isUserReviewed={isUserReviewedMedia}
                     >
                         <ZoomProvider>
                             <Suspense fallback={<CanvasAreaLoading />}>
@@ -86,11 +93,13 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                                                         onClose={close}
                                                         mediaItem={mediaItem}
                                                         onSelectedMediaItem={onSelectedMediaItem}
+                                                        mode={mode}
+                                                        onModeChange={setMode}
                                                     />
                                                 </View>
 
                                                 <View gridArea={'toolbar'}>
-                                                    <PrimaryToolbar />
+                                                    {mode === 'annotation' && <PrimaryToolbar />}
                                                 </View>
 
                                                 <View gridArea={'bottom'}>
