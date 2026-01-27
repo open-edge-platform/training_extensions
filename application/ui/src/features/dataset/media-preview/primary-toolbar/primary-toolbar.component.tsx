@@ -20,7 +20,9 @@ export const PrimaryToolbar = () => {
                     </Flex>
                 </Toolbar.Section>
                 <Toolbar.Section>
-                    <ToggleAnnotationsVisibility />
+                    <Flex justifyContent={'center'}>
+                        <ToggleAnnotationsVisibility />
+                    </Flex>
                 </Toolbar.Section>
             </Flex>
         </Toolbar.Container>
