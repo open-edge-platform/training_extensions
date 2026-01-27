@@ -30,8 +30,10 @@ const StatusTag = ({ status }: { status: string }) => (
 
 export const TrainingModelRow = ({ job, onCancel }: TrainingModelRowProps) => {
     const { data: models } = useGetModels();
-    const trainingModel = models?.find((model) => model.id === job.metadata.model.id);
-    const modelName = trainingModel?.name || job.metadata.model.id;
+    const modelId = 'model' in job.metadata && job.metadata.model?.id;
+    const modelArchitecture = 'model' in job.metadata && job.metadata.model?.architecture;
+    const trainingModel = models?.find((model) => model.id === modelId);
+    const modelName = trainingModel?.name || modelId;
 
     return (
         <BottomProgressBar progress={job.progress}>
@@ -59,7 +61,7 @@ export const TrainingModelRow = ({ job, onCancel }: TrainingModelRowProps) => {
                 <Text UNSAFE_className={classes.smallText}>...</Text>
 
                 <Flex alignItems={'start'} direction={'column'} gap={'size-100'}>
-                    <Text UNSAFE_className={classes.smallText}>{job.metadata.model.architecture}</Text>
+                    <Text UNSAFE_className={classes.smallText}>{modelArchitecture}</Text>
                     {/* TODO: Speed is hardcoded for now, once the backend is update we need to update this */}
                     <Tag prefix={<ThumbsUp />} text={'Speed'} className={classes.recommendedForTag} />
                 </Flex>
