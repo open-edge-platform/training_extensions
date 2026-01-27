@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { ActionButton, Button, ButtonGroup, dimensionValue, Flex, Key, Text } from '@geti/ui';
-import { CloseSemiBold } from '@geti/ui/icons';
+import { Checkmark, CloseSemiBold } from '@geti/ui/icons';
 import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { isEmpty } from 'lodash-es';
 
@@ -51,13 +51,17 @@ export const SecondaryToolbar = ({
     const { selectedAnnotations } = useSelectedAnnotations();
     const { isHidden, projectLabels } = useSecondaryToolbarState();
     const { selectedLabel, setSelectedLabelId } = useAnnotator();
-    const { annotations, isSaving, updateAnnotations, submitAnnotations } = useAnnotationActions();
+    const { annotations, isSaving, updateAnnotations, submitAnnotations, submitPredictions } = useAnnotationActions();
 
     const hasAnnotations = !isEmpty(annotations);
     const selectedIndex = items.findIndex((item) => item.id === mediaItem.id);
 
     const handleSubmit = async () => {
-        await submitAnnotations();
+        if (mode === 'annotation') {
+            await submitAnnotations();
+        } else {
+            await submitPredictions();
+        }
 
         const nextItem = getNextItem(items.length - 1, selectedIndex);
         onSelectedMediaItem(items[nextItem]);
@@ -93,7 +97,7 @@ export const SecondaryToolbar = ({
             justifyContent={'space-between'}
             UNSAFE_style={{ paddingTop: dimensionValue('size-125') }}
         >
-            <ToolbarContainer isHidden={!hasAnnotations}>
+            <ToolbarContainer>
                 <AnnotatorModes mode={mode} onModeChange={onModeChange} />
             </ToolbarContainer>
             <ToolbarContainer isHidden={isHidden}>
@@ -112,7 +116,14 @@ export const SecondaryToolbar = ({
                         marginStart={'size-200'}
                         isDisabled={!hasAnnotations || isSaving}
                     >
-                        Submit
+                        {mode === 'annotation' ? (
+                            'Submit'
+                        ) : (
+                            <>
+                                <Checkmark />
+                                <Text>Confirm prediction</Text>
+                            </>
+                        )}
                     </Button>
 
                     <ActionButton

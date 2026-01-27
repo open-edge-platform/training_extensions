@@ -46,6 +46,7 @@ interface AnnotationsContextValue {
     deleteAnnotations: (annotationIds: string[]) => void;
     updateAnnotations: (updatedAnnotations: Annotation[]) => void;
     submitAnnotations: () => Promise<void>;
+    submitPredictions: () => Promise<void>;
     isUserReviewed: boolean;
     isSaving: boolean;
 }
@@ -109,13 +110,25 @@ export const AnnotationActionsProvider = ({
         );
     };
 
+    const saveAnnotations = async (annotationsDTO: AnnotationDTO[]) => {
+        await saveMutation.mutateAsync({
+            params: { path: { dataset_item_id: mediaItem.id, project_id: projectId } },
+            body: { annotations: annotationsDTO },
+        });
+    };
+
     const submitAnnotations = async () => {
         const serverFormattedAnnotations = mapLocalAnnotationsToServer(annotations);
 
-        await saveMutation.mutateAsync({
-            params: { path: { dataset_item_id: mediaItem.id || '', project_id: projectId } },
-            body: { annotations: serverFormattedAnnotations },
-        });
+        await saveAnnotations(serverFormattedAnnotations);
+    };
+
+    const submitPredictions = async () => {
+        const serverFormattedAnnotationsWithoutConfidences: AnnotationDTO[] = mapLocalAnnotationsToServer(
+            annotations
+        ).map(({ confidences, ...restOfAnnotation }) => restOfAnnotation);
+
+        await saveAnnotations(serverFormattedAnnotationsWithoutConfidences);
     };
 
     return (
@@ -131,6 +144,7 @@ export const AnnotationActionsProvider = ({
 
                 // Remote
                 submitAnnotations,
+                submitPredictions,
 
                 isSaving: saveMutation.isPending,
             }}

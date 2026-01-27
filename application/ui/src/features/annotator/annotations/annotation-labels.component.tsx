@@ -136,7 +136,7 @@ export const AnnotationLabels = ({ labels, onRemove }: AnnotationLabelsProps) =>
                     fill='#fff'
                     aria-label={`label ${label.name}`}
                 >
-                    {`${label.name} ${isPrediction(label) ? formatPredictionScore(label.probability) : undefined}`}
+                    {`${label.name} ${isPrediction(label) ? formatPredictionScore(label.probability) : ''}`.trim()}
                 </text>
 
                 {/* Remove button */}

@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Suspense, useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 
 import { Content, Dialog, Flex, Grid, Loading, View } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
@@ -69,12 +69,10 @@ const getAnnotations = (
 
 const useAnnotatorMode = (isSuccess: boolean, isUserReviewed: boolean) => {
     const [mode, setMode] = useState<AnnotatorMode>('annotation');
-    const hasRunOnlyForFirstQuery = useRef<boolean>(false);
 
     useEffect(() => {
         // For the first query, we want to set the mode based on whether the user has reviewed the media item or not.
-        if (isSuccess && !hasRunOnlyForFirstQuery.current) {
-            hasRunOnlyForFirstQuery.current = true;
+        if (isSuccess) {
             setMode(isUserReviewed ? 'annotation' : 'prediction');
         }
     }, [isSuccess, isUserReviewed]);
