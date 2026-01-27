@@ -5,19 +5,16 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { MediaItem } from '../../../../components/media-item/media-item.component';
 import { MediaThumbnail } from '../../../../components/media-thumbnail/media-thumbnail.component';
-import type { Media, MediaStateMap } from '../../../../constants/shared-types';
+import type { Media } from '../../../../constants/shared-types';
 import { getThumbnailUrl } from '../../../../shared/media-url.utils';
-import { AnnotationStatusIcon } from '../../gallery/annotation-state-icon.component';
 
 type SidebarMediaItemProps = {
     item: Media;
-    mediaState: MediaStateMap;
     onSelectedMediaItem: (item: Media) => void;
 };
 
-export const SidebarMediaItem = ({ item, mediaState, onSelectedMediaItem }: SidebarMediaItemProps) => {
+export const SidebarMediaItem = ({ item, onSelectedMediaItem }: SidebarMediaItemProps) => {
     const projectId = useProjectIdentifier();
-    const itemState = mediaState.get(String(item.id));
 
     return (
         <MediaItem
@@ -28,7 +25,6 @@ export const SidebarMediaItem = ({ item, mediaState, onSelectedMediaItem }: Side
                     onClick={() => onSelectedMediaItem(item)}
                 />
             )}
-            bottomRightElement={() => <AnnotationStatusIcon state={itemState} />}
         />
     );
 };
