@@ -10,6 +10,7 @@ import type { Media } from '../../../../constants/shared-types';
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
 import { Labels } from '../../../annotator/labels/labels.component';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
+import { useSelectedData } from '../../selected-data-provider.component';
 import { Toolbar } from '../toolbar-container/toolbar-container.component';
 import { AnnotatorModes } from './annotator-modes/annotator-modes-toggle.component';
 import type { AnnotatorMode } from './annotator-modes/mode';
@@ -48,6 +49,7 @@ export const SecondaryToolbar = ({
     const queryClient = useQueryClient();
     const { isHidden } = useSecondaryToolbarState();
     const { annotations, isSaving, submitAnnotations, submitPredictions } = useAnnotationActions();
+    const { setMediaState } = useSelectedData();
 
     const hasAnnotations = !isEmpty(annotations);
     const selectedIndex = items.findIndex((item) => item.id === mediaItem.id);
@@ -58,6 +60,14 @@ export const SecondaryToolbar = ({
         } else {
             await submitPredictions();
         }
+
+        setMediaState((prev) => {
+            const newState = new Map(prev);
+
+            newState.set(String(mediaItem.id), 'accepted');
+
+            return newState;
+        });
 
         const nextItem = getNextItem(items.length - 1, selectedIndex);
         onSelectedMediaItem(items[nextItem]);
