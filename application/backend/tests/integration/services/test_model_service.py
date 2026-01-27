@@ -341,7 +341,7 @@ class TestModelServiceIntegration:
     def test_update_revision(
         self, fxt_project_id: UUID, fxt_model_id: UUID, fxt_model_service: ModelService, db_session: Session
     ):
-        """Test updating a new model revision succeeds."""
+        """Test updating an existing model revision succeeds."""
         fxt_model_service.update_revision_status(
             project_id=fxt_project_id,
             model_id=fxt_model_id,

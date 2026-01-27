@@ -49,11 +49,17 @@ class ModelRevisionRepository(BaseRepository[ModelRevisionDB]):
         result = cast(CursorResult, self.db.execute(stmt))
         return result.rowcount > 0
 
-    def update_training_status(self, obj_id: str, training_status: str) -> bool:
+    def update_training_status(self, obj_id: str, training_status: str) -> None:
+        """
+        Update the training status of a model revision.
+
+        Args:
+            obj_id (str): Unique identifier of the model revision to update.
+            training_status (str): New training status value to set.
+        """
         stmt = (
             update(ModelRevisionDB)
             .where((ModelRevisionDB.id == obj_id) & (ModelRevisionDB.project_id == self.project_id))
             .values(training_status=training_status)
         )
-        result = cast(CursorResult, self.db.execute(stmt))
-        return result.rowcount > 0
+        self.db.execute(stmt)
