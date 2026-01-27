@@ -3,10 +3,10 @@
 
 import { Key } from 'react';
 
+import { useProject } from 'hooks/api/project.hook';
 import polylabel from 'polylabel';
 
 import type { Label } from '../../../constants/shared-types';
-import { useSelectedProject } from '../../../hooks/use-selected-project.hook';
 import { useAnnotationActions } from '../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotationVisibility } from '../../../shared/annotator/annotation-visibility-provider.component';
 import type { Annotation } from '../../../shared/types';
@@ -19,7 +19,7 @@ type AnnotationShapeProps = {
 };
 
 export const AnnotationShapeWithLabels = ({ annotation }: AnnotationShapeProps) => {
-    const selectedProject = useSelectedProject();
+    const { data: selectedProject } = useProject();
     const { isVisible } = useAnnotationVisibility();
     const { updateAnnotations, deleteAnnotations } = useAnnotationActions();
 

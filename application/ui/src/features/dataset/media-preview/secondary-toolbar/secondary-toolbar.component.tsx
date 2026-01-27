@@ -4,10 +4,10 @@
 import { ActionButton, Button, ButtonGroup, dimensionValue, Flex, Key, Text } from '@geti/ui';
 import { Checkmark, CloseSemiBold } from '@geti/ui/icons';
 import { useQueryClient, type QueryClient } from '@tanstack/react-query';
-import { useSelectedProject } from 'hooks/use-selected-project.hook';
 import { isEmpty } from 'lodash-es';
 
 import type { Label, Media } from '../../../../constants/shared-types';
+import { useProject } from '../../../../hooks/api/project.hook';
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
 import { useSelectedAnnotations } from '../../../../shared/annotator/select-annotation-provider.component';
@@ -51,10 +51,10 @@ export const SecondaryToolbar = ({
     onModeChange,
 }: SecondaryToolbarProps) => {
     const queryClient = useQueryClient();
-    const selectedProject = useSelectedProject();
     const { setMediaState } = useSelectedData();
-    const { selectedAnnotations } = useSelectedAnnotations();
     const { projectLabels } = useSecondaryToolbarState();
+    const { selectedAnnotations } = useSelectedAnnotations();
+    const { data: selectedProject } = useProject();
     const { selectedLabel, setSelectedLabelId } = useAnnotator();
 
     const {
@@ -68,7 +68,7 @@ export const SecondaryToolbar = ({
     } = useAnnotationActions();
 
     const hasAnnotations = !isEmpty(annotations);
-    const isMultiLabel = selectedProject.task.exclusive_labels == false;
+    const isMultiLabel = selectedProject.task.exclusive_labels === false;
     const isClassification = selectedProject.task.task_type === 'classification';
     const selectedIndex = items.findIndex((item) => item.id === mediaItem.id);
 

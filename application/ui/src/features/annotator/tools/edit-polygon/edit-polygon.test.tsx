@@ -15,7 +15,7 @@ import { removeOffLimitPointsPolygon } from '../utils';
 import { EditPolygon } from './edit-polygon.component';
 
 const mockROI = { x: 0, y: 0, width: 1000, height: 1000 };
-vi.mock('hooks/use-selected-project.hook', () => ({ useSelectedProject: () => getMockedProject({}) }));
+vi.mock('hooks/api/project.hook', () => ({ useProject: () => ({ data: getMockedProject({}) }) }));
 
 vi.mock('../../../../shared/annotator/annotator-provider.component', async (importActual) => {
     const actual = await importActual<typeof import('../../../../shared/annotator/annotator-provider.component')>();
