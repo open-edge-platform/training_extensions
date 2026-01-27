@@ -108,15 +108,7 @@ export const Graphs = () => {
     const hasData = latencyData.length > 0 || throughputData.length > 0;
 
     return (
-        <Grid
-            gridArea={'aside'}
-            height={'90vh'}
-            areas={['header', 'graphs']}
-            rows={['min-content', 'minmax(0, 1fr)']}
-            UNSAFE_style={{
-                padding: 'var(--spectrum-global-dimension-size-200)',
-            }}
-        >
+        <Grid gridArea={'aside'} height={'100%'} areas={['header', 'graphs']} rows={['min-content', 'minmax(0, 1fr)']}>
             <Flex gridArea={'header'} alignItems='center' gap={'size-100'} marginBottom={'size-300'}>
                 <Heading level={4}>Model statistics</Heading>
             </Flex>
