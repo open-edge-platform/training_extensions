@@ -1,27 +1,23 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { View } from '@geti/ui';
-import { Accept, Search } from '@geti/ui/icons';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { MediaItem } from '../../../../components/media-item/media-item.component';
 import { MediaThumbnail } from '../../../../components/media-thumbnail/media-thumbnail.component';
-import type { Media } from '../../../../constants/shared-types';
-import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
+import type { Media, MediaStateMap } from '../../../../constants/shared-types';
 import { getThumbnailUrl } from '../../../../shared/media-url.utils';
-
-import classes from './sidebar-media-item.module.scss';
+import { AnnotationStatusIcon } from '../../gallery/annotation-state-icon.component';
 
 type SidebarMediaItemProps = {
     item: Media;
-    isSelected: boolean;
+    mediaState: MediaStateMap;
     onSelectedMediaItem: (item: Media) => void;
 };
 
-export const SidebarMediaItem = ({ item, isSelected, onSelectedMediaItem }: SidebarMediaItemProps) => {
+export const SidebarMediaItem = ({ item, mediaState, onSelectedMediaItem }: SidebarMediaItemProps) => {
     const projectId = useProjectIdentifier();
-    const { isUserReviewed } = useAnnotationActions();
+    const itemState = mediaState.get(String(item.id));
 
     return (
         <MediaItem
@@ -32,17 +28,7 @@ export const SidebarMediaItem = ({ item, isSelected, onSelectedMediaItem }: Side
                     onClick={() => onSelectedMediaItem(item)}
                 />
             )}
-            bottomRightElement={() => {
-                if (!isSelected) {
-                    return null;
-                }
-
-                return (
-                    <View UNSAFE_className={isUserReviewed ? classes.iconAccept : classes.iconSearch}>
-                        {isUserReviewed ? <Accept /> : <Search />}
-                    </View>
-                );
-            }}
+            bottomRightElement={() => <AnnotationStatusIcon state={itemState} />}
         />
     );
 };

@@ -41,7 +41,9 @@ export const BottomToolbar = ({ isUserReviewed, mediaItem }: BottomToolbarProps)
                                 prefix={isUserReviewed ? <Accept /> : <Search />}
                                 text={isUserReviewed ? 'Accepted' : 'For Review'}
                             />
-                            <Picker placeholder={'Select subset'} aria-label='Subset picker'>
+
+                            {/* TODO: Update these once backend is ready */}
+                            <Picker placeholder={'Select subset'} aria-label={'Select subset'}>
                                 <Item>Validation</Item>
                                 <Item>Testing</Item>
                                 <Item>Training</Item>
