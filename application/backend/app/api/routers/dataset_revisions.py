@@ -41,7 +41,7 @@ def list_dataset_revisions(
     project: Annotated[Project, Depends(get_project)],
     dataset_revision_service: Annotated[DatasetRevisionService, Depends(get_dataset_revision_service)],
 ) -> list[DatasetRevisionView]:
-    """Get all dataset revisions in a project, optionally filtered by dataset revision."""
+    """List the dataset revisions in a project."""
     try:
         dataset_revision_views = []
         for dataset_revision in dataset_revision_service.list_dataset_revisions(project_id=project.id):
