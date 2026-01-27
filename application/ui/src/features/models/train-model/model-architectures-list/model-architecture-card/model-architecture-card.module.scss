@@ -4,16 +4,12 @@
     background-color: var(--spectrum-global-color-gray-200);
     display: grid;
     grid-template-rows: subgrid;
-    grid-row: span 4;
+    grid-row: span 3;
     gap: var(--spectrum-global-dimension-size-200);
     transition:
         border-color 0.3s ease-in-out,
         background-color 0.3s ease-in-out;
     cursor: pointer;
-}
-
-.modelArchitectureCompact {
-    grid-row: span 2;
 }
 
 .modelArchitectureSelected {
@@ -46,11 +42,13 @@
     line-height: var(--spectrum-global-dimension-size-300);
 }
 
-.modelArchitectureExpandedDescription {
-    font-size: var(--spectrum-global-dimension-font-size-75);
-}
-
 .activeModelArchitecture {
     background-color: var(--energy-blue);
     color: var(--spectrum-global-color-gray-50);
+}
+
+.description {
+    svg {
+        fill: var(--energy-blue) !important;
+    }
 }

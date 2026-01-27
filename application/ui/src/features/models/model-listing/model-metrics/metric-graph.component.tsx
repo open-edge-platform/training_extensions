@@ -3,7 +3,7 @@
 
 import { ActionButton, dimensionValue, Flex, Heading, Item, Menu, MenuTrigger, View } from '@geti/ui';
 import { MoreMenu } from '@geti/ui/icons';
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Area, AreaChart, CartesianGrid, Tooltip, XAxis, YAxis } from 'recharts';
 
 type MetricGraphProps<T extends Record<string, unknown>> = {
     title: string;
@@ -55,36 +55,40 @@ export const MetricGraph = <T extends Record<string, unknown>>({
                 backgroundColor={'gray-50'}
                 minHeight={'size-3400'}
             >
-                <ResponsiveContainer width='100%' height='100%'>
-                    <AreaChart data={data} margin={{ top: 35, bottom: 35, left: 20 }}>
-                        <CartesianGrid />
-                        <XAxis
-                            dataKey={xAxisKey}
-                            label={{ value: xAxisKey, position: 'bottom', fill: '#666', offset: 12 }}
-                            ticks={xAxisTicks}
-                            tickMargin={12}
-                        />
-                        <YAxis
-                            label={{ value: yAxisLabel, angle: -90, position: 'center', dx: -30 }}
-                            domain={yAxisDomain}
-                            ticks={yAxisTicks}
-                            tickMargin={12}
-                        />
-                        <Tooltip
-                            contentStyle={{ backgroundColor: '#fff', border: '1px solid #ccc' }}
-                            labelStyle={{ color: '#333' }}
-                        />
-                        <Area
-                            type='linear'
-                            dataKey={dataKey}
-                            name={yAxisLabel}
-                            stroke='var(--energy-blue)'
-                            strokeWidth={2}
-                            fill='var(--energy-blue)'
-                            fillOpacity={0.3}
-                        />
-                    </AreaChart>
-                </ResponsiveContainer>
+                <AreaChart
+                    responsive
+                    height={'100%'}
+                    width={'100%'}
+                    data={data}
+                    margin={{ top: 35, bottom: 35, left: 20 }}
+                >
+                    <CartesianGrid />
+                    <XAxis
+                        dataKey={xAxisKey}
+                        label={{ value: xAxisKey, position: 'bottom', fill: '#666', offset: 12 }}
+                        ticks={xAxisTicks}
+                        tickMargin={12}
+                    />
+                    <YAxis
+                        label={{ value: yAxisLabel, angle: -90, position: 'center', dx: -30 }}
+                        domain={yAxisDomain}
+                        ticks={yAxisTicks}
+                        tickMargin={12}
+                    />
+                    <Tooltip
+                        contentStyle={{ backgroundColor: '#fff', border: '1px solid #ccc' }}
+                        labelStyle={{ color: '#333' }}
+                    />
+                    <Area
+                        type='linear'
+                        dataKey={dataKey}
+                        name={yAxisLabel}
+                        stroke='var(--energy-blue)'
+                        strokeWidth={2}
+                        fill='var(--energy-blue)'
+                        fillOpacity={0.3}
+                    />
+                </AreaChart>
             </View>
         </Flex>
     );
