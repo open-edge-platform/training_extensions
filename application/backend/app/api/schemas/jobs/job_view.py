@@ -59,7 +59,11 @@ class JobView(BaseModel):
         match job.job_type:
             case JobType.TRAIN:
                 metadata = TrainingMetadata.model_validate(job)
-            case JobType.IMPORT_DATASET_NEW | JobType.IMPORT_DATASET_PROJECT | JobType.IMPORT_DATASET_PROJECT:
+            case (
+                JobType.IMPORT_DATASET_AS_NEW_PROJECT
+                | JobType.IMPORT_DATASET_TO_PROJECT
+                | JobType.PREPARE_DATASET_FOR_IMPORT
+            ):
                 metadata = ImportDatasetMetadata.model_validate(job)
             case _:
                 raise ValueError("Metadata is not defined for this job type")

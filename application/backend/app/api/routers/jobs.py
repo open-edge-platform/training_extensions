@@ -66,11 +66,11 @@ async def submit_job(
                         job_id=job_id,
                     ),
                 )
-            case JobType.IMPORT_DATASET_PREPARE:
+            case JobType.PREPARE_DATASET_FOR_IMPORT:
                 raise NotImplementedError
-            case JobType.IMPORT_DATASET_NEW:
+            case JobType.IMPORT_DATASET_AS_NEW_PROJECT:
                 raise NotImplementedError
-            case JobType.IMPORT_DATASET_PROJECT:
+            case JobType.IMPORT_DATASET_TO_PROJECT:
                 raise NotImplementedError
             case _:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Unknown job type")

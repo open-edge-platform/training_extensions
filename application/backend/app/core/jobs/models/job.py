@@ -24,9 +24,9 @@ class JobStatus(IntEnum):
 
 class JobType(StrEnum):
     TRAIN = "train"
-    IMPORT_DATASET_PREPARE = "prepare_dataset_for_import"
-    IMPORT_DATASET_NEW = "import_dataset_as_new_project"
-    IMPORT_DATASET_PROJECT = "import_dataset_to_project"
+    PREPARE_DATASET_FOR_IMPORT = "prepare_dataset_for_import"
+    IMPORT_DATASET_AS_NEW_PROJECT = "import_dataset_as_new_project"
+    IMPORT_DATASET_TO_PROJECT = "import_dataset_to_project"
 
 
 def now_utc_ts() -> float:
