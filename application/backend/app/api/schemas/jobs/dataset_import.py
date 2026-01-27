@@ -4,7 +4,7 @@
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from app.api.schemas.jobs.base import BaseJobRequest
 from app.core.jobs.models import JobType
@@ -154,3 +154,20 @@ class ImportDatasetNewRequest(BaseImportDatasetRequest):
             }
         }
     }
+
+
+class ImportDatasetMetadata(BaseModel):
+    staged_dataset_id: str = Field(..., description="Dataset ID")
+    project_id: str | None = Field(None, description="Project ID")
+    filters: DatasetFilters | None = Field(None, description="Filters to apply to the dataset during import")
+    labels_mapping: dict[str, str] | None = Field(None, description="Mapping between labels")
+    subset_mapping: dict[str, DatasetItemSubset] | None = Field(
+        None, description="Subset mapping between dataset and project convention"
+    )
+    project: NewProjectParams | None = Field(None, description="New project parameters")
+
+    @model_validator(mode="before")
+    @classmethod
+    def populate_metadata(cls, data: object) -> object:
+        # TODO: Implement validator when service layer models added
+        return data

@@ -9,9 +9,12 @@ from pydantic import BaseModel, Field
 
 from app.core.jobs.models import Job, JobStatus, JobType
 
+from .dataset_import import ImportDatasetMetadata
 from .training import TrainingMetadata
 
-JobMetadata = Annotated[TrainingMetadata, Field(..., description="Metadata associated with the job")]
+JobMetadata = Annotated[
+    TrainingMetadata | ImportDatasetMetadata, Field(..., description="Metadata associated with the job")
+]
 
 
 class JobView(BaseModel):
@@ -19,7 +22,7 @@ class JobView(BaseModel):
 
     job_id: UUID = Field(..., description="Job identifier")
     job_type: JobType = Field(..., description="Type of the job")
-    metadata: JobMetadata | None = Field(None, description="Metadata associated with the job")
+    metadata: JobMetadata = Field(..., description="Metadata associated with the job")
     status: str = Field(..., description="Job status")
     progress: float = Field(..., description="Job progress percentage (0-100)")
     message: str | None = Field(None, description="Additional information about the job status")
@@ -55,9 +58,11 @@ class JobView(BaseModel):
     def of(job: Job) -> "JobView":
         match job.job_type:
             case JobType.TRAIN:
-                metadata = TrainingMetadata.model_validate(job)  # type: ignore[arg-type]
+                metadata = TrainingMetadata.model_validate(job)
+            case JobType.IMPORT_DATASET_NEW | JobType.IMPORT_DATASET_PROJECT | JobType.IMPORT_DATASET_PROJECT:
+                metadata = ImportDatasetMetadata.model_validate(job)
             case _:
-                metadata = None
+                raise ValueError("Metadata is not defined for this job type")
 
         return JobView(
             job_id=job.id,
