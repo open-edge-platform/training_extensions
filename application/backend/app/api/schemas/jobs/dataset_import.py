@@ -180,9 +180,16 @@ class ImportDatasetMetadata(BaseModel):
     staged_dataset_id: str = Field(..., description="Dataset ID")
     project_id: str | None = Field(None, description="Project ID")
     filters: DatasetFilters | None = Field(None, description="Filters to apply to the dataset during import")
-    labels_mapping: dict[str, str] | None = Field(None, description="Mapping between labels")
+    labels_mapping: dict[str, str] | None = Field(
+        None,
+        description="Specify how to map the labels found in the dataset to the labels defined in the project. If and "
+        "only if the dataset labels exactly match the project labels, this parameter can be left unspecified (null)",
+    )
     subset_mapping: dict[str, DatasetItemSubset] | None = Field(
-        None, description="Subset mapping between dataset and project convention"
+        None,
+        description="Specify how to map the subsets assigned to the items in the dataset to the project subsets. "
+        "If this parameter is unspecified (null), then each item will be assigned to the respective subset defined in "
+        "the dataset",
     )
     project: NewProjectParams | None = Field(None, description="New project parameters")
 
