@@ -1,13 +1,15 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { PointerEvent, useCallback } from 'react';
+import { CSSProperties, PointerEvent, useCallback } from 'react';
 
 import { isEmpty } from 'lodash-es';
 import { v4 as uuid } from 'uuid';
 
 import { useZoom } from '../../../components/zoom/zoom.provider';
 import type { Label } from '../../../constants/shared-types';
+
+import classes from './annotation-labels.module.scss';
 
 const labelStyles = (scale: number) => {
     // We need the actual values for calculations:
@@ -108,7 +110,14 @@ export const AnnotationLabels = ({ labels, onRemove }: AnnotationLabelsProps) =>
         fullLengthOfAllLabels += labelWidth + gap;
 
         return (
-            <g key={label.id} fill='none' stroke='none' fillOpacity={1}>
+            <g
+                key={label.id}
+                fill='none'
+                stroke='none'
+                fillOpacity={1}
+                style={{ '--labelColor': label.color } as CSSProperties}
+                className={classes.labelContainer}
+            >
                 {/* Label name */}
                 <rect
                     x={xOffset}
@@ -124,7 +133,6 @@ export const AnnotationLabels = ({ labels, onRemove }: AnnotationLabelsProps) =>
                     x={xOffset + padding}
                     y={yOffset + styles.textYOffset}
                     fontSize={fontSize}
-                    fill='#fff'
                     aria-label={`label ${label.name}`}
                 >
                     {label.name}
@@ -143,7 +151,6 @@ export const AnnotationLabels = ({ labels, onRemove }: AnnotationLabelsProps) =>
                         x={xOffset + labelWidth - styles.closeButtonXOffset}
                         y={yOffset + styles.textYOffset}
                         fontSize={fontSize}
-                        fill='#fff'
                         aria-label={`Remove ${label.name}`}
                     >
                         x
