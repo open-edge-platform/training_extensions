@@ -110,4 +110,42 @@ describe('Labels', () => {
         expect(mockSetSelectedLabelId).toHaveBeenCalledWith('label-2');
         expect(mockUpdateAnnotations).not.toHaveBeenCalled();
     });
+
+    it('removes label when all selected annotations already have it', () => {
+        mockSelectedAnnotations.current = new Set(['annotation-1', 'annotation-2']);
+        mockAnnotations.current = [
+            { id: 'annotation-1', labels: [mockLabels[0]], shape: { type: 'RECTANGLE' } },
+            { id: 'annotation-2', labels: [mockLabels[0]], shape: { type: 'RECTANGLE' } },
+        ];
+
+        render(<Labels />);
+
+        const personButton = screen.getByRole('button', { name: 'Label Person' });
+        fireEvent.click(personButton);
+
+        expect(mockUpdateAnnotations).toHaveBeenCalledWith([
+            { id: 'annotation-1', labels: [], shape: { type: 'RECTANGLE' } },
+            { id: 'annotation-2', labels: [], shape: { type: 'RECTANGLE' } },
+        ]);
+        expect(mockSetSelectedLabelId).toHaveBeenCalledWith(null);
+    });
+
+    it('adds label when at least one selected annotation does not have it', () => {
+        mockSelectedAnnotations.current = new Set(['annotation-1', 'annotation-2']);
+        mockAnnotations.current = [
+            { id: 'annotation-1', labels: [mockLabels[0]], shape: { type: 'RECTANGLE' } },
+            { id: 'annotation-2', labels: [mockLabels[1]], shape: { type: 'RECTANGLE' } },
+        ];
+
+        render(<Labels />);
+
+        const personButton = screen.getByRole('button', { name: 'Label Person' });
+        fireEvent.click(personButton);
+
+        expect(mockSetSelectedLabelId).toHaveBeenCalledWith('label-1');
+        expect(mockUpdateAnnotations).toHaveBeenCalledWith(
+            [mockAnnotations.current[0], mockAnnotations.current[1]],
+            [mockLabels[0]]
+        );
+    });
 });

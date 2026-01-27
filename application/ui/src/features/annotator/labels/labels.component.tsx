@@ -3,13 +3,14 @@
 
 import { CSSProperties, useRef, useState } from 'react';
 
-import { ActionButton, Text } from '@geti/ui';
+import { ActionButton, Flex, Text } from '@geti/ui';
 import { clsx } from 'clsx';
 
 import type { Label } from '../../../constants/shared-types';
 import { useAnnotationActions } from '../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotator } from '../../../shared/annotator/annotator-provider.component';
 import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
+import type { Annotation } from '../../../shared/types';
 import { useVisibleLabelsCount } from './use-visible-labels-count.hook';
 
 import classes from './labels.module.scss';
@@ -24,7 +25,6 @@ interface LabelBadgeProps {
 const LabelBadge = ({ label, isSelected, isHidden, onClick }: LabelBadgeProps) => {
     return (
         <button
-            type={'button'}
             onClick={onClick}
             style={{ '--labelBgColor': label.color } as CSSProperties}
             className={clsx(classes.badge, { [classes.selected]: isSelected, [classes.hidden]: isHidden })}
@@ -49,11 +49,28 @@ export const Labels = () => {
     const [isExpanded, setIsExpanded] = useState(false);
 
     const handleLabelClick = (label: Label) => {
-        setSelectedLabelId(label.id);
-
         if (selectedAnnotations.size > 0) {
             const selectedAnnotationsList = annotations.filter((a) => selectedAnnotations.has(a.id));
-            updateAnnotations(selectedAnnotationsList, [label]);
+
+            const allAnnotationsHaveLabel = selectedAnnotationsList.every((annotation) =>
+                annotation.labels.some((l) => l.id === label.id)
+            );
+
+            if (allAnnotationsHaveLabel) {
+                // Remove label
+                const updatedAnnotations = selectedAnnotationsList.map((annotation) => {
+                    const filteredLabels = annotation.labels.filter((l) => l.id !== label.id);
+                    return { ...annotation, labels: filteredLabels } as Annotation;
+                });
+                updateAnnotations(updatedAnnotations);
+                setSelectedLabelId(null);
+            } else {
+                // Add label
+                updateAnnotations(selectedAnnotationsList, [label]);
+                setSelectedLabelId(label.id);
+            }
+        } else {
+            setSelectedLabelId(label.id);
         }
     };
 
@@ -65,7 +82,7 @@ export const Labels = () => {
     const hiddenCount = labels.length - collapsedVisibleCount;
 
     return (
-        <div className={classes.wrapper}>
+        <Flex alignItems='start' gap='size-100' minWidth={0} flex='1'>
             <div ref={containerRef} className={clsx(classes.labelsContainer, { [classes.expanded]: isExpanded })}>
                 {labels.map((label, index) => (
                     <LabelBadge
@@ -87,6 +104,6 @@ export const Labels = () => {
                     {isExpanded ? 'Show less' : `+${hiddenCount} more`}
                 </ActionButton>
             )}
-        </div>
+        </Flex>
     );
 };
