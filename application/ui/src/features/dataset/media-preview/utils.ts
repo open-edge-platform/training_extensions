@@ -9,20 +9,11 @@ export const getAnnotations = (
     isUserReviewed: boolean,
     annotations: AnnotationDTO[]
 ): AnnotationDTO[] => {
-    if (mode === 'annotation' && isUserReviewed) {
-        return annotations;
+    if (mode === 'annotation') {
+        return isUserReviewed ? annotations : [];
     }
-
-    if (mode === 'annotation' && !isUserReviewed) {
-        return [];
-    }
-
-    if (mode === 'prediction' && isUserReviewed) {
-        return [];
-    }
-
-    if (mode === 'prediction' && !isUserReviewed) {
-        return annotations;
+    if (mode === 'prediction') {
+        return isUserReviewed ? [] : annotations;
     }
 
     return [];
