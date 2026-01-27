@@ -9,10 +9,11 @@ from uuid import uuid4
 import pytest
 from fastapi import status
 
-from app.api.dependencies import get_dataset_revision_service
+from app.api.dependencies import get_dataset_revision, get_dataset_revision_service
 from app.api.schemas.dataset_item import DatasetItemSubset
+from app.api.schemas.dataset_revision import DatasetRevisionView, ItemCount
 from app.main import app
-from app.models import DatasetItem, MediaFormat
+from app.models import DatasetItem, DatasetRevision, MediaFormat
 from app.services import DatasetRevisionService, ResourceNotFoundError, ResourceType
 
 
@@ -35,6 +36,31 @@ def fxt_dataset_item():
 
 
 @pytest.fixture
+def fxt_dataset_revision(fxt_get_project):
+    return DatasetRevisionView(
+        id=uuid4(),
+        project_id=fxt_get_project.id,
+        name="Dataset (mock)",
+        files_deleted=False,
+        item_counts=ItemCount(total=10, training=7, validation=2, testing=1),
+    )
+
+
+@pytest.fixture
+def fxt_get_dataset_revision(fxt_dataset_revision):
+    # Convert DatasetRevisionView to DatasetRevision
+    dataset_revision = DatasetRevision(
+        id=fxt_dataset_revision.id,
+        project_id=fxt_dataset_revision.project_id,
+        name=fxt_dataset_revision.name,
+        files_deleted=fxt_dataset_revision.files_deleted,
+    )
+    app.dependency_overrides[get_dataset_revision] = lambda: dataset_revision
+    yield dataset_revision
+    app.dependency_overrides.pop(get_dataset_revision, None)
+
+
+@pytest.fixture
 def fxt_dataset_revision_service() -> MagicMock:
     dataset_revision_service = MagicMock(spec=DatasetRevisionService)
     app.dependency_overrides[get_dataset_revision_service] = lambda: dataset_revision_service
@@ -42,6 +68,70 @@ def fxt_dataset_revision_service() -> MagicMock:
 
 
 class TestDatasetRevisionItemEndpoints:
+    def test_list_dataset_revisions_success(
+        self, fxt_get_project, fxt_dataset_revision_service, fxt_client, fxt_dataset_revision
+    ):
+        fxt_dataset_revision_service.list_dataset_revisions.return_value = [fxt_dataset_revision]
+        fxt_dataset_revision_service.count_items_by_subset.return_value = {
+            "total": 10,
+            "training": 7,
+            "validation": 2,
+            "testing": 1,
+        }
+
+        response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/dataset_revisions")
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert isinstance(data, list)
+        assert data[0]["item_counts"]["total"] == 10
+        fxt_dataset_revision_service.list_dataset_revisions.assert_called_once_with(project_id=fxt_get_project.id)
+        fxt_dataset_revision_service.count_items_by_subset.assert_called_once_with(
+            project_id=fxt_get_project.id, dataset_revision_id=fxt_dataset_revision.id
+        )
+
+    def test_list_dataset_revisions_not_found(self, fxt_get_project, fxt_dataset_revision_service, fxt_client):
+        fxt_dataset_revision_service.list_dataset_revisions.side_effect = ResourceNotFoundError(
+            ResourceType.PROJECT, str(fxt_get_project.id)
+        )
+
+        response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/dataset_revisions")
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        fxt_dataset_revision_service.list_dataset_revisions.assert_called_once_with(project_id=fxt_get_project.id)
+
+    def test_get_dataset_revision_details_success(
+        self, fxt_get_project, fxt_dataset_revision_service, fxt_client, fxt_get_dataset_revision
+    ):
+        fxt_dataset_revision_service.count_items_by_subset.return_value = {
+            "total": 10,
+            "training": 7,
+            "validation": 2,
+            "testing": 1,
+        }
+
+        response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/dataset_revisions/{fxt_get_dataset_revision.id}")
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()["item_counts"]["total"] == 10
+        fxt_dataset_revision_service.count_items_by_subset.assert_called_once_with(
+            project_id=fxt_get_project.id, dataset_revision_id=fxt_get_dataset_revision.id
+        )
+
+    def test_get_dataset_revision_details_not_found(
+        self, fxt_get_project, fxt_dataset_revision_service, fxt_client, fxt_get_dataset_revision
+    ):
+        fxt_dataset_revision_service.count_items_by_subset.side_effect = ResourceNotFoundError(
+            ResourceType.DATASET_REVISION, str(fxt_get_dataset_revision.id)
+        )
+
+        response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/dataset_revisions/{fxt_get_dataset_revision.id}")
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        fxt_dataset_revision_service.count_items_by_subset.assert_called_once_with(
+            project_id=fxt_get_project.id, dataset_revision_id=fxt_get_dataset_revision.id
+        )
+
     def test_list_dataset_revision_items_revision_not_found(
         self, fxt_get_project, fxt_dataset_revision_id, fxt_dataset_revision_service, fxt_client
     ):

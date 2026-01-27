@@ -1,7 +1,6 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from datetime import datetime
 from uuid import UUID
 
 from pydantic import Field
@@ -21,7 +20,7 @@ class DatasetRevisionView(BaseIDModel):
 
     project_id: UUID = Field(..., description="Id of the project of the dataset revision")
     name: str = Field(..., description="User friendly model name")
-    created_at: datetime = Field(..., description="Creation date of the dataset revision")
+    files_deleted: bool = Field(..., description="Whether or not files are deleted from disk for this dataset revision")
     item_counts: ItemCount = Field(description="Number of items in the dataset")
 
     model_config = {
