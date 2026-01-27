@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { CSSProperties, useRef, useState } from 'react';
+import { CSSProperties, forwardRef, useState } from 'react';
 
 import { ActionButton, Flex, Text } from '@geti/ui';
 import { clsx } from 'clsx';
@@ -11,7 +11,6 @@ import { useAnnotationActions } from '../../../shared/annotator/annotation-actio
 import { useAnnotator } from '../../../shared/annotator/annotator-provider.component';
 import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
 import type { Annotation } from '../../../shared/types';
-import { useVisibleLabelsCount } from './use-visible-labels-count.hook';
 
 import classes from './labels.module.scss';
 
@@ -39,13 +38,15 @@ const LabelBadge = ({ label, isSelected, isHidden, onClick }: LabelBadgeProps) =
     );
 };
 
-export const Labels = () => {
+interface LabelsProps {
+    collapsedVisibleCount?: number;
+}
+
+export const Labels = forwardRef<HTMLDivElement, LabelsProps>(({ collapsedVisibleCount = Infinity }, ref) => {
     const { selectedLabelId, setSelectedLabelId, labels } = useAnnotator();
     const { selectedAnnotations } = useSelectedAnnotations();
     const { annotations, updateAnnotations } = useAnnotationActions();
 
-    const containerRef = useRef<HTMLDivElement>(null);
-    const { collapsedVisibleCount } = useVisibleLabelsCount({ containerRef, totalLabels: labels.length });
     const [isExpanded, setIsExpanded] = useState(false);
 
     const handleLabelClick = (label: Label) => {
@@ -83,7 +84,7 @@ export const Labels = () => {
 
     return (
         <Flex alignItems='start' gap='size-100' minWidth={0} flex='1'>
-            <div ref={containerRef} className={clsx(classes.labelsContainer, { [classes.expanded]: isExpanded })}>
+            <div ref={ref} className={clsx(classes.labelsContainer, { [classes.expanded]: isExpanded })}>
                 {labels.map((label, index) => (
                     <LabelBadge
                         key={label.id}
@@ -106,4 +107,6 @@ export const Labels = () => {
             )}
         </Flex>
     );
-};
+});
+
+Labels.displayName = 'Labels';

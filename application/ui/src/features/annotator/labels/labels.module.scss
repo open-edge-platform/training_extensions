@@ -1,5 +1,7 @@
 .labelsContainer {
     padding: var(--spectrum-global-dimension-size-50);
+    margin-top: calc(-1 * var(--spectrum-global-dimension-size-25));
+    margin-bottom: calc(-1 * var(--spectrum-global-dimension-size-50));
     display: flex;
     flex-wrap: nowrap;
     gap: var(--spectrum-global-dimension-size-100);

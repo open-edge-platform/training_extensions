@@ -1,20 +1,24 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Button, ButtonGroup, dimensionValue, Flex, Text } from '@geti/ui';
+import { useRef } from 'react';
+
+import { ActionButton, Button, ButtonGroup, dimensionValue, Text } from '@geti/ui';
 import { Checkmark, CloseSemiBold } from '@geti/ui/icons';
 import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { isEmpty } from 'lodash-es';
 
 import type { Media } from '../../../../constants/shared-types';
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
+import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
+import { useSelectedAnnotations } from '../../../../shared/annotator/select-annotation-provider.component';
 import { Labels } from '../../../annotator/labels/labels.component';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
 import { useSelectedData } from '../../selected-data-provider.component';
 import { Toolbar } from '../toolbar-container/toolbar-container.component';
 import { AnnotatorModes } from './annotator-modes/annotator-modes-toggle.component';
 import type { AnnotatorMode } from './annotator-modes/mode';
-import { useSecondaryToolbarState } from './use-secondary-toolbar-state.hook';
+import { useVisibleLabelsCount } from './use-visible-labels-count.hook';
 
 import styles from './secondary-toolbar.module.scss';
 
@@ -47,9 +51,17 @@ export const SecondaryToolbar = ({
     onModeChange,
 }: SecondaryToolbarProps) => {
     const queryClient = useQueryClient();
-    const { isHidden } = useSecondaryToolbarState();
+    const toolbarRef = useRef<HTMLDivElement>(null);
+    const labelsContainerRef = useRef<HTMLDivElement>(null);
+    const { selectedAnnotations } = useSelectedAnnotations();
     const { annotations, isSaving, submitAnnotations, submitPredictions } = useAnnotationActions();
     const { setMediaState } = useSelectedData();
+    const { labels } = useAnnotator();
+    const { collapsedVisibleCount } = useVisibleLabelsCount({
+        toolbarRef,
+        labelsContainerRef,
+        totalLabels: labels.length,
+    });
 
     const hasAnnotations = !isEmpty(annotations);
     const selectedIndex = items.findIndex((item) => item.id === mediaItem.id);
@@ -84,22 +96,25 @@ export const SecondaryToolbar = ({
     };
 
     return (
-        <Flex
-            height={'100%'}
-            width={'100%'}
-            alignItems={'center'}
-            justifyContent={'space-between'}
-            UNSAFE_style={{ paddingTop: dimensionValue('size-125') }}
-            isHidden={isHidden}
+        <div
+            ref={toolbarRef}
+            style={{
+                height: '100%',
+                width: '100%',
+                display: selectedAnnotations.size === 0 ? 'none' : 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                paddingTop: dimensionValue('size-125'),
+            }}
         >
             <Toolbar.Container>
                 <Toolbar.Section>
                     <AnnotatorModes mode={mode} onModeChange={onModeChange} />
                 </Toolbar.Section>
             </Toolbar.Container>
-            <Toolbar.Container>
+            <Toolbar.Container id='labels-container'>
                 <Toolbar.Section>
-                    <Labels />
+                    <Labels ref={labelsContainerRef} collapsedVisibleCount={collapsedVisibleCount} />
                 </Toolbar.Section>
             </Toolbar.Container>
             <Toolbar.Container>
@@ -139,6 +154,6 @@ export const SecondaryToolbar = ({
                     </ButtonGroup>
                 </Toolbar.Section>
             </Toolbar.Container>
-        </Flex>
+        </div>
     );
 };
