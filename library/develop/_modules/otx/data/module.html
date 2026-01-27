@@ -261,6 +261,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">multiprocessing</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Sequence</span>
 
@@ -286,6 +287,9 @@
     <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.dataset.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataset</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="n">_MP_CONTEXT</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">get_context</span><span class="p">(</span><span class="s2">&quot;spawn&quot;</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="OTXDataModule">
@@ -728,6 +732,7 @@
             <span class="s2">&quot;persistent_workers&quot;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">num_workers</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span>
             <span class="s2">&quot;sampler&quot;</span><span class="p">:</span> <span class="n">sampler</span><span class="p">,</span>
             <span class="s2">&quot;shuffle&quot;</span><span class="p">:</span> <span class="n">sampler</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;multiprocessing_context&quot;</span><span class="p">:</span> <span class="n">_MP_CONTEXT</span> <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">num_workers</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
         <span class="p">}</span>
 
         <span class="n">tile_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_config</span>
@@ -758,6 +763,7 @@
             <span class="n">pin_memory</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="n">collate_fn</span><span class="o">=</span><span class="n">dataset</span><span class="o">.</span><span class="n">collate_fn</span><span class="p">,</span>
             <span class="n">persistent_workers</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">num_workers</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="n">multiprocessing_context</span><span class="o">=</span><span class="n">_MP_CONTEXT</span> <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">num_workers</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 
@@ -776,6 +782,7 @@
             <span class="n">pin_memory</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="n">collate_fn</span><span class="o">=</span><span class="n">dataset</span><span class="o">.</span><span class="n">collate_fn</span><span class="p">,</span>
             <span class="n">persistent_workers</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">num_workers</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="n">multiprocessing_context</span><span class="o">=</span><span class="n">_MP_CONTEXT</span> <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">num_workers</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 
@@ -794,6 +801,7 @@
             <span class="n">pin_memory</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="n">collate_fn</span><span class="o">=</span><span class="n">dataset</span><span class="o">.</span><span class="n">collate_fn</span><span class="p">,</span>
             <span class="n">persistent_workers</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">num_workers</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="n">multiprocessing_context</span><span class="o">=</span><span class="n">_MP_CONTEXT</span> <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">num_workers</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 
