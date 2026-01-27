@@ -86,7 +86,7 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                     height='100%'
                     rows='auto 1fr auto'
                     columns={`auto 1fr ${SIDEBAR_WIDTH}px`}
-                    areas={['header header header', 'toolbar canvas aside', 'toolbar bottom aside']}
+                    areas={['header header aside', 'toolbar canvas aside', 'toolbar bottom aside']}
                 >
                     <AnnotationActionsProvider
                         mediaItem={mediaItem}
