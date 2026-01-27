@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useState } from 'react';
 
 import { Content, Dialog, Flex, Grid, Loading, View } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
@@ -44,25 +44,14 @@ const CanvasAreaLoading = () => (
     </Flex>
 );
 
-const useAnnotatorMode = (isSuccess: boolean, isUserReviewed: boolean) => {
-    const [mode, setMode] = useState<AnnotatorMode>('annotation');
-
-    useEffect(() => {
-        // For the first query, we want to set the mode based on whether the user has reviewed the media item or not.
-        if (isSuccess) {
-            setMode(isUserReviewed ? 'annotation' : 'prediction');
-        }
-    }, [isSuccess, isUserReviewed]);
-
-    return [mode, setMode] as const;
-};
-
 export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPreviewProps) => {
     const projectId = useProjectIdentifier();
 
+    const [mode, setMode] = useState<AnnotatorMode>('annotation');
+
     const { items, hasNextPage, isFetchingNextPage, fetchNextPage } = useGetDatasetItems();
 
-    const { data: annotationsData, isSuccess } = $api.useQuery(
+    const { data: annotationsData } = $api.useQuery(
         'get',
         '/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations',
         {
@@ -75,7 +64,6 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
 
     const isUserReviewedMedia = annotationsData?.user_reviewed ?? false;
     const annotationsDTO = annotationsData?.annotations ?? [];
-    const [mode, setMode] = useAnnotatorMode(isSuccess, isUserReviewedMedia);
 
     return (
         <Dialog UNSAFE_style={{ backgroundColor: 'var(--spectrum-global-color-gray-50)' }}>
