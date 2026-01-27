@@ -3,7 +3,7 @@
 from collections.abc import Sequence
 from typing import cast
 
-from sqlalchemy import CursorResult, delete, select
+from sqlalchemy import CursorResult, delete, select, update
 from sqlalchemy.orm import Session
 
 from app.db.schema import ModelRevisionDB
@@ -45,6 +45,15 @@ class ModelRevisionRepository(BaseRepository[ModelRevisionDB]):
         """Delete the model revision by its id."""
         stmt = delete(ModelRevisionDB).where(
             (ModelRevisionDB.id == obj_id) & (ModelRevisionDB.project_id == self.project_id)
+        )
+        result = cast(CursorResult, self.db.execute(stmt))
+        return result.rowcount > 0
+
+    def update_training_status(self, obj_id: str, training_status: str) -> bool:
+        stmt = (
+            update(ModelRevisionDB)
+            .where((ModelRevisionDB.id == obj_id) & (ModelRevisionDB.project_id == self.project_id))
+            .values(training_status=training_status)
         )
         result = cast(CursorResult, self.db.execute(stmt))
         return result.rowcount > 0

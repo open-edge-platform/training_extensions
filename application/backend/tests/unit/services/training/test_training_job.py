@@ -38,14 +38,14 @@ def fxt_training_job(tmp_path, fxt_training_params):
 
 
 class TestTrainingJob:
-    def test_on_finish_copies_log_file(self, fxt_training_job):
+    def test_on_complete_copies_log_file(self, fxt_training_job):
         """Test that log file is copied to the correct destination."""
         # Create the log file
         log_path = fxt_training_job.log_dir / fxt_training_job.log_file
         log_path.write_text("Training log content")
 
         # Execute
-        fxt_training_job.on_finish()
+        fxt_training_job.on_complete()
 
         # Verify the log was copied
         expected_path = (
@@ -60,12 +60,12 @@ class TestTrainingJob:
         assert expected_path.read_text() == "Training log content"
 
     @patch("app.core.jobs.models.training_job.logger")
-    def test_on_finish_logs_warning(self, mock_logger, fxt_training_job):
+    def test_on_complete_logs_warning(self, mock_logger, fxt_training_job):
         """Test that a warning is logged and no file copied when the source log file doesn't exist."""
         # Don't create the log file
 
         # Execute
-        fxt_training_job.on_finish()
+        fxt_training_job.on_complete()
 
         # Verify warning was logged and no file was copied
         log_path = fxt_training_job.log_dir / fxt_training_job.log_file
