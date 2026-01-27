@@ -23,12 +23,6 @@ const ActiveModelArchitecture = () => {
     );
 };
 
-const ModelArchitectureExpandedDescription = () => {
-    const { modelArchitecture } = useModelArchitecture();
-
-    return <Text UNSAFE_className={styles.modelArchitectureExpandedDescription}>{modelArchitecture.description}</Text>;
-};
-
 const ModelArchitectureDescription = () => {
     const { modelArchitecture, isSelected } = useModelArchitecture();
 
@@ -124,6 +118,5 @@ export const ModelArchitectureCard = ({
 ModelArchitectureCard.Name = ModelArchitectureName;
 ModelArchitectureCard.Parameters = ModelArchitectureParameters;
 ModelArchitectureCard.Divider = ModelArchitectureDivider;
-ModelArchitectureCard.ExpandedDescription = ModelArchitectureExpandedDescription;
 ModelArchitectureCard.Description = ModelArchitectureDescription;
 ModelArchitectureCard.Active = ActiveModelArchitecture;
