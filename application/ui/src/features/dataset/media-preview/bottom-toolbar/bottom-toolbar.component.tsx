@@ -3,6 +3,7 @@
 
 import { Flex, Grid, Item, Picker, Tag, Text } from '@geti/ui';
 import { Accept, Search } from '@geti/ui/icons';
+import { clsx } from 'clsx';
 
 import { Media } from '../../../../constants/shared-types';
 import { Hotkeys } from '../primary-toolbar/hotkeys/hotkeys.component';
@@ -34,10 +35,10 @@ export const BottomToolbar = ({ isUserReviewed, mediaItem }: BottomToolbarProps)
                         <Flex gap={'size-100'} alignItems={'center'}>
                             <Text UNSAFE_className={classes.filename}>{fileName}</Text>
                             <Tag
-                                style={{
-                                    backgroundColor: isUserReviewed ? 'var(--moss-tint-1)' : 'var(--coral-shade-1)',
-                                    color: isUserReviewed ? 'var(--spectrum-global-color-gray-50)' : '#fff',
-                                }}
+                                className={clsx({
+                                    [classes.accepted]: isUserReviewed,
+                                    [classes.forReview]: !isUserReviewed,
+                                })}
                                 prefix={isUserReviewed ? <Accept /> : <Search />}
                                 text={isUserReviewed ? 'Accepted' : 'For Review'}
                             />
