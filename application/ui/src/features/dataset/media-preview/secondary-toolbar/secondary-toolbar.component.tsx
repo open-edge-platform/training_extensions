@@ -49,7 +49,7 @@ export const SecondaryToolbar = ({
 }: SecondaryToolbarProps) => {
     const queryClient = useQueryClient();
     const { selectedAnnotations } = useSelectedAnnotations();
-    const { isHidden, projectLabels } = useSecondaryToolbarState();
+    const { projectLabels } = useSecondaryToolbarState();
     const { selectedLabel, setSelectedLabelId } = useAnnotator();
     const { annotations, isSaving, updateAnnotations, submitAnnotations, submitPredictions } = useAnnotationActions();
 
@@ -102,7 +102,7 @@ export const SecondaryToolbar = ({
                     <AnnotatorModes mode={mode} onModeChange={onModeChange} />
                 </Toolbar.Section>
             </Toolbar.Container>
-            <Toolbar.Container isHidden={isHidden}>
+            <Toolbar.Container>
                 <Toolbar.Section>
                     <LabelPicker selectedLabel={selectedLabel} labels={projectLabels} onSelect={handleSelect} />
                 </Toolbar.Section>
