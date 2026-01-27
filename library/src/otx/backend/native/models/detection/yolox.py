@@ -7,6 +7,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
+from torch.export import Dim
+
 from otx.backend.native.exporter.base import OTXModelExporter
 from otx.backend.native.exporter.native import OTXNativeModelExporter
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
@@ -156,11 +158,7 @@ class YOLOX(OTXDetectionModel):
                 "output_names": ["boxes", "labels"],
                 "export_params": True,
                 "opset_version": 18,
-                "dynamic_axes": {
-                    "image": {0: "batch"},
-                    "boxes": {0: "batch", 1: "num_dets"},
-                    "labels": {0: "batch", 1: "num_dets"},
-                },
+                "dynamic_shapes": {"inputs": {0: Dim("batch")}},
                 "keep_initializers_as_inputs": False,
                 "verbose": False,
                 "autograd_inlining": False,
