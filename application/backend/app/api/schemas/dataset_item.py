@@ -6,11 +6,11 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from app.core.models import BaseRequiredIDModel, BaseRequiredIDNameModel, Pagination
+from app.core.models import BaseRequiredIDModel, Pagination
 from app.models import DatasetItemAnnotation, DatasetItemSubset, MediaFormat
 
 
-class DatasetRevisionItemView(BaseRequiredIDNameModel):
+class DatasetRevisionItemView(BaseRequiredIDModel):
     """
     Dataset Revision item
     """
@@ -24,7 +24,6 @@ class DatasetRevisionItemView(BaseRequiredIDNameModel):
         "json_schema_extra": {
             "example": {
                 "id": "7b073838-99d3-42ff-9018-4e901eb047fc",
-                "name": "img-010203",
                 "format": "jpg",
                 "width": 1280,
                 "height": 720,
