@@ -1,11 +1,21 @@
-.accepted {
-    path {
-        fill: var(--spectrum-global-color-positive);
-    }
+.accepted,
+.rejected,
+.toReview {
+    border-radius: var(--spectrum-global-dimension-size-200);
+    padding: var(--spectrum-global-dimension-size-100) var(--spectrum-global-dimension-size-200);
 }
 
-.rejected {
-    path {
-        fill: var(--spectrum-global-color-negative);
+.accepted {
+    background: var(--moss-tint-1);
+    color: var(--spectrum-global-color-gray-50);
+}
+
+.rejected,
+.toReview {
+    background: var(--coral-shade-1);
+    color: var(--spectrum-global-color-gray-50);
+
+    svg {
+        fill: #fff;
     }
 }

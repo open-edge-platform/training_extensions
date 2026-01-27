@@ -11,11 +11,13 @@
 }
 
 .leftTopElement {
+    background: var(--spectrum-global-color-gray-50);
     top: var(--spectrum-global-dimension-size-50);
     left: var(--spectrum-global-dimension-size-50);
 }
 
 .rightTopElement {
+    background: var(--spectrum-global-color-gray-50);
     top: var(--spectrum-global-dimension-size-50);
     right: var(--spectrum-global-dimension-size-50);
 }
@@ -24,9 +26,11 @@
     bottom: var(--spectrum-global-dimension-size-50);
     left: var(--spectrum-global-dimension-size-50);
 }
+
 .bottomRightElement {
     bottom: var(--spectrum-global-dimension-size-50);
     right: var(--spectrum-global-dimension-size-50);
+    opacity: 1;
 }
 
 div[class*='mediaItem']:is([data-hovered], [data-selected], [data-accepted='true'], [data-rejected='true']) {
