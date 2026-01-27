@@ -111,7 +111,7 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                                                 </View>
 
                                                 <View gridArea={'toolbar'}>
-                                                    <PrimaryToolbar />
+                                                    <PrimaryToolbar mode={mode} />
                                                 </View>
 
                                                 <View gridArea={'bottom'}>
