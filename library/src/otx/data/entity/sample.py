@@ -370,9 +370,10 @@ class OTXSampleBatch:
         Returns:
             Updated dataclass
         """
-        updated_kwargs = asdict(self)
-        updated_kwargs.update(**kwargs)
-        return self.__class__(**updated_kwargs)
+        updated = object.__new__(self.__class__)
+        updated.__dict__.update(asdict(self))
+        updated.__dict__.update(kwargs)
+        return updated
 
 
 @dataclass
