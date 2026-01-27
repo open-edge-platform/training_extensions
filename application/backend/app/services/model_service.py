@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import cast
 from uuid import UUID
 
+import pandas as pd
 from loguru import logger
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -20,6 +21,38 @@ from app.repositories import EvaluationRepository, LabelRepository, ModelRevisio
 
 from .base import BaseSessionManagedService, ResourceInUseError, ResourceNotFoundError, ResourceType
 from .parent_process_guard import parent_process_only
+
+# Mapping of CSV column keys to display names for series metrics.
+# Keys not included here will be ignored.
+KEY_MAPPING = {
+    "epoch": "Epoch",
+    "lr-SGD": "Learning rate SGD",
+    "lr-SGD-momentum": "Learning rate SGD momentum",
+    "step": "Step",
+    "train/data_time": "Training data time",
+    "train/iter_time": "Training iteration time",
+    "train/loss_bbox": "Training loss bbox",
+    "train/loss_cls": "Training loss cls",
+    "train/loss_obj": "Training loss obj",
+    "train/total_loss": "Training total loss",
+    "val/f1-score": "Validation F1 score",
+    "val/map": "Validation map",
+    "val/map_50": "Validation map@50",
+    "val/map_75": "Validation map@75",
+    "val/map_large": "Validation map large",
+    "val/map_medium": "Validation map medium",
+    "val/map_per_class": "Validation map per class",
+    "val/map_small": "Validation map small",
+    "val/mar_1": "Validation mar 1",
+    "val/mar_10": "Validation mar 10",
+    "val/mar_100": "Validation mar 100",
+    "val/mar_100_per_class": "Validation mar 100 per class",
+    "val/mar_large": "Validation mar large",
+    "val/mar_medium": "Validation mar medium",
+    "val/mar_small": "Validation mar small",
+    "validation/data_time": "Validation data time",
+    "validation/iter_time": "Validation iteration time",
+}
 
 
 @dataclass(frozen=True)
@@ -299,3 +332,72 @@ class ModelService(BaseSessionManagedService):
 
         evaluation_repo = EvaluationRepository(self.db_session)
         evaluation_repo.save(evaluation_db)
+
+    def get_model_training_metrics(
+        self,
+        project_id: UUID,
+        model_id: UUID,
+    ) -> list[dict]:
+        """
+        Get training metrics from the metrics.csv file for a model.
+
+        Args:
+            project_id (UUID): The unique identifier of the project.
+            model_id (UUID): The unique identifier of the model.
+
+        Returns:
+            list[dict]: A list of metric dictionaries
+
+        Raises:
+            ResourceNotFoundError: If the model or metrics file is not found.
+        """
+        # Verify the model exists
+        model_revision = self.get_model(project_id=project_id, model_id=model_id)
+        if model_revision.files_deleted:
+            raise ResourceNotFoundError(ResourceType.MODEL, str(model_id))
+
+        metrics_file = self._projects_dir / str(project_id) / "models" / str(model_id) / "metrics.csv"
+        if not metrics_file.exists():
+            raise ResourceNotFoundError(ResourceType.MODEL, f"{model_id} (metrics.csv not found)")
+
+        return self._parse_metrics_csv(metrics_file)
+
+    @staticmethod
+    def _parse_metrics_csv(metrics_file: Path) -> list[dict]:
+        """
+        Parse a metrics CSV file and return the formatted metrics.
+
+        Args:
+            metrics_file (Path): Path to the metrics.csv file.
+
+        Returns:
+            list[dict]: A list of formatted metric dictionaries.
+        """
+        metrics: list[dict] = []
+
+        # Read the CSV file
+        df = pd.read_csv(metrics_file)
+
+        for col in df.columns:
+            mapped_name = KEY_MAPPING.get(col)
+            if not mapped_name:
+                continue
+            metric = {
+                "header": mapped_name,
+                "type": "line",
+                "key": mapped_name,
+                "value": {
+                    "x_axis_label": "Timestamp",
+                    "y_axis_label": mapped_name,
+                    "line_data": [
+                        {
+                            "header": mapped_name,
+                            "key": mapped_name,
+                            "points": [{"x": x, "y": y, "type": "point"} for x, y in zip(df["epoch"], df[col])],
+                        }
+                    ],
+                },
+            }
+            metrics.append(metric)
+
+        return metrics

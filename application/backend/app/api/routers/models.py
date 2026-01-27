@@ -11,7 +11,7 @@ from fastapi.openapi.models import Example
 from fastapi.responses import StreamingResponse
 
 from app.api.dependencies import get_model_service, get_project
-from app.api.schemas import ModelView, ProjectView
+from app.api.schemas import ModelView, ProjectView, TrainingMetricsView
 from app.api.schemas.model import ExtendedModelView
 from app.api.validators import DatasetRevisionID, ModelID
 from app.models.model_revision import ModelFormat
@@ -195,3 +195,29 @@ def delete_model(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ResourceInUseError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+
+
+@router.get(
+    "/{model_id}/training_metrics",
+    response_model=TrainingMetricsView,
+    responses={
+        status.HTTP_200_OK: {"description": "Training metrics for the model"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project or model ID"},
+        status.HTTP_404_NOT_FOUND: {"description": "Project, model, or metrics file not found"},
+    },
+)
+def get_training_metrics(
+    project: Annotated[ProjectView, Depends(get_project)],
+    model_id: ModelID,
+    model_service: Annotated[ModelService, Depends(get_model_service)],
+) -> TrainingMetricsView:
+    """Get training metrics for a model.
+
+    Returns metrics computed during training such as loss over time, validation accuracy over time, etc.
+    The metrics are parsed from the metrics.csv file stored alongside the model.
+    """
+    try:
+        training_metrics = model_service.get_model_training_metrics(project_id=project.id, model_id=model_id)
+        return TrainingMetricsView.model_validate({"training_metrics": training_metrics})
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

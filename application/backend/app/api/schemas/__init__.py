@@ -6,6 +6,7 @@ from .evaluation import EvaluationView, MetricView
 from .label import LabelView, PatchLabels
 from .metrics import PipelineMetricsView
 from .model import ModelView
+from .model_statistics import TrainingMetricsView
 from .pipeline import PipelineView
 from .project import ProjectCreate, ProjectUpdateName, ProjectView, TaskView
 from .sink import SinkView
@@ -27,6 +28,7 @@ __all__ = [
     "SourceView",
     "StagedDatasetView",
     "TaskView",
+    "TrainingMetricsView",
     "WebRTCConfigResponse",
     "WebRTCIceServer",
 ]

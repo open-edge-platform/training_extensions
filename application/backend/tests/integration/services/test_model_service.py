@@ -340,3 +340,47 @@ class TestModelServiceIntegration:
         assert metrics_dict["accuracy"] == 0.95
         assert metrics_dict["f1_score"] == 0.89
         assert metrics_dict["precision"] == 0.92
+
+    def test_get_training_metrics_success(
+        self,
+        tmp_path: Path,
+        fxt_project_id: UUID,
+        fxt_model_id: UUID,
+        fxt_model_service: ModelService,
+    ):
+        """Test retrieving training metrics from metrics.csv file."""
+        # Create a model directory with a metrics.csv file
+        model_dir = tmp_path / "projects" / str(fxt_project_id) / "models" / str(fxt_model_id)
+        model_dir.mkdir(parents=True)
+
+        csv_content = """epoch,train/total_loss,val/f1-score
+        1,0.1,0.95
+        2,0.2,0.89
+        3,0.3,0.92
+        """
+        (model_dir / "metrics.csv").write_text(csv_content)
+
+        metrics = fxt_model_service.get_model_training_metrics(project_id=fxt_project_id, model_id=fxt_model_id)
+        assert len(metrics) == 3
+        for metric in metrics:
+            assert metric["header"] in ["Epoch", "Training total loss", "Validation F1 score"]
+            assert metric["type"] == "line"
+            assert metric["key"] in ["Epoch", "Training total loss", "Validation F1 score"]
+            assert metric.get("value")
+
+    def test_get_training_metrics_file_not_found(
+        self,
+        tmp_path: Path,
+        fxt_project_id: UUID,
+        fxt_model_id: UUID,
+        fxt_model_service: ModelService,
+    ):
+        """Test that ResourceNotFoundError is raised when metrics.csv doesn't exist."""
+        # Create model directory without metrics.csv
+        model_dir = tmp_path / "projects" / str(fxt_project_id) / "models" / str(fxt_model_id)
+        model_dir.mkdir(parents=True)
+
+        with pytest.raises(ResourceNotFoundError) as exc_info:
+            fxt_model_service.get_model_training_metrics(project_id=fxt_project_id, model_id=fxt_model_id)
+
+        assert "metrics.csv not found" in str(exc_info.value)
