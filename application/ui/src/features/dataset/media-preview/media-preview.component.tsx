@@ -103,7 +103,10 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                                                 </View>
 
                                                 <View gridArea={'bottom'}>
-                                                    <BottomToolbar />
+                                                    <BottomToolbar
+                                                        isUserReviewed={isUserReviewedMedia}
+                                                        mediaItem={mediaItem}
+                                                    />
                                                 </View>
 
                                                 <View gridArea={'canvas'} overflow={'hidden'}>

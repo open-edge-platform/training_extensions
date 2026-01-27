@@ -62,13 +62,7 @@ export const SidebarItems = ({
                 isLoadingMore={isFetchingNextPage}
                 scrollToIndex={selectedIndex}
                 onLoadMore={() => hasNextPage && fetchNextPage()}
-                contentItem={(item) => (
-                    <SidebarMediaItem
-                        item={item}
-                        isSelected={mediaItem.id === item.id}
-                        onSelectedMediaItem={onSelectedMediaItem}
-                    />
-                )}
+                contentItem={(item) => <SidebarMediaItem item={item} onSelectedMediaItem={onSelectedMediaItem} />}
             />
         </View>
     );
