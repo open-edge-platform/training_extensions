@@ -8,6 +8,8 @@ FROM python:3.13-slim@sha256:baf66684c5fcafbda38a54b227ee30ec41e40af1e4073edee3a
 # uv / uvx
 COPY --from=docker.io/astral/uv:0.9.27@sha256:143b40f4ab56a780f43377604702107b5a35f83a4453daf1e4be691358718a6a /uv /uvx /bin/
 
+ENV UV_HTTP_TIMEOUT=300
+
 WORKDIR /application/backend
 
 # Build deps (for compiling / Rust-based crates)
