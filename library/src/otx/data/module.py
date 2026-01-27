@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import logging
+import multiprocessing
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Sequence
 
@@ -31,6 +32,9 @@ if TYPE_CHECKING:
     from otx.data.dataset.base import OTXDataset
 
 logger = logging.getLogger(__name__)
+
+
+_MP_CONTEXT = multiprocessing.get_context("spawn")
 
 
 class OTXDataModule(LightningDataModule):
@@ -460,6 +464,7 @@ class OTXDataModule(LightningDataModule):
             "persistent_workers": config.num_workers > 0,
             "sampler": sampler,
             "shuffle": sampler is None,
+            "multiprocessing_context": _MP_CONTEXT if config.num_workers > 0 else None,
         }
 
         tile_config = self.tile_config
@@ -487,6 +492,7 @@ class OTXDataModule(LightningDataModule):
             pin_memory=True,
             collate_fn=dataset.collate_fn,
             persistent_workers=config.num_workers > 0,
+            multiprocessing_context=_MP_CONTEXT if config.num_workers > 0 else None,
         )
 
     def test_dataloader(self) -> DataLoader:
@@ -502,6 +508,7 @@ class OTXDataModule(LightningDataModule):
             pin_memory=True,
             collate_fn=dataset.collate_fn,
             persistent_workers=config.num_workers > 0,
+            multiprocessing_context=_MP_CONTEXT if config.num_workers > 0 else None,
         )
 
     def predict_dataloader(self) -> DataLoader:
@@ -517,6 +524,7 @@ class OTXDataModule(LightningDataModule):
             pin_memory=True,
             collate_fn=dataset.collate_fn,
             persistent_workers=config.num_workers > 0,
+            multiprocessing_context=_MP_CONTEXT if config.num_workers > 0 else None,
         )
 
     def setup(self, stage: str) -> None:
