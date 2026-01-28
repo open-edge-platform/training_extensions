@@ -2,25 +2,22 @@
 # SPDX-License-Identifier: Apache-2.0
 """Fixtures for unit tests of data entities."""
 
-import numpy as np
+from __future__ import annotations
+
 import pytest
 import torch
+from datumaro.experimental.fields import ImageInfo as DmImageInfo
+from datumaro.experimental.fields import Subset
 from torchvision import tv_tensors
 
-from otx.data.entity import ImageInfo, OTXDataItem
+from otx.data.entity.sample import ClassificationSample
 
 
 @pytest.fixture
-def fxt_numpy_data_entity() -> OTXDataItem:
-    return OTXDataItem(
-        image=np.ndarray((10, 10, 3), dtype=np.float32),
-        img_info=ImageInfo(img_idx=0, img_shape=(10, 10), ori_shape=(10, 10)),
-    )
-
-
-@pytest.fixture
-def fxt_torchvision_data_entity() -> OTXDataItem:
-    return OTXDataItem(
+def fxt_torchvision_data_entity() -> ClassificationSample:
+    return ClassificationSample(
         image=tv_tensors.Image(torch.randn(3, 10, 10), dtype=torch.float32),
-        img_info=ImageInfo(img_idx=0, img_shape=(10, 10), ori_shape=(10, 10)),
+        dm_image_info=DmImageInfo(width=10, height=10),
+        subset=Subset.TRAINING,
+        label=torch.tensor(0),
     )

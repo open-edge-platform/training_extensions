@@ -12,7 +12,7 @@ from otx.backend.native.models.detection.backbones.cspnext import CSPNeXtModule
 from otx.backend.native.models.detection.heads.rtmdet_head import RTMDetSepBNHeadModule
 from otx.backend.native.models.detection.necks.cspnext_pafpn import CSPNeXtPAFPNModule
 from otx.backend.native.models.detection.rtmdet import RTMDet
-from otx.data.entity.torch import OTXPredBatch
+from otx.data.entity.sample import OTXPredictionBatch
 
 
 class TestRTMDet:
@@ -65,7 +65,7 @@ class TestRTMDet:
     def test_predict(self, model, fxt_detection_batch):
         model.eval()
         output = model(fxt_detection_batch)
-        assert isinstance(output, OTXPredBatch)
+        assert isinstance(output, OTXPredictionBatch)
 
     @pytest.mark.parametrize(
         "model",

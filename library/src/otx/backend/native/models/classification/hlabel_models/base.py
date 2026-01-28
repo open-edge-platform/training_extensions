@@ -19,7 +19,7 @@ from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCall
 from otx.backend.native.models.classification.classifier import KLHLabelClassifier
 from otx.backend.native.schedulers import LRSchedulerListCallable
 from otx.data.entity.base import OTXBatchLossEntity
-from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
+from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
 from otx.metrics import MetricInput
 from otx.metrics.accuracy import (
     HLabelClsMetricCallable,
@@ -132,7 +132,7 @@ class OTXHlabelClsModel(OTXModel):
             if sample_model_dict[key].shape != incremental_model_dict[key].shape
         ]
 
-    def _customize_inputs(self, inputs: OTXDataBatch) -> dict[str, Any]:
+    def _customize_inputs(self, inputs: OTXSampleBatch) -> dict[str, Any]:
         if self.training:
             mode = "loss"
         elif self.explain_mode:
@@ -150,8 +150,8 @@ class OTXHlabelClsModel(OTXModel):
     def _customize_outputs(
         self,
         outputs: Any,  # noqa: ANN401
-        inputs: OTXDataBatch,
-    ) -> OTXPredBatch | OTXBatchLossEntity:
+        inputs: OTXSampleBatch,
+    ) -> OTXPredictionBatch | OTXBatchLossEntity:
         if self.training:
             return OTXBatchLossEntity(loss=outputs)
 
@@ -164,8 +164,7 @@ class OTXHlabelClsModel(OTXModel):
             labels = outputs.argmax(-1, keepdim=True)
 
         if self.explain_mode:
-            return OTXPredBatch(
-                batch_size=inputs.batch_size,
+            return OTXPredictionBatch(
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
                 labels=list(labels),
@@ -174,8 +173,7 @@ class OTXHlabelClsModel(OTXModel):
                 feature_vector=[feature_vector.unsqueeze(0) for feature_vector in outputs["feature_vector"]],
             )
 
-        return OTXPredBatch(
-            batch_size=inputs.batch_size,
+        return OTXPredictionBatch(
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             labels=list(labels),
@@ -210,8 +208,8 @@ class OTXHlabelClsModel(OTXModel):
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: OTXPredBatch,
-        inputs: OTXDataBatch,
+        preds: OTXPredictionBatch,
+        inputs: OTXSampleBatch,
     ) -> MetricInput:
         hlabel_info: HLabelInfo = self.label_info  # type: ignore[assignment]
 
@@ -243,18 +241,17 @@ class OTXHlabelClsModel(OTXModel):
 
         raise TypeError(label_info)
 
-    def get_dummy_input(self, batch_size: int = 1) -> OTXDataBatch:  # type: ignore[override]
+    def get_dummy_input(self, batch_size: int = 1) -> OTXSampleBatch:  # type: ignore[override]
         """Returns a dummy input for classification OV model."""
         images = torch.stack([torch.rand(3, *self.data_input_params.input_size) for _ in range(batch_size)])
         labels = [torch.LongTensor([0])] * batch_size
-        return OTXDataBatch(batch_size=batch_size, images=images, labels=labels)
+        return OTXSampleBatch(images=images, labels=labels)
 
-    def forward_explain(self, inputs: OTXDataBatch) -> OTXPredBatch:
+    def forward_explain(self, inputs: OTXSampleBatch) -> OTXPredictionBatch:
         """Model forward explain function."""
         outputs = self.model(images=inputs.images, mode="explain")
 
-        return OTXPredBatch(
-            batch_size=inputs.batch_size,
+        return OTXPredictionBatch(
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             labels=list(outputs["preds"]),

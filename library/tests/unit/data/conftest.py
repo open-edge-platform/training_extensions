@@ -26,7 +26,7 @@ from otx.data.dataset.instance_segmentation import OTXInstanceSegDataset
 from otx.data.dataset.segmentation import (
     OTXSegmentationDataset,
 )
-from otx.data.entity.torch import OTXDataItem
+from otx.data.entity.sample import OTXSample
 
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture
@@ -188,12 +188,12 @@ def fxt_mock_segmentation_dm_subset(mocker: MockerFixture, fxt_segmentation_dm_i
 
 @pytest.fixture(
     params=[
-        (OTXHlabelClsDataset, OTXDataItem, {}),
-        (OTXMultilabelClsDataset, OTXDataItem, {}),
-        (OTXMulticlassClsDataset, OTXDataItem, {}),
-        (OTXDetectionDataset, OTXDataItem, {}),
-        (OTXInstanceSegDataset, OTXDataItem, {}),
-        (OTXSegmentationDataset, OTXDataItem, {}),
+        (OTXHlabelClsDataset, OTXSample, {}),
+        (OTXMultilabelClsDataset, OTXSample, {}),
+        (OTXMulticlassClsDataset, OTXSample, {}),
+        (OTXDetectionDataset, OTXSample, {}),
+        (OTXInstanceSegDataset, OTXSample, {}),
+        (OTXSegmentationDataset, OTXSample, {}),
     ],
     ids=[
         "hlabel_cls",
@@ -206,7 +206,7 @@ def fxt_mock_segmentation_dm_subset(mocker: MockerFixture, fxt_segmentation_dm_i
 )
 def fxt_dataset_and_data_entity_cls(
     request: pytest.FixtureRequest,
-) -> tuple[OTXDataset, OTXDataItem]:
+) -> tuple[OTXDataset, OTXSample]:
     return request.param
 
 

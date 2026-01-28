@@ -28,7 +28,7 @@ class OTXKeypointDetectionDataset(OTXDataset):
 
     This dataset handles keypoint detection where specific key points (like body joints)
     are detected and localized in images. It processes Datumaro dataset items and
-    converts them into OTXDataItem format suitable for keypoint detection training
+    converts them into OTXSample format suitable for keypoint detection training
     and inference.
 
     Args:

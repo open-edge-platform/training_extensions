@@ -14,7 +14,7 @@ from model_api.tilers import SemanticSegmentationTiler
 from torchvision import tv_tensors
 
 from otx.backend.openvino.models.base import OVModel
-from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
+from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
 from otx.metrics import MetricInput
 from otx.metrics.dice import SegmCallable
 from otx.types.label import SegLabelInfo
@@ -86,23 +86,22 @@ class OVSegmentationModel(OVModel):
     def _customize_outputs(
         self,
         outputs: list[ImageResultWithSoftPrediction],
-        inputs: OTXDataBatch,
-    ) -> OTXPredBatch:
+        inputs: OTXSampleBatch,
+    ) -> OTXPredictionBatch:
         """Customize the outputs of the model for OTX pipeline.
 
         Args:
             outputs (list[ImageResultWithSoftPrediction]): List of model outputs with soft predictions.
-            inputs (OTXDataBatch): Input batch containing images and metadata.
+            inputs (OTXSampleBatch): Input batch containing images and metadata.
 
         Returns:
-            OTXPredBatch: Customized prediction batch containing masks and feature vectors.
+            OTXPredictionBatch: Customized prediction batch containing masks and feature vectors.
         """
         masks = [tv_tensors.Mask(np.expand_dims(mask.resultImage, axis=0)) for mask in outputs]
         predicted_f_vectors = (
             [out.feature_vector for out in outputs] if outputs and outputs[0].feature_vector.size != 1 else []
         )
-        return OTXPredBatch(
-            batch_size=len(outputs),
+        return OTXPredictionBatch(
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=[],
@@ -112,16 +111,16 @@ class OVSegmentationModel(OVModel):
 
     def prepare_metric_inputs(
         self,
-        preds: OTXPredBatch,  # type: ignore[override]
-        inputs: OTXDataBatch,  # type: ignore[override]
+        preds: OTXPredictionBatch,  # type: ignore[override]
+        inputs: OTXSampleBatch,  # type: ignore[override]
     ) -> MetricInput:
         """Prepare inputs for metric computation.
 
         Converts predictions and ground truth inputs into a format suitable for metric evaluation.
 
         Args:
-            preds (OTXPredBatch): Predicted segmentation batch containing masks.
-            inputs (OTXDataBatch): Input batch containing ground truth masks.
+            preds (OTXPredictionBatch): Predicted segmentation batch containing masks.
+            inputs (OTXSampleBatch): Input batch containing ground truth masks.
 
         Returns:
             MetricInput: A list of dictionaries with 'preds' and 'target' keys for metric evaluation.

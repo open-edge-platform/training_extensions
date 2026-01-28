@@ -19,7 +19,7 @@ import numpy as np
 import torch
 
 from otx.config.explain import ExplainConfig
-from otx.data.entity.torch import OTXPredBatch
+from otx.data.entity.sample import OTXPredictionBatch
 from otx.types.explain import TargetExplainGroup
 from otx.types.label import HLabelInfo, LabelInfoTypes
 
@@ -31,10 +31,10 @@ ProcessedSaliencyMaps = list[dict[str, np.ndarray | torch.Tensor]]
 
 
 def process_saliency_maps_in_pred_entity(
-    predict_result: list[OTXPredBatch],
+    predict_result: list[OTXPredictionBatch],
     explain_config: ExplainConfig,
     label_info: LabelInfoTypes,
-) -> list[OTXPredBatch]:
+) -> list[OTXPredictionBatch]:
     """Process saliency maps in PredEntity."""
     processed_predict_result = []
     for predict_result_per_batch in predict_result:

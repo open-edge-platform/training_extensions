@@ -21,7 +21,7 @@ class OTXSegmentationDataset(OTXDataset):
 
     This dataset handles semantic segmentation where each pixel in an image is classified
     into one of multiple classes. It processes Datumaro dataset items and converts them
-    into OTXDataItem format suitable for semantic segmentation training and inference.
+    into OTXSample format suitable for semantic segmentation training and inference.
 
     Args:
         dm_subset: Datumaro dataset subset containing the data items.

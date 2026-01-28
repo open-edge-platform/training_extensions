@@ -7,11 +7,11 @@ from __future__ import annotations
 
 from otx.backend.native.models.base import OTXModel
 from otx.backend.openvino.models.base import OVModel
-from otx.data.entity import OTXDataItem
+from otx.data.entity import OTXSample
 from otx.data.module import OTXDataModule
 from otx.types import PathLike
 
 METRICS = dict[str, float]
-ANNOTATIONS = list[OTXDataItem]
+ANNOTATIONS = list[OTXSample]
 MODEL = OTXModel | OVModel | PathLike
 DATA = OTXDataModule | PathLike

@@ -5,7 +5,8 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from dataclasses import asdict, dataclass
+from typing import TYPE_CHECKING, Any, Sequence
 
 import numpy as np
 import polars as pl
@@ -27,6 +28,16 @@ from datumaro.experimental.fields import (
 from torchvision import tv_tensors
 
 from otx.data.entity.base import ImageInfo
+from otx.data.entity.validation import (
+    validate_bboxes,
+    validate_feature_vectors,
+    validate_images,
+    validate_imgs_info,
+    validate_keypoints,
+    validate_labels,
+    validate_masks,
+    validate_scores,
+)
 
 if TYPE_CHECKING:
     from torchvision.tv_tensors import BoundingBoxes, Mask
@@ -57,7 +68,14 @@ def register_pytree_node(cls: type[Sample]) -> type[Sample]:
         return (list(obj_dict.values()), list(obj_dict.keys()))
 
     def unflatten_fn(values: list[Any], context: list[str]) -> object:
-        return cls(**dict(zip(context, values)))
+        kwargs = dict(zip(context, values))
+        # Extract _img_info to set after construction (since __post_init__ would overwrite it)
+        img_info = kwargs.pop("_img_info", None)
+        obj = cls(**kwargs)
+        # Restore _img_info if it was present (preserves transformed img_info)
+        if img_info is not None:
+            obj._img_info = img_info
+        return obj
 
     pytree.register_pytree_node(
         cls,
@@ -73,31 +91,6 @@ class OTXSample(Sample):
 
     image: np.ndarray | torch.Tensor | tv_tensors.Image | Any
     subset: Subset = subset_field()
-
-    @property
-    def masks(self) -> Mask | None:
-        """Get masks for the sample."""
-        return None
-
-    @property
-    def bboxes(self) -> BoundingBoxes | None:
-        """Get bounding boxes for the sample."""
-        return None
-
-    @property
-    def keypoints(self) -> torch.Tensor | None:
-        """Get keypoints for the sample."""
-        return None
-
-    @property
-    def polygons(self) -> np.ndarray | None:
-        """Get polygons for the sample."""
-        return None
-
-    @property
-    def label(self) -> torch.Tensor | None:
-        """Optional label property that returns None by default."""
-        return None
 
     @property
     def img_info(self) -> ImageInfo:
@@ -200,7 +193,7 @@ class DetectionSample(OTXSample):
 
 @register_pytree_node
 class SegmentationSample(OTXSample):
-    """OTXDataItemSample is a base class for OTX data items."""
+    """OTXSample for segmentation tasks."""
 
     subset: Subset = subset_field()
     image: np.ndarray | tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=False)
@@ -264,3 +257,174 @@ class KeypointSample(OTXSample):
             img_shape=shape,
             ori_shape=shape,
         )
+
+
+def collate_fn(samples: list[OTXSample]) -> OTXSampleBatch:
+    """Collate OTXSamples into a batch.
+
+    Args:
+        samples: List of OTXSamples to batch
+
+    Returns:
+        Batched OTXSampleBatch with stacked tensors
+    """
+    # Check if all images have the same size. TODO(kprokofi): remove this check once OV IR models are moved.
+    if all(sample.image.shape == samples[0].image.shape for sample in samples):
+        images = torch.stack([sample.image for sample in samples])
+    else:
+        # we need this only in case of OV inference, where no resize
+        images = [sample.image for sample in samples]
+
+    return OTXSampleBatch(
+        images=images,
+        labels=[sample.label for sample in samples],
+        bboxes=[sample.bboxes for sample in samples],
+        keypoints=[sample.keypoints for sample in samples],
+        masks=[sample.masks for sample in samples],
+        imgs_info=[sample.img_info for sample in samples],
+    )
+
+
+@dataclass
+class OTXSampleBatch:
+    """OTX sample batch implementation.
+
+    Attributes:
+        images: The batch of images as a tensor or list of tensors.
+        labels: List of label tensors, optional.
+        masks: List of masks, optional.
+        bboxes: List of bounding boxes, optional.
+        keypoints: List of keypoint tensors, optional.
+        imgs_info: Sequence of image information, optional.
+    """
+
+    images: torch.Tensor | list[torch.Tensor]
+    labels: list[torch.Tensor] | None = None
+    masks: list[Mask] | None = None
+    bboxes: list[BoundingBoxes] | None = None
+    keypoints: list[torch.Tensor] | None = None
+    imgs_info: Sequence[ImageInfo | None] | None = None
+
+    @property
+    def batch_size(self) -> int:
+        """Get the number of samples in the batch."""
+        if isinstance(self.images, torch.Tensor):
+            return self.images.shape[0]
+        return len(self.images)
+
+    def __post_init__(self) -> None:
+        """Validate the batch after initialization."""
+        self._validate()
+
+    def _validate(self) -> None:
+        """Validate the batch fields."""
+        validate_images(self.images)
+        if self.labels is not None:
+            validate_labels(self.labels)
+        if self.bboxes is not None:
+            validate_bboxes(self.bboxes)
+        if self.keypoints is not None:
+            validate_keypoints(self.keypoints)
+        if self.masks is not None:
+            validate_masks(self.masks)
+        if self.imgs_info is not None:
+            validate_imgs_info(self.imgs_info)
+
+    def pin_memory(self) -> OTXSampleBatch:
+        """Pin memory for member tensor variables."""
+        # https://github.com/pytorch/pytorch/issues/116403
+
+        kwargs = {}
+
+        def maybe_pin(x: Any) -> Any:  # noqa: ANN401
+            if isinstance(x, torch.Tensor):
+                return x.pin_memory()
+            return x
+
+        def maybe_wrap_tv(x: Any) -> Any:  # noqa: ANN401
+            if isinstance(x, tv_tensors.TVTensor):
+                return tv_tensors.wrap(x.pin_memory(), like=x)
+            return maybe_pin(x)
+
+        # Handle images separately because of tv_tensors wrapping
+        if self.images is not None:
+            if isinstance(self.images, list):
+                kwargs["images"] = [maybe_wrap_tv(img) for img in self.images]
+            else:
+                kwargs["images"] = maybe_wrap_tv(self.images)
+
+        # Generic handler for all other fields
+        for field in ["labels", "bboxes", "keypoints", "masks"]:
+            value = getattr(self, field)
+            if value is not None:
+                kwargs[field] = [maybe_wrap_tv(v) if v is not None else None for v in value]
+
+        return self.wrap(**kwargs)
+
+    def wrap(self, **kwargs) -> OTXSampleBatch:
+        """Wrap this dataclass with the given keyword arguments.
+
+        Args:
+            **kwargs: Keyword arguments to be overwritten on top of this dataclass
+
+        Returns:
+            Updated dataclass
+        """
+        updated = object.__new__(self.__class__)
+        updated.__dict__.update(asdict(self))
+        updated.__dict__.update(kwargs)
+        return updated
+
+
+@dataclass
+class OTXPredictionBatch(OTXSampleBatch):
+    """OTX prediction batch implementation.
+
+    Extends OTXSampleBatch with prediction-specific fields.
+
+    Attributes:
+        scores: List of score tensors, optional.
+        feature_vector: List of feature vector tensors, optional.
+        saliency_map: List of saliency map tensors, optional.
+    """
+
+    scores: list[torch.Tensor] | None = None
+    feature_vector: list[torch.Tensor] | None = None
+    saliency_map: list[torch.Tensor] | None = None
+
+    def __post_init__(self) -> None:
+        """Validate the prediction batch after initialization."""
+        super().__post_init__()
+        if self.scores is not None:
+            validate_scores(self.scores)
+        if self.feature_vector is not None:
+            validate_feature_vectors(self.feature_vector)
+
+
+@dataclass
+class OTXPrediction:
+    """OTX prediction data entity for a single sample.
+
+    This is used for storing individual prediction results, e.g., after tile merging.
+
+    Attributes:
+        image: The image tensor.
+        img_info: Image metadata information.
+        label: The predicted label tensor, optional.
+        masks: The predicted masks, optional.
+        bboxes: The predicted bounding boxes, optional.
+        keypoints: The predicted keypoints, optional.
+        scores: The prediction scores, optional.
+        feature_vector: The feature vector for XAI, optional.
+        saliency_map: The saliency map for XAI, optional.
+    """
+
+    image: torch.Tensor | np.ndarray
+    img_info: ImageInfo | None = None
+    label: torch.Tensor | None = None
+    masks: Mask | None = None
+    bboxes: BoundingBoxes | None = None
+    keypoints: torch.Tensor | None = None
+    scores: torch.Tensor | None = None
+    feature_vector: torch.Tensor | None = None
+    saliency_map: torch.Tensor | None = None
