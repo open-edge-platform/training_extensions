@@ -267,8 +267,8 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">torchvision</span><span class="w"> </span><span class="kn">import</span> <span class="n">tv_tensors</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.openvino.models.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">OVModel</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataBatch</span><span class="p">,</span> <span class="n">OTXPredBatch</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.utils.structures.mask.mask_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">encode_rle</span><span class="p">,</span> <span class="n">polygon_to_rle</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.sample</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXPredictionBatch</span><span class="p">,</span> <span class="n">OTXSampleBatch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.utils.structures.mask.mask_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">encode_rle</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">MetricInput</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.metrics.mean_ap</span><span class="w"> </span><span class="kn">import</span> <span class="n">MaskRLEMeanAPFMeasureCallable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.label</span><span class="w"> </span><span class="kn">import</span> <span class="n">LabelInfo</span>
@@ -365,16 +365,16 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_customize_outputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">outputs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">InstanceSegmentationResult</span><span class="p">],</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">OTXDataBatch</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXPredBatch</span><span class="p">:</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">OTXSampleBatch</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OTXPredictionBatch</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Customize the model outputs for OTX compatibility.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            outputs (list[InstanceSegmentationResult]): Model outputs.</span>
-<span class="sd">            inputs (OTXDataBatch): Input data batch.</span>
+<span class="sd">            inputs (OTXSampleBatch): Input data batch.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            OTXPredBatch: Customized predictions batch.</span>
+<span class="sd">            OTXPredictionBatch: Customized predictions batch.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">bboxes</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">scores</span> <span class="o">=</span> <span class="p">[]</span>
@@ -403,8 +403,7 @@
                 <span class="n">predicted_s_maps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">image_map</span><span class="p">)</span>
 
             <span class="n">predicted_f_vectors</span> <span class="o">=</span> <span class="p">[</span><span class="n">out</span><span class="o">.</span><span class="n">feature_vector</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">out</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">]</span>
-            <span class="k">return</span> <span class="n">OTXPredBatch</span><span class="p">(</span>
-                <span class="n">batch_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">),</span>
+            <span class="k">return</span> <span class="n">OTXPredictionBatch</span><span class="p">(</span>
                 <span class="n">images</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
                 <span class="n">imgs_info</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
                 <span class="n">scores</span><span class="o">=</span><span class="n">scores</span><span class="p">,</span>
@@ -415,8 +414,7 @@
                 <span class="n">feature_vector</span><span class="o">=</span><span class="n">predicted_f_vectors</span><span class="p">,</span>
             <span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">OTXPredBatch</span><span class="p">(</span>
-            <span class="n">batch_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">),</span>
+        <span class="k">return</span> <span class="n">OTXPredictionBatch</span><span class="p">(</span>
             <span class="n">images</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
             <span class="n">imgs_info</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">,</span>
             <span class="n">scores</span><span class="o">=</span><span class="n">scores</span><span class="p">,</span>
@@ -429,8 +427,8 @@
 <a class="viewcode-back" href="../../../../../guide/reference/_autosummary/otx.models.html#otx.backend.openvino.models.OVInstanceSegmentationModel.prepare_metric_inputs">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">prepare_metric_inputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">preds</span><span class="p">:</span> <span class="n">OTXPredBatch</span><span class="p">,</span>  <span class="c1"># type: ignore[override]</span>
-        <span class="n">inputs</span><span class="p">:</span> <span class="n">OTXDataBatch</span><span class="p">,</span>  <span class="c1"># type: ignore[override]</span>
+        <span class="n">preds</span><span class="p">:</span> <span class="n">OTXPredictionBatch</span><span class="p">,</span>  <span class="c1"># type: ignore[override]</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">OTXSampleBatch</span><span class="p">,</span>  <span class="c1"># type: ignore[override]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MetricInput</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Prepare inputs for metric computation.</span>
 
@@ -438,8 +436,8 @@
 <span class="sd">        and caches the ground truth for the current batch.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            preds (OTXPredBatch): Current batch predictions.</span>
-<span class="sd">            inputs (OTXDataBatch): Current batch ground-truth inputs.</span>
+<span class="sd">            preds (OTXPredictionBatch): Current batch predictions.</span>
+<span class="sd">            inputs (OTXSampleBatch): Current batch ground-truth inputs.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            MetricInput: Dictionary containing predictions and ground truth.</span>
@@ -459,11 +457,10 @@
         <span class="p">]</span>
 
         <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">labels</span><span class="p">)):</span>  <span class="c1"># type: ignore[arg-type]</span>
-            <span class="n">rles</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="p">[</span><span class="n">encode_rle</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span> <span class="k">for</span> <span class="n">mask</span> <span class="ow">in</span> <span class="n">inputs</span><span class="o">.</span><span class="n">masks</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">]</span>
-                <span class="k">if</span> <span class="n">inputs</span><span class="o">.</span><span class="n">masks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">masks</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span>
-                <span class="k">else</span> <span class="n">polygon_to_rle</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">polygons</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="o">*</span><span class="n">inputs</span><span class="o">.</span><span class="n">imgs_info</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">ori_shape</span><span class="p">)</span>  <span class="c1"># type: ignore[index,union-attr]</span>
-            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">inputs</span><span class="o">.</span><span class="n">masks</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">masks</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Masks are required for metric computation&quot;</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="n">rles</span> <span class="o">=</span> <span class="p">[</span><span class="n">encode_rle</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span> <span class="k">for</span> <span class="n">mask</span> <span class="ow">in</span> <span class="n">inputs</span><span class="o">.</span><span class="n">masks</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">]</span>
             <span class="n">target_info</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="p">{</span>
                     <span class="s2">&quot;boxes&quot;</span><span class="p">:</span> <span class="n">inputs</span><span class="o">.</span><span class="n">bboxes</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">data</span> <span class="k">if</span> <span class="n">inputs</span><span class="o">.</span><span class="n">bboxes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">)),</span>

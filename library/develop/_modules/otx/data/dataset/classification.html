@@ -285,7 +285,7 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;OTX Dataset for multi-class classification tasks.</span>
 
 <span class="sd">    This dataset handles single-label classification where each image belongs to exactly one class.</span>
-<span class="sd">    It processes Datumaro dataset items and converts them into OTXDataItem format suitable for</span>
+<span class="sd">    It processes Datumaro dataset items and converts them into OTXSample format suitable for</span>
 <span class="sd">    multi-class classification training and inference.</span>
 
 <span class="sd">    Args:</span>
@@ -374,7 +374,7 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;OTX Dataset for multi-label classification tasks.</span>
 
 <span class="sd">    This dataset handles multi-label classification where each image can belong to multiple classes</span>
-<span class="sd">    simultaneously. It processes Datumaro dataset items and converts them into OTXDataItem format</span>
+<span class="sd">    simultaneously. It processes Datumaro dataset items and converts them into OTXSample format</span>
 <span class="sd">    with one-hot encoded labels suitable for multi-label classification training and inference.</span>
 
 <span class="sd">    Args:</span>
@@ -491,7 +491,7 @@
 <span class="sd">    with multiple classification heads. It supports both multiclass heads (where one class per head</span>
 <span class="sd">    is selected) and multilabel heads (where multiple classes can be selected simultaneously).</span>
 
-<span class="sd">    The dataset processes Datumaro dataset items and converts them into OTXDataItem format with</span>
+<span class="sd">    The dataset processes Datumaro dataset items and converts them into OTXSample format with</span>
 <span class="sd">    hierarchical label encoding suitable for H-label classification training and inference.</span>
 
 <span class="sd">    Args:</span>

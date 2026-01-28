@@ -277,7 +277,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.detection.utils.assigners</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimOTAAssigner</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.native.models.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_checkpoint</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.config.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">TileConfig</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataBatch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.sample</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXSampleBatch</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.metrics.fmeasure</span><span class="w"> </span><span class="kn">import</span> <span class="n">MeanAveragePrecisionFMeasureCallable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.export</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXExportFormatType</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.types.precision</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXPrecisionType</span>
@@ -389,7 +389,7 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_customize_inputs</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">entity</span><span class="p">:</span> <span class="n">OTXDataBatch</span><span class="p">,</span>
+        <span class="n">entity</span><span class="p">:</span> <span class="n">OTXSampleBatch</span><span class="p">,</span>
         <span class="n">pad_size_divisor</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">32</span><span class="p">,</span>
         <span class="n">pad_value</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">114</span><span class="p">,</span>  <span class="c1"># YOLOX uses 114 as pad_value</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>

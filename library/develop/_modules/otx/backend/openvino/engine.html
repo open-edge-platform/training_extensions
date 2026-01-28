@@ -273,7 +273,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.backend.openvino.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">OVModel</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.config.explain</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExplainConfig</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageInfo</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataBatch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.entity.sample</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXSampleBatch</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.data.module</span><span class="w"> </span><span class="kn">import</span> <span class="n">OTXDataModule</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Engine</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">otx.tools.auto_configurator</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoConfigurator</span>
@@ -575,8 +575,7 @@
                 <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">datamodule</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
                     <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;The input data should be a list of numpy arrays.&quot;</span>
                     <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-                <span class="n">customized_inputs</span> <span class="o">=</span> <span class="n">OTXDataBatch</span><span class="p">(</span>
-                    <span class="n">batch_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">datamodule</span><span class="p">),</span>
+                <span class="n">customized_inputs</span> <span class="o">=</span> <span class="n">OTXSampleBatch</span><span class="p">(</span>
                     <span class="n">images</span><span class="o">=</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">img</span><span class="p">)</span> <span class="k">for</span> <span class="n">img</span> <span class="ow">in</span> <span class="n">datamodule</span><span class="p">],</span>
                     <span class="n">imgs_info</span><span class="o">=</span><span class="p">[</span>
                         <span class="n">ImageInfo</span><span class="p">(</span><span class="n">img_idx</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">ori_shape</span><span class="o">=</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">img_shape</span><span class="o">=</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>

@@ -608,7 +608,7 @@ Therefore, we need to unresolve it this time.</p>
 <p>OTX Dataset for object detection tasks.</p>
 <p>This dataset handles object detection where each image contains multiple objects with
 bounding box annotations. It processes Datumaro dataset items and converts them into
-OTXDataItem format suitable for object detection training and inference.</p>
+OTXSample format suitable for object detection training and inference.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -666,7 +666,7 @@ If False, use integer indices as keys.</p>
 <p>This dataset handles hierarchical classification where labels are organized in a tree structure
 with multiple classification heads. It supports both multiclass heads (where one class per head
 is selected) and multilabel heads (where multiple classes can be selected simultaneously).</p>
-<p>The dataset processes Datumaro dataset items and converts them into OTXDataItem format with
+<p>The dataset processes Datumaro dataset items and converts them into OTXSample format with
 hierarchical label encoding suitable for H-label classification training and inference.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -812,7 +812,7 @@ If False, use integer indices as keys.</p>
 <p>OTX Dataset for keypoint detection tasks.</p>
 <p>This dataset handles keypoint detection where specific key points (like body joints)
 are detected and localized in images. It processes Datumaro dataset items and
-converts them into OTXDataItem format suitable for keypoint detection training
+converts them into OTXSample format suitable for keypoint detection training
 and inference.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -859,7 +859,7 @@ and inference.</p>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">OTXDataset</span></code></p>
 <p>OTX Dataset for multi-class classification tasks.</p>
 <p>This dataset handles single-label classification where each image belongs to exactly one class.
-It processes Datumaro dataset items and converts them into OTXDataItem format suitable for
+It processes Datumaro dataset items and converts them into OTXSample format suitable for
 multi-class classification training and inference.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -919,7 +919,7 @@ If False, use integer indices as keys.</p>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">OTXDataset</span></code></p>
 <p>OTX Dataset for multi-label classification tasks.</p>
 <p>This dataset handles multi-label classification where each image can belong to multiple classes
-simultaneously. It processes Datumaro dataset items and converts them into OTXDataItem format
+simultaneously. It processes Datumaro dataset items and converts them into OTXSample format
 with one-hot encoded labels suitable for multi-label classification training and inference.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -988,7 +988,7 @@ If False, use integer indices as keys.</p>
 <p>OTX Dataset for semantic segmentation tasks.</p>
 <p>This dataset handles semantic segmentation where each pixel in an image is classified
 into one of multiple classes. It processes Datumaro dataset items and converts them
-into OTXDataItem format suitable for semantic segmentation training and inference.</p>
+into OTXSample format suitable for semantic segmentation training and inference.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
