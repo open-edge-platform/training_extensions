@@ -3,17 +3,11 @@
     margin-top: calc(-1 * var(--spectrum-global-dimension-size-25));
     margin-bottom: calc(-1 * var(--spectrum-global-dimension-size-50));
     display: flex;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     gap: var(--spectrum-global-dimension-size-100);
-    overflow: hidden;
     align-items: center;
     flex: 1;
     min-width: 0;
-}
-
-.expanded {
-    flex-wrap: wrap;
-    overflow: visible;
 }
 
 .badge {
@@ -35,12 +29,6 @@
     opacity: 0.9;
 }
 
-.hidden {
-    position: absolute;
-    visibility: hidden;
-    pointer-events: none;
-}
-
 .selected,
 .selected:focus {
     outline-offset: var(--spectrum-global-dimension-size-25);
@@ -54,8 +42,4 @@
     overflow: hidden;
     max-width: var(--spectrum-global-dimension-size-1600);
     font-size: var(--spectrum-global-dimension-font-size-75);
-}
-
-.showMoreButton {
-    flex-shrink: 0;
 }

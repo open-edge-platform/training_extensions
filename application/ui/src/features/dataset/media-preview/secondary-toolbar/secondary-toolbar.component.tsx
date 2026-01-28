@@ -1,9 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useRef } from 'react';
-
-import { ActionButton, Button, ButtonGroup, dimensionValue, Text } from '@geti/ui';
+import { ActionButton, Button, ButtonGroup, Text } from '@geti/ui';
 import { Checkmark, CloseSemiBold } from '@geti/ui/icons';
 import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { isEmpty } from 'lodash-es';
@@ -11,8 +9,6 @@ import { isEmpty } from 'lodash-es';
 import type { Media } from '../../../../constants/shared-types';
 import { useProject } from '../../../../hooks/api/project.hook';
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
-import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
-import { useSelectedAnnotations } from '../../../../shared/annotator/select-annotation-provider.component';
 import { Labels } from '../../../annotator/labels/labels.component';
 import { isClassificationTask } from '../../../project/task-type-guards';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
@@ -20,7 +16,6 @@ import { useSelectedData } from '../../selected-data-provider.component';
 import { Toolbar } from '../toolbar-container/toolbar-container.component';
 import { AnnotatorModes } from './annotator-modes/annotator-modes-toggle.component';
 import type { AnnotatorMode } from './annotator-modes/mode';
-import { useVisibleLabelsCount } from './use-visible-labels-count.hook';
 
 import styles from './secondary-toolbar.module.scss';
 
@@ -53,17 +48,8 @@ export const SecondaryToolbar = ({
     onModeChange,
 }: SecondaryToolbarProps) => {
     const queryClient = useQueryClient();
-    const toolbarRef = useRef<HTMLDivElement>(null);
-    const labelsContainerRef = useRef<HTMLDivElement>(null);
     const { setMediaState } = useSelectedData();
-    const { selectedAnnotations } = useSelectedAnnotations();
     const { data: selectedProject } = useProject();
-    const { labels } = useAnnotator();
-    const { collapsedVisibleCount } = useVisibleLabelsCount({
-        toolbarRef,
-        labelsContainerRef,
-        totalLabels: labels.length,
-    });
 
     const { annotations, isSaving, submitAnnotations } = useAnnotationActions();
 
@@ -98,30 +84,15 @@ export const SecondaryToolbar = ({
     };
 
     return (
-        <div
-            ref={toolbarRef}
-            style={{
-                width: '100%',
-                height: '100%',
-                display: selectedAnnotations.size === 0 && !isClassification ? 'none' : 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                paddingTop: dimensionValue('size-125'),
-            }}
-        >
+        <div className={styles.secondaryToolbarContainer}>
             <Toolbar.Container>
                 <Toolbar.Section>
                     <AnnotatorModes mode={mode} onModeChange={onModeChange} />
                 </Toolbar.Section>
             </Toolbar.Container>
-            <Toolbar.Container id='labels-container'>
+            <Toolbar.Container>
                 <Toolbar.Section>
-                    <Labels
-                        ref={labelsContainerRef}
-                        collapsedVisibleCount={collapsedVisibleCount}
-                        isClassification={isClassification}
-                        isMultiLabel={isMultiLabel}
-                    />
+                    <Labels isClassification={isClassification} isMultiLabel={isMultiLabel} />
                 </Toolbar.Section>
             </Toolbar.Container>
             <Toolbar.Container>
