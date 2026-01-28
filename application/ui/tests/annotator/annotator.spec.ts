@@ -21,7 +21,7 @@ const candyPngBuffer = fs.readFileSync(candyPngPath);
 const redLabel = getMockedLabel({ id: 'red-label', name: 'red-label', color: '#ad2323' });
 const blueLabel = getMockedLabel({ id: 'blue-label', name: 'blue-label', color: '#2424a0' });
 
-const mockedProject = getMockedProject({
+const mockedDetectionProject = getMockedProject({
     id: 'candy-id',
     task: {
         exclusive_labels: true,
@@ -30,35 +30,29 @@ const mockedProject = getMockedProject({
     },
 });
 
-test.beforeEach(async ({ network, page }) => {
-    network.use(
-        http.get('/api/projects/{project_id}', () => {
-            return HttpResponse.json(mockedProject);
-        }),
-        http.get('/api/projects/{project_id}/dataset/media', () => {
-            return HttpResponse.json({
-                items: [mockedMedia({ width: 1000, height: 750 })],
-                pagination: { offset: 0, limit: 20, count: 1, total: 1 },
-            });
-        }),
-        http.get('/api/projects/{project_id}/dataset/media/{media_id}/binary', async () => {
-            return HttpResponse.arrayBuffer(candyPngBuffer.buffer, {
-                headers: { 'Content-Type': 'image/png' },
-            });
-        }),
-        http.get('/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations', async () => {
-            return HttpResponse.json({
-                annotations: [],
-                user_reviewed: false,
-            });
-        })
-    );
-
-    await page.goto(`/projects/${mockedProject.id}/dataset`);
-    await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
-});
-
 test.describe('Annotator', () => {
+    test.beforeEach(async ({ network, page }) => {
+        network.use(
+            http.get('/api/projects/{project_id}', () => {
+                return HttpResponse.json(mockedDetectionProject);
+            }),
+            http.get('/api/projects/{project_id}/dataset/media', () => {
+                return HttpResponse.json({
+                    items: [mockedMedia({ width: 1000, height: 750 })],
+                    pagination: { offset: 0, limit: 20, count: 1, total: 1 },
+                });
+            }),
+            http.get('/api/projects/{project_id}/dataset/media/{media_id}/binary', async () => {
+                return HttpResponse.arrayBuffer(candyPngBuffer.buffer, {
+                    headers: { 'Content-Type': 'image/png' },
+                });
+            })
+        );
+
+        await page.goto(`/projects/${mockedDetectionProject.id}/dataset`);
+        await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
+    });
+
     test('Add and change annotations labels', async ({ page, boundingBoxTool }) => {
         await test.step('Draw an annotation', async () => {
             await boundingBoxTool.selectTool();
