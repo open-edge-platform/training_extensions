@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { createContext, ReactNode, useContext } from 'react';
+import { createContext, ReactNode, useContext, useMemo } from 'react';
 
 import { useProject } from 'hooks/api/project.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
@@ -78,11 +78,9 @@ export const AnnotationActionsProvider = ({
 
     const { data: project } = useProject();
 
-    const getPredictions = () => {
+    const predictions = useMemo(() => {
         return mapServerAnnotationsToLocal(initialPredictionsDTO, project.task.labels ?? []);
-    };
-
-    const predictions = getPredictions();
+    }, [initialPredictionsDTO, project.task.labels]);
 
     const [annotations, setAnnotations, undoRedoActions] = useUndoRedoState<Annotation[]>(() => {
         const projectLabels = project?.task?.labels ?? [];
