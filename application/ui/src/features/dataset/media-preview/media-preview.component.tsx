@@ -116,11 +116,13 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
     const { items, hasNextPage, isFetchingNextPage, fetchNextPage } = useGetDatasetItems();
 
     return (
-        <Dialog UNSAFE_style={{
-            backgroundColor: 'var(--spectrum-global-color-gray-50)',
-            '--spectrum-dialog-padding-x': 'var(--spectrum-global-dimension-size-250)',
-            '--spectrum-dialog-padding-y': 'var(--spectrum-global-dimension-size-250)',
-        }}>
+        <Dialog
+            UNSAFE_style={{
+                backgroundColor: 'var(--spectrum-global-color-gray-50)',
+                '--spectrum-dialog-padding-x': 'var(--spectrum-global-dimension-size-250)',
+                '--spectrum-dialog-padding-y': 'var(--spectrum-global-dimension-size-250)',
+            }}
+        >
             <Content>
                 <Grid
                     gap='size-125'
