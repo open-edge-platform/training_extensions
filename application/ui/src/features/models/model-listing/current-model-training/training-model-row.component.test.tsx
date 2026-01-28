@@ -71,7 +71,7 @@ describe('TrainingModelRow', () => {
 
         const cancelButton = await screen.findByRole('button', { name: /cancel training job/i });
         expect(cancelButton).toBeVisible();
-        expect(cancelButton).not.toBeDisabled();
+        expect(cancelButton).toBeEnabled();
     });
 
     it('disables Cancel button when job is not running', async () => {

@@ -41,7 +41,7 @@ describe('InferenceDevices', () => {
 
     beforeEach(() => {
         vi.resetAllMocks();
-        queryClient.clear();
+        queryClient.removeQueries();
     });
 
     it('displays current device selection', async () => {
