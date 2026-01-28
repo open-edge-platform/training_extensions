@@ -5,6 +5,7 @@ import { PointerEvent, useRef, useState } from 'react';
 
 import { clampPointBetweenImage } from '@geti/smart-tools/utils';
 
+import selectionCursor from '../../../../assets/icons/selection.svg?url';
 import { useZoom } from '../../../../components/zoom/zoom.provider';
 import type { Label } from '../../../../constants/shared-types';
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
@@ -24,6 +25,8 @@ interface PreviewAnnotationsProps {
     previewAnnotations: Annotation[];
     image: Pick<RegionOfInterest, 'width' | 'height'>;
 }
+
+const CURSOR_OFFSET = '7 8';
 
 const PreviewAnnotations = ({ previewAnnotations, image }: PreviewAnnotationsProps) => {
     if (previewAnnotations.length === 0) return null;
@@ -135,7 +138,7 @@ export const SegmentAnythingTool = () => {
             onPointerMove={handleMouseMove}
             onPointerDown={handlePointerDown}
             onPointerLeave={() => setPreviewShapes([])}
-            style={{ cursor: `url("/icons/selection.svg") 8 8, auto` }}
+            style={{ cursor: `url(${selectionCursor}) ${CURSOR_OFFSET}, auto` }}
         >
             <PreviewAnnotations previewAnnotations={previewAnnotations} image={image} />
         </SvgToolCanvas>
