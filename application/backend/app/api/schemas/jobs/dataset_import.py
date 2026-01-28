@@ -2,20 +2,17 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from typing import Literal
-from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
-from app.api.schemas.jobs.base import BaseJobRequest
+from app.api.schemas.dataset import DatasetFilters
 from app.core.jobs.models import JobType
 from app.models import DatasetItemSubset, TaskType
 
-
-class BaseImportDatasetRequest(BaseModel):
-    staged_dataset_id: UUID = Field(..., description="ID of the staged dataset associated with the job")
+from .base import BaseDatasetRequest, BaseJobRequest
 
 
-class PrepareDatasetForImportRequest(BaseImportDatasetRequest):
+class PrepareDatasetForImportRequest(BaseDatasetRequest):
     job_type: Literal[JobType.PREPARE_DATASET_FOR_IMPORT]
 
     model_config = {
@@ -28,39 +25,17 @@ class PrepareDatasetForImportRequest(BaseImportDatasetRequest):
     }
 
 
-class DatasetFilters(BaseModel):
-    labels: list[str] | None = Field(
-        None,
-        description="List of labels to consider during import; any annotation with labels not present in the list will "
-        "be filtered out; if the parameter is unspecified (null), then all labels will be considered",
-    )
-    subsets: list[str] | None = Field(
-        None,
-        description="List of subsets to consider during import; any item assigned a subset not present in the list "
-        "will be filtered out; if the parameter is unspecified (null), then all subsets will be considered",
-    )
-    include_unannotated: bool = Field(True, description="Whether to include unannotated items to the dataset")
-
-    model_config = {
-        "json_schema_extra": {
-            "example": {
-                "labels": ["person", "car", "motorcycle"],
-                "subsets": ["training", "validation"],
-                "include_unannotated": False,
-            }
-        }
-    }
-
-
 class ImportDatasetProjectParams(BaseModel):
-    filters: DatasetFilters = Field(..., description="Filters to apply to the dataset during import")
-    labels_mapping: dict[str, str] = Field(
-        ...,
+    filters: DatasetFilters = Field(
+        default_factory=DatasetFilters, description="Filters to apply to the dataset during import"
+    )
+    labels_mapping: dict[str, str] | None = Field(
+        None,
         description="Specify how to map the labels found in the dataset to the labels defined in the project. If and "
         "only if the dataset labels exactly match the project labels, this parameter can be left unspecified (null)",
     )
-    subset_mapping: dict[str, DatasetItemSubset] = Field(
-        ...,
+    subset_mapping: dict[str, DatasetItemSubset] | None = Field(
+        None,
         description="Specify how to map the subsets assigned to the items in the dataset to the project subsets. If "
         "this parameter is unspecified (null), then each item will be assigned to the respective subset defined in the "
         "dataset",
@@ -81,10 +56,14 @@ class ImportDatasetProjectParams(BaseModel):
     }
 
 
-class ImportDatasetToProjectRequest(BaseImportDatasetRequest, BaseJobRequest):
+class ImportDatasetToProjectRequest(BaseDatasetRequest, BaseJobRequest):
     job_type: Literal[JobType.IMPORT_DATASET_TO_PROJECT]
 
-    parameters: ImportDatasetProjectParams = Field(..., description="Dataset parameters")
+    parameters: ImportDatasetProjectParams = Field(
+        default_factory=ImportDatasetProjectParams,
+        description="Configuration for importing the dataset into the project, including filtering, labeling and "
+        "subset mapping options",
+    )
 
     model_config = {
         "json_schema_extra": {
@@ -129,7 +108,9 @@ class NewProjectParams(BaseModel):
 
 class ImportDatasetNewParams(BaseModel):
     project: NewProjectParams = Field(..., description="New project parameters")
-    filters: DatasetFilters = Field(..., description="Filters to apply to the dataset during import")
+    filters: DatasetFilters = Field(
+        default_factory=DatasetFilters, description="Filters to apply to the dataset during import"
+    )
 
     model_config = {
         "json_schema_extra": {
@@ -149,10 +130,14 @@ class ImportDatasetNewParams(BaseModel):
     }
 
 
-class ImportDatasetAsNewProjectRequest(BaseImportDatasetRequest):
+class ImportDatasetAsNewProjectRequest(BaseDatasetRequest):
     job_type: Literal[JobType.IMPORT_DATASET_AS_NEW_PROJECT]
 
-    parameters: ImportDatasetNewParams = Field(..., description="Dataset parameters")
+    parameters: ImportDatasetNewParams = Field(
+        ...,
+        description="Configuration for importing the dataset as the new project, including filtering options and new "
+        "project parameters",
+    )
 
     model_config = {
         "json_schema_extra": {
