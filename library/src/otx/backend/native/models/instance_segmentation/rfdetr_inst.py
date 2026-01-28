@@ -8,7 +8,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 import torch
-from rfdetr import RFDETRSegMedium
+from rfdetr import (
+    RFDETRSeg2XLarge,
+    RFDETRSegLarge,
+    RFDETRSegMedium,
+    RFDETRSegNano,
+    RFDETRSegSmall,
+    RFDETRSegXLarge,
+)
 from rfdetr.main import populate_args
 from rfdetr.models.lwdetr import build_criterion_and_postprocessors
 from rfdetr.util.get_param_dicts import get_param_dict
@@ -59,7 +66,21 @@ class RFDETRInst(OTXInstanceSegModel):
     """
 
     _pretrained_weights: ClassVar[dict[str, str]] = {
-        "rfdetr_seg_m": "https://storage.googleapis.com/rfdetr/medium_coco/checkpoint_best_regular.pth",
+        "rfdetr_seg_n": "https://storage.googleapis.com/rfdetr/rf-detr-seg-n-ft.pth",
+        "rfdetr_seg_s": "https://storage.googleapis.com/rfdetr/rf-detr-seg-s-ft.pth",
+        "rfdetr_seg_m": "https://storage.googleapis.com/rfdetr/rf-detr-seg-m-ft.pth",
+        "rfdetr_seg_l": "https://storage.googleapis.com/rfdetr/rf-detr-seg-l-ft.pth",
+        "rfdetr_seg_xl": "https://storage.googleapis.com/rfdetr/rf-detr-seg-xl-ft.pth",
+        "rfdetr_seg_2xl": "https://storage.googleapis.com/rfdetr/rf-detr-seg-2xl-ft.pth",
+    }
+
+    _model_class_mapping: ClassVar[dict[str, type]] = {
+        "rfdetr_seg_n": RFDETRSegNano,
+        "rfdetr_seg_s": RFDETRSegSmall,
+        "rfdetr_seg_m": RFDETRSegMedium,
+        "rfdetr_seg_l": RFDETRSegLarge,
+        "rfdetr_seg_xl": RFDETRSegXLarge,
+        "rfdetr_seg_2xl": RFDETRSeg2XLarge,
     }
 
     input_size_multiplier = 24
@@ -68,7 +89,14 @@ class RFDETRInst(OTXInstanceSegModel):
         self,
         label_info: LabelInfoTypes,
         data_input_params: DataInputParams | None = None,
-        model_name: Literal["rfdetr_seg_m"] = "rfdetr_seg_m",
+        model_name: Literal[
+            "rfdetr_seg_n",
+            "rfdetr_seg_s",
+            "rfdetr_seg_m",
+            "rfdetr_seg_l",
+            "rfdetr_seg_xl",
+            "rfdetr_seg_2xl",
+        ] = "rfdetr_seg_m",
         optimizer: OptimizerCallable = DefaultOptimizerCallable,
         scheduler: LRSchedulerCallable | LRSchedulerListCallable = DefaultSchedulerCallable,
         metric: MetricCallable = MaskRLEMeanAPFMeasureCallable,
@@ -106,7 +134,8 @@ class RFDETRInst(OTXInstanceSegModel):
         num_classes = num_classes if num_classes is not None else self.num_classes
 
         # Create RF-DETR Segmentation model with segmentation_head=True
-        detector = RFDETRSegMedium(num_classes=num_classes, pretrain_weights=None)
+        model_class = self._model_class_mapping[self.model_name]
+        detector = model_class(num_classes=num_classes, pretrain_weights=None)
 
         # Reinitialize detection head for our num_classes
         detector.model.reinitialize_detection_head(num_classes)
@@ -352,8 +381,33 @@ class RFDETRInst(OTXInstanceSegModel):
         imagenet_std = (58.395, 57.12, 57.375)
 
         return {
-            "rfdetr_seg_preview": DataInputParams(
+            "rfdetr_seg_n": DataInputParams(
+                input_size=(312, 312),
+                mean=imagenet_mean,
+                std=imagenet_std,
+            ),
+            "rfdetr_seg_s": DataInputParams(
+                input_size=(384, 384),
+                mean=imagenet_mean,
+                std=imagenet_std,
+            ),
+            "rfdetr_seg_m": DataInputParams(
                 input_size=(432, 432),
+                mean=imagenet_mean,
+                std=imagenet_std,
+            ),
+            "rfdetr_seg_l": DataInputParams(
+                input_size=(504, 504),
+                mean=imagenet_mean,
+                std=imagenet_std,
+            ),
+            "rfdetr_seg_xl": DataInputParams(
+                input_size=(624, 624),
+                mean=imagenet_mean,
+                std=imagenet_std,
+            ),
+            "rfdetr_seg_2xl": DataInputParams(
+                input_size=(768, 768),
                 mean=imagenet_mean,
                 std=imagenet_std,
             ),
