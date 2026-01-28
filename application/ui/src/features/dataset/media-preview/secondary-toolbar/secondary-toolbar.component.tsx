@@ -73,11 +73,7 @@ export const SecondaryToolbar = ({
     const selectedIndex = items.findIndex((item) => item.id === mediaItem.id);
 
     const handleSubmit = async () => {
-        if (mode === 'annotation') {
-            await submitAnnotations();
-        } else {
-            await submitPredictions();
-        }
+        await submitAnnotations();
 
         setMediaState((prev) => {
             const newState = new Map(prev);

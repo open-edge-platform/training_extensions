@@ -77,9 +77,11 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                     areas={['header header aside', 'toolbar canvas aside', 'toolbar bottom aside']}
                 >
                     <AnnotationActionsProvider
+                        key={mediaItem.id}
                         mediaItem={mediaItem}
-                        initialAnnotationsDTO={getAnnotations(mode, isUserReviewedMedia, annotationsDTO)}
+                        initialAnnotationsDTO={annotationsDTO}
                         isUserReviewed={isUserReviewedMedia}
+                        mode={mode}
                     >
                         <ZoomProvider>
                             <Suspense fallback={<CanvasAreaLoading />}>
@@ -120,18 +122,18 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                                 </SelectAnnotationProvider>
                             </Suspense>
                         </ZoomProvider>
-
-                        <View gridArea={'aside'}>
-                            <SidebarItems
-                                items={items}
-                                mediaItem={mediaItem}
-                                hasNextPage={hasNextPage}
-                                isFetchingNextPage={isFetchingNextPage}
-                                fetchNextPage={fetchNextPage}
-                                onSelectedMediaItem={onSelectedMediaItem}
-                            />
-                        </View>
                     </AnnotationActionsProvider>
+
+                    <View gridArea={'aside'}>
+                        <SidebarItems
+                            items={items}
+                            mediaItem={mediaItem}
+                            hasNextPage={hasNextPage}
+                            isFetchingNextPage={isFetchingNextPage}
+                            fetchNextPage={fetchNextPage}
+                            onSelectedMediaItem={onSelectedMediaItem}
+                        />
+                    </View>
                 </Grid>
             </Content>
         </Dialog>

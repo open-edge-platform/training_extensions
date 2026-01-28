@@ -11,6 +11,8 @@ import { $api } from '../../api/client';
 import type { AnnotationDTO, Label, Media } from '../../constants/shared-types';
 import { UndoRedoProvider } from '../../features/dataset/media-preview/primary-toolbar/undo-redo/undo-redo-provider.component';
 import useUndoRedoState from '../../features/dataset/media-preview/primary-toolbar/undo-redo/use-undo-redo-state';
+import { AnnotatorMode } from '../../features/dataset/media-preview/secondary-toolbar/annotator-modes/mode';
+import { getAnnotations } from '../../features/dataset/media-preview/utils';
 import type { Annotation, Shape } from '../types';
 
 const mapServerAnnotationsToLocal = (serverAnnotations: AnnotationDTO[], projectLabels: Label[]): Annotation[] => {
@@ -58,6 +60,7 @@ type AnnotationActionsProviderProps = {
     initialAnnotationsDTO?: AnnotationDTO[];
     isUserReviewed?: boolean;
     mediaItem: Media;
+    mode: AnnotatorMode;
 };
 
 export const AnnotationActionsProvider = ({
@@ -65,6 +68,7 @@ export const AnnotationActionsProvider = ({
     initialAnnotationsDTO = [],
     isUserReviewed = false,
     mediaItem,
+    mode,
 }: AnnotationActionsProviderProps) => {
     const projectId = useProjectIdentifier();
     const saveMutation = $api.useMutation(
@@ -74,10 +78,24 @@ export const AnnotationActionsProvider = ({
 
     const { data: project } = useProject();
 
+    const getPredictions = () => {
+        if (mode === 'annotation' || isUserReviewed) {
+            return [];
+        }
+
+        return mapServerAnnotationsToLocal(initialAnnotationsDTO, project.task.labels ?? []);
+    };
+
+    const predictions = getPredictions();
+
     const [annotations, setAnnotations, undoRedoActions] = useUndoRedoState<Annotation[]>([]);
 
     useEffect(() => {
-        const projectLabels = project?.task?.labels || [];
+        if (mode === 'prediction' || isUserReviewed === false) {
+            return;
+        }
+
+        const projectLabels = project?.task?.labels ?? [];
 
         const localAnnotations = mapServerAnnotationsToLocal(initialAnnotationsDTO, projectLabels);
 
@@ -118,9 +136,9 @@ export const AnnotationActionsProvider = ({
     };
 
     const submitAnnotations = async () => {
-        const serverFormattedAnnotations = mapLocalAnnotationsToServer(annotations);
+        const serverAnnotations = mapLocalAnnotationsToServer(mode === 'annotation' ? annotations : predictions);
 
-        await saveAnnotations(serverFormattedAnnotations);
+        await saveAnnotations(serverAnnotations);
     };
 
     const submitPredictions = async () => {
@@ -131,11 +149,13 @@ export const AnnotationActionsProvider = ({
         await saveAnnotations(serverFormattedAnnotationsWithoutConfidences);
     };
 
+    const annotationsToRender = mode === 'annotation' ? annotations : predictions;
+
     return (
         <AnnotationsContext.Provider
             value={{
                 isUserReviewed,
-                annotations,
+                annotations: annotationsToRender,
 
                 // Local
                 addAnnotations,
