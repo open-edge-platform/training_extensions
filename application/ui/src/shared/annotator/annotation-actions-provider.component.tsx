@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { createContext, ReactNode, useContext, useEffect } from 'react';
+import { createContext, ReactNode, useContext, useMemo } from 'react';
 
 import { useProject } from 'hooks/api/project.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
@@ -11,6 +11,7 @@ import { $api } from '../../api/client';
 import type { AnnotationDTO, Label, Media } from '../../constants/shared-types';
 import { UndoRedoProvider } from '../../features/dataset/media-preview/primary-toolbar/undo-redo/undo-redo-provider.component';
 import useUndoRedoState from '../../features/dataset/media-preview/primary-toolbar/undo-redo/use-undo-redo-state';
+import { AnnotatorMode } from '../../features/dataset/media-preview/secondary-toolbar/annotator-modes/mode';
 import type { Annotation, Shape } from '../types';
 
 const mapServerAnnotationsToLocal = (serverAnnotations: AnnotationDTO[], projectLabels: Label[]): Annotation[] => {
@@ -46,7 +47,6 @@ interface AnnotationsContextValue {
     deleteAnnotations: (annotationIds: string[]) => void;
     updateAnnotations: (updatedAnnotations: Annotation[]) => void;
     submitAnnotations: () => Promise<void>;
-    submitPredictions: () => Promise<void>;
     isUserReviewed: boolean;
     isSaving: boolean;
 }
@@ -55,16 +55,20 @@ const AnnotationsContext = createContext<AnnotationsContextValue | null>(null);
 
 type AnnotationActionsProviderProps = {
     children: ReactNode;
-    initialAnnotationsDTO?: AnnotationDTO[];
+    initialAnnotationsDTO: AnnotationDTO[];
+    initialPredictionsDTO: AnnotationDTO[];
     isUserReviewed?: boolean;
     mediaItem: Media;
+    mode: AnnotatorMode;
 };
 
 export const AnnotationActionsProvider = ({
     children,
-    initialAnnotationsDTO = [],
+    initialAnnotationsDTO,
+    initialPredictionsDTO,
     isUserReviewed = false,
     mediaItem,
+    mode,
 }: AnnotationActionsProviderProps) => {
     const projectId = useProjectIdentifier();
     const saveMutation = $api.useMutation(
@@ -74,16 +78,15 @@ export const AnnotationActionsProvider = ({
 
     const { data: project } = useProject();
 
-    const [annotations, setAnnotations, undoRedoActions] = useUndoRedoState<Annotation[]>([]);
+    const predictions = useMemo(() => {
+        return mapServerAnnotationsToLocal(initialPredictionsDTO, project.task.labels ?? []);
+    }, [initialPredictionsDTO, project.task.labels]);
 
-    useEffect(() => {
-        const projectLabels = project?.task?.labels || [];
+    const [annotations, setAnnotations, undoRedoActions] = useUndoRedoState<Annotation[]>(() => {
+        const projectLabels = project?.task?.labels ?? [];
 
-        const localAnnotations = mapServerAnnotationsToLocal(initialAnnotationsDTO, projectLabels);
-
-        undoRedoActions.reset(localAnnotations);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [initialAnnotationsDTO, project?.task?.labels]);
+        return mapServerAnnotationsToLocal(initialAnnotationsDTO, projectLabels);
+    });
 
     const updateAnnotations = (updatedAnnotations: Annotation[]) => {
         const updatedMap = new Map(updatedAnnotations.map((annotation) => [annotation.id, annotation]));
@@ -117,25 +120,31 @@ export const AnnotationActionsProvider = ({
         });
     };
 
-    const submitAnnotations = async () => {
-        const serverFormattedAnnotations = mapLocalAnnotationsToServer(annotations);
-
-        await saveAnnotations(serverFormattedAnnotations);
-    };
-
     const submitPredictions = async () => {
         const serverFormattedAnnotationsWithoutConfidences: AnnotationDTO[] = mapLocalAnnotationsToServer(
-            annotations
+            predictions
         ).map(({ confidences, ...restOfAnnotation }) => restOfAnnotation);
 
         await saveAnnotations(serverFormattedAnnotationsWithoutConfidences);
     };
 
+    const submitAnnotations = async () => {
+        if (mode === 'prediction') {
+            await submitPredictions();
+        } else {
+            const serverAnnotations = mapLocalAnnotationsToServer(annotations);
+
+            await saveAnnotations(serverAnnotations);
+        }
+    };
+
+    const annotationsToRender = mode === 'annotation' ? annotations : predictions;
+
     return (
         <AnnotationsContext.Provider
             value={{
                 isUserReviewed,
-                annotations,
+                annotations: annotationsToRender,
 
                 // Local
                 addAnnotations,
@@ -144,7 +153,6 @@ export const AnnotationActionsProvider = ({
 
                 // Remote
                 submitAnnotations,
-                submitPredictions,
 
                 isSaving: saveMutation.isPending,
             }}
