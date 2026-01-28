@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { createContext, ReactNode, useContext, useEffect } from 'react';
+import { createContext, ReactNode, useContext } from 'react';
 
 import { useProject } from 'hooks/api/project.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
@@ -84,18 +84,11 @@ export const AnnotationActionsProvider = ({
 
     const predictions = getPredictions();
 
-    const [annotations, setAnnotations, undoRedoActions] = useUndoRedoState<Annotation[]>([]);
-
-    useEffect(() => {
-        if (mode === 'prediction' || isUserReviewed === false) return;
-
+    const [annotations, setAnnotations, undoRedoActions] = useUndoRedoState<Annotation[]>(() => {
         const projectLabels = project?.task?.labels ?? [];
 
-        const localAnnotations = mapServerAnnotationsToLocal(initialAnnotationsDTO, projectLabels);
-
-        undoRedoActions.reset(localAnnotations);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [initialAnnotationsDTO, project?.task?.labels]);
+        return mapServerAnnotationsToLocal(initialAnnotationsDTO, projectLabels);
+    });
 
     const updateAnnotations = (updatedAnnotations: Annotation[]) => {
         const updatedMap = new Map(updatedAnnotations.map((annotation) => [annotation.id, annotation]));

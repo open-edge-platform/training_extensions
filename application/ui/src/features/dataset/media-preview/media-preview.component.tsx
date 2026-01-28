@@ -44,14 +44,18 @@ const CanvasAreaLoading = () => (
     </Flex>
 );
 
-export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPreviewProps) => {
-    const projectId = useProjectIdentifier();
+type MediaPreviewContentProps = {
+    items: Media[];
+    mediaItem: Media;
+    onClose: () => void;
+    onSelectedMediaItem: (item: Media) => void;
+};
 
+const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }: MediaPreviewContentProps) => {
+    const projectId = useProjectIdentifier();
     const [mode, setMode] = useState<AnnotatorMode>('annotation');
 
-    const { items, hasNextPage, isFetchingNextPage, fetchNextPage } = useGetDatasetItems();
-
-    const { data: annotationsData } = $api.useQuery(
+    const { data: annotationsData } = $api.useSuspenseQuery(
         'get',
         '/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations',
         {
@@ -66,6 +70,52 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
     const annotationsDTO = annotationsData?.annotations ?? [];
 
     return (
+        <AnnotationActionsProvider
+            key={mediaItem.id}
+            mediaItem={mediaItem}
+            initialAnnotationsDTO={getInitialAnnotations(mode, isUserReviewed, annotationsDTO)}
+            initialPredictionsDTO={getInitialPredictions(mode, isUserReviewed, annotationsDTO)}
+            isUserReviewed={isUserReviewed}
+            mode={mode}
+        >
+            <SelectAnnotationProvider>
+                <AnnotationVisibilityProvider>
+                    <AnnotatorProvider mediaItem={mediaItem}>
+                        <CanvasSettingsProvider>
+                            <View gridArea={'header'}>
+                                <SecondaryToolbar
+                                    items={items}
+                                    onClose={onClose}
+                                    mediaItem={mediaItem}
+                                    onSelectedMediaItem={onSelectedMediaItem}
+                                    mode={mode}
+                                    onModeChange={setMode}
+                                />
+                            </View>
+
+                            <View gridArea={'toolbar'}>{mode === 'annotation' && <PrimaryToolbar />}</View>
+
+                            <View gridArea={'bottom'}>
+                                <BottomToolbar isUserReviewed={isUserReviewed} mediaItem={mediaItem} />
+                            </View>
+
+                            <View gridArea={'canvas'} overflow={'hidden'}>
+                                <AnnotatorCanvasSettings>
+                                    <AnnotatorCanvas mediaItem={mediaItem} />
+                                </AnnotatorCanvasSettings>
+                            </View>
+                        </CanvasSettingsProvider>
+                    </AnnotatorProvider>
+                </AnnotationVisibilityProvider>
+            </SelectAnnotationProvider>
+        </AnnotationActionsProvider>
+    );
+};
+
+export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPreviewProps) => {
+    const { items, hasNextPage, isFetchingNextPage, fetchNextPage } = useGetDatasetItems();
+
+    return (
         <Dialog UNSAFE_style={{ backgroundColor: 'var(--spectrum-global-color-gray-50)' }}>
             <Content>
                 <Grid
@@ -76,54 +126,16 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                     columns={['size-800', '1fr', SIDEBAR_WIDTH]}
                     areas={['header header aside', 'toolbar canvas aside', 'toolbar bottom aside']}
                 >
-                    <AnnotationActionsProvider
-                        key={mediaItem.id}
-                        mediaItem={mediaItem}
-                        initialAnnotationsDTO={getInitialAnnotations(mode, isUserReviewed, annotationsDTO)}
-                        initialPredictionsDTO={getInitialPredictions(mode, isUserReviewed, annotationsDTO)}
-                        isUserReviewed={isUserReviewed}
-                        mode={mode}
-                    >
-                        <ZoomProvider>
-                            <Suspense fallback={<CanvasAreaLoading />}>
-                                <SelectAnnotationProvider>
-                                    <AnnotationVisibilityProvider>
-                                        <AnnotatorProvider mediaItem={mediaItem}>
-                                            <CanvasSettingsProvider>
-                                                <View gridArea={'header'}>
-                                                    <SecondaryToolbar
-                                                        items={items}
-                                                        onClose={close}
-                                                        mediaItem={mediaItem}
-                                                        onSelectedMediaItem={onSelectedMediaItem}
-                                                        mode={mode}
-                                                        onModeChange={setMode}
-                                                    />
-                                                </View>
-
-                                                <View gridArea={'toolbar'}>
-                                                    {mode === 'annotation' && <PrimaryToolbar />}
-                                                </View>
-
-                                                <View gridArea={'bottom'}>
-                                                    <BottomToolbar
-                                                        isUserReviewed={isUserReviewed}
-                                                        mediaItem={mediaItem}
-                                                    />
-                                                </View>
-
-                                                <View gridArea={'canvas'} overflow={'hidden'}>
-                                                    <AnnotatorCanvasSettings>
-                                                        <AnnotatorCanvas mediaItem={mediaItem} />
-                                                    </AnnotatorCanvasSettings>
-                                                </View>
-                                            </CanvasSettingsProvider>
-                                        </AnnotatorProvider>
-                                    </AnnotationVisibilityProvider>
-                                </SelectAnnotationProvider>
-                            </Suspense>
-                        </ZoomProvider>
-                    </AnnotationActionsProvider>
+                    <ZoomProvider>
+                        <Suspense fallback={<CanvasAreaLoading />}>
+                            <MediaPreviewContent
+                                items={items}
+                                mediaItem={mediaItem}
+                                onClose={close}
+                                onSelectedMediaItem={onSelectedMediaItem}
+                            />
+                        </Suspense>
+                    </ZoomProvider>
 
                     <View gridArea={'aside'}>
                         <SidebarItems
