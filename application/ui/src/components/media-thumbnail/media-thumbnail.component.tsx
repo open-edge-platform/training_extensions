@@ -10,7 +10,7 @@ type MediaThumbnailProps = {
 
 export const MediaThumbnail = ({ onDoubleClick, onClick, url, alt }: MediaThumbnailProps) => {
     return (
-        <div onDoubleClick={onDoubleClick} onClick={onClick}>
+        <div onDoubleClick={onDoubleClick} onClick={onClick} style={{ textAlign: 'center' }}>
             <img
                 src={url}
                 alt={alt}

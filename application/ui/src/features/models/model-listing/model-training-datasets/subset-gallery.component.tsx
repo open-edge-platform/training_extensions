@@ -53,10 +53,10 @@ export const SubsetGallery = ({
     }
 
     return (
-        <View height={'100%'} width={'100%'} position={'relative'} minHeight={'size-5000'}>
+        <View height={'size-5000'} width={'100%'}>
             <VirtualizerGridLayout
                 items={items}
-                ariaLabel='subset-media-grid'
+                ariaLabel={'subset media grid'}
                 selectionMode='none'
                 layoutOptions={layoutOptions}
                 isLoadingMore={isFetchingNextPage}
@@ -65,7 +65,7 @@ export const SubsetGallery = ({
                     <MediaItem
                         contentElement={() => (
                             <MediaThumbnail
-                                alt={item.id}
+                                alt={item.subset + ' item'}
                                 url={getDatasetRevisionThumbnailUrl(projectId, datasetRevisionId, item.id)}
                                 // TODO: leverage onDoubleClick to open a dialog
                             />
