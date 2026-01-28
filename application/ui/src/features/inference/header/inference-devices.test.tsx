@@ -9,6 +9,7 @@ import { render } from 'test-utils/render';
 
 import { http } from '../../../api/utils';
 import { server } from '../../../msw-node-setup';
+import { queryClient } from '../../../providers';
 import { InferenceDevices } from './inference-devices.component';
 
 const mockPipeline = getMockedPipeline({
@@ -40,6 +41,7 @@ describe('InferenceDevices', () => {
 
     beforeEach(() => {
         vi.resetAllMocks();
+        queryClient.clear();
     });
 
     it('displays current device selection', async () => {
@@ -51,12 +53,17 @@ describe('InferenceDevices', () => {
     it('updates device on selection change', async () => {
         const pipelinePatchSpy = renderApp();
 
-        await screen.findByLabelText('inference compute');
+        const picker = await screen.findByLabelText('inference compute');
+        expect(picker).toHaveTextContent('CPU');
 
-        await userEvent.click(screen.getByRole('button', { name: /inference compute/i }));
-        await userEvent.click(screen.getByRole('option', { name: /GPU/i }));
+        const button = screen.getByRole('button', { name: /inference compute/i });
+        await userEvent.click(button);
+
+        const option = await screen.findByRole('option', { name: /GPU/i });
+        await userEvent.click(option);
 
         await waitFor(() => {
+            expect(screen.getByLabelText('inference compute')).toHaveTextContent('GPU');
             expect(pipelinePatchSpy).toHaveBeenCalled();
         });
     });
