@@ -343,7 +343,7 @@ class TestDatasetRevisionServiceIntegration:
         fxt_projects_dir: Path,
         fxt_dataset_service: DatasetService,
         fxt_dataset_revision_service: DatasetRevisionService,
-        fxt_project_with_subset_items_on_disk: tuple[Project, list[DatasetItemDB]],
+        fxt_project_with_subset_items_on_disk: tuple[Project, list[tuple[MediaDB, DatasetItemDB]]],
     ) -> None:
         """Test counting dataset items by subset."""
         # Create non-empty dataset in memory
