@@ -4,17 +4,18 @@
 import type { AnnotationDTO } from '../../../constants/shared-types';
 import { AnnotatorMode } from './secondary-toolbar/annotator-modes/mode';
 
-export const getAnnotations = (
+export const getInitialAnnotations = (
     mode: AnnotatorMode,
     isUserReviewed: boolean,
-    annotations: AnnotationDTO[]
+    annotationsDTO: AnnotationDTO[]
 ): AnnotationDTO[] => {
-    if (mode === 'annotation') {
-        return isUserReviewed ? annotations : [];
-    }
-    if (mode === 'prediction') {
-        return isUserReviewed ? [] : annotations;
-    }
+    return mode === 'annotation' ? (isUserReviewed ? annotationsDTO : []) : [];
+};
 
-    return [];
+export const getInitialPredictions = (
+    mode: AnnotatorMode,
+    isUserReviewed: boolean,
+    annotationsDTO: AnnotationDTO[]
+): AnnotationDTO[] => {
+    return mode === 'prediction' ? (isUserReviewed ? [] : annotationsDTO) : [];
 };
