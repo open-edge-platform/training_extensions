@@ -26,7 +26,7 @@ from otx.backend.native.models.classification.multiclass_models.base import (
 )
 from otx.backend.native.schedulers import LRSchedulerListCallable
 from otx.backend.native.tools.explain.explain_algo import ViTReciproCAM, feature_vector_fn
-from otx.data.entity import OTXDataBatch, OTXPredBatch
+from otx.data.entity import OTXPredictionBatch, OTXSampleBatch
 from otx.metrics.accuracy import MultiClassClsMetricCallable
 from otx.types.label import LabelInfoTypes
 
@@ -163,8 +163,8 @@ class ForwardExplainMixInForViT:
 
     def forward_explain(
         self,
-        inputs: OTXDataBatch,
-    ) -> OTXPredBatch:
+        inputs: OTXSampleBatch,
+    ) -> OTXPredictionBatch:
         """Model forward function."""
         self._register()
         orig_model_forward = self.model.forward
@@ -172,7 +172,7 @@ class ForwardExplainMixInForViT:
         try:
             self.model.forward = types.MethodType(self._forward_explain_image_classifier, self.model)  # type: ignore[method-assign, assignment]
 
-            forward_func: Callable[[OTXDataBatch], OTXPredBatch] | None = getattr(self, "forward", None)
+            forward_func: Callable[[OTXSampleBatch], OTXPredictionBatch] | None = getattr(self, "forward", None)
 
             if forward_func is None:
                 msg = (

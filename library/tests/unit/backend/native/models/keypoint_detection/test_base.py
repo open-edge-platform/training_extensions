@@ -13,7 +13,7 @@ import torch
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.backend.native.models.keypoint_detection.rtmpose import RTMPose
 from otx.data.entity.base import OTXBatchLossEntity
-from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
+from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
 from otx.metrics.pck import PCKMeasureCallable
 from otx.types.label import LabelInfo
 
@@ -34,7 +34,7 @@ class TestOTXKeypointDetectionModel:
         )
 
     @pytest.fixture
-    def batch_data_entity(self, model) -> OTXDataBatch:
+    def batch_data_entity(self, model) -> OTXSampleBatch:
         return model.get_dummy_input(2)
 
     @pytest.fixture
@@ -106,7 +106,7 @@ class TestOTXKeypointDetectionModel:
         model.training = False
         outputs = [(torch.randn(2, 2), torch.randn(2))]
         customized_outputs = model._customize_outputs(outputs, batch_data_entity)
-        assert isinstance(customized_outputs, OTXPredBatch)
+        assert isinstance(customized_outputs, OTXPredictionBatch)
         assert len(customized_outputs.keypoints) == len(customized_outputs.scores)
 
     def test_dummy_input(self, model: OTXKeypointDetectionModel):

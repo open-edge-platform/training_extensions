@@ -40,9 +40,8 @@ export const ProjectCard = ({ item }: ProjectCardProps) => {
                         <Tag withDot={false} text={item.task.task_type} className={classes.tag} />
                     </Flex>
 
-                    <Flex alignItems={'center'} gap={'size-100'} direction={'row'} wrap='wrap'>
-                        <Text>• Edited: 2025-08-07 06:05 AM</Text>
-                        <Text>• Labels: {(item.task.labels || []).map((label) => label.name).join(', ')}</Text>
+                    <Flex gap={'size-100'} direction={'column'}>
+                        <Text>• Labels: {(item.task.labels ?? []).map((label) => label.name).join(', ')}</Text>
                     </Flex>
                 </View>
             </Flex>

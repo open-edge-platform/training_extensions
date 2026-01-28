@@ -33,7 +33,7 @@ from otx.backend.native.models.instance_segmentation.segmentors.maskrcnn_tv impo
 )
 from otx.config.data import TileConfig
 from otx.data.entity.base import OTXBatchLossEntity
-from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
+from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
 from otx.data.entity.utils import stack_batch
 from otx.metrics.fmeasure import MaskRLEMeanAPFMeasureCallable
 
@@ -191,7 +191,7 @@ class MaskRCNNTV(OTXInstanceSegModel):
 
         return model
 
-    def _customize_inputs(self, entity: OTXDataBatch) -> dict[str, Any]:
+    def _customize_inputs(self, entity: OTXSampleBatch) -> dict[str, Any]:
         if isinstance(entity.images, list):
             entity.images, entity.imgs_info = stack_batch(entity.images, entity.imgs_info, pad_size_divisor=32)  # type: ignore[arg-type,assignment]
         return {"entity": entity}
@@ -199,8 +199,8 @@ class MaskRCNNTV(OTXInstanceSegModel):
     def _customize_outputs(
         self,
         outputs: dict | list[dict],  # type: ignore[override]
-        inputs: OTXDataBatch,
-    ) -> OTXPredBatch | OTXBatchLossEntity:
+        inputs: OTXSampleBatch,
+    ) -> OTXPredictionBatch | OTXBatchLossEntity:
         if self.training:
             if not isinstance(outputs, dict):
                 raise TypeError(outputs)
@@ -254,8 +254,7 @@ class MaskRCNNTV(OTXInstanceSegModel):
             saliency_map = outputs["saliency_map"].detach().cpu().numpy()
             feature_vector = outputs["feature_vector"].detach().cpu().numpy()
 
-            return OTXPredBatch(
-                batch_size=len(outputs),
+            return OTXPredictionBatch(
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
                 scores=scores,
@@ -266,8 +265,7 @@ class MaskRCNNTV(OTXInstanceSegModel):
                 feature_vector=list(feature_vector),
             )
 
-        return OTXPredBatch(
-            batch_size=len(outputs),
+        return OTXPredictionBatch(
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=scores,
@@ -315,7 +313,7 @@ class MaskRCNNTV(OTXInstanceSegModel):
 class RotatedMaskRCNNModelV2(RotatedPredictMixin, MaskRCNNTV):
     """Rotated MaskRCNN for Torchvision MaskRCNN model implementation."""
 
-    def predict_step(self, *args: torch.Any, **kwargs: torch.Any) -> OTXPredBatch:
+    def predict_step(self, *args: torch.Any, **kwargs: torch.Any) -> OTXPredictionBatch:
         """Perform prediction step for rotated detection."""
         preds = super().predict_step(*args, **kwargs)
         return self.rotated_predict_step(preds)

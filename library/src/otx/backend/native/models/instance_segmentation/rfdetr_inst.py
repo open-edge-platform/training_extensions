@@ -30,7 +30,7 @@ from otx.backend.native.models.instance_segmentation.base import OTXInstanceSegM
 from otx.backend.native.models.utils.utils import load_checkpoint
 from otx.config.data import TileConfig
 from otx.data.entity.base import OTXBatchLossEntity
-from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
+from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
 from otx.metrics.fmeasure import MaskRLEMeanAPFMeasureCallable
 
 if TYPE_CHECKING:
@@ -179,7 +179,7 @@ class RFDETRInst(OTXInstanceSegModel):
             multi_scale=self.multi_scale,
         )
 
-    def _customize_inputs(self, entity: OTXDataBatch) -> dict[str, Any]:
+    def _customize_inputs(self, entity: OTXSampleBatch) -> dict[str, Any]:
         """Convert OTX batch format to RF-DETR format for instance segmentation.
 
         Args:
@@ -236,8 +236,8 @@ class RFDETRInst(OTXInstanceSegModel):
     def _customize_outputs(
         self,
         outputs: dict | tuple,  # type: ignore[override]
-        inputs: OTXDataBatch,
-    ) -> OTXPredBatch | OTXBatchLossEntity:
+        inputs: OTXSampleBatch,
+    ) -> OTXPredictionBatch | OTXBatchLossEntity:
         """Convert model outputs to OTX format with masks.
 
         Args:
@@ -245,7 +245,7 @@ class RFDETRInst(OTXInstanceSegModel):
             inputs: Original OTX data batch.
 
         Returns:
-            OTXPredBatch with masks during inference, OTXBatchLossEntity during training.
+            OTXPredictionBatch with masks during inference, OTXBatchLossEntity during training.
         """
         if self.training:
             # Training: outputs is loss dictionary from RFDETRInstDetector
@@ -288,8 +288,7 @@ class RFDETRInst(OTXInstanceSegModel):
             msg = "Explain mode is not supported for RF-DETR model."
             raise ValueError(msg)
 
-        return OTXPredBatch(
-            batch_size=len(scores_list),
+        return OTXPredictionBatch(
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=scores_list,

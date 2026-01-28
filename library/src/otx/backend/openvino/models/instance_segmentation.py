@@ -12,8 +12,8 @@ from model_api.tilers import InstanceSegmentationTiler
 from torchvision import tv_tensors
 
 from otx.backend.openvino.models.base import OVModel
-from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
-from otx.data.utils.structures.mask.mask_util import encode_rle, polygon_to_rle
+from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
+from otx.data.utils.structures.mask.mask_util import encode_rle
 from otx.metrics import MetricInput
 from otx.metrics.fmeasure import MaskRLEMeanAPFMeasureCallable
 from otx.types.label import LabelInfo
@@ -108,16 +108,16 @@ class OVInstanceSegmentationModel(OVModel):
     def _customize_outputs(
         self,
         outputs: list[InstanceSegmentationResult],
-        inputs: OTXDataBatch,
-    ) -> OTXPredBatch:
+        inputs: OTXSampleBatch,
+    ) -> OTXPredictionBatch:
         """Customize the model outputs for OTX compatibility.
 
         Args:
             outputs (list[InstanceSegmentationResult]): Model outputs.
-            inputs (OTXDataBatch): Input data batch.
+            inputs (OTXSampleBatch): Input data batch.
 
         Returns:
-            OTXPredBatch: Customized predictions batch.
+            OTXPredictionBatch: Customized predictions batch.
         """
         bboxes = []
         scores = []
@@ -146,8 +146,7 @@ class OVInstanceSegmentationModel(OVModel):
                 predicted_s_maps.append(image_map)
 
             predicted_f_vectors = [out.feature_vector[0] for out in outputs]
-            return OTXPredBatch(
-                batch_size=len(outputs),
+            return OTXPredictionBatch(
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
                 scores=scores,
@@ -158,8 +157,7 @@ class OVInstanceSegmentationModel(OVModel):
                 feature_vector=predicted_f_vectors,
             )
 
-        return OTXPredBatch(
-            batch_size=len(outputs),
+        return OTXPredictionBatch(
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=scores,
@@ -170,8 +168,8 @@ class OVInstanceSegmentationModel(OVModel):
 
     def prepare_metric_inputs(
         self,
-        preds: OTXPredBatch,  # type: ignore[override]
-        inputs: OTXDataBatch,  # type: ignore[override]
+        preds: OTXPredictionBatch,  # type: ignore[override]
+        inputs: OTXSampleBatch,  # type: ignore[override]
     ) -> MetricInput:
         """Prepare inputs for metric computation.
 
@@ -179,8 +177,8 @@ class OVInstanceSegmentationModel(OVModel):
         and caches the ground truth for the current batch.
 
         Args:
-            preds (OTXPredBatch): Current batch predictions.
-            inputs (OTXDataBatch): Current batch ground-truth inputs.
+            preds (OTXPredictionBatch): Current batch predictions.
+            inputs (OTXSampleBatch): Current batch ground-truth inputs.
 
         Returns:
             MetricInput: Dictionary containing predictions and ground truth.
@@ -200,11 +198,10 @@ class OVInstanceSegmentationModel(OVModel):
         ]
 
         for idx in range(len(inputs.labels)):  # type: ignore[arg-type]
-            rles = (
-                [encode_rle(mask) for mask in inputs.masks[idx].data]
-                if inputs.masks is not None and len(inputs.masks[idx]) > 0
-                else polygon_to_rle(inputs.polygons[idx], *inputs.imgs_info[idx].ori_shape)  # type: ignore[index,union-attr]
-            )
+            if inputs.masks is None or len(inputs.masks[idx]) == 0:
+                msg = "Masks are required for metric computation"
+                raise ValueError(msg)
+            rles = [encode_rle(mask) for mask in inputs.masks[idx].data]
             target_info.append(
                 {
                     "boxes": inputs.bboxes[idx].data if inputs.bboxes is not None else torch.empty((0, 4)),

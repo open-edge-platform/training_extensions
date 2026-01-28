@@ -7,6 +7,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
+from torch.export import Dim
+
 from otx.backend.native.exporter.base import OTXModelExporter
 from otx.backend.native.exporter.native import OTXNativeModelExporter
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
@@ -20,7 +22,7 @@ from otx.backend.native.models.detection.necks import YOLOXPAFPN
 from otx.backend.native.models.detection.utils.assigners import SimOTAAssigner
 from otx.backend.native.models.utils.utils import load_checkpoint
 from otx.config.data import TileConfig
-from otx.data.entity.torch import OTXDataBatch
+from otx.data.entity.sample import OTXSampleBatch
 from otx.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 from otx.types.export import OTXExportFormatType
 from otx.types.precision import OTXPrecisionType
@@ -130,7 +132,7 @@ class YOLOX(OTXDetectionModel):
 
     def _customize_inputs(
         self,
-        entity: OTXDataBatch,
+        entity: OTXSampleBatch,
         pad_size_divisor: int = 32,
         pad_value: int = 114,  # YOLOX uses 114 as pad_value
     ) -> dict[str, Any]:
@@ -156,11 +158,7 @@ class YOLOX(OTXDetectionModel):
                 "output_names": ["boxes", "labels"],
                 "export_params": True,
                 "opset_version": 18,
-                "dynamic_axes": {
-                    "image": {0: "batch"},
-                    "boxes": {0: "batch", 1: "num_dets"},
-                    "labels": {0: "batch", 1: "num_dets"},
-                },
+                "dynamic_shapes": {"inputs": {0: Dim("batch")}},
                 "keep_initializers_as_inputs": False,
                 "verbose": False,
                 "autograd_inlining": False,

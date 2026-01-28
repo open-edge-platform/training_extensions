@@ -26,7 +26,7 @@ from otx.backend.native.models.detection.detectors.rfdetr import RFDETRDetector
 from otx.backend.native.models.utils.utils import load_checkpoint
 from otx.config.data import TileConfig
 from otx.data.entity.base import OTXBatchLossEntity
-from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
+from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
 from otx.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 
 if TYPE_CHECKING:
@@ -174,8 +174,8 @@ class RFDETR(DFine):
     def _customize_outputs(
         self,
         outputs: tuple[torch.Tensor, ...] | dict[str, Any],  # type: ignore[override]
-        inputs: OTXDataBatch,
-    ) -> OTXPredBatch | OTXBatchLossEntity:
+        inputs: OTXSampleBatch,
+    ) -> OTXPredictionBatch | OTXBatchLossEntity:
         if self.training:
             if not isinstance(outputs, dict):
                 raise TypeError(outputs)
@@ -194,8 +194,7 @@ class RFDETR(DFine):
         image_shapes = [img_info.img_shape for img_info in inputs.imgs_info]  # type: ignore[union-attr]
         scores, bboxes, labels, _ = self.model.postprocess(outputs, image_shapes)
 
-        return OTXPredBatch(
-            batch_size=inputs.batch_size,
+        return OTXPredictionBatch(
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=scores,

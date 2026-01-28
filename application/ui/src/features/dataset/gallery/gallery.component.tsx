@@ -1,8 +1,6 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState } from 'react';
-
 import { DialogContainer, Size } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
@@ -14,10 +12,7 @@ import type { Media } from '../../../constants/shared-types';
 import { getThumbnailUrl } from '../../../shared/media-url.utils';
 import { MediaPreview } from '../media-preview/media-preview.component';
 import { useSelectedData } from '../selected-data-provider.component';
-import { AnnotationStatusIcon } from './annotation-state-icon.component';
 import { DeleteMediaItem } from './delete-media-item/delete-media-item.component';
-
-import classes from './gallery.module.scss';
 
 type GalleryProps = {
     items: Media[];
@@ -35,8 +30,14 @@ const layoutOptions = {
 export const Gallery = ({ items, hasNextPage, isFetchingNextPage, fetchNextPage }: GalleryProps) => {
     const project_id = useProjectIdentifier();
 
-    const [selectedMediaItem, setSelectedMediaItem] = useState<null | Media>(null);
-    const { selectedKeys, mediaState, setSelectedKeys, toggleSelectedKeys } = useSelectedData();
+    const {
+        selectedKeys,
+        mediaState,
+        setSelectedKeys,
+        toggleSelectedKeys,
+        selectedMediaItem,
+        onSelectedMediaItemChange,
+    } = useSelectedData();
 
     const isSetSelectedKeys = selectedKeys instanceof Set;
 
@@ -54,12 +55,11 @@ export const Gallery = ({ items, hasNextPage, isFetchingNextPage, fetchNextPage 
                 onSelectionChange={setSelectedKeys}
                 contentItem={(item) => (
                     <MediaItem
-                        className={classes.mediaItem}
                         contentElement={() => (
                             <MediaThumbnail
                                 alt={item.name}
                                 url={getThumbnailUrl(project_id, String(item.id))}
-                                onDoubleClick={() => setSelectedMediaItem(item)}
+                                onDoubleClick={() => onSelectedMediaItemChange(item)}
                             />
                         )}
                         topLeftElement={() => (
@@ -72,17 +72,16 @@ export const Gallery = ({ items, hasNextPage, isFetchingNextPage, fetchNextPage 
                         topRightElement={() => (
                             <DeleteMediaItem itemsIds={[String(item.id)]} onDeleted={toggleSelectedKeys} />
                         )}
-                        bottomRightElement={() => <AnnotationStatusIcon state={mediaState.get(String(item.id))} />}
                     />
                 )}
             />
 
-            <DialogContainer onDismiss={() => setSelectedMediaItem(null)}>
+            <DialogContainer type={'fullscreenTakeover'} onDismiss={() => onSelectedMediaItemChange(null)}>
                 {selectedMediaItem !== null && (
                     <MediaPreview
                         mediaItem={selectedMediaItem}
-                        close={() => setSelectedMediaItem(null)}
-                        onSelectedMediaItem={setSelectedMediaItem}
+                        close={() => onSelectedMediaItemChange(null)}
+                        onSelectedMediaItem={onSelectedMediaItemChange}
                     />
                 )}
             </DialogContainer>

@@ -21,7 +21,7 @@ import styles from './hotkeys.module.scss';
 
 export const Hotkeys = () => {
     return (
-        <DialogTrigger type={'popover'} hideArrow placement={'right'}>
+        <DialogTrigger type={'popover'} hideArrow placement={'top'}>
             <TooltipTrigger>
                 <ActionButton isQuiet aria-label={'Hotkeys'}>
                     <HotkeysIcon />

@@ -14,7 +14,7 @@ from torch.utils._pytree import tree_flatten
 from torchvision import tv_tensors
 from torchvision.utils import _log_api_usage_once
 
-from otx.types.image import ImageColorChannel, ImageType
+from otx.types.image import ImageType
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -64,10 +64,6 @@ class ImageInfo(tv_tensors.TVTensor):
         scale_factor: Scale factor (height, width) if the image is resized during preprocessing.
             Default value is `(1.0, 1.0)` when there is no resizing. However, if the image is cropped,
             it will lose the scaling information and be `None`.
-        normalized: If true, this image is normalized with `norm_mean` and `norm_std`
-        norm_mean: Mean vector used to normalize this image
-        norm_std: Standard deviation vector used to normalize this image
-        image_color_channel: Color channel type of this image, RGB or BGR.
         ignored_labels: Label that should be ignored in this image. Default to None.
         keep_ratio: If true, the image is resized while keeping the aspect ratio. Default to False.
     """
@@ -77,10 +73,6 @@ class ImageInfo(tv_tensors.TVTensor):
     ori_shape: tuple[int, int]
     padding: tuple[int, int, int, int] = (0, 0, 0, 0)
     scale_factor: tuple[float, float] | None = (1.0, 1.0)
-    normalized: bool = False
-    norm_mean: tuple[float, float, float] = (0.0, 0.0, 0.0)
-    norm_std: tuple[float, float, float] = (1.0, 1.0, 1.0)
-    image_color_channel: ImageColorChannel = ImageColorChannel.RGB
     ignored_labels: list[int]
     keep_ratio: bool = False
 
@@ -94,10 +86,6 @@ class ImageInfo(tv_tensors.TVTensor):
         ori_shape: tuple[int, int],
         padding: tuple[int, int, int, int] = (0, 0, 0, 0),
         scale_factor: tuple[float, float] | None = (1.0, 1.0),
-        normalized: bool = False,
-        norm_mean: tuple[float, float, float] = (0.0, 0.0, 0.0),
-        norm_std: tuple[float, float, float] = (1.0, 1.0, 1.0),
-        image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
         ignored_labels: list[int] | None = None,
         keep_ratio: bool = False,
     ) -> ImageInfo:
@@ -107,10 +95,6 @@ class ImageInfo(tv_tensors.TVTensor):
         image_info.ori_shape = ori_shape
         image_info.padding = padding
         image_info.scale_factor = scale_factor
-        image_info.normalized = normalized
-        image_info.norm_mean = norm_mean
-        image_info.norm_std = norm_std
-        image_info.image_color_channel = image_color_channel
         image_info.ignored_labels = ignored_labels if ignored_labels else []
         image_info.keep_ratio = keep_ratio
         return image_info
@@ -122,10 +106,6 @@ class ImageInfo(tv_tensors.TVTensor):
         ori_shape: tuple[int, int],
         padding: tuple[int, int, int, int] = (0, 0, 0, 0),
         scale_factor: tuple[float, float] | None = (1.0, 1.0),
-        normalized: bool = False,
-        norm_mean: tuple[float, float, float] = (0.0, 0.0, 0.0),
-        norm_std: tuple[float, float, float] = (1.0, 1.0, 1.0),
-        image_color_channel: ImageColorChannel = ImageColorChannel.RGB,
         ignored_labels: list[int] | None = None,
         keep_ratio: bool = False,
     ) -> ImageInfo:
@@ -136,10 +116,6 @@ class ImageInfo(tv_tensors.TVTensor):
             ori_shape=ori_shape,
             padding=padding,
             scale_factor=scale_factor,
-            normalized=normalized,
-            norm_mean=norm_mean,
-            norm_std=norm_std,
-            image_color_channel=image_color_channel,
             ignored_labels=ignored_labels,
             keep_ratio=keep_ratio,
         )
@@ -170,10 +146,6 @@ class ImageInfo(tv_tensors.TVTensor):
                 ori_shape=image_info.ori_shape,
                 padding=image_info.padding,
                 scale_factor=image_info.scale_factor,
-                normalized=image_info.normalized,
-                norm_mean=image_info.norm_mean,
-                norm_std=image_info.norm_std,
-                image_color_channel=image_info.image_color_channel,
                 ignored_labels=image_info.ignored_labels,
                 keep_ratio=image_info.keep_ratio,
             )
@@ -187,10 +159,6 @@ class ImageInfo(tv_tensors.TVTensor):
                     ori_shape=image_info.ori_shape,
                     padding=image_info.padding,
                     scale_factor=image_info.scale_factor,
-                    normalized=image_info.normalized,
-                    norm_mean=image_info.norm_mean,
-                    norm_std=image_info.norm_std,
-                    image_color_channel=image_info.image_color_channel,
                     ignored_labels=image_info.ignored_labels,
                     keep_ratio=image_info.keep_ratio,
                 )
@@ -206,10 +174,6 @@ class ImageInfo(tv_tensors.TVTensor):
             f"ori_shape={self.ori_shape}, "
             f"padding={self.padding}, "
             f"scale_factor={self.scale_factor}, "
-            f"normalized={self.normalized}, "
-            f"norm_mean={self.norm_mean}, "
-            f"norm_std={self.norm_std}, "
-            f"image_color_channel={self.image_color_channel}, "
             f"ignored_labels={self.ignored_labels}, "
             f"keep_ratio={self.keep_ratio})"
         )
@@ -287,19 +251,6 @@ def _pad_image_info(
     height, width = image_info.img_shape
     image_info.padding = (left, top, right, bottom)
     image_info.img_shape = (height + top + bottom, width + left + right)
-    return image_info
-
-
-@F.register_kernel(functional=F.normalize, tv_tensor_cls=ImageInfo)
-def _normalize_image_info(
-    image_info: ImageInfo,
-    mean: list[float],
-    std: list[float],
-    **kwargs,  # noqa: ARG001
-) -> ImageInfo:
-    image_info.normalized = True
-    image_info.norm_mean = (mean[0], mean[1], mean[2])
-    image_info.norm_std = (std[0], std[1], std[2])
     return image_info
 
 

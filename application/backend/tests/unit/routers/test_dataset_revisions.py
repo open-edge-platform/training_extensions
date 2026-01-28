@@ -65,7 +65,6 @@ class TestDatasetRevisionItemEndpoints:
         fxt_dataset_revision_service.get_dataset_revision.return_value = MagicMock(id=fxt_dataset_revision_id)
         mock_item_data = {
             "id": str(fxt_dataset_item.id),
-            "name": "test_dataset_item",
             "format": MediaFormat.JPG.value,
             "width": 1024,
             "height": 768,
@@ -85,7 +84,6 @@ class TestDatasetRevisionItemEndpoints:
         assert response_data["pagination"]["offset"] == 0
         assert len(response_data["items"]) == 1
         assert response_data["items"][0]["id"] == str(fxt_dataset_item.id)
-        assert response_data["items"][0]["name"] == "test_dataset_item"
 
         fxt_dataset_revision_service.get_dataset_revision.assert_called_once_with(
             project_id=fxt_get_project.id, revision_id=fxt_dataset_revision_id
@@ -104,7 +102,6 @@ class TestDatasetRevisionItemEndpoints:
         fxt_dataset_revision_service.get_dataset_revision.return_value = MagicMock(id=fxt_dataset_revision_id)
         mock_item_data = {
             "id": str(fxt_dataset_item.id),
-            "name": "test_dataset_item",
             "format": MediaFormat.JPG.value,
             "width": 1024,
             "height": 768,
@@ -143,7 +140,6 @@ class TestDatasetRevisionItemEndpoints:
         fxt_dataset_revision_service.get_dataset_revision.return_value = MagicMock(id=fxt_dataset_revision_id)
         mock_item_data = {
             "id": str(fxt_dataset_item.id),
-            "name": "test_dataset_item",
             "format": MediaFormat.JPG.value,
             "width": 1024,
             "height": 768,
@@ -200,7 +196,6 @@ class TestDatasetRevisionItemEndpoints:
         fxt_dataset_revision_service.get_dataset_revision.return_value = MagicMock(id=fxt_dataset_revision_id)
         mock_item_data = {
             "id": str(fxt_dataset_item.id),
-            "name": "test_dataset_item",
             "format": MediaFormat.JPG.value,
             "width": 1024,
             "height": 768,
@@ -215,7 +210,6 @@ class TestDatasetRevisionItemEndpoints:
         assert response.status_code == status.HTTP_200_OK
         response_json = response.json()
         assert response_json["id"] == str(fxt_dataset_item.id)
-        assert response_json["name"] == "test_dataset_item"
         assert response_json["width"] == 1024
         assert response_json["height"] == 768
         assert response_json["subset"] == "training"
