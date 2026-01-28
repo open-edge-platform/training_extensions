@@ -3,7 +3,8 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
+from fastapi.openapi.models import Example
 from starlette.responses import FileResponse
 
 from app.api.dependencies import get_dataset_revision, get_dataset_revision_service, get_project
@@ -73,6 +74,56 @@ def get_dataset_revision_details(
 ) -> DatasetRevisionView:
     """Get a specific dataset revision by ID."""
     try:
+        item_counts = dataset_revision_service.count_items_by_subset(
+            project_id=project.id, dataset_revision_id=dataset_revision.id
+        )
+        dataset_revision_view = dataset_revision.model_dump() | {"item_counts": item_counts}
+        return DatasetRevisionView.model_validate(dataset_revision_view, from_attributes=True)
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+UPDATE_DATASET_REVISION_BODY_DESCRIPTION = """
+Update name of a dataset revision.
+"""
+UPDATE_DATASET_REVISION_BODY_EXAMPLES = {
+    "name": Example(
+        summary="Update dataset revision name",
+        description="Change the name of a dataset revision",
+        value={
+            "name": "new_dataset_revision_name",
+        },
+    ),
+}
+
+
+@router.patch(
+    "/{dataset_revision_id}",
+    response_model=DatasetRevisionView,
+    responses={
+        status.HTTP_200_OK: {"description": "Dataset revision successfully renamed"},
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project or dataset revision ID"},
+        status.HTTP_404_NOT_FOUND: {"description": "Project or dataset revision not found"},
+    },
+)
+def rename_dataset_revision(
+    project: Annotated[Project, Depends(get_project)],
+    dataset_revision: Annotated[DatasetRevision, Depends(get_dataset_revision)],
+    dataset_revision_metadata: Annotated[
+        dict,
+        Body(
+            description=UPDATE_DATASET_REVISION_BODY_DESCRIPTION,
+            openapi_examples=UPDATE_DATASET_REVISION_BODY_EXAMPLES,
+        ),
+    ],
+    dataset_revision_service: Annotated[DatasetRevisionService, Depends(get_dataset_revision_service)],
+) -> DatasetRevisionView:
+    """Rename a model"""
+    try:
+        dataset_revision = dataset_revision_service.rename_dataset_revision(
+            dataset_revision=dataset_revision,
+            dataset_revision_metadata=dataset_revision_metadata,
+        )
         item_counts = dataset_revision_service.count_items_by_subset(
             project_id=project.id, dataset_revision_id=dataset_revision.id
         )
