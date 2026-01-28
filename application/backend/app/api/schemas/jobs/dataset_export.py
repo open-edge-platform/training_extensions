@@ -23,7 +23,7 @@ class ExportDatasetRequest(BaseJobRequest, BaseDatasetRequest):
 
 
 class StageDatasetParams(BaseModel):
-    filters: DatasetFilters = Field(default_factory=DatasetFilters, description="Dataset filters to use for export")
+    filters: DatasetFilters = Field(default_factory=DatasetFilters, description="Dataset filters to use for staging")
 
 
 class StageDatasetRequest(BaseJobRequest, BaseDatasetRequest):
