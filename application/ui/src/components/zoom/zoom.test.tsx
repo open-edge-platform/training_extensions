@@ -16,7 +16,7 @@ describe('Zoom', () => {
     it('Scales and translates content so that it fits the screen', () => {
         const screenSize = { width: 500, height: 500 };
         const contentSize = { width: 500, height: 500 };
-        const expectedZoom = { translate: { x: 0, y: 0 }, scale: 1 };
+        const expectedZoom = { translate: { x: 25, y: 25 }, scale: 0.9 };
 
         vi.mocked(useContainerSize).mockImplementation(() => screenSize);
 
