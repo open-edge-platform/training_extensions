@@ -15,7 +15,7 @@ from otx.backend.native.exporter.native import OTXNativeModelExporter
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel
 from otx.backend.native.schedulers import LRSchedulerListCallable
 from otx.data.entity.base import OTXBatchLossEntity
-from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
+from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
 from otx.metrics import MetricInput
 from otx.metrics.accuracy import (
     MultiClassClsMetricCallable,
@@ -74,7 +74,7 @@ class OTXMulticlassClsModel(OTXModel):
             for name, param in self.named_parameters():
                 param.requires_grad = name in classification_layers
 
-    def _customize_inputs(self, inputs: OTXDataBatch) -> dict[str, Any]:
+    def _customize_inputs(self, inputs: OTXSampleBatch) -> dict[str, Any]:
         if self.training:
             mode = "loss"
         elif self.explain_mode:
@@ -92,14 +92,13 @@ class OTXMulticlassClsModel(OTXModel):
     def _customize_outputs(
         self,
         outputs: Any,  # noqa: ANN401
-        inputs: OTXDataBatch,
-    ) -> OTXPredBatch | OTXBatchLossEntity:
+        inputs: OTXSampleBatch,
+    ) -> OTXPredictionBatch | OTXBatchLossEntity:
         if self.training:
             return OTXBatchLossEntity(loss=outputs)
 
         if self.explain_mode:
-            return OTXPredBatch(
-                batch_size=inputs.batch_size,
+            return OTXPredictionBatch(
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
                 labels=list(outputs["labels"]),
@@ -113,8 +112,7 @@ class OTXMulticlassClsModel(OTXModel):
         scores = torch.unbind(logits, 0)
         preds = logits.argmax(-1, keepdim=True).unbind(0)
 
-        return OTXPredBatch(
-            batch_size=inputs.batch_size,
+        return OTXPredictionBatch(
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             labels=list(preds),
@@ -148,8 +146,8 @@ class OTXMulticlassClsModel(OTXModel):
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: OTXPredBatch,
-        inputs: OTXDataBatch,
+        preds: OTXPredictionBatch,
+        inputs: OTXSampleBatch,
     ) -> MetricInput:
         pred = torch.tensor(preds.labels, device=self.device)
         target = torch.tensor(inputs.labels, device=self.device)
@@ -161,22 +159,21 @@ class OTXMulticlassClsModel(OTXModel):
     def _reset_prediction_layer(self, num_classes: int) -> None:
         return
 
-    def get_dummy_input(self, batch_size: int = 1) -> OTXDataBatch:  # type: ignore[override]
+    def get_dummy_input(self, batch_size: int = 1) -> OTXSampleBatch:  # type: ignore[override]
         """Returns a dummy input for classification model."""
         images = torch.stack([torch.rand(3, *self.data_input_params.input_size) for _ in range(batch_size)])
         labels = [torch.LongTensor([0])] * batch_size
-        return OTXDataBatch(batch_size=batch_size, images=images, labels=labels)
+        return OTXSampleBatch(images=images, labels=labels)
 
     def forward_for_tracing(self, image: Tensor) -> Tensor | dict[str, Tensor]:
         """Model forward function used for the model tracing during model exportation."""
         return self.model(images=image)
 
-    def forward_explain(self, inputs: OTXDataBatch) -> OTXPredBatch:
+    def forward_explain(self, inputs: OTXSampleBatch) -> OTXPredictionBatch:
         """Model forward explain function."""
         outputs = self.model(images=inputs.images, mode="explain")
 
-        return OTXPredBatch(
-            batch_size=inputs.batch_size,
+        return OTXPredictionBatch(
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             labels=list(outputs["preds"]),

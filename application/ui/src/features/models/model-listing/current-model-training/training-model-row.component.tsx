@@ -44,11 +44,14 @@ export const TrainingModelRow = ({ job, onCancel }: TrainingModelRowProps) => {
                 columnGap={'size-200'}
                 UNSAFE_className={classes.grid}
             >
-                <Flex direction={'column'} gap={'size-50'}>
+                <Flex direction={'column'} justifyContent={'center'} gap={'size-50'}>
                     <Flex alignItems={'center'}>
                         <Text UNSAFE_className={classes.modelName}>{modelName}</Text>
+                    </Flex>
+
+                    <Flex alignItems={'start'}>
                         <TrainingTag />
-                        <StatusTag status={job.message || 'running...'} />
+                        <StatusTag status={job.message || 'Running...'} />
                     </Flex>
 
                     <Text UNSAFE_className={classes.metaText}>

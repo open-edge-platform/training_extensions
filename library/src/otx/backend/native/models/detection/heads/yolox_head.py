@@ -29,7 +29,7 @@ from otx.backend.native.models.modules.activation import Swish, build_activation
 from otx.backend.native.models.modules.conv_module import Conv2dModule, DepthwiseSeparableConvModule
 from otx.backend.native.models.modules.norm import build_norm_layer
 from otx.backend.native.models.utils.utils import InstanceData
-from otx.data.entity.torch import OTXDataBatch
+from otx.data.entity.sample import OTXSampleBatch
 
 logger = logging.getLogger()
 
@@ -450,7 +450,7 @@ class YOLOXHeadModule(BaseDenseHead):
     def prepare_loss_inputs(
         self,
         x: tuple[Tensor],
-        entity: OTXDataBatch,
+        entity: OTXSampleBatch,
     ) -> dict | tuple:
         """Perform forward propagation of the detection head and prepare for loss calculation.
 

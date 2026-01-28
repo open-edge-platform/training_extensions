@@ -63,17 +63,11 @@ export const DataCollection = () => {
     const isDisabled = patchPipelineMutation.isPending || !canEditPipeline;
 
     return (
-        <Flex
-            key={`${serverRate}-${serverConfidenceThreshold}`}
-            UNSAFE_style={{
-                padding: 'var(--spectrum-global-dimension-size-200)',
-            }}
-            direction={'column'}
-        >
+        <Flex key={`${serverRate}-${serverConfidenceThreshold}`} direction={'column'} minHeight={0} height={'100%'}>
             <Flex alignItems='center' gap={'size-100'} marginBottom={'size-300'}>
                 <Heading level={4}>Data collection</Heading>
             </Flex>
-            <Flex direction={'column'} UNSAFE_style={{ overflow: 'hidden auto' }}>
+            <Flex direction={'column'} flex={1} UNSAFE_style={{ overflow: 'hidden auto' }}>
                 <Heading level={3} margin={0}>
                     Capture rate
                 </Heading>

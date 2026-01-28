@@ -468,28 +468,40 @@ class OTXTrainer(Trainer):
         self.prepare_model(
             training_params=training_params, dataset_revision_id=dataset_info.revision_id, configuration=training_config
         )
-        trained_model_path, otx_engine = self.train_model(
-            training_config=otx_training_config,
-            dataset_info=dataset_info,
-            weights_path=weights_path,
-            model_id=training_params.model_id,
-            device=training_params.device,
-            has_parent_revision=training_params.parent_model_revision_id is not None,
-        )
-        self.evaluate_model(
-            otx_engine=otx_engine,
-            model_checkpoint_path=trained_model_path,
-            task=task,
-            model_revision_id=training_params.model_id,
-            dataset_revision_id=dataset_info.revision_id,
-        )
-        exported_model_paths = self.export_model(otx_engine=otx_engine, model_checkpoint_path=trained_model_path)
-        self.store_model_artifacts(
-            model_dir=model_dir,
-            otx_work_dir=Path(otx_engine.work_dir),
-            trained_model_path=trained_model_path,
-            exported_model_paths=exported_model_paths,
-        )
+        try:
+            self.__update_model_revision_training_status(
+                project_id=project_id, model_id=training_params.model_id, status=TrainingStatus.IN_PROGRESS
+            )
+            trained_model_path, otx_engine = self.train_model(
+                training_config=otx_training_config,
+                dataset_info=dataset_info,
+                weights_path=weights_path,
+                model_id=training_params.model_id,
+                device=training_params.device,
+                has_parent_revision=training_params.parent_model_revision_id is not None,
+            )
+            self.evaluate_model(
+                otx_engine=otx_engine,
+                model_checkpoint_path=trained_model_path,
+                task=task,
+                model_revision_id=training_params.model_id,
+                dataset_revision_id=dataset_info.revision_id,
+            )
+            exported_model_paths = self.export_model(otx_engine=otx_engine, model_checkpoint_path=trained_model_path)
+            self.store_model_artifacts(
+                model_dir=model_dir,
+                otx_work_dir=Path(otx_engine.work_dir),
+                trained_model_path=trained_model_path,
+                exported_model_paths=exported_model_paths,
+            )
+            self.__update_model_revision_training_status(
+                project_id=project_id, model_id=training_params.model_id, status=TrainingStatus.SUCCESSFUL
+            )
+        except Exception:
+            self.__update_model_revision_training_status(
+                project_id=project_id, model_id=training_params.model_id, status=TrainingStatus.FAILED
+            )
+            raise
 
     @staticmethod
     def __base_model_path(data_dir: Path, project_id: UUID, model_id: UUID) -> Path:
@@ -546,3 +558,8 @@ class OTXTrainer(Trainer):
             return otx_task_type_to_class[otx_task_type]
         except KeyError:
             raise ValueError(f"Unsupported OTX task type: {otx_task_type}")
+
+    def __update_model_revision_training_status(self, project_id: UUID, model_id: UUID, status: TrainingStatus):
+        with self._db_session_factory() as db:
+            self._model_service.set_db_session(db)
+            self._model_service.update_revision_status(project_id=project_id, model_id=model_id, training_status=status)

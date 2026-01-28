@@ -12,10 +12,7 @@ import type { Media } from '../../../constants/shared-types';
 import { getThumbnailUrl } from '../../../shared/media-url.utils';
 import { MediaPreview } from '../media-preview/media-preview.component';
 import { useSelectedData } from '../selected-data-provider.component';
-import { AnnotationStatusIcon } from './annotation-state-icon.component';
 import { DeleteMediaItem } from './delete-media-item/delete-media-item.component';
-
-import classes from './gallery.module.scss';
 
 type GalleryProps = {
     items: Media[];
@@ -58,7 +55,6 @@ export const Gallery = ({ items, hasNextPage, isFetchingNextPage, fetchNextPage 
                 onSelectionChange={setSelectedKeys}
                 contentItem={(item) => (
                     <MediaItem
-                        className={classes.mediaItem}
                         contentElement={() => (
                             <MediaThumbnail
                                 alt={item.name}
@@ -76,7 +72,6 @@ export const Gallery = ({ items, hasNextPage, isFetchingNextPage, fetchNextPage 
                         topRightElement={() => (
                             <DeleteMediaItem itemsIds={[String(item.id)]} onDeleted={toggleSelectedKeys} />
                         )}
-                        bottomRightElement={() => <AnnotationStatusIcon state={mediaState.get(String(item.id))} />}
                     />
                 )}
             />

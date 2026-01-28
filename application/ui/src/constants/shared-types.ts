@@ -49,3 +49,5 @@ export type SourceConfig =
     | ImagesFolderSourceConfig;
 
 export type SourceConfigPayload = Exclude<SourceConfig, DisconnectedSourceConfig>;
+
+export type AnnotationDTO = components['schemas']['DatasetItemAnnotation-Input'];

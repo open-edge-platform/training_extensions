@@ -30,7 +30,7 @@ class TrainingJob(ProjectJob[TrainingJobParams]):
     data_dir: Path
     params: TrainingJobParams
 
-    def on_finish(self) -> None:
+    def on_complete(self) -> None:
         """Copy the training log to the model's directory upon job completion."""
         log_path = self.log_dir / self.log_file
         if not log_path.exists():

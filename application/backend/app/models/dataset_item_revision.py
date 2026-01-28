@@ -13,7 +13,6 @@ class DatasetRevisionItem(BaseEntity):
 
     Attributes:
         id: Unique identifier for the dataset revision item.
-        name: Name of the dataset revision item.
         format: Format of the dataset revision item (e.g., JPG, PNG).
         width: Width of the dataset revision item in pixels.
         height: Height of the dataset revision item in pixels.
@@ -21,7 +20,6 @@ class DatasetRevisionItem(BaseEntity):
     """
 
     id: UUID
-    name: str
     format: MediaFormat
     width: int
     height: int

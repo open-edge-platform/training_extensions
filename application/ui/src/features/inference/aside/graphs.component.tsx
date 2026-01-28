@@ -56,49 +56,46 @@ const useMetricsData = () => {
 
 const Graph = ({ label, data }: { label: string; data: DataPoint[] }) => {
     return (
-        <View padding={{ top: 'size-250', left: 'size-200', right: 'size-200', bottom: 'size-125' }}>
-            <LineChart width={500} height={200} data={data}>
-                <XAxis
-                    minTickGap={32}
-                    stroke='var(--spectrum-global-color-gray-800)'
-                    dataKey='name'
-                    tickLine={false}
-                    tickMargin={8}
-                />
-                <YAxis
-                    tickLine={false}
-                    stroke='var(--spectrum-global-color-gray-900)'
-                    dataKey='value'
-                    tickFormatter={(value: number) => {
-                        return value > 10 ? value.toFixed(0) : value.toFixed(2);
+        <LineChart responsive width={'100%'} style={{ aspectRatio: 1.6 }} data={data}>
+            <XAxis
+                minTickGap={32}
+                stroke='var(--spectrum-global-color-gray-800)'
+                dataKey='name'
+                tickLine={false}
+                tickMargin={8}
+            />
+            <YAxis
+                tickLine={false}
+                stroke='var(--spectrum-global-color-gray-900)'
+                dataKey='value'
+                tickFormatter={(value: number) => {
+                    return value > 10 ? value.toFixed(0) : value.toFixed(2);
+                }}
+            >
+                <Label
+                    angle={-90}
+                    value={label}
+                    position='insideLeft'
+                    style={{
+                        textAnchor: 'middle',
+                        fill: 'var(--spectrum-global-color-gray-900)',
+                        fontSize: '10px',
                     }}
-                >
-                    <Label
-                        angle={-90}
-                        value={label}
-                        position='insideLeft'
-                        offset={10}
-                        style={{
-                            textAnchor: 'middle',
-                            fill: 'var(--spectrum-global-color-gray-900)',
-                            fontSize: '10px',
-                        }}
-                    />
-                </YAxis>
-                <CartesianGrid stroke='var(--spectrum-global-color-gray-400)' />
-                {data.length > 0 && (
-                    <ReferenceLine x={data[0].name} stroke='var(--spectrum-global-color-gray-600)' strokeWidth={2} />
-                )}
-                <Line
-                    type='linear'
-                    dataKey='value'
-                    dot={false}
-                    stroke='var(--energy-blue)'
-                    isAnimationActive={false}
-                    strokeWidth='3'
                 />
-            </LineChart>
-        </View>
+            </YAxis>
+            <CartesianGrid stroke='var(--spectrum-global-color-gray-400)' />
+            {data.length > 0 && (
+                <ReferenceLine x={data[0].name} stroke='var(--spectrum-global-color-gray-600)' strokeWidth={2} />
+            )}
+            <Line
+                type='linear'
+                dataKey='value'
+                dot={false}
+                stroke='var(--energy-blue)'
+                isAnimationActive={false}
+                strokeWidth='3'
+            />
+        </LineChart>
     );
 };
 
@@ -108,15 +105,7 @@ export const Graphs = () => {
     const hasData = latencyData.length > 0 || throughputData.length > 0;
 
     return (
-        <Grid
-            gridArea={'aside'}
-            height={'90vh'}
-            areas={['header', 'graphs']}
-            rows={['min-content', 'minmax(0, 1fr)']}
-            UNSAFE_style={{
-                padding: 'var(--spectrum-global-dimension-size-200)',
-            }}
-        >
+        <Grid gridArea={'aside'} height={'100%'} areas={['header', 'graphs']} rows={['min-content', 'minmax(0, 1fr)']}>
             <Flex gridArea={'header'} alignItems='center' gap={'size-100'} marginBottom={'size-300'}>
                 <Heading level={4}>Model statistics</Heading>
             </Flex>
@@ -131,13 +120,13 @@ export const Graphs = () => {
                     </IllustratedMessage>
                 ) : (
                     <>
-                        <View paddingY='size-200'>
+                        <View>
                             <Heading level={4} marginBottom={'size-300'}>
                                 Throughput
                             </Heading>
                             <Graph label='requests/sec' data={throughputData} />
                         </View>
-                        <View paddingY='size-200'>
+                        <View>
                             <Heading level={4} marginBottom={'size-300'}>
                                 Latency
                             </Heading>

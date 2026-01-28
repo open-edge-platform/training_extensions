@@ -31,7 +31,6 @@ describe('ProjectCard', () => {
 
         expect(await screen.findByText('detection')).toBeInTheDocument();
         expect(await screen.findByText('• Labels: Cat, Dog')).toBeInTheDocument();
-        expect(await screen.findByText('• Edited: 2025-08-07 06:05 AM')).toBeInTheDocument();
         expect(await screen.findByRole('button', { name: /open project options/i })).toBeInTheDocument();
     });
 

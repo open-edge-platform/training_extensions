@@ -57,8 +57,8 @@ class Job(BaseIDModel, Generic[JobParamsT]):
     def log_file(self) -> str:
         return f"{self.job_type.lower()}-{self.id}.log"
 
-    def on_finish(self) -> None:
-        """Hook called when the job is completed successfully."""
+    def on_complete(self) -> None:
+        """Hook called when the job is finished successfully or failed."""
 
     def start(self) -> None:
         self.status = JobStatus.RUNNING
@@ -76,12 +76,13 @@ class Job(BaseIDModel, Generic[JobParamsT]):
         self.status = JobStatus.DONE
         self.progress = 100.0
         self.updated_at = now_utc_ts()
-        self.on_finish()
+        self.on_complete()
 
     def fail(self, msg: str) -> None:
         self.status = JobStatus.FAILED
         self.updated_at = now_utc_ts()
         self.error = msg
+        self.on_complete()
 
     def cancelling(self) -> None:
         self.status = JobStatus.CANCELLING
