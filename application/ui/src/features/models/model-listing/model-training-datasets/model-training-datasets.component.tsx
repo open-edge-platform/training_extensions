@@ -3,6 +3,7 @@
 
 import { ActionButton, Content, Flex, Heading, Text } from '@geti/ui';
 import { Filter, GridSmall, Search, SortUpDown } from '@geti/ui/icons';
+import { useNumberFormatter } from 'react-aria';
 
 import type { DatasetSubset } from '../../../../constants/shared-types';
 import { useGetDatasetRevisionItems } from '../../../../hooks/use-get-dataset-revision-items.hook';
@@ -44,7 +45,8 @@ const SubsetBox = ({ title, subset, datasetRevisionId, totalItems }: SubsetBoxPr
         }
     );
 
-    const subsetPercentage = totalItems > 0 ? Math.round((totalCount / totalItems) * 100) : 0;
+    const formatter = useNumberFormatter({ style: 'percent', maximumFractionDigits: 0 });
+    const subsetPercentage = totalItems > 0 ? totalCount / totalItems : 0;
 
     return (
         <Flex
@@ -58,7 +60,7 @@ const SubsetBox = ({ title, subset, datasetRevisionId, totalItems }: SubsetBoxPr
             <Flex UNSAFE_className={styles.boxHeading} justifyContent={'space-between'} alignItems={'center'}>
                 <Flex gap={'size-100'} alignItems={'center'}>
                     <Heading level={5}>
-                        {title} {subsetPercentage}%
+                        {title} {formatter.format(subsetPercentage)}
                     </Heading>
                     <Text>({totalCount})</Text>
                 </Flex>
