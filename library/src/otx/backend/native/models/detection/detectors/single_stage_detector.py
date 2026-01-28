@@ -17,7 +17,7 @@ import torch
 
 from otx.backend.native.models.modules.base_module import BaseModule
 from otx.backend.native.models.utils.utils import InstanceData
-from otx.data.entity.torch import OTXDataBatch
+from otx.data.entity.sample import OTXSampleBatch
 
 if TYPE_CHECKING:
     from torch import Tensor, nn
@@ -90,7 +90,7 @@ class SingleStageDetector(BaseModule):
 
     def forward(
         self,
-        entity: OTXDataBatch,
+        entity: OTXSampleBatch,
         mode: str = "tensor",
     ) -> dict[str, torch.Tensor] | list[InstanceData] | tuple[torch.Tensor] | torch.Tensor:
         """The unified entry for a forward process in both training and test.
@@ -134,7 +134,7 @@ class SingleStageDetector(BaseModule):
 
     def loss(
         self,
-        entity: OTXDataBatch,
+        entity: OTXSampleBatch,
     ) -> dict:
         """Calculate losses from a batch of inputs and data samples.
 
@@ -156,7 +156,7 @@ class SingleStageDetector(BaseModule):
 
     def predict(
         self,
-        entity: OTXDataBatch,
+        entity: OTXSampleBatch,
         rescale: bool = True,
     ) -> list[InstanceData]:
         """Predict results from a batch of inputs and data samples with post-processing.

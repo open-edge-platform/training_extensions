@@ -37,7 +37,7 @@ from otx.backend.native.models.modules.conv_module import Conv2dModule
 from otx.backend.native.models.modules.norm import build_norm_layer, is_norm
 from otx.backend.native.models.utils.utils import InstanceData
 from otx.backend.native.models.utils.weight_init import bias_init_with_prob, constant_init, normal_init
-from otx.data.entity.torch import OTXDataBatch
+from otx.data.entity.sample import OTXSampleBatch
 from otx.data.utils.structures.bbox.transforms import get_box_wh, scale_boxes
 from otx.data.utils.structures.mask.mask_util import polygon_to_bitmap
 
@@ -618,7 +618,7 @@ class RTMDetInstHead(RTMDetHead):
             "num_pos": num_pos,
         }
 
-    def prepare_loss_inputs(self, x: tuple[Tensor], entity: OTXDataBatch) -> dict:
+    def prepare_loss_inputs(self, x: tuple[Tensor], entity: OTXSampleBatch) -> dict:
         """Perform forward propagation and prepare outputs for loss calculation.
 
         Args:

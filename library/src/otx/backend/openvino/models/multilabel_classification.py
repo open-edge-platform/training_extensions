@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any
 import torch
 
 from otx.backend.openvino.models.base import OVModel
-from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
+from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
 from otx.metrics import MetricInput
 from otx.metrics.accuracy import (
     MultiLabelClsMetricCallable,
@@ -69,16 +69,16 @@ class OVMultilabelClassificationModel(OVModel):
     def _customize_outputs(
         self,
         outputs: list[ClassificationResult],
-        inputs: OTXDataBatch,
-    ) -> OTXPredBatch:
+        inputs: OTXSampleBatch,
+    ) -> OTXPredictionBatch:
         """Customize the outputs of the model for OTX compatibility.
 
         Args:
             outputs (list[ClassificationResult]): List of classification results from the model.
-            inputs (OTXDataBatch): Input batch containing images and metadata.
+            inputs (OTXSampleBatch): Input batch containing images and metadata.
 
         Returns:
-            OTXPredBatch: Customized prediction batch containing scores, saliency maps, and feature vectors.
+            OTXPredictionBatch: Customized prediction batch containing scores, saliency maps, and feature vectors.
         """
         pred_scores = [torch.tensor([top_label.confidence for top_label in out.top_labels]) for out in outputs]
 
@@ -88,8 +88,7 @@ class OVMultilabelClassificationModel(OVModel):
 
             # Squeeze dim 2D => 1D, (1, internal_dim) => (internal_dim)
             predicted_f_vectors = [out.feature_vector[0] for out in outputs]
-            return OTXPredBatch(
-                batch_size=len(outputs),
+            return OTXPredictionBatch(
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
                 scores=pred_scores,
@@ -98,8 +97,7 @@ class OVMultilabelClassificationModel(OVModel):
                 feature_vector=predicted_f_vectors,
             )
 
-        return OTXPredBatch(
-            batch_size=len(outputs),
+        return OTXPredictionBatch(
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=pred_scores,
@@ -108,16 +106,16 @@ class OVMultilabelClassificationModel(OVModel):
 
     def prepare_metric_inputs(
         self,
-        preds: OTXPredBatch,
-        inputs: OTXDataBatch,
+        preds: OTXPredictionBatch,
+        inputs: OTXSampleBatch,
     ) -> MetricInput:
         """Prepare inputs for metric computation.
 
         Converts prediction and input entities to a format suitable for metric evaluation.
 
         Args:
-            preds (OTXPredBatch): The predicted batch entity containing predicted labels and scores.
-            inputs (OTXDataBatch): The input batch entity containing ground truth labels.
+            preds (OTXPredictionBatch): The predicted batch entity containing predicted labels and scores.
+            inputs (OTXSampleBatch): The input batch entity containing ground truth labels.
 
         Returns:
             MetricInput: A dictionary containing 'preds' and 'target' keys

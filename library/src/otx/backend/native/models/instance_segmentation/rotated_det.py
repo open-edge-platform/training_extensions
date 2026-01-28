@@ -8,7 +8,7 @@ import numpy as np
 import torch
 from torchvision import tv_tensors
 
-from otx.data.entity.torch.torch import OTXPredBatch
+from otx.data.entity.sample import OTXPredictionBatch
 
 
 def get_polygon_area(points: np.ndarray) -> float:
@@ -25,22 +25,21 @@ def get_polygon_area(points: np.ndarray) -> float:
     return 0.5 * np.abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
 
 
-def convert_masks_to_rotated_predictions(preds: OTXPredBatch) -> OTXPredBatch:
-    """Convert masks to rotated bounding boxes and polygons.
+def convert_masks_to_rotated_predictions(preds: OTXPredictionBatch) -> OTXPredictionBatch:
+    """Convert masks to rotated bounding boxes.
 
     This function processes the predictions from an instance segmentation model,
-    extracting rotated bounding boxes and polygons from the masks.
+    extracting rotated bounding boxes from the masks.
 
     Args:
-        preds (OTXPredBatch): The predictions from the instance segmentation model.
+        preds (OTXPredictionBatch): The predictions from the instance segmentation model.
 
     Returns:
-        OTXPredBatch: The predictions with rotated bounding boxes and polygons.
+        OTXPredictionBatch: The predictions with rotated bounding boxes.
     """
     batch_scores = []
     batch_bboxes = []
     batch_labels = []
-    batch_polygons = []
     batch_masks = []
 
     for field_name, field in zip(
@@ -58,7 +57,7 @@ def convert_masks_to_rotated_predictions(preds: OTXPredBatch) -> OTXPredBatch:
         preds.labels,  # type: ignore[arg-type]
         preds.masks,  # type: ignore[arg-type]
     ):
-        boxes, scores, labels, masks, polygons = [], [], [], [], []
+        boxes, scores, labels, masks = [], [], [], []
 
         for bbox, score, label, mask in zip(pred_bboxes, pred_scores, pred_labels, pred_masks):
             if mask.sum() == 0:
@@ -68,18 +67,17 @@ def convert_masks_to_rotated_predictions(preds: OTXPredBatch) -> OTXPredBatch:
             if hierarchies is None:
                 continue
 
-            rbox_polygons = []
+            # Find the largest contour for the rotated bounding box
+            valid_contours = []
             for contour, hierarchy in zip(contours, hierarchies[0]):
                 if hierarchy[3] != -1 or len(contour) <= 2:
                     continue
-                # Get rotated bounding box points and convert to ragged array format
                 box_points = cv2.boxPoints(cv2.minAreaRect(contour)).astype(np.float32)
                 area = get_polygon_area(box_points)
-                rbox_polygons.append((box_points, area))
+                valid_contours.append((box_points, area))
 
-            if rbox_polygons:
-                rbox_polygons.sort(key=lambda x: x[1], reverse=True)
-                polygons.append(rbox_polygons[0][0])
+            if valid_contours:
+                valid_contours.sort(key=lambda x: x[1], reverse=True)
                 scores.append(score)
                 boxes.append(bbox)
                 labels.append(label)
@@ -94,17 +92,14 @@ def convert_masks_to_rotated_predictions(preds: OTXPredBatch) -> OTXPredBatch:
         batch_scores.append(scores)
         batch_bboxes.append(boxes)
         batch_labels.append(labels)
-        batch_polygons.append(polygons)
         batch_masks.append(masks)
 
-    return OTXPredBatch(
-        batch_size=preds.batch_size,
+    return OTXPredictionBatch(
         images=preds.images,
         imgs_info=preds.imgs_info,
         scores=batch_scores,
         bboxes=batch_bboxes,
         masks=batch_masks,
-        polygons=batch_polygons,
         labels=batch_labels,
     )
 
@@ -112,6 +107,6 @@ def convert_masks_to_rotated_predictions(preds: OTXPredBatch) -> OTXPredBatch:
 class RotatedPredictMixin:
     """Mixin class for rotated detection prediction."""
 
-    def rotated_predict_step(self, preds: OTXPredBatch) -> OTXPredBatch:
+    def rotated_predict_step(self, preds: OTXPredictionBatch) -> OTXPredictionBatch:
         """Perform prediction step for rotated detection."""
         return convert_masks_to_rotated_predictions(preds)
