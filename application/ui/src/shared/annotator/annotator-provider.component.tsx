@@ -3,11 +3,12 @@
 
 import { createContext, ReactNode, useContext, useState, type Dispatch, type SetStateAction } from 'react';
 
-import { useProjectLabels } from 'hooks/use-project-labels.hook';
-
 import type { Label, Media } from '../../constants/shared-types';
 import { useLoadImageQuery } from '../../features/annotator/hooks/use-load-image-query.hook';
 import type { ToolType } from '../../features/annotator/tools/interface';
+import { isClassificationTask } from '../../features/project/task-type-guards';
+import { useProject } from '../../hooks/api/project.hook';
+import { useProjectLabels } from '../../hooks/use-project-labels.hook';
 import type { RegionOfInterest } from '../types';
 
 type AnnotatorContext = {
@@ -31,8 +32,10 @@ export const AnnotatorProviderContext = createContext<AnnotatorContext | null>(n
 
 const useSelectedLabel = () => {
     const labels = useProjectLabels();
-
-    const [selectedLabelId, setSelectedLabelId] = useState<string | null>(labels.length === 0 ? null : labels[0].id);
+    const { data: project } = useProject();
+    const hasDefaultLabel = !isClassificationTask(project.task.task_type);
+    const defaultLabel = hasDefaultLabel && labels.length > 0 ? labels[0].id : null;
+    const [selectedLabelId, setSelectedLabelId] = useState<string | null>(defaultLabel);
 
     const selectedLabel: Label | null = labels.find(({ id }) => id === selectedLabelId) ?? null;
 

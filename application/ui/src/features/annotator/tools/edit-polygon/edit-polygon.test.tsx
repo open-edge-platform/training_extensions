@@ -5,15 +5,18 @@ import '@wessberg/pointer-events';
 
 import { fireEvent, screen } from '@testing-library/react';
 import { getMockedAnnotation } from 'mocks/mock-annotation';
+import { getMockedProject } from 'mocks/mock-project';
 import { render } from 'test-utils/render';
 
 import { AnnotationVisibilityProvider } from '../../../../shared/annotator/annotation-visibility-provider.component';
 import { Annotation, Point, Polygon } from '../../../../shared/types';
 import { CanvasSettingsProvider } from '../../../dataset/media-preview/primary-toolbar/settings/canvas-settings-provider.component';
+import { SelectedDataProvider } from '../../../dataset/selected-data-provider.component';
 import { removeOffLimitPointsPolygon } from '../utils';
 import { EditPolygon } from './edit-polygon.component';
 
 const mockROI = { x: 0, y: 0, width: 1000, height: 1000 };
+vi.mock('hooks/api/project.hook', () => ({ useProject: () => ({ data: getMockedProject({}) }) }));
 
 vi.mock('../../../../shared/annotator/annotator-provider.component', async (importActual) => {
     const actual = await importActual<typeof import('../../../../shared/annotator/annotator-provider.component')>();
@@ -72,11 +75,13 @@ const renderApp = async (
     }
 ) => {
     return render(
-        <AnnotationVisibilityProvider>
-            <CanvasSettingsProvider>
-                <EditPolygon annotation={annotation} zoom={1} />
-            </CanvasSettingsProvider>
-        </AnnotationVisibilityProvider>
+        <SelectedDataProvider>
+            <AnnotationVisibilityProvider>
+                <CanvasSettingsProvider>
+                    <EditPolygon annotation={annotation} zoom={1} />
+                </CanvasSettingsProvider>
+            </AnnotationVisibilityProvider>
+        </SelectedDataProvider>
     );
 };
 
