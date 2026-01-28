@@ -45,6 +45,12 @@ test.beforeEach(async ({ network, page }) => {
             return HttpResponse.arrayBuffer(candyPngBuffer.buffer, {
                 headers: { 'Content-Type': 'image/png' },
             });
+        }),
+        http.get('/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations', async () => {
+            return HttpResponse.json({
+                annotations: [],
+                user_reviewed: false,
+            });
         })
     );
 

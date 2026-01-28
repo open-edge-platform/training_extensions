@@ -58,14 +58,8 @@ export const SecondaryToolbar = ({
     const { data: selectedProject } = useProject();
     const { selectedLabel, setSelectedLabelId } = useAnnotator();
 
-    const {
-        annotations,
-        isSaving,
-        addAnnotations,
-        updateAnnotations,
-        deleteAnnotations,
-        submitAnnotations,
-    } = useAnnotationActions();
+    const { annotations, isSaving, addAnnotations, updateAnnotations, deleteAnnotations, submitAnnotations } =
+        useAnnotationActions();
 
     const hasAnnotations = !isEmpty(annotations);
     const isMultiLabel = selectedProject.task.exclusive_labels === false;
