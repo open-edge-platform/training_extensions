@@ -5,7 +5,7 @@ import { Button, ButtonGroup, Content, Dialog, Divider, Flex, Heading, Link, Tex
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { paths } from '../../../constants/paths';
-import { useTrainModelMutation } from '../hooks/api/use-train-model-mutation';
+import { useTrainModelMutation } from '../../../hooks/api/models.hook';
 import { TrainModelDialogContent } from './train-model-dialog-content';
 import { useTrainModel } from './train-model-provider.component';
 

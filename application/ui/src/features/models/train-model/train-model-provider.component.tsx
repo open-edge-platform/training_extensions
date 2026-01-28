@@ -11,10 +11,7 @@ import {
     RecommendedModelArchitectures,
     TrainingDevice,
 } from '../../../constants/shared-types';
-import { useGetActiveModelArchitectureId } from '../hooks/api/use-get-active-model-architecture-id.hook';
-import { useGetDatasetRevisions } from '../hooks/api/use-get-dataset-revisions';
-import { useGetTaskModelArchitectures } from '../hooks/api/use-get-model-architectures.hook';
-import { useGetTrainingDevices } from '../hooks/api/use-get-training-devices';
+import { useGetActiveModelArchitectureId, useGetDatasetRevisions, useGetTaskModelArchitectures, useGetTrainingDevices } from '../../../hooks/api/models.hook';
 
 type TrainModelContextProps = {
     modelArchitectures: ModelArchitectureWithPerformanceCategory[];

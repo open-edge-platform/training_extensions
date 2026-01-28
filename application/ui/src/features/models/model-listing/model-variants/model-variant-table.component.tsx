@@ -5,7 +5,7 @@ import { ActionButton, Cell, Column, Flex, Row, TableBody, TableHeader, TableVie
 import { DownloadIcon } from '@geti/ui/icons';
 
 import type { ExtendedModel, ModelFormat } from '../../../../constants/shared-types';
-import { useDownloadModel } from '../../hooks/api/use-download-model.hook';
+import { useDownloadModel } from '../../../../hooks/api/models.hook';
 import { formatModelSize } from '../utils/format-model-size';
 
 interface ModelVariantTableProps {
