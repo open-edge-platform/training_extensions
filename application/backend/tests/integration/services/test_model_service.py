@@ -8,8 +8,8 @@ from sqlalchemy.orm import Session
 
 from app.db.schema import DatasetRevisionDB, EvaluationDB, MetricScoreDB, ModelRevisionDB, ProjectDB
 from app.models import DatasetItemSubset, EvaluationResult
-from app.models.model_revision import ModelFormat
-from app.services import ModelService, ResourceNotFoundError, ResourceType
+from app.models.model_revision import ModelFormat, TrainingStatus
+from app.services import ModelRevisionMetadata, ModelService, ResourceNotFoundError, ResourceType
 from tests.integration.project_factory import ProjectTestDataFactory
 
 
@@ -170,7 +170,7 @@ class TestModelServiceIntegration:
 
         assert total_size == 100 + 200 + 300 + 400
 
-    def test_update_model(self, fxt_project_id: UUID, fxt_model_id: UUID, fxt_model_service: ModelService):
+    def test_rename_model(self, fxt_project_id: UUID, fxt_model_id: UUID, fxt_model_service: ModelService):
         """Test updating name of a model by ID."""
         new_model_name = "This is a new model name"
         model_metadata = {"name": new_model_name}
@@ -307,6 +307,50 @@ class TestModelServiceIntegration:
         assert files_exist is True
         expected_paths = tuple(model_dir / file for file in expected_files)
         assert paths == expected_paths
+
+    def test_create_revision(
+        self, fxt_project_id: UUID, fxt_model_id: UUID, fxt_model_service: ModelService, db_session: Session
+    ):
+        """Test creating a new model revision succeeds."""
+        dataset_revision_db = DatasetRevisionDB(project_id=str(fxt_project_id), name="Dataset Revision")
+        db_session.add(dataset_revision_db)
+        db_session.flush()
+        model_id = uuid4()
+        dataset_revision_id = UUID(dataset_revision_db.id)
+        architecture_id = "MODEL_ARCHITECTURE_ID"
+
+        fxt_model_service.create_revision(
+            ModelRevisionMetadata(
+                model_id=model_id,
+                project_id=fxt_project_id,
+                architecture_id=architecture_id,
+                parent_revision_id=fxt_model_id,
+                dataset_revision_id=dataset_revision_id,
+                training_status=TrainingStatus.IN_PROGRESS,
+            )
+        )
+
+        model_db = db_session.get(ModelRevisionDB, str(model_id))
+        assert model_db is not None
+        assert model_db.project_id == str(fxt_project_id)
+        assert model_db.parent_revision == str(fxt_model_id)
+        assert model_db.training_dataset_id == str(dataset_revision_id)
+        assert model_db.architecture == architecture_id
+        assert model_db.training_status == TrainingStatus.IN_PROGRESS
+
+    def test_update_revision(
+        self, fxt_project_id: UUID, fxt_model_id: UUID, fxt_model_service: ModelService, db_session: Session
+    ):
+        """Test updating an existing model revision succeeds."""
+        fxt_model_service.update_revision_status(
+            project_id=fxt_project_id,
+            model_id=fxt_model_id,
+            training_status=TrainingStatus.IN_PROGRESS,
+        )
+
+        model_db = db_session.get(ModelRevisionDB, str(fxt_model_id))
+        assert model_db is not None
+        assert model_db.training_status == TrainingStatus.IN_PROGRESS
 
     def test_save_evaluation_result(
         self, fxt_model_id: UUID, fxt_project_id: UUID, fxt_model_service: ModelService, db_session: Session
