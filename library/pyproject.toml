@@ -140,7 +140,9 @@ Repository = "https://github.com/open-edge-platform/training_extensions/"
 
 [tool.uv]
 default-groups = ["dev", "lint"]
-override-dependencies = ["torch==2.10.0"]
+override-dependencies = [
+    "torch==2.10.0",
+]
 conflicts = [
     [
         { extra = "cpu" },

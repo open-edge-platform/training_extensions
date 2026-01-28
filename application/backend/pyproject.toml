@@ -63,6 +63,9 @@ lint = [
 [tool.uv]
 default-groups = ["dev", "lint"]
 required-version = "~=0.9.27"
+override-dependencies = [
+    "torch==2.10.0",
+] # remove when rfdetr package is fixed
 conflicts = [
     [
         { extra = "cpu" },
