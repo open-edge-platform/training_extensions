@@ -283,6 +283,18 @@ class ModelService(BaseSessionManagedService):
             )
         )
 
+    def update_revision_status(self, project_id: UUID, model_id: UUID, training_status: TrainingStatus) -> None:
+        """
+        Updates the training status of a model revision for the given project.
+
+        Args:
+            project_id (UUID): Identifier of the project that owns the model revision.
+            model_id (UUID): Identifier of the model revision to update.
+            training_status (TrainingStatus): New training status to set for the model revision.
+        """
+        model_revision_repo = ModelRevisionRepository(project_id=str(project_id), db=self.db_session)
+        model_revision_repo.update_training_status(obj_id=str(model_id), training_status=training_status)
+
     def get_model_binary_files(
         self, project_id: UUID, model_id: UUID, format: ModelFormat
     ) -> tuple[bool, tuple[Path, ...]]:

@@ -46,7 +46,7 @@ class TestDeitTiny:
         preds = fxt_model.predict_step(fxt_input, batch_idx=0)
         assert len(preds.labels) == fxt_input.batch_size
         assert len(preds.scores) == fxt_input.batch_size
-        assert preds.has_xai_outputs == explain_mode
+        assert (preds.saliency_map is not None and len(preds.saliency_map) > 0) == explain_mode
 
     @pytest.mark.parametrize(
         ("model_cls", "label_info_fxt_name"),

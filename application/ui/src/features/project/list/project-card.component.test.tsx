@@ -1,8 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { fireEvent, screen } from '@testing-library/react';
 import { getMockedProject } from 'mocks/mock-project';
-import { fireEvent, render, screen } from 'test-utils/render';
+import { render } from 'test-utils/render';
 
 import { ProjectCard } from './project-card.component';
 

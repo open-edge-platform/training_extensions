@@ -1,7 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { fireEvent, renderHook } from '@testing-library/react';
+import { fireEvent } from '@testing-library/react';
+import { renderHook } from 'test-utils/render';
 
 import { usePanning } from './use-panning.hook';
 

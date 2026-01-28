@@ -1,16 +1,19 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { fireEvent, screen } from '@testing-library/react';
 import { getMockedLabel } from 'mocks/mock-labels';
-import { fireEvent, render, screen } from 'test-utils/render';
+import { render } from 'test-utils/render';
 
-import type { Label } from '../../../constants/shared-types';
+import { ZoomState } from '../../../../components/zoom/types';
+import { useZoom } from '../../../../components/zoom/zoom.provider';
+import type { Label } from '../../../../constants/shared-types';
 import { AnnotationLabels } from './annotation-labels.component';
 
 const mockZoom = { scale: 1, maxZoomIn: 10, hasAnimation: false, translate: { x: 0, y: 0 } };
 
-vi.mock('../../../components/zoom/zoom.provider', () => ({
-    useZoom: () => mockZoom,
+vi.mock('../../../../components/zoom/zoom.provider', () => ({
+    useZoom: vi.fn(() => mockZoom),
 }));
 
 describe('AnnotationLabels', () => {
@@ -78,8 +81,8 @@ describe('AnnotationLabels', () => {
     });
 
     it('adjusts sizes based on zoom scale', () => {
-        mockZoom.scale = 2;
         const label = getMockedLabel({ name: 'Person' });
+        vi.mocked(useZoom).mockReturnValue({ ...mockZoom, scale: 2 } as ZoomState);
 
         render(
             <svg>

@@ -28,7 +28,7 @@ from otx.backend.native.models.detection.utils.utils import unmap
 from otx.backend.native.models.modules import Conv2dModule, PatchedConv2d, build_norm_layer
 from otx.backend.native.models.modules.scale import Scale
 from otx.backend.native.models.utils.utils import InstanceData
-from otx.data.entity.torch import OTXDataBatch
+from otx.data.entity.sample import OTXSampleBatch
 
 EPS = 1e-12
 
@@ -191,7 +191,7 @@ class ATSSHeadModule(ClassIncrementalMixin, AnchorHead):
     def prepare_loss_inputs(
         self,
         x: tuple[Tensor],
-        entity: OTXDataBatch,
+        entity: OTXSampleBatch,
     ) -> dict | tuple:
         """Perform forward propagation of the detection head and prepare for loss calculation.
 

@@ -6,7 +6,7 @@ import torch
 
 from otx.backend.native.models.base import DataInputParams
 from otx.backend.native.models.instance_segmentation.rtmdet_inst import RTMDetInst
-from otx.data.entity.torch import OTXPredBatch
+from otx.data.entity.sample import OTXPredictionBatch
 
 
 class TestRTMDetInst:
@@ -30,7 +30,7 @@ class TestRTMDetInst:
         )
         model.eval()
         output = model(fxt_instance_seg_batch)
-        assert isinstance(output, OTXPredBatch)
+        assert isinstance(output, OTXPredictionBatch)
 
     def test_export(self):
         model = RTMDetInst(

@@ -6,9 +6,9 @@ import { PointerEvent, useCallback } from 'react';
 import { isEmpty } from 'lodash-es';
 import { v4 as uuid } from 'uuid';
 
-import { useZoom } from '../../../components/zoom/zoom.provider';
-import { AnnotationLabel } from '../../../shared/types';
-import { isPrediction } from './utils';
+import { useZoom } from '../../../../components/zoom/zoom.provider';
+import { AnnotationLabel } from '../../../../shared/types';
+import { isPrediction } from '../utils';
 
 const labelStyles = (scale: number) => {
     // We need the actual values for calculations:
@@ -20,7 +20,6 @@ const labelStyles = (scale: number) => {
 
     const height = 24 / scale;
     const padding = 8 / scale;
-    const gap = 2 / scale; // Gap between labels
     const closeButtonWidth = 20 / scale;
     const fontSize = 14 / scale;
     const yOffset = -height;
@@ -32,7 +31,6 @@ const labelStyles = (scale: number) => {
     return {
         height,
         padding,
-        gap,
         closeButtonWidth,
         fontSize,
         yOffset,
@@ -58,7 +56,7 @@ export const AnnotationLabels = ({ labels, onRemove }: AnnotationLabelsProps) =>
     const { scale } = useZoom();
 
     const styles = labelStyles(scale);
-    const { height, padding, gap, closeButtonWidth, fontSize, yOffset, charWidth } = styles;
+    const { height, padding, closeButtonWidth, fontSize, yOffset, charWidth } = styles;
 
     const calculateLabelWidth = (text: string) => {
         const textWidth = text.length * charWidth;
@@ -114,7 +112,7 @@ export const AnnotationLabels = ({ labels, onRemove }: AnnotationLabelsProps) =>
             : 0;
         const xOffset = fullLengthOfAllLabels;
 
-        fullLengthOfAllLabels += labelWidth + gap;
+        fullLengthOfAllLabels += labelWidth;
 
         return (
             <g key={label.id} fill='none' stroke='none' fillOpacity={1}>

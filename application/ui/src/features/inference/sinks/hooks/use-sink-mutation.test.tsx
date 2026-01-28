@@ -1,9 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { act, renderHook } from '@testing-library/react';
+import { act } from '@testing-library/react';
 import { HttpResponse } from 'msw';
-import { TestProviders } from 'test-utils/render';
+import { renderHook } from 'test-utils/render';
 
 import { http } from '../../../../api/utils';
 import { server } from '../../../../msw-node-setup';
@@ -21,9 +21,7 @@ const mockedSource: LocalFolderSinkConfig = {
 describe('useSinkMutation', () => {
     it('creates a new sink and return its resource id', async () => {
         const newResourceId = 'resource-id-123';
-        const { result } = renderHook(() => useSinkMutation(true), {
-            wrapper: TestProviders,
-        });
+        const { result } = renderHook(() => useSinkMutation(true));
 
         server.use(
             http.post('/api/sinks', () => HttpResponse.json({ ...mockedSource, id: newResourceId })),
@@ -37,9 +35,7 @@ describe('useSinkMutation', () => {
     });
 
     it('update a source item and returns its resource id', async () => {
-        const { result } = renderHook(() => useSinkMutation(false), {
-            wrapper: TestProviders,
-        });
+        const { result } = renderHook(() => useSinkMutation(false));
 
         server.use(
             http.post('/api/sinks', () => HttpResponse.error()),

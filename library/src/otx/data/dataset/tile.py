@@ -272,7 +272,6 @@ class OTXTileInstSegTestDataset(OTXTileDataset):
             ori_bboxes=item.bboxes,
             ori_labels=item.label,
             ori_masks=item.masks,
-            ori_polygons=item.polygons,
         )
 
 
