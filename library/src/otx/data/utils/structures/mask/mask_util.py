@@ -95,56 +95,6 @@ def encode_rle(mask: torch.Tensor) -> dict:
     return {"counts": counts.tolist(), "size": list(mask.shape)}
 
 
-def crop_and_resize_polygons(
-    annos: np.ndarray,
-    bboxes: np.ndarray,
-    out_shape: tuple,
-    inds: np.ndarray,
-    device: str = "cpu",
-) -> torch.Tensor:
-    """Crop and resize polygons to the target size.
-
-    Args:
-        annos: Ragged array containing np.ndarray objects of shape (Npoly, 2)
-        bboxes: Bounding boxes array of shape (N, 4)
-        out_shape: Output shape (height, width)
-        inds: Indices array
-        device: Target device
-
-    Returns:
-        torch.Tensor: Resized polygon masks
-    """
-    out_h, out_w = out_shape
-    if len(annos) == 0:
-        return torch.empty((0, *out_shape), dtype=torch.float, device=device)
-
-    resized_polygons = np.empty(len(bboxes), dtype=object)
-    for i in range(len(bboxes)):
-        polygon_points = annos[inds[i]]
-        bbox = bboxes[i, :]
-        x1, y1, x2, y2 = bbox
-        w = np.maximum(x2 - x1, 1)
-        h = np.maximum(y2 - y1, 1)
-        h_scale = out_h / max(h, 0.1)  # avoid too large scale
-        w_scale = out_w / max(w, 0.1)
-
-        # Crop: translate points relative to bbox origin
-        cropped_points = polygon_points.copy()
-        cropped_points[:, 0] -= x1  # x coordinates
-        cropped_points[:, 1] -= y1  # y coordinates
-
-        # Resize: scale points to output size
-        resized_points = cropped_points.copy()
-        resized_points[:, 0] *= w_scale
-        resized_points[:, 1] *= h_scale
-
-        resized_polygons[i] = resized_points
-
-    mask_targets = polygon_to_bitmap(resized_polygons, *out_shape)
-
-    return torch.from_numpy(mask_targets).float().to(device)
-
-
 def crop_and_resize_masks(
     annos: tv_tensors.Mask,
     bboxes: np.ndarray,

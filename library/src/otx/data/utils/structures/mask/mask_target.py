@@ -18,7 +18,7 @@ from torch import Tensor
 from torch.nn.modules.utils import _pair
 from torchvision import tv_tensors
 
-from .mask_util import crop_and_resize_masks, crop_and_resize_polygons
+from .mask_util import crop_and_resize_masks
 
 
 def mask_target(
@@ -35,7 +35,7 @@ def mask_target(
             images, each has shape (num_pos, 4).
         pos_assigned_gt_inds_list (list[Tensor]): Assigned GT indices for each
             positive proposals, each has shape (num_pos,).
-        gt_masks_list (list[np.ndarray] or list[tv_tensors.Mask]): Ground truth masks or polygons.
+        gt_masks_list (list[tv_tensors.Mask]): Ground truth masks.
         mask_size (int): The mask size.
         meta_infos (list[dict]): Meta information of each image.
 
@@ -60,7 +60,7 @@ def mask_target(
 def mask_target_single(
     pos_proposals: Tensor,
     pos_assigned_gt_inds: Tensor,
-    gt_masks: np.ndarray | tv_tensors.Mask,
+    gt_masks: tv_tensors.Mask,
     mask_size: list[int],
     meta_info: dict,
 ) -> Tensor:
@@ -69,7 +69,7 @@ def mask_target_single(
     Args:
         pos_proposals (Tensor): Positive proposals, has shape (num_pos, 4).
         pos_assigned_gt_inds (Tensor): Assigned GT indices for positive proposals, has shape (num_pos,).
-        gt_masks (np.ndarray or tv_tensors.Mask): Ground truth masks as polygons or tv_tensors.Mask.
+        gt_masks (tv_tensors.Mask): Ground truth masks.
         mask_size (list[int]): The mask size.
         meta_info (dict): Meta information of the image.
 
@@ -81,12 +81,8 @@ def mask_target_single(
         warnings.warn("No ground truth masks are provided!", stacklevel=2)
         return pos_proposals.new_zeros((0, *mask_size))
 
-    if isinstance(gt_masks, np.ndarray):
-        crop_and_resize = crop_and_resize_polygons
-    elif isinstance(gt_masks, tv_tensors.Mask):
-        crop_and_resize = crop_and_resize_masks
-    else:
-        warnings.warn("Unsupported ground truth mask type!", stacklevel=2)
+    if not isinstance(gt_masks, tv_tensors.Mask):
+        warnings.warn("Unsupported ground truth mask type! Expected tv_tensors.Mask.", stacklevel=2)
         return pos_proposals.new_zeros((0, *mask_size))
 
     device = pos_proposals.device
@@ -98,7 +94,7 @@ def mask_target_single(
         proposals_np[:, [1, 3]] = np.clip(proposals_np[:, [1, 3]], 0, maxh)
         pos_assigned_gt_inds = pos_assigned_gt_inds.cpu().numpy()
 
-        mask_targets = crop_and_resize(
+        mask_targets = crop_and_resize_masks(
             gt_masks,
             proposals_np,
             mask_size,  # type: ignore[arg-type]

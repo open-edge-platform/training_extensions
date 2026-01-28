@@ -2,22 +2,11 @@
 # SPDX-License-Identifier: Apache-2.0
 """Unit tests of base data entity."""
 
-import numpy as np
 import pytest
 import torch
 import torchvision.transforms.v2 as tvt
 
-from otx.data.entity import OTXDataItem
-
-
-class TestOTXDataItem:
-    def test_image_type(
-        self,
-        fxt_numpy_data_entity,
-        fxt_torchvision_data_entity,
-    ) -> None:
-        assert fxt_numpy_data_entity.image.dtype == np.float32
-        assert fxt_torchvision_data_entity.image.dtype == torch.float32
+from otx.data.entity.sample import ClassificationSample
 
 
 class TestImageInfo:
@@ -36,7 +25,7 @@ class TestImageInfo:
     @pytest.mark.parametrize("fxt_transform", ["fxt_resize", "fxt_random_resize"])
     def test_resize(
         self,
-        fxt_torchvision_data_entity: OTXDataItem,
+        fxt_torchvision_data_entity: ClassificationSample,
         fxt_transform: str,
         request: pytest.FixtureRequest,
     ) -> None:
@@ -70,7 +59,7 @@ class TestImageInfo:
     )
     def test_crop(
         self,
-        fxt_torchvision_data_entity: OTXDataItem,
+        fxt_torchvision_data_entity: ClassificationSample,
         fxt_transform: str,
         request: pytest.FixtureRequest,
     ) -> None:
@@ -83,7 +72,7 @@ class TestImageInfo:
 
     def test_pad(
         self,
-        fxt_torchvision_data_entity: OTXDataItem,
+        fxt_torchvision_data_entity: ClassificationSample,
     ) -> None:
         transform = tvt.Pad(padding=(1, 2, 3, 4))
         transformed = transform(fxt_torchvision_data_entity)
@@ -92,23 +81,10 @@ class TestImageInfo:
         assert fxt_torchvision_data_entity.image.shape[1:] == transformed.img_info.ori_shape
         assert transformed.img_info.padding == (1, 2, 3, 4)
 
-    def test_normalize(
-        self,
-        fxt_torchvision_data_entity: OTXDataItem,
-    ) -> None:
-        mean = (100, 101, 102)
-        std = (1, 2, 3)
-        transform = tvt.Normalize(mean=mean, std=std)
-        transformed = transform(fxt_torchvision_data_entity)
-
-        assert transformed.img_info.normalized
-        assert transformed.img_info.norm_mean == mean
-        assert transformed.img_info.norm_std == std
-
     @pytest.mark.skipif(not torch.cuda.is_available(), reason="Test only if CUDA is available.")
     def test_to_cuda(
         self,
-        fxt_torchvision_data_entity: OTXDataItem,
+        fxt_torchvision_data_entity: ClassificationSample,
     ) -> None:
         cuda_img_info = fxt_torchvision_data_entity.img_info.to(device="cuda")
         # Do not lose its meta info although calling `Tensor.to(device="cuda")`

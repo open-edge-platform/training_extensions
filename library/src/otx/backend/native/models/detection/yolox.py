@@ -22,7 +22,7 @@ from otx.backend.native.models.detection.necks import YOLOXPAFPN
 from otx.backend.native.models.detection.utils.assigners import SimOTAAssigner
 from otx.backend.native.models.utils.utils import load_checkpoint
 from otx.config.data import TileConfig
-from otx.data.entity.torch import OTXDataBatch
+from otx.data.entity.sample import OTXSampleBatch
 from otx.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
 from otx.types.export import OTXExportFormatType
 from otx.types.precision import OTXPrecisionType
@@ -132,7 +132,7 @@ class YOLOX(OTXDetectionModel):
 
     def _customize_inputs(
         self,
-        entity: OTXDataBatch,
+        entity: OTXSampleBatch,
         pad_size_divisor: int = 32,
         pad_value: int = 114,  # YOLOX uses 114 as pad_value
     ) -> dict[str, Any]:

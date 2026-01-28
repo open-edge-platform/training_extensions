@@ -25,7 +25,7 @@ from otx.backend.native.models.common.utils.utils import (
 from otx.backend.native.models.detection.utils.utils import unpack_det_entity
 from otx.backend.native.models.modules.base_module import BaseModule
 from otx.backend.native.models.utils.utils import InstanceData
-from otx.data.entity.torch import OTXDataBatch
+from otx.data.entity.sample import OTXSampleBatch
 
 
 class BaseDenseHead(BaseModule):
@@ -69,7 +69,7 @@ class BaseDenseHead(BaseModule):
     def prepare_loss_inputs(
         self,
         x: tuple[Tensor],
-        entity: OTXDataBatch,
+        entity: OTXSampleBatch,
     ) -> dict | tuple:
         """Perform forward propagation of the detection head and prepare for loss calculation.
 
@@ -90,7 +90,7 @@ class BaseDenseHead(BaseModule):
     def predict(
         self,
         x: tuple[Tensor],
-        entity: OTXDataBatch,
+        entity: OTXSampleBatch,
         rescale: bool = False,
     ) -> list[InstanceData]:
         """Perform forward propagation of the detection head and predict detection results.
