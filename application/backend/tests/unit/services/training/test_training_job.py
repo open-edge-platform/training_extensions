@@ -1,8 +1,9 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+from collections.abc import Callable
 from unittest.mock import patch
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 
@@ -12,16 +13,22 @@ from app.models.system import DeviceInfo, DeviceType
 
 
 @pytest.fixture
-def fxt_training_params():
-    return TrainingJobParams(
-        device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
-        model_architecture_id="test_arch",
-        task=Task(task_type=TaskType.CLASSIFICATION),
-    )
+def fxt_training_params() -> Callable[[UUID, UUID], TrainingJobParams]:
+    def _make_training_job_params(job_id: UUID, project_id: UUID) -> TrainingJobParams:
+        return TrainingJobParams(
+            device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
+            model_architecture_id="test_arch",
+            task=Task(task_type=TaskType.CLASSIFICATION),
+            job_id=job_id,
+            project_id=project_id,
+        )
+
+    return _make_training_job_params
 
 
 @pytest.fixture
 def fxt_training_job(tmp_path, fxt_training_params):
+    job_id = uuid4()
     project_id = uuid4()
     log_dir = tmp_path / "logs"
     data_dir = tmp_path / "data"
@@ -29,11 +36,11 @@ def fxt_training_job(tmp_path, fxt_training_params):
     data_dir.mkdir(parents=True)
 
     return TrainingJob(
-        id=uuid4(),
+        id=job_id,
         project_id=project_id,
         log_dir=log_dir,
         data_dir=data_dir,
-        params=fxt_training_params,
+        params=fxt_training_params(job_id, project_id),
     )
 
 

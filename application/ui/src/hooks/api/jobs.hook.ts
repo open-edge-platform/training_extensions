@@ -27,9 +27,14 @@ export const useGetCurrentTrainingJob = () => {
         },
     });
 
-    const activeTrainingJob = activeJobs.data?.find(
-        (job) => job.metadata.project.id === projectId && job.status === 'RUNNING' && job.job_type === 'train'
-    );
+    const activeTrainingJob = activeJobs.data?.find((job) => {
+        const jobProjectId =
+            'project' in job.metadata &&
+            job.metadata.project &&
+            'id' in job.metadata.project &&
+            job.metadata.project.id;
+        return jobProjectId === projectId && job.status === 'RUNNING' && job.job_type === 'train';
+    });
 
     return activeTrainingJob;
 };
