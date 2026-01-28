@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 
-import { Item, Key, Picker, toast } from '@geti/ui';
+import { Item, Key, Picker } from '@geti/ui';
 
 import { $api } from '../../../api/client';
 import { usePatchPipeline, usePipeline } from '../../../hooks/api/pipeline.hook';
@@ -32,7 +32,6 @@ export const InferenceDevices = () => {
             {
                 onError: (error) => {
                     if (error) {
-                        toast({ type: 'error', message: String(error.detail) });
                         setSelectedKey(pipeline.device);
                     }
                 },

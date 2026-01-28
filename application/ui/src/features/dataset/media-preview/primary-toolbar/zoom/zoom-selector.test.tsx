@@ -1,7 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { fireEvent, render, screen } from 'test-utils/render';
+import { fireEvent, screen } from '@testing-library/react';
+import { render } from 'test-utils/render';
 
 import { useZoom } from '../../../../../components/zoom/zoom.provider';
 import { ZoomSelector } from './zoom-selector.component';

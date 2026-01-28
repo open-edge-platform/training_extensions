@@ -1,7 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen } from 'test-utils/render';
+import { screen } from '@testing-library/react';
+import { render } from 'test-utils/render';
 
 import { useContainerSize } from './use-container-size';
 import { ZoomTransform } from './zoom-transform';

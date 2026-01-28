@@ -6,7 +6,8 @@ import '@wessberg/pointer-events';
 import { ReactNode } from 'react';
 
 import { ThemeProvider } from '@geti/ui/theme';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
+import { render } from 'test-utils/render';
 
 import { Polygon } from '../../../../shared/types';
 import { EditPoints } from './edit-points.component';
