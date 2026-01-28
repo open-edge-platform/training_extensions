@@ -11,6 +11,7 @@ import { render } from 'test-utils/render';
 import { AnnotationVisibilityProvider } from '../../../../shared/annotator/annotation-visibility-provider.component';
 import { Annotation, Point, Polygon } from '../../../../shared/types';
 import { CanvasSettingsProvider } from '../../../dataset/media-preview/primary-toolbar/settings/canvas-settings-provider.component';
+import { SelectedDataProvider } from '../../../dataset/selected-data-provider.component';
 import { removeOffLimitPointsPolygon } from '../utils';
 import { EditPolygon } from './edit-polygon.component';
 
@@ -74,11 +75,13 @@ const renderApp = async (
     }
 ) => {
     return render(
-        <AnnotationVisibilityProvider>
-            <CanvasSettingsProvider>
-                <EditPolygon annotation={annotation} zoom={1} />
-            </CanvasSettingsProvider>
-        </AnnotationVisibilityProvider>
+        <SelectedDataProvider>
+            <AnnotationVisibilityProvider>
+                <CanvasSettingsProvider>
+                    <EditPolygon annotation={annotation} zoom={1} />
+                </CanvasSettingsProvider>
+            </AnnotationVisibilityProvider>
+        </SelectedDataProvider>
     );
 };
 

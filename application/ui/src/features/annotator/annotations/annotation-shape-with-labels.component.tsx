@@ -10,9 +10,9 @@ import type { Label } from '../../../constants/shared-types';
 import { useAnnotationActions } from '../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotationVisibility } from '../../../shared/annotator/annotation-visibility-provider.component';
 import type { Annotation } from '../../../shared/types';
+import { isClassificationTask } from '../../project/task-type-guards';
 import { AnnotationLabels } from './annotation-labels/annotation-labels.component';
 import { AnnotationShape } from './annotation-shape/annotation-shape.component';
-import { FullImageShape } from './full-image-shape/full-image-shape.component';
 
 type AnnotationShapeProps = {
     annotation: Annotation;
@@ -24,13 +24,12 @@ export const AnnotationShapeWithLabels = ({ annotation }: AnnotationShapeProps) 
     const { updateAnnotations, deleteAnnotations } = useAnnotationActions();
 
     const { shape, labels } = annotation;
-    const isClassificationProject = selectedProject.task.task_type === 'classification';
 
     const removeLabels = (labelId: Key | null) => {
         const updatedLabels = annotation.labels.filter((label) => label.id !== labelId) as Label[];
         const hasNoLabels = updatedLabels.length === 0;
 
-        if (isClassificationProject && hasNoLabels) {
+        if (isClassificationTask(selectedProject.task.task_type) && hasNoLabels) {
             deleteAnnotations([annotation.id]);
         } else {
             updateAnnotations([{ ...annotation, labels: updatedLabels }]);
@@ -39,10 +38,10 @@ export const AnnotationShapeWithLabels = ({ annotation }: AnnotationShapeProps) 
 
     if (shape.type === 'full_image') {
         return (
-            <g>
-                <FullImageShape annotation={annotation} />
+            <>
+                <AnnotationShape annotation={annotation} />
                 <AnnotationLabels labels={labels} onRemove={removeLabels} />
-            </g>
+            </>
         );
     }
 

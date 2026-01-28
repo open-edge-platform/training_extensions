@@ -11,6 +11,7 @@ import { useProject } from '../../../../hooks/api/project.hook';
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
 import { useSelectedAnnotations } from '../../../../shared/annotator/select-annotation-provider.component';
+import { isClassificationTask } from '../../../project/task-type-guards';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
 import { useSelectedData } from '../../selected-data-provider.component';
 import { Toolbar } from '../toolbar-container/toolbar-container.component';
@@ -69,7 +70,6 @@ export const SecondaryToolbar = ({
 
     const hasAnnotations = !isEmpty(annotations);
     const isMultiLabel = selectedProject.task.exclusive_labels === false;
-    const isClassification = selectedProject.task.task_type === 'classification';
     const selectedIndex = items.findIndex((item) => item.id === mediaItem.id);
 
     const handleSubmit = async () => {
@@ -161,7 +161,11 @@ export const SecondaryToolbar = ({
                     <LabelPicker
                         labels={projectLabels}
                         selectedLabel={selectedLabel}
-                        onSelect={isClassification ? handleClassificationSelect : handleSelect}
+                        onSelect={
+                            isClassificationTask(selectedProject.task.task_type)
+                                ? handleClassificationSelect
+                                : handleSelect
+                        }
                     />
                 </Toolbar.Section>
             </Toolbar.Container>

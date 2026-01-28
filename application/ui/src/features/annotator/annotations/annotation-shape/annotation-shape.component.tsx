@@ -1,7 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import type { Annotation, Polygon } from '../../../../shared/types';
+import type { Annotation } from '../../../../shared/types';
+import { useSelectedData } from '../../../dataset/selected-data-provider.component';
 import { getFormattedPoints, isPrediction } from '../utils';
 
 type AnnotationShapeProps = {
@@ -10,10 +11,24 @@ type AnnotationShapeProps = {
 
 export const AnnotationShape = ({ annotation }: AnnotationShapeProps) => {
     const { shape, labels } = annotation;
+    const { selectedMediaItem } = useSelectedData();
     const color = labels.length ? labels[0].color : '--annotation-fill';
     const strokeDasharray = annotation.labels.some(isPrediction)
         ? 'calc(10 / var(--zoom-scale)) calc(6 / var(--zoom-scale))'
         : undefined;
+
+    if (shape.type === 'full_image') {
+        return (
+            <rect
+                fill={'none'}
+                stroke={color}
+                aria-label='annotation full image'
+                width={selectedMediaItem?.width}
+                height={selectedMediaItem?.height}
+                strokeDasharray={strokeDasharray}
+            />
+        );
+    }
 
     if (shape.type === 'rectangle') {
         return (
@@ -32,7 +47,7 @@ export const AnnotationShape = ({ annotation }: AnnotationShapeProps) => {
     return (
         <polygon
             aria-label='annotation polygon'
-            points={getFormattedPoints((shape as Polygon).points)}
+            points={getFormattedPoints(shape.points)}
             fill={color}
             strokeDasharray={strokeDasharray}
         />

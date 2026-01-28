@@ -6,6 +6,7 @@ import { createContext, ReactNode, useContext, useState, type Dispatch, type Set
 import type { Label, Media } from '../../constants/shared-types';
 import { useLoadImageQuery } from '../../features/annotator/hooks/use-load-image-query.hook';
 import type { ToolType } from '../../features/annotator/tools/interface';
+import { isClassificationTask } from '../../features/project/task-type-guards';
 import { useProject } from '../../hooks/api/project.hook';
 import { useProjectLabels } from '../../hooks/use-project-labels.hook';
 import type { RegionOfInterest } from '../types';
@@ -32,7 +33,7 @@ export const AnnotatorProviderContext = createContext<AnnotatorContext | null>(n
 const useSelectedLabel = () => {
     const labels = useProjectLabels();
     const { data: project } = useProject();
-    const hasDefaultLabel = project.task.task_type !== 'classification';
+    const hasDefaultLabel = !isClassificationTask(project.task.task_type);
     const defaultLabel = hasDefaultLabel && labels.length > 0 ? labels[0].id : null;
     const [selectedLabelId, setSelectedLabelId] = useState<string | null>(defaultLabel);
 
