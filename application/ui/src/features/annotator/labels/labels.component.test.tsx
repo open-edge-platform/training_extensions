@@ -16,6 +16,8 @@ const mockLabels: Label[] = [
 
 const mockSetSelectedLabelId = vi.fn();
 const mockUpdateAnnotations = vi.fn();
+const mockAddAnnotations = vi.fn();
+const mockDeleteAnnotations = vi.fn();
 const mockSelectedAnnotations = { current: new Set<string>() };
 const mockAnnotations = { current: [] as { id: string; labels: Label[]; shape: { type: string } }[] };
 
@@ -37,6 +39,8 @@ vi.mock('../../../shared/annotator/annotation-actions-provider.component', () =>
     useAnnotationActions: () => ({
         annotations: mockAnnotations.current,
         updateAnnotations: mockUpdateAnnotations,
+        addAnnotations: mockAddAnnotations,
+        deleteAnnotations: mockDeleteAnnotations,
     }),
 }));
 
@@ -44,6 +48,8 @@ describe('Labels', () => {
     beforeEach(() => {
         mockSetSelectedLabelId.mockClear();
         mockUpdateAnnotations.mockClear();
+        mockAddAnnotations.mockClear();
+        mockDeleteAnnotations.mockClear();
         mockSelectedAnnotations.current = new Set();
         mockAnnotations.current = [];
     });
@@ -148,5 +154,98 @@ describe('Labels', () => {
             [mockAnnotations.current[0], mockAnnotations.current[1]],
             [mockLabels[0]]
         );
+    });
+
+    describe('classification mode', () => {
+        it('creates full_image annotation when no annotations exist', () => {
+            mockAnnotations.current = [];
+
+            render(<Labels isClassification />);
+
+            const personButton = screen.getByRole('button', { name: 'Label Person' });
+            fireEvent.click(personButton);
+
+            expect(mockAddAnnotations).toHaveBeenCalledWith([{ type: 'full_image' }], [mockLabels[0]]);
+        });
+
+        it('replaces labels in single-label mode', () => {
+            mockAnnotations.current = [{ id: 'annotation-1', labels: [mockLabels[0]], shape: { type: 'full_image' } }];
+
+            render(<Labels isClassification isMultiLabel={false} />);
+
+            const carButton = screen.getByRole('button', { name: 'Label Car' });
+            fireEvent.click(carButton);
+
+            expect(mockUpdateAnnotations).toHaveBeenCalledWith([
+                { ...mockAnnotations.current[0], labels: [mockLabels[1]] },
+            ]);
+        });
+
+        it('toggles label on in multi-label mode', () => {
+            mockAnnotations.current = [{ id: 'annotation-1', labels: [mockLabels[0]], shape: { type: 'full_image' } }];
+
+            render(<Labels isClassification isMultiLabel />);
+
+            const carButton = screen.getByRole('button', { name: 'Label Car' });
+            fireEvent.click(carButton);
+
+            expect(mockUpdateAnnotations).toHaveBeenCalledWith([
+                { ...mockAnnotations.current[0], labels: [mockLabels[0], mockLabels[1]] },
+            ]);
+        });
+
+        it('toggles label off in multi-label mode', () => {
+            mockAnnotations.current = [
+                { id: 'annotation-1', labels: [mockLabels[0], mockLabels[1]], shape: { type: 'full_image' } },
+            ];
+
+            render(<Labels isClassification isMultiLabel />);
+
+            const personButton = screen.getByRole('button', { name: 'Label Person' });
+            fireEvent.click(personButton);
+
+            expect(mockUpdateAnnotations).toHaveBeenCalledWith([
+                { ...mockAnnotations.current[0], labels: [mockLabels[1]] },
+            ]);
+        });
+
+        it('deletes annotation when removing last label in multi-label mode', () => {
+            mockAnnotations.current = [{ id: 'annotation-1', labels: [mockLabels[0]], shape: { type: 'full_image' } }];
+
+            render(<Labels isClassification isMultiLabel />);
+
+            const personButton = screen.getByRole('button', { name: 'Label Person' });
+            fireEvent.click(personButton);
+
+            expect(mockDeleteAnnotations).toHaveBeenCalledWith(['annotation-1']);
+        });
+
+        it('does not require selected annotations for classification', () => {
+            mockSelectedAnnotations.current = new Set(); // No annotations selected
+            mockAnnotations.current = [{ id: 'annotation-1', labels: [mockLabels[0]], shape: { type: 'full_image' } }];
+
+            render(<Labels isClassification />);
+
+            const carButton = screen.getByRole('button', { name: 'Label Car' });
+            fireEvent.click(carButton);
+
+            expect(mockUpdateAnnotations).toHaveBeenCalled();
+        });
+
+        it('shows badge as selected when label is applied to annotation', () => {
+            mockAnnotations.current = [
+                { id: 'annotation-1', labels: [mockLabels[0], mockLabels[1]], shape: { type: 'full_image' } },
+            ];
+
+            render(<Labels isClassification isMultiLabel />);
+
+            const personButton = screen.getByRole('button', { name: 'Label Person' });
+            const carButton = screen.getByRole('button', { name: 'Label Car' });
+            const dogButton = screen.getByRole('button', { name: 'Label Dog' });
+
+            expect(personButton).toHaveAttribute('aria-pressed', 'true');
+            expect(carButton).toHaveAttribute('aria-pressed', 'true');
+            expect(dogButton).toHaveAttribute('aria-pressed', 'false');
+        });
     });
 });
