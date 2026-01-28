@@ -347,7 +347,7 @@ class TestDatasetRevisionServiceIntegration:
     ) -> None:
         """Test counting dataset items by subset."""
         # Create non-empty dataset in memory
-        project, _ = fxt_project_with_subset_items_on_disk
+        project, media_and_dataset_items = fxt_project_with_subset_items_on_disk
         dataset = fxt_dataset_service.get_dm_dataset(
             project.id, project.task, annotation_status=DatasetItemAnnotationStatus.REVIEWED
         )
@@ -365,11 +365,17 @@ class TestDatasetRevisionServiceIntegration:
         # Count items in each subset
         counts = fxt_dataset_revision_service.count_items_by_subset(project.id, revision_id)
 
-        assert counts[DatasetItemSubset.UNASSIGNED.name] == 2
-        assert counts[DatasetItemSubset.TRAINING.name] == 3
-        assert counts[DatasetItemSubset.VALIDATION.name] == 2
-        assert counts[DatasetItemSubset.TESTING.name] == 1
-        assert counts["total"] == 8
+        # Calculate expected counts from fixture data
+        expected_counts = {}
+        for _, dataset_item in media_and_dataset_items:
+            subset_name = dataset_item.subset.name
+            expected_counts[subset_name] = expected_counts.get(subset_name, 0) + 1
+        expected_total = sum(expected_counts.values())
+
+        # Verify counts match expected values from fixture
+        for subset_name, expected_count in expected_counts.items():
+            assert counts[subset_name] == expected_count
+        assert counts["total"] == expected_total
 
     def test_delete_dataset_revision_files(
         self,

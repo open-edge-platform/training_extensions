@@ -166,7 +166,7 @@ class DatasetRevisionService(BaseSessionManagedService):
         Count the number of dataset items in a dataset revision, grouped by subset.
 
         Efficiently reads only the necessary metadata from the Parquet file to compute:
-        - The total number of items ("all")
+        - The total number of items ("total")
         - The number of items in each subset (e.g., "train", "val", "test")
 
         Args:
@@ -174,7 +174,7 @@ class DatasetRevisionService(BaseSessionManagedService):
             dataset_revision_id (UUID): The UUID of the dataset revision.
 
         Returns:
-            dict[str, int]: A dictionary mapping subset names to counts. Includes an "total" key for the total count.
+            dict[str, int]: A dictionary mapping subset names to counts. Includes a "total" key for the total count.
 
         Raises:
             ResourceNotFoundError: If the Parquet file does not exist.

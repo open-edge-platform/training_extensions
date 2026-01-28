@@ -61,7 +61,7 @@ def list_dataset_revisions(
     "/{dataset_revision_id}",
     response_model=DatasetRevisionView,
     responses={
-        status.HTTP_200_OK: {"description": "Datset revision found"},
+        status.HTTP_200_OK: {"description": "Dataset revision found"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid project or dataset revision ID"},
         status.HTTP_404_NOT_FOUND: {"description": "Project or dataset revision not found"},
     },
