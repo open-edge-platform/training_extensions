@@ -5,11 +5,11 @@
 .img {
     display: flex;
     object-fit: cover;
-    transition: scale 0.2s ease-in-out;
+    transition: transform 0.2s ease-in-out;
     height: 100%;
     width: 100%;
 
     &:hover {
-        scale: 1.1;
+        transform: scale(1.1);
     }
 }
