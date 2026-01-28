@@ -1,7 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Literal, Union
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field
 
@@ -76,7 +76,7 @@ class LineMetric(BaseModel):
     value: SeriesData = Field(..., description="List of data points")
 
 
-TrainingMetrics = Union["BarMetric | TextMetric | RadialBarMetric | LineMetric"]
+TrainingMetrics = Annotated[BarMetric | TextMetric | RadialBarMetric | LineMetric, Field(discriminator="metric_type")]
 
 
 class TrainingMetricsView(BaseModel):
