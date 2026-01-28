@@ -3,12 +3,12 @@
 
 from uuid import UUID
 
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 from app.core.models import BaseIDModel
 
 
-class ItemCount(BaseIDModel):
+class ItemCount(BaseModel):
     total: int = Field(..., description="Total number of items in the dataset")
     training: int = Field(..., description="Number of items in the training subset")
     validation: int = Field(..., description="Number of items in the validation subset")
@@ -16,7 +16,7 @@ class ItemCount(BaseIDModel):
 
 
 class DatasetRevisionView(BaseIDModel):
-    """Represents a model revision with its architecture, parent revision, training info, variants, and file status."""
+    """Represents a dataset revision, including its project association, display name, file deletion status, and item counts."""
 
     project_id: UUID = Field(..., description="Id of the project of the dataset revision")
     name: str = Field(..., description="User friendly model name")
