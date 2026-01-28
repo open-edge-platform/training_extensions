@@ -1,16 +1,14 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse } from 'msw';
-import { TestProviders } from 'test-utils/render';
+import { render } from 'test-utils/render';
 
 import { http } from '../../../../../api/utils';
 import { server } from '../../../../../msw-node-setup';
 import { SinkMenu, SinkMenuProps } from './sink-menu.component';
-
-vi.mock('hooks/use-project-identifier.hook', () => ({ useProjectIdentifier: () => ({ projectId: '123' }) }));
 
 describe('SinkMenu', () => {
     const renderApp = ({
@@ -19,11 +17,7 @@ describe('SinkMenu', () => {
         isConnected = false,
         onEdit = vi.fn(),
     }: Partial<SinkMenuProps>) => {
-        render(
-            <TestProviders>
-                <SinkMenu id={id} name={name} isConnected={isConnected} onEdit={onEdit} />
-            </TestProviders>
-        );
+        render(<SinkMenu id={id} name={name} isConnected={isConnected} onEdit={onEdit} />);
     };
 
     it('edit', async () => {

@@ -1,8 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { screen } from '@testing-library/react';
 import { getMockedAnnotation } from 'mocks/mock-annotation';
-import { render, screen } from 'test-utils/render';
+import { render } from 'test-utils/render';
 
 import type { Annotation, Polygon, Rect } from '../../../shared/types';
 import { AnnotationShape } from './annotation-shape.component';
