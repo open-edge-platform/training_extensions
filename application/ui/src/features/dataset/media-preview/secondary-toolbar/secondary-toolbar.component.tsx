@@ -65,7 +65,7 @@ export const SecondaryToolbar = ({
         totalLabels: labels.length,
     });
 
-    const { annotations, isSaving, submitAnnotations, submitPredictions } = useAnnotationActions();
+    const { annotations, isSaving, submitAnnotations } = useAnnotationActions();
 
     const hasAnnotations = !isEmpty(annotations);
     const isMultiLabel = selectedProject.task.exclusive_labels === false;
@@ -73,11 +73,7 @@ export const SecondaryToolbar = ({
     const selectedIndex = items.findIndex((item) => item.id === mediaItem.id);
 
     const handleSubmit = async () => {
-        if (mode === 'annotation') {
-            await submitAnnotations();
-        } else {
-            await submitPredictions();
-        }
+        await submitAnnotations();
 
         setMediaState((prev) => {
             const newState = new Map(prev);
@@ -101,17 +97,6 @@ export const SecondaryToolbar = ({
         onSelectedMediaItem(items[nextItem]);
     };
 
-    const renderLabels = () => {
-        return (
-            <Labels
-                ref={labelsContainerRef}
-                collapsedVisibleCount={collapsedVisibleCount}
-                isClassification={isClassification}
-                isMultiLabel={isMultiLabel}
-            />
-        );
-    };
-
     return (
         <div
             ref={toolbarRef}
@@ -130,7 +115,14 @@ export const SecondaryToolbar = ({
                 </Toolbar.Section>
             </Toolbar.Container>
             <Toolbar.Container id='labels-container'>
-                <Toolbar.Section>{renderLabels()}</Toolbar.Section>
+                <Toolbar.Section>
+                    <Labels
+                        ref={labelsContainerRef}
+                        collapsedVisibleCount={collapsedVisibleCount}
+                        isClassification={isClassification}
+                        isMultiLabel={isMultiLabel}
+                    />
+                </Toolbar.Section>
             </Toolbar.Container>
             <Toolbar.Container>
                 <Toolbar.Section>
