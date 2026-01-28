@@ -76,7 +76,7 @@ class LineMetric(BaseModel):
     value: SeriesData = Field(..., description="List of data points")
 
 
-TrainingMetrics = Annotated[BarMetric | TextMetric | RadialBarMetric | LineMetric, Field(discriminator="metric_type")]
+TrainingMetrics = Annotated[BarMetric | TextMetric | RadialBarMetric | LineMetric, Field(discriminator="type")]
 
 
 class TrainingMetricsView(BaseModel):
