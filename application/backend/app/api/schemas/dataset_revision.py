@@ -16,7 +16,7 @@ class ItemCount(BaseModel):
 
 
 class DatasetRevisionView(BaseIDModel):
-    """Represents a dataset revision, including its project association, display name, file deletion status, and item counts."""
+    """Represents metadata of a dataset revision."""
 
     project_id: UUID = Field(..., description="Id of the project of the dataset revision")
     name: str = Field(..., description="User friendly model name")

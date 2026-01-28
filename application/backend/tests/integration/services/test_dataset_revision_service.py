@@ -209,7 +209,7 @@ def fxt_project_with_subset_items_on_disk(
         db_session.flush()
 
         dataset_item = DatasetItemDB(
-            subset=subset,
+            subset=subset.name.lower(),
             user_reviewed=True,
             project_id=str(project.id),
             created_at=created_at,
@@ -366,9 +366,9 @@ class TestDatasetRevisionServiceIntegration:
         counts = fxt_dataset_revision_service.count_items_by_subset(project.id, revision_id)
 
         # Calculate expected counts from fixture data
-        expected_counts = {}
+        expected_counts: dict[str, int] = {}
         for _, dataset_item in media_and_dataset_items:
-            subset_name = dataset_item.subset.name
+            subset_name = dataset_item.subset if dataset_item.subset is not None else DatasetItemSubset.UNASSIGNED.name
             expected_counts[subset_name] = expected_counts.get(subset_name, 0) + 1
         expected_total = sum(expected_counts.values())
 
