@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { CSSProperties, forwardRef, useState } from 'react';
+import { CSSProperties, Ref, useState } from 'react';
 
 import { ActionButton, Flex, Text } from '@geti/ui';
 import { clsx } from 'clsx';
@@ -41,119 +41,119 @@ const LabelBadge = ({ label, isSelected, isHidden, onClick }: LabelBadgeProps) =
 };
 
 interface LabelsProps {
+    ref?: Ref<HTMLDivElement>;
     collapsedVisibleCount?: number;
     isClassification?: boolean;
     isMultiLabel?: boolean;
 }
 
-export const Labels = forwardRef<HTMLDivElement, LabelsProps>(
-    ({ collapsedVisibleCount = Infinity, isClassification = false, isMultiLabel = false }, ref) => {
-        const { selectedLabelId, setSelectedLabelId, labels } = useAnnotator();
-        const { selectedAnnotations } = useSelectedAnnotations();
-        const { annotations, addAnnotations, updateAnnotations, deleteAnnotations } = useAnnotationActions();
+export const Labels = ({
+    ref,
+    collapsedVisibleCount = Infinity,
+    isClassification = false,
+    isMultiLabel = false,
+}: LabelsProps) => {
+    const { selectedLabelId, setSelectedLabelId, labels } = useAnnotator();
+    const { selectedAnnotations } = useSelectedAnnotations();
+    const { annotations, addAnnotations, updateAnnotations, deleteAnnotations } = useAnnotationActions();
 
-        const [isExpanded, setIsExpanded] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(false);
 
-        const handleClassificationClick = (label: Label) => {
-            if (isEmpty(annotations)) {
-                addAnnotations([{ type: 'full_image' }], [label]);
-                return;
-            }
+    const handleClassificationClick = (label: Label) => {
+        if (isEmpty(annotations)) {
+            addAnnotations([{ type: 'full_image' }], [label]);
+            return;
+        }
 
-            if (isMultiLabel) {
-                const updatedAnnotations = annotations.map((annotation) => ({
-                    ...annotation,
-                    labels: toggleLabel(label, annotation.labels),
-                }));
+        if (isMultiLabel) {
+            const updatedAnnotations = annotations.map((annotation) => ({
+                ...annotation,
+                labels: toggleLabel(label, annotation.labels),
+            }));
 
-                const hasNoLabels = updatedAnnotations.every(({ labels: annotationLabels }) =>
-                    isEmpty(annotationLabels)
-                );
+            const hasNoLabels = updatedAnnotations.every(({ labels: annotationLabels }) => isEmpty(annotationLabels));
 
-                if (hasNoLabels) {
-                    deleteAnnotations(updatedAnnotations.map(({ id }) => id));
-                } else {
-                    updateAnnotations(updatedAnnotations);
-                }
+            if (hasNoLabels) {
+                deleteAnnotations(updatedAnnotations.map(({ id }) => id));
             } else {
-                updateAnnotations(annotations.map((annotation) => ({ ...annotation, labels: [label] })));
+                updateAnnotations(updatedAnnotations);
             }
-        };
+        } else {
+            updateAnnotations(annotations.map((annotation) => ({ ...annotation, labels: [label] })));
+        }
+    };
 
-        const handleNonClassificationClick = (label: Label) => {
-            if (selectedAnnotations.size > 0) {
-                const selectedAnnotationsList = annotations.filter((a) => selectedAnnotations.has(a.id));
+    const handleNonClassificationClick = (label: Label) => {
+        if (selectedAnnotations.size > 0) {
+            const selectedAnnotationsList = annotations.filter((a) => selectedAnnotations.has(a.id));
 
-                const allAnnotationsHaveLabel = selectedAnnotationsList.every((annotation) =>
-                    annotation.labels.some((l) => l.id === label.id)
-                );
+            const allAnnotationsHaveLabel = selectedAnnotationsList.every((annotation) =>
+                annotation.labels.some((l) => l.id === label.id)
+            );
 
-                if (allAnnotationsHaveLabel) {
-                    // Remove label
-                    const updatedAnnotations = selectedAnnotationsList.map((annotation) => {
-                        const filteredLabels = annotation.labels.filter((l) => l.id !== label.id);
-                        return { ...annotation, labels: filteredLabels } as Annotation;
-                    });
-                    updateAnnotations(updatedAnnotations);
-                    setSelectedLabelId(null);
-                } else {
-                    // Add label
-                    updateAnnotations(selectedAnnotationsList, [label]);
-                    setSelectedLabelId(label.id);
-                }
+            if (allAnnotationsHaveLabel) {
+                // Remove label
+                const updatedAnnotations = selectedAnnotationsList.map((annotation) => {
+                    const filteredLabels = annotation.labels.filter((l) => l.id !== label.id);
+                    return { ...annotation, labels: filteredLabels } as Annotation;
+                });
+                updateAnnotations(updatedAnnotations);
+                setSelectedLabelId(null);
             } else {
+                // Add label
+                updateAnnotations(selectedAnnotationsList, [label]);
                 setSelectedLabelId(label.id);
             }
-        };
+        } else {
+            setSelectedLabelId(label.id);
+        }
+    };
 
-        const handleLabelClick = (label: Label) => {
-            if (isClassification) {
-                handleClassificationClick(label);
-            } else {
-                handleNonClassificationClick(label);
-            }
-        };
+    const handleLabelClick = (label: Label) => {
+        if (isClassification) {
+            handleClassificationClick(label);
+        } else {
+            handleNonClassificationClick(label);
+        }
+    };
 
-        const handleToggleExpand = () => {
-            setIsExpanded((prev) => !prev);
-        };
+    const handleToggleExpand = () => {
+        setIsExpanded((prev) => !prev);
+    };
 
-        const isLabelSelected = (label: Label): boolean => {
-            if (isClassification) {
-                return annotations.some((annotation) => annotation.labels.some((l) => l.id === label.id));
-            }
-            return selectedLabelId === label.id;
-        };
+    const isLabelSelected = (label: Label): boolean => {
+        if (isClassification) {
+            return annotations.some((annotation) => annotation.labels.some((l) => l.id === label.id));
+        }
+        return selectedLabelId === label.id;
+    };
 
-        const hasOverflow = collapsedVisibleCount < labels.length;
-        const hiddenCount = labels.length - collapsedVisibleCount;
+    const hasOverflow = collapsedVisibleCount < labels.length;
+    const hiddenCount = labels.length - collapsedVisibleCount;
 
-        return (
-            <Flex alignItems='start' gap='size-100' minWidth={0} flex='1'>
-                <div ref={ref} className={clsx(classes.labelsContainer, { [classes.expanded]: isExpanded })}>
-                    {labels.map((label, index) => (
-                        <LabelBadge
-                            key={label.id}
-                            label={label}
-                            isSelected={isLabelSelected(label)}
-                            isHidden={!isExpanded && index >= collapsedVisibleCount}
-                            onClick={() => handleLabelClick(label)}
-                        />
-                    ))}
-                </div>
-                {hasOverflow && (
-                    <ActionButton
-                        isQuiet
-                        onPress={handleToggleExpand}
-                        aria-expanded={isExpanded}
-                        UNSAFE_className={classes.showMoreButton}
-                    >
-                        {isExpanded ? 'Show less' : `+${hiddenCount} more`}
-                    </ActionButton>
-                )}
-            </Flex>
-        );
-    }
-);
-
-Labels.displayName = 'Labels';
+    return (
+        <Flex alignItems='start' gap='size-100' minWidth={0} flex='1'>
+            <div ref={ref} className={clsx(classes.labelsContainer, { [classes.expanded]: isExpanded })}>
+                {labels.map((label, index) => (
+                    <LabelBadge
+                        key={label.id}
+                        label={label}
+                        isSelected={isLabelSelected(label)}
+                        isHidden={!isExpanded && index >= collapsedVisibleCount}
+                        onClick={() => handleLabelClick(label)}
+                    />
+                ))}
+            </div>
+            {hasOverflow && (
+                <ActionButton
+                    isQuiet
+                    onPress={handleToggleExpand}
+                    aria-expanded={isExpanded}
+                    UNSAFE_className={classes.showMoreButton}
+                >
+                    {isExpanded ? 'Show less' : `+${hiddenCount} more`}
+                </ActionButton>
+            )}
+        </Flex>
+    );
+};
