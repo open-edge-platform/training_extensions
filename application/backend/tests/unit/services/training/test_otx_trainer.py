@@ -138,6 +138,8 @@ class TestOTXTrainerPrepareWeights:
             model_architecture_id="Object_Detection_YOLOX_S",
             task=Task(task_type=TaskType.DETECTION),
             parent_model_revision_id=None,
+            job_id=uuid4(),
+            project_id=uuid4(),
         )
         otx_trainer = fxt_otx_trainer()
 
@@ -168,6 +170,7 @@ class TestOTXTrainerPrepareWeights:
             model_architecture_id="Object_Detection_YOLOX_S",
             task=Task(task_type=TaskType.DETECTION),
             parent_model_revision_id=parent_model_revision_id,
+            job_id=uuid4(),
         )
         expected_weights_path = (
             tmp_path / "projects" / str(project_id) / "models" / str(parent_model_revision_id) / "model.ckpt"
@@ -197,6 +200,7 @@ class TestOTXTrainerPrepareWeights:
             model_architecture_id="Object_Detection_YOLOX_S",
             task=Task(task_type=TaskType.DETECTION),
             parent_model_revision_id=parent_model_revision_id,
+            job_id=uuid4(),
         )
         expected_weights_path = (
             tmp_path / "projects" / str(project_id) / "models" / str(parent_model_revision_id) / "model.ckpt"
@@ -207,25 +211,6 @@ class TestOTXTrainerPrepareWeights:
         with pytest.raises(FileNotFoundError) as excinfo:
             otx_trainer.prepare_weights(training_params)
         assert excinfo.value.args[0] == f"Parent model weights not found at {expected_weights_path}"
-
-    def test_prepare_weights_with_parent_model_no_project_id_raises_error(
-        self,
-        fxt_otx_trainer: Callable[[], OTXTrainer],
-    ):
-        """Test that ValueError is raised when parent model revision ID is provided without project ID."""
-        # Arrange
-        training_params = TrainingJobParams(
-            device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
-            model_architecture_id="Object_Detection_YOLOX_S",
-            task=Task(task_type=TaskType.DETECTION),
-            parent_model_revision_id=uuid4(),
-            project_id=None,
-        )
-        otx_trainer = fxt_otx_trainer()
-
-        # Act & Assert
-        with pytest.raises(ValueError, match="Project ID must be provided for parent model weights preparation"):
-            otx_trainer.prepare_weights(training_params)
 
 
 class TestOTXTrainerPrepareTrainingConfiguration:
@@ -241,6 +226,7 @@ class TestOTXTrainerPrepareTrainingConfiguration:
             model_architecture_id="Object_Detection_YOLOX_S",
             task=Task(task_type=TaskType.DETECTION),
             parent_model_revision_id=parent_model_revision_id,
+            job_id=uuid4(),
         )
         otx_trainer = fxt_otx_trainer()
         mock_training_config = Mock(spec=TrainingConfiguration)
@@ -664,6 +650,7 @@ class TestOTXTrainerPrepareModel:
             model_architecture_id=model_architecture_id,
             task=Task(task_type=TaskType.CLASSIFICATION, exclusive_labels=True),
             parent_model_revision_id=None,
+            job_id=uuid4(),
         )
         dataset_revision_id = uuid4()
         otx_trainer = fxt_otx_trainer()
@@ -875,6 +862,7 @@ class TestOTXTrainerEvaluateModel:
             project_id=project_id,
             model_architecture_id="Object_Detection_YOLOX_S",
             task=Task(task_type=task_type, exclusive_labels=exclusive_labels),
+            job_id=uuid4(),
         )
 
         # Act

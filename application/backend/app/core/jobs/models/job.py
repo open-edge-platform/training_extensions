@@ -4,6 +4,7 @@
 from datetime import UTC, datetime
 from enum import IntEnum, StrEnum
 from typing import Generic, TypeVar
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -23,6 +24,9 @@ class JobStatus(IntEnum):
 
 class JobType(StrEnum):
     TRAIN = "train"
+    PREPARE_DATASET_FOR_IMPORT = "prepare_dataset_for_import"
+    IMPORT_DATASET_AS_NEW_PROJECT = "import_dataset_as_new_project"
+    IMPORT_DATASET_TO_PROJECT = "import_dataset_to_project"
 
 
 def now_utc_ts() -> float:
@@ -89,3 +93,8 @@ class Job(BaseIDModel, Generic[JobParamsT]):
         self.status = JobStatus.CANCELLED
         self.updated_at = now_utc_ts()
         self.message = "Job was cancelled"
+
+
+class ProjectJob(Job, Generic[JobParamsT]):
+    project_id: UUID
+    params: JobParamsT

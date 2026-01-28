@@ -6,10 +6,12 @@ import { Checkmark, CloseSemiBold } from '@geti/ui/icons';
 import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { isEmpty } from 'lodash-es';
 
-import type { Media } from '../../../../constants/shared-types';
+import type { Label, Media } from '../../../../constants/shared-types';
+import { useProject } from '../../../../hooks/api/project.hook';
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
 import { useSelectedAnnotations } from '../../../../shared/annotator/select-annotation-provider.component';
+import { isClassificationTask } from '../../../project/task-type-guards';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
 import { useSelectedData } from '../../selected-data-provider.component';
 import { Toolbar } from '../toolbar-container/toolbar-container.component';
@@ -17,6 +19,7 @@ import { AnnotatorModes } from './annotator-modes/annotator-modes-toggle.compone
 import type { AnnotatorMode } from './annotator-modes/mode';
 import { LabelPicker } from './label-picker.component';
 import { useSecondaryToolbarState } from './use-secondary-toolbar-state.hook';
+import { toggleLabel } from './util';
 
 import styles from './secondary-toolbar.module.scss';
 
@@ -49,21 +52,21 @@ export const SecondaryToolbar = ({
     onModeChange,
 }: SecondaryToolbarProps) => {
     const queryClient = useQueryClient();
-    const { selectedAnnotations } = useSelectedAnnotations();
-    const { projectLabels } = useSecondaryToolbarState();
-    const { selectedLabel, setSelectedLabelId } = useAnnotator();
-    const { annotations, isSaving, updateAnnotations, submitAnnotations, submitPredictions } = useAnnotationActions();
     const { setMediaState } = useSelectedData();
+    const { projectLabels } = useSecondaryToolbarState();
+    const { selectedAnnotations } = useSelectedAnnotations();
+    const { data: selectedProject } = useProject();
+    const { selectedLabel, setSelectedLabelId } = useAnnotator();
+
+    const { annotations, isSaving, addAnnotations, updateAnnotations, deleteAnnotations, submitAnnotations } =
+        useAnnotationActions();
 
     const hasAnnotations = !isEmpty(annotations);
+    const isMultiLabel = selectedProject.task.exclusive_labels === false;
     const selectedIndex = items.findIndex((item) => item.id === mediaItem.id);
 
     const handleSubmit = async () => {
-        if (mode === 'annotation') {
-            await submitAnnotations();
-        } else {
-            await submitPredictions();
-        }
+        await submitAnnotations();
 
         setMediaState((prev) => {
             const newState = new Map(prev);
@@ -99,10 +102,40 @@ export const SecondaryToolbar = ({
         setSelectedLabelId(label?.id ?? null);
     };
 
+    const handleClassificationSelect = (value: Key | null) => {
+        const label = projectLabels.find(({ id }) => id === value);
+        const labels = label ? [label] : [];
+
+        if (isEmpty(annotations)) {
+            addAnnotations([{ type: 'full_image' }], labels);
+        } else if (isMultiLabel) {
+            updateClassificationAnnotations(labels[0]);
+        } else {
+            updateAnnotations(annotations.map((annotation) => ({ ...annotation, labels })));
+        }
+
+        setSelectedLabelId(label?.id ?? null);
+    };
+
+    const updateClassificationAnnotations = (newLabel: Label) => {
+        const updatedAnnotations = annotations.map((annotation) => ({
+            ...annotation,
+            labels: toggleLabel(newLabel, annotation.labels),
+        }));
+
+        const hasNoLabels = updatedAnnotations.every(({ labels }) => isEmpty(labels));
+
+        if (hasNoLabels) {
+            deleteAnnotations(updatedAnnotations.map(({ id }) => id));
+        } else {
+            updateAnnotations(updatedAnnotations);
+        }
+    };
+
     return (
         <Flex
-            height={'100%'}
             width={'100%'}
+            height={'100%'}
             alignItems={'center'}
             justifyContent={'space-between'}
             UNSAFE_style={{ paddingTop: dimensionValue('size-125') }}
@@ -114,7 +147,15 @@ export const SecondaryToolbar = ({
             </Toolbar.Container>
             <Toolbar.Container>
                 <Toolbar.Section>
-                    <LabelPicker selectedLabel={selectedLabel} labels={projectLabels} onSelect={handleSelect} />
+                    <LabelPicker
+                        labels={projectLabels}
+                        selectedLabel={selectedLabel}
+                        onSelect={
+                            isClassificationTask(selectedProject.task.task_type)
+                                ? handleClassificationSelect
+                                : handleSelect
+                        }
+                    />
                 </Toolbar.Section>
             </Toolbar.Container>
             <Toolbar.Container>
