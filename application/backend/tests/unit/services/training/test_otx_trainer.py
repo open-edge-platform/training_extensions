@@ -432,10 +432,8 @@ class TestOTXTrainerCreateTrainingDataset:
                 otx_trainer, "_OTXTrainer__get_otx_dataset_class_by_task_type", return_value=mock_dataset_class
             ):
                 # Act
-                dataset_info = otx_trainer.create_training_dataset(
-                    project_id=project_id,
-                    task=task,
-                    training_config=training_config,
+                dataset_info = otx_trainer.gather_training_dataset(
+                    project_id=project_id, task=task, training_config=training_config
                 )
 
         # Assert
@@ -477,6 +475,155 @@ class TestOTXTrainerCreateTrainingDataset:
         assert dataset_info.revision_id == dataset_revision_id
 
         # Verify dataset revision was saved
+        fxt_dataset_revision_service.save_revision.assert_called_once_with(
+            project_id=project_id,
+            dataset=mock_dm_dataset,
+        )
+
+        # Verify SubsetConfig objects were created correctly
+        assert dataset_info.otx_training_subset_config.batch_size == 8
+        assert dataset_info.otx_training_subset_config.num_workers == 4
+        assert dataset_info.otx_training_subset_config.transforms == mock_train_transforms
+
+        assert dataset_info.otx_validation_subset_config.batch_size == 4
+        assert dataset_info.otx_validation_subset_config.num_workers == 2
+        assert dataset_info.otx_validation_subset_config.transforms == mock_val_transforms
+
+        assert dataset_info.otx_testing_subset_config.batch_size == 2
+        assert dataset_info.otx_testing_subset_config.num_workers == 1
+        assert dataset_info.otx_testing_subset_config.transforms == mock_test_transforms
+
+    def test_load_training_dataset_success(
+        self,
+        fxt_otx_trainer: Callable[[], OTXTrainer],
+        fxt_dataset_service: Mock,
+        fxt_dataset_revision_service: Mock,
+    ):
+        """Test successful loading of an existing dataset revision for training."""
+        # Arrange
+        project_id = uuid4()
+        existing_revision_id = uuid4()
+        task = Task(task_type=TaskType.DETECTION, exclusive_labels=True)
+        otx_trainer = fxt_otx_trainer()
+
+        # Mock the Datumaro dataset loaded from revision
+        mock_dm_dataset = Mock()
+        fxt_dataset_revision_service.load_revision.return_value = mock_dm_dataset
+
+        # Mock filtered subsets
+        mock_training_subset = Mock()
+        mock_validation_subset = Mock()
+        mock_testing_subset = Mock()
+
+        mock_dm_dataset.filter_by_subset.side_effect = [
+            mock_training_subset,
+            mock_validation_subset,
+            mock_testing_subset,
+        ]
+
+        # Mock dataset revision saving (even when loading, a new revision is saved)
+        new_revision_id = uuid4()
+        fxt_dataset_revision_service.save_revision.return_value = new_revision_id
+
+        # Create a training configuration matching the expected structure
+        training_config = {
+            "data": {
+                "input_size": (640, 640),
+                "train_subset": {
+                    "batch_size": 8,
+                    "num_workers": 4,
+                    "sampler": {"class_path": "torch.utils.data.RandomSampler"},
+                    "transforms": [
+                        {"class_path": "torchvision.transforms.v2.RandomHorizontalFlip", "init_args": {"p": 0.5}}
+                    ],
+                },
+                "val_subset": {
+                    "batch_size": 4,
+                    "num_workers": 2,
+                    "sampler": {"class_path": "torch.utils.data.RandomSampler"},
+                    "transforms": [],
+                },
+                "test_subset": {
+                    "batch_size": 2,
+                    "num_workers": 1,
+                    "sampler": {"class_path": "torch.utils.data.RandomSampler"},
+                    "transforms": [],
+                },
+            }
+        }
+
+        # Mock TorchVisionTransformLib.generate to return mock transforms
+        mock_train_transforms = [Mock()]
+        mock_val_transforms = [Mock()]
+        mock_test_transforms = [Mock()]
+
+        with patch("app.services.training.otx_trainer.TorchVisionTransformLib.generate") as mock_generate:
+            mock_generate.side_effect = [mock_train_transforms, mock_val_transforms, mock_test_transforms]
+
+            # Mock the __get_otx_dataset_class_by_task_type method to return a proper mock class
+            mock_dataset_class = Mock()
+            mock_dataset_class.__name__ = "OTXDetectionDataset"
+
+            mock_otx_training_dataset = Mock()
+            mock_otx_validation_dataset = Mock()
+            mock_otx_testing_dataset = Mock()
+
+            mock_dataset_class.side_effect = [
+                mock_otx_training_dataset,
+                mock_otx_validation_dataset,
+                mock_otx_testing_dataset,
+            ]
+
+            with patch.object(
+                otx_trainer, "_OTXTrainer__get_otx_dataset_class_by_task_type", return_value=mock_dataset_class
+            ):
+                # Act
+                dataset_info = otx_trainer.gather_training_dataset(
+                    project_id=project_id,
+                    task=task,
+                    training_config=training_config,
+                    dataset_revision_id=existing_revision_id,
+                )
+
+        # Assert
+        # Verify load_revision was called instead of get_dm_dataset
+        fxt_dataset_revision_service.load_revision.assert_called_once_with(
+            project_id=project_id,
+            dataset_revision_id=existing_revision_id,
+        )
+        fxt_dataset_service.get_dm_dataset.assert_not_called()
+
+        # Verify subsets were filtered for train, val, and test
+        assert mock_dm_dataset.filter_by_subset.call_count == 3
+
+        # Verify transforms were generated for each subset
+        assert mock_generate.call_count == 3
+
+        # Verify OTXDataset was instantiated three times with correct parameters
+        assert mock_dataset_class.call_count == 3
+
+        # Verify first call (training dataset)
+        train_call = mock_dataset_class.call_args_list[0]
+        assert train_call.kwargs["dm_subset"] == mock_training_subset
+        assert train_call.kwargs["transforms"] == mock_train_transforms
+
+        # Verify second call (validation dataset)
+        val_call = mock_dataset_class.call_args_list[1]
+        assert val_call.kwargs["dm_subset"] == mock_validation_subset
+        assert val_call.kwargs["transforms"] == mock_val_transforms
+
+        # Verify third call (testing dataset)
+        test_call = mock_dataset_class.call_args_list[2]
+        assert test_call.kwargs["dm_subset"] == mock_testing_subset
+        assert test_call.kwargs["transforms"] == mock_test_transforms
+
+        # Verify the returned DatasetInfo
+        assert dataset_info.otx_training_dataset == mock_otx_training_dataset
+        assert dataset_info.otx_validation_dataset == mock_otx_validation_dataset
+        assert dataset_info.otx_testing_dataset == mock_otx_testing_dataset
+        assert dataset_info.revision_id == new_revision_id
+
+        # Verify dataset revision was saved with the loaded dataset
         fxt_dataset_revision_service.save_revision.assert_called_once_with(
             project_id=project_id,
             dataset=mock_dm_dataset,

@@ -4,6 +4,7 @@ from datetime import datetime
 from pathlib import Path
 from uuid import UUID, uuid4
 
+import datumaro.experimental as dm
 import pytest
 from sqlalchemy.orm import Session
 
@@ -371,3 +372,57 @@ class TestDatasetRevisionServiceIntegration:
         # Verify it's marked as deleted
         revision = fxt_dataset_revision_service.get_dataset_revision(project_id=project.id, revision_id=revision_id)
         assert revision.files_deleted is True
+
+    def test_load_revision(
+        self,
+        fxt_projects_dir: Path,
+        fxt_dataset_service: DatasetService,
+        fxt_dataset_revision_service: DatasetRevisionService,
+        fxt_project_with_subset_items: tuple[Project, list[DatasetItemDB]],
+        db_session: Session,
+    ) -> None:
+        """Test loading a dataset revision as a Datumaro dataset."""
+        project, _ = fxt_project_with_subset_items
+        dataset = fxt_dataset_service.get_dm_dataset(project.id, project.task, DatasetItemAnnotationStatus.REVIEWED)
+
+        # Save a revision
+        revision_id = fxt_dataset_revision_service.save_revision(
+            project_id=project.id,
+            dataset=dataset,
+        )
+
+        # Load the revision
+        loaded_dataset = fxt_dataset_revision_service.load_revision(
+            project_id=project.id, dataset_revision_id=revision_id
+        )
+
+        # Verify it returns a Datumaro dataset
+        assert isinstance(loaded_dataset, dm.Dataset)
+
+    def test_load_revision_files_deleted(
+        self,
+        fxt_projects_dir: Path,
+        fxt_dataset_service: DatasetService,
+        fxt_dataset_revision_service: DatasetRevisionService,
+        fxt_project_with_subset_items: tuple[Project, list[DatasetItemDB]],
+        db_session: Session,
+    ) -> None:
+        """Test loading a revision with deleted files raises error."""
+        project, _ = fxt_project_with_subset_items
+        dataset = fxt_dataset_service.get_dm_dataset(project.id, project.task, DatasetItemAnnotationStatus.REVIEWED)
+
+        # Save a revision
+        revision_id = fxt_dataset_revision_service.save_revision(
+            project_id=project.id,
+            dataset=dataset,
+        )
+
+        # Delete the revision files
+        fxt_dataset_revision_service.delete_dataset_revision_files(project_id=project.id, revision_id=revision_id)
+
+        # Try to load the revision - should raise error
+        with pytest.raises(ResourceNotFoundError) as excinfo:
+            fxt_dataset_revision_service.load_revision(project_id=project.id, dataset_revision_id=revision_id)
+
+        assert excinfo.value.resource_type == ResourceType.DATASET_REVISION
+        assert excinfo.value.resource_id == str(revision_id)
