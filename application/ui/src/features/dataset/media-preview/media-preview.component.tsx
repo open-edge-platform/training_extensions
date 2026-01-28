@@ -24,7 +24,7 @@ import { CanvasSettingsProvider } from './primary-toolbar/settings/canvas-settin
 import { AnnotatorMode } from './secondary-toolbar/annotator-modes/mode';
 import { SecondaryToolbar } from './secondary-toolbar/secondary-toolbar.component';
 import { SidebarItems } from './sidebar-items/sidebar-items.component';
-import { getAnnotations } from './utils';
+import { getInitialAnnotations, getInitialPredictions } from './utils';
 
 const isUnannotatedError = (error: unknown): boolean => {
     return (
@@ -62,7 +62,7 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
         }
     );
 
-    const isUserReviewedMedia = annotationsData?.user_reviewed ?? false;
+    const isUserReviewed = annotationsData?.user_reviewed ?? false;
     const annotationsDTO = annotationsData?.annotations ?? [];
 
     return (
@@ -79,8 +79,9 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                     <AnnotationActionsProvider
                         key={mediaItem.id}
                         mediaItem={mediaItem}
-                        initialAnnotationsDTO={annotationsDTO}
-                        isUserReviewed={isUserReviewedMedia}
+                        initialAnnotationsDTO={getInitialAnnotations(mode, isUserReviewed, annotationsDTO)}
+                        initialPredictionsDTO={getInitialPredictions(mode, isUserReviewed, annotationsDTO)}
+                        isUserReviewed={isUserReviewed}
                         mode={mode}
                     >
                         <ZoomProvider>
@@ -106,7 +107,7 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
 
                                                 <View gridArea={'bottom'}>
                                                     <BottomToolbar
-                                                        isUserReviewed={isUserReviewedMedia}
+                                                        isUserReviewed={isUserReviewed}
                                                         mediaItem={mediaItem}
                                                     />
                                                 </View>

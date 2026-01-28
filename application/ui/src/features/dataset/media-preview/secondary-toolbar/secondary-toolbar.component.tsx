@@ -65,7 +65,6 @@ export const SecondaryToolbar = ({
         updateAnnotations,
         deleteAnnotations,
         submitAnnotations,
-        submitPredictions,
     } = useAnnotationActions();
 
     const hasAnnotations = !isEmpty(annotations);
