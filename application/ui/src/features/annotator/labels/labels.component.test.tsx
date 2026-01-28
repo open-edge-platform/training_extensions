@@ -1,8 +1,9 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { fireEvent, screen } from '@testing-library/react';
 import { getMockedLabel } from 'mocks/mock-labels';
-import { fireEvent, render, screen } from 'test-utils/render';
+import { render } from 'test-utils/render';
 
 import type { Label } from '../../../constants/shared-types';
 import { Labels } from './labels.component';

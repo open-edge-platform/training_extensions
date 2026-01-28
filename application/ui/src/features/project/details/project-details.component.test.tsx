@@ -1,20 +1,13 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { screen } from '@testing-library/react';
 import { HttpResponse } from 'msw';
-import { render, screen } from 'test-utils/render';
+import { render } from 'test-utils/render';
 
 import { http } from '../../../api/utils';
 import { server } from '../../../msw-node-setup';
 import { ProjectDetails } from './project-details.component';
-
-vi.mock('react-router', async (importOriginal) => {
-    const actual = await importOriginal<typeof import('react-router')>();
-    return {
-        ...actual,
-        useParams: vi.fn(() => ({ projectId: '123' })),
-    };
-});
 
 describe('ProjectDetails', () => {
     it('renders the correct values for each resource', async () => {

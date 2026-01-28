@@ -1,24 +1,29 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useRef } from 'react';
+import { Key, useRef } from 'react';
 
 import { ActionButton, Button, ButtonGroup, dimensionValue, Text } from '@geti/ui';
 import { Checkmark, CloseSemiBold } from '@geti/ui/icons';
 import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { isEmpty } from 'lodash-es';
 
-import type { Media } from '../../../../constants/shared-types';
+import type { Label, Media } from '../../../../constants/shared-types';
+import { useProject } from '../../../../hooks/api/project.hook';
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
 import { useSelectedAnnotations } from '../../../../shared/annotator/select-annotation-provider.component';
 import { Labels } from '../../../annotator/labels/labels.component';
+import { isClassificationTask } from '../../../project/task-type-guards';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
 import { useSelectedData } from '../../selected-data-provider.component';
 import { Toolbar } from '../toolbar-container/toolbar-container.component';
 import { AnnotatorModes } from './annotator-modes/annotator-modes-toggle.component';
 import type { AnnotatorMode } from './annotator-modes/mode';
+import { LabelPicker } from './label-picker.component';
+import { useSecondaryToolbarState } from './use-secondary-toolbar-state.hook';
 import { useVisibleLabelsCount } from './use-visible-labels-count.hook';
+import { toggleLabel } from './util';
 
 import styles from './secondary-toolbar.module.scss';
 
@@ -53,17 +58,30 @@ export const SecondaryToolbar = ({
     const queryClient = useQueryClient();
     const toolbarRef = useRef<HTMLDivElement>(null);
     const labelsContainerRef = useRef<HTMLDivElement>(null);
-    const { selectedAnnotations } = useSelectedAnnotations();
-    const { annotations, isSaving, submitAnnotations, submitPredictions } = useAnnotationActions();
     const { setMediaState } = useSelectedData();
-    const { labels } = useAnnotator();
+    const { projectLabels } = useSecondaryToolbarState();
+    const { selectedAnnotations } = useSelectedAnnotations();
+    const { data: selectedProject } = useProject();
+    const { labels, selectedLabel, setSelectedLabelId } = useAnnotator();
     const { collapsedVisibleCount } = useVisibleLabelsCount({
         toolbarRef,
         labelsContainerRef,
         totalLabels: labels.length,
     });
 
+    const {
+        annotations,
+        isSaving,
+        addAnnotations,
+        updateAnnotations,
+        deleteAnnotations,
+        submitAnnotations,
+        submitPredictions,
+    } = useAnnotationActions();
+
     const hasAnnotations = !isEmpty(annotations);
+    const isMultiLabel = selectedProject.task.exclusive_labels === false;
+    const isClassification = isClassificationTask(selectedProject.task.task_type);
     const selectedIndex = items.findIndex((item) => item.id === mediaItem.id);
 
     const handleSubmit = async () => {
@@ -95,13 +113,69 @@ export const SecondaryToolbar = ({
         onSelectedMediaItem(items[nextItem]);
     };
 
+    const handleSelect = (value: Key | null) => {
+        const label = projectLabels.find((l) => l.id === value);
+        const newLabels = label ? [label] : [];
+
+        const updatedAnnotations = annotations
+            .filter((annotation) => selectedAnnotations.has(annotation.id))
+            .map((annotation) => ({ ...annotation, labels: newLabels }));
+
+        updateAnnotations(updatedAnnotations);
+        setSelectedLabelId(label?.id ?? null);
+    };
+
+    const handleClassificationSelect = (value: Key | null) => {
+        const label = projectLabels.find((l) => l.id === value);
+        const newLabels = label ? [label] : [];
+
+        if (isEmpty(annotations)) {
+            addAnnotations([{ type: 'full_image' }], newLabels);
+        } else if (isMultiLabel) {
+            updateClassificationAnnotations(newLabels[0]);
+        } else {
+            updateAnnotations(annotations.map((annotation) => ({ ...annotation, labels: newLabels })));
+        }
+
+        setSelectedLabelId(label?.id ?? null);
+    };
+
+    const updateClassificationAnnotations = (newLabel: Label) => {
+        const updatedAnnotations = annotations.map((annotation) => ({
+            ...annotation,
+            labels: toggleLabel(newLabel, annotation.labels),
+        }));
+
+        const hasNoLabels = updatedAnnotations.every(({ labels: annotationLabels }) => isEmpty(annotationLabels));
+
+        if (hasNoLabels) {
+            deleteAnnotations(updatedAnnotations.map(({ id }) => id));
+        } else {
+            updateAnnotations(updatedAnnotations);
+        }
+    };
+
+    const renderLabels = () => {
+        if (isClassification) {
+            return (
+                <LabelPicker
+                    labels={projectLabels}
+                    selectedLabel={selectedLabel}
+                    onSelect={handleClassificationSelect}
+                />
+            );
+        }
+
+        return <Labels ref={labelsContainerRef} collapsedVisibleCount={collapsedVisibleCount} />;
+    };
+
     return (
         <div
             ref={toolbarRef}
             style={{
-                height: '100%',
                 width: '100%',
-                display: selectedAnnotations.size === 0 ? 'none' : 'flex',
+                height: '100%',
+                display: selectedAnnotations.size === 0 && !isClassification ? 'none' : 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 paddingTop: dimensionValue('size-125'),
@@ -113,9 +187,7 @@ export const SecondaryToolbar = ({
                 </Toolbar.Section>
             </Toolbar.Container>
             <Toolbar.Container id='labels-container'>
-                <Toolbar.Section>
-                    <Labels ref={labelsContainerRef} collapsedVisibleCount={collapsedVisibleCount} />
-                </Toolbar.Section>
+                <Toolbar.Section>{renderLabels()}</Toolbar.Section>
             </Toolbar.Container>
             <Toolbar.Container>
                 <Toolbar.Section>
