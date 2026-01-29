@@ -1,12 +1,7 @@
-.stroke {
-    stroke-dasharray: 10;
-    stroke-dashoffset: 10;
-}
-
 .animateStroke {
-    stroke-dasharray: 10;
-    stroke-dashoffset: 10;
-    animation: dash 40s linear infinite;
+    stroke-dasharray: calc(10 / var(--zoom-scale));
+    stroke-dashoffset: calc(10 / var(--zoom-scale));
+    animation: dash calc(40s * var(--zoom-scale)) linear infinite;
 }
 
 @keyframes dash {
