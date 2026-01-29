@@ -1,6 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+from pathlib import Path
 from uuid import UUID
 
 from app.models import DatasetItemSubset, MediaFormat
@@ -14,6 +15,7 @@ class DatasetRevisionItem(BaseEntity):
     Attributes:
         id: Unique identifier for the dataset revision item.
         format: Format of the dataset revision item (e.g., JPG, PNG).
+        image_path: Path to the image file of the item, relative to the data folder.
         width: Width of the dataset revision item in pixels.
         height: Height of the dataset revision item in pixels.
         subset: Subset to which the dataset revision item belongs (e.g., training, validation, testing).
@@ -21,6 +23,7 @@ class DatasetRevisionItem(BaseEntity):
 
     id: UUID
     format: MediaFormat
+    image_path: Path
     width: int
     height: int
     subset: DatasetItemSubset
