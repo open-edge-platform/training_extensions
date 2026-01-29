@@ -3,7 +3,7 @@
 
 import { Flex, Item, Loading, TabList, TabPanels, Tabs, Text } from '@geti/ui';
 
-import { useGetModel } from '../../../../hooks/api/models.hook';
+import { useGetModel } from '../../hooks/api/use-get-model.hook';
 import { ModelMetrics } from '../model-metrics/model-metrics.component';
 import { ModelTrainingDatasets } from '../model-training-datasets/model-training-datasets.component';
 import { ModelTrainingParameters } from '../model-training-parameters/model-training-parameters.component';

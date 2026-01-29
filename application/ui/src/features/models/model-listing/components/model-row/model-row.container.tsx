@@ -7,8 +7,10 @@ import { AlertDialog, DialogContainer, Key } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import type { Model } from '../../../../../constants/shared-types';
-import { useDeleteModel, useGetModel, useRenameModel } from '../../../../../hooks/api/models.hook';
 import { usePatchPipeline } from '../../../../../hooks/api/pipeline.hook';
+import { useDeleteModel } from '../../../hooks/api/use-delete-model.hook';
+import { useGetModel } from '../../../hooks/api/use-get-model.hook';
+import { useRenameModel } from '../../../hooks/api/use-rename-model.hook';
 import { useModelListing } from '../../provider/model-listing-provider';
 import { ModelRow } from './model-row.component';
 import { RenameModelDialog } from './rename-model-dialog.component';

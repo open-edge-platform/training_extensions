@@ -4,7 +4,7 @@
 import { useMemo } from 'react';
 
 import type { Model } from '../../../../constants/shared-types';
-import { useGetActiveModelArchitectureId } from '../../../../hooks/api/models.hook';
+import { useGetActiveModelArchitectureId } from '../../hooks/api/use-get-active-model-architecture-id.hook';
 import { GroupByMode, GroupedModels, SortBy } from '../types';
 import { filterBySearch, groupModels, pinModel, removeEmpty, sortGroupedModels } from '../utils/model-transforms';
 

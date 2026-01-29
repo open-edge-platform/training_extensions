@@ -3,7 +3,8 @@
 
 import { createContext, ReactNode, useContext, useState } from 'react';
 
-import { useGetActiveModelArchitectureId, useGetModels } from '../../../../hooks/api/models.hook';
+import { useGetActiveModelArchitectureId } from '../../hooks/api/use-get-active-model-architecture-id.hook';
+import { useGetModels } from '../../hooks/api/use-get-models.hook';
 import { useGroupedModels } from '../hooks/use-grouped-models.hook';
 import type { GroupByMode, GroupedModels, SortBy } from '../types';
 

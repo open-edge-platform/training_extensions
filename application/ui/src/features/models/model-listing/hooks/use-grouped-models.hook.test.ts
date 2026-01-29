@@ -8,7 +8,7 @@ import { useGroupedModels } from './use-grouped-models.hook';
 
 const mockActiveModelId = vi.hoisted(() => vi.fn<() => string | undefined>(() => undefined));
 
-vi.mock('../../../../hooks/api/models.hook', () => ({
+vi.mock('../../hooks/api/use-get-active-model-architecture-id.hook', () => ({
     useGetActiveModelArchitectureId: mockActiveModelId,
 }));
 

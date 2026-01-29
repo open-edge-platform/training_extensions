@@ -4,7 +4,7 @@
 import { Flex, Text } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 
-import { useGetActiveModelArchitectureId } from '../../../hooks/api/models.hook';
+import { useGetActiveModelArchitectureId } from '../../models/hooks/api/use-get-active-model-architecture-id.hook';
 
 export const ActiveModel = () => {
     const activeModelArchitectureId = useGetActiveModelArchitectureId();
