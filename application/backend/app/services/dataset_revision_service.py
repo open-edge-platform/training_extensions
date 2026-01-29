@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import shutil
+from functools import lru_cache
 from pathlib import Path
 from uuid import UUID, uuid4
 
@@ -39,7 +40,7 @@ class DatasetRevisionService(BaseSessionManagedService):
         Returns:
             UUID: The UUID of the newly created dataset revision.
         """
-        revision_repo = DatasetRevisionRepository(db=self.db_session)
+        revision_repo = DatasetRevisionRepository(project_id=str(project_id), db=self.db_session)
         dataset_revision_id = str(uuid4())
         short_id = dataset_revision_id.split("-")[0]
         dataset_name = f"Dataset ({short_id})"
@@ -60,6 +61,22 @@ class DatasetRevisionService(BaseSessionManagedService):
         )
         return UUID(revision_db.id)
 
+    def list_dataset_revisions(self, project_id: UUID) -> list[DatasetRevision]:
+        """
+        Get information about all available dataset revisions in a project.
+
+        Retrieves a list of all dataset revisions that belong to the specified project.
+
+        Args:
+            project_id (UUID): The unique identifier of the project whose dataset revisions to list.
+
+        Returns:
+            list[DatasetRevision]: A list of dataset revision objects representing all dataset
+                revisions in the project. Returns an empty list if the project has no dataset revisions.
+        """
+        dataset_revision_repo = DatasetRevisionRepository(project_id=str(project_id), db=self.db_session)
+        return [DatasetRevision.model_validate(dataset_rev_db) for dataset_rev_db in dataset_revision_repo.list_all()]
+
     def get_dataset_revision(self, project_id: UUID, revision_id: UUID) -> DatasetRevision:
         """
         Get a dataset revision by ID.
@@ -74,9 +91,9 @@ class DatasetRevisionService(BaseSessionManagedService):
         Raises:
             ResourceNotFoundError: If the revision is not found.
         """
-        revision_repo = DatasetRevisionRepository(db=self.db_session)
+        revision_repo = DatasetRevisionRepository(project_id=str(project_id), db=self.db_session)
         revision = revision_repo.get_by_id(str(revision_id))
-        if revision is None or revision.project_id != str(project_id):
+        if revision is None:
             raise ResourceNotFoundError(ResourceType.DATASET_REVISION, str(revision_id))
         return self._to_dataset_revision(dataset_db=revision)
 
@@ -87,7 +104,7 @@ class DatasetRevisionService(BaseSessionManagedService):
         Args:
             dataset_revision: The dataset revision to update.
         """
-        revision_repo = DatasetRevisionRepository(db=self.db_session)
+        revision_repo = DatasetRevisionRepository(project_id=str(dataset_revision.project_id), db=self.db_session)
         _ = revision_repo.update(
             DatasetRevisionDB(
                 id=str(dataset_revision.id),
@@ -142,6 +159,33 @@ class DatasetRevisionService(BaseSessionManagedService):
             raise ResourceNotFoundError(ResourceType.DATASET_REVISION, str(revision_id))
 
         return parquet_path
+
+    @lru_cache(maxsize=64)
+    def count_items_by_subset(self, project_id: UUID, dataset_revision_id: UUID) -> dict[str, int]:
+        """
+        Count the number of dataset items in a dataset revision, grouped by subset.
+
+        Efficiently reads only the necessary metadata from the Parquet file to compute:
+        - The total number of items ("total")
+        - The number of items in each subset (e.g., "train", "val", "test")
+
+        Args:
+            project_id (UUID): The UUID of the project.
+            dataset_revision_id (UUID): The UUID of the dataset revision.
+
+        Returns:
+            dict[str, int]: A dictionary mapping subset names to counts. Includes a "total" key for the total count.
+
+        Raises:
+            ResourceNotFoundError: If the Parquet file does not exist.
+        """
+        parquet_path = self._get_revision_parquet_path(project_id, dataset_revision_id)
+        lf = pl.scan_parquet(parquet_path)
+        subset_counts = lf.group_by("subset").len().collect()
+        counts = {row["subset"].lower(): row["len"] for row in subset_counts.to_dicts()}
+        total = sum(counts.values())
+        counts["total"] = total
+        return counts
 
     def list_dataset_revision_items(
         self,

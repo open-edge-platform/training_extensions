@@ -58,26 +58,15 @@ export const SecondaryToolbar = ({
     const { data: selectedProject } = useProject();
     const { selectedLabel, setSelectedLabelId } = useAnnotator();
 
-    const {
-        annotations,
-        isSaving,
-        addAnnotations,
-        updateAnnotations,
-        deleteAnnotations,
-        submitAnnotations,
-        submitPredictions,
-    } = useAnnotationActions();
+    const { annotations, isSaving, addAnnotations, updateAnnotations, deleteAnnotations, submitAnnotations } =
+        useAnnotationActions();
 
     const hasAnnotations = !isEmpty(annotations);
     const isMultiLabel = selectedProject.task.exclusive_labels === false;
     const selectedIndex = items.findIndex((item) => item.id === mediaItem.id);
 
     const handleSubmit = async () => {
-        if (mode === 'annotation') {
-            await submitAnnotations();
-        } else {
-            await submitPredictions();
-        }
+        await submitAnnotations();
 
         setMediaState((prev) => {
             const newState = new Map(prev);
