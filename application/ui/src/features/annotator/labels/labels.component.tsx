@@ -19,17 +19,19 @@ import classes from './labels.module.scss';
 interface LabelBadgeProps {
     label: Label;
     isSelected: boolean;
+    isDisabled: boolean;
     onClick: () => void;
 }
 
-const LabelBadge = ({ label, isSelected, onClick }: LabelBadgeProps) => {
+const LabelBadge = ({ label, isSelected, isDisabled, onClick }: LabelBadgeProps) => {
     return (
         <button
             onClick={onClick}
             style={{ '--labelBgColor': label.color } as CSSProperties}
-            className={clsx(classes.badge, { [classes.selected]: isSelected })}
+            className={clsx(classes.badge, { [classes.selected]: isSelected, [classes.disabled]: isDisabled })}
             aria-pressed={isSelected}
             aria-label={`Label ${label.name}`}
+            aria-disabled={isDisabled}
         >
             <Text UNSAFE_className={classes.badgeText}>{label.name}</Text>
         </button>
@@ -39,14 +41,17 @@ const LabelBadge = ({ label, isSelected, onClick }: LabelBadgeProps) => {
 interface LabelsProps {
     isClassification?: boolean;
     isMultiLabel?: boolean;
+    isReadOnly?: boolean;
 }
 
-export const Labels = ({ isClassification = false, isMultiLabel = false }: LabelsProps) => {
+export const Labels = ({ isClassification = false, isMultiLabel = false, isReadOnly = false }: LabelsProps) => {
     const { selectedLabelId, setSelectedLabelId, labels } = useAnnotator();
     const { selectedAnnotations } = useSelectedAnnotations();
     const { annotations, addAnnotations, updateAnnotations, deleteAnnotations } = useAnnotationActions();
 
     const handleClassificationClick = (label: Label) => {
+        if (isReadOnly) return;
+
         if (isEmpty(annotations)) {
             addAnnotations([{ type: 'full_image' }], [label]);
             return;
@@ -66,11 +71,20 @@ export const Labels = ({ isClassification = false, isMultiLabel = false }: Label
                 updateAnnotations(updatedAnnotations);
             }
         } else {
-            updateAnnotations(annotations.map((annotation) => ({ ...annotation, labels: [label] })));
+            const isAlreadySelected = annotations.some((annotation) =>
+                annotation.labels.some((l) => l.id === label.id)
+            );
+
+            if (isAlreadySelected) {
+                deleteAnnotations(annotations.map(({ id }) => id));
+            } else {
+                updateAnnotations(annotations.map((annotation) => ({ ...annotation, labels: [label] })));
+            }
         }
     };
 
     const handleNonClassificationClick = (label: Label) => {
+        if (isReadOnly) return;
         if (selectedAnnotations.size > 0) {
             const selectedAnnotationsList = annotations.filter((a) => selectedAnnotations.has(a.id));
 
@@ -119,6 +133,7 @@ export const Labels = ({ isClassification = false, isMultiLabel = false }: Label
                         key={label.id}
                         label={label}
                         isSelected={isLabelSelected(label)}
+                        isDisabled={isReadOnly}
                         onClick={() => handleLabelClick(label)}
                     />
                 ))}
