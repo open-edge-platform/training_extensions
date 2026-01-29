@@ -7,7 +7,6 @@ import { fileURLToPath } from 'url';
 
 import { expect } from '@playwright/test';
 import { getMockedLabel } from 'mocks/mock-labels';
-import { mockedMedia } from 'mocks/mock-media';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 
@@ -35,12 +34,6 @@ test.describe('Annotator', () => {
         network.use(
             http.get('/api/projects/{project_id}', () => {
                 return HttpResponse.json(mockedDetectionProject);
-            }),
-            http.get('/api/projects/{project_id}/dataset/media', () => {
-                return HttpResponse.json({
-                    items: [mockedMedia({ width: 1000, height: 750 })],
-                    pagination: { offset: 0, limit: 20, count: 1, total: 1 },
-                });
             }),
             http.get('/api/projects/{project_id}/dataset/media/{media_id}/binary', async () => {
                 return HttpResponse.arrayBuffer(candyPngBuffer.buffer, {

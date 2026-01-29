@@ -7,7 +7,6 @@ import { fileURLToPath } from 'url';
 
 import { expect, Page } from '@playwright/test';
 import { getMockedLabel } from 'mocks/mock-labels';
-import { mockedMedia } from 'mocks/mock-media';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 
@@ -37,12 +36,6 @@ test.beforeEach(async ({ network }) => {
         http.get('/api/projects/{project_id}', () => {
             return HttpResponse.json(mockedClassificationProject);
         }),
-        http.get('/api/projects/{project_id}/dataset/media', () => {
-            return HttpResponse.json({
-                items: [mockedMedia({ width: 1000, height: 750 })],
-                pagination: { offset: 0, limit: 20, count: 1, total: 1 },
-            });
-        }),
         http.get('/api/projects/{project_id}/dataset/media/{media_id}/binary', async () => {
             return HttpResponse.arrayBuffer(candyPngBuffer.buffer, {
                 headers: { 'Content-Type': 'image/png' },
@@ -65,8 +58,7 @@ test.describe('Annotator Classification', () => {
     test.describe('Single label', () => {
         test('select multiple labels update the current annotation', async ({ page }) => {
             await test.step('selecting a label adds a new labeled annotation', async () => {
-                await page.getByRole('button', { name: 'Select label Label Picker' }).click();
-                await page.getByTestId('popover').getByText(redLabel.name).click();
+                await page.getByRole('button', { name: `Label ${redLabel.name}` }).click();
 
                 const annotation = getAnnotationShape(page);
                 await expect(annotation).toBeVisible();
@@ -75,13 +67,11 @@ test.describe('Annotator Classification', () => {
 
             await test.step('selecting another label changes the annotation label', async () => {
                 const annotation = getAnnotationShape(page);
+                await page.getByRole('button', { name: `Label ${greenLabel.name}` }).click();
 
-                await page.getByRole('button', { name: `${redLabel.name} Label Picker` }).click();
-                await page.getByTestId('popover').getByText(greenLabel.name).click();
                 await expect(annotation).toHaveAttribute('stroke', greenLabel.color);
 
-                await page.getByRole('button', { name: `${greenLabel.name} Label Picker` }).click();
-                await page.getByTestId('popover').getByText(yellowLabel.name).click();
+                await page.getByRole('button', { name: `Label ${yellowLabel.name}` }).click();
 
                 await expect(page.getByLabel(`label ${yellowLabel.name} background`)).toBeVisible();
                 await expect(annotation).toHaveAttribute('stroke', yellowLabel.color);
@@ -94,8 +84,7 @@ test.describe('Annotator Classification', () => {
 
         test('remove the annotations when label is removed', async ({ page }) => {
             await test.step('add initial labeled annotation', async () => {
-                await page.getByRole('button', { name: 'Select label Label Picker' }).click();
-                await page.getByTestId('popover').getByText(redLabel.name).click();
+                await page.getByRole('button', { name: `Label ${redLabel.name}` }).click();
 
                 const annotation = getAnnotationShape(page);
                 await expect(annotation).toBeVisible();
@@ -126,8 +115,7 @@ test.describe('Annotator Classification', () => {
 
         test('add multiple labels', async ({ page }) => {
             await test.step('add initial labeled annotation', async () => {
-                await page.getByRole('button', { name: 'Select label Label Picker' }).click();
-                await page.getByTestId('popover').getByText(redLabel.name).click();
+                await page.getByRole('button', { name: `Label ${redLabel.name}` }).click();
 
                 const annotation = getAnnotationShape(page);
                 await expect(annotation).toBeVisible();
@@ -135,11 +123,8 @@ test.describe('Annotator Classification', () => {
             });
 
             await test.step('add more labels and keep the initial stroke color', async () => {
-                await page.getByRole('button', { name: `${redLabel.name} Label Picker` }).click();
-                await page.getByTestId('popover').getByText(greenLabel.name).click();
-
-                await page.getByRole('button', { name: `${greenLabel.name} Label Picker` }).click();
-                await page.getByTestId('popover').getByText(yellowLabel.name).click();
+                await page.getByRole('button', { name: `Label ${greenLabel.name}` }).click();
+                await page.getByRole('button', { name: `Label ${yellowLabel.name}` }).click();
 
                 await expect(page.getByLabel(`label ${redLabel.name} background`)).toBeVisible();
                 await expect(page.getByLabel(`label ${greenLabel.name} background`)).toBeVisible();
@@ -153,14 +138,9 @@ test.describe('Annotator Classification', () => {
 
         test('remove the annotations when all labels are removed', async ({ page }) => {
             await test.step('add annotation with multiple labels', async () => {
-                await page.getByRole('button', { name: 'Select label Label Picker' }).click();
-                await page.getByTestId('popover').getByText(redLabel.name).click();
-
-                await page.getByRole('button', { name: `${redLabel.name} Label Picker` }).click();
-                await page.getByTestId('popover').getByText(greenLabel.name).click();
-
-                await page.getByRole('button', { name: `${greenLabel.name} Label Picker` }).click();
-                await page.getByTestId('popover').getByText(yellowLabel.name).click();
+                await page.getByRole('button', { name: `Label ${redLabel.name}` }).click();
+                await page.getByRole('button', { name: `Label ${greenLabel.name}` }).click();
+                await page.getByRole('button', { name: `Label ${yellowLabel.name}` }).click();
             });
 
             await test.step('removing all labels', async () => {
@@ -174,14 +154,9 @@ test.describe('Annotator Classification', () => {
 
         test(`hide/show annotation's label using setting`, async ({ page }) => {
             await test.step('add multi-label annotation', async () => {
-                await page.getByRole('button', { name: 'Select label Label Picker' }).click();
-                await page.getByTestId('popover').getByText(redLabel.name).click();
-
-                await page.getByRole('button', { name: `${redLabel.name} Label Picker` }).click();
-                await page.getByTestId('popover').getByText(greenLabel.name).click();
-
-                await page.getByRole('button', { name: `${greenLabel.name} Label Picker` }).click();
-                await page.getByTestId('popover').getByText(yellowLabel.name).click();
+                await page.getByRole('button', { name: `Label ${redLabel.name}` }).click();
+                await page.getByRole('button', { name: `Label ${greenLabel.name}` }).click();
+                await page.getByRole('button', { name: `Label ${yellowLabel.name}` }).click();
 
                 await expect(page.getByLabel(`label ${redLabel.name} background`)).toBeVisible();
                 await expect(page.getByLabel(`label ${greenLabel.name} background`)).toBeVisible();
@@ -212,11 +187,8 @@ test.describe('Annotator Classification', () => {
 
         test('hide/show annotation', async ({ page }) => {
             await test.step('add multi-label annotation', async () => {
-                await page.getByRole('button', { name: 'Select label Label Picker' }).click();
-                await page.getByTestId('popover').getByText(redLabel.name).click();
-
-                await page.getByRole('button', { name: `${redLabel.name} Label Picker` }).click();
-                await page.getByTestId('popover').getByText(greenLabel.name).click();
+                await page.getByRole('button', { name: `Label ${redLabel.name}` }).click();
+                await page.getByRole('button', { name: `Label ${greenLabel.name}` }).click();
 
                 await expect(page.getByLabel(`label ${redLabel.name} background`)).toBeVisible();
                 await expect(page.getByLabel(`label ${greenLabel.name} background`)).toBeVisible();
