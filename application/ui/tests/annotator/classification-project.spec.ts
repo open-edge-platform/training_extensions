@@ -24,7 +24,7 @@ const greenLabel = getMockedLabel({ id: 'green-label', name: 'green-label', colo
 const yellowLabel = getMockedLabel({ id: 'yellow-label', name: 'yellow-label', color: '#ffff00' });
 
 const mockedClassificationProject = getMockedProject({
-    id: 'candy-id',
+    id: '123e4567-e89b-12d3-a456-426614174000',
     task: {
         exclusive_labels: true,
         task_type: 'classification',
@@ -82,7 +82,8 @@ test.describe('Annotator Classification', () => {
 
                 await page.getByRole('button', { name: `${greenLabel.name} Label Picker` }).click();
                 await page.getByTestId('popover').getByText(yellowLabel.name).click();
-                await page.getByLabel(`label ${yellowLabel.name}`).nth(3).click();
+
+                await expect(page.getByLabel(`label ${yellowLabel.name} background`)).toBeVisible();
                 await expect(annotation).toHaveAttribute('stroke', yellowLabel.color);
             });
 
@@ -102,7 +103,7 @@ test.describe('Annotator Classification', () => {
             });
 
             await test.step('remove the annotation label', async () => {
-                await page.getByLabel(`Remove ${redLabel.name}`).nth(1).click();
+                await page.getByLabel(`Remove ${redLabel.name}`).click();
                 expect(await page.getByLabel('annotation full image').count()).toBe(0);
             });
         });
@@ -140,9 +141,9 @@ test.describe('Annotator Classification', () => {
                 await page.getByRole('button', { name: `${greenLabel.name} Label Picker` }).click();
                 await page.getByTestId('popover').getByText(yellowLabel.name).click();
 
-                await expect(page.getByLabel(`label ${redLabel.name} background`).nth(1)).toBeVisible();
-                await expect(page.getByLabel(`label ${greenLabel.name} background`).nth(1)).toBeVisible();
-                await expect(page.getByLabel(`label ${yellowLabel.name} background`).nth(1)).toBeVisible();
+                await expect(page.getByLabel(`label ${redLabel.name} background`)).toBeVisible();
+                await expect(page.getByLabel(`label ${greenLabel.name} background`)).toBeVisible();
+                await expect(page.getByLabel(`label ${yellowLabel.name} background`)).toBeVisible();
 
                 const annotation = getAnnotationShape(page);
                 await expect(annotation).toBeVisible();
@@ -163,9 +164,9 @@ test.describe('Annotator Classification', () => {
             });
 
             await test.step('removing all labels', async () => {
-                await page.getByLabel(`Remove ${redLabel.name}`).nth(1).click();
-                await page.getByLabel(`Remove ${greenLabel.name}`).nth(1).click();
-                await page.getByLabel(`Remove ${yellowLabel.name}`).nth(1).click();
+                await page.getByLabel(`Remove ${redLabel.name}`).click();
+                await page.getByLabel(`Remove ${greenLabel.name}`).click();
+                await page.getByLabel(`Remove ${yellowLabel.name}`).click();
 
                 expect(await page.getByLabel('annotation full image').count()).toBe(0);
             });
@@ -182,18 +183,18 @@ test.describe('Annotator Classification', () => {
                 await page.getByRole('button', { name: `${greenLabel.name} Label Picker` }).click();
                 await page.getByTestId('popover').getByText(yellowLabel.name).click();
 
-                await expect(page.getByLabel(`label ${redLabel.name} background`).nth(1)).toBeVisible();
-                await expect(page.getByLabel(`label ${greenLabel.name} background`).nth(1)).toBeVisible();
-                await expect(page.getByLabel(`label ${yellowLabel.name} background`).nth(1)).toBeVisible();
+                await expect(page.getByLabel(`label ${redLabel.name} background`)).toBeVisible();
+                await expect(page.getByLabel(`label ${greenLabel.name} background`)).toBeVisible();
+                await expect(page.getByLabel(`label ${yellowLabel.name} background`)).toBeVisible();
             });
 
             await test.step('hide labels', async () => {
                 await page.getByRole('button', { name: 'Settings' }).click();
                 await page.getByRole('switch', { name: 'Hide labels' }).click();
 
-                await expect(page.getByLabel(`label ${redLabel.name} background`).nth(1)).toBeHidden();
-                await expect(page.getByLabel(`label ${greenLabel.name} background`).nth(1)).toBeHidden();
-                await expect(page.getByLabel(`label ${yellowLabel.name} background`).nth(1)).toBeHidden();
+                await expect(page.getByLabel(`label ${redLabel.name} background`)).toBeHidden();
+                await expect(page.getByLabel(`label ${greenLabel.name} background`)).toBeHidden();
+                await expect(page.getByLabel(`label ${yellowLabel.name} background`)).toBeHidden();
 
                 await expect(getAnnotationShape(page)).toBeVisible();
             });
@@ -201,9 +202,9 @@ test.describe('Annotator Classification', () => {
             await test.step('show labels', async () => {
                 await page.getByRole('switch', { name: 'Hide labels' }).click();
 
-                await expect(page.getByLabel(`label ${redLabel.name} background`).nth(1)).toBeVisible();
-                await expect(page.getByLabel(`label ${greenLabel.name} background`).nth(1)).toBeVisible();
-                await expect(page.getByLabel(`label ${yellowLabel.name} background`).nth(1)).toBeVisible();
+                await expect(page.getByLabel(`label ${redLabel.name} background`)).toBeVisible();
+                await expect(page.getByLabel(`label ${greenLabel.name} background`)).toBeVisible();
+                await expect(page.getByLabel(`label ${yellowLabel.name} background`)).toBeVisible();
 
                 await expect(getAnnotationShape(page)).toBeVisible();
             });
@@ -217,15 +218,15 @@ test.describe('Annotator Classification', () => {
                 await page.getByRole('button', { name: `${redLabel.name} Label Picker` }).click();
                 await page.getByTestId('popover').getByText(greenLabel.name).click();
 
-                await expect(page.getByLabel(`label ${redLabel.name} background`).nth(1)).toBeVisible();
-                await expect(page.getByLabel(`label ${greenLabel.name} background`).nth(1)).toBeVisible();
+                await expect(page.getByLabel(`label ${redLabel.name} background`)).toBeVisible();
+                await expect(page.getByLabel(`label ${greenLabel.name} background`)).toBeVisible();
             });
 
             await test.step('hide annotation', async () => {
                 await page.getByRole('button', { name: 'Hide annotations' }).click();
 
-                await expect(page.getByLabel(`label ${redLabel.name} background`).nth(1)).toBeHidden();
-                await expect(page.getByLabel(`label ${greenLabel.name} background`).nth(1)).toBeHidden();
+                await expect(page.getByLabel(`label ${redLabel.name} background`)).toBeHidden();
+                await expect(page.getByLabel(`label ${greenLabel.name} background`)).toBeHidden();
 
                 await expect(getAnnotationShape(page)).toBeHidden();
             });
@@ -233,8 +234,8 @@ test.describe('Annotator Classification', () => {
             await test.step('show annotation', async () => {
                 await page.getByRole('button', { name: 'Show annotations' }).click();
 
-                await expect(page.getByLabel(`label ${redLabel.name} background`).nth(1)).toBeVisible();
-                await expect(page.getByLabel(`label ${greenLabel.name} background`).nth(1)).toBeVisible();
+                await expect(page.getByLabel(`label ${redLabel.name} background`)).toBeVisible();
+                await expect(page.getByLabel(`label ${greenLabel.name} background`)).toBeVisible();
 
                 await expect(getAnnotationShape(page)).toBeVisible();
             });

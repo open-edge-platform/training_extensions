@@ -22,7 +22,7 @@ const redLabel = getMockedLabel({ id: 'red-label', name: 'red-label', color: '#a
 const blueLabel = getMockedLabel({ id: 'blue-label', name: 'blue-label', color: '#2424a0' });
 
 const mockedDetectionProject = getMockedProject({
-    id: 'candy-id',
+    id: '123e4567-e89b-12d3-a456-426614174000',
     task: {
         exclusive_labels: true,
         task_type: 'detection',
