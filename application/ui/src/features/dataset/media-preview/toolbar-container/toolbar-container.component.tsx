@@ -3,16 +3,16 @@
 
 import { ReactNode } from 'react';
 
-import { View } from '@geti/ui';
+import { View, ViewProps } from '@geti/ui';
 
-type ToolbarContainerProps = {
+interface ToolbarContainerProps extends ViewProps<5> {
     children: ReactNode;
     isHidden?: boolean;
-};
+}
 
-const ToolbarContainer = ({ children, isHidden }: ToolbarContainerProps) => {
+const ToolbarContainer = ({ children, isHidden, ...rest }: ToolbarContainerProps) => {
     return (
-        <View borderRadius={'regular'} backgroundColor={'gray-200'} padding={'size-50'} isHidden={isHidden}>
+        <View borderRadius={'regular'} backgroundColor={'gray-200'} padding={'size-50'} isHidden={isHidden} {...rest}>
             {children}
         </View>
     );

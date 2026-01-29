@@ -45,7 +45,7 @@ interface AnnotationsContextValue {
     annotations: Annotation[];
     addAnnotations: (shapes: Shape[], labels: Label[]) => void;
     deleteAnnotations: (annotationIds: string[]) => void;
-    updateAnnotations: (updatedAnnotations: Annotation[]) => void;
+    updateAnnotations: (updatedAnnotations: Annotation[], labels?: Label[]) => void;
     submitAnnotations: () => Promise<void>;
     isUserReviewed: boolean;
     isSaving: boolean;
@@ -88,12 +88,20 @@ export const AnnotationActionsProvider = ({
         return mapServerAnnotationsToLocal(initialAnnotationsDTO, projectLabels);
     });
 
-    const updateAnnotations = (updatedAnnotations: Annotation[]) => {
-        const updatedMap = new Map(updatedAnnotations.map((annotation) => [annotation.id, annotation]));
-
-        setAnnotations((prevAnnotations) =>
-            prevAnnotations.map((annotation) => updatedMap.get(annotation.id) ?? annotation)
-        );
+    const updateAnnotations = (updatedAnnotations: Annotation[], labels?: Label[]) => {
+        if (labels !== undefined) {
+            const idsToUpdate = new Set(updatedAnnotations.map((a) => a.id));
+            setAnnotations((prevAnnotations) =>
+                prevAnnotations.map((annotation) =>
+                    idsToUpdate.has(annotation.id) ? { ...annotation, labels } : annotation
+                )
+            );
+        } else {
+            const updatedMap = new Map(updatedAnnotations.map((annotation) => [annotation.id, annotation]));
+            setAnnotations((prevAnnotations) =>
+                prevAnnotations.map((annotation) => updatedMap.get(annotation.id) ?? annotation)
+            );
+        }
     };
 
     const addAnnotations = (shapes: Shape[], labels: Label[]) => {
