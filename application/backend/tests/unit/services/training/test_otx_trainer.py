@@ -418,7 +418,7 @@ class TestOTXTrainerCreateTrainingDataset:
                 otx_trainer, "_OTXTrainer__get_otx_dataset_class_by_task_type", return_value=mock_dataset_class
             ):
                 # Act
-                dataset_info = otx_trainer.gather_training_dataset(
+                dataset_info = otx_trainer.prepare_training_dataset(
                     project_id=project_id, task=task, training_config=training_config
                 )
 
@@ -564,7 +564,7 @@ class TestOTXTrainerCreateTrainingDataset:
                 otx_trainer, "_OTXTrainer__get_otx_dataset_class_by_task_type", return_value=mock_dataset_class
             ):
                 # Act
-                dataset_info = otx_trainer.gather_training_dataset(
+                dataset_info = otx_trainer.prepare_training_dataset(
                     project_id=project_id,
                     task=task,
                     training_config=training_config,

@@ -198,12 +198,12 @@ class OTXTrainer(Trainer):
 
             return training_config, otx_training_config
 
-    @step("Gather Training Dataset", 10)
-    def gather_training_dataset(
+    @step("Prepare Training Dataset", 10)
+    def prepare_training_dataset(
         self, project_id: UUID, task: Task, training_config: dict, dataset_revision_id: UUID | None = None
     ) -> DatasetInfo:
         """
-        Gather datasets for training, validation, and testing.
+        Prepare datasets for training, validation, and testing.
 
         If a specific dataset revision ID is provided, it loads that revision from the database.
         Otherwise, it creates a new dataset from the current items in the database with user-verified annotations.
@@ -476,7 +476,7 @@ class OTXTrainer(Trainer):
             training_params=training_params, task=task
         )
         self.assign_subsets(training_config=training_config, project_id=project_id)
-        dataset_info = self.gather_training_dataset(
+        dataset_info = self.prepare_training_dataset(
             project_id=project_id,
             task=task,
             training_config=otx_training_config,

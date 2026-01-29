@@ -8,7 +8,7 @@ from typing import Annotated
 from uuid import UUID, uuid4
 
 import aiofiles
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Body, Depends, HTTPException, status
 from loguru import logger
 from sse_starlette.sse import EventSourceResponse, ServerSentEvent
 
@@ -43,7 +43,6 @@ async def submit_job(
     data_dir: Annotated[Path, Depends(get_data_dir)],
     project_service: Annotated[ProjectService, Depends(get_project_service)],
     system_service: Annotated[SystemService, Depends(get_system_service)],
-    dataset_revision_id: Annotated[UUID | None, Query()] = None,
 ) -> JobView:
     """Create a new job and submit it to the scheduler."""
     try:
@@ -65,7 +64,7 @@ async def submit_job(
                         task=project.task,
                         project_id=job_request.project_id,
                         job_id=job_id,
-                        dataset_revision_id=dataset_revision_id,
+                        dataset_revision_id=job_request.parameters.dataset_revision_id,
                     ),
                 )
             case JobType.PREPARE_DATASET_FOR_IMPORT:
