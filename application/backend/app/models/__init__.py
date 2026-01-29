@@ -10,6 +10,7 @@ from .data_collection_policy import (
     FixedRateDataCollectionPolicy,
 )
 from .dataset_item import DatasetItem, DatasetItemAnnotation, DatasetItemAnnotationStatus, DatasetItemSubset
+from .dataset_revision import DatasetRevision
 from .evaluation import EvaluationResult
 from .label import Label, LabelReference
 from .media import Media, MediaFormat, MediaType
@@ -50,6 +51,7 @@ __all__ = [
     "DatasetItemAnnotation",
     "DatasetItemAnnotationStatus",
     "DatasetItemSubset",
+    "DatasetRevision",
     "DisconnectedSinkConfig",
     "DisconnectedSourceConfig",
     "EvaluationResult",

@@ -1,0 +1,16 @@
+.imgContainer {
+    overflow: hidden;
+    text-align: center;
+}
+
+.img {
+    display: flex;
+    object-fit: cover;
+    transition: transform 0.2s ease-in-out;
+    height: 100%;
+    width: 100%;
+
+    &:hover {
+        transform: scale(1.1);
+    }
+}

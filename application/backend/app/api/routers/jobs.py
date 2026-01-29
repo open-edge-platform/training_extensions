@@ -74,6 +74,10 @@ async def submit_job(
                 raise NotImplementedError
             case JobType.IMPORT_DATASET_TO_PROJECT:
                 raise NotImplementedError
+            case JobType.EXPORT_DATASET:
+                raise NotImplementedError
+            case JobType.STAGE_DATASET:
+                raise NotImplementedError
             case _:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Unknown job type")
         await job_queue.submit(job)
