@@ -9,6 +9,7 @@ import { isEmpty } from 'lodash-es';
 import { useZoom } from '../../../../components/zoom/zoom.provider';
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
+import { useSelectedAnnotations } from '../../../../shared/annotator/select-annotation-provider.component';
 import { Point } from '../../../../shared/types';
 import { usePolygonConfig } from '../hooks/use-polygon-config.hook';
 import { SvgToolCanvas } from '../svg-tool-canvas.component';
@@ -30,6 +31,7 @@ import classes from './polygon-tool.module.scss';
 export const PolygonTool = () => {
     const { scale: zoom } = useZoom();
     const { addAnnotations } = useAnnotationActions();
+    const { setSelectedAnnotations } = useSelectedAnnotations();
     const { image, selectedLabel } = useAnnotator();
 
     const ref = useRef<SVGRectElement>({} as SVGRectElement);
@@ -120,10 +122,12 @@ export const PolygonTool = () => {
                 startTransition(async () => {
                     const optimizedPolygon = await optimizePolygonOrSegments(polygon);
 
-                    addAnnotations(
+                    const newIds = addAnnotations(
                         [{ type: 'polygon', points: optimizedPolygon.points }],
                         selectedLabel ? [selectedLabel] : []
                     );
+
+                    setSelectedAnnotations(new Set(newIds));
                 });
 
                 resetTool();

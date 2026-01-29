@@ -10,6 +10,7 @@ import { useZoom } from '../../../../components/zoom/zoom.provider';
 import type { Label } from '../../../../constants/shared-types';
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
+import { useSelectedAnnotations } from '../../../../shared/annotator/select-annotation-provider.component';
 import type { Annotation, RegionOfInterest, Shape } from '../../../../shared/types';
 import { AnnotationShape } from '../../annotations/annotation-shape/annotation-shape.component';
 import { MaskAnnotations } from '../../annotations/mask-annotations.component';
@@ -58,6 +59,7 @@ export const SegmentAnythingTool = () => {
     const zoom = useZoom();
     const { roi, image, selectedLabel } = useAnnotator();
     const { addAnnotations } = useAnnotationActions();
+    const { setSelectedAnnotations } = useSelectedAnnotations();
     const { isLoading, decodingQueryFn } = useSegmentAnythingModel();
     const throttledDecodingQueryFn = useSingleStackFn(decodingQueryFn);
 
@@ -90,7 +92,9 @@ export const SegmentAnythingTool = () => {
     };
 
     const handleAddAnnotations = (shapes: Shape[], label: Label) => {
-        addAnnotations(shapes, [label]);
+        const newIds = addAnnotations(shapes, [label]);
+
+        setSelectedAnnotations(new Set(newIds));
         setPreviewShapes([]);
     };
 
