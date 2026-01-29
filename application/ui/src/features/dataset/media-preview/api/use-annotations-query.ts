@@ -13,7 +13,7 @@ const isUnannotatedError = (error: unknown): boolean => {
     );
 };
 
-export const useAnnotations = (datasetItemId: string) => {
+export const useAnnotationsQuery = (datasetItemId: string) => {
     const projectId = useProjectIdentifier();
 
     return useSuspenseQuery({

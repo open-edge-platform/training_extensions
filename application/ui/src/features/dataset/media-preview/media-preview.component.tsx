@@ -13,7 +13,7 @@ import { AnnotationVisibilityProvider } from '../../../shared/annotator/annotati
 import { AnnotatorProvider } from '../../../shared/annotator/annotator-provider.component';
 import { SelectAnnotationProvider } from '../../../shared/annotator/select-annotation-provider.component';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
-import { useAnnotations } from './api/use-annotations-query';
+import { useAnnotationsQuery } from './api/use-annotations-query';
 import { BottomToolbar } from './bottom-toolbar/bottom-toolbar.component';
 import { SIDEBAR_WIDTH } from './constants';
 import { PrimaryToolbar } from './primary-toolbar/primary-toolbar.component';
@@ -46,7 +46,7 @@ type MediaPreviewContentProps = {
 const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }: MediaPreviewContentProps) => {
     const [mode, setMode] = useState<AnnotatorMode>('annotation');
 
-    const { data: annotationsData } = useAnnotations(mediaItem.id);
+    const { data: annotationsData } = useAnnotationsQuery(mediaItem.id);
 
     const isUserReviewed = annotationsData?.user_reviewed ?? false;
     const annotationsDTO = annotationsData?.annotations ?? [];
