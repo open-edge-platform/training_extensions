@@ -89,7 +89,6 @@ export const Labels = ({
                 updateAnnotations(updatedAnnotations);
             }
         } else {
-            // Single-label: toggle - if clicking the same label, remove it; otherwise replace
             const isAlreadySelected = annotations.some((annotation) =>
                 annotation.labels.some((l) => l.id === label.id)
             );
