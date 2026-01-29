@@ -1,11 +1,12 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Cell, Column, Flex, Row, TableBody, TableHeader, TableView } from '@geti/ui';
+import { ActionButton, Cell, Column, Flex, Row, TableBody, TableHeader, TableView, Text } from '@geti/ui';
 import { DownloadIcon } from '@geti/ui/icons';
 
 import type { ExtendedModel, ModelFormat } from '../../../../constants/shared-types';
 import { useDownloadModel } from '../../hooks/api/use-download-model.hook';
+import { NoResultsWrapper } from '../components/no-results-wrapper/no-results-wrapper.component';
 import { formatModelSize } from '../utils/format-model-size';
 
 interface ModelVariantTableProps {
@@ -18,7 +19,7 @@ export const ModelVariantTable = ({ model, format }: ModelVariantTableProps) => 
     const variants = (model.variants ?? []).filter((variant) => variant.format === format);
 
     if (variants.length === 0) {
-        return null;
+        return <NoResultsWrapper message={`No ${format.toUpperCase()} variants available for this model`} />;
     }
 
     return (

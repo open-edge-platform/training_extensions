@@ -5,6 +5,8 @@ import { ReactNode } from 'react';
 
 import { Content, Flex, Grid, Heading, Text } from '@geti/ui';
 
+import { NoResultsWrapper } from '../components/no-results-wrapper/no-results-wrapper.component';
+
 import styles from './model-training-parameters.module.scss';
 
 const Box = ({ title, content }: { title: string; content: ReactNode }) => {
@@ -23,6 +25,14 @@ const Box = ({ title, content }: { title: string; content: ReactNode }) => {
 };
 
 export const ModelTrainingParameters = () => {
+    // TODO: Get actual training parameters from the model
+    // Replace with actual check when API data is available
+    const hasTrainingParameters = false;
+
+    if (!hasTrainingParameters) {
+        return <NoResultsWrapper message={'No training parameters available for this model'} />;
+    }
+
     return (
         <Grid columns={['1fr', '1fr', '1fr', '1fr']} gap={'size-200'}>
             <Box

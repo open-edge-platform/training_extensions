@@ -3,6 +3,7 @@
 
 import { Divider, Flex, Text } from '@geti/ui';
 
+import { NoResultsWrapper } from '../components/no-results-wrapper/no-results-wrapper.component';
 import { ModelMetricsGraphs } from './model-metrics-graphs.component';
 
 // TODO: replace this with actual API data
@@ -43,6 +44,14 @@ const mockLossData = [
 ];
 
 export const ModelMetrics = () => {
+    // TODO: Get actual metrics data from the model
+    // Replace with actual check when API data is available
+    const hasMetrics = false;
+
+    if (!hasMetrics) {
+        return <NoResultsWrapper message={'No metrics available for this model'} />;
+    }
+
     const trainingTime = '00:02:47';
     const jobDuration = '00:04:35';
 
