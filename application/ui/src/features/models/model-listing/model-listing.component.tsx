@@ -5,13 +5,14 @@ import { Flex } from '@geti/ui';
 
 import { EmptySearchResults } from './components/expandable-search/empty-search-results.component';
 import { GroupModelsContainer } from './components/group-models-container/group-models-container.component';
-import { useModelListing } from './provider/model-listing-provider';
+import { GroupedModels } from './types';
 
-export const ModelListing = () => {
-    const { groupedModels, searchBy } = useModelListing();
+interface ModelListingProps {
+    hasNoResults: boolean;
+    groupedModels: GroupedModels[];
+}
 
-    const hasNoResults = groupedModels.length === 0 && searchBy.length > 0;
-
+export const ModelListing = ({ groupedModels, hasNoResults }: ModelListingProps) => {
     return (
         <>
             {hasNoResults ? (
