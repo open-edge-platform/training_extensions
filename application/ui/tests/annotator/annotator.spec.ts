@@ -114,19 +114,20 @@ test.describe('Annotator', () => {
                 await boundingBoxTool.drawBoundingBox(annotation);
             }
 
-            // There should be twice the elements, the mask and the annotation itself
-            expect(await page.getByLabel(`label ${redLabel.name} background`).count()).toBe(annotations.length * 2);
+            expect(await page.getByLabel(`label ${redLabel.name} background`).count()).toBe(annotations.length);
         });
 
         await test.step('Remove labels', async () => {
             await page.getByRole('button', { name: 'selection tool' }).click();
+            const labels = page.getByLabel('Remove red-label');
 
-            await page.getByLabel('Remove red-label').nth(4).click();
-            await page.getByLabel('Remove red-label').nth(2).click();
+            await labels.nth(0).click();
+            await labels.nth(1).click();
         });
 
         await test.step('change select annotation label', async () => {
             const container = page.getByLabel('annotation rect');
+
             await container.nth(5).click({ modifiers: ['Shift'] });
             await container.nth(4).click({ modifiers: ['Shift'] });
             await container.nth(3).click({ modifiers: ['Shift'] });
@@ -134,8 +135,7 @@ test.describe('Annotator', () => {
             await page.getByRole('button', { name: `${redLabel.name} Label Picker` }).click();
             await page.getByTestId('popover').getByText(blueLabel.name).click();
 
-            // There should be twice the elements, the mask and the annotation itself
-            expect(await page.getByLabel(`label ${blueLabel.name} background`).count()).toBe(annotations.length * 2);
+            expect(await page.getByLabel(`label ${blueLabel.name} background`).count()).toBe(annotations.length);
         });
     });
 });
