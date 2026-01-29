@@ -3,7 +3,7 @@
 
 import { useAnnotationVisibility } from '../../../shared/annotator/annotation-visibility-provider.component';
 import { Annotation } from '../../../shared/types';
-import { AnnotationShape } from './annotation-shape.component';
+import { AnnotationShape } from './annotation-shape/annotation-shape.component';
 
 interface AnnotationShapeWithoutLabelsProps {
     annotation: Annotation;

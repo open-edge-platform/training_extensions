@@ -6,10 +6,9 @@ import { Suspense } from 'react';
 import { Divider, Flex, Loading, View } from '@geti/ui';
 
 import { ActiveModel } from './active-model.component';
+import { DisablePipelineButton } from './disable-pipeline-button.component';
 import { InferenceDevices } from './inference-devices.component';
 import { InputOutputSetup } from './input-output-setup.component';
-import { PipelineSwitch } from './pipeline-toggle.component';
-import { WebRTCConnectionStatus } from './web-rtc-connection-status.component';
 
 export const Header = () => {
     return (
@@ -29,16 +28,12 @@ export const Header = () => {
 
                 <Divider orientation='vertical' size='S' />
 
-                <WebRTCConnectionStatus />
-
-                <Divider orientation='vertical' size='S' />
-
                 <Suspense fallback={<Loading />}>
                     <InferenceDevices />
                 </Suspense>
 
-                <Flex marginStart='auto'>
-                    <PipelineSwitch />
+                <Flex marginStart='auto' gap={'size-100'}>
+                    <DisablePipelineButton />
                     <InputOutputSetup />
                 </Flex>
             </Flex>

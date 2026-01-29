@@ -5,12 +5,13 @@ import { PointerEvent, useRef, useState } from 'react';
 
 import { clampPointBetweenImage } from '@geti/smart-tools/utils';
 
+import selectionCursor from '../../../../assets/icons/selection.svg?url';
 import { useZoom } from '../../../../components/zoom/zoom.provider';
-import { Label } from '../../../../constants/shared-types';
+import type { Label } from '../../../../constants/shared-types';
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
 import type { Annotation, RegionOfInterest, Shape } from '../../../../shared/types';
-import { AnnotationShape } from '../../annotations/annotation-shape.component';
+import { AnnotationShape } from '../../annotations/annotation-shape/annotation-shape.component';
 import { MaskAnnotations } from '../../annotations/mask-annotations.component';
 import { SvgToolCanvas } from '../svg-tool-canvas.component';
 import { getRelativePoint, removeOffLimitPoints } from '../utils';
@@ -25,6 +26,8 @@ interface PreviewAnnotationsProps {
     image: Pick<RegionOfInterest, 'width' | 'height'>;
 }
 
+const CURSOR_OFFSET = '7 8';
+
 const PreviewAnnotations = ({ previewAnnotations, image }: PreviewAnnotationsProps) => {
     if (previewAnnotations.length === 0) return null;
 
@@ -37,6 +40,7 @@ const PreviewAnnotations = ({ previewAnnotations, image }: PreviewAnnotationsPro
                     stroke={'var(--energy-blue-shade)'}
                     strokeWidth={'calc(3px / var(--zoom-scale))'}
                     fill={'transparent'}
+                    fillOpacity={'var(--annotation-fill-opacity)'}
                     className={classes.animateStroke}
                 >
                     <AnnotationShape annotation={annotation} />
@@ -115,9 +119,7 @@ export const SegmentAnythingTool = () => {
     const previewAnnotations = (acceptedShapes ?? previewShapes).map((shape, idx): Annotation => {
         return {
             shape,
-            // During preview mode (while hovering), display the annotation without label color
-            // to provide an unobscured view of the underlying image before finalizing placement.
-            labels: [],
+            labels: selectedLabel ? [selectedLabel] : [],
             id: `${idx}`,
         };
     });
@@ -135,7 +137,7 @@ export const SegmentAnythingTool = () => {
             onPointerMove={handleMouseMove}
             onPointerDown={handlePointerDown}
             onPointerLeave={() => setPreviewShapes([])}
-            style={{ cursor: `url("/icons/selection.svg") 8 8, auto` }}
+            style={{ cursor: `url(${selectionCursor}) ${CURSOR_OFFSET}, auto` }}
         >
             <PreviewAnnotations previewAnnotations={previewAnnotations} image={image} />
         </SvgToolCanvas>

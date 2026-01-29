@@ -11,6 +11,7 @@ import { HttpResponse } from 'msw';
 
 import { handlers, http } from '../src/api/utils';
 import { BoundingBoxToolPage } from './annotator/bounding-box-tool-page';
+import { AnnotatorPage } from './datasets/annotator-page';
 import { StreamPage } from './inference/stream-page';
 import { JobsPage } from './jobs/jobs-page';
 import { ModelsPage } from './models/models-page';
@@ -24,6 +25,7 @@ interface Fixtures {
     modelsPage: ModelsPage;
     jobsPage: JobsPage;
     boundingBoxTool: BoundingBoxToolPage;
+    annotatorPage: AnnotatorPage;
 }
 
 const test = testBase.extend<Fixtures>({
@@ -130,6 +132,10 @@ const test = testBase.extend<Fixtures>({
     boundingBoxTool: async ({ page }, use) => {
         const boundingBoxTool = new BoundingBoxToolPage(page);
         await use(boundingBoxTool);
+    },
+    annotatorPage: async ({ page }, use) => {
+        const annotatorPage = new AnnotatorPage(page);
+        await use(annotatorPage);
     },
 });
 

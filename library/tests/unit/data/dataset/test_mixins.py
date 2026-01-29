@@ -10,7 +10,7 @@ import torch
 from torchvision.transforms.v2 import Compose, ToDtype
 
 from otx.data.dataset.mixins import DataAugSwitchMixin
-from otx.data.entity.torch import OTXDataItem
+from otx.data.entity.sample import OTXSample
 
 
 class MockDataset(DataAugSwitchMixin):
@@ -20,7 +20,7 @@ class MockDataset(DataAugSwitchMixin):
         self.to_tv_image = True
         self.transforms = None
 
-    def _apply_transforms(self, entity: OTXDataItem) -> OTXDataItem:
+    def _apply_transforms(self, entity: OTXSample) -> OTXSample:
         return entity
 
 
@@ -42,8 +42,8 @@ class TestDataAugSwitchMixin:
 
     @pytest.fixture
     def mock_entity(self):
-        """Create a mock OTXDataItem."""
-        return MagicMock(spec=OTXDataItem)
+        """Create a mock OTXSample."""
+        return MagicMock(spec=OTXSample)
 
     def test_lazy_initialization(self, mock_dataset):
         """Test that mixin initializes lazily."""

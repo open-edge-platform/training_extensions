@@ -11,7 +11,7 @@ from torch._dynamo.testing import CompileCounter
 from otx.backend.native.models.base import DataInputParams
 from otx.backend.native.models.detection.rtdetr import RTDETR
 from otx.data.entity.base import ImageInfo, OTXBatchLossEntity
-from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
+from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
 from otx.types import LabelInfo
 
 
@@ -31,8 +31,7 @@ class TestRTDETR:
             "loss_vfl": torch.tensor(0.3),
             "loss_giou": torch.tensor(0.2),
         }
-        inputs = OTXDataBatch(
-            batch_size=2,
+        inputs = OTXSampleBatch(
             imgs_info=[
                 ImageInfo(img_idx=0, img_shape=(320, 320), ori_shape=(320, 320)),
                 ImageInfo(img_idx=1, img_shape=(320, 320), ori_shape=(320, 320)),
@@ -71,7 +70,7 @@ class TestRTDETR:
         )
         result = model._customize_outputs(outputs, inputs)
 
-        assert isinstance(result, OTXPredBatch)
+        assert isinstance(result, OTXPredictionBatch)
         assert isinstance(result.scores, torch.Tensor)
         assert isinstance(result.bboxes, torch.Tensor)
         assert isinstance(result.labels, torch.Tensor)

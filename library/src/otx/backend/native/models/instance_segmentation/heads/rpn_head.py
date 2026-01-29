@@ -24,7 +24,7 @@ from otx.backend.native.models.instance_segmentation.utils.utils import unpack_i
 from otx.backend.native.models.modules import build_activation_layer
 from otx.backend.native.models.modules.conv_module import Conv2dModule
 from otx.backend.native.models.utils.utils import InstanceData
-from otx.data.entity.torch import OTXDataBatch
+from otx.data.entity.sample import OTXSampleBatch
 from otx.data.utils.structures.bbox import empty_box_as, get_box_wh
 
 if TYPE_CHECKING:
@@ -164,7 +164,7 @@ class RPNHeadModule(AnchorHead):
     def prepare_loss_inputs(
         self,
         x: tuple[Tensor],
-        entity: OTXDataBatch,  # type: ignore[override]
+        entity: OTXSampleBatch,  # type: ignore[override]
     ) -> tuple:
         """Perform forward propagation and prepare outputs for loss calculation.
 
@@ -204,7 +204,7 @@ class RPNHeadModule(AnchorHead):
     def predict(
         self,
         x: tuple[Tensor, ...],
-        entity: OTXDataBatch,
+        entity: OTXSampleBatch,
         rescale: bool = False,
     ) -> list[InstanceData]:
         """Forward-prop of the detection head and predict detection results on the features of the upstream network.

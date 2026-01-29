@@ -3,7 +3,7 @@
 
 import { orderBy } from 'lodash-es';
 
-import { ModelArchitectureWithPerformanceCategory } from '../../../../constants/shared-types';
+import type { ModelArchitectureWithPerformanceCategory } from '../../../../constants/shared-types';
 
 export const SortingOptions = {
     RELEVANCE_ASC: 'relevance-asc',

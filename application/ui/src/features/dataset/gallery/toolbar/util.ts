@@ -3,7 +3,7 @@
 
 import { Key, Selection } from '@geti/ui';
 
-import { MediaItemState, MediaStateMap } from '../../../../constants/shared-types';
+import type { MediaItemState, MediaStateMap } from '../../../../constants/shared-types';
 
 export const toggleMultipleSelection =
     (items: Key[]) =>

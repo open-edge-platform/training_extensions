@@ -23,9 +23,9 @@ from otx.data.entity.sample import (
     InstanceSegmentationSample,
     KeypointSample,
     OTXSample,
+    OTXSampleBatch,
     SegmentationSample,
 )
-from otx.data.entity.torch import OTXDataBatch
 from otx.data.transform_libs.torchvision import (
     CachedMixUp,
     CachedMosaic,
@@ -166,7 +166,7 @@ class TestResize:
     def test_forward_only_image(
         self,
         resize: Resize,
-        fxt_det_data_entity: tuple[tuple, OTXSample, OTXDataBatch],
+        fxt_det_data_entity: tuple[tuple, OTXSample, OTXSampleBatch],
         keep_ratio: bool,
         expected_shape: tuple,
         expected_scale_factor: tuple,
@@ -201,7 +201,7 @@ class TestResize:
     def test_forward_bboxes_masks(
         self,
         resize: Resize,
-        fxt_inst_seg_data_entity: tuple[tuple, OTXSample, OTXDataBatch],
+        fxt_inst_seg_data_entity: tuple[tuple, OTXSample, OTXSampleBatch],
         keep_ratio: bool,
         expected_shape: tuple,
     ) -> None:
@@ -230,7 +230,7 @@ class TestRandomFlip:
     def test_forward(
         self,
         random_flip: RandomFlip,
-        fxt_inst_seg_data_entity: tuple[tuple, OTXSample, OTXDataBatch],
+        fxt_inst_seg_data_entity: tuple[tuple, OTXSample, OTXSampleBatch],
     ) -> None:
         """Test forward."""
         entity = deepcopy(fxt_inst_seg_data_entity[0])
@@ -474,7 +474,7 @@ class TestCachedMosaic:
     def test_forward_pop_small_cache(
         self,
         cached_mosaic: CachedMosaic,
-        fxt_inst_seg_data_entity: tuple[tuple, OTXSample, OTXDataBatch],
+        fxt_inst_seg_data_entity: tuple[tuple, OTXSample, OTXSampleBatch],
     ) -> None:
         """Test forward for popping cache."""
         cached_mosaic.max_cached_images = 4
@@ -493,7 +493,7 @@ class TestCachedMosaic:
     def test_forward(
         self,
         cached_mosaic: CachedMosaic,
-        fxt_inst_seg_data_entity: tuple[tuple, OTXSample, OTXDataBatch],
+        fxt_inst_seg_data_entity: tuple[tuple, OTXSample, OTXSampleBatch],
     ) -> None:
         """Test forward."""
         entity = deepcopy(fxt_inst_seg_data_entity[0])
@@ -528,7 +528,7 @@ class TestCachedMixUp:
     def test_forward_pop_small_cache(
         self,
         cached_mixup: CachedMixUp,
-        fxt_inst_seg_data_entity: tuple[tuple, OTXSample, OTXDataBatch],
+        fxt_inst_seg_data_entity: tuple[tuple, OTXSample, OTXSampleBatch],
     ) -> None:
         """Test forward for popping cache."""
         cached_mixup.max_cached_images = 1  # force to set to 1 for this test
@@ -547,7 +547,7 @@ class TestCachedMixUp:
     def test_forward(
         self,
         cached_mixup: CachedMixUp,
-        fxt_inst_seg_data_entity: tuple[tuple, OTXSample, OTXDataBatch],
+        fxt_inst_seg_data_entity: tuple[tuple, OTXSample, OTXSampleBatch],
     ) -> None:
         """Test forward."""
         entity = deepcopy(fxt_inst_seg_data_entity[0])
@@ -583,7 +583,7 @@ class TestYOLOXHSVRandomAug:
 class TestPad:
     def test_forward(
         self,
-        fxt_inst_seg_data_entity: tuple[tuple, OTXSample, OTXDataBatch],
+        fxt_inst_seg_data_entity: tuple[tuple, OTXSample, OTXSampleBatch],
     ) -> None:
         entity = deepcopy(fxt_inst_seg_data_entity[0])
 
@@ -635,7 +635,7 @@ class TestRandomResize:
         transform_str = str(transform)
         assert isinstance(transform_str, str)
 
-    def test_forward(self, fxt_inst_seg_data_entity: tuple[tuple, OTXSample, OTXDataBatch]):
+    def test_forward(self, fxt_inst_seg_data_entity: tuple[tuple, OTXSample, OTXSampleBatch]):
         entity = deepcopy(fxt_inst_seg_data_entity[0])
 
         # choose target scale from init when override is True

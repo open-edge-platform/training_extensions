@@ -9,7 +9,7 @@ from torch._dynamo.testing import CompileCounter
 from otx.backend.native.exporter.native import OTXModelExporter
 from otx.backend.native.models.base import DataInputParams
 from otx.backend.native.models.detection.atss import ATSS
-from otx.data.entity.torch import OTXPredBatch
+from otx.data.entity.sample import OTXPredictionBatch
 from otx.types.export import TaskLevelExportParameters
 
 
@@ -63,7 +63,7 @@ class TestATSS:
     def test_predict(self, model, fxt_detection_batch):
         model.eval()
         output = model(fxt_detection_batch)
-        assert isinstance(output, OTXPredBatch)
+        assert isinstance(output, OTXPredictionBatch)
 
     @pytest.mark.parametrize(
         "model",

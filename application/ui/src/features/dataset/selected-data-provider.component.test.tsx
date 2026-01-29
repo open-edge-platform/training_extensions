@@ -1,7 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen, waitForElementToBeRemoved } from 'test-utils/render';
+import { screen, waitForElementToBeRemoved } from '@testing-library/react';
+import { render } from 'test-utils/render';
 
 import { SelectedDataProvider, useSelectedData } from './selected-data-provider.component';
 

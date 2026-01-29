@@ -14,7 +14,7 @@ import torch
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable, OTXModel
 from otx.backend.native.schedulers import LRSchedulerListCallable
 from otx.data.entity.base import ImageInfo, OTXBatchLossEntity
-from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
+from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
 from otx.metrics import MetricCallable, MetricInput
 from otx.metrics.pck import PCKMeasureCallable
 from otx.types.export import TaskLevelExportParameters
@@ -64,7 +64,7 @@ class OTXKeypointDetectionModel(OTXModel):
             torch_compile=torch_compile,
         )
 
-    def _customize_inputs(self, entity: OTXDataBatch) -> dict[str, Any]:
+    def _customize_inputs(self, entity: OTXSampleBatch) -> dict[str, Any]:
         """Convert TorchDataBatch into Topdown model's input."""
         inputs: dict[str, Any] = {}
 
@@ -76,8 +76,8 @@ class OTXKeypointDetectionModel(OTXModel):
     def _customize_outputs(
         self,
         outputs: Any,  # noqa: ANN401
-        inputs: OTXDataBatch,
-    ) -> OTXPredBatch | OTXBatchLossEntity:
+        inputs: OTXSampleBatch,
+    ) -> OTXPredictionBatch | OTXBatchLossEntity:
         if self.training:
             if not isinstance(outputs, dict):
                 raise TypeError(outputs)
@@ -118,8 +118,7 @@ class OTXKeypointDetectionModel(OTXModel):
             keypoints.append(visible_keypoints)
             scores.append(score)
 
-        return OTXPredBatch(
-            batch_size=len(outputs),
+        return OTXPredictionBatch(
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             keypoints=keypoints,
@@ -135,8 +134,8 @@ class OTXKeypointDetectionModel(OTXModel):
 
     def _convert_pred_entity_to_compute_metric(  # type: ignore[override]
         self,
-        preds: OTXPredBatch,
-        inputs: OTXDataBatch,
+        preds: OTXPredictionBatch,
+        inputs: OTXSampleBatch,
     ) -> MetricInput:
         if inputs.keypoints is None:
             msg = "The input ground truth keypoints are not provided."
@@ -171,7 +170,7 @@ class OTXKeypointDetectionModel(OTXModel):
         """Model forward function used for the model tracing during model exportation."""
         return self.model.forward(inputs=image, mode="tensor")
 
-    def get_dummy_input(self, batch_size: int = 1) -> OTXDataBatch:  # type: ignore[override]
+    def get_dummy_input(self, batch_size: int = 1) -> OTXSampleBatch:  # type: ignore[override]
         """Generates a dummy input, suitable for launching forward() on it.
 
         Args:
@@ -191,9 +190,8 @@ class OTXKeypointDetectionModel(OTXModel):
                 ),
             )
 
-        return OTXDataBatch(
-            batch_size,
-            images,
+        return OTXSampleBatch(
+            images=images,
             labels=[],
             bboxes=[],
             keypoints=[],

@@ -3,7 +3,8 @@
 
 import { PointerEvent } from 'react';
 
-import { act, renderHook } from '@testing-library/react';
+import { act } from '@testing-library/react';
+import { renderHook } from 'test-utils/render';
 
 import { useWheelPanning } from './use-wheel-panning.hook';
 

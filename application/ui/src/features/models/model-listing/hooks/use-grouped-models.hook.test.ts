@@ -1,8 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { renderHook } from '@testing-library/react';
 import { getMockedModel } from 'mocks/mock-model';
+import { renderHook } from 'test-utils/render';
 
 import { useGroupedModels } from './use-grouped-models.hook';
 

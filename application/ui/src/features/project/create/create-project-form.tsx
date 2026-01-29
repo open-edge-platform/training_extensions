@@ -60,7 +60,8 @@ export const CreateProjectForm = ({ projects }: CreateProjectFormProps) => {
                     id: projectId,
                     task: {
                         task_type: selectedTask,
-                        exclusive_labels: selectedTask === 'classification',
+                        exclusive_labels:
+                            selectedTask === 'classification' && classificationTaskType === 'single-label',
                         labels,
                     },
                     name,

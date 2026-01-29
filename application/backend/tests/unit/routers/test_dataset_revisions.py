@@ -1,6 +1,5 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
 import os
 import tempfile
 from unittest.mock import MagicMock
@@ -8,6 +7,7 @@ from uuid import uuid4
 
 import pytest
 from fastapi import status
+from PIL import Image
 
 from app.api.dependencies import get_data_dir, get_dataset_revision, get_dataset_revision_service
 from app.api.schemas.dataset_item import DatasetItemSubset
@@ -186,7 +186,6 @@ class TestDatasetRevisionItemEndpoints:
         fxt_dataset_revision_service.get_dataset_revision.return_value = MagicMock(id=fxt_dataset_revision_id)
         mock_item_data = {
             "id": str(fxt_dataset_item.id),
-            "name": "test_dataset_item",
             "format": MediaFormat.JPG.value,
             "width": 1024,
             "height": 768,
@@ -206,7 +205,6 @@ class TestDatasetRevisionItemEndpoints:
         assert response_data["pagination"]["offset"] == 0
         assert len(response_data["items"]) == 1
         assert response_data["items"][0]["id"] == str(fxt_dataset_item.id)
-        assert response_data["items"][0]["name"] == "test_dataset_item"
 
         fxt_dataset_revision_service.get_dataset_revision.assert_called_once_with(
             project_id=fxt_get_project.id, revision_id=fxt_dataset_revision_id
@@ -225,7 +223,6 @@ class TestDatasetRevisionItemEndpoints:
         fxt_dataset_revision_service.get_dataset_revision.return_value = MagicMock(id=fxt_dataset_revision_id)
         mock_item_data = {
             "id": str(fxt_dataset_item.id),
-            "name": "test_dataset_item",
             "format": MediaFormat.JPG.value,
             "width": 1024,
             "height": 768,
@@ -264,7 +261,6 @@ class TestDatasetRevisionItemEndpoints:
         fxt_dataset_revision_service.get_dataset_revision.return_value = MagicMock(id=fxt_dataset_revision_id)
         mock_item_data = {
             "id": str(fxt_dataset_item.id),
-            "name": "test_dataset_item",
             "format": MediaFormat.JPG.value,
             "width": 1024,
             "height": 768,
@@ -321,7 +317,6 @@ class TestDatasetRevisionItemEndpoints:
         fxt_dataset_revision_service.get_dataset_revision.return_value = MagicMock(id=fxt_dataset_revision_id)
         mock_item_data = {
             "id": str(fxt_dataset_item.id),
-            "name": "test_dataset_item",
             "format": MediaFormat.JPG.value,
             "width": 1024,
             "height": 768,
@@ -336,7 +331,6 @@ class TestDatasetRevisionItemEndpoints:
         assert response.status_code == status.HTTP_200_OK
         response_json = response.json()
         assert response_json["id"] == str(fxt_dataset_item.id)
-        assert response_json["name"] == "test_dataset_item"
         assert response_json["width"] == 1024
         assert response_json["height"] == 768
         assert response_json["subset"] == "training"
@@ -374,12 +368,11 @@ class TestDatasetRevisionItemEndpoints:
             ResourceType.DATASET_ITEM, str(dataset_item_id)
         )
 
-        with pytest.raises(ResourceNotFoundError):
-            response = fxt_client.get(
-                f"/api/projects/{str(fxt_get_project.id)}/dataset_revisions/{str(fxt_dataset_revision_id)}/items/{str(dataset_item_id)}"
-            )
+        response = fxt_client.get(
+            f"/api/projects/{str(fxt_get_project.id)}/dataset_revisions/{str(fxt_dataset_revision_id)}/items/{str(dataset_item_id)}"
+        )
 
-            assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_get_dataset_revision_item_invalid_ids(self, fxt_get_project, fxt_dataset_revision_service, fxt_client):
         response = fxt_client.get(
@@ -401,7 +394,7 @@ class TestDatasetRevisionItemEndpoints:
             tmp_file_path = tmp_file.name
 
         try:
-            fxt_dataset_revision_service.get_dataset_revision_item_binary_path.return_value = tmp_file_path
+            fxt_dataset_revision_service.get_dataset_revision_item.return_value = MagicMock(image_path=tmp_file_path)
 
             response = fxt_client.get(
                 f"/api/projects/{str(fxt_get_project.id)}/dataset_revisions/{str(fxt_dataset_revision_id)}/items/{str(dataset_item_id)}/binary"
@@ -411,7 +404,7 @@ class TestDatasetRevisionItemEndpoints:
             fxt_dataset_revision_service.get_dataset_revision.assert_called_once_with(
                 project_id=fxt_get_project.id, revision_id=fxt_dataset_revision_id
             )
-            fxt_dataset_revision_service.get_dataset_revision_item_binary_path.assert_called_once_with(
+            fxt_dataset_revision_service.get_dataset_revision_item.assert_called_once_with(
                 project_id=fxt_get_project.id,
                 dataset_revision=fxt_dataset_revision_service.get_dataset_revision(),
                 item_id=str(dataset_item_id),
@@ -433,23 +426,22 @@ class TestDatasetRevisionItemEndpoints:
         )
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
-        fxt_dataset_revision_service.get_dataset_revision_item_binary_path.assert_not_called()
+        fxt_dataset_revision_service.get_dataset_revision_item.assert_not_called()
 
     def test_get_dataset_revision_item_binary_not_found(
         self, fxt_get_project, fxt_dataset_revision_id, fxt_dataset_revision_service, fxt_client
     ):
         dataset_item_id = uuid4()
         fxt_dataset_revision_service.get_dataset_revision.return_value = MagicMock(id=fxt_dataset_revision_id)
-        fxt_dataset_revision_service.get_dataset_revision_item_binary_path.side_effect = ResourceNotFoundError(
+        fxt_dataset_revision_service.get_dataset_revision_item.side_effect = ResourceNotFoundError(
             ResourceType.DATASET_ITEM, str(dataset_item_id)
         )
 
-        with pytest.raises(ResourceNotFoundError):
-            response = fxt_client.get(
-                f"/api/projects/{str(fxt_get_project.id)}/dataset_revisions/{str(fxt_dataset_revision_id)}/items/{str(dataset_item_id)}/binary"
-            )
+        response = fxt_client.get(
+            f"/api/projects/{str(fxt_get_project.id)}/dataset_revisions/{str(fxt_dataset_revision_id)}/items/{str(dataset_item_id)}/binary"
+        )
 
-            assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_get_dataset_revision_item_binary_invalid_ids(
         self, fxt_get_project, fxt_dataset_revision_service, fxt_client
@@ -467,47 +459,38 @@ class TestDatasetRevisionItemEndpoints:
         dataset_item_id = uuid4()
         fxt_dataset_revision_service.get_dataset_revision.return_value = MagicMock(id=fxt_dataset_revision_id)
 
-        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp_file:
-            tmp_file.write(b"test thumbnail data")
-            tmp_file.flush()
-            tmp_file_path = tmp_file.name
+        # Create a dummy PIL image to return as the thumbnail
+        dummy_image = Image.new("RGB", (64, 64), color="red")
+        fxt_dataset_revision_service.get_dataset_revision_item_thumbnail.return_value = dummy_image
 
-        try:
-            # Thumbnail endpoint now uses the same method as binary (returns full image)
-            fxt_dataset_revision_service.get_dataset_revision_item_binary_path.return_value = tmp_file_path
+        response = fxt_client.get(
+            f"/api/projects/{str(fxt_get_project.id)}/dataset_revisions/{str(fxt_dataset_revision_id)}/items/{str(dataset_item_id)}/thumbnail"
+        )
 
-            response = fxt_client.get(
-                f"/api/projects/{str(fxt_get_project.id)}/dataset_revisions/{str(fxt_dataset_revision_id)}/items/{str(dataset_item_id)}/thumbnail"
-            )
-
-            assert response.status_code == status.HTTP_200_OK
-            fxt_dataset_revision_service.get_dataset_revision.assert_called_once_with(
-                project_id=fxt_get_project.id, revision_id=fxt_dataset_revision_id
-            )
-            fxt_dataset_revision_service.get_dataset_revision_item_binary_path.assert_called_once_with(
-                project_id=fxt_get_project.id,
-                dataset_revision=fxt_dataset_revision_service.get_dataset_revision(),
-                item_id=str(dataset_item_id),
-            )
-        finally:
-            if os.path.exists(tmp_file_path):
-                os.unlink(tmp_file_path)
+        assert response.status_code == status.HTTP_200_OK
+        fxt_dataset_revision_service.get_dataset_revision.assert_called_once_with(
+            project_id=fxt_get_project.id, revision_id=fxt_dataset_revision_id
+        )
+        fxt_dataset_revision_service.get_dataset_revision_item_thumbnail.assert_called_once_with(
+            project_id=fxt_get_project.id,
+            dataset_revision=fxt_dataset_revision_service.get_dataset_revision(),
+            item_id=str(dataset_item_id),
+        )
 
     def test_get_dataset_revision_item_thumbnail_not_found(
         self, fxt_get_project, fxt_dataset_revision_id, fxt_dataset_revision_service, fxt_client
     ):
         dataset_item_id = uuid4()
         fxt_dataset_revision_service.get_dataset_revision.return_value = MagicMock(id=fxt_dataset_revision_id)
-        fxt_dataset_revision_service.get_dataset_revision_item_binary_path.side_effect = ResourceNotFoundError(
+        fxt_dataset_revision_service.get_dataset_revision_item_thumbnail.side_effect = ResourceNotFoundError(
             ResourceType.DATASET_ITEM, str(dataset_item_id)
         )
 
-        with pytest.raises(ResourceNotFoundError):
-            response = fxt_client.get(
-                f"/api/projects/{str(fxt_get_project.id)}/dataset_revisions/{str(fxt_dataset_revision_id)}/items/{str(dataset_item_id)}/thumbnail"
-            )
+        response = fxt_client.get(
+            f"/api/projects/{str(fxt_get_project.id)}/dataset_revisions/{str(fxt_dataset_revision_id)}/items/{str(dataset_item_id)}/thumbnail"
+        )
 
-            assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_get_dataset_revision_item_thumbnail_invalid_ids(
         self, fxt_get_project, fxt_dataset_revision_service, fxt_client
@@ -538,12 +521,11 @@ class TestDatasetRevisionItemEndpoints:
             ResourceType.DATASET_REVISION, str(fxt_dataset_revision_id)
         )
 
-        with pytest.raises(ResourceNotFoundError):
-            response = fxt_client.delete(
-                f"/api/projects/{str(fxt_get_project.id)}/dataset_revisions/{str(fxt_dataset_revision_id)}"
-            )
+        response = fxt_client.delete(
+            f"/api/projects/{str(fxt_get_project.id)}/dataset_revisions/{str(fxt_dataset_revision_id)}"
+        )
 
-            assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_delete_dataset_revision_files_invalid_id(self, fxt_get_project, fxt_dataset_revision_service, fxt_client):
         response = fxt_client.delete(f"/api/projects/{str(fxt_get_project.id)}/dataset_revisions/invalid-id")

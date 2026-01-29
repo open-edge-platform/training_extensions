@@ -9,7 +9,7 @@ from torch import nn
 
 from otx.backend.native.models.detection.detectors.single_stage_detector import SingleStageDetector
 from otx.data.entity.base import ImageInfo
-from otx.data.entity.torch import OTXPredBatch
+from otx.data.entity.sample import OTXPredictionBatch
 
 
 class TestSingleStageDetector:
@@ -49,8 +49,7 @@ class TestSingleStageDetector:
     @pytest.fixture
     def batch(self):
         inputs = torch.randn(1, 3, 32, 32)
-        return OTXPredBatch(
-            batch_size=1,
+        return OTXPredictionBatch(
             imgs_info=ImageInfo(img_idx=0, img_shape=(32, 32), ori_shape=(32, 32)),
             images=inputs,
             bboxes=[torch.tensor([[0.5, 0.5, 0.5, 0.5]])],

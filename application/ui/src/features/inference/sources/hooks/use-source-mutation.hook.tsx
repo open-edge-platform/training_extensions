@@ -5,7 +5,7 @@ import { omit } from 'lodash-es';
 import { v4 as uuid } from 'uuid';
 
 import { $api } from '../../../../api/client';
-import { SourceConfig } from '../util';
+import type { SourceConfigPayload } from '../../../../constants/shared-types';
 
 export const useSourceMutation = (isNewSource: boolean) => {
     const addSource = $api.useMutation('post', '/api/sources', {
@@ -22,7 +22,7 @@ export const useSourceMutation = (isNewSource: boolean) => {
         },
     });
 
-    return async (body: SourceConfig) => {
+    return async (body: SourceConfigPayload) => {
         if (isNewSource) {
             const sourcePayload = {
                 ...body,

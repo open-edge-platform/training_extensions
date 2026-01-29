@@ -28,7 +28,7 @@ class OTXMulticlassClsDataset(OTXDataset):
     """OTX Dataset for multi-class classification tasks.
 
     This dataset handles single-label classification where each image belongs to exactly one class.
-    It processes Datumaro dataset items and converts them into OTXDataItem format suitable for
+    It processes Datumaro dataset items and converts them into OTXSample format suitable for
     multi-class classification training and inference.
 
     Args:
@@ -111,7 +111,7 @@ class OTXMultilabelClsDataset(OTXDataset):
     """OTX Dataset for multi-label classification tasks.
 
     This dataset handles multi-label classification where each image can belong to multiple classes
-    simultaneously. It processes Datumaro dataset items and converts them into OTXDataItem format
+    simultaneously. It processes Datumaro dataset items and converts them into OTXSample format
     with one-hot encoded labels suitable for multi-label classification training and inference.
 
     Args:
@@ -222,7 +222,7 @@ class OTXHlabelClsDataset(OTXDataset):
     with multiple classification heads. It supports both multiclass heads (where one class per head
     is selected) and multilabel heads (where multiple classes can be selected simultaneously).
 
-    The dataset processes Datumaro dataset items and converts them into OTXDataItem format with
+    The dataset processes Datumaro dataset items and converts them into OTXSample format with
     hierarchical label encoding suitable for H-label classification training and inference.
 
     Args:

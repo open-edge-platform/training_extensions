@@ -3,10 +3,13 @@ default_language_version:
 
 repos:
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: "0.9.7"
+    rev: "0.9.27"
     hooks:
       - id: uv-lock
         name: uv lock
+        always_run: true
+        pass_filenames: false
+
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: "v1.6.1"
     hooks:

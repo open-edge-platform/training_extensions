@@ -16,7 +16,7 @@ from otx.backend.native.models.detection.heads.dfine_decoder import DFINETransfo
 from otx.backend.native.models.detection.losses.dfine_loss import DFINECriterion
 from otx.backend.native.models.detection.necks.dfine_hybrid_encoder import HybridEncoder
 from otx.backend.native.models.detection.rtdetr import DETR
-from otx.data.entity.torch import OTXPredBatch
+from otx.data.entity.sample import OTXPredictionBatch
 
 
 class TestDFine:
@@ -46,7 +46,7 @@ class TestDFine:
     def test_predict(self, model, fxt_detection_batch):
         model.eval()
         output = model(fxt_detection_batch)
-        assert isinstance(output, OTXPredBatch)
+        assert isinstance(output, OTXPredictionBatch)
 
     @pytest.mark.parametrize(
         "model",

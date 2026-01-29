@@ -33,7 +33,7 @@ const ColorPicker = ({ onChange, value }: SpectrumColorPickerProps) => {
         <SpectrumColorPicker value={value} onChange={onChange} rounding={'none'}>
             <Flex direction='column' gap='size-300'>
                 <ColorEditor />
-                <ColorSwatchPicker>
+                <ColorSwatchPicker width={'size-3600'}>
                     {DISTINCT_COLORS.map((color) => {
                         return <ColorSwatch color={color} key={color} />;
                     })}

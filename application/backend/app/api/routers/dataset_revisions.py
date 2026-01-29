@@ -1,11 +1,11 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-
+from io import BytesIO
 from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from fastapi.openapi.models import Example
-from starlette.responses import FileResponse
+from starlette.responses import FileResponse, StreamingResponse
 
 from app.api.dependencies import get_dataset_revision, get_dataset_revision_service, get_project
 from app.api.schemas.dataset_item import (
@@ -28,6 +28,19 @@ router = APIRouter(
 DEFAULT_DATASET_ITEMS_NUMBER_RETURNED = 10
 MAX_DATASET_ITEMS_NUMBER_RETURNED = 100
 
+UPDATE_DATASET_REVISION_BODY_DESCRIPTION = """
+Update name of a dataset revision.
+"""
+UPDATE_DATASET_REVISION_BODY_EXAMPLES = {
+    "name": Example(
+        summary="Update dataset revision name",
+        description="Change the name of a dataset revision",
+        value={
+            "name": "new_dataset_revision_name",
+        },
+    ),
+}
+
 
 @router.get(
     "",
@@ -42,7 +55,7 @@ def list_dataset_revisions(
     project: Annotated[Project, Depends(get_project)],
     dataset_revision_service: Annotated[DatasetRevisionService, Depends(get_dataset_revision_service)],
 ) -> list[DatasetRevisionView]:
-    """Get all dataset revisions in a project, optionally filtered by dataset revision."""
+    """List the dataset revisions in a project."""
     try:
         dataset_revision_views = []
         for dataset_revision in dataset_revision_service.list_dataset_revisions(project_id=project.id):
@@ -62,7 +75,7 @@ def list_dataset_revisions(
     "/{dataset_revision_id}",
     response_model=DatasetRevisionView,
     responses={
-        status.HTTP_200_OK: {"description": "Datset revision found"},
+        status.HTTP_200_OK: {"description": "Dataset revision found"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid project or dataset revision ID"},
         status.HTTP_404_NOT_FOUND: {"description": "Project or dataset revision not found"},
     },
@@ -72,7 +85,7 @@ def get_dataset_revision_details(
     dataset_revision: Annotated[DatasetRevision, Depends(get_dataset_revision)],
     dataset_revision_service: Annotated[DatasetRevisionService, Depends(get_dataset_revision_service)],
 ) -> DatasetRevisionView:
-    """Get a specific dataset revision by ID."""
+    """Get information about a specific dataset revision."""
     try:
         item_counts = dataset_revision_service.count_items_by_subset(
             project_id=project.id, dataset_revision_id=dataset_revision.id
@@ -81,20 +94,6 @@ def get_dataset_revision_details(
         return DatasetRevisionView.model_validate(dataset_revision_view, from_attributes=True)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-
-
-UPDATE_DATASET_REVISION_BODY_DESCRIPTION = """
-Update name of a dataset revision.
-"""
-UPDATE_DATASET_REVISION_BODY_EXAMPLES = {
-    "name": Example(
-        summary="Update dataset revision name",
-        description="Change the name of a dataset revision",
-        value={
-            "name": "new_dataset_revision_name",
-        },
-    ),
-}
 
 
 @router.patch(
@@ -118,7 +117,7 @@ def rename_dataset_revision(
     ],
     dataset_revision_service: Annotated[DatasetRevisionService, Depends(get_dataset_revision_service)],
 ) -> DatasetRevisionView:
-    """Rename a model"""
+    """Rename a dataset revision"""
     try:
         dataset_revision = dataset_revision_service.rename_dataset_revision(
             dataset_revision=dataset_revision,
@@ -186,13 +185,15 @@ def get_dataset_revision_item(
     dataset_revision_service: Annotated[DatasetRevisionService, Depends(get_dataset_revision_service)],
 ) -> DatasetRevisionItemView:
     """Get information about a specific item in the dataset revision"""
-    dataset_revision_item = dataset_revision_service.get_dataset_revision_item(
-        project_id=project.id,
-        dataset_revision=dataset_revision,
-        item_id=str(dataset_item_id),
-    )
-
-    return DatasetRevisionItemView.model_validate(dataset_revision_item, from_attributes=True)
+    try:
+        dataset_revision_item = dataset_revision_service.get_dataset_revision_item(
+            project_id=project.id,
+            dataset_revision=dataset_revision,
+            item_id=str(dataset_item_id),
+        )
+        return DatasetRevisionItemView.model_validate(dataset_revision_item, from_attributes=True)
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.get(
@@ -200,7 +201,7 @@ def get_dataset_revision_item(
     responses={
         status.HTTP_200_OK: {"description": "Dataset item binary found"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid dataset item ID or revision ID"},
-        status.HTTP_404_NOT_FOUND: {"description": "Dataset item, binary, revision, or project not found"},
+        status.HTTP_404_NOT_FOUND: {"description": "Dataset revision, item or project not found"},
     },
 )
 def get_dataset_revision_item_binary(
@@ -210,12 +211,15 @@ def get_dataset_revision_item_binary(
     dataset_revision_service: Annotated[DatasetRevisionService, Depends(get_dataset_revision_service)],
 ) -> FileResponse:
     """Get the image data of an item in the dataset revision"""
-    binary_path = dataset_revision_service.get_dataset_revision_item_binary_path(
-        project_id=project.id,
-        dataset_revision=dataset_revision,
-        item_id=str(dataset_item_id),
-    )
-    return FileResponse(binary_path, media_type="application/octet-stream")
+    try:
+        binary_path = dataset_revision_service.get_dataset_revision_item(
+            project_id=project.id,
+            dataset_revision=dataset_revision,
+            item_id=str(dataset_item_id),
+        ).image_path
+        return FileResponse(binary_path)
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.get(
@@ -223,7 +227,7 @@ def get_dataset_revision_item_binary(
     responses={
         status.HTTP_200_OK: {"description": "Dataset item thumbnail found"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid dataset item ID or revision ID"},
-        status.HTTP_404_NOT_FOUND: {"description": "Dataset item, thumbnail, revision, or project not found"},
+        status.HTTP_404_NOT_FOUND: {"description": "Dataset revision, item or project not found"},
     },
 )
 def get_dataset_revision_item_thumbnail(
@@ -231,15 +235,27 @@ def get_dataset_revision_item_thumbnail(
     dataset_revision: Annotated[DatasetRevision, Depends(get_dataset_revision)],
     dataset_item_id: DatasetItemID,
     dataset_revision_service: Annotated[DatasetRevisionService, Depends(get_dataset_revision_service)],
-) -> FileResponse:
+) -> StreamingResponse:
     """Get the thumbnail of an item in the dataset revision"""
-    # TODO: correctly compute thumbnail image and return it.
-    binary_path = dataset_revision_service.get_dataset_revision_item_binary_path(
-        project_id=project.id,
-        dataset_revision=dataset_revision,
-        item_id=str(dataset_item_id),
-    )
-    return FileResponse(binary_path, media_type="image/jpeg")
+    try:
+        thumbnail = dataset_revision_service.get_dataset_revision_item_thumbnail(
+            project_id=project.id,
+            dataset_revision=dataset_revision,
+            item_id=str(dataset_item_id),
+        )
+        buffer = BytesIO()
+        thumbnail.save(buffer, format="JPEG")
+        buffer.seek(0)
+        return StreamingResponse(
+            buffer,
+            media_type="image/jpeg",
+            headers={
+                "Content-Disposition": f"inline; filename={dataset_item_id}.jpeg",
+                "Cache-Control": "public, max-age=31536000",
+            },
+        )
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.delete(
@@ -257,4 +273,7 @@ def delete_dataset_revision_files(
     dataset_revision_service: Annotated[DatasetRevisionService, Depends(get_dataset_revision_service)],
 ) -> None:
     """Delete the files associated with a dataset revision"""
-    dataset_revision_service.delete_dataset_revision_files(project_id=project.id, revision_id=dataset_revision_id)
+    try:
+        dataset_revision_service.delete_dataset_revision_files(project_id=project.id, revision_id=dataset_revision_id)
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

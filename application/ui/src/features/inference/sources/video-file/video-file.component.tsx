@@ -4,7 +4,7 @@
 import { Flex, TextField } from '@geti/ui';
 
 import { ReactComponent as Folder } from '../../../../assets/icons/folder.svg';
-import { VideoFileSourceConfig } from '../util';
+import type { VideoFileSourceConfig } from '../../../../constants/shared-types';
 
 import classes from './video-file.module.scss';
 

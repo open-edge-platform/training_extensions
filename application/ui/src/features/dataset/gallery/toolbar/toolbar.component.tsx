@@ -18,10 +18,24 @@ type ToolbarProps = {
     items: Media[];
 };
 
+type AnnotateButtonProps = {
+    isDisabled?: boolean;
+    onClick?: () => void;
+};
+
+const AnnotateButton = ({ isDisabled, onClick }: AnnotateButtonProps) => {
+    return (
+        <Button variant={'primary'} onPress={onClick} isDisabled={isDisabled}>
+            Annotate
+        </Button>
+    );
+};
+
 export const Toolbar = ({ items }: ToolbarProps) => {
     const projectId = useProjectIdentifier();
     const queryClient = useQueryClient();
-    const { selectedKeys, setSelectedKeys, setMediaState, toggleSelectedKeys } = useSelectedData();
+    const { selectedKeys, setSelectedKeys, setMediaState, toggleSelectedKeys, onSelectedMediaItemChange } =
+        useSelectedData();
 
     const addItemMutation = $api.useMutation('post', '/api/projects/{project_id}/dataset/media');
 
@@ -84,6 +98,10 @@ export const Toolbar = ({ items }: ToolbarProps) => {
                 <ButtonGroup>
                     <AddMediaButton onFilesSelected={handleAddMediaItem} />
                     <TrainModel />
+                    <AnnotateButton
+                        isDisabled={items.at(0) === undefined}
+                        onClick={items.at(0) === undefined ? undefined : () => onSelectedMediaItemChange(items[0])}
+                    />
                 </ButtonGroup>
             </Flex>
 

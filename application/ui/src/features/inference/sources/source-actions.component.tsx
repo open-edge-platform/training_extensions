@@ -8,10 +8,10 @@ import { Back } from '@geti/ui/icons';
 import { isEmpty } from 'lodash-es';
 
 import { $api } from '../../../api/client';
+import type { SourceConfig } from '../../../constants/shared-types';
 import { EditSourceForm } from './edit-source-form.component';
 import { SourcesList } from './source-list/source-list.component';
 import { SourceOptions } from './source-options';
-import { SourceConfig } from './util';
 
 export const SourceActions = () => {
     const [view, setView] = useState<'list' | 'options' | 'edit'>('list');
