@@ -1,5 +1,6 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+from pathlib import Path
 from typing import Annotated
 
 from fastapi import APIRouter, File, HTTPException, UploadFile, status
@@ -7,6 +8,7 @@ from fastapi.params import Depends
 from starlette.responses import StreamingResponse
 
 from app.api.dependencies import get_staged_dataset_service
+from app.api.io_utils import file_iterator
 from app.api.schemas import StagedDatasetView
 from app.api.validators import StagedDatasetID
 from app.services.staged_dataset_service import StagedDatasetService
@@ -68,9 +70,18 @@ async def list_datasets(
         status.HTTP_404_NOT_FOUND: {"description": "Staged dataset not found"},
     },
 )
-def get_dataset(staged_dataset_id: StagedDatasetID) -> StagedDatasetView:
+def get_dataset(
+    staged_dataset_id: StagedDatasetID,
+    staged_dataset_service: Annotated[StagedDatasetService, Depends(get_staged_dataset_service)],
+) -> StagedDatasetView:
     """Get info about the staged dataset from the staging area"""
-    raise NotImplementedError
+    staged_dataset = staged_dataset_service.get(staged_dataset_id)
+    if not staged_dataset:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Staged dataset with ID '{staged_dataset_id}' not found.",
+        )
+    return StagedDatasetView.model_validate(staged_dataset, from_attributes=True)
 
 
 @router.get(
@@ -83,9 +94,31 @@ def get_dataset(staged_dataset_id: StagedDatasetID) -> StagedDatasetView:
         },
     },
 )
-def download_archive(staged_dataset_id: StagedDatasetID) -> StreamingResponse:
+def download_archive(
+    staged_dataset_id: StagedDatasetID,
+    staged_dataset_service: Annotated[StagedDatasetService, Depends(get_staged_dataset_service)],
+) -> StreamingResponse:
     """Download the staged dataset archive from the staging area"""
-    raise NotImplementedError
+    staged_dataset = staged_dataset_service.get(staged_dataset_id)
+    if staged_dataset is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Staged dataset with ID `{staged_dataset_id}` not found.",
+        )
+
+    if not staged_dataset.compressed:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Staged dataset is not in zip format ready for download.",
+        )
+
+    return StreamingResponse(
+        file_iterator(Path(staged_dataset.filename)),
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f"attachment; filename={staged_dataset.filename}",
+        },
+    )
 
 
 @router.delete(
@@ -95,6 +128,14 @@ def download_archive(staged_dataset_id: StagedDatasetID) -> StreamingResponse:
         status.HTTP_404_NOT_FOUND: {"description": "Staged dataset not found"},
     },
 )
-def delete_dataset(staged_dataset_id: StagedDatasetID) -> None:
+def delete_dataset(
+    staged_dataset_id: StagedDatasetID,
+    staged_dataset_service: Annotated[StagedDatasetService, Depends(get_staged_dataset_service)],
+) -> None:
     """Delete the staged dataset from the staging area"""
-    raise NotImplementedError
+    deleted = staged_dataset_service.delete(staged_dataset_id)
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Staged dataset with ID '{staged_dataset_id}' not found.",
+        )

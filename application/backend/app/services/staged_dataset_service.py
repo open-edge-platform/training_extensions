@@ -1,6 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import shutil
 from collections.abc import Awaitable, Callable
 from pathlib import Path
 from uuid import UUID, uuid4
@@ -64,10 +65,11 @@ class StagedDatasetService:
                 out_f.write(chunk)
 
         return StagedDataset(
+            compressed=True,
+            filename=str(target_path),
+            format=_infer_format_from_filename(filename),
             id=dataset_id,
             size=size,
-            format=_infer_format_from_filename(filename),
-            compressed=True,
         )
 
     def list_all(self) -> list[StagedDataset]:
@@ -97,12 +99,61 @@ class StagedDatasetService:
             size = archive_path.stat().st_size
             compressed = archive_path.is_file() and archive_path.suffix == ".zip"
             dataset_format = _infer_format_from_filename(archive_path.name)
+            # TODO: extract datumaro dataset metadata when uncompressed
             staged_datasets.append(
                 StagedDataset(
-                    id=dataset_id,
-                    format=dataset_format,
                     compressed=compressed,
+                    filename=str(archive_path),
+                    format=dataset_format,
+                    id=dataset_id,
                     size=size,
                 )
             )
         return staged_datasets
+
+    def get(self, dataset_id: UUID) -> StagedDataset | None:
+        """
+        Retrieve a single staged dataset by its identifier.
+
+        The dataset is expected to reside in a subdirectory named with the given UUID. The first regular file found
+        in that directory is treated as the archive and mapped to a `StagedDataset` instance.
+
+        Args:
+            dataset_id: Identifier of the staged dataset to retrieve.
+
+        Returns:
+            A `StagedDataset` object if the dataset exists and contains at least one file; otherwise `None`.
+        """
+        dataset_dir = self._staged_datasets_dir / str(dataset_id)
+        if not dataset_dir.is_dir():
+            return None
+
+        files = [p for p in dataset_dir.iterdir() if p.is_file()]
+        if not files:
+            return None
+
+        archive_path = files[0]
+        size = archive_path.stat().st_size
+        compressed = archive_path.is_file() and archive_path.suffix == ".zip"
+        # TODO: extract datumaro dataset metadata when uncompressed
+
+        return StagedDataset(
+            id=dataset_id,
+            filename=str(archive_path),
+            format=_infer_format_from_filename(archive_path.name),
+            compressed=compressed,
+            size=size,
+        )
+
+    def delete(self, dataset_id: UUID) -> bool:
+        """
+        Delete a staged dataset directory and its contents.
+
+        Returns \`True\` if the directory existed and was removed, otherwise `False`.
+        """
+        dataset_dir = self._staged_datasets_dir / str(dataset_id)
+        if not dataset_dir.is_dir():
+            return False
+
+        shutil.rmtree(dataset_dir)
+        return True

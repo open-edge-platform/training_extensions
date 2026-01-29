@@ -15,6 +15,7 @@ class DatasetFormat(StrEnum):
 
 
 class StagedDataset(BaseRequiredIDModel):
+    filename: str
     compressed: bool
     format: DatasetFormat
     size: int
