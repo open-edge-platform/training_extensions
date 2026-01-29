@@ -2,11 +2,14 @@
 # SPDX-License-Identifier: Apache-2.0
 from typing import Annotated
 
-from fastapi import APIRouter, File, UploadFile, status
+from fastapi import APIRouter, File, HTTPException, UploadFile, status
+from fastapi.params import Depends
 from starlette.responses import StreamingResponse
 
+from app.api.dependencies import get_staged_dataset_service
 from app.api.schemas import StagedDatasetView
 from app.api.validators import StagedDatasetID
+from app.services.staged_dataset_service import StagedDatasetService
 
 router = APIRouter(prefix="/api/staged_datasets", tags=["Dataset Import/Export"])
 
@@ -15,13 +18,29 @@ router = APIRouter(prefix="/api/staged_datasets", tags=["Dataset Import/Export"]
     "",
     response_model=StagedDatasetView,
     responses={
-        status.HTTP_200_OK: {"description": "Dataset archive uploaded successfully"},
+        status.HTTP_201_CREATED: {"description": "Dataset archive uploaded successfully"},
         status.HTTP_422_UNPROCESSABLE_CONTENT: {"description": "Invalid archive has been uploaded"},
     },
 )
-def upload_dataset_archive(file: Annotated[UploadFile, File()]) -> StagedDatasetView:
+async def upload_dataset_archive(
+    file: Annotated[UploadFile, File()],
+    staged_datasets_service: Annotated[StagedDatasetService, Depends(get_staged_dataset_service)],
+) -> StagedDatasetView:
     """Upload dataset archive to the staging area"""
-    raise NotImplementedError
+    if not file.filename:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Uploaded archive must have a filename.",
+        )
+
+    try:
+        staged_dataset = await staged_datasets_service.upload(
+            filename=file.filename,
+            chunk_reader=lambda: file.read(1024 * 1024),
+        )
+        return StagedDatasetView.model_validate(staged_dataset, from_attributes=True)
+    finally:
+        await file.close()
 
 
 @router.get(
@@ -33,9 +52,11 @@ def upload_dataset_archive(file: Annotated[UploadFile, File()]) -> StagedDataset
         },
     },
 )
-def list_datasets() -> list[StagedDatasetView]:
+async def list_datasets(
+    staged_dataset_service: Annotated[StagedDatasetService, Depends(get_staged_dataset_service)],
+) -> list[StagedDatasetView]:
     """List all datasets from the staging area"""
-    raise NotImplementedError
+    return [StagedDatasetView.model_validate(item, from_attributes=True) for item in staged_dataset_service.list_all()]
 
 
 @router.get(
