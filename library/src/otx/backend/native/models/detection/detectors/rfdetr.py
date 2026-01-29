@@ -160,7 +160,8 @@ class RFDETRDetector(BaseModule):
         """
         outputs = self.lwdetr(batch_inputs)
         # outputs is (pred_boxes, pred_logits, pred_masks) in export mode
-        pred_boxes, pred_logits, pred_masks = outputs
+        pred_boxes, pred_logits = outputs
+        pred_masks = None
 
         # Process outputs similar to PostProcess
         scores = torch.sigmoid(pred_logits)

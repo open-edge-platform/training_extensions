@@ -17,6 +17,7 @@ from rfdetr import RFDETRBase, RFDETRLarge, RFDETRMedium, RFDETRNano, RFDETRSmal
 from rfdetr.main import populate_args
 from rfdetr.models.lwdetr import build_criterion_and_postprocessors
 from rfdetr.util.get_param_dicts import get_param_dict
+from torch.export import Dim
 
 from otx.backend.native.exporter.base import OTXModelExporter
 from otx.backend.native.exporter.native import OTXNativeModelExporter
@@ -259,18 +260,11 @@ class RFDETR(DFine):
             swap_rgb=False,
             via_onnx=True,
             onnx_export_configuration={
-                "input_names": ["input"],
+                "input_names": ["images"],
                 "output_names": ["bboxes", "labels", "scores"],
-                "dynamic_axes": {
-                    "images": {0: "batch"},
-                    "bboxes": {0: "batch", 1: "num_dets"},
-                    "labels": {0: "batch", 1: "num_dets"},
-                    "scores": {0: "batch", 1: "num_dets"},
-                },
-                "dynamo": False,  # RF-DETR does not support dynamo
-                "do_constant_folding": True,
-                "opset_version": 17,
+                "dynamic_shapes": {"inputs": {0: Dim("batch")}},
                 "autograd_inlining": False,
+                "opset_version": 18,
             },
             output_names=["bboxes", "labels", "scores"],
         )
