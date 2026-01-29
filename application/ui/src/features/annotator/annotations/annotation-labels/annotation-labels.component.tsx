@@ -132,7 +132,7 @@ export const AnnotationLabels = ({ labels, onRemove }: AnnotationLabelsProps) =>
                     width={labelWidth}
                     height={height}
                     fill={label.color}
-                    stroke='none'
+                    stroke={`hsl(from ${label.color} h s calc(l - 10))`}
                     rx={styles.borderRadius}
                     aria-label={`label ${label.name} background`}
                 />

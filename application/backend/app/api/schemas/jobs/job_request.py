@@ -5,6 +5,7 @@ from typing import Annotated
 
 from pydantic import Field, TypeAdapter
 
+from .dataset_export import ExportDatasetRequest, StageDatasetRequest
 from .dataset_import import (
     ImportDatasetAsNewProjectRequest,
     ImportDatasetToProjectRequest,
@@ -13,7 +14,12 @@ from .dataset_import import (
 from .training import TrainingRequest
 
 JobRequest = Annotated[
-    TrainingRequest | ImportDatasetToProjectRequest | PrepareDatasetForImportRequest | ImportDatasetAsNewProjectRequest,
+    TrainingRequest
+    | ImportDatasetToProjectRequest
+    | PrepareDatasetForImportRequest
+    | ImportDatasetAsNewProjectRequest
+    | ExportDatasetRequest
+    | StageDatasetRequest,
     Field(discriminator="job_type"),
 ]
 

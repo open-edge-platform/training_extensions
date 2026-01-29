@@ -20,18 +20,24 @@ interface LabelBadgeProps {
     label: Label;
     isSelected: boolean;
     isHidden: boolean;
+    isDisabled: boolean;
     onClick: () => void;
 }
 
-const LabelBadge = ({ label, isSelected, isHidden, onClick }: LabelBadgeProps) => {
+const LabelBadge = ({ label, isSelected, isHidden, isDisabled, onClick }: LabelBadgeProps) => {
     return (
         <button
             onClick={onClick}
             style={{ '--labelBgColor': label.color } as CSSProperties}
-            className={clsx(classes.badge, { [classes.selected]: isSelected, [classes.hidden]: isHidden })}
+            className={clsx(classes.badge, {
+                [classes.selected]: isSelected,
+                [classes.hidden]: isHidden,
+                [classes.disabled]: isDisabled,
+            })}
             aria-pressed={isSelected}
             aria-label={`Label ${label.name}`}
             aria-hidden={isHidden}
+            aria-disabled={isDisabled}
             tabIndex={isHidden ? -1 : 0}
             data-label-badge
         >
@@ -45,6 +51,7 @@ interface LabelsProps {
     collapsedVisibleCount?: number;
     isClassification?: boolean;
     isMultiLabel?: boolean;
+    isReadOnly?: boolean;
 }
 
 export const Labels = ({
@@ -52,6 +59,7 @@ export const Labels = ({
     collapsedVisibleCount = Infinity,
     isClassification = false,
     isMultiLabel = false,
+    isReadOnly = false,
 }: LabelsProps) => {
     const { selectedLabelId, setSelectedLabelId, labels } = useAnnotator();
     const { selectedAnnotations } = useSelectedAnnotations();
@@ -60,6 +68,8 @@ export const Labels = ({
     const [isExpanded, setIsExpanded] = useState(false);
 
     const handleClassificationClick = (label: Label) => {
+        if (isReadOnly) return;
+
         if (isEmpty(annotations)) {
             addAnnotations([{ type: 'full_image' }], [label]);
             return;
@@ -79,11 +89,21 @@ export const Labels = ({
                 updateAnnotations(updatedAnnotations);
             }
         } else {
-            updateAnnotations(annotations.map((annotation) => ({ ...annotation, labels: [label] })));
+            // Single-label: toggle - if clicking the same label, remove it; otherwise replace
+            const isAlreadySelected = annotations.some((annotation) =>
+                annotation.labels.some((l) => l.id === label.id)
+            );
+
+            if (isAlreadySelected) {
+                deleteAnnotations(annotations.map(({ id }) => id));
+            } else {
+                updateAnnotations(annotations.map((annotation) => ({ ...annotation, labels: [label] })));
+            }
         }
     };
 
     const handleNonClassificationClick = (label: Label) => {
+        if (isReadOnly) return;
         if (selectedAnnotations.size > 0) {
             const selectedAnnotationsList = annotations.filter((a) => selectedAnnotations.has(a.id));
 
@@ -140,6 +160,7 @@ export const Labels = ({
                         label={label}
                         isSelected={isLabelSelected(label)}
                         isHidden={!isExpanded && index >= collapsedVisibleCount}
+                        isDisabled={isReadOnly}
                         onClick={() => handleLabelClick(label)}
                     />
                 ))}

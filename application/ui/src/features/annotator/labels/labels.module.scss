@@ -47,6 +47,15 @@
     outline: var(--spectrum-global-dimension-size-25) solid var(--labelBgColor);
 }
 
+.disabled {
+    cursor: default;
+    opacity: 0.6;
+}
+
+.disabled:hover {
+    opacity: 0.6;
+}
+
 .badgeText {
     color: var(--foregroundColor);
     white-space: nowrap;

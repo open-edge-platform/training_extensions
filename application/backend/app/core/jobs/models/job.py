@@ -27,6 +27,8 @@ class JobType(StrEnum):
     PREPARE_DATASET_FOR_IMPORT = "prepare_dataset_for_import"
     IMPORT_DATASET_AS_NEW_PROJECT = "import_dataset_as_new_project"
     IMPORT_DATASET_TO_PROJECT = "import_dataset_to_project"
+    EXPORT_DATASET = "export_dataset"
+    STAGE_DATASET = "stage_dataset"
 
 
 def now_utc_ts() -> float:

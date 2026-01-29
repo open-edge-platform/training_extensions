@@ -7,7 +7,6 @@ import { fileURLToPath } from 'url';
 
 import { expect } from '@playwright/test';
 import { getMockedLabel } from 'mocks/mock-labels';
-import { mockedMedia } from 'mocks/mock-media';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 
@@ -21,8 +20,8 @@ const candyPngBuffer = fs.readFileSync(candyPngPath);
 const redLabel = getMockedLabel({ id: 'red-label', name: 'red-label', color: '#ad2323' });
 const blueLabel = getMockedLabel({ id: 'blue-label', name: 'blue-label', color: '#2424a0' });
 
-const mockedProject = getMockedProject({
-    id: 'candy-id',
+const mockedDetectionProject = getMockedProject({
+    id: '123e4567-e89b-12d3-a456-426614174000',
     task: {
         exclusive_labels: true,
         task_type: 'detection',
@@ -30,35 +29,23 @@ const mockedProject = getMockedProject({
     },
 });
 
-test.beforeEach(async ({ network, page }) => {
-    network.use(
-        http.get('/api/projects/{project_id}', () => {
-            return HttpResponse.json(mockedProject);
-        }),
-        http.get('/api/projects/{project_id}/dataset/media', () => {
-            return HttpResponse.json({
-                items: [mockedMedia({ width: 1000, height: 750 })],
-                pagination: { offset: 0, limit: 20, count: 1, total: 1 },
-            });
-        }),
-        http.get('/api/projects/{project_id}/dataset/media/{media_id}/binary', async () => {
-            return HttpResponse.arrayBuffer(candyPngBuffer.buffer, {
-                headers: { 'Content-Type': 'image/png' },
-            });
-        }),
-        http.get('/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations', async () => {
-            return HttpResponse.json({
-                annotations: [],
-                user_reviewed: false,
-            });
-        })
-    );
-
-    await page.goto(`/projects/${mockedProject.id}/dataset`);
-    await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
-});
-
 test.describe('Annotator', () => {
+    test.beforeEach(async ({ network, page }) => {
+        network.use(
+            http.get('/api/projects/{project_id}', () => {
+                return HttpResponse.json(mockedDetectionProject);
+            }),
+            http.get('/api/projects/{project_id}/dataset/media/{media_id}/binary', async () => {
+                return HttpResponse.arrayBuffer(candyPngBuffer.buffer, {
+                    headers: { 'Content-Type': 'image/png' },
+                });
+            })
+        );
+
+        await page.goto(`/projects/${mockedDetectionProject.id}/dataset`);
+        await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
+    });
+
     test('Add and change annotations labels', async ({ page, boundingBoxTool }) => {
         await test.step('Draw an annotation', async () => {
             await boundingBoxTool.selectTool();
@@ -122,27 +109,27 @@ test.describe('Annotator', () => {
                 await boundingBoxTool.drawBoundingBox(annotation);
             }
 
-            // There should be twice the elements, the mask and the annotation itself
-            expect(await page.getByLabel(`label ${redLabel.name} background`).count()).toBe(annotations.length * 2);
+            expect(await page.getByLabel(`label ${redLabel.name} background`).count()).toBe(annotations.length);
         });
 
         await test.step('Remove labels', async () => {
             await page.getByRole('button', { name: 'selection tool' }).click();
+            const labels = page.getByLabel('Remove red-label');
 
-            await page.getByLabel('Remove red-label').nth(4).click();
-            await page.getByLabel('Remove red-label').nth(2).click();
+            await labels.nth(0).click();
+            await labels.nth(1).click();
         });
 
         await test.step('Change selected annotations label using label badge', async () => {
             const container = page.getByLabel('annotation rect');
+
             await container.nth(5).click({ modifiers: ['Shift'] });
             await container.nth(4).click({ modifiers: ['Shift'] });
             await container.nth(3).click({ modifiers: ['Shift'] });
 
             await page.getByRole('button', { name: `Label ${blueLabel.name}` }).click();
 
-            // There should be twice the elements, the mask and the annotation itself
-            expect(await page.getByLabel(`label ${blueLabel.name} background`).count()).toBe(annotations.length * 2);
+            expect(await page.getByLabel(`label ${blueLabel.name} background`).count()).toBe(annotations.length);
         });
     });
 });

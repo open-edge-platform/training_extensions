@@ -3,7 +3,7 @@
 
 import { useRef } from 'react';
 
-import { ActionButton, Button, ButtonGroup, dimensionValue, Text } from '@geti/ui';
+import { ActionButton, Button, ButtonGroup, Text } from '@geti/ui';
 import { Checkmark, CloseSemiBold } from '@geti/ui/icons';
 import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { isEmpty } from 'lodash-es';
@@ -12,7 +12,6 @@ import type { Media } from '../../../../constants/shared-types';
 import { useProject } from '../../../../hooks/api/project.hook';
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
-import { useSelectedAnnotations } from '../../../../shared/annotator/select-annotation-provider.component';
 import { Labels } from '../../../annotator/labels/labels.component';
 import { isClassificationTask } from '../../../project/task-type-guards';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
@@ -56,7 +55,6 @@ export const SecondaryToolbar = ({
     const toolbarRef = useRef<HTMLDivElement>(null);
     const labelsContainerRef = useRef<HTMLDivElement>(null);
     const { setMediaState } = useSelectedData();
-    const { selectedAnnotations } = useSelectedAnnotations();
     const { data: selectedProject } = useProject();
     const { labels } = useAnnotator();
     const { collapsedVisibleCount } = useVisibleLabelsCount({
@@ -98,17 +96,7 @@ export const SecondaryToolbar = ({
     };
 
     return (
-        <div
-            ref={toolbarRef}
-            style={{
-                width: '100%',
-                height: '100%',
-                display: selectedAnnotations.size === 0 && !isClassification ? 'none' : 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                paddingTop: dimensionValue('size-125'),
-            }}
-        >
+        <div ref={toolbarRef} className={styles.secondaryToolbarContainer}>
             <Toolbar.Container>
                 <Toolbar.Section>
                     <AnnotatorModes mode={mode} onModeChange={onModeChange} />
@@ -121,6 +109,7 @@ export const SecondaryToolbar = ({
                         collapsedVisibleCount={collapsedVisibleCount}
                         isClassification={isClassification}
                         isMultiLabel={isMultiLabel}
+                        isReadOnly={mode === 'prediction'}
                     />
                 </Toolbar.Section>
             </Toolbar.Container>
