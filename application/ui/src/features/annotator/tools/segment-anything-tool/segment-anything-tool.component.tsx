@@ -40,6 +40,7 @@ const PreviewAnnotations = ({ previewAnnotations, image }: PreviewAnnotationsPro
                     stroke={'var(--energy-blue-shade)'}
                     strokeWidth={'calc(3px / var(--zoom-scale))'}
                     fill={'transparent'}
+                    fillOpacity={'var(--annotation-fill-opacity)'}
                     className={classes.animateStroke}
                 >
                     <AnnotationShape annotation={annotation} />
@@ -118,9 +119,7 @@ export const SegmentAnythingTool = () => {
     const previewAnnotations = (acceptedShapes ?? previewShapes).map((shape, idx): Annotation => {
         return {
             shape,
-            // During preview mode (while hovering), display the annotation without label color
-            // to provide an unobscured view of the underlying image before finalizing placement.
-            labels: [],
+            labels: selectedLabel ? [selectedLabel] : [],
             id: `${idx}`,
         };
     });
