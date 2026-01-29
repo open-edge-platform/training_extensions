@@ -26,8 +26,8 @@ from .parent_process_guard import parent_process_only
 # Keys not included here will be ignored.
 KEY_MAPPING = {
     "epoch": "Epoch",
-    "lr-SGD": "Learning rate SGD",
-    "lr-SGD-momentum": "Learning rate SGD momentum",
+    "lr-SGD": "Learning rate (SGD)",
+    "lr-SGD-momentum": "Learning rate momentum (SGD)",
     "step": "Step",
     "train/data_time": "Training data time",
     "train/iter_time": "Training iteration time",
@@ -36,20 +36,20 @@ KEY_MAPPING = {
     "train/loss_obj": "Training loss obj",
     "train/total_loss": "Training total loss",
     "val/f1-score": "Validation F1 score",
-    "val/map": "Validation map",
-    "val/map_50": "Validation map@50",
-    "val/map_75": "Validation map@75",
-    "val/map_large": "Validation map large",
-    "val/map_medium": "Validation map medium",
-    "val/map_per_class": "Validation map per class",
-    "val/map_small": "Validation map small",
-    "val/mar_1": "Validation mar 1",
-    "val/mar_10": "Validation mar 10",
-    "val/mar_100": "Validation mar 100",
-    "val/mar_100_per_class": "Validation mar 100 per class",
-    "val/mar_large": "Validation mar large",
-    "val/mar_medium": "Validation mar medium",
-    "val/mar_small": "Validation mar small",
+    "val/map": "Validation mAP",
+    "val/map_50": "Validation mAP@50",
+    "val/map_75": "Validation mAP@75",
+    "val/map_large": "Validation mAP large",
+    "val/map_medium": "Validation mAP medium",
+    "val/map_per_class": "Validation mAP per class",
+    "val/map_small": "Validation mAP small",
+    "val/mar_1": "Validation mAR@1",
+    "val/mar_10": "Validation mAR@10",
+    "val/mar_100": "Validation mAR@100",
+    "val/mar_100_per_class": "Validation mAR@100 per class",
+    "val/mar_large": "Validation mAR large",
+    "val/mar_medium": "Validation mAR medium",
+    "val/mar_small": "Validation mAR small",
     "validation/data_time": "Validation data time",
     "validation/iter_time": "Validation iteration time",
 }
@@ -393,6 +393,7 @@ class ModelService(BaseSessionManagedService):
         for col in df.columns:
             mapped_name = KEY_MAPPING.get(col)
             if not mapped_name:
+                logger.debug("Metric key '{}' not in KEY_MAPPING, skipping", col)
                 continue
             metric = {
                 "header": mapped_name,
