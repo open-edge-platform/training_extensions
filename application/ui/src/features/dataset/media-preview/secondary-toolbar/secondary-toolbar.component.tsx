@@ -1,25 +1,21 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Button, ButtonGroup, dimensionValue, Flex, Key, Text } from '@geti/ui';
+import { ActionButton, Button, ButtonGroup, Text } from '@geti/ui';
 import { Checkmark, CloseSemiBold } from '@geti/ui/icons';
 import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { isEmpty } from 'lodash-es';
 
-import type { Label, Media } from '../../../../constants/shared-types';
+import type { Media } from '../../../../constants/shared-types';
 import { useProject } from '../../../../hooks/api/project.hook';
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
-import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
-import { useSelectedAnnotations } from '../../../../shared/annotator/select-annotation-provider.component';
+import { Labels } from '../../../annotator/labels/labels.component';
 import { isClassificationTask } from '../../../project/task-type-guards';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
 import { useSelectedData } from '../../selected-data-provider.component';
 import { Toolbar } from '../toolbar-container/toolbar-container.component';
 import { AnnotatorModes } from './annotator-modes/annotator-modes-toggle.component';
 import type { AnnotatorMode } from './annotator-modes/mode';
-import { LabelPicker } from './label-picker.component';
-import { useSecondaryToolbarState } from './use-secondary-toolbar-state.hook';
-import { toggleLabel } from './util';
 
 import styles from './secondary-toolbar.module.scss';
 
@@ -53,16 +49,13 @@ export const SecondaryToolbar = ({
 }: SecondaryToolbarProps) => {
     const queryClient = useQueryClient();
     const { setMediaState } = useSelectedData();
-    const { projectLabels } = useSecondaryToolbarState();
-    const { selectedAnnotations } = useSelectedAnnotations();
     const { data: selectedProject } = useProject();
-    const { selectedLabel, setSelectedLabelId } = useAnnotator();
 
-    const { annotations, isSaving, addAnnotations, updateAnnotations, deleteAnnotations, submitAnnotations } =
-        useAnnotationActions();
+    const { annotations, isSaving, submitAnnotations } = useAnnotationActions();
 
     const hasAnnotations = !isEmpty(annotations);
     const isMultiLabel = selectedProject.task.exclusive_labels === false;
+    const isClassification = isClassificationTask(selectedProject.task.task_type);
     const selectedIndex = items.findIndex((item) => item.id === mediaItem.id);
 
     const handleSubmit = async () => {
@@ -90,56 +83,8 @@ export const SecondaryToolbar = ({
         onSelectedMediaItem(items[nextItem]);
     };
 
-    const handleSelect = (value: Key | null) => {
-        const label = projectLabels.find(({ id }) => id === value);
-        const labels = label ? [label] : [];
-
-        const updatedAnnotations = annotations
-            .filter((annotation) => selectedAnnotations.has(annotation.id))
-            .map((annotation) => ({ ...annotation, labels }));
-
-        updateAnnotations(updatedAnnotations);
-        setSelectedLabelId(label?.id ?? null);
-    };
-
-    const handleClassificationSelect = (value: Key | null) => {
-        const label = projectLabels.find(({ id }) => id === value);
-        const labels = label ? [label] : [];
-
-        if (isEmpty(annotations)) {
-            addAnnotations([{ type: 'full_image' }], labels);
-        } else if (isMultiLabel) {
-            updateClassificationAnnotations(labels[0]);
-        } else {
-            updateAnnotations(annotations.map((annotation) => ({ ...annotation, labels })));
-        }
-
-        setSelectedLabelId(label?.id ?? null);
-    };
-
-    const updateClassificationAnnotations = (newLabel: Label) => {
-        const updatedAnnotations = annotations.map((annotation) => ({
-            ...annotation,
-            labels: toggleLabel(newLabel, annotation.labels),
-        }));
-
-        const hasNoLabels = updatedAnnotations.every(({ labels }) => isEmpty(labels));
-
-        if (hasNoLabels) {
-            deleteAnnotations(updatedAnnotations.map(({ id }) => id));
-        } else {
-            updateAnnotations(updatedAnnotations);
-        }
-    };
-
     return (
-        <Flex
-            width={'100%'}
-            height={'100%'}
-            alignItems={'center'}
-            justifyContent={'space-between'}
-            UNSAFE_style={{ paddingTop: dimensionValue('size-125') }}
-        >
+        <div className={styles.secondaryToolbarContainer}>
             <Toolbar.Container>
                 <Toolbar.Section>
                     <AnnotatorModes mode={mode} onModeChange={onModeChange} />
@@ -147,14 +92,10 @@ export const SecondaryToolbar = ({
             </Toolbar.Container>
             <Toolbar.Container>
                 <Toolbar.Section>
-                    <LabelPicker
-                        labels={projectLabels}
-                        selectedLabel={selectedLabel}
-                        onSelect={
-                            isClassificationTask(selectedProject.task.task_type)
-                                ? handleClassificationSelect
-                                : handleSelect
-                        }
+                    <Labels
+                        isClassification={isClassification}
+                        isMultiLabel={isMultiLabel}
+                        isReadOnly={mode === 'prediction'}
                     />
                 </Toolbar.Section>
             </Toolbar.Container>
@@ -195,6 +136,6 @@ export const SecondaryToolbar = ({
                     </ButtonGroup>
                 </Toolbar.Section>
             </Toolbar.Container>
-        </Flex>
+        </div>
     );
 };

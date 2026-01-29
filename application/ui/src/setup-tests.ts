@@ -34,3 +34,12 @@ Object.defineProperty(global, 'Request', {
     writable: false,
     value: RequestPolyfill,
 });
+
+// Mock ResizeObserver which is not available in jsdom
+class ResizeObserverMock {
+    observe = vi.fn();
+    unobserve = vi.fn();
+    disconnect = vi.fn();
+}
+
+global.ResizeObserver = ResizeObserverMock;

@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { PointerEvent, useCallback } from 'react';
+import { CSSProperties, PointerEvent, useCallback } from 'react';
 
 import { isEmpty } from 'lodash-es';
 import { v4 as uuid } from 'uuid';
@@ -9,6 +9,8 @@ import { v4 as uuid } from 'uuid';
 import { useZoom } from '../../../../components/zoom/zoom.provider';
 import { AnnotationLabel } from '../../../../shared/types';
 import { isPrediction } from '../utils';
+
+import classes from '../annotation-labels.module.scss';
 
 const labelStyles = (scale: number) => {
     // We need the actual values for calculations:
@@ -115,7 +117,14 @@ export const AnnotationLabels = ({ labels, onRemove }: AnnotationLabelsProps) =>
         fullLengthOfAllLabels += labelWidth;
 
         return (
-            <g key={label.id} fill='none' stroke='none' fillOpacity={1}>
+            <g
+                key={label.id}
+                fill='none'
+                stroke='none'
+                fillOpacity={1}
+                style={{ '--labelColor': label.color } as CSSProperties}
+                className={classes.labelContainer}
+            >
                 {/* Label name */}
                 <rect
                     x={xOffset}
@@ -123,7 +132,7 @@ export const AnnotationLabels = ({ labels, onRemove }: AnnotationLabelsProps) =>
                     width={labelWidth}
                     height={height}
                     fill={label.color}
-                    stroke='none'
+                    stroke={`hsl(from ${label.color} h s calc(l - 10))`}
                     rx={styles.borderRadius}
                     aria-label={`label ${label.name} background`}
                 />
@@ -131,7 +140,6 @@ export const AnnotationLabels = ({ labels, onRemove }: AnnotationLabelsProps) =>
                     x={xOffset + padding}
                     y={yOffset + styles.textYOffset}
                     fontSize={fontSize}
-                    fill='#fff'
                     aria-label={`label ${label.name}`}
                 >
                     {`${label.name} ${isPrediction(label) ? formatPredictionScore(label.probability) : ''}`.trim()}
@@ -150,7 +158,6 @@ export const AnnotationLabels = ({ labels, onRemove }: AnnotationLabelsProps) =>
                         x={xOffset + labelWidth - styles.closeButtonXOffset}
                         y={yOffset + styles.textYOffset}
                         fontSize={fontSize}
-                        fill='#fff'
                         aria-label={`Remove ${label.name}`}
                     >
                         x
