@@ -63,7 +63,6 @@ class DatasetRevisionService(BaseSessionManagedService):
 
     def load_revision(self, project_id: UUID, dataset_revision_id: UUID) -> dm.Dataset:
         """
-
         Loads the Datumaro dataset belonging to the dataset revision.
 
         Args:
