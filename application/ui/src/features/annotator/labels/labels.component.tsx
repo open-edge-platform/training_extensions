@@ -127,7 +127,11 @@ export const Labels = ({ isClassification = false, isMultiLabel = false, isReadO
 
     return (
         <Flex alignItems='start' gap='size-100' minWidth={0} flex='1'>
-            <div className={classes.labelsContainer}>
+            <div
+                aria-label={'Labels'}
+                className={clsx(classes.labelsContainer, { [classes.readOnlyLabels]: isReadOnly })}
+                aria-disabled={isReadOnly}
+            >
                 {labels.map((label) => (
                     <LabelBadge
                         key={label.id}
