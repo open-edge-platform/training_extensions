@@ -132,7 +132,7 @@ class TestDatasetRevisionItemEndpoints:
             project_id=fxt_get_project.id, dataset_revision_id=fxt_get_dataset_revision.id
         )
 
-    def test_rename_model_success(
+    def test_rename_dataset_revision_success(
         self, tmp_path, fxt_get_dataset_revision, fxt_get_project, fxt_dataset_revision_service, fxt_client
     ):
         app.dependency_overrides[get_data_dir] = lambda: tmp_path / "data"

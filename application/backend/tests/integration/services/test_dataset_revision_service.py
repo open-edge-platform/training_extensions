@@ -405,7 +405,7 @@ class TestDatasetRevisionServiceIntegration:
             dataset=dataset,
         )
 
-        new_dr_name = "This is a new datset revision name"
+        new_dr_name = "This is a new dataset revision name"
         dataset_revision_metadata = {"name": new_dr_name}
 
         # Get the dataset revision before renaming, rename it and get it after

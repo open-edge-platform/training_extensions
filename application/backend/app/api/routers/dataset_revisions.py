@@ -117,7 +117,7 @@ def rename_dataset_revision(
     ],
     dataset_revision_service: Annotated[DatasetRevisionService, Depends(get_dataset_revision_service)],
 ) -> DatasetRevisionView:
-    """Rename a dataset revision"""
+    """Rename a dataset revision."""
     try:
         dataset_revision = dataset_revision_service.rename_dataset_revision(
             dataset_revision=dataset_revision,
