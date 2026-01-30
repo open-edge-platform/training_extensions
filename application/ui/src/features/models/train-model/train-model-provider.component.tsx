@@ -37,6 +37,7 @@ const TrainModelContext = createContext<TrainModelContextProps | null>(null);
 
 type TrainModelProviderProps = {
     children: ReactNode;
+    preSelectedDatasetRevisionId?: string;
 };
 
 const getModelArchitectures = (
@@ -65,7 +66,7 @@ const getModelArchitectures = (
     });
 };
 
-export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
+export const TrainModelProvider = ({ children, preSelectedDatasetRevisionId }: TrainModelProviderProps) => {
     const { data } = useGetTaskModelArchitectures();
     const { data: trainingDevices } = useGetTrainingDevices();
     const { data: datasetRevisions } = useGetDatasetRevisions();
@@ -88,7 +89,7 @@ export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
         trainingDevices?.at(0)?.type ?? null
     );
     const [selectedDatasetRevision, setSelectedDatasetRevision] = useState<string | null>(
-        datasetRevisions?.at(0)?.id ?? null
+        preSelectedDatasetRevisionId ?? datasetRevisions?.at(0)?.id ?? null
     );
 
     return (

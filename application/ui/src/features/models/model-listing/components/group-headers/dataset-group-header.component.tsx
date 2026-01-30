@@ -51,7 +51,7 @@ export const DatasetGroupHeader = ({ dataset }: DatasetGroupHeaderProps) => {
             />
 
             <Flex>
-                <TrainModel />
+                <TrainModel preSelectedDatasetRevisionId={dataset.id} />
             </Flex>
         </Grid>
     );
