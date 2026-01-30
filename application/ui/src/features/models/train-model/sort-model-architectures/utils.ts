@@ -6,8 +6,6 @@ import { orderBy } from 'lodash-es';
 import type { ModelArchitectureWithPerformanceCategory } from '../../../../constants/shared-types';
 
 export const SortingOptions = {
-    RELEVANCE_ASC: 'relevance-asc',
-    RELEVANCE_DESC: 'relevance-desc',
     NAME_ASC: 'name-asc',
     NAME_DESC: 'name-desc',
     INFERENCE_SPEED_ASC: 'inference-speed-asc',
@@ -25,10 +23,6 @@ type SortingHandler = (
 ) => ModelArchitectureWithPerformanceCategory[];
 
 export const SORTING_HANDLERS: Record<SortingOptions, SortingHandler> = {
-    [SortingOptions.RELEVANCE_DESC]: (modelArchitectures) =>
-        orderBy(modelArchitectures, (modelArchitecture) => modelArchitecture.performanceCategory === undefined, 'desc'),
-    [SortingOptions.RELEVANCE_ASC]: (modelArchitectures) =>
-        orderBy(modelArchitectures, (modelArchitecture) => modelArchitecture.performanceCategory === undefined, 'asc'),
     [SortingOptions.ACCURACY_ASC]: (modelArchitectures) =>
         orderBy(modelArchitectures, (modelArchitecture) => modelArchitecture.stats.performance_ratings.accuracy, 'asc'),
     [SortingOptions.ACCURACY_DESC]: (modelArchitectures) =>
@@ -68,16 +62,6 @@ export const SORTING_HANDLERS: Record<SortingOptions, SortingHandler> = {
 };
 
 export const SORT_OPTIONS = [
-    [
-        {
-            key: SortingOptions.RELEVANCE_ASC,
-            name: 'Relevance',
-        },
-        {
-            key: SortingOptions.RELEVANCE_DESC,
-            name: 'Relevance',
-        },
-    ],
     [
         {
             key: SortingOptions.NAME_ASC,
