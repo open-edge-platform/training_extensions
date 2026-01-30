@@ -3,6 +3,8 @@
 
 import { getMockedModel } from 'mocks/mock-model';
 
+import type { DatasetRevision } from '../../../../constants/shared-types';
+import type { DatasetGroup } from '../types';
 import { groupModelsByArchitecture, groupModelsByDataset } from './grouping';
 
 describe('groupModelsByDataset', () => {
@@ -45,6 +47,75 @@ describe('groupModelsByDataset', () => {
         expect(groupedModels).toHaveLength(2);
         expect(groupedModels[0].models).toHaveLength(2);
         expect(groupedModels[1].models).toHaveLength(1);
+    });
+
+    it('should use dataset revision names when provided', () => {
+        const models = [
+            getMockedModel({
+                id: 'model-1',
+                training_info: {
+                    status: 'successful',
+                    dataset_revision_id: 'dataset-1',
+                    label_schema_revision: {},
+                },
+            }),
+        ];
+
+        const datasetRevisions: DatasetRevision[] = [
+            {
+                id: 'dataset-1',
+                name: 'My Custom Dataset',
+                project_id: 'project-1',
+                files_deleted: false,
+                item_counts: {
+                    total: 100,
+                    training: 70,
+                    validation: 20,
+                    testing: 10,
+                },
+            },
+        ];
+
+        const groupedModels = groupModelsByDataset(models, { datasetRevisions });
+
+        expect(groupedModels).toHaveLength(1);
+        expect(groupedModels[0].group.name).toBe('My Custom Dataset');
+
+        const group = groupedModels[0].group as DatasetGroup;
+        expect(group.imageCount).toBe(100);
+        expect(group.trainingSubsets).toEqual({
+            training: 70,
+            validation: 20,
+            testing: 10,
+        });
+    });
+
+    it('should fallback to dataset ID when revision not found', () => {
+        const models = [
+            getMockedModel({
+                id: 'model-1',
+                training_info: {
+                    status: 'successful',
+                    dataset_revision_id: 'dataset-unknown',
+                    label_schema_revision: {},
+                },
+            }),
+        ];
+
+        const datasetRevisions: DatasetRevision[] = [];
+
+        const groupedModels = groupModelsByDataset(models, { datasetRevisions });
+
+        expect(groupedModels).toHaveLength(1);
+        expect(groupedModels[0].group.name).toBe('Dataset #dataset-');
+
+        const group: DatasetGroup = groupedModels[0].group as DatasetGroup;
+        expect(group.imageCount).toBe(0);
+        expect(group.trainingSubsets).toEqual({
+            training: 0,
+            validation: 0,
+            testing: 0,
+        });
     });
 });
 
