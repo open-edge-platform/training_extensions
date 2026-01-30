@@ -43,31 +43,31 @@ export const SORT_OPTIONS = [
     [
         {
             key: SortingOptions.NAME_ASC,
-            name: 'Name',
+            name: 'Name (A to Z)',
         },
         {
             key: SortingOptions.NAME_DESC,
-            name: 'Name',
+            name: 'Name (Z to A)',
         },
     ],
     [
         {
             key: SortingOptions.SIZE_ASC,
-            name: 'Size',
+            name: 'Size (smallest first)',
         },
         {
             key: SortingOptions.SIZE_DESC,
-            name: 'Size',
+            name: 'Size (largest first)',
         },
     ],
     [
         {
             key: SortingOptions.ACCURACY_ASC,
-            name: 'Accuracy',
+            name: 'Accuracy (lowest first)',
         },
         {
             key: SortingOptions.ACCURACY_DESC,
-            name: 'Accuracy',
+            name: 'Accuracy (highest first)',
         },
     ],
 ];
