@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Cell, Column, Flex, Row, TableBody, TableHeader, TableView, Text } from '@geti/ui';
+import { ActionButton, Cell, Column, Flex, Row, TableBody, TableHeader, TableView } from '@geti/ui';
 import { DownloadIcon } from '@geti/ui/icons';
 
 import type { ExtendedModel, ModelFormat } from '../../../../constants/shared-types';
