@@ -7,10 +7,10 @@ import { EmptySearchResults } from './components/expandable-search/empty-search-
 import { GroupModelsContainer } from './components/group-models-container/group-models-container.component';
 import { GroupedModels } from './types';
 
-interface ModelListingProps {
+type ModelListingProps = {
     hasNoResults: boolean;
     groupedModels: GroupedModels[];
-}
+};
 
 export const ModelListing = ({ groupedModels, hasNoResults }: ModelListingProps) => {
     return (
