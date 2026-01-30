@@ -32,29 +32,33 @@ describe('CrosshairLine', () => {
         expect(vRect).toHaveAttribute('height', '100%');
     });
 
-    it('handles zoom levels correctly', () => {
+    it('handles zoom level 2 correctly', () => {
         const { container } = render(
             <svg>
                 <CrosshairLine zoom={2} point={mockPoint} direction='horizontal' />
             </svg>
         );
         expect(container.querySelector('rect')).toHaveAttribute('height', '0.5');
+    });
 
-        const { container: highZoom } = render(
+    it('handles high zoom level correctly', () => {
+        const { container } = render(
             <svg>
                 <CrosshairLine zoom={4} point={mockPoint} direction='vertical' />
             </svg>
         );
-        const rect = highZoom.querySelector('rect');
+        const rect = container.querySelector('rect');
         expect(rect).toHaveAttribute('width', '0.25');
         expect(rect).toHaveAttribute('stroke-width', '0.25');
+    });
 
-        const { container: lowZoom } = render(
+    it('handles low zoom level correctly', () => {
+        const { container } = render(
             <svg>
                 <CrosshairLine zoom={0.5} point={mockPoint} direction='horizontal' />
             </svg>
         );
-        expect(lowZoom.querySelector('rect')).toHaveAttribute('height', '2');
+        expect(container.querySelector('rect')).toHaveAttribute('height', '2');
     });
 
     it('applies correct styling', () => {
@@ -71,7 +75,7 @@ describe('CrosshairLine', () => {
         expect(rect).toHaveAttribute('stroke-width', '1');
     });
 
-    it('handles different point coordinates', () => {
+    it('handles different integer point coordinates', () => {
         const differentPoint: Point = { x: 50, y: 75 };
         const { container } = render(
             <svg>
@@ -79,13 +83,15 @@ describe('CrosshairLine', () => {
             </svg>
         );
         expect(container.querySelector('rect')).toHaveAttribute('y', '75');
+    });
 
+    it('handles decimal point coordinates', () => {
         const decimalPoint: Point = { x: 10.5, y: 20.75 };
-        const { container: decimalContainer } = render(
+        const { container } = render(
             <svg>
                 <CrosshairLine zoom={1} point={decimalPoint} direction='vertical' />
             </svg>
         );
-        expect(decimalContainer.querySelector('rect')).toHaveAttribute('x', '10.5');
+        expect(container.querySelector('rect')).toHaveAttribute('x', '10.5');
     });
 });
