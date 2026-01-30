@@ -32,7 +32,7 @@ async def upload_archive(
     """Upload dataset archive to the staging area"""
     if not file.filename:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Uploaded archive must have a filename.",
         )
 
@@ -113,11 +113,12 @@ def download_archive(
             detail="Staged dataset is not in zip format ready for download.",
         )
 
+    file_path = Path(staged_dataset.filename)
     return StreamingResponse(
-        file_iterator(Path(staged_dataset.filename)),
+        file_iterator(file_path),
         media_type="application/zip",
         headers={
-            "Content-Disposition": f"attachment; filename={staged_dataset.filename}",
+            "Content-Disposition": f"attachment; filename={file_path.name}",
         },
     )
 
