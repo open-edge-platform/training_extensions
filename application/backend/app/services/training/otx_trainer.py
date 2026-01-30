@@ -198,9 +198,16 @@ class OTXTrainer(Trainer):
 
             return training_config, otx_training_config
 
-    @step("Create Training Dataset", 10)
-    def create_training_dataset(self, project_id: UUID, task: Task, training_config: dict) -> DatasetInfo:
-        """Create datasets for training, validation, and testing."""
+    @step("Prepare Training Dataset", 10)
+    def prepare_training_dataset(
+        self, project_id: UUID, task: Task, training_config: dict, dataset_revision_id: UUID | None = None
+    ) -> DatasetInfo:
+        """
+        Prepare datasets for training, validation, and testing.
+
+        If a specific dataset revision ID is provided, it loads that revision from the database.
+        Otherwise, it creates a new dataset from the current items in the database with user-verified annotations.
+        """
 
         def build_subset_config(subset_name: str) -> SubsetConfig:
             subset_cfg_data = training_config["data"][f"{subset_name}_subset"]
@@ -216,11 +223,22 @@ class OTXTrainer(Trainer):
             self._dataset_service.set_db_session(db)
             self._dataset_revision_service.set_db_session(db)
 
-            # Create a dataset including only the items with user-verified annotations
-            logger.info("Creating dataset (dm.Dataset) from the DB items with reviewed annotations")
-            dm_dataset = self._dataset_service.get_dm_dataset(
-                project_id=project_id, task=task, annotation_status=DatasetItemAnnotationStatus.REVIEWED
-            )
+            if dataset_revision_id:
+                # Load the specified dataset revision from the database
+                logger.info("Loading pre-existing dataset revision (ID={}) from the database", dataset_revision_id)
+                dm_dataset = self._dataset_revision_service.load_revision(
+                    project_id=project_id, dataset_revision_id=dataset_revision_id
+                )
+            else:
+                # Create a dataset revision including only the items with user-verified annotations, then save it
+                logger.info("Creating a new dataset revision with user-verified annotated items")
+                dm_dataset = self._dataset_service.get_dm_dataset(
+                    project_id=project_id, task=task, annotation_status=DatasetItemAnnotationStatus.REVIEWED
+                )
+                dataset_revision_id = self._dataset_revision_service.save_revision(
+                    project_id=project_id, dataset=dm_dataset
+                )
+                logger.info("Dataset revision saved with ID: {}", dataset_revision_id)
 
             # Extract the subsets (training, validation, testing)
             logger.info("Extracting training, validation, and testing subsets from the dataset")
@@ -250,13 +268,6 @@ class OTXTrainer(Trainer):
                 dm_subset=dm_testing_dataset,
                 transforms=test_subset_config.transforms,  # pyrefly: ignore[bad-argument-type]
             )
-
-            # Store the dataset as a new revision
-            logger.info("Saving dataset revision to disk")
-            dataset_revision_id = self._dataset_revision_service.save_revision(
-                project_id=project_id, dataset=dm_dataset
-            )
-            logger.info("Dataset revision saved with ID: {}", dataset_revision_id)
 
             return DatasetInfo(
                 otx_training_dataset=otx_training_dataset,
@@ -462,8 +473,11 @@ class OTXTrainer(Trainer):
             training_params=training_params, task=task
         )
         self.assign_subsets(training_config=training_config, project_id=project_id)
-        dataset_info = self.create_training_dataset(
-            project_id=project_id, task=task, training_config=otx_training_config
+        dataset_info = self.prepare_training_dataset(
+            project_id=project_id,
+            task=task,
+            training_config=otx_training_config,
+            dataset_revision_id=training_params.dataset_revision_id,
         )
         self.prepare_model(
             training_params=training_params, dataset_revision_id=dataset_info.revision_id, configuration=training_config
