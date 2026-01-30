@@ -126,11 +126,18 @@ describe('AnnotationLabels', () => {
             </svg>
         );
 
-        const firstRect = screen.getByLabelText('label A background');
-        const secondRect = screen.getByLabelText('label B background');
+        const firstPath = screen.getByLabelText('label A background');
+        const secondPath = screen.getByLabelText('label B background');
 
-        const firstX = parseFloat(firstRect.getAttribute('x') || '0');
-        const secondX = parseFloat(secondRect.getAttribute('x') || '0');
+        // Extract x position from path's d attribute (format: "M x y ...")
+        const getPathX = (path: HTMLElement) => {
+            const d = path.getAttribute('d') || '';
+            const match = d.match(/^M\s+([-\d.]+)/);
+            return match ? parseFloat(match[1]) : 0;
+        };
+
+        const firstX = getPathX(firstPath);
+        const secondX = getPathX(secondPath);
 
         // Second label should be positioned after the first
         expect(secondX).toBeGreaterThan(firstX);
