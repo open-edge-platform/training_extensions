@@ -225,16 +225,20 @@ class OTXTrainer(Trainer):
 
             if dataset_revision_id:
                 # Load the specified dataset revision from the database
-                logger.info("Loading dataset revision (ID={}) from the database", dataset_revision_id)
+                logger.info("Loading pre-existing dataset revision (ID={}) from the database", dataset_revision_id)
                 dm_dataset = self._dataset_revision_service.load_revision(
                     project_id=project_id, dataset_revision_id=dataset_revision_id
                 )
             else:
-                # Create a dataset including only the items with user-verified annotations
-                logger.info("Creating dataset (dm.Dataset) from the DB items with reviewed annotations")
+                # Create a dataset revision including only the items with user-verified annotations, then save it
+                logger.info("Creating a new dataset revision with user-verified annotated items")
                 dm_dataset = self._dataset_service.get_dm_dataset(
                     project_id=project_id, task=task, annotation_status=DatasetItemAnnotationStatus.REVIEWED
                 )
+                dataset_revision_id = self._dataset_revision_service.save_revision(
+                    project_id=project_id, dataset=dm_dataset
+                )
+                logger.info("Dataset revision saved with ID: {}", dataset_revision_id)
 
             # Extract the subsets (training, validation, testing)
             logger.info("Extracting training, validation, and testing subsets from the dataset")
@@ -264,13 +268,6 @@ class OTXTrainer(Trainer):
                 dm_subset=dm_testing_dataset,
                 transforms=test_subset_config.transforms,  # pyrefly: ignore[bad-argument-type]
             )
-
-            # Store the dataset as a new revision
-            logger.info("Saving dataset revision to disk")
-            dataset_revision_id = self._dataset_revision_service.save_revision(
-                project_id=project_id, dataset=dm_dataset
-            )
-            logger.info("Dataset revision saved with ID: {}", dataset_revision_id)
 
             return DatasetInfo(
                 otx_training_dataset=otx_training_dataset,
