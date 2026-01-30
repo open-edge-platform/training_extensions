@@ -5,23 +5,10 @@ import { ReactNode, useState } from 'react';
 
 import { Button, Flex } from '@geti/ui';
 
-import type { ModelArchitectureWithPerformanceCategory } from '../../../../constants/shared-types';
 import { useTrainModel } from '../train-model-provider.component';
 import { AllModelArchitectures } from './all-model-architectures.component';
 import { RecommendedModelArchitectures } from './recommended-model-architectures.component';
-
-const getRecommendedArchitectures = (modelArchitectures: ModelArchitectureWithPerformanceCategory[]) => {
-    const recommended = modelArchitectures.filter(
-        (modelArchitecture) => modelArchitecture.performanceCategory !== undefined
-    );
-
-    if (recommended.length > 0) {
-        return recommended;
-    }
-
-    // For now just return top 3 recommended architectures, but in the future we can add more logic here
-    return modelArchitectures.slice(0, 3);
-};
+import { getRecommendedModelArchitecturesWithActiveArchitecture } from './utils';
 
 type ModelArchitecturesContainerProps = {
     children: ReactNode;
@@ -59,7 +46,10 @@ export const ModelArchitecturesList = () => {
         );
     }
 
-    const recommendedArchitectures = getRecommendedArchitectures(modelArchitectures);
+    const recommendedArchitectures = getRecommendedModelArchitecturesWithActiveArchitecture(
+        modelArchitectures,
+        activeModelArchitectureId
+    );
 
     return (
         <ModelArchitecturesContainer showMore={showMore} onShowMore={setShowMore}>
