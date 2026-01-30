@@ -115,7 +115,7 @@ export const Toolbar = ({ items }: ToolbarProps) => {
                     justifyContent={'space-between'}
                 >
                     <Checkbox
-                        name={'select all'}
+                        aria-label={'select all'}
                         onChange={handleToggleManyItemSelection}
                         isSelected={totalSelectedElements === items.length}
                     />
