@@ -11,7 +11,7 @@ from app.api.dependencies import get_staged_dataset_service
 from app.api.io_utils import file_iterator
 from app.api.schemas import StagedDatasetView
 from app.api.validators import StagedDatasetID
-from app.services.staged_dataset_service import StagedDatasetService
+from app.services import StagedDatasetService
 
 router = APIRouter(prefix="/api/staged_datasets", tags=["Dataset Import/Export"])
 
@@ -19,12 +19,13 @@ router = APIRouter(prefix="/api/staged_datasets", tags=["Dataset Import/Export"]
 @router.post(
     "",
     response_model=StagedDatasetView,
+    status_code=status.HTTP_201_CREATED,
     responses={
         status.HTTP_201_CREATED: {"description": "Dataset archive uploaded successfully"},
         status.HTTP_422_UNPROCESSABLE_CONTENT: {"description": "Invalid archive has been uploaded"},
     },
 )
-async def upload_dataset_archive(
+async def upload_archive(
     file: Annotated[UploadFile, File()],
     staged_datasets_service: Annotated[StagedDatasetService, Depends(get_staged_dataset_service)],
 ) -> StagedDatasetView:
@@ -75,7 +76,7 @@ def get_dataset(
     staged_dataset_service: Annotated[StagedDatasetService, Depends(get_staged_dataset_service)],
 ) -> StagedDatasetView:
     """Get info about the staged dataset from the staging area"""
-    staged_dataset = staged_dataset_service.get(staged_dataset_id)
+    staged_dataset = staged_dataset_service.find_by_id(staged_dataset_id)
     if not staged_dataset:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -99,7 +100,7 @@ def download_archive(
     staged_dataset_service: Annotated[StagedDatasetService, Depends(get_staged_dataset_service)],
 ) -> StreamingResponse:
     """Download the staged dataset archive from the staging area"""
-    staged_dataset = staged_dataset_service.get(staged_dataset_id)
+    staged_dataset = staged_dataset_service.find_by_id(staged_dataset_id)
     if staged_dataset is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -123,6 +124,7 @@ def download_archive(
 
 @router.delete(
     "/{staged_dataset_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
     responses={
         status.HTTP_204_NO_CONTENT: {"description": "Staged dataset successfully deleted"},
         status.HTTP_404_NOT_FOUND: {"description": "Staged dataset not found"},
@@ -133,7 +135,7 @@ def delete_dataset(
     staged_dataset_service: Annotated[StagedDatasetService, Depends(get_staged_dataset_service)],
 ) -> None:
     """Delete the staged dataset from the staging area"""
-    deleted = staged_dataset_service.delete(staged_dataset_id)
+    deleted = staged_dataset_service.delete_by_id(staged_dataset_id)
     if not deleted:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

@@ -111,9 +111,9 @@ class StagedDatasetService:
             )
         return staged_datasets
 
-    def get(self, dataset_id: UUID) -> StagedDataset | None:
+    def find_by_id(self, dataset_id: UUID) -> StagedDataset | None:
         """
-        Retrieve a single staged dataset by its identifier.
+        Finds a single staged dataset by its identifier.
 
         The dataset is expected to reside in a subdirectory named with the given UUID. The first regular file found
         in that directory is treated as the archive and mapped to a `StagedDataset` instance.
@@ -145,11 +145,11 @@ class StagedDatasetService:
             size=size,
         )
 
-    def delete(self, dataset_id: UUID) -> bool:
+    def delete_by_id(self, dataset_id: UUID) -> bool:
         """
         Delete a staged dataset directory and its contents.
 
-        Returns \`True\` if the directory existed and was removed, otherwise `False`.
+        Returns `True` if the directory existed and was removed, otherwise `False`.
         """
         dataset_dir = self._staged_datasets_dir / str(dataset_id)
         if not dataset_dir.is_dir():

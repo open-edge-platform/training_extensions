@@ -28,11 +28,11 @@ from app.services import (
     ResourceNotFoundError,
     SinkService,
     SourceUpdateService,
+    StagedDatasetService,
     SystemService,
 )
 from app.services.data_collect import DataCollector
 from app.services.event.event_bus import EventBus
-from app.services.staged_dataset_service import StagedDatasetService
 from app.services.training_configuration_service import TrainingConfigurationService
 from app.webrtc.manager import WebRTCManager
 
