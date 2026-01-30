@@ -88,4 +88,30 @@ export class AnnotatorPage {
     async getZoomValue() {
         return this.page.getByTestId('zoom-level');
     }
+
+    getAnnotationsList() {
+        return this.page.getByTestId('annotations-canvas-tools');
+    }
+
+    async getAnnotationsListItems(label: 'annotation rect' | 'prediction rect') {
+        return this.getAnnotationsList()
+            .getByLabel(label)
+            .evaluateAll((nodes) => nodes.filter((node) => !node.closest('mask')));
+    }
+
+    getAnnotationMode(mode: 'Annotation' | 'Prediction') {
+        return this.page.getByTestId('annotator-modes-id').getByRole('button', { name: mode });
+    }
+
+    async openAnnotationMode() {
+        await this.getAnnotationMode('Annotation').click();
+    }
+
+    async openPredictionMode() {
+        await this.getAnnotationMode('Prediction').click();
+    }
+
+    getPrimaryToolbar() {
+        return this.page.getByTestId('primary-toolbar-id');
+    }
 }

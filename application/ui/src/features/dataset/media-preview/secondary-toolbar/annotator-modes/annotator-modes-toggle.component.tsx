@@ -32,7 +32,13 @@ type AnnotatorModes = {
 export const AnnotatorModes = ({ mode, onModeChange }: AnnotatorModes) => {
     return (
         <View backgroundColor={'gray-200'} padding={'size-50'} borderRadius={'regular'}>
-            <Flex width={'100%'} height={'100%'} gap={'size-100'} alignItems={'center'}>
+            <Flex
+                width={'100%'}
+                height={'100%'}
+                gap={'size-100'}
+                alignItems={'center'}
+                data-testid={'annotator-modes-id'}
+            >
                 <ToggleButton mode={'annotation'} selectedMode={mode} onClick={() => onModeChange('annotation')}>
                     Annotation
                 </ToggleButton>
