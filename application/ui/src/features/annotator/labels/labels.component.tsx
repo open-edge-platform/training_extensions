@@ -3,7 +3,7 @@
 
 import { CSSProperties, Ref, useState } from 'react';
 
-import { ActionButton, Flex, Text } from '@geti/ui';
+import { ActionButton, Flex, PressableElement, Text, Tooltip, TooltipTrigger } from '@geti/ui';
 import { clsx } from 'clsx';
 import { isEmpty } from 'lodash-es';
 
@@ -26,23 +26,28 @@ interface LabelBadgeProps {
 
 const LabelBadge = ({ label, isSelected, isHidden, isDisabled, onClick }: LabelBadgeProps) => {
     return (
-        <button
-            onClick={onClick}
-            style={{ '--labelBgColor': label.color } as CSSProperties}
-            className={clsx(classes.badge, {
-                [classes.selected]: isSelected,
-                [classes.hidden]: isHidden,
-                [classes.disabled]: isDisabled,
-            })}
-            aria-pressed={isSelected}
-            aria-label={`Label ${label.name}`}
-            aria-hidden={isHidden}
-            aria-disabled={isDisabled}
-            tabIndex={isHidden ? -1 : 0}
-            data-label-badge
-        >
-            <Text UNSAFE_className={classes.badgeText}>{label.name}</Text>
-        </button>
+        <TooltipTrigger delay={300}>
+            <PressableElement>
+                <button
+                    onClick={onClick}
+                    style={{ '--labelBgColor': label.color } as CSSProperties}
+                    className={clsx(classes.badge, {
+                        [classes.selected]: isSelected,
+                        [classes.hidden]: isHidden,
+                        [classes.disabled]: isDisabled,
+                    })}
+                    aria-pressed={isSelected}
+                    aria-label={`Label ${label.name}`}
+                    aria-hidden={isHidden}
+                    aria-disabled={isDisabled}
+                    tabIndex={isHidden ? -1 : 0}
+                    data-label-badge
+                >
+                    <Text UNSAFE_className={classes.badgeText}>{label.name}</Text>
+                </button>
+            </PressableElement>
+            <Tooltip>{label.name}</Tooltip>
+        </TooltipTrigger>
     );
 };
 
