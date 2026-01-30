@@ -38,10 +38,10 @@ export const AnnotationShapeWithLabels = ({ annotation }: AnnotationShapeProps) 
 
     if (shape.type === 'full_image') {
         return (
-            <>
+            <g display={isVisible ? 'block' : 'none'}>
                 <AnnotationShape annotation={annotation} />
                 <AnnotationLabels labels={labels} onRemove={removeLabels} />
-            </>
+            </g>
         );
     }
 

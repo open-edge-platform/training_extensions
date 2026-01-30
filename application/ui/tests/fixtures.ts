@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 
 import { createNetworkFixture, NetworkFixture } from '@msw/playwright';
 import { expect, test as testBase } from '@playwright/test';
+import { mockedMedia } from 'mocks/mock-media';
 import { HttpResponse } from 'msw';
 
 import { handlers, http } from '../src/api/utils';
@@ -111,6 +112,15 @@ const test = testBase.extend<Fixtures>({
                     { type: 'cpu', name: 'CPU' },
                     { type: 'xpu', name: 'XPU' },
                 ]);
+            }),
+            http.get('/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations', ({ response }) => {
+                return response(200).json({ annotations: [], user_reviewed: false });
+            }),
+            http.get('/api/projects/{project_id}/dataset/media', () => {
+                return HttpResponse.json({
+                    items: [mockedMedia({ width: 1000, height: 750 })],
+                    pagination: { offset: 0, limit: 20, count: 1, total: 1 },
+                });
             }),
         ],
     }),
