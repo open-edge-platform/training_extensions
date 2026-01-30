@@ -9,7 +9,7 @@ import pytest
 from fastapi import status
 from PIL import Image
 
-from app.api.dependencies import get_dataset_revision, get_dataset_revision_service
+from app.api.dependencies import get_data_dir, get_dataset_revision, get_dataset_revision_service
 from app.api.schemas.dataset_item import DatasetItemSubset
 from app.api.schemas.dataset_revision import DatasetRevisionView, ItemCount
 from app.main import app
@@ -128,6 +128,37 @@ class TestDatasetRevisionItemEndpoints:
         response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/dataset_revisions/{fxt_get_dataset_revision.id}")
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
+        fxt_dataset_revision_service.count_items_by_subset.assert_called_once_with(
+            project_id=fxt_get_project.id, dataset_revision_id=fxt_get_dataset_revision.id
+        )
+
+    def test_rename_dataset_revision_success(
+        self, tmp_path, fxt_get_dataset_revision, fxt_get_project, fxt_dataset_revision_service, fxt_client
+    ):
+        app.dependency_overrides[get_data_dir] = lambda: tmp_path / "data"
+
+        fxt_dataset_revision_service.rename_dataset_revision.return_value = DatasetRevision(
+            id=fxt_get_dataset_revision.id,
+            project_id=fxt_get_dataset_revision.project_id,
+            name="New name",
+            files_deleted=False,
+        )
+        fxt_dataset_revision_service.count_items_by_subset.return_value = {
+            "total": 10,
+            "training": 7,
+            "validation": 2,
+            "testing": 1,
+        }
+
+        response = fxt_client.patch(
+            f"/api/projects/{fxt_get_project.id}/dataset_revisions/{fxt_get_dataset_revision.id}",
+            json={"name": "New name"},
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        fxt_dataset_revision_service.rename_dataset_revision.assert_called_once_with(
+            dataset_revision=fxt_get_dataset_revision, dataset_revision_metadata={"name": "New name"}
+        )
         fxt_dataset_revision_service.count_items_by_subset.assert_called_once_with(
             project_id=fxt_get_project.id, dataset_revision_id=fxt_get_dataset_revision.id
         )

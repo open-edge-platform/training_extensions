@@ -16,6 +16,10 @@
     overflow: visible;
 }
 
+.readOnlyLabels {
+    pointer-events: none;
+}
+
 .badge {
     --foregroundColor: lch(from var(--labelBgColor) calc((50 - l) * infinity) 0 0);
 

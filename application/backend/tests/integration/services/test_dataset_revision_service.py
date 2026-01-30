@@ -327,11 +327,9 @@ class TestDatasetRevisionServiceIntegration:
 
     def test_get_dataset_revision(
         self,
-        fxt_projects_dir: Path,
         fxt_dataset_service: DatasetService,
         fxt_dataset_revision_service: DatasetRevisionService,
         fxt_project_with_subset_items: tuple[Project, list[DatasetItemDB]],
-        db_session: Session,
     ) -> None:
         """Test getting a dataset revision."""
         project, _ = fxt_project_with_subset_items
@@ -390,6 +388,41 @@ class TestDatasetRevisionServiceIntegration:
 
         assert excinfo.value.resource_type == ResourceType.DATASET_REVISION
         assert excinfo.value.resource_id == str(revision_id)
+
+    def test_rename_dataset_revision(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_dataset_revision_service: DatasetRevisionService,
+        fxt_project_with_subset_items: tuple[Project, list[DatasetItemDB]],
+    ) -> None:
+        """Test updating name of a dataset revision"""
+        project, _ = fxt_project_with_subset_items
+        dataset = fxt_dataset_service.get_dm_dataset(project.id, project.task, DatasetItemAnnotationStatus.REVIEWED)
+
+        # Save a revision
+        revision_id = fxt_dataset_revision_service.save_revision(
+            project_id=project.id,
+            dataset=dataset,
+        )
+
+        new_dr_name = "This is a new dataset revision name"
+        dataset_revision_metadata = {"name": new_dr_name}
+
+        # Get the dataset revision before renaming, rename it and get it after
+        dr_before_renaming = fxt_dataset_revision_service.get_dataset_revision(
+            project_id=project.id, revision_id=revision_id
+        )
+        name_before_renaming = dr_before_renaming.name
+        dr_from_renaming = fxt_dataset_revision_service.rename_dataset_revision(
+            dataset_revision=dr_before_renaming, dataset_revision_metadata=dataset_revision_metadata
+        )
+        dr_after_renaming = fxt_dataset_revision_service.get_dataset_revision(
+            project_id=project.id, revision_id=revision_id
+        )
+
+        assert dr_from_renaming.name == new_dr_name
+        assert name_before_renaming != new_dr_name
+        assert dr_after_renaming.name == new_dr_name
 
     def test_count_items_by_subset(
         self,

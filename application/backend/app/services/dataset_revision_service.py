@@ -101,6 +101,25 @@ class DatasetRevisionService(BaseSessionManagedService):
             raise ResourceNotFoundError(ResourceType.DATASET_REVISION, str(revision_id))
         return self._to_dataset_revision(dataset_db=revision)
 
+    def rename_dataset_revision(
+        self, dataset_revision: DatasetRevision, dataset_revision_metadata: dict[str, str]
+    ) -> DatasetRevision:
+        """
+        Rename a dataset revision.
+
+        Args:
+            dataset_revision (DatasetRevision): The dataset revision to rename.
+            dataset_revision_metadata: Dict containing updated dataset revision name
+
+        Returns:
+            DatasetRevision: The dataset revision object containing the dataset revision's updated information.
+        """
+        new_name = dataset_revision_metadata.get("name")
+        if new_name is not None:
+            dataset_revision.name = new_name
+            self.update_dataset_revision(dataset_revision)
+        return dataset_revision
+
     def update_dataset_revision(self, dataset_revision: DatasetRevision) -> None:
         """
         Updates a dataset revision.

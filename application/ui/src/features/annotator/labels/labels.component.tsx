@@ -152,7 +152,15 @@ export const Labels = ({
 
     return (
         <Flex alignItems='start' gap='size-100' minWidth={0} flex='1'>
-            <div ref={ref} className={clsx(classes.labelsContainer, { [classes.expanded]: isExpanded })}>
+            <div
+                ref={ref}
+                aria-label={'Labels'}
+                className={clsx(classes.labelsContainer, {
+                    [classes.expanded]: isExpanded,
+                    [classes.readOnlyLabels]: isReadOnly,
+                })}
+                aria-disabled={isReadOnly}
+            >
                 {labels.map((label, index) => (
                     <LabelBadge
                         key={label.id}
