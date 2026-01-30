@@ -58,9 +58,10 @@ export default [
                 'warn',
                 'line',
                 [
-                    new RegExp(
-                        ` Copyright \\(C\\) ((?:${allowedYears.join('|')})|2025-(?:${allowedYears.join('|')})) Intel Corporation`
-                    ),
+                    {
+                        pattern: ` Copyright \\(C\\) ((?:${allowedYears.join('|')})|2025-(?:${allowedYears.join('|')})) Intel Corporation`,
+                        template: ` Copyright (C) ${currentYear} Intel Corporation`,
+                    },
                     ' SPDX-License-Identifier: Apache-2.0',
                 ],
             ],
