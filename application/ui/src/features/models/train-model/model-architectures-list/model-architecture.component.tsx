@@ -32,7 +32,7 @@ export const ModelArchitecture = ({
             <ModelArchitectureCard.Parameters />
             {isActive && (
                 <View justifySelf={'start'}>
-                    <ModelArchitectureCard.Active />{' '}
+                    <ModelArchitectureCard.Active />
                 </View>
             )}
         </ModelArchitectureCard>

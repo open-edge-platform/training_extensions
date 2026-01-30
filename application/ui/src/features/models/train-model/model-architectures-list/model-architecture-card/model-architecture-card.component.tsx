@@ -12,12 +12,7 @@ import styles from './model-architecture-card.module.scss';
 
 const ActiveModelArchitecture = () => {
     return (
-        <View
-            alignSelf={'start'}
-            UNSAFE_className={styles.activeModelArchitecture}
-            paddingX={'size-50'}
-            borderRadius={'regular'}
-        >
+        <View UNSAFE_className={styles.activeModelArchitecture} paddingX={'size-50'} borderRadius={'regular'}>
             <Text>Active model</Text>
         </View>
     );
