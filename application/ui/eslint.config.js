@@ -60,7 +60,7 @@ export default [
                 [
                     {
                         pattern: ` Copyright \\(C\\) ((?:${allowedYears.join('|')})|2025-(?:${allowedYears.join('|')})) Intel Corporation`,
-                        template: ` Copyright (C) ${currentYear} Intel Corporation`,
+                        template: ` Copyright (C) 2025-${currentYear} Intel Corporation`,
                     },
                     ' SPDX-License-Identifier: Apache-2.0',
                 ],
