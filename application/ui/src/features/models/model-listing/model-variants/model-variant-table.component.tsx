@@ -6,7 +6,6 @@ import { DownloadIcon } from '@geti/ui/icons';
 
 import type { ExtendedModel, ModelFormat } from '../../../../constants/shared-types';
 import { useDownloadModel } from '../../hooks/api/use-download-model.hook';
-import { NoResultsWrapper } from '../components/no-results-wrapper/no-results-wrapper.component';
 import { formatModelSize } from '../utils/format-model-size';
 
 interface ModelVariantTableProps {
@@ -17,10 +16,6 @@ interface ModelVariantTableProps {
 export const ModelVariantTable = ({ model, format }: ModelVariantTableProps) => {
     const { downloadModel, isDownloading } = useDownloadModel(model.id);
     const variants = (model.variants ?? []).filter((variant) => variant.format === format);
-
-    if (variants.length === 0) {
-        return <NoResultsWrapper message={`No ${format.toUpperCase()} variants available for this model`} />;
-    }
 
     return (
         <TableView aria-label={`Model variants for ${model.id}`} overflowMode={'wrap'} density={'compact'}>

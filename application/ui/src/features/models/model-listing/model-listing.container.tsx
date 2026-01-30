@@ -3,6 +3,7 @@
 
 import { dimensionValue, Divider, Flex, Heading } from '@geti/ui';
 
+import { ReactComponent as NoTrainedModels } from '../../../assets/no-trained-models.svg';
 import { TrainModel } from '../train-model/train-model.component';
 import { Header } from './components/header.component';
 import { CurrentModelTraining } from './current-model-training/current-model-training.component';
@@ -27,6 +28,7 @@ const ModelListingContent = () => {
                 <CurrentModelTraining />
 
                 <Flex direction={'column'} alignItems={'center'} gap={'size-100'} marginTop={'size-600'}>
+                    <NoTrainedModels />
                     <Heading level={2}>No models yet. Train your first model to get started.</Heading>
                     <TrainModel />
                 </Flex>
