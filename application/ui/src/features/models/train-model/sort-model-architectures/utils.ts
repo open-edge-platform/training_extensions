@@ -8,10 +8,8 @@ import type { ModelArchitectureWithPerformanceCategory } from '../../../../const
 export const SortingOptions = {
     NAME_ASC: 'name-asc',
     NAME_DESC: 'name-desc',
-    INFERENCE_SPEED_ASC: 'inference-speed-asc',
-    INFERENCE_SPEED_DESC: 'inference-speed-desc',
-    TRAINING_TIME_ASC: 'training-time-asc',
-    TRAINING_TIME_DESC: 'training-time-desc',
+    SIZE_ASC: 'size-asc',
+    SIZE_DESC: 'size-desc',
     ACCURACY_ASC: 'accuracy-asc',
     ACCURACY_DESC: 'accuracy-desc',
 } as const;
@@ -31,34 +29,14 @@ export const SORTING_HANDLERS: Record<SortingOptions, SortingHandler> = {
             (modelArchitecture) => modelArchitecture.stats.performance_ratings.accuracy,
             'desc'
         ),
-    [SortingOptions.INFERENCE_SPEED_ASC]: (modelArchitectures) =>
-        orderBy(
-            modelArchitectures,
-            (modelArchitecture) => modelArchitecture.stats.performance_ratings.inference_speed,
-            'asc'
-        ),
-    [SortingOptions.INFERENCE_SPEED_DESC]: (modelArchitectures) =>
-        orderBy(
-            modelArchitectures,
-            (modelArchitecture) => modelArchitecture.stats.performance_ratings.inference_speed,
-            'desc'
-        ),
-    [SortingOptions.TRAINING_TIME_ASC]: (modelArchitectures) =>
-        orderBy(
-            modelArchitectures,
-            (modelArchitecture) => modelArchitecture.stats.performance_ratings.training_time,
-            'asc'
-        ),
-    [SortingOptions.TRAINING_TIME_DESC]: (modelArchitectures) =>
-        orderBy(
-            modelArchitectures,
-            (modelArchitecture) => modelArchitecture.stats.performance_ratings.training_time,
-            'desc'
-        ),
     [SortingOptions.NAME_ASC]: (modelArchitectures) =>
         orderBy(modelArchitectures, (modelArchitecture) => modelArchitecture.name, 'asc'),
     [SortingOptions.NAME_DESC]: (modelArchitectures) =>
         orderBy(modelArchitectures, (modelArchitecture) => modelArchitecture.name, 'desc'),
+    [SortingOptions.SIZE_ASC]: (modelArchitectures) =>
+        orderBy(modelArchitectures, (modelArchitecture) => modelArchitecture.stats.trainable_parameters, 'asc'),
+    [SortingOptions.SIZE_DESC]: (modelArchitectures) =>
+        orderBy(modelArchitectures, (modelArchitecture) => modelArchitecture.stats.trainable_parameters, 'desc'),
 };
 
 export const SORT_OPTIONS = [
@@ -74,22 +52,12 @@ export const SORT_OPTIONS = [
     ],
     [
         {
-            key: SortingOptions.INFERENCE_SPEED_ASC,
-            name: 'Inference speed',
+            key: SortingOptions.SIZE_ASC,
+            name: 'Size',
         },
         {
-            key: SortingOptions.INFERENCE_SPEED_DESC,
-            name: 'Inference speed',
-        },
-    ],
-    [
-        {
-            key: SortingOptions.TRAINING_TIME_ASC,
-            name: 'Training time',
-        },
-        {
-            key: SortingOptions.TRAINING_TIME_DESC,
-            name: 'Training time',
+            key: SortingOptions.SIZE_DESC,
+            name: 'Size',
         },
     ],
     [

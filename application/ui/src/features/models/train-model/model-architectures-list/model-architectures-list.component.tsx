@@ -30,8 +30,8 @@ const ModelArchitecturesContainer = ({ children, onShowMore, showMore }: ModelAr
 
 export const ModelArchitecturesList = () => {
     const [showMore, setShowMore] = useState<boolean>(false);
-    const { modelArchitectures, selectedModelArchitectureId, onSelectModelArchitectureId } = useTrainModel();
-    const activeModelArchitectureId = 'Custom_Object_Detection_Gen3_SSD';
+    const { activeModelArchitectureId, modelArchitectures, selectedModelArchitectureId, onSelectModelArchitectureId } =
+        useTrainModel();
 
     if (showMore) {
         return (

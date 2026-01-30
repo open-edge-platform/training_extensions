@@ -30,7 +30,11 @@ export const ModelArchitecture = ({
         >
             <ModelArchitectureCard.Name />
             <ModelArchitectureCard.Parameters />
-            <View justifySelf={'start'}>{isActive && <ModelArchitectureCard.Active />}</View>
+            {isActive && (
+                <View justifySelf={'start'}>
+                    <ModelArchitectureCard.Active />{' '}
+                </View>
+            )}
         </ModelArchitectureCard>
     );
 };

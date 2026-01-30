@@ -45,7 +45,7 @@ const ModelArchitectureParameters = () => {
 
     return (
         <ul className={styles.modelArchitectureParameters}>
-            <li>Number of parameters: {modelArchitecture.stats.trainable_parameters} Millions</li>
+            <li>Size: {modelArchitecture.stats.trainable_parameters} Millions</li>
             <li>Accuracy: {modelArchitecture.stats.performance_ratings.accuracy}</li>
             <li>Inference speed: {modelArchitecture.stats.performance_ratings.inference_speed}</li>
             <li>Training time: {modelArchitecture.stats.performance_ratings.training_time}</li>
