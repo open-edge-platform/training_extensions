@@ -9,7 +9,7 @@ from uuid import UUID, uuid4
 
 import datumaro.experimental as dm
 import polars as pl
-from datumaro.experimental.export_import import export_dataset
+from datumaro.experimental.export_import import export_dataset, import_dataset
 from loguru import logger
 from PIL import Image, UnidentifiedImageError
 from sqlalchemy.orm import Session
@@ -64,6 +64,22 @@ class DatasetRevisionService(BaseSessionManagedService):
             as_zip=False,  # Export as uncompressed directory, see #5070 for details
         )
         return UUID(revision_db.id)
+
+    def load_revision(self, project_id: UUID, dataset_revision_id: UUID) -> dm.Dataset:
+        """
+        Loads the Datumaro dataset belonging to the dataset revision.
+
+        Args:
+            project_id: The UUID of the project.
+            dataset_revision_id: The UUID of the dataset revision.
+        Returns:
+            dm.Dataset: The dataset revision as a Datumaro dataset.
+        """
+        dataset_revision = self.get_dataset_revision(project_id, dataset_revision_id)
+        if dataset_revision.files_deleted:
+            raise ResourceNotFoundError(ResourceType.DATASET_REVISION, str(dataset_revision_id))
+        parquet_path = self._get_revision_parquet_path(project_id, dataset_revision_id)
+        return import_dataset(input_path=parquet_path.parent)
 
     def list_dataset_revisions(self, project_id: UUID) -> list[DatasetRevision]:
         """
