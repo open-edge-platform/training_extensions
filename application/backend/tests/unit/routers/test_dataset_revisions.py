@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import os
 import tempfile
+from datetime import datetime
 from unittest.mock import MagicMock
 from uuid import uuid4
 
@@ -39,8 +40,8 @@ def fxt_dataset_item():
 def fxt_dataset_revision(fxt_get_project):
     return DatasetRevisionView(
         id=uuid4(),
-        project_id=fxt_get_project.id,
         name="Dataset (mock)",
+        created_at=datetime(2026, 1, 1),
         files_deleted=False,
         item_counts=ItemCount(total=10, training=7, validation=2, testing=1),
     )
@@ -51,8 +52,8 @@ def fxt_get_dataset_revision(fxt_dataset_revision):
     # Convert DatasetRevisionView to DatasetRevision
     dataset_revision = DatasetRevision(
         id=fxt_dataset_revision.id,
-        project_id=fxt_dataset_revision.project_id,
         name=fxt_dataset_revision.name,
+        created_at=datetime(2026, 1, 1),
         files_deleted=fxt_dataset_revision.files_deleted,
     )
     app.dependency_overrides[get_dataset_revision] = lambda: dataset_revision
@@ -139,8 +140,8 @@ class TestDatasetRevisionItemEndpoints:
 
         fxt_dataset_revision_service.rename_dataset_revision.return_value = DatasetRevision(
             id=fxt_get_dataset_revision.id,
-            project_id=fxt_get_dataset_revision.project_id,
             name="New name",
+            created_at=datetime(2026, 1, 1),
             files_deleted=False,
         )
         fxt_dataset_revision_service.count_items_by_subset.return_value = {
@@ -157,7 +158,7 @@ class TestDatasetRevisionItemEndpoints:
 
         assert response.status_code == status.HTTP_200_OK
         fxt_dataset_revision_service.rename_dataset_revision.assert_called_once_with(
-            dataset_revision=fxt_get_dataset_revision, dataset_revision_metadata={"name": "New name"}
+            project_id=fxt_get_project.id, dataset_revision=fxt_get_dataset_revision, new_name="New name"
         )
         fxt_dataset_revision_service.count_items_by_subset.assert_called_once_with(
             project_id=fxt_get_project.id, dataset_revision_id=fxt_get_dataset_revision.id

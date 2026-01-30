@@ -347,7 +347,6 @@ class TestDatasetRevisionServiceIntegration:
 
         assert revision is not None
         assert revision.id == revision_id
-        assert revision.project_id == project.id
         assert revision.name == f"Dataset ({str(revision.id).split('-')[0]})"
         assert revision.files_deleted is False
 
@@ -407,7 +406,6 @@ class TestDatasetRevisionServiceIntegration:
         )
 
         new_dr_name = "This is a new dataset revision name"
-        dataset_revision_metadata = {"name": new_dr_name}
 
         # Get the dataset revision before renaming, rename it and get it after
         dr_before_renaming = fxt_dataset_revision_service.get_dataset_revision(
@@ -415,7 +413,7 @@ class TestDatasetRevisionServiceIntegration:
         )
         name_before_renaming = dr_before_renaming.name
         dr_from_renaming = fxt_dataset_revision_service.rename_dataset_revision(
-            dataset_revision=dr_before_renaming, dataset_revision_metadata=dataset_revision_metadata
+            project_id=project.id, dataset_revision=dr_before_renaming, new_name=new_dr_name
         )
         dr_after_renaming = fxt_dataset_revision_service.get_dataset_revision(
             project_id=project.id, revision_id=revision_id

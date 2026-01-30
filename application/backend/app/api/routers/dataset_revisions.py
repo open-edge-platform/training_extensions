@@ -59,16 +59,17 @@ def list_dataset_revisions(
     try:
         dataset_revision_views = []
         for dataset_revision in dataset_revision_service.list_dataset_revisions(project_id=project.id):
-            item_counts = dataset_revision_service.count_items_by_subset(
-                project_id=project.id, dataset_revision_id=dataset_revision.id
-            )
-            dataset_revision_views.append(dataset_revision.model_dump() | {"item_counts": item_counts})
-        return [
-            DatasetRevisionView.model_validate(dataset_revision_view, from_attributes=True)
-            for dataset_revision_view in dataset_revision_views
-        ]
-    except ResourceNotFoundError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+            dataset_revision_view_data = dataset_revision.model_dump()
+            if not dataset_revision.files_deleted:
+                item_counts = dataset_revision_service.count_items_by_subset(
+                    project_id=project.id, dataset_revision_id=dataset_revision.id
+                )
+                dataset_revision_view_data |= {"item_counts": item_counts}
+            dataset_revision_view = DatasetRevisionView.model_validate(dataset_revision_view_data, from_attributes=True)
+            dataset_revision_views.append(dataset_revision_view)
+        return dataset_revision_views
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.get(
@@ -87,11 +88,13 @@ def get_dataset_revision_details(
 ) -> DatasetRevisionView:
     """Get information about a specific dataset revision."""
     try:
-        item_counts = dataset_revision_service.count_items_by_subset(
-            project_id=project.id, dataset_revision_id=dataset_revision.id
-        )
-        dataset_revision_view = dataset_revision.model_dump() | {"item_counts": item_counts}
-        return DatasetRevisionView.model_validate(dataset_revision_view, from_attributes=True)
+        dataset_revision_view_data = dataset_revision.model_dump()
+        if not dataset_revision.files_deleted:
+            item_counts = dataset_revision_service.count_items_by_subset(
+                project_id=project.id, dataset_revision_id=dataset_revision.id
+            )
+            dataset_revision_view_data |= {"item_counts": item_counts}
+        return DatasetRevisionView.model_validate(dataset_revision_view_data, from_attributes=True)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -119,15 +122,25 @@ def rename_dataset_revision(
 ) -> DatasetRevisionView:
     """Rename a dataset revision."""
     try:
+        new_name = dataset_revision_metadata["name"]
+    except KeyError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing 'name' field in request body",
+        )
+    try:
         dataset_revision = dataset_revision_service.rename_dataset_revision(
+            project_id=project.id,
             dataset_revision=dataset_revision,
-            dataset_revision_metadata=dataset_revision_metadata,
+            new_name=new_name,
         )
-        item_counts = dataset_revision_service.count_items_by_subset(
-            project_id=project.id, dataset_revision_id=dataset_revision.id
-        )
-        dataset_revision_view = dataset_revision.model_dump() | {"item_counts": item_counts}
-        return DatasetRevisionView.model_validate(dataset_revision_view, from_attributes=True)
+        dataset_revision_view_data = dataset_revision.model_dump()
+        if not dataset_revision.files_deleted:
+            item_counts = dataset_revision_service.count_items_by_subset(
+                project_id=project.id, dataset_revision_id=dataset_revision.id
+            )
+            dataset_revision_view_data |= {"item_counts": item_counts}
+        return DatasetRevisionView.model_validate(dataset_revision_view_data, from_attributes=True)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -272,7 +285,21 @@ def delete_dataset_revision_files(
     dataset_revision_id: DatasetRevisionID,
     dataset_revision_service: Annotated[DatasetRevisionService, Depends(get_dataset_revision_service)],
 ) -> None:
-    """Delete the files associated with a dataset revision"""
+    """
+    Delete the files relative to a given dataset revision to free up disk space.
+
+    Specifically, this endpoint deletes all items and their associated binary data (images, annotations, etc.)
+    from the dataset revision, but it does NOT delete the revision metadata (such as name, creation date, etc.).
+    After invoking this endpoint, the dataset revision will still exist in the system, but it will no longer be possible
+    to view the items contained within it.
+
+    Beware that this operation is irreversible; once the files are deleted, they cannot be recovered.
+    Also note that the deletion of dataset revision items does NOT have any impact on the project main dataset,
+    i.e. the dataset items returned by the '/dataset/items' endpoints.
+
+    The only purpose of this endpoint is to free up storage space by deleting files no longer deemed necessary,
+    namely snapshots of datasets used during training (dataset revisions).
+    """
     try:
         dataset_revision_service.delete_dataset_revision_files(project_id=project.id, revision_id=dataset_revision_id)
     except ResourceNotFoundError as e:

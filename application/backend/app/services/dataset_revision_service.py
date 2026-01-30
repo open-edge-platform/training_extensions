@@ -118,36 +118,37 @@ class DatasetRevisionService(BaseSessionManagedService):
         return self._to_dataset_revision(dataset_db=revision)
 
     def rename_dataset_revision(
-        self, dataset_revision: DatasetRevision, dataset_revision_metadata: dict[str, str]
+        self, project_id: UUID, dataset_revision: DatasetRevision, new_name: str
     ) -> DatasetRevision:
         """
         Rename a dataset revision.
 
         Args:
-            dataset_revision (DatasetRevision): The dataset revision to rename.
-            dataset_revision_metadata: Dict containing updated dataset revision name
+            project_id: The UUID of the project.
+            dataset_revision: The dataset revision to rename.
+            new_name: The new name to assign to the dataset revision.
 
         Returns:
             DatasetRevision: The dataset revision object containing the dataset revision's updated information.
         """
-        new_name = dataset_revision_metadata.get("name")
         if new_name is not None:
             dataset_revision.name = new_name
-            self.update_dataset_revision(dataset_revision)
+            self.update_dataset_revision(project_id=project_id, dataset_revision=dataset_revision)
         return dataset_revision
 
-    def update_dataset_revision(self, dataset_revision: DatasetRevision) -> None:
+    def update_dataset_revision(self, project_id: UUID, dataset_revision: DatasetRevision) -> None:
         """
         Updates a dataset revision.
 
         Args:
+            project_id: The UUID of the project.
             dataset_revision: The dataset revision to update.
         """
-        revision_repo = DatasetRevisionRepository(project_id=str(dataset_revision.project_id), db=self.db_session)
+        revision_repo = DatasetRevisionRepository(project_id=str(project_id), db=self.db_session)
         _ = revision_repo.update(
             DatasetRevisionDB(
                 id=str(dataset_revision.id),
-                project_id=str(dataset_revision.project_id),
+                project_id=str(project_id),
                 name=dataset_revision.name,
                 files_deleted=dataset_revision.files_deleted,
             )
@@ -171,7 +172,7 @@ class DatasetRevisionService(BaseSessionManagedService):
 
         # Mark as deleted in the database
         revision.files_deleted = True
-        self.update_dataset_revision(dataset_revision=revision)
+        self.update_dataset_revision(project_id=project_id, dataset_revision=revision)
 
         # Delete files from filesystem
         revision_path = self.projects_dir / str(project_id) / "dataset_revisions" / str(revision_id)
