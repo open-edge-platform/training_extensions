@@ -33,7 +33,7 @@ export const groupModelsByDataset = (models: Model[], options?: GroupModelsByDat
     );
 
     models.forEach((model) => {
-        const datasetId = model.training_info.dataset_revision_id ?? 'unknown';
+        const datasetId = model.training_info.dataset_revision_id!;
         const labels = model.training_info.label_schema_revision?.labels;
         const labelCount = Array.isArray(labels) ? labels.length : 0;
         const datasetRevision = datasetRevisionsMap.get(datasetId);
