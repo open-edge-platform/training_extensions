@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ExtendedModel, Model } from '../src/constants/shared-types';
+import { ExtendedModel, Model, ModelArchitectureWithPerformanceCategory } from '../src/constants/shared-types';
 
 export const getMockedModel = (overrides: Partial<Model> = {}): Model => ({
     id: '76e07d18-196e-4e33-bf98-ac1d35dca4cb',
@@ -40,5 +40,29 @@ export const getMockedExtendedModel = (overrides: Partial<ExtendedModel> = {}): 
             ],
         },
     ],
+    ...overrides,
+});
+
+export const getMockedModelArchitecture = (
+    overrides: Partial<ModelArchitectureWithPerformanceCategory> = {}
+): ModelArchitectureWithPerformanceCategory => ({
+    id: 'Object_Detection_Deim_DFine_L',
+    task: 'detection',
+    name: 'Deim-DFine-L',
+    description: 'DEIM is an advanced training framework designed to enhance the matching mechanism in DETRs.',
+    capabilities: {
+        xai: true,
+        tiling: true,
+    },
+    stats: {
+        gigaflops: 91,
+        trainable_parameters: 31,
+        performance_ratings: {
+            accuracy: 2,
+            training_time: 2,
+            inference_speed: 2,
+        },
+    },
+    support_status: 'active',
     ...overrides,
 });

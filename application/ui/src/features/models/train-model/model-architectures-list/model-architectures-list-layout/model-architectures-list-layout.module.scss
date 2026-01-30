@@ -1,4 +1,9 @@
 .gridLayout {
     grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--spectrum-global-dimension-size-3400)), 1fr));
     gap: var(--spectrum-global-dimension-size-300);
+
+    // If there are only 4 items, display them in a 2x2 layout
+    &:has(> div:first-child:nth-last-child(4)) {
+        grid-template-columns: repeat(2, minmax(min(100%, var(--spectrum-global-dimension-size-2000)), 1fr));
+    }
 }

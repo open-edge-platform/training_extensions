@@ -55,7 +55,7 @@ const ModelArchitectureName = () => {
     const { modelArchitecture, isSelected } = useModelArchitecture();
 
     return (
-        <Flex justifyContent={'space-between'} alignItems={'center'}>
+        <Flex justifyContent={'space-between'} alignItems={'center'} minWidth={0}>
             <Radio
                 flex={1}
                 minWidth={0}
