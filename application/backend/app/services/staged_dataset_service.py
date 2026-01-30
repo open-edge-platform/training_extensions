@@ -90,7 +90,10 @@ class StagedDatasetService:
             if not item.is_dir():
                 continue
 
-            dataset_id = UUID(item.name)
+            try:
+                dataset_id = UUID(item.name)
+            except ValueError:
+                continue
             files = [p for p in item.iterdir() if p.is_file()]
             if not files:
                 continue
