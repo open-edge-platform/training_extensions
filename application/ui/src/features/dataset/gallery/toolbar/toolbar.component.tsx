@@ -1,13 +1,12 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, ButtonGroup, Divider, Flex, Heading, Text, toast } from '@geti/ui';
+import { Button, ButtonGroup, Checkbox, Divider, Flex, Heading, Text, toast } from '@geti/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { $api } from '../../../../api/client';
 import { AddMediaButton } from '../../../../components/add-media-button/add-media-button.component';
-import { CheckboxInput } from '../../../../components/checkbox-input/checkbox-input.component';
 import type { Media } from '../../../../constants/shared-types';
 import { TrainModel } from '../../../models/train-model/train-model.component';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
@@ -115,10 +114,10 @@ export const Toolbar = ({ items }: ToolbarProps) => {
                     alignItems={'center'}
                     justifyContent={'space-between'}
                 >
-                    <CheckboxInput
+                    <Checkbox
                         name={'select all'}
                         onChange={handleToggleManyItemSelection}
-                        isChecked={totalSelectedElements === items.length}
+                        isSelected={totalSelectedElements === items.length}
                     />
 
                     <Divider orientation={'vertical'} size={'S'} />
