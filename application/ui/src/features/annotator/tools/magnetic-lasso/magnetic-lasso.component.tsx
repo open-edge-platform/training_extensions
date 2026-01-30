@@ -9,9 +9,7 @@ import { useMutation } from '@tanstack/react-query';
 import { isEmpty, isEqual, throttle } from 'lodash-es';
 
 import { useZoom } from '../../../../components/zoom/zoom.provider';
-import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
-import { useSelectedAnnotations } from '../../../../shared/annotator/select-annotation-provider.component';
 import { Point } from '../../../../shared/types';
 import { isNonEmptyArray } from '../../../../shared/util';
 import { usePolygonConfig } from '../hooks/use-polygon-config.hook';
@@ -27,14 +25,14 @@ import {
     START_POINT_FIELD_FOCUS_RADIUS,
 } from '../polygon-tool/utils';
 import { SvgToolCanvas } from '../svg-tool-canvas.component';
+import { useAddAndSelectAnnotations } from '../use-add-and-select-annotations.hook';
 
 import classes from './magnetic-lasso.module.scss';
 
 export const MagneticLasso = () => {
     const { scale: zoom } = useZoom();
     const [mode, setMode] = useState<PolygonMode>(PolygonMode.MagneticLasso);
-    const { addAnnotations } = useAnnotationActions();
-    const { setSelectedAnnotations } = useSelectedAnnotations();
+    const { addAndSelectAnnotations } = useAddAndSelectAnnotations();
     const { image, selectedLabel } = useAnnotator();
     const [isPendingPolygonOptimization, startTransition] = useTransition();
 
@@ -95,12 +93,10 @@ export const MagneticLasso = () => {
             startTransition(async () => {
                 const optimizedPolygon = await optimizePolygonOrSegments(polygon);
 
-                const newIds = addAnnotations(
+                addAndSelectAnnotations(
                     [{ type: 'polygon', points: optimizedPolygon.points }],
                     selectedLabel ? [selectedLabel] : []
                 );
-
-                setSelectedAnnotations(new Set(newIds));
             });
         }
     };
