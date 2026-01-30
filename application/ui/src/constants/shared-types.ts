@@ -26,10 +26,7 @@ export type TrainingDevice = {
 
 export type DatasetSubset = components['schemas']['DatasetItemSubset'];
 export type DatasetItem = components['schemas']['DatasetItemView'];
-export type DatasetRevision = {
-    id: string;
-    name: string;
-};
+export type DatasetRevision = components['schemas']['DatasetRevisionView'];
 
 export type Project = components['schemas']['ProjectView'];
 

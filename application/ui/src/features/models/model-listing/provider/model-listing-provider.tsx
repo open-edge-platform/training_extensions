@@ -3,6 +3,8 @@
 
 import { createContext, ReactNode, useContext, useState } from 'react';
 
+import { useGetDatasetRevisions } from 'hooks/use-get-dataset-revisions.hook';
+
 import { useGetActiveModelArchitectureId } from '../../hooks/api/use-get-active-model-architecture-id.hook';
 import { useGetModels } from '../../hooks/api/use-get-models.hook';
 import { useGroupedModels } from '../hooks/use-grouped-models.hook';
@@ -41,7 +43,8 @@ export const ModelListingProvider = ({ children }: ModelListingProviderProps) =>
 
     const activeModelArchitectureId = useGetActiveModelArchitectureId();
     const { data: models } = useGetModels();
-    const groupedModels = useGroupedModels(models, { groupBy, sortBy, pinActive, searchBy });
+    const { data: datasetRevisions = [] } = useGetDatasetRevisions();
+    const groupedModels = useGroupedModels(models, { groupBy, sortBy, pinActive, searchBy, datasetRevisions });
 
     const onGroupByChange = (mode: GroupByMode) => {
         setGroupBy(mode);

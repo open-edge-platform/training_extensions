@@ -20,7 +20,13 @@ describe('useGroupedModels', () => {
     describe('basic functionality', () => {
         it('should return empty array when models is undefined', () => {
             const { result } = renderHook(() =>
-                useGroupedModels(undefined, { groupBy: 'dataset', sortBy: 'name', pinActive: false, searchBy: '' })
+                useGroupedModels(undefined, {
+                    groupBy: 'dataset',
+                    sortBy: 'name',
+                    pinActive: false,
+                    searchBy: '',
+                    datasetRevisions: [],
+                })
             );
 
             expect(result.current).toEqual([]);
@@ -28,7 +34,13 @@ describe('useGroupedModels', () => {
 
         it('should return empty array when models is empty', () => {
             const { result } = renderHook(() =>
-                useGroupedModels([], { groupBy: 'dataset', sortBy: 'name', pinActive: false, searchBy: '' })
+                useGroupedModels([], {
+                    groupBy: 'dataset',
+                    sortBy: 'name',
+                    pinActive: false,
+                    searchBy: '',
+                    datasetRevisions: [],
+                })
             );
 
             expect(result.current).toEqual([]);
@@ -65,7 +77,13 @@ describe('useGroupedModels', () => {
             ];
 
             const { result } = renderHook(() =>
-                useGroupedModels(models, { groupBy: 'dataset', sortBy: 'name', pinActive: false, searchBy: '' })
+                useGroupedModels(models, {
+                    groupBy: 'dataset',
+                    sortBy: 'name',
+                    pinActive: false,
+                    searchBy: '',
+                    datasetRevisions: [],
+                })
             );
 
             expect(result.current).toHaveLength(2);
@@ -83,7 +101,13 @@ describe('useGroupedModels', () => {
             ];
 
             const { result } = renderHook(() =>
-                useGroupedModels(models, { groupBy: 'architecture', sortBy: 'name', pinActive: false, searchBy: '' })
+                useGroupedModels(models, {
+                    groupBy: 'architecture',
+                    sortBy: 'name',
+                    pinActive: false,
+                    searchBy: '',
+                    datasetRevisions: [],
+                })
             );
 
             expect(result.current).toHaveLength(2);
@@ -107,7 +131,13 @@ describe('useGroupedModels', () => {
             ];
 
             const { result } = renderHook(() =>
-                useGroupedModels(models, { groupBy: 'architecture', sortBy: 'name', pinActive: false, searchBy: '' })
+                useGroupedModels(models, {
+                    groupBy: 'architecture',
+                    sortBy: 'name',
+                    pinActive: false,
+                    searchBy: '',
+                    datasetRevisions: [],
+                })
             );
 
             expect(result.current[0].models[0].id).toBe('model-1');
@@ -125,7 +155,13 @@ describe('useGroupedModels', () => {
             ];
 
             const { result } = renderHook(() =>
-                useGroupedModels(models, { groupBy: 'architecture', sortBy: 'name', pinActive: true, searchBy: '' })
+                useGroupedModels(models, {
+                    groupBy: 'architecture',
+                    sortBy: 'name',
+                    pinActive: true,
+                    searchBy: '',
+                    datasetRevisions: [],
+                })
             );
 
             expect(result.current[0].models[0].id).toBe('model-3');
@@ -143,7 +179,13 @@ describe('useGroupedModels', () => {
             ];
 
             const { result } = renderHook(() =>
-                useGroupedModels(models, { groupBy: 'architecture', sortBy: 'name', pinActive: true, searchBy: '' })
+                useGroupedModels(models, {
+                    groupBy: 'architecture',
+                    sortBy: 'name',
+                    pinActive: true,
+                    searchBy: '',
+                    datasetRevisions: [],
+                })
             );
 
             expect(result.current[0].models[0].id).toBe('bravo');
@@ -161,7 +203,13 @@ describe('useGroupedModels', () => {
             ];
 
             const { result } = renderHook(() =>
-                useGroupedModels(models, { groupBy: 'architecture', sortBy: 'name', pinActive: false, searchBy: '' })
+                useGroupedModels(models, {
+                    groupBy: 'architecture',
+                    sortBy: 'name',
+                    pinActive: false,
+                    searchBy: '',
+                    datasetRevisions: [],
+                })
             );
 
             const allModels = result.current.flatMap((group) => group.models);
@@ -181,6 +229,7 @@ describe('useGroupedModels', () => {
                     sortBy: 'name',
                     pinActive: false,
                     searchBy: 'resnet',
+                    datasetRevisions: [],
                 })
             );
 
@@ -201,6 +250,7 @@ describe('useGroupedModels', () => {
                     sortBy: 'name',
                     pinActive: false,
                     searchBy: 'nonexistent',
+                    datasetRevisions: [],
                 })
             );
 
@@ -220,6 +270,7 @@ describe('useGroupedModels', () => {
                     sortBy: 'name',
                     pinActive: false,
                     searchBy: 'YOLOX',
+                    datasetRevisions: [],
                 })
             );
 
@@ -241,6 +292,7 @@ describe('useGroupedModels', () => {
                     sortBy: 'name',
                     pinActive: false,
                     searchBy: 'ResNet',
+                    datasetRevisions: [],
                 })
             );
 
@@ -266,6 +318,7 @@ describe('useGroupedModels', () => {
                     sortBy: 'name',
                     pinActive: true,
                     searchBy: 'ResNet',
+                    datasetRevisions: [],
                 })
             );
 
@@ -287,6 +340,7 @@ describe('useGroupedModels', () => {
                     sortBy: 'name',
                     pinActive: false,
                     searchBy: 'Custom',
+                    datasetRevisions: [],
                 })
             );
 
