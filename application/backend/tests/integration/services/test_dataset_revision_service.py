@@ -545,11 +545,9 @@ class TestDatasetRevisionServiceIntegration:
 
     def test_load_revision(
         self,
-        fxt_projects_dir: Path,
         fxt_dataset_service: DatasetService,
         fxt_dataset_revision_service: DatasetRevisionService,
         fxt_project_with_subset_items: tuple[Project, list[DatasetItemDB]],
-        db_session: Session,
     ) -> None:
         """Test loading a dataset revision as a Datumaro dataset."""
         project, _ = fxt_project_with_subset_items
@@ -571,11 +569,9 @@ class TestDatasetRevisionServiceIntegration:
 
     def test_load_revision_files_deleted(
         self,
-        fxt_projects_dir: Path,
         fxt_dataset_service: DatasetService,
         fxt_dataset_revision_service: DatasetRevisionService,
         fxt_project_with_subset_items: tuple[Project, list[DatasetItemDB]],
-        db_session: Session,
     ) -> None:
         """Test loading a revision with deleted files raises error."""
         project, _ = fxt_project_with_subset_items
