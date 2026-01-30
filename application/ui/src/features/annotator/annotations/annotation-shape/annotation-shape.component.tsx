@@ -13,16 +13,15 @@ export const AnnotationShape = ({ annotation }: AnnotationShapeProps) => {
     const { shape, labels } = annotation;
     const { selectedMediaItem } = useSelectedData();
     const color = labels.length ? labels[0].color : '--annotation-fill';
-    const strokeDasharray = annotation.labels.some(isPrediction)
-        ? 'calc(10 / var(--zoom-scale)) calc(6 / var(--zoom-scale))'
-        : undefined;
+    const hasPredictionLabel = labels.some(isPrediction);
+    const strokeDasharray = hasPredictionLabel ? 'calc(10 / var(--zoom-scale)) calc(6 / var(--zoom-scale))' : undefined;
 
     if (shape.type === 'full_image') {
         return (
             <rect
                 fill={'none'}
                 stroke={color}
-                aria-label='annotation full image'
+                aria-label={`${hasPredictionLabel ? 'prediction' : 'annotation'} full image`}
                 width={selectedMediaItem?.width}
                 height={selectedMediaItem?.height}
                 strokeDasharray={strokeDasharray}
@@ -33,7 +32,7 @@ export const AnnotationShape = ({ annotation }: AnnotationShapeProps) => {
     if (shape.type === 'rectangle') {
         return (
             <rect
-                aria-label='annotation rect'
+                aria-label={`${hasPredictionLabel ? 'prediction' : 'annotation'} rect`}
                 x={shape.x}
                 y={shape.y}
                 width={shape.width}
@@ -46,7 +45,7 @@ export const AnnotationShape = ({ annotation }: AnnotationShapeProps) => {
 
     return (
         <polygon
-            aria-label='annotation polygon'
+            aria-label={`${hasPredictionLabel ? 'prediction' : 'annotation'} polygon`}
             points={getFormattedPoints(shape.points)}
             fill={color}
             strokeDasharray={strokeDasharray}
