@@ -3,7 +3,7 @@
 
 import dayjs from 'dayjs';
 
-import type { Model } from '../../../../constants/shared-types';
+import type { DatasetRevision, Model } from '../../../../constants/shared-types';
 import type { GroupedModels } from '../types';
 
 const formatDatasetStartTime = (dateString: string | null | undefined): string => {
@@ -20,27 +20,36 @@ const formatDatasetStartTime = (dateString: string | null | undefined): string =
     }
 };
 
-export const groupModelsByDataset = (models: Model[]): GroupedModels[] => {
+type GroupModelsByDatasetOptions = {
+    datasetRevisions: DatasetRevision[];
+};
+
+export const groupModelsByDataset = (models: Model[], options?: GroupModelsByDatasetOptions): GroupedModels[] => {
+    const { datasetRevisions = [] } = options || {};
     const groups: Record<string, GroupedModels> = {}; // datasetId -> models
+
+    const datasetRevisionsMap = new Map(
+        datasetRevisions.map((datasetRevision) => [datasetRevision.id, datasetRevision])
+    );
 
     models.forEach((model) => {
         const datasetId = model.training_info.dataset_revision_id ?? 'unknown';
         const labels = model.training_info.label_schema_revision?.labels;
         const labelCount = Array.isArray(labels) ? labels.length : 0;
+        const datasetRevision = datasetRevisionsMap.get(datasetId);
 
         if (!groups[datasetId]) {
             groups[datasetId] = {
                 group: {
                     id: datasetId,
-                    name: `Dataset #${datasetId.slice(0, 8)}`,
+                    name: datasetRevision?.name ?? `Dataset #${datasetId.slice(0, 8)}`,
                     createdAt: formatDatasetStartTime(model.training_info.start_time),
                     labelCount,
-                    // TODO: Replace with actual dataset info when available from API
-                    imageCount: 0,
+                    imageCount: datasetRevision?.item_counts.total ?? 0,
                     trainingSubsets: {
-                        training: 70,
-                        validation: 20,
-                        testing: 10,
+                        training: datasetRevision?.item_counts.training ?? 0,
+                        validation: datasetRevision?.item_counts.validation ?? 0,
+                        testing: datasetRevision?.item_counts.testing ?? 0,
                     },
                 },
                 models: [],
