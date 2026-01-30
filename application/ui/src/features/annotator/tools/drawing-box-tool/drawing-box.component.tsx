@@ -19,7 +19,7 @@ import { useCrosshair } from './crosshair/use-crosshair.hook';
 
 const CURSOR_OFFSET = '7 8';
 interface DrawingBoxInterface {
-    onComplete: (shapes: RectInterface[], labels: Label[]) => void;
+    onComplete: (shapes: RectInterface[], labels: Label[]) => string[];
     roi: RegionOfInterest;
     image: ImageData;
     selectedLabel: Label | null;

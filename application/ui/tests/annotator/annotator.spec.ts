@@ -133,7 +133,7 @@ test.describe('Annotator', () => {
         await test.step('Change selected annotations label using label badge', async () => {
             const container = page.getByLabel('annotation rect');
 
-            await container.nth(5).click({ modifiers: ['Shift'] });
+            await container.nth(5).click();
             await container.nth(4).click({ modifiers: ['Shift'] });
             await container.nth(3).click({ modifiers: ['Shift'] });
 
