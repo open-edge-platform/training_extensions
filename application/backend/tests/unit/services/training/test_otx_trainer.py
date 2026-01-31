@@ -510,7 +510,7 @@ class TestOTXTrainerPrepareModel:
         # Arrange
         project_id = uuid4()
         model_id = uuid4()
-        model_architecture_id = "Custom_Image_Classification_EfficientNet-B0"
+        model_architecture_id = "image-classification-efficientnet-b0"
         training_params = TrainingJobParams(
             device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
             model_id=model_id,
