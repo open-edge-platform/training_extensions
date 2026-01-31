@@ -17,13 +17,12 @@ from otx.backend.native.models.instance_segmentation.losses import ROICriterion
 from otx.backend.native.models.instance_segmentation.maskrcnn import MaskRCNN
 from otx.backend.native.models.utils.utils import InstanceData
 from otx.data.entity.base import ImageInfo
-from otx.data.entity.torch import OTXDataBatch
+from otx.data.entity.sample import OTXSampleBatch
 
 
 @pytest.fixture
-def fxt_inst_seg_batch_entity() -> OTXDataBatch:
-    return OTXDataBatch(
-        batch_size=1,
+def fxt_inst_seg_batch_entity() -> OTXSampleBatch:
+    return OTXSampleBatch(
         images=[torch.empty((3, 480, 480))],
         bboxes=[torch.Tensor([[0.0, 0.0, 240, 240], [240, 240, 480, 480]])],
         labels=[torch.LongTensor([0, 1])],
@@ -40,9 +39,8 @@ def fxt_inst_seg_batch_entity() -> OTXDataBatch:
 
 
 @pytest.fixture
-def fxt_inst_seg_batch_entity_with_ignored_label() -> OTXDataBatch:
-    return OTXDataBatch(
-        batch_size=1,
+def fxt_inst_seg_batch_entity_with_ignored_label() -> OTXSampleBatch:
+    return OTXSampleBatch(
         images=[torch.empty((3, 480, 480))],
         bboxes=[torch.Tensor([[0.0, 0.0, 240, 240], [240, 240, 480, 480]])],
         labels=[torch.LongTensor([0, 1])],

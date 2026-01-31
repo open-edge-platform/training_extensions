@@ -1,9 +1,33 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 from app.core.models import BaseRequiredIDModel
+
+
+class DatasetFilters(BaseModel):
+    labels: list[str] | None = Field(
+        None,
+        description="List of labels to consider during import or export; any annotation with labels not present in "
+        "the list will be filtered out; if the parameter is unspecified (null), then all labels will be considered",
+    )
+    subsets: list[str] | None = Field(
+        None,
+        description="List of subsets to consider during import or export; any item assigned a subset not present in "
+        "the list will be filtered out; if the parameter is unspecified (null), then all subsets will be considered",
+    )
+    include_unannotated: bool = Field(True, description="Whether to include unannotated items to the dataset")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "labels": ["person", "car", "motorcycle"],
+                "subsets": ["training", "validation"],
+                "include_unannotated": False,
+            }
+        }
+    }
 
 
 class StagedDatasetView(BaseRequiredIDModel):

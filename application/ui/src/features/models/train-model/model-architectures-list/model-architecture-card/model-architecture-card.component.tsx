@@ -3,37 +3,26 @@
 
 import { createContext, ReactNode, useContext } from 'react';
 
-import { Content, ContextualHelp, Divider, Heading, Radio, Text, View } from '@geti/ui';
+import { Content, ContextualHelp, Divider, Flex, Heading, Radio, Text, View } from '@geti/ui';
 import { clsx } from 'clsx';
 
 import { type ModelArchitecture as ModelArchitectureType } from '../../../../../constants/shared-types';
 
-import styles from './model-architecture.module.scss';
+import styles from './model-architecture-card.module.scss';
 
 const ActiveModelArchitecture = () => {
     return (
-        <View
-            alignSelf={'start'}
-            UNSAFE_className={styles.activeModelArchitecture}
-            paddingX={'size-50'}
-            borderRadius={'regular'}
-        >
+        <View UNSAFE_className={styles.activeModelArchitecture} paddingX={'size-50'} borderRadius={'regular'}>
             <Text>Active model</Text>
         </View>
     );
 };
 
-const ModelArchitectureExpandedDescription = () => {
-    const { modelArchitecture } = useModelArchitecture();
-
-    return <Text UNSAFE_className={styles.modelArchitectureExpandedDescription}>{modelArchitecture.description}</Text>;
-};
-
 const ModelArchitectureDescription = () => {
-    const { modelArchitecture } = useModelArchitecture();
+    const { modelArchitecture, isSelected } = useModelArchitecture();
 
     return (
-        <ContextualHelp variant='info'>
+        <ContextualHelp variant='info' UNSAFE_className={clsx({ [styles.description]: isSelected })}>
             <Heading>{modelArchitecture.name}</Heading>
             <Content>
                 <Text>{modelArchitecture.description}</Text>
@@ -51,7 +40,10 @@ const ModelArchitectureParameters = () => {
 
     return (
         <ul className={styles.modelArchitectureParameters}>
-            <li>Number of parameters: {modelArchitecture.stats.trainable_parameters} Millions</li>
+            <li>Size: {modelArchitecture.stats.trainable_parameters} Millions</li>
+            <li>Accuracy: {modelArchitecture.stats.performance_ratings.accuracy}</li>
+            <li>Inference speed: {modelArchitecture.stats.performance_ratings.inference_speed}</li>
+            <li>Training time: {modelArchitecture.stats.performance_ratings.training_time}</li>
             <li>License: Apache 2.0</li>
         </ul>
     );
@@ -61,14 +53,19 @@ const ModelArchitectureName = () => {
     const { modelArchitecture, isSelected } = useModelArchitecture();
 
     return (
-        <Radio
-            value={modelArchitecture.id}
-            UNSAFE_className={clsx(styles.modelArchitectureName, {
-                [styles.modelArchitectureNameSelected]: isSelected,
-            })}
-        >
-            {modelArchitecture.name}
-        </Radio>
+        <Flex justifyContent={'space-between'} alignItems={'center'} minWidth={0}>
+            <Radio
+                flex={1}
+                minWidth={0}
+                value={modelArchitecture.id}
+                UNSAFE_className={clsx(styles.modelArchitectureName, {
+                    [styles.modelArchitectureNameSelected]: isSelected,
+                })}
+            >
+                {modelArchitecture.name}
+            </Radio>
+            <ModelArchitectureDescription />
+        </Flex>
     );
 };
 
@@ -91,7 +88,6 @@ export const useModelArchitecture = () => {
 
 type ModelArchitectureProps = {
     isSelected: boolean;
-    isCompact?: boolean;
     children: ReactNode;
     onSelect: () => void;
     modelArchitecture: ModelArchitectureType;
@@ -99,7 +95,6 @@ type ModelArchitectureProps = {
 
 export const ModelArchitectureCard = ({
     isSelected,
-    isCompact,
     children,
     onSelect,
     modelArchitecture,
@@ -109,7 +104,6 @@ export const ModelArchitectureCard = ({
             <div
                 className={clsx(styles.modelArchitectureContainer, {
                     [styles.modelArchitectureSelected]: isSelected,
-                    [styles.modelArchitectureCompact]: isCompact,
                 })}
                 onClick={onSelect}
             >
@@ -122,6 +116,5 @@ export const ModelArchitectureCard = ({
 ModelArchitectureCard.Name = ModelArchitectureName;
 ModelArchitectureCard.Parameters = ModelArchitectureParameters;
 ModelArchitectureCard.Divider = ModelArchitectureDivider;
-ModelArchitectureCard.ExpandedDescription = ModelArchitectureExpandedDescription;
 ModelArchitectureCard.Description = ModelArchitectureDescription;
 ModelArchitectureCard.Active = ActiveModelArchitecture;

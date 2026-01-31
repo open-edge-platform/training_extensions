@@ -18,7 +18,7 @@ from rich.progress import Progress
 from otx.backend.openvino.models import OVModel
 from otx.config.explain import ExplainConfig
 from otx.data.entity.base import ImageInfo
-from otx.data.entity.torch import OTXDataBatch
+from otx.data.entity.sample import OTXSampleBatch
 from otx.data.module import OTXDataModule
 from otx.engine import Engine
 from otx.tools.auto_configurator import AutoConfigurator
@@ -304,8 +304,7 @@ class OVEngine(Engine):
                 if not isinstance(datamodule[0], np.ndarray):
                     msg = "The input data should be a list of numpy arrays."
                     raise TypeError(msg)
-                customized_inputs = OTXDataBatch(
-                    batch_size=len(datamodule),
+                customized_inputs = OTXSampleBatch(
                     images=[torch.tensor(img) for img in datamodule],
                     imgs_info=[
                         ImageInfo(img_idx=i, ori_shape=img.shape, img_shape=img.shape)

@@ -30,8 +30,10 @@ const StatusTag = ({ status }: { status: string }) => (
 
 export const TrainingModelRow = ({ job, onCancel }: TrainingModelRowProps) => {
     const { data: models } = useGetModels();
-    const trainingModel = models?.find((model) => model.id === job.metadata.model.id);
-    const modelName = trainingModel?.name || job.metadata.model.id;
+    const modelId = 'model' in job.metadata && job.metadata.model?.id;
+    const modelArchitecture = 'model' in job.metadata && job.metadata.model?.architecture;
+    const trainingModel = models?.find((model) => model.id === modelId);
+    const modelName = trainingModel?.name || modelId;
 
     return (
         <BottomProgressBar progress={job.progress}>
@@ -42,11 +44,14 @@ export const TrainingModelRow = ({ job, onCancel }: TrainingModelRowProps) => {
                 columnGap={'size-200'}
                 UNSAFE_className={classes.grid}
             >
-                <Flex direction={'column'} gap={'size-50'}>
+                <Flex direction={'column'} justifyContent={'center'} gap={'size-50'}>
                     <Flex alignItems={'center'}>
                         <Text UNSAFE_className={classes.modelName}>{modelName}</Text>
+                    </Flex>
+
+                    <Flex alignItems={'start'}>
                         <TrainingTag />
-                        <StatusTag status={job.message || 'running...'} />
+                        <StatusTag status={job.message || 'Running...'} />
                     </Flex>
 
                     <Text UNSAFE_className={classes.metaText}>
@@ -59,7 +64,7 @@ export const TrainingModelRow = ({ job, onCancel }: TrainingModelRowProps) => {
                 <Text UNSAFE_className={classes.smallText}>...</Text>
 
                 <Flex alignItems={'start'} direction={'column'} gap={'size-100'}>
-                    <Text UNSAFE_className={classes.smallText}>{job.metadata.model.architecture}</Text>
+                    <Text UNSAFE_className={classes.smallText}>{modelArchitecture}</Text>
                     {/* TODO: Speed is hardcoded for now, once the backend is update we need to update this */}
                     <Tag prefix={<ThumbsUp />} text={'Speed'} className={classes.recommendedForTag} />
                 </Flex>

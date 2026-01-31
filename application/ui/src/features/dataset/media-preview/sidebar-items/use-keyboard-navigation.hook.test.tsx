@@ -3,9 +3,9 @@
 
 import { useRef } from 'react';
 
-import { fireEvent } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import { getMultipleMockedMedia } from 'mocks/mock-media';
-import { render, screen } from 'test-utils/render';
+import { render } from 'test-utils/render';
 
 import { useKeyboardNavigation, type UseKeyboardNavigationProps } from './use-keyboard-navigation.hook';
 

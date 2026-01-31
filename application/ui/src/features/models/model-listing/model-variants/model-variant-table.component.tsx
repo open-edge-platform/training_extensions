@@ -17,10 +17,6 @@ export const ModelVariantTable = ({ model, format }: ModelVariantTableProps) => 
     const { downloadModel, isDownloading } = useDownloadModel(model.id);
     const variants = (model.variants ?? []).filter((variant) => variant.format === format);
 
-    if (variants.length === 0) {
-        return null;
-    }
-
     return (
         <TableView aria-label={`Model variants for ${model.id}`} overflowMode={'wrap'} density={'compact'}>
             <TableHeader>

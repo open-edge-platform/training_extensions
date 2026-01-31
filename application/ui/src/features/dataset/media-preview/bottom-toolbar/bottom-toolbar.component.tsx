@@ -2,8 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Flex, Grid, Item, Picker, Tag, Text } from '@geti/ui';
-import { Search } from '@geti/ui/icons';
+import { Accept, Search } from '@geti/ui/icons';
+import { clsx } from 'clsx';
 
+import { Media } from '../../../../constants/shared-types';
 import { Hotkeys } from '../primary-toolbar/hotkeys/hotkeys.component';
 import { Settings } from '../primary-toolbar/settings/settings.component';
 import { ToggleFocus } from '../primary-toolbar/toggle-focus.component';
@@ -11,9 +13,16 @@ import { ZoomFitScreen } from '../primary-toolbar/zoom/zoom-fit-screen.component
 import { ZoomSelector } from '../primary-toolbar/zoom/zoom-selector.component';
 import { Toolbar } from '../toolbar-container/toolbar-container.component';
 
-import styles from './bottom-toolbar.module.scss';
+import classes from './bottom-toolbar.module.scss';
 
-export const BottomToolbar = () => {
+type BottomToolbarProps = {
+    isUserReviewed: boolean;
+    mediaItem: Media;
+};
+
+export const BottomToolbar = ({ isUserReviewed, mediaItem }: BottomToolbarProps) => {
+    const fileName = `${mediaItem.name}.${mediaItem.format} (${mediaItem.width} x ${mediaItem.height} px)`;
+
     return (
         <Flex justifyContent={'end'}>
             <Toolbar.Container>
@@ -24,9 +33,18 @@ export const BottomToolbar = () => {
 
                     <Toolbar.Section>
                         <Flex gap={'size-100'} alignItems={'center'}>
-                            <Text UNSAFE_className={styles.filename}>VID_20210209_160431.jpg (1080x1920 px)</Text>
-                            <Tag className={styles.forReview} prefix={<Search />} text={'For Review'} />
-                            <Picker placeholder={'Select subset'} aria-label='Subset picker'>
+                            <Text UNSAFE_className={classes.filename}>{fileName}</Text>
+                            <Tag
+                                className={clsx({
+                                    [classes.accepted]: isUserReviewed,
+                                    [classes.forReview]: !isUserReviewed,
+                                })}
+                                prefix={isUserReviewed ? <Accept /> : <Search />}
+                                text={isUserReviewed ? 'Accepted' : 'For Review'}
+                            />
+
+                            {/* TODO: Update these once backend is ready */}
+                            <Picker placeholder={'Select subset'} aria-label={'Select subset'}>
                                 <Item>Validation</Item>
                                 <Item>Testing</Item>
                                 <Item>Training</Item>

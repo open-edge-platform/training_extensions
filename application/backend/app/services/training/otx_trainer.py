@@ -126,9 +126,6 @@ class OTXTrainer(Trainer):
                 task=task.task_type, model_manifest_id=model_architecture_id
             )
 
-        if project_id is None:
-            raise ValueError("Project ID must be provided for parent model weights preparation")
-
         weights_path = self.__build_model_weights_path(self._data_dir, project_id, parent_model_revision_id)
         if not weights_path.exists():
             raise FileNotFoundError(f"Parent model weights not found at {weights_path}")
@@ -174,7 +171,7 @@ class OTXTrainer(Trainer):
     def prepare_training_configuration(
         self, training_params: TrainingJobParams, task: Task
     ) -> tuple[TrainingConfiguration, dict]:
-        project_id = cast(UUID, training_params.project_id)
+        project_id = training_params.project_id
         with self._db_session_factory() as db:
             # Load the training configuration from the database
             self._training_configuration_service.set_db_session(db)
@@ -201,9 +198,16 @@ class OTXTrainer(Trainer):
 
             return training_config, otx_training_config
 
-    @step("Create Training Dataset", 10)
-    def create_training_dataset(self, project_id: UUID, task: Task, training_config: dict) -> DatasetInfo:
-        """Create datasets for training, validation, and testing."""
+    @step("Prepare Training Dataset", 10)
+    def prepare_training_dataset(
+        self, project_id: UUID, task: Task, training_config: dict, dataset_revision_id: UUID | None = None
+    ) -> DatasetInfo:
+        """
+        Prepare datasets for training, validation, and testing.
+
+        If a specific dataset revision ID is provided, it loads that revision from the database.
+        Otherwise, it creates a new dataset from the current items in the database with user-verified annotations.
+        """
 
         def build_subset_config(subset_name: str) -> SubsetConfig:
             subset_cfg_data = training_config["data"][f"{subset_name}_subset"]
@@ -219,11 +223,22 @@ class OTXTrainer(Trainer):
             self._dataset_service.set_db_session(db)
             self._dataset_revision_service.set_db_session(db)
 
-            # Create a dataset including only the items with user-verified annotations
-            logger.info("Creating dataset (dm.Dataset) from the DB items with reviewed annotations")
-            dm_dataset = self._dataset_service.get_dm_dataset(
-                project_id=project_id, task=task, annotation_status=DatasetItemAnnotationStatus.REVIEWED
-            )
+            if dataset_revision_id:
+                # Load the specified dataset revision from the database
+                logger.info("Loading pre-existing dataset revision (ID={}) from the database", dataset_revision_id)
+                dm_dataset = self._dataset_revision_service.load_revision(
+                    project_id=project_id, dataset_revision_id=dataset_revision_id
+                )
+            else:
+                # Create a dataset revision including only the items with user-verified annotations, then save it
+                logger.info("Creating a new dataset revision with user-verified annotated items")
+                dm_dataset = self._dataset_service.get_dm_dataset(
+                    project_id=project_id, task=task, annotation_status=DatasetItemAnnotationStatus.REVIEWED
+                )
+                dataset_revision_id = self._dataset_revision_service.save_revision(
+                    project_id=project_id, dataset=dm_dataset
+                )
+                logger.info("Dataset revision saved with ID: {}", dataset_revision_id)
 
             # Extract the subsets (training, validation, testing)
             logger.info("Extracting training, validation, and testing subsets from the dataset")
@@ -254,13 +269,6 @@ class OTXTrainer(Trainer):
                 transforms=test_subset_config.transforms,  # pyrefly: ignore[bad-argument-type]
             )
 
-            # Store the dataset as a new revision
-            logger.info("Saving dataset revision to disk")
-            dataset_revision_id = self._dataset_revision_service.save_revision(
-                project_id=project_id, dataset=dm_dataset
-            )
-            logger.info("Dataset revision saved with ID: {}", dataset_revision_id)
-
             return DatasetInfo(
                 otx_training_dataset=otx_training_dataset,
                 otx_validation_dataset=otx_validation_dataset,
@@ -275,7 +283,7 @@ class OTXTrainer(Trainer):
     def prepare_model(
         self, training_params: TrainingJobParams, dataset_revision_id: UUID, configuration: TrainingConfiguration
     ) -> None:
-        project_id = cast(UUID, training_params.project_id)  # In 'run' we already check that project_id is not None
+        project_id = training_params.project_id
         logger.info("Preparing model revision (model_id={}, project_id={})", training_params.model_id, project_id)
         with self._db_session_factory() as db:
             self._model_service.set_db_session(db)
@@ -453,8 +461,6 @@ class OTXTrainer(Trainer):
         self._ctx = ctx
         training_params = self._get_training_params(ctx)
         project_id = training_params.project_id
-        if project_id is None:
-            raise ValueError("Project ID must be provided in training parameters")
         task = training_params.task
         model_dir = self.__base_model_path(
             data_dir=self._data_dir,
@@ -467,34 +473,49 @@ class OTXTrainer(Trainer):
             training_params=training_params, task=task
         )
         self.assign_subsets(training_config=training_config, project_id=project_id)
-        dataset_info = self.create_training_dataset(
-            project_id=project_id, task=task, training_config=otx_training_config
+        dataset_info = self.prepare_training_dataset(
+            project_id=project_id,
+            task=task,
+            training_config=otx_training_config,
+            dataset_revision_id=training_params.dataset_revision_id,
         )
         self.prepare_model(
             training_params=training_params, dataset_revision_id=dataset_info.revision_id, configuration=training_config
         )
-        trained_model_path, otx_engine = self.train_model(
-            training_config=otx_training_config,
-            dataset_info=dataset_info,
-            weights_path=weights_path,
-            model_id=training_params.model_id,
-            device=training_params.device,
-            has_parent_revision=training_params.parent_model_revision_id is not None,
-        )
-        self.evaluate_model(
-            otx_engine=otx_engine,
-            model_checkpoint_path=trained_model_path,
-            task=task,
-            model_revision_id=training_params.model_id,
-            dataset_revision_id=dataset_info.revision_id,
-        )
-        exported_model_paths = self.export_model(otx_engine=otx_engine, model_checkpoint_path=trained_model_path)
-        self.store_model_artifacts(
-            model_dir=model_dir,
-            otx_work_dir=Path(otx_engine.work_dir),
-            trained_model_path=trained_model_path,
-            exported_model_paths=exported_model_paths,
-        )
+        try:
+            self.__update_model_revision_training_status(
+                project_id=project_id, model_id=training_params.model_id, status=TrainingStatus.IN_PROGRESS
+            )
+            trained_model_path, otx_engine = self.train_model(
+                training_config=otx_training_config,
+                dataset_info=dataset_info,
+                weights_path=weights_path,
+                model_id=training_params.model_id,
+                device=training_params.device,
+                has_parent_revision=training_params.parent_model_revision_id is not None,
+            )
+            self.evaluate_model(
+                otx_engine=otx_engine,
+                model_checkpoint_path=trained_model_path,
+                task=task,
+                model_revision_id=training_params.model_id,
+                dataset_revision_id=dataset_info.revision_id,
+            )
+            exported_model_paths = self.export_model(otx_engine=otx_engine, model_checkpoint_path=trained_model_path)
+            self.store_model_artifacts(
+                model_dir=model_dir,
+                otx_work_dir=Path(otx_engine.work_dir),
+                trained_model_path=trained_model_path,
+                exported_model_paths=exported_model_paths,
+            )
+            self.__update_model_revision_training_status(
+                project_id=project_id, model_id=training_params.model_id, status=TrainingStatus.SUCCESSFUL
+            )
+        except Exception:
+            self.__update_model_revision_training_status(
+                project_id=project_id, model_id=training_params.model_id, status=TrainingStatus.FAILED
+            )
+            raise
 
     @staticmethod
     def __base_model_path(data_dir: Path, project_id: UUID, model_id: UUID) -> Path:
@@ -551,3 +572,8 @@ class OTXTrainer(Trainer):
             return otx_task_type_to_class[otx_task_type]
         except KeyError:
             raise ValueError(f"Unsupported OTX task type: {otx_task_type}")
+
+    def __update_model_revision_training_status(self, project_id: UUID, model_id: UUID, status: TrainingStatus):
+        with self._db_session_factory() as db:
+            self._model_service.set_db_session(db)
+            self._model_service.update_revision_status(project_id=project_id, model_id=model_id, training_status=status)

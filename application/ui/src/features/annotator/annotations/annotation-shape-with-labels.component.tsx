@@ -3,32 +3,47 @@
 
 import { Key } from 'react';
 
+import { useProject } from 'hooks/api/project.hook';
 import polylabel from 'polylabel';
 
 import type { Label } from '../../../constants/shared-types';
 import { useAnnotationActions } from '../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotationVisibility } from '../../../shared/annotator/annotation-visibility-provider.component';
-import type { Annotation, Polygon } from '../../../shared/types';
-import { AnnotationLabels } from './annotation-labels.component';
-import { AnnotationShape } from './annotation-shape.component';
+import type { Annotation } from '../../../shared/types';
+import { isClassificationTask } from '../../project/task-type-guards';
+import { AnnotationLabels } from './annotation-labels/annotation-labels.component';
+import { AnnotationShape } from './annotation-shape/annotation-shape.component';
 
 type AnnotationShapeProps = {
     annotation: Annotation;
 };
 
 export const AnnotationShapeWithLabels = ({ annotation }: AnnotationShapeProps) => {
-    const { shape, labels } = annotation;
+    const { data: selectedProject } = useProject();
     const { isVisible } = useAnnotationVisibility();
-    const { updateAnnotations } = useAnnotationActions();
+    const { updateAnnotations, deleteAnnotations } = useAnnotationActions();
+
+    const { shape, labels } = annotation;
 
     const removeLabels = (labelId: Key | null) => {
-        const updatedAnnotation = {
-            ...annotation,
-            labels: annotation.labels.filter((label) => label.id !== labelId) as Label[],
-        };
+        const updatedLabels = annotation.labels.filter((label) => label.id !== labelId) as Label[];
+        const hasNoLabels = updatedLabels.length === 0;
 
-        updateAnnotations([updatedAnnotation]);
+        if (isClassificationTask(selectedProject.task.task_type) && hasNoLabels) {
+            deleteAnnotations([annotation.id]);
+        } else {
+            updateAnnotations([{ ...annotation, labels: updatedLabels }]);
+        }
     };
+
+    if (shape.type === 'full_image') {
+        return (
+            <g display={isVisible ? 'block' : 'none'}>
+                <AnnotationShape annotation={annotation} />
+                <AnnotationLabels labels={labels} onRemove={removeLabels} />
+            </g>
+        );
+    }
 
     if (shape.type === 'rectangle') {
         return (
@@ -39,8 +54,7 @@ export const AnnotationShapeWithLabels = ({ annotation }: AnnotationShapeProps) 
         );
     }
 
-    const polygonPoints = (shape as Polygon).points;
-    const polygonCoords = [polygonPoints.map((point) => [point.x, point.y])];
+    const polygonCoords = [shape.points.map((point) => [point.x, point.y])];
     const [labelX, labelY] = polylabel(polygonCoords);
 
     return (

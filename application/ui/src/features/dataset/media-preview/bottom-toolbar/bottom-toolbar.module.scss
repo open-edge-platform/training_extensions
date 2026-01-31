@@ -2,6 +2,12 @@
     font-size: var(--spectrum-global-dimension-size-150);
 }
 
+.accepted {
+    background-color: var(--moss-tint-1) !important;
+    color: var(--spectrum-global-color-gray-50) !important;
+}
+
 .forReview {
     background-color: var(--coral-shade-1) !important;
+    color: #fff !important;
 }

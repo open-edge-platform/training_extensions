@@ -7,11 +7,11 @@ import { isPointOverPoint, isPolygonValid } from '@geti/smart-tools/utils';
 import { isEmpty } from 'lodash-es';
 
 import { useZoom } from '../../../../components/zoom/zoom.provider';
-import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
 import { Point } from '../../../../shared/types';
 import { usePolygonConfig } from '../hooks/use-polygon-config.hook';
 import { SvgToolCanvas } from '../svg-tool-canvas.component';
+import { useAddAndSelectAnnotations } from '../use-add-and-select-annotations.hook';
 import { PolygonDraw } from './polygon-draw.component';
 import {
     drawingStyles,
@@ -29,7 +29,7 @@ import classes from './polygon-tool.module.scss';
 
 export const PolygonTool = () => {
     const { scale: zoom } = useZoom();
-    const { addAnnotations } = useAnnotationActions();
+    const { addAndSelectAnnotations } = useAddAndSelectAnnotations();
     const { image, selectedLabel } = useAnnotator();
 
     const ref = useRef<SVGRectElement>({} as SVGRectElement);
@@ -120,7 +120,7 @@ export const PolygonTool = () => {
                 startTransition(async () => {
                     const optimizedPolygon = await optimizePolygonOrSegments(polygon);
 
-                    addAnnotations(
+                    addAndSelectAnnotations(
                         [{ type: 'polygon', points: optimizedPolygon.points }],
                         selectedLabel ? [selectedLabel] : []
                     );

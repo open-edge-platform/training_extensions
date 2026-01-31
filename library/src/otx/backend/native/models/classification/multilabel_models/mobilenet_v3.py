@@ -21,7 +21,7 @@ from otx.backend.native.models.classification.multilabel_models.base import OTXM
 from otx.backend.native.models.classification.necks.gap import GlobalAveragePooling
 from otx.backend.native.schedulers import LRSchedulerListCallable
 from otx.data.entity.base import OTXBatchLossEntity
-from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
+from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
 from otx.metrics.accuracy import MultiLabelClsMetricCallable
 from otx.types.label import LabelInfoTypes
 
@@ -85,7 +85,7 @@ class MobileNetV3MultilabelCls(OTXMultilabelClsModel):
             loss_scale=7.0,
         )
 
-    def _customize_inputs(self, inputs: OTXDataBatch) -> dict[str, Any]:
+    def _customize_inputs(self, inputs: OTXSampleBatch) -> dict[str, Any]:
         if self.training:
             mode = "loss"
         elif self.explain_mode:
@@ -103,8 +103,8 @@ class MobileNetV3MultilabelCls(OTXMultilabelClsModel):
     def _customize_outputs(
         self,
         outputs: Any,  # noqa: ANN401
-        inputs: OTXDataBatch,
-    ) -> OTXPredBatch | OTXBatchLossEntity:
+        inputs: OTXSampleBatch,
+    ) -> OTXPredictionBatch | OTXBatchLossEntity:
         if self.training:
             return OTXBatchLossEntity(loss=outputs)
 
@@ -112,8 +112,7 @@ class MobileNetV3MultilabelCls(OTXMultilabelClsModel):
         logits = outputs if isinstance(outputs, torch.Tensor) else outputs["logits"]
         scores = torch.unbind(logits, 0)
 
-        return OTXPredBatch(
-            batch_size=inputs.batch_size,
+        return OTXPredictionBatch(
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=list(scores),

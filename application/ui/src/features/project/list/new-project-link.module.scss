@@ -5,8 +5,12 @@
     align-items: center;
     flex-direction: column;
     justify-content: center;
-    border-radius: regular;
+    border-radius: var(--spectrum-alias-border-radius-regular);
     background-color: var(--spectrum-global-color-gray-300);
     gap: var(--spectrum-global-dimension-size-200);
     padding: var(--spectrum-global-dimension-size-275);
+
+    &:hover {
+        background-color: var(--spectrum-global-color-gray-200);
+    }
 }

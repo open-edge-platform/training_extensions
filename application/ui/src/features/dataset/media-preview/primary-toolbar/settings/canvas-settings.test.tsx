@@ -1,7 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
+import { render } from 'test-utils/render';
 
 import { CanvasSettingsProvider, DEFAULT_CANVAS_SETTINGS } from './canvas-settings-provider.component';
 import { CanvasSettings } from './canvas-settings.component';

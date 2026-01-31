@@ -1,10 +1,12 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { screen } from '@testing-library/react';
 import { getMockedAnnotation } from 'mocks/mock-annotation';
-import { render, screen } from 'test-utils/render';
+import { render } from 'test-utils/render';
 
-import type { Annotation, Polygon, Rect } from '../../../shared/types';
+import type { Annotation, Polygon, Rect } from '../../../../shared/types';
+import { SelectedDataProvider } from '../../../dataset/selected-data-provider.component';
 import { AnnotationShape } from './annotation-shape.component';
 
 type AnnotationRect = Annotation & { shape: Rect };
@@ -13,7 +15,11 @@ type AnnotationPolygon = Annotation & { shape: Polygon };
 describe('AnnotationShape', () => {
     it('bounding box as a rect', () => {
         const annotation = getMockedAnnotation() as AnnotationRect;
-        render(<AnnotationShape annotation={annotation} />);
+        render(
+            <SelectedDataProvider>
+                <AnnotationShape annotation={annotation} />
+            </SelectedDataProvider>
+        );
 
         const rect = screen.getByLabelText('annotation rect');
 
@@ -32,7 +38,11 @@ describe('AnnotationShape', () => {
         ];
         const annotation = getMockedAnnotation({ shape: { type: 'polygon', points } }) as AnnotationPolygon;
 
-        render(<AnnotationShape annotation={annotation} />);
+        render(
+            <SelectedDataProvider>
+                <AnnotationShape annotation={annotation} />
+            </SelectedDataProvider>
+        );
         const polygon = screen.getByLabelText('annotation polygon');
 
         expect(polygon).toHaveAttribute('points', '1,2 3,4 5,6');

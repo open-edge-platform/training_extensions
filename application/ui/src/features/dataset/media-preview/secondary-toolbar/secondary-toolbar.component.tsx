@@ -1,21 +1,21 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Button, ButtonGroup, dimensionValue, Flex, Key, Text } from '@geti/ui';
+import { ActionButton, Button, ButtonGroup, Text } from '@geti/ui';
 import { Checkmark, CloseSemiBold } from '@geti/ui/icons';
 import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { isEmpty } from 'lodash-es';
 
 import type { Media } from '../../../../constants/shared-types';
+import { useProject } from '../../../../hooks/api/project.hook';
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
-import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
-import { useSelectedAnnotations } from '../../../../shared/annotator/select-annotation-provider.component';
+import { Labels } from '../../../annotator/labels/labels.component';
+import { isClassificationTask } from '../../../project/task-type-guards';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
+import { useSelectedData } from '../../selected-data-provider.component';
 import { Toolbar } from '../toolbar-container/toolbar-container.component';
 import { AnnotatorModes } from './annotator-modes/annotator-modes-toggle.component';
 import type { AnnotatorMode } from './annotator-modes/mode';
-import { LabelPicker } from './label-picker.component';
-import { useSecondaryToolbarState } from './use-secondary-toolbar-state.hook';
 
 import styles from './secondary-toolbar.module.scss';
 
@@ -48,20 +48,26 @@ export const SecondaryToolbar = ({
     onModeChange,
 }: SecondaryToolbarProps) => {
     const queryClient = useQueryClient();
-    const { selectedAnnotations } = useSelectedAnnotations();
-    const { projectLabels } = useSecondaryToolbarState();
-    const { selectedLabel, setSelectedLabelId } = useAnnotator();
-    const { annotations, isSaving, updateAnnotations, submitAnnotations, submitPredictions } = useAnnotationActions();
+    const { setMediaState } = useSelectedData();
+    const { data: selectedProject } = useProject();
+
+    const { annotations, isSaving, submitAnnotations } = useAnnotationActions();
 
     const hasAnnotations = !isEmpty(annotations);
+    const isMultiLabel = selectedProject.task.exclusive_labels === false;
+    const isClassification = isClassificationTask(selectedProject.task.task_type);
     const selectedIndex = items.findIndex((item) => item.id === mediaItem.id);
 
     const handleSubmit = async () => {
-        if (mode === 'annotation') {
-            await submitAnnotations();
-        } else {
-            await submitPredictions();
-        }
+        await submitAnnotations();
+
+        setMediaState((prev) => {
+            const newState = new Map(prev);
+
+            newState.set(String(mediaItem.id), 'accepted');
+
+            return newState;
+        });
 
         const nextItem = getNextItem(items.length - 1, selectedIndex);
         onSelectedMediaItem(items[nextItem]);
@@ -77,26 +83,8 @@ export const SecondaryToolbar = ({
         onSelectedMediaItem(items[nextItem]);
     };
 
-    const handleSelect = (value: Key | null) => {
-        const label = projectLabels.find(({ id }) => id === value);
-        const labels = label ? [label] : [];
-
-        const updatedAnnotations = annotations
-            .filter((annotation) => selectedAnnotations.has(annotation.id))
-            .map((annotation) => ({ ...annotation, labels }));
-
-        updateAnnotations(updatedAnnotations);
-        setSelectedLabelId(label?.id ?? null);
-    };
-
     return (
-        <Flex
-            height={'100%'}
-            width={'100%'}
-            alignItems={'center'}
-            justifyContent={'space-between'}
-            UNSAFE_style={{ paddingTop: dimensionValue('size-125') }}
-        >
+        <div className={styles.secondaryToolbarContainer}>
             <Toolbar.Container>
                 <Toolbar.Section>
                     <AnnotatorModes mode={mode} onModeChange={onModeChange} />
@@ -104,7 +92,11 @@ export const SecondaryToolbar = ({
             </Toolbar.Container>
             <Toolbar.Container>
                 <Toolbar.Section>
-                    <LabelPicker selectedLabel={selectedLabel} labels={projectLabels} onSelect={handleSelect} />
+                    <Labels
+                        isClassification={isClassification}
+                        isMultiLabel={isMultiLabel}
+                        isReadOnly={mode === 'prediction'}
+                    />
                 </Toolbar.Section>
             </Toolbar.Container>
             <Toolbar.Container>
@@ -144,6 +136,6 @@ export const SecondaryToolbar = ({
                     </ButtonGroup>
                 </Toolbar.Section>
             </Toolbar.Container>
-        </Flex>
+        </div>
     );
 };
