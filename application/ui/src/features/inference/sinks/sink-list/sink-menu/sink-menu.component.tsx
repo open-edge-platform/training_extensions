@@ -26,7 +26,7 @@ export const SinkMenu = ({ id, name, isConnected, onEdit }: SinkMenuProps) => {
 
     const updatePipeline = $api.useMutation('patch', '/api/projects/{project_id}/pipeline', {
         meta: {
-            invalidateQueries: [['get', '/api/projects/{project_id}/pipeline']],
+            invalidateQueries: [['get', '/api/projects/{project_id}/pipeline', { params: { path: { project_id } } }]],
         },
     });
 
