@@ -19,7 +19,7 @@ export const BoundingBoxTool = () => {
 
     return (
         <DrawingBox
-            roi={{ x: 0, y: 0, width: mediaItem.width, height: mediaItem.height }}
+            roi={{ x: 0, y: 0, width: mediaItem.width ?? 0, height: mediaItem.height ?? 0 }}
             image={image}
             zoom={zoom}
             selectedLabel={selectedLabel}

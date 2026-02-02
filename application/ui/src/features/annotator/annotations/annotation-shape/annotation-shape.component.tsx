@@ -22,8 +22,8 @@ export const AnnotationShape = ({ annotation }: AnnotationShapeProps) => {
                 fill={'none'}
                 stroke={color}
                 aria-label={`${hasPredictionLabel ? 'prediction' : 'annotation'} full image`}
-                width={selectedMediaItem?.width}
-                height={selectedMediaItem?.height}
+                width={selectedMediaItem?.width ?? 0}
+                height={selectedMediaItem?.height ?? 0}
                 strokeDasharray={strokeDasharray}
             />
         );

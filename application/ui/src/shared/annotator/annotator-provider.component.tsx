@@ -67,7 +67,7 @@ export const AnnotatorProvider = ({ mediaItem, children }: { mediaItem: Media; c
 
                 mediaItem,
                 image: imageQuery.data,
-                roi: { x: 0, y: 0, width: mediaItem.width, height: mediaItem.height },
+                roi: { x: 0, y: 0, width: mediaItem.width ?? 0, height: mediaItem.height ?? 0 },
             }}
         >
             {children}
