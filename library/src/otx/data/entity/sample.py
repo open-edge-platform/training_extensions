@@ -8,7 +8,6 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING, Any, Sequence
 
-import numpy as np
 import polars as pl
 import torch
 import torch.utils._pytree as pytree
@@ -89,7 +88,7 @@ def register_pytree_node(cls: type[Sample]) -> type[Sample]:
 class OTXSample(Sample):
     """Base class for OTX data samples."""
 
-    image: np.ndarray | torch.Tensor | tv_tensors.Image | Any
+    image: torch.Tensor | tv_tensors.Image
     subset: Subset = subset_field()
 
     @property
@@ -111,7 +110,7 @@ class ClassificationSample(OTXSample):
 
     subset: Subset = subset_field()
 
-    image: tv_tensors.Image | np.ndarray | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
+    image: tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
     label: torch.Tensor = label_field(pl.UInt8())
     dm_image_info: DmImageInfo = image_info_field()
 
@@ -129,8 +128,8 @@ class ClassificationSample(OTXSample):
 class ClassificationMultiLabelSample(OTXSample):
     """ClassificationMultiLabelSample is a base class for OTX multi label classification items."""
 
-    image: tv_tensors.Image | np.ndarray | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
-    label: np.ndarray | torch.Tensor = label_field(pl.UInt8(), multi_label=True)
+    image: tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
+    label: torch.Tensor = label_field(pl.UInt8(), multi_label=True)
     dm_image_info: DmImageInfo = image_info_field()
 
     def __post_init__(self) -> None:
@@ -147,8 +146,8 @@ class ClassificationMultiLabelSample(OTXSample):
 class ClassificationHierarchicalSample(OTXSample):
     """ClassificationHierarchicalSample is a base class for OTX hierarchical classification items."""
 
-    image: tv_tensors.Image | np.ndarray | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
-    label: np.ndarray | torch.Tensor = label_field(pl.UInt8(), is_list=True)
+    image: tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
+    label: torch.Tensor = label_field(pl.UInt8(), is_list=True)
     dm_image_info: DmImageInfo = image_info_field()
 
     def __post_init__(self) -> None:
@@ -165,18 +164,19 @@ class ClassificationHierarchicalSample(OTXSample):
 class DetectionSample(OTXSample):
     """DetectionSample is a base class for OTX detection items."""
 
-    image: tv_tensors.Image | np.ndarray | torch.Tensor = image_field(
+    image: tv_tensors.Image | torch.Tensor = image_field(
         dtype=pl.UInt8(), format="BGR", channels_first=True
     )
     label: torch.Tensor = label_field(pl.UInt8(), is_list=True)
-    bboxes: np.ndarray | tv_tensors.BoundingBoxes = bbox_field(dtype=pl.Float32())
+    bboxes: tv_tensors.BoundingBoxes = bbox_field(dtype=pl.Float32())
     dm_image_info: DmImageInfo = image_info_field()
 
     def __post_init__(self) -> None:
         shape = (self.dm_image_info.height, self.dm_image_info.width)
 
-        # Convert bboxes to tv_tensors format
-        if isinstance(self.bboxes, np.ndarray):
+        # Ensure bboxes are tv_tensors.BoundingBoxes
+        if not isinstance(self.bboxes, tv_tensors.BoundingBoxes):
+            # If it's a plain tensor, wrap it
             self.bboxes = tv_tensors.BoundingBoxes(
                 self.bboxes,
                 format=tv_tensors.BoundingBoxFormat.XYXY,
@@ -196,7 +196,7 @@ class SegmentationSample(OTXSample):
     """OTXSample for segmentation tasks."""
 
     subset: Subset = subset_field()
-    image: np.ndarray | tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=False)
+    image: tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=False)
     masks: tv_tensors.Mask = mask_field(dtype=pl.UInt8(), channels_first=True, has_channels_dim=True)
     dm_image_info: DmImageInfo = image_info_field()
 
@@ -214,8 +214,8 @@ class InstanceSegmentationSample(OTXSample):
     """OTXSample for instance segmentation tasks."""
 
     subset: Subset = subset_field()
-    image: tv_tensors.Image | np.ndarray | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
-    bboxes: np.ndarray | tv_tensors.BoundingBoxes = bbox_field(dtype=pl.Float32())
+    image: tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
+    bboxes: tv_tensors.BoundingBoxes = bbox_field(dtype=pl.Float32())
     masks: tv_tensors.Mask = instance_mask_field(dtype=pl.UInt8())
     label: torch.Tensor = label_field(dtype=pl.UInt8(), is_list=True)
     dm_image_info: DmImageInfo = image_info_field()
@@ -223,8 +223,9 @@ class InstanceSegmentationSample(OTXSample):
     def __post_init__(self) -> None:
         shape = (self.dm_image_info.height, self.dm_image_info.width)
 
-        # Convert bboxes to tv_tensors format
-        if isinstance(self.bboxes, np.ndarray):
+        # Ensure bboxes are tv_tensors.BoundingBoxes
+        if not isinstance(self.bboxes, tv_tensors.BoundingBoxes):
+            # If it's a plain tensor, wrap it
             self.bboxes = tv_tensors.BoundingBoxes(
                 self.bboxes,
                 format=tv_tensors.BoundingBoxFormat.XYXY,
@@ -244,7 +245,7 @@ class KeypointSample(OTXSample):
     """KeypointSample is a base class for OTX keypoint detection items."""
 
     subset: Subset = subset_field()
-    image: tv_tensors.Image | np.ndarray | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
+    image: tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
     label: torch.Tensor = label_field(dtype=pl.UInt8(), is_list=True)
     keypoints: torch.Tensor = keypoints_field()
     dm_image_info: DmImageInfo = image_info_field()
@@ -419,7 +420,7 @@ class OTXPrediction:
         saliency_map: The saliency map for XAI, optional.
     """
 
-    image: torch.Tensor | np.ndarray
+    image: torch.Tensor
     img_info: ImageInfo | None = None
     label: torch.Tensor | None = None
     masks: Mask | None = None
