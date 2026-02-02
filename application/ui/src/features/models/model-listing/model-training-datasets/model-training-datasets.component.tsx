@@ -82,7 +82,7 @@ const SubsetBox = ({ title, subset, datasetRevisionId, totalItems }: SubsetBoxPr
 };
 
 const ModelTrainingContent = ({ datasetRevision }: { datasetRevision: DatasetRevision }) => {
-    const totalItems = datasetRevision.item_counts.total ?? 0;
+    const totalItems = datasetRevision.item_counts?.total ?? 0;
     const datasetRevisionId = String(datasetRevision.id);
 
     return (

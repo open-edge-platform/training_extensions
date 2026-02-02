@@ -16,13 +16,10 @@ type DatasetGroupHeaderProps = {
 };
 
 export const DatasetGroupHeader = ({ dataset }: DatasetGroupHeaderProps) => {
+    const gridColumns = dataset.filesDeleted ? ['auto', '1fr', 'auto', 'auto'] : ['auto', '1fr', 'auto', '1fr', 'auto'];
+
     return (
-        <Grid
-            columns={['auto', '1fr', 'auto', '1fr', 'auto']}
-            alignItems={'center'}
-            marginBottom={'size-225'}
-            gap={'size-200'}
-        >
+        <Grid columns={gridColumns} alignItems={'center'} marginBottom={'size-225'} gap={'size-200'}>
             <Flex alignItems={'center'} gap={'size-50'}>
                 <Heading level={2} UNSAFE_style={{ fontSize: dimensionValue('size-300') }}>
                     {dataset.name}
