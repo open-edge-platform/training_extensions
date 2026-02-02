@@ -741,8 +741,8 @@ class TestMediaServiceIntegration:
         [
             (None, 7),  # All items
             ("unannotated", 2),  # 2 unannotated items
-            ("reviewed", 3),  # 3 reviewed items
-            ("to_review", 2),  # 2 to_review items
+            ("reviewed", 3),  # 3 items with user_reviewed=True
+            ("to_review", 4),  # 2 unannotated items + 2 items with user_reviewed=False
         ],
     )
     def test_count_media_with_annotation_status(
@@ -765,7 +765,7 @@ class TestMediaServiceIntegration:
             (None, ["unannotated1", "unannotated2", "reviewed1", "reviewed2", "reviewed3", "to_review1", "to_review2"]),
             (DatasetItemAnnotationStatus.UNANNOTATED, ["unannotated1", "unannotated2"]),
             (DatasetItemAnnotationStatus.REVIEWED, ["reviewed1", "reviewed2", "reviewed3"]),
-            (DatasetItemAnnotationStatus.TO_REVIEW, ["to_review1", "to_review2"]),
+            (DatasetItemAnnotationStatus.TO_REVIEW, ["unannotated1", "unannotated2", "to_review1", "to_review2"]),
         ],
     )
     def test_list_media_with_annotation_status(
@@ -797,7 +797,7 @@ class TestMediaServiceIntegration:
             (DatasetItemAnnotationStatus.UNANNOTATED, 1, 2, 0),  # Beyond available unannotated items
             (DatasetItemAnnotationStatus.REVIEWED, 2, 0, 2),  # First page of reviewed
             (DatasetItemAnnotationStatus.REVIEWED, 2, 2, 1),  # Second page of reviewed (only 1 left)
-            (DatasetItemAnnotationStatus.TO_REVIEW, 10, 0, 2),  # All to_review items
+            (DatasetItemAnnotationStatus.TO_REVIEW, 10, 0, 4),  # All items with user_reviewed=False
         ],
     )
     def test_list_media_with_annotation_status_pagination(
@@ -883,7 +883,7 @@ class TestMediaServiceIntegration:
                 annotation_status=DatasetItemAnnotationStatus.TO_REVIEW,
             ),
         )
-        assert len(to_review_media) == 2
+        assert len(to_review_media) == 4
 
     def test_list_media_filter_by_single_label(
         self,
