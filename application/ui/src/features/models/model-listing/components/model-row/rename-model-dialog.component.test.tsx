@@ -18,7 +18,7 @@ describe('RenameModelDialog', () => {
         it('should render dialog with heading and current name in input', () => {
             render(<RenameModelDialog {...defaultProps} />);
 
-            expect(screen.getByRole('heading', { name: 'Rename Model' })).toBeInTheDocument();
+            expect(screen.getByRole('heading', { name: 'Rename model' })).toBeInTheDocument();
             expect(screen.getByRole('textbox')).toHaveValue('Current Model Name');
             expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
             expect(screen.getByRole('button', { name: 'Rename' })).toBeInTheDocument();
