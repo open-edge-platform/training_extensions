@@ -87,7 +87,7 @@ export const DatasetGroupHeader = ({ dataset }: DatasetGroupHeaderProps) => {
                 </Heading>
 
                 <MenuTrigger>
-                    <ActionButton isQuiet aria-label={'Model actions'}>
+                    <ActionButton isQuiet aria-label={'Dataset actions'}>
                         <MoreMenu />
                     </ActionButton>
                     <Menu onAction={handleDatasetMenuAction} aria-label={'Dataset actions menu'}>

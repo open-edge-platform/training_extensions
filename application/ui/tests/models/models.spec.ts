@@ -1,6 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { getMockedDatasetRevision } from 'mocks/mock-dataset-revision';
 import { getMockedExtendedModel, getMockedModel } from 'mocks/mock-model';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
@@ -55,6 +56,12 @@ test.describe('Models', () => {
             }),
             http.get('/api/projects/{project_id}/models', () => {
                 return HttpResponse.json(mockedModels);
+            }),
+            http.get('/api/projects/{project_id}/dataset_revisions', () => {
+                return HttpResponse.json([
+                    getMockedDatasetRevision({ id: 'dataset-1', name: 'Dataset Revision 1' }),
+                    getMockedDatasetRevision({ id: 'dataset-2', name: 'Dataset Revision 2' }),
+                ]);
             }),
             http.get('/api/projects/{project_id}/models/{model_id}', ({ params }) => {
                 const foundModel = mockedModels.find((model) => model.id === params.model_id);
@@ -248,5 +255,29 @@ test.describe('Models', () => {
         await modelsPage.clickSetActiveAction();
 
         expect(activatedModelId).toBe('model-1');
+    });
+
+    test('can rename a dataset revision', async ({ modelsPage, network }) => {
+        network.use(
+            http.patch('/api/projects/{project_id}/dataset_revisions/{dataset_revision_id}', async ({ request }) => {
+                const body = (await request.json()) as { name: string };
+
+                return HttpResponse.json(getMockedDatasetRevision({ id: 'dataset-1', name: body.name }));
+            }),
+            http.get('/api/projects/{project_id}/dataset_revisions', () => {
+                return HttpResponse.json([
+                    getMockedDatasetRevision({ id: 'dataset-1', name: 'Renamed Dataset' }),
+                    getMockedDatasetRevision({ id: 'dataset-2', name: 'Dataset Revision 2' }),
+                ]);
+            })
+        );
+
+        await modelsPage.goto();
+
+        await modelsPage.openDatasetMenu();
+        await modelsPage.clickRenameDatasetAction();
+        await modelsPage.renameDatasetRevision('Renamed Dataset');
+
+        await expect(modelsPage.getDatasetHeaderByName('Renamed Dataset')).toBeVisible();
     });
 });
