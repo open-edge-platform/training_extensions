@@ -9,7 +9,9 @@ export const useGetDatasetRevisions = () => {
 
     return $api.useQuery('get', '/api/projects/{project_id}/dataset_revisions', {
         params: {
-            path: { project_id },
+            path: {
+                project_id,
+            },
         },
     });
 };

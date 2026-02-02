@@ -64,6 +64,14 @@ export const queryClient = new QueryClient({
     }),
 });
 
+/**
+ * Returns the provided query key.
+ * Helper to centralize construction and typing of React Query keys.
+ * It acts as an identity function.
+ *
+ * @param queryKey - The query key to return.
+ * @returns The same query key.
+ */
 export const getQueryKey = (queryKey: QueryKey<paths>): QueryKey<paths> => {
     return queryKey;
 };
