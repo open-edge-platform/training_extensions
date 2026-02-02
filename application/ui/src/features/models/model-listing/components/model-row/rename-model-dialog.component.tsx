@@ -25,7 +25,7 @@ export const RenameModelDialog = ({ currentName, onRename, onClose, isPending }:
 
     return (
         <Dialog>
-            <Heading>Rename Model</Heading>
+            <Heading>Rename model</Heading>
 
             <Divider />
 
