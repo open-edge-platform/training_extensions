@@ -17,7 +17,7 @@ from sqlalchemy.orm import Session
 from app.db.schema import DatasetRevisionDB
 from app.models import DatasetItemSubset
 from app.models.dataset_item_revision import DatasetRevisionItem
-from app.models.dataset_revision import DatasetRevision
+from app.models.dataset_revision import DatasetRevision, DatasetRevisionCounts
 from app.repositories import DatasetRevisionRepository
 from app.utils.images import crop_to_thumbnail
 
@@ -201,31 +201,49 @@ class DatasetRevisionService(BaseSessionManagedService):
         return parquet_path
 
     @lru_cache(maxsize=64)
-    def count_items_by_subset(self, project_id: UUID, dataset_revision_id: UUID) -> dict[str, int]:
+    def __count_dataset_revision_items(self, project_id: UUID, dataset_revision_id: UUID) -> DatasetRevisionCounts:
+        """Refer to DatasetRevisionService.count_dataset_revision_items"""
+        parquet_path = self._get_revision_parquet_path(project_id, dataset_revision_id)
+        lf = pl.scan_parquet(parquet_path)
+        subset_counts_raw = lf.group_by("subset").len().collect().to_dicts()  # [{"subset": "TRAINING", "len": 12}, ...]
+        counts_by_subset = {row["subset"].lower(): row["len"] for row in subset_counts_raw}  # {"training": 12, ...}
+        try:
+            dataset_revision_counts = DatasetRevisionCounts(
+                training=counts_by_subset["training"],
+                validation=counts_by_subset["validation"],
+                testing=counts_by_subset["testing"],
+                total=sum(counts_by_subset.values()),
+            )
+        except KeyError as exc:
+            logger.error(
+                "Failed to count dataset revision items for project_id='{}', dataset_revision_id='{}'. Error: {}",
+                project_id,
+                dataset_revision_id,
+                exc,
+            )
+            raise
+        return dataset_revision_counts
+
+    def count_dataset_revision_items(
+        self, project_id: UUID, dataset_revision: DatasetRevision
+    ) -> DatasetRevisionCounts | None:
         """
         Count the number of dataset items in a dataset revision, grouped by subset.
 
-        Efficiently reads only the necessary metadata from the Parquet file to compute:
+        This method scans the dataset revision Parquet file and efficiently computes:
         - The total number of items ("total")
-        - The number of items in each subset (e.g., "train", "val", "test")
+        - The number of items in each subset (e.g., "training", "validation", "testing")
 
         Args:
-            project_id (UUID): The UUID of the project.
-            dataset_revision_id (UUID): The UUID of the dataset revision.
+            project_id: The UUID of the project.
+            dataset_revision: The dataset revision.
 
         Returns:
-            dict[str, int]: A dictionary mapping subset names to counts. Includes a "total" key for the total count.
-
-        Raises:
-            ResourceNotFoundError: If the Parquet file does not exist.
+            DatasetRevisionCounts | None: The counts of dataset items, or None if files are deleted
         """
-        parquet_path = self._get_revision_parquet_path(project_id, dataset_revision_id)
-        lf = pl.scan_parquet(parquet_path)
-        subset_counts = lf.group_by("subset").len().collect()
-        counts = {row["subset"].lower(): row["len"] for row in subset_counts.to_dicts()}
-        total = sum(counts.values())
-        counts["total"] = total
-        return counts
+        if dataset_revision.files_deleted:
+            return None
+        return self.__count_dataset_revision_items(project_id, dataset_revision.id)
 
     def _parse_revision_item_from_df_row_dict(
         self, project_id: UUID, dataset_revision_id: UUID, df_revision_item: dict[str, Any]

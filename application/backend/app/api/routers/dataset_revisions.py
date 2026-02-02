@@ -60,11 +60,11 @@ def list_dataset_revisions(
         dataset_revision_views = []
         for dataset_revision in dataset_revision_service.list_dataset_revisions(project_id=project.id):
             dataset_revision_view_data = dataset_revision.model_dump()
-            if not dataset_revision.files_deleted:
-                item_counts = dataset_revision_service.count_items_by_subset(
-                    project_id=project.id, dataset_revision_id=dataset_revision.id
-                )
-                dataset_revision_view_data |= {"item_counts": item_counts}
+            dataset_revision_item_counts = dataset_revision_service.count_dataset_revision_items(
+                project_id=project.id, dataset_revision=dataset_revision
+            )
+            if dataset_revision_item_counts is not None:
+                dataset_revision_view_data |= {"item_counts": dataset_revision_item_counts.model_dump()}
             dataset_revision_view = DatasetRevisionView.model_validate(dataset_revision_view_data, from_attributes=True)
             dataset_revision_views.append(dataset_revision_view)
         return dataset_revision_views
@@ -89,11 +89,11 @@ def get_dataset_revision_details(
     """Get information about a specific dataset revision."""
     try:
         dataset_revision_view_data = dataset_revision.model_dump()
-        if not dataset_revision.files_deleted:
-            item_counts = dataset_revision_service.count_items_by_subset(
-                project_id=project.id, dataset_revision_id=dataset_revision.id
-            )
-            dataset_revision_view_data |= {"item_counts": item_counts}
+        dataset_revision_item_counts = dataset_revision_service.count_dataset_revision_items(
+            project_id=project.id, dataset_revision=dataset_revision
+        )
+        if dataset_revision_item_counts is not None:
+            dataset_revision_view_data |= {"item_counts": dataset_revision_item_counts.model_dump()}
         return DatasetRevisionView.model_validate(dataset_revision_view_data, from_attributes=True)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
@@ -135,11 +135,11 @@ def rename_dataset_revision(
             new_name=new_name,
         )
         dataset_revision_view_data = dataset_revision.model_dump()
-        if not dataset_revision.files_deleted:
-            item_counts = dataset_revision_service.count_items_by_subset(
-                project_id=project.id, dataset_revision_id=dataset_revision.id
-            )
-            dataset_revision_view_data |= {"item_counts": item_counts}
+        dataset_revision_item_counts = dataset_revision_service.count_dataset_revision_items(
+            project_id=project.id, dataset_revision=dataset_revision
+        )
+        if dataset_revision_item_counts is not None:
+            dataset_revision_view_data |= {"item_counts": dataset_revision_item_counts.model_dump()}
         return DatasetRevisionView.model_validate(dataset_revision_view_data, from_attributes=True)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

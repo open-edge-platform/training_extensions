@@ -9,6 +9,8 @@ from app.core.models import BaseIDModel
 
 
 class ItemCount(BaseModel):
+    """Counts of samples in different splits of a dataset revision."""
+
     total: int = Field(..., description="Total number of items in the dataset")
     training: int = Field(..., description="Number of items in the training subset")
     validation: int = Field(..., description="Number of items in the validation subset")

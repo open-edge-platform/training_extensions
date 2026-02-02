@@ -6,6 +6,17 @@ from uuid import UUID
 from app.models.base import BaseEntity
 
 
+class DatasetRevisionCounts(BaseEntity):
+    """
+    Counts of samples in different splits of a dataset revision.
+    """
+
+    total: int
+    training: int
+    validation: int
+    testing: int
+
+
 class DatasetRevision(BaseEntity):
     """
     A dataset revision is an immutable snapshot of a training dataset.
