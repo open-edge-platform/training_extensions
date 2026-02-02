@@ -6,6 +6,7 @@ import { Image, Tag } from '@geti/ui/icons';
 
 import { TrainModel } from '../../../train-model/train-model.component';
 import type { DatasetGroup } from '../../types';
+import { DatasetActions } from '../dataset-actions/dataset-actions.component';
 import { ThreeSectionRange } from '../three-section-range/three-section-range.component';
 
 import classes from './group-headers.module.scss';
@@ -26,6 +27,8 @@ export const DatasetGroupHeader = ({ dataset }: DatasetGroupHeaderProps) => {
                 <Heading level={2} UNSAFE_style={{ fontSize: dimensionValue('size-300') }}>
                     {dataset.name}
                 </Heading>
+
+                <DatasetActions dataset={dataset} />
             </Flex>
             <Text
                 UNSAFE_style={{
@@ -51,7 +54,7 @@ export const DatasetGroupHeader = ({ dataset }: DatasetGroupHeaderProps) => {
             />
 
             <Flex>
-                <TrainModel />
+                <TrainModel preSelectedDatasetRevisionId={dataset.id} />
             </Flex>
         </Grid>
     );

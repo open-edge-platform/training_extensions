@@ -17,7 +17,7 @@ export const useTrainModelMutation = () => {
         }: {
             device: DeviceType;
             modelArchitectureId: string;
-            datasetRevisionId: string;
+            datasetRevisionId: string | null;
         },
         onSuccess?: () => void
     ) => {
