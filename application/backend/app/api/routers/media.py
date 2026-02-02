@@ -75,7 +75,7 @@ def add_media(
         dataset_service.create_dataset_item(
             project=project,
             media=media,
-            user_reviewed=True,
+            user_reviewed=False,
         )
         return MediaView.model_validate(media, from_attributes=True)
     except InvalidImageError:
