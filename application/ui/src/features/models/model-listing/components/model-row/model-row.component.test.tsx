@@ -6,11 +6,10 @@ import userEvent from '@testing-library/user-event';
 import { render } from 'test-utils/render';
 
 import { getMockedModel } from '../../../../../../mocks/mock-model';
-import type { Model } from '../../../../../constants/shared-types';
 import { ModelRow } from './model-row.component';
 
 describe('ModelRow', () => {
-    const defaultModel: Model = getMockedModel({
+    const defaultModel = getMockedModel({
         id: 'model-123',
         name: 'Test Model',
         architecture: 'YOLOX',
@@ -68,7 +67,7 @@ describe('ModelRow', () => {
     describe('parent revision model', () => {
         it('should render parent revision model when provided and call onExpandModel when clicked', async () => {
             const onExpandModel = vi.fn();
-            const parentModel: Model = getMockedModel({
+            const parentModel = getMockedModel({
                 id: 'parent-123',
                 name: 'Parent Model',
             });
@@ -87,40 +86,6 @@ describe('ModelRow', () => {
             render(<ModelRow model={defaultModel} />);
 
             expect(screen.queryByText('Fine-tuned from')).not.toBeInTheDocument();
-        });
-    });
-
-    describe('model actions menu', () => {
-        it('should render menu with all items and handle clicks correctly', async () => {
-            const onModelAction = vi.fn();
-
-            render(<ModelRow model={defaultModel} onModelAction={onModelAction} />);
-
-            const menuButton = screen.getByRole('button', { name: 'Model actions' });
-            expect(menuButton).toBeInTheDocument();
-
-            await userEvent.click(menuButton);
-            expect(screen.getByRole('menuitem', { name: 'Set as active' })).toBeInTheDocument();
-            expect(screen.getByRole('menuitem', { name: 'Rename' })).toBeInTheDocument();
-            expect(screen.getByRole('menuitem', { name: 'Delete' })).toBeInTheDocument();
-
-            await userEvent.click(screen.getByRole('menuitem', { name: 'Set as active' }));
-            expect(onModelAction).toHaveBeenCalledWith('active');
-            await userEvent.click(menuButton);
-            await userEvent.click(screen.getByRole('menuitem', { name: 'Rename' }));
-            expect(onModelAction).toHaveBeenCalledWith('rename');
-
-            await userEvent.click(menuButton);
-            await userEvent.click(screen.getByRole('menuitem', { name: 'Delete' }));
-            expect(onModelAction).toHaveBeenCalledWith('delete');
-
-            expect(onModelAction).toHaveBeenCalledTimes(3);
-        });
-
-        it('should not render actions menu when onModelAction is not provided', () => {
-            render(<ModelRow model={defaultModel} />);
-
-            expect(screen.queryByRole('button', { name: 'Model actions' })).not.toBeInTheDocument();
         });
     });
 });

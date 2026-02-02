@@ -4,6 +4,7 @@
 import { Suspense, useState } from 'react';
 
 import { Content, Dialog, Flex, Grid, Loading, View } from '@geti/ui';
+import { clsx } from 'clsx';
 
 import { ZoomProvider } from '../../../components/zoom/zoom.provider';
 import type { Media } from '../../../constants/shared-types';
@@ -23,6 +24,8 @@ import { AnnotatorMode } from './secondary-toolbar/annotator-modes/mode';
 import { SecondaryToolbar } from './secondary-toolbar/secondary-toolbar.component';
 import { SidebarItems } from './sidebar-items/sidebar-items.component';
 import { getInitialAnnotations, getInitialPredictions } from './utils';
+
+import styles from './media-preview.module.scss';
 
 type MediaPreviewProps = {
     mediaItem: Media;
@@ -51,6 +54,8 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
     const isUserReviewed = annotationsData?.user_reviewed ?? false;
     const annotationsDTO = annotationsData?.annotations ?? [];
 
+    const isReadOnlyCanvas = mode === 'prediction';
+
     return (
         <AnnotationActionsProvider
             key={mediaItem.id}
@@ -75,13 +80,24 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
                                 />
                             </View>
 
-                            <View gridArea={'toolbar'}>{mode === 'annotation' && <PrimaryToolbar />}</View>
+                            <div
+                                style={{ gridArea: 'toolbar' }}
+                                aria-label={'primary toolbar'}
+                                aria-disabled={isReadOnlyCanvas}
+                                className={clsx({ [styles.primaryToolbarDisabled]: isReadOnlyCanvas })}
+                            >
+                                <PrimaryToolbar />
+                            </div>
 
                             <View gridArea={'bottom'}>
                                 <BottomToolbar isUserReviewed={isUserReviewed} mediaItem={mediaItem} />
                             </View>
 
-                            <View gridArea={'canvas'} overflow={'hidden'}>
+                            <View
+                                gridArea={'canvas'}
+                                overflow={'hidden'}
+                                UNSAFE_className={clsx({ [styles.readOnlyCanvas]: isReadOnlyCanvas })}
+                            >
                                 <AnnotatorCanvasSettings>
                                     <AnnotatorCanvas mediaItem={mediaItem} />
                                 </AnnotatorCanvasSettings>

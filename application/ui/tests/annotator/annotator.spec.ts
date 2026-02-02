@@ -229,7 +229,7 @@ test.describe('Annotator', () => {
             await expect(annotatorPage.getAnnotationMode('Prediction')).toHaveAttribute('aria-pressed', 'true');
             await expect(annotatorPage.getAnnotationMode('Annotation')).toHaveAttribute('aria-pressed', 'false');
 
-            await expect(annotatorPage.getPrimaryToolbar()).toBeHidden();
+            await expect(annotatorPage.getPrimaryToolbar()).toHaveAttribute('aria-disabled', 'true');
             await expect(page.getByLabel('Labels')).toHaveAttribute('aria-disabled', 'true');
 
             await expect(page.getByLabel(`label ${blueLabel.name} background`)).toHaveCount(predictions.length);
