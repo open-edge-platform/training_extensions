@@ -7,7 +7,7 @@ import { useHotkeys } from 'react-hotkeys-hook';
 
 import { IconWrapper } from '../../../../../components/icon-wrapper/icon-wrapper.component';
 import { useSetZoom } from '../../../../../components/zoom/zoom.provider';
-import { HOTKEYS } from '../hotkeys/hotkeys-definition';
+import { HOTKEYS } from '../../../../../shared/hotkeys-definition';
 
 export const ZoomFitScreen = () => {
     const { fitToScreen } = useSetZoom();

@@ -14,9 +14,9 @@ describe('sortModels', () => {
 
     it('should sort models by name ascending', () => {
         const models = [
-            getMockedModel({ id: 'charlie' }),
-            getMockedModel({ id: 'alpha' }),
-            getMockedModel({ id: 'bravo' }),
+            getMockedModel({ id: 'charlie', name: 'Charlie' }),
+            getMockedModel({ id: 'alpha', name: 'Alpha' }),
+            getMockedModel({ id: 'bravo', name: 'Bravo' }),
         ];
 
         const sorted = sortModels(models, 'name');
@@ -28,9 +28,9 @@ describe('sortModels', () => {
 
     it('should sort models by architecture ascending', () => {
         const models = [
-            getMockedModel({ id: 'model-1', architecture: 'YOLOX' }),
-            getMockedModel({ id: 'model-2', architecture: 'MobileNet' }),
-            getMockedModel({ id: 'model-3', architecture: 'ResNet' }),
+            getMockedModel({ id: 'model-1', name: 'Charlie', architecture: 'YOLOX' }),
+            getMockedModel({ id: 'model-2', name: 'Alpha', architecture: 'MobileNet' }),
+            getMockedModel({ id: 'model-3', name: 'Bravo', architecture: 'ResNet' }),
         ];
 
         const sorted = sortModels(models, 'architecture');

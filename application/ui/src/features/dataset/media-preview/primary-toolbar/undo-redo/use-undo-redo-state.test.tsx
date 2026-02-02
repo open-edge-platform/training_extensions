@@ -3,7 +3,8 @@
 
 import { useEffect } from 'react';
 
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
+import { render } from 'test-utils/render';
 
 import { UndoRedoProvider } from './undo-redo-provider.component';
 import useUndoRedoState, { SetStateWrapper } from './use-undo-redo-state';

@@ -8,7 +8,7 @@ import openvino.runtime as ov
 import pytest
 
 from otx.backend.native.engine import OTXEngine
-from otx.data.entity.torch import OTXPredBatch
+from otx.data.entity.sample import OTXPredictionBatch
 from otx.engine import create_engine
 
 RECIPE_LIST_ALL = pytest.RECIPE_LIST
@@ -58,12 +58,13 @@ def test_forward_explain(
     )
 
     predict_result = engine.predict()
-    assert isinstance(predict_result[0], OTXPredBatch)
-    assert not predict_result[0].has_xai_outputs
+    assert isinstance(predict_result[0], OTXPredictionBatch)
+    assert predict_result[0].saliency_map is None or len(predict_result[0].saliency_map) == 0
 
     predict_result_explain = engine.predict(explain=True)
-    assert isinstance(predict_result_explain[0], OTXPredBatch)
-    assert predict_result_explain[0].has_xai_outputs
+    assert isinstance(predict_result_explain[0], OTXPredictionBatch)
+    assert predict_result_explain[0].saliency_map is not None
+    assert len(predict_result_explain[0].saliency_map) > 0
 
     batch_size = len(predict_result[0].scores)
     for i in range(batch_size):
@@ -110,8 +111,9 @@ def test_predict_with_explain(
 
     # Predict with explain torch & process maps
     predict_result_explain_torch = engine.predict(explain=True)
-    assert isinstance(predict_result_explain_torch[0], OTXPredBatch)
-    assert predict_result_explain_torch[0].has_xai_outputs
+    assert isinstance(predict_result_explain_torch[0], OTXPredictionBatch)
+    assert predict_result_explain_torch[0].saliency_map is not None
+    assert len(predict_result_explain_torch[0].saliency_map) > 0
     assert predict_result_explain_torch[0].saliency_map is not None
     assert isinstance(predict_result_explain_torch[0].saliency_map[0], dict)
 
@@ -140,8 +142,9 @@ def test_predict_with_explain(
     # Predict OV model with xai & process maps
     ov_engine = create_engine(model=exported_model_path, data=engine.datamodule, work_dir=engine.work_dir)
     predict_result_explain_ov = ov_engine.predict(checkpoint=exported_model_path, explain=True)
-    assert isinstance(predict_result_explain_ov[0], OTXPredBatch)
-    assert predict_result_explain_ov[0].has_xai_outputs
+    assert isinstance(predict_result_explain_ov[0], OTXPredictionBatch)
+    assert predict_result_explain_ov[0].saliency_map is not None
+    assert len(predict_result_explain_ov[0].saliency_map) > 0
     assert predict_result_explain_ov[0].saliency_map is not None
     assert isinstance(predict_result_explain_ov[0].saliency_map[0], dict)
     assert predict_result_explain_ov[0].feature_vector is not None

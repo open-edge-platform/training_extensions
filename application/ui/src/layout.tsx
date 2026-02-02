@@ -4,6 +4,7 @@
 import { Suspense } from 'react';
 
 import { Flex, Grid, Item, Loading, TabList, Tabs, View } from '@geti/ui';
+import { useProject } from 'hooks/api/project.hook';
 import { Outlet, useLocation } from 'react-router';
 import { Link } from 'react-router-dom';
 
@@ -54,16 +55,6 @@ const Header = () => {
                         </Flex>
                     </Item>
                     <Item
-                        textValue='Inference page showing live inference on your project'
-                        key={'inference'}
-                        href={paths.project.inference({ projectId })}
-                    >
-                        <Flex alignItems='center' gap='size-100'>
-                            <LiveFeedIcon style={iconStyles} />
-                            Inference
-                        </Flex>
-                    </Item>
-                    <Item
                         textValue='Models page to visualise your models'
                         key={'models'}
                         href={paths.project.models({ projectId })}
@@ -71,6 +62,16 @@ const Header = () => {
                         <Flex alignItems='center' gap='size-100'>
                             <Webhook style={iconStyles} />
                             Models
+                        </Flex>
+                    </Item>
+                    <Item
+                        textValue='Inference page showing live inference on your project'
+                        key={'inference'}
+                        href={paths.project.inference({ projectId })}
+                    >
+                        <Flex alignItems='center' gap='size-100'>
+                            <LiveFeedIcon style={iconStyles} />
+                            Inference
                         </Flex>
                     </Item>
                 </TabList>
@@ -89,14 +90,14 @@ const getFirstPathSegment = (path: string): string => {
 
 export const Layout = () => {
     const { pathname } = useLocation();
+    // We want to check if the project exists before rendering the layout. If it doesn't, error boundary will catch it.
+    useProject();
 
     return (
         <Tabs aria-label='Header navigation' selectedKey={getFirstPathSegment(pathname)}>
             <Grid
                 areas={['header', 'content']}
-                UNSAFE_style={{
-                    gridTemplateRows: 'var(--spectrum-global-dimension-size-800, 4rem) auto',
-                }}
+                rows={['size-800', 'minmax(0, 1fr)']}
                 minHeight={'100vh'}
                 maxHeight={'100vh'}
                 height={'100%'}

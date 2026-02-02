@@ -19,7 +19,7 @@ class DataAugSwitchMixin:
 
     Usage:
         class MyDataset(OTXDataset, DataAugSwitchMixin):
-            def _get_item_impl(self, index: int) -> OTXDataItem | None:
+            def _get_item_impl(self, index: int) -> OTXSample | None:
                 # ... get your data ...
                 self._apply_augmentation_switch()
                 return self._apply_transforms(entity)

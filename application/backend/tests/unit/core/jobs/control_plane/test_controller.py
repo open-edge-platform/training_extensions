@@ -136,7 +136,7 @@ class TestJobController:
             pass
 
         await event_queue.put(UnknownEvent())
-        await event_queue.put(None)  # Signal end
+        await event_queue.put(None)  # Signal end  # pyrefly: ignore[bad-argument-type]
 
         with patch("app.core.jobs.control_plane.controller.logger") as mock_logger:
             await fxt_job_controller._handle_job_events(job, event_queue)

@@ -1,24 +1,32 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, ButtonGroup, dimensionValue, Flex, Grid } from '@geti/ui';
+import { ActionButton, Button, ButtonGroup, Text } from '@geti/ui';
+import { Checkmark, CloseSemiBold } from '@geti/ui/icons';
 import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { isEmpty } from 'lodash-es';
 
-import type { DatasetItem } from '../../../../constants/shared-types';
+import type { Media } from '../../../../constants/shared-types';
+import { useProject } from '../../../../hooks/api/project.hook';
 import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
-import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
+import { Labels } from '../../../annotator/labels/labels.component';
+import { isClassificationTask } from '../../../project/task-type-guards';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
-import { LabelPicker } from './label-picker.component';
-import { useSecondaryToolbarState } from './use-secondary-toolbar-state.hook';
+import { useSelectedData } from '../../selected-data-provider.component';
+import { Toolbar } from '../toolbar-container/toolbar-container.component';
+import { AnnotatorModes } from './annotator-modes/annotator-modes-toggle.component';
+import type { AnnotatorMode } from './annotator-modes/mode';
 
-import classes from '../media-preview.module.scss';
+import styles from './secondary-toolbar.module.scss';
 
 type SecondaryToolbarProps = {
-    items: DatasetItem[];
-    mediaItem: DatasetItem;
+    items: Media[];
+    mediaItem: Media;
     onClose: () => void;
-    onSelectedMediaItem: (item: DatasetItem) => void;
+    onSelectedMediaItem: (item: Media) => void;
+
+    mode: AnnotatorMode;
+    onModeChange: (mode: AnnotatorMode) => void;
 };
 
 const getNextItem = (totalItems: number, newIndex: number) => {
@@ -31,17 +39,35 @@ const invalidateMediaItemAnnotations = (queryClient: QueryClient) => {
     });
 };
 
-export const SecondaryToolbar = ({ items, mediaItem, onClose, onSelectedMediaItem }: SecondaryToolbarProps) => {
+export const SecondaryToolbar = ({
+    items,
+    mediaItem,
+    onClose,
+    onSelectedMediaItem,
+    mode,
+    onModeChange,
+}: SecondaryToolbarProps) => {
     const queryClient = useQueryClient();
+    const { setMediaState } = useSelectedData();
+    const { data: selectedProject } = useProject();
+
     const { annotations, isSaving, submitAnnotations } = useAnnotationActions();
-    const { selectedLabel, setSelectedLabelId } = useAnnotator();
-    const { isHidden, projectLabels } = useSecondaryToolbarState();
 
     const hasAnnotations = !isEmpty(annotations);
+    const isMultiLabel = selectedProject.task.exclusive_labels === false;
+    const isClassification = isClassificationTask(selectedProject.task.task_type);
     const selectedIndex = items.findIndex((item) => item.id === mediaItem.id);
 
     const handleSubmit = async () => {
         await submitAnnotations();
+
+        setMediaState((prev) => {
+            const newState = new Map(prev);
+
+            newState.set(String(mediaItem.id), 'accepted');
+
+            return newState;
+        });
 
         const nextItem = getNextItem(items.length - 1, selectedIndex);
         onSelectedMediaItem(items[nextItem]);
@@ -58,20 +84,23 @@ export const SecondaryToolbar = ({ items, mediaItem, onClose, onSelectedMediaIte
     };
 
     return (
-        <Flex
-            height={'100%'}
-            width={'100%'}
-            alignItems={'center'}
-            UNSAFE_style={{ paddingTop: dimensionValue('size-125') }}
-        >
-            <Grid width={'100%'} UNSAFE_className={classes.toolbarGrid} isHidden={isHidden}>
-                <Flex width={'100%'} UNSAFE_className={classes.toolbarSection} justifyContent={'space-between'}>
-                    <LabelPicker
-                        selectedLabel={selectedLabel}
-                        labels={projectLabels}
-                        onSelect={(value) => setSelectedLabelId(value !== null ? String(value) : null)}
+        <div className={styles.secondaryToolbarContainer}>
+            <Toolbar.Container>
+                <Toolbar.Section>
+                    <AnnotatorModes mode={mode} onModeChange={onModeChange} />
+                </Toolbar.Section>
+            </Toolbar.Container>
+            <Toolbar.Container>
+                <Toolbar.Section>
+                    <Labels
+                        isClassification={isClassification}
+                        isMultiLabel={isMultiLabel}
+                        isReadOnly={mode === 'prediction'}
                     />
-
+                </Toolbar.Section>
+            </Toolbar.Container>
+            <Toolbar.Container>
+                <Toolbar.Section>
                     <ButtonGroup>
                         <DeleteMediaItem
                             itemsIds={[String(mediaItem.id)]}
@@ -84,15 +113,29 @@ export const SecondaryToolbar = ({ items, mediaItem, onClose, onSelectedMediaIte
                             marginStart={'size-200'}
                             isDisabled={!hasAnnotations || isSaving}
                         >
-                            Submit
+                            {mode === 'annotation' ? (
+                                'Submit'
+                            ) : (
+                                <>
+                                    <Checkmark />
+                                    <Text>Confirm prediction</Text>
+                                </>
+                            )}
                         </Button>
 
-                        <Button variant='secondary' onPress={onClose} isDisabled={isSaving}>
-                            Close
-                        </Button>
+                        <ActionButton
+                            isQuiet
+                            onPress={onClose}
+                            isDisabled={isSaving}
+                            marginStart={'size-100'}
+                            UNSAFE_className={styles.closeButton}
+                        >
+                            <CloseSemiBold width={14} height={14} />
+                            <Text>Close</Text>
+                        </ActionButton>
                     </ButtonGroup>
-                </Flex>
-            </Grid>
-        </Flex>
+                </Toolbar.Section>
+            </Toolbar.Container>
+        </div>
     );
 };

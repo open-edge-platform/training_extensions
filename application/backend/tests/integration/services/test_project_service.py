@@ -6,7 +6,7 @@ from uuid import UUID, uuid4
 import pytest
 from sqlalchemy.orm import Session
 
-from app.db.schema import DatasetItemDB, LabelDB, PipelineDB, ProjectDB
+from app.db.schema import LabelDB, MediaDB, PipelineDB, ProjectDB
 from app.models import Label, Task, TaskType
 from app.services import LabelService, PipelineService, ResourceWithIdAlreadyExistsError, SystemService
 from app.services.base import ResourceInUseError, ResourceNotFoundError, ResourceType
@@ -188,25 +188,26 @@ class TestProjectServiceIntegration:
         fetched_thumbnail_path = fxt_project_service.get_project_thumbnail_path(UUID(db_project.id))
         assert fetched_thumbnail_path is None
 
-        # Add a dataset item
-        db_dataset_item = DatasetItemDB(
+        # Add a media
+        db_media = MediaDB(
             id=str(uuid4()),
+            type="image",
             project_id=db_project.id,
             name="item1",
             format="jpg",
             width=1920,
             height=1080,
             size=1024,
-            subset="unassigned",
+            source_id=None,
         )
-        db_session.add(db_dataset_item)
+        db_session.add(db_media)
         db_session.flush()
 
         # Now it should return the path to the thumbnail
         fetched_thumbnail_path = fxt_project_service.get_project_thumbnail_path(UUID(db_project.id))
         assert (
             fetched_thumbnail_path
-            == fxt_project_service._projects_dir / f"{db_project.id}/dataset/{db_dataset_item.id}-thumb.jpg"
+            == fxt_project_service._projects_dir / f"{db_project.id}/dataset/{db_media.id}-thumb.jpg"
         )
 
     def test_get_project_by_id_not_found(self, fxt_project_service: ProjectService):

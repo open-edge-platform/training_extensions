@@ -6,16 +6,16 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from app.core.models import BaseRequiredIDNameModel, Pagination
-from app.models import DatasetItemAnnotation, DatasetItemFormat, DatasetItemSubset
+from app.core.models import BaseRequiredIDModel, Pagination
+from app.models import DatasetItemAnnotation, DatasetItemSubset, MediaFormat
 
 
-class DatasetRevisionItemView(BaseRequiredIDNameModel):
+class DatasetRevisionItemView(BaseRequiredIDModel):
     """
     Dataset Revision item
     """
 
-    format: DatasetItemFormat
+    format: MediaFormat
     width: int
     height: int
     subset: DatasetItemSubset
@@ -24,7 +24,6 @@ class DatasetRevisionItemView(BaseRequiredIDNameModel):
         "json_schema_extra": {
             "example": {
                 "id": "7b073838-99d3-42ff-9018-4e901eb047fc",
-                "name": "img-010203",
                 "format": "jpg",
                 "width": 1280,
                 "height": 720,
@@ -34,28 +33,17 @@ class DatasetRevisionItemView(BaseRequiredIDNameModel):
     }
 
 
-class DatasetItemView(BaseRequiredIDNameModel):
+class DatasetItemView(BaseRequiredIDModel):
     """
     Dataset item
     """
 
-    format: DatasetItemFormat
-    width: int
-    height: int
-    size: int
-    source_id: UUID | None = None
     subset: DatasetItemSubset
 
     model_config = {
         "json_schema_extra": {
             "example": {
                 "id": "7b073838-99d3-42ff-9018-4e901eb047fc",
-                "name": "img-010203",
-                "format": "jpg",
-                "width": 1280,
-                "height": 720,
-                "size": 2211840,
-                "source_id": "c1feaabc-da2b-442e-9b3e-55c11c2c2ff3",
                 "subset": "unassigned",
             }
         }

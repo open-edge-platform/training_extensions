@@ -4,11 +4,10 @@ from datetime import datetime
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Body, Depends, File, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from fastapi.openapi.models import Example
-from starlette.responses import FileResponse
 
-from app.api.dependencies import get_dataset_service, get_file_name_and_extension, get_project
+from app.api.dependencies import get_dataset_service, get_project
 from app.api.schemas.dataset_item import (
     DatasetItemAnnotations,
     DatasetItemAssignSubset,
@@ -20,12 +19,7 @@ from app.api.validators import DatasetItemID
 from app.core.models import Pagination
 from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Project
 from app.services import DatasetService, ResourceNotFoundError
-from app.services.dataset_service import (
-    AnnotationValidationError,
-    DatasetItemFilters,
-    InvalidImageError,
-    SubsetAlreadyAssignedError,
-)
+from app.services.dataset_service import AnnotationValidationError, DatasetItemFilters, SubsetAlreadyAssignedError
 
 router = APIRouter(prefix="/api/projects/{project_id}/dataset/items", tags=["Datasets"])
 
@@ -92,38 +86,6 @@ SET_DATASET_ITEM_ANNOTATIONS_BODY_EXAMPLES = {
         },
     ),
 }
-
-
-@router.post(
-    "",
-    status_code=status.HTTP_201_CREATED,
-    response_model=DatasetItemView,
-    responses={
-        status.HTTP_201_CREATED: {"description": "Dataset item created"},
-        status.HTTP_422_UNPROCESSABLE_CONTENT: {"description": "Invalid image has been uploaded"},
-    },
-)
-def add_dataset_item(
-    project: Annotated[Project, Depends(get_project)],
-    dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
-    file_name_and_extension: Annotated[tuple[str, str], Depends(get_file_name_and_extension)],
-    file: Annotated[UploadFile, File()],
-) -> DatasetItemView:
-    """Add a new item to the dataset by uploading an image"""
-    name, format = file_name_and_extension
-    try:
-        dataset_item = dataset_service.create_dataset_item(
-            project=project,
-            data=file.file,
-            name=name,
-            format=format,
-            user_reviewed=True,
-        )
-        return DatasetItemView.model_validate(dataset_item, from_attributes=True)
-    except InvalidImageError:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Invalid image has been uploaded."
-        )
 
 
 @router.get(
@@ -196,73 +158,6 @@ def get_dataset_item(
     try:
         dataset_item = dataset_service.get_dataset_item_by_id(project_id=project.id, dataset_item_id=dataset_item_id)
         return DatasetItemView.model_validate(dataset_item, from_attributes=True)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-
-
-@router.get(
-    "/{dataset_item_id}/binary",
-    responses={
-        status.HTTP_200_OK: {"description": "Dataset item binary found"},
-        status.HTTP_400_BAD_REQUEST: {"description": "Invalid dataset item ID or project ID"},
-        status.HTTP_404_NOT_FOUND: {"description": "Dataset item, dataset item binary or project not found"},
-    },
-)
-def get_dataset_item_binary(
-    project: Annotated[Project, Depends(get_project)],
-    dataset_item_id: DatasetItemID,
-    dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
-) -> FileResponse:
-    """Get dataset item binary content"""
-    try:
-        binary_path = dataset_service.get_dataset_item_binary_path_by_id(
-            project_id=project.id, dataset_item_id=dataset_item_id
-        )
-        return FileResponse(path=binary_path)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-
-
-@router.get(
-    "/{dataset_item_id}/thumbnail",
-    responses={
-        status.HTTP_200_OK: {"description": "Dataset item thumbnail found"},
-        status.HTTP_400_BAD_REQUEST: {"description": "Invalid dataset item ID or project ID"},
-        status.HTTP_404_NOT_FOUND: {"description": "Dataset item, dataset item thumbnail or project not found"},
-    },
-)
-def get_dataset_item_thumbnail(
-    project: Annotated[Project, Depends(get_project)],
-    dataset_item_id: DatasetItemID,
-    dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
-) -> FileResponse:
-    """Get dataset item thumbnail binary content"""
-    try:
-        thumbnail_path = dataset_service.get_dataset_item_thumbnail_path_by_id(
-            project=project, dataset_item_id=dataset_item_id
-        )
-        return FileResponse(path=thumbnail_path)
-    except ResourceNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-
-
-@router.delete(
-    "/{dataset_item_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
-    responses={
-        status.HTTP_204_NO_CONTENT: {"description": "Dataset item deleted"},
-        status.HTTP_400_BAD_REQUEST: {"description": "Invalid dataset item ID or project ID"},
-        status.HTTP_404_NOT_FOUND: {"description": "Dataset item or project not found"},
-    },
-)
-def delete_dataset_item(
-    project: Annotated[Project, Depends(get_project)],
-    dataset_item_id: DatasetItemID,
-    dataset_service: Annotated[DatasetService, Depends(get_dataset_service)],
-) -> None:
-    """Delete an item from the dataset"""
-    try:
-        dataset_service.delete_dataset_item(project=project, dataset_item_id=dataset_item_id)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 

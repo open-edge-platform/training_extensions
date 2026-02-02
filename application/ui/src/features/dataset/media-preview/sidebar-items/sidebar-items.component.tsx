@@ -5,27 +5,28 @@ import { useRef } from 'react';
 
 import { Size, useUnwrapDOMRef, View } from '@geti/ui';
 
-import type { DatasetItem } from '../../../../constants/shared-types';
+import { VirtualizerGridLayout } from '../../../../components/virtualizer-grid-layout/virtualizer-grid-layout.component';
+import type { Media } from '../../../../constants/shared-types';
 import { useSelectedData } from '../../selected-data-provider.component';
-import { VirtualizerGridLayout } from '../../virtualizer-grid-layout/virtualizer-grid-layout.component';
+import { SIDEBAR_MEDIA_SIZE } from '../constants';
 import { SidebarMediaItem } from './sidebar-media-item.component';
 import { useKeyboardNavigation } from './use-keyboard-navigation.hook';
 
 const layoutOptions = {
     maxColumns: 1,
     minSpace: new Size(8, 8),
-    minItemSize: new Size(120, 120),
-    maxItemSize: new Size(120, 120),
+    minItemSize: new Size(SIDEBAR_MEDIA_SIZE, SIDEBAR_MEDIA_SIZE),
+    maxItemSize: new Size(SIDEBAR_MEDIA_SIZE, SIDEBAR_MEDIA_SIZE),
     preserveAspectRatio: true,
 };
 
 type SidebarItemsProps = {
-    items: DatasetItem[];
+    items: Media[];
     hasNextPage: boolean;
     isFetchingNextPage: boolean;
-    mediaItem: DatasetItem;
+    mediaItem: Media;
     fetchNextPage: () => void;
-    onSelectedMediaItem: (item: DatasetItem) => void;
+    onSelectedMediaItem: (item: Media) => void;
 };
 
 export const SidebarItems = ({
@@ -61,13 +62,7 @@ export const SidebarItems = ({
                 isLoadingMore={isFetchingNextPage}
                 scrollToIndex={selectedIndex}
                 onLoadMore={() => hasNextPage && fetchNextPage()}
-                contentItem={(item) => (
-                    <SidebarMediaItem
-                        item={item}
-                        isSelected={mediaItem.id === item.id}
-                        onSelectedMediaItem={onSelectedMediaItem}
-                    />
-                )}
+                contentItem={(item) => <SidebarMediaItem item={item} onSelectedMediaItem={onSelectedMediaItem} />}
             />
         </View>
     );

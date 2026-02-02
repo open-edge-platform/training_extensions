@@ -12,8 +12,7 @@ import torch
 from datumaro.experimental import Dataset
 
 from otx.data.dataset.base import OTXDataset, _default_collate_fn
-from otx.data.entity.sample import OTXSample
-from otx.data.entity.torch.torch import OTXDataBatch
+from otx.data.entity.sample import OTXSample, OTXSampleBatch
 
 
 class TestDefaultCollateFn:
@@ -28,7 +27,6 @@ class TestDefaultCollateFn:
         sample1.masks = None
         sample1.bboxes = None
         sample1.keypoints = None
-        sample1.polygons = None
         sample1.img_info = None
 
         sample2 = Mock(spec=OTXSample)
@@ -37,13 +35,12 @@ class TestDefaultCollateFn:
         sample2.masks = None
         sample2.bboxes = None
         sample2.keypoints = None
-        sample2.polygons = None
         sample2.img_info = None
 
         items = [sample1, sample2]
         result = _default_collate_fn(items)
 
-        assert isinstance(result, OTXDataBatch)
+        assert isinstance(result, OTXSampleBatch)
         assert result.batch_size == 2
         assert isinstance(result.images, torch.Tensor)
         assert result.images.shape == (2, 3, 224, 224)
@@ -58,7 +55,6 @@ class TestDefaultCollateFn:
         sample1.masks = None
         sample1.bboxes = None
         sample1.keypoints = None
-        sample1.polygons = None
         sample1.img_info = None
 
         sample2 = Mock(spec=OTXSample)
@@ -67,7 +63,6 @@ class TestDefaultCollateFn:
         sample2.masks = None
         sample2.bboxes = None
         sample2.keypoints = None
-        sample2.polygons = None
         sample2.img_info = None
 
         items = [sample1, sample2]

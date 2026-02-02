@@ -16,7 +16,6 @@ from typing import Sequence
 import cv2
 import numpy as np
 import torch
-from shapely import geometry
 from torch import BoolTensor, Tensor
 
 CV2_INTERP_CODES = {
@@ -188,39 +187,6 @@ def rescale_masks(
     )
 
 
-def rescale_polygons(polygons: np.ndarray, scale_factor: float | tuple[float, float]) -> np.ndarray:
-    """Rescale polygons as large as possible while keeping the aspect ratio.
-
-    Args:
-        polygons: Object array containing np.ndarray objects of shape (Npoly, 2)
-        scale_factor: Scale factor to be applied to polygons with (height, width)
-            or single float value.
-
-    Returns:
-        np.ndarray: The rescaled polygons.
-    """
-    if len(polygons) == 0:
-        return polygons
-
-    if isinstance(scale_factor, float):
-        w_scale = h_scale = scale_factor
-    else:
-        h_scale, w_scale = scale_factor
-
-    rescaled_polygons = np.empty_like(polygons)
-    for i, poly_points in enumerate(polygons):
-        if poly_points.size > 0:
-            scaled_points = poly_points.astype(np.float32)
-            scaled_points[:, 0] *= w_scale  # x coordinates
-            scaled_points[:, 1] *= h_scale  # y coordinates
-            rescaled_polygons[i] = scaled_points
-        else:
-            # Handle empty or invalid polygons
-            rescaled_polygons[i] = np.array([[0, 0], [0, 0], [0, 0]], dtype=np.float32)
-
-    return rescaled_polygons
-
-
 def rescale_keypoints(keypoints: Tensor, scale_factor: float | tuple[float, float]) -> Tensor:
     """Rescale keypoints as large as possible while keeping the aspect ratio.
 
@@ -322,48 +288,6 @@ def translate_masks(
     if translated_masks.ndim == 2:
         translated_masks = translated_masks[:, :, None]
     return translated_masks.transpose((2, 0, 1)).astype(dtype)
-
-
-def translate_polygons(
-    polygons: np.ndarray,
-    out_shape: tuple[int, int],
-    offset: int | float,
-    direction: str = "horizontal",
-    border_value: int | float = 0,
-) -> np.ndarray:
-    """Translate polygons.
-
-    Args:
-        polygons: Object array containing np.ndarray objects of shape (Npoly, 2)
-        out_shape: Output shape (height, width)
-        offset: Translation offset
-        direction: Translation direction, "horizontal" or "vertical"
-        border_value: Border value (only used for legacy compatibility)
-
-    Returns:
-        np.ndarray: Translated polygons
-    """
-    assert (  # noqa: S101
-        border_value is None or border_value == 0
-    ), f"Here border_value is not used, and defaultly should be None or 0. got {border_value}."
-
-    if len(polygons) == 0:
-        return polygons
-
-    axis = 0 if direction == "horizontal" else 1
-    out = out_shape[1] if direction == "horizontal" else out_shape[0]
-
-    translated_polygons = np.empty_like(polygons)
-    for i, poly_points in enumerate(polygons):
-        if poly_points.size > 0:
-            translated_points = poly_points.copy()
-            translated_points[:, axis] = np.clip(translated_points[:, axis] + offset, 0, out)
-            translated_polygons[i] = translated_points
-        else:
-            # Handle empty or invalid polygons
-            translated_polygons[i] = np.array([[0, 0], [0, 0], [0, 0]], dtype=np.float32)
-
-    return translated_polygons
 
 
 def _get_translate_matrix(offset: int | float, direction: str = "horizontal") -> np.ndarray:
@@ -759,36 +683,6 @@ def flip_masks(masks: np.ndarray, direction: str = "horizontal") -> np.ndarray:
     return np.stack([flip_image(mask, direction=direction) for mask in masks])
 
 
-def flip_polygons(polygons: np.ndarray, height: int, width: int, direction: str = "horizontal") -> np.ndarray:
-    """Flip polygons along the given direction.
-
-    Args:
-        polygons: Object array containing np.ndarray objects of shape (Npoly, 2)
-        height: Image height
-        width: Image width
-        direction: Flip direction, "horizontal", "vertical", or "diagonal"
-
-    Returns:
-        np.ndarray: Flipped polygons
-    """
-    if len(polygons) == 0:
-        return polygons
-
-    flipped_polygons = np.empty_like(polygons)
-    for i, poly_points in enumerate(polygons):
-        flipped_points = poly_points.copy()
-        if direction == "horizontal":
-            flipped_points[:, 0] = width - flipped_points[:, 0]  # x coordinates
-        elif direction == "vertical":
-            flipped_points[:, 1] = height - flipped_points[:, 1]  # y coordinates
-        else:
-            flipped_points[:, 0] = width - flipped_points[:, 0]  # x coordinates
-            flipped_points[:, 1] = height - flipped_points[:, 1]  # y coordinates
-        flipped_polygons[i] = flipped_points
-
-    return flipped_polygons
-
-
 def project_bboxes(boxes: Tensor, homography_matrix: Tensor | np.ndarray) -> Tensor:
     """Geometric transformat boxes in-place.
 
@@ -811,51 +705,6 @@ def project_bboxes(boxes: Tensor, homography_matrix: Tensor | np.ndarray) -> Ten
     # Convert to homogeneous coordinates by normalization
     corners = corners[..., :2] / corners[..., 2:3]
     return corner2hbox(corners)
-
-
-def project_polygons(
-    polygons: np.ndarray,
-    homography_matrix: np.ndarray,
-    out_shape: tuple[int, int],
-) -> np.ndarray:
-    """Transform polygons using a homography matrix.
-
-    Args:
-        polygons: Object array containing np.ndarray objects of shape (Npoly, 2)
-        homography_matrix: Homography matrix of shape (3, 3) for geometric transformation
-        out_shape: Output shape (height, width) for boundary clipping
-
-    Returns:
-        np.ndarray: Transformed polygons
-    """
-    if len(polygons) == 0:
-        return polygons
-
-    height, width = out_shape
-    transformed_polygons = np.empty_like(polygons)
-
-    for i, poly_points in enumerate(polygons):
-        if poly_points.size == 0:
-            transformed_polygons[i] = np.array([[0, 0], [0, 0], [0, 0]], dtype=np.float32)
-            continue
-        # Convert to homogeneous coordinates
-        points_h = np.hstack([poly_points, np.ones((poly_points.shape[0], 1), dtype=np.float32)])  # (N, 3)
-
-        # Apply transformation
-        proj = homography_matrix @ points_h.T  # (3, N)
-
-        # Convert back to Cartesian coordinates
-        denom = proj[2:3]
-        denom[denom == 0] = 1e-6  # avoid divide-by-zero
-        proj_cartesian = (proj[:2] / denom).T  # (N, 2)
-
-        # Clip to image boundaries
-        proj_cartesian[:, 0] = np.clip(proj_cartesian[:, 0], 0, width - 1)
-        proj_cartesian[:, 1] = np.clip(proj_cartesian[:, 1], 0, height - 1)
-
-        transformed_polygons[i] = proj_cartesian.astype(np.float32)
-
-    return transformed_polygons
 
 
 def hbox2corner(boxes: Tensor) -> Tensor:
@@ -910,86 +759,6 @@ def crop_masks(masks: np.ndarray, bbox: np.ndarray) -> np.ndarray:
     return masks[:, y1 : y1 + h, x1 : x1 + w]
 
 
-def crop_polygons(polygons: np.ndarray, bbox: np.ndarray, height: int, width: int) -> np.ndarray:
-    """Crop each polygon by the given bbox.
-
-    Args:
-        polygons: Object array containing np.ndarray objects of shape (Npoly, 2)
-        bbox: Bounding box as [x1, y1, x2, y2]
-        height: Original image height
-        width: Original image width
-
-    Returns:
-        np.ndarray: Cropped polygons
-    """
-    assert isinstance(bbox, np.ndarray)  # noqa: S101
-    assert bbox.ndim == 1  # noqa: S101
-
-    # clip the boundary
-    bbox = bbox.copy()
-    bbox[0::2] = np.clip(bbox[0::2], 0, width)
-    bbox[1::2] = np.clip(bbox[1::2], 0, height)
-    x1, y1, x2, y2 = bbox
-
-    # reference: https://github.com/facebookresearch/fvcore/blob/main/fvcore/transforms/transform.py
-    crop_box = geometry.box(x1, y1, x2, y2).buffer(0.0)
-    # suppress shapely warnings util it incorporates GEOS>=3.11.2
-    # reference: https://github.com/shapely/shapely/issues/1345
-    initial_settings = np.seterr()
-    np.seterr(invalid="ignore")
-
-    cropped_polygons = np.empty_like(polygons)
-
-    for i, polygon_points in enumerate(polygons):
-        cropped_poly_per_obj = []
-
-        # Convert ragged array polygon to shapely polygon
-        if polygon_points.size == 0:
-            # Handle empty or invalid polygons
-            cropped_polygons[i] = np.array([[0, 0], [0, 0], [0, 0]], dtype=np.float32)
-            continue
-
-        p = geometry.Polygon(polygon_points).buffer(0.0)
-
-        # polygon must be valid to perform intersection.
-        if not p.is_valid:
-            # a dummy polygon to avoid misalignment between masks and boxes
-            cropped_polygons[i] = np.array([[0, 0], [0, 0], [0, 0]], dtype=np.float32)
-            continue
-
-        cropped = p.intersection(crop_box)
-        if cropped.is_empty:
-            # a dummy polygon to avoid misalignment between masks and boxes
-            cropped_polygons[i] = np.array([[0, 0], [0, 0], [0, 0]], dtype=np.float32)
-            continue
-
-        cropped = cropped.geoms if isinstance(cropped, geometry.collection.BaseMultipartGeometry) else [cropped]
-
-        # one polygon may be cropped to multiple ones
-        for poly in cropped:
-            # ignore lines or points
-            if not isinstance(poly, geometry.Polygon) or not poly.is_valid:
-                continue
-
-            coords = np.asarray(poly.exterior.coords)
-
-            # remove an extra identical vertex at the end
-            coords = coords[:-1]
-            coords[:, 0] -= x1
-            coords[:, 1] -= y1
-            cropped_poly_per_obj.append(coords)
-
-        # a dummy polygon to avoid misalignment between masks and boxes
-        if len(cropped_poly_per_obj) == 0:
-            cropped_polygons[i] = np.array([[0, 0], [0, 0], [0, 0]], dtype=np.float32)
-        else:
-            # Concatenate all cropped polygons for this object into a single array
-            cropped_polygons[i] = np.concatenate(cropped_poly_per_obj, axis=0)
-
-    np.seterr(**initial_settings)
-    return cropped_polygons
-
-
 def get_bboxes_from_masks(masks: Tensor) -> np.ndarray:
     """Create boxes from masks."""
     num_masks = len(masks)
@@ -1005,48 +774,3 @@ def get_bboxes_from_masks(masks: Tensor) -> np.ndarray:
             # boundary of instance masks are fully included by the box
             bboxes[idx, :] = np.array([x[0], y[0], x[-1] + 1, y[-1] + 1], dtype=np.float32)
     return bboxes
-
-
-def get_bboxes_from_polygons(polygons: np.ndarray, height: int, width: int) -> np.ndarray:
-    """Create boxes from polygons.
-
-    Args:
-        polygons: Ragged array of (Npoly, 2) arrays
-        height: Image height
-        width: Image width
-
-    Returns:
-        np.ndarray: Bounding boxes in XYXY format, shape (N, 4)
-    """
-    num_polygons = len(polygons)
-    boxes = np.zeros((num_polygons, 4), dtype=np.float32)
-
-    ref_xy_min = np.array([width * 2, height * 2], dtype=np.float32)
-    ref_xy_max = np.zeros(2, dtype=np.float32)
-
-    for idx, poly_points in enumerate(polygons):
-        if poly_points.size > 0:
-            xy_min = np.minimum(ref_xy_min, np.min(poly_points, axis=0))
-            xy_max = np.maximum(ref_xy_max, np.max(poly_points, axis=0))
-            boxes[idx, :2] = xy_min
-            boxes[idx, 2:] = xy_max
-        else:
-            # Handle empty or invalid polygons
-            boxes[idx] = [0, 0, 0, 0]
-    return boxes
-
-
-def area_polygon(x: np.ndarray, y: np.ndarray) -> np.ndarray:
-    """Compute the area of a component of a polygon.
-
-    Using the shoelace formula:
-    https://stackoverflow.com/questions/24467972/calculate-area-of-polygon-given-x-y-coordinates
-
-    Args:
-        x (ndarray): x coordinates of the component
-        y (ndarray): y coordinates of the component
-
-    Return:
-        (float): the are of the component
-    """
-    return 0.5 * np.abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))

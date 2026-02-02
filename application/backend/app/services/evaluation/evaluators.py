@@ -3,9 +3,12 @@
 
 from abc import ABCMeta, abstractmethod
 from enum import StrEnum
+from typing import Any, cast
 
 import numpy as np
 from datumaro.experimental import Dataset
+from datumaro.experimental.categories import LabelCategories
+from datumaro.experimental.fields import LabelField
 from faster_coco_eval import COCO, COCOeval_faster
 from numpy.typing import NDArray
 from sklearn.metrics import accuracy_score, confusion_matrix, f1_score, precision_score, recall_score
@@ -28,7 +31,7 @@ def datumaro_dataset_to_coco(dataset: Dataset) -> dict:
     coco_dataset_dict: dict[str, list] = {"images": [], "annotations": [], "categories": []}
 
     # Add categories
-    for label_idx, label in enumerate(dataset.schema.attributes["label"].categories.labels):
+    for label_idx, label in enumerate(cast(LabelCategories, dataset.schema.attributes["label"].categories).labels):
         coco_dataset_dict["categories"].append(
             {
                 "id": label_idx,
@@ -55,7 +58,7 @@ def datumaro_dataset_to_coco(dataset: Dataset) -> dict:
                 x1, y1, x2, y2 = bbox
                 width = x2 - x1
                 height = y2 - y1
-                annotation = {
+                annotation: dict[str, Any] = {
                     "id": annotation_id,
                     "image_id": image_id,
                     "category_id": int(label_idx),
@@ -139,16 +142,34 @@ class AccuracyEvaluator(EvaluatorWithLabelArrays):
         super().__init__(predictions_dataset=predictions_dataset, ground_truth_dataset=ground_truth_dataset)
 
     def precision(self, averaging_method: AveragingMethod = AveragingMethod.MACRO) -> float:
-        return precision_score(y_true=self._gt_labels, y_pred=self._pred_labels, average=averaging_method.value)
+        return float(
+            precision_score(
+                y_true=self._gt_labels,
+                y_pred=self._pred_labels,
+                average=averaging_method.value,  # pyrefly: ignore[bad-argument-type]
+            )
+        )
 
     def recall(self, averaging_method: AveragingMethod = AveragingMethod.MACRO) -> float:
-        return recall_score(y_true=self._gt_labels, y_pred=self._pred_labels, average=averaging_method.value)
+        return float(
+            recall_score(
+                y_true=self._gt_labels,
+                y_pred=self._pred_labels,
+                average=averaging_method.value,  # pyrefly: ignore[bad-argument-type]
+            )
+        )
 
     def accuracy(self) -> float:
-        return accuracy_score(y_true=self._gt_labels, y_pred=self._pred_labels)
+        return float(accuracy_score(y_true=self._gt_labels, y_pred=self._pred_labels))
 
     def f1_score(self, averaging_method: AveragingMethod = AveragingMethod.MACRO) -> float:
-        return f1_score(y_true=self._gt_labels, y_pred=self._pred_labels, average=averaging_method.value)
+        return float(
+            f1_score(
+                y_true=self._gt_labels,
+                y_pred=self._pred_labels,
+                average=averaging_method.value,  # pyrefly: ignore[bad-argument-type]
+            )
+        )
 
 
 class ConfusionMatrixEvaluator(EvaluatorWithLabelArrays):
@@ -199,8 +220,8 @@ class MultiClassClassificationEvaluator(AccuracyEvaluator, ConfusionMatrixEvalua
 
     def __init__(self, predictions_dataset: Dataset, ground_truth_dataset: Dataset):
         if (
-            predictions_dataset.schema.attributes["label"].field.multi_label
-            or ground_truth_dataset.schema.attributes["label"].field.multi_label
+            cast(LabelField, predictions_dataset.schema.attributes["label"].field).multi_label
+            or cast(LabelField, ground_truth_dataset.schema.attributes["label"].field).multi_label
         ):
             raise ValueError(f"{self.__class__.__name__} should not be used for multi-label classification datasets")
 
@@ -222,8 +243,8 @@ class MultiLabelClassificationEvaluator(AccuracyEvaluator):
 
     def __init__(self, predictions_dataset: Dataset, ground_truth_dataset: Dataset):
         if not (
-            predictions_dataset.schema.attributes["label"].field.multi_label
-            and ground_truth_dataset.schema.attributes["label"].field.multi_label
+            cast(LabelField, predictions_dataset.schema.attributes["label"].field).multi_label
+            and cast(LabelField, ground_truth_dataset.schema.attributes["label"].field).multi_label
         ):
             raise ValueError(f"{self.__class__.__name__} should only be used for multi-label classification datasets")
 
@@ -235,8 +256,8 @@ class MultiLabelClassificationEvaluator(AccuracyEvaluator):
         mlb = MultiLabelBinarizer()
         gt_labels_list = [s.label for s in self.ground_truth_dataset]
         pred_labels_list = [s.label for s in self.predictions_dataset]
-        gt_labels = mlb.fit_transform(gt_labels_list)
-        pred_labels = mlb.transform(pred_labels_list)
+        gt_labels = cast(NDArray[np.int_], mlb.fit_transform(gt_labels_list))
+        pred_labels = cast(NDArray[np.int_], mlb.transform(pred_labels_list))
         return gt_labels, pred_labels
 
 

@@ -55,24 +55,32 @@
 | ------ | ------------------------------------- | ------- | ------------ | ------------------------------------------------ |
 | `GET`  | `/api/projects/<id>/pipeline/metrics` | -       | metrics info | Get inference metrics (latency, throughput, ...) |
 
-## Datasets
+## Media
 
-| Method   | Path                                              | Payload | Return                | Description                                        |
-| -------- | ------------------------------------------------- | ------- | --------------------- | -------------------------------------------------- |
-| `GET`    | `/api/projects/<id>/dataset/items`                | -       | list of dataset items | List the dataset items (option 'with_annotations') |
-| `GET`    | `/api/projects/<id>/dataset/items/<id>`           | -       | dataset item info     | Get info about a dataset item                      |
-| `GET`    | `/api/projects/<id>/dataset/items/<id>/binary`    | -       | binary                | Get the image data of a dataset item (full res)    |
-| `GET`    | `/api/projects/<id>/dataset/items/<id>/thumbnail` | -       | binary                | Get the thumbnail of a dataset item                |
-| `POST`   | `/api/projects/<id>/dataset/items`                | binary  | media info            | Upload an image to the dataset                     |
-| `DELETE` | `/api/projects/<id>/dataset/items/<id>`           | -       | -                     | Delete a dataset item                              |
+| Method   | Path                                              | Payload | Return                         | Description                                |
+| -------- |---------------------------------------------------| ------- |--------------------------------|--------------------------------------------|
+| `GET`    | `/api/projects/<id>/dataset/media`                | -       | list of dataset media          | List the dataset media (images and videos) |
+| `GET`    | `/api/projects/<id>/dataset/media/<id>`           | -       | dataset media info             | Get info about a dataset media             |
+| `GET`    | `/api/projects/<id>/dataset/media/<id>/frames`    | -       | list of annotated video frames | List the annotated video frames            |
+| `GET`    | `/api/projects/<id>/dataset/media/<id>/binary`    | -       | binary                         | Get the image data of a media (full res)   |
+| `GET`    | `/api/projects/<id>/dataset/media/<id>/thumbnail` | -       | binary                         | Get the thumbnail of a media        |
+| `POST`   | `/api/projects/<id>/dataset/media`                | binary  | media info                     | Upload an image or a video to the dataset  |
+| `DELETE` | `/api/projects/<id>/dataset/media/<id>`           | -       | -                              | Delete a dataset media                     |
 
 ### Annotations
 
 | Method   | Path                                                | Payload         | Return          | Description                               |
 | -------- | --------------------------------------------------- | --------------- | --------------- | ----------------------------------------- |
-| `GET`    | `/api/projects/<id>/dataset/items/<id>/annotations` | -               | annotation info | Get the annotation/prediction for a media |
-| `POST`   | `/api/projects/<id>/dataset/items/<id>/annotations` | annotation info | annotation info | Annotate a media                          |
-| `DELETE` | `/api/projects/<id>/dataset/items/<id>/annotations` | -               | -               | Delete the annotation for a media         |
+| `GET`    | `/api/projects/<id>/dataset/media/<id>/annotations` | -               | annotation info | Get the annotation/prediction for a media |
+| `POST`   | `/api/projects/<id>/dataset/media/<id>/annotations` | annotation info | annotation info | Annotate a media                          |
+| `DELETE` | `/api/projects/<id>/dataset/media/<id>/annotations` | -               | -               | Delete the annotation for a media         |
+
+## Dataset items
+
+| Method   | Path                                              | Payload | Return                | Description                                        |
+| -------- | ------------------------------------------------- | ------- | --------------------- | -------------------------------------------------- |
+| `GET`    | `/api/projects/<id>/dataset/items`                | -       | list of dataset items | List the dataset items (option 'with_annotations') |
+| `GET`    | `/api/projects/<id>/dataset/items/<id>`           | -       | dataset item info     | Get info about a dataset item                      |
 
 ### Tags
 
@@ -94,7 +102,7 @@
 | `DELETE` | `/api/projects/<id>/dataset/views/<id>/items` | items ids or filter | -             | Remove items from a dataset view |
 | `DELETE` | `/api/projects/<id>/dataset/views/<id>`       | -                   | -             | Delete a dataset view            |
 
-## Models
+### Models
 
 | Method   | Path                                          | Payload | Return         | Description                            |
 | -------- | --------------------------------------------- | ------- | -------------- | -------------------------------------- |
@@ -115,9 +123,21 @@
 
 ## Jobs
 
-| Method   | Path                           | Payload             | Return       | Description                                       |
-| -------- | ------------------------------ | ------------------- | ------------ | ------------------------------------------------- |
-| `POST`   | `/api/projects/<id>/jobs`      | job type and params | job id       | Create and submit a new job                       |
-| `GET`    | `/api/projects/<id>/jobs`      | -                   | list of jobs | List the jobs in a project (scheduled or running) |
-| `GET`    | `/api/projects/<id>/jobs/<id>` | -                   | job info     | Get info about a specific job                     |
-| `DELETE` | `/api/projects/<id>/jobs/<id>` | -                   | -            | Cancel a job                                      |
+| Method | Path                    | Payload              | Return       | Description                                        |
+| ------ | ----------------------- | -------------------- | ------------ | -------------------------------------------------- |
+| `POST` | `/api/jobs`             | job type and params  | job id       | Create and submit a new job                        |
+| `GET`  | `/api/jobs`             | -                    | list of jobs | List the jobs in a project (scheduled or running)  |
+| `GET`  | `/api/jobs/<id>`        | -                    | job info     | Get info about a specific job                      |
+| `POST` | `/api/jobs/<id>:cancel` | -                    | -            | Cancel a job                                       |
+| `GET`  | `/api/jobs/<id>/status` | -                    | job status   | Stream real-time status updates for a specific job |
+| `GET`  | `/api/jobs/<id>/logs`   | -                    | job logs     | Stream real-time log output for a specific job     |
+
+Job types:
+
+- `train`
+- `prepare_dataset_for_import`
+- `import_dataset_to_existing_project`
+- `import_dataset_as_new_project`
+- `export_dataset`
+- `stage_dataset`
+

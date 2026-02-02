@@ -7,7 +7,7 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { API_BASE_URL } from '../../../api/client';
 import { ZoomTransform } from '../../../components/zoom/zoom-transform';
-import type { DatasetItem } from '../../../constants/shared-types';
+import type { Media } from '../../../constants/shared-types';
 import { useAnnotationActions } from '../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotationVisibility } from '../../../shared/annotator/annotation-visibility-provider.component';
 import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
@@ -17,11 +17,11 @@ import { ToolManager } from '../tools/tool-manager.component';
 import styles from './annotator-canvas.module.scss';
 
 const getImageUrl = (projectId: string, itemId: string) => {
-    return `${API_BASE_URL}/api/projects/${projectId}/dataset/items/${itemId}/binary`;
+    return `${API_BASE_URL}/api/projects/${projectId}/dataset/media/${itemId}/binary`;
 };
 
 type AnnotatorCanvasProps = {
-    mediaItem: DatasetItem;
+    mediaItem: Media;
 };
 
 export const AnnotatorCanvas = ({ mediaItem }: AnnotatorCanvasProps) => {

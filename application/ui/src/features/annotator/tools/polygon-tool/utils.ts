@@ -3,11 +3,12 @@
 
 import { PointerEvent, SVGProps } from 'react';
 
-import { isEmpty, isEqual, negate } from 'lodash-es';
+import { isPolygonValid } from '@geti/smart-tools/utils';
+import { isEmpty, isEqual, isNil, negate } from 'lodash-es';
 
-import { Label } from '../../../../constants/shared-types';
-import { isEraserOrRightButton, isLeftButton } from '../../buttons-utils';
-import { Point } from '../../types';
+import type { Label } from '../../../../constants/shared-types';
+import { isEraserOrRightButton, isLeftButton } from '../../../../shared/buttons-utils';
+import { Point, Polygon as PolygonType } from '../../../../shared/types';
 import { DEFAULT_ANNOTATION_STYLES } from '../../utils';
 import { PointerType } from '../utils';
 
@@ -46,7 +47,13 @@ export enum PointerIconsOffset {
     MagneticLassoClose = '0 0',
 }
 
-export const TOOL_ICON: Record<PolygonMode, { icon: PointerIcons; offset: PointerIconsOffset }> = {
+export interface MouseEventHandlers {
+    onPointerUp: (event: PointerEvent<SVGSVGElement>) => void;
+    onPointerDown: (event: PointerEvent<SVGSVGElement>) => void;
+    onPointerMove: (event: PointerEvent<SVGSVGElement>) => void;
+}
+
+const TOOL_ICON: Record<PolygonMode, { icon: PointerIcons; offset: PointerIconsOffset }> = {
     [PolygonMode.Lasso]: { icon: PointerIcons.Lasso, offset: PointerIconsOffset.Lasso },
     [PolygonMode.Eraser]: { icon: PointerIcons.Eraser, offset: PointerIconsOffset.Eraser },
     [PolygonMode.Polygon]: { icon: PointerIcons.Polygon, offset: PointerIconsOffset.Polygon },
@@ -64,18 +71,6 @@ export const START_POINT_FIELD_DEFAULT_RADIUS = 6;
 export const START_POINT_FIELD_FOCUS_RADIUS = 8;
 
 const isDifferent = negate(isEqual);
-
-export const getCloseMode = (mode: PolygonMode | null) => {
-    if (mode === PolygonMode.MagneticLasso) {
-        return PolygonMode.MagneticLassoClose;
-    }
-
-    if (mode === PolygonMode.Lasso) {
-        return PolygonMode.LassoClose;
-    }
-
-    return PolygonMode.PolygonClose;
-};
 
 export const drawingStyles = (defaultLabel: Label | null): typeof DEFAULT_ANNOTATION_STYLES => {
     if (defaultLabel === null) {
@@ -123,10 +118,10 @@ const mouseButtonEventValidation =
         }
     };
 
-export const leftMouseButtonHandler = (callback: CallbackPointerVoid): CallbackPointerVoid =>
+const leftMouseButtonHandler = (callback: CallbackPointerVoid): CallbackPointerVoid =>
     mouseButtonEventValidation(callback)(isLeftButton);
 
-export const rightMouseButtonHandler = (callback: CallbackPointerVoid): CallbackPointerVoid =>
+const rightMouseButtonHandler = (callback: CallbackPointerVoid): CallbackPointerVoid =>
     mouseButtonEventValidation(callback)(isEraserOrRightButton);
 
 export const leftRightMouseButtonHandler =
@@ -135,12 +130,6 @@ export const leftRightMouseButtonHandler =
         leftMouseButtonHandler(leftCallback)(event);
         rightMouseButtonHandler(rightCallback)(event);
     };
-
-export interface MouseEventHandlers {
-    onPointerUp: (event: PointerEvent<SVGSVGElement>) => void;
-    onPointerDown: (event: PointerEvent<SVGSVGElement>) => void;
-    onPointerMove: (event: PointerEvent<SVGSVGElement>) => void;
-}
 
 export const removeEmptySegments =
     (...newSegments: Point[][]) =>
@@ -164,4 +153,14 @@ export const isCloseMode = (mode: PolygonMode | null) => {
     }
 
     return [PolygonMode.PolygonClose, PolygonMode.LassoClose, PolygonMode.MagneticLassoClose].includes(mode);
+};
+
+export const isPolygonReadyToClose = (currentPolygon: PolygonType | null): currentPolygon is PolygonType => {
+    if (isNil(currentPolygon)) {
+        return false;
+    }
+
+    const pointsWithoutLast = currentPolygon.points.slice(0, -1);
+
+    return isPolygonValid({ shapeType: 'polygon', points: pointsWithoutLast });
 };

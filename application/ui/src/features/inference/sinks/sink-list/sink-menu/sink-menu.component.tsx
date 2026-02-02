@@ -26,7 +26,7 @@ export const SinkMenu = ({ id, name, isConnected, onEdit }: SinkMenuProps) => {
 
     const updatePipeline = $api.useMutation('patch', '/api/projects/{project_id}/pipeline', {
         meta: {
-            invalidateQueries: [['get', '/api/projects/{project_id}/pipeline']],
+            invalidateQueries: [['get', '/api/projects/{project_id}/pipeline', { params: { path: { project_id } } }]],
         },
     });
 
@@ -44,39 +44,35 @@ export const SinkMenu = ({ id, name, isConnected, onEdit }: SinkMenuProps) => {
         }
     };
 
-    const handleConnect = async () => {
-        try {
-            await updatePipeline.mutateAsync({
+    const handleConnect = () => {
+        updatePipeline.mutate(
+            {
                 params: { path: { project_id } },
                 body: { sink_id: id },
-            });
-
-            toast({
-                type: 'success',
-                message: `Successfully connected to "${name}"`,
-            });
-        } catch (_error) {
-            toast({
-                type: 'error',
-                message: `Failed to connect to "${name}".`,
-            });
-        }
+            },
+            {
+                onSuccess: () => {
+                    toast({
+                        type: 'success',
+                        message: `Successfully connected to "${name}"`,
+                    });
+                },
+            }
+        );
     };
 
-    const handleDelete = async () => {
-        try {
-            await removeSink.mutateAsync({ params: { path: { sink_id: id } } });
-
-            toast({
-                type: 'success',
-                message: `${name} has been removed successfully!`,
-            });
-        } catch (_error) {
-            toast({
-                type: 'error',
-                message: `Failed to remove "${name}".`,
-            });
-        }
+    const handleDelete = () => {
+        removeSink.mutate(
+            { params: { path: { sink_id: id } } },
+            {
+                onSuccess: () => {
+                    toast({
+                        type: 'success',
+                        message: `${name} has been removed successfully!`,
+                    });
+                },
+            }
+        );
     };
 
     return (

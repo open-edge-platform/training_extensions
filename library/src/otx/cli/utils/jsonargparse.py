@@ -8,7 +8,6 @@ from __future__ import annotations
 import ast
 import logging
 from contextlib import contextmanager
-from pathlib import Path
 from typing import Any, Iterator, TypeVar, Union
 
 import docstring_parser
@@ -116,6 +115,7 @@ def apply_config(self: ActionConfigFile, parser: ArgumentParser, cfg: Namespace,
     from jsonargparse._link_arguments import skip_apply_links
     from jsonargparse._loaders_dumpers import get_loader_exceptions, load_value
     from jsonargparse._optionals import get_config_read_mode
+    from jsonargparse._util import Path
 
     with _ActionSubCommands.not_single_subcommand(), previous_config_context(cfg), skip_apply_links():
         kwargs = {"env": False, "defaults": False, "_skip_check": True, "_fail_no_subcommand": False}
@@ -297,7 +297,7 @@ def get_defaults_with_overrides(self: ArgumentParser, skip_check: bool = False) 
     from jsonargparse._namespace import recreate_branches
     from jsonargparse._parameter_resolvers import UnknownDefault
     from jsonargparse._typehints import ActionTypeHint
-    from jsonargparse._util import argument_error, change_to_path_dir
+    from jsonargparse._util import Path, argument_error, change_to_path_dir
 
     cfg = Namespace()
     for action in filter_default_actions(self._actions):

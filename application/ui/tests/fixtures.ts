@@ -7,10 +7,15 @@ import { fileURLToPath } from 'url';
 
 import { createNetworkFixture, NetworkFixture } from '@msw/playwright';
 import { expect, test as testBase } from '@playwright/test';
+import { mockedMedia } from 'mocks/mock-media';
 import { HttpResponse } from 'msw';
 
 import { handlers, http } from '../src/api/utils';
+import { BoundingBoxToolPage } from './annotator/bounding-box-tool-page';
+import { AnnotatorPage } from './datasets/annotator-page';
 import { StreamPage } from './inference/stream-page';
+import { JobsPage } from './jobs/jobs-page';
+import { ModelsPage } from './models/models-page';
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -18,6 +23,10 @@ const dirname = path.dirname(filename);
 interface Fixtures {
     network: NetworkFixture;
     streamPage: StreamPage;
+    modelsPage: ModelsPage;
+    jobsPage: JobsPage;
+    boundingBoxTool: BoundingBoxToolPage;
+    annotatorPage: AnnotatorPage;
 }
 
 const test = testBase.extend<Fixtures>({
@@ -62,6 +71,21 @@ const test = testBase.extend<Fixtures>({
                     },
                 ]);
             }),
+            http.get('/api/projects/{project_id}', () => {
+                return HttpResponse.json({
+                    id: '123',
+                    name: 'Test Project',
+                    task: {
+                        task_type: 'detection',
+                        exclusive_labels: false,
+                        labels: [
+                            { id: '1', color: 'red', name: 'person' },
+                            { id: '2', color: 'blue', name: 'car' },
+                        ],
+                    },
+                    active_pipeline: true,
+                });
+            }),
             http.delete('/api/projects/{project_id}', () => {
                 return HttpResponse.json(null, { status: 204 });
             }),
@@ -75,7 +99,7 @@ const test = testBase.extend<Fixtures>({
                 // Schema is empty, so we return an empty object
                 return response(200).json({} as never);
             }),
-            http.get('/api/projects/{project_id}/dataset/items/{dataset_item_id}/thumbnail', ({}) => {
+            http.get('/api/projects/{project_id}/dataset/media/{media_id}/thumbnail', ({}) => {
                 const sampleImagePath = path.resolve(dirname, './assets/candy-thumbnail.png');
                 const sampleImageBuffer = fs.readFileSync(sampleImagePath);
 
@@ -83,11 +107,45 @@ const test = testBase.extend<Fixtures>({
                     headers: { 'content-type': 'image/png' },
                 });
             }),
+            http.get('/api/system/devices/inference', ({ response }) => {
+                return response(200).json([
+                    { type: 'cpu', name: 'CPU' },
+                    { type: 'xpu', name: 'XPU' },
+                ]);
+            }),
+            http.get('/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations', ({ response }) => {
+                return response(200).json({ annotations: [], user_reviewed: false });
+            }),
+            http.get('/api/projects/{project_id}/dataset/media', () => {
+                return HttpResponse.json({
+                    items: [mockedMedia({ width: 1000, height: 750 })],
+                    pagination: { offset: 0, limit: 20, count: 1, total: 1 },
+                });
+            }),
         ],
     }),
     streamPage: async ({ page }, use) => {
         const streamPage = new StreamPage(page);
+
         await use(streamPage);
+    },
+    modelsPage: async ({ page }, use) => {
+        const modelsPage = new ModelsPage(page);
+
+        await use(modelsPage);
+    },
+    jobsPage: async ({ page }, use) => {
+        const jobsPage = new JobsPage(page);
+
+        await use(jobsPage);
+    },
+    boundingBoxTool: async ({ page }, use) => {
+        const boundingBoxTool = new BoundingBoxToolPage(page);
+        await use(boundingBoxTool);
+    },
+    annotatorPage: async ({ page }, use) => {
+        const annotatorPage = new AnnotatorPage(page);
+        await use(annotatorPage);
     },
 });
 

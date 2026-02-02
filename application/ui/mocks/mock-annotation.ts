@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import type { Annotation } from '../src/features/annotator/types';
+import type { Annotation } from '../src/shared/types';
 import { getMockedLabel } from './mock-labels';
 
 export const getMockedAnnotation = (annotation?: Partial<Annotation>): Annotation => {

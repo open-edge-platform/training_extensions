@@ -1,11 +1,35 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { useQueryClient } from '@tanstack/react-query';
 import { omit } from 'lodash-es';
 import { v4 as uuid } from 'uuid';
 
 import { $api } from '../../../../api/client';
-import { SourceConfig } from '../util';
+import type { SourceConfigPayload } from '../../../../constants/shared-types';
+import { getQueryKey } from '../../../../query-client/query-client';
+
+const useUpdateSource = () => {
+    const queryClient = useQueryClient();
+
+    return $api.useMutation('patch', '/api/sources/{source_id}', {
+        meta: {
+            invalidateQueries: [['get', '/api/sources']],
+        },
+        onSuccess: (
+            _,
+            {
+                params: {
+                    path: { source_id },
+                },
+            }
+        ) => {
+            return queryClient.invalidateQueries({
+                queryKey: getQueryKey(['get', '/api/sources/{source_id}', { params: { path: { source_id } } }]),
+            });
+        },
+    });
+};
 
 export const useSourceMutation = (isNewSource: boolean) => {
     const addSource = $api.useMutation('post', '/api/sources', {
@@ -13,16 +37,10 @@ export const useSourceMutation = (isNewSource: boolean) => {
             invalidateQueries: [['get', '/api/sources']],
         },
     });
-    const updateSource = $api.useMutation('patch', '/api/sources/{source_id}', {
-        meta: {
-            invalidateQueries: [
-                ['get', '/api/sources'],
-                ['get', '/api/sources/{source_id}'],
-            ],
-        },
-    });
 
-    return async (body: SourceConfig) => {
+    const updateSource = useUpdateSource();
+
+    return async (body: SourceConfigPayload) => {
         if (isNewSource) {
             const sourcePayload = {
                 ...body,

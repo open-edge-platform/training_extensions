@@ -1,18 +1,36 @@
 @startuml
 
-' Dataset-related tables
-class dataset_items << (T,#FFAAAA) >> {
+' Media related tables
+
+class media << (T,#FFAAAA) >> {
   id : UUID
   project_id : UUID
+  type : TEXT
   name : TEXT
   format : TEXT
   width : INTEGER
   height : INTEGER
   size : INTEGER
+  --
+  fps : INTEGER
+  frame_count : INTEGER
+  --
+  source_id : UUID
+}
+
+class video_frames << (T,#FFAAAA) >> {
+  id : UUID
+  video_id : UUID
+  timestamp : INTEGER
+}
+
+' Dataset-related tables
+class dataset_items << (T,#FFAAAA) >> {
+  id : UUID
+  project_id : UUID
   annotation_data : JSON
   user_reviewed : BOOLEAN
   prediction_model_id : UUID
-  source_id : UUID
   subset : TEXT
   subset_assigned_at : TIMESTAMP
 }
@@ -46,13 +64,13 @@ class dataset_revisions << (T,#FFAAAA) >> {
 object MediaBinary {
   <i>format</i> : jpg / png
   <i>prefix</i> : projects/{project_id}/dataset/
-  <i>filename</i> : {dataset_item_id}.{format}
+  <i>filename</i> : {id}.{format}
 }
 
 object MediaThumbnail {
   <i>format</i> : jpg
   <i>prefix</i> : projects/{project_id}/dataset/
-  <i>filename</i> : {dataset_item_id}-thumb.jpg
+  <i>filename</i> : {id}-thumb.jpg
 }
 
 object DatasetRevision {
@@ -60,10 +78,6 @@ object DatasetRevision {
   <i>prefix</i> : projects/{project_id}/dataset_revisions/{revision_id}/
   <i>filename</i> : <shard_idx>.arrow
 }
-
-dataset_items ||---|| MediaBinary
-
-dataset_items ||---|| MediaThumbnail
 
 dataset_revisions ||---|| DatasetRevision
 
@@ -75,6 +89,15 @@ class projects << (T,#CCCCCC) >> {
 projects ||---o{ dataset_items
 projects ||---o{ dataset_views
 projects ||---o{ dataset_revisions
+projects ||---o{ media
+
+dataset_items ||---|| media
+
+
+media ||---o| video_frames
+media ||---o{ video_frames
+media ||---|| MediaBinary
+media ||---|| MediaThumbnail
 
 class model_revisions << (T,#CCCCCC) >> {
   id : UUID

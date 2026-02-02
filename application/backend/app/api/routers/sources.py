@@ -173,8 +173,10 @@ def update_source(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The 'source_type' field cannot be changed")
 
     try:
-        updated_source: Source = source.model_copy(update=source_config)
-        updated_source.config_data = updated_source.config_data.model_copy(update=source_config)
+        updated_source = source.model_copy(update=source_config)
+        updated_source.config_data = updated_source.config_data.model_copy(  # pyrefly: ignore[bad-assignment]
+            update=source_config
+        )
         source = source_update_service.update_source(
             source=source,
             new_name=updated_source.name,

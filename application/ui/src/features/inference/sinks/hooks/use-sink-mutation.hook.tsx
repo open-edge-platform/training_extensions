@@ -1,10 +1,34 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { useQueryClient } from '@tanstack/react-query';
 import { omit } from 'lodash-es';
 
 import { $api } from '../../../../api/client';
+import { getQueryKey } from '../../../../query-client/query-client';
 import { SinkConfig } from '../utils';
+
+const useUpdateSink = () => {
+    const queryClient = useQueryClient();
+
+    return $api.useMutation('patch', '/api/sinks/{sink_id}', {
+        meta: {
+            invalidateQueries: [['get', '/api/sinks']],
+        },
+        onSuccess: (
+            _,
+            {
+                params: {
+                    path: { sink_id },
+                },
+            }
+        ) => {
+            return queryClient.invalidateQueries({
+                queryKey: getQueryKey(['get', '/api/sinks/{sink_id}', { params: { path: { sink_id } } }]),
+            });
+        },
+    });
+};
 
 export const useSinkMutation = (isNewSink: boolean) => {
     const addSink = $api.useMutation('post', '/api/sinks', {
@@ -12,14 +36,8 @@ export const useSinkMutation = (isNewSink: boolean) => {
             invalidateQueries: [['get', '/api/sinks']],
         },
     });
-    const updateSink = $api.useMutation('patch', '/api/sinks/{sink_id}', {
-        meta: {
-            invalidateQueries: [
-                ['get', '/api/sinks'],
-                ['get', '/api/sinks/{sink_id}'],
-            ],
-        },
-    });
+
+    const updateSink = useUpdateSink();
 
     return async (body: SinkConfig) => {
         if (isNewSink) {

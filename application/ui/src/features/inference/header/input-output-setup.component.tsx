@@ -18,7 +18,7 @@ import {
     View,
 } from '@geti/ui';
 
-import { ReactComponent as Camera } from '../../../assets/icons/camera.svg';
+import { ReactComponent as PipelineIcon } from '../../../assets/icons/pipeline.svg';
 import { SinkActions } from '../sinks/sink-actions.component';
 import { SourceActions } from '../sources/source-actions.component';
 
@@ -31,7 +31,7 @@ export const InputOutputSetup = () => {
     return (
         <DialogTrigger type='popover'>
             <Button variant={'secondary'} UNSAFE_style={{ gap: dimensionValue('size-125') }}>
-                <Camera fill='white' />
+                <PipelineIcon fill='white' />
                 <Text>Pipeline configuration</Text>
             </Button>
             <Dialog minWidth={'size-6000'} UNSAFE_style={paddingStyle}>

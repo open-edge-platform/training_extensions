@@ -8,9 +8,9 @@ import { usePipeline } from 'hooks/api/pipeline.hook';
 import { isEqual } from 'lodash-es';
 
 import { StatusTag } from '../../../../components/status-tag/status-tag.component';
+import type { SourceConfig } from '../../../../constants/shared-types';
 import { removeUnderscore } from '../../util';
 import { SourceMenu } from '../source-menu/source-menu.component';
-import { SourceConfig } from '../util';
 import { SettingsList } from './settings-list/settings-list.component';
 import { SourceIcon } from './source-icon/source-icon.component';
 

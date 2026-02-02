@@ -87,10 +87,10 @@ def _create_detection_labels(project_id: str | UUID) -> list[LabelDB]:
         list[LabelDB]: List of created label objects.
     """
     return [
-        LabelDB(project_id=project_id, name="Clubs", color="#2d6311", hotkey="c"),
-        LabelDB(project_id=project_id, name="Diamonds", color="#baa3b3", hotkey="d"),
-        LabelDB(project_id=project_id, name="Spades", color="#000702", hotkey="s"),
-        LabelDB(project_id=project_id, name="Hearts", color="#1f016b", hotkey="h"),
+        LabelDB(project_id=project_id, name="Diamonds", color="#8a0000", hotkey="d"),
+        LabelDB(project_id=project_id, name="Spades", color="#000000", hotkey="s"),
+        LabelDB(project_id=project_id, name="Clubs", color="#000000", hotkey="c"),
+        LabelDB(project_id=project_id, name="Hearts", color="#8a0000", hotkey="h"),
     ]
 
 

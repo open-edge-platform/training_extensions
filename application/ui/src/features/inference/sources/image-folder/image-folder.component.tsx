@@ -4,7 +4,7 @@
 import { Flex, Switch, TextField } from '@geti/ui';
 
 import { ReactComponent as Folder } from '../../../../assets/icons/folder.svg';
-import { ImagesFolderSourceConfig } from '../util';
+import type { ImagesFolderSourceConfig } from '../../../../constants/shared-types';
 
 import classes from './image-folder.module.scss';
 

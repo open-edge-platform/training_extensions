@@ -1,16 +1,14 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse } from 'msw';
-import { TestProviders } from 'test-utils/render';
+import { render } from 'test-utils/render';
 
 import { http } from '../../../../api/utils';
 import { server } from '../../../../msw-node-setup';
 import { SourceMenu, SourceMenuProps } from './source-menu.component';
-
-vi.mock('hooks/use-project-identifier.hook', () => ({ useProjectIdentifier: () => ({ projectId: '123' }) }));
 
 describe('SourceMenu', () => {
     const renderApp = ({
@@ -19,11 +17,7 @@ describe('SourceMenu', () => {
         isConnected = false,
         onEdit = vi.fn(),
     }: Partial<SourceMenuProps>) => {
-        render(
-            <TestProviders>
-                <SourceMenu id={id} name={name} isConnected={isConnected} onEdit={onEdit} />
-            </TestProviders>
-        );
+        render(<SourceMenu id={id} name={name} isConnected={isConnected} onEdit={onEdit} />);
     };
 
     it('edit', async () => {
@@ -103,7 +97,9 @@ describe('SourceMenu', () => {
             await userEvent.click(screen.getByRole('button', { name: /source menu/i }));
             await userEvent.click(screen.getByRole('menuitem', { name: /Connect/i }));
 
-            await expect(await screen.findByLabelText('toast')).toHaveTextContent(`Failed to connect to "${name}"`);
+            await expect(await screen.findByLabelText('toast')).toHaveTextContent(
+                'An unexpected error occurred. Please try again.'
+            );
         });
     });
 });

@@ -9,7 +9,7 @@ from torchvision import tv_tensors
 from otx.backend.native.models.base import DataInputParams
 from otx.backend.native.models.keypoint_detection.rtmpose import RTMPose
 from otx.data.entity.base import OTXBatchLossEntity
-from otx.data.entity.torch import OTXDataBatch
+from otx.data.entity.sample import OTXSampleBatch
 
 
 class TestRTMPoseTiny:
@@ -38,4 +38,4 @@ class TestRTMPoseTiny:
         outputs = [(torch.randn(17, 2), torch.randn(17))]
         fxt_keypoint_det_model.training = False
         preds = fxt_keypoint_det_model._customize_outputs(outputs, fxt_keypoint_det_batch_data_entity)
-        assert isinstance(preds, OTXDataBatch)
+        assert isinstance(preds, OTXSampleBatch)

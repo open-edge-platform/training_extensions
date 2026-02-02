@@ -8,7 +8,7 @@ import torch
 from otx.backend.native.models.utils.xai_utils import process_saliency_maps, process_saliency_maps_in_pred_entity
 from otx.config.explain import ExplainConfig
 from otx.data.entity.base import ImageInfo
-from otx.data.entity.torch import OTXPredBatch
+from otx.data.entity.sample import OTXPredictionBatch
 from otx.types.explain import TargetExplainGroup
 
 NUM_CLASSES = 6
@@ -142,10 +142,9 @@ def test_process_image(postprocess) -> None:
         assert all(s_map_dict["map_per_image"].shape == (RAW_SIZE, RAW_SIZE) for s_map_dict in processed_saliency_maps)
 
 
-def _get_pred_result_multiclass(pred_labels, pred_scores) -> OTXPredBatch:
-    return OTXPredBatch(
-        batch_size=BATCH_SIZE,
-        images=None,
+def _get_pred_result_multiclass(pred_labels, pred_scores) -> OTXPredictionBatch:
+    return OTXPredictionBatch(
+        images=[torch.randn(3, OUT_SIZE, OUT_SIZE, dtype=torch.float32) for _ in range(BATCH_SIZE)],
         imgs_info=IMGS_INFO,
         scores=pred_scores,
         labels=pred_labels,
@@ -154,10 +153,9 @@ def _get_pred_result_multiclass(pred_labels, pred_scores) -> OTXPredBatch:
     )
 
 
-def _get_pred_result_multilabel(pred_labels, pred_scores) -> OTXPredBatch:
-    return OTXPredBatch(
-        batch_size=BATCH_SIZE,
-        images=None,
+def _get_pred_result_multilabel(pred_labels, pred_scores) -> OTXPredictionBatch:
+    return OTXPredictionBatch(
+        images=[torch.randn(3, OUT_SIZE, OUT_SIZE, dtype=torch.float32) for _ in range(BATCH_SIZE)],
         imgs_info=IMGS_INFO,
         scores=pred_scores,
         labels=pred_labels,
@@ -166,10 +164,9 @@ def _get_pred_result_multilabel(pred_labels, pred_scores) -> OTXPredBatch:
     )
 
 
-def _get_pred_result_hcls(pred_labels, pred_scores) -> OTXPredBatch:
-    return OTXPredBatch(
-        batch_size=BATCH_SIZE,
-        images=None,
+def _get_pred_result_hcls(pred_labels, pred_scores) -> OTXPredictionBatch:
+    return OTXPredictionBatch(
+        images=[torch.randn(3, OUT_SIZE, OUT_SIZE, dtype=torch.float32) for _ in range(BATCH_SIZE)],
         imgs_info=IMGS_INFO,
         scores=pred_scores,
         labels=pred_labels,
