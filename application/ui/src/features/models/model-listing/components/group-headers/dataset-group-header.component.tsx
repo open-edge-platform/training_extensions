@@ -47,11 +47,14 @@ export const DatasetGroupHeader = ({ dataset }: DatasetGroupHeaderProps) => {
                 </Flex>
             </Flex>
 
-            <ThreeSectionRange
-                trainingValue={dataset.trainingSubsets.training}
-                validationValue={dataset.trainingSubsets.validation}
-                testingValue={dataset.trainingSubsets.testing}
-            />
+            {!dataset.filesDeleted && (
+                <ThreeSectionRange
+                    id={`dataset-range-${dataset.id}`}
+                    trainingValue={dataset.trainingSubsets.training}
+                    validationValue={dataset.trainingSubsets.validation}
+                    testingValue={dataset.trainingSubsets.testing}
+                />
+            )}
 
             <Flex>
                 <TrainModel preSelectedDatasetRevisionId={dataset.id} />
