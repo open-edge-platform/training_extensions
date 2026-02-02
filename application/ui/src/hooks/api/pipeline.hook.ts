@@ -1,9 +1,11 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { useQueryClient } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { $api } from '../../api/client';
+import { getQueryKey } from '../../query-client/query-client';
 
 export const usePipeline = () => {
     const projectId = useProjectIdentifier();
@@ -31,20 +33,71 @@ export const usePipelineMetrics = () => {
 };
 
 export const usePatchPipeline = () => {
+    const queryClient = useQueryClient();
+
     return $api.useMutation('patch', '/api/projects/{project_id}/pipeline', {
-        meta: { invalidateQueries: [['get', '/api/projects/{project_id}/pipeline']] },
+        onSuccess: (
+            _,
+            {
+                params: {
+                    path: { project_id },
+                },
+            }
+        ) => {
+            return queryClient.invalidateQueries({
+                queryKey: getQueryKey([
+                    'get',
+                    '/api/projects/{project_id}/pipeline',
+                    { params: { path: { project_id } } },
+                ]),
+            });
+        },
     });
 };
 
 export const useEnablePipeline = () => {
+    const queryClient = useQueryClient();
+
     return $api.useMutation('post', '/api/projects/{project_id}/pipeline:enable', {
-        meta: { invalidateQueries: [['get', '/api/projects/{project_id}/pipeline']] },
+        onSuccess: (
+            _,
+            {
+                params: {
+                    path: { project_id },
+                },
+            }
+        ) => {
+            return queryClient.invalidateQueries({
+                queryKey: getQueryKey([
+                    'get',
+                    '/api/projects/{project_id}/pipeline',
+                    { params: { path: { project_id } } },
+                ]),
+            });
+        },
     });
 };
 
 export const useDisablePipeline = () => {
+    const queryClient = useQueryClient();
+
     return $api.useMutation('post', '/api/projects/{project_id}/pipeline:disable', {
-        meta: { invalidateQueries: [['get', '/api/projects/{project_id}/pipeline']] },
+        onSuccess: (
+            _,
+            {
+                params: {
+                    path: { project_id },
+                },
+            }
+        ) => {
+            return queryClient.invalidateQueries({
+                queryKey: getQueryKey([
+                    'get',
+                    '/api/projects/{project_id}/pipeline',
+                    { params: { path: { project_id } } },
+                ]),
+            });
+        },
     });
 };
 

@@ -14,7 +14,7 @@ import {
 import { createMemoryRouter, RouterProvider } from 'react-router';
 
 import { paths } from '../constants/paths';
-import { queryClient } from '../providers';
+import { queryClient } from '../query-client/query-client';
 
 export interface RenderOptions extends RTLRenderOptions {
     route?: string;
