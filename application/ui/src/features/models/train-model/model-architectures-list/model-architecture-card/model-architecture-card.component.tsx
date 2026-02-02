@@ -3,7 +3,7 @@
 
 import { createContext, ReactNode, useContext } from 'react';
 
-import { Content, ContextualHelp, Divider, Flex, Heading, Radio, Text, View } from '@geti/ui';
+import { Badge, Content, ContextualHelp, Divider, Flex, Heading, Radio, Text } from '@geti/ui';
 import { clsx } from 'clsx';
 
 import { type ModelArchitecture as ModelArchitectureType } from '../../../../../constants/shared-types';
@@ -12,9 +12,9 @@ import styles from './model-architecture-card.module.scss';
 
 const ActiveModelArchitecture = () => {
     return (
-        <View UNSAFE_className={styles.activeModelArchitecture} paddingX={'size-50'} borderRadius={'regular'}>
-            <Text>Active model</Text>
-        </View>
+        <Badge variant={'info'} UNSAFE_className={styles.activeModelArchitecture}>
+            Active model
+        </Badge>
     );
 };
 
