@@ -5,23 +5,26 @@ import { createContext, ReactNode, useContext, useState, type Dispatch, type Set
 
 import { Selection } from '@geti/ui';
 
-export type AnnotationStatus = 'rejected' | 'accepted';
-export type MediaState = Map<string, AnnotationStatus>;
+import { MediaStateMap, type Media } from '../../constants/shared-types';
 
 type SelectedDataState = null | {
     selectedKeys: Selection;
     setSelectedKeys: Dispatch<SetStateAction<Selection>>;
 
-    mediaState: MediaState;
-    setMediaState: Dispatch<SetStateAction<MediaState>>;
+    mediaState: MediaStateMap;
+    setMediaState: Dispatch<SetStateAction<MediaStateMap>>;
     toggleSelectedKeys: (key: string[]) => void;
+
+    selectedMediaItem: Media | null;
+    onSelectedMediaItemChange: (item: Media | null) => void;
 };
 
 const SelectedDataContext = createContext<SelectedDataState>(null);
 
 export const SelectedDataProvider = ({ children }: { children: ReactNode }) => {
-    const [mediaState, setMediaState] = useState<MediaState>(new Map());
+    const [mediaState, setMediaState] = useState<MediaStateMap>(new Map());
     const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set());
+    const [selectedMediaItem, setSelectedMediaItem] = useState<null | Media>(null);
 
     const toggleSelectedKeys = (keys: string[]) => {
         setSelectedKeys((prevSelectedKeys) => {
@@ -37,7 +40,15 @@ export const SelectedDataProvider = ({ children }: { children: ReactNode }) => {
 
     return (
         <SelectedDataContext.Provider
-            value={{ selectedKeys, setSelectedKeys, mediaState, setMediaState, toggleSelectedKeys }}
+            value={{
+                selectedKeys,
+                setSelectedKeys,
+                mediaState,
+                setMediaState,
+                toggleSelectedKeys,
+                selectedMediaItem,
+                onSelectedMediaItemChange: setSelectedMediaItem,
+            }}
         >
             {children}
         </SelectedDataContext.Provider>

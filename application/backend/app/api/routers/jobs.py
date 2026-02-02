@@ -5,14 +5,15 @@ import asyncio
 from collections.abc import AsyncGenerator
 from pathlib import Path
 from typing import Annotated
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import aiofiles
 from fastapi import APIRouter, Body, Depends, HTTPException, status
+from loguru import logger
 from sse_starlette.sse import EventSourceResponse, ServerSentEvent
 
 from app.api.dependencies import get_data_dir, get_job_dir, get_job_queue, get_project_service, get_system_service
-from app.api.schemas.job import JobRequest, JobType, JobView
+from app.api.schemas.jobs import JobRequest, JobType, JobView
 from app.api.validators import JobID
 from app.core.jobs.control_plane import CancellationResult, JobQueue
 from app.core.jobs.models import JobStatus, TrainingJob, TrainingJobParams
@@ -28,7 +29,11 @@ router = APIRouter(prefix="/api/jobs", tags=["Jobs"])
     responses={
         status.HTTP_202_ACCEPTED: {"description": "Job successfully created"},
         status.HTTP_400_BAD_REQUEST: {"description": "Unknown job type or invalid parameters"},
-        status.HTTP_404_NOT_FOUND: {"description": "Project not found"},
+        status.HTTP_404_NOT_FOUND: {"description": "Project not found or dataset doesn't exist"},
+        status.HTTP_409_CONFLICT: {"description": "Dataset is locked by another job"},
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {
+            "description": "Dataset already in datumaro format and ready for import"
+        },
     },
 )
 async def submit_job(
@@ -41,12 +46,14 @@ async def submit_job(
 ) -> JobView:
     """Create a new job and submit it to the scheduler."""
     try:
-        device = system_service.get_device_info(job_request.parameters.device)
-        project = project_service.get_project_by_id(job_request.project_id)
         job = None
+        job_id = uuid4()
         match job_request.job_type:
             case JobType.TRAIN:
+                device = system_service.get_device_info(job_request.parameters.device)
+                project = project_service.get_project_by_id(job_request.project_id)
                 job = TrainingJob(
+                    id=job_id,
                     project_id=job_request.project_id,
                     log_dir=job_dir,
                     data_dir=data_dir,
@@ -55,8 +62,21 @@ async def submit_job(
                         model_architecture_id=job_request.parameters.model_architecture_id,
                         parent_model_revision_id=job_request.parameters.parent_model_revision_id,
                         task=project.task,
+                        project_id=job_request.project_id,
+                        job_id=job_id,
+                        dataset_revision_id=job_request.parameters.dataset_revision_id,
                     ),
                 )
+            case JobType.PREPARE_DATASET_FOR_IMPORT:
+                raise NotImplementedError
+            case JobType.IMPORT_DATASET_AS_NEW_PROJECT:
+                raise NotImplementedError
+            case JobType.IMPORT_DATASET_TO_PROJECT:
+                raise NotImplementedError
+            case JobType.EXPORT_DATASET:
+                raise NotImplementedError
+            case JobType.STAGE_DATASET:
+                raise NotImplementedError
             case _:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Unknown job type")
         await job_queue.submit(job)
@@ -126,8 +146,14 @@ async def cancel_job(job_id: JobID, job_queue: Annotated[JobQueue, Depends(get_j
                 raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Job already completed or cancelled")
             case CancellationResult.PENDING_CANCELLED | CancellationResult.RUNNING_CANCELLING:
                 if not job:
+                    logger.error("Can't locate job {} after cancellation", job_id)
                     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Job not found")
                 return JobView.of(job)
+            case _:
+                logger.error("Unexpected cancellation result: {}", result)
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error while processing job cancellation"
+                )
     except ValueError:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Unable to cancel job")
 

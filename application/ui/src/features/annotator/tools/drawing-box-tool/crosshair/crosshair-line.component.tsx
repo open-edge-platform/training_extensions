@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import type { Point } from '../../../types';
+import type { Point } from '../../../../../shared/types';
 
 const DEFAULT_SIZE = 1.0;
 

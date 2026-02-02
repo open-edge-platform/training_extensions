@@ -1,15 +1,15 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { TestProviders } from 'test-utils/render';
+import { render } from 'test-utils/render';
 
+import type { IPCameraSourceConfig } from '../../../../constants/shared-types';
 import { useConnectSourceToPipeline } from '../../../../hooks/api/pipeline.hook';
 import { useSourceMutation } from '../hooks/use-source-mutation.hook';
 import { IpCamera } from '../ip-camera/ip-camera.component';
 import { getIpCameraInitialConfig, ipCameraBodyFormatter } from '../ip-camera/utils';
-import { IPCameraSourceConfig } from '../util';
 import { EditSource } from './edit-source.component';
 
 vi.mock('../hooks/use-source-mutation.hook');
@@ -30,15 +30,13 @@ describe('EditIpCamera', () => {
 
     const renderApp = (mockOnSaved = vi.fn()) => {
         render(
-            <TestProviders>
-                <EditSource
-                    config={getIpCameraInitialConfig()}
-                    onSaved={mockOnSaved}
-                    onBackToList={vi.fn()}
-                    componentFields={(state: IPCameraSourceConfig) => <IpCamera defaultState={state} />}
-                    bodyFormatter={ipCameraBodyFormatter}
-                />
-            </TestProviders>
+            <EditSource
+                config={getIpCameraInitialConfig()}
+                onSaved={mockOnSaved}
+                onBackToList={vi.fn()}
+                componentFields={(state: IPCameraSourceConfig) => <IpCamera defaultState={state} />}
+                bodyFormatter={ipCameraBodyFormatter}
+            />
         );
     };
 

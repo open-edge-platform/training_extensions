@@ -13,10 +13,10 @@ from torch import Tensor
 
 from otx.backend.native.models.common.utils.utils import sample_point
 from otx.backend.native.models.utils.utils import InstanceData
-from otx.data.entity.torch import OTXDataBatch
+from otx.data.entity.sample import OTXSampleBatch
 
 
-def unpack_inst_seg_entity(entity: OTXDataBatch) -> tuple:
+def unpack_inst_seg_entity(entity: OTXSampleBatch) -> tuple:
     """Unpack gt_instances, gt_instances_ignore and img_metas based on batch_data_samples.
 
     Args:
@@ -35,13 +35,11 @@ def unpack_inst_seg_entity(entity: OTXDataBatch) -> tuple:
     batch_img_metas = []
     img_infos = entity.imgs_info
     masks = entity.masks
-    polygons = entity.polygons
     bboxes = entity.bboxes
     labels = entity.labels
     for index in range(len(img_infos)):  # type: ignore[union-attr,arg-type]
         img_info = img_infos[index]  # type: ignore[index]
         mask = masks[index] if masks is not None else None
-        polygon = polygons[index] if polygons is not None else None
         bbox = bboxes[index] if bboxes is not None else None
         label = labels[index] if labels is not None else None
         metainfo = {
@@ -53,12 +51,10 @@ def unpack_inst_seg_entity(entity: OTXDataBatch) -> tuple:
         }
         batch_img_metas.append(metainfo)
 
-        gt_masks = mask if mask is not None else polygon
-
         batch_gt_instances.append(
             InstanceData(
                 metainfo=metainfo,
-                masks=gt_masks,
+                masks=mask,
                 bboxes=bbox,
                 labels=label,
             ),

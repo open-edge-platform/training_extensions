@@ -13,6 +13,7 @@ class ResourceType(StrEnum):
 
     SOURCE = "Source"
     SINK = "Sink"
+    MEDIA = "Media"
     MODEL = "Model"
     PIPELINE = "Pipeline"
     PROJECT = "Project"

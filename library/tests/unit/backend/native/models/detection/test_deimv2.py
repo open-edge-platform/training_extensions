@@ -12,7 +12,7 @@ import torch
 
 from otx.backend.native.models.base import DataInputParams
 from otx.backend.native.models.detection.deimv2 import DEIMV2
-from otx.data.entity.torch import OTXPredBatch
+from otx.data.entity.sample import OTXPredictionBatch
 
 
 class TestDEIMV2:
@@ -154,8 +154,8 @@ class TestDEIMV2:
         # Forward pass should return predictions
         output = model(fxt_detection_batch)
 
-        # Check that output is OTXPredBatch
-        assert isinstance(output, OTXPredBatch)
+        # Check that output is OTXPredictionBatch
+        assert isinstance(output, OTXPredictionBatch)
         assert output.batch_size == 2
 
     @patch("otx.backend.native.models.detection.deimv2.load_checkpoint")

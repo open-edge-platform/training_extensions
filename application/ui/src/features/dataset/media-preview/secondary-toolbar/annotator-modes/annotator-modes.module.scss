@@ -1,0 +1,17 @@
+.toggleButton {
+    padding: var(--spectrum-global-dimension-size-50) var(--spectrum-global-dimension-size-150);
+    border-radius: var(--spectrum-global-dimension-size-200);
+    outline: none;
+    border: none;
+    background-color: var(--spectrum-global-color-gray-200);
+    color: var(--spectrum-global-color-gray-700);
+    transition:
+        background-color 0.3s ease-in-out,
+        color 0.3s ease-in-out;
+    font-weight: 700;
+
+    &:is([aria-pressed='true']) {
+        background-color: var(--spectrum-global-color-gray-50);
+        color: var(--energy-blue);
+    }
+}

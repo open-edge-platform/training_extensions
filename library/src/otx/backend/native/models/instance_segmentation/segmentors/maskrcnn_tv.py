@@ -25,13 +25,13 @@ from torchvision.models.detection.roi_heads import paste_masks_in_image
 from torchvision.models.resnet import resnet50
 
 if TYPE_CHECKING:
-    from otx.data.entity.torch import OTXDataBatch
+    from otx.data.entity.sample import OTXSampleBatch
 
 
 class MaskRCNN(_MaskRCNN):
     """Torchvision MaskRCNN model with forward method accepting TorchDataBatch."""
 
-    def forward(self, entity: OTXDataBatch) -> dict[str, Tensor] | list[dict[str, Tensor]]:
+    def forward(self, entity: OTXSampleBatch) -> dict[str, Tensor] | list[dict[str, Tensor]]:
         """Overwrite GeneralizedRCNN forward method to accept TorchDataBatch."""
         ori_shapes = [img_info.ori_shape for img_info in entity.imgs_info]  # type: ignore[union-attr]
         img_shapes = [img_info.img_shape for img_info in entity.imgs_info]  # type: ignore[union-attr]
@@ -43,7 +43,6 @@ class MaskRCNN(_MaskRCNN):
                 bboxes = entity.bboxes[i] if entity.bboxes is not None else None
                 labels = entity.labels[i] if entity.labels is not None else None
                 masks = entity.masks[i] if entity.masks is not None else None
-                polygons = entity.polygons[i] if entity.polygons is not None else None
                 # NOTE: shift labels by 1 as 0 is reserved for background
                 _labels = labels + 1 if len(labels) else labels
                 targets.append(
@@ -51,7 +50,6 @@ class MaskRCNN(_MaskRCNN):
                         "boxes": bboxes,
                         "labels": _labels,
                         "masks": masks,
-                        "polygons": polygons,
                     },
                 )
 

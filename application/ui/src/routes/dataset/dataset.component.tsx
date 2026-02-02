@@ -5,7 +5,7 @@ import { dimensionValue, Flex } from '@geti/ui';
 
 import { Gallery } from '../../features/dataset/gallery/gallery.component';
 import { Toolbar } from '../../features/dataset/gallery/toolbar/toolbar.component';
-import { useGetDatasetItems } from '../../features/dataset/gallery/use-get-dataset-items.hook';
+import { useGetDatasetItems } from '../../hooks/use-get-dataset-items.hook';
 
 export const Dataset = () => {
     const { items, hasNextPage, isFetchingNextPage, fetchNextPage } = useGetDatasetItems();

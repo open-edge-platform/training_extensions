@@ -6,15 +6,19 @@ import { Suspense, type ReactNode } from 'react';
 import { IntelBrandedLoading, Toast } from '@geti/ui';
 import { ThemeProvider } from '@geti/ui/theme';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, RenderOptions } from '@testing-library/react';
+import {
+    render as rtlRender,
+    renderHook as rtlRenderHook,
+    RenderOptions as RTLRenderOptions,
+} from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 
 import { paths } from '../constants/paths';
-import { queryClient } from '../providers';
+import { queryClient } from '../query-client/query-client';
 
-interface Options extends RenderOptions {
-    route: string;
-    path: string;
+export interface RenderOptions extends RTLRenderOptions {
+    route?: string;
+    path?: string;
 }
 
 export const TestProviders = ({ children }: { children: ReactNode }) => {
@@ -28,27 +32,36 @@ export const TestProviders = ({ children }: { children: ReactNode }) => {
     );
 };
 
-const customRender = (
-    ui: ReactNode,
-    options: Options = { route: paths.project.index({}), path: paths.project.index.pattern }
-) => {
-    const router = createMemoryRouter(
+const createTestRouter = (children: ReactNode, options: RenderOptions) => {
+    const route = options.route ?? paths.project.details({ projectId: '123' });
+    const path = options.path ?? paths.project.details.pattern;
+
+    return createMemoryRouter(
         [
             {
-                path: options.path,
-                element: <TestProviders>{ui}</TestProviders>,
+                path,
+                element: <TestProviders>{children}</TestProviders>,
             },
         ],
         {
-            initialEntries: [options.route],
+            initialEntries: [route],
             initialIndex: 0,
         }
     );
-
-    return render(<RouterProvider router={router} />);
 };
 
-// eslint-disable-next-line import/export
-export * from '@testing-library/react';
-// eslint-disable-next-line import/export
-export { customRender as render };
+export const render = (ui: ReactNode, options: RenderOptions = {}) => {
+    const router = createTestRouter(ui, options);
+
+    return rtlRender(<RouterProvider router={router} />);
+};
+
+export const renderHook = <TProps, TResult>(callback: (props: TProps) => TResult, options: RenderOptions = {}) => {
+    const Wrapper = ({ children }: { children: ReactNode }) => {
+        const router = createTestRouter(children, options);
+
+        return <RouterProvider router={router} />;
+    };
+
+    return rtlRenderHook(callback, { wrapper: Wrapper });
+};

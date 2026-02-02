@@ -15,6 +15,7 @@ import logging
 from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 import numpy as np
+from torch.export import Dim
 
 from otx.backend.native.exporter.base import OTXModelExporter
 from otx.backend.native.exporter.native import OTXNativeModelExporter
@@ -355,11 +356,7 @@ class SSD(OTXDetectionModel):
             onnx_export_configuration={
                 "input_names": ["image"],
                 "output_names": ["boxes", "labels"],
-                "dynamic_axes": {
-                    "image": {0: "batch"},
-                    "boxes": {0: "batch", 1: "num_dets"},
-                    "labels": {0: "batch", 1: "num_dets"},
-                },
+                "dynamic_shapes": {"inputs": {0: Dim("batch")}},
                 "autograd_inlining": False,
             },
             output_names=["bboxes", "labels", "feature_vector", "saliency_map"] if self.explain_mode else None,

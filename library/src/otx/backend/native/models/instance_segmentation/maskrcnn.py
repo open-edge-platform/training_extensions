@@ -32,7 +32,7 @@ from otx.backend.native.models.instance_segmentation.utils.roi_extractors import
 from otx.backend.native.models.modules.norm import build_norm_layer
 from otx.backend.native.models.utils.utils import load_checkpoint
 from otx.config.data import TileConfig
-from otx.data.entity.torch import OTXPredBatch
+from otx.data.entity.sample import OTXPredictionBatch
 from otx.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
 
 if TYPE_CHECKING:
@@ -408,7 +408,7 @@ class MaskRCNN(OTXInstanceSegModel):
 class RotatedMaskRCNNModel(RotatedPredictMixin, MaskRCNN):
     """Base class for the rotated detection models used in OTX."""
 
-    def predict_step(self, *args: torch.Any, **kwargs: torch.Any) -> OTXPredBatch:
+    def predict_step(self, *args: torch.Any, **kwargs: torch.Any) -> OTXPredictionBatch:
         """Perform prediction step for rotated detection."""
         preds = super().predict_step(*args, **kwargs)
         return self.rotated_predict_step(preds)

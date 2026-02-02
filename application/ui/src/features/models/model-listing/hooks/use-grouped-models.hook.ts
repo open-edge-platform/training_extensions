@@ -3,39 +3,36 @@
 
 import { useMemo } from 'react';
 
-import { partition } from 'lodash-es';
-
-import { Model } from '../../../../constants/shared-types';
-import { useGetActiveModelId } from '../../hooks/api/use-get-active-model-id.hook';
+import type { DatasetRevision, Model } from '../../../../constants/shared-types';
+import { useGetActiveModelArchitectureId } from '../../hooks/api/use-get-active-model-architecture-id.hook';
 import { GroupByMode, GroupedModels, SortBy } from '../types';
-import { groupModelsByArchitecture, groupModelsByDataset } from '../utils/grouping';
-import { sortModels } from '../utils/sorting';
+import { filterBySearch, groupModels, pinModel, removeEmpty, sortGroupedModels } from '../utils/model-transforms';
 
 type UseGroupedModelsOptions = {
     groupBy: GroupByMode;
     sortBy: SortBy;
     pinActive: boolean;
+    searchBy: string;
+    datasetRevisions: DatasetRevision[];
 };
 
+// Responsible for:
+// - Filtering models based on searchBy query
+// - Grouping models based on the selected grouping mode
+// - Sorting models within each group based on the selected sorting criteria
+// - Pinning the active model to the top of its group if the pinActive option is enabled
 export const useGroupedModels = (models: Model[] | undefined, options: UseGroupedModelsOptions): GroupedModels[] => {
-    const { groupBy, sortBy, pinActive } = options;
-    const activeModelId = useGetActiveModelId();
+    const { groupBy, sortBy, pinActive, searchBy, datasetRevisions } = options;
+    const activeModelArchitectureId = useGetActiveModelArchitectureId();
 
     return useMemo(() => {
         if (!models) return [];
 
-        const groups = groupBy === 'dataset' ? groupModelsByDataset(models) : groupModelsByArchitecture(models);
+        const filtered = filterBySearch(models, searchBy);
+        const grouped = groupModels(filtered, groupBy, datasetRevisions);
+        const sorted = sortGroupedModels(grouped, sortBy);
+        const pinned = pinModel(sorted, pinActive ? activeModelArchitectureId : undefined);
 
-        return groups.map((group) => {
-            const sortedModels = sortModels(group.models, sortBy);
-
-            if (!pinActive || !activeModelId) {
-                return { ...group, models: sortedModels };
-            }
-
-            const [activeModel, otherModels] = partition(sortedModels, (model) => model.id === activeModelId);
-
-            return { ...group, models: [...activeModel, ...otherModels] };
-        });
-    }, [models, groupBy, sortBy, pinActive, activeModelId]);
+        return removeEmpty(pinned);
+    }, [models, groupBy, sortBy, pinActive, activeModelArchitectureId, searchBy, datasetRevisions]);
 };

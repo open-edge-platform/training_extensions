@@ -1,6 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+from .base import BaseEntity
 from .data_collection_policy import (
     ConfidenceThresholdDataCollectionPolicy,
     DataCollectionConfig,
@@ -8,14 +9,11 @@ from .data_collection_policy import (
     DataCollectionPolicyAdapter,
     FixedRateDataCollectionPolicy,
 )
-from .dataset_item import (
-    DatasetItem,
-    DatasetItemAnnotation,
-    DatasetItemAnnotationStatus,
-    DatasetItemFormat,
-    DatasetItemSubset,
-)
+from .dataset_item import DatasetItem, DatasetItemAnnotation, DatasetItemAnnotationStatus, DatasetItemSubset
+from .dataset_revision import DatasetRevision
+from .evaluation import EvaluationResult
 from .label import Label, LabelReference
+from .media import Media, MediaFormat, MediaType
 from .model_revision import ModelRevision, TrainingInfo, TrainingStatus
 from .pipeline import Pipeline, PipelineStatus
 from .project import Project
@@ -44,6 +42,7 @@ from .source import (
 from .task import Task, TaskType
 
 __all__ = [
+    "BaseEntity",
     "ConfidenceThresholdDataCollectionPolicy",
     "DataCollectionConfig",
     "DataCollectionPolicy",
@@ -51,10 +50,11 @@ __all__ = [
     "DatasetItem",
     "DatasetItemAnnotation",
     "DatasetItemAnnotationStatus",
-    "DatasetItemFormat",
     "DatasetItemSubset",
+    "DatasetRevision",
     "DisconnectedSinkConfig",
     "DisconnectedSourceConfig",
+    "EvaluationResult",
     "FixedRateDataCollectionPolicy",
     "FolderSinkConfig",
     "FullImage",
@@ -62,6 +62,9 @@ __all__ = [
     "ImagesFolderSourceConfig",
     "Label",
     "LabelReference",
+    "Media",
+    "MediaFormat",
+    "MediaType",
     "ModelRevision",
     "MqttSinkConfig",
     "OutputFormat",

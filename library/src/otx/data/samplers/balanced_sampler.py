@@ -50,21 +50,20 @@ class BalancedSampler(Sampler):
         n_repeats: int = 1,
         generator: torch.Generator | None = None,
     ):
-        self.dataset = dataset
         self.num_replicas = num_replicas
         self.rank = rank
         self.drop_last = drop_last
         self.generator = generator
         self.repeat = n_repeats
 
-        super().__init__(dataset)
+        super().__init__()
 
         # img_indices: dict[label: list[idx]]
         ann_stats = dataset.get_idx_list_per_classes()
 
         self.img_indices = {k: torch.tensor(v, dtype=torch.int64) for k, v in ann_stats.items() if len(v) > 0}
         self.num_cls = len(self.img_indices.keys())
-        self.data_length = len(self.dataset)
+        self.data_length = len(dataset)
         self.num_trials = max(int(self.data_length / self.num_cls), 1)
 
         if efficient_mode:

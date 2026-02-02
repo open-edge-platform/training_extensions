@@ -7,7 +7,7 @@ import type { Shape as SmartToolsShape, Polygon as ToolPolygon, Rect as ToolRect
 import { BoundingBox } from '@geti/smart-tools/utils';
 import { isEmpty } from 'lodash-es';
 
-import type { ClipperPoint, Point, Polygon, Rect, RegionOfInterest, Shape } from '../types';
+import type { ClipperPoint, Point, Polygon, Rect, RegionOfInterest, Shape } from '../../../shared/types';
 
 // @ts-expect-error `default` actually exists in the module
 const ClipperJS = Clipper.default || Clipper;
@@ -241,7 +241,7 @@ const removeOffPointsRect = (rect: Rect, roi: RegionOfInterest): Rect => {
     return rect;
 };
 
-const removeOffLimitPointsPolygon = (shape: Shape, roi: RegionOfInterest): Polygon => {
+export const removeOffLimitPointsPolygon = (shape: Polygon | Rect, roi: RegionOfInterest): Polygon => {
     const { width, height, x, y } = roi;
     const getRect = (rx: number, ry: number, rWidth: number, rHeight: number): Rect => ({
         x: rx,
@@ -278,7 +278,7 @@ const convertPolygonPoints = (shape: Polygon): ClipperPoint[] => {
     return shape.points.map(({ x, y }: Point) => ({ X: x, Y: y }));
 };
 
-const transformToClipperShape = (shape: Shape): ClipperShape => {
+const transformToClipperShape = (shape: Polygon | Rect): ClipperShape => {
     if (shape.type === 'rectangle') {
         return new ClipperJS([calculateRectanglePoints(shape)], true);
     } else {
@@ -288,7 +288,7 @@ const transformToClipperShape = (shape: Shape): ClipperShape => {
 
 const runUnionOrDifference =
     <T>(algorithm: 'union' | 'difference', formatTo: (path: ClipperPoint[]) => T) =>
-    (roi: RegionOfInterest, subj: Shape, clip: Shape): T => {
+    (roi: RegionOfInterest, subj: Polygon | Rect, clip: Polygon | Rect): T => {
         const subjShape = transformToClipperShape(subj);
         const clipShape = transformToClipperShape(clip);
         const solutionPath = subjShape[algorithm](clipShape);
@@ -303,7 +303,7 @@ const clipperShapeToPolygon = (path: ClipperPoint[]): Polygon => ({
     points: path.map(({ X, Y }) => ({ x: X, y: Y })),
 });
 
-export const getShapesDifference = runUnionOrDifference<Polygon>('difference', clipperShapeToPolygon);
+const getShapesDifference = runUnionOrDifference<Polygon>('difference', clipperShapeToPolygon);
 
 const findBiggerSubPath = (shape: ClipperShape): ClipperPoint[] => {
     const areas = shape.areas();
@@ -333,7 +333,9 @@ const filterIntersectedPathsWithRoi = (roi: RegionOfInterest, shape: ClipperShap
 };
 
 export const removeOffLimitPoints = (shape: Shape, roi: RegionOfInterest): Shape => {
-    return shape.type === 'rectangle' ? removeOffPointsRect(shape, roi) : removeOffLimitPointsPolygon(shape, roi);
+    return shape.type === 'rectangle'
+        ? removeOffPointsRect(shape, roi)
+        : removeOffLimitPointsPolygon(shape as Polygon, roi);
 };
 
 type ElementType = SVGElement | HTMLDivElement;
@@ -395,4 +397,36 @@ export const getImageData = (img: HTMLImageElement): ImageData => {
     const height = img.naturalHeight ? img.naturalHeight : img.height;
 
     return ctx.getImageData(0, 0, width, height);
+};
+
+export const isKeyboardDelete = (event: KeyboardEvent): boolean =>
+    event.code === 'Backspace' || event.code === 'Delete';
+
+type ProjectLine = [startPoint: Point, endPoint: Point];
+export const projectPointOnLine = ([startPoint, endPoint]: ProjectLine, point: Point): Point | undefined => {
+    // Move startPoint to origin
+    const b = {
+        x: endPoint.x - startPoint.x,
+        y: endPoint.y - startPoint.y,
+    };
+    const a = {
+        x: point.x - startPoint.x,
+        y: point.y - startPoint.y,
+    };
+
+    // Project a onto b
+    const aDotB = a.x * b.x + a.y * b.y;
+    const bDotB = b.x * b.x + b.y * b.y;
+    const scale = aDotB / bDotB;
+
+    // Return undefined if the projected point would lie outside of the given line
+    if (scale < 0 || scale > 1) {
+        return undefined;
+    }
+
+    // Move origin back to startPoint
+    return {
+        x: b.x * scale + startPoint.x,
+        y: b.y * scale + startPoint.y,
+    };
 };

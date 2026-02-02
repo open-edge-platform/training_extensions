@@ -28,10 +28,10 @@ from otx.backend.native.tools.explain.explain_algo import InstSegExplainAlgo, fe
 from otx.backend.native.tools.tile_merge import InstanceSegTileMerge
 from otx.config.data import TileConfig
 from otx.data.entity.base import ImageInfo, OTXBatchLossEntity
+from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
 from otx.data.entity.tile import OTXTileBatchDataEntity
-from otx.data.entity.torch import OTXDataBatch, OTXPredBatch
 from otx.data.entity.utils import stack_batch
-from otx.data.utils.structures.mask.mask_util import encode_rle, polygon_to_rle
+from otx.data.utils.structures.mask.mask_util import encode_rle
 from otx.metrics import MetricInput
 from otx.metrics.fmeasure import FMeasure
 from otx.metrics.mean_ap import MaskRLEMeanAPFMeasureCallable
@@ -110,7 +110,7 @@ class OTXInstanceSegModel(OTXModel):
 
         return detector
 
-    def _customize_inputs(self, entity: OTXDataBatch) -> dict[str, Any]:
+    def _customize_inputs(self, entity: OTXSampleBatch) -> dict[str, Any]:
         if isinstance(entity.images, list):
             entity.images, entity.imgs_info = stack_batch(entity.images, entity.imgs_info, pad_size_divisor=32)  # type: ignore[assignment,arg-type]
         inputs: dict[str, Any] = {}
@@ -123,8 +123,8 @@ class OTXInstanceSegModel(OTXModel):
     def _customize_outputs(
         self,
         outputs: list[InstanceData] | dict,
-        inputs: OTXDataBatch,
-    ) -> OTXPredBatch | OTXBatchLossEntity:
+        inputs: OTXSampleBatch,
+    ) -> OTXPredictionBatch | OTXBatchLossEntity:
         if self.training:
             if not isinstance(outputs, dict):
                 raise TypeError(outputs)
@@ -176,8 +176,7 @@ class OTXInstanceSegModel(OTXModel):
             saliency_map = outputs["saliency_map"].detach().cpu().numpy()
             feature_vector = outputs["feature_vector"].detach().cpu().numpy()
 
-            return OTXPredBatch(
-                batch_size=len(predictions),
+            return OTXPredictionBatch(
                 images=inputs.images,
                 imgs_info=inputs.imgs_info,
                 scores=scores,
@@ -188,8 +187,7 @@ class OTXInstanceSegModel(OTXModel):
                 feature_vector=list(feature_vector),
             )
 
-        return OTXPredBatch(
-            batch_size=len(predictions),
+        return OTXPredictionBatch(
             images=inputs.images,
             imgs_info=inputs.imgs_info,
             scores=scores,
@@ -198,7 +196,7 @@ class OTXInstanceSegModel(OTXModel):
             labels=labels,
         )
 
-    def forward_tiles(self, inputs: OTXTileBatchDataEntity) -> OTXPredBatch:
+    def forward_tiles(self, inputs: OTXTileBatchDataEntity) -> OTXPredictionBatch:
         """Unpack instance segmentation tiles.
 
         Args:
@@ -207,7 +205,7 @@ class OTXInstanceSegModel(OTXModel):
         Returns:
             TorchPredBatch: Merged instance segmentation prediction.
         """
-        tile_preds: list[OTXPredBatch] = []
+        tile_preds: list[OTXPredictionBatch] = []
         tile_infos: list[list[TileInfo]] = []
         merger = InstanceSegTileMerge(
             inputs.imgs_info,
@@ -224,15 +222,13 @@ class OTXInstanceSegModel(OTXModel):
             tile_infos.append(batch_tile_infos)
         pred_entities = merger.merge(tile_preds, tile_infos)
 
-        pred_entity = OTXPredBatch(
-            batch_size=inputs.batch_size,
+        pred_entity = OTXPredictionBatch(
             images=[pred_entity.image for pred_entity in pred_entities],
             imgs_info=[pred_entity.img_info for pred_entity in pred_entities],
             scores=[pred_entity.scores for pred_entity in pred_entities],
             bboxes=[pred_entity.bboxes for pred_entity in pred_entities],
             labels=[pred_entity.label for pred_entity in pred_entities],
             masks=[pred_entity.masks for pred_entity in pred_entities],
-            polygons=[pred_entity.polygons for pred_entity in pred_entities],  # type: ignore[misc]
         )
         if self.explain_mode:
             pred_entity.saliency_map = [pred_entity.saliency_map for pred_entity in pred_entities]
@@ -270,7 +266,7 @@ class OTXInstanceSegModel(OTXModel):
             label_info=modified_label_info,
         )
 
-    def test_step(self, batch: OTXDataBatch, batch_idx: int) -> OTXPredBatch:
+    def test_step(self, batch: OTXSampleBatch, batch_idx: int) -> OTXPredictionBatch:
         """Perform a single test step on a batch of data from the test set.
 
         Processes the batch through the model, applies threshold filtering to predictions,
@@ -281,7 +277,7 @@ class OTXInstanceSegModel(OTXModel):
             batch_idx: The index of the current batch.
 
         Returns:
-            OTXPredBatch: The filtered prediction results for the batch.
+            OTXPredictionBatch: The filtered prediction results for the batch.
 
         Raises:
             TypeError: If predictions are of type OTXBatchLossEntity or if metric inputs
@@ -316,10 +312,10 @@ class OTXInstanceSegModel(OTXModel):
 
     def predict_step(
         self,
-        batch: OTXDataBatch | OTXTileBatchDataEntity,
+        batch: OTXSampleBatch | OTXTileBatchDataEntity,
         batch_idx: int,
         dataloader_idx: int = 0,
-    ) -> OTXPredBatch:
+    ) -> OTXPredictionBatch:
         """Step function called during PyTorch Lightning Trainer's predict."""
         if self.explain_mode:
             return self._filter_outputs_by_threshold(self.forward_explain(inputs=batch))  # type: ignore[arg-type]
@@ -386,18 +382,16 @@ class OTXInstanceSegModel(OTXModel):
 
             super()._log_metrics(meter, key, **compute_kwargs)
 
-    def _filter_outputs_by_threshold(self, outputs: OTXPredBatch) -> OTXPredBatch:
+    def _filter_outputs_by_threshold(self, outputs: OTXPredictionBatch) -> OTXPredictionBatch:
         scores = []
         bboxes = []
         labels = []
         masks = []
-        polygons = []
 
         for i in range(len(outputs.imgs_info)):  # type: ignore[arg-type]
             _scores = outputs.scores[i] if outputs.scores is not None else None
             _bboxes = outputs.bboxes[i] if outputs.bboxes is not None else None
             _masks = outputs.masks[i] if outputs.masks is not None else None
-            _polygons = outputs.polygons[i] if outputs.polygons is not None else None
             _labels = outputs.labels[i] if outputs.labels is not None else None
 
             filtered_idx = torch.where(_scores > self.best_confidence_threshold)
@@ -409,20 +403,17 @@ class OTXInstanceSegModel(OTXModel):
                 # Ensure filtered_idx is on the same device as masks
                 mask_filtered_idx = tuple(idx.to(_masks.device) for idx in filtered_idx)
                 masks.append(_masks[mask_filtered_idx])
-            if _polygons is not None:
-                polygons.append(_polygons[filtered_idx])
 
         outputs.scores = scores
         outputs.bboxes = bboxes
         outputs.labels = labels
         outputs.masks = masks
-        outputs.polygons = polygons
         return outputs
 
     def _convert_pred_entity_to_compute_metric(
         self,
-        preds: OTXPredBatch,  # type: ignore[override]
-        inputs: OTXDataBatch,  # type: ignore[override]
+        preds: OTXPredictionBatch,  # type: ignore[override]
+        inputs: OTXSampleBatch,  # type: ignore[override]
     ) -> MetricInput:
         """Convert the prediction entity to the format that the metric can compute and cache the ground truth.
 
@@ -452,17 +443,15 @@ class OTXInstanceSegModel(OTXModel):
                 },
             )
         for i in range(len(inputs.imgs_info)):  # type: ignore[arg-type]
-            imgs_info = inputs.imgs_info[i] if inputs.imgs_info is not None else None
+            inputs.imgs_info[i] if inputs.imgs_info is not None else None
             bboxes = inputs.bboxes[i] if inputs.bboxes is not None else None
             masks = inputs.masks[i] if inputs.masks is not None else None
-            polygons = inputs.polygons[i] if inputs.polygons is not None else None
             labels = inputs.labels[i] if inputs.labels is not None else None
 
-            rles = (
-                [encode_rle(mask) for mask in masks.data]
-                if masks is not None
-                else polygon_to_rle(polygons, *imgs_info.ori_shape)  # type: ignore[union-attr,arg-type]
-            )
+            if masks is None:
+                msg = "Masks are required for metric computation"
+                raise ValueError(msg)
+            rles = [encode_rle(mask) for mask in masks.data]
             target_info.append(
                 {
                     "boxes": bboxes.data,
@@ -472,7 +461,7 @@ class OTXInstanceSegModel(OTXModel):
             )
         return {"preds": pred_info, "target": target_info}
 
-    def get_dummy_input(self, batch_size: int = 1) -> OTXDataBatch:  # type: ignore[override]
+    def get_dummy_input(self, batch_size: int = 1) -> OTXSampleBatch:  # type: ignore[override]
         """Returns a dummy input for instance segmentation model."""
         images = [torch.rand(3, *self.data_input_params.input_size) for _ in range(batch_size)]
         infos = []
@@ -484,9 +473,9 @@ class OTXInstanceSegModel(OTXModel):
                     ori_shape=img.shape,
                 ),
             )
-        return OTXDataBatch(batch_size, images, imgs_info=infos)
+        return OTXSampleBatch(images=images, imgs_info=infos)
 
-    def forward_explain(self, inputs: OTXDataBatch) -> OTXPredBatch:
+    def forward_explain(self, inputs: OTXSampleBatch) -> OTXPredictionBatch:
         """Model forward function."""
         if isinstance(inputs, OTXTileBatchDataEntity):
             return self.forward_tiles(inputs)
@@ -510,7 +499,7 @@ class OTXInstanceSegModel(OTXModel):
     @torch.no_grad()
     def _forward_explain_inst_seg(
         self: TwoStageDetector,  # noqa: PLW0211
-        entity: OTXDataBatch,
+        entity: OTXSampleBatch,
         mode: str = "tensor",  # noqa: ARG004
     ) -> dict[str, Tensor]:
         """Forward func of the BaseDetector instance, which located in is in ExplainableOTXInstanceSegModel().model."""
@@ -539,7 +528,7 @@ class OTXInstanceSegModel(OTXModel):
     def get_results_from_head(
         self,
         x: tuple[Tensor],
-        entity: OTXDataBatch,
+        entity: OTXSampleBatch,
     ) -> tuple[Tensor, Tensor, Tensor] | list[InstanceData] | list[dict[str, Tensor]]:
         """Get the results from the head of the instance segmentation model.
 

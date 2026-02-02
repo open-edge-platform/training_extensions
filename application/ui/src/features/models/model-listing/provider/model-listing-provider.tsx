@@ -3,7 +3,9 @@
 
 import { createContext, ReactNode, useContext, useState } from 'react';
 
-import { useGetActiveModelId } from '../../hooks/api/use-get-active-model-id.hook';
+import { useGetDatasetRevisions } from 'hooks/use-get-dataset-revisions.hook';
+
+import { useGetActiveModelArchitectureId } from '../../hooks/api/use-get-active-model-architecture-id.hook';
 import { useGetModels } from '../../hooks/api/use-get-models.hook';
 import { useGroupedModels } from '../hooks/use-grouped-models.hook';
 import type { GroupByMode, GroupedModels, SortBy } from '../types';
@@ -14,14 +16,16 @@ interface ModelListingContextValue {
     sortBy: SortBy;
     pinActive: boolean;
     expandedModelIds: Set<string>;
-    activeModelId: string | undefined;
+    activeModelArchitectureId: string | undefined;
     groupedModels: GroupedModels[];
+    searchBy: string;
 
     // Actions
     onGroupByChange: (mode: GroupByMode) => void;
     onSortChange: (key: SortBy) => void;
     onPinActiveToggle: () => void;
     onExpandModel: (modelId: string) => void;
+    onSearchChange: (query: string) => void;
 }
 
 const ModelListingContext = createContext<ModelListingContextValue | null>(null);
@@ -35,10 +39,12 @@ export const ModelListingProvider = ({ children }: ModelListingProviderProps) =>
     const [sortBy, setSortBy] = useState<SortBy>('score');
     const [pinActive, setPinActive] = useState<boolean>(false);
     const [expandedModelIds, setExpandedModelIds] = useState<Set<string>>(new Set());
+    const [searchBy, setSearchBy] = useState<string>('');
 
-    const activeModelId = useGetActiveModelId();
+    const activeModelArchitectureId = useGetActiveModelArchitectureId();
     const { data: models } = useGetModels();
-    const groupedModels = useGroupedModels(models, { groupBy, sortBy, pinActive });
+    const { data: datasetRevisions = [] } = useGetDatasetRevisions();
+    const groupedModels = useGroupedModels(models, { groupBy, sortBy, pinActive, searchBy, datasetRevisions });
 
     const onGroupByChange = (mode: GroupByMode) => {
         setGroupBy(mode);
@@ -50,6 +56,10 @@ export const ModelListingProvider = ({ children }: ModelListingProviderProps) =>
 
     const onPinActiveToggle = () => {
         setPinActive((prev) => !prev);
+    };
+
+    const onSearchChange = (query: string) => {
+        setSearchBy(query);
     };
 
     const onExpandModel = (modelId: string) => {
@@ -71,12 +81,14 @@ export const ModelListingProvider = ({ children }: ModelListingProviderProps) =>
         sortBy,
         pinActive,
         expandedModelIds,
-        activeModelId,
+        activeModelArchitectureId,
         groupedModels,
+        searchBy,
         onGroupByChange,
         onSortChange,
         onPinActiveToggle,
         onExpandModel,
+        onSearchChange,
     };
 
     return <ModelListingContext.Provider value={value}>{children}</ModelListingContext.Provider>;

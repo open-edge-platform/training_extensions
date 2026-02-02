@@ -3,22 +3,14 @@
 
 import { startTransition } from 'react';
 
-import { act, renderHook, waitFor } from '@testing-library/react';
+import { act, screen, waitFor } from '@testing-library/react';
 import { HttpResponse } from 'msw';
-import { screen, TestProviders } from 'test-utils/render';
+import { renderHook } from 'test-utils/render';
 
 import { http } from '../../../../api/utils';
 import { server } from '../../../../msw-node-setup';
 import { LocalFolderSinkConfig, SinkOutputFormats } from '../utils';
 import { useSinkAction } from './use-sink-action.hook';
-
-vi.mock('react-router', async (importOriginal) => {
-    const actual = await importOriginal<typeof import('react-router')>();
-    return {
-        ...actual,
-        useParams: vi.fn(() => ({ projectId: '123' })),
-    };
-});
 
 const mockedConfig: LocalFolderSinkConfig = {
     id: '1',
@@ -50,9 +42,7 @@ const renderApp = async ({
         http.patch('/api/projects/{project_id}/pipeline', () => HttpResponse.json({}))
     );
 
-    const { result } = renderHook(() => useSinkAction({ config: mockedConfig, isNewSink, bodyFormatter }), {
-        wrapper: TestProviders,
-    });
+    const { result } = renderHook(() => useSinkAction({ config: mockedConfig, isNewSink, bodyFormatter }));
     const [_state, submitAction] = result.current;
 
     const formData = new FormData();
@@ -73,9 +63,7 @@ const renderApp = async ({
 
 describe('useSinkAction', () => {
     it('return initial config', () => {
-        const { result } = renderHook(() => useSinkAction({ config: mockedConfig, isNewSink: true, bodyFormatter }), {
-            wrapper: TestProviders,
-        });
+        const { result } = renderHook(() => useSinkAction({ config: mockedConfig, isNewSink: true, bodyFormatter }));
 
         expect(result.current[0]).toEqual(mockedConfig);
     });

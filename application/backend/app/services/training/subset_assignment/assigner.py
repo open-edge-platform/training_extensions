@@ -53,10 +53,10 @@ class SubsetAssigner:
         X = np.arange(len(items)).reshape(-1, 1)
         y = label_matrix
 
-        splits = list(stratifier.split(X, y))
-        train_indices = splits[0][1]
-        val_indices = splits[1][1]
-        test_indices = splits[2][1]
+        splits = list(stratifier.split(X, y))  # pyrefly: ignore[bad-argument-type]
+        train_indices: list[int] = splits[0][1].tolist()
+        val_indices: list[int] = splits[1][1].tolist()
+        test_indices: list[int] = splits[2][1].tolist()
 
         indices_by_subset: dict[DatasetItemSubset, list[int]] = {
             DatasetItemSubset.TRAINING: train_indices,

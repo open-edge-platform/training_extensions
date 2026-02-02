@@ -38,4 +38,4 @@ def parse_manifest(*manifest_sources, relative: bool = True) -> ModelManifest:
         failonmissingfiles=True,
         none_behavior=hiyapyco.NONE_BEHAVIOR_OVERRIDE,
     )
-    return ModelManifest(**yaml_manifest)
+    return ModelManifest(**yaml_manifest)  # pyrefly: ignore[missing-argument,bad-unpacking]

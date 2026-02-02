@@ -14,7 +14,7 @@ export const Inference = () => {
             areas={['toolbar aside', 'canvas aside']}
             UNSAFE_style={{
                 gridTemplateRows: 'var(--spectrum-global-dimension-size-800, 4rem) auto',
-                gridTemplateColumns: 'auto min-content',
+                gridTemplateColumns: 'minmax(0, 1fr) auto',
                 height: '100%',
                 overflow: 'hidden',
                 gap: '1px',

@@ -111,7 +111,8 @@ class TestOTXDetectionModel:
         otx_model.explain_mode = True
         outputs = otx_model.forward_explain(inputs)
 
-        assert outputs.has_xai_outputs
+        assert outputs.saliency_map is not None
+        assert len(outputs.saliency_map) > 0
         assert outputs.feature_vector is not None
         assert outputs.saliency_map is not None
 

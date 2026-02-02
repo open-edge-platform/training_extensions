@@ -44,8 +44,8 @@ const SidebarTabs = ({ tabs, selectedTab }: TabProps) => {
                 gridColumn={'1/2'}
                 UNSAFE_className={styles.sidebarContent}
                 backgroundColor={'gray-100'}
-                paddingY={'size-200'}
-                paddingX={'size-300'}
+                paddingY={'size-400'}
+                paddingX={'size-500'}
             >
                 {content}
             </View>
