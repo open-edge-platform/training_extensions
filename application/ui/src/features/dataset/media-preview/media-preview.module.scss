@@ -1,0 +1,10 @@
+.readOnlyCanvas {
+    & * {
+        pointer-events: none !important;
+    }
+}
+
+.primaryToolbarDisabled {
+    opacity: 0.6;
+    pointer-events: none;
+}

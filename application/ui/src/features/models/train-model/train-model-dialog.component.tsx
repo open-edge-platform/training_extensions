@@ -18,8 +18,7 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
     const trainModelMutation = useTrainModelMutation();
     const projectId = useProjectIdentifier();
 
-    const isStartButtonDisabled =
-        selectedModelArchitectureId === null || selectedTrainingDevice === null || selectedDatasetRevision === null;
+    const isStartButtonDisabled = selectedModelArchitectureId === null || selectedTrainingDevice === null;
 
     const trainModel = () => {
         if (isStartButtonDisabled) return;
@@ -27,7 +26,7 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
         trainModelMutation.mutate(
             {
                 device: selectedTrainingDevice,
-                datasetRevisionId: selectedDatasetRevision,
+                datasetRevisionId: selectedDatasetRevision ?? null,
                 modelArchitectureId: selectedModelArchitectureId,
             },
             () => {

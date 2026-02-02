@@ -1,8 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Flex, Grid, Item, Key, Menu, MenuTrigger, Tag, Text } from '@geti/ui';
-import { MoreMenu } from '@geti/ui/icons';
+import { Flex, Grid, Tag, Text } from '@geti/ui';
 
 import { ReactComponent as ThumbsUp } from '../../../../../assets/icons/thumbs-up.svg';
 import type { Model } from '../../../../../constants/shared-types';
@@ -20,16 +19,9 @@ type ModelRowProps = {
     activeModelArchitectureId?: string;
     parentRevisionModel?: Model;
     onExpandModel?: (modelId: string) => void;
-    onModelAction?: (key: Key) => void;
 };
 
-export const ModelRow = ({
-    model,
-    activeModelArchitectureId,
-    parentRevisionModel,
-    onExpandModel,
-    onModelAction,
-}: ModelRowProps) => {
+export const ModelRow = ({ model, activeModelArchitectureId, parentRevisionModel, onExpandModel }: ModelRowProps) => {
     const trainingEndTime = model.training_info.end_time;
     const totalSize = model.size;
 
@@ -66,19 +58,6 @@ export const ModelRow = ({
             <Text UNSAFE_className={styles.smallText}>{totalSize > 0 ? formatModelSize(totalSize) : '-'}</Text>
 
             <AccuracyIndicator accuracy={72} />
-
-            {onModelAction ? (
-                <MenuTrigger>
-                    <ActionButton isQuiet aria-label={'Model actions'}>
-                        <MoreMenu />
-                    </ActionButton>
-                    <Menu onAction={onModelAction} aria-label={'Model actions menu'}>
-                        <Item key={'active'}>Set as active</Item>
-                        <Item key={'rename'}>Rename</Item>
-                        <Item key={'delete'}>Delete</Item>
-                    </Menu>
-                </MenuTrigger>
-            ) : null}
         </Grid>
     );
 };
