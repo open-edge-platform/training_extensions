@@ -661,8 +661,14 @@ class RandomResizedCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
         return repr_str
 
 
+# TODO(GPU-Aug): DEPRECATED - Use torchvision.transforms.v2.RandomResizedCrop instead.
+# This class will be removed in a future version.
 class EfficientNetRandomCrop(RandomResizedCrop):
     """EfficientNet style RandomResizedCrop.
+
+    .. deprecated::
+        Use `torchvision.transforms.v2.RandomResizedCrop` instead.
+        This class will be removed in a future version.
 
     This class implements mmpretrain.datasets.transforms.EfficientNetRandomCrop reimplemented as torchvision.transform.
 
@@ -774,8 +780,16 @@ class EfficientNetRandomCrop(RandomResizedCrop):
         return repr_str
 
 
+# TODO(GPU-Aug): DEPRECATED for classification - Use kornia.augmentation.RandomHorizontalFlip
+# or torchvision.transforms.v2.RandomHorizontalFlip instead for classification tasks.
+# Still needed for detection/segmentation tasks that require bbox/mask transforms.
 class RandomFlip(tvt_v2.Transform, NumpytoTVTensorMixin):
     """Implementation of mmdet.datasets.transforms.RandomFlip with torchvision format.
+
+    .. note::
+        For classification tasks, use ``kornia.augmentation.RandomHorizontalFlip``
+        or ``torchvision.transforms.v2.RandomHorizontalFlip`` instead.
+        This class is still needed for detection/segmentation tasks.
 
     Reference : https://github.com/open-mmlab/mmdetection/blob/v3.2.0/mmdet/datasets/transforms/transforms.py#L496-L596
 
@@ -897,8 +911,13 @@ class RandomFlip(tvt_v2.Transform, NumpytoTVTensorMixin):
         return repr_str
 
 
+# TODO(GPU-Aug): DEPRECATED - Use kornia.augmentation.RandomGaussianBlur instead.
 class RandomGaussianBlur(GaussianBlur):
-    """Modified version of the torchvision GaussianBlur."""
+    """Modified version of the torchvision GaussianBlur.
+
+    .. note::
+        DEPRECATED: Use ``kornia.augmentation.RandomGaussianBlur`` instead.
+    """
 
     def __init__(
         self,
@@ -916,8 +935,12 @@ class RandomGaussianBlur(GaussianBlur):
         return inpt
 
 
+# TODO(GPU-Aug): DEPRECATED - Use kornia.augmentation.RandomGaussianNoise instead.
 class RandomGaussianNoise(GaussianNoise):
     """Modified version of the torchvision GaussianNoise.
+
+    .. note::
+        DEPRECATED: Use ``kornia.augmentation.RandomGaussianNoise`` instead.
 
     This augmentation allows to add gaussian noise to unscaled image.
     Only float32 images are supported for this augmentation.
@@ -949,8 +972,14 @@ class RandomGaussianNoise(GaussianNoise):
         return inputs
 
 
+# TODO(GPU-Aug): DEPRECATED - Use kornia.augmentation.ColorJiggle or similar instead.
 class PhotoMetricDistortion(tvt_v2.Transform, NumpytoTVTensorMixin):
     """Implementation of mmdet.datasets.transforms.PhotoMetricDistortion with torchvision format.
+
+    .. note::
+        DEPRECATED: Use ``kornia.augmentation.ColorJiggle`` or compose multiple
+        Kornia augmentations (RandomBrightness, RandomContrast, RandomSaturation, RandomHue)
+        for equivalent functionality.
 
     Reference : https://github.com/open-mmlab/mmdetection/blob/v3.2.0/mmdet/datasets/transforms/transforms.py#L1084-L1210
 
@@ -1100,8 +1129,14 @@ class PhotoMetricDistortion(tvt_v2.Transform, NumpytoTVTensorMixin):
         return repr_str
 
 
+# TODO(GPU-Aug): DEPRECATED for classification - Use kornia.augmentation.RandomAffine instead.
+# Still needed for detection/segmentation tasks that require bbox/mask transforms.
 class RandomAffine(tvt_v2.Transform, NumpytoTVTensorMixin):
     """Implementation of mmdet.datasets.transforms.RandomAffine with torchvision format.
+
+    .. note::
+        For classification tasks, use ``kornia.augmentation.RandomAffine`` instead.
+        This class is still needed for detection/segmentation tasks.
 
     Reference : https://github.com/open-mmlab/mmdetection/blob/v3.2.0/mmdet/datasets/transforms/transforms.py#L2736-L2901
 

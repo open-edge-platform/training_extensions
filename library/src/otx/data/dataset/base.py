@@ -8,7 +8,6 @@ from __future__ import annotations
 import abc
 from typing import TYPE_CHECKING, Callable, Iterable, List, Union
 
-import numpy as np
 import torch
 from torch.utils.data import Dataset as TorchDataset
 
@@ -26,8 +25,6 @@ from otx.types import OTXTaskType
 Transforms = Union[
     Compose, Callable, List[Callable], dict[str, Compose | Callable | List[Callable]], "CPUAugmentationPipeline"
 ]
-
-RNG = np.random.default_rng(42)
 
 
 def _ensure_chw_format(img: torch.Tensor) -> torch.Tensor:
@@ -77,13 +74,13 @@ def _default_collate_fn(items: list[OTXSample]) -> OTXSampleBatch:
     image_tensors = []
     for item in items:
         img = item.image
-        if isinstance(img, torch.Tensor):
-            # Convert to float32 if not already
-            if img.dtype != torch.float32:
-                img = img.float()
-        else:
-            # Convert numpy array to float32 tensor
-            img = torch.from_numpy(img).float()
+        # All images should already be tensors from the pipeline
+        if not isinstance(img, torch.Tensor):
+            msg = f"Expected torch.Tensor but got {type(img)}. Images should be converted to tensors in the dataset pipeline."
+            raise TypeError(msg)
+        # Convert to float32 if not already
+        if img.dtype != torch.float32:
+            img = img.float()
         # Ensure image is in CHW format
         img = _ensure_chw_format(img)
         image_tensors.append(img)
@@ -195,7 +192,7 @@ class OTXDataset(TorchDataset):
             if results is not None:
                 return results
 
-            index = RNG.integers(0, len(self))
+            index = torch.randint(0, len(self), (1,)).item()
 
         msg = f"Reach the maximum refetch number ({self.max_refetch})"
         raise RuntimeError(msg)

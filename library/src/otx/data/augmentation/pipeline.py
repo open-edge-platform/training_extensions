@@ -17,7 +17,6 @@ from copy import copy
 from inspect import isclass
 from typing import TYPE_CHECKING, Any, Callable
 
-import numpy as np
 import torch
 import torchvision.transforms.v2 as tvt_v2
 import typeguard
@@ -276,7 +275,7 @@ class CPUAugmentationPipeline(nn.Module):
             if isinstance(node, ast.Constant):
                 return node.value
             if isinstance(node, ast.Tuple):
-                return np.array([_eval(val) for val in node.elts])
+                return torch.tensor([_eval(val) for val in node.elts])
             if isinstance(node, ast.BinOp) and type(node.op) in bin_ops:
                 left = _eval(node.left)
                 right = _eval(node.right)
@@ -288,8 +287,8 @@ class CPUAugmentationPipeline(nn.Module):
             raise SyntaxError(msg)
 
         ret = _eval(tree)
-        if isinstance(ret, np.ndarray):
-            return tuple(ret.round().astype(np.int32).tolist())
+        if isinstance(ret, torch.Tensor):
+            return tuple(ret.round().int().tolist())
         return round(ret)
 
     def _is_native_torchvision_transform(self, transform: tvt_v2.Transform) -> bool:
@@ -361,38 +360,58 @@ class CPUAugmentationPipeline(nn.Module):
 
 
 class GPUAugmentationPipeline(nn.Module):
-    """GPU-stage augmentation pipeline using Kornia.
+    """GPU-stage augmentation pipeline using Kornia AugmentationSequential.
 
     This pipeline runs on GPU after batch transfer via Lightning Callback.
-    It handles augmentations that benefit from GPU acceleration:
-    - Color augmentations (ColorJiggle, RandomGrayscale)
-    - Geometric augmentations (RandomHorizontalFlip, RandomRotation)
-    - Normalization (applied last)
+    It uses Kornia's AugmentationSequential for efficient batch-level processing
+    with support for multiple data types (images, bboxes, masks, keypoints).
+
+    Key features:
+    - Uses Kornia AugmentationSequential for optimized batch processing
+    - Supports data_keys for transforming bboxes, masks, keypoints along with images
+    - Extracts normalization parameters for model export
 
     The pipeline expects batched tensors in BCHW format with values in [0, 1].
 
     Args:
         augmentations: List of Kornia augmentation modules.
-        mean: Normalization mean (extracted from Normalize if present).
-        std: Normalization std (extracted from Normalize if present).
+        data_keys: List of data keys to transform (e.g., ["input", "bbox", "mask"]).
+            Defaults to ["input"] for image-only augmentation.
 
     Example:
         >>> import kornia.augmentation as K
-        >>> pipeline = GPUAugmentationPipeline([
-        ...     K.RandomHorizontalFlip(p=0.5),
-        ...     K.ColorJiggle(0.1, 0.1, 0.1, 0.1),
-        ...     K.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ... ])
-        >>> batch = pipeline(batch)  # BCHW tensor
+        >>> pipeline = GPUAugmentationPipeline(
+        ...     augmentations=[
+        ...         K.RandomHorizontalFlip(p=0.5),
+        ...         K.ColorJiggle(0.1, 0.1, 0.1, 0.1),
+        ...         K.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ...     ],
+        ...     data_keys=["input"],
+        ... )
+        >>> augmented_images = pipeline(batch_images)
     """
 
     def __init__(
         self,
         augmentations: list[nn.Module] | None = None,
+        data_keys: list[str] | None = None,
     ) -> None:
         super().__init__()
-        self.augmentations = nn.ModuleList(augmentations or [])
-        self._mean, self._std = self._extract_normalization_params(self.augmentations)
+        self._augmentations_list = augmentations or []
+        self._data_keys = data_keys or ["input"]
+        self._mean, self._std = self._extract_normalization_params(self._augmentations_list)
+
+        # Build Kornia AugmentationSequential for efficient batch processing
+        if self._augmentations_list:
+            import kornia.augmentation as K
+
+            self.aug_sequential = K.AugmentationSequential(
+                *self._augmentations_list,
+                data_keys=self._data_keys,
+                same_on_batch=False,
+            )
+        else:
+            self.aug_sequential = None
 
     @staticmethod
     def _extract_normalization_params(
@@ -410,31 +429,36 @@ class GPUAugmentationPipeline(nn.Module):
         std: tuple[float, float, float] | None = None
 
         for aug in augmentations:
-            # Check if this is a Normalize augmentation
-            if hasattr(aug, "mean") and hasattr(aug, "std"):
-                # Extract mean from the Normalize module
-                if aug.mean is not None:
-                    mean_val = aug.mean
-                    if hasattr(mean_val, "tolist"):
-                        mean = tuple(mean_val.tolist())
-                    elif hasattr(mean_val, "__iter__"):
-                        mean = tuple(mean_val)
-                    else:
-                        mean = (float(mean_val),) * 3
+            # Check if this is a Normalize augmentation (Kornia stores in flags dict)
+            flags = getattr(aug, "flags", {})
+            aug_mean = flags.get("mean") if isinstance(flags, dict) else None
+            aug_std = flags.get("std") if isinstance(flags, dict) else None
 
-                # Extract std from the Normalize module
-                if aug.std is not None:
-                    std_val = aug.std
-                    if hasattr(std_val, "tolist"):
-                        std = tuple(std_val.tolist())
-                    elif hasattr(std_val, "__iter__"):
-                        std = tuple(std_val)
-                    else:
-                        std = (float(std_val),) * 3
+            # Fallback to direct attributes if flags not present
+            if aug_mean is None:
+                aug_mean = getattr(aug, "mean", None)
+            if aug_std is None:
+                aug_std = getattr(aug, "std", None)
+
+            if aug_mean is not None and aug_std is not None:
+                # Extract mean value
+                if hasattr(aug_mean, "tolist"):
+                    mean = tuple(aug_mean.tolist())
+                elif hasattr(aug_mean, "__iter__"):
+                    mean = tuple(aug_mean)
+                else:
+                    mean = (float(aug_mean),) * 3
+
+                # Extract std value
+                if hasattr(aug_std, "tolist"):
+                    std = tuple(aug_std.tolist())
+                elif hasattr(aug_std, "__iter__"):
+                    std = tuple(aug_std)
+                else:
+                    std = (float(aug_std),) * 3
 
                 # Stop after finding the first Normalize
-                if mean is not None and std is not None:
-                    break
+                break
 
         return mean, std
 
@@ -447,6 +471,11 @@ class GPUAugmentationPipeline(nn.Module):
     def std(self) -> tuple[float, float, float] | None:
         """Get normalization std."""
         return self._std
+
+    @property
+    def data_keys(self) -> list[str]:
+        """Get data keys used by the pipeline."""
+        return self._data_keys
 
     @classmethod
     def list_available_transforms(cls) -> list[type]:
@@ -465,16 +494,23 @@ class GPUAugmentationPipeline(nn.Module):
             return []
 
     @classmethod
-    def from_config(cls, config: SubsetConfig) -> GPUAugmentationPipeline:
+    def from_config(
+        cls,
+        config: SubsetConfig,
+        data_keys: list[str] | None = None,
+    ) -> GPUAugmentationPipeline:
         """Build GPU augmentation pipeline from SubsetConfig.
 
         This function handles:
         - `augmentations_gpu` field with Kornia augmentations
         - Extraction of normalization parameters for model update
         - Input size placeholder replacement $(input_size)
+        - data_keys for Kornia AugmentationSequential
 
         Args:
             config: SubsetConfig with augmentations_gpu.
+            data_keys: List of data keys for AugmentationSequential.
+                Defaults to ["input"] for image-only augmentation.
 
         Returns:
             GPUAugmentationPipeline ready for use in Callback.
@@ -483,7 +519,7 @@ class GPUAugmentationPipeline(nn.Module):
         aug_configs = config.augmentations_gpu
 
         if not aug_configs:
-            return cls([])
+            return cls([], data_keys=data_keys)
 
         augmentations = []
 
@@ -497,32 +533,17 @@ class GPUAugmentationPipeline(nn.Module):
                 # Handle input_size placeholder
                 cfg = CPUAugmentationPipeline._configure_input_size(dict(cfg), input_size)
 
-                # Extract normalization parameters before instantiation
-                class_path = cfg.get("class_path", "")
-                if "Normalize" in class_path:
-                    init_args = cfg.get("init_args", {})
-                    raw_mean = init_args.get("mean")
-                    raw_std = init_args.get("std")
-                    if raw_mean is not None:
-                        tuple(raw_mean) if hasattr(raw_mean, "__iter__") else (raw_mean,) * 3  # type: ignore[assignment]
-                    if raw_std is not None:
-                        tuple(raw_std) if hasattr(raw_std, "__iter__") else (raw_std,) * 3  # type: ignore[assignment]
-
                 # Instantiate the transform
                 transform = cls._dispatch_transform(cfg)
             elif isinstance(cfg, nn.Module):
                 transform = cfg
-                # Try to extract mean/std from already instantiated Normalize
-                if hasattr(transform, "mean") and hasattr(transform, "std"):
-                    tuple(transform.mean.tolist()) if hasattr(transform.mean, "tolist") else tuple(transform.mean)  # type: ignore[assignment]
-                    tuple(transform.std.tolist()) if hasattr(transform.std, "tolist") else tuple(transform.std)  # type: ignore[assignment]
             else:
                 msg = f"Unsupported augmentation config type: {type(cfg)}"
                 raise TypeError(msg)
 
             augmentations.append(transform)
 
-        return cls(augmentations)
+        return cls(augmentations, data_keys=data_keys)
 
     @classmethod
     def _dispatch_transform(cls, cfg_transform: DictConfig | dict | nn.Module) -> nn.Module:
@@ -546,21 +567,76 @@ class GPUAugmentationPipeline(nn.Module):
         )
         raise TypeError(msg)
 
-    def forward(self, images: torch.Tensor) -> torch.Tensor:
-        """Apply GPU augmentations to batched images.
+    def forward(
+        self,
+        images: torch.Tensor,
+        labels: list[torch.Tensor] | None = None,
+        bboxes: list[torch.Tensor] | None = None,
+        masks: list[torch.Tensor] | None = None,
+        keypoints: list[torch.Tensor] | None = None,
+    ) -> dict[str, torch.Tensor | list[torch.Tensor] | None]:
+        """Apply GPU augmentations to batched data using Kornia AugmentationSequential.
+
 
         Args:
             images: Batched images tensor in BCHW format, values in [0, 1].
+            labels: List of labels per image (optional).
+            bboxes: List of bounding boxes per image (optional).
+            masks: List of masks per image (optional).
+            keypoints: List of keypoints per image (optional).
 
         Returns:
-            Augmented images tensor.
+            Dict with augmented data: {"images": tensor, "labels": list, "bboxes": list, "masks": list, "keypoints": list}
         """
-        for transform in self.augmentations:
-            images = transform(images)
-        return images
+        if self.aug_sequential is None:
+            return {"images": images, "labels": labels, "bboxes": bboxes, "masks": masks, "keypoints": keypoints}
+
+        # Build input list based on what data is provided and matches data_keys
+        inputs = [images]
+        provided_keys = ["input"]
+
+        if labels is not None and "label" in self._data_keys:
+            inputs.append(labels)
+            provided_keys.append("label")
+        if bboxes is not None and "bbox_xyxy" in self._data_keys:
+            inputs.append(bboxes)
+            provided_keys.append("bbox_xyxy")
+        if masks is not None and "mask" in self._data_keys:
+            inputs.append(masks)
+            provided_keys.append("mask")
+        if keypoints is not None and "keypoints" in self._data_keys:
+            inputs.append(keypoints)
+            provided_keys.append("keypoints")
+
+        # Apply augmentation to all inputs
+        results = self.aug_sequential(*inputs)
+
+        # Parse results back
+        output = {"images": None, "labels": labels, "bboxes": bboxes, "masks": masks, "keypoints": keypoints}
+        if isinstance(results, (tuple, list)):
+            for i, key in enumerate(provided_keys):
+                if key == "input":
+                    output["images"] = results[i]
+                elif key == "label":
+                    output["labels"] = results[i]
+                elif key == "bbox_xyxy":
+                    output["bboxes"] = results[i]
+                elif key == "mask":
+                    output["masks"] = results[i]
+                elif key == "keypoints":
+                    output["keypoints"] = results[i]
+        else:
+            # Single output (images only)
+            output["images"] = results
+
+        return output
 
     def __repr__(self) -> str:
         """String representation of the pipeline."""
-        aug_strs = [f"  {aug}" for aug in self.augmentations]
+        if self.aug_sequential is not None:
+            aug_str = str(self.aug_sequential)
+        else:
+            aug_str = "  (empty)"
         info = f"  mean={self._mean}, std={self._std}" if self._mean or self._std else ""
-        return "GPUAugmentationPipeline(\n" + "\n".join(aug_strs) + (f"\n{info}" if info else "") + "\n)"
+        return f"GPUAugmentationPipeline(\n{aug_str}\n  data_keys={self._data_keys}{info}\n)"
+
