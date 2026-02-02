@@ -18,7 +18,7 @@ interface AnchorProps {
     zoom: number;
     label: string;
     fill?: string;
-    contextMenu?: ReactNode;
+    contextMenu?: (onClose: () => void) => ReactNode;
     cursor?: CSSProperties['cursor'];
     onStart?: () => void;
     onComplete: () => void;
@@ -42,10 +42,6 @@ export const Anchor = ({
     const state = useOverlayTriggerState({});
     const triggerRef = useRef<ComponentRef<'svg'>>(null);
     const [dragFrom, setDragFrom] = useState<Point | null>(null);
-
-    const handleOpen = () => {
-        state.open();
-    };
 
     const onPointerDown = (event: PointerEvent) => {
         event.preventDefault();
@@ -110,11 +106,10 @@ export const Anchor = ({
                 height={size * 2}
                 fillOpacity={0}
                 {...interactiveAnchorProps}
-                aria-label='camilo'
             />
 
-            <CursorContextMenu state={state} triggerRef={triggerRef} onOpen={handleOpen} isValidTrigger={() => true}>
-                {contextMenu}
+            <CursorContextMenu state={state} triggerRef={triggerRef} onOpen={state.open}>
+                {isFunction(contextMenu) && contextMenu(state.close)}
             </CursorContextMenu>
         </g>
     );

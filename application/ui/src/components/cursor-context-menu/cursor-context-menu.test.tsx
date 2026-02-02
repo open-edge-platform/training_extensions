@@ -4,19 +4,17 @@
 import { ReactNode, useRef } from 'react';
 
 import { useOverlayTriggerState } from '@react-stately/overlays';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 
 import { CursorContextMenu } from './cursor-context-menu.component';
 
 describe('CursorContextMenu', () => {
     const renderApp = ({
         onOpen = vi.fn(),
-        isValidTrigger = vi.fn(),
         isOpen = false,
         children = <div>Menu Content</div>,
     }: {
         onOpen?: () => void;
-        isValidTrigger?: (element: Element) => boolean;
         isOpen?: boolean;
         children?: ReactNode;
     }) => {
@@ -27,12 +25,7 @@ describe('CursorContextMenu', () => {
             return (
                 <div data-testid='modal' style={{ position: 'relative' }}>
                     <button ref={triggerRef}>trigger</button>
-                    <CursorContextMenu
-                        state={state}
-                        triggerRef={triggerRef}
-                        onOpen={onOpen}
-                        isValidTrigger={isValidTrigger}
-                    >
+                    <CursorContextMenu state={state} triggerRef={triggerRef} onOpen={onOpen}>
                         {children}
                     </CursorContextMenu>
                 </div>
@@ -44,15 +37,5 @@ describe('CursorContextMenu', () => {
     it('does not render the menu when isOpen is false', () => {
         renderApp({ isOpen: false });
         expect(screen.queryByText('Menu Content')).not.toBeInTheDocument();
-    });
-
-    it('does not open the menu when isValidTrigger returns false', () => {
-        const mockOnOpen = vi.fn();
-        renderApp({ isOpen: false, onOpen: mockOnOpen, isValidTrigger: () => false });
-
-        const triggerElement = screen.getByRole('button', { name: 'trigger' });
-        fireEvent.contextMenu(triggerElement, { clientX: 100, clientY: 150 });
-
-        expect(mockOnOpen).not.toHaveBeenCalled();
     });
 });

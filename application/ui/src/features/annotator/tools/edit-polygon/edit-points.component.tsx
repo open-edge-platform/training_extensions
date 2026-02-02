@@ -97,17 +97,20 @@ export const EditPoints = ({ zoom, shape, addPoint, onComplete, moveAnchorTo, re
                             zoom={zoom}
                             onComplete={onComplete}
                             fill={isSelected ? 'var(--energy-blue)' : undefined}
-                            label={`Resize polygon ${idx} anchor`}
+                            label={`Resize polygon (${point.x}, ${point.y}) anchor`}
                             moveAnchorTo={(x: number, y: number) => moveAnchorTo(idx, x, y)}
-                            contextMenu={
+                            contextMenu={(onCloseMenu) => (
                                 <ActionButton
                                     isQuiet
-                                    onPress={() => handleRemovePoints([idx])}
+                                    onPress={() => {
+                                        onCloseMenu();
+                                        handleRemovePoints([idx]);
+                                    }}
                                     aria-label={`delete point`}
                                 >
                                     Delete
                                 </ActionButton>
-                            }
+                            )}
                         />
                     </g>
                 );

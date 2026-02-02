@@ -146,7 +146,7 @@ describe('EditPolygonTool', () => {
 
         await renderApp(annotation);
 
-        const rect = screen.getByLabelText('Resize polygon 1 anchor');
+        const rect = screen.getByLabelText(`Resize polygon (${startPoint.x}, ${startPoint.y}) anchor`);
         moveLine(rect, startPoint, endPoint);
 
         const finalShape = {

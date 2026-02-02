@@ -14,7 +14,7 @@ export interface CursorContextMenuProps {
     state: OverlayTriggerState;
     children: ReactNode;
     onOpen: () => void;
-    isValidTrigger: (element: Element) => boolean;
+
     triggerRef: RefObject<Element | null>;
 }
 
@@ -24,7 +24,7 @@ const getParentModal = () => {
     return document.querySelector('[data-testid="modal"]');
 };
 
-export const CursorContextMenu = ({ state, children, triggerRef, onOpen, isValidTrigger }: CursorContextMenuProps) => {
+export const CursorContextMenu = ({ state, children, triggerRef, onOpen }: CursorContextMenuProps) => {
     const ref = useRef<HTMLDivElement>(null);
     const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
 
@@ -32,17 +32,14 @@ export const CursorContextMenu = ({ state, children, triggerRef, onOpen, isValid
         'contextmenu',
         (event) => {
             event.preventDefault();
-
             const parentModal = getParentModal();
 
-            if (isValidTrigger(event.target as Element)) {
-                if (parentModal === null) return;
+            if (parentModal === null) return;
 
-                const modalBox = parentModal.getBoundingClientRect();
+            const modalBox = parentModal.getBoundingClientRect();
 
-                onOpen();
-                setCursorPosition({ x: event.clientX - modalBox.x + X_PADDING, y: event.clientY - modalBox.y });
-            }
+            onOpen();
+            setCursorPosition({ x: event.clientX - modalBox.x + X_PADDING, y: event.clientY - modalBox.y });
         },
         triggerRef
     );

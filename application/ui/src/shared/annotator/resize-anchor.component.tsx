@@ -17,7 +17,7 @@ interface ResizeAnchorProps {
     Anchor?: ReactNode;
     cursor?: CSSProperties['cursor'];
     strokeWidth?: number;
-    contextMenu?: ReactNode;
+    contextMenu?: (onClose: () => void) => ReactNode;
     onStart?: () => void;
     onComplete: () => void;
     moveAnchorTo: (x: number, y: number) => void;
