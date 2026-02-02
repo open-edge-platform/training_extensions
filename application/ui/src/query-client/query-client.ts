@@ -17,20 +17,19 @@ declare module '@tanstack/react-query' {
 const TOAST_DURATION = 5000;
 
 const getErrorMessage = (error: unknown): string => {
-    if (error && typeof error === 'object') {
-        if ('detail' in error && typeof error.detail === 'string') {
-            return error.detail;
-        }
-
-        if ('message' in error && typeof error.message === 'string') {
-            if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-                return 'Network error. Please check your connection and try again.';
-            }
-
-            return error.message;
-        }
+    if (!error || typeof error !== 'object') {
+        return 'An unexpected error occurred. Please try again.';
     }
-
+    if ('detail' in error && typeof error.detail === 'string') {
+        return error.detail;
+    }
+    if ('message' in error && typeof error.message === 'string') {
+        const message = error.message;
+        if (error instanceof TypeError && message.includes('Failed to fetch')) {
+            return 'Network error. Please check your connection and try again.';
+        }
+        return message;
+    }
     return 'An unexpected error occurred. Please try again.';
 };
 
