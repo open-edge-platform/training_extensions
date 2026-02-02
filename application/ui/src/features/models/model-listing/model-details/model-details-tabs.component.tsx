@@ -35,6 +35,9 @@ export const ModelDetailsTabs = ({ modelId }: ModelDetailsTabsProps) => {
     }
 
     const currentDatasetRevisionId = model.training_info.dataset_revision_id;
+
+    // Note: currentDatasetRevision might be 'undefined' if the dataset revision was deleted after the model
+    // was trained.
     const currentDatasetRevision = datasetRevisions.find(
         (datasetRevision) => datasetRevision.id === currentDatasetRevisionId
     );
