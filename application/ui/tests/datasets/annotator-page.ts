@@ -112,6 +112,6 @@ export class AnnotatorPage {
     }
 
     getPrimaryToolbar() {
-        return this.page.getByTestId('primary-toolbar-id');
+        return this.page.getByLabel('primary toolbar');
     }
 }
