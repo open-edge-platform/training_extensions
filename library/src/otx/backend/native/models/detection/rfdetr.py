@@ -130,7 +130,9 @@ class RFDETR(DFine):
             "rfdetr_nano": RFDETRNano,
             "rfdetr_small": RFDETRSmall,
         }
-        rfdetr = model_class_mapping[self.model_name](num_classes=num_classes, pretrained_weights=None)
+        rfdetr = model_class_mapping[self.model_name](
+            num_classes=num_classes, pretrained_weights=None, gradient_checkpointing=True
+        )
         rfdetr.model.reinitialize_detection_head(num_classes)
 
         # Update args for criterion building
