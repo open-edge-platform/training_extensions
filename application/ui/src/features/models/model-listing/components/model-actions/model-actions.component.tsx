@@ -71,9 +71,9 @@ export const ModelActions = ({ model }: ModelActionsProps) => {
                     <MoreMenu />
                 </ActionButton>
                 <Menu onAction={handleAction} aria-label={'Model actions menu'}>
-                    <Item key={'active'}>Set as active</Item>
-                    <Item key={'rename'}>Rename</Item>
-                    <Item key={'delete'}>Delete</Item>
+                    <Item key={MODEL_ACTIONS.ACTIVE}>Set as active</Item>
+                    <Item key={MODEL_ACTIONS.RENAME}>Rename</Item>
+                    <Item key={MODEL_ACTIONS.DELETE}>Delete</Item>
                 </Menu>
             </MenuTrigger>
 

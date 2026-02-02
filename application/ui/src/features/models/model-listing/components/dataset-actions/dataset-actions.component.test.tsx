@@ -19,6 +19,7 @@ const mockDataset: DatasetGroup = {
         validation: 20,
         testing: 10,
     },
+    filesDeleted: false,
 };
 
 describe('DatasetActions', () => {
