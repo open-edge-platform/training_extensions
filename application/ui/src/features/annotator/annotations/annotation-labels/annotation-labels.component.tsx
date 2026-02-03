@@ -72,10 +72,12 @@ export const AnnotationLabels = ({ labels, onRemove, useBottomCorners = false }:
                             className={classes.label}
                             style={{
                                 '--label-color': label.color,
-                                '--border-top-left': isFirst ? '4px' : '0',
-                                '--border-top-right': isLast ? '4px' : '0',
-                                '--border-bottom-left': useBottomCorners && isFirst ? '4px' : '0',
-                                '--border-bottom-right': useBottomCorners && isLast ? '4px' : '0',
+                                '--border-top-left': isFirst ? 'var(--spectrum-global-dimension-size-50)' : '0',
+                                '--border-top-right': isLast ? 'var(--spectrum-global-dimension-size-50)' : '0',
+                                '--border-bottom-left':
+                                    useBottomCorners && isFirst ? 'var(--spectrum-global-dimension-size-50)' : '0',
+                                '--border-bottom-right':
+                                    useBottomCorners && isLast ? 'var(--spectrum-global-dimension-size-50)' : '0',
                             }}
                             aria-label={`label ${label.name} background`}
                         >
