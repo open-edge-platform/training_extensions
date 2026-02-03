@@ -40,7 +40,7 @@ export const SourceOptions = ({ onSaved, hasHeader, children }: SourceOptionsPro
                 defaultActiveInput={null}
                 items={[
                     {
-                        label: 'Usb Camera',
+                        label: 'USB Camera',
                         value: 'usb_camera',
                         icon: <WebcamIcon width={'24px'} />,
                         content: (

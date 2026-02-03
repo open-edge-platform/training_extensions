@@ -236,7 +236,7 @@ test('Inference', async ({ streamPage, page, network }) => {
 
         await page.getByRole('button', { name: 'Pipeline configuration' }).click();
         await page.getByRole('button', { name: 'Add new source' }).click();
-        await page.getByRole('button', { name: 'Usb Camera' }).click();
+        await page.getByRole('button', { name: 'USB Camera' }).click();
 
         const usbCamera = 'new camera';
         await page.getByRole('textbox', { name: 'Name' }).fill(usbCamera);
