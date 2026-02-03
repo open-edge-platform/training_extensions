@@ -14,7 +14,7 @@ from torch.utils.data import Dataset as TorchDataset
 from otx import LabelInfo, NullLabelInfo
 from otx.data.entity.sample import OTXSample
 from otx.data.transform_libs.torchvision import Compose
-
+from torchvision.transforms.v2 import functional as f
 
 from otx.data.augmentation.pipeline import CPUAugmentationPipeline
 from otx.data.entity.sample import OTXSample, OTXSampleBatch
@@ -25,7 +25,6 @@ from otx.types import OTXTaskType
 Transforms = Union[
     Compose, Callable, List[Callable], dict[str, Compose | Callable | List[Callable]], "CPUAugmentationPipeline"
 ]
-
 
 def _ensure_chw_format(img: torch.Tensor) -> torch.Tensor:
     """Ensure image tensor is in CHW format with 3 channels.
@@ -149,11 +148,9 @@ class OTXDataset(TorchDataset):
         return len(self.dm_subset)
 
     def _apply_transforms(self, entity: OTXSample) -> OTXSample | None:
+        entity.image = f.to_dtype(entity.image, dtype=torch.float32, scale=True)
         if self.transforms is None:
             return entity
-
-        # New path: CPUAugmentationPipeline
-        from otx.data.augmentation.pipeline import CPUAugmentationPipeline
 
         if isinstance(self.transforms, CPUAugmentationPipeline):
             return self.transforms(entity)

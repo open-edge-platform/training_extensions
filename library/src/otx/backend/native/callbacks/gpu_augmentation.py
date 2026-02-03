@@ -48,6 +48,8 @@ class GPUAugmentationCallback(Callback):
         >>> trainer = Trainer(callbacks=[callback])
     """
 
+    # Data keys for each task type. Masks for instance segmentation are handled
+    # with special preprocessing (add channel dim) in GPUAugmentationPipeline.forward().
     _DATA_KEYS_BY_TASK: dict[OTXTaskType, list[str]] = {
         OTXTaskType.MULTI_CLASS_CLS: ["label"],
         OTXTaskType.MULTI_LABEL_CLS: ["label"],
@@ -138,6 +140,8 @@ class GPUAugmentationCallback(Callback):
             pipeline: GPUAugmentationPipeline to apply.
             batch: OTXSampleBatch to transform.
         """
+        from torchvision import tv_tensors
+
         # Move pipeline to same device as batch
         device = batch.images.device if hasattr(batch.images, "device") else None
         if device is not None:
@@ -158,9 +162,19 @@ class GPUAugmentationCallback(Callback):
         if result.get("labels") is not None:
             batch.labels = result["labels"]
         if result.get("bboxes") is not None:
-            batch.bboxes = result["bboxes"]
+            # Kornia may return plain tensors, wrap them back to BoundingBoxes
+            batch.bboxes = [
+                tv_tensors.BoundingBoxes(b, format=tv_tensors.BoundingBoxFormat.XYXY, canvas_size=batch.images.shape[-2:])
+                if not isinstance(b, tv_tensors.BoundingBoxes)
+                else b
+                for b in result["bboxes"]
+            ]
         if result.get("masks") is not None:
-            batch.masks = result["masks"]
+            # Kornia may return plain tensors, wrap them back to Mask
+            batch.masks = [
+                tv_tensors.Mask(m) if not isinstance(m, tv_tensors.Mask) else m
+                for m in result["masks"]
+            ]
         if result.get("keypoints") is not None:
             batch.keypoints = result["keypoints"]
 

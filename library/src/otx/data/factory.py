@@ -46,6 +46,9 @@ class TransformLibFactory:
         """
         # New path: use augmentations_cpu if provided
         if config.augmentations_cpu:
+            # Already a pipeline object (e.g., from from_file method)
+            if isinstance(config.augmentations_cpu, CPUAugmentationPipeline):
+                return config.augmentations_cpu
             return CPUAugmentationPipeline.from_config(config)
 
         raise NotImplementedError(config.transform_lib_type)

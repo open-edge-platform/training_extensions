@@ -11,18 +11,24 @@ This module provides the core augmentation pipeline classes:
 from __future__ import annotations
 
 import ast
+import os
 import operator
 import typing
-from copy import copy
+from copy import copy, deepcopy
+
 from inspect import isclass
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable
 
 import torch
 import torchvision.transforms.v2 as tvt_v2
+import torchvision.utils as tv_utils
 import typeguard
 from lightning.pytorch.cli import instantiate_class
 from omegaconf import DictConfig
 from torch import nn
+import kornia.augmentation as K
+from kornia.augmentation.container import ops
 
 from otx.data.entity.sample import OTXSample
 from otx.data.utils import import_object_from_module
@@ -30,6 +36,33 @@ from otx.data.utils import import_object_from_module
 if TYPE_CHECKING:
     from otx.config.data import SubsetConfig
 
+
+# Monkey-patch to fix transform_matrix slicing for list masks
+_original_transform_list = ops.MaskSequentialOps.transform_list
+
+@classmethod
+def _fixed_transform_list(cls, input, module, param, extra_args=None):
+    """Fixed version that slices transform_matrix for each list element."""
+    if extra_args is None:
+        extra_args = {}
+    if isinstance(module, (K.GeometricAugmentationBase2D,)):
+        tfm_input = []
+        params = cls.get_instance_module_param(param)
+        params_i = deepcopy(params)
+        for i, inp in enumerate(input):
+            params_i["batch_prob"] = params["batch_prob"][i:i+1]  # Keep tensor shape
+            # FIX: Slice transform_matrix for index i
+            transform_i = module.transform_matrix[i:i+1] if module.transform_matrix is not None else None
+            tfm_inp = module.transform_masks(
+                inp, params=params_i, flags=module.flags, transform=transform_i, **extra_args
+            )
+            tfm_input.append(tfm_inp)
+        return tfm_input
+    else:
+        # Use original for non-geometric
+        return _original_transform_list.__func__(cls, input, module, param, extra_args)
+
+ops.MaskSequentialOps.transform_list = _fixed_transform_list
 
 class CPUAugmentationPipeline(nn.Module):
     """CPU-stage augmentation pipeline using torchvision.transforms.v2.
@@ -401,10 +434,13 @@ class GPUAugmentationPipeline(nn.Module):
         self._data_keys = data_keys or ["input"]
         self._mean, self._std = self._extract_normalization_params(self._augmentations_list)
 
+        debug_dir = os.getenv("OTX_GPU_AUG_DEBUG_DIR")
+        self._debug_dir = Path(debug_dir) if debug_dir else None
+        self._debug_max = int(os.getenv("OTX_GPU_AUG_DEBUG_MAX", "50"))
+        self._debug_counter = 0
+
         # Build Kornia AugmentationSequential for efficient batch processing
         if self._augmentations_list:
-            import kornia.augmentation as K
-
             self.aug_sequential = K.AugmentationSequential(
                 *self._augmentations_list,
                 data_keys=self._data_keys,
@@ -582,31 +618,54 @@ class GPUAugmentationPipeline(nn.Module):
             images: Batched images tensor in BCHW format, values in [0, 1].
             labels: List of labels per image (optional).
             bboxes: List of bounding boxes per image (optional).
-            masks: List of masks per image (optional).
+            masks: List of masks per image (optional). Can be:
+                - Semantic segmentation: (C, H, W) format
+                - Instance segmentation: (N_instances, H, W) format
             keypoints: List of keypoints per image (optional).
 
         Returns:
             Dict with augmented data: {"images": tensor, "labels": list, "bboxes": list, "masks": list, "keypoints": list}
         """
         if self.aug_sequential is None:
+            if self._debug_dir is not None:
+                self._debug_visualize("no_aug", images, bboxes, masks, keypoints)
             return {"images": images, "labels": labels, "bboxes": bboxes, "masks": masks, "keypoints": keypoints}
 
-        # Build input list based on what data is provided and matches data_keys
-        inputs = [images]
-        provided_keys = ["input"]
-
-        if labels is not None and "label" in self._data_keys:
-            inputs.append(labels)
-            provided_keys.append("label")
-        if bboxes is not None and "bbox_xyxy" in self._data_keys:
-            inputs.append(bboxes)
-            provided_keys.append("bbox_xyxy")
+        # Handle instance segmentation masks: Kornia expects (N, C, H, W) but instance
+        # masks are (N_instances, H, W). We add a channel dim before and squeeze after.
+        # This allows Kornia to properly transform instance masks along with images.
+        masks_need_squeeze = False
+        original_masks = masks
+        original_bboxes = bboxes
+        original_keypoints = keypoints
+        if self._debug_dir is not None:
+            self._debug_visualize("before", images, original_bboxes, original_masks, original_keypoints)
         if masks is not None and "mask" in self._data_keys:
-            inputs.append(masks)
-            provided_keys.append("mask")
-        if keypoints is not None and "keypoints" in self._data_keys:
-            inputs.append(keypoints)
-            provided_keys.append("keypoints")
+            # Check if masks need channel dimension added (instance seg format)
+            # Instance seg masks: (N_instances, H, W) - 3D per sample
+            # Semantic seg masks: (C, H, W) where C is often 1 or num_classes
+            # We add channel dim to all masks for consistency with Kornia
+            masks_need_squeeze = True
+            masks = [m.unsqueeze(0) for m in masks]  # (N, H, W) -> (N, 1, H, W)
+
+        # Map data key names to actual data
+        data_map = {
+            "input": images,
+            "label": labels,
+            "bbox_xyxy": bboxes,
+            "mask": masks,
+            "keypoints": keypoints,
+        }
+
+        # Build input list in the SAME ORDER as self._data_keys
+        # This is critical because Kornia uses the order to match data to keys
+        inputs = []
+        provided_keys = []
+        for key in self._data_keys:
+            data = data_map.get(key)
+            if data is not None:
+                inputs.append(data)
+                provided_keys.append(key)
 
         # Apply augmentation to all inputs
         results = self.aug_sequential(*inputs)
@@ -622,14 +681,77 @@ class GPUAugmentationPipeline(nn.Module):
                 elif key == "bbox_xyxy":
                     output["bboxes"] = results[i]
                 elif key == "mask":
-                    output["masks"] = results[i]
+                    # Remove channel dim if we added it
+                    mask_results = results[i]
+                    if masks_need_squeeze:
+                        mask_results = [m.squeeze(0) for m in mask_results]  # (1, N, H, W) -> (N, H, W)
+                    output["masks"] = mask_results
                 elif key == "keypoints":
                     output["keypoints"] = results[i]
         else:
             # Single output (images only)
             output["images"] = results
 
+        if self._debug_dir is not None:
+            self._debug_visualize(
+                "after",
+                output["images"],
+                typing.cast(list[torch.Tensor] | None, output["bboxes"]),
+                typing.cast(list[torch.Tensor] | None, output["masks"]),
+                typing.cast(list[torch.Tensor] | None, output["keypoints"]),
+            )
+
         return output
+
+    def _debug_visualize(
+        self,
+        tag: str,
+        images: torch.Tensor,
+        bboxes: list[torch.Tensor] | None,
+        masks: list[torch.Tensor] | None,
+        keypoints: list[torch.Tensor] | None,
+    ) -> None:
+        if self._debug_dir is None:
+            return
+        if self._debug_counter >= self._debug_max:
+            return
+
+        self._debug_dir.mkdir(parents=True, exist_ok=True)
+        images = images.detach().cpu().clamp(0, 1)
+        images_uint8 = (images * 255).to(torch.uint8)
+
+        batch_size = images_uint8.shape[0]
+        for idx in range(batch_size):
+            img = images_uint8[idx]
+
+            if masks is not None and idx < len(masks):
+                mask = masks[idx]
+                mask = mask.detach().cpu()
+                if mask.ndim == 2:
+                    mask = mask.unsqueeze(0)
+                if mask.ndim == 3:
+                    mask_bool = mask > 0
+                    num_masks = mask_bool.shape[0]
+                    colors = [(int(c[0]), int(c[1]), int(c[2])) for c in torch.randint(0, 255, (num_masks, 3))]
+                    img = tv_utils.draw_segmentation_masks(img, mask_bool, colors=colors, alpha=0.35)
+
+            if bboxes is not None and idx < len(bboxes):
+                boxes = bboxes[idx]
+                if boxes.numel() > 0 and boxes.shape[-1] == 4:
+                    img = tv_utils.draw_bounding_boxes(img, boxes, colors="yellow", width=2)
+
+            if keypoints is not None and idx < len(keypoints):
+                kps = keypoints[idx]
+                if kps.numel() > 0:
+                    if kps.ndim == 2 and kps.shape[-1] == 2:
+                        kps = kps.unsqueeze(0)
+                    if kps.ndim == 3 and kps.shape[-1] == 2:
+                        img = tv_utils.draw_keypoints(img, kps, colors="red", radius=2)
+
+            save_path = self._debug_dir / f"{self._debug_counter:06d}_{tag}_b{idx}.png"
+            tv_utils.save_image(img.float() / 255.0, save_path)
+
+        self._debug_counter += 1
 
     def __repr__(self) -> str:
         """String representation of the pipeline."""

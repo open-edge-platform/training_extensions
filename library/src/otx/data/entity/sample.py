@@ -168,7 +168,9 @@ class DetectionSample(OTXSample):
         dtype=pl.UInt8(), format="BGR", channels_first=True
     )
     label: torch.Tensor = label_field(pl.UInt8(), is_list=True)
-    bboxes: tv_tensors.BoundingBoxes = bbox_field(dtype=pl.Float32())
+    # Use Union type to allow torch.Tensor from Polars (since tv_tensors.BoundingBoxes
+    # conversion is not supported in Datumaro), then convert in __post_init__
+    bboxes: tv_tensors.BoundingBoxes | torch.Tensor = bbox_field(dtype=pl.Float32())
     dm_image_info: DmImageInfo = image_info_field()
 
     def __post_init__(self) -> None:
@@ -215,7 +217,9 @@ class InstanceSegmentationSample(OTXSample):
 
     subset: Subset = subset_field()
     image: tv_tensors.Image | torch.Tensor = image_field(dtype=pl.UInt8(), channels_first=True)
-    bboxes: tv_tensors.BoundingBoxes = bbox_field(dtype=pl.Float32())
+    # Use Union type to allow torch.Tensor from Polars (since tv_tensors.BoundingBoxes
+    # conversion is not supported in Datumaro), then convert in __post_init__
+    bboxes: tv_tensors.BoundingBoxes | torch.Tensor = bbox_field(dtype=pl.Float32())
     masks: tv_tensors.Mask = instance_mask_field(dtype=pl.UInt8())
     label: torch.Tensor = label_field(dtype=pl.UInt8(), is_list=True)
     dm_image_info: DmImageInfo = image_info_field()
@@ -276,12 +280,18 @@ def collate_fn(samples: list[OTXSample]) -> OTXSampleBatch:
         # we need this only in case of OV inference, where no resize
         images = [sample.image for sample in samples]
 
+    # Collect optional fields - use getattr to handle samples without these attributes
+    labels = [sample.label for sample in samples] if hasattr(samples[0], "label") else None
+    bboxes = [sample.bboxes for sample in samples] if hasattr(samples[0], "bboxes") else None
+    keypoints = [sample.keypoints for sample in samples] if hasattr(samples[0], "keypoints") else None
+    masks = [sample.masks for sample in samples] if hasattr(samples[0], "masks") else None
+
     return OTXSampleBatch(
         images=images,
-        labels=[sample.label for sample in samples],
-        bboxes=[sample.bboxes for sample in samples],
-        keypoints=[sample.keypoints for sample in samples],
-        masks=[sample.masks for sample in samples],
+        labels=labels,
+        bboxes=bboxes,
+        keypoints=keypoints,
+        masks=masks,
         imgs_info=[sample.img_info for sample in samples],
     )
 
