@@ -52,6 +52,7 @@ export const groupModelsByDataset = (models: Model[], options?: GroupModelsByDat
                         validation: datasetRevision?.item_counts?.validation ?? 0,
                         testing: datasetRevision?.item_counts?.testing ?? 0,
                     },
+                    filesDeleted: datasetRevision?.files_deleted ?? false,
                 },
                 models: [],
             };

@@ -1,4 +1,4 @@
-id: Custom_Image_Classification_DeiT-Tiny
+id: image-classification-deit-tiny
 name: DeiT-Tiny
 
 pretrained_weights:

@@ -153,11 +153,7 @@ test.describe('Annotator', () => {
                     width: 780,
                     height: 421,
                 },
-                labels: [
-                    {
-                        id: blueLabel.id,
-                    },
-                ],
+                labels: [{ id: blueLabel.id }],
                 confidences: [0.9619140625],
             },
             {
@@ -168,11 +164,7 @@ test.describe('Annotator', () => {
                     width: 909,
                     height: 456,
                 },
-                labels: [
-                    {
-                        id: blueLabel.id,
-                    },
-                ],
+                labels: [{ id: blueLabel.id }],
                 confidences: [0.9599609375],
             },
             {
@@ -183,11 +175,7 @@ test.describe('Annotator', () => {
                     width: 1553,
                     height: 889,
                 },
-                labels: [
-                    {
-                        id: blueLabel.id,
-                    },
-                ],
+                labels: [{ id: blueLabel.id }],
                 confidences: [0.904296875],
             },
         ] satisfies AnnotationDTO[];
