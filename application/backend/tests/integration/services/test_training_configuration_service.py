@@ -23,7 +23,7 @@ from app.services.training_configuration_service import TrainingConfigurationSer
 def fxt_training_configuration() -> TrainingConfiguration:
     """Create a mock training configuration."""
     return TrainingConfiguration(
-        model_manifest_id="Custom_Image_Classification_EfficientNet-B0",
+        model_manifest_id="object-detection-yolox-s",
         global_parameters=GlobalParameters(
             dataset_preparation=GlobalDatasetPreparationParameters(
                 subset_split=SubsetSplit(),
@@ -52,9 +52,9 @@ class TestTrainingConfigurationService:
         db_session.add(project)
         model = ModelRevisionDB(
             id=str(uuid4()),
-            name="Object_Detection_YOLOv5",
+            name="YOLOX-S (abc123)",
             project_id=project.id,
-            architecture="Object_Detection_YOLOv5",
+            architecture="object-detection-yolox-s",
             training_status="running",
             training_configuration=fxt_training_configuration.model_dump(),
             label_schema_revision={},
@@ -88,14 +88,14 @@ class TestTrainingConfigurationService:
         training_configuration = TrainingConfigurationDB(
             id=str(uuid4()),
             project_id=project.id,
-            model_architecture_id="Custom_Object_Detection_YOLOX",
+            model_architecture_id="object-detection-yolox-s",
             configuration_data=fxt_training_configuration.model_dump(),
         )
         db_session.add(training_configuration)
         db_session.flush()
 
         training_configuration = fxt_training_configuration_service.get_training_configuration(
-            project_id=UUID(project.id), model_architecture_id="Custom_Object_Detection_YOLOX"
+            project_id=UUID(project.id), model_architecture_id="object-detection-yolox-s"
         )
         assert isinstance(training_configuration, TrainingConfiguration)
         assert training_configuration == fxt_training_configuration
@@ -105,7 +105,7 @@ class TestTrainingConfigurationService:
     ):
         """Test getting training configuration by model architecture ID from manifest."""
         training_configuration = fxt_training_configuration_service.get_training_configuration(
-            project_id=uuid4(), model_architecture_id="Custom_Object_Detection_YOLOX"
+            project_id=uuid4(), model_architecture_id="object-detection-yolox-s"
         )
         assert isinstance(training_configuration, TrainingConfiguration)
         assert training_configuration != fxt_training_configuration
@@ -152,7 +152,7 @@ class TestTrainingConfigurationService:
         db_session.flush()
 
         training_config_update = {
-            "model_manifest_id": "Custom_Image_Classification_EfficientNet-B0",
+            "model_manifest_id": "object-detection-yolox-s",
             "hyperparameters": {
                 "dataset_preparation": {"augmentation": {"topdown_affine": {"enable": True, "probability": 0.5}}},
                 "training": {"max_epochs": 999},
@@ -192,14 +192,14 @@ class TestTrainingConfigurationService:
         training_configuration = TrainingConfigurationDB(
             id=str(uuid4()),
             project_id=project.id,
-            model_architecture_id="Custom_Object_Detection_YOLOX",
+            model_architecture_id="object-detection-yolox-s",
             configuration_data=fxt_training_configuration.model_dump(),
         )
         db_session.add(training_configuration)
         db_session.flush()
 
         training_config_update = {
-            "model_manifest_id": "Custom_Image_Classification_EfficientNet-B0",
+            "model_manifest_id": "object-detection-yolox-s",
             "hyperparameters": {
                 "dataset_preparation": {"augmentation": {"topdown_affine": {"enable": True, "probability": 0.5}}},
                 "training": {"max_epochs": 999},
@@ -213,7 +213,7 @@ class TestTrainingConfigurationService:
         training_configuration = fxt_training_configuration_service.update_training_configuration(
             project_id=UUID(project.id),
             training_config_update=training_config_update,
-            model_architecture_id="Custom_Object_Detection_YOLOX",
+            model_architecture_id="object-detection-yolox-s",
         )
         assert isinstance(training_configuration, TrainingConfiguration)
         assert training_configuration != fxt_training_configuration

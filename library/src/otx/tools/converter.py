@@ -38,200 +38,107 @@ class ModelStatus(str, Enum):
 
 TEMPLATE_ID_MAPPING = {
     # MULTI_CLASS_CLS
-    "Custom_Image_Classification_DeiT-Tiny": {
+    "image-classification-deit-tiny": {
         "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "deit_tiny.yaml",
         "status": ModelStatus.ACTIVE,
         "default": False,
     },
-    "Custom_Image_Classification_EfficinetNet-B0": {
+    "image-classification-efficientnet-b0": {
         "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "efficientnet_b0.yaml",
         "status": ModelStatus.BALANCE,
         "default": True,
     },
-    "Custom_Image_Classification_EfficientNet-V2-S": {
+    "image-classification-efficientnet-v2-s": {
         "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "efficientnet_v2.yaml",
         "status": ModelStatus.ACCURACY,
         "default": False,
     },
-    "Custom_Image_Classification_MobileNet-V3-large-1x": {
+    "image-classification-mobilenet-v3-large": {
         "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "mobilenet_v3_large.yaml",
         "status": ModelStatus.SPEED,
         "default": False,
     },
-    "Custom_Image_Classification_EfficientNet-B3": {
+    "image-classification-efficientnet-b3": {
         "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "tv_efficientnet_b3.yaml",
         "status": ModelStatus.ACTIVE,
         "default": False,
     },
-    "Custom_Image_Classification_EfficientNet-V2-L": {
-        "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "tv_efficientnet_v2_l.yaml",
-        "status": ModelStatus.DEPRECATED,
-        "default": False,
-    },
-    "Custom_Image_Classification_MobileNet-V3-small": {
-        "recipe_path": RECIPE_PATH / "classification" / "multi_class_cls" / "tv_mobilenet_v3_small.yaml",
-        "status": ModelStatus.DEPRECATED,
-        "default": False,
-    },
     # DETECTION
-    "Custom_Object_Detection_Gen3_ATSS": {
+    "object-detection-atss-mobilenet-v2": {
         "recipe_path": RECIPE_PATH / "detection" / "atss_mobilenetv2.yaml",
         "status": ModelStatus.BALANCE,
         "default": True,
     },
-    "Object_Detection_ResNeXt101_ATSS": {
-        "recipe_path": RECIPE_PATH / "detection" / "atss_resnext101.yaml",
-        "status": ModelStatus.DEPRECATED,
-        "default": False,
-    },
-    "Custom_Object_Detection_Gen3_SSD": {
+    "object-detection-ssd-mobilenet-v2": {
         "recipe_path": RECIPE_PATH / "detection" / "ssd_mobilenetv2.yaml",
-        "status": ModelStatus.DEPRECATED,
+        "status": ModelStatus.ACTIVE,
         "default": False,
     },
-    "Object_Detection_YOLOX_X": {
+    "object-detection-yolox-x": {
         "recipe_path": RECIPE_PATH / "detection" / "yolox_x.yaml",
         "status": ModelStatus.ACTIVE,
         "default": False,
     },
-    "Object_Detection_YOLOX_L": {
+    "object-detection-yolox-l": {
         "recipe_path": RECIPE_PATH / "detection" / "yolox_l.yaml",
         "status": ModelStatus.ACTIVE,
         "default": False,
     },
-    "Object_Detection_YOLOX_S": {
+    "object-detection-yolox-s": {
         "recipe_path": RECIPE_PATH / "detection" / "yolox_s.yaml",
         "status": ModelStatus.SPEED,
         "default": False,
     },
-    "Custom_Object_Detection_YOLOX": {
+    "object-detection-yolox-tiny": {
         "recipe_path": RECIPE_PATH / "detection" / "yolox_tiny.yaml",
-        "status": ModelStatus.DEPRECATED,
+        "status": ModelStatus.ACTIVE,
         "default": False,
     },
-    "Object_Detection_RTDetr_18": {
-        "recipe_path": RECIPE_PATH / "detection" / "rtdetr_18.yaml",
-        "status": ModelStatus.DEPRECATED,
-        "default": False,
-    },
-    "Object_Detection_RTDetr_50": {
+    "object-detection-rt-detr-r50": {
         "recipe_path": RECIPE_PATH / "detection" / "rtdetr_50.yaml",
         "status": ModelStatus.ACTIVE,
         "default": False,
     },
-    "Object_Detection_RTDetr_101": {
-        "recipe_path": RECIPE_PATH / "detection" / "rtdetr_101.yaml",
-        "status": ModelStatus.DEPRECATED,
-        "default": False,
-    },
-    "Object_Detection_RTMDet_tiny": {
-        "recipe_path": RECIPE_PATH / "detection" / "rtmdet_tiny.yaml",
-        "status": ModelStatus.DEPRECATED,
-        "default": False,
-    },
-    "Object_Detection_DFine_X": {
+    "object-detection-d-fine-x": {
         "recipe_path": RECIPE_PATH / "detection" / "dfine_x.yaml",
         "status": ModelStatus.ACCURACY,
         "default": False,
     },
-    "Object_Detection_Deim_DFine_M": {
+    "object-detection-deim-d-fine-m": {
         "recipe_path": RECIPE_PATH / "detection" / "deim_dfine_m.yaml",
         "status": ModelStatus.ACTIVE,
         "default": False,
     },
-    "Object_Detection_Deim_DFine_L": {
+    "object-detection-deim-d-fine-l": {
         "recipe_path": RECIPE_PATH / "detection" / "deim_dfine_l.yaml",
         "status": ModelStatus.ACTIVE,
         "default": False,
     },
-    "Object_Detection_Deim_DFine_X": {
+    "object-detection-deim-d-fine-x": {
         "recipe_path": RECIPE_PATH / "detection" / "deim_dfine_x.yaml",
         "status": ModelStatus.ACTIVE,
         "default": False,
     },
     # INSTANCE_SEGMENTATION
-    "Custom_Counting_Instance_Segmentation_MaskRCNN_ResNet50": {
-        "recipe_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_r50.yaml",
-        "status": ModelStatus.DEPRECATED,
-        "default": False,
-    },
-    "Custom_Counting_Instance_Segmentation_MaskRCNN_SwinT_FP16": {
+    "instance-segmentation-mask-rcnn-swin-t": {
         "recipe_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_swint.yaml",
         "status": ModelStatus.ACCURACY,
         "default": False,
     },
-    "Custom_Counting_Instance_Segmentation_MaskRCNN_EfficientNetB2B": {
+    "instance-segmentation-mask-rcnn-efficientnet-b2": {
         "recipe_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_efficientnetb2b.yaml",
         "status": ModelStatus.SPEED,
         "default": True,
     },
-    "Custom_Instance_Segmentation_RTMDet_tiny": {
+    "instance-segmentation-rtmdet-tiny": {
         "recipe_path": RECIPE_PATH / "instance_segmentation" / "rtmdet_inst_tiny.yaml",
         "status": ModelStatus.ACTIVE,
         "default": False,
     },
-    "Custom_Instance_Segmentation_MaskRCNN_ResNet50_v2": {
+    "instance-segmentation-mask-rcnn-resnet50": {
         "recipe_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_r50_tv.yaml",
         "status": ModelStatus.BALANCE,
         "default": False,
-    },
-    # ROTATED_DETECTION
-    "Custom_Rotated_Detection_via_Instance_Segmentation_MaskRCNN_ResNet50": {
-        "recipe_path": RECIPE_PATH / "rotated_detection" / "maskrcnn_r50.yaml",
-        "status": ModelStatus.DEPRECATED,
-        "default": False,
-    },
-    "Custom_Rotated_Detection_via_Instance_Segmentation_MaskRCNN_EfficientNetB2B": {
-        "recipe_path": RECIPE_PATH / "rotated_detection" / "maskrcnn_efficientnetb2b.yaml",
-        "status": ModelStatus.SPEED,
-        "default": True,
-    },
-    "Rotated_Detection_MaskRCNN_ResNet50_V2": {
-        "recipe_path": RECIPE_PATH / "rotated_detection" / "maskrcnn_r50_v2.yaml",
-        "status": ModelStatus.BALANCE,
-        "default": False,
-    },
-    # SEMANTIC_SEGMENTATION
-    "Custom_Semantic_Segmentation_Lite-HRNet-18-mod2_OCR": {
-        "recipe_path": RECIPE_PATH / "semantic_segmentation" / "litehrnet_18.yaml",
-        "status": ModelStatus.BALANCE,
-        "default": True,
-    },
-    "Custom_Semantic_Segmentation_Lite-HRNet-s-mod2_OCR": {
-        "recipe_path": RECIPE_PATH / "semantic_segmentation" / "litehrnet_s.yaml",
-        "status": ModelStatus.SPEED,
-        "default": False,
-    },
-    "Custom_Semantic_Segmentation_Lite-HRNet-x-mod3_OCR": {
-        "recipe_path": RECIPE_PATH / "semantic_segmentation" / "litehrnet_x.yaml",
-        "status": ModelStatus.DEPRECATED,
-        "default": False,
-    },
-    "Custom_Semantic_Segmentation_SegNext_t": {
-        "recipe_path": RECIPE_PATH / "semantic_segmentation" / "segnext_t.yaml",
-        "status": ModelStatus.ACTIVE,
-        "default": False,
-    },
-    "Custom_Semantic_Segmentation_SegNext_s": {
-        "recipe_path": RECIPE_PATH / "semantic_segmentation" / "segnext_s.yaml",
-        "status": ModelStatus.ACTIVE,
-        "default": False,
-    },
-    "Custom_Semantic_Segmentation_SegNext_B": {
-        "recipe_path": RECIPE_PATH / "semantic_segmentation" / "segnext_b.yaml",
-        "status": ModelStatus.ACTIVE,
-        "default": False,
-    },
-    "Custom_Semantic_Segmentation_DINOV2_S": {
-        "recipe_path": RECIPE_PATH / "semantic_segmentation" / "dino_v2.yaml",
-        "status": ModelStatus.ACCURACY,
-        "default": False,
-    },
-    # KEYPOINT_DETECTION
-    "Keypoint_Detection_RTMPose_Tiny": {
-        "recipe_path": RECIPE_PATH / "keypoint_detection" / "rtmpose_tiny.yaml",
-        "status": ModelStatus.SPEED,
-        "default": True,
     },
 }
 
