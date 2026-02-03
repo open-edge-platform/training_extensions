@@ -1,10 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { DialogContainer, Size } from '@geti/ui';
+import { Checkbox, DialogContainer, Flex, Size } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
-import { CheckboxInput } from '../../../components/checkbox-input/checkbox-input.component';
 import { MediaItem } from '../../../components/media-item/media-item.component';
 import { MediaThumbnail } from '../../../components/media-thumbnail/media-thumbnail.component';
 import { VirtualizerGridLayout } from '../../../components/virtualizer-grid-layout/virtualizer-grid-layout.component';
@@ -63,11 +62,17 @@ export const Gallery = ({ items, hasNextPage, isFetchingNextPage, fetchNextPage 
                             />
                         )}
                         topLeftElement={() => (
-                            <CheckboxInput
-                                isReadOnly
-                                name={`select-${item.id}`}
-                                isChecked={isSetSelectedKeys && selectedKeys.has(String(item.id))}
-                            />
+                            <Flex
+                                width={'size-200'}
+                                height={'size-200'}
+                                alignItems={'center'}
+                                justifyContent={'center'}
+                            >
+                                <Checkbox
+                                    onChange={() => toggleSelectedKeys([String(item.id)])}
+                                    isSelected={isSetSelectedKeys && selectedKeys.has(String(item.id))}
+                                />
+                            </Flex>
                         )}
                         topRightElement={() => (
                             <DeleteMediaItem itemsIds={[String(item.id)]} onDeleted={toggleSelectedKeys} />

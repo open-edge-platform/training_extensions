@@ -18,6 +18,7 @@ export type DatasetGroup = {
         validation: number;
         testing: number;
     };
+    filesDeleted: boolean;
 };
 
 export type ArchitectureGroup = {

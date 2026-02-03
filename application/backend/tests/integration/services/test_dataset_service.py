@@ -875,7 +875,7 @@ class TestDatasetServiceIntegration:
             (None, 7),  # All items
             ("unannotated", 2),  # 2 unannotated items
             ("reviewed", 3),  # 3 reviewed items
-            ("to_review", 2),  # 2 to_review items
+            ("to_review", 4),  # 2 unannotated items + 2 with 'user_reviewed=False'
         ],
     )
     def test_count_dataset_items_with_annotation_status(
@@ -898,7 +898,7 @@ class TestDatasetServiceIntegration:
             (None, ["unannotated1", "unannotated2", "reviewed1", "reviewed2", "reviewed3", "to_review1", "to_review2"]),
             (DatasetItemAnnotationStatus.UNANNOTATED, ["unannotated1", "unannotated2"]),
             (DatasetItemAnnotationStatus.REVIEWED, ["reviewed1", "reviewed2", "reviewed3"]),
-            (DatasetItemAnnotationStatus.TO_REVIEW, ["to_review1", "to_review2"]),
+            (DatasetItemAnnotationStatus.TO_REVIEW, ["unannotated1", "unannotated2", "to_review1", "to_review2"]),
         ],
     )
     def test_list_dataset_items_with_annotation_status(
@@ -928,7 +928,7 @@ class TestDatasetServiceIntegration:
             (DatasetItemAnnotationStatus.UNANNOTATED, 1, 2, 0),  # Beyond available unannotated items
             (DatasetItemAnnotationStatus.REVIEWED, 2, 0, 2),  # First page of reviewed
             (DatasetItemAnnotationStatus.REVIEWED, 2, 2, 1),  # Second page of reviewed (only 1 left)
-            (DatasetItemAnnotationStatus.TO_REVIEW, 10, 0, 2),  # All to_review items
+            (DatasetItemAnnotationStatus.TO_REVIEW, 10, 0, 4),  # All items with user_reviewed=False
         ],
     )
     def test_list_dataset_items_with_annotation_status_pagination(
@@ -1005,7 +1005,7 @@ class TestDatasetServiceIntegration:
         for item in unannotated_items:
             assert item.annotation_data is None
 
-        # Reviewed items should have annotation_data and user_reviewed=True
+        # Reviewed items should have user_reviewed=True
         reviewed_items = fxt_dataset_service.list_dataset_items(
             project_id=project.id,
             filters=DatasetItemFilters(
@@ -1014,19 +1014,17 @@ class TestDatasetServiceIntegration:
         )
         assert len(reviewed_items) == 3
         for item in reviewed_items:
-            assert item.annotation_data is not None
             assert item.user_reviewed is True
 
-        # To review items should have annotation_data and user_reviewed=False
+        # To review items should have user_reviewed=False
         to_review_items = fxt_dataset_service.list_dataset_items(
             project_id=project.id,
             filters=DatasetItemFilters(
                 annotation_status=DatasetItemAnnotationStatus.TO_REVIEW,
             ),
         )
-        assert len(to_review_items) == 2
+        assert len(to_review_items) == 4
         for item in to_review_items:
-            assert item.annotation_data is not None
             assert item.user_reviewed is False
 
     def test_list_dataset_items_filter_by_single_label(

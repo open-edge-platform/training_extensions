@@ -24,7 +24,7 @@ export const ZoomSelector = () => {
                 </IconWrapper>
             </ActionButton>
 
-            <Flex justifyContent={'center'}>
+            <Flex justifyContent={'end'} width={'size-350'}>
                 <span
                     aria-label={'Zoom level'}
                     data-value={zoom.scale}

@@ -11,8 +11,8 @@ import {
     RecommendedModelArchitectures,
     TrainingDevice,
 } from '../../../constants/shared-types';
+import { useGetDatasetRevisions } from '../../../hooks/use-get-dataset-revisions.hook';
 import { useGetActiveModelArchitectureId } from '../hooks/api/use-get-active-model-architecture-id.hook';
-import { useGetDatasetRevisions } from '../hooks/api/use-get-dataset-revisions';
 import { useGetTaskModelArchitectures } from '../hooks/api/use-get-model-architectures.hook';
 import { useGetTrainingDevices } from '../hooks/api/use-get-training-devices';
 
@@ -37,6 +37,7 @@ const TrainModelContext = createContext<TrainModelContextProps | null>(null);
 
 type TrainModelProviderProps = {
     children: ReactNode;
+    preSelectedDatasetRevisionId?: string;
 };
 
 const getModelArchitectures = (
@@ -65,7 +66,7 @@ const getModelArchitectures = (
     });
 };
 
-export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
+export const TrainModelProvider = ({ children, preSelectedDatasetRevisionId }: TrainModelProviderProps) => {
     const { data } = useGetTaskModelArchitectures();
     const { data: trainingDevices } = useGetTrainingDevices();
     const { data: datasetRevisions } = useGetDatasetRevisions();
@@ -88,7 +89,7 @@ export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
         trainingDevices?.at(0)?.type ?? null
     );
     const [selectedDatasetRevision, setSelectedDatasetRevision] = useState<string | null>(
-        datasetRevisions?.at(0)?.id ?? null
+        preSelectedDatasetRevisionId ?? datasetRevisions?.at(0)?.id ?? null
     );
 
     return (
@@ -105,7 +106,7 @@ export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
                 selectedTrainingDevice,
                 onSelectTrainingDevice: setSelectedTrainingDevice,
 
-                datasetRevisions,
+                datasetRevisions: datasetRevisions ?? [],
                 selectedDatasetRevision,
                 onSelectDatasetRevision: setSelectedDatasetRevision,
             }}

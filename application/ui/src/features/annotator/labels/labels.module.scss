@@ -32,7 +32,11 @@
     border: none;
     flex-shrink: 0;
     height: var(--spectrum-global-dimension-size-350);
-    transition: outline 0.15s ease;
+    outline: var(--spectrum-global-dimension-size-25) solid transparent;
+    outline-offset: 0;
+    transition:
+        outline-color 0.15s ease,
+        outline-offset 0.15s ease;
 }
 
 .badge:hover {
@@ -48,7 +52,7 @@
 .selected,
 .selected:focus {
     outline-offset: var(--spectrum-global-dimension-size-25);
-    outline: var(--spectrum-global-dimension-size-25) solid var(--labelBgColor);
+    outline-color: var(--labelBgColor);
 }
 
 .disabled {

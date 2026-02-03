@@ -1,7 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from uuid import UUID
+from datetime import datetime
 
 from pydantic import BaseModel, Field
 
@@ -9,6 +9,8 @@ from app.core.models import BaseIDModel
 
 
 class ItemCount(BaseModel):
+    """Counts of samples in different splits of a dataset revision."""
+
     total: int = Field(..., description="Total number of items in the dataset")
     training: int = Field(..., description="Number of items in the training subset")
     validation: int = Field(..., description="Number of items in the validation subset")
@@ -16,20 +18,22 @@ class ItemCount(BaseModel):
 
 
 class DatasetRevisionView(BaseIDModel):
-    """Represents metadata of a dataset revision."""
+    """A dataset revision is an immutable snapshot of a training dataset."""
 
-    project_id: UUID = Field(..., description="Id of the project of the dataset revision")
-    name: str = Field(..., description="User friendly model name")
-    files_deleted: bool = Field(..., description="Whether or not files are deleted from disk for this dataset revision")
-    item_counts: ItemCount = Field(description="Number of items in the dataset")
+    name: str = Field(..., description="Name of the dataset revision")
+    created_at: datetime = Field(description="Timestamp when when the dataset revision was created")
+    files_deleted: bool = Field(..., description="Indicates if the dataset revision files have been deleted")
+    item_counts: ItemCount | None = Field(
+        description="Number of items in the dataset (null for deleted datasets)", default=None
+    )
 
     model_config = {
         "json_schema_extra": {
             "example": {
                 "id": "1ed5487a-a9e7-44d9-aaba-ea92fb8983ee",
-                "project_id": "f619c2c8-b14c-4188-9268-d2e0d0662bdd",
                 "name": "Dataset (1ed5487a)",
                 "created_at": "2023-10-01T12:00:00Z",
+                "files_deleted": False,
                 "item_counts": {"total": 100, "training": 70, "validation": 20, "testing": 10},
             }
         }

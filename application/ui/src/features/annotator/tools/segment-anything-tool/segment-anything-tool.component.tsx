@@ -8,12 +8,12 @@ import { clampPointBetweenImage } from '@geti/smart-tools/utils';
 import selectionCursor from '../../../../assets/icons/selection.svg?url';
 import { useZoom } from '../../../../components/zoom/zoom.provider';
 import type { Label } from '../../../../constants/shared-types';
-import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
 import type { Annotation, RegionOfInterest, Shape } from '../../../../shared/types';
 import { AnnotationShape } from '../../annotations/annotation-shape/annotation-shape.component';
 import { MaskAnnotations } from '../../annotations/mask-annotations.component';
 import { SvgToolCanvas } from '../svg-tool-canvas.component';
+import { useAddAndSelectAnnotations } from '../use-add-and-select-annotations.hook';
 import { getRelativePoint, removeOffLimitPoints } from '../utils';
 import { SAMLoading } from './sam-loading.component';
 import { useSegmentAnythingModel } from './use-segment-anything.hook';
@@ -57,7 +57,7 @@ export const SegmentAnythingTool = () => {
 
     const zoom = useZoom();
     const { roi, image, selectedLabel } = useAnnotator();
-    const { addAnnotations } = useAnnotationActions();
+    const { addAndSelectAnnotations } = useAddAndSelectAnnotations();
     const { isLoading, decodingQueryFn } = useSegmentAnythingModel();
     const throttledDecodingQueryFn = useSingleStackFn(decodingQueryFn);
 
@@ -90,7 +90,7 @@ export const SegmentAnythingTool = () => {
     };
 
     const handleAddAnnotations = (shapes: Shape[], label: Label) => {
-        addAnnotations(shapes, [label]);
+        addAndSelectAnnotations(shapes, [label]);
         setPreviewShapes([]);
     };
 

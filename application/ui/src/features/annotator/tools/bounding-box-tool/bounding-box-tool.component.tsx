@@ -2,14 +2,20 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useZoom } from '../../../../components/zoom/zoom.provider';
-import { useAnnotationActions } from '../../../../shared/annotator/annotation-actions-provider.component';
+import type { Label } from '../../../../constants/shared-types';
 import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
+import type { Rect } from '../../../../shared/types';
 import { DrawingBox } from '../drawing-box-tool/drawing-box.component';
+import { useAddAndSelectAnnotations } from '../use-add-and-select-annotations.hook';
 
 export const BoundingBoxTool = () => {
     const { scale: zoom } = useZoom();
-    const { addAnnotations } = useAnnotationActions();
+    const { addAndSelectAnnotations } = useAddAndSelectAnnotations();
     const { mediaItem, image, selectedLabel } = useAnnotator();
+
+    const handleComplete = (shapes: Rect[], labels: Label[]): string[] => {
+        return addAndSelectAnnotations(shapes, labels);
+    };
 
     return (
         <DrawingBox
@@ -17,7 +23,7 @@ export const BoundingBoxTool = () => {
             image={image}
             zoom={zoom}
             selectedLabel={selectedLabel}
-            onComplete={addAnnotations}
+            onComplete={handleComplete}
         />
     );
 };

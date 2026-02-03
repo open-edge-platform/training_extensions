@@ -332,13 +332,17 @@ class TestOTXTrainerAssignSubsets:
 
 
 class TestOTXTrainerCreateTrainingDataset:
-    """Tests for the OTXTrainer.create_training_dataset method."""
+    """Tests for the OTXTrainer.prepare_training_dataset method."""
 
-    def test_create_training_dataset_success(
+    @pytest.mark.parametrize(
+        "dataset_revision_id", [None, uuid4()], ids=["with new dataset revision", "with existing dataset revision"]
+    )
+    def test_prepare_training_dataset_success(
         self,
         fxt_otx_trainer: Callable[[], OTXTrainer],
         fxt_dataset_service: Mock,
         fxt_dataset_revision_service: Mock,
+        dataset_revision_id,
     ):
         """Test successful creation of training, validation, and testing datasets."""
         # Arrange
@@ -349,6 +353,7 @@ class TestOTXTrainerCreateTrainingDataset:
         # Mock the Datumaro dataset
         mock_dm_dataset = Mock()
         fxt_dataset_service.get_dm_dataset.return_value = mock_dm_dataset
+        fxt_dataset_revision_service.load_revision.return_value = mock_dm_dataset
 
         # Mock filtered subsets
         mock_training_subset = Mock()
@@ -362,8 +367,8 @@ class TestOTXTrainerCreateTrainingDataset:
         ]
 
         # Mock dataset revision saving
-        dataset_revision_id = uuid4()
-        fxt_dataset_revision_service.save_revision.return_value = dataset_revision_id
+        new_dataset_revision_id = uuid4()  # this ID is only used when a new revision is created
+        fxt_dataset_revision_service.save_revision.return_value = new_dataset_revision_id
 
         # Create a training configuration matching the expected structure
         training_config = {
@@ -418,19 +423,32 @@ class TestOTXTrainerCreateTrainingDataset:
                 otx_trainer, "_OTXTrainer__get_otx_dataset_class_by_task_type", return_value=mock_dataset_class
             ):
                 # Act
-                dataset_info = otx_trainer.create_training_dataset(
+                dataset_info = otx_trainer.prepare_training_dataset(
                     project_id=project_id,
                     task=task,
                     training_config=training_config,
+                    dataset_revision_id=dataset_revision_id,
                 )
 
         # Assert
-        # Verify get_dm_dataset was called with correct parameters
-        fxt_dataset_service.get_dm_dataset.assert_called_once_with(
-            project_id=project_id,
-            task=task,
-            annotation_status=DatasetItemAnnotationStatus.REVIEWED,
-        )
+        # Verify that a dataset revision was created and saved if and only if no revision ID was provided
+        if dataset_revision_id is None:
+            fxt_dataset_service.get_dm_dataset.assert_called_once_with(
+                project_id=project_id,
+                task=task,
+                annotation_status=DatasetItemAnnotationStatus.REVIEWED,
+            )
+            fxt_dataset_revision_service.save_revision.assert_called_once_with(
+                project_id=project_id,
+                dataset=mock_dm_dataset,
+            )
+            fxt_dataset_revision_service.load_revision.assert_not_called()
+        else:
+            fxt_dataset_service.get_dm_dataset.assert_not_called()
+            fxt_dataset_revision_service.save_revision.assert_not_called()
+            fxt_dataset_revision_service.load_revision.assert_called_once_with(
+                project_id=project_id, dataset_revision_id=dataset_revision_id
+            )
 
         # Verify subsets were filtered for train, val, and test
         assert mock_dm_dataset.filter_by_subset.call_count == 3
@@ -460,13 +478,10 @@ class TestOTXTrainerCreateTrainingDataset:
         assert dataset_info.otx_training_dataset == mock_otx_training_dataset
         assert dataset_info.otx_validation_dataset == mock_otx_validation_dataset
         assert dataset_info.otx_testing_dataset == mock_otx_testing_dataset
-        assert dataset_info.revision_id == dataset_revision_id
-
-        # Verify dataset revision was saved
-        fxt_dataset_revision_service.save_revision.assert_called_once_with(
-            project_id=project_id,
-            dataset=mock_dm_dataset,
-        )
+        if dataset_revision_id is not None:
+            assert dataset_info.revision_id == dataset_revision_id
+        else:
+            assert dataset_info.revision_id == new_dataset_revision_id
 
         # Verify SubsetConfig objects were created correctly
         assert dataset_info.otx_training_subset_config.batch_size == 8
