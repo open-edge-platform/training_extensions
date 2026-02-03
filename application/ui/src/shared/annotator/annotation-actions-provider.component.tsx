@@ -73,7 +73,18 @@ export const AnnotationActionsProvider = ({
     const projectId = useProjectIdentifier();
     const saveMutation = $api.useMutation(
         'post',
-        '/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations'
+        '/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations',
+        {
+            meta: {
+                invalidateQueries: [
+                    [
+                        'get',
+                        '/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations',
+                        { params: { path: { project_id: projectId, dataset_item_id: mediaItem.id } } },
+                    ],
+                ],
+            },
+        }
     );
 
     const { data: project } = useProject();
