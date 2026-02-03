@@ -16,19 +16,19 @@ class ModelArchitectureCategory:
 
 RECOMMENDED_MODEL_ARCHITECTURES = {
     TaskType.CLASSIFICATION: {
-        ModelArchitectureCategory.BALANCE: "Custom_Image_Classification_EfficinetNet-B0",
-        ModelArchitectureCategory.ACCURACY: "Custom_Image_Classification_EfficientNet-V2-S",
-        ModelArchitectureCategory.SPEED: "Custom_Image_Classification_MobileNet-V3-large-1x",
+        ModelArchitectureCategory.BALANCE: "image-classification-efficientnet-b0",
+        ModelArchitectureCategory.ACCURACY: "image-classification-efficientnet-v2-s",
+        ModelArchitectureCategory.SPEED: "image-classification-mobilenet-v3-large",
     },
     TaskType.DETECTION: {
-        ModelArchitectureCategory.BALANCE: "Custom_Object_Detection_Gen3_ATSS",
-        ModelArchitectureCategory.ACCURACY: "Object_Detection_DFine_X",
-        ModelArchitectureCategory.SPEED: "Object_Detection_YOLOX_S",
+        ModelArchitectureCategory.BALANCE: "object-detection-atss-mobilenet-v2",
+        ModelArchitectureCategory.ACCURACY: "object-detection-d-fine-x",
+        ModelArchitectureCategory.SPEED: "object-detection-yolox-s",
     },
     TaskType.INSTANCE_SEGMENTATION: {
-        ModelArchitectureCategory.BALANCE: "Custom_Instance_Segmentation_MaskRCNN_ResNet50_v2",
-        ModelArchitectureCategory.ACCURACY: "Custom_Counting_Instance_Segmentation_MaskRCNN_SwinT_FP16",
-        ModelArchitectureCategory.SPEED: "Custom_Counting_Instance_Segmentation_MaskRCNN_EfficientNetB2B",
+        ModelArchitectureCategory.BALANCE: "instance-segmentation-mask-rcnn-resnet50",
+        ModelArchitectureCategory.ACCURACY: "instance-segmentation-mask-rcnn-swin-t",
+        ModelArchitectureCategory.SPEED: "instance-segmentation-mask-rcnn-efficientnet-b2",
     },
 }
 
@@ -73,9 +73,9 @@ class ModelArchitectures(BaseModel):
             "example": {
                 "model_architectures": [
                     {
-                        "id": "Object_Detection_Deim_DFine_M",
+                        "id": "object-detection-deim-d-fine-m",
                         "task": "detection",
-                        "name": "Deim-DFine-M",
+                        "name": "DEIM-D-FINE-M",
                         "description": "DEIM is an advanced training framework designed to enhance the matching"
                         " mechanism in DETRs, enabling faster convergence and improved accuracy.",
                         "capabilities": {"xai": True, "tiling": True},
@@ -88,9 +88,9 @@ class ModelArchitectures(BaseModel):
                     },
                 ],
                 "top_picks": {
-                    "balance": "Custom_Object_Detection_Gen3_ATSS",
-                    "speed": "Object_Detection_YOLOX_S",
-                    "accuracy": "Object_Detection_DFine_X",
+                    "balance": "object-detection-atss-mobilenet-v2",
+                    "speed": "object-detection-yolox-s",
+                    "accuracy": "object-detection-d-fine-x",
                 },
             }
         }

@@ -118,7 +118,7 @@ def seed(with_model: bool) -> None:
             video_path="data/media/card-video.mp4",
             sink_id=folders.id,
             model_id="977eeb18-eaac-449d-bc80-e340fbe052ad",
-            model_architecture="Object_Detection_YOLOX_S",
+            model_architecture="object-detection-yolox-s",
             labels=detection_labels,
         )
 
@@ -129,7 +129,7 @@ def seed(with_model: bool) -> None:
             video_path="data/media/fish-video.mp4",
             sink_id=folders.id,
             model_id="c3d4e5f6-a7b8-9012-cdef-123456789012",
-            model_architecture="Custom_Instance_Segmentation_RTMDet_tiny",
+            model_architecture="instance-segmentation-rtmdet-tiny",
             labels=segmentation_labels,
         )
 

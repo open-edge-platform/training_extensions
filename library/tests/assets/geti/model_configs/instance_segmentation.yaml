@@ -1,5 +1,5 @@
 job_type: train
-model_manifest_id: Custom_Counting_Instance_Segmentation_MaskRCNN_EfficientNetB2B
+model_manifest_id: instance-segmentation-mask-rcnn-efficientnet-b2
 export_parameters:
   - format: openvino
     output_model_id: 687dde02ee0628d82f9fdfe3

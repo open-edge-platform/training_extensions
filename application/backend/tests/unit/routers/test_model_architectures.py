@@ -21,11 +21,11 @@ class TestModelArchitecturesEndpoint:
 
         # Verify structure of first detection model
         detection_model = next(
-            arch for arch in data["model_architectures"] if arch["id"] == "Custom_Object_Detection_Gen3_ATSS"
+            arch for arch in data["model_architectures"] if arch["id"] == "object-detection-atss-mobilenet-v2"
         )
 
         assert detection_model["task"] == "detection"
-        assert detection_model["name"] == "ATSS-MobileNetV2"
+        assert detection_model["name"] == "ATSS-MobileNet-V2"
         assert (
             detection_model["description"]
             == "ATSS (Adaptive Training Sample Selection) is an anchor-based object detection algorithm that introduces"
@@ -50,9 +50,9 @@ class TestModelArchitecturesEndpoint:
         # Verify top picks
         assert "top_picks" in data
         top_picks = data["top_picks"]
-        assert top_picks["balance"] == "Custom_Object_Detection_Gen3_ATSS"
-        assert top_picks["speed"] == "Object_Detection_YOLOX_S"
-        assert top_picks["accuracy"] == "Object_Detection_DFine_X"
+        assert top_picks["balance"] == "object-detection-atss-mobilenet-v2"
+        assert top_picks["speed"] == "object-detection-yolox-s"
+        assert top_picks["accuracy"] == "object-detection-d-fine-x"
 
     @pytest.mark.parametrize(
         "task_filter, total_models",

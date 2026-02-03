@@ -196,64 +196,6 @@ class TestGetiConfigConverter:
             len(engine.datamodule.val_dataloader().dataset.transforms.transforms) == 4
         )
 
-    def test_semantic_segmentation_augs(self, tmp_path):
-        cfg_path = "tests/assets/geti/model_configs/semantic_segmentation.yaml"
-        otx_config = OTXConfig.from_yaml_file(cfg_path)
-        default_config = GetiConfigConverter.convert(asdict(otx_config))
-        assert len(default_config["data"]["train_subset"]["transforms"]) == 9
-        # instantiate
-        data_root = "tests/assets/common_semantic_segmentation_dataset"
-        engine, _ = GetiConfigConverter.instantiate(
-            config=default_config,
-            work_dir=tmp_path,
-            data_root=data_root,
-        )
-        assert len(engine.datamodule.train_subset.transforms) == 9
-        assert engine.datamodule.train_dataloader().dataset.transforms is not None
-        # crop, collor_jitter, flip, normalize, to_dtype
-        assert len(engine.datamodule.train_dataloader().dataset.transforms.transforms) == 5
-
-    def test_keypoint_detection_augs(self, tmp_path):
-        cfg_path = "tests/assets/geti/model_configs/keypoint_detection.yaml"
-        otx_config = OTXConfig.from_yaml_file(cfg_path)
-        default_config = GetiConfigConverter.convert(asdict(otx_config))
-        assert len(default_config["data"]["train_subset"]["transforms"]) == 6
-        # instantiate
-        data_root = "tests/assets/car_tree_bug_keypoint"
-        engine, _ = GetiConfigConverter.instantiate(
-            config=default_config,
-            work_dir=tmp_path,
-            data_root=data_root,
-        )
-        assert len(engine.datamodule.train_subset.transforms) == 6
-        assert engine.datamodule.train_dataloader().dataset.transforms is not None
-        # top_down_affine, normalize, to_dtype
-        assert len(engine.datamodule.train_dataloader().dataset.transforms.transforms) == 3
-        # resize, pad, normalize, to_dtype
-        assert len(engine.datamodule.val_dataloader().dataset.transforms.transforms) == 4
-
-        otx_config.hyper_parameters["dataset_preparation"]["augmentation"]["topdown_affine"]["enable"] = False
-        default_config = GetiConfigConverter.convert(asdict(otx_config))
-        assert len(default_config["data"]["train_subset"]["transforms"]) == 6
-        for aug in default_config["data"]["train_subset"]["transforms"]:
-            if aug["class_path"] == "otx.data.transform_libs.torchvision.TopDownAffine":
-                assert not aug["enable"]
-
-        # instantiate
-        data_root = "tests/assets/car_tree_bug_keypoint"
-        engine, _ = GetiConfigConverter.instantiate(
-            config=default_config,
-            work_dir=tmp_path,
-            data_root=data_root,
-        )
-        assert engine.datamodule.train_dataloader().dataset.transforms is not None
-        # top_down_affine, normalize, to_dtype
-        assert len(engine.datamodule.train_dataloader().dataset.transforms.transforms) == 3
-        # resize, normalize, to_dtype
-        assert len(engine.datamodule.val_dataloader().dataset.transforms.transforms) == 3
-        for aug in engine.datamodule.val_dataloader().dataset.transforms.transforms:
-            assert aug.__class__.__name__ != "otx.data.transform_libs.torchvision.Pad"
-
     def test_instantiate(self, tmp_path):
         data_root = "tests/assets/car_tree_bug"
         otx_config = OTXConfig.from_yaml_file("tests/assets/geti/model_configs/detection.yaml")

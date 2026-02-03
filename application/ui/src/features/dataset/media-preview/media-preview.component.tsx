@@ -71,11 +71,11 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
                         <CanvasSettingsProvider>
                             <View gridArea={'header'}>
                                 <SecondaryToolbar
+                                    mode={mode}
                                     items={items}
                                     onClose={onClose}
                                     mediaItem={mediaItem}
                                     onSelectedMediaItem={onSelectedMediaItem}
-                                    mode={mode}
                                     onModeChange={setMode}
                                 />
                             </View>
