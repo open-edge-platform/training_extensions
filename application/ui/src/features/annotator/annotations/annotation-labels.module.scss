@@ -1,7 +1,0 @@
-.labelContainer {
-    --textColor: lch(from var(--labelColor) calc((50 - l) * infinity) 0 0);
-
-    text {
-        fill: var(--textColor);
-    }
-}
