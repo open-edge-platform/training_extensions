@@ -122,7 +122,7 @@ test.describe('Annotator Classification', () => {
                 await expect(annotation).toHaveAttribute('stroke', redLabel.color);
             });
 
-            await test.step('add more labels and keep the initial stroke color', async () => {
+            await test.step('add more labels and use white stroke color for multiple labels', async () => {
                 await page.getByRole('button', { name: `Label ${greenLabel.name}` }).click();
                 await page.getByRole('button', { name: `Label ${yellowLabel.name}` }).click();
 
@@ -132,7 +132,7 @@ test.describe('Annotator Classification', () => {
 
                 const annotation = getAnnotationShape(page);
                 await expect(annotation).toBeVisible();
-                await expect(annotation).toHaveAttribute('stroke', redLabel.color);
+                await expect(annotation).toHaveAttribute('stroke', 'white');
             });
         });
 

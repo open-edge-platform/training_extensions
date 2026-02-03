@@ -62,7 +62,7 @@ export const AnnotationShapeWithLabels = ({ annotation }: AnnotationShapeProps) 
             <g transform={`translate(${-labelX}, ${-labelY})`}>
                 <AnnotationShape annotation={annotation} />
             </g>
-            <AnnotationLabels labels={labels} onRemove={removeLabels} />
+            <AnnotationLabels labels={labels} onRemove={removeLabels} useBottomCorners />
         </g>
     );
 };
