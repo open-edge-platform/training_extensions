@@ -1,11 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ReactNode, RefObject, useRef, useState } from 'react';
+import { ReactNode, RefObject, useState } from 'react';
 
-import { View } from '@geti/ui';
-import { useOverlay } from 'react-aria';
-import { createPortal } from 'react-dom';
+import { dimensionValue, Flex, Popover } from '@geti/ui';
 import { OverlayTriggerState } from 'react-stately';
 
 import { useEventListener } from '../../hooks/event-listener.hook';
@@ -18,58 +16,40 @@ export interface CursorContextMenuProps {
     triggerRef: RefObject<Element | null>;
 }
 
-export const X_PADDING = 10;
-
-const getParentModal = () => {
-    return document.querySelector('[data-testid="modal"]');
-};
-
 export const CursorContextMenu = ({ state, children, triggerRef, onOpen }: CursorContextMenuProps) => {
-    const ref = useRef<HTMLDivElement>(null);
     const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
 
     useEventListener(
         'contextmenu',
         (event) => {
             event.preventDefault();
-            const parentModal = getParentModal();
+            const modalBox = triggerRef.current?.getBoundingClientRect();
 
-            if (parentModal === null) return;
-
-            const modalBox = parentModal.getBoundingClientRect();
+            if (modalBox === undefined) return;
 
             onOpen();
-            setCursorPosition({ x: event.clientX - modalBox.x + X_PADDING, y: event.clientY - modalBox.y });
+            setCursorPosition({ x: event.clientX - modalBox.x, y: event.clientY - modalBox.y });
         },
         triggerRef
     );
 
-    const { overlayProps } = useOverlay(
-        {
-            isOpen: state.isOpen,
-            isDismissable: true,
-            shouldCloseOnBlur: false,
-            onClose: state.close,
-        },
-        ref
-    );
-
-    if (!state.isOpen) return null;
-
-    return createPortal(
-        <div ref={ref} {...overlayProps}>
-            <View
-                top={cursorPosition.y}
-                left={cursorPosition.x}
-                zIndex={100001}
-                position='absolute'
-                data-testid='position container'
-                backgroundColor='gray-200'
-                {...overlayProps}
+    return (
+        <Popover
+            hideArrow
+            state={state}
+            offset={cursorPosition.y}
+            crossOffset={cursorPosition.x}
+            placement={'bottom start'}
+            triggerRef={triggerRef}
+            onDismissButtonPress={state.close}
+        >
+            <Flex
+                gap={'size-100'}
+                justifyContent={'space-between'}
+                UNSAFE_style={{ paddingBlock: dimensionValue('size-50') }}
             >
                 {children}
-            </View>
-        </div>,
-        getParentModal() as HTMLElement
+            </Flex>
+        </Popover>
     );
 };
