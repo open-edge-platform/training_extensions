@@ -296,200 +296,107 @@
 
 <span class="n">TEMPLATE_ID_MAPPING</span> <span class="o">=</span> <span class="p">{</span>
     <span class="c1"># MULTI_CLASS_CLS</span>
-    <span class="s2">&quot;Custom_Image_Classification_DeiT-Tiny&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;image-classification-deit-tiny&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;classification&quot;</span> <span class="o">/</span> <span class="s2">&quot;multi_class_cls&quot;</span> <span class="o">/</span> <span class="s2">&quot;deit_tiny.yaml&quot;</span><span class="p">,</span>
         <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
-    <span class="s2">&quot;Custom_Image_Classification_EfficinetNet-B0&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;image-classification-efficientnet-b0&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;classification&quot;</span> <span class="o">/</span> <span class="s2">&quot;multi_class_cls&quot;</span> <span class="o">/</span> <span class="s2">&quot;efficientnet_b0.yaml&quot;</span><span class="p">,</span>
         <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">BALANCE</span><span class="p">,</span>
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">},</span>
-    <span class="s2">&quot;Custom_Image_Classification_EfficientNet-V2-S&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;image-classification-efficientnet-v2-s&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;classification&quot;</span> <span class="o">/</span> <span class="s2">&quot;multi_class_cls&quot;</span> <span class="o">/</span> <span class="s2">&quot;efficientnet_v2.yaml&quot;</span><span class="p">,</span>
         <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACCURACY</span><span class="p">,</span>
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
-    <span class="s2">&quot;Custom_Image_Classification_MobileNet-V3-large-1x&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;image-classification-mobilenet-v3-large&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;classification&quot;</span> <span class="o">/</span> <span class="s2">&quot;multi_class_cls&quot;</span> <span class="o">/</span> <span class="s2">&quot;mobilenet_v3_large.yaml&quot;</span><span class="p">,</span>
         <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">SPEED</span><span class="p">,</span>
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
-    <span class="s2">&quot;Custom_Image_Classification_EfficientNet-B3&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;image-classification-efficientnet-b3&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;classification&quot;</span> <span class="o">/</span> <span class="s2">&quot;multi_class_cls&quot;</span> <span class="o">/</span> <span class="s2">&quot;tv_efficientnet_b3.yaml&quot;</span><span class="p">,</span>
         <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
-    <span class="s2">&quot;Custom_Image_Classification_EfficientNet-V2-L&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;classification&quot;</span> <span class="o">/</span> <span class="s2">&quot;multi_class_cls&quot;</span> <span class="o">/</span> <span class="s2">&quot;tv_efficientnet_v2_l.yaml&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">DEPRECATED</span><span class="p">,</span>
-        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;Custom_Image_Classification_MobileNet-V3-small&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;classification&quot;</span> <span class="o">/</span> <span class="s2">&quot;multi_class_cls&quot;</span> <span class="o">/</span> <span class="s2">&quot;tv_mobilenet_v3_small.yaml&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">DEPRECATED</span><span class="p">,</span>
-        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">},</span>
     <span class="c1"># DETECTION</span>
-    <span class="s2">&quot;Custom_Object_Detection_Gen3_ATSS&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;object-detection-atss-mobilenet-v2&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;atss_mobilenetv2.yaml&quot;</span><span class="p">,</span>
         <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">BALANCE</span><span class="p">,</span>
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">},</span>
-    <span class="s2">&quot;Object_Detection_ResNeXt101_ATSS&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;atss_resnext101.yaml&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">DEPRECATED</span><span class="p">,</span>
-        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;Custom_Object_Detection_Gen3_SSD&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;object-detection-ssd-mobilenet-v2&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;ssd_mobilenetv2.yaml&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">DEPRECATED</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
-    <span class="s2">&quot;Object_Detection_YOLOX_X&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;object-detection-yolox-x&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;yolox_x.yaml&quot;</span><span class="p">,</span>
         <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
-    <span class="s2">&quot;Object_Detection_YOLOX_L&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;object-detection-yolox-l&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;yolox_l.yaml&quot;</span><span class="p">,</span>
         <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
-    <span class="s2">&quot;Object_Detection_YOLOX_S&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;object-detection-yolox-s&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;yolox_s.yaml&quot;</span><span class="p">,</span>
         <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">SPEED</span><span class="p">,</span>
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
-    <span class="s2">&quot;Custom_Object_Detection_YOLOX&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;object-detection-yolox-tiny&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;yolox_tiny.yaml&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">DEPRECATED</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
-    <span class="s2">&quot;Object_Detection_RTDetr_18&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;rtdetr_18.yaml&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">DEPRECATED</span><span class="p">,</span>
-        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;Object_Detection_RTDetr_50&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;object-detection-rt-detr-r50&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;rtdetr_50.yaml&quot;</span><span class="p">,</span>
         <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
-    <span class="s2">&quot;Object_Detection_RTDetr_101&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;rtdetr_101.yaml&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">DEPRECATED</span><span class="p">,</span>
-        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;Object_Detection_RTMDet_tiny&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;rtmdet_tiny.yaml&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">DEPRECATED</span><span class="p">,</span>
-        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;Object_Detection_DFine_X&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;object-detection-d-fine-x&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;dfine_x.yaml&quot;</span><span class="p">,</span>
         <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACCURACY</span><span class="p">,</span>
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
-    <span class="s2">&quot;Object_Detection_Deim_DFine_M&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;object-detection-deim-d-fine-m&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;deim_dfine_m.yaml&quot;</span><span class="p">,</span>
         <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
-    <span class="s2">&quot;Object_Detection_Deim_DFine_L&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;object-detection-deim-d-fine-l&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;deim_dfine_l.yaml&quot;</span><span class="p">,</span>
         <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
-    <span class="s2">&quot;Object_Detection_Deim_DFine_X&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;object-detection-deim-d-fine-x&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;deim_dfine_x.yaml&quot;</span><span class="p">,</span>
         <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
     <span class="c1"># INSTANCE_SEGMENTATION</span>
-    <span class="s2">&quot;Custom_Counting_Instance_Segmentation_MaskRCNN_ResNet50&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;instance_segmentation&quot;</span> <span class="o">/</span> <span class="s2">&quot;maskrcnn_r50.yaml&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">DEPRECATED</span><span class="p">,</span>
-        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;Custom_Counting_Instance_Segmentation_MaskRCNN_SwinT_FP16&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;instance-segmentation-mask-rcnn-swin-t&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;instance_segmentation&quot;</span> <span class="o">/</span> <span class="s2">&quot;maskrcnn_swint.yaml&quot;</span><span class="p">,</span>
         <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACCURACY</span><span class="p">,</span>
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
-    <span class="s2">&quot;Custom_Counting_Instance_Segmentation_MaskRCNN_EfficientNetB2B&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;instance-segmentation-mask-rcnn-efficientnet-b2&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;instance_segmentation&quot;</span> <span class="o">/</span> <span class="s2">&quot;maskrcnn_efficientnetb2b.yaml&quot;</span><span class="p">,</span>
         <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">SPEED</span><span class="p">,</span>
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">},</span>
-    <span class="s2">&quot;Custom_Instance_Segmentation_RTMDet_tiny&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;instance-segmentation-rtmdet-tiny&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;instance_segmentation&quot;</span> <span class="o">/</span> <span class="s2">&quot;rtmdet_inst_tiny.yaml&quot;</span><span class="p">,</span>
         <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">},</span>
-    <span class="s2">&quot;Custom_Instance_Segmentation_MaskRCNN_ResNet50_v2&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;instance-segmentation-mask-rcnn-resnet50&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;instance_segmentation&quot;</span> <span class="o">/</span> <span class="s2">&quot;maskrcnn_r50_tv.yaml&quot;</span><span class="p">,</span>
         <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">BALANCE</span><span class="p">,</span>
         <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="c1"># ROTATED_DETECTION</span>
-    <span class="s2">&quot;Custom_Rotated_Detection_via_Instance_Segmentation_MaskRCNN_ResNet50&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;rotated_detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;maskrcnn_r50.yaml&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">DEPRECATED</span><span class="p">,</span>
-        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;Custom_Rotated_Detection_via_Instance_Segmentation_MaskRCNN_EfficientNetB2B&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;rotated_detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;maskrcnn_efficientnetb2b.yaml&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">SPEED</span><span class="p">,</span>
-        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;Rotated_Detection_MaskRCNN_ResNet50_V2&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;rotated_detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;maskrcnn_r50_v2.yaml&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">BALANCE</span><span class="p">,</span>
-        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="c1"># SEMANTIC_SEGMENTATION</span>
-    <span class="s2">&quot;Custom_Semantic_Segmentation_Lite-HRNet-18-mod2_OCR&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;semantic_segmentation&quot;</span> <span class="o">/</span> <span class="s2">&quot;litehrnet_18.yaml&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">BALANCE</span><span class="p">,</span>
-        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;Custom_Semantic_Segmentation_Lite-HRNet-s-mod2_OCR&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;semantic_segmentation&quot;</span> <span class="o">/</span> <span class="s2">&quot;litehrnet_s.yaml&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">SPEED</span><span class="p">,</span>
-        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;Custom_Semantic_Segmentation_Lite-HRNet-x-mod3_OCR&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;semantic_segmentation&quot;</span> <span class="o">/</span> <span class="s2">&quot;litehrnet_x.yaml&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">DEPRECATED</span><span class="p">,</span>
-        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;Custom_Semantic_Segmentation_SegNext_t&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;semantic_segmentation&quot;</span> <span class="o">/</span> <span class="s2">&quot;segnext_t.yaml&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
-        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;Custom_Semantic_Segmentation_SegNext_s&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;semantic_segmentation&quot;</span> <span class="o">/</span> <span class="s2">&quot;segnext_s.yaml&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
-        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;Custom_Semantic_Segmentation_SegNext_B&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;semantic_segmentation&quot;</span> <span class="o">/</span> <span class="s2">&quot;segnext_b.yaml&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
-        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;Custom_Semantic_Segmentation_DINOV2_S&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;semantic_segmentation&quot;</span> <span class="o">/</span> <span class="s2">&quot;dino_v2.yaml&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">ACCURACY</span><span class="p">,</span>
-        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="c1"># KEYPOINT_DETECTION</span>
-    <span class="s2">&quot;Keypoint_Detection_RTMPose_Tiny&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;recipe_path&quot;</span><span class="p">:</span> <span class="n">RECIPE_PATH</span> <span class="o">/</span> <span class="s2">&quot;keypoint_detection&quot;</span> <span class="o">/</span> <span class="s2">&quot;rtmpose_tiny.yaml&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">ModelStatus</span><span class="o">.</span><span class="n">SPEED</span><span class="p">,</span>
-        <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">},</span>
 <span class="p">}</span>
 
