@@ -44,6 +44,7 @@ const mapLocalAnnotationsToServer = (localAnnotations: Annotation[]): Annotation
 interface AnnotationsContextValue {
     annotations: Annotation[];
     addAnnotations: (shapes: Shape[], labels: Label[]) => string[];
+    addAnnotationWithEmptyLabel: (label: Label) => void;
     deleteAnnotations: (annotationIds: string[]) => void;
     updateAnnotations: (updatedAnnotations: Annotation[], labels?: Label[]) => void;
     submitAnnotations: () => Promise<void>;
@@ -129,6 +130,15 @@ export const AnnotationActionsProvider = ({
         return newAnnotations.map((annotation) => annotation.id);
     };
 
+    const deleteAllAnnotations = () => {
+        setAnnotations([]);
+    };
+
+    const addAnnotationWithEmptyLabel = (emptyLabel: Label) => {
+        deleteAllAnnotations();
+        addAnnotations([{ type: 'full_image' }], [emptyLabel]);
+    };
+
     const deleteAnnotations = (annotationIds: string[]) => {
         setAnnotations((prevAnnotations) =>
             prevAnnotations.filter((annotation) => !annotationIds.includes(annotation.id))
@@ -173,6 +183,7 @@ export const AnnotationActionsProvider = ({
                 addAnnotations,
                 updateAnnotations,
                 deleteAnnotations,
+                addAnnotationWithEmptyLabel,
 
                 // Remote
                 submitAnnotations,

@@ -50,7 +50,8 @@ const filterOutEmptyLabels = (labels: Label[]): Label[] => labels.filter((label)
 export const Labels = ({ isClassification = false, isMultiLabel = false, isReadOnly = false }: LabelsProps) => {
     const { selectedLabelId, setSelectedLabelId, labels } = useAnnotator();
     const { selectedAnnotations } = useSelectedAnnotations();
-    const { annotations, addAnnotations, updateAnnotations, deleteAnnotations } = useAnnotationActions();
+    const { annotations, addAnnotations, updateAnnotations, deleteAnnotations, addAnnotationWithEmptyLabel } =
+        useAnnotationActions();
 
     const handleClassificationClick = (label: Label) => {
         if (isReadOnly) return;
@@ -61,12 +62,13 @@ export const Labels = ({ isClassification = false, isMultiLabel = false, isReadO
         }
 
         if (label.id === EMPTY_LABEL_ID && annotations.length !== 0) {
-            deleteAnnotations(annotations.map(({ id }) => id));
-            addAnnotations([{ type: 'full_image' }], [label]);
+            addAnnotationWithEmptyLabel(label);
             return;
         }
 
         if (isMultiLabel) {
+            // If there is an annotation with the empty label, and we are trying to add assign new label to it, we need
+            // to remove the empty label from the annotation first.
             const annotationWithoutEmptyLabel = annotations.map((annotation) => ({
                 ...annotation,
                 labels: filterOutEmptyLabels(annotation.labels),
@@ -101,8 +103,7 @@ export const Labels = ({ isClassification = false, isMultiLabel = false, isReadO
         if (isReadOnly) return;
 
         if (label.id === EMPTY_LABEL_ID) {
-            deleteAnnotations(annotations.map(({ id }) => id));
-            addAnnotations([{ type: 'full_image' }], [label]);
+            addAnnotationWithEmptyLabel(label);
             return;
         }
 
