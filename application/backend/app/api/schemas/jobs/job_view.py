@@ -9,11 +9,13 @@ from pydantic import BaseModel, Field
 
 from app.core.jobs.models import Job, JobStatus, JobType
 
+from .dataset_export import ExportDatasetMetadata
 from .dataset_import import ImportDatasetMetadata
 from .training import TrainingMetadata
 
 JobMetadata = Annotated[
-    TrainingMetadata | ImportDatasetMetadata, Field(..., description="Metadata associated with the job")
+    TrainingMetadata | ImportDatasetMetadata | ExportDatasetMetadata,
+    Field(..., description="Metadata associated with the job"),
 ]
 
 
@@ -65,6 +67,8 @@ class JobView(BaseModel):
                 | JobType.PREPARE_DATASET_FOR_IMPORT
             ):
                 metadata = ImportDatasetMetadata.model_validate(job)
+            case JobType.EXPORT_DATASET | JobType.EXPORT_DATASET:
+                metadata = ExportDatasetMetadata.model_validate(job)
             case _:
                 raise ValueError("Metadata is not defined for this job type")
 

@@ -6,7 +6,7 @@ from uuid import uuid4
 import pytest
 
 from app.models import DatasetItemSubset
-from app.services.training.subset_assignment import DatasetItemWithLabels, SplitRatios, SubsetAssigner
+from app.services.subset_assignment import DatasetItemWithLabels, SplitRatios, SubsetAssigner
 
 
 class TestSubsetAssigner:

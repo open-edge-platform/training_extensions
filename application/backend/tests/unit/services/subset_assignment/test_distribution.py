@@ -5,7 +5,7 @@ import re
 import pytest
 
 from app.models import DatasetItemSubset
-from app.services.training.subset_assignment import SplitRatios, SubsetDistribution
+from app.services.subset_assignment import SplitRatios, SubsetDistribution
 
 
 class TestSubsetDistribution:

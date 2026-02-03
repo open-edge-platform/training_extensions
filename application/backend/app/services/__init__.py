@@ -23,6 +23,7 @@ from .pipeline_service import PipelineService
 from .project_service import ProjectService
 from .sink_service import SinkService
 from .source_service import SourceService, SourceUpdateService
+from .subset_assignment import SplitRatios, SubsetAssigner, SubsetService
 from .staged_dataset_service import StagedDatasetService
 from .system_service import SystemService
 from .training_configuration_service import TrainingConfigurationService
@@ -51,7 +52,10 @@ __all__ = [
     "SinkService",
     "SourceService",
     "SourceUpdateService",
+    "SplitRatios",
     "StagedDatasetService",
+    "SubsetAssigner",
+    "SubsetService",
     "SystemService",
     "TrainingConfigurationService",
     "VideoStreamService",

@@ -6,7 +6,7 @@ from unittest.mock import Mock, call
 import pytest
 
 from app.core.run import ExecutionContext
-from app.services.training.base import Trainer, step
+from app.executors.base import Executor, step
 
 
 class TestStepDecorator:
@@ -17,7 +17,7 @@ class TestStepDecorator:
         """Test that the decorator calls report_progress when the step starts and completes."""
 
         # Arrange
-        class MockTrainer(Trainer):
+        class MockTrainer(Executor):
             def run(self, ctx: ExecutionContext) -> None:
                 pass
 
@@ -42,7 +42,7 @@ class TestStepDecorator:
         """Test that the decorator reports failure when an exception occurs."""
 
         # Arrange
-        class MockTrainer(Trainer):
+        class MockTrainer(Executor):
             def run(self, ctx: ExecutionContext) -> None:
                 pass
 
@@ -69,7 +69,7 @@ class TestStepDecorator:
         class CustomException(Exception):
             pass
 
-        class MockTrainer(Trainer):
+        class MockTrainer(Executor):
             def run(self, ctx: ExecutionContext) -> None:
                 pass
 

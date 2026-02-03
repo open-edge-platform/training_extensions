@@ -35,9 +35,17 @@ from otx.types.precision import OTXPrecisionType
 from otx.types.task import OTXTaskType
 from sqlalchemy.orm import Session
 
-from app.core.jobs.models import TrainingJobParams
 from app.core.run import ExecutionContext
-from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, EvaluationResult, Task, TaskType, TrainingStatus
+from app.executors.base import Executor, step
+from app.models import (
+    DatasetItemAnnotationStatus,
+    DatasetItemSubset,
+    EvaluationResult,
+    Task,
+    TaskType,
+    TrainingJobParams,
+    TrainingStatus,
+)
 from app.models.system import DeviceInfo, DeviceType
 from app.models.training_configuration.configuration import TrainingConfiguration
 from app.services import (
@@ -46,12 +54,13 @@ from app.services import (
     DatasetService,
     ModelRevisionMetadata,
     ModelService,
+    SplitRatios,
+    SubsetAssigner,
+    SubsetService,
     TrainingConfigurationService,
 )
 
-from .base import Trainer, step
 from .progress import TrainingProgressCallback
-from .subset_assignment import SplitRatios, SubsetAssigner, SubsetService
 
 MODEL_WEIGHTS_PATH = "model_weights_path"
 
@@ -91,7 +100,7 @@ class ExportedModels:
     onnx_model_path: Path
 
 
-class OTXTrainer(Trainer):
+class OTXTrainer(Executor):
     """OTX-specific trainer implementation."""
 
     def __init__(
@@ -459,7 +468,7 @@ class OTXTrainer(Trainer):
 
     def run(self, ctx: ExecutionContext) -> None:
         self._ctx = ctx
-        training_params = self._get_training_params(ctx)
+        training_params = TrainingJobParams.model_validate_json(ctx.payload)
         project_id = training_params.project_id
         task = training_params.task
         model_dir = self.__base_model_path(

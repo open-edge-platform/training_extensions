@@ -5,7 +5,7 @@ from unittest.mock import Mock
 
 from lightning import Trainer as LightningTrainer
 
-from app.services.training.otx_trainer import TrainingProgressCallback
+from app.executors.training.otx_trainer import TrainingProgressCallback
 
 
 class DummyTrainer:

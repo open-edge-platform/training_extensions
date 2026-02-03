@@ -8,7 +8,6 @@ from typing import Any, TypeVar
 
 from loguru import logger
 
-from app.core.jobs.models import TrainingJobParams
 from app.core.run import ExecutionContext, Runnable
 
 T = TypeVar("T")
@@ -16,13 +15,13 @@ T = TypeVar("T")
 
 def step(name: str, complete: float | None = None) -> Callable[[Callable[..., T]], Callable[..., T]]:
     """
-    Decorator to mark a method as a training step.
+    Decorator to mark a method as a step of the Executor implementation.
 
-    It expects the decorated method to be part of a Trainer subclass. The decorator adds progress reporting around the
-    execution of the step.
+    It expects the decorated method to be part of an Executor subclass. The decorator adds progress reporting around
+    the execution of the step.
 
     Usage:
-        class MyTrainer(Trainer):
+        class MyTrainer(Executor):
             @step("Prepare Weights")
             def prepare_weights(self, ...) -> None:
                 # implementation
@@ -50,23 +49,18 @@ def step(name: str, complete: float | None = None) -> Callable[[Callable[..., T]
     return decorator
 
 
-class Trainer(Runnable, ABC):
+class Executor(Runnable, ABC):
     """
-    Abstract base class for model training workflows.
+    Abstract base class for Runnable implementations.
 
-    Subclasses should implement their training logic by defining methods decorated with @step.
+    Subclasses should implement their logic by defining methods decorated with @step.
     """
 
     def __init__(self) -> None:
         self._ctx: ExecutionContext | None = None
-        self._training_params: TrainingJobParams | None = None
 
     @abstractmethod
     def run(self, ctx: ExecutionContext) -> None: ...
-
-    @staticmethod
-    def _get_training_params(ctx: ExecutionContext) -> TrainingJobParams:
-        return TrainingJobParams.model_validate_json(ctx.payload)
 
     def report_progress(self, msg: str = "", percent: float = 0.0, exc: bool = False) -> None:
         if self._ctx is not None:

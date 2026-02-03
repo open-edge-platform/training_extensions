@@ -301,7 +301,11 @@ class DatasetService(BaseSessionManagedService):
         return self.get_dataset_item_by_id(project_id=project_id, dataset_item_id=dataset_item_id)
 
     def get_dm_dataset(
-        self, project_id: UUID, task: Task, annotation_status: DatasetItemAnnotationStatus | None
+        self,
+        project_id: UUID,
+        task: Task,
+        annotation_status: DatasetItemAnnotationStatus | None,
+        label_names: list[str] | None = None,
     ) -> dm.Dataset:
         def get_dataset_items_and_media(offset: int, limit: int) -> list[tuple[DatasetItem, Media]]:
             return self.list_dataset_items_with_media(
@@ -312,7 +316,7 @@ class DatasetService(BaseSessionManagedService):
         def _get_image_path(item: DatasetItem) -> str:
             return str(self._media_service.get_media_binary_path_by_id(project_id=project_id, media_id=item.id))
 
-        labels = self._label_service.list_all(project_id=project_id)
+        labels = self._label_service.list_all(project_id=project_id, label_names=label_names)
         return convert_dataset(
             task=task,
             labels=labels,

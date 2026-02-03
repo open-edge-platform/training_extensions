@@ -17,9 +17,11 @@ class LabelRepository(BaseRepository[LabelDB]):
         super().__init__(db, LabelDB)
         self.project_id = project_id
 
-    def list_all(self) -> Sequence[LabelDB]:
-        """Get labels by project ID."""
+    def list_all(self, names: list[str] | None = None) -> Sequence[LabelDB]:
+        """Get labels by project ID. Optionally filter by names."""
         stmt = select(LabelDB).where(LabelDB.project_id == self.project_id)
+        if names:
+            stmt = stmt.where(LabelDB.name.in_(names))
         return self.db.execute(stmt).scalars().all()
 
     def list_ids(self) -> Sequence[str]:
