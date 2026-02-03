@@ -101,6 +101,10 @@ export class ModelsPage {
         await this.page.getByRole('menuitem', { name: 'Rename' }).click();
     }
 
+    async clickDeleteDatasetAction() {
+        await this.page.getByRole('menuitem', { name: 'Delete' }).click();
+    }
+
     async renameDatasetRevision(newName: string) {
         const textbox = this.page.getByRole('textbox', { name: 'Dataset revision name' });
 
@@ -110,5 +114,13 @@ export class ModelsPage {
 
     getDatasetHeaderByName(name: string) {
         return this.page.getByRole('heading').filter({ hasText: name });
+    }
+
+    getThreeSectionRange(datasetId: string) {
+        return this.page.getByTestId(`dataset-range-${datasetId}`);
+    }
+
+    async clickTrainingDatasetsTab() {
+        await this.page.getByRole('tab', { name: 'Training datasets' }).click();
     }
 }
