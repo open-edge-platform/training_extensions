@@ -26,7 +26,7 @@ RECOMMENDED_MODEL_ARCHITECTURES = {
         ModelArchitectureCategory.SPEED: "object-detection-yolox-s",
     },
     TaskType.INSTANCE_SEGMENTATION: {
-        ModelArchitectureCategory.BALANCE: "instance-segmentation-mask-rcnn-resnet50-v2",
+        ModelArchitectureCategory.BALANCE: "instance-segmentation-mask-rcnn-resnet50",
         ModelArchitectureCategory.ACCURACY: "instance-segmentation-mask-rcnn-swin-t",
         ModelArchitectureCategory.SPEED: "instance-segmentation-mask-rcnn-efficientnet-b2",
     },

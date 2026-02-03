@@ -135,7 +135,7 @@ TEMPLATE_ID_MAPPING = {
         "status": ModelStatus.ACTIVE,
         "default": False,
     },
-    "instance-segmentation-mask-rcnn-resnet50-v2": {
+    "instance-segmentation-mask-rcnn-resnet50": {
         "recipe_path": RECIPE_PATH / "instance_segmentation" / "maskrcnn_r50_tv.yaml",
         "status": ModelStatus.BALANCE,
         "default": False,

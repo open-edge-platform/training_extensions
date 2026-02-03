@@ -48,7 +48,7 @@ class DefaultModels:
             DefaultCategory.DEFAULT: "instance-segmentation-mask-rcnn-efficientnet-b2",
             DefaultCategory.ACCURACY: "instance-segmentation-mask-rcnn-swin-t",
             DefaultCategory.SPEED: "instance-segmentation-mask-rcnn-efficientnet-b2",
-            DefaultCategory.BALANCE: "instance-segmentation-mask-rcnn-resnet50-v2",
+            DefaultCategory.BALANCE: "instance-segmentation-mask-rcnn-resnet50",
         },
     }
 
