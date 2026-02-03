@@ -10,6 +10,7 @@ import { isEmpty } from 'lodash-es';
 import type { Label } from '../../../constants/shared-types';
 import { useAnnotationActions } from '../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotator } from '../../../shared/annotator/annotator-provider.component';
+import { EMPTY_LABEL_ID } from '../../../shared/annotator/labels';
 import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
 import type { Annotation } from '../../../shared/types';
 import { toggleLabel } from '../../dataset/media-preview/secondary-toolbar/util';
@@ -44,6 +45,8 @@ interface LabelsProps {
     isReadOnly?: boolean;
 }
 
+const filterOutEmptyLabels = (labels: Label[]): Label[] => labels.filter((label) => label.id !== EMPTY_LABEL_ID);
+
 export const Labels = ({ isClassification = false, isMultiLabel = false, isReadOnly = false }: LabelsProps) => {
     const { selectedLabelId, setSelectedLabelId, labels } = useAnnotator();
     const { selectedAnnotations } = useSelectedAnnotations();
@@ -57,8 +60,19 @@ export const Labels = ({ isClassification = false, isMultiLabel = false, isReadO
             return;
         }
 
+        if (label.id === EMPTY_LABEL_ID && annotations.length !== 0) {
+            deleteAnnotations(annotations.map(({ id }) => id));
+            addAnnotations([{ type: 'full_image' }], [label]);
+            return;
+        }
+
         if (isMultiLabel) {
-            const updatedAnnotations = annotations.map((annotation) => ({
+            const annotationWithoutEmptyLabel = annotations.map((annotation) => ({
+                ...annotation,
+                labels: filterOutEmptyLabels(annotation.labels),
+            }));
+
+            const updatedAnnotations = annotationWithoutEmptyLabel.map((annotation) => ({
                 ...annotation,
                 labels: toggleLabel(label, annotation.labels),
             }));
@@ -85,16 +99,28 @@ export const Labels = ({ isClassification = false, isMultiLabel = false, isReadO
 
     const handleNonClassificationClick = (label: Label) => {
         if (isReadOnly) return;
+
+        if (label.id === EMPTY_LABEL_ID) {
+            deleteAnnotations(annotations.map(({ id }) => id));
+            addAnnotations([{ type: 'full_image' }], [label]);
+            return;
+        }
+
         if (selectedAnnotations.size > 0) {
             const selectedAnnotationsList = annotations.filter((a) => selectedAnnotations.has(a.id));
 
-            const allAnnotationsHaveLabel = selectedAnnotationsList.every((annotation) =>
+            const selectedAnnotationsWithoutEmptyLabel: Annotation[] = selectedAnnotationsList.map((annotation) => ({
+                ...annotation,
+                labels: filterOutEmptyLabels(annotation.labels),
+            }));
+
+            const allAnnotationsHaveLabel = selectedAnnotationsWithoutEmptyLabel.every((annotation) =>
                 annotation.labels.some((l) => l.id === label.id)
             );
 
             if (allAnnotationsHaveLabel) {
                 // Remove label
-                const updatedAnnotations = selectedAnnotationsList.map((annotation) => {
+                const updatedAnnotations = selectedAnnotationsWithoutEmptyLabel.map((annotation) => {
                     const filteredLabels = annotation.labels.filter((l) => l.id !== label.id);
                     return { ...annotation, labels: filteredLabels } as Annotation;
                 });
@@ -102,7 +128,7 @@ export const Labels = ({ isClassification = false, isMultiLabel = false, isReadO
                 setSelectedLabelId(null);
             } else {
                 // Add label
-                updateAnnotations(selectedAnnotationsList, [label]);
+                updateAnnotations(selectedAnnotationsWithoutEmptyLabel, [label]);
                 setSelectedLabelId(label.id);
             }
         } else {

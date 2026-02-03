@@ -3,7 +3,6 @@
 
 import { createContext, ReactNode, useContext, useMemo } from 'react';
 
-import { useProject } from 'hooks/api/project.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { v4 as uuid } from 'uuid';
 
@@ -13,6 +12,7 @@ import { UndoRedoProvider } from '../../features/dataset/media-preview/primary-t
 import useUndoRedoState from '../../features/dataset/media-preview/primary-toolbar/undo-redo/use-undo-redo-state';
 import { AnnotatorMode } from '../../features/dataset/media-preview/secondary-toolbar/annotator-modes/mode';
 import type { Annotation, Shape } from '../types';
+import { EMPTY_LABEL_ID, useProjectLabelsWithEmptyLabel } from './labels';
 
 const mapServerAnnotationsToLocal = (serverAnnotations: AnnotationDTO[], projectLabels: Label[]): Annotation[] => {
     const labelMap = new Map(projectLabels.map((label) => [label.id, label]));
@@ -62,6 +62,10 @@ type AnnotationActionsProviderProps = {
     mode: AnnotatorMode;
 };
 
+const filterOutAnnotationWithEmptyLabel = (annotations: Annotation[]): Annotation[] => {
+    return annotations.filter((annotation) => annotation.labels.some((label) => label.id !== EMPTY_LABEL_ID));
+};
+
 export const AnnotationActionsProvider = ({
     children,
     initialAnnotationsDTO,
@@ -87,15 +91,13 @@ export const AnnotationActionsProvider = ({
         }
     );
 
-    const { data: project } = useProject();
+    const projectLabels = useProjectLabelsWithEmptyLabel();
 
     const predictions = useMemo(() => {
-        return mapServerAnnotationsToLocal(initialPredictionsDTO, project.task.labels ?? []);
-    }, [initialPredictionsDTO, project.task.labels]);
+        return mapServerAnnotationsToLocal(initialPredictionsDTO, projectLabels);
+    }, [initialPredictionsDTO, projectLabels]);
 
     const [annotations, setAnnotations, undoRedoActions] = useUndoRedoState<Annotation[]>(() => {
-        const projectLabels = project?.task?.labels ?? [];
-
         return mapServerAnnotationsToLocal(initialAnnotationsDTO, projectLabels);
     });
 
@@ -141,8 +143,9 @@ export const AnnotationActionsProvider = ({
     };
 
     const submitPredictions = async () => {
+        const filteredPredictions = filterOutAnnotationWithEmptyLabel(predictions);
         const serverFormattedAnnotationsWithoutConfidences: AnnotationDTO[] = mapLocalAnnotationsToServer(
-            predictions
+            filteredPredictions
         ).map(({ confidences, ...restOfAnnotation }) => restOfAnnotation);
 
         await saveAnnotations(serverFormattedAnnotationsWithoutConfidences);
@@ -152,7 +155,8 @@ export const AnnotationActionsProvider = ({
         if (mode === 'prediction') {
             await submitPredictions();
         } else {
-            const serverAnnotations = mapLocalAnnotationsToServer(annotations);
+            const filteredAnnotations = filterOutAnnotationWithEmptyLabel(annotations);
+            const serverAnnotations = mapLocalAnnotationsToServer(filteredAnnotations);
 
             await saveAnnotations(serverAnnotations);
         }
