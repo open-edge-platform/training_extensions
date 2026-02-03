@@ -10,7 +10,7 @@ import { isClassificationTask } from '../../features/project/task-type-guards';
 
 export const EMPTY_LABEL_ID = 'empty-label';
 export const NO_LABEl: Label = { id: EMPTY_LABEL_ID, name: 'No label', color: '#FFF' };
-export const NO_OBJECTS_LABEL: Label = { id: EMPTY_LABEL_ID, name: 'No objects', color: '#FFF' };
+export const NO_OBJECT_LABEL: Label = { id: EMPTY_LABEL_ID, name: 'No object', color: '#FFF' };
 
 const getEmptyLabel = (taskType: TaskType, exclusiveLabels: boolean): Label | null => {
     if (isClassificationTask(taskType)) {
@@ -23,7 +23,7 @@ const getEmptyLabel = (taskType: TaskType, exclusiveLabels: boolean): Label | nu
         return null;
     }
 
-    return NO_OBJECTS_LABEL;
+    return NO_OBJECT_LABEL;
 };
 
 export const useProjectLabelsWithEmptyLabel = (): Label[] => {
