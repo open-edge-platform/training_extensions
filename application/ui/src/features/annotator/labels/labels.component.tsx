@@ -3,7 +3,7 @@
 
 import { CSSProperties } from 'react';
 
-import { Flex, Text } from '@geti/ui';
+import { Divider, Flex, Text } from '@geti/ui';
 import { clsx } from 'clsx';
 import { isEmpty } from 'lodash-es';
 
@@ -159,13 +159,16 @@ export const Labels = ({ isClassification = false, isMultiLabel = false, isReadO
                 aria-disabled={isReadOnly}
             >
                 {labels.map((label) => (
-                    <LabelBadge
-                        key={label.id}
-                        label={label}
-                        isSelected={isLabelSelected(label)}
-                        isDisabled={isReadOnly}
-                        onClick={() => handleLabelClick(label)}
-                    />
+                    <>
+                        {label.id === EMPTY_LABEL_ID && <Divider size={'S'} orientation={'vertical'} />}
+                        <LabelBadge
+                            key={label.id}
+                            label={label}
+                            isSelected={isLabelSelected(label)}
+                            isDisabled={isReadOnly}
+                            onClick={() => handleLabelClick(label)}
+                        />
+                    </>
                 ))}
             </div>
         </Flex>
