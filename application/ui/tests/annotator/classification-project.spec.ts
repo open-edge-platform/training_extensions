@@ -247,7 +247,7 @@ test.describe('Annotator Classification', () => {
                     await expect(page.getByLabel(`label ${greenLabel.name} background`)).toBeVisible();
                 });
 
-                await test.step('assign "no label" removes other labels', async () => {
+                await test.step('assigning "no label" removes other labels', async () => {
                     await page.getByRole('button', { name: `Label No label` }).click();
 
                     await expect(page.getByLabel(`label No label background`)).toBeVisible();
@@ -255,7 +255,7 @@ test.describe('Annotator Classification', () => {
                     await expect(page.getByLabel(`label ${greenLabel.name} background`)).toBeHidden();
                 });
 
-                await test.step('assign other label than "no label" removes "no label"', async () => {
+                await test.step('assigning other label than "no label" removes "no label"', async () => {
                     await page.getByRole('button', { name: `Label ${redLabel.name}` }).click();
 
                     await expect(page.getByLabel(`label No label background`)).toBeHidden();
@@ -263,7 +263,7 @@ test.describe('Annotator Classification', () => {
                 });
             });
 
-            test('renders "no label" when server returns empty annotations list', async ({ page, network }) => {
+            test('renders "No label" when server returns empty annotations list', async ({ page, network }) => {
                 network.use(
                     http.get('/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations', () => {
                         return HttpResponse.json({
