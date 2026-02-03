@@ -6,6 +6,7 @@ import { Image, Tag } from '@geti/ui/icons';
 
 import { TrainModel } from '../../../train-model/train-model.component';
 import type { DatasetGroup } from '../../types';
+import { DatasetActions } from '../dataset-actions/dataset-actions.component';
 import { ThreeSectionRange } from '../three-section-range/three-section-range.component';
 
 import classes from './group-headers.module.scss';
@@ -15,17 +16,16 @@ type DatasetGroupHeaderProps = {
 };
 
 export const DatasetGroupHeader = ({ dataset }: DatasetGroupHeaderProps) => {
+    const gridColumns = dataset.filesDeleted ? ['auto', '1fr', 'auto', 'auto'] : ['auto', '1fr', 'auto', '1fr', 'auto'];
+
     return (
-        <Grid
-            columns={['auto', '1fr', 'auto', '1fr', 'auto']}
-            alignItems={'center'}
-            marginBottom={'size-225'}
-            gap={'size-200'}
-        >
+        <Grid columns={gridColumns} alignItems={'center'} marginBottom={'size-225'} gap={'size-200'}>
             <Flex alignItems={'center'} gap={'size-50'}>
                 <Heading level={2} UNSAFE_style={{ fontSize: dimensionValue('size-300') }}>
                     {dataset.name}
                 </Heading>
+
+                <DatasetActions dataset={dataset} />
             </Flex>
             <Text
                 UNSAFE_style={{
@@ -44,14 +44,17 @@ export const DatasetGroupHeader = ({ dataset }: DatasetGroupHeaderProps) => {
                 </Flex>
             </Flex>
 
-            <ThreeSectionRange
-                trainingValue={dataset.trainingSubsets.training}
-                validationValue={dataset.trainingSubsets.validation}
-                testingValue={dataset.trainingSubsets.testing}
-            />
+            {!dataset.filesDeleted && (
+                <ThreeSectionRange
+                    id={`dataset-range-${dataset.id}`}
+                    trainingValue={dataset.trainingSubsets.training}
+                    validationValue={dataset.trainingSubsets.validation}
+                    testingValue={dataset.trainingSubsets.testing}
+                />
+            )}
 
             <Flex>
-                <TrainModel />
+                <TrainModel preSelectedDatasetRevisionId={dataset.id} />
             </Flex>
         </Grid>
     );

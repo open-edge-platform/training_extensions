@@ -100,7 +100,7 @@ class TestMediaEndpoints:
         fxt_dataset_service.create_dataset_item.assert_called_once_with(
             project=fxt_get_project,
             media=fxt_media,
-            user_reviewed=True,
+            user_reviewed=False,
         )
 
     def test_list_media(self, fxt_get_project, fxt_media, fxt_media_service, fxt_client):

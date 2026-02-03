@@ -92,4 +92,35 @@ export class ModelsPage {
 
         return names;
     }
+
+    async openDatasetMenu() {
+        await this.page.getByLabel('Dataset actions').first().click();
+    }
+
+    async clickRenameDatasetAction() {
+        await this.page.getByRole('menuitem', { name: 'Rename' }).click();
+    }
+
+    async clickDeleteDatasetAction() {
+        await this.page.getByRole('menuitem', { name: 'Delete' }).click();
+    }
+
+    async renameDatasetRevision(newName: string) {
+        const textbox = this.page.getByRole('textbox', { name: 'Dataset revision name' });
+
+        await textbox.fill(newName);
+        await textbox.press('Enter');
+    }
+
+    getDatasetHeaderByName(name: string) {
+        return this.page.getByRole('heading').filter({ hasText: name });
+    }
+
+    getThreeSectionRange(datasetId: string) {
+        return this.page.getByTestId(`dataset-range-${datasetId}`);
+    }
+
+    async clickTrainingDatasetsTab() {
+        await this.page.getByRole('tab', { name: 'Training datasets' }).click();
+    }
 }

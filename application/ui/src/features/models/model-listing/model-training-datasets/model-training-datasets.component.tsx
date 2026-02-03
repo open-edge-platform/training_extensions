@@ -5,11 +5,11 @@ import { ActionButton, Content, Flex, Heading, Text } from '@geti/ui';
 import { Filter, GridSmall, Search, SortUpDown } from '@geti/ui/icons';
 import { useNumberFormatter } from 'react-aria';
 
-import type { DatasetSubset } from '../../../../constants/shared-types';
+import type { DatasetRevision, DatasetSubset } from '../../../../constants/shared-types';
 import { useGetDatasetRevisionItems } from '../../../../hooks/use-get-dataset-revision-items.hook';
 import { SubsetGallery } from './subset-gallery.component';
 
-import styles from './model-training-datasets.module.scss';
+import classes from './model-training-datasets.module.scss';
 
 type SubsetBoxProps = {
     title: string;
@@ -57,7 +57,7 @@ const SubsetBox = ({ title, subset, datasetRevisionId, totalItems }: SubsetBoxPr
             minHeight={'size-5000'}
             justifyContent={'center'}
         >
-            <Flex UNSAFE_className={styles.boxHeading} justifyContent={'space-between'} alignItems={'center'}>
+            <Flex UNSAFE_className={classes.boxHeading} justifyContent={'space-between'} alignItems={'center'}>
                 <Flex gap={'size-100'} alignItems={'center'}>
                     <Heading level={5}>
                         {title} {formatter.format(subsetPercentage)}
@@ -67,7 +67,7 @@ const SubsetBox = ({ title, subset, datasetRevisionId, totalItems }: SubsetBoxPr
                 <BoxActions />
             </Flex>
 
-            <Content UNSAFE_className={styles.boxContent}>
+            <Content UNSAFE_className={classes.boxContent}>
                 <SubsetGallery
                     items={items}
                     datasetRevisionId={datasetRevisionId}
@@ -81,25 +81,9 @@ const SubsetBox = ({ title, subset, datasetRevisionId, totalItems }: SubsetBoxPr
     );
 };
 
-export const ModelTrainingDatasets = ({ datasetRevisionId }: { datasetRevisionId: string | undefined | null }) => {
-    const { totalCount: trainingCount } = useGetDatasetRevisionItems({
-        datasetRevisionId: datasetRevisionId ?? '',
-        subset: 'training',
-    });
-    const { totalCount: validationCount } = useGetDatasetRevisionItems({
-        datasetRevisionId: datasetRevisionId ?? '',
-        subset: 'validation',
-    });
-    const { totalCount: testingCount } = useGetDatasetRevisionItems({
-        datasetRevisionId: datasetRevisionId ?? '',
-        subset: 'testing',
-    });
-
-    const totalItems = trainingCount + validationCount + testingCount;
-
-    if (!datasetRevisionId) {
-        return <Text>No dataset revision found for this model</Text>;
-    }
+const ModelTrainingContent = ({ datasetRevision }: { datasetRevision: DatasetRevision }) => {
+    const totalItems = datasetRevision.item_counts?.total ?? 0;
+    const datasetRevisionId = String(datasetRevision.id);
 
     return (
         <Flex gap={'size-300'} width={'100%'}>
@@ -123,4 +107,24 @@ export const ModelTrainingDatasets = ({ datasetRevisionId }: { datasetRevisionId
             />
         </Flex>
     );
+};
+
+export const ModelTrainingDatasets = ({ datasetRevision }: { datasetRevision?: DatasetRevision }) => {
+    if (!datasetRevision || !datasetRevision.id) {
+        return (
+            <Flex justifyContent={'center'} alignItems={'center'} height={'size-3000'}>
+                <Text>No dataset revision found for this model</Text>
+            </Flex>
+        );
+    }
+
+    if (datasetRevision.files_deleted) {
+        return (
+            <Flex justifyContent={'center'} alignItems={'center'} height={'size-3000'}>
+                <Text>The files for this dataset revision have been deleted.</Text>
+            </Flex>
+        );
+    }
+
+    return <ModelTrainingContent datasetRevision={datasetRevision} />;
 };

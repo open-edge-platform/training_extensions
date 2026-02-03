@@ -25,7 +25,19 @@ export const DeleteMediaItem = ({ itemsIds = [], onDeleted }: DeleteMediaItemPro
 
     const removeMutation = $api.useMutation('delete', `/api/projects/{project_id}/dataset/media/{media_id}`, {
         meta: {
-            invalidateQueries: [['get', '/api/projects/{project_id}/dataset/media']],
+            invalidateQueries: [
+                [
+                    'get',
+                    '/api/projects/{project_id}/dataset/media',
+                    {
+                        params: {
+                            path: {
+                                project_id,
+                            },
+                        },
+                    },
+                ],
+            ],
         },
         onError: (error, { params: { path } }) => {
             const { media_id: itemId } = path;

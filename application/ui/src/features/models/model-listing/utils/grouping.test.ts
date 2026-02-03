@@ -64,8 +64,8 @@ describe('groupModelsByDataset', () => {
         const datasetRevisions: DatasetRevision[] = [
             {
                 id: 'dataset-1',
+                created_at: '2025-01-01T00:00:00.000000+00:00',
                 name: 'My Custom Dataset',
-                project_id: 'project-1',
                 files_deleted: false,
                 item_counts: {
                     total: 100,

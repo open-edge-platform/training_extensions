@@ -5,14 +5,19 @@ import { useState } from 'react';
 
 import { Button, ButtonGroup, Content, Dialog, Divider, Form, Heading, TextField } from '@geti/ui';
 
-interface RenameModelDialogProps {
+interface RenameDatasetRevisionDialogProps {
     currentName: string;
     onRename: (newName: string) => void;
     onClose: () => void;
     isPending?: boolean;
 }
 
-export const RenameModelDialog = ({ currentName, onRename, onClose, isPending }: RenameModelDialogProps) => {
+export const RenameDatasetRevisionDialog = ({
+    currentName,
+    onRename,
+    onClose,
+    isPending,
+}: RenameDatasetRevisionDialogProps) => {
     const [newName, setNewName] = useState(currentName);
 
     const hasSameName = newName.trim() === currentName;
@@ -25,18 +30,24 @@ export const RenameModelDialog = ({ currentName, onRename, onClose, isPending }:
 
     return (
         <Dialog>
-            <Heading>Rename model</Heading>
+            <Heading>Rename dataset revision</Heading>
 
             <Divider />
 
             <Content>
                 <Form onSubmit={handleSubmit} validationBehavior={'native'}>
-                    <TextField label='Model name' value={newName} onChange={setNewName} width='100%' isRequired />
+                    <TextField
+                        label={'Dataset revision name'}
+                        value={newName}
+                        onChange={setNewName}
+                        width={'100%'}
+                        isRequired
+                    />
                     <ButtonGroup align={'end'} marginTop={'size-300'}>
-                        <Button variant='secondary' onPress={onClose}>
+                        <Button variant={'secondary'} onPress={onClose}>
                             Cancel
                         </Button>
-                        <Button variant='accent' type='submit' isPending={isPending} isDisabled={hasSameName}>
+                        <Button variant={'accent'} type={'submit'} isPending={isPending} isDisabled={hasSameName}>
                             Rename
                         </Button>
                     </ButtonGroup>

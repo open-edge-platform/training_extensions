@@ -11,7 +11,7 @@ from PIL import Image
 from sqlalchemy.orm import Session
 
 from app.db.schema import DatasetItemDB, DatasetRevisionDB, MediaDB, PipelineDB
-from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Pipeline, Project
+from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, DatasetRevision, Pipeline, Project
 from app.services import (
     DatasetRevisionService,
     DatasetService,
@@ -347,7 +347,6 @@ class TestDatasetRevisionServiceIntegration:
 
         assert revision is not None
         assert revision.id == revision_id
-        assert revision.project_id == project.id
         assert revision.name == f"Dataset ({str(revision.id).split('-')[0]})"
         assert revision.files_deleted is False
 
@@ -407,7 +406,6 @@ class TestDatasetRevisionServiceIntegration:
         )
 
         new_dr_name = "This is a new dataset revision name"
-        dataset_revision_metadata = {"name": new_dr_name}
 
         # Get the dataset revision before renaming, rename it and get it after
         dr_before_renaming = fxt_dataset_revision_service.get_dataset_revision(
@@ -415,7 +413,7 @@ class TestDatasetRevisionServiceIntegration:
         )
         name_before_renaming = dr_before_renaming.name
         dr_from_renaming = fxt_dataset_revision_service.rename_dataset_revision(
-            dataset_revision=dr_before_renaming, dataset_revision_metadata=dataset_revision_metadata
+            project_id=project.id, dataset_revision=dr_before_renaming, new_name=new_dr_name
         )
         dr_after_renaming = fxt_dataset_revision_service.get_dataset_revision(
             project_id=project.id, revision_id=revision_id
@@ -425,7 +423,7 @@ class TestDatasetRevisionServiceIntegration:
         assert name_before_renaming != new_dr_name
         assert dr_after_renaming.name == new_dr_name
 
-    def test_count_items_by_subset(
+    def test_count_dataset_revision_items(
         self,
         fxt_projects_dir: Path,
         fxt_dataset_service: DatasetService,
@@ -448,9 +446,12 @@ class TestDatasetRevisionServiceIntegration:
         revision_path = fxt_projects_dir / str(project.id) / "dataset_revisions" / str(revision_id)
         assert revision_path.exists()
         assert (revision_path / "data.parquet").exists()
+        revision = fxt_dataset_revision_service.get_dataset_revision(project_id=project.id, revision_id=revision_id)
 
         # Count items in each subset
-        counts = fxt_dataset_revision_service.count_items_by_subset(project.id, revision_id)
+        counts = fxt_dataset_revision_service.count_dataset_revision_items(
+            project_id=project.id, dataset_revision=revision
+        )
 
         # Calculate expected counts from fixture data
         expected_counts: dict[str, int] = {}
@@ -460,9 +461,28 @@ class TestDatasetRevisionServiceIntegration:
         expected_total = sum(expected_counts.values())
 
         # Verify counts match expected values from fixture
-        for subset_name, expected_count in expected_counts.items():
-            assert counts[subset_name] == expected_count
-        assert counts["total"] == expected_total
+        assert counts is not None
+        assert counts.training == expected_counts["training"]
+        assert counts.validation == expected_counts["validation"]
+        assert counts.testing == expected_counts["testing"]
+        assert counts.total == expected_total
+
+    def test_count_dataset_revision_items_in_deleted_revision(
+        self,
+        fxt_dataset_revision_service: DatasetRevisionService,
+    ) -> None:
+        revision = DatasetRevision(
+            id=uuid4(),
+            name="Deleted Revision",
+            created_at=datetime.utcnow(),
+            files_deleted=True,
+        )
+
+        counts = fxt_dataset_revision_service.count_dataset_revision_items(
+            project_id=uuid4(), dataset_revision=revision
+        )
+
+        assert counts is None
 
     def test_delete_dataset_revision_files(
         self,
