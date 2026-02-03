@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Flex, Item, TabList, TabPanels, Tabs, Text } from '@geti/ui';
+import { isEmpty } from 'lodash-es';
 
 import { ReactComponent as ONNX } from '../../../../assets/icons/onnx-logo.svg';
 import { ReactComponent as OpenVINO } from '../../../../assets/icons/openvino-logo.svg';
@@ -16,7 +17,7 @@ type ModelVariantsTabsProps = {
 };
 
 export const ModelVariantsTabs = ({ model }: ModelVariantsTabsProps) => {
-    if (!model.variants || model.variants.length === 0) {
+    if (isEmpty(model.variants)) {
         return (
             <Flex justifyContent={'center'} alignItems={'center'} height={'size-3000'}>
                 <Text>There are no model variants available.</Text>
