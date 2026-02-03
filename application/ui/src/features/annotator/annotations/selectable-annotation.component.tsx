@@ -63,7 +63,7 @@ export const SelectableAnnotation = ({ children }: { children: ReactNode }) => {
         deleteAnnotations(annotationsToDelete);
     };
 
-    useHotkeys([HOTKEYS.deleteAnnotation, HOTKEYS.deleteAnnotationWithBackspace], () => {
+    useHotkeys([HOTKEYS.deleteAnnotation, HOTKEYS.deleteAnnotationAlternative], () => {
         // Focus the parent SVG container to keep focus within the annotation area
         const parentSvg = elementRef.current?.closest('svg');
         if (parentSvg) {

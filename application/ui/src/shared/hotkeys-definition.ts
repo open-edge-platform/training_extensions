@@ -14,7 +14,7 @@ export const HOTKEYS = {
     redo: `${CTRL_OR_COMMAND_KEY}+y`,
     toggleAnnotationsVisibility: 'a',
     deleteAnnotation: 'delete',
-    deleteAnnotationWithBackspace: 'backspace',
+    deleteAnnotationAlternative: 'backspace',
     fitToScreen: 'r',
     selectionTool: 'v',
     boundingBoxTool: 'b',
