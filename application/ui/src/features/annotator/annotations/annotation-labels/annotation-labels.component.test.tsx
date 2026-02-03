@@ -142,11 +142,17 @@ describe('AnnotationLabels', () => {
         const lastLabel = screen.getByLabelText('label Last background');
 
         // First label should have top-left rounded
-        expect(firstLabel).toHaveStyle({ '--border-top-left': '4px', '--border-top-right': '0' });
+        expect(firstLabel).toHaveStyle({
+            '--border-top-left': 'var(--spectrum-global-dimension-size-50)',
+            '--border-top-right': '0',
+        });
         // Middle label should have no rounded corners
         expect(middleLabel).toHaveStyle({ '--border-top-left': '0', '--border-top-right': '0' });
         // Last label should have top-right rounded
-        expect(lastLabel).toHaveStyle({ '--border-top-left': '0', '--border-top-right': '4px' });
+        expect(lastLabel).toHaveStyle({
+            '--border-top-left': '0',
+            '--border-top-right': 'var(--spectrum-global-dimension-size-50)',
+        });
     });
 
     it('applies bottom corners when useBottomCorners is true', () => {
@@ -165,8 +171,14 @@ describe('AnnotationLabels', () => {
         const lastLabel = screen.getByLabelText('label Last background');
 
         // First label should have bottom-left rounded
-        expect(firstLabel).toHaveStyle({ '--border-bottom-left': '4px', '--border-bottom-right': '0' });
+        expect(firstLabel).toHaveStyle({
+            '--border-bottom-left': 'var(--spectrum-global-dimension-size-50)',
+            '--border-bottom-right': '0',
+        });
         // Last label should have bottom-right rounded
-        expect(lastLabel).toHaveStyle({ '--border-bottom-left': '0', '--border-bottom-right': '4px' });
+        expect(lastLabel).toHaveStyle({
+            '--border-bottom-left': '0',
+            '--border-bottom-right': 'var(--spectrum-global-dimension-size-50)',
+        });
     });
 });
