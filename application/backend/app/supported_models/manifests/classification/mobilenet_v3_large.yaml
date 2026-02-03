@@ -1,5 +1,5 @@
-id: Custom_Image_Classification_MobileNet-V3-large-1x
-name: MobileNet-V3-large-1x
+id: image-classification-mobilenet-v3-large
+name: MobileNet-V3-Large
 
 pretrained_weights:
   url: https://raw.githubusercontent.com/d-li14/mobilenetv3.pytorch/master/pretrained/mobilenetv3-large-1cd25616.pth

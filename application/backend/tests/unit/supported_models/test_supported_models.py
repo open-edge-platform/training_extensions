@@ -16,9 +16,9 @@ class TestSupportedModels:
     @pytest.mark.parametrize(
         "model_manifest_id, expected_task",
         [
-            ("Custom_Image_Classification_EfficientNet-V2-S", "classification"),
-            ("Custom_Object_Detection_Gen3_ATSS", "detection"),
-            ("Custom_Counting_Instance_Segmentation_MaskRCNN_EfficientNetB2B", "instance_segmentation"),
+            ("image-classification-efficientnet-v2-s", "classification"),
+            ("object-detection-atss-mobilenet-v2", "detection"),
+            ("instance-segmentation-mask-rcnn-efficientnet-b2", "instance_segmentation"),
         ],
     )
     def test_get_model_manifest_by_id(self, model_manifest_id, expected_task) -> None:

@@ -1,5 +1,5 @@
-id: Object_Detection_Deim_DFine_L
-name: Deim-DFine-L
+id: object-detection-deim-d-fine-l
+name: DEIM-D-FINE-L
 
 pretrained_weights:
   url: https://github.com/eugene123tw/DEIM/releases/download/poc/deim_dfine_hgnetv2_l_coco_50e.pth
