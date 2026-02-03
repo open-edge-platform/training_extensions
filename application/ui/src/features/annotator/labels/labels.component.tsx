@@ -67,14 +67,22 @@ export const Labels = ({ isClassification = false, isMultiLabel = false, isReadO
         }
 
         if (isMultiLabel) {
-            // If there is an annotation with the empty label, and we are trying to add assign new label to it, we need
-            // to remove the empty label from the annotation first.
-            const annotationWithoutEmptyLabel = annotations.map((annotation) => ({
-                ...annotation,
-                labels: filterOutEmptyLabels(annotation.labels),
-            }));
+            const hasEmptyLabel = annotations.some((annotation) =>
+                annotation.labels.some((l) => l.id === EMPTY_LABEL_ID)
+            );
 
-            const updatedAnnotations = annotationWithoutEmptyLabel.map((annotation) => ({
+            let annotationsToUpdate = annotations;
+
+            // If there is an annotation with the empty label, and we are trying to add assign new label to it, we
+            // need to remove the empty label from the annotation first.
+            if (hasEmptyLabel) {
+                annotationsToUpdate = annotations.map((annotation) => ({
+                    ...annotation,
+                    labels: filterOutEmptyLabels(annotation.labels),
+                }));
+            }
+
+            const updatedAnnotations = annotationsToUpdate.map((annotation) => ({
                 ...annotation,
                 labels: toggleLabel(label, annotation.labels),
             }));
