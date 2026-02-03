@@ -146,7 +146,9 @@ export const Labels = ({ isClassification = false, isMultiLabel = false, isReadO
 
     const isLabelSelected = (label: Label): boolean => {
         if (isClassification) {
-            return annotations.some((annotation) => annotation.labels.some((l) => l.id === label.id));
+            return annotations.some((annotation) =>
+                annotation.labels.some((l) => l.id === label.id && l.id !== EMPTY_LABEL_ID)
+            );
         }
         return selectedLabelId === label.id;
     };
