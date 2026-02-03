@@ -242,7 +242,9 @@ def instantiate_sampler(sampler_config: SamplerConfig, dataset: Dataset, **kwarg
     init_signature = list(inspect.signature(sampler_class.__init__).parameters.keys())
     if "batch_size" not in init_signature:
         kwargs.pop("batch_size", None)
-    sampler_kwargs = {**sampler_config.init_args, **kwargs}
+    # Handle None init_args
+    init_args = sampler_config.init_args or {}
+    sampler_kwargs = {**init_args, **kwargs}
     return sampler_class(dataset, **sampler_kwargs)
 
 
