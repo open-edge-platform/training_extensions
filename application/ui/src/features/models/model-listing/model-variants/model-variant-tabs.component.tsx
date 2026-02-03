@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Item, TabList, TabPanels, Tabs } from '@geti/ui';
+import { Flex, Item, TabList, TabPanels, Tabs, Text } from '@geti/ui';
 
 import { ReactComponent as ONNX } from '../../../../assets/icons/onnx-logo.svg';
 import { ReactComponent as OpenVINO } from '../../../../assets/icons/openvino-logo.svg';
@@ -16,6 +16,14 @@ type ModelVariantsTabsProps = {
 };
 
 export const ModelVariantsTabs = ({ model }: ModelVariantsTabsProps) => {
+    if (!model.variants || model.variants.length === 0) {
+        return (
+            <Flex justifyContent={'center'} alignItems={'center'} height={'size-3000'}>
+                <Text>There are no model variants available.</Text>
+            </Flex>
+        );
+    }
+
     return (
         <Tabs aria-label='Model variants' UNSAFE_className={classes.tabs}>
             <TabList>
