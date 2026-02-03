@@ -109,18 +109,13 @@ export const Labels = ({ isClassification = false, isMultiLabel = false, isReadO
         if (selectedAnnotations.size > 0) {
             const selectedAnnotationsList = annotations.filter((a) => selectedAnnotations.has(a.id));
 
-            const selectedAnnotationsWithoutEmptyLabel: Annotation[] = selectedAnnotationsList.map((annotation) => ({
-                ...annotation,
-                labels: filterOutEmptyLabels(annotation.labels),
-            }));
-
-            const allAnnotationsHaveLabel = selectedAnnotationsWithoutEmptyLabel.every((annotation) =>
+            const allAnnotationsHaveLabel = selectedAnnotationsList.every((annotation) =>
                 annotation.labels.some((l) => l.id === label.id)
             );
 
             if (allAnnotationsHaveLabel) {
                 // Remove label
-                const updatedAnnotations = selectedAnnotationsWithoutEmptyLabel.map((annotation) => {
+                const updatedAnnotations = selectedAnnotationsList.map((annotation) => {
                     const filteredLabels = annotation.labels.filter((l) => l.id !== label.id);
                     return { ...annotation, labels: filteredLabels } as Annotation;
                 });
@@ -128,7 +123,7 @@ export const Labels = ({ isClassification = false, isMultiLabel = false, isReadO
                 setSelectedLabelId(null);
             } else {
                 // Add label
-                updateAnnotations(selectedAnnotationsWithoutEmptyLabel, [label]);
+                updateAnnotations(selectedAnnotationsList, [label]);
                 setSelectedLabelId(label.id);
             }
         } else {
