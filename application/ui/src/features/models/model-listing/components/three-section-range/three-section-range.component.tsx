@@ -6,12 +6,13 @@ import { Flex, Grid, Text, View } from '@geti/ui';
 import classes from './three-section-range.module.scss';
 
 type ThreeSectionRangeProps = {
+    id?: string;
     trainingValue: number;
     validationValue: number;
     testingValue: number;
 };
 
-export const ThreeSectionRange = ({ trainingValue, validationValue, testingValue }: ThreeSectionRangeProps) => {
+export const ThreeSectionRange = ({ id, trainingValue, validationValue, testingValue }: ThreeSectionRangeProps) => {
     const gridColumns = [
         trainingValue > 0 ? `${trainingValue}fr` : '1fr',
         validationValue > 0 ? `${validationValue}fr` : '1fr',
@@ -19,7 +20,7 @@ export const ThreeSectionRange = ({ trainingValue, validationValue, testingValue
     ];
 
     return (
-        <Flex alignItems={'center'} width={'100%'}>
+        <Flex alignItems={'center'} width={'100%'} data-testid={id}>
             <Text UNSAFE_className={classes.label}>TRAINING SUBSETS</Text>
 
             <Grid

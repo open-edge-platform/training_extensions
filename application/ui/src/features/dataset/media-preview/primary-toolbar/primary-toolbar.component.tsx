@@ -11,7 +11,7 @@ import { UndoRedo } from './undo-redo/undo-redo.component';
 export const PrimaryToolbar = () => {
     return (
         <Toolbar.Container data-testid={'primary-toolbar-id'}>
-            <Flex direction={'column'} gap={'size-50'}>
+            <Flex direction={'column'} gap={'size-50'} alignItems={'center'}>
                 <Toolbar.Section>
                     <Flex direction={'column'} gap={'size-50'}>
                         <AnnotatorTools />

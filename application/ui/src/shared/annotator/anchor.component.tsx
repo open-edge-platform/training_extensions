@@ -1,10 +1,12 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { CSSProperties, PointerEvent, ReactNode, useState } from 'react';
+import { ComponentRef, CSSProperties, PointerEvent, ReactNode, useRef, useState } from 'react';
 
+import { useOverlayTriggerState } from '@react-stately/overlays';
 import { isFunction } from 'lodash-es';
 
+import { CursorContextMenu } from '../../components/cursor-context-menu/cursor-context-menu.component';
 import { isLeftButton } from '../buttons-utils';
 import { Point } from '../types';
 
@@ -16,6 +18,7 @@ interface AnchorProps {
     zoom: number;
     label: string;
     fill?: string;
+    contextMenu?: (onClose: () => void) => ReactNode;
     cursor?: CSSProperties['cursor'];
     onStart?: () => void;
     onComplete: () => void;
@@ -31,10 +34,13 @@ export const Anchor = ({
     label,
     cursor,
     children,
+    contextMenu,
     onStart,
     moveAnchorTo,
     onComplete,
 }: AnchorProps) => {
+    const state = useOverlayTriggerState({});
+    const triggerRef = useRef<ComponentRef<'svg'>>(null);
     const [dragFrom, setDragFrom] = useState<Point | null>(null);
 
     const onPointerDown = (event: PointerEvent) => {
@@ -89,7 +95,7 @@ export const Anchor = ({
     };
 
     return (
-        <g>
+        <g ref={triggerRef}>
             {children}
             <rect
                 x={x - size}
@@ -101,6 +107,10 @@ export const Anchor = ({
                 fillOpacity={0}
                 {...interactiveAnchorProps}
             />
+
+            <CursorContextMenu state={state} triggerRef={triggerRef} onOpen={state.open}>
+                {isFunction(contextMenu) && contextMenu(state.close)}
+            </CursorContextMenu>
         </g>
     );
 };

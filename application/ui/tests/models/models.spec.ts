@@ -280,4 +280,38 @@ test.describe('Models', () => {
 
         await expect(modelsPage.getDatasetHeaderByName('Renamed Dataset')).toBeVisible();
     });
+
+    test('handles dataset revision deletion correctly', async ({ modelsPage, network, page }) => {
+        await modelsPage.goto();
+
+        await expect(modelsPage.getThreeSectionRange('dataset-1')).toBeVisible();
+        await expect(modelsPage.getThreeSectionRange('dataset-2')).toBeVisible();
+
+        network.use(
+            http.delete('/api/projects/{project_id}/dataset_revisions/{dataset_revision_id}', () => {
+                return HttpResponse.json(null, { status: 204 });
+            }),
+            http.get('/api/projects/{project_id}/dataset_revisions', () => {
+                return HttpResponse.json([
+                    getMockedDatasetRevision({ id: 'dataset-1', name: 'Dataset Revision 1', files_deleted: true }),
+                    getMockedDatasetRevision({ id: 'dataset-2', name: 'Dataset Revision 2' }),
+                ]);
+            })
+        );
+
+        await modelsPage.openDatasetMenu();
+        await modelsPage.clickDeleteDatasetAction();
+        await modelsPage.confirmDelete();
+
+        await expect(modelsPage.getThreeSectionRange('dataset-1')).toBeHidden();
+        await expect(modelsPage.getThreeSectionRange('dataset-2')).toBeVisible();
+
+        await modelsPage.expandModel('YOLOX Model v1');
+        await modelsPage.clickTrainingDatasetsTab();
+
+        await expect(page.getByText('The files for this dataset revision have been deleted.')).toBeVisible();
+        await expect(page.getByRole('heading', { name: /Training/ })).toBeHidden();
+        await expect(page.getByRole('heading', { name: /Validation/ })).toBeHidden();
+        await expect(page.getByRole('heading', { name: /Testing/ })).toBeHidden();
+    });
 });
