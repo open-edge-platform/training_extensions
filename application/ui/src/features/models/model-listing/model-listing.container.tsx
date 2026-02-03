@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { dimensionValue, Divider, Flex, Heading } from '@geti/ui';
+import { useGetCurrentTrainingJob } from 'hooks/api/jobs.hook';
+import { isEmpty } from 'lodash-es';
 
 import { ReactComponent as NoTrainedModels } from '../../../assets/no-trained-models.svg';
 import { TrainModel } from '../train-model/train-model.component';
@@ -12,6 +14,7 @@ import { ModelListingProvider, useModelListing } from './provider/model-listing-
 
 const ModelListingContent = () => {
     const { groupedModels, searchBy } = useModelListing();
+    const trainingJob = useGetCurrentTrainingJob();
 
     const hasNoResults = groupedModels.length === 0 && searchBy.length > 0;
     const hasNoModels = groupedModels.length === 0 && searchBy.length === 0;
@@ -27,11 +30,13 @@ const ModelListingContent = () => {
             >
                 <CurrentModelTraining />
 
-                <Flex direction={'column'} alignItems={'center'} gap={'size-100'} marginTop={'size-600'}>
-                    <NoTrainedModels />
-                    <Heading level={2}>No models yet. Train your first model to get started.</Heading>
-                    <TrainModel />
-                </Flex>
+                {isEmpty(trainingJob) && (
+                    <Flex direction={'column'} alignItems={'center'} gap={'size-100'} marginTop={'size-600'}>
+                        <NoTrainedModels />
+                        <Heading level={2}>No models yet. Train your first model to get started.</Heading>
+                        <TrainModel />
+                    </Flex>
+                )}
             </Flex>
         );
     }
