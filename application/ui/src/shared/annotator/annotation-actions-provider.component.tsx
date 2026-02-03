@@ -143,9 +143,8 @@ export const AnnotationActionsProvider = ({
     };
 
     const submitPredictions = async () => {
-        const filteredPredictions = filterOutAnnotationWithEmptyLabel(predictions);
         const serverFormattedAnnotationsWithoutConfidences: AnnotationDTO[] = mapLocalAnnotationsToServer(
-            filteredPredictions
+            predictions
         ).map(({ confidences, ...restOfAnnotation }) => restOfAnnotation);
 
         await saveAnnotations(serverFormattedAnnotationsWithoutConfidences);
