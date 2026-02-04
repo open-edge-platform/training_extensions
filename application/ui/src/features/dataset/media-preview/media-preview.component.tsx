@@ -5,10 +5,10 @@ import { Suspense, useState } from 'react';
 
 import { Content, Dialog, Flex, Grid, Loading, View } from '@geti/ui';
 import { clsx } from 'clsx';
+import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook';
 
 import { ZoomProvider } from '../../../components/zoom/zoom.provider';
 import type { Media } from '../../../constants/shared-types';
-import { useGetDatasetItems } from '../../../hooks/use-get-dataset-items.hook';
 import { AnnotationActionsProvider } from '../../../shared/annotator/annotation-actions-provider.component';
 import { AnnotationVisibilityProvider } from '../../../shared/annotator/annotation-visibility-provider.component';
 import { AnnotatorProvider } from '../../../shared/annotator/annotator-provider.component';
@@ -111,7 +111,7 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
 };
 
 export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPreviewProps) => {
-    const { items, hasNextPage, isFetchingNextPage, fetchNextPage } = useGetDatasetItems();
+    const { items, hasNextPage, isFetchingNextPage, fetchNextPage } = useGetDatasetMediaItems();
 
     return (
         <Dialog
