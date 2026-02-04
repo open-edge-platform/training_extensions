@@ -1,7 +1,6 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 from pathlib import Path
-from typing import Any
 
 import cv2
 from loguru import logger
@@ -13,11 +12,6 @@ class VideoMetadata(BaseModel):
     height: int
     frame_count: int
     fps: float
-
-
-class FfprobeOutput(BaseModel):
-    programs: list[Any]
-    streams: list[VideoMetadata]
 
 
 def get_video_metadata(video_path: Path) -> VideoMetadata:

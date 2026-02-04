@@ -27,7 +27,7 @@ from .base import BaseSessionManagedService, ResourceNotFoundError, ResourceType
 
 DEFAULT_THUMBNAIL_SIZE = 256
 
-VIDEO_WRITE_CHUNK_SIZE = 1024 * 1024 * 1024
+VIDEO_WRITE_CHUNK_SIZE = 100 * 1024 * 1024  # 100 MB
 
 
 class InvalidImageError(Exception):
