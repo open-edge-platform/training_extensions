@@ -3,6 +3,7 @@
 
 import { Button, ButtonGroup, Content, Dialog, Divider, Flex, Heading, Link, Text, toast } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import { useMatch } from 'react-router';
 
 import { paths } from '../../../constants/paths';
 import { useTrainModelMutation } from '../hooks/api/use-train-model-mutation';
@@ -18,6 +19,7 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
         useTrainModel();
     const trainModelMutation = useTrainModelMutation();
     const projectId = useProjectIdentifier();
+    const isModelsPage = useMatch(paths.project.models.pattern);
 
     const isStartButtonDisabled = selectedModelArchitectureId === null || selectedTrainingDevice === null;
 
@@ -36,7 +38,9 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
                 onClose();
 
                 toast({
-                    message: (
+                    message: isModelsPage ? (
+                        <Text>Model training started successfully.</Text>
+                    ) : (
                         <Flex alignItems={'center'} gap={'size-50'} wrap={'wrap'}>
                             <Text>
                                 Model training started successfully.{' '}
