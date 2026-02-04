@@ -16,7 +16,10 @@ type DatasetGroupHeaderProps = {
 };
 
 export const DatasetGroupHeader = ({ dataset }: DatasetGroupHeaderProps) => {
-    const gridColumns = dataset.filesDeleted ? ['auto', '1fr', 'auto', 'auto'] : ['auto', '1fr', 'auto', '1fr', 'auto'];
+    const hasDatasetRevisionData = dataset.imageCount > 0 && !dataset.filesDeleted;
+    const gridColumns = hasDatasetRevisionData
+        ? ['auto', '1fr', 'auto', '1fr', 'auto']
+        : ['auto', '1fr', 'auto', 'auto'];
 
     return (
         <Grid columns={gridColumns} alignItems={'center'} marginBottom={'size-225'} gap={'size-200'}>
@@ -44,7 +47,7 @@ export const DatasetGroupHeader = ({ dataset }: DatasetGroupHeaderProps) => {
                 </Flex>
             </Flex>
 
-            {!dataset.filesDeleted && (
+            {hasDatasetRevisionData && (
                 <ThreeSectionRange
                     id={`dataset-range-${dataset.id}`}
                     trainingValue={dataset.trainingSubsets.training}
