@@ -1,18 +1,22 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { CSSProperties } from 'react';
+import { CSSProperties, useRef } from 'react';
 
-import { Flex, Text } from '@geti/ui';
+import { ActionButton, CustomPopover, Flex, FocusableRefValue, Text } from '@geti/ui';
+import { Add, Edit } from '@geti/ui/icons';
+import { useOverlayTriggerState } from '@react-stately/overlays';
 import { clsx } from 'clsx';
 import { isEmpty } from 'lodash-es';
 
-import type { Label } from '../../../constants/shared-types';
+import type { Label, TaskType } from '../../../constants/shared-types';
+import { useProject } from '../../../hooks/api/project.hook';
 import { useAnnotationActions } from '../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotator } from '../../../shared/annotator/annotator-provider.component';
 import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
 import type { Annotation } from '../../../shared/types';
 import { toggleLabel } from '../../dataset/media-preview/secondary-toolbar/util';
+import { EditLabelsPopover } from './edit-labels-popover/edit-labels-popover.component';
 
 import classes from './labels.module.scss';
 
@@ -48,6 +52,11 @@ export const Labels = ({ isClassification = false, isMultiLabel = false, isReadO
     const { selectedLabelId, setSelectedLabelId, labels } = useAnnotator();
     const { selectedAnnotations } = useSelectedAnnotations();
     const { annotations, addAnnotations, updateAnnotations, deleteAnnotations } = useAnnotationActions();
+    const { data: project } = useProject();
+    const taskType: TaskType = project?.task?.task_type ?? 'detection';
+
+    const triggerRef = useRef<FocusableRefValue<HTMLElement, HTMLButtonElement>>(null);
+    const popoverState = useOverlayTriggerState({});
 
     const handleClassificationClick = (label: Label) => {
         if (isReadOnly) return;
@@ -125,23 +134,48 @@ export const Labels = ({ isClassification = false, isMultiLabel = false, isReadO
         return selectedLabelId === label.id;
     };
 
+    const hasLabels = labels.length > 0;
+
     return (
         <Flex alignItems='start' gap='size-100' minWidth={0} flex='1'>
-            <div
-                aria-label={'Labels'}
-                className={clsx(classes.labelsContainer, { [classes.readOnlyLabels]: isReadOnly })}
-                aria-disabled={isReadOnly}
-            >
-                {labels.map((label) => (
-                    <LabelBadge
-                        key={label.id}
-                        label={label}
-                        isSelected={isLabelSelected(label)}
-                        isDisabled={isReadOnly}
-                        onClick={() => handleLabelClick(label)}
+            {hasLabels && (
+                <div
+                    aria-label={'Labels'}
+                    className={clsx(classes.labelsContainer, { [classes.readOnlyLabels]: isReadOnly })}
+                    aria-disabled={isReadOnly}
+                >
+                    {labels.map((label) => (
+                        <LabelBadge
+                            key={label.id}
+                            label={label}
+                            isSelected={isLabelSelected(label)}
+                            isDisabled={isReadOnly}
+                            onClick={() => handleLabelClick(label)}
+                        />
+                    ))}
+                </div>
+            )}
+            {hasLabels ? (
+                <ActionButton ref={triggerRef} isQuiet aria-label='Edit labels' onPress={popoverState.open}>
+                    <Edit />
+                </ActionButton>
+            ) : (
+                <ActionButton ref={triggerRef} isQuiet aria-label='Create label' onPress={popoverState.open}>
+                    <Add />
+                    <Text>Create label</Text>
+                </ActionButton>
+            )}
+            {popoverState.isOpen && (
+                <CustomPopover ref={triggerRef} state={popoverState} placement='bottom end'>
+                    <EditLabelsPopover
+                        labels={labels}
+                        taskType={taskType}
+                        onLabelSelect={handleLabelClick}
+                        isLabelSelected={isLabelSelected}
+                        autoCreateNewLabel={!hasLabels}
                     />
-                ))}
-            </div>
+                </CustomPopover>
+            )}
         </Flex>
     );
 };

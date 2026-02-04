@@ -1,18 +1,18 @@
-// Copyright (C) 2025 Intel Corporation
+// Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
 import { KeyboardEvent } from 'react';
 
 import { TextField } from '@geti/ui';
 
-import { formatHotkeyForDisplay } from '../../../../shared/hotkeys-definition';
-import { validateLabelHotkey } from '../validator';
+import { formatHotkeyForDisplay } from '../../shared/hotkeys-definition';
+import { validateLabelHotkey } from './label-validation';
 
-type HotkeyFieldProps = {
+interface HotkeyFieldProps {
     hotkey: string | null | undefined;
     onHotkeyChange: (hotkey: string | null) => void;
     allHotkeys: string[];
-};
+}
 
 export const HotkeyField = ({ hotkey, onHotkeyChange, allHotkeys }: HotkeyFieldProps) => {
     const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -25,7 +25,6 @@ export const HotkeyField = ({ hotkey, onHotkeyChange, allHotkeys }: HotkeyFieldP
             return;
         }
 
-        // Build the hotkey string
         const modifiers: string[] = [];
         if (ctrlKey) modifiers.push('ctrl');
         if (metaKey) modifiers.push('meta');
@@ -38,14 +37,13 @@ export const HotkeyField = ({ hotkey, onHotkeyChange, allHotkeys }: HotkeyFieldP
     };
 
     const validationResult = hotkey == null ? undefined : validateLabelHotkey(hotkey, allHotkeys);
-
-    const formatedHotkey = hotkey == null ? undefined : formatHotkeyForDisplay(hotkey);
+    const formattedHotkey = hotkey == null ? '' : formatHotkeyForDisplay(hotkey);
 
     return (
         <TextField
             aria-label={'Hotkey input'}
             placeholder={'Hotkey'}
-            value={formatedHotkey}
+            value={formattedHotkey}
             onKeyDown={handleKeyDown}
             width={'100%'}
             errorMessage={validationResult}

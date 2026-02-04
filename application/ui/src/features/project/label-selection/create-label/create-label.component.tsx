@@ -3,45 +3,17 @@
 
 import { useRef, useState } from 'react';
 
-import {
-    ActionButton,
-    ColorEditor,
-    ColorSwatch,
-    ColorSwatchPicker,
-    DOMRefValue,
-    Flex,
-    Grid,
-    ColorPicker as SpectrumColorPicker,
-    SpectrumColorPickerProps,
-    TextField,
-    TextFieldRef,
-    useUnwrapDOMRef,
-    View,
-} from '@geti/ui';
+import { ActionButton, DOMRefValue, Grid, TextField, TextFieldRef, useUnwrapDOMRef, View } from '@geti/ui';
 import { Add } from '@geti/ui/icons';
 import { useEventListener } from 'hooks/event-listener.hook';
 import { v4 as uuid } from 'uuid';
 
+import { HotkeyField } from '../../../../components/label-fields/hotkey-field.component';
+import { LabelColorPicker } from '../../../../components/label-fields/label-color-picker.component';
+import { validateLabelName } from '../../../../components/label-fields/label-validation';
 import type { Label, TaskType } from '../../../../constants/shared-types';
 import { TASK_HOTKEYS } from '../../../../shared/hotkeys-definition';
-import { DISTINCT_COLORS, getRandomDistinctColor } from '../../../annotator/label-utils';
-import { validateLabelName } from '../validator';
-import { HotkeyField } from './hotkey-field.component';
-
-const ColorPicker = ({ onChange, value }: SpectrumColorPickerProps) => {
-    return (
-        <SpectrumColorPicker value={value} onChange={onChange} rounding={'none'}>
-            <Flex direction='column' gap='size-300'>
-                <ColorEditor />
-                <ColorSwatchPicker width={'size-3600'}>
-                    {DISTINCT_COLORS.map((color) => {
-                        return <ColorSwatch color={color} key={color} />;
-                    })}
-                </ColorSwatchPicker>
-            </Flex>
-        </SpectrumColorPicker>
-    );
-};
+import { getRandomDistinctColor } from '../../../annotator/label-utils';
 
 const getInitialLabel = (): Label => ({ id: uuid(), color: getRandomDistinctColor(), name: '', hotkey: null });
 
@@ -61,7 +33,7 @@ export const CreateLabel = ({ labels, onCreate, taskType }: CreateLabelProps) =>
     const appHotkeys = Object.values(TASK_HOTKEYS[taskType]);
     const allHotkeys = [...labelsHotkeys, ...appHotkeys];
 
-    const validationResult = validateLabelName(newLabel, labels);
+    const validationResult = validateLabelName(newLabel.name, labels);
     const isCreateLabelDisabled = newLabel.name.trim().length === 0 || validationResult !== undefined;
 
     const createLabel = () => {
@@ -95,11 +67,11 @@ export const CreateLabel = ({ labels, onCreate, taskType }: CreateLabelProps) =>
             alignItems={'start'}
             ref={containerRef}
         >
-            <ColorPicker
+            <LabelColorPicker
                 onChange={(newColor) => {
-                    setNewLabel((prevLabel) => ({ ...prevLabel, color: newColor.toString('hex') }));
+                    setNewLabel((prevLabel) => ({ ...prevLabel, color: newColor }));
                 }}
-                value={newLabel.color}
+                color={newLabel.color}
             />
             <View>
                 <TextField
