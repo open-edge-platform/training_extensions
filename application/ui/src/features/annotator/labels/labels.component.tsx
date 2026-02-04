@@ -170,7 +170,6 @@ export const Labels = ({ isClassification = false, isMultiLabel = false, isReadO
                     <Fragment key={label.id}>
                         {label.id === EMPTY_LABEL_ID && <Divider size={'S'} orientation={'vertical'} />}
                         <LabelBadge
-                            key={label.id}
                             label={label}
                             isSelected={isLabelSelected(label)}
                             isDisabled={isReadOnly}
