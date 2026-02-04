@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Button, ButtonGroup, Text } from '@geti/ui';
+import { ActionButton, Button, ButtonGroup, Flex, Text } from '@geti/ui';
 import { Checkmark, CloseSemiBold } from '@geti/ui/icons';
 import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { isEmpty } from 'lodash-es';
@@ -17,14 +17,13 @@ import { Toolbar } from '../toolbar-container/toolbar-container.component';
 import { AnnotatorModes } from './annotator-modes/annotator-modes-toggle.component';
 import type { AnnotatorMode } from './annotator-modes/mode';
 
-import styles from './secondary-toolbar.module.scss';
+import classes from './secondary-toolbar.module.scss';
 
 type SecondaryToolbarProps = {
     items: Media[];
     mediaItem: Media;
     onClose: () => void;
     onSelectedMediaItem: (item: Media) => void;
-
     mode: AnnotatorMode;
     onModeChange: (mode: AnnotatorMode) => void;
 };
@@ -84,7 +83,13 @@ export const SecondaryToolbar = ({
     };
 
     return (
-        <div className={styles.secondaryToolbarContainer}>
+        <Flex
+            width={'100%'}
+            height={'100%'}
+            alignItems={'center'}
+            justifyContent={'space-between'}
+            UNSAFE_className={classes.secondaryToolbarContainer}
+        >
             <Toolbar.Container>
                 <Toolbar.Section>
                     <AnnotatorModes mode={mode} onModeChange={onModeChange} />
@@ -128,7 +133,7 @@ export const SecondaryToolbar = ({
                             onPress={onClose}
                             isDisabled={isSaving}
                             marginStart={'size-100'}
-                            UNSAFE_className={styles.closeButton}
+                            UNSAFE_className={classes.closeButton}
                         >
                             <CloseSemiBold width={14} height={14} />
                             <Text>Close</Text>
@@ -136,6 +141,6 @@ export const SecondaryToolbar = ({
                     </ButtonGroup>
                 </Toolbar.Section>
             </Toolbar.Container>
-        </div>
+        </Flex>
     );
 };
