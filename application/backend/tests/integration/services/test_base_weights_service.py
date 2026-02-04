@@ -11,9 +11,9 @@ from app.models import TaskType
 from app.services.base_weights_service import BaseWeightsService
 from app.supported_models.supported_models import ManifestNotFoundException
 
-DETECTION_MODEL_MANIFEST_ID = "Custom_Object_Detection_Gen3_SSD"
+DETECTION_MODEL_MANIFEST_ID = "object-detection-ssd-mobilenet-v2"
 DETECTION_WEIGHTS_FILENAME = "mobilenet_v2-2s_ssd-992x736.pth"
-CLASSIFICATION_MODEL_MANIFEST_ID = "Custom_Image_Classification_DeiT-Tiny"
+CLASSIFICATION_MODEL_MANIFEST_ID = "image-classification-deit-tiny"
 
 
 @pytest.fixture()

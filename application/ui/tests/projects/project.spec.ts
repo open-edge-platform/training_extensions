@@ -126,9 +126,9 @@ test.describe('Project', () => {
 
         await page.getByRole('button', { name: /Create project/ }).click();
 
-        // Correctly navigated to inference page
-        await page.waitForURL(/inference/);
-        expect(page.url()).toContain('/inference');
+        // Correctly navigated to dataset page
+        await page.waitForURL(/dataset/);
+        expect(page.url()).toContain('/dataset');
 
         // Go back to project list and confirm the project was created
         await page.goto('/projects');

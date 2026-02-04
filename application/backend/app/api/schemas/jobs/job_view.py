@@ -39,7 +39,7 @@ class JobView(BaseModel):
                     "project": {"id": "7b073838-99d3-42ff-9018-4e901eb047fc"},
                     "model": {
                         "id": "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
-                        "architecture": "Custom_Object_Detection_Gen3_ATSS",
+                        "architecture": "object-detection-atss-mobilenet-v2",
                         "parent_revision_id": "ef3983f1-cef0-4ebe-91db-7330f1dd6e27",
                         "dataset_revision_id": "2b073838-99d3-42ff-9018-4e901eb047fc",
                     },

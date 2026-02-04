@@ -22,7 +22,7 @@ from app.services.training_configuration_service import TrainingConfigurationSer
 def fxt_training_configuration() -> TrainingConfiguration:
     """Create a mock training configuration."""
     return TrainingConfiguration(
-        model_manifest_id="Custom_Image_Classification_EfficientNet-B0",
+        model_manifest_id="image-classification-efficientnet-b0",
         global_parameters=GlobalParameters(
             dataset_preparation=GlobalDatasetPreparationParameters(
                 subset_split=SubsetSplit(),

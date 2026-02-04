@@ -19,8 +19,8 @@ from app.services import ModelService, ResourceInUseError, ResourceNotFoundError
 def fxt_model() -> ModelView:
     return ModelView(
         id=uuid4(),
-        name="Object_Detection_YOLOX (id-short)",
-        architecture="Object_Detection_YOLOX",
+        name="YOLOX-X (abc123)",
+        architecture="object-detection-yolox-x",
         training_info=TrainingInfo(status=TrainingStatus.NOT_STARTED, label_schema_revision={}, configuration={}),  # type: ignore
         size=0,
     )  # type: ignore
