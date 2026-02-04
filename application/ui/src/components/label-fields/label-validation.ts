@@ -4,11 +4,7 @@
 import type { Label } from '../../constants/shared-types';
 import { convertHotkeyToOSFormat } from '../../shared/hotkeys-definition';
 
-export const validateLabelName = (
-    name: string,
-    existingLabels: Label[],
-    excludeId?: string
-): string | undefined => {
+export const validateLabelName = (name: string, existingLabels: Label[], excludeId?: string): string | undefined => {
     const trimmedName = name.trim();
 
     const isDuplicate = existingLabels.some((label) => label.name === trimmedName && label.id !== excludeId);
