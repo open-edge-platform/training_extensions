@@ -24,7 +24,7 @@ const MIN_NUMBER_OF_ANNOTATED_ITEMS = 3;
 
 export const useIsTrainingButtonDisabled = () => {
     const { data: datasetItems } = useGetDatasetItems();
-    const count = datasetItems?.items.length ?? 0;
+    const count = datasetItems?.pagination.total ?? 0;
 
     return count < MIN_NUMBER_OF_ANNOTATED_ITEMS;
 };
