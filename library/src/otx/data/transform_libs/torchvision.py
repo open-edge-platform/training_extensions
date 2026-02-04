@@ -238,162 +238,65 @@ class MinIoURandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
         return repr_str
 
 
-class Resize(tvt_v2.Transform, NumpytoTVTensorMixin):
-    """Implementation of mmdet.datasets.transforms.Resize with torchvision format.
+class Resize(tvt_v2.Resize):
+    """Resize transform based on torchvision.transforms.v2.Resize.
 
-    Reference : https://github.com/open-mmlab/mmdetection/blob/v3.2.0/mmdet/datasets/transforms/transforms.py#L135-L246
-
-    TODO : optimize logic to torcivision pipeline
+    Extends torchvision's Resize with optional control over target resizing.
 
     Args:
-        scale (int or tuple): Images scales for resizing with (height, width). Defaults to None
-        scale_factor (float or tuple[float]): Scale factors for resizing with (height, width).
-            Defaults to None.
-        keep_ratio (bool): Whether to keep the aspect ratio when resizing the
-            image. Defaults to False.
-        clip_object_border (bool): Whether to clip the objects
-            outside the border of the image. In some dataset like MOT17, the gt
-            bboxes are allowed to cross the border of images. Therefore, we
-            don't need to clip the gt bboxes in these cases. Defaults to True.
-        interpolation (str): Interpolation method. Defaults to 'bilinear'.
-        interpolation_mask (str): Interpolation method for mask. Defaults to 'nearest'.
-        transform_bbox (bool): Whether to transform bounding boxes. Defaults to False.
-        transform_keypoints (bool): Whether to transform keypoints. Defaults to False.
-        transform_mask (bool): Whether to transform masks. Defaults to False.
-        is_numpy_to_tvtensor (bool): Whether convert outputs to tensor. Defaults to False.
+        size (int or tuple): Target size (height, width).
+        resize_targets (bool): If True, resize all targets (bboxes, masks, keypoints)
+            along with the image using torchvision's built-in logic.
+            If False, resize only the image and leave targets unchanged.
+            Defaults to True.
+        interpolation: Interpolation mode for images. Defaults to InterpolationMode.BILINEAR.
+        max_size: Maximum allowed size. Defaults to None.
+        antialias: Whether to apply antialiasing. Defaults to True.
     """
 
     def __init__(
         self,
-        scale: int | tuple[int, int] | None = None,  # (H, W)
-        scale_factor: float | tuple[float, float] | None = None,  # (H, W)
-        keep_ratio: bool = False,
-        clip_object_border: bool = True,
-        interpolation: str = "bilinear",
-        interpolation_mask: str = "nearest",
-        transform_bbox: bool = False,
-        transform_keypoints: bool = False,
-        transform_mask: bool = False,
-        is_numpy_to_tvtensor: bool = True,
-        **kwargs,
+        size: int | tuple[int, int],
+        resize_targets: bool = True,
+        interpolation: F.InterpolationMode = F.InterpolationMode.BILINEAR,
+        max_size: int | None = None,
+        antialias: bool = True,
     ) -> None:
-        super().__init__()
+        super().__init__(size=size, interpolation=interpolation, max_size=max_size, antialias=antialias)
+        self.resize_targets = resize_targets
 
-        assert scale is not None or scale_factor is not None, "`scale` and`scale_factor` can not both be `None`"  # noqa: S101
+    def forward(self, *inputs):
+        """Resize image and optionally targets."""
+        if self.resize_targets:
+            # Use parent's forward which resizes everything
+            return super().forward(*inputs)
 
-        if scale is None:
-            self.scale = None
-        elif isinstance(scale, int):
-            self.scale = (scale, scale)
-        else:
-            self.scale = tuple(scale)  # type: ignore[assignment]
+        # Resize only the image, keep targets unchanged
+        sample = inputs[0] if len(inputs) == 1 else inputs
 
-        self.transform_bbox = transform_bbox
-        self.transform_keypoints = transform_keypoints
-        self.transform_mask = transform_mask
-        self.interpolation = interpolation
-        self.interpolation_mask = interpolation_mask
-        self.keep_ratio = keep_ratio
-        self.clip_object_border = clip_object_border
-        if scale_factor is None:
-            self.scale_factor = None
-        elif isinstance(scale_factor, float):
-            self.scale_factor = (scale_factor, scale_factor)
-        elif isinstance(scale_factor, tuple) and len(scale_factor) == 2:
-            self.scale_factor = scale_factor
-        else:
-            msg = f"expect scale_factor is float or Tuple(float), butget {type(scale_factor)}"
-            raise TypeError(msg)
+        if hasattr(sample, "image"):
+            # OTXSample-like object
+            sample.image = F.resize(
+                sample.image,
+                size=self.size,
+                interpolation=self.interpolation,
+                max_size=self.max_size,
+                antialias=self.antialias,
+            )
+            # Update img_info if available
+            if hasattr(sample, "img_info") and sample.img_info is not None:
+                new_h, new_w = sample.image.shape[-2:]
+                sample.img_info = _resize_image_info(sample.img_info, (new_h, new_w))
+            return sample
 
-        self.is_numpy_to_tvtensor = is_numpy_to_tvtensor
-
-    def _resize_img(self, inputs: OTXSample) -> tuple[OTXSample, tuple[float, float] | None]:
-        """Resize images with inputs.img_info.img_shape."""
-        scale_factor: tuple[float, float] | None = getattr(inputs.img_info, "scale_factor", None)  # (H, W)
-        if (img := getattr(inputs, "image", None)) is not None:
-            img = to_np_image(img)
-            img_shape = get_image_shape(img)
-            scale: tuple[int, int] = self.scale or scale_size(
-                img_shape,
-                self.scale_factor,  # type: ignore[arg-type]
-            )  # (H, W)
-
-            if self.keep_ratio:
-                h, w = img.shape[:2]
-                new_scale = min(scale[0] / h, scale[1] / w)
-                img = cv2.resize(
-                    img,
-                    None,
-                    fx=new_scale,
-                    fy=new_scale,
-                    interpolation=CV2_INTERP_CODES[self.interpolation],
-                )
-                scale = img.shape[:2]
-
-            else:
-                img = cv2.resize(img, scale[::-1], interpolation=CV2_INTERP_CODES[self.interpolation])
-
-            inputs.image = img
-            inputs.img_info = _resize_image_info(inputs.img_info, img.shape[:2])
-            inputs.img_info.keep_ratio = self.keep_ratio  # type: ignore[union-attr]
-            scale_factor = (scale[0] / img_shape[0], scale[1] / img_shape[1])
-        return inputs, scale_factor
-
-    def _resize_bboxes(self, inputs: OTXSample, scale_factor: tuple[float, float]) -> OTXSample:
-        """Resize bounding boxes with scale_factor only for `Resize`."""
-        if (bboxes := getattr(inputs, "bboxes", None)) is not None:
-            bboxes = rescale_bboxes(bboxes, scale_factor)
-            if self.clip_object_border:
-                bboxes = clip_bboxes(bboxes, inputs.img_info.img_shape)  # type: ignore[union-attr]
-            inputs.bboxes = tv_tensors.BoundingBoxes(bboxes, format="XYXY", canvas_size=inputs.img_info.img_shape)  # type: ignore[union-attr]
-        return inputs
-
-    def _resize_keypoints(self, inputs: OTXSample, scale_factor: tuple[float, float]) -> OTXSample:
-        """Resize keypoints with scale_factor only for `Resize`."""
-        if inputs.keypoints is not None:  # type: ignore[union-attr]
-            inputs.keypoints[:, :2] = rescale_keypoints(inputs.keypoints[:, :2], scale_factor)  # type: ignore[union-attr]
-        return inputs
-
-    def _resize_masks(self, inputs: OTXSample, scale_factor: tuple[float, float]) -> OTXSample:
-        """Resize masks with scale_factor only for `Resize`."""
-        masks = getattr(inputs, "masks", None)
-        if masks is not None and len(masks) > 0:
-            # bit mask
-            masks = masks.numpy() if not isinstance(masks, np.ndarray) else masks
-            masks = rescale_masks(masks, scale_factor, interpolation=self.interpolation_mask)
-            inputs.masks = masks  # type: ignore[union-attr]
-
-        return inputs
-
-    def forward(self, *_inputs: OTXSample) -> OTXSample | None:
-        """Transform function to resize images, bounding boxes, and masks."""
-        assert len(_inputs) == 1, "[tmp] Multiple entity is not supported yet."  # noqa: S101
-        inputs = _inputs[0]
-        inputs, scale_factor = self._resize_img(inputs)
-        if self.transform_bbox:
-            inputs = self._resize_bboxes(inputs, scale_factor)  # type: ignore[arg-type, assignment]
-
-        if self.transform_keypoints:
-            inputs = self._resize_keypoints(inputs, scale_factor)  # type: ignore[arg-type, assignment]
-
-        if self.transform_mask:
-            inputs = self._resize_masks(inputs, scale_factor)  # type: ignore[arg-type, assignment]
-
-        return self.convert(inputs)
-
-    def __repr__(self) -> str:
-        repr_str = self.__class__.__name__
-        repr_str += f"(scale={self.scale}, "
-        repr_str += f"scale_factor={self.scale_factor}, "
-        repr_str += f"keep_ratio={self.keep_ratio}, "
-        repr_str += f"clip_object_border={self.clip_object_border}, "
-        repr_str += f"interpolation={self.interpolation}, "
-        repr_str += f"interpolation_mask={self.interpolation_mask}, "
-        repr_str += f"transform_bbox={self.transform_bbox}, "
-        repr_str += f"transform_keypoint={self.transform_keypoints}, "
-        repr_str += f"transform_mask={self.transform_mask}, "
-        repr_str += f"is_numpy_to_tvtensor={self.is_numpy_to_tvtensor})"
-        return repr_str
+        # Fallback: just resize the tensor directly
+        return F.resize(
+            sample,
+            size=self.size,
+            interpolation=self.interpolation,
+            max_size=self.max_size,
+            antialias=self.antialias,
+        )
 
 
 class RandomResizedCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
