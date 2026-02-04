@@ -166,7 +166,10 @@ class TestDatasetServiceUnit:
                 shape=FullImage(type="full_image"),
             )
         ]
-        DatasetService._validate_annotations(annotations=annotations, project=fxt_multilabel_classification_project)
+        DatasetService._validate_annotations(annotations=annotations, task=fxt_multilabel_classification_project.task)
+
+    def test_validate_annotations_multilabel_classification_empty(self, fxt_multilabel_classification_project) -> None:
+        DatasetService._validate_annotations(annotations=[], task=fxt_multilabel_classification_project.task)
 
     def test_validate_annotations_multilabel_classification_multi_annotations(
         self, fxt_multilabel_classification_project
@@ -182,7 +185,9 @@ class TestDatasetServiceUnit:
             ),
         ]
         with pytest.raises(AnnotationValidationError):
-            DatasetService._validate_annotations(annotations=annotations, project=fxt_multilabel_classification_project)
+            DatasetService._validate_annotations(
+                annotations=annotations, task=fxt_multilabel_classification_project.task
+            )
 
     @pytest.mark.parametrize(
         "shape",
@@ -201,7 +206,22 @@ class TestDatasetServiceUnit:
             )
         ]
         with pytest.raises(AnnotationValidationError):
-            DatasetService._validate_annotations(annotations=annotations, project=fxt_multilabel_classification_project)
+            DatasetService._validate_annotations(
+                annotations=annotations, task=fxt_multilabel_classification_project.task
+            )
+
+    def test_validate_annotations_multiclass_classification(self, fxt_multiclass_classification_project) -> None:
+        annotations = [
+            DatasetItemAnnotation(
+                labels=[LabelReference(id=uuid4())],
+                shape=FullImage(type="full_image"),
+            )
+        ]
+        DatasetService._validate_annotations(annotations=annotations, task=fxt_multiclass_classification_project.task)
+
+    def test_validate_annotations_multiclass_classification_empty(self, fxt_multiclass_classification_project) -> None:
+        with pytest.raises(AnnotationValidationError):
+            DatasetService._validate_annotations(annotations=[], task=fxt_multiclass_classification_project.task)
 
     def test_validate_annotations_multiclass_classification_multiple_labels(
         self, fxt_multiclass_classification_project
@@ -213,7 +233,9 @@ class TestDatasetServiceUnit:
             )
         ]
         with pytest.raises(AnnotationValidationError):
-            DatasetService._validate_annotations(annotations=annotations, project=fxt_multiclass_classification_project)
+            DatasetService._validate_annotations(
+                annotations=annotations, task=fxt_multiclass_classification_project.task
+            )
 
     def test_validate_annotations_detection(self, fxt_detection_project) -> None:
         annotations = [
@@ -226,7 +248,10 @@ class TestDatasetServiceUnit:
                 shape=Rectangle(type="rectangle", x=10, y=10, width=10, height=10),
             ),
         ]
-        DatasetService._validate_annotations(annotations=annotations, project=fxt_detection_project)
+        DatasetService._validate_annotations(annotations=annotations, task=fxt_detection_project.task)
+
+    def test_validate_annotations_detection_empty(self, fxt_detection_project) -> None:
+        DatasetService._validate_annotations(annotations=[], task=fxt_detection_project.task)
 
     @pytest.mark.parametrize(
         "shape",
@@ -247,7 +272,7 @@ class TestDatasetServiceUnit:
             ),
         ]
         with pytest.raises(AnnotationValidationError):
-            DatasetService._validate_annotations(annotations=annotations, project=fxt_detection_project)
+            DatasetService._validate_annotations(annotations=annotations, task=fxt_detection_project.task)
 
     def test_validate_annotations_detection_wrong_shape_multiple_labels(self, fxt_detection_project) -> None:
         annotations = [
@@ -261,7 +286,7 @@ class TestDatasetServiceUnit:
             ),
         ]
         with pytest.raises(AnnotationValidationError):
-            DatasetService._validate_annotations(annotations=annotations, project=fxt_detection_project)
+            DatasetService._validate_annotations(annotations=annotations, task=fxt_detection_project.task)
 
     def test_validate_annotations_segmentation(self, fxt_segmentation_project) -> None:
         annotations = [
@@ -274,7 +299,10 @@ class TestDatasetServiceUnit:
                 shape=Polygon(type="polygon", points=[Point(x=10, y=10), Point(x=20, y=20)]),
             ),
         ]
-        DatasetService._validate_annotations(annotations=annotations, project=fxt_segmentation_project)
+        DatasetService._validate_annotations(annotations=annotations, task=fxt_segmentation_project.task)
+
+    def test_validate_annotations_segmentation_empty(self, fxt_segmentation_project) -> None:
+        DatasetService._validate_annotations(annotations=[], task=fxt_segmentation_project.task)
 
     @pytest.mark.parametrize(
         "shape",
@@ -295,7 +323,7 @@ class TestDatasetServiceUnit:
             ),
         ]
         with pytest.raises(AnnotationValidationError):
-            DatasetService._validate_annotations(annotations=annotations, project=fxt_segmentation_project)
+            DatasetService._validate_annotations(annotations=annotations, task=fxt_segmentation_project.task)
 
     def test_validate_annotations_segmentation_wrong_shape_multiple_labels(self, fxt_segmentation_project) -> None:
         annotations = [
@@ -309,7 +337,7 @@ class TestDatasetServiceUnit:
             ),
         ]
         with pytest.raises(AnnotationValidationError):
-            DatasetService._validate_annotations(annotations=annotations, project=fxt_segmentation_project)
+            DatasetService._validate_annotations(annotations=annotations, task=fxt_segmentation_project.task)
 
     def test_set_dataset_item_annotations(self, fxt_dataset_service, fxt_detection_project) -> None:
         dataset_service = fxt_dataset_service

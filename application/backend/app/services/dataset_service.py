@@ -94,7 +94,7 @@ class DatasetService(BaseSessionManagedService):
         if annotations is not None:
             labels = self._label_service.list_all(project_id=project.id)
             DatasetService._validate_annotations_labels(annotations=annotations, labels=labels)
-            DatasetService._validate_annotations(annotations=annotations, project=project)
+            DatasetService._validate_annotations(annotations=annotations, task=project.task)
             DatasetService._validate_annotations_coordinates(annotations=annotations, media=media)
 
             dataset_item.annotation_data = [annotation.model_dump(mode="json") for annotation in annotations]
@@ -191,15 +191,20 @@ class DatasetService(BaseSessionManagedService):
                     raise AnnotationValidationError(f"Label {str(annotation_label.id)} is not found in the project.")
 
     @staticmethod
-    def _validate_annotations(annotations: list[DatasetItemAnnotation], project: Project) -> None:  # noqa: C901
-        match project.task.task_type:
+    def _validate_annotations(annotations: list[DatasetItemAnnotation], task: Task) -> None:  # noqa: C901, PLR0912
+        match task.task_type:
             case TaskType.CLASSIFICATION:
+                if len(annotations) == 0:
+                    if task.exclusive_labels:  # multiclass classification -> empty label not allowed
+                        raise AnnotationValidationError("Multiclass classification project requires one annotation.")
+                    # multilabel classification  -> empty label allowed
+                    return
                 if len(annotations) > 1:
                     raise AnnotationValidationError("Classification project doesn't allow more than one annotation.")
                 annotation = annotations[0]
                 if not isinstance(annotation.shape, FullImage):
                     raise AnnotationValidationError("Classification project supports only full_image shapes.")
-                if project.task.exclusive_labels and len(annotation.labels) > 1:
+                if task.exclusive_labels and len(annotation.labels) > 1:
                     raise AnnotationValidationError(
                         "Multiclass classification project doesn't allow more than one label per annotation."
                     )
@@ -252,7 +257,7 @@ class DatasetService(BaseSessionManagedService):
         """
         labels = self._label_service.list_all(project_id=project.id)
         DatasetService._validate_annotations_labels(annotations=annotations, labels=labels)
-        DatasetService._validate_annotations(annotations=annotations, project=project)
+        DatasetService._validate_annotations(annotations=annotations, task=project.task)
 
         repo = DatasetItemRepository(project_id=str(project.id), db=self.db_session)
         self.get_dataset_item_by_id(project_id=project.id, dataset_item_id=dataset_item_id)
