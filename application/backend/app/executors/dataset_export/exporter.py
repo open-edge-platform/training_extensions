@@ -9,6 +9,7 @@ from pathlib import Path
 from uuid import UUID, uuid4
 
 from datumaro.experimental.data_formats.base import DataFormat, Dataset, save_dataset
+from datumaro.experimental.export_import import export_dataset
 from loguru import logger
 from sqlalchemy.orm import Session
 
@@ -67,22 +68,28 @@ class DatasetExporter(Executor):
 
     @step("Export dataset", 80)
     def export_dataset(self, dataset_id: UUID, dataset: Dataset, export_format: DatasetFormat) -> Path | None:
-        data_format = self.__get_dm_format(export_format)
         target_dir = self._staged_datasets_dir / str(dataset_id)
+        logger.info("Exporting dataset {} to {} in {} format", dataset_id, target_dir, export_format)
         target_dir.mkdir(parents=True, exist_ok=True)
         match export_format:
             case DatasetFormat.COCO:
                 save_dataset(
                     dataset=dataset,
-                    data_format=data_format,
+                    data_format=self.__get_dm_format(export_format),
                     images_dir_path=str(target_dir / "images"),
                     annotations_path=str(target_dir / "annotations.json"),
                 )
             case DatasetFormat.YOLO:
                 save_dataset(
                     dataset=dataset,
-                    data_format=data_format,
+                    data_format=self.__get_dm_format(export_format),
                     root_dir=str(target_dir),
+                )
+            case DatasetFormat.DATUMARO_V2:
+                export_dataset(
+                    dataset=dataset,
+                    output_path=target_dir,
+                    as_zip=True,
                 )
             case _:
                 raise ValueError(f"Unsupported dataset format for export: {export_format}")
@@ -126,8 +133,10 @@ class DatasetExporter(Executor):
             )
             return
         target_dir = self.export_dataset(dataset_id, dataset, export_params.export_format)
-        zip_path = self.zip_dataset_contents(target_dir, export_params.export_format)
-        self.cleanup(zip_path)
+        if export_params.export_format != DatasetFormat.DATUMARO_V2:
+            # todo: remove after https://github.com/open-edge-platform/datumaro/issues/2026 is implemented
+            zip_path = self.zip_dataset_contents(target_dir, export_params.export_format)
+            self.cleanup(zip_path)
 
     @staticmethod
     def __get_dm_format(dataset_format: DatasetFormat) -> DataFormat:

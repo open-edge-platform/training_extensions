@@ -26,13 +26,7 @@ from app.models.training_configuration.configuration import (
     SubsetSplit,
     TrainingConfiguration,
 )
-from app.services import (
-    DatasetRevisionService,
-    DatasetService,
-    ModelRevisionMetadata,
-    ModelService,
-    TrainingConfigurationService,
-)
+from app.services import ModelRevisionMetadata, ModelService, TrainingConfigurationService
 from app.services.base_weights_service import BaseWeightsService
 from app.services.subset_assignment import (
     DatasetItemWithLabels,
@@ -59,18 +53,6 @@ def fxt_subset_service() -> Mock:
 def fxt_assigner() -> Mock:
     """Mock SubsetAssigner for testing."""
     return Mock(spec=SubsetAssigner)
-
-
-@pytest.fixture
-def fxt_dataset_service() -> Mock:
-    """Mock DatasetService for testing."""
-    return Mock(spec=DatasetService)
-
-
-@pytest.fixture
-def fxt_dataset_revision_service() -> Mock:
-    """Mock DatasetRevisionService for testing."""
-    return Mock(spec=DatasetRevisionService)
 
 
 @pytest.fixture
