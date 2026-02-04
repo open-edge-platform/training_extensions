@@ -3,10 +3,10 @@
 
 import { createContext, ReactNode, useContext, useState, type Dispatch, type SetStateAction } from 'react';
 
-import type { Label, Media } from '../../constants/shared-types';
+import type { Label, Media, TaskType } from '../../constants/shared-types';
 import { useLoadImageQuery } from '../../features/annotator/hooks/use-load-image-query.hook';
 import type { ToolType } from '../../features/annotator/tools/interface';
-import { isClassificationTask } from '../../features/project/task-type-guards';
+import { isClassificationTask, isSegmentationTask } from '../../features/project/task-type-guards';
 import { useProject } from '../../hooks/api/project.hook';
 import type { RegionOfInterest } from '../types';
 import { useProjectLabelsWithEmptyLabel } from './labels';
@@ -47,8 +47,21 @@ const useSelectedLabel = () => {
     };
 };
 
+const getDefaultTool = (taskType: TaskType | null): ToolType => {
+    if (isClassificationTask(taskType)) {
+        return 'selection';
+    }
+
+    if (isSegmentationTask(taskType)) {
+        return 'polygon';
+    }
+
+    return 'bounding-box';
+};
+
 export const AnnotatorProvider = ({ mediaItem, children }: { mediaItem: Media; children: ReactNode }) => {
-    const [activeTool, setActiveTool] = useState<ToolType>('selection');
+    const { data: selectedProject } = useProject();
+    const [activeTool, setActiveTool] = useState<ToolType>(getDefaultTool(selectedProject?.task.task_type));
 
     const { selectedLabel, selectedLabelId, setSelectedLabelId, labels } = useSelectedLabel();
 
