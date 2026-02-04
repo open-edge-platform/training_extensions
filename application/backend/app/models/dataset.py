@@ -8,7 +8,8 @@ from app.core.models import BaseRequiredIDModel
 
 class DatasetFormat(StrEnum):
     COCO = "coco"
-    DATUMARO = "datumaro"
+    DATUMARO_V1 = "datumaro_v1"
+    DATUMARO_V2 = "datumaro_v2"
     VOC = "voc"
     YOLO = "yolo"
     UNKNOWN = "unknown"

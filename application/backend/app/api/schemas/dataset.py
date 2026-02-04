@@ -32,7 +32,7 @@ class DatasetFilters(BaseModel):
 
 
 class StagedDatasetView(BaseRequiredIDModel):
-    format: DatasetFormat = Field(..., description="Dataset format, e.g., 'coco', 'datumaro'")
+    format: DatasetFormat = Field(..., description="Dataset format")
     compressed: bool = Field(..., description="Whether the dataset is compressed")
     ready_for_export: bool = Field(..., description="Whether the dataset is ready for export")
     ready_for_import: bool = Field(..., description="Whether the dataset is ready for import")
@@ -43,7 +43,7 @@ class StagedDatasetView(BaseRequiredIDModel):
         "json_schema_extra": {
             "example": {
                 "id": "63f983fe-f2c7-4054-a0b1-6aab8a355a12",
-                "format": "datumaro",
+                "format": "datumaro_v2",
                 "compressed": False,
                 "ready_for_export": False,
                 "ready_for_import": True,
@@ -68,7 +68,7 @@ class StagedDatasetView(BaseRequiredIDModel):
                 "size": data.size,
                 "format": data.format,
                 "ready_for_export": data.compressed,
-                "ready_for_import": data.format == DatasetFormat.DATUMARO and not data.compressed,
+                "ready_for_import": data.format == DatasetFormat.DATUMARO_V2 and not data.compressed,
                 "metadata": data.metadata,
             }
         return data

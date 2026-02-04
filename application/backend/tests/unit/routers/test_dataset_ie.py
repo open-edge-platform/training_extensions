@@ -22,7 +22,7 @@ def fxt_staged_dataset(tmp_path: Path) -> StagedDataset:
         id=uuid4(),
         filename=str(tmp_path / "dataset.zip"),
         compressed=True,
-        format=DatasetFormat.DATUMARO,
+        format=DatasetFormat.DATUMARO_V2,
         size=2048,
     )
 
@@ -40,7 +40,7 @@ class TestDatasetIEEndpoints:
     ) -> None:
         fxt_staged_dataset_service.upload.return_value = fxt_staged_dataset
         file_content = b"some-bytes"
-        files = {"file": ("dataset.zip", io.BytesIO(file_content), "application/zip")}
+        files = {"file": ("dataset_coco.zip", io.BytesIO(file_content), "application/zip")}
 
         response = fxt_client.post("/api/staged_datasets", files=files)
 

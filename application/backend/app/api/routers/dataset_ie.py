@@ -20,25 +20,16 @@ router = APIRouter(prefix="/api/staged_datasets", tags=["Dataset Import/Export"]
     "",
     response_model=StagedDatasetView,
     status_code=status.HTTP_201_CREATED,
-    responses={
-        status.HTTP_201_CREATED: {"description": "Dataset archive uploaded successfully"},
-        status.HTTP_422_UNPROCESSABLE_CONTENT: {"description": "Invalid archive has been uploaded"},
-    },
+    responses={status.HTTP_201_CREATED: {"description": "Dataset archive uploaded successfully"}},
 )
 async def upload_archive(
     file: Annotated[UploadFile, File()],
     staged_datasets_service: Annotated[StagedDatasetService, Depends(get_staged_dataset_service)],
 ) -> StagedDatasetView:
     """Upload dataset archive to the staging area"""
-    if not file.filename:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Uploaded archive must have a filename.",
-        )
-
     try:
         staged_dataset = await staged_datasets_service.upload(
-            filename=file.filename,
+            filename=file.filename or "dataset.zip",
             chunk_reader=lambda: file.read(1024 * 1024),
         )
         return StagedDatasetView.model_validate(staged_dataset, from_attributes=True)
