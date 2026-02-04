@@ -10,11 +10,11 @@ import { isEmpty } from 'lodash-es';
 import { $api } from '../../../../api/client';
 import type { USBCameraSourceConfig } from '../../../../constants/shared-types';
 
-type WebcamFieldsProps = {
+type UsbCameraProps = {
     defaultState?: USBCameraSourceConfig;
 };
 
-export const WebcamFields = ({ defaultState }: WebcamFieldsProps) => {
+export const UsbCamera = ({ defaultState }: UsbCameraProps) => {
     const [name, setName] = useState(defaultState?.name);
     const isSystemName = useRef(isEmpty(defaultState?.name));
 
