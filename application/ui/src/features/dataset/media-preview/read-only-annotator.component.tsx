@@ -4,9 +4,8 @@
 import { ActionButton, Flex, Text, View } from '@geti/ui';
 import { CloseSemiBold } from '@geti/ui/icons';
 
-import type { AnnotationDTO, Media } from '../../../constants/shared-types';
+import type { Media } from '../../../constants/shared-types';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
-import { AnnotatorProviders } from './annotator-providers.component';
 import { BottomToolbar } from './bottom-toolbar/bottom-toolbar.component';
 import { AnnotatorCanvasSettings } from './primary-toolbar/settings/annotator-canvas-settings.component';
 import { AnnotatorModes } from './secondary-toolbar/annotator-modes/annotator-modes-toggle.component';
@@ -16,14 +15,13 @@ import classes from './read-only-annotator.module.scss';
 
 type ReadOnlyAnnotatorProps = {
     mediaItem: Media;
-    annotationsDTO: AnnotationDTO[];
     isUserReviewed: boolean;
     onClose: () => void;
     onModeChange?: (mode: 'annotation' | 'prediction') => void;
 };
 
 /**
- * Simplified read-only annotator for viewing predictions and dataset revisions.
+ * Simplified read-only annotator for viewing predictions.
  *
  * Features:
  * - Read-only canvas (no annotation editing)
@@ -34,21 +32,9 @@ type ReadOnlyAnnotatorProps = {
  * Note: This component renders into the parent grid layout from MediaPreview.
  * It uses the same gridArea structure as the normal annotator but with fewer elements.
  */
-export const ReadOnlyAnnotator = ({
-    mediaItem,
-    annotationsDTO,
-    isUserReviewed,
-    onModeChange,
-    onClose,
-}: ReadOnlyAnnotatorProps) => {
+export const ReadOnlyAnnotator = ({ mediaItem, isUserReviewed, onModeChange, onClose }: ReadOnlyAnnotatorProps) => {
     return (
-        <AnnotatorProviders
-            mediaItem={mediaItem}
-            initialAnnotationsDTO={annotationsDTO}
-            initialPredictionsDTO={[]}
-            isUserReviewed={isUserReviewed}
-            mode={'annotation'}
-        >
+        <>
             <View gridArea={'header'} UNSAFE_className={classes.toolbarContainer}>
                 <Flex alignItems={'center'} justifyContent={'space-between'} width={'100%'}>
                     {onModeChange ? (
@@ -78,6 +64,6 @@ export const ReadOnlyAnnotator = ({
             <View gridArea={'bottom'}>
                 <BottomToolbar isUserReviewed={isUserReviewed} mediaItem={mediaItem} hideHotkeys />
             </View>
-        </AnnotatorProviders>
+        </>
     );
 };

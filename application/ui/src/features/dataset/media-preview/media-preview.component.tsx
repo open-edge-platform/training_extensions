@@ -49,18 +49,6 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
     const isUserReviewed = annotationsData?.user_reviewed ?? false;
     const annotationsDTO = annotationsData?.annotations ?? [];
 
-    if (mode === 'prediction') {
-        return (
-            <ReadOnlyAnnotator
-                mediaItem={mediaItem}
-                annotationsDTO={getInitialPredictions(mode, isUserReviewed, annotationsDTO)}
-                isUserReviewed={isUserReviewed}
-                onModeChange={setMode}
-                onClose={onClose}
-            />
-        );
-    }
-
     return (
         <AnnotatorProviders
             key={mediaItem.id}
@@ -70,30 +58,41 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
             isUserReviewed={isUserReviewed}
             mode={mode}
         >
-            <View gridArea={'header'}>
-                <SecondaryToolbar
-                    mode={mode}
-                    items={items}
-                    onClose={onClose}
+            {mode === 'prediction' ? (
+                <ReadOnlyAnnotator
                     mediaItem={mediaItem}
-                    onSelectedMediaItem={onSelectedMediaItem}
+                    isUserReviewed={isUserReviewed}
                     onModeChange={setMode}
+                    onClose={onClose}
                 />
-            </View>
+            ) : (
+                <>
+                    <View gridArea={'header'}>
+                        <SecondaryToolbar
+                            mode={mode}
+                            items={items}
+                            onClose={onClose}
+                            mediaItem={mediaItem}
+                            onSelectedMediaItem={onSelectedMediaItem}
+                            onModeChange={setMode}
+                        />
+                    </View>
 
-            <View gridArea={'toolbar'} aria-label={'primary toolbar'} UNSAFE_className={classes.primaryToolbar}>
-                <PrimaryToolbar />
-            </View>
+                    <View gridArea={'toolbar'} aria-label={'primary toolbar'} UNSAFE_className={classes.primaryToolbar}>
+                        <PrimaryToolbar />
+                    </View>
 
-            <View gridArea={'bottom'}>
-                <BottomToolbar isUserReviewed={isUserReviewed} mediaItem={mediaItem} />
-            </View>
+                    <View gridArea={'bottom'}>
+                        <BottomToolbar isUserReviewed={isUserReviewed} mediaItem={mediaItem} />
+                    </View>
 
-            <View gridArea={'canvas'} overflow={'hidden'}>
-                <AnnotatorCanvasSettings>
-                    <AnnotatorCanvas mediaItem={mediaItem} />
-                </AnnotatorCanvasSettings>
-            </View>
+                    <View gridArea={'canvas'} overflow={'hidden'}>
+                        <AnnotatorCanvasSettings>
+                            <AnnotatorCanvas mediaItem={mediaItem} />
+                        </AnnotatorCanvasSettings>
+                    </View>
+                </>
+            )}
         </AnnotatorProviders>
     );
 };
