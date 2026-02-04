@@ -69,6 +69,7 @@ export const Gallery = ({ items, hasNextPage, isFetchingNextPage, fetchNextPage 
                                 justifyContent={'center'}
                             >
                                 <Checkbox
+                                    aria-label={'Select media item ' + item.name}
                                     onChange={() => toggleSelectedKeys([String(item.id)])}
                                     isSelected={isSetSelectedKeys && selectedKeys.has(String(item.id))}
                                 />
