@@ -197,7 +197,7 @@ class DatasetService(BaseSessionManagedService):
                 if len(annotations) == 0:
                     if task.exclusive_labels:  # multiclass classification -> empty label not allowed
                         raise AnnotationValidationError("Multiclass classification project requires one annotation.")
-                    # multilabel classification  -> empty label allowed
+                    # multilabel classification -> empty label allowed
                     return
                 if len(annotations) > 1:
                     raise AnnotationValidationError("Classification project doesn't allow more than one annotation.")
