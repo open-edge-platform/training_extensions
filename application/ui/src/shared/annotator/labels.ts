@@ -9,15 +9,15 @@ import type { Label, TaskType } from '../../constants/shared-types';
 import { isClassificationTask } from '../../features/project/task-type-guards';
 
 export const EMPTY_LABEL_ID = 'empty-label';
-export const NO_LABEl: Label = { id: EMPTY_LABEL_ID, name: 'No label', color: '#FFF' };
-export const NO_OBJECT_LABEL: Label = { id: EMPTY_LABEL_ID, name: 'No object', color: '#FFF' };
+const NO_LABEL: Label = { id: EMPTY_LABEL_ID, name: 'No label', color: '#FFF' };
+const NO_OBJECT_LABEL: Label = { id: EMPTY_LABEL_ID, name: 'No object', color: '#FFF' };
 
 const getEmptyLabel = (taskType: TaskType, exclusiveLabels: boolean): Label | null => {
     if (isClassificationTask(taskType)) {
         const isMultiLabel = exclusiveLabels === false;
 
         if (isMultiLabel) {
-            return NO_LABEl;
+            return NO_LABEL;
         }
 
         return null;
