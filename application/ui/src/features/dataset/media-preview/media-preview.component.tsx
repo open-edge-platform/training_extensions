@@ -115,7 +115,7 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                     width='100%'
                     height='100%'
                     rows='auto 1fr auto'
-                    columns={['size-800', '1fr', SIDEBAR_WIDTH]}
+                    columns={['size-700', '1fr', SIDEBAR_WIDTH]}
                     areas={['header header aside', 'toolbar canvas aside', 'toolbar bottom aside']}
                 >
                     <Suspense fallback={<CanvasAreaLoading />}>
