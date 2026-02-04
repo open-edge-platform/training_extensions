@@ -14,7 +14,8 @@ type TrainModelDialogProps = {
 };
 
 export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
-    const { selectedTrainingDevice, selectedModelArchitectureId, selectedDatasetRevision } = useTrainModel();
+    const { selectedTrainingDevice, selectedModelArchitectureId, selectedDatasetRevisionId, datasetRevisions } =
+        useTrainModel();
     const trainModelMutation = useTrainModelMutation();
     const projectId = useProjectIdentifier();
 
@@ -23,10 +24,12 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
     const trainModel = () => {
         if (isStartButtonDisabled) return;
 
+        const datasetRevisionId = datasetRevisions.find((revision) => revision.id === selectedDatasetRevisionId)?.value;
+
         trainModelMutation.mutate(
             {
+                datasetRevisionId: datasetRevisionId === undefined ? null : datasetRevisionId,
                 device: selectedTrainingDevice,
-                datasetRevisionId: selectedDatasetRevision ?? null,
                 modelArchitectureId: selectedModelArchitectureId,
             },
             () => {
