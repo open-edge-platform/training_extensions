@@ -1,7 +1,5 @@
-.readOnlyCanvas {
-    & * {
-        pointer-events: none !important;
-    }
+.primaryToolbar {
+    grid-area: toolbar;
 }
 
 .primaryToolbarDisabled {
