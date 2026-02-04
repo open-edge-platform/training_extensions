@@ -6,6 +6,8 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { isObject } from 'lodash-es';
 
 import { fetchClient } from '../../../../api/client';
+import { AnnotationDTO } from '../../../../constants/shared-types';
+import { EMPTY_LABEL_ID } from '../../../../shared/annotator/labels';
 
 const isUnannotatedError = (error: unknown): boolean => {
     return (
@@ -41,6 +43,21 @@ export const useAnnotationsQuery = (datasetItemId: string) => {
 
             if (error) {
                 throw error;
+            }
+
+            // If there are no annotations, it means that the user annotated the whole image with the empty label.
+            if (data?.annotations.length === 0) {
+                const annotationDTO = {
+                    shape: {
+                        type: 'full_image',
+                    },
+                    labels: [{ id: EMPTY_LABEL_ID }],
+                } satisfies AnnotationDTO;
+
+                return {
+                    annotations: [annotationDTO],
+                    user_reviewed: true,
+                };
             }
 
             return data;
