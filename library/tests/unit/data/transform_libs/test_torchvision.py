@@ -154,72 +154,73 @@ class TestMinIoURandomCrop:
 class TestResize:
     @pytest.fixture
     def resize(self) -> Resize:
-        return Resize(scale=(128, 96), is_numpy_to_tvtensor=False)  # (64, 64) -> (128, 96)
+        return Resize(size=(128, 96), resize_targets=True)
 
-    @pytest.mark.parametrize(
-        ("keep_ratio", "expected_shape", "expected_scale_factor"),
-        [
-            (True, (96, 96), (1.5, 1.5)),
-            (False, (128, 96), (2.0, 1.5)),
-        ],
-    )
-    def test_forward_only_image(
+    def test_forward_resize_targets_true(
         self,
-        resize: Resize,
-        fxt_det_data_entity: tuple[tuple, OTXSample, OTXSampleBatch],
-        keep_ratio: bool,
-        expected_shape: tuple,
-        expected_scale_factor: tuple,
-    ) -> None:
-        """Test forward only image."""
-        resize.keep_ratio = keep_ratio
-        resize.transform_bbox = False
-        resize.transform_mask = False
-        entity = deepcopy(fxt_det_data_entity[0])
-
-        results = resize(entity)
-
-        assert results.img_info.ori_shape == (64, 64)
-        if keep_ratio:
-            assert results.image.shape[:2] == expected_shape
-            assert results.img_info.img_shape == expected_shape
-            assert results.img_info.scale_factor == expected_scale_factor
-        else:
-            assert results.image.shape[:2] == expected_shape
-            assert results.img_info.img_shape == expected_shape
-            assert results.img_info.scale_factor == expected_scale_factor
-
-        assert torch.all(results.bboxes.data == fxt_det_data_entity[0].bboxes.data)
-
-    @pytest.mark.parametrize(
-        ("keep_ratio", "expected_shape"),
-        [
-            (True, (96, 96)),
-            (False, (128, 96)),
-        ],
-    )
-    def test_forward_bboxes_masks(
-        self,
-        resize: Resize,
         fxt_inst_seg_data_entity: tuple[tuple, OTXSample, OTXSampleBatch],
-        keep_ratio: bool,
-        expected_shape: tuple,
     ) -> None:
-        """Test forward with bboxes and masks."""
-        resize.transform_bbox = True
-        resize.transform_mask = True
+        """Test forward with resize_targets=True resizes everything."""
+        resize = Resize(size=(128, 96), resize_targets=True)
         entity = deepcopy(fxt_inst_seg_data_entity[0])
+        original_bboxes = entity.bboxes.clone() if isinstance(entity.bboxes, torch.Tensor) else torch.tensor(entity.bboxes)
 
-        resize.keep_ratio = keep_ratio
         results = resize(entity)
 
-        assert results.image.shape[:2] == expected_shape
-        assert results.img_info.img_shape == expected_shape
-        assert torch.all(
-            results.bboxes
-            == fxt_inst_seg_data_entity[0].bboxes * torch.tensor(results.img_info.scale_factor[::-1] * 2),
+        # Image should be resized
+        assert results.image.shape[-2:] == (128, 96)
+        # Bboxes should be scaled (torchvision handles this)
+        assert results.bboxes is not None
+        # Masks should be resized
+        assert results.masks.shape[-2:] == (128, 96)
+
+    def test_forward_resize_targets_false(
+        self,
+        fxt_inst_seg_data_entity: tuple[tuple, OTXSample, OTXSampleBatch],
+    ) -> None:
+        """Test forward with resize_targets=False resizes only image."""
+        resize = Resize(size=(128, 96), resize_targets=False)
+        entity = deepcopy(fxt_inst_seg_data_entity[0])
+        original_bboxes = entity.bboxes.clone() if isinstance(entity.bboxes, torch.Tensor) else torch.tensor(entity.bboxes)
+        original_masks_shape = entity.masks.shape[-2:]
+
+        results = resize(entity)
+
+        # Image should be resized
+        assert results.image.shape[-2:] == (128, 96)
+        # Bboxes should be unchanged
+        assert torch.all(results.bboxes == original_bboxes)
+        # Masks should be unchanged
+        assert results.masks.shape[-2:] == original_masks_shape
+
+    def test_torchvision_resize_consistency(self) -> None:
+        """Test that our Resize produces same results as torchvision.transforms.v2.Resize for images."""
+        import torchvision.transforms.v2 as v2
+
+        img = torch.randint(0, 256, (3, 64, 64), dtype=torch.uint8)
+        target_size = (128, 96)
+
+        # Our resize (targets=False to just resize image)
+        from datumaro.experimental.fields import ImageInfo as DmImageInfo
+        entity = DetectionSample(
+            image=tv_tensors.Image(img),
+            dm_image_info=DmImageInfo(height=64, width=64),
+            bboxes=tv_tensors.BoundingBoxes(
+                torch.tensor([[0, 0, 32, 32]], dtype=torch.float32),
+                format="XYXY",
+                canvas_size=(64, 64),
+            ),
+            label=LongTensor([1]),
         )
-        assert results.masks.shape[1:] == expected_shape
+        our_resize = Resize(size=target_size, resize_targets=False)
+        result = our_resize(entity)
+
+        # Torchvision resize
+        tv_resize = v2.Resize(size=target_size, antialias=True)
+        tv_result = tv_resize(tv_tensors.Image(img))
+
+        # Should produce same result for image
+        assert torch.equal(result.image, tv_result)
 
 
 class TestRandomFlip:

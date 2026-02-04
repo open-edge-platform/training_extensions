@@ -10,7 +10,7 @@ train_subset:
   batch_size: 8
   num_workers: 4
   augmentations_cpu:
-    - class_path: torchvision.transforms.v2.Resize
+    - class_path: otx.data.transform_libs.torchvision.Resize
       init_args:
         size: $(input_size)
   augmentations_gpu:
@@ -49,9 +49,10 @@ val_subset:
   batch_size: 8
   num_workers: 4
   augmentations_cpu:
-    - class_path: torchvision.transforms.v2.Resize
+    - class_path: otx.data.transform_libs.torchvision.Resize
       init_args:
         size: $(input_size)
+        resize_targets: false
   augmentations_gpu:
     - class_path: kornia.augmentation.Normalize
       init_args:
@@ -72,9 +73,10 @@ test_subset:
   batch_size: 8
   num_workers: 4
   augmentations_cpu:
-    - class_path: torchvision.transforms.v2.Resize
+    - class_path: otx.data.transform_libs.torchvision.Resize
       init_args:
         size: $(input_size)
+        resize_targets: false
   augmentations_gpu:
     - class_path: kornia.augmentation.Normalize
       init_args:
