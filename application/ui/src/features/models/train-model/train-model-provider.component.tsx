@@ -16,6 +16,8 @@ import { useGetActiveModelArchitectureId } from '../hooks/api/use-get-active-mod
 import { useGetTaskModelArchitectures } from '../hooks/api/use-get-model-architectures.hook';
 import { useGetTrainingDevices } from '../hooks/api/use-get-training-devices';
 
+type DatasetRevisionWithValue = Pick<DatasetRevision, 'id' | 'name'> & { value: string | null };
+
 type TrainModelContextProps = {
     modelArchitectures: ModelArchitectureWithPerformanceCategory[];
 
@@ -28,9 +30,9 @@ type TrainModelContextProps = {
     selectedTrainingDevice: DeviceType | null;
     onSelectTrainingDevice: (deviceType: DeviceType | null) => void;
 
-    datasetRevisions: DatasetRevision[];
-    selectedDatasetRevision: string | null;
-    onSelectDatasetRevision: (datasetRevision: string | null) => void;
+    datasetRevisions: DatasetRevisionWithValue[];
+    selectedDatasetRevisionId: string | null;
+    onSelectDatasetRevisionId: (datasetRevision: string | null) => void;
 };
 
 const TrainModelContext = createContext<TrainModelContextProps | null>(null);
@@ -66,10 +68,20 @@ const getModelArchitectures = (
     });
 };
 
+const useDatasetRevisions = () => {
+    const { data: datasetRevisions } = useGetDatasetRevisions();
+    return {
+        datasetRevisions: [
+            { id: 'use-current-dataset-revision', name: 'Use current revision', value: null },
+            ...(datasetRevisions?.map(({ id, name }) => ({ id, name, value: String(id) })) ?? []),
+        ],
+    };
+};
+
 export const TrainModelProvider = ({ children, preSelectedDatasetRevisionId }: TrainModelProviderProps) => {
     const { data } = useGetTaskModelArchitectures();
     const { data: trainingDevices } = useGetTrainingDevices();
-    const { data: datasetRevisions } = useGetDatasetRevisions();
+    const { datasetRevisions } = useDatasetRevisions();
     const activeModelArchitectureId = useGetActiveModelArchitectureId();
 
     const modelArchitectures: ModelArchitectureWithPerformanceCategory[] = getModelArchitectures(
@@ -88,7 +100,7 @@ export const TrainModelProvider = ({ children, preSelectedDatasetRevisionId }: T
     const [selectedTrainingDevice, setSelectedTrainingDevice] = useState<DeviceType | null>(
         trainingDevices?.at(0)?.type ?? null
     );
-    const [selectedDatasetRevision, setSelectedDatasetRevision] = useState<string | null>(
+    const [selectedDatasetRevisionId, setSelectedDatasetRevisionId] = useState<string | null>(
         preSelectedDatasetRevisionId ?? datasetRevisions?.at(0)?.id ?? null
     );
 
@@ -106,9 +118,9 @@ export const TrainModelProvider = ({ children, preSelectedDatasetRevisionId }: T
                 selectedTrainingDevice,
                 onSelectTrainingDevice: setSelectedTrainingDevice,
 
-                datasetRevisions: datasetRevisions ?? [],
-                selectedDatasetRevision,
-                onSelectDatasetRevision: setSelectedDatasetRevision,
+                datasetRevisions,
+                selectedDatasetRevisionId,
+                onSelectDatasetRevisionId: setSelectedDatasetRevisionId,
             }}
         >
             {children}
