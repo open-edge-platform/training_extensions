@@ -14,7 +14,7 @@ import { useProjectLabelsWithEmptyLabel } from './labels';
 type AnnotatorContext = {
     // Tools
     activeTool: ToolType | null;
-    setActiveTool: Dispatch<SetStateAction<ToolType>>;
+    setActiveTool: Dispatch<SetStateAction<ToolType | null>>;
 
     // Labels
     selectedLabelId: string | null;
@@ -47,9 +47,9 @@ const useSelectedLabel = () => {
     };
 };
 
-const getDefaultTool = (taskType: TaskType | null): ToolType => {
+const getDefaultTool = (taskType: TaskType | null): ToolType | null => {
     if (isClassificationTask(taskType)) {
-        return 'selection';
+        return null;
     }
 
     if (isSegmentationTask(taskType)) {
@@ -61,7 +61,9 @@ const getDefaultTool = (taskType: TaskType | null): ToolType => {
 
 export const AnnotatorProvider = ({ mediaItem, children }: { mediaItem: Media; children: ReactNode }) => {
     const { data: selectedProject } = useProject();
-    const [activeTool, setActiveTool] = useState<ToolType>(getDefaultTool(selectedProject?.task.task_type));
+    const [activeTool, setActiveTool] = useState<ToolType | null>(() =>
+        getDefaultTool(selectedProject?.task.task_type)
+    );
 
     const { selectedLabel, selectedLabelId, setSelectedLabelId, labels } = useSelectedLabel();
 
