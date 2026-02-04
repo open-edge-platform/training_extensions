@@ -90,7 +90,7 @@ def upgrade() -> None:
         sa.Column("format", sa.String(length=50), nullable=False),
         sa.Column("width", sa.Integer(), nullable=True),
         sa.Column("height", sa.Integer(), nullable=True),
-        sa.Column("fps", sa.Integer(), nullable=True),
+        sa.Column("fps", sa.Float(), nullable=True),
         sa.Column("frame_count", sa.Integer(), nullable=True),
         sa.Column("size", sa.Integer(), nullable=False),
         sa.Column("source_id", sa.Text(), nullable=True),

@@ -27,7 +27,7 @@ from .base import BaseSessionManagedService, ResourceNotFoundError, ResourceType
 
 DEFAULT_THUMBNAIL_SIZE = 256
 
-VIDEO_WRITE_CHINK_SIZE = 1024 * 1024 * 1024
+VIDEO_WRITE_CHUNK_SIZE = 1024 * 1024 * 1024
 
 
 class InvalidImageError(Exception):
@@ -138,7 +138,7 @@ class MediaService(BaseSessionManagedService):
         data.seek(0)
         with open(binary_path, "wb") as f:
             # Read in chunks to avoid memory issues for large files
-            while chunk := data.read(VIDEO_WRITE_CHINK_SIZE):
+            while chunk := data.read(VIDEO_WRITE_CHUNK_SIZE):
                 f.write(chunk)
 
         try:
