@@ -12,6 +12,7 @@ import { getThumbnailUrl } from '../../../shared/media-url.utils';
 import { MediaPreview } from '../media-preview/media-preview.component';
 import { useSelectedData } from '../selected-data-provider.component';
 import { DeleteMediaItem } from './delete-media-item/delete-media-item.component';
+import { useDatasetItemNavigation } from './hooks/use-dataset-item-navigation.hook';
 
 type GalleryProps = {
     items: Media[];
@@ -28,15 +29,8 @@ const layoutOptions = {
 
 export const Gallery = ({ items, hasNextPage, isFetchingNextPage, fetchNextPage }: GalleryProps) => {
     const project_id = useProjectIdentifier();
-
-    const {
-        selectedKeys,
-        mediaState,
-        setSelectedKeys,
-        toggleSelectedKeys,
-        selectedMediaItem,
-        onSelectedMediaItemChange,
-    } = useSelectedData();
+    const { selectedMediaItem, onSelectedMediaItemChange } = useDatasetItemNavigation();
+    const { selectedKeys, mediaState, setSelectedKeys, toggleSelectedKeys } = useSelectedData();
 
     const isSetSelectedKeys = selectedKeys instanceof Set;
 

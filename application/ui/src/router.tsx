@@ -93,6 +93,14 @@ export const router = createBrowserRouter([
                         ),
                     },
                     {
+                        path: paths.project.datasetItem.pattern,
+                        element: (
+                            <SelectedDataProvider>
+                                <Dataset />
+                            </SelectedDataProvider>
+                        ),
+                    },
+                    {
                         path: paths.project.models.pattern,
                         element: <Models />,
                     },
