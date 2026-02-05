@@ -223,7 +223,7 @@ export const Labels = ({ isClassification = false, isMultiLabel = false, isReadO
         });
     };
 
-    const hasLabels = labels.length > 0;
+    const hasLabels = labels.filter((label) => label.id !== EMPTY_LABEL_ID).length > 0;
 
     return (
         <Flex alignItems='start' gap='size-100' minWidth={0} flex='1'>
