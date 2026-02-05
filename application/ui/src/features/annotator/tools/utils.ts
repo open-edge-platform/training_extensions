@@ -360,7 +360,7 @@ export const loadImage = async (link: string): Promise<HTMLImageElement> => {
     // Fetch as blob first to avoid CORS issues with cached images
     const response = await fetch(link, { credentials: 'include' });
     if (!response.ok) {
-        throw new Error(`Failed to load image: ${response.statusText}`);
+        throw new Error(`Failed to load image from ${link}: ${response.status} ${response.statusText}`);
     }
 
     const blob = await response.blob();
