@@ -92,7 +92,9 @@ describe('HotkeyField', () => {
     });
 
     it('shows error message when provided', () => {
-        render(<HotkeyField hotkey='a' onHotkeyChange={mockOnHotkeyChange} errorMessage='That hotkey is already in use' />);
+        render(
+            <HotkeyField hotkey='a' onHotkeyChange={mockOnHotkeyChange} errorMessage='That hotkey is already in use' />
+        );
 
         expect(screen.getByText('That hotkey is already in use')).toBeInTheDocument();
     });

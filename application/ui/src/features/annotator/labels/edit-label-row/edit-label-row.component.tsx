@@ -22,13 +22,7 @@ interface EditLabelRowProps {
     onDelete: (label: Label) => void;
 }
 
-export const EditLabelRow = ({
-    label,
-    existingLabels,
-    isSelected,
-    onSelect,
-    onDelete,
-}: EditLabelRowProps) => {
+export const EditLabelRow = ({ label, existingLabels, isSelected, onSelect, onDelete }: EditLabelRowProps) => {
     const projectId = useProjectIdentifier();
     const updateLabelMutation = useUpdateLabel();
 
