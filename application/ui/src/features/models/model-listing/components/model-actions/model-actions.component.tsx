@@ -33,7 +33,7 @@ export const ModelActions = ({ model }: ModelActionsProps) => {
     const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-    const disabled_keys = isFailedModel(model) ? [MODEL_ACTIONS.ACTIVE, MODEL_ACTIONS.RENAME] : [];
+    const disabledKeys = isFailedModel(model) ? [MODEL_ACTIONS.ACTIVE, MODEL_ACTIONS.RENAME] : [];
 
     const handleAction = (key: Key) => {
         if (key === MODEL_ACTIONS.ACTIVE) {
@@ -72,7 +72,7 @@ export const ModelActions = ({ model }: ModelActionsProps) => {
                 <ActionButton isQuiet aria-label={'Model actions'}>
                     <MoreMenu />
                 </ActionButton>
-                <Menu onAction={handleAction} aria-label={'Model actions menu'} disabledKeys={disabled_keys}>
+                <Menu onAction={handleAction} aria-label={'Model actions menu'} disabledKeys={disabledKeys}>
                     <Item key={MODEL_ACTIONS.ACTIVE}>Set as active</Item>
                     <Item key={MODEL_ACTIONS.RENAME}>Rename</Item>
                     <Item key={MODEL_ACTIONS.DELETE}>Delete</Item>
