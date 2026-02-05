@@ -9,133 +9,67 @@ import { HotkeyField } from './hotkey-field.component';
 describe('HotkeyField', () => {
     const mockOnHotkeyChange = vi.fn();
 
+    const renderHotkeyField = (hotkey: string | null | undefined = null, errorMessage?: string) => {
+        render(<HotkeyField hotkey={hotkey} onHotkeyChange={mockOnHotkeyChange} errorMessage={errorMessage} />);
+        return screen.getByRole('textbox', { name: 'Hotkey input' });
+    };
+
     beforeEach(() => {
         mockOnHotkeyChange.mockClear();
     });
 
-    it('renders with placeholder when hotkey is null', () => {
-        render(<HotkeyField hotkey={null} onHotkeyChange={mockOnHotkeyChange} />);
+    describe('display', () => {
+        it('renders empty with placeholder when hotkey is null', () => {
+            const input = renderHotkeyField(null);
 
-        const input = screen.getByRole('textbox', { name: 'Hotkey input' });
-        expect(input).toHaveAttribute('placeholder', 'Hotkey');
-        expect(input).toHaveValue('');
+            expect(input).toHaveAttribute('placeholder', 'Hotkey');
+            expect(input).toHaveValue('');
+        });
+
+        it('renders empty when hotkey is undefined', () => {
+            const input = renderHotkeyField(undefined);
+
+            expect(input).toHaveValue('');
+        });
+
+        it('displays formatted hotkey value in uppercase', () => {
+            const input = renderHotkeyField('ctrl+s');
+
+            expect(input).toHaveValue('CTRL+S');
+        });
+
+        it('shows error message when provided', () => {
+            renderHotkeyField('a', 'That hotkey is already in use');
+
+            expect(screen.getByText('That hotkey is already in use')).toBeInTheDocument();
+        });
     });
 
-    it('displays formatted hotkey value', () => {
-        render(<HotkeyField hotkey='ctrl+s' onHotkeyChange={mockOnHotkeyChange} />);
+    describe('key capture', () => {
+        it.each([
+            ['simple key', { key: 'a' }, 'a'],
+            ['ctrl modifier', { key: 's', ctrlKey: true }, 'ctrl+s'],
+            ['alt modifier', { key: 'a', altKey: true }, 'alt+a'],
+            ['meta modifier', { key: 'a', metaKey: true }, 'meta+a'],
+            ['shift modifier', { key: 's', shiftKey: true }, 'shift+s'],
+            ['ctrl+shift', { key: 's', ctrlKey: true, shiftKey: true }, 'ctrl+shift+s'],
+            ['all modifiers', { key: 'a', ctrlKey: true, metaKey: true, altKey: true, shiftKey: true }, 'ctrl+meta+alt+shift+a'],
+        ])('captures %s', (_, keyEvent, expected) => {
+            const input = renderHotkeyField();
 
-        const input = screen.getByRole('textbox', { name: 'Hotkey input' });
-        expect(input).toHaveValue('CTRL+S');
+            fireEvent.keyDown(input, keyEvent);
+
+            expect(mockOnHotkeyChange).toHaveBeenCalledWith(expected);
+        });
     });
 
-    it('captures simple key press', () => {
-        render(<HotkeyField hotkey={null} onHotkeyChange={mockOnHotkeyChange} />);
+    describe('ignored keys', () => {
+        it.each(['Control', 'Alt', 'Shift', 'Meta'])('ignores standalone %s key press', (key) => {
+            const input = renderHotkeyField();
 
-        const input = screen.getByRole('textbox', { name: 'Hotkey input' });
-        fireEvent.keyDown(input, { key: 'a' });
+            fireEvent.keyDown(input, { key });
 
-        expect(mockOnHotkeyChange).toHaveBeenCalledWith('a');
-    });
-
-    it('captures key with ctrl modifier', () => {
-        render(<HotkeyField hotkey={null} onHotkeyChange={mockOnHotkeyChange} />);
-
-        const input = screen.getByRole('textbox', { name: 'Hotkey input' });
-        fireEvent.keyDown(input, { key: 's', ctrlKey: true });
-
-        expect(mockOnHotkeyChange).toHaveBeenCalledWith('ctrl+s');
-    });
-
-    it('captures key with multiple modifiers', () => {
-        render(<HotkeyField hotkey={null} onHotkeyChange={mockOnHotkeyChange} />);
-
-        const input = screen.getByRole('textbox', { name: 'Hotkey input' });
-        fireEvent.keyDown(input, { key: 's', ctrlKey: true, shiftKey: true });
-
-        expect(mockOnHotkeyChange).toHaveBeenCalledWith('ctrl+shift+s');
-    });
-
-    it('ignores standalone Control key press', () => {
-        render(<HotkeyField hotkey={null} onHotkeyChange={mockOnHotkeyChange} />);
-
-        const input = screen.getByRole('textbox', { name: 'Hotkey input' });
-        fireEvent.keyDown(input, { key: 'Control' });
-
-        expect(mockOnHotkeyChange).not.toHaveBeenCalled();
-    });
-
-    it('ignores standalone Alt key press', () => {
-        render(<HotkeyField hotkey={null} onHotkeyChange={mockOnHotkeyChange} />);
-
-        const input = screen.getByRole('textbox', { name: 'Hotkey input' });
-        fireEvent.keyDown(input, { key: 'Alt' });
-
-        expect(mockOnHotkeyChange).not.toHaveBeenCalled();
-    });
-
-    it('ignores standalone Shift key press', () => {
-        render(<HotkeyField hotkey={null} onHotkeyChange={mockOnHotkeyChange} />);
-
-        const input = screen.getByRole('textbox', { name: 'Hotkey input' });
-        fireEvent.keyDown(input, { key: 'Shift' });
-
-        expect(mockOnHotkeyChange).not.toHaveBeenCalled();
-    });
-
-    it('ignores standalone Meta key press', () => {
-        render(<HotkeyField hotkey={null} onHotkeyChange={mockOnHotkeyChange} />);
-
-        const input = screen.getByRole('textbox', { name: 'Hotkey input' });
-        fireEvent.keyDown(input, { key: 'Meta' });
-
-        expect(mockOnHotkeyChange).not.toHaveBeenCalled();
-    });
-
-    it('shows error message when provided', () => {
-        render(
-            <HotkeyField hotkey='a' onHotkeyChange={mockOnHotkeyChange} errorMessage='That hotkey is already in use' />
-        );
-
-        expect(screen.getByText('That hotkey is already in use')).toBeInTheDocument();
-    });
-
-    it('does not show error when errorMessage is undefined', () => {
-        render(<HotkeyField hotkey='c' onHotkeyChange={mockOnHotkeyChange} />);
-
-        expect(screen.queryByText('That hotkey is already in use')).not.toBeInTheDocument();
-    });
-
-    it('handles undefined hotkey same as null', () => {
-        render(<HotkeyField hotkey={undefined} onHotkeyChange={mockOnHotkeyChange} />);
-
-        const input = screen.getByRole('textbox', { name: 'Hotkey input' });
-        expect(input).toHaveValue('');
-    });
-
-    it('captures alt modifier', () => {
-        render(<HotkeyField hotkey={null} onHotkeyChange={mockOnHotkeyChange} />);
-
-        const input = screen.getByRole('textbox', { name: 'Hotkey input' });
-        fireEvent.keyDown(input, { key: 'a', altKey: true });
-
-        expect(mockOnHotkeyChange).toHaveBeenCalledWith('alt+a');
-    });
-
-    it('captures meta modifier', () => {
-        render(<HotkeyField hotkey={null} onHotkeyChange={mockOnHotkeyChange} />);
-
-        const input = screen.getByRole('textbox', { name: 'Hotkey input' });
-        fireEvent.keyDown(input, { key: 'a', metaKey: true });
-
-        expect(mockOnHotkeyChange).toHaveBeenCalledWith('meta+a');
-    });
-
-    it('builds modifier order as ctrl+meta+alt+shift', () => {
-        render(<HotkeyField hotkey={null} onHotkeyChange={mockOnHotkeyChange} />);
-
-        const input = screen.getByRole('textbox', { name: 'Hotkey input' });
-        fireEvent.keyDown(input, { key: 'a', ctrlKey: true, metaKey: true, altKey: true, shiftKey: true });
-
-        expect(mockOnHotkeyChange).toHaveBeenCalledWith('ctrl+meta+alt+shift+a');
+            expect(mockOnHotkeyChange).not.toHaveBeenCalled();
+        });
     });
 });

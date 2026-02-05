@@ -12,65 +12,59 @@ describe('validateLabelName', () => {
         getMockedLabel({ id: 'label-3', name: 'Dog' }),
     ];
 
-    it('returns undefined for a unique label name', () => {
-        expect(validateLabelName('Cat', existingLabels)).toBeUndefined();
+    describe('unique names', () => {
+        it.each([
+            ['unique name', 'Cat'],
+            ['empty labels array', 'Anything'],
+            ['empty name', ''],
+            ['whitespace-only name', '   '],
+        ])('returns undefined for %s', (_, name) => {
+            const labels = name === 'Anything' ? [] : existingLabels;
+            expect(validateLabelName(name, labels, undefined)).toBeUndefined();
+        });
     });
 
-    it('returns error message for duplicate label name', () => {
-        expect(validateLabelName('Person', existingLabels)).toBe('That label name already exists');
+    describe('duplicate detection', () => {
+        it('returns error for duplicate name', () => {
+            expect(validateLabelName('Person', existingLabels)).toBe('That label name already exists');
+        });
+
+        it('trims whitespace before checking', () => {
+            expect(validateLabelName('  Person  ', existingLabels)).toBe('That label name already exists');
+        });
+
+        it('is case-sensitive', () => {
+            expect(validateLabelName('person', existingLabels)).toBeUndefined();
+            expect(validateLabelName('PERSON', existingLabels)).toBeUndefined();
+        });
     });
 
-    it('is case-sensitive when checking duplicates', () => {
-        expect(validateLabelName('person', existingLabels)).toBeUndefined();
-        expect(validateLabelName('PERSON', existingLabels)).toBeUndefined();
-    });
+    describe('excludeId', () => {
+        it('allows same name when excludeId matches label id', () => {
+            expect(validateLabelName('Person', existingLabels, 'label-1')).toBeUndefined();
+        });
 
-    it('trims whitespace before checking duplicates', () => {
-        expect(validateLabelName('  Person  ', existingLabels)).toBe('That label name already exists');
-        expect(validateLabelName('  Cat  ', existingLabels)).toBeUndefined();
-    });
-
-    it('allows duplicate when excludeId matches the label id', () => {
-        expect(validateLabelName('Person', existingLabels, 'label-1')).toBeUndefined();
-    });
-
-    it('returns error for duplicate even with excludeId for different label', () => {
-        expect(validateLabelName('Person', existingLabels, 'label-2')).toBe('That label name already exists');
-    });
-
-    it('returns undefined for empty labels array', () => {
-        expect(validateLabelName('Anything', [])).toBeUndefined();
-    });
-
-    it('returns undefined for empty name', () => {
-        expect(validateLabelName('', existingLabels)).toBeUndefined();
-    });
-
-    it('returns undefined for whitespace-only name', () => {
-        expect(validateLabelName('   ', existingLabels)).toBeUndefined();
+        it('still detects duplicate when excludeId is different label', () => {
+            expect(validateLabelName('Person', existingLabels, 'label-2')).toBe('That label name already exists');
+        });
     });
 });
 
 describe('validateLabelHotkey', () => {
-    it('returns undefined for a unique hotkey', () => {
-        expect(validateLabelHotkey('a', ['b', 'c'])).toBeUndefined();
+    it.each([
+        ['unique hotkey', 'a', ['b', 'c']],
+        ['empty array', 'a', []],
+        ['unique with modifiers', 'ctrl+s', ['ctrl+a']],
+    ])('returns undefined for %s', (_, hotkey, existing) => {
+        expect(validateLabelHotkey(hotkey, existing)).toBeUndefined();
     });
 
-    it('returns error message for duplicate hotkey', () => {
-        expect(validateLabelHotkey('a', ['a', 'b'])).toBe('That hotkey is already in use');
-    });
-
-    it('is case-insensitive when checking duplicates', () => {
-        expect(validateLabelHotkey('A', ['a', 'b'])).toBe('That hotkey is already in use');
-        expect(validateLabelHotkey('a', ['A', 'B'])).toBe('That hotkey is already in use');
-    });
-
-    it('returns undefined for empty hotkeys array', () => {
-        expect(validateLabelHotkey('a', [])).toBeUndefined();
-    });
-
-    it('handles modifier key combinations', () => {
-        expect(validateLabelHotkey('ctrl+s', ['ctrl+s'])).toBe('That hotkey is already in use');
-        expect(validateLabelHotkey('ctrl+s', ['ctrl+a'])).toBeUndefined();
+    it.each([
+        ['exact match', 'a', ['a', 'b']],
+        ['uppercase input', 'A', ['a', 'b']],
+        ['lowercase input', 'a', ['A', 'B']],
+        ['modifier combination', 'ctrl+s', ['ctrl+s']],
+    ])('returns error for duplicate: %s', (_, hotkey, existing) => {
+        expect(validateLabelHotkey(hotkey, existing)).toBe('That hotkey is already in use');
     });
 });
