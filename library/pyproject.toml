@@ -83,7 +83,7 @@ lint = [
     "types-setuptools",
     "types-python-dateutil",
     "tokenize-rt==3.2.0",
-    "pyrefly~=0.48.2",
+    "pyrefly~=0.51.0",
 ]
 
 [project.optional-dependencies]
