@@ -3,26 +3,18 @@
 
 import { Item, Picker } from '@geti/ui';
 
-import { DatasetRevision } from '../../../constants/shared-types';
+import { useTrainModel } from './train-model-provider.component';
 
-type SelectDatasetRevisionProps = {
-    datasetRevisions: DatasetRevision[];
-    selectedDatasetRevision: string | null;
-    onSelectedDatasetRevisionChange: (datasetRevision: string) => void;
-};
+export const SelectDatasetRevision = () => {
+    const { datasetRevisions, selectedDatasetRevisionId, onSelectDatasetRevisionId } = useTrainModel();
 
-export const SelectDatasetRevision = ({
-    datasetRevisions,
-    selectedDatasetRevision,
-    onSelectedDatasetRevisionChange,
-}: SelectDatasetRevisionProps) => {
     return (
         <Picker
             flex={1}
             items={datasetRevisions}
             label={'Select dataset revision'}
-            selectedKey={selectedDatasetRevision}
-            onSelectionChange={(key) => onSelectedDatasetRevisionChange(String(key))}
+            selectedKey={selectedDatasetRevisionId}
+            onSelectionChange={(key) => onSelectDatasetRevisionId(String(key))}
         >
             {(item) => <Item key={item.id}>{item.name}</Item>}
         </Picker>

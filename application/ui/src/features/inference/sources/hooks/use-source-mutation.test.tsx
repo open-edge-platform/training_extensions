@@ -1,13 +1,13 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { act, renderHook } from '@testing-library/react';
+import { act } from '@testing-library/react';
 import { HttpResponse } from 'msw';
-import { TestProviders } from 'test-utils/render';
+import { renderHook } from 'test-utils/render';
 
 import { http } from '../../../../api/utils';
+import type { USBCameraSourceConfig } from '../../../../constants/shared-types';
 import { server } from '../../../../msw-node-setup';
-import { USBCameraSourceConfig } from '../util';
 import { useSourceMutation } from './use-source-mutation.hook';
 
 const mockedSource: USBCameraSourceConfig = {
@@ -20,9 +20,7 @@ const mockedSource: USBCameraSourceConfig = {
 describe('useSourceMutation', () => {
     it('creates a new source and return its resource id', async () => {
         const newResourceId = 'resource-id-123';
-        const { result } = renderHook(() => useSourceMutation(true), {
-            wrapper: TestProviders,
-        });
+        const { result } = renderHook(() => useSourceMutation(true));
 
         server.use(
             http.post('/api/sources', () => HttpResponse.json({ ...mockedSource, id: newResourceId })),
@@ -36,9 +34,7 @@ describe('useSourceMutation', () => {
     });
 
     it('update a source item and returns its resource id', async () => {
-        const { result } = renderHook(() => useSourceMutation(false), {
-            wrapper: TestProviders,
-        });
+        const { result } = renderHook(() => useSourceMutation(false));
 
         server.use(
             http.post('/api/sources', () => HttpResponse.error()),

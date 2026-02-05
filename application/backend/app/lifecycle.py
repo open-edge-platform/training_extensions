@@ -24,6 +24,7 @@ from app.services import (
     DatasetRevisionService,
     DatasetService,
     LabelService,
+    MediaService,
     ModelService,
     TrainingConfigurationService,
 )
@@ -62,7 +63,9 @@ def setup_job_controller(data_dir: Path, max_parallel_jobs: int) -> tuple[JobQue
                 base_weights_service=BaseWeightsService(data_dir=data_dir),
                 subset_service=SubsetService(),
                 subset_assigner=SubsetAssigner(),
-                dataset_service=DatasetService(data_dir=data_dir, label_service=LabelService()),
+                dataset_service=DatasetService(
+                    label_service=LabelService(), media_service=MediaService(data_dir=data_dir)
+                ),
                 dataset_revision_service=DatasetRevisionService(data_dir=data_dir),
                 model_service=ModelService(data_dir=data_dir),
                 training_configuration_service=TrainingConfigurationService(),

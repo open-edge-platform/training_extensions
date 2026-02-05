@@ -1,19 +1,47 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Item, TabList, TabPanels, Tabs, Text } from '@geti/ui';
+import { Flex, Item, Loading, TabList, TabPanels, Tabs, Text } from '@geti/ui';
 
-import type { SchemaModelView } from '../../../../api/openapi-spec';
+import { useGetDatasetRevisions } from '../../../../hooks/use-get-dataset-revisions.hook';
+import { useGetModel } from '../../hooks/api/use-get-model.hook';
 import { ModelMetrics } from '../model-metrics/model-metrics.component';
 import { ModelTrainingDatasets } from '../model-training-datasets/model-training-datasets.component';
 import { ModelTrainingParameters } from '../model-training-parameters/model-training-parameters.component';
 import { ModelVariantsTabs } from '../model-variants/model-variant-tabs.component';
 
 interface ModelDetailsTabsProps {
-    model: SchemaModelView;
+    modelId: string;
 }
 
-export const ModelDetailsTabs = ({ model }: ModelDetailsTabsProps) => {
+export const ModelDetailsTabs = ({ modelId }: ModelDetailsTabsProps) => {
+    const { isPending, isError, data: model } = useGetModel(modelId);
+    const { data: datasetRevisions = [] } = useGetDatasetRevisions();
+
+    if (isPending) {
+        return (
+            <Flex alignItems={'center'} justifyContent={'center'} height={'size-3000'}>
+                <Loading size={'M'} />
+            </Flex>
+        );
+    }
+
+    if (isError || !model) {
+        return (
+            <Flex alignItems={'center'} justifyContent={'center'} height={'size-3000'}>
+                <Text>Failed to load model details</Text>
+            </Flex>
+        );
+    }
+
+    const currentDatasetRevisionId = model.training_info.dataset_revision_id;
+
+    // Note: currentDatasetRevision might be 'undefined' if the dataset revision was deleted after the model
+    // was trained.
+    const currentDatasetRevision = datasetRevisions.find(
+        (datasetRevision) => datasetRevision.id === currentDatasetRevisionId
+    );
+
     return (
         <Tabs
             aria-label={'Model details'}
@@ -49,7 +77,7 @@ export const ModelDetailsTabs = ({ model }: ModelDetailsTabsProps) => {
                     <ModelTrainingParameters />
                 </Item>
                 <Item key='datasets'>
-                    <ModelTrainingDatasets />
+                    <ModelTrainingDatasets datasetRevision={currentDatasetRevision} />
                 </Item>
             </TabPanels>
         </Tabs>

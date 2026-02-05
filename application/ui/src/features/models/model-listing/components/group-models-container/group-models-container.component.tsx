@@ -3,7 +3,7 @@
 
 import { Disclosure, DisclosurePanel, DisclosureTitle, Flex } from '@geti/ui';
 
-import { SchemaModelView } from '../../../../../api/openapi-spec';
+import type { Model } from '../../../../../constants/shared-types';
 import { ModelDetailsTabs } from '../../model-details/model-details-tabs.component';
 import { useModelListing } from '../../provider/model-listing-provider';
 import { ArchitectureGroup, DatasetGroup } from '../../types';
@@ -15,7 +15,7 @@ import classes from './group-models-container.module.scss';
 
 interface GroupModelsContainerProps {
     group: DatasetGroup | ArchitectureGroup;
-    models: SchemaModelView[];
+    models: Model[];
 }
 
 export const GroupModelsContainer = ({ group, models }: GroupModelsContainerProps) => {
@@ -26,22 +26,27 @@ export const GroupModelsContainer = ({ group, models }: GroupModelsContainerProp
             <GroupHeader data={group} />
             <ModelsTableHeader />
 
-            {models.map((model) => (
-                <Disclosure
-                    key={model.id}
-                    isQuiet
-                    UNSAFE_className={classes.disclosure}
-                    isExpanded={model.id ? expandedModelIds.has(model.id) : false}
-                    onExpandedChange={() => model.id && onExpandModel(model.id)}
-                >
-                    <DisclosureTitle UNSAFE_className={classes.disclosureItem}>
-                        <ModelRowContainer model={model} />
-                    </DisclosureTitle>
-                    <DisclosurePanel>
-                        <ModelDetailsTabs model={model} />
-                    </DisclosurePanel>
-                </Disclosure>
-            ))}
+            {models.map((model) => {
+                const modelId = model.id;
+
+                return (
+                    <Disclosure
+                        key={modelId}
+                        isQuiet
+                        UNSAFE_className={classes.disclosure}
+                        isExpanded={expandedModelIds.has(modelId)}
+                        onExpandedChange={() => onExpandModel(modelId)}
+                        data-testid={`model-disclosure-${modelId}`}
+                    >
+                        <DisclosureTitle UNSAFE_className={classes.disclosureItem}>
+                            <ModelRowContainer model={model} />
+                        </DisclosureTitle>
+                        <DisclosurePanel>
+                            <ModelDetailsTabs modelId={modelId} />
+                        </DisclosurePanel>
+                    </Disclosure>
+                );
+            })}
         </Flex>
     );
 };

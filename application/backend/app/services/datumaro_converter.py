@@ -21,7 +21,7 @@ from datumaro.experimental.fields import (
 )
 from loguru import logger
 
-from app.models import DatasetItem, DatasetItemSubset, Label, Polygon, Rectangle, Task, TaskType
+from app.models import DatasetItem, DatasetItemSubset, Label, Media, Polygon, Rectangle, Task, TaskType
 from app.utils.typing import NDArrayFloat32, NDArrayInt
 
 CONVERSION_BATCH_SIZE = 50
@@ -159,21 +159,23 @@ S = TypeVar("S", bound=Sample)  # Sample type e.g. DetectionSample, Classificati
 def _convert_dataset(
     sample_type: type[S],
     project_labels: Sequence[Label],
-    get_dataset_items: Callable[[int, int], list[DatasetItem]],
+    get_dataset_items_and_media: Callable[[int, int], list[tuple[DatasetItem, Media]]],
     get_image_path: Callable[[DatasetItem], str],
-    convert_sample: Callable[[DatasetItem, str, list[UUID]], S | None],
+    convert_sample: Callable[[DatasetItem, Media, str, list[UUID]], S | None],
 ) -> Dataset[S]:
     dataset: Dataset[S] = Dataset(
         sample_type, categories={"label": LabelCategories(labels=tuple([label.name for label in project_labels]))}
     )
     project_labels_ids = [label.id for label in project_labels]
     offset = 0
-    dataset_items: list[DatasetItem] = get_dataset_items(offset, CONVERSION_BATCH_SIZE)
-    while len(dataset_items) > 0:
-        for dataset_item in dataset_items:
+    dataset_items_and_media: list[tuple[DatasetItem, Media]] = get_dataset_items_and_media(
+        offset, CONVERSION_BATCH_SIZE
+    )
+    while len(dataset_items_and_media) > 0:
+        for dataset_item, media in dataset_items_and_media:
             image_path = get_image_path(dataset_item)
             try:
-                sample = convert_sample(dataset_item, image_path, project_labels_ids)
+                sample = convert_sample(dataset_item, media, image_path, project_labels_ids)
             except Exception:
                 logger.error(
                     "Failed conversion of dataset item to Datumaro sample. dataset_item = {}; sample_type = {}",
@@ -191,14 +193,14 @@ def _convert_dataset(
                         dataset,
                     )
                     raise
-        offset += len(dataset_items)
-        dataset_items = get_dataset_items(offset, CONVERSION_BATCH_SIZE)
+        offset += len(dataset_items_and_media)
+        dataset_items_and_media = get_dataset_items_and_media(offset, CONVERSION_BATCH_SIZE)
     return dataset
 
 
 def convert_classification_dataset(
     project_labels: Sequence[Label],
-    get_dataset_items: Callable[[int, int], list[DatasetItem]],
+    get_dataset_items_and_media: Callable[[int, int], list[tuple[DatasetItem, Media]]],
     get_image_path: Callable[[DatasetItem], str],
 ) -> Dataset[ClassificationSample]:
     """
@@ -206,7 +208,7 @@ def convert_classification_dataset(
 
     Args:
         project_labels: List of project labels
-        get_dataset_items: Function to get a batch of dataset items
+        get_dataset_items_and_media: Function to get a batch of dataset items with media
         get_image_path: Function to get image path for a dataset item
 
     Returns:
@@ -214,7 +216,7 @@ def convert_classification_dataset(
     """
 
     def _convert_sample(
-        dataset_item: DatasetItem, image_path: str, project_labels_ids: list[UUID]
+        dataset_item: DatasetItem, media: Media, image_path: str, project_labels_ids: list[UUID]
     ) -> ClassificationSample | None:
         if dataset_item.annotation_data is None:
             return None
@@ -222,7 +224,7 @@ def convert_classification_dataset(
             annotation = dataset_item.annotation_data[0]  # classification -> only one shape (annotation)
             return ClassificationSample(
                 image=image_path,
-                image_info=ImageInfo(width=dataset_item.width, height=dataset_item.height),
+                image_info=ImageInfo(width=media.width, height=media.height),
                 label=project_labels_ids.index(annotation.labels[0].id),  # multiclass -> only one label
                 confidence=annotation.confidences[0] if annotation.confidences else None,
                 subset=convert_to_dm_subset(dataset_item.subset),
@@ -234,7 +236,7 @@ def convert_classification_dataset(
     return _convert_dataset(
         sample_type=ClassificationSample,
         project_labels=project_labels,
-        get_dataset_items=get_dataset_items,
+        get_dataset_items_and_media=get_dataset_items_and_media,
         get_image_path=get_image_path,
         convert_sample=_convert_sample,
     )
@@ -242,7 +244,7 @@ def convert_classification_dataset(
 
 def convert_multilabel_classification_dataset(
     project_labels: Sequence[Label],
-    get_dataset_items: Callable[[int, int], list[DatasetItem]],
+    get_dataset_items_and_media: Callable[[int, int], list[tuple[DatasetItem, Media]]],
     get_image_path: Callable[[DatasetItem], str],
 ) -> Dataset[MultilabelClassificationSample]:
     """
@@ -250,7 +252,7 @@ def convert_multilabel_classification_dataset(
 
     Args:
         project_labels: List of project labels
-        get_dataset_items: Function to get a batch of dataset items
+        get_dataset_items_and_media: Function to get a batch of dataset items with media
         get_image_path: Function to get image path for a dataset item
 
     Returns:
@@ -258,7 +260,7 @@ def convert_multilabel_classification_dataset(
     """
 
     def _convert_sample(
-        dataset_item: DatasetItem, image_path: str, project_labels_ids: list[UUID]
+        dataset_item: DatasetItem, media: Media, image_path: str, project_labels_ids: list[UUID]
     ) -> MultilabelClassificationSample | None:
         if dataset_item.annotation_data is None:
             return None
@@ -270,7 +272,7 @@ def convert_multilabel_classification_dataset(
             return None
         return MultilabelClassificationSample(
             image=image_path,
-            image_info=ImageInfo(width=dataset_item.width, height=dataset_item.height),
+            image_info=ImageInfo(width=media.width, height=media.height),
             label=np.array(labels_indexes),
             confidence=np.array(annotation.confidences) if annotation.confidences else None,
             subset=convert_to_dm_subset(dataset_item.subset),
@@ -279,7 +281,7 @@ def convert_multilabel_classification_dataset(
     return _convert_dataset(
         sample_type=MultilabelClassificationSample,
         project_labels=project_labels,
-        get_dataset_items=get_dataset_items,
+        get_dataset_items_and_media=get_dataset_items_and_media,
         get_image_path=get_image_path,
         convert_sample=_convert_sample,
     )
@@ -287,7 +289,7 @@ def convert_multilabel_classification_dataset(
 
 def convert_detection_dataset(
     project_labels: Sequence[Label],
-    get_dataset_items: Callable[[int, int], list[DatasetItem]],
+    get_dataset_items_and_media: Callable[[int, int], list[tuple[DatasetItem, Media]]],
     get_image_path: Callable[[DatasetItem], str],
 ) -> Dataset[DetectionSample]:
     """
@@ -295,7 +297,7 @@ def convert_detection_dataset(
 
     Args:
         project_labels: List of project labels
-        get_dataset_items: Function to get a batch of dataset items
+        get_dataset_items_and_media: Function to get a batch of dataset items with media
         get_image_path: Function to get image path for a dataset item
 
     Returns:
@@ -303,7 +305,7 @@ def convert_detection_dataset(
     """
 
     def _convert_sample(
-        dataset_item: DatasetItem, image_path: str, project_labels_ids: list[UUID]
+        dataset_item: DatasetItem, media: Media, image_path: str, project_labels_ids: list[UUID]
     ) -> DetectionSample | None:
         if dataset_item.annotation_data is None:
             return None
@@ -341,7 +343,7 @@ def convert_detection_dataset(
         )
         return DetectionSample(
             image=image_path,
-            image_info=ImageInfo(width=dataset_item.width, height=dataset_item.height),
+            image_info=ImageInfo(width=media.width, height=media.height),
             bboxes=np.array(coords),
             label=np.array(labels_indexes),
             confidence=np.array(confidences) if confidences else None,
@@ -351,7 +353,7 @@ def convert_detection_dataset(
     return _convert_dataset(
         sample_type=DetectionSample,
         project_labels=project_labels,
-        get_dataset_items=get_dataset_items,
+        get_dataset_items_and_media=get_dataset_items_and_media,
         get_image_path=get_image_path,
         convert_sample=_convert_sample,
     )
@@ -359,7 +361,7 @@ def convert_detection_dataset(
 
 def convert_instance_segmentation_dataset(
     project_labels: Sequence[Label],
-    get_dataset_items: Callable[[int, int], list[DatasetItem]],
+    get_dataset_items_and_media: Callable[[int, int], list[tuple[DatasetItem, Media]]],
     get_image_path: Callable[[DatasetItem], str],
 ) -> Dataset[InstanceSegmentationSample]:
     """
@@ -367,7 +369,7 @@ def convert_instance_segmentation_dataset(
 
     Args:
         project_labels: List of project labels
-        get_dataset_items: Function to get a batch of dataset items
+        get_dataset_items_and_media: Function to get a batch of dataset items with media
         get_image_path: Function to get image path for a dataset item
 
     Returns:
@@ -375,7 +377,7 @@ def convert_instance_segmentation_dataset(
     """
 
     def _convert_sample(
-        dataset_item: DatasetItem, image_path: str, project_labels_ids: list[UUID]
+        dataset_item: DatasetItem, media: Media, image_path: str, project_labels_ids: list[UUID]
     ) -> InstanceSegmentationSample | None:
         if dataset_item.annotation_data is None:
             return None
@@ -420,7 +422,7 @@ def convert_instance_segmentation_dataset(
         polygons_np[:] = [np.asarray(p, dtype=np.float32) for p in polygons]
         return InstanceSegmentationSample(
             image=image_path,
-            image_info=ImageInfo(width=dataset_item.width, height=dataset_item.height),
+            image_info=ImageInfo(width=media.width, height=media.height),
             polygons=polygons_np,
             label=np.array(labels_indexes),
             confidence=np.array(confidences) if confidences else None,
@@ -430,7 +432,7 @@ def convert_instance_segmentation_dataset(
     return _convert_dataset(
         sample_type=InstanceSegmentationSample,
         project_labels=project_labels,
-        get_dataset_items=get_dataset_items,
+        get_dataset_items_and_media=get_dataset_items_and_media,
         get_image_path=get_image_path,
         convert_sample=_convert_sample,
     )
@@ -439,7 +441,7 @@ def convert_instance_segmentation_dataset(
 def convert_dataset(
     task: Task,
     labels: Sequence[Label],
-    get_dataset_items: Callable[[int, int], list[DatasetItem]],
+    get_dataset_items_and_media: Callable[[int, int], list[tuple[DatasetItem, Media]]],
     get_image_path: Callable[[DatasetItem], str],
 ) -> Dataset:
     """
@@ -448,7 +450,7 @@ def convert_dataset(
     Args:
         task: Task metadata
         labels: Project labels
-        get_dataset_items: Function to get a batch of dataset items
+        get_dataset_items_and_media: Function to get a batch of dataset items with media
         get_image_path: Function to get image path for a dataset item
 
     Returns:
@@ -457,19 +459,27 @@ def convert_dataset(
     match task.task_type:
         case TaskType.DETECTION:
             return convert_detection_dataset(
-                project_labels=labels, get_dataset_items=get_dataset_items, get_image_path=get_image_path
+                project_labels=labels,
+                get_dataset_items_and_media=get_dataset_items_and_media,
+                get_image_path=get_image_path,
             )
         case TaskType.CLASSIFICATION:
             if task.exclusive_labels:
                 return convert_classification_dataset(
-                    project_labels=labels, get_dataset_items=get_dataset_items, get_image_path=get_image_path
+                    project_labels=labels,
+                    get_dataset_items_and_media=get_dataset_items_and_media,
+                    get_image_path=get_image_path,
                 )
             return convert_multilabel_classification_dataset(
-                project_labels=labels, get_dataset_items=get_dataset_items, get_image_path=get_image_path
+                project_labels=labels,
+                get_dataset_items_and_media=get_dataset_items_and_media,
+                get_image_path=get_image_path,
             )
         case TaskType.INSTANCE_SEGMENTATION:
             return convert_instance_segmentation_dataset(
-                project_labels=labels, get_dataset_items=get_dataset_items, get_image_path=get_image_path
+                project_labels=labels,
+                get_dataset_items_and_media=get_dataset_items_and_media,
+                get_image_path=get_image_path,
             )
         case _:
             raise Exception

@@ -11,10 +11,11 @@ import torch
 import torch.utils._pytree as pytree
 
 if TYPE_CHECKING:
-    from otx.data.entity import ImageInfo, OTXDataItem
+    from otx.data.entity import ImageInfo
+    from otx.data.entity.sample import OTXSample
 
 
-def register_pytree_node(cls: type[OTXDataItem]) -> type[OTXDataItem]:
+def register_pytree_node(cls: type[OTXSample]) -> type[OTXSample]:
     """Decorator to register an OTX data entity with PyTorch's PyTree.
 
     This decorator should be applied to every OTX data entity, as TorchVision V2 transforms

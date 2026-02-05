@@ -23,12 +23,24 @@ export const DeleteMediaItem = ({ itemsIds = [], onDeleted }: DeleteMediaItemPro
     const project_id = useProjectIdentifier();
     const alertDialogState = useOverlayTriggerState({});
 
-    const removeMutation = $api.useMutation('delete', `/api/projects/{project_id}/dataset/items/{dataset_item_id}`, {
+    const removeMutation = $api.useMutation('delete', `/api/projects/{project_id}/dataset/media/{media_id}`, {
         meta: {
-            invalidateQueries: [['get', '/api/projects/{project_id}/dataset/items']],
+            invalidateQueries: [
+                [
+                    'get',
+                    '/api/projects/{project_id}/dataset/media',
+                    {
+                        params: {
+                            path: {
+                                project_id,
+                            },
+                        },
+                    },
+                ],
+            ],
         },
         onError: (error, { params: { path } }) => {
-            const { dataset_item_id: itemId } = path;
+            const { media_id: itemId } = path;
 
             toast({
                 id: String(itemId),
@@ -43,10 +55,10 @@ export const DeleteMediaItem = ({ itemsIds = [], onDeleted }: DeleteMediaItemPro
 
         toast({ id: 'deleting-notification', type: 'info', message: `Deleting items...` });
 
-        const deleteItemPromises = itemsIds.map(async (dataset_item_id) => {
-            await removeMutation.mutateAsync({ params: { path: { project_id, dataset_item_id } } });
+        const deleteItemPromises = itemsIds.map(async (media_id) => {
+            await removeMutation.mutateAsync({ params: { path: { project_id, media_id } } });
 
-            return { itemId: dataset_item_id };
+            return { itemId: media_id };
         });
 
         const responses = await Promise.allSettled(deleteItemPromises);

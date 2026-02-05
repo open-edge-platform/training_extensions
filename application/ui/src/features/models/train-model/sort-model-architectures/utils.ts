@@ -3,39 +3,24 @@
 
 import { orderBy } from 'lodash-es';
 
-import { ModelArchitecture } from '../../../../constants/shared-types';
+import type { ModelArchitectureWithPerformanceCategory } from '../../../../constants/shared-types';
 
 export const SortingOptions = {
-    RELEVANCE_ASC: 'relevance-asc',
-    RELEVANCE_DESC: 'relevance-desc',
     NAME_ASC: 'name-asc',
     NAME_DESC: 'name-desc',
-    INFERENCE_SPEED_ASC: 'inference-speed-asc',
-    INFERENCE_SPEED_DESC: 'inference-speed-desc',
-    TRAINING_TIME_ASC: 'training-time-asc',
-    TRAINING_TIME_DESC: 'training-time-desc',
+    SIZE_ASC: 'size-asc',
+    SIZE_DESC: 'size-desc',
     ACCURACY_ASC: 'accuracy-asc',
     ACCURACY_DESC: 'accuracy-desc',
 } as const;
 
 export type SortingOptions = (typeof SortingOptions)[keyof typeof SortingOptions];
 
-type SortingHandler = (modelArchitectures: ModelArchitecture[]) => ModelArchitecture[];
+type SortingHandler = (
+    modelArchitectures: ModelArchitectureWithPerformanceCategory[]
+) => ModelArchitectureWithPerformanceCategory[];
 
 export const SORTING_HANDLERS: Record<SortingOptions, SortingHandler> = {
-    // TODO: Update once backend supports recommended model architectures
-    [SortingOptions.RELEVANCE_DESC]: (modelArchitectures) => modelArchitectures,
-    /*orderBy(
-            modelArchitectures,
-            (modelArchitecture) => modelArchitecture.performanceCategory === PerformanceCategory.OTHER,
-            'desc'
-        ),*/
-    [SortingOptions.RELEVANCE_ASC]: (modelArchitectures) => modelArchitectures,
-    /*orderBy(
-            modelArchitectures,
-            (modelArchitecture) => modelArchitecture.performanceCategory === PerformanceCategory.OTHER,
-            'asc'
-        ),*/
     [SortingOptions.ACCURACY_ASC]: (modelArchitectures) =>
         orderBy(modelArchitectures, (modelArchitecture) => modelArchitecture.stats.performance_ratings.accuracy, 'asc'),
     [SortingOptions.ACCURACY_DESC]: (modelArchitectures) =>
@@ -44,85 +29,45 @@ export const SORTING_HANDLERS: Record<SortingOptions, SortingHandler> = {
             (modelArchitecture) => modelArchitecture.stats.performance_ratings.accuracy,
             'desc'
         ),
-    [SortingOptions.INFERENCE_SPEED_ASC]: (modelArchitectures) =>
-        orderBy(
-            modelArchitectures,
-            (modelArchitecture) => modelArchitecture.stats.performance_ratings.inference_speed,
-            'asc'
-        ),
-    [SortingOptions.INFERENCE_SPEED_DESC]: (modelArchitectures) =>
-        orderBy(
-            modelArchitectures,
-            (modelArchitecture) => modelArchitecture.stats.performance_ratings.inference_speed,
-            'desc'
-        ),
-    [SortingOptions.TRAINING_TIME_ASC]: (modelArchitectures) =>
-        orderBy(
-            modelArchitectures,
-            (modelArchitecture) => modelArchitecture.stats.performance_ratings.training_time,
-            'asc'
-        ),
-    [SortingOptions.TRAINING_TIME_DESC]: (modelArchitectures) =>
-        orderBy(
-            modelArchitectures,
-            (modelArchitecture) => modelArchitecture.stats.performance_ratings.training_time,
-            'desc'
-        ),
     [SortingOptions.NAME_ASC]: (modelArchitectures) =>
         orderBy(modelArchitectures, (modelArchitecture) => modelArchitecture.name, 'asc'),
     [SortingOptions.NAME_DESC]: (modelArchitectures) =>
         orderBy(modelArchitectures, (modelArchitecture) => modelArchitecture.name, 'desc'),
+    [SortingOptions.SIZE_ASC]: (modelArchitectures) =>
+        orderBy(modelArchitectures, (modelArchitecture) => modelArchitecture.stats.trainable_parameters, 'asc'),
+    [SortingOptions.SIZE_DESC]: (modelArchitectures) =>
+        orderBy(modelArchitectures, (modelArchitecture) => modelArchitecture.stats.trainable_parameters, 'desc'),
 };
 
 export const SORT_OPTIONS = [
     [
         {
-            key: SortingOptions.RELEVANCE_ASC,
-            name: 'Relevance',
-        },
-        {
-            key: SortingOptions.RELEVANCE_DESC,
-            name: 'Relevance',
-        },
-    ],
-    [
-        {
             key: SortingOptions.NAME_ASC,
-            name: 'Name',
+            name: 'Name (A to Z)',
         },
         {
             key: SortingOptions.NAME_DESC,
-            name: 'Name',
+            name: 'Name (Z to A)',
         },
     ],
     [
         {
-            key: SortingOptions.INFERENCE_SPEED_ASC,
-            name: 'Inference speed',
+            key: SortingOptions.SIZE_ASC,
+            name: 'Size (smallest first)',
         },
         {
-            key: SortingOptions.INFERENCE_SPEED_DESC,
-            name: 'Inference speed',
-        },
-    ],
-    [
-        {
-            key: SortingOptions.TRAINING_TIME_ASC,
-            name: 'Training time',
-        },
-        {
-            key: SortingOptions.TRAINING_TIME_DESC,
-            name: 'Training time',
+            key: SortingOptions.SIZE_DESC,
+            name: 'Size (largest first)',
         },
     ],
     [
         {
             key: SortingOptions.ACCURACY_ASC,
-            name: 'Accuracy',
+            name: 'Accuracy (lowest first)',
         },
         {
             key: SortingOptions.ACCURACY_DESC,
-            name: 'Accuracy',
+            name: 'Accuracy (highest first)',
         },
     ],
 ];

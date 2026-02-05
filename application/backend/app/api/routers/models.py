@@ -12,7 +12,8 @@ from fastapi.responses import StreamingResponse
 
 from app.api.dependencies import get_model_service, get_project
 from app.api.schemas import ModelView, ProjectView
-from app.api.validators import ModelID
+from app.api.schemas.model import ExtendedModelView
+from app.api.validators import DatasetRevisionID, ModelID
 from app.models.model_revision import ModelFormat
 from app.services import ModelService, ResourceInUseError, ResourceNotFoundError, ResourceType
 
@@ -31,21 +32,26 @@ router = APIRouter(prefix="/api/projects/{project_id}/models", tags=["Models"])
 def list_models(
     project: Annotated[ProjectView, Depends(get_project)],
     model_service: Annotated[ModelService, Depends(get_model_service)],
+    dataset_revision_id: Annotated[
+        DatasetRevisionID | None,
+        Query(description="Dataset revision id for optional filtering"),
+    ] = None,
 ) -> list[ModelView]:
-    """Get all models in a project."""
+    """Get all models in a project, optionally filtered by dataset revision."""
     try:
         model_views = []
-        for model_revision in model_service.list_models(project.id):
+        for model_revision in model_service.list_models(project_id=project.id, dataset_revision_id=dataset_revision_id):
             model_variants = model_service.get_model_variants(project_id=project.id, model_id=model_revision.id)
-            model_views.append(model_revision.model_dump() | {"variants": model_variants})
+            model_size = model_service.get_model_size_in_bytes(project_id=project.id, model_id=model_revision.id)
+            model_views.append(model_revision.model_dump() | {"variants": model_variants} | {"size": model_size})
         return [ModelView.model_validate(model_view, from_attributes=True) for model_view in model_views]
-    except ResourceNotFoundError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.get(
     "/{model_id}",
-    response_model=ModelView,
+    response_model=ExtendedModelView,
     responses={
         status.HTTP_200_OK: {"description": "Model found"},
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid project or model ID"},
@@ -56,13 +62,14 @@ def get_model(
     project: Annotated[ProjectView, Depends(get_project)],
     model_id: ModelID,
     model_service: Annotated[ModelService, Depends(get_model_service)],
-) -> ModelView:
+) -> ExtendedModelView:
     """Get a specific model by ID."""
     try:
         model_revision = model_service.get_model(project_id=project.id, model_id=model_id)
         model_variants = model_service.get_model_variants(project_id=project.id, model_id=model_id)
-        model_view = model_revision.model_dump() | {"variants": model_variants}
-        return ModelView.model_validate(model_view, from_attributes=True)
+        model_size = model_service.get_model_size_in_bytes(project_id=project.id, model_id=model_id)
+        model_view = model_revision.model_dump() | {"variants": model_variants} | {"size": model_size}
+        return ExtendedModelView.model_validate(model_view, from_attributes=True)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -152,7 +159,10 @@ def rename_model(
         model_revision = model_service.rename_model(
             project_id=project.id, model_id=model_id, model_metadata=model_metadata
         )
-        return ModelView.model_validate(model_revision, from_attributes=True)
+        model_variants = model_service.get_model_variants(project_id=project.id, model_id=model_id)
+        model_size = model_service.get_model_size_in_bytes(project_id=project.id, model_id=model_id)
+        model_view = model_revision.model_dump() | {"variants": model_variants} | {"size": model_size}
+        return ModelView.model_validate(model_view, from_attributes=True)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -175,7 +185,15 @@ def delete_model(
     model_service: Annotated[ModelService, Depends(get_model_service)],
     files_only: Annotated[bool, Query()] = False,
 ) -> None:
-    """Delete a model from a project."""
+    """
+    Delete a given model, or the files associated with it.
+
+    If `files_only` is false, the entire model revision is deleted.
+    If `files_only` is true, only the model files are deleted (weights, training logs, ...), while model metadata
+    such as name and creation date are preserved; the model continues to exist as a lightweight record in the system,
+    although operations that depend on the presence of model files (e.g., fine-tuning, inference) will no longer be
+    possible; the only purpose of this option is to free up storage space while preserving model metadata.
+    """
     try:
         if files_only:
             model_service.delete_model_files(project_id=project.id, model_id=model_id)

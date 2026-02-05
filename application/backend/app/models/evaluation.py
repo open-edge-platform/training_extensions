@@ -3,12 +3,10 @@
 
 from uuid import UUID
 
-from pydantic import BaseModel
-
-from app.models import DatasetItemSubset
+from app.models import BaseEntity, DatasetItemSubset
 
 
-class EvaluationResult(BaseModel):
+class EvaluationResult(BaseEntity):
     """
     Represents the evaluation results of a model revision on a specific dataset subset.
 

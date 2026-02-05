@@ -1,5 +1,5 @@
-id: Object_Detection_RTDetr_50
-name: RTDetr-R50
+id: object-detection-rt-detr-r50
+name: RT-DETR-R50
 
 pretrained_weights:
   url: https://github.com/lyuwenyu/storage/releases/download/v0.1/rtdetr_r50vd_2x_coco_objects365_from_paddle.pth

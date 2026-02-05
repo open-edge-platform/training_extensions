@@ -1,9 +1,10 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen } from '@testing-library/react';
-import { getMultipleMockedMediaItems } from 'mocks/mock-media-item';
+import { screen } from '@testing-library/react';
+import { getMultipleMockedMedia } from 'mocks/mock-media';
 import { Size } from 'react-aria-components';
+import { render } from 'test-utils/render';
 
 import { MediaStateMap } from '../../constants/shared-types';
 import { VirtualizerGridLayout } from './virtualizer-grid-layout.component';
@@ -16,7 +17,7 @@ const mockedLayoutOptions = {
 };
 
 describe('VirtualizerGridLayout', () => {
-    const mockedItems = getMultipleMockedMediaItems(2, 'test');
+    const mockedItems = getMultipleMockedMedia(2, 'test');
 
     it('renders all items as visible options', () => {
         const mockedLoadingMore = vi.fn();

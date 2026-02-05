@@ -4,10 +4,10 @@
 import dayjs from 'dayjs';
 import { orderBy } from 'lodash-es';
 
-import type { SchemaModelView } from '../../../../api/openapi-spec';
+import type { Model } from '../../../../constants/shared-types';
 import type { SortBy } from '../types';
 
-export const sortModels = (models: SchemaModelView[], sortBy: SortBy): SchemaModelView[] => {
+export const sortModels = (models: Model[], sortBy: SortBy): Model[] => {
     switch (sortBy) {
         case 'name':
             return orderBy(models, (model) => model.name?.toLowerCase() ?? '', 'asc');

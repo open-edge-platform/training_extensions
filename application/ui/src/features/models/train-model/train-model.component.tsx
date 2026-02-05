@@ -5,12 +5,20 @@ import { Suspense } from 'react';
 
 import { Button, DialogTrigger, Loading, View } from '@geti/ui';
 
+import { useIsTrainingButtonDisabled } from '../hooks/use-is-training-button-disabled';
 import { TrainModelDialog } from './train-model-dialog.component';
+import { TrainModelProvider } from './train-model-provider.component';
 
-export const TrainModel = () => {
+type TrainModelProps = {
+    preSelectedDatasetRevisionId?: string;
+};
+
+export const TrainModel = ({ preSelectedDatasetRevisionId }: TrainModelProps) => {
+    const isTrainingDisabled = useIsTrainingButtonDisabled();
+
     return (
         <DialogTrigger>
-            <Button>Train model</Button>
+            <Button isDisabled={isTrainingDisabled}>Train model</Button>
             {(close) => (
                 <Suspense
                     fallback={
@@ -19,7 +27,9 @@ export const TrainModel = () => {
                         </View>
                     }
                 >
-                    <TrainModelDialog onClose={close} />
+                    <TrainModelProvider preSelectedDatasetRevisionId={preSelectedDatasetRevisionId}>
+                        <TrainModelDialog onClose={close} />
+                    </TrainModelProvider>
                 </Suspense>
             )}
         </DialogTrigger>

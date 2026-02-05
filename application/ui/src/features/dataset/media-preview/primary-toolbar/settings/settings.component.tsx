@@ -21,7 +21,7 @@ import styles from './settings.module.scss';
 
 export const Settings = () => {
     return (
-        <DialogTrigger type={'popover'} hideArrow placement={'right'}>
+        <DialogTrigger type={'popover'} hideArrow placement={'top'}>
             <TooltipTrigger>
                 <ActionButton isQuiet aria-label={'Settings'}>
                     <Adjustments />

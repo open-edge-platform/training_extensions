@@ -5,9 +5,9 @@ import { ReactNode } from 'react';
 
 import { Button, Flex, Form } from '@geti/ui';
 
+import type { SourceConfigPayload } from '../../../../constants/shared-types';
 import { useConnectSourceToPipeline } from '../../../../hooks/api/pipeline.hook';
 import { useSourceAction } from '../hooks/use-source-action.hook';
-import { SourceConfig } from '../util';
 
 interface AddSourceProps<T> {
     config: Awaited<T>;
@@ -16,7 +16,7 @@ interface AddSourceProps<T> {
     bodyFormatter: (formData: FormData) => T;
 }
 
-export const AddSource = <T extends SourceConfig>({
+export const AddSource = <T extends SourceConfigPayload>({
     config,
     onSaved,
     bodyFormatter,

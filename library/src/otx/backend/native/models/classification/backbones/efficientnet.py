@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any, Callable, ClassVar
 
 import torch
-from pytorchcv.models.model_store import download_model
+from pytorchcv.models.common.model_store import download_model
 from torch import nn
 from torch.nn import functional, init
 

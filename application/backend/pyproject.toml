@@ -8,13 +8,13 @@ requires-python = ">=3.13,<3.14"
 dependencies = [
     "fastapi[standard]~=0.121.2",
     "hiyapyco==0.7.0",
-    "openvino-model-api~=0.3.0.4",
+    "openvino-model-api @ git+https://github.com/open-edge-platform/model_api.git",
     "pillow~=12.0",
     "python-multipart~=0.0.20",
     "uvicorn~=0.38.0",
     "psutil~=7.1.3",
     "pyyaml~=6.0.3",
-    "openvino==2025.3.0",
+    "openvino~=2025.4.1",
     "watchdog==6.0.0",
     "sqlalchemy~=2.0.44",
     "alembic~=1.17.2",
@@ -62,7 +62,7 @@ lint = [
 
 [tool.uv]
 default-groups = ["dev", "lint"]
-required-version = "~=0.9.7"
+required-version = "~=0.9.27"
 conflicts = [
     [
         { extra = "cpu" },
@@ -96,7 +96,7 @@ line-ending = "lf"
 [tool.ruff.lint]
 select = ["ARG", "E", "F", "I", "N", "UP", "YTT", "ASYNC", "S", "COM", "C4", "FA", "PIE", "PYI", "Q", "RSE", "RET", "SIM",
     "TID", "PL", "RUF", "C90", "D103", "ANN001", "ANN201", "ANN205"]
-ignore = ["N801", "N805","N806","N807", "N818", "COM812", "RET503", "SIM108", "SIM105", "PLR2004",
+ignore = ["ARG002", "N801", "N805","N806","N807", "N818", "COM812", "RET503", "SIM108", "SIM105", "PLR2004",
     "RUF010", "RUF012", "CPY001", "PLE1205"]
 fixable = ["ALL"]
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"

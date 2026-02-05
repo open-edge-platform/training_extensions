@@ -8,6 +8,7 @@ from uuid import UUID
 from pydantic import Field, model_validator
 
 from app.db.schema import ModelRevisionDB
+from app.models import DatasetItemSubset, EvaluationResult
 from app.models.base import BaseEntity
 
 
@@ -34,7 +35,6 @@ class TrainingInfo(BaseEntity):
 
     status: TrainingStatus = TrainingStatus.NOT_STARTED
     label_schema_revision: dict = Field(default_factory=dict)
-    configuration: dict = Field(default_factory=dict)
     start_time: datetime | None = None
     end_time: datetime | None = None
     dataset_revision_id: UUID | None = None
@@ -46,7 +46,6 @@ class TrainingInfo(BaseEntity):
             return {
                 "status": data.training_status,
                 "label_schema_revision": data.label_schema_revision,
-                "configuration": data.training_configuration,
                 "start_time": data.training_started_at,
                 "end_time": data.training_finished_at,
                 "dataset_revision_id": data.training_dataset_id,
@@ -64,7 +63,7 @@ class ModelRevision(BaseEntity):
     Attributes:
         id: Unique identifier for the model revision.
         name: User friendly name to identify a model
-        architecture: Name of the model architecture (e.g., 'Object_Detection_RTDetr_50').
+        architecture: Identifier of the model architecture (e.g., 'object-detection-rt-detr-r50').
         parent_revision: UUID of the parent revision if this is derived from another revision,
             None if this is the initial revision.
         training_info: Details about the training process, including status, configuration, and associated dataset.
@@ -77,6 +76,8 @@ class ModelRevision(BaseEntity):
     architecture: str
     parent_revision: UUID | None = None
     training_info: TrainingInfo | None = None
+    evaluations: list[EvaluationResult] = []
+    training_configuration: dict | None = None
     files_deleted: bool = False
 
     @model_validator(mode="before")
@@ -89,6 +90,16 @@ class ModelRevision(BaseEntity):
                 "architecture": data.architecture,
                 "parent_revision": data.parent_revision,
                 "files_deleted": data.files_deleted,
+                "evaluations": [
+                    EvaluationResult(
+                        model_revision_id=UUID(e.model_revision_id),
+                        dataset_revision_id=UUID(e.dataset_revision_id),
+                        subset=DatasetItemSubset(e.subset),
+                        metrics={m.metric: m.score for m in e.metric_scores},
+                    )
+                    for e in data.evaluations
+                ],
                 "training_info": TrainingInfo.model_validate(data),
+                "training_configuration": data.training_configuration,
             }
         return data

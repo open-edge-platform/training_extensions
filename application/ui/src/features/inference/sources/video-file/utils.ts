@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { VideoFileSourceConfig } from '../util';
+import type { VideoFileSourceConfig } from '../../../../constants/shared-types';
 
 export const getVideoFileInitialConfig = (): VideoFileSourceConfig => ({
     id: '',

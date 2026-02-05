@@ -1,4 +1,4 @@
-id: Custom_Image_Classification_EfficientNet-V2-S
+id: image-classification-efficientnet-v2-s
 name: EfficientNet-V2-S
 
 pretrained_weights:

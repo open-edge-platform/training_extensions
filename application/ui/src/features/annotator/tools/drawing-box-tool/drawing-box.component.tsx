@@ -7,7 +7,7 @@ import { clampBox, clampPointBetweenImage, pointsToRect } from '@geti/smart-tool
 import { useEventListener } from 'hooks/event-listener.hook';
 
 import selectionCursor from '../../../../assets/icons/selection.svg?url';
-import { Label } from '../../../../constants/shared-types';
+import type { Label } from '../../../../constants/shared-types';
 import { isLeftButton } from '../../../../shared/buttons-utils';
 import type { Point, Rect as RectInterface, RegionOfInterest } from '../../../../shared/types';
 import { Rectangle } from '../../shapes/rectangle.component';
@@ -19,7 +19,7 @@ import { useCrosshair } from './crosshair/use-crosshair.hook';
 
 const CURSOR_OFFSET = '7 8';
 interface DrawingBoxInterface {
-    onComplete: (shapes: RectInterface[], labels: Label[]) => void;
+    onComplete: (shapes: RectInterface[], labels: Label[]) => string[];
     roi: RegionOfInterest;
     image: ImageData;
     selectedLabel: Label | null;

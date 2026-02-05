@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Callable
 from pathlib import Path
+from typing import cast
 from unittest.mock import Mock
 from uuid import UUID, uuid4
 
@@ -10,7 +11,7 @@ import pytest
 from starlette import status
 
 from app.api.dependencies import get_data_dir, get_job_dir, get_job_queue
-from app.api.schemas.job import JobRequest, TrainingRequestParams
+from app.api.schemas.jobs import JobRequestAdapter
 from app.core.jobs import JobQueue
 from app.core.jobs.control_plane import CancellationResult
 from app.core.jobs.models import Job, JobStatus, JobType, TrainingJob, TrainingJobParams
@@ -62,23 +63,26 @@ class TestJobEndpoints:
         project.task.task_type = TaskType.CLASSIFICATION
         project.task.exclusive_labels = True
         fxt_project_service.get_project_by_id.return_value = project
-        job_request = JobRequest(
-            project_id=uuid4(),
-            job_type=JobType.TRAIN,
-            parameters=TrainingRequestParams(
-                device="cpu",
-                model_architecture_id="YOLOv8",
-                parent_model_revision_id=uuid4(),
-            ),
+        job_request = JobRequestAdapter.validate_python(
+            {
+                "project_id": uuid4(),
+                "job_type": JobType.TRAIN,
+                "parameters": {
+                    "device": "cpu",
+                    "model_architecture_id": "image-classification-deit-tiny",
+                    "parent_model_revision_id": uuid4(),
+                },
+            }
         )
 
         response = fxt_client.post("/api/jobs", json=job_request.model_dump(mode="json"))
 
         assert response.status_code == status.HTTP_202_ACCEPTED
         assert response.json()["job_id"]
+        job_request = cast(TrainingJob, job_request)
         fxt_project_service.get_project_by_id.assert_called_once_with(job_request.project_id)
         fxt_jobs_queue.submit.assert_called_once()
-        assert fxt_jobs_queue.submit.call_args[0][0].params.model_architecture_id == "YOLOv8"
+        assert fxt_jobs_queue.submit.call_args[0][0].params.model_architecture_id == "image-classification-deit-tiny"
         assert fxt_jobs_queue.submit.call_args[0][0].params.task.task_type == TaskType.CLASSIFICATION
 
     def test_list_jobs(self, fxt_client, fxt_jobs_queue, fxt_job):

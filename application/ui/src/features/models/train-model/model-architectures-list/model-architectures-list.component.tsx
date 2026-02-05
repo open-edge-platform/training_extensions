@@ -1,62 +1,64 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState } from 'react';
+import { ReactNode, useState } from 'react';
 
 import { Button, Flex } from '@geti/ui';
 
-import { type ModelArchitecture as ModelArchitectureType } from '../../../../constants/shared-types';
+import { useTrainModel } from '../train-model-provider.component';
 import { AllModelArchitectures } from './all-model-architectures.component';
 import { RecommendedModelArchitectures } from './recommended-model-architectures.component';
+import { getRecommendedModelArchitecturesWithActiveArchitecture } from './utils';
 
-const getRecommendedArchitectures = (modelArchitectures: ModelArchitectureType[]) => {
-    return modelArchitectures.slice(0, 3);
+type ModelArchitecturesContainerProps = {
+    children: ReactNode;
+    showMore: boolean;
+    onShowMore: (showMore: boolean) => void;
 };
 
-type ModelArchitecturesListProps = {
-    activeModelArchitectureId: string | undefined;
-    modelArchitectures: ModelArchitectureType[];
-    selectedModelArchitectureId: string | null;
-    onSelectedModelArchitectureIdChange: (modelArchitectureId: string | null) => void;
+const ModelArchitecturesContainer = ({ children, onShowMore, showMore }: ModelArchitecturesContainerProps) => {
+    return (
+        <Flex direction={'column'} minHeight={0} gap={'size-300'}>
+            {children}
+
+            <Button alignSelf={'start'} variant={'primary'} onPress={() => onShowMore(!showMore)}>
+                {showMore ? 'Show less' : 'Show more'}
+            </Button>
+        </Flex>
+    );
 };
 
-export const ModelArchitecturesList = ({
-    modelArchitectures,
-    activeModelArchitectureId,
-    selectedModelArchitectureId,
-    onSelectedModelArchitectureIdChange,
-}: ModelArchitecturesListProps) => {
+export const ModelArchitecturesList = () => {
     const [showMore, setShowMore] = useState<boolean>(false);
+    const { activeModelArchitectureId, modelArchitectures, selectedModelArchitectureId, onSelectModelArchitectureId } =
+        useTrainModel();
 
     if (showMore) {
         return (
-            <Flex direction={'column'} minHeight={0} gap={'size-300'}>
+            <ModelArchitecturesContainer showMore={showMore} onShowMore={setShowMore}>
                 <AllModelArchitectures
                     activeModelArchitectureId={activeModelArchitectureId}
                     modelArchitectures={modelArchitectures}
                     selectedModelArchitectureId={selectedModelArchitectureId}
-                    onSelectedModelArchitectureIdChange={onSelectedModelArchitectureIdChange}
+                    onSelectedModelArchitectureIdChange={onSelectModelArchitectureId}
                 />
-                <Button alignSelf={'start'} variant={'primary'} onPress={() => setShowMore(false)}>
-                    Show less
-                </Button>
-            </Flex>
+            </ModelArchitecturesContainer>
         );
     }
 
-    const recommendedArchitectures = getRecommendedArchitectures(modelArchitectures);
+    const recommendedArchitectures = getRecommendedModelArchitecturesWithActiveArchitecture(
+        modelArchitectures,
+        activeModelArchitectureId
+    );
 
     return (
-        <Flex direction={'column'} minHeight={0} gap={'size-300'}>
+        <ModelArchitecturesContainer showMore={showMore} onShowMore={setShowMore}>
             <RecommendedModelArchitectures
                 activeModelArchitectureId={activeModelArchitectureId}
                 modelArchitectures={recommendedArchitectures}
                 selectedModelArchitectureId={selectedModelArchitectureId}
-                onSelectedModelArchitectureIdChange={onSelectedModelArchitectureIdChange}
+                onSelectedModelArchitectureIdChange={onSelectModelArchitectureId}
             />
-            <Button alignSelf={'start'} variant={'primary'} onPress={() => setShowMore(true)}>
-                Show more
-            </Button>
-        </Flex>
+        </ModelArchitecturesContainer>
     );
 };

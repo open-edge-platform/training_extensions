@@ -86,6 +86,7 @@ class ModelRevisionDB(BaseID):
     files_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
 
     project = relationship("ProjectDB", back_populates="model_revisions")
+    evaluations = relationship("EvaluationDB", back_populates="model_revision")
 
 
 class DatasetRevisionDB(BaseID):
@@ -97,24 +98,33 @@ class DatasetRevisionDB(BaseID):
     files_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
 
 
-class DatasetItemDB(BaseID):
+class DatasetItemDB(Base):
     __tablename__ = "dataset_items"
     __table_args__ = (Index("idx_dataset_items_user_reviewed", "project_id", "user_reviewed"),)
 
+    id: Mapped[str] = mapped_column(Text, ForeignKey("media.id", ondelete="CASCADE"), primary_key=True, nullable=False)
     project_id: Mapped[str] = mapped_column(Text, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
-    name: Mapped[str] = mapped_column(String(255), nullable=False)
-    format: Mapped[str] = mapped_column(String(50), nullable=False)
-    width: Mapped[int] = mapped_column(Integer, nullable=False)
-    height: Mapped[int] = mapped_column(Integer, nullable=False)
-    size: Mapped[int] = mapped_column(Integer, nullable=False)
     annotation_data: Mapped[list | None] = mapped_column(JSON, nullable=True, default=None)
     user_reviewed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     prediction_model_id: Mapped[str | None] = mapped_column(
         Text, ForeignKey("model_revisions.id", ondelete="SET NULL"), nullable=True
     )
-    source_id: Mapped[str | None] = mapped_column(Text, ForeignKey("sources.id", ondelete="SET NULL"), nullable=True)
     subset: Mapped[str | None] = mapped_column(String(20), nullable=False)
     subset_assigned_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+
+class MediaDB(BaseID):
+    __tablename__ = "media"
+    __table_args__ = ()
+
+    project_id: Mapped[str] = mapped_column(Text, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    type: Mapped[str] = mapped_column(String(50), nullable=False)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    format: Mapped[str] = mapped_column(String(50), nullable=False)
+    width: Mapped[int] = mapped_column(Integer, nullable=False)
+    height: Mapped[int] = mapped_column(Integer, nullable=False)
+    size: Mapped[int] = mapped_column(Integer, nullable=False)
+    source_id: Mapped[str | None] = mapped_column(Text, ForeignKey("sources.id", ondelete="SET NULL"), nullable=True)
 
 
 class LabelDB(BaseID):
@@ -160,6 +170,7 @@ class EvaluationDB(BaseID):
     subset: Mapped[str] = mapped_column(String(20), nullable=False)
 
     metric_scores = relationship("MetricScoreDB", back_populates="evaluation")
+    model_revision = relationship("ModelRevisionDB", back_populates="evaluations")
 
 
 class MetricScoreDB(BaseID):

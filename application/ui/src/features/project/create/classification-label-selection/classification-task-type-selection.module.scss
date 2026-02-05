@@ -1,0 +1,24 @@
+.title {
+    font-size: var(--spectrum-global-dimension-size-200);
+    color: var(--spectrum-global-color-gray-900);
+    text-align: center;
+}
+
+.typeDescription {
+    display: block;
+    color: var(--spectrum-global-color-gray-700);
+}
+
+.itemType {
+    border: var(--spectrum-global-dimension-size-25) solid transparent;
+    background-color: var(--spectrum-global-color-gray-300);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: var(--spectrum-global-dimension-size-200) var(--spectrum-global-dimension-size-250);
+    flex: 1;
+    cursor: pointer;
+
+    &:has(:checked) {
+        border: var(--spectrum-global-dimension-size-25) solid var(--energy-blue);
+        background-color: var(--selection-dark-blue);
+    }
+}

@@ -52,50 +52,50 @@ SEGMENTATION_MODEL_BASE_URL="https://storage.geti.intel.com/test-data/geti-tune/
 SEGMENTATION_MODEL_TARGET_DIR="data/projects/a1b2c3d4-e5f6-7890-abcd-ef1234567890/models/c3d4e5f6-a7b8-9012-cdef-123456789012"
 
 # Model file extensions to download
-MODEL_EXTENSIONS=("xml" "bin" "onnx" "ckpt")
+MODEL_EXTENSIONS="xml bin onnx ckpt"
 
-# Video URLs and targets
-declare -A VIDEO_URLS=(
-  ["$DETECTION_VIDEO_TARGET"]="$DETECTION_VIDEO_URL"
-  ["$SEGMENTATION_VIDEO_TARGET"]="$SEGMENTATION_VIDEO_URL"
-)
+# Function to download a video file
+download_video() {
+  local url="$1"
+  local target="$2"
+  if [ ! -f "$target" ]; then
+    mkdir -p "$(dirname "$target")"
+    echo "Downloading video to $target..."
+    curl -fL "$url" -o "$target"
+  else
+    echo "Video already exists at $target"
+  fi
+}
 
-# Model base URLs and target directories
-declare -A MODEL_CONFIGS=(
-  ["$DETECTION_MODEL_TARGET_DIR"]="$DETECTION_MODEL_BASE_URL"
-  ["$SEGMENTATION_MODEL_TARGET_DIR"]="$SEGMENTATION_MODEL_BASE_URL"
-)
+# Function to download model files
+download_model() {
+  local base_url="$1"
+  local target_dir="$2"
+  mkdir -p "$target_dir"
+  for ext in $MODEL_EXTENSIONS; do
+    MODEL_FILE="$target_dir/model.$ext"
+    if [ ! -f "$MODEL_FILE" ]; then
+      echo "Downloading model .$ext file to $target_dir..."
+      curl -fL "$base_url.$ext" -o "$MODEL_FILE"
+    else
+      echo "Model .$ext file already exists at $MODEL_FILE"
+    fi
+  done
+}
 
 if [[ "$DOWNLOAD_FILES" == "true" ]]; then
   echo "Downloading required files if not present..."
 
   # Download videos
-  for target in "${!VIDEO_URLS[@]}"; do
-    if [ ! -f "$target" ]; then
-      mkdir -p "$(dirname "$target")"
-      echo "Downloading video to $target..."
-      curl -fL "${VIDEO_URLS[$target]}" -o "$target"
-    else
-      echo "Video already exists at $target"
-    fi
-  done
+  download_video "$DETECTION_VIDEO_URL" "$DETECTION_VIDEO_TARGET"
+  download_video "$SEGMENTATION_VIDEO_URL" "$SEGMENTATION_VIDEO_TARGET"
 
   # Download model files
-  for target_dir in "${!MODEL_CONFIGS[@]}"; do
-    mkdir -p "$target_dir"
-    base_url="${MODEL_CONFIGS[$target_dir]}"
-    for ext in "${MODEL_EXTENSIONS[@]}"; do
-      MODEL_FILE="$target_dir/model.$ext"
-      if [ ! -f "$MODEL_FILE" ]; then
-        echo "Downloading model .$ext file to $target_dir..."
-        curl -fL "$base_url.$ext" -o "$MODEL_FILE"
-      else
-        echo "Model .$ext file already exists at $MODEL_FILE"
-      fi
-    done
-  done
+  download_model "$DETECTION_MODEL_BASE_URL" "$DETECTION_MODEL_TARGET_DIR"
+  download_model "$SEGMENTATION_MODEL_BASE_URL" "$SEGMENTATION_MODEL_TARGET_DIR"
 fi
 
 echo "Starting FastAPI server..."
 
 exec $UV_CMD "$APP_MODULE"
+ 

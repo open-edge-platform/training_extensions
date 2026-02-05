@@ -1,5 +1,5 @@
-id: Object_Detection_DFine_X
-name: DFine-X
+id: object-detection-d-fine-x
+name: D-FINE-X
 
 pretrained_weights:
   url: https://github.com/Peterande/storage/releases/download/dfinev1.0/dfine_x_coco.pth

@@ -1,9 +1,10 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { CanceledIcon, CheckCircleOutlined } from '@geti/ui/icons';
+import { View } from '@geti/ui';
+import { CanceledIcon, CheckCircleOutlined, Search } from '@geti/ui/icons';
 
-import { MediaItemState } from '../../../constants/shared-types';
+import type { MediaItemState } from '../../../constants/shared-types';
 
 import classes from './annotation-state-icon.module.scss';
 
@@ -13,12 +14,24 @@ type AnnotationStatusIconProps = {
 
 export const AnnotationStatusIcon = ({ state }: AnnotationStatusIconProps) => {
     if (state === 'accepted') {
-        return <CheckCircleOutlined className={classes.accepted} />;
+        return (
+            <View UNSAFE_className={classes.accepted}>
+                <CheckCircleOutlined />
+            </View>
+        );
     }
 
     if (state === 'rejected') {
-        return <CanceledIcon className={classes.rejected} />;
+        return (
+            <View UNSAFE_className={classes.rejected}>
+                <CanceledIcon />
+            </View>
+        );
     }
 
-    return null;
+    return (
+        <View UNSAFE_className={classes.toReview}>
+            <Search />
+        </View>
+    );
 };

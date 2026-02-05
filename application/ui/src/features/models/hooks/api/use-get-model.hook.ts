@@ -11,7 +11,7 @@ export const useGetModel = (modelId: string | null | undefined) => {
     return $api.useQuery(
         'get',
         '/api/projects/{project_id}/models/{model_id}',
-        { params: { path: { project_id: projectId, model_id: modelId! } } },
-        { enabled: !!modelId }
+        { params: { path: { project_id: projectId, model_id: String(modelId) } } },
+        { enabled: Boolean(modelId) }
     );
 };

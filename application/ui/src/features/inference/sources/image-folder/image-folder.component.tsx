@@ -4,7 +4,7 @@
 import { Flex, Switch, TextField } from '@geti/ui';
 
 import { ReactComponent as Folder } from '../../../../assets/icons/folder.svg';
-import { ImagesFolderSourceConfig } from '../util';
+import type { ImagesFolderSourceConfig } from '../../../../constants/shared-types';
 
 import classes from './image-folder.module.scss';
 
@@ -16,10 +16,11 @@ export const ImageFolder = ({ defaultState }: ImageFolderProps) => {
     return (
         <Flex direction='column' gap='size-200'>
             <TextField isHidden label='id' name='id' defaultValue={defaultState?.id} />
-            <TextField width={'100%'} label='Name' name='name' defaultValue={defaultState?.name} />
+            <TextField isRequired width={'100%'} label='Name' name='name' defaultValue={defaultState?.name} />
 
             <Flex direction='row' gap='size-200'>
                 <TextField
+                    isRequired
                     flex='1'
                     label='Images folder path'
                     name='images_folder_path'

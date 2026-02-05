@@ -53,7 +53,6 @@ class ClassIncrementalSampler(Sampler):
         n_repeats: int = 1,
         generator: torch.Generator | None = None,
     ):
-        self.dataset = dataset
         self.batch_size = batch_size
         self.num_replicas = num_replicas
         self.rank = rank
@@ -61,7 +60,7 @@ class ClassIncrementalSampler(Sampler):
         self.generator = generator
         self.repeat = n_repeats
 
-        super().__init__(dataset)
+        super().__init__()
 
         # Need to split new classes dataset indices & old classses dataset indices
         ann_stats = dataset.get_idx_list_per_classes(use_string_label=True)
@@ -83,7 +82,7 @@ class ClassIncrementalSampler(Sampler):
             self.data_length = int(len(self.new_indices) * (1 + old_new_ratio))
             self.old_new_ratio = 1
         else:
-            self.data_length = len(self.dataset)
+            self.data_length = len(dataset)
             self.old_new_ratio = int(old_new_ratio)
 
         self.num_samples = self._calcuate_num_samples()

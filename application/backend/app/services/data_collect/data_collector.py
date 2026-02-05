@@ -10,8 +10,8 @@ from loguru import logger
 from app.db import get_db_session
 from app.models import (
     ConfidenceThresholdDataCollectionPolicy,
-    DatasetItemFormat,
     FixedRateDataCollectionPolicy,
+    MediaFormat,
     Pipeline,
     Project,
 )
@@ -52,7 +52,7 @@ class FixedRatePolicyChecker(PolicyChecker):
         self.min_interval = 1.0 / policy.rate
         self.last_collect_time = 0.0
 
-    def should_collect(self, timestamp: float, confidence_scores: list[float]) -> bool:  # noqa: ARG002
+    def should_collect(self, timestamp: float, confidence_scores: list[float]) -> bool:
         time_since_last = timestamp - self.last_collect_time
         if time_since_last < self.min_interval:
             return False
@@ -171,7 +171,7 @@ class DataCollector:
         if self.active_pipeline_data is None:
             return
         pipeline, project = self.active_pipeline_data
-        from app.services import DatasetService, LabelService
+        from app.services import DatasetService, LabelService, MediaService
 
         confidence_scores = get_confidence_scores(prediction=inference_data.prediction)
         should_collect = (
@@ -186,7 +186,10 @@ class DataCollector:
         frame_data = cv2.cvtColor(frame_data, cv2.COLOR_BGR2RGB)  # Convert BGR to RGB
         with get_db_session() as session:
             label_service = LabelService(db_session=session)
-            dataset_service = DatasetService(data_dir=self.data_dir, label_service=label_service, db_session=session)
+            media_service = MediaService(data_dir=self.data_dir, db_session=session)
+            dataset_service = DatasetService(
+                label_service=label_service, media_service=media_service, db_session=session
+            )
 
             # Check if max_dataset_size limit has been reached
             max_dataset_size = pipeline.data_collection.max_dataset_size
@@ -203,13 +206,17 @@ class DataCollector:
             labels = label_service.list_all(project_id=project.id)
             annotations = convert_prediction(labels=labels, frame_data=frame_data, prediction=inference_data.prediction)
 
+            media = media_service.create_image(
+                project=project,
+                data=frame_data,
+                name=f"{timestamp:.4f}".replace(".", "_"),
+                format=MediaFormat.JPG,
+                source_id=pipeline.source_id,
+            )
             dataset_service.create_dataset_item(
                 project=project,
-                name=f"{timestamp:.4f}".replace(".", "_"),
-                format=DatasetItemFormat.JPG,
-                data=frame_data,
+                media=media,
                 user_reviewed=False,
-                source_id=pipeline.source_id,
                 prediction_model_id=inference_data.model_id,
                 annotations=annotations,
             )

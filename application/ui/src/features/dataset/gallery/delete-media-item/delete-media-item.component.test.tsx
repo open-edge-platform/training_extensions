@@ -1,20 +1,13 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { fireEvent, screen } from '@testing-library/react';
 import { HttpResponse } from 'msw';
-import { fireEvent, render, screen } from 'test-utils/render';
+import { render } from 'test-utils/render';
 
 import { http } from '../../../../api/utils';
 import { server } from '../../../../msw-node-setup';
 import { DeleteMediaItem } from './delete-media-item.component';
-
-vi.mock('react-router', async (importOriginal) => {
-    const actual = await importOriginal<typeof import('react-router')>();
-    return {
-        ...actual,
-        useParams: vi.fn(() => ({ projectId: '123' })),
-    };
-});
 
 describe('DeleteMediaItem', () => {
     it('deletes a media item and shows a success toast', async () => {
@@ -22,7 +15,7 @@ describe('DeleteMediaItem', () => {
         const mockedOnDeleted = vitest.fn();
 
         server.use(
-            http.delete('/api/projects/{project_id}/dataset/items/{dataset_item_id}', () => {
+            http.delete('/api/projects/{project_id}/dataset/media/{media_id}', () => {
                 return HttpResponse.json(null, { status: 204 });
             })
         );
@@ -45,9 +38,9 @@ describe('DeleteMediaItem', () => {
         const mockedOnDeleted = vitest.fn();
 
         server.use(
-            http.delete('/api/projects/{project_id}/dataset/items/{dataset_item_id}', ({ params }) => {
-                const { dataset_item_id } = params;
-                return dataset_item_id === itemToDelete
+            http.delete('/api/projects/{project_id}/dataset/media/{media_id}', ({ params }) => {
+                const { media_id } = params;
+                return media_id === itemToDelete
                     ? HttpResponse.json(null, { status: 204 })
                     : // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                       // @ts-expect-error

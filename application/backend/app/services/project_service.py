@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.db.schema import ProjectDB
 from app.models import Label, PipelineStatus, Project, Task
-from app.repositories import DatasetItemRepository, ProjectRepository
+from app.repositories import MediaRepository, ProjectRepository
 from app.repositories.base import PrimaryKeyIntegrityError
 
 from .base import (
@@ -105,12 +105,12 @@ class ProjectService(BaseSessionManagedService):
             raise ResourceNotFoundError(ResourceType.PROJECT, str(project_id))
 
     def get_project_thumbnail_path(self, project_id: UUID) -> Path | None:
-        """Get the path to the project's thumbnail image, as determined by the earliest dataset item"""
-        dataset_item_repo = DatasetItemRepository(project_id=str(project_id), db=self.db_session)
-        earliest_dataset_item = dataset_item_repo.get_earliest()
+        """Get the path to the project's thumbnail image, as determined by the earliest media"""
+        media_repo = MediaRepository(project_id=str(project_id), db=self.db_session)
+        earliest_media = media_repo.get_earliest()
 
-        if earliest_dataset_item:
-            return self._projects_dir / f"{project_id}/dataset/{earliest_dataset_item.id}-thumb.jpg"
+        if earliest_media:
+            return self._projects_dir / f"{project_id}/dataset/{earliest_media.id}-thumb.jpg"
         return None
 
     def _to_project(self, project_db: ProjectDB) -> Project:

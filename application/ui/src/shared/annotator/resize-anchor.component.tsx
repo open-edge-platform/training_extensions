@@ -11,15 +11,16 @@ interface ResizeAnchorProps {
     zoom: number;
     x: number;
     y: number;
-    moveAnchorTo: (x: number, y: number) => void;
-    cursor?: CSSProperties['cursor'];
     label: string;
-    onStart?: () => void;
-    onComplete: () => void;
     fill?: string;
     stroke?: string;
-    strokeWidth?: number;
     Anchor?: ReactNode;
+    cursor?: CSSProperties['cursor'];
+    strokeWidth?: number;
+    contextMenu?: (onClose: () => void) => ReactNode;
+    onStart?: () => void;
+    onComplete: () => void;
+    moveAnchorTo: (x: number, y: number) => void;
 }
 
 export const ResizeAnchor = ({
@@ -30,6 +31,7 @@ export const ResizeAnchor = ({
     onComplete,
     moveAnchorTo,
     label,
+    contextMenu,
     fill = 'white',
     cursor = 'all-scroll',
     stroke = 'var(--energy-blue)',
@@ -57,10 +59,11 @@ export const ResizeAnchor = ({
             onStart={onStart}
             onComplete={onComplete}
             moveAnchorTo={moveAnchorTo}
+            contextMenu={contextMenu}
         >
             <rect
                 fillOpacity={1.0}
-                transform-origin={`${x}px ${y}px`}
+                style={{ transformOrigin: `${x}px ${y}px` }}
                 x={x - size / 2}
                 y={y - size / 2}
                 width={size}

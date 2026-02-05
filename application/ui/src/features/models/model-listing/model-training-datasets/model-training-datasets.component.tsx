@@ -3,17 +3,19 @@
 
 import { ActionButton, Content, Flex, Heading, Text } from '@geti/ui';
 import { Filter, GridSmall, Search, SortUpDown } from '@geti/ui/icons';
+import { useNumberFormatter } from 'react-aria';
 
-import { DatasetSubset } from '../../../../constants/shared-types';
-import { useGetDatasetItems } from '../../../../hooks/use-get-dataset-items.hook';
+import type { DatasetRevision, DatasetSubset } from '../../../../constants/shared-types';
+import { useGetDatasetRevisionItems } from '../../../../hooks/use-get-dataset-revision-items.hook';
 import { SubsetGallery } from './subset-gallery.component';
 
-import styles from './model-training-datasets.module.scss';
+import classes from './model-training-datasets.module.scss';
 
 type SubsetBoxProps = {
     title: string;
-    subsetSplit: number;
     subset: DatasetSubset;
+    datasetRevisionId: string;
+    totalItems: number;
 };
 
 const BoxActions = () => {
@@ -35,10 +37,16 @@ const BoxActions = () => {
     );
 };
 
-const SubsetBox = ({ title, subsetSplit, subset }: SubsetBoxProps) => {
-    const { items, fetchNextPage, hasNextPage, isFetchingNextPage, isPending, totalCount } = useGetDatasetItems({
-        subset,
-    });
+const SubsetBox = ({ title, subset, datasetRevisionId, totalItems }: SubsetBoxProps) => {
+    const { items, fetchNextPage, hasNextPage, isFetchingNextPage, isPending, totalCount } = useGetDatasetRevisionItems(
+        {
+            datasetRevisionId,
+            subset,
+        }
+    );
+
+    const formatter = useNumberFormatter({ style: 'percent', maximumFractionDigits: 0 });
+    const subsetPercentage = totalItems > 0 ? totalCount / totalItems : 0;
 
     return (
         <Flex
@@ -49,19 +57,20 @@ const SubsetBox = ({ title, subsetSplit, subset }: SubsetBoxProps) => {
             minHeight={'size-5000'}
             justifyContent={'center'}
         >
-            <Flex UNSAFE_className={styles.boxHeading} justifyContent={'space-between'} alignItems={'center'}>
+            <Flex UNSAFE_className={classes.boxHeading} justifyContent={'space-between'} alignItems={'center'}>
                 <Flex gap={'size-100'} alignItems={'center'}>
                     <Heading level={5}>
-                        {title} {subsetSplit}%
+                        {title} {formatter.format(subsetPercentage)}
                     </Heading>
                     <Text>({totalCount})</Text>
                 </Flex>
                 <BoxActions />
             </Flex>
 
-            <Content UNSAFE_className={styles.boxContent}>
+            <Content UNSAFE_className={classes.boxContent}>
                 <SubsetGallery
                     items={items}
+                    datasetRevisionId={datasetRevisionId}
                     fetchNextPage={fetchNextPage}
                     hasNextPage={hasNextPage}
                     isFetchingNextPage={isFetchingNextPage}
@@ -72,12 +81,50 @@ const SubsetBox = ({ title, subsetSplit, subset }: SubsetBoxProps) => {
     );
 };
 
-export const ModelTrainingDatasets = () => {
+const ModelTrainingContent = ({ datasetRevision }: { datasetRevision: DatasetRevision }) => {
+    const totalItems = datasetRevision.item_counts?.total ?? 0;
+    const datasetRevisionId = String(datasetRevision.id);
+
     return (
         <Flex gap={'size-300'} width={'100%'}>
-            <SubsetBox title={'Training'} subsetSplit={70} subset={'training'} />
-            <SubsetBox title={'Validation'} subsetSplit={20} subset={'validation'} />
-            <SubsetBox title={'Testing'} subsetSplit={10} subset={'testing'} />
+            <SubsetBox
+                title={'Training'}
+                subset={'training'}
+                datasetRevisionId={datasetRevisionId}
+                totalItems={totalItems}
+            />
+            <SubsetBox
+                title={'Validation'}
+                subset={'validation'}
+                datasetRevisionId={datasetRevisionId}
+                totalItems={totalItems}
+            />
+            <SubsetBox
+                title={'Testing'}
+                subset={'testing'}
+                datasetRevisionId={datasetRevisionId}
+                totalItems={totalItems}
+            />
         </Flex>
     );
+};
+
+export const ModelTrainingDatasets = ({ datasetRevision }: { datasetRevision?: DatasetRevision }) => {
+    if (!datasetRevision || !datasetRevision.id) {
+        return (
+            <Flex justifyContent={'center'} alignItems={'center'} height={'size-3000'}>
+                <Text>No dataset revision found for this model</Text>
+            </Flex>
+        );
+    }
+
+    if (datasetRevision.files_deleted) {
+        return (
+            <Flex justifyContent={'center'} alignItems={'center'} height={'size-3000'}>
+                <Text>The files for this dataset revision have been deleted.</Text>
+            </Flex>
+        );
+    }
+
+    return <ModelTrainingContent datasetRevision={datasetRevision} />;
 };

@@ -1,10 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-import os
-import tempfile
 from datetime import datetime
-from io import BytesIO
-from unittest.mock import ANY, MagicMock
+from unittest.mock import MagicMock
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
@@ -20,7 +17,7 @@ from app.api.schemas.dataset_item import (
     SetDatasetItemAnnotations,
 )
 from app.main import app
-from app.models import DatasetItem, DatasetItemAnnotationStatus, DatasetItemFormat, LabelReference, Rectangle
+from app.models import DatasetItem, DatasetItemAnnotationStatus, LabelReference, Rectangle
 from app.services import DatasetService, ResourceNotFoundError, ResourceType
 from app.services.dataset_service import AnnotationValidationError, DatasetItemFilters, SubsetAlreadyAssignedError
 
@@ -30,14 +27,8 @@ def fxt_dataset_item():
     return DatasetItem(
         id=uuid4(),
         project_id=uuid4(),
-        name="test_dataset_item",
-        format=DatasetItemFormat.JPG,
-        width=1024,
-        height=768,
-        size=2048,
         annotation_data=None,
         prediction_model_id=uuid4(),
-        source_id=uuid4(),
         subset=DatasetItemSubset.UNASSIGNED,
         user_reviewed=False,
         subset_assigned_at=None,
@@ -55,52 +46,11 @@ def test_convert_dataset_item_to_view(fxt_dataset_item) -> None:
     view = DatasetItemView.model_validate(fxt_dataset_item, from_attributes=True)
     assert view == DatasetItemView(
         id=fxt_dataset_item.id,
-        name=fxt_dataset_item.name,
-        format=fxt_dataset_item.format,
-        width=fxt_dataset_item.width,
-        height=fxt_dataset_item.height,
-        size=fxt_dataset_item.size,
-        source_id=fxt_dataset_item.source_id,
         subset=DatasetItemSubset.UNASSIGNED,
     )
 
 
 class TestDatasetItemEndpoints:
-    def test_create_dataset_item_no_file(self, fxt_get_project, fxt_dataset_item, fxt_dataset_service, fxt_client):
-        fxt_dataset_service.create_dataset_item.return_value = fxt_dataset_item
-
-        response = fxt_client.post(f"/api/projects/{uuid4()}/dataset/items")
-
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
-        fxt_dataset_service.create_dataset_item.assert_not_called()
-
-    def test_create_dataset_item_success(self, fxt_get_project, fxt_dataset_item, fxt_dataset_service, fxt_client):
-        fxt_dataset_service.create_dataset_item.return_value = fxt_dataset_item
-
-        response = fxt_client.post(
-            f"/api/projects/{str(uuid4())}/dataset/items",
-            files={"file": ("test_file.jpg", BytesIO(b"123"), "image/jpeg")},
-        )
-
-        assert response.status_code == status.HTTP_201_CREATED
-        assert response.json() == {
-            "format": "jpg",
-            "height": 768,
-            "id": str(fxt_dataset_item.id),
-            "name": "test_dataset_item",
-            "size": 2048,
-            "source_id": str(fxt_dataset_item.source_id),
-            "subset": "unassigned",
-            "width": 1024,
-        }
-        fxt_dataset_service.create_dataset_item.assert_called_once_with(
-            project=fxt_get_project,
-            data=ANY,
-            name="test_file",
-            format="jpg",
-            user_reviewed=True,
-        )
-
     def test_list_dataset_items(self, fxt_get_project, fxt_dataset_item, fxt_dataset_service, fxt_client):
         fxt_dataset_service.count_dataset_items.return_value = 1
         fxt_dataset_service.list_dataset_items.return_value = [fxt_dataset_item]
@@ -251,20 +201,8 @@ class TestDatasetItemEndpoints:
         "http_method, http_path, service_method",
         [
             ("get", f"/api/projects/{uuid4()}/dataset/items/invalid-id", "get_dataset_item_by_id"),
-            ("get", f"/api/projects/{uuid4()}/dataset/items/invalid-id/binary", "get_dataset_item_binary_path_by_id"),
-            (
-                "get",
-                f"/api/projects/{uuid4()}/dataset/items/invalid-id/thumbnail",
-                "get_dataset_item_thumbnail_path_by_id",
-            ),
-            ("delete", f"/api/projects/{uuid4()}/dataset/items/invalid-id", "delete_dataset_item"),
             ("post", f"/api/projects/{uuid4()}/dataset/items/invalid-id/annotations", "set_dataset_item_annotations"),
             ("get", f"/api/projects/{uuid4()}/dataset/items/invalid-id/annotations", "get_dataset_item_by_id"),
-            (
-                "delete",
-                f"/api/projects/{uuid4()}/dataset/items/invalid-id/annotations",
-                "delete_dataset_item_annotations",
-            ),
             ("patch", f"/api/projects/{uuid4()}/dataset/items/invalid-id/subset", "assign_dataset_item_subset"),
         ],
     )
@@ -296,104 +234,11 @@ class TestDatasetItemEndpoints:
 
         assert response.status_code == status.HTTP_200_OK
         assert response.json() == {
-            "format": "jpg",
-            "height": 768,
             "id": str(fxt_dataset_item.id),
-            "name": "test_dataset_item",
-            "size": 2048,
-            "source_id": str(fxt_dataset_item.source_id),
             "subset": "unassigned",
-            "width": 1024,
         }
         fxt_dataset_service.get_dataset_item_by_id.assert_called_once_with(
             project_id=fxt_get_project.id, dataset_item_id=fxt_dataset_item.id
-        )
-
-    def test_get_dataset_item_binary_not_found(self, fxt_get_project, fxt_dataset_service, fxt_client):
-        dataset_item_id = uuid4()
-        fxt_dataset_service.get_dataset_item_binary_path_by_id.side_effect = ResourceNotFoundError(
-            ResourceType.DATASET_ITEM, str(dataset_item_id)
-        )
-
-        response = fxt_client.get(f"/api/projects/{str(uuid4())}/dataset/items/{str(dataset_item_id)}/binary")
-
-        assert response.status_code == status.HTTP_404_NOT_FOUND
-        fxt_dataset_service.get_dataset_item_binary_path_by_id.assert_called_once_with(
-            project_id=fxt_get_project.id, dataset_item_id=dataset_item_id
-        )
-
-    def test_get_dataset_item_binary_success(self, fxt_get_project, fxt_dataset_service, fxt_client):
-        dataset_item_id = uuid4()
-
-        tmp_file_path = None
-        try:
-            with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp_file:
-                temp_file_path = tmp_file.name
-                fxt_dataset_service.get_dataset_item_binary_path_by_id.return_value = temp_file_path
-                response = fxt_client.get(f"/api/projects/{str(uuid4())}/dataset/items/{str(dataset_item_id)}/binary")
-
-            assert response.status_code == status.HTTP_200_OK
-            fxt_dataset_service.get_dataset_item_binary_path_by_id.assert_called_once_with(
-                project_id=fxt_get_project.id, dataset_item_id=dataset_item_id
-            )
-        finally:
-            if tmp_file_path and os.path.exists(tmp_file_path):
-                os.unlink(tmp_file_path)
-
-    def test_get_dataset_item_thumbnail_not_found(self, fxt_get_project, fxt_dataset_service, fxt_client):
-        dataset_item_id = uuid4()
-        fxt_dataset_service.get_dataset_item_thumbnail_path_by_id.side_effect = ResourceNotFoundError(
-            ResourceType.DATASET_ITEM, str(dataset_item_id)
-        )
-
-        response = fxt_client.get(f"/api/projects/{str(uuid4())}/dataset/items/{str(dataset_item_id)}/thumbnail")
-
-        assert response.status_code == status.HTTP_404_NOT_FOUND
-        fxt_dataset_service.get_dataset_item_thumbnail_path_by_id.assert_called_once_with(
-            project=fxt_get_project, dataset_item_id=dataset_item_id
-        )
-
-    def test_get_dataset_item_thumbnail_success(self, fxt_get_project, fxt_dataset_service, fxt_client):
-        dataset_item_id = uuid4()
-
-        tmp_file_path = None
-        try:
-            with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp_file:
-                temp_file_path = tmp_file.name
-                fxt_dataset_service.get_dataset_item_thumbnail_path_by_id.return_value = temp_file_path
-                response = fxt_client.get(
-                    f"/api/projects/{str(uuid4())}/dataset/items/{str(dataset_item_id)}/thumbnail"
-                )
-
-            assert response.status_code == status.HTTP_200_OK
-            fxt_dataset_service.get_dataset_item_thumbnail_path_by_id.assert_called_once_with(
-                project=fxt_get_project, dataset_item_id=dataset_item_id
-            )
-        finally:
-            if tmp_file_path and os.path.exists(tmp_file_path):
-                os.unlink(tmp_file_path)
-
-    def test_delete_dataset_item_not_found(self, fxt_get_project, fxt_dataset_service, fxt_client):
-        dataset_item_id = uuid4()
-        fxt_dataset_service.delete_dataset_item.side_effect = ResourceNotFoundError(
-            ResourceType.DATASET_ITEM, str(dataset_item_id)
-        )
-
-        response = fxt_client.delete(f"/api/projects/{str(uuid4())}/dataset/items/{str(dataset_item_id)}")
-
-        assert response.status_code == status.HTTP_404_NOT_FOUND
-        fxt_dataset_service.delete_dataset_item.assert_called_once_with(
-            project=fxt_get_project, dataset_item_id=dataset_item_id
-        )
-
-    def test_delete_dataset_item_success(self, fxt_get_project, fxt_dataset_service, fxt_client):
-        dataset_item_id = uuid4()
-
-        response = fxt_client.delete(f"/api/projects/{str(uuid4())}/dataset/items/{str(dataset_item_id)}")
-
-        assert response.status_code == status.HTTP_204_NO_CONTENT
-        fxt_dataset_service.delete_dataset_item.assert_called_once_with(
-            project=fxt_get_project, dataset_item_id=dataset_item_id
         )
 
     def test_set_dataset_item_annotations_success(self, fxt_get_project, fxt_dataset_service, fxt_client):
@@ -586,14 +431,8 @@ class TestDatasetItemEndpoints:
 
         assert response.status_code == status.HTTP_200_OK
         assert response.json() == {
-            "format": "jpg",
-            "height": 768,
             "id": str(fxt_dataset_item.id),
-            "name": "test_dataset_item",
-            "size": 2048,
-            "source_id": str(fxt_dataset_item.source_id),
             "subset": "unassigned",
-            "width": 1024,
         }
         fxt_dataset_service.assign_dataset_item_subset.assert_called_once_with(
             project_id=fxt_get_project.id,

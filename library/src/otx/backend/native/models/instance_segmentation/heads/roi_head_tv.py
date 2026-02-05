@@ -1,7 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Customised torchvision RoIHeads class with support for polygons as ground truth masks."""
+"""Customised torchvision RoIHeads class."""
 
 from __future__ import annotations
 
@@ -61,7 +61,7 @@ def maskrcnn_loss(
 
 
 class TVRoIHeads(RoIHeads):
-    """Customised RoIHeads class with support for polygons as ground truth masks."""
+    """Customised RoIHeads class."""
 
     def forward(
         self,
@@ -70,7 +70,7 @@ class TVRoIHeads(RoIHeads):
         image_shapes: list[tuple[int, int]],
         targets: list[dict[str, Tensor]] | None = None,
     ) -> tuple[list[dict[str, Tensor]], dict[str, Tensor]]:
-        """Support both polygons and masks as ground truth masks.
+        """Support masks as ground truth masks.
 
         Note: This method is a copy of the original forward method from RoIHeads.
         TODO(Eugene): Add support for incremental learning.
@@ -141,11 +141,7 @@ class TVRoIHeads(RoIHeads):
                     msg = "targets, pos_matched_idxs, mask_logits cannot be None when training"
                     raise ValueError(msg)
 
-                gt_masks = (
-                    [t["masks"] for t in targets]
-                    if targets[0]["masks"] is not None
-                    else [t["polygons"] for t in targets]
-                )
+                gt_masks = [t["masks"] for t in targets]
                 gt_labels = [t["labels"] for t in targets]
                 rcnn_loss_mask = maskrcnn_loss(
                     mask_logits,

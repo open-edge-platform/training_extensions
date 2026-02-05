@@ -3,7 +3,7 @@
 
 import { Flex, Switch, TextField } from '@geti/ui';
 
-import { IPCameraSourceConfig } from '../util';
+import type { IPCameraSourceConfig } from '../../../../constants/shared-types';
 
 type IpCameraProps = {
     defaultState?: IPCameraSourceConfig;
@@ -13,8 +13,14 @@ export const IpCamera = ({ defaultState }: IpCameraProps) => {
     return (
         <Flex direction='column' gap='size-200'>
             <TextField isHidden label='id' name='id' defaultValue={defaultState?.id} />
-            <TextField width={'100%'} label='Name' name='name' defaultValue={defaultState?.name} />
-            <TextField width={'100%'} label='Stream Url:' name='stream_url' defaultValue={defaultState?.stream_url} />
+            <TextField isRequired width={'100%'} label='Name' name='name' defaultValue={defaultState?.name} />
+            <TextField
+                isRequired
+                width={'100%'}
+                label='Stream Url:'
+                name='stream_url'
+                defaultValue={defaultState?.stream_url}
+            />
             <Switch
                 name='auth_required'
                 aria-label='Require Authentication'

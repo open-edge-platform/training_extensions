@@ -8,6 +8,31 @@ from app.models import TaskType
 from app.supported_models.model_manifest import Capabilities, ModelManifestDeprecationStatus, ModelStats
 
 
+class ModelArchitectureCategory:
+    BALANCE = "balance"
+    SPEED = "speed"
+    ACCURACY = "accuracy"
+
+
+RECOMMENDED_MODEL_ARCHITECTURES = {
+    TaskType.CLASSIFICATION: {
+        ModelArchitectureCategory.BALANCE: "image-classification-efficientnet-b0",
+        ModelArchitectureCategory.ACCURACY: "image-classification-efficientnet-v2-s",
+        ModelArchitectureCategory.SPEED: "image-classification-mobilenet-v3-large",
+    },
+    TaskType.DETECTION: {
+        ModelArchitectureCategory.BALANCE: "object-detection-atss-mobilenet-v2",
+        ModelArchitectureCategory.ACCURACY: "object-detection-d-fine-x",
+        ModelArchitectureCategory.SPEED: "object-detection-yolox-s",
+    },
+    TaskType.INSTANCE_SEGMENTATION: {
+        ModelArchitectureCategory.BALANCE: "instance-segmentation-mask-rcnn-resnet50",
+        ModelArchitectureCategory.ACCURACY: "instance-segmentation-mask-rcnn-swin-t",
+        ModelArchitectureCategory.SPEED: "instance-segmentation-mask-rcnn-efficientnet-b2",
+    },
+}
+
+
 class ModelArchitectureView(BaseModel):
     """Simplified model architecture information for API responses"""
 
@@ -24,6 +49,14 @@ class ModelArchitectureView(BaseModel):
     )
 
 
+class TopPicks(BaseModel):
+    """Top picks for model architectures based on categories"""
+
+    balance: str = Field(title="Balance Model", description="Model architecture that balances accuracy and speed")
+    speed: str = Field(title="Speed Model", description="Model architecture optimized for speed")
+    accuracy: str = Field(title="Accuracy Model", description="Model architecture optimized for accuracy")
+
+
 class ModelArchitectures(BaseModel):
     """Model architectures response"""
 
@@ -31,14 +64,18 @@ class ModelArchitectures(BaseModel):
         title="Model Architectures", description="List of available model architectures"
     )
 
+    top_picks: TopPicks | None = Field(
+        title="Top Picks", description="Recommended model architectures for different categories"
+    )
+
     model_config = {
         "json_schema_extra": {
             "example": {
                 "model_architectures": [
                     {
-                        "id": "Object_Detection_Deim_DFine_M",
+                        "id": "object-detection-deim-d-fine-m",
                         "task": "detection",
-                        "name": "Deim-DFine-M",
+                        "name": "DEIM-D-FINE-M",
                         "description": "DEIM is an advanced training framework designed to enhance the matching"
                         " mechanism in DETRs, enabling faster convergence and improved accuracy.",
                         "capabilities": {"xai": True, "tiling": True},
@@ -49,7 +86,12 @@ class ModelArchitectures(BaseModel):
                         },
                         "support_status": "active",
                     },
-                ]
+                ],
+                "top_picks": {
+                    "balance": "object-detection-atss-mobilenet-v2",
+                    "speed": "object-detection-yolox-s",
+                    "accuracy": "object-detection-d-fine-x",
+                },
             }
         }
     }

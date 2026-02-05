@@ -2,30 +2,27 @@
 # SPDX-License-Identifier: Apache-2.0
 import shutil
 from pathlib import Path
-from typing import Any, Generic, Literal
+from typing import Literal
 from uuid import UUID, uuid4
 
 from loguru import logger
 from pydantic import Field
 
-from app.core.jobs.models import Job, JobParams, JobParamsT, JobType
 from app.models import Task
 from app.models.system import DeviceInfo
 
+from .job import JobParams, JobType, ProjectJob
+
 
 class TrainingJobParams(JobParams):
-    job_id: UUID | None = None
-    project_id: UUID | None = None
+    job_id: UUID
+    project_id: UUID
     model_architecture_id: str
     parent_model_revision_id: UUID | None = None
     task: Task
     model_id: UUID = Field(default_factory=uuid4)
+    dataset_revision_id: UUID | None = None
     device: DeviceInfo
-
-
-class ProjectJob(Job, Generic[JobParamsT]):
-    project_id: UUID
-    params: JobParamsT
 
 
 class TrainingJob(ProjectJob[TrainingJobParams]):
@@ -34,11 +31,7 @@ class TrainingJob(ProjectJob[TrainingJobParams]):
     data_dir: Path
     params: TrainingJobParams
 
-    def model_post_init(self, _: Any) -> None:
-        self.params.job_id = self.id
-        self.params.project_id = self.project_id
-
-    def on_finish(self) -> None:
+    def on_complete(self) -> None:
         """Copy the training log to the model's directory upon job completion."""
         log_path = self.log_dir / self.log_file
         if not log_path.exists():

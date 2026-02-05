@@ -7,7 +7,7 @@ import { SortDown } from '@geti/ui/icons';
 import { GRID_COLUMNS } from '../constants';
 import { useModelListing } from '../provider/model-listing-provider';
 
-const ColumnHeader = ({ label, isSorted }: { label: string; isSorted: boolean }) => (
+const ColumnHeader = ({ label, isSorted }: { label: string; isSorted?: boolean }) => (
     <Flex alignItems='center' gap='size-50'>
         <Text>{label}</Text>
         {isSorted && <SortDown width={16} height={16} />}

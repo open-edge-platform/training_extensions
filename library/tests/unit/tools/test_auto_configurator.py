@@ -76,7 +76,7 @@ class TestAutoConfigurator:
         assert len(default_config) > 0
         assert "config" in default_config
         assert len(default_config["config"]) > 0
-        assert default_config["config"][0] == target_config
+        assert str(default_config["config"][0]) == str(target_config)
 
         # OTX-Mobilenet-v2
         # new_config

@@ -35,28 +35,26 @@ export const SourceMenu = ({ id, name, isConnected, onEdit }: SourceMenuProps) =
         meta: {
             invalidateQueries: [
                 ['get', '/api/sources'],
-                ['get', '/api/projects/{project_id}/pipeline'],
+                ['get', '/api/projects/{project_id}/pipeline', { params: { path: { project_id } } }],
             ],
         },
     });
 
-    const handleConnect = async () => {
-        try {
-            await updatePipeline.mutateAsync({
+    const handleConnect = () => {
+        updatePipeline.mutate(
+            {
                 params: { path: { project_id } },
                 body: { source_id: id },
-            });
-
-            toast({
-                type: 'success',
-                message: `Successfully connected to "${name}".`,
-            });
-        } catch (_error) {
-            toast({
-                type: 'error',
-                message: `Failed to connect to "${name}".`,
-            });
-        }
+            },
+            {
+                onSuccess: () => {
+                    toast({
+                        type: 'success',
+                        message: `Successfully connected to "${name}".`,
+                    });
+                },
+            }
+        );
     };
 
     const removeSource = $api.useMutation('delete', '/api/sources/{source_id}', {
@@ -65,20 +63,18 @@ export const SourceMenu = ({ id, name, isConnected, onEdit }: SourceMenuProps) =
         },
     });
 
-    const handleDelete = async () => {
-        try {
-            await removeSource.mutateAsync({ params: { path: { source_id: id } } });
-
-            toast({
-                type: 'success',
-                message: `${name} has been removed successfully!`,
-            });
-        } catch (_error) {
-            toast({
-                type: 'error',
-                message: `Failed to remove "${name}".`,
-            });
-        }
+    const handleDelete = () => {
+        removeSource.mutate(
+            { params: { path: { source_id: id } } },
+            {
+                onSuccess: () => {
+                    toast({
+                        type: 'success',
+                        message: `${name} has been removed successfully!`,
+                    });
+                },
+            }
+        );
     };
 
     return (

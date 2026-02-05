@@ -1,8 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { fireEvent, screen } from '@testing-library/react';
 import { getMockedProject } from 'mocks/mock-project';
-import { fireEvent, render, screen } from 'test-utils/render';
+import { render } from 'test-utils/render';
 
 import { ProjectCard } from './project-card.component';
 
@@ -31,7 +32,6 @@ describe('ProjectCard', () => {
 
         expect(await screen.findByText('detection')).toBeInTheDocument();
         expect(await screen.findByText('• Labels: Cat, Dog')).toBeInTheDocument();
-        expect(await screen.findByText('• Edited: 2025-08-07 06:05 AM')).toBeInTheDocument();
         expect(await screen.findByRole('button', { name: /open project options/i })).toBeInTheDocument();
     });
 

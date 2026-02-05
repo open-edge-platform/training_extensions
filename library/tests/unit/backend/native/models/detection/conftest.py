@@ -7,11 +7,11 @@ import torch
 from torchvision import tv_tensors
 
 from otx.data.entity.base import ImageInfo
-from otx.data.entity.torch import OTXDataBatch
+from otx.data.entity.sample import OTXSampleBatch
 
 
 @pytest.fixture
-def fxt_detection_batch(batch_size: int = 2) -> OTXDataBatch:
+def fxt_detection_batch(batch_size: int = 2) -> OTXSampleBatch:
     """Create a mock detection batch for testing."""
     images = [torch.randn(3, 640, 640), torch.randn(3, 640, 640)]
 
@@ -39,8 +39,7 @@ def fxt_detection_batch(batch_size: int = 2) -> OTXDataBatch:
         ImageInfo(img_idx=1, img_shape=(640, 640), ori_shape=(640, 640)),
     ]
 
-    return OTXDataBatch(
-        batch_size=batch_size,
+    return OTXSampleBatch(
         images=images,
         bboxes=bboxes,
         labels=labels,

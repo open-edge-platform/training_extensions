@@ -14,7 +14,7 @@ from app.core.run import ExecutionContext, Runnable
 T = TypeVar("T")
 
 
-def step(name: str) -> Callable[[Callable[..., T]], Callable[..., T]]:
+def step(name: str, complete: float | None = None) -> Callable[[Callable[..., T]], Callable[..., T]]:
     """
     Decorator to mark a method as a training step.
 
@@ -30,18 +30,19 @@ def step(name: str) -> Callable[[Callable[..., T]], Callable[..., T]]:
 
     Args:
         name: Human-readable name for the step (used in logging and progress reporting).
+        complete: Optional float indicating the completion percentage after this step.
     """
 
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         @wraps(func)
         def wrapper(self: Any, *args: Any, **kwargs: Any) -> T:
-            self.report_progress(f"Starting: {name}")
+            self.report_progress(f"Started: {name}")
             try:
                 result = func(self, *args, **kwargs)
             except Exception:
                 self.report_progress(f"Failed: {name}", exc=True)
                 raise
-            self.report_progress(f"Completed: {name}")
+            self.report_progress(f"Completed: {name}", percent=complete)
             return result
 
         return wrapper

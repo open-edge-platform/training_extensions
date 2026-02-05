@@ -1,16 +1,16 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import type { ImagesFolderSourceConfig, SourceConfig, VideoFileSourceConfig } from '../../../constants/shared-types';
 import { EditSource } from './edit-source/edit-source.component';
 import { ImageFolder } from './image-folder/image-folder.component';
 import { imagesFolderBodyFormatter } from './image-folder/utils';
 import { IpCamera } from './ip-camera/ip-camera.component';
 import { ipCameraBodyFormatter } from './ip-camera/utils';
-import { ImagesFolderSourceConfig, SourceConfig, VideoFileSourceConfig } from './util';
+import { UsbCamera } from './usb-camera/usb-camera-fields.component';
+import { usbCameraBodyFormatter } from './usb-camera/utils';
 import { videoFileBodyFormatter } from './video-file/utils';
 import { VideoFile } from './video-file/video-file.component';
-import { usbCameraBodyFormatter } from './webcam/utils';
-import { WebcamFields } from './webcam/webcam-fields.component';
 
 interface EditSourceFormProps {
     config: SourceConfig;
@@ -25,7 +25,7 @@ export const EditSourceForm = ({ config, onSaved, onBackToList }: EditSourceForm
                 onSaved={onSaved}
                 config={config}
                 onBackToList={onBackToList}
-                componentFields={(state) => <WebcamFields defaultState={state} />}
+                componentFields={(state) => <UsbCamera defaultState={state} />}
                 bodyFormatter={usbCameraBodyFormatter}
             />
         );

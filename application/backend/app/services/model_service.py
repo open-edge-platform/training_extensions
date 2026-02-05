@@ -3,6 +3,7 @@
 
 import shutil
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 from typing import cast
 from uuid import UUID
@@ -83,6 +84,28 @@ class ModelService(BaseSessionManagedService):
                 model_variants.append(model_info)
 
         return model_variants
+
+    def get_model_size_in_bytes(self, project_id: UUID, model_id: UUID) -> int:
+        """
+        Get the total size of the model and all its files in bytes.
+
+        Args:
+            project_id (UUID): The unique identifier of the project whose models to get.
+            model_id (UUID): The unique identifier of the model to retrieve size for.
+        Returns:
+            int: Total size of the model and all its files in bytes.
+        """
+
+        @lru_cache
+        def _cached_model_size_in_bytes(_model_path: Path) -> int:
+            return sum(f.stat().st_size for f in _model_path.glob("**/*") if f.is_file())
+
+        model_revision = self.get_model(project_id=project_id, model_id=model_id)
+        if model_revision.files_deleted:
+            return 0
+
+        model_path = self._projects_dir / str(project_id) / "models" / str(model_id)
+        return _cached_model_size_in_bytes(_model_path=model_path)
 
     def rename_model(self, project_id: UUID, model_id: UUID, model_metadata: dict[str, str]) -> ModelRevision:
         """
@@ -169,7 +192,7 @@ class ModelService(BaseSessionManagedService):
         model_rev_db.files_deleted = True
         model_rev_repo.update(model_rev_db)
 
-    def list_models(self, project_id: UUID) -> list[ModelRevision]:
+    def list_models(self, project_id: UUID, dataset_revision_id: UUID | None = None) -> list[ModelRevision]:
         """
         Get information about all available model revisions in a project.
 
@@ -179,13 +202,19 @@ class ModelService(BaseSessionManagedService):
 
         Args:
             project_id (UUID): The unique identifier of the project whose models to list.
+            dataset_revision_id (UUID | None, optional): The unique identifier of the dataset revision to filter on.
 
         Returns:
             list[ModelRevision]: A list of model revision objects representing all model
-                revisions in the project. Returns an empty list if the project has no models.
+                revisions in the project, optionally filtered on dataset revision.
+                Returns an empty list if the project has no models.
         """
         model_rev_repo = ModelRevisionRepository(project_id=str(project_id), db=self.db_session)
-        return [ModelRevision.model_validate(model_rev_db) for model_rev_db in model_rev_repo.list_all()]
+        training_dataset_id = str(dataset_revision_id) if dataset_revision_id is not None else None
+        return [
+            ModelRevision.model_validate(model_rev_db)
+            for model_rev_db in model_rev_repo.list_all(training_dataset_id=training_dataset_id)
+        ]
 
     def create_revision(self, metadata: ModelRevisionMetadata) -> None:
         """
@@ -220,6 +249,18 @@ class ModelService(BaseSessionManagedService):
                 label_schema_revision=labels_schema_rev,
             )
         )
+
+    def update_revision_status(self, project_id: UUID, model_id: UUID, training_status: TrainingStatus) -> None:
+        """
+        Updates the training status of a model revision for the given project.
+
+        Args:
+            project_id (UUID): Identifier of the project that owns the model revision.
+            model_id (UUID): Identifier of the model revision to update.
+            training_status (TrainingStatus): New training status to set for the model revision.
+        """
+        model_revision_repo = ModelRevisionRepository(project_id=str(project_id), db=self.db_session)
+        model_revision_repo.update_training_status(obj_id=str(model_id), training_status=training_status)
 
     def get_model_binary_files(
         self, project_id: UUID, model_id: UUID, format: ModelFormat

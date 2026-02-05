@@ -11,7 +11,7 @@ from otx.backend.native.models.classification.hlabel_models.torchvision_model im
 from otx.backend.native.models.classification.multiclass_models.torchvision_model import TVModelMulticlassCls
 from otx.backend.native.models.classification.multilabel_models.torchvision_model import TVModelMultilabelCls
 from otx.data.entity.base import OTXBatchLossEntity
-from otx.data.entity.torch import OTXPredBatch
+from otx.data.entity.sample import OTXPredictionBatch
 from otx.types.export import TaskLevelExportParameters
 from otx.types.task import OTXTaskType
 
@@ -91,7 +91,7 @@ class TestOTXTVModel:
 
         tv_model.training = False
         preds = tv_model._customize_outputs(outputs, data_entity)
-        assert isinstance(preds, OTXPredBatch)
+        assert isinstance(preds, OTXPredictionBatch)
 
     def test_export_parameters(self, fxt_tv_model):
         export_parameters = fxt_tv_model._export_parameters
@@ -105,8 +105,8 @@ class TestOTXTVModel:
         fxt_tv_model.explain_mode = explain_mode
         outputs = fxt_tv_model.predict_step(batch=fxt_multiclass_cls_batch_data_entity, batch_idx=0)
 
-        assert isinstance(outputs, OTXPredBatch)
-        assert outputs.has_xai_outputs == explain_mode
+        assert isinstance(outputs, OTXPredictionBatch)
+        assert (outputs.saliency_map is not None and len(outputs.saliency_map) > 0) == explain_mode
         if explain_mode:
             assert outputs.feature_vector[0].ndim == 2
             assert outputs.saliency_map[0].ndim == 3

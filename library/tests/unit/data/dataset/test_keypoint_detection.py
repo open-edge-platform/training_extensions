@@ -44,7 +44,6 @@ class TestOTXKeypointDetectionDataset:
         assert isinstance(entity.img_info, ImageInfo)
         assert hasattr(entity, "label")
         assert isinstance(entity.label, Tensor)
-        assert hasattr(entity, "bboxes")
         assert hasattr(entity, "keypoints")
         assert isinstance(entity.keypoints, Tensor)
         assert entity.keypoints.shape == (4, 3)

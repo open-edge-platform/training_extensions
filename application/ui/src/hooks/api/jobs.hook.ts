@@ -19,15 +19,30 @@ export const useListJobs = () => {
 
 export const useGetCurrentTrainingJob = () => {
     const projectId = useProjectIdentifier();
-    const activeJobs = useListJobs();
+    const activeJobs = $api.useQuery('get', '/api/jobs', undefined, {
+        refetchInterval: (query) => {
+            const hasActiveJob = query.state.data?.some((job) => job.status === 'RUNNING' || job.status === 'PENDING');
 
-    const activeTrainingJob = activeJobs.data?.find(
-        (job) => job.metadata.project.id === projectId && job.status === 'running' && job.job_type === 'train'
-    );
+            return hasActiveJob ? 5000 : false;
+        },
+    });
+
+    const activeTrainingJob = activeJobs.data?.find((job) => {
+        const jobProjectId =
+            'project' in job.metadata &&
+            job.metadata.project &&
+            'id' in job.metadata.project &&
+            job.metadata.project.id;
+        return jobProjectId === projectId && job.status === 'RUNNING' && job.job_type === 'train';
+    });
 
     return activeTrainingJob;
 };
 
 export const useCancelJob = () => {
-    return $api.useMutation('post', '/api/jobs/{job_id}:cancel');
+    return $api.useMutation('post', '/api/jobs/{job_id}:cancel', {
+        meta: {
+            invalidateQueries: [['get', '/api/jobs']],
+        },
+    });
 };

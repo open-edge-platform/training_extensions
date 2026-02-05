@@ -4,7 +4,7 @@
 import { useSubmitJob } from 'hooks/api/jobs.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
-import { DeviceType } from '../../../../constants/shared-types';
+import type { DeviceType } from '../../../../constants/shared-types';
 
 export const useTrainModelMutation = () => {
     const trainModelMutation = useSubmitJob();
@@ -14,10 +14,11 @@ export const useTrainModelMutation = () => {
         {
             device,
             modelArchitectureId,
+            datasetRevisionId,
         }: {
             device: DeviceType;
             modelArchitectureId: string;
-            datasetRevisionId: string;
+            datasetRevisionId: string | null;
         },
         onSuccess?: () => void
     ) => {
@@ -29,8 +30,7 @@ export const useTrainModelMutation = () => {
                     parameters: {
                         device,
                         model_architecture_id: modelArchitectureId,
-                        // TODO: uncomment once supported by backend
-                        // dataset_revision_id: datasetRevisionId,
+                        dataset_revision_id: datasetRevisionId,
                     },
                 },
             },
