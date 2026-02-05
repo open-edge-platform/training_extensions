@@ -111,7 +111,7 @@ test.describe('Annotator Classification', () => {
     });
 
     test.describe('Multiple labels', () => {
-        test.beforeEach(async ({ network, page }) => {
+        test.beforeEach(async ({ network }) => {
             network.use(
                 http.get('/api/projects/{project_id}', () => {
                     return HttpResponse.json({

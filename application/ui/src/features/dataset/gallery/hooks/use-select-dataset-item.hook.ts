@@ -9,11 +9,11 @@ import { Media } from '../../../../constants/shared-types';
 import { useGetDatasetMediaItems } from '../../../../hooks/use-get-dataset-media-items.hook';
 import { useProjectIdentifier } from '../../../../hooks/use-project-identifier.hook';
 
-export const useDatasetItemNavigation = () => {
+export const useSelectDatasetItem = () => {
     const navigate = useNavigate();
     const projectId = useProjectIdentifier();
     const { items } = useGetDatasetMediaItems();
-    const { datasetItemId } = useParams<{ datasetItemId: string }>();
+    const { datasetItemId: selectedDatasetItemId } = useParams<{ datasetItemId: string }>();
 
     const onSelectedMediaItemChange = (item: Media | null) => {
         const route = isObject(item)
@@ -24,7 +24,7 @@ export const useDatasetItemNavigation = () => {
     };
 
     return {
-        selectedMediaItem: items.find((item) => item.id === datasetItemId) ?? null,
+        selectedMediaItem: items.find((item) => item.id === selectedDatasetItemId) ?? null,
         onSelectedMediaItemChange,
     };
 };

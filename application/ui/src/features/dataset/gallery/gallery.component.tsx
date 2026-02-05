@@ -12,7 +12,7 @@ import { getThumbnailUrl } from '../../../shared/media-url.utils';
 import { MediaPreview } from '../media-preview/media-preview.component';
 import { useSelectedData } from '../selected-data-provider.component';
 import { DeleteMediaItem } from './delete-media-item/delete-media-item.component';
-import { useDatasetItemNavigation } from './hooks/use-dataset-item-navigation.hook';
+import { useSelectDatasetItem } from './hooks/use-select-dataset-item.hook';
 
 type GalleryProps = {
     items: Media[];
@@ -28,8 +28,8 @@ const layoutOptions = {
 };
 
 export const Gallery = ({ items, hasNextPage, isFetchingNextPage, fetchNextPage }: GalleryProps) => {
-    const project_id = useProjectIdentifier();
-    const { selectedMediaItem, onSelectedMediaItemChange } = useDatasetItemNavigation();
+    const projectId = useProjectIdentifier();
+    const { selectedMediaItem, onSelectedMediaItemChange } = useSelectDatasetItem();
     const { selectedKeys, mediaState, setSelectedKeys, toggleSelectedKeys } = useSelectedData();
 
     const isSetSelectedKeys = selectedKeys instanceof Set;
@@ -51,7 +51,7 @@ export const Gallery = ({ items, hasNextPage, isFetchingNextPage, fetchNextPage 
                         contentElement={() => (
                             <MediaThumbnail
                                 alt={item.name}
-                                url={getThumbnailUrl(project_id, String(item.id))}
+                                url={getThumbnailUrl(projectId, String(item.id))}
                                 onDoubleClick={() => onSelectedMediaItemChange(item)}
                             />
                         )}
