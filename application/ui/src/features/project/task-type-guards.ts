@@ -10,3 +10,7 @@ export const isClassificationTask = (taskType: TaskType | null): boolean => {
 export const isDetectionTask = (taskType: TaskType | null): boolean => {
     return taskType === 'detection';
 };
+
+export const isSegmentationTask = (taskType: TaskType | null): boolean => {
+    return taskType === 'instance_segmentation';
+};
