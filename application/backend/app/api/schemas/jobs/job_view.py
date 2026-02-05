@@ -67,7 +67,7 @@ class JobView(BaseModel):
                 | JobType.PREPARE_DATASET_FOR_IMPORT
             ):
                 metadata = ImportDatasetMetadata.model_validate(job)
-            case JobType.EXPORT_DATASET | JobType.EXPORT_DATASET:
+            case JobType.EXPORT_DATASET | JobType.STAGE_DATASET:
                 metadata = ExportDatasetMetadata.model_validate(job)
             case _:
                 raise ValueError("Metadata is not defined for this job type")
