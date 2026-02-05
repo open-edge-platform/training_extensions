@@ -13,6 +13,7 @@ train_subset:
     - class_path: otx.data.transform_libs.torchvision.Resize
       init_args:
         size: $(input_size)
+        keep_aspect_ratio: false
   augmentations_gpu:
     - class_path: kornia.augmentation.RandomHorizontalFlip
       init_args:
@@ -52,6 +53,7 @@ val_subset:
     - class_path: otx.data.transform_libs.torchvision.Resize
       init_args:
         size: $(input_size)
+        keep_aspect_ratio: false
         resize_targets: false
   augmentations_gpu:
     - class_path: kornia.augmentation.Normalize
@@ -76,6 +78,7 @@ test_subset:
     - class_path: otx.data.transform_libs.torchvision.Resize
       init_args:
         size: $(input_size)
+        keep_aspect_ratio: false
         resize_targets: false
   augmentations_gpu:
     - class_path: kornia.augmentation.Normalize
