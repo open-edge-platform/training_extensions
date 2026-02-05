@@ -33,7 +33,6 @@ export const CurrentModelTraining = ({ groupBy, datasetRevisions }: CurrentModel
             gap={'size-200'}
             direction={'column'}
             UNSAFE_style={{ padding: 'var(--spectrum-global-dimension-size-300)' }}
-            marginBottom={'size-200'}
         >
             <Heading level={2} UNSAFE_style={{ fontSize: dimensionValue('size-300') }}>
                 Current training
