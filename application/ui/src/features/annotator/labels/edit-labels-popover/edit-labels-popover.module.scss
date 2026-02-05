@@ -1,9 +1,9 @@
 .popoverContent {
     padding: var(--spectrum-global-dimension-size-150);
-    min-width: 480px;
+    min-width: var(--spectrum-global-dimension-size-6000);
 }
 
 .labelsList {
-    max-height: 560px;
+    max-height: calc(var(--spectrum-global-dimension-size-6000) + var(--spectrum-global-dimension-size-1000));
     overflow-y: auto;
 }

@@ -3,12 +3,13 @@
 
 import { CSSProperties, useState } from 'react';
 
-import { ActionButton, Checkbox, Flex, TextField, View } from '@geti/ui';
+import { ActionButton, Flex, TextField, View } from '@geti/ui';
 import { Delete } from '@geti/ui/icons';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { LabelColorPicker } from '../../../../components/label-fields/label-color-picker.component';
 import { validateLabelName } from '../../../../components/label-fields/label-validation';
+import { SilentCheckbox } from '../../../../components/label-fields/silent-checkbox.component';
 import type { Label } from '../../../../constants/shared-types';
 import { useUpdateLabel } from '../api/use-update-label.hook';
 
@@ -73,7 +74,11 @@ export const EditLabelRow = ({ label, existingLabels, isSelected, onSelect, onDe
             UNSAFE_className={classes.labelRow}
             UNSAFE_style={{ '--label-color': color } as CSSProperties}
         >
-            <Checkbox isSelected={isSelected} onChange={() => onSelect()} aria-label={`Select ${label.name} label`} />
+            <SilentCheckbox
+                isSelected={isSelected}
+                onChange={onSelect}
+                aria-label={`Select ${label.name} label`}
+            />
 
             <LabelColorPicker color={color} onChange={handleColorChange} />
 
