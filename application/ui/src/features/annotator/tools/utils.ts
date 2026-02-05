@@ -348,22 +348,39 @@ export const getRelativePoint = (element: ElementType, point: Point, zoom: numbe
     };
 };
 
-export const loadImage = (link: string): Promise<HTMLImageElement> =>
-    new Promise<HTMLImageElement>((resolve, reject) => {
+export const loadImage = async (link: string): Promise<HTMLImageElement> => {
+    if (process.env.NODE_ENV === 'test') {
         const image = new Image();
-        image.crossOrigin = 'anonymous';
 
-        image.onload = () => resolve(image);
-        image.onerror = (error) => reject(error);
-
-        image.fetchPriority = 'high';
         image.src = link;
 
-        if (process.env.NODE_ENV === 'test') {
-            // Immediately load the media item's image
+        return image;
+    }
+
+    // Fetch as blob first to avoid CORS issues with cached images
+    const response = await fetch(link, { credentials: 'include' });
+    if (!response.ok) {
+        throw new Error(`Failed to load image: ${response.statusText}`);
+    }
+
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+
+    return new Promise<HTMLImageElement>((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => {
+            URL.revokeObjectURL(objectUrl);
             resolve(image);
-        }
+        };
+        image.onerror = (error) => {
+            URL.revokeObjectURL(objectUrl);
+            reject(error);
+        };
+
+        image.fetchPriority = 'high';
+        image.src = objectUrl;
     });
+};
 
 const drawImageOnCanvas = (img: HTMLImageElement, filter = ''): HTMLCanvasElement => {
     const canvas: HTMLCanvasElement = document.createElement('canvas');
