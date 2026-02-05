@@ -10,7 +10,7 @@ import { v4 as uuid } from 'uuid';
 
 import { HotkeyField } from '../../../../components/label-fields/hotkey-field.component';
 import { LabelColorPicker } from '../../../../components/label-fields/label-color-picker.component';
-import { validateLabelName } from '../../../../components/label-fields/label-validation';
+import { validateLabelHotkey, validateLabelName } from '../../../../components/label-fields/label-validation';
 import type { Label, TaskType } from '../../../../constants/shared-types';
 import { TASK_HOTKEYS } from '../../../../shared/hotkeys-definition';
 import { getRandomDistinctColor } from '../../../annotator/label-utils';
@@ -34,6 +34,7 @@ export const CreateLabel = ({ labels, onCreate, taskType }: CreateLabelProps) =>
     const allHotkeys = [...labelsHotkeys, ...appHotkeys];
 
     const validationResult = validateLabelName(newLabel.name, labels);
+    const hotkeyError = newLabel.hotkey ? validateLabelHotkey(newLabel.hotkey, allHotkeys) : undefined;
     const isCreateLabelDisabled = newLabel.name.trim().length === 0 || validationResult !== undefined;
 
     const createLabel = () => {
@@ -89,7 +90,7 @@ export const CreateLabel = ({ labels, onCreate, taskType }: CreateLabelProps) =>
                 <HotkeyField
                     hotkey={newLabel.hotkey}
                     onHotkeyChange={(newHotkey) => setNewLabel((prevLabel) => ({ ...prevLabel, hotkey: newHotkey }))}
-                    allHotkeys={allHotkeys}
+                    errorMessage={hotkeyError}
                 />
             </View>
 

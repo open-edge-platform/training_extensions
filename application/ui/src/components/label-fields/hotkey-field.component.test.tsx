@@ -14,7 +14,7 @@ describe('HotkeyField', () => {
     });
 
     it('renders with placeholder when hotkey is null', () => {
-        render(<HotkeyField hotkey={null} onHotkeyChange={mockOnHotkeyChange} allHotkeys={[]} />);
+        render(<HotkeyField hotkey={null} onHotkeyChange={mockOnHotkeyChange} />);
 
         const input = screen.getByRole('textbox', { name: 'Hotkey input' });
         expect(input).toHaveAttribute('placeholder', 'Hotkey');
@@ -22,14 +22,14 @@ describe('HotkeyField', () => {
     });
 
     it('displays formatted hotkey value', () => {
-        render(<HotkeyField hotkey='ctrl+s' onHotkeyChange={mockOnHotkeyChange} allHotkeys={[]} />);
+        render(<HotkeyField hotkey='ctrl+s' onHotkeyChange={mockOnHotkeyChange} />);
 
         const input = screen.getByRole('textbox', { name: 'Hotkey input' });
         expect(input).toHaveValue('CTRL+S');
     });
 
     it('captures simple key press', () => {
-        render(<HotkeyField hotkey={null} onHotkeyChange={mockOnHotkeyChange} allHotkeys={[]} />);
+        render(<HotkeyField hotkey={null} onHotkeyChange={mockOnHotkeyChange} />);
 
         const input = screen.getByRole('textbox', { name: 'Hotkey input' });
         fireEvent.keyDown(input, { key: 'a' });
@@ -38,7 +38,7 @@ describe('HotkeyField', () => {
     });
 
     it('captures key with ctrl modifier', () => {
-        render(<HotkeyField hotkey={null} onHotkeyChange={mockOnHotkeyChange} allHotkeys={[]} />);
+        render(<HotkeyField hotkey={null} onHotkeyChange={mockOnHotkeyChange} />);
 
         const input = screen.getByRole('textbox', { name: 'Hotkey input' });
         fireEvent.keyDown(input, { key: 's', ctrlKey: true });
@@ -47,7 +47,7 @@ describe('HotkeyField', () => {
     });
 
     it('captures key with multiple modifiers', () => {
-        render(<HotkeyField hotkey={null} onHotkeyChange={mockOnHotkeyChange} allHotkeys={[]} />);
+        render(<HotkeyField hotkey={null} onHotkeyChange={mockOnHotkeyChange} />);
 
         const input = screen.getByRole('textbox', { name: 'Hotkey input' });
         fireEvent.keyDown(input, { key: 's', ctrlKey: true, shiftKey: true });
@@ -56,7 +56,7 @@ describe('HotkeyField', () => {
     });
 
     it('ignores standalone Control key press', () => {
-        render(<HotkeyField hotkey={null} onHotkeyChange={mockOnHotkeyChange} allHotkeys={[]} />);
+        render(<HotkeyField hotkey={null} onHotkeyChange={mockOnHotkeyChange} />);
 
         const input = screen.getByRole('textbox', { name: 'Hotkey input' });
         fireEvent.keyDown(input, { key: 'Control' });
@@ -65,7 +65,7 @@ describe('HotkeyField', () => {
     });
 
     it('ignores standalone Alt key press', () => {
-        render(<HotkeyField hotkey={null} onHotkeyChange={mockOnHotkeyChange} allHotkeys={[]} />);
+        render(<HotkeyField hotkey={null} onHotkeyChange={mockOnHotkeyChange} />);
 
         const input = screen.getByRole('textbox', { name: 'Hotkey input' });
         fireEvent.keyDown(input, { key: 'Alt' });
@@ -74,7 +74,7 @@ describe('HotkeyField', () => {
     });
 
     it('ignores standalone Shift key press', () => {
-        render(<HotkeyField hotkey={null} onHotkeyChange={mockOnHotkeyChange} allHotkeys={[]} />);
+        render(<HotkeyField hotkey={null} onHotkeyChange={mockOnHotkeyChange} />);
 
         const input = screen.getByRole('textbox', { name: 'Hotkey input' });
         fireEvent.keyDown(input, { key: 'Shift' });
@@ -83,7 +83,7 @@ describe('HotkeyField', () => {
     });
 
     it('ignores standalone Meta key press', () => {
-        render(<HotkeyField hotkey={null} onHotkeyChange={mockOnHotkeyChange} allHotkeys={[]} />);
+        render(<HotkeyField hotkey={null} onHotkeyChange={mockOnHotkeyChange} />);
 
         const input = screen.getByRole('textbox', { name: 'Hotkey input' });
         fireEvent.keyDown(input, { key: 'Meta' });
@@ -91,27 +91,27 @@ describe('HotkeyField', () => {
         expect(mockOnHotkeyChange).not.toHaveBeenCalled();
     });
 
-    it('shows error for duplicate hotkey', () => {
-        render(<HotkeyField hotkey='a' onHotkeyChange={mockOnHotkeyChange} allHotkeys={['a', 'b']} />);
+    it('shows error message when provided', () => {
+        render(<HotkeyField hotkey='a' onHotkeyChange={mockOnHotkeyChange} errorMessage='That hotkey is already in use' />);
 
         expect(screen.getByText('That hotkey is already in use')).toBeInTheDocument();
     });
 
-    it('does not show error for unique hotkey', () => {
-        render(<HotkeyField hotkey='c' onHotkeyChange={mockOnHotkeyChange} allHotkeys={['a', 'b']} />);
+    it('does not show error when errorMessage is undefined', () => {
+        render(<HotkeyField hotkey='c' onHotkeyChange={mockOnHotkeyChange} />);
 
         expect(screen.queryByText('That hotkey is already in use')).not.toBeInTheDocument();
     });
 
     it('handles undefined hotkey same as null', () => {
-        render(<HotkeyField hotkey={undefined} onHotkeyChange={mockOnHotkeyChange} allHotkeys={[]} />);
+        render(<HotkeyField hotkey={undefined} onHotkeyChange={mockOnHotkeyChange} />);
 
         const input = screen.getByRole('textbox', { name: 'Hotkey input' });
         expect(input).toHaveValue('');
     });
 
     it('captures alt modifier', () => {
-        render(<HotkeyField hotkey={null} onHotkeyChange={mockOnHotkeyChange} allHotkeys={[]} />);
+        render(<HotkeyField hotkey={null} onHotkeyChange={mockOnHotkeyChange} />);
 
         const input = screen.getByRole('textbox', { name: 'Hotkey input' });
         fireEvent.keyDown(input, { key: 'a', altKey: true });
@@ -120,7 +120,7 @@ describe('HotkeyField', () => {
     });
 
     it('captures meta modifier', () => {
-        render(<HotkeyField hotkey={null} onHotkeyChange={mockOnHotkeyChange} allHotkeys={[]} />);
+        render(<HotkeyField hotkey={null} onHotkeyChange={mockOnHotkeyChange} />);
 
         const input = screen.getByRole('textbox', { name: 'Hotkey input' });
         fireEvent.keyDown(input, { key: 'a', metaKey: true });
@@ -129,7 +129,7 @@ describe('HotkeyField', () => {
     });
 
     it('builds modifier order as ctrl+meta+alt+shift', () => {
-        render(<HotkeyField hotkey={null} onHotkeyChange={mockOnHotkeyChange} allHotkeys={[]} />);
+        render(<HotkeyField hotkey={null} onHotkeyChange={mockOnHotkeyChange} />);
 
         const input = screen.getByRole('textbox', { name: 'Hotkey input' });
         fireEvent.keyDown(input, { key: 'a', ctrlKey: true, metaKey: true, altKey: true, shiftKey: true });

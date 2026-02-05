@@ -6,15 +6,14 @@ import { KeyboardEvent } from 'react';
 import { TextField } from '@geti/ui';
 
 import { formatHotkeyForDisplay } from '../../shared/hotkeys-definition';
-import { validateLabelHotkey } from './label-validation';
 
 interface HotkeyFieldProps {
     hotkey: string | null | undefined;
     onHotkeyChange: (hotkey: string | null) => void;
-    allHotkeys: string[];
+    errorMessage?: string;
 }
 
-export const HotkeyField = ({ hotkey, onHotkeyChange, allHotkeys }: HotkeyFieldProps) => {
+export const HotkeyField = ({ hotkey, onHotkeyChange, errorMessage }: HotkeyFieldProps) => {
     const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
         event.preventDefault();
 
@@ -36,7 +35,6 @@ export const HotkeyField = ({ hotkey, onHotkeyChange, allHotkeys }: HotkeyFieldP
         onHotkeyChange(hotkeyString);
     };
 
-    const validationResult = hotkey == null ? undefined : validateLabelHotkey(hotkey, allHotkeys);
     const formattedHotkey = hotkey == null ? '' : formatHotkeyForDisplay(hotkey);
 
     return (
@@ -46,8 +44,8 @@ export const HotkeyField = ({ hotkey, onHotkeyChange, allHotkeys }: HotkeyFieldP
             value={formattedHotkey}
             onKeyDown={handleKeyDown}
             width={'100%'}
-            errorMessage={validationResult}
-            validationState={validationResult === undefined ? undefined : 'invalid'}
+            errorMessage={errorMessage}
+            validationState={errorMessage ? 'invalid' : undefined}
         />
     );
 };

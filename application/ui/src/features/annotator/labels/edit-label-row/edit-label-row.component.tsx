@@ -7,28 +7,24 @@ import { ActionButton, Checkbox, Flex, TextField, View } from '@geti/ui';
 import { Delete } from '@geti/ui/icons';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
-import { HotkeyField } from '../../../../components/label-fields/hotkey-field.component';
 import { LabelColorPicker } from '../../../../components/label-fields/label-color-picker.component';
-import { validateLabelHotkey, validateLabelName } from '../../../../components/label-fields/label-validation';
+import { validateLabelName } from '../../../../components/label-fields/label-validation';
 import type { Label } from '../../../../constants/shared-types';
 import { useUpdateLabel } from '../api/use-update-label.hook';
-import { DeleteLabelDialog } from '../delete-label-dialog/delete-label-dialog.component';
 
 import classes from './edit-label-row.module.scss';
 
 interface EditLabelRowProps {
     label: Label;
     existingLabels: Label[];
-    allHotkeys: string[];
     isSelected: boolean;
     onSelect: () => void;
-    onDelete: (labelId: string) => void;
+    onDelete: (label: Label) => void;
 }
 
 export const EditLabelRow = ({
     label,
     existingLabels,
-    allHotkeys,
     isSelected,
     onSelect,
     onDelete,
@@ -38,7 +34,6 @@ export const EditLabelRow = ({
 
     const [name, setName] = useState(label.name);
     const [color, setColor] = useState(label.color);
-    const [hotkey, setHotkey] = useState<string | null>(label.hotkey ?? null);
 
     const validationError = validateLabelName(name, existingLabels, label.id);
 
@@ -50,7 +45,7 @@ export const EditLabelRow = ({
 
         updateLabelMutation.mutate({
             body: {
-                labels_to_edit: [{ id: label.id, new_name: name.trim(), new_color: color, new_hotkey: hotkey }],
+                labels_to_edit: [{ id: label.id, new_name: name.trim(), new_color: color, new_hotkey: label.hotkey }],
             },
             params: {
                 path: {
@@ -65,7 +60,9 @@ export const EditLabelRow = ({
 
         updateLabelMutation.mutate({
             body: {
-                labels_to_edit: [{ id: label.id, new_name: getValidName(), new_color: newColor, new_hotkey: hotkey }],
+                labels_to_edit: [
+                    { id: label.id, new_name: getValidName(), new_color: newColor, new_hotkey: label.hotkey },
+                ],
             },
             params: {
                 path: {
@@ -73,29 +70,6 @@ export const EditLabelRow = ({
                 },
             },
         });
-    };
-
-    const handleHotkeyChange = (newHotkey: string | null) => {
-        setHotkey(newHotkey);
-
-        if (newHotkey !== null && validateLabelHotkey(newHotkey, allHotkeys)) {
-            return;
-        }
-
-        updateLabelMutation.mutate({
-            body: {
-                labels_to_edit: [{ id: label.id, new_name: getValidName(), new_color: color, new_hotkey: newHotkey }],
-            },
-            params: {
-                path: {
-                    project_id: projectId,
-                },
-            },
-        });
-    };
-
-    const handleDelete = () => {
-        onDelete(label.id);
     };
 
     return (
@@ -122,15 +96,14 @@ export const EditLabelRow = ({
                 />
             </View>
 
-            <View width={'size-1600'}>
-                <HotkeyField hotkey={hotkey} onHotkeyChange={handleHotkeyChange} allHotkeys={allHotkeys} />
-            </View>
-
-            <DeleteLabelDialog label={label} onDelete={handleDelete}>
-                <ActionButton aria-label={`Delete ${label.name} label`} isQuiet UNSAFE_className={classes.deleteButton}>
-                    <Delete />
-                </ActionButton>
-            </DeleteLabelDialog>
+            <ActionButton
+                aria-label={`Delete ${label.name} label`}
+                isQuiet
+                UNSAFE_className={classes.deleteButton}
+                onPress={() => onDelete(label)}
+            >
+                <Delete />
+            </ActionButton>
         </Flex>
     );
 };
