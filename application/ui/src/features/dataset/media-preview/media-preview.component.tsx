@@ -4,10 +4,12 @@
 import { Suspense, useState } from 'react';
 
 import { Content, Dialog, Flex, Grid, Loading, View } from '@geti/ui';
+import { QueryClient, useQueryClient } from '@tanstack/react-query';
 import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook';
 
 import type { Media } from '../../../constants/shared-types';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
+import { useSelectedData } from '../selected-data-provider.component';
 import { AnnotatorProviders } from './annotator-providers.component';
 import { useAnnotationsQuery } from './api/use-annotations-query';
 import { BottomToolbar } from './bottom-toolbar/bottom-toolbar.component';
@@ -17,6 +19,7 @@ import { AnnotatorCanvasSettings } from './primary-toolbar/settings/annotator-ca
 import { ReadOnlyAnnotator } from './read-only-annotator.component';
 import { AnnotatorMode } from './secondary-toolbar/annotator-modes/mode';
 import { SecondaryToolbar } from './secondary-toolbar/secondary-toolbar.component';
+import { getNextItem } from './secondary-toolbar/util';
 import { SidebarItems } from './sidebar-items/sidebar-items.component';
 import { getInitialAnnotations, getInitialPredictions } from './utils';
 
@@ -26,17 +29,23 @@ type MediaPreviewProps = {
     onSelectedMediaItem: (item: Media) => void;
 };
 
+type MediaPreviewContentProps = {
+    items: Media[];
+    mediaItem: Media;
+    onClose: () => void;
+    onSelectedMediaItem: (item: Media) => void;
+};
+
 const CanvasAreaLoading = () => (
     <Flex gridArea={'canvas'} alignContent={'center'} justifyContent={'center'}>
         <Loading size='L' mode='inline' />
     </Flex>
 );
 
-type MediaPreviewContentProps = {
-    items: Media[];
-    mediaItem: Media;
-    onClose: () => void;
-    onSelectedMediaItem: (item: Media) => void;
+const invalidateMediaItemAnnotations = (queryClient: QueryClient) => {
+    queryClient.invalidateQueries({
+        queryKey: ['get', '/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations'],
+    });
 };
 
 const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }: MediaPreviewContentProps) => {
@@ -46,6 +55,26 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
 
     const isUserReviewed = annotationsData?.user_reviewed ?? false;
     const annotationsDTO = annotationsData?.annotations ?? [];
+    const queryClient = useQueryClient();
+    const { setMediaState } = useSelectedData();
+
+    const selectedIndex = items.findIndex((item) => item.id === mediaItem.id);
+
+    const handleSubmitAnnotations = async () => {
+        setMediaState((prev) => {
+            const newState = new Map(prev);
+
+            newState.set(String(mediaItem.id), 'accepted');
+
+            return newState;
+        });
+
+        const nextItem = getNextItem(items.length - 1, selectedIndex);
+        onSelectedMediaItem(items[nextItem]);
+
+        const isLastItem = selectedIndex === items.length - 1;
+        isLastItem && invalidateMediaItemAnnotations(queryClient);
+    };
 
     return (
         <AnnotatorProviders
@@ -62,6 +91,7 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
                     isUserReviewed={isUserReviewed}
                     onModeChange={setMode}
                     onClose={onClose}
+                    onAcceptPrediction={handleSubmitAnnotations}
                 />
             ) : (
                 <>
@@ -73,6 +103,7 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
                             mediaItem={mediaItem}
                             onSelectedMediaItem={onSelectedMediaItem}
                             onModeChange={setMode}
+                            onAcceptPrediction={handleSubmitAnnotations}
                         />
                     </View>
 
