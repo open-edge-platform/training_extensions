@@ -20,8 +20,6 @@ import { SecondaryToolbar } from './secondary-toolbar/secondary-toolbar.componen
 import { SidebarItems } from './sidebar-items/sidebar-items.component';
 import { getInitialAnnotations, getInitialPredictions } from './utils';
 
-import classes from './media-preview.module.scss';
-
 type MediaPreviewProps = {
     mediaItem: Media;
     close: () => void;
@@ -78,7 +76,7 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
                         />
                     </View>
 
-                    <View gridArea={'toolbar'} aria-label={'primary toolbar'} UNSAFE_className={classes.primaryToolbar}>
+                    <View gridArea={'toolbar'} aria-label={'primary toolbar'}>
                         <PrimaryToolbar />
                     </View>
 
