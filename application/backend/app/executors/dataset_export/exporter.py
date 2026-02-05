@@ -20,6 +20,25 @@ from app.services import DatasetRevisionService, DatasetService
 from app.services.datumaro_converter import convert_to_dm_subset
 
 
+def get_dm_format(dataset_format: DatasetFormat) -> DataFormat:
+    """
+    Convert DatasetFormat to Datumaro DataFormat.
+
+    Args:
+        dataset_format: DatasetFormat enum value.
+
+    Returns:
+        Corresponding DataFormat enum value.
+    """
+    format_mapping = {
+        DatasetFormat.COCO: DataFormat.COCO,
+        DatasetFormat.YOLO: DataFormat.YOLO,
+    }
+    if dataset_format not in format_mapping:
+        raise ValueError(f"Unsupported dataset format for export: {dataset_format}")
+    return format_mapping[dataset_format]
+
+
 class DatasetExporter(Executor):
     def __init__(
         self,
@@ -56,13 +75,15 @@ class DatasetExporter(Executor):
                     project_id=export_params.project_id, dataset_revision_id=export_params.dataset_id
                 )
             filtered_dataset = None
-            if export_params.subsets:
+            if dataset and export_params.subsets:
                 # todo: datumaro API seems to lack a proper way to filter by multiple subsets,
                 #  so we chain multiple filter calls for now
                 for subset in export_params.subsets:
+                    filtered_by_subset = dataset.filter_by_subset(subset=convert_to_dm_subset(subset))
                     if filtered_dataset:
-                        filtered_dataset.append_dataset(dataset.filter_by_subset(subset=convert_to_dm_subset(subset)))
-                    filtered_dataset = dataset.filter_by_subset(subset=convert_to_dm_subset(subset))
+                        filtered_dataset.append_dataset(filtered_by_subset)
+                    else:
+                        filtered_dataset = filtered_by_subset
                 dataset = filtered_dataset
             return export_params.dataset_id or uuid4(), dataset
 
@@ -75,14 +96,14 @@ class DatasetExporter(Executor):
             case DatasetFormat.COCO:
                 save_dataset(
                     dataset=dataset,
-                    data_format=self.__get_dm_format(export_format),
+                    data_format=get_dm_format(export_format),
                     images_dir_path=str(target_dir / "images"),
                     annotations_path=str(target_dir / "annotations.json"),
                 )
             case DatasetFormat.YOLO:
                 save_dataset(
                     dataset=dataset,
-                    data_format=self.__get_dm_format(export_format),
+                    data_format=get_dm_format(export_format),
                     root_dir=str(target_dir),
                 )
             case DatasetFormat.DATUMARO_V2:
@@ -137,13 +158,3 @@ class DatasetExporter(Executor):
             # todo: remove after https://github.com/open-edge-platform/datumaro/issues/2026 is implemented
             zip_path = self.zip_dataset_contents(target_dir, export_params.export_format)
             self.cleanup(zip_path)
-
-    @staticmethod
-    def __get_dm_format(dataset_format: DatasetFormat) -> DataFormat:
-        format_mapping = {
-            DatasetFormat.COCO: DataFormat.COCO,
-            DatasetFormat.YOLO: DataFormat.YOLO,
-        }
-        if dataset_format not in format_mapping:
-            raise ValueError(f"Unsupported dataset format for export: {dataset_format}")
-        return format_mapping[dataset_format]
