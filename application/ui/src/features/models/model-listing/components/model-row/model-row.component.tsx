@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, Grid, Tag, Text } from '@geti/ui';
+import { Badge, Flex, Grid, Tag, Text } from '@geti/ui';
 
 import { ReactComponent as ThumbsUp } from '../../../../../assets/icons/thumbs-up.svg';
 import type { Model } from '../../../../../constants/shared-types';
@@ -9,6 +9,7 @@ import { GRID_COLUMNS } from '../../constants';
 import { AccuracyIndicator } from '../../model-variants/accuracy-indicator.component';
 import { formatTrainingDateTime } from '../../utils/date-formatting';
 import { formatModelSize } from '../../utils/format-model-size';
+import { isFailedModel } from '../../utils/utils';
 import { ActiveModelTag } from '../active-model-tag.component';
 import { ParentRevisionModel } from '../parent-revision-model.component';
 
@@ -21,6 +22,10 @@ type ModelRowProps = {
     onExpandModel?: (modelId: string) => void;
 };
 
+const FailedModel = () => {
+    return <Badge variant={'negative'}>Failed</Badge>;
+};
+
 export const ModelRow = ({ model, activeModelArchitectureId, parentRevisionModel, onExpandModel }: ModelRowProps) => {
     const trainingEndTime = model.training_info.end_time;
     const totalSize = model.size;
@@ -30,7 +35,7 @@ export const ModelRow = ({ model, activeModelArchitectureId, parentRevisionModel
             <Flex direction={'column'} gap={'size-50'}>
                 <Flex alignItems={'center'} gap={'size-100'}>
                     <Text UNSAFE_className={styles.modelName} data-testid={'model-name'}>
-                        {model.name ?? 'Unnamed Model'}
+                        {model.name ?? 'Unnamed Model'} {isFailedModel(model) && <FailedModel />}
                     </Text>
                     {model.id === activeModelArchitectureId && <ActiveModelTag />}
                 </Flex>

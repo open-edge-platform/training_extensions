@@ -49,6 +49,18 @@ describe('ModelRow', () => {
 
             expect(screen.getByText('-')).toBeInTheDocument();
         });
+
+        it('renders "Failed" badge when training status is failed', () => {
+            const failedModel = getMockedModel({
+                training_info: {
+                    status: 'failed',
+                },
+            });
+
+            render(<ModelRow model={failedModel} />);
+
+            expect(screen.getByText('Failed')).toBeInTheDocument();
+        });
     });
 
     describe('active model tag', () => {
