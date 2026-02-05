@@ -8,6 +8,7 @@ const projects = root.path('/projects');
 const project = projects.path('/:projectId');
 const inference = projects.path('/:projectId/inference');
 const dataset = projects.path('/:projectId/dataset');
+const datasetItem = dataset.path('/:datasetItemId');
 const models = projects.path('/:projectId/models');
 
 export const paths = {
@@ -18,6 +19,7 @@ export const paths = {
         details: project,
         inference,
         dataset,
+        datasetItem,
         models,
     },
 };
