@@ -1,11 +1,13 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, Grid, Item, Picker, Tag, Text } from '@geti/ui';
+import { Flex, Grid, Item, Key, Picker, Tag, Text } from '@geti/ui';
 import { Accept, Search } from '@geti/ui/icons';
 import { clsx } from 'clsx';
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
-import { Media } from '../../../../constants/shared-types';
+import { $api } from '../../../../api/client';
+import { DatasetSubset, Media } from '../../../../constants/shared-types';
 import { Hotkeys } from '../primary-toolbar/hotkeys/hotkeys.component';
 import { Settings } from '../primary-toolbar/settings/settings.component';
 import { ToggleFocus } from '../primary-toolbar/toggle-focus.component';
@@ -20,8 +22,37 @@ type BottomToolbarProps = {
     mediaItem: Media;
 };
 
+const useUpdateSubset = () => {
+    const projectId = useProjectIdentifier();
+
+    const updateSubsetMutation = $api.useMutation(
+        'patch',
+        '/api/projects/{project_id}/dataset/items/{dataset_item_id}/subset'
+    );
+
+    const handleSubsetChange = (key: Key | null, mediaItem: Media) => {
+        const subset = key as Exclude<DatasetSubset, 'unassigned'>;
+
+        updateSubsetMutation.mutate({
+            params: {
+                path: {
+                    project_id: projectId,
+                    dataset_item_id: mediaItem.id,
+                },
+            },
+            body: {
+                subset,
+            },
+        });
+    };
+
+    return { handleSubsetChange };
+};
+
 export const BottomToolbar = ({ isUserReviewed, mediaItem }: BottomToolbarProps) => {
     const fileName = `${mediaItem.name}.${mediaItem.format} (${mediaItem.width} x ${mediaItem.height} px)`;
+
+    const { handleSubsetChange } = useUpdateSubset();
 
     return (
         <Flex justifyContent={'end'}>
@@ -43,11 +74,14 @@ export const BottomToolbar = ({ isUserReviewed, mediaItem }: BottomToolbarProps)
                                 text={isUserReviewed ? 'Accepted' : 'For Review'}
                             />
 
-                            {/* TODO: Update these once backend is ready */}
-                            <Picker placeholder={'Select subset'} aria-label={'Select subset'}>
-                                <Item>Validation</Item>
-                                <Item>Testing</Item>
-                                <Item>Training</Item>
+                            <Picker
+                                placeholder={'Select subset'}
+                                aria-label={'Select subset'}
+                                onSelectionChange={(key) => handleSubsetChange(key, mediaItem)}
+                            >
+                                <Item key={'validation'}>Validation</Item>
+                                <Item key={'testing'}>Testing</Item>
+                                <Item key={'training'}>Training</Item>
                             </Picker>
                         </Flex>
                     </Toolbar.Section>
