@@ -63,21 +63,23 @@ describe('BottomToolbar', () => {
         expect(screen.getByLabelText('Select subset')).toBeInTheDocument();
     });
 
-    it('renders all toolbar sections including Hotkeys, Settings, and Zoom controls', () => {
-        renderBottomToolbar({ isUserReviewed: false, mediaItem: mockMediaItem });
-
-        expect(screen.getByLabelText('Select subset')).toBeInTheDocument();
-        expect(screen.getByText('test-image.jpg (1920 x 1080 px)')).toBeInTheDocument();
-    });
-
     it('calls patch mutation when subset is changed', async () => {
         const patchSpy = vi.fn();
 
         server.use(
-            http.patch('/api/projects/{project_id}/dataset/items/{dataset_item_id}/subset', ({ params }) => {
-                patchSpy(params);
-                return HttpResponse.json({ id: 'media-123', subset: 'validation' }, { status: 200 });
-            })
+            http.get('/api/projects/{project_id}/dataset/items/{dataset_item_id}', () => {
+                return HttpResponse.json({ id: 'media-123', subset: 'unassigned' }, { status: 200 });
+            }),
+            http.patch(
+                '/api/projects/{project_id}/dataset/items/{dataset_item_id}/subset',
+                async ({ request, params }) => {
+                    const body = await request.json();
+
+                    patchSpy(params, body);
+
+                    return HttpResponse.json({ id: 'media-123', subset: 'validation' }, { status: 200 });
+                }
+            )
         );
 
         renderBottomToolbar({ isUserReviewed: false, mediaItem: mockMediaItem });
@@ -93,6 +95,9 @@ describe('BottomToolbar', () => {
                 expect.objectContaining({
                     project_id: expect.any(String),
                     dataset_item_id: 'media-123',
+                }),
+                expect.objectContaining({
+                    subset: 'validation',
                 })
             );
         });

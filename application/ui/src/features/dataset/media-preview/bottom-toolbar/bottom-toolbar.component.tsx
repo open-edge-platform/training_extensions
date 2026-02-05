@@ -22,8 +22,17 @@ type BottomToolbarProps = {
     mediaItem: Media;
 };
 
-const useUpdateSubset = () => {
+const useSubsets = (mediaItemId: string) => {
     const projectId = useProjectIdentifier();
+
+    const { data } = $api.useQuery('get', '/api/projects/{project_id}/dataset/items/{dataset_item_id}', {
+        params: {
+            path: {
+                project_id: projectId,
+                dataset_item_id: mediaItemId,
+            },
+        },
+    });
 
     const updateSubsetMutation = $api.useMutation(
         'patch',
@@ -31,7 +40,7 @@ const useUpdateSubset = () => {
     );
 
     const handleSubsetChange = (key: Key | null, mediaItem: Media) => {
-        const subset = key as Exclude<DatasetSubset, 'unassigned'>;
+        if (key === null || key === 'unassigned') return;
 
         updateSubsetMutation.mutate({
             params: {
@@ -41,18 +50,18 @@ const useUpdateSubset = () => {
                 },
             },
             body: {
-                subset,
+                subset: key as Exclude<DatasetSubset, 'unassigned'>,
             },
         });
     };
 
-    return { handleSubsetChange };
+    return { currentSubset: data?.subset ?? null, handleSubsetChange };
 };
 
 export const BottomToolbar = ({ isUserReviewed, mediaItem }: BottomToolbarProps) => {
     const fileName = `${mediaItem.name}.${mediaItem.format} (${mediaItem.width} x ${mediaItem.height} px)`;
 
-    const { handleSubsetChange } = useUpdateSubset();
+    const { currentSubset, handleSubsetChange } = useSubsets(mediaItem.id);
 
     return (
         <Flex justifyContent={'end'}>
@@ -75,6 +84,7 @@ export const BottomToolbar = ({ isUserReviewed, mediaItem }: BottomToolbarProps)
                             />
 
                             <Picker
+                                selectedKey={currentSubset === 'unassigned' ? null : currentSubset}
                                 placeholder={'Select subset'}
                                 aria-label={'Select subset'}
                                 onSelectionChange={(key) => handleSubsetChange(key, mediaItem)}
