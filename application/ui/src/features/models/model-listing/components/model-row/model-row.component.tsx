@@ -51,7 +51,13 @@ export const ModelRow = ({
             <Flex direction={'column'} gap={'size-50'}>
                 <Flex alignItems={'center'} gap={'size-100'}>
                     <Text UNSAFE_className={styles.modelName} data-testid={'model-name'}>
-                        {model.name ?? 'Unnamed Model'} {isFailedModel(model) && <FailedModel />}
+                        {model.name ?? 'Unnamed Model'}
+                        {isFailedModel(model) && (
+                            <>
+                                {' '}
+                                <FailedModel />
+                            </>
+                        )}
                     </Text>
                     {model.id === activeModelArchitectureId && <ActiveModelTag />}
                 </Flex>
