@@ -143,6 +143,61 @@ test.describe('Annotator', () => {
         });
     });
 
+    test.describe('Handles empty label', () => {
+        test('label assignment', async ({ page, boundingBoxTool }) => {
+            await page.goto(`/projects/${mockedDetectionProject.id}/dataset`);
+            await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
+
+            const annotations = [
+                { x: 100, y: 100, width: 150, height: 150 },
+                { x: 300, y: 200, width: 150, height: 150 },
+                { x: 600, y: 300, width: 150, height: 150 },
+            ];
+
+            await test.step('Draw annotations', async () => {
+                await boundingBoxTool.selectTool();
+
+                for await (const annotation of annotations) {
+                    await boundingBoxTool.drawBoundingBox(annotation);
+                }
+
+                await expect(page.getByLabel(`label ${redLabel.name} background`)).toHaveCount(annotations.length);
+            });
+
+            await test.step('Assigning "No object" removes other annotations', async () => {
+                await page.getByLabel('Label No object').click();
+
+                await expect(page.getByLabel(`label ${redLabel.name} background`)).toHaveCount(0);
+                await expect(page.getByLabel(`label No object background`)).toHaveCount(1);
+            });
+
+            await test.step('Drawing new annotation removes "No object" annotation', async () => {
+                await boundingBoxTool.selectTool();
+
+                await boundingBoxTool.drawBoundingBox({ x: 100, y: 100, width: 150, height: 150 });
+
+                await expect(page.getByLabel(`label ${redLabel.name} background`)).toHaveCount(1);
+                await expect(page.getByLabel(`label No object background`)).toHaveCount(0);
+            });
+        });
+
+        test('renders "No object" when server returns empty annotations list', async ({ page, network }) => {
+            network.use(
+                http.get('/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations', () => {
+                    return HttpResponse.json({
+                        annotations: [],
+                        user_reviewed: true,
+                    });
+                })
+            );
+
+            await page.goto(`/projects/${mockedDetectionProject.id}/dataset`);
+            await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
+
+            await expect(page.getByLabel(`label No object background`)).toHaveCount(1);
+        });
+    });
+
     test('Annotation vs Prediction', async ({ page, annotatorPage, boundingBoxTool, network }) => {
         const predictions = [
             {

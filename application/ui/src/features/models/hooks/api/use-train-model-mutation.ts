@@ -14,6 +14,7 @@ export const useTrainModelMutation = () => {
         {
             device,
             modelArchitectureId,
+            datasetRevisionId,
         }: {
             device: DeviceType;
             modelArchitectureId: string;
@@ -29,8 +30,7 @@ export const useTrainModelMutation = () => {
                     parameters: {
                         device,
                         model_architecture_id: modelArchitectureId,
-                        // TODO: uncomment once supported by backend
-                        // dataset_revision_id: datasetRevisionId,
+                        dataset_revision_id: datasetRevisionId,
                     },
                 },
             },

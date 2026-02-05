@@ -1,23 +1,21 @@
 name: Geti Tune Library checks
 
 on:
-  push:
-    branches:
-      - develop
-      - release/**
-    tags:
-      - "v*"
-  pull_request:
   merge_group:
     branches:
       - develop
       - release/**
-  workflow_dispatch: # run on request (no need for PR)
+  push:
+    tags:
+      - "v*"
+  pull_request:
+  workflow_call:
+  workflow_dispatch:
 
 permissions: {} # No permissions by default
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: lib-lint-and-test-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -28,32 +26,21 @@ jobs:
     name: Check if workflow should run
     runs-on: ubuntu-latest
     outputs:
-      run_workflow: ${{ steps.run_workflow.outputs.run }}
+      run_workflow: ${{ steps.check_paths.outputs.run }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
 
-      - name: Get all paths that should trigger the workflow
-        id: changed-files-yaml
-        uses: tj-actions/changed-files@e0021407031f5be11a464abee9a0776171c79891 # v47.0.1
+      - name: Check paths
+        id: check_paths
+        uses: ./.github/actions/check-paths
         with:
           files_yaml: |
             test:
               - library/**
               - .github/**
-
-      - name: Set run flag
-        id: run_workflow
-        run: |
-          if [ "${{ github.event_name }}" = "push" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "run=true" >> "$GITHUB_OUTPUT"
-          elif [ "${{ steps.changed-files-yaml.outputs.test_any_changed }}" = "true" ]; then
-            echo "run=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "run=false" >> "$GITHUB_OUTPUT"
-          fi
 
   code-quality-checks:
     runs-on: ubuntu-24.04

@@ -8,11 +8,11 @@ import { DatasetSubset } from '../constants/shared-types';
 
 const DATASET_ITEMS_LIMIT = 20;
 
-interface UseGetDatasetItemsOptions {
+interface UseGetDatasetMediaItemsOptions {
     subset?: DatasetSubset;
 }
 
-export const useGetDatasetItems = (options?: UseGetDatasetItemsOptions) => {
+export const useGetDatasetMediaItems = (options?: UseGetDatasetMediaItemsOptions) => {
     const project_id = useProjectIdentifier();
     const subset = options?.subset;
 

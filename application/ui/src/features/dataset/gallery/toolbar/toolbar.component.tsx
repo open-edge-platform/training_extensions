@@ -8,6 +8,7 @@ import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { $api } from '../../../../api/client';
 import { AddMediaButton } from '../../../../components/add-media-button/add-media-button.component';
 import type { Media } from '../../../../constants/shared-types';
+import { getQueryKey } from '../../../../query-client/query-client';
 import { TrainModel } from '../../../models/train-model/train-model.component';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
 import { useSelectedData } from '../../selected-data-provider.component';
@@ -75,7 +76,17 @@ export const Toolbar = ({ items }: ToolbarProps) => {
         const failed = promises.filter((result) => result.status === 'rejected').length;
 
         await queryClient.invalidateQueries({
-            queryKey: ['get', '/api/projects/{project_id}/dataset/media'],
+            queryKey: getQueryKey([
+                'get',
+                '/api/projects/{project_id}/dataset/media',
+                {
+                    params: {
+                        path: {
+                            project_id: projectId,
+                        },
+                    },
+                },
+            ]),
         });
 
         if (failed === 0) {

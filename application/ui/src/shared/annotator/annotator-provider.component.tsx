@@ -3,18 +3,18 @@
 
 import { createContext, ReactNode, useContext, useState, type Dispatch, type SetStateAction } from 'react';
 
-import type { Label, Media } from '../../constants/shared-types';
+import type { Label, Media, TaskType } from '../../constants/shared-types';
 import { useLoadImageQuery } from '../../features/annotator/hooks/use-load-image-query.hook';
 import type { ToolType } from '../../features/annotator/tools/interface';
-import { isClassificationTask } from '../../features/project/task-type-guards';
+import { isClassificationTask, isSegmentationTask } from '../../features/project/task-type-guards';
 import { useProject } from '../../hooks/api/project.hook';
-import { useProjectLabels } from '../../hooks/use-project-labels.hook';
 import type { RegionOfInterest } from '../types';
+import { useProjectLabelsWithEmptyLabel } from './labels';
 
 type AnnotatorContext = {
     // Tools
     activeTool: ToolType | null;
-    setActiveTool: Dispatch<SetStateAction<ToolType>>;
+    setActiveTool: Dispatch<SetStateAction<ToolType | null>>;
 
     // Labels
     selectedLabelId: string | null;
@@ -31,8 +31,8 @@ type AnnotatorContext = {
 export const AnnotatorProviderContext = createContext<AnnotatorContext | null>(null);
 
 const useSelectedLabel = () => {
-    const labels = useProjectLabels();
     const { data: project } = useProject();
+    const labels = useProjectLabelsWithEmptyLabel();
     const hasDefaultLabel = !isClassificationTask(project.task.task_type);
     const defaultLabel = hasDefaultLabel && labels.length > 0 ? labels[0].id : null;
     const [selectedLabelId, setSelectedLabelId] = useState<string | null>(defaultLabel);
@@ -47,8 +47,23 @@ const useSelectedLabel = () => {
     };
 };
 
+const getDefaultTool = (taskType: TaskType | null): ToolType | null => {
+    if (isClassificationTask(taskType)) {
+        return null;
+    }
+
+    if (isSegmentationTask(taskType)) {
+        return 'polygon';
+    }
+
+    return 'bounding-box';
+};
+
 export const AnnotatorProvider = ({ mediaItem, children }: { mediaItem: Media; children: ReactNode }) => {
-    const [activeTool, setActiveTool] = useState<ToolType>('selection');
+    const { data: selectedProject } = useProject();
+    const [activeTool, setActiveTool] = useState<ToolType | null>(() =>
+        getDefaultTool(selectedProject?.task.task_type)
+    );
 
     const { selectedLabel, selectedLabelId, setSelectedLabelId, labels } = useSelectedLabel();
 

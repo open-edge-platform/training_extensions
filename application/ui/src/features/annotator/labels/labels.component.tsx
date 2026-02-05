@@ -1,9 +1,18 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { CSSProperties, useRef, useState } from 'react';
+import { CSSProperties, Fragment, useRef, useState } from 'react';
 
-import { ActionButton, AlertDialog, CustomPopover, DialogContainer, Flex, FocusableRefValue, Text } from '@geti/ui';
+import {
+    ActionButton,
+    AlertDialog,
+    CustomPopover,
+    DialogContainer,
+    Divider,
+    Flex,
+    FocusableRefValue,
+    Text,
+} from '@geti/ui';
 import { Add, Edit } from '@geti/ui/icons';
 import { useOverlayTriggerState } from '@react-stately/overlays';
 import { clsx } from 'clsx';
@@ -13,6 +22,7 @@ import { isEmpty } from 'lodash-es';
 import type { Label } from '../../../constants/shared-types';
 import { useAnnotationActions } from '../../../shared/annotator/annotation-actions-provider.component';
 import { useAnnotator } from '../../../shared/annotator/annotator-provider.component';
+import { EMPTY_LABEL_ID } from '../../../shared/annotator/labels';
 import { useSelectedAnnotations } from '../../../shared/annotator/select-annotation-provider.component';
 import type { Annotation } from '../../../shared/types';
 import { toggleLabel } from '../../dataset/media-preview/secondary-toolbar/util';
@@ -49,10 +59,13 @@ interface LabelsProps {
     isReadOnly?: boolean;
 }
 
+const filterOutEmptyLabels = (labels: Label[]): Label[] => labels.filter((label) => label.id !== EMPTY_LABEL_ID);
+
 export const Labels = ({ isClassification = false, isMultiLabel = false, isReadOnly = false }: LabelsProps) => {
     const { selectedLabelId, setSelectedLabelId, labels } = useAnnotator();
     const { selectedAnnotations } = useSelectedAnnotations();
-    const { annotations, addAnnotations, updateAnnotations, deleteAnnotations } = useAnnotationActions();
+    const { annotations, addAnnotations, updateAnnotations, deleteAnnotations, addAnnotationWithEmptyLabel } =
+        useAnnotationActions();
 
     const projectId = useProjectIdentifier();
     const updateLabelMutation = useUpdateLabel();
@@ -70,8 +83,28 @@ export const Labels = ({ isClassification = false, isMultiLabel = false, isReadO
             return;
         }
 
+        if (label.id === EMPTY_LABEL_ID && annotations.length !== 0) {
+            addAnnotationWithEmptyLabel(label);
+            return;
+        }
+
         if (isMultiLabel) {
-            const updatedAnnotations = annotations.map((annotation) => ({
+            const hasEmptyLabel = annotations.some((annotation) =>
+                annotation.labels.some((l) => l.id === EMPTY_LABEL_ID)
+            );
+
+            let annotationsToUpdate = annotations;
+
+            // If there is an annotation with the empty label, and we are trying to add assign new label to it, we
+            // need to remove the empty label from the annotation first.
+            if (hasEmptyLabel) {
+                annotationsToUpdate = annotations.map((annotation) => ({
+                    ...annotation,
+                    labels: filterOutEmptyLabels(annotation.labels),
+                }));
+            }
+
+            const updatedAnnotations = annotationsToUpdate.map((annotation) => ({
                 ...annotation,
                 labels: toggleLabel(label, annotation.labels),
             }));
@@ -98,6 +131,12 @@ export const Labels = ({ isClassification = false, isMultiLabel = false, isReadO
 
     const handleNonClassificationClick = (label: Label) => {
         if (isReadOnly) return;
+
+        if (label.id === EMPTY_LABEL_ID) {
+            addAnnotationWithEmptyLabel(label);
+            return;
+        }
+
         if (selectedAnnotations.size > 0) {
             const selectedAnnotationsList = annotations.filter((a) => selectedAnnotations.has(a.id));
 
@@ -132,6 +171,10 @@ export const Labels = ({ isClassification = false, isMultiLabel = false, isReadO
     };
 
     const isLabelSelected = (label: Label): boolean => {
+        if (label.id === EMPTY_LABEL_ID) {
+            return false;
+        }
+
         if (isClassification) {
             return annotations.some((annotation) => annotation.labels.some((l) => l.id === label.id));
         }
@@ -191,13 +234,15 @@ export const Labels = ({ isClassification = false, isMultiLabel = false, isReadO
                     aria-disabled={isReadOnly}
                 >
                     {labels.map((label) => (
-                        <LabelBadge
-                            key={label.id}
-                            label={label}
-                            isSelected={isLabelSelected(label)}
-                            isDisabled={isReadOnly}
-                            onClick={() => handleLabelClick(label)}
-                        />
+                        <Fragment key={label.id}>
+                            {label.id === EMPTY_LABEL_ID && <Divider size={'S'} orientation={'vertical'} />}
+                            <LabelBadge
+                                label={label}
+                                isSelected={isLabelSelected(label)}
+                                isDisabled={isReadOnly}
+                                onClick={() => handleLabelClick(label)}
+                            />
+                        </Fragment>
                     ))}
                 </div>
             )}
