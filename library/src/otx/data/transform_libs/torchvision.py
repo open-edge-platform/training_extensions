@@ -238,19 +238,22 @@ class MinIoURandomCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
         return repr_str
 
 
-class Resize(tvt_v2.Resize):
-    """Resize transform based on torchvision.transforms.v2.Resize.
+class Resize(tvt_v2.Transform):
+    """Resize transform based on torchvision.transforms.v2.
 
-    Extends torchvision's Resize with optional control over target resizing.
+    Extends torchvision's Resize with optional control over target resizing
+    and aspect ratio preservation with padding.
 
     Args:
-        size (int or tuple): Target size (height, width).
+        size (int or tuple): Target size (height, width). If int, a square (size, size) is used.
         resize_targets (bool): If True, resize all targets (bboxes, masks, keypoints)
-            along with the image using torchvision's built-in logic.
-            If False, resize only the image and leave targets unchanged.
+            along with the image. If False, resize only the image and leave targets unchanged.
             Defaults to True.
+        keep_aspect_ratio (bool): If True, preserve the aspect ratio of the original image
+            by resizing to fit within the target size and padding to reach exact target dimensions.
+            Defaults to False.
+        pad_value (int or tuple): Padding value for image. Defaults to 0.
         interpolation: Interpolation mode for images. Defaults to InterpolationMode.BILINEAR.
-        max_size: Maximum allowed size. Defaults to None.
         antialias: Whether to apply antialiasing. Defaults to True.
     """
 
@@ -258,45 +261,210 @@ class Resize(tvt_v2.Resize):
         self,
         size: int | tuple[int, int],
         resize_targets: bool = True,
+        keep_aspect_ratio: bool = False,
+        pad_value: int | tuple[int, int, int] = 0,
         interpolation: F.InterpolationMode = F.InterpolationMode.BILINEAR,
-        max_size: int | None = None,
         antialias: bool = True,
     ) -> None:
-        super().__init__(size=size, interpolation=interpolation, max_size=max_size, antialias=antialias)
+        super().__init__()
+        self.size = (size, size) if isinstance(size, int) else tuple(size)
         self.resize_targets = resize_targets
+        self.keep_aspect_ratio = keep_aspect_ratio
+        self.pad_value = pad_value
+        self.interpolation = interpolation
+        self.antialias = antialias
+
+    def _compute_resize_params(
+        self,
+        orig_h: int,
+        orig_w: int,
+    ) -> tuple[int, int, int, int, int, int]:
+        """Compute resize dimensions and padding.
+
+        Returns:
+            new_h, new_w: Size after resize (before padding).
+            pad_left, pad_top, pad_right, pad_bottom: Padding amounts.
+        """
+        target_h, target_w = self.size
+
+        if not self.keep_aspect_ratio:
+            return target_h, target_w, 0, 0, 0, 0
+
+        # Compute scale to fit within target while preserving aspect ratio
+        scale = min(target_w / orig_w, target_h / orig_h)
+        new_w = int(round(orig_w * scale))
+        new_h = int(round(orig_h * scale))
+
+        # Compute padding to reach target size (center the image)
+        pad_w = target_w - new_w
+        pad_h = target_h - new_h
+        pad_left = pad_w // 2
+        pad_right = pad_w - pad_left
+        pad_top = pad_h // 2
+        pad_bottom = pad_h - pad_top
+
+        return new_h, new_w, pad_left, pad_top, pad_right, pad_bottom
 
     def forward(self, *inputs):
-        """Resize image and optionally targets."""
-        if self.resize_targets:
-            # Use parent's forward which resizes everything
-            return super().forward(*inputs)
-
-        # Resize only the image, keep targets unchanged
+        """Resize image and optionally targets, with optional aspect ratio preservation."""
         sample = inputs[0] if len(inputs) == 1 else inputs
 
-        if hasattr(sample, "image"):
-            # OTXSample-like object
-            sample.image = F.resize(
-                sample.image,
-                size=self.size,
+        if not hasattr(sample, "image"):
+            # Fallback: just resize the tensor directly
+            return F.resize(
+                sample,
+                size=list(self.size),
                 interpolation=self.interpolation,
-                max_size=self.max_size,
                 antialias=self.antialias,
             )
-            # Update img_info if available
-            if hasattr(sample, "img_info") and sample.img_info is not None:
-                new_h, new_w = sample.image.shape[-2:]
-                sample.img_info = _resize_image_info(sample.img_info, (new_h, new_w))
-            return sample
 
-        # Fallback: just resize the tensor directly
-        return F.resize(
-            sample,
-            size=self.size,
+        # Get original dimensions
+        orig_h, orig_w = sample.image.shape[-2:]
+
+        # Compute resize and padding parameters
+        new_h, new_w, pad_left, pad_top, pad_right, pad_bottom = self._compute_resize_params(orig_h, orig_w)
+
+        # Resize image
+        sample.image = F.resize(
+            sample.image,
+            size=[new_h, new_w],
             interpolation=self.interpolation,
-            max_size=self.max_size,
             antialias=self.antialias,
         )
+
+        # Apply padding if needed
+        if pad_left > 0 or pad_top > 0 or pad_right > 0 or pad_bottom > 0:
+            sample.image = F.pad(
+                sample.image,
+                padding=[pad_left, pad_top, pad_right, pad_bottom],
+                fill=self.pad_value,
+            )
+
+        # Calculate scale factors for target transforms
+        scale_x = new_w / orig_w
+        scale_y = new_h / orig_h
+
+        # Resize/transform targets if requested
+        if self.resize_targets:
+            # Transform bounding boxes
+            if hasattr(sample, "bboxes") and sample.bboxes is not None and len(sample.bboxes) > 0:
+                bboxes = sample.bboxes
+                # Scale bboxes
+                if isinstance(bboxes, tv_tensors.BoundingBoxes):
+                    bboxes_data = bboxes.clone()
+                else:
+                    bboxes_data = bboxes.clone() if isinstance(bboxes, torch.Tensor) else torch.as_tensor(bboxes)
+
+                # Apply scaling
+                bboxes_data[..., 0::2] = bboxes_data[..., 0::2] * scale_x  # x coordinates
+                bboxes_data[..., 1::2] = bboxes_data[..., 1::2] * scale_y  # y coordinates
+
+                # Apply padding offset
+                if pad_left > 0 or pad_top > 0:
+                    bboxes_data[..., 0::2] = bboxes_data[..., 0::2] + pad_left  # x coordinates
+                    bboxes_data[..., 1::2] = bboxes_data[..., 1::2] + pad_top  # y coordinates
+
+                sample.bboxes = tv_tensors.BoundingBoxes(
+                    bboxes_data,
+                    format=bboxes.format if isinstance(bboxes, tv_tensors.BoundingBoxes) else "XYXY",
+                    canvas_size=self.size,
+                )
+
+            # Transform masks
+            if hasattr(sample, "masks") and sample.masks is not None and len(sample.masks) > 0:
+                masks = sample.masks
+                # Resize masks
+                resized_masks = F.resize(
+                    masks,
+                    size=[new_h, new_w],
+                    interpolation=F.InterpolationMode.NEAREST,
+                    antialias=False,
+                )
+                # Pad masks
+                if pad_left > 0 or pad_top > 0 or pad_right > 0 or pad_bottom > 0:
+                    resized_masks = F.pad(
+                        resized_masks,
+                        padding=[pad_left, pad_top, pad_right, pad_bottom],
+                        fill=0,
+                    )
+                sample.masks = tv_tensors.Mask(resized_masks) if isinstance(masks, tv_tensors.Mask) else resized_masks
+
+            # Transform keypoints/points
+            if hasattr(sample, "keypoints") and sample.keypoints is not None:
+                keypoints = sample.keypoints
+                if isinstance(keypoints, torch.Tensor):
+                    keypoints = keypoints.clone()
+                    # Scale keypoints (assuming format [..., x, y] or [..., x, y, visibility])
+                    keypoints[..., 0] = keypoints[..., 0] * scale_x + pad_left
+                    keypoints[..., 1] = keypoints[..., 1] * scale_y + pad_top
+                    sample.keypoints = keypoints
+
+        # Update img_info if available
+        if hasattr(sample, "img_info") and sample.img_info is not None:
+            final_h, final_w = sample.image.shape[-2:]
+            sample.img_info = _resize_image_info(sample.img_info, (final_h, final_w))
+            if self.keep_aspect_ratio:
+                # Store padding info for potential inverse transforms
+                sample.img_info.pad_offset = (pad_left, pad_top, pad_right, pad_bottom)
+                sample.img_info.scale_factor = (scale_x, scale_y)
+
+        # Debug visualization
+        # self._debug_visualize(sample, "Resize", orig_h, orig_w, new_h, new_w, [pad_left, pad_top, pad_right, pad_bottom])
+
+        return sample
+
+    def _debug_visualize(self, sample, transform_name, orig_h, orig_w, padded_h, padded_w, padding):
+        """Debug visualization - save annotated PNG for inspection."""
+        import os
+
+        from PIL import Image
+        from torchvision.utils import draw_bounding_boxes, draw_segmentation_masks
+
+        os.makedirs("debug_resize", exist_ok=True)
+
+        # Get unique id for this sample
+        sample_id = id(sample)
+
+        # Convert image to CHW uint8 tensor
+        img = sample.image
+        if isinstance(img, np.ndarray):
+            if img.ndim == 3:
+                img = torch.from_numpy(img).permute(2, 0, 1)
+            else:
+                img = torch.from_numpy(img)
+        if img.dtype != torch.uint8:
+            img = img.float()
+            if img.max() <= 1.0:
+                img = (img * 255.0).clamp(0, 255)
+            img = img.to(torch.uint8)
+
+        annotated = img
+
+        # Draw masks if available
+        if hasattr(sample, "masks") and sample.masks is not None and len(sample.masks) > 0:
+            masks = sample.masks
+            if isinstance(masks, np.ndarray):
+                masks = torch.from_numpy(masks)
+            if masks.dtype != torch.bool:
+                masks = masks > 0
+            if masks.ndim == 2:
+                masks = masks.unsqueeze(0)
+            annotated = draw_segmentation_masks(annotated, masks, alpha=0.5)
+
+        # Draw bboxes if available
+        if hasattr(sample, "bboxes") and sample.bboxes is not None and len(sample.bboxes) > 0:
+            bboxes = sample.bboxes
+            if isinstance(bboxes, np.ndarray):
+                bboxes = torch.from_numpy(bboxes)
+            bboxes = bboxes.to(torch.int64)
+            annotated = draw_bounding_boxes(annotated, bboxes, colors="red", width=2)
+
+        # Save annotated image
+        img_path = f"debug_resize/{transform_name}_{sample_id}_orig{orig_h}x{orig_w}_pad{padded_h}x{padded_w}.png"
+        Image.fromarray(annotated.permute(1, 2, 0).cpu().numpy()).save(img_path)
+
+
+        return sample
 
 
 class RandomResizedCrop(tvt_v2.Transform, NumpytoTVTensorMixin):
