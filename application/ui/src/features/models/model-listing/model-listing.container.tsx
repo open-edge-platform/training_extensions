@@ -13,7 +13,7 @@ import { ModelListing } from './model-listing.component';
 import { ModelListingProvider, useModelListing } from './provider/model-listing-provider';
 
 const ModelListingContent = () => {
-    const { groupedModels, searchBy } = useModelListing();
+    const { groupedModels, searchBy, datasetRevisions, groupBy } = useModelListing();
     const trainingJob = useGetCurrentTrainingJob();
 
     const hasNoResults = groupedModels.length === 0 && searchBy.length > 0;
@@ -28,7 +28,7 @@ const ModelListingContent = () => {
                 justifyContent={'center'}
                 UNSAFE_style={{ padding: dimensionValue('size-300') }}
             >
-                <CurrentModelTraining />
+                <CurrentModelTraining groupBy={groupBy} datasetRevisions={datasetRevisions} />
 
                 {isEmpty(trainingJob) && (
                     <Flex direction={'column'} alignItems={'center'} gap={'size-100'} marginTop={'size-600'}>
@@ -47,7 +47,7 @@ const ModelListingContent = () => {
 
             <Divider size={'S'} marginY={'size-300'} />
 
-            <CurrentModelTraining />
+            <CurrentModelTraining groupBy={groupBy} datasetRevisions={datasetRevisions} />
 
             <ModelListing hasNoResults={hasNoResults} groupedModels={groupedModels} />
         </Flex>
