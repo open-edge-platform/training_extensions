@@ -53,7 +53,11 @@ describe('HotkeyField', () => {
             ['meta modifier', { key: 'a', metaKey: true }, 'meta+a'],
             ['shift modifier', { key: 's', shiftKey: true }, 'shift+s'],
             ['ctrl+shift', { key: 's', ctrlKey: true, shiftKey: true }, 'ctrl+shift+s'],
-            ['all modifiers', { key: 'a', ctrlKey: true, metaKey: true, altKey: true, shiftKey: true }, 'ctrl+meta+alt+shift+a'],
+            [
+                'all modifiers',
+                { key: 'a', ctrlKey: true, metaKey: true, altKey: true, shiftKey: true },
+                'ctrl+meta+alt+shift+a',
+            ],
         ])('captures %s', (_, keyEvent, expected) => {
             const input = renderHotkeyField();
 

@@ -74,11 +74,7 @@ export const EditLabelRow = ({ label, existingLabels, isSelected, onSelect, onDe
             UNSAFE_className={classes.labelRow}
             UNSAFE_style={{ '--label-color': color } as CSSProperties}
         >
-            <SilentCheckbox
-                isSelected={isSelected}
-                onChange={onSelect}
-                aria-label={`Select ${label.name} label`}
-            />
+            <SilentCheckbox isSelected={isSelected} onChange={onSelect} aria-label={`Select ${label.name} label`} />
 
             <LabelColorPicker color={color} onChange={handleColorChange} />
 
