@@ -22,9 +22,9 @@ export const datasetRevisionItemToMedia = (item: Partial<DatasetRevisionItem> & 
         name: item.id, // Use ID as name since revision items don't have names
         type: 'image',
         format: item.format ?? ('jpg' as 'jpg' | 'png'),
-        width: item.width ?? 0,
-        height: item.height ?? 0,
-        size: 0, // Revision items don't track file size
+        width: item.width ?? 1,
+        height: item.height ?? 1,
+        size: 1, // Revision items don't track file size
         source_id: null,
     };
 };
