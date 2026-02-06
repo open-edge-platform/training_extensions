@@ -4,12 +4,13 @@
 import { getMockedModel } from 'mocks/mock-model';
 import { renderHook } from 'test-utils/render';
 
+import type { Model } from '../../../../constants/shared-types';
 import { useGroupedModels } from './use-grouped-models.hook';
 
-const mockActiveModelId = vi.hoisted(() => vi.fn<() => string | undefined>(() => undefined));
+const mockActiveModelId = vi.hoisted(() => vi.fn<() => Model | undefined>(() => undefined));
 
-vi.mock('../../hooks/api/use-get-active-model-architecture-id.hook', () => ({
-    useGetActiveModelArchitectureId: mockActiveModelId,
+vi.mock('../../hooks/api/use-get-active-model.hook', () => ({
+    useGetActiveModel: mockActiveModelId,
 }));
 
 describe('useGroupedModels', () => {
@@ -122,7 +123,7 @@ describe('useGroupedModels', () => {
 
     describe('pinning active model', () => {
         it('should not pin active model when pinActive is false', () => {
-            mockActiveModelId.mockReturnValue('model-3');
+            mockActiveModelId.mockReturnValue(getMockedModel({ id: 'model-3' }));
 
             const models = [
                 getMockedModel({ id: 'model-1', name: 'Model A', architecture: 'YOLOX' }),
@@ -146,7 +147,7 @@ describe('useGroupedModels', () => {
         });
 
         it('should pin active model to first position when pinActive is true', () => {
-            mockActiveModelId.mockReturnValue('model-3');
+            mockActiveModelId.mockReturnValue(getMockedModel({ id: 'model-3' }));
 
             const models = [
                 getMockedModel({ id: 'model-1', name: 'Model A', architecture: 'YOLOX' }),
@@ -170,7 +171,7 @@ describe('useGroupedModels', () => {
         });
 
         it('should maintain sorted order for non-active models when pinning active', () => {
-            mockActiveModelId.mockReturnValue('bravo');
+            mockActiveModelId.mockReturnValue(getMockedModel({ id: 'bravo' }));
 
             const models = [
                 getMockedModel({ id: 'charlie', name: 'Charlie Model', architecture: 'YOLOX' }),
@@ -304,7 +305,7 @@ describe('useGroupedModels', () => {
         });
 
         it('should work with pinActive when searching', () => {
-            mockActiveModelId.mockReturnValue('model-3');
+            mockActiveModelId.mockReturnValue(getMockedModel({ id: 'model-3' }));
 
             const models = [
                 getMockedModel({ id: 'model-1', name: 'ResNet-A', architecture: 'ResNet' }),

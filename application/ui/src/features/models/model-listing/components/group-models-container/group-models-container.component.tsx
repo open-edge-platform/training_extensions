@@ -9,7 +9,7 @@ import { useModelListing } from '../../provider/model-listing-provider';
 import { ArchitectureGroup, DatasetGroup } from '../../types';
 import { isFailedModel } from '../../utils/utils';
 import { GroupHeader } from '../group-headers/group-header.component';
-import { ModelRowContainer } from '../model-row/model-row.container';
+import { ModelRowContainer } from '../model-row/model-row-container.component';
 import { ModelsTableHeader } from '../models-table-header.component';
 
 import classes from './group-models-container.module.scss';
