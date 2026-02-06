@@ -60,3 +60,11 @@
     max-width: var(--spectrum-global-dimension-size-1600);
     font-size: var(--spectrum-global-dimension-font-size-75);
 }
+
+.overflowCount {
+    white-space: nowrap;
+    font-size: var(--spectrum-global-dimension-font-size-75);
+    color: var(--spectrum-global-color-gray-600);
+    flex-shrink: 0;
+    align-self: center;
+}

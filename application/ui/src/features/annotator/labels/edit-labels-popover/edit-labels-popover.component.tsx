@@ -17,8 +17,10 @@ interface EditLabelsPopoverProps {
     labels: Label[];
     onLabelSelect: (label: Label) => void;
     isLabelSelected: (label: Label) => boolean;
+    isLabelPinned: (labelId: string) => boolean;
     onRequestDeleteLabel: (label: Label) => void;
     onSaveNewLabel: (name: string, color: string) => void;
+    onTogglePinLabel: (label: Label) => void;
     autoCreateNewLabel?: boolean;
 }
 
@@ -26,8 +28,10 @@ export const EditLabelsPopover = ({
     labels,
     onLabelSelect,
     isLabelSelected,
+    isLabelPinned,
     onRequestDeleteLabel,
     onSaveNewLabel,
+    onTogglePinLabel,
     autoCreateNewLabel = false,
 }: EditLabelsPopoverProps) => {
     const [isCreatingLabel, setIsCreatingLabel] = useState(autoCreateNewLabel);
@@ -56,8 +60,10 @@ export const EditLabelsPopover = ({
                         label={label}
                         existingLabels={editableLabels}
                         isSelected={isLabelSelected(label)}
+                        isPinned={isLabelPinned(label.id)}
                         onSelect={() => onLabelSelect(label)}
                         onDelete={onRequestDeleteLabel}
+                        onTogglePin={onTogglePinLabel}
                     />
                 ))}
                 {isCreatingLabel ? (

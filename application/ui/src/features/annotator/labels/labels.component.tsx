@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { CSSProperties, Fragment, useRef, useState } from 'react';
+import { CSSProperties, Fragment, useMemo, useRef, useState } from 'react';
 
 import {
     ActionButton,
@@ -28,8 +28,11 @@ import type { Annotation } from '../../../shared/types';
 import { toggleLabel } from '../../dataset/media-preview/secondary-toolbar/util';
 import { useUpdateLabel } from './api/use-update-label.hook';
 import { EditLabelsPopover } from './edit-labels-popover/edit-labels-popover.component';
+import { usePinnedLabels } from './hooks/use-pinned-labels.hook';
 
 import classes from './labels.module.scss';
+
+const MAX_VISIBLE_LABELS = 5;
 
 interface LabelBadgeProps {
     label: Label;
@@ -69,11 +72,34 @@ export const Labels = ({ isClassification = false, isMultiLabel = false, isReadO
 
     const projectId = useProjectIdentifier();
     const updateLabelMutation = useUpdateLabel();
+    const { isPinned, togglePin, hasPinnedLabels } = usePinnedLabels(projectId);
 
     const triggerRef = useRef<FocusableRefValue<HTMLElement, HTMLButtonElement>>(null);
     const popoverState = useOverlayTriggerState({});
     const deleteDialogState = useOverlayTriggerState({});
     const [labelToDelete, setLabelToDelete] = useState<Label | null>(null);
+
+    const nonEmptyLabels = useMemo(() => labels.filter((label) => label.id !== EMPTY_LABEL_ID), [labels]);
+
+    const visibleLabels = useMemo(() => {
+        if (hasPinnedLabels) {
+            return labels.filter((label) => isPinned(label.id) || label.id === EMPTY_LABEL_ID);
+        }
+
+        const emptyLabel = labels.find((label) => label.id === EMPTY_LABEL_ID);
+        const limited = nonEmptyLabels.slice(0, MAX_VISIBLE_LABELS);
+
+        return emptyLabel ? [...limited, emptyLabel] : limited;
+    }, [labels, nonEmptyLabels, hasPinnedLabels, isPinned]);
+
+    const hiddenLabelsCount = useMemo(() => {
+        const visibleNonEmptyCount = visibleLabels.filter((label) => label.id !== EMPTY_LABEL_ID).length;
+        return nonEmptyLabels.length - visibleNonEmptyCount;
+    }, [nonEmptyLabels, visibleLabels]);
+
+    const handleTogglePinLabel = (label: Label) => {
+        togglePin(label.id);
+    };
 
     const handleClassificationClick = (label: Label) => {
         if (isReadOnly) return;
@@ -233,7 +259,7 @@ export const Labels = ({ isClassification = false, isMultiLabel = false, isReadO
                     className={clsx(classes.labelsContainer, { [classes.readOnlyLabels]: isReadOnly })}
                     aria-disabled={isReadOnly}
                 >
-                    {labels.map((label) => (
+                    {visibleLabels.map((label) => (
                         <Fragment key={label.id}>
                             {label.id === EMPTY_LABEL_ID && <Divider size={'S'} orientation={'vertical'} />}
                             <LabelBadge
@@ -244,6 +270,9 @@ export const Labels = ({ isClassification = false, isMultiLabel = false, isReadO
                             />
                         </Fragment>
                     ))}
+                    {hiddenLabelsCount > 0 && (
+                        <Text UNSAFE_className={classes.overflowCount}>+ {hiddenLabelsCount} more</Text>
+                    )}
                 </div>
             )}
             {hasLabels ? (
@@ -262,8 +291,10 @@ export const Labels = ({ isClassification = false, isMultiLabel = false, isReadO
                         labels={labels}
                         onLabelSelect={handleLabelClick}
                         isLabelSelected={isLabelSelected}
+                        isLabelPinned={isPinned}
                         onRequestDeleteLabel={handleRequestDeleteLabel}
                         onSaveNewLabel={handleSaveNewLabel}
+                        onTogglePinLabel={handleTogglePinLabel}
                         autoCreateNewLabel={!hasLabels}
                     />
                 </CustomPopover>

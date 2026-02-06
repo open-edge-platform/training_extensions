@@ -10,9 +10,22 @@
     &:hover .deleteButton {
         opacity: 1;
     }
+
+    &:hover .pinButton {
+        opacity: 1;
+    }
 }
 
 .deleteButton {
     opacity: 0;
     transition: opacity 0.15s ease;
+}
+
+.pinButton {
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.pinButtonPinned {
+    opacity: 1;
 }

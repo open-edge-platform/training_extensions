@@ -3,8 +3,8 @@
 
 import { CSSProperties, useState } from 'react';
 
-import { ActionButton, Flex, TextField, View } from '@geti/ui';
-import { Delete } from '@geti/ui/icons';
+import { ActionButton, Flex, TextField, Tooltip, TooltipTrigger, View } from '@geti/ui';
+import { Delete, Pin, Unpin } from '@geti/ui/icons';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { LabelColorPicker } from '../../../../components/label-fields/label-color-picker.component';
@@ -19,11 +19,21 @@ interface EditLabelRowProps {
     label: Label;
     existingLabels: Label[];
     isSelected: boolean;
+    isPinned: boolean;
     onSelect: () => void;
     onDelete: (label: Label) => void;
+    onTogglePin: (label: Label) => void;
 }
 
-export const EditLabelRow = ({ label, existingLabels, isSelected, onSelect, onDelete }: EditLabelRowProps) => {
+export const EditLabelRow = ({
+    label,
+    existingLabels,
+    isSelected,
+    isPinned,
+    onSelect,
+    onDelete,
+    onTogglePin,
+}: EditLabelRowProps) => {
     const projectId = useProjectIdentifier();
     const updateLabelMutation = useUpdateLabel();
 
@@ -90,6 +100,18 @@ export const EditLabelRow = ({ label, existingLabels, isSelected, onSelect, onDe
                     validationState={validationError ? 'invalid' : undefined}
                 />
             </View>
+
+            <TooltipTrigger>
+                <ActionButton
+                    aria-label={isPinned ? `Unpin ${label.name} label` : `Pin ${label.name} label`}
+                    isQuiet
+                    UNSAFE_className={isPinned ? classes.pinButtonPinned : classes.pinButton}
+                    onPress={() => onTogglePin(label)}
+                >
+                    {isPinned ? <Pin /> : <Unpin />}
+                </ActionButton>
+                <Tooltip>{isPinned ? 'Unpin label' : 'Pin label'}</Tooltip>
+            </TooltipTrigger>
 
             <ActionButton
                 aria-label={`Delete ${label.name} label`}
