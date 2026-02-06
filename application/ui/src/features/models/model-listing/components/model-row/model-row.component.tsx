@@ -3,7 +3,11 @@
 
 import { Badge, Flex, Grid, Text } from '@geti/ui';
 
-import type { DatasetRevision, Model } from '../../../../../constants/shared-types';
+import type {
+    DatasetRevision,
+    Model,
+    ModelArchitectureWithPerformanceCategory,
+} from '../../../../../constants/shared-types';
 import { GRID_COLUMNS } from '../../constants';
 import { AccuracyIndicator } from '../../model-variants/accuracy-indicator.component';
 import { type GroupByMode } from '../../types';
@@ -24,6 +28,7 @@ type ModelRowProps = {
     onExpandModel?: (modelId: string) => void;
     groupBy: GroupByMode;
     datasetRevision: DatasetRevision | undefined;
+    modelArchitecture: ModelArchitectureWithPerformanceCategory | undefined;
 };
 
 const FailedModel = () => {
@@ -37,6 +42,7 @@ export const ModelRow = ({
     onExpandModel,
     groupBy,
     datasetRevision,
+    modelArchitecture,
 }: ModelRowProps) => {
     const trainingEndTime = model.training_info.end_time;
     const totalSize = model.size;
@@ -79,7 +85,7 @@ export const ModelRow = ({
             {groupBy === 'architecture' ? (
                 <DatasetColumn datasetRevision={datasetRevision} labelsCount={labelsCount} />
             ) : (
-                <ArchitectureColumn architecture={model.architecture} />
+                <ArchitectureColumn architecture={modelArchitecture} />
             )}
 
             <Text UNSAFE_className={styles.smallText}>{totalSize > 0 ? formatModelSize(totalSize) : '-'}</Text>

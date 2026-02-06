@@ -23,7 +23,7 @@ type UseGroupedModelsOptions = {
 // - Pinning the active model to the top of its group if the pinActive option is enabled
 export const useGroupedModels = (models: Model[] | undefined, options: UseGroupedModelsOptions): GroupedModels[] => {
     const { groupBy, sortBy, pinActive, searchBy, datasetRevisions } = options;
-    const model = useGetActiveModel();
+    const activeModel = useGetActiveModel();
 
     return useMemo(() => {
         if (!models) return [];
@@ -31,8 +31,8 @@ export const useGroupedModels = (models: Model[] | undefined, options: UseGroupe
         const filtered = filterBySearch(models, searchBy);
         const grouped = groupModels(filtered, groupBy, datasetRevisions);
         const sorted = sortGroupedModels(grouped, sortBy);
-        const pinned = pinModel(sorted, pinActive ? model?.id : undefined);
+        const pinned = pinModel(sorted, pinActive ? activeModel?.id : undefined);
 
         return removeEmpty(pinned);
-    }, [models, groupBy, sortBy, pinActive, model?.id, searchBy, datasetRevisions]);
+    }, [models, groupBy, sortBy, pinActive, activeModel?.id, searchBy, datasetRevisions]);
 };
