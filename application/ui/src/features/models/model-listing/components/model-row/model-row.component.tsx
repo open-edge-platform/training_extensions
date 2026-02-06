@@ -18,6 +18,7 @@ import { ActiveModelTag } from '../active-model-tag.component';
 import { ParentRevisionModel } from '../parent-revision-model.component';
 import { ArchitectureColumn } from './architecture-column.component';
 import { DatasetColumn } from './dataset-revision-column.component';
+import { getTestingMetric } from './utils';
 
 import styles from './model-row.module.scss';
 
@@ -51,6 +52,8 @@ export const ModelRow = ({
         'labels' in labelSchemaRevision && Array.isArray(labelSchemaRevision.labels)
             ? labelSchemaRevision.labels.length
             : undefined;
+
+    const metricValue = getTestingMetric(model)?.value;
 
     return (
         <Grid columns={GRID_COLUMNS} alignItems={'center'} width={'100%'} columnGap={'size-200'}>
@@ -90,7 +93,7 @@ export const ModelRow = ({
 
             <Text UNSAFE_className={styles.smallText}>{totalSize > 0 ? formatModelSize(totalSize) : '-'}</Text>
 
-            <AccuracyIndicator accuracy={72} />
+            {metricValue === undefined ? <Text>-</Text> : <AccuracyIndicator accuracy={metricValue} />}
         </Grid>
     );
 };
