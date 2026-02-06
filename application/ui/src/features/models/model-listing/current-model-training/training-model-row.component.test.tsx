@@ -3,7 +3,7 @@
 
 import { screen, within } from '@testing-library/react';
 import { getMockedDatasetRevision } from 'mocks/mock-dataset-revision';
-import { getMockedModel } from 'mocks/mock-model';
+import { getMockedModel, getMockedModelArchitecture } from 'mocks/mock-model';
 import { HttpResponse } from 'msw';
 import { render } from 'test-utils/render';
 
@@ -13,8 +13,9 @@ import { server } from '../../../../msw-node-setup';
 import { TrainingModelRow } from './training-model-row.component';
 
 describe('TrainingModelRow', () => {
-    const mockModels = getMockedModel({
+    const mockModel = getMockedModel({
         id: 'model-123',
+        architecture: 'arch-123',
         name: 'My Detection Model',
         training_info: {
             dataset_revision_id: 'dataset-123',
@@ -28,10 +29,16 @@ describe('TrainingModelRow', () => {
         },
     });
 
+    const modelArchitecture = getMockedModelArchitecture({
+        performanceCategory: 'Speed',
+        id: mockModel.architecture,
+        name: 'Custom_Object_Detection_Gen3_ATSS',
+    });
+
     beforeEach(() => {
         server.use(
             http.get('/api/projects/{project_id}/models/{model_id}', () => {
-                return HttpResponse.json(mockModels);
+                return HttpResponse.json(mockModel);
             })
         );
     });
@@ -41,8 +48,8 @@ describe('TrainingModelRow', () => {
             metadata: {
                 project: { id: '123' },
                 model: {
-                    id: 'model-123',
-                    architecture: 'Custom_Object_Detection_Gen3_ATSS',
+                    id: mockModel.id,
+                    architecture: modelArchitecture.id,
                     parent_revision_id: null,
                     dataset_revision_id: 'dataset-123',
                 },
@@ -63,14 +70,21 @@ describe('TrainingModelRow', () => {
             },
         });
 
-        render(<TrainingModelRow job={job} groupBy={'dataset'} datasetRevisions={[datasetRevision]} />);
+        render(
+            <TrainingModelRow
+                job={job}
+                groupBy={'dataset'}
+                datasetRevisions={[datasetRevision]}
+                modelArchitectures={[modelArchitecture]}
+            />
+        );
 
         expect(await screen.findByText('My Detection Model')).toBeVisible();
         expect(screen.getByText('Training')).toBeVisible();
         expect(screen.getByText('Running...')).toBeVisible();
         expect(screen.getByText(/Started: 19 Jan 2026/i)).toBeVisible();
 
-        expect(screen.getByText(/Custom_Object_Detection_Gen3_ATSS/)).toBeVisible();
+        expect(screen.getByText(new RegExp(modelArchitecture.name))).toBeVisible();
         expect(screen.queryByText(datasetRevision.name)).not.toBeInTheDocument();
         expect(screen.queryByTestId('dataset-count')).not.toBeInTheDocument();
         expect(screen.queryByTestId('labels-count')).not.toBeInTheDocument();
@@ -103,21 +117,28 @@ describe('TrainingModelRow', () => {
             },
         });
 
-        render(<TrainingModelRow job={job} groupBy={'architecture'} datasetRevisions={[datasetRevision]} />);
+        render(
+            <TrainingModelRow
+                job={job}
+                groupBy={'architecture'}
+                datasetRevisions={[datasetRevision]}
+                modelArchitectures={[modelArchitecture]}
+            />
+        );
 
         expect(await screen.findByText('My Detection Model')).toBeVisible();
         expect(screen.getByText('Training')).toBeVisible();
         expect(screen.getByText('Running...')).toBeVisible();
         expect(screen.getByText(/Started: 19 Jan 2026/i)).toBeVisible();
 
-        expect(screen.queryByText(/Custom_Object_Detection_Gen3_ATSS/)).not.toBeInTheDocument();
+        expect(screen.queryByText(new RegExp(modelArchitecture.name))).not.toBeInTheDocument();
 
         expect(screen.getByText(datasetRevision.name)).toBeInTheDocument();
         const datasetBadge = screen.getByTestId('dataset-count');
         expect(within(datasetBadge).getByText(datasetRevision.item_counts?.total?.toString() ?? ''));
 
         const labelsBadge = screen.getByTestId('labels-count');
-        const labelSchemaRevision = mockModels.training_info.label_schema_revision ?? {};
+        const labelSchemaRevision = mockModel.training_info.label_schema_revision ?? {};
         const labelsCount =
             'labels' in labelSchemaRevision && Array.isArray(labelSchemaRevision.labels)
                 ? labelSchemaRevision.labels.length
@@ -140,7 +161,15 @@ describe('TrainingModelRow', () => {
             status: 'RUNNING',
         });
 
-        render(<TrainingModelRow job={job} onCancel={mockCancel} datasetRevisions={[]} groupBy={'dataset'} />);
+        render(
+            <TrainingModelRow
+                job={job}
+                onCancel={mockCancel}
+                datasetRevisions={[]}
+                groupBy={'dataset'}
+                modelArchitectures={[modelArchitecture]}
+            />
+        );
 
         const cancelButton = await screen.findByRole('button', { name: /cancel training job/i });
         expect(cancelButton).toBeVisible();
@@ -162,33 +191,17 @@ describe('TrainingModelRow', () => {
             status: 'FINISHED',
         });
 
-        render(<TrainingModelRow job={job} onCancel={mockCancel} datasetRevisions={[]} groupBy={'dataset'} />);
+        render(
+            <TrainingModelRow
+                job={job}
+                onCancel={mockCancel}
+                datasetRevisions={[]}
+                groupBy={'dataset'}
+                modelArchitectures={[modelArchitecture]}
+            />
+        );
 
         const cancelButton = await screen.findByRole('button', { name: /cancel training job/i });
         expect(cancelButton).toBeDisabled();
-    });
-
-    it('falls back to model ID when model name is not found', async () => {
-        server.use(
-            http.get('/api/projects/{project_id}/models', () => {
-                return HttpResponse.json([]);
-            })
-        );
-
-        const job = getMockedJob({
-            metadata: {
-                project: { id: '123' },
-                model: {
-                    id: 'unknown-model-id',
-                    architecture: 'Custom_Object_Detection_Gen3_ATSS',
-                    parent_revision_id: null,
-                    dataset_revision_id: 'dataset-123',
-                },
-            },
-        });
-
-        render(<TrainingModelRow job={job} datasetRevisions={[]} groupBy={'dataset'} />);
-
-        expect(await screen.findByText('unknown-model-id')).toBeVisible();
     });
 });

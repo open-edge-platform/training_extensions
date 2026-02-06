@@ -6,7 +6,7 @@ import userEvent from '@testing-library/user-event';
 import { getMockedDatasetRevision } from 'mocks/mock-dataset-revision';
 import { render } from 'test-utils/render';
 
-import { getMockedModel } from '../../../../../../mocks/mock-model';
+import { getMockedModel, getMockedModelArchitecture } from '../../../../../../mocks/mock-model';
 import { ModelRow } from './model-row.component';
 
 describe('ModelRow', () => {
@@ -37,9 +37,18 @@ describe('ModelRow', () => {
         },
     });
 
+    const modelArchitecture = getMockedModelArchitecture({ performanceCategory: 'Speed' });
+
     describe('basic rendering', () => {
         it('should render all model information correctly when grouped by architecture', () => {
-            render(<ModelRow model={defaultModel} datasetRevision={datasetRevision} groupBy={'architecture'} />);
+            render(
+                <ModelRow
+                    model={defaultModel}
+                    datasetRevision={datasetRevision}
+                    groupBy={'architecture'}
+                    modelArchitecture={modelArchitecture}
+                />
+            );
 
             expect(screen.getByTestId('model-name')).toHaveTextContent('Test Model');
 
@@ -54,17 +63,24 @@ describe('ModelRow', () => {
             expect(screen.getByText(datasetRevision.name)).toBeInTheDocument();
             expect(within(datasetBadge).getByText(datasetRevision.item_counts?.total?.toString() ?? ''));
             expect(within(labelsBadge).getByText(labelsCount));
-            expect(screen.queryByText(/YOLOX/)).not.toBeInTheDocument();
-            expect(screen.queryByText('Speed')).not.toBeInTheDocument();
+            expect(screen.queryByText(new RegExp(modelArchitecture.name))).not.toBeInTheDocument();
+            expect(screen.queryByText(modelArchitecture.performanceCategory ?? '')).not.toBeInTheDocument();
         });
 
         it('should render all model information correctly when grouped by dataset', () => {
-            render(<ModelRow model={defaultModel} datasetRevision={datasetRevision} groupBy={'dataset'} />);
+            render(
+                <ModelRow
+                    model={defaultModel}
+                    datasetRevision={datasetRevision}
+                    groupBy={'dataset'}
+                    modelArchitecture={modelArchitecture}
+                />
+            );
 
             expect(screen.getByTestId('model-name')).toHaveTextContent('Test Model');
 
-            expect(screen.getByText(/YOLOX/)).toBeInTheDocument();
-            expect(screen.getByText('Speed')).toBeInTheDocument();
+            expect(screen.getByText(new RegExp(modelArchitecture.name))).toBeInTheDocument();
+            expect(screen.getByText(modelArchitecture.performanceCategory ?? '')).toBeInTheDocument();
             expect(screen.queryByText(datasetRevision.name)).not.toBeInTheDocument();
             expect(screen.queryByTestId('dataset-count')).not.toBeInTheDocument();
             expect(screen.queryByTestId('labels-count')).not.toBeInTheDocument();
@@ -73,7 +89,14 @@ describe('ModelRow', () => {
         it('should render "Unnamed Model" when model name is null or undefined', () => {
             const modelWithoutName = getMockedModel({ name: undefined });
 
-            render(<ModelRow model={modelWithoutName} datasetRevision={datasetRevision} groupBy={'dataset'} />);
+            render(
+                <ModelRow
+                    model={modelWithoutName}
+                    datasetRevision={datasetRevision}
+                    groupBy={'dataset'}
+                    modelArchitecture={modelArchitecture}
+                />
+            );
 
             expect(screen.getByTestId('model-name')).toHaveTextContent('Unnamed Model');
         });
@@ -81,7 +104,14 @@ describe('ModelRow', () => {
         it('should render "-" when model size is 0 or negative', () => {
             const modelWithZeroSize = getMockedModel({ size: 0 });
 
-            render(<ModelRow model={modelWithZeroSize} datasetRevision={datasetRevision} groupBy={'dataset'} />);
+            render(
+                <ModelRow
+                    model={modelWithZeroSize}
+                    datasetRevision={datasetRevision}
+                    groupBy={'dataset'}
+                    modelArchitecture={modelArchitecture}
+                />
+            );
 
             expect(screen.getByText('-')).toBeInTheDocument();
         });
@@ -93,20 +123,28 @@ describe('ModelRow', () => {
                 },
             });
 
-            render(<ModelRow model={failedModel} datasetRevision={datasetRevision} groupBy={'dataset'} />);
+            render(
+                <ModelRow
+                    model={failedModel}
+                    datasetRevision={datasetRevision}
+                    groupBy={'dataset'}
+                    modelArchitecture={modelArchitecture}
+                />
+            );
 
             expect(screen.getByText('Failed')).toBeInTheDocument();
         });
     });
 
     describe('active model tag', () => {
-        it('should show active tag only when model id matches activeModelArchitectureId', () => {
+        it('should show active tag only when model id matches activeModelId', () => {
             const { rerender } = render(
                 <ModelRow
                     model={defaultModel}
                     activeModelId='model-123'
                     datasetRevision={datasetRevision}
                     groupBy={'dataset'}
+                    modelArchitecture={modelArchitecture}
                 />
             );
             expect(screen.getByText('Active')).toBeInTheDocument();
@@ -117,11 +155,19 @@ describe('ModelRow', () => {
                     activeModelId={'different-id'}
                     datasetRevision={datasetRevision}
                     groupBy={'dataset'}
+                    modelArchitecture={modelArchitecture}
                 />
             );
             expect(screen.queryByText('Active')).not.toBeInTheDocument();
 
-            rerender(<ModelRow model={defaultModel} datasetRevision={datasetRevision} groupBy={'dataset'} />);
+            rerender(
+                <ModelRow
+                    model={defaultModel}
+                    datasetRevision={datasetRevision}
+                    groupBy={'dataset'}
+                    modelArchitecture={modelArchitecture}
+                />
+            );
             expect(screen.queryByText('Active')).not.toBeInTheDocument();
         });
     });
@@ -141,6 +187,7 @@ describe('ModelRow', () => {
                     onExpandModel={onExpandModel}
                     datasetRevision={datasetRevision}
                     groupBy={'dataset'}
+                    modelArchitecture={modelArchitecture}
                 />
             );
 
@@ -153,7 +200,14 @@ describe('ModelRow', () => {
         });
 
         it('should not render parent revision model when not provided', () => {
-            render(<ModelRow model={defaultModel} datasetRevision={datasetRevision} groupBy={'dataset'} />);
+            render(
+                <ModelRow
+                    model={defaultModel}
+                    datasetRevision={datasetRevision}
+                    groupBy={'dataset'}
+                    modelArchitecture={modelArchitecture}
+                />
+            );
 
             expect(screen.queryByText('Fine-tuned from')).not.toBeInTheDocument();
         });

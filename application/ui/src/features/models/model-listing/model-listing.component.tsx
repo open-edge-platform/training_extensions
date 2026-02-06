@@ -25,12 +25,8 @@ export const ModelListing = ({ groupedModels, hasNoResults }: ModelListingProps)
                     flex={1}
                     UNSAFE_style={{ backgroundColor: 'var(--spectrum-global-color-gray-50)' }}
                 >
-                    {groupedModels.map(({ group, models }, index) => (
-                        <GroupModelsContainer
-                            key={'id' in group ? group.id : `${group.name}-${index}`}
-                            group={group}
-                            models={models}
-                        />
+                    {groupedModels.map(({ group, models }) => (
+                        <GroupModelsContainer key={group.id} group={group} models={models} />
                     ))}
                 </Flex>
             )}

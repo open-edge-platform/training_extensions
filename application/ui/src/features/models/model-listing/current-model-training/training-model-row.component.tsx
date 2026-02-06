@@ -7,7 +7,7 @@ import { AlertDialog, Button, DialogContainer, Divider, Flex, Grid, Loading, Tag
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 
-import type { DatasetRevision, Job } from '../../../../constants/shared-types';
+import { DatasetRevision, Job, ModelArchitectureWithPerformanceCategory } from '../../../../constants/shared-types';
 import { useGetModel } from '../../hooks/api/use-get-model.hook';
 import { ArchitectureColumn } from '../components/model-row/architecture-column.component';
 import { DatasetColumn } from '../components/model-row/dataset-revision-column.component';
@@ -24,6 +24,7 @@ type TrainingModelRowProps = {
     onCancel?: () => void;
     groupBy: GroupByMode;
     datasetRevisions: DatasetRevision[];
+    modelArchitectures: ModelArchitectureWithPerformanceCategory[];
 };
 
 const TrainingTag = () => (
@@ -69,11 +70,19 @@ const CancelTraining = ({ job, onCancel }: CancelTrainingProps) => {
     );
 };
 
-export const TrainingModelRow = ({ job, onCancel, datasetRevisions, groupBy }: TrainingModelRowProps) => {
+export const TrainingModelRow = ({
+    job,
+    onCancel,
+    datasetRevisions,
+    groupBy,
+    modelArchitectures,
+}: TrainingModelRowProps) => {
     const modelId = 'model' in job.metadata ? job.metadata.model?.id : undefined;
     const { data: trainingModel } = useGetModel(modelId);
-    const modelArchitecture = 'model' in job.metadata && job.metadata.model?.architecture;
-    const modelName = trainingModel?.name || modelId;
+    const modelArchitectureId = 'model' in job.metadata && job.metadata.model?.architecture;
+    const modelName = trainingModel?.name;
+
+    const modelArchitecture = modelArchitectures.find(({ id }) => id === modelArchitectureId);
 
     const datasetRevision = datasetRevisions.find(({ id }) => id === trainingModel?.training_info.dataset_revision_id);
     const labelSchemaRevision = trainingModel?.training_info.label_schema_revision ?? {};
@@ -114,7 +123,7 @@ export const TrainingModelRow = ({ job, onCancel, datasetRevisions, groupBy }: T
                     {groupBy === 'architecture' ? (
                         <DatasetColumn datasetRevision={datasetRevision} labelsCount={labelsCount} />
                     ) : (
-                        <ArchitectureColumn architecture={String(modelArchitecture)} />
+                        <ArchitectureColumn architecture={modelArchitecture} />
                     )}
                 </Flex>
 

@@ -73,8 +73,7 @@ export const groupModelsByArchitecture = (models: Model[]): GroupedModels[] => {
         if (!groups[arch]) {
             groups[arch] = {
                 group: {
-                    name: arch,
-                    recommendedFor: 'balance',
+                    id: arch,
                 },
                 models: [],
             };
