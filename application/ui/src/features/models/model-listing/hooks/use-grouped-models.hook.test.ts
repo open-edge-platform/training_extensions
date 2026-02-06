@@ -113,8 +113,8 @@ describe('useGroupedModels', () => {
 
             expect(result.current).toHaveLength(2);
 
-            const yoloxGroup = result.current.find(({ group }) => group.name === 'YOLOX');
-            const mobileNetGroup = result.current.find(({ group }) => group.name === 'MobileNet');
+            const yoloxGroup = result.current.find(({ group }) => group.id === 'YOLOX');
+            const mobileNetGroup = result.current.find(({ group }) => group.id === 'MobileNet');
 
             expect(yoloxGroup?.models).toHaveLength(2);
             expect(mobileNetGroup?.models).toHaveLength(1);
@@ -277,7 +277,7 @@ describe('useGroupedModels', () => {
 
             // Only YOLOX group should remain, ResNet group should be filtered out
             expect(result.current).toHaveLength(1);
-            expect(result.current[0].group.name).toBe('YOLOX');
+            expect(result.current[0].group.id).toBe('YOLOX');
         });
 
         it('should apply search filter before grouping and sorting', () => {

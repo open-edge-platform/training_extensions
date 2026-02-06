@@ -23,7 +23,6 @@ export const ArchitectureColumn = ({ architecture }: ArchitectureColumnProps) =>
     return (
         <Flex direction={'column'} gap={'size-100'}>
             <Text UNSAFE_className={classes.smallText}>{architecture.name} (Apache 2.0)</Text>
-            {/* TODO: Speed is hardcoded for now, once the backend is update we need to update this */}
             <ModelBadge id={'architecture-name'}>
                 <ThumbsUp />
                 <Text>{capitalize(architecture.performanceCategory)}</Text>
