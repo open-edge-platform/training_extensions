@@ -1,13 +1,20 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Flex, Loading, Size, Text, View } from '@geti/ui';
+import { Suspense, useState } from 'react';
+
+import { Content, Dialog, DialogContainer, Flex, Grid, Loading, Size, Text, View } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { MediaItem } from '../../../../components/media-item/media-item.component';
 import { MediaThumbnail } from '../../../../components/media-thumbnail/media-thumbnail.component';
 import { VirtualizerGridLayout } from '../../../../components/virtualizer-grid-layout/virtualizer-grid-layout.component';
-import type { DatasetItem } from '../../../../constants/shared-types';
+import type { DatasetRevisionItem } from '../../../../constants/shared-types';
+import { AnnotatorProviders } from '../../../../features/dataset/media-preview/annotator-providers.component';
+import { useAnnotationsQuery } from '../../../../features/dataset/media-preview/api/use-annotations-query';
+import { ReadOnlyAnnotator } from '../../../../features/dataset/media-preview/read-only-annotator.component';
+import { getInitialPredictions } from '../../../../features/dataset/media-preview/utils';
+import { datasetRevisionItemToMedia } from '../../../../shared/dataset-revision-utils';
 import { getDatasetRevisionThumbnailUrl } from '../../../../shared/media-url.utils';
 
 const layoutOptions = {
@@ -18,12 +25,51 @@ const layoutOptions = {
 };
 
 type SubsetGalleryProps = {
-    items: DatasetItem[];
+    items: DatasetRevisionItem[];
     datasetRevisionId: string;
     fetchNextPage: () => void;
     hasNextPage: boolean;
     isFetchingNextPage: boolean;
-    isLoading: boolean;
+    isPending: boolean;
+};
+
+type SubsetMediaDialogProps = {
+    item: DatasetRevisionItem;
+    onClose: () => void;
+};
+
+const SubsetMediaDialog = ({ item, onClose }: SubsetMediaDialogProps) => {
+    const { data: annotationsData } = useAnnotationsQuery(item.id);
+
+    const annotationsDTO = annotationsData?.annotations ?? [];
+    const isUserReviewed = annotationsData?.user_reviewed ?? false;
+    const mediaItem = datasetRevisionItemToMedia(item);
+
+    return (
+        <Dialog>
+            <Content>
+                <Grid
+                    gap='size-125'
+                    width='100%'
+                    height='100%'
+                    rows='auto 1fr auto'
+                    columns={['1fr']}
+                    areas={['header', 'canvas', 'bottom']}
+                >
+                    <AnnotatorProviders
+                        key={mediaItem.id}
+                        mediaItem={mediaItem}
+                        initialAnnotationsDTO={[]}
+                        initialPredictionsDTO={getInitialPredictions('prediction', isUserReviewed, annotationsDTO)}
+                        isUserReviewed={isUserReviewed}
+                        mode={'prediction'}
+                    >
+                        <ReadOnlyAnnotator mediaItem={mediaItem} isUserReviewed={isUserReviewed} onClose={onClose} />
+                    </AnnotatorProviders>
+                </Grid>
+            </Content>
+        </Dialog>
+    );
 };
 
 export const SubsetGallery = ({
@@ -31,15 +77,16 @@ export const SubsetGallery = ({
     datasetRevisionId,
     hasNextPage,
     isFetchingNextPage,
-    isLoading,
+    isPending,
     fetchNextPage,
 }: SubsetGalleryProps) => {
     const projectId = useProjectIdentifier();
+    const [selectedItem, setSelectedItem] = useState<DatasetRevisionItem | null>(null);
 
-    if (isLoading) {
+    if (isPending) {
         return (
             <Flex height={'100%'}>
-                <Loading />
+                <Loading mode='inline' />
             </Flex>
         );
     }
@@ -53,26 +100,36 @@ export const SubsetGallery = ({
     }
 
     return (
-        <View height={'size-5000'} width={'100%'}>
-            <VirtualizerGridLayout
-                items={items}
-                ariaLabel={'subset media grid'}
-                selectionMode='none'
-                layoutOptions={layoutOptions}
-                isLoadingMore={isFetchingNextPage}
-                onLoadMore={() => hasNextPage && fetchNextPage()}
-                contentItem={(item) => (
-                    <MediaItem
-                        contentElement={() => (
-                            <MediaThumbnail
-                                alt={item.subset + ' item'}
-                                url={getDatasetRevisionThumbnailUrl(projectId, datasetRevisionId, item.id)}
-                                // TODO: leverage onDoubleClick to open a dialog
-                            />
-                        )}
-                    />
+        <>
+            <View height={'size-5000'} width={'100%'}>
+                <VirtualizerGridLayout
+                    items={items}
+                    ariaLabel={'subset media grid'}
+                    selectionMode='none'
+                    layoutOptions={layoutOptions}
+                    isLoadingMore={isFetchingNextPage}
+                    onLoadMore={() => hasNextPage && fetchNextPage()}
+                    contentItem={(item) => (
+                        <MediaItem
+                            contentElement={() => (
+                                <MediaThumbnail
+                                    alt={`${item.subset} item`}
+                                    url={getDatasetRevisionThumbnailUrl(projectId, datasetRevisionId, item.id)}
+                                    onDoubleClick={() => setSelectedItem(item)}
+                                />
+                            )}
+                        />
+                    )}
+                />
+            </View>
+
+            <DialogContainer type={'fullscreen'} onDismiss={() => setSelectedItem(null)}>
+                {selectedItem && (
+                    <Suspense fallback={<Loading />}>
+                        <SubsetMediaDialog item={selectedItem} onClose={() => setSelectedItem(null)} />
+                    </Suspense>
                 )}
-            />
-        </View>
+            </DialogContainer>
+        </>
     );
 };
