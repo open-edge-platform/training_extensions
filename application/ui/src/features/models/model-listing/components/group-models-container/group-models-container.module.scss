@@ -19,4 +19,7 @@
     [class*='spectrum-Accordion-itemHeader'] > [class*='spectrum-Accordion-itemIndicator'] {
         padding: 0 var(--spectrum-global-dimension-size-400);
     }
+    [class*='spectrum-Accordion-itemHeader'][class*='is-hovered'] {
+        background-color: var(--spectrum-global-color-gray-300);
+    }
 }
