@@ -349,14 +349,6 @@ export const getRelativePoint = (element: ElementType, point: Point, zoom: numbe
 };
 
 export const loadImage = async (link: string): Promise<HTMLImageElement> => {
-    if (process.env.NODE_ENV === 'test') {
-        const image = new Image();
-
-        image.src = link;
-
-        return image;
-    }
-
     // Fetch as blob first to avoid CORS issues with cached images
     const response = await fetch(link, { credentials: 'include' });
     if (!response.ok) {
@@ -368,6 +360,7 @@ export const loadImage = async (link: string): Promise<HTMLImageElement> => {
 
     return new Promise<HTMLImageElement>((resolve, reject) => {
         const image = new Image();
+
         image.onload = () => {
             URL.revokeObjectURL(objectUrl);
             resolve(image);
