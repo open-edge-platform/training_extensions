@@ -45,16 +45,6 @@ vi.mock('../../../shared/annotator/annotation-actions-provider.component', () =>
     }),
 }));
 
-vi.mock('../../../hooks/api/project.hook', () => ({
-    useProject: () => ({
-        data: {
-            task: {
-                task_type: 'detection',
-            },
-        },
-    }),
-}));
-
 vi.mock('./api/use-update-label.hook', () => ({
     useUpdateLabel: () => ({
         mutate: vi.fn(),
