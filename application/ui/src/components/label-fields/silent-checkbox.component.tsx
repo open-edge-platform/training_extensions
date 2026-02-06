@@ -6,11 +6,11 @@ import { clsx } from 'clsx';
 
 import classes from './silent-checkbox.module.scss';
 
-interface SilentCheckboxProps {
+type SilentCheckboxProps = {
     isSelected: boolean;
     onChange: () => void;
     'aria-label': string;
-}
+};
 
 export const SilentCheckbox = ({ isSelected, onChange, 'aria-label': ariaLabel }: SilentCheckboxProps) => {
     return (

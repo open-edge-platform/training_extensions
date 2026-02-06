@@ -7,10 +7,7 @@
         background-color: var(--spectrum-global-color-gray-100);
     }
 
-    &:hover .deleteButton {
-        opacity: 1;
-    }
-
+    &:hover .deleteButton,
     &:hover .pinButton {
         opacity: 1;
     }

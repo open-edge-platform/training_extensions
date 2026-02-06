@@ -5,45 +5,45 @@ import { useState } from 'react';
 
 import { ActionButton, Flex, View } from '@geti/ui';
 import { Add } from '@geti/ui/icons';
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import type { Label } from '../../../../constants/shared-types';
-import { EMPTY_LABEL_ID } from '../../../../shared/annotator/labels';
-import { EditLabelRow } from '../edit-label-row/edit-label-row.component';
+import { usePinnedLabels } from '../hooks/use-pinned-labels.hook';
+import { LabelRow } from '../label-row/label-row.component';
 import { NewLabelRow } from '../new-label-row/new-label-row.component';
+import { useLabels } from '../use-labels.hook';
 
-import classes from './edit-labels-popover.module.scss';
+import classes from './labels-editor.module.scss';
 
-interface EditLabelsPopoverProps {
-    labels: Label[];
-    onLabelSelect: (label: Label) => void;
-    isLabelSelected: (label: Label) => boolean;
-    isLabelPinned: (labelId: string) => boolean;
+type LabelsEditorProps = {
+    isClassification?: boolean;
+    isMultiLabel?: boolean;
     onRequestDeleteLabel: (label: Label) => void;
-    onSaveNewLabel: (name: string, color: string) => void;
-    onTogglePinLabel: (label: Label) => void;
     autoCreateNewLabel?: boolean;
-}
+};
 
-export const EditLabelsPopover = ({
-    labels,
-    onLabelSelect,
-    isLabelSelected,
-    isLabelPinned,
+export const LabelsEditor = ({
+    isClassification = false,
+    isMultiLabel = false,
     onRequestDeleteLabel,
-    onSaveNewLabel,
-    onTogglePinLabel,
     autoCreateNewLabel = false,
-}: EditLabelsPopoverProps) => {
-    const [isCreatingLabel, setIsCreatingLabel] = useState(autoCreateNewLabel);
+}: LabelsEditorProps) => {
+    const { editableLabels, toggleLabelOnAnnotations, isLabelActive, addLabel, updateLabel, validateName } = useLabels({
+        isClassification,
+        isMultiLabel,
+    });
 
-    const editableLabels = labels.filter((label) => label.id !== EMPTY_LABEL_ID);
+    const projectId = useProjectIdentifier();
+    const { isPinned, togglePin } = usePinnedLabels(projectId);
+
+    const [isCreatingLabel, setIsCreatingLabel] = useState(autoCreateNewLabel);
 
     const handleAddNewLabel = () => {
         setIsCreatingLabel(true);
     };
 
     const handleSaveNewLabel = (name: string, color: string) => {
-        onSaveNewLabel(name, color);
+        addLabel(name, color);
         setIsCreatingLabel(false);
     };
 
@@ -51,26 +51,31 @@ export const EditLabelsPopover = ({
         setIsCreatingLabel(false);
     };
 
+    const handleTogglePin = (label: Label) => {
+        togglePin(label.id);
+    };
+
     return (
-        <View UNSAFE_className={classes.popoverContent}>
+        <View UNSAFE_className={classes.editorContent}>
             <Flex direction={'column'} gap={'size-50'} UNSAFE_className={classes.labelsList}>
                 {editableLabels.map((label) => (
-                    <EditLabelRow
+                    <LabelRow
                         key={label.id}
                         label={label}
-                        existingLabels={editableLabels}
-                        isSelected={isLabelSelected(label)}
-                        isPinned={isLabelPinned(label.id)}
-                        onSelect={() => onLabelSelect(label)}
+                        isSelected={isLabelActive(label)}
+                        isPinned={isPinned(label.id)}
+                        onSelect={() => toggleLabelOnAnnotations(label)}
                         onDelete={onRequestDeleteLabel}
-                        onTogglePin={onTogglePinLabel}
+                        onTogglePin={handleTogglePin}
+                        onUpdate={updateLabel}
+                        validateName={validateName}
                     />
                 ))}
                 {isCreatingLabel ? (
                     <NewLabelRow
-                        existingLabels={editableLabels}
                         onSave={handleSaveNewLabel}
                         onCancel={handleCancelNewLabel}
+                        validateName={validateName}
                     />
                 ) : (
                     <ActionButton isQuiet onPress={handleAddNewLabel} aria-label='Add new label'>

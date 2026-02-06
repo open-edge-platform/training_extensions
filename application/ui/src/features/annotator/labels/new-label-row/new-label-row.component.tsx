@@ -3,23 +3,21 @@
 
 import { FocusEvent, KeyboardEvent, useEffect, useRef, useState } from 'react';
 
-import { ActionButton, DOMRefValue, Flex, TextField, TextFieldRef, useUnwrapDOMRef, View } from '@geti/ui';
+import { ActionButton, DOMRefValue, Grid, TextField, TextFieldRef, useUnwrapDOMRef, View } from '@geti/ui';
 import { Close } from '@geti/ui/icons';
 
 import { LabelColorPicker } from '../../../../components/label-fields/label-color-picker.component';
-import { validateLabelName } from '../../../../components/label-fields/label-validation';
-import type { Label } from '../../../../constants/shared-types';
 import { getRandomDistinctColor } from '../../label-utils';
 
-import classes from '../edit-label-row/edit-label-row.module.scss';
+import classes from '../label-row/label-row.module.scss';
 
-interface NewLabelRowProps {
-    existingLabels: Label[];
+type NewLabelRowProps = {
     onSave: (name: string, color: string) => void;
     onCancel: () => void;
-}
+    validateName: (name: string, excludeId?: string) => string | undefined;
+};
 
-export const NewLabelRow = ({ existingLabels, onSave, onCancel }: NewLabelRowProps) => {
+export const NewLabelRow = ({ onSave, onCancel, validateName }: NewLabelRowProps) => {
     const rowRef = useRef<DOMRefValue<HTMLDivElement>>(null);
     const rowRefUnwrapped = useUnwrapDOMRef(rowRef);
     const inputRef = useRef<TextFieldRef<HTMLInputElement>>(null);
@@ -27,7 +25,7 @@ export const NewLabelRow = ({ existingLabels, onSave, onCancel }: NewLabelRowPro
     const [name, setName] = useState('');
     const [color, setColor] = useState(getRandomDistinctColor);
 
-    const validationError = name.trim() === '' ? undefined : validateLabelName(name, existingLabels);
+    const validationError = name.trim() === '' ? undefined : validateName(name);
 
     useEffect(() => {
         // Focus the input when the component mounts
@@ -63,22 +61,19 @@ export const NewLabelRow = ({ existingLabels, onSave, onCancel }: NewLabelRowPro
     };
 
     return (
-        <Flex
+        <Grid
             ref={rowRef}
+            columns={['size-350', 'size-400', '1fr', 'size-400', 'size-400']}
             gap={'size-100'}
             alignItems={'start'}
             UNSAFE_className={classes.labelRow}
             UNSAFE_style={{ '--label-color': color }}
         >
-            <View
-                UNSAFE_style={{
-                    width: 'calc(var(--spectrum-global-dimension-size-300) + var(--spectrum-global-dimension-size-75))',
-                }}
-            />
+            <View />
 
             <LabelColorPicker color={color} onChange={setColor} />
 
-            <View flex={1}>
+            <View>
                 <TextField
                     ref={inputRef}
                     aria-label={'New label name'}
@@ -93,6 +88,8 @@ export const NewLabelRow = ({ existingLabels, onSave, onCancel }: NewLabelRowPro
                 />
             </View>
 
+            <View />
+
             <ActionButton
                 aria-label='Cancel new label'
                 isQuiet
@@ -101,6 +98,6 @@ export const NewLabelRow = ({ existingLabels, onSave, onCancel }: NewLabelRowPro
             >
                 <Close />
             </ActionButton>
-        </Flex>
+        </Grid>
     );
 };

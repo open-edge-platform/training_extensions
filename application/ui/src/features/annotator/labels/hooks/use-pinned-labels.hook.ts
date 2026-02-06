@@ -11,12 +11,12 @@ const getPinnedLabelsKey = (projectId: string) => {
     return `${PINNED_LABELS_KEY}-${projectId}`;
 };
 
-interface UsePinnedLabelsReturn {
+type UsePinnedLabelsReturn = {
     pinnedLabelIds: string[];
     isPinned: (labelId: string) => boolean;
     togglePin: (labelId: string) => void;
     hasPinnedLabels: boolean;
-}
+};
 
 export const usePinnedLabels = (projectId: string): UsePinnedLabelsReturn => {
     const [pinnedLabelIds, setPinnedLabelIds] = useLocalStorage<string[]>(getPinnedLabelsKey(projectId), []);

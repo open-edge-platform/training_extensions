@@ -4,7 +4,7 @@
 import { useMemo } from 'react';
 
 import type { DatasetRevision, Model } from '../../../../constants/shared-types';
-import { useGetActiveModelArchitectureId } from '../../hooks/api/use-get-active-model-architecture-id.hook';
+import { useGetActiveModel } from '../../hooks/api/use-get-active-model.hook';
 import { GroupByMode, GroupedModels, SortBy } from '../types';
 import { filterBySearch, groupModels, pinModel, removeEmpty, sortGroupedModels } from '../utils/model-transforms';
 
@@ -23,7 +23,7 @@ type UseGroupedModelsOptions = {
 // - Pinning the active model to the top of its group if the pinActive option is enabled
 export const useGroupedModels = (models: Model[] | undefined, options: UseGroupedModelsOptions): GroupedModels[] => {
     const { groupBy, sortBy, pinActive, searchBy, datasetRevisions } = options;
-    const activeModelArchitectureId = useGetActiveModelArchitectureId();
+    const activeModel = useGetActiveModel();
 
     return useMemo(() => {
         if (!models) return [];
@@ -31,8 +31,8 @@ export const useGroupedModels = (models: Model[] | undefined, options: UseGroupe
         const filtered = filterBySearch(models, searchBy);
         const grouped = groupModels(filtered, groupBy, datasetRevisions);
         const sorted = sortGroupedModels(grouped, sortBy);
-        const pinned = pinModel(sorted, pinActive ? activeModelArchitectureId : undefined);
+        const pinned = pinModel(sorted, pinActive ? activeModel?.id : undefined);
 
         return removeEmpty(pinned);
-    }, [models, groupBy, sortBy, pinActive, activeModelArchitectureId, searchBy, datasetRevisions]);
+    }, [models, groupBy, sortBy, pinActive, activeModel?.id, searchBy, datasetRevisions]);
 };

@@ -10,10 +10,6 @@
     min-width: 0;
 }
 
-.readOnlyLabels {
-    pointer-events: none;
-}
-
 .badge {
     --foregroundColor: lch(from var(--labelBgColor) calc((50 - l) * infinity) 0 0);
 
@@ -41,15 +37,6 @@
 .selected:focus {
     outline-offset: var(--spectrum-global-dimension-size-25);
     outline-color: var(--labelBgColor);
-}
-
-.disabled {
-    cursor: default !important;
-    opacity: 0.6;
-}
-
-.disabled:hover {
-    opacity: 0.7;
 }
 
 .badgeText {
