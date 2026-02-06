@@ -41,7 +41,7 @@ class BaseDispatcher(metaclass=ABCMeta):
         Args:
             output_config: Configuration for the output destination
         """
-        if output_config.rate_limit is not None and not output_config.rate_limit:
+        if output_config.rate_limit == 0:
             raise ValueError("Rate limit cannot be 0. If no rate limit applies, do not set a limit instead.")
         self.output_formats = output_config.output_formats
         self.rate_limit = output_config.rate_limit
