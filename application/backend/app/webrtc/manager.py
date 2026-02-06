@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import asyncio
-import queue
 from dataclasses import dataclass
 from typing import Any
 
@@ -11,6 +10,7 @@ from loguru import logger
 
 from app.models.webrtc import Answer, InputData, Offer
 
+from .broadcaster import FrameBroadcaster
 from .sdp_handler import SDPHandler
 from .stream import InferenceVideoStreamTrack
 
@@ -24,10 +24,10 @@ class WebRTCSettings:
 class WebRTCManager:
     """Manager for handling WebRTC connections."""
 
-    def __init__(self, stream_queue: queue.Queue, settings: WebRTCSettings, sdp_handler: SDPHandler) -> None:
+    def __init__(self, frame_broadcaster: FrameBroadcaster, settings: WebRTCSettings, sdp_handler: SDPHandler) -> None:
         self._pcs: dict[str, RTCPeerConnection] = {}
         self._input_data: dict[str, Any] = {}
-        self._stream_queue = stream_queue
+        self._frame_broadcaster = frame_broadcaster
         self._settings = settings
         self._sdp_handler = sdp_handler
 
@@ -37,13 +37,15 @@ class WebRTCManager:
         self._pcs[offer.webrtc_id] = pc
 
         # Add video track
-        track = InferenceVideoStreamTrack(self._stream_queue)
+        stream_queue = self._frame_broadcaster.register()
+        track = InferenceVideoStreamTrack(stream_queue=stream_queue)
         pc.addTrack(track)
 
         @pc.on("connectionstatechange")
         async def connection_state_change() -> None:
             if pc.connectionState in ["failed", "closed"]:
                 await self.cleanup_connection(offer.webrtc_id)
+                self._frame_broadcaster.unregister(stream_queue)
 
         # Set remote description from client's offer
         await pc.setRemoteDescription(RTCSessionDescription(sdp=offer.sdp, type=offer.type))
