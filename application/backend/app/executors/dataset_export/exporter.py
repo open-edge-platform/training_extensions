@@ -14,10 +14,10 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from app.core.run import ExecutionContext
+from app.datumaro_converter.utils import SubsetConverter
 from app.executors.base import Executor, step
 from app.models import DatasetFormat, DatasetItemAnnotationStatus, ExportDatasetJobParams
 from app.services import DatasetRevisionService, DatasetService
-from app.services.datumaro_converter import convert_to_dm_subset
 
 
 def get_dm_format(dataset_format: DatasetFormat) -> DataFormat:
@@ -79,7 +79,7 @@ class DatasetExporter(Executor):
                 # todo: datumaro API seems to lack a proper way to filter by multiple subsets,
                 #  so we chain multiple filter calls for now
                 for subset in export_params.subsets:
-                    filtered_by_subset = dataset.filter_by_subset(subset=convert_to_dm_subset(subset))
+                    filtered_by_subset = dataset.filter_by_subset(subset=SubsetConverter.to_datumaro(subset))
                     if filtered_dataset:
                         filtered_dataset.append_dataset(filtered_by_subset)
                     else:
@@ -106,12 +106,19 @@ class DatasetExporter(Executor):
                     data_format=get_dm_format(export_format),
                     root_dir=str(target_dir),
                 )
-            case DatasetFormat.DATUMARO_V2:
+            case DatasetFormat.VOC:
+                # todo: implement after datumaro VOC exporter is implemented:
+                #  https://github.com/open-edge-platform/datumaro/issues/2003
+                raise NotImplementedError("VOC export is not implemented yet")
+            case DatasetFormat.GETI:
                 export_dataset(
                     dataset=dataset,
                     output_path=target_dir,
                     as_zip=True,
                 )
+                original_zip = target_dir / "dataset.zip"
+                new_zip = target_dir / "dataset-geti.zip"
+                original_zip.rename(new_zip)
             case _:
                 raise ValueError(f"Unsupported dataset format for export: {export_format}")
         return target_dir
@@ -154,7 +161,7 @@ class DatasetExporter(Executor):
             )
             return
         target_dir = self.export_dataset(dataset_id, dataset, export_params.export_format)
-        if export_params.export_format != DatasetFormat.DATUMARO_V2:
+        if export_params.export_format != DatasetFormat.GETI:
             # todo: remove after https://github.com/open-edge-platform/datumaro/issues/2026 is implemented
             zip_path = self.zip_dataset_contents(target_dir, export_params.export_format)
             self.cleanup(zip_path)

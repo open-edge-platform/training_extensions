@@ -25,6 +25,7 @@ from tests.bdd.parsers import parse_sse_events
 
 
 @given('A "{task_type}" project "{project_name}" with labels {labels} exists')  # pyrefly: ignore
+@given('An "{task_type}" project "{project_name}" with labels {labels} exists')  # pyrefly: ignore
 def step_project_exists(context: Context, task_type: TaskType, project_name: str, labels: str) -> None:
     labels_list = ast.literal_eval(labels)
     project_body = {
@@ -39,20 +40,9 @@ def step_project_exists(context: Context, task_type: TaskType, project_name: str
     context.project = ProjectView.model_validate(response.json())
 
 
-@given("the project dataset has {count:d} unannotated images")  # pyrefly: ignore
-def step_dataset_has_unannotated_images(context: Context, count: int) -> None:
+@given('the project dataset has {count:d} unannotated images in subset "{subset}"')  # pyrefly: ignore
+def step_dataset_has_unannotated_images(context: Context, count: int, subset: str) -> None:
     """Add multiple random unannotated images to the dataset."""
-    project = cast(ProjectView, context.project)
-    for _ in range(count):
-        # Upload random image
-        buffer, filename, _ = generate_random_image()
-        files = {"file": (filename, buffer, "image/jpeg")}
-        requests.post(f"{context.base_url}/api/projects/{project.id}/dataset/media", files=files)
-
-
-@given('the project dataset has {count:d} images with annotations in subset "{subset}"')  # pyrefly: ignore
-def step_dataset_has_annotated_images(context: Context, count: int, subset: str) -> None:
-    """Add multiple random unannotated images to the dataset specific subset."""
     project = cast(ProjectView, context.project)
     for _ in range(count):
         # Upload random image
@@ -61,22 +51,54 @@ def step_dataset_has_annotated_images(context: Context, count: int, subset: str)
         media_response = requests.post(f"{context.base_url}/api/projects/{project.id}/dataset/media", files=files)
         dataset_item_id = media_response.json()["id"]
 
+        # Assign subset
+        requests.patch(
+            f"{context.base_url}/api/projects/{project.id}/dataset/items/{dataset_item_id}/subset",
+            json={"subset": subset},
+        )
+
+
+@given('the project dataset has {count:d} images with annotations in subset "{subset}"')  # pyrefly: ignore
+def step_dataset_has_annotated_images(context: Context, count: int, subset: str) -> None:
+    """Add multiple random unannotated images to the dataset specific subset."""
+    project = cast(ProjectView, context.project)
+    for i in range(count):
+        # Upload random image
+        buffer, filename, _ = generate_random_image()
+        files = {"file": (filename, buffer, "image/jpeg")}
+        media_response = requests.post(f"{context.base_url}/api/projects/{project.id}/dataset/media", files=files)
+        dataset_item_id = media_response.json()["id"]
+
         # Set annotations
         label_ids = [str(label.id) for label in project.task.labels]
-        annotation_body = {
-            "annotations": [
-                {
-                    "labels": [{"id": random.choice(label_ids)}],
-                    "shape": {
-                        "type": "rectangle",
-                        "x": 10 + secrets.randbelow(50),
-                        "y": 20 + secrets.randbelow(50),
-                        "width": 80 + secrets.randbelow(100),
-                        "height": 100 + secrets.randbelow(150),
-                    },
+        annotation_body = {}
+        match project.task.task_type:
+            case TaskType.CLASSIFICATION:
+                if len(label_ids) < 2:
+                    raise ValueError("At least 2 labels are required for this step")
+                annotation_body = {
+                    "annotations": [
+                        {
+                            "labels": [{"id": label_ids[0]}] if i % 2 == 0 else [{"id": label_ids[1]}],
+                            "shape": {"type": "full_image"},
+                        },
+                    ],
                 }
-            ]
-        }
+            case TaskType.DETECTION:
+                annotation_body = {
+                    "annotations": [
+                        {
+                            "labels": [{"id": random.choice(label_ids)}],
+                            "shape": {
+                                "type": "rectangle",
+                                "x": 10 + secrets.randbelow(50),
+                                "y": 20 + secrets.randbelow(50),
+                                "width": 80 + secrets.randbelow(100),
+                                "height": 100 + secrets.randbelow(150),
+                            },
+                        }
+                    ]
+                }
         requests.post(
             f"{context.base_url}/api/projects/{project.id}/dataset/items/{dataset_item_id}/annotations",
             json=annotation_body,
@@ -109,9 +131,12 @@ def step_export_dataset(context: Context, export_format: str, filters: str) -> N
     ) as stream_response:
         for job_data in parse_sse_events(stream_response):
             job = JobView.model_validate(job_data)
-            if job.status == JobStatus.DONE.name:
+            if job.status in (JobStatus.DONE.name, JobStatus.FAILED.name):
                 context.job = job
                 break
+
+    job = cast(JobView, context.job)
+    assert job.status == JobStatus.DONE.name, f"Expected job to be DONE, but got {job.status}, error: {job.error}"
 
 
 @then("the staged dataset archive {archive_name} should exist")  # pyrefly: ignore
@@ -128,13 +153,13 @@ def step_staged_dataset_archive_exists(context: Context, archive_name: str) -> N
     context.staged_dataset_path = staged_datasets_dir / matching_archives[0]
 
 
-@then("the staged dataset has {count:d} images")  # pyrefly: ignore
-def step_staged_dataset_has_items(context: Context, count: int) -> None:
+@then("the exported dataset has {count:d} images")  # pyrefly: ignore
+def step_exported_dataset_has_items(context: Context, count: int) -> None:
     dataset = None
     export_format = context.export_format
     dataset_path = cast(Path, context.staged_dataset_path)
     match export_format:
-        case DatasetFormat.DATUMARO_V2:
+        case DatasetFormat.GETI:
             dataset = import_dataset(dataset_path)
         case DatasetFormat.YOLO:
             extract_dir = dataset_path.with_suffix("")

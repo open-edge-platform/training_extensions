@@ -10,6 +10,7 @@ import pytest
 from datumaro.experimental import Dataset
 from datumaro.experimental.data_formats.base import DataFormat
 
+from app.datumaro_converter.utils import SubsetConverter
 from app.executors import DatasetExporter
 from app.models import (
     DatasetFormat,
@@ -19,7 +20,6 @@ from app.models import (
     Task,
     TaskType,
 )
-from app.services.datumaro_converter import convert_to_dm_subset
 
 
 @pytest.fixture
@@ -80,7 +80,7 @@ class TestDatasetExporter:
             label_names=fxt_export_params.labels,
         )
         dataset.filter_by_subset.assert_has_calls(
-            [call(subset=convert_to_dm_subset(subset)) for subset in (subsets or [])]
+            [call(subset=SubsetConverter.to_datumaro(subset)) for subset in (subsets or [])]
         )
 
     @pytest.mark.parametrize(
@@ -106,7 +106,7 @@ class TestDatasetExporter:
             dataset_revision_id=fxt_export_params.dataset_id,
         )
         dataset.filter_by_subset.assert_has_calls(
-            [call(subset=convert_to_dm_subset(subset)) for subset in (subsets or [])]
+            [call(subset=SubsetConverter.to_datumaro(subset)) for subset in (subsets or [])]
         )
 
     @pytest.mark.parametrize(
@@ -145,15 +145,20 @@ class TestDatasetExporter:
                     root_dir=str(target_dir),
                 )
 
-    def test_export_dataset_datumaro_v2(self, fxt_exporter: DatasetExporter, fxt_staged_datasets_dir: Path):
+    def test_export_dataset_geti(self, fxt_exporter: DatasetExporter, fxt_staged_datasets_dir: Path):
         dataset = Mock(spec=Dataset)
         dataset_id = uuid4()
 
-        with patch("app.executors.dataset_export.exporter.export_dataset") as mock_export_dataset:
-            target_dir = fxt_exporter.export_dataset(dataset_id, dataset, DatasetFormat.DATUMARO_V2)
+        with (
+            patch("app.executors.dataset_export.exporter.export_dataset") as mock_export_dataset,
+            patch("app.executors.dataset_export.exporter.Path.rename") as rename_mock,
+        ):
+            target_dir = fxt_exporter.export_dataset(dataset_id, dataset, DatasetFormat.GETI)
 
+            assert target_dir
             assert target_dir == fxt_staged_datasets_dir / str(dataset_id)
             mock_export_dataset.assert_called_once_with(dataset=dataset, output_path=target_dir, as_zip=True)
+            rename_mock.assert_called_once_with(target_dir / "dataset-geti.zip")
 
     def test_zip_dataset_contents(self, fxt_exporter: DatasetExporter, fxt_staged_datasets_dir: Path):
         target_dir = fxt_staged_datasets_dir / str(uuid4())

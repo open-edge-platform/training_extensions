@@ -6,6 +6,13 @@ from uuid import UUID, uuid4
 import numpy as np
 import pytest
 
+from app.datumaro_converter import (
+    ClassificationSample,
+    DetectionSample,
+    InstanceSegmentationSample,
+    MultilabelClassificationSample,
+    convert_dataset,
+)
 from app.models import (
     DatasetItem,
     DatasetItemAnnotation,
@@ -14,24 +21,14 @@ from app.models import (
     Label,
     LabelReference,
     Media,
+    MediaFormat,
     MediaType,
     Point,
     Polygon,
     Rectangle,
     Shape,
-)
-from app.models.media import ImageFormat
-from app.services.datumaro_converter import (
-    ClassificationSample,
-    DetectionSample,
-    InstanceSegmentationSample,
-    MultilabelClassificationSample,
-    convert_classification_dataset,
-    convert_detection_dataset,
-    convert_instance_segmentation_dataset,
-    convert_multilabel_classification_dataset,
-    convert_polygon,
-    convert_rectangle,
+    Task,
+    TaskType,
 )
 
 
@@ -126,18 +123,6 @@ def fxt_instance_segmentation_dataset_item(fxt_dataset_item, fxt_dataset_item_an
     return _create_instance_segmentation_dataset_item
 
 
-def test_convert_rectangle() -> None:
-    rectangle = Rectangle(x=10, y=20, width=200, height=100)
-    result = convert_rectangle(rectangle)
-    assert result == [10, 20, 210, 120]
-
-
-def test_convert_polygon() -> None:
-    polygon = Polygon(points=[Point(x=10, y=20), Point(x=20, y=30), Point(x=30, y=40), Point(x=40, y=50)])
-    result = convert_polygon(polygon)
-    assert result == [[10, 20], [20, 30], [30, 40], [40, 50]]
-
-
 def test_convert_detection_dataset(fxt_project_labels, fxt_detection_dataset_item) -> None:
     project_id = uuid4()
     media = Media(
@@ -147,19 +132,18 @@ def test_convert_detection_dataset(fxt_project_labels, fxt_detection_dataset_ite
         name="test",
         width=200,
         height=100,
-        format=ImageFormat.JPG,
+        format=MediaFormat.JPG,
         size=1024,
         source_id=None,
-        fps=None,
-        frame_count=None,
     )
     dataset_item_1 = fxt_detection_dataset_item(project_id, str(fxt_project_labels[0].id), 4, 5, 10, 10)
     dataset_item_2 = fxt_detection_dataset_item(project_id, str(fxt_project_labels[1].id), 14, 35, 10, 10)
     get_dataset_items_and_media = MagicMock(side_effect=[[(dataset_item_1, media), (dataset_item_2, media)], []])
     get_image_path = MagicMock(side_effect=["path1", "path2"])
 
-    dataset = convert_detection_dataset(
-        project_labels=fxt_project_labels,
+    dataset = convert_dataset(
+        task=Task(task_type=TaskType.DETECTION),
+        labels=fxt_project_labels,
         get_dataset_items_and_media=get_dataset_items_and_media,
         get_image_path=get_image_path,
     )
@@ -197,19 +181,18 @@ def test_convert_multiclass_classification_dataset(fxt_project_labels, fxt_class
         name="test",
         width=200,
         height=100,
-        format=ImageFormat.JPG,
+        format=MediaFormat.JPG,
         size=1024,
         source_id=None,
-        fps=None,
-        frame_count=None,
     )
     dataset_item_1 = fxt_classification_dataset_item(project_id, str(fxt_project_labels[0].id))
     dataset_item_2 = fxt_classification_dataset_item(project_id, str(fxt_project_labels[1].id))
     get_dataset_items_and_media = MagicMock(side_effect=[[(dataset_item_1, media), (dataset_item_2, media)], []])
     get_image_path = MagicMock(side_effect=["path1", "path2"])
 
-    dataset = convert_classification_dataset(
-        project_labels=fxt_project_labels,
+    dataset = convert_dataset(
+        task=Task(task_type=TaskType.CLASSIFICATION, exclusive_labels=True),
+        labels=fxt_project_labels,
         get_dataset_items_and_media=get_dataset_items_and_media,
         get_image_path=get_image_path,
     )
@@ -249,11 +232,9 @@ def test_convert_multilabel_classification_dataset_item(
         name="test",
         width=200,
         height=100,
-        format=ImageFormat.JPG,
+        format=MediaFormat.JPG,
         size=1024,
         source_id=None,
-        fps=None,
-        frame_count=None,
     )
     dataset_item = fxt_multilabel_classification_dataset_item(
         project_id, [str(fxt_project_labels[0].id), str(fxt_project_labels[1].id)]
@@ -261,8 +242,9 @@ def test_convert_multilabel_classification_dataset_item(
     get_dataset_items_and_media = MagicMock(side_effect=[[(dataset_item, media)], []])
     get_image_path = MagicMock(side_effect=["path1"])
 
-    dataset = convert_multilabel_classification_dataset(
-        project_labels=fxt_project_labels,
+    dataset = convert_dataset(
+        task=Task(task_type=TaskType.CLASSIFICATION, exclusive_labels=False),
+        labels=fxt_project_labels,
         get_dataset_items_and_media=get_dataset_items_and_media,
         get_image_path=get_image_path,
     )
@@ -287,11 +269,9 @@ def test_convert_instance_segmentation_dataset(fxt_project_labels, fxt_instance_
         name="test",
         width=200,
         height=100,
-        format=ImageFormat.JPG,
+        format=MediaFormat.JPG,
         size=1024,
         source_id=None,
-        fps=None,
-        frame_count=None,
     )
     dataset_item_1 = fxt_instance_segmentation_dataset_item(
         project_id,
@@ -310,8 +290,9 @@ def test_convert_instance_segmentation_dataset(fxt_project_labels, fxt_instance_
     get_dataset_items_and_media = MagicMock(side_effect=[[(dataset_item_1, media), (dataset_item_2, media)], []])
     get_image_path = MagicMock(side_effect=["path1", "path2"])
 
-    dataset = convert_instance_segmentation_dataset(
-        project_labels=fxt_project_labels,
+    dataset = convert_dataset(
+        task=Task(task_type=TaskType.INSTANCE_SEGMENTATION),
+        labels=fxt_project_labels,
         get_dataset_items_and_media=get_dataset_items_and_media,
         get_image_path=get_image_path,
     )

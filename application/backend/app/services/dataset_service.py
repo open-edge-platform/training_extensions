@@ -9,6 +9,7 @@ from uuid import UUID
 import datumaro.experimental as dm
 from sqlalchemy.orm import Session
 
+from app.datumaro_converter import convert_dataset
 from app.db.schema import DatasetItemDB, MediaDB
 from app.models import (
     DatasetItem,
@@ -25,7 +26,6 @@ from app.models import (
     TaskType,
 )
 from app.repositories import DatasetItemRepository
-from app.services.datumaro_converter import convert_dataset
 from app.services.media_service import MediaService
 
 from .base import BaseSessionManagedService, ResourceNotFoundError, ResourceType
