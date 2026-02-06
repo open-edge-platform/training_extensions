@@ -5,6 +5,7 @@ import { dimensionValue, Flex, Heading, View } from '@geti/ui';
 import { useCancelJob, useGetCurrentTrainingJob } from 'hooks/api/jobs.hook';
 
 import { type DatasetRevision } from '../../../../constants/shared-types';
+import { useGetTaskModelArchitectures } from '../../hooks/api/use-get-model-architectures.hook';
 import { ModelsTableHeader } from '../components/models-table-header.component';
 import { GroupByMode } from '../types';
 import { TrainingModelRow } from './training-model-row.component';
@@ -17,6 +18,7 @@ type CurrentModelTrainingProps = {
 export const CurrentModelTraining = ({ groupBy, datasetRevisions }: CurrentModelTrainingProps) => {
     const activeTrainingJob = useGetCurrentTrainingJob();
     const cancelJobMutation = useCancelJob();
+    const { modelArchitectures } = useGetTaskModelArchitectures();
 
     const handleCancelTraining = () => {
         if (activeTrainingJob?.job_id) {
@@ -46,6 +48,7 @@ export const CurrentModelTraining = ({ groupBy, datasetRevisions }: CurrentModel
                     onCancel={handleCancelTraining}
                     groupBy={groupBy}
                     datasetRevisions={datasetRevisions}
+                    modelArchitectures={modelArchitectures}
                 />
             </View>
         </Flex>

@@ -6,9 +6,7 @@ import { createContext, ReactNode, use, useState } from 'react';
 import {
     DatasetRevision,
     DeviceType,
-    ModelArchitecture,
     ModelArchitectureWithPerformanceCategory,
-    RecommendedModelArchitectures,
     TrainingDevice,
 } from '../../../constants/shared-types';
 import { useGetDatasetRevisions } from '../../../hooks/use-get-dataset-revisions.hook';
@@ -42,32 +40,6 @@ type TrainModelProviderProps = {
     preSelectedDatasetRevisionId?: string;
 };
 
-const getModelArchitectures = (
-    modelArchitectures: ModelArchitecture[],
-    recommendedModelArchitectures: RecommendedModelArchitectures | null
-): ModelArchitectureWithPerformanceCategory[] => {
-    if (recommendedModelArchitectures === null) {
-        return modelArchitectures;
-    }
-
-    // Recommended architectures have the shape like { balance: "id-1", speed: "id-2", accuracy: "id-3" }
-    // Here we need to convert it to { "id-1": "balance", "id-2": "speed", "id-3": "accuracy" }
-    const recommendedArchitectureIdToCategory = Object.fromEntries(
-        Object.entries(recommendedModelArchitectures).map(([key, value]) => [value, key])
-    );
-
-    return modelArchitectures.map((modelArchitecture) => {
-        if (recommendedArchitectureIdToCategory[modelArchitecture.id] === undefined) {
-            return modelArchitecture;
-        }
-
-        return {
-            ...modelArchitecture,
-            performanceCategory: recommendedArchitectureIdToCategory[modelArchitecture.id],
-        };
-    });
-};
-
 const useDatasetRevisions = () => {
     const { data: datasetRevisions } = useGetDatasetRevisions();
     return {
@@ -79,17 +51,12 @@ const useDatasetRevisions = () => {
 };
 
 export const TrainModelProvider = ({ children, preSelectedDatasetRevisionId }: TrainModelProviderProps) => {
-    const { data } = useGetTaskModelArchitectures();
+    const { modelArchitectures } = useGetTaskModelArchitectures();
     const { data: trainingDevices } = useGetTrainingDevices();
     const { datasetRevisions } = useDatasetRevisions();
     const activeModel = useGetActiveModel();
 
-    const modelArchitectures: ModelArchitectureWithPerformanceCategory[] = getModelArchitectures(
-        data.model_architectures,
-        data.top_picks
-    );
-
-    const activeModelArchitecture = data.model_architectures.find(
+    const activeModelArchitecture = modelArchitectures.find(
         (modelArchitecture) => modelArchitecture.id === activeModel?.architecture
     );
 

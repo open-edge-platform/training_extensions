@@ -3,7 +3,8 @@
 
 import { Disclosure, DisclosurePanel, DisclosureTitle, Flex } from '@geti/ui';
 
-import type { Model } from '../../../../../constants/shared-types';
+import { Model } from '../../../../../constants/shared-types';
+import { useGetTaskModelArchitectures } from '../../../hooks/api/use-get-model-architectures.hook';
 import { ModelDetailsTabs } from '../../model-details/model-details-tabs.component';
 import { useModelListing } from '../../provider/model-listing-provider';
 import { ArchitectureGroup, DatasetGroup } from '../../types';
@@ -21,6 +22,7 @@ interface GroupModelsContainerProps {
 
 export const GroupModelsContainer = ({ group, models }: GroupModelsContainerProps) => {
     const { expandedModelIds, onExpandModel } = useModelListing();
+    const { modelArchitectures } = useGetTaskModelArchitectures();
 
     return (
         <Flex direction={'column'} UNSAFE_className={classes.groupModelsContainer}>
@@ -29,6 +31,7 @@ export const GroupModelsContainer = ({ group, models }: GroupModelsContainerProp
 
             {models.map((model) => {
                 const modelId = model.id;
+                const modelArchitecture = modelArchitectures.find(({ id }) => id === model.architecture);
 
                 return (
                     <Disclosure
@@ -41,7 +44,7 @@ export const GroupModelsContainer = ({ group, models }: GroupModelsContainerProp
                         data-testid={`model-disclosure-${modelId}`}
                     >
                         <DisclosureTitle UNSAFE_className={classes.disclosureItem}>
-                            <ModelRowContainer model={model} />
+                            <ModelRowContainer model={model} modelArchitecture={modelArchitecture} />
                         </DisclosureTitle>
                         <DisclosurePanel>
                             <ModelDetailsTabs modelId={modelId} />
