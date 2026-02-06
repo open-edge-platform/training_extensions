@@ -41,6 +41,7 @@ vi.mock('../../../shared/annotator/annotation-actions-provider.component', () =>
         updateAnnotations: mockUpdateAnnotations,
         addAnnotations: mockAddAnnotations,
         deleteAnnotations: mockDeleteAnnotations,
+        addAnnotationWithEmptyLabel: vi.fn(),
     }),
 }));
 
@@ -51,6 +52,12 @@ vi.mock('../../../hooks/api/project.hook', () => ({
                 task_type: 'detection',
             },
         },
+    }),
+}));
+
+vi.mock('./api/use-update-label.hook', () => ({
+    useUpdateLabel: () => ({
+        mutate: vi.fn(),
     }),
 }));
 

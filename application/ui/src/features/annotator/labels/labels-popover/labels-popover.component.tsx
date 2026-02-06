@@ -7,39 +7,38 @@ import { ActionButton, Flex, View } from '@geti/ui';
 import { Add } from '@geti/ui/icons';
 
 import type { Label } from '../../../../constants/shared-types';
-import { EMPTY_LABEL_ID } from '../../../../shared/annotator/labels';
-import { EditLabelRow } from '../edit-label-row/edit-label-row.component';
+import { LabelRow } from '../label-row/label-row.component';
 import { NewLabelRow } from '../new-label-row/new-label-row.component';
+import { useLabels } from '../use-labels.hook';
 
-import classes from './edit-labels-popover.module.scss';
+import classes from './labels-popover.module.scss';
 
-interface EditLabelsPopoverProps {
-    labels: Label[];
-    onLabelSelect: (label: Label) => void;
-    isLabelSelected: (label: Label) => boolean;
+type LabelsPopoverProps = {
+    isClassification?: boolean;
+    isMultiLabel?: boolean;
     onRequestDeleteLabel: (label: Label) => void;
-    onSaveNewLabel: (name: string, color: string) => void;
     autoCreateNewLabel?: boolean;
-}
+};
 
-export const EditLabelsPopover = ({
-    labels,
-    onLabelSelect,
-    isLabelSelected,
+export const LabelsPopover = ({
+    isClassification = false,
+    isMultiLabel = false,
     onRequestDeleteLabel,
-    onSaveNewLabel,
     autoCreateNewLabel = false,
-}: EditLabelsPopoverProps) => {
-    const [isCreatingLabel, setIsCreatingLabel] = useState(autoCreateNewLabel);
+}: LabelsPopoverProps) => {
+    const { editableLabels, toggleLabelOnAnnotations, isLabelActive, addLabel, updateLabel, validateName } = useLabels({
+        isClassification,
+        isMultiLabel,
+    });
 
-    const editableLabels = labels.filter((label) => label.id !== EMPTY_LABEL_ID);
+    const [isCreatingLabel, setIsCreatingLabel] = useState(autoCreateNewLabel);
 
     const handleAddNewLabel = () => {
         setIsCreatingLabel(true);
     };
 
     const handleSaveNewLabel = (name: string, color: string) => {
-        onSaveNewLabel(name, color);
+        addLabel(name, color);
         setIsCreatingLabel(false);
     };
 
@@ -51,20 +50,21 @@ export const EditLabelsPopover = ({
         <View UNSAFE_className={classes.popoverContent}>
             <Flex direction={'column'} gap={'size-50'} UNSAFE_className={classes.labelsList}>
                 {editableLabels.map((label) => (
-                    <EditLabelRow
+                    <LabelRow
                         key={label.id}
                         label={label}
-                        existingLabels={editableLabels}
-                        isSelected={isLabelSelected(label)}
-                        onSelect={() => onLabelSelect(label)}
+                        isSelected={isLabelActive(label)}
+                        onSelect={() => toggleLabelOnAnnotations(label)}
                         onDelete={onRequestDeleteLabel}
+                        onUpdate={updateLabel}
+                        validateName={validateName}
                     />
                 ))}
                 {isCreatingLabel ? (
                     <NewLabelRow
-                        existingLabels={editableLabels}
                         onSave={handleSaveNewLabel}
                         onCancel={handleCancelNewLabel}
+                        validateName={validateName}
                     />
                 ) : (
                     <ActionButton isQuiet onPress={handleAddNewLabel} aria-label='Add new label'>

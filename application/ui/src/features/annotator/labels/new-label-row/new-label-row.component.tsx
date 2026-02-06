@@ -7,19 +7,17 @@ import { ActionButton, DOMRefValue, Flex, TextField, TextFieldRef, useUnwrapDOMR
 import { Close } from '@geti/ui/icons';
 
 import { LabelColorPicker } from '../../../../components/label-fields/label-color-picker.component';
-import { validateLabelName } from '../../../../components/label-fields/label-validation';
-import type { Label } from '../../../../constants/shared-types';
 import { getRandomDistinctColor } from '../../label-utils';
 
-import classes from '../edit-label-row/edit-label-row.module.scss';
+import classes from '../label-row/label-row.module.scss';
 
-interface NewLabelRowProps {
-    existingLabels: Label[];
+type NewLabelRowProps = {
     onSave: (name: string, color: string) => void;
     onCancel: () => void;
-}
+    validateName: (name: string, excludeId?: string) => string | undefined;
+};
 
-export const NewLabelRow = ({ existingLabels, onSave, onCancel }: NewLabelRowProps) => {
+export const NewLabelRow = ({ onSave, onCancel, validateName }: NewLabelRowProps) => {
     const rowRef = useRef<DOMRefValue<HTMLDivElement>>(null);
     const rowRefUnwrapped = useUnwrapDOMRef(rowRef);
     const inputRef = useRef<TextFieldRef<HTMLInputElement>>(null);
@@ -27,7 +25,7 @@ export const NewLabelRow = ({ existingLabels, onSave, onCancel }: NewLabelRowPro
     const [name, setName] = useState('');
     const [color, setColor] = useState(getRandomDistinctColor);
 
-    const validationError = name.trim() === '' ? undefined : validateLabelName(name, existingLabels);
+    const validationError = name.trim() === '' ? undefined : validateName(name);
 
     useEffect(() => {
         // Focus the input when the component mounts

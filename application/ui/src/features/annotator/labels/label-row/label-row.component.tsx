@@ -5,32 +5,27 @@ import { CSSProperties, useState } from 'react';
 
 import { ActionButton, Flex, TextField, View } from '@geti/ui';
 import { Delete } from '@geti/ui/icons';
-import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { LabelColorPicker } from '../../../../components/label-fields/label-color-picker.component';
-import { validateLabelName } from '../../../../components/label-fields/label-validation';
 import { SilentCheckbox } from '../../../../components/label-fields/silent-checkbox.component';
 import type { Label } from '../../../../constants/shared-types';
-import { useUpdateLabel } from '../api/use-update-label.hook';
 
-import classes from './edit-label-row.module.scss';
+import classes from './label-row.module.scss';
 
-interface EditLabelRowProps {
+type LabelRowProps = {
     label: Label;
-    existingLabels: Label[];
     isSelected: boolean;
     onSelect: () => void;
     onDelete: (label: Label) => void;
-}
+    onUpdate: (labelId: string, updates: { name: string; color: string; hotkey: string | null | undefined }) => void;
+    validateName: (name: string, excludeId?: string) => string | undefined;
+};
 
-export const EditLabelRow = ({ label, existingLabels, isSelected, onSelect, onDelete }: EditLabelRowProps) => {
-    const projectId = useProjectIdentifier();
-    const updateLabelMutation = useUpdateLabel();
-
+export const LabelRow = ({ label, isSelected, onSelect, onDelete, onUpdate, validateName }: LabelRowProps) => {
     const [name, setName] = useState(label.name);
     const [color, setColor] = useState(label.color);
 
-    const validationError = validateLabelName(name, existingLabels, label.id);
+    const validationError = validateName(name, label.id);
 
     const getValidName = () => (validationError || name.trim() === '' ? label.name : name.trim());
 
@@ -38,33 +33,12 @@ export const EditLabelRow = ({ label, existingLabels, isSelected, onSelect, onDe
         if (validationError || name.trim() === '') return;
         if (name === label.name) return;
 
-        updateLabelMutation.mutate({
-            body: {
-                labels_to_edit: [{ id: label.id, new_name: name.trim(), new_color: color, new_hotkey: label.hotkey }],
-            },
-            params: {
-                path: {
-                    project_id: projectId,
-                },
-            },
-        });
+        onUpdate(label.id, { name: name.trim(), color, hotkey: label.hotkey });
     };
 
     const handleColorChange = (newColor: string) => {
         setColor(newColor);
-
-        updateLabelMutation.mutate({
-            body: {
-                labels_to_edit: [
-                    { id: label.id, new_name: getValidName(), new_color: newColor, new_hotkey: label.hotkey },
-                ],
-            },
-            params: {
-                path: {
-                    project_id: projectId,
-                },
-            },
-        });
+        onUpdate(label.id, { name: getValidName(), color: newColor, hotkey: label.hotkey });
     };
 
     return (

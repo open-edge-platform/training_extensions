@@ -7,11 +7,11 @@ import { TextField } from '@geti/ui';
 
 import { formatHotkeyForDisplay } from '../../shared/hotkeys-definition';
 
-interface HotkeyFieldProps {
+type HotkeyFieldProps = {
     hotkey: string | null | undefined;
     onHotkeyChange: (hotkey: string | null) => void;
     errorMessage?: string;
-}
+};
 
 export const HotkeyField = ({ hotkey, onHotkeyChange, errorMessage }: HotkeyFieldProps) => {
     const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {

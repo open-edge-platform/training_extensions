@@ -5,10 +5,10 @@ import { ColorEditor, ColorSwatch, ColorSwatchPicker, Flex, ColorPicker as Spect
 
 import { DISTINCT_COLORS } from '../../features/annotator/label-utils';
 
-interface LabelColorPickerProps {
+type LabelColorPickerProps = {
     color: string;
     onChange: (color: string) => void;
-}
+};
 
 export const LabelColorPicker = ({ color, onChange }: LabelColorPickerProps) => {
     return (
