@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { CSSProperties } from 'react';
+import { CSSProperties, Fragment } from 'react';
 
 import { Divider, Flex, Text } from '@geti/ui';
 import { clsx } from 'clsx';
@@ -167,16 +167,15 @@ export const Labels = ({ isClassification = false, isMultiLabel = false, isReadO
                 aria-disabled={isReadOnly}
             >
                 {labels.map((label) => (
-                    <>
+                    <Fragment key={label.id}>
                         {label.id === EMPTY_LABEL_ID && <Divider size={'S'} orientation={'vertical'} />}
                         <LabelBadge
-                            key={label.id}
                             label={label}
                             isSelected={isLabelSelected(label)}
                             isDisabled={isReadOnly}
                             onClick={() => handleLabelClick(label)}
                         />
-                    </>
+                    </Fragment>
                 ))}
             </div>
         </Flex>

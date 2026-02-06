@@ -1,4 +1,4 @@
-.secondaryToolbarContainer {
+.toolbarContainer {
     padding-top: var(--spectrum-global-dimension-size-125);
 }
 
@@ -6,4 +6,12 @@
     padding-left: var(--spectrum-global-dimension-size-200);
     padding-right: var(--spectrum-global-dimension-size-50);
     gap: var(--spectrum-global-dimension-size-50);
+}
+
+.readOnlyCanvas {
+    /* Disable interactions on annotation shapes only */
+    & [aria-label*='annotation'],
+    & [aria-label*='prediction'] {
+        pointer-events: none !important;
+    }
 }

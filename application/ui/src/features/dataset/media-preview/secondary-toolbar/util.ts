@@ -12,3 +12,7 @@ export const toggleLabel = (newLabel: Label, labels: Label[]): Label[] => {
 
     return [...labels, newLabel];
 };
+
+export const getNextItem = (totalItems: number, newIndex: number) => {
+    return Math.min(totalItems, newIndex + 1);
+};
