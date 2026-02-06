@@ -4,10 +4,17 @@
 import { dimensionValue, Flex, Heading, View } from '@geti/ui';
 import { useCancelJob, useGetCurrentTrainingJob } from 'hooks/api/jobs.hook';
 
+import { type DatasetRevision } from '../../../../constants/shared-types';
 import { ModelsTableHeader } from '../components/models-table-header.component';
+import { GroupByMode } from '../types';
 import { TrainingModelRow } from './training-model-row.component';
 
-export const CurrentModelTraining = () => {
+type CurrentModelTrainingProps = {
+    groupBy: GroupByMode;
+    datasetRevisions: DatasetRevision[];
+};
+
+export const CurrentModelTraining = ({ groupBy, datasetRevisions }: CurrentModelTrainingProps) => {
     const activeTrainingJob = useGetCurrentTrainingJob();
     const cancelJobMutation = useCancelJob();
 
@@ -35,7 +42,12 @@ export const CurrentModelTraining = () => {
             <View backgroundColor={'gray-75'}>
                 <ModelsTableHeader />
 
-                <TrainingModelRow job={activeTrainingJob} onCancel={handleCancelTraining} />
+                <TrainingModelRow
+                    job={activeTrainingJob}
+                    onCancel={handleCancelTraining}
+                    groupBy={groupBy}
+                    datasetRevisions={datasetRevisions}
+                />
             </View>
         </Flex>
     );

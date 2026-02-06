@@ -18,3 +18,7 @@ export const formatTrainingDateTime = (dateString: string | null | undefined): s
         return '-';
     }
 };
+
+export const formatDatasetRevisionDate = (date: string): string => {
+    return dayjs(date).format('DD MMM YYYY, hh:mm A');
+};

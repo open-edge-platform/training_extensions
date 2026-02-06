@@ -7,6 +7,7 @@ import type { Model } from '../../../../../constants/shared-types';
 import { ModelDetailsTabs } from '../../model-details/model-details-tabs.component';
 import { useModelListing } from '../../provider/model-listing-provider';
 import { ArchitectureGroup, DatasetGroup } from '../../types';
+import { isFailedModel } from '../../utils/utils';
 import { GroupHeader } from '../group-headers/group-header.component';
 import { ModelRowContainer } from '../model-row/model-row.container';
 import { ModelsTableHeader } from '../models-table-header.component';
@@ -35,6 +36,7 @@ export const GroupModelsContainer = ({ group, models }: GroupModelsContainerProp
                         isQuiet
                         UNSAFE_className={classes.disclosure}
                         isExpanded={expandedModelIds.has(modelId)}
+                        isDisabled={isFailedModel(model)}
                         onExpandedChange={() => onExpandModel(modelId)}
                         data-testid={`model-disclosure-${modelId}`}
                     >

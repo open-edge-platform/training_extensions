@@ -11,13 +11,13 @@ import type { Model } from '../../../../../constants/shared-types';
 import { usePatchPipeline } from '../../../../../hooks/api/pipeline.hook';
 import { useDeleteModel } from '../../../hooks/api/use-delete-model.hook';
 import { useRenameModel } from '../../../hooks/api/use-rename-model.hook';
+import { isFailedModel } from '../../utils/utils';
 import { RenameModelDialog } from '../model-row/rename-model-dialog.component';
 
 const MODEL_ACTIONS = {
     ACTIVE: 'active',
     RENAME: 'rename',
     DELETE: 'delete',
-    EXPORT: 'export',
 };
 
 type ModelActionsProps = {
@@ -32,6 +32,8 @@ export const ModelActions = ({ model }: ModelActionsProps) => {
 
     const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+    const disabledKeys = isFailedModel(model) ? [MODEL_ACTIONS.ACTIVE, MODEL_ACTIONS.RENAME] : [];
 
     const handleAction = (key: Key) => {
         if (key === MODEL_ACTIONS.ACTIVE) {
@@ -70,7 +72,7 @@ export const ModelActions = ({ model }: ModelActionsProps) => {
                 <ActionButton isQuiet aria-label={'Model actions'}>
                     <MoreMenu />
                 </ActionButton>
-                <Menu onAction={handleAction} aria-label={'Model actions menu'}>
+                <Menu onAction={handleAction} aria-label={'Model actions menu'} disabledKeys={disabledKeys}>
                     <Item key={MODEL_ACTIONS.ACTIVE}>Set as active</Item>
                     <Item key={MODEL_ACTIONS.RENAME}>Rename</Item>
                     <Item key={MODEL_ACTIONS.DELETE}>Delete</Item>
