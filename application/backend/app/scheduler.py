@@ -32,7 +32,7 @@ class Scheduler:
         # Queue for the inference results (predictions)
         self.pred_queue: mp.Queue = mp.Queue(maxsize=self.PREDICTION_QUEUE_SIZE)
         # Queue for pushing predictions to the visualization stream (WebRTC)
-        self.rtc_stream_queue: queue.Queue = queue.Queue(maxsize=1)
+        self.rtc_stream_broadcaster: queue.Queue = queue.Queue(maxsize=1)
         # Event to sync all processes on application shutdown
         self.mp_stop_event = mp.Event()
 
@@ -70,7 +70,7 @@ class Scheduler:
         dispatching_thread = DispatchingWorker(
             event_bus=self._event_bus,
             pred_queue=self.pred_queue,
-            rtc_stream_queue=self.rtc_stream_queue,
+            rtc_stream_queue=self.rtc_stream_broadcaster,
             stop_event=self.mp_stop_event,
             data_collector=self._data_collector,
         )
