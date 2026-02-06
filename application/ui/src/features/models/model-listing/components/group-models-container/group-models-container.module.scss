@@ -4,6 +4,25 @@
 
 .disclosure {
     background-color: var(--spectrum-global-color-gray-75);
+    transition: background-color 0.3s ease-in-out;
+    border: 1px solid var(--spectrum-global-color-gray-200) !important;
+    border-top: none !important;
+
+    &:has(div[aria-label='Active']) {
+        border-left: var(--spectrum-alias-border-size-thicker) solid var(--energy-blue) !important;
+    }
+
+    &:not([class*='is-expanded']):has(div[aria-label='Active']) {
+        background-color: var(--selection-dark-blue);
+
+        & [class*='spectrum-Accordion-itemHeader']:has(div[aria-label='Active']) {
+            background-color: var(--selection-dark-blue);
+        }
+
+        & [class*='spectrum-Accordion-itemHeader'][class*='is-hovered']:has(div[aria-label='Active']) {
+            background-color: hsl(from var(--selection-dark-blue) h s calc(l + 5));
+        }
+    }
 
     &[class*='is-expanded'] {
         background-color: var(--spectrum-global-color-gray-50);
