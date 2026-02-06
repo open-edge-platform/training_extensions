@@ -65,10 +65,7 @@ export const SecondaryToolbar = ({
             </Toolbar.Container>
             <Toolbar.Container>
                 <Toolbar.Section>
-                    <Labels
-                        isClassification={isClassification}
-                        isMultiLabel={isMultiLabel}
-                    />
+                    <Labels isClassification={isClassification} isMultiLabel={isMultiLabel} />
                 </Toolbar.Section>
             </Toolbar.Container>
             <Toolbar.Container>

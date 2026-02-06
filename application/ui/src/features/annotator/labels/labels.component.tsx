@@ -221,10 +221,7 @@ export const Labels = ({ isClassification = false, isMultiLabel = false }: Label
     return (
         <Flex alignItems='start' gap='size-100' minWidth={0} flex='1'>
             {hasLabels && (
-                <div
-                    aria-label={'Labels'}
-                    className={classes.labelsContainer}
-                >
+                <div aria-label={'Labels'} className={classes.labelsContainer}>
                     {labels.map((label) => (
                         <Fragment key={label.id}>
                             {label.id === EMPTY_LABEL_ID && <Divider size={'S'} orientation={'vertical'} />}

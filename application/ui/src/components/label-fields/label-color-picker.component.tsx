@@ -12,7 +12,11 @@ interface LabelColorPickerProps {
 
 export const LabelColorPicker = ({ color, onChange }: LabelColorPickerProps) => {
     return (
-        <SpectrumColorPicker value={color} onChange={(newColor) => onChange(newColor.toString('hex'))} rounding={'none'}>
+        <SpectrumColorPicker
+            value={color}
+            onChange={(newColor) => onChange(newColor.toString('hex'))}
+            rounding={'none'}
+        >
             <Flex direction='column' gap='size-300'>
                 <ColorEditor />
                 <ColorSwatchPicker width={'size-3600'}>
