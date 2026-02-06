@@ -16,14 +16,14 @@ import type { DatasetRevisionItem, Media } from '../constants/shared-types';
  * NOTE: In the future the whole media/datasetItem/datasetRevisionItem will hopefully be
  * merged and we wont need multiple endpoints to get the full dataset of the item.
  */
-export const datasetRevisionItemToMedia = (item: DatasetRevisionItem): Media => {
+export const datasetRevisionItemToMedia = (item: Partial<DatasetRevisionItem> & { id: string }): Media => {
     return {
         id: item.id,
         name: item.id, // Use ID as name since revision items don't have names
         type: 'image',
-        format: item.format,
-        width: item.width,
-        height: item.height,
+        format: item.format ?? ('jpg' as 'jpg' | 'png'),
+        width: item.width ?? 0,
+        height: item.height ?? 0,
         size: 0, // Revision items don't track file size
         source_id: null,
     };

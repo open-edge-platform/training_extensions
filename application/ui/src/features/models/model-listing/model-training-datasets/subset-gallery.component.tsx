@@ -25,7 +25,7 @@ const layoutOptions = {
 };
 
 type SubsetGalleryProps = {
-    items: DatasetRevisionItem[];
+    items: (Partial<DatasetRevisionItem> & { id: string })[];
     datasetRevisionId: string;
     fetchNextPage: () => void;
     hasNextPage: boolean;
@@ -34,7 +34,7 @@ type SubsetGalleryProps = {
 };
 
 type SubsetMediaDialogProps = {
-    item: DatasetRevisionItem;
+    item: Partial<DatasetRevisionItem> & { id: string };
     onClose: () => void;
 };
 
@@ -81,7 +81,7 @@ export const SubsetGallery = ({
     fetchNextPage,
 }: SubsetGalleryProps) => {
     const projectId = useProjectIdentifier();
-    const [selectedItem, setSelectedItem] = useState<DatasetRevisionItem | null>(null);
+    const [selectedItem, setSelectedItem] = useState<(Partial<DatasetRevisionItem> & { id: string }) | null>(null);
 
     if (isPending) {
         return (
