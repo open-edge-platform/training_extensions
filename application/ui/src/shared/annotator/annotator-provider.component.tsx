@@ -47,7 +47,11 @@ const useSelectedLabel = () => {
     };
 };
 
-const getDefaultTool = (taskType: TaskType | null): ToolType | null => {
+const getDefaultTool = (taskType: TaskType | null, mode?: 'annotation' | 'prediction'): ToolType | null => {
+    if (mode === 'prediction') {
+        return null;
+    }
+
     if (isClassificationTask(taskType)) {
         return null;
     }
@@ -59,10 +63,18 @@ const getDefaultTool = (taskType: TaskType | null): ToolType | null => {
     return 'bounding-box';
 };
 
-export const AnnotatorProvider = ({ mediaItem, children }: { mediaItem: Media; children: ReactNode }) => {
+export const AnnotatorProvider = ({
+    mediaItem,
+    mode,
+    children,
+}: {
+    mediaItem: Media;
+    mode?: 'annotation' | 'prediction';
+    children: ReactNode;
+}) => {
     const { data: selectedProject } = useProject();
     const [activeTool, setActiveTool] = useState<ToolType | null>(() =>
-        getDefaultTool(selectedProject?.task.task_type)
+        getDefaultTool(selectedProject?.task.task_type, mode)
     );
 
     const { selectedLabel, selectedLabelId, setSelectedLabelId, labels } = useSelectedLabel();

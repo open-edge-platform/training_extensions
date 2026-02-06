@@ -33,7 +33,7 @@
     opacity: 1;
 }
 
-div[class*='mediaItem']:is([data-hovered], [data-selected], [data-accepted='true'], [data-rejected='true']) {
+div[class*='mediaItem']:is([data-hovered], [data-selected]) {
     .floatingContainer {
         opacity: 1;
     }
