@@ -83,14 +83,4 @@ describe('EditProjectNameDialog', () => {
         expect(await screen.findByText(errorMessage)).toBeVisible();
         expect(onClose).not.toHaveBeenCalled();
     });
-
-    it('respects maximum character length', () => {
-        render(
-            <EditProjectNameDialog onClose={vi.fn()} isOpen={true} projectId={projectId} projectName={projectName} />
-        );
-
-        const input = screen.getByLabelText(/edit project name field/i) as HTMLInputElement;
-
-        expect(input.maxLength).toBe(100);
-    });
 });

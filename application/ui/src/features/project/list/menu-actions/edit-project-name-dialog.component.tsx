@@ -26,16 +26,17 @@ interface EditProjectNameDialogProps {
     projectName: string;
 }
 
-const MAX_NUMBER_OF_CHARACTERS_OF_PROJECT_NAME = 100;
+const PROJECT_NAME_MAX_LENGTH = 100;
 
 export const EditProjectNameDialog = ({ onClose, isOpen, projectId, projectName }: EditProjectNameDialogProps) => {
     const patchProjectMutation = usePatchProject();
     const [newProjectName, setNewProjectName] = useState(projectName);
 
-    const isNameUnchanged = newProjectName.trim() === projectName;
-    const isSaveButtonDisabled = isEmpty(newProjectName) || isNameUnchanged || patchProjectMutation.isPending;
+    const trimmedProjectName = newProjectName.trim();
+    const isNameUnchanged = trimmedProjectName === projectName;
+    const isSaveButtonDisabled = isEmpty(trimmedProjectName) || isNameUnchanged || patchProjectMutation.isPending;
 
-    const editProjectName = async (newName: string) => {
+    const editProjectName = (newName: string) => {
         patchProjectMutation.mutate(
             {
                 params: { path: { project_id: projectId } },
@@ -69,7 +70,7 @@ export const EditProjectNameDialog = ({ onClose, isOpen, projectId, projectName 
                     <Content>
                         <Form onSubmit={handleEditProjectName}>
                             <TextField
-                                maxLength={MAX_NUMBER_OF_CHARACTERS_OF_PROJECT_NAME}
+                                maxLength={PROJECT_NAME_MAX_LENGTH}
                                 //eslint-disable-next-line jsx-a11y/no-autofocus
                                 autoFocus
                                 value={newProjectName}

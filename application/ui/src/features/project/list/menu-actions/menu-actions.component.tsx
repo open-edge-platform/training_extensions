@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { CSSProperties } from 'react';
+import type { CSSProperties } from 'react';
 
 import { ActionButton, Item, Key, Menu, MenuTrigger, toast } from '@geti/ui';
 import { MoreMenu } from '@geti/ui/icons';
