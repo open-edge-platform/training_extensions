@@ -6,15 +6,18 @@
     height: var(--spectrum-global-dimension-size-225);
     margin: var(--spectrum-global-dimension-size-100) var(--spectrum-global-dimension-size-75) 0;
     padding: 0;
-    border: none;
+    border: var(--spectrum-global-dimension-size-10) solid transparent;
     border-radius: var(--spectrum-alias-border-radius-regular);
     background-color: transparent;
     color: var(--spectrum-global-color-gray-700);
     cursor: pointer;
-    transition: background-color 0.15s ease;
+    transition:
+        background-color 0.15s ease,
+        border-color 0.15s ease;
 
     &:hover {
         background-color: var(--spectrum-global-color-gray-200);
+        border-color: var(--spectrum-global-color-gray-400);
     }
 
     &.selected {

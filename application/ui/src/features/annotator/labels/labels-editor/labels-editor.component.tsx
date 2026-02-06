@@ -11,21 +11,21 @@ import { LabelRow } from '../label-row/label-row.component';
 import { NewLabelRow } from '../new-label-row/new-label-row.component';
 import { useLabels } from '../use-labels.hook';
 
-import classes from './labels-popover.module.scss';
+import classes from './labels-editor.module.scss';
 
-type LabelsPopoverProps = {
+type LabelsEditorProps = {
     isClassification?: boolean;
     isMultiLabel?: boolean;
     onRequestDeleteLabel: (label: Label) => void;
     autoCreateNewLabel?: boolean;
 };
 
-export const LabelsPopover = ({
+export const LabelsEditor = ({
     isClassification = false,
     isMultiLabel = false,
     onRequestDeleteLabel,
     autoCreateNewLabel = false,
-}: LabelsPopoverProps) => {
+}: LabelsEditorProps) => {
     const { editableLabels, toggleLabelOnAnnotations, isLabelActive, addLabel, updateLabel, validateName } = useLabels({
         isClassification,
         isMultiLabel,
@@ -47,7 +47,7 @@ export const LabelsPopover = ({
     };
 
     return (
-        <View UNSAFE_className={classes.popoverContent}>
+        <View UNSAFE_className={classes.editorContent}>
             <Flex direction={'column'} gap={'size-50'} UNSAFE_className={classes.labelsList}>
                 {editableLabels.map((label) => (
                     <LabelRow

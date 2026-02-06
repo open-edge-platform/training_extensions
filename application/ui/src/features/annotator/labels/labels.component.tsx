@@ -1,25 +1,14 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { CSSProperties, Fragment, useRef, useState } from 'react';
+import { CSSProperties, Fragment } from 'react';
 
-import {
-    ActionButton,
-    AlertDialog,
-    CustomPopover,
-    DialogContainer,
-    Divider,
-    Flex,
-    FocusableRefValue,
-    Text,
-} from '@geti/ui';
-import { Add, Edit } from '@geti/ui/icons';
-import { useOverlayTriggerState } from '@react-stately/overlays';
+import { Divider, Flex, Text } from '@geti/ui';
 import { clsx } from 'clsx';
 
 import type { Label } from '../../../constants/shared-types';
 import { EMPTY_LABEL_ID } from '../../../shared/annotator/labels';
-import { LabelsPopover } from './labels-popover/labels-popover.component';
+import { LabelsEditorPopover } from './labels-editor/labels-editor-popover.component';
 import { useLabels } from './use-labels.hook';
 
 import classes from './labels.module.scss';
@@ -50,35 +39,10 @@ type LabelsProps = {
 };
 
 export const Labels = ({ isClassification = false, isMultiLabel = false }: LabelsProps) => {
-    const { labels, hasLabels, toggleLabelOnAnnotations, isLabelActive, deleteLabel } = useLabels({
+    const { labels, hasLabels, toggleLabelOnAnnotations, isLabelActive } = useLabels({
         isClassification,
         isMultiLabel,
     });
-
-    const triggerRef = useRef<FocusableRefValue<HTMLElement, HTMLButtonElement>>(null);
-    const popoverState = useOverlayTriggerState({});
-    const deleteDialogState = useOverlayTriggerState({});
-    const [labelToDelete, setLabelToDelete] = useState<Label | null>(null);
-
-    const handleRequestDeleteLabel = (label: Label) => {
-        setLabelToDelete(label);
-        popoverState.close();
-        deleteDialogState.open();
-    };
-
-    const handleConfirmDeleteLabel = () => {
-        if (labelToDelete) {
-            deleteDialogState.close();
-            deleteLabel(labelToDelete.id);
-            setLabelToDelete(null);
-        }
-    };
-
-    const handleCancelDeleteLabel = () => {
-        deleteDialogState.close();
-        setLabelToDelete(null);
-        popoverState.open();
-    };
 
     return (
         <Flex alignItems='start' gap='size-100' minWidth={0} flex='1'>
@@ -96,43 +60,11 @@ export const Labels = ({ isClassification = false, isMultiLabel = false }: Label
                     ))}
                 </div>
             )}
-            {hasLabels ? (
-                <ActionButton ref={triggerRef} isQuiet aria-label='Edit labels' onPress={popoverState.open}>
-                    <Edit />
-                </ActionButton>
-            ) : (
-                <ActionButton ref={triggerRef} isQuiet aria-label='Create label' onPress={popoverState.open}>
-                    <Add />
-                    <Text>Create label</Text>
-                </ActionButton>
-            )}
-            {popoverState.isOpen && (
-                <CustomPopover ref={triggerRef} state={popoverState} placement='bottom end'>
-                    <LabelsPopover
-                        isClassification={isClassification}
-                        isMultiLabel={isMultiLabel}
-                        onRequestDeleteLabel={handleRequestDeleteLabel}
-                        autoCreateNewLabel={!hasLabels}
-                    />
-                </CustomPopover>
-            )}
-
-            <DialogContainer onDismiss={handleCancelDeleteLabel}>
-                {deleteDialogState.isOpen && labelToDelete && (
-                    <AlertDialog
-                        title={'Delete label'}
-                        variant={'destructive'}
-                        primaryActionLabel={'Delete'}
-                        cancelLabel={'Cancel'}
-                        onPrimaryAction={handleConfirmDeleteLabel}
-                        onCancel={handleCancelDeleteLabel}
-                    >
-                        If you remove the {labelToDelete.name} label, all annotations in your dataset that have this
-                        label will be deleted. However, this won&apos;t impact any models you&apos;ve trained in the
-                        past.
-                    </AlertDialog>
-                )}
-            </DialogContainer>
+            <LabelsEditorPopover
+                isClassification={isClassification}
+                isMultiLabel={isMultiLabel}
+                hasLabels={hasLabels}
+            />
         </Flex>
     );
 };

@@ -1,9 +1,9 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { CSSProperties, useState } from 'react';
+import { useState } from 'react';
 
-import { ActionButton, Flex, TextField, View } from '@geti/ui';
+import { ActionButton, Grid, TextField, View } from '@geti/ui';
 import { Delete } from '@geti/ui/icons';
 
 import { LabelColorPicker } from '../../../../components/label-fields/label-color-picker.component';
@@ -42,17 +42,18 @@ export const LabelRow = ({ label, isSelected, onSelect, onDelete, onUpdate, vali
     };
 
     return (
-        <Flex
+        <Grid
+            columns={['size-350', 'size-400', '1fr', 'size-400']}
             gap={'size-100'}
             alignItems={'start'}
             UNSAFE_className={classes.labelRow}
-            UNSAFE_style={{ '--label-color': color } as CSSProperties}
+            UNSAFE_style={{ '--label-color': color }}
         >
             <SilentCheckbox isSelected={isSelected} onChange={onSelect} aria-label={`Select ${label.name} label`} />
 
             <LabelColorPicker color={color} onChange={handleColorChange} />
 
-            <View flex={1}>
+            <View>
                 <TextField
                     aria-label={'Label name'}
                     placeholder={'Label name'}
@@ -73,6 +74,6 @@ export const LabelRow = ({ label, isSelected, onSelect, onDelete, onUpdate, vali
             >
                 <Delete />
             </ActionButton>
-        </Flex>
+        </Grid>
     );
 };

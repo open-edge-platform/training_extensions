@@ -3,7 +3,7 @@
 
 import { FocusEvent, KeyboardEvent, useEffect, useRef, useState } from 'react';
 
-import { ActionButton, DOMRefValue, Flex, TextField, TextFieldRef, useUnwrapDOMRef, View } from '@geti/ui';
+import { ActionButton, DOMRefValue, Grid, TextField, TextFieldRef, useUnwrapDOMRef, View } from '@geti/ui';
 import { Close } from '@geti/ui/icons';
 
 import { LabelColorPicker } from '../../../../components/label-fields/label-color-picker.component';
@@ -61,22 +61,19 @@ export const NewLabelRow = ({ onSave, onCancel, validateName }: NewLabelRowProps
     };
 
     return (
-        <Flex
+        <Grid
             ref={rowRef}
+            columns={['size-350', 'size-400', '1fr', 'size-400']}
             gap={'size-100'}
             alignItems={'start'}
             UNSAFE_className={classes.labelRow}
             UNSAFE_style={{ '--label-color': color }}
         >
-            <View
-                UNSAFE_style={{
-                    width: 'calc(var(--spectrum-global-dimension-size-300) + var(--spectrum-global-dimension-size-75))',
-                }}
-            />
+            <View />
 
             <LabelColorPicker color={color} onChange={setColor} />
 
-            <View flex={1}>
+            <View>
                 <TextField
                     ref={inputRef}
                     aria-label={'New label name'}
@@ -99,6 +96,6 @@ export const NewLabelRow = ({ onSave, onCancel, validateName }: NewLabelRowProps
             >
                 <Close />
             </ActionButton>
-        </Flex>
+        </Grid>
     );
 };
