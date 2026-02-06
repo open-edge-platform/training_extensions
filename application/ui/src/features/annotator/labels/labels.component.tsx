@@ -34,19 +34,17 @@ import classes from './labels.module.scss';
 interface LabelBadgeProps {
     label: Label;
     isSelected: boolean;
-    isDisabled: boolean;
     onClick: () => void;
 }
 
-const LabelBadge = ({ label, isSelected, isDisabled, onClick }: LabelBadgeProps) => {
+const LabelBadge = ({ label, isSelected, onClick }: LabelBadgeProps) => {
     return (
         <button
             onClick={onClick}
             style={{ '--labelBgColor': label.color } as CSSProperties}
-            className={clsx(classes.badge, { [classes.selected]: isSelected, [classes.disabled]: isDisabled })}
+            className={clsx(classes.badge, { [classes.selected]: isSelected })}
             aria-pressed={isSelected}
             aria-label={`Label ${label.name}`}
-            aria-disabled={isDisabled}
         >
             <Text UNSAFE_className={classes.badgeText}>{label.name}</Text>
         </button>
@@ -56,12 +54,11 @@ const LabelBadge = ({ label, isSelected, isDisabled, onClick }: LabelBadgeProps)
 interface LabelsProps {
     isClassification?: boolean;
     isMultiLabel?: boolean;
-    isReadOnly?: boolean;
 }
 
 const filterOutEmptyLabels = (labels: Label[]): Label[] => labels.filter((label) => label.id !== EMPTY_LABEL_ID);
 
-export const Labels = ({ isClassification = false, isMultiLabel = false, isReadOnly = false }: LabelsProps) => {
+export const Labels = ({ isClassification = false, isMultiLabel = false }: LabelsProps) => {
     const { selectedLabelId, setSelectedLabelId, labels } = useAnnotator();
     const { selectedAnnotations } = useSelectedAnnotations();
     const { annotations, addAnnotations, updateAnnotations, deleteAnnotations, addAnnotationWithEmptyLabel } =
@@ -76,8 +73,6 @@ export const Labels = ({ isClassification = false, isMultiLabel = false, isReadO
     const [labelToDelete, setLabelToDelete] = useState<Label | null>(null);
 
     const handleClassificationClick = (label: Label) => {
-        if (isReadOnly) return;
-
         if (isEmpty(annotations)) {
             addAnnotations([{ type: 'full_image' }], [label]);
             return;
@@ -130,8 +125,6 @@ export const Labels = ({ isClassification = false, isMultiLabel = false, isReadO
     };
 
     const handleNonClassificationClick = (label: Label) => {
-        if (isReadOnly) return;
-
         if (label.id === EMPTY_LABEL_ID) {
             addAnnotationWithEmptyLabel(label);
             return;
@@ -230,8 +223,7 @@ export const Labels = ({ isClassification = false, isMultiLabel = false, isReadO
             {hasLabels && (
                 <div
                     aria-label={'Labels'}
-                    className={clsx(classes.labelsContainer, { [classes.readOnlyLabels]: isReadOnly })}
-                    aria-disabled={isReadOnly}
+                    className={classes.labelsContainer}
                 >
                     {labels.map((label) => (
                         <Fragment key={label.id}>
@@ -239,7 +231,6 @@ export const Labels = ({ isClassification = false, isMultiLabel = false, isReadO
                             <LabelBadge
                                 label={label}
                                 isSelected={isLabelSelected(label)}
-                                isDisabled={isReadOnly}
                                 onClick={() => handleLabelClick(label)}
                             />
                         </Fragment>

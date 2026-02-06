@@ -68,7 +68,6 @@ export const SecondaryToolbar = ({
                     <Labels
                         isClassification={isClassification}
                         isMultiLabel={isMultiLabel}
-                        isReadOnly={mode === 'prediction'}
                     />
                 </Toolbar.Section>
             </Toolbar.Container>
