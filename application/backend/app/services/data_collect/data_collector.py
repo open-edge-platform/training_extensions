@@ -49,6 +49,8 @@ class FixedRatePolicyChecker(PolicyChecker):
     """
 
     def __init__(self, policy: FixedRateDataCollectionPolicy):
+        if not policy.rate:
+            raise ValueError("Collection rate cannot be set to 0 or None.")
         self.min_interval = 1.0 / policy.rate
         self.last_collect_time = 0.0
 
