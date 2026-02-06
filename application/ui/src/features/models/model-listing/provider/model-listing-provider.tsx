@@ -43,7 +43,7 @@ export const ModelListingProvider = ({ children }: ModelListingProviderProps) =>
     const [expandedModelIds, setExpandedModelIds] = useState<Set<string>>(new Set());
     const [searchBy, setSearchBy] = useState<string>('');
 
-    const model = useGetActiveModel();
+    const activeModel = useGetActiveModel();
     const { data: models } = useGetModels();
     const { data: datasetRevisions = [] } = useGetDatasetRevisions();
     const groupedModels = useGroupedModels(models, { groupBy, sortBy, pinActive, searchBy, datasetRevisions });
@@ -83,7 +83,7 @@ export const ModelListingProvider = ({ children }: ModelListingProviderProps) =>
         sortBy,
         pinActive,
         expandedModelIds,
-        activeModelId: model?.id,
+        activeModelId: activeModel?.id,
         groupedModels,
         searchBy,
         datasetRevisions,
