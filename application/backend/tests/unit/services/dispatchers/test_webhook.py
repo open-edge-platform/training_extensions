@@ -53,6 +53,12 @@ def fxt_sample_predictions():
 class TestWebhookDispatcher:
     """Unit tests for the WebhookDispatcher class."""
 
+    def test_init_zero_rate_limit_raises(self, fxt_webhook_config):
+        """Test that the BaseDispatcher raises ValueError when rate_limit is zero"""
+        fxt_webhook_config.rate_limit = 0
+        with pytest.raises(ValueError):
+            WebhookDispatcher(fxt_webhook_config)
+
     def test_init_sets_attributes(self, fxt_webhook_config):
         """Test that the WebhookDispatcher initializes with correct attributes."""
         dispatcher = WebhookDispatcher(fxt_webhook_config)
