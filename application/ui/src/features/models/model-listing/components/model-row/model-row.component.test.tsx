@@ -104,7 +104,7 @@ describe('ModelRow', () => {
             const { rerender } = render(
                 <ModelRow
                     model={defaultModel}
-                    activeModelArchitectureId='model-123'
+                    activeModelId='model-123'
                     datasetRevision={datasetRevision}
                     groupBy={'dataset'}
                 />
@@ -114,7 +114,7 @@ describe('ModelRow', () => {
             rerender(
                 <ModelRow
                     model={defaultModel}
-                    activeModelArchitectureId={'different-id'}
+                    activeModelId={'different-id'}
                     datasetRevision={datasetRevision}
                     groupBy={'dataset'}
                 />

@@ -19,7 +19,7 @@ import styles from './model-row.module.scss';
 
 type ModelRowProps = {
     model: Model;
-    activeModelArchitectureId?: string;
+    activeModelId?: string;
     parentRevisionModel?: Model;
     onExpandModel?: (modelId: string) => void;
     groupBy: GroupByMode;
@@ -32,7 +32,7 @@ const FailedModel = () => {
 
 export const ModelRow = ({
     model,
-    activeModelArchitectureId,
+    activeModelId,
     parentRevisionModel,
     onExpandModel,
     groupBy,
@@ -59,7 +59,7 @@ export const ModelRow = ({
                             </>
                         )}
                     </Text>
-                    {model.id === activeModelArchitectureId && <ActiveModelTag />}
+                    {model.id === activeModelId && <ActiveModelTag />}
                 </Flex>
                 <Text UNSAFE_className={styles.secondaryText}>
                     {parentRevisionModel ? (

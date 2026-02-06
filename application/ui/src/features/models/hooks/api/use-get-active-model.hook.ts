@@ -3,8 +3,8 @@
 
 import { usePipeline } from 'hooks/api/pipeline.hook';
 
-export const useGetActiveModelArchitectureId = () => {
+export const useGetActiveModel = () => {
     const pipeline = usePipeline();
 
-    return pipeline.data.model?.architecture;
+    return pipeline.data.model;
 };
