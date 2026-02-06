@@ -5,6 +5,7 @@ import { createContext, ReactNode, useContext, useState } from 'react';
 
 import { useGetDatasetRevisions } from 'hooks/use-get-dataset-revisions.hook';
 
+import { type DatasetRevision } from '../../../../constants/shared-types';
 import { useGetActiveModelArchitectureId } from '../../hooks/api/use-get-active-model-architecture-id.hook';
 import { useGetModels } from '../../hooks/api/use-get-models.hook';
 import { useGroupedModels } from '../hooks/use-grouped-models.hook';
@@ -19,6 +20,7 @@ interface ModelListingContextValue {
     activeModelArchitectureId: string | undefined;
     groupedModels: GroupedModels[];
     searchBy: string;
+    datasetRevisions: DatasetRevision[];
 
     // Actions
     onGroupByChange: (mode: GroupByMode) => void;
@@ -84,6 +86,7 @@ export const ModelListingProvider = ({ children }: ModelListingProviderProps) =>
         activeModelArchitectureId,
         groupedModels,
         searchBy,
+        datasetRevisions,
         onGroupByChange,
         onSortChange,
         onPinActiveToggle,

@@ -12,8 +12,9 @@ type ModelRowContainerProps = {
 };
 
 export const ModelRowContainer = ({ model }: ModelRowContainerProps) => {
-    const { activeModelArchitectureId, onExpandModel } = useModelListing();
+    const { activeModelArchitectureId, onExpandModel, groupBy, datasetRevisions } = useModelListing();
     const { data: parentRevisionModel } = useGetModel(model.parent_revision);
+    const datasetRevision = datasetRevisions.find(({ id }) => id === model.training_info.dataset_revision_id);
 
     return (
         <>
@@ -22,6 +23,8 @@ export const ModelRowContainer = ({ model }: ModelRowContainerProps) => {
                 activeModelArchitectureId={activeModelArchitectureId}
                 parentRevisionModel={parentRevisionModel}
                 onExpandModel={onExpandModel}
+                groupBy={groupBy}
+                datasetRevision={datasetRevision}
             />
             <ModelActions model={model} />
         </>
