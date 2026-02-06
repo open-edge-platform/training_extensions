@@ -5,6 +5,7 @@ import { getMockedModel } from 'mocks/mock-model';
 import { renderHook } from 'test-utils/render';
 
 import type { Model } from '../../../../constants/shared-types';
+import { isFailedModel } from '../utils/utils';
 import { useGroupedModels } from './use-grouped-models.hook';
 
 const mockActiveModelId = vi.hoisted(() => vi.fn<() => Model | undefined>(() => undefined));
@@ -27,6 +28,7 @@ describe('useGroupedModels', () => {
                     pinActive: false,
                     searchBy: '',
                     datasetRevisions: [],
+                    showFailedModels: true,
                 })
             );
 
@@ -41,6 +43,7 @@ describe('useGroupedModels', () => {
                     pinActive: false,
                     searchBy: '',
                     datasetRevisions: [],
+                    showFailedModels: true,
                 })
             );
 
@@ -84,6 +87,7 @@ describe('useGroupedModels', () => {
                     pinActive: false,
                     searchBy: '',
                     datasetRevisions: [],
+                    showFailedModels: true,
                 })
             );
 
@@ -108,6 +112,7 @@ describe('useGroupedModels', () => {
                     pinActive: false,
                     searchBy: '',
                     datasetRevisions: [],
+                    showFailedModels: true,
                 })
             );
 
@@ -138,6 +143,7 @@ describe('useGroupedModels', () => {
                     pinActive: false,
                     searchBy: '',
                     datasetRevisions: [],
+                    showFailedModels: true,
                 })
             );
 
@@ -162,6 +168,7 @@ describe('useGroupedModels', () => {
                     pinActive: true,
                     searchBy: '',
                     datasetRevisions: [],
+                    showFailedModels: true,
                 })
             );
 
@@ -186,6 +193,7 @@ describe('useGroupedModels', () => {
                     pinActive: true,
                     searchBy: '',
                     datasetRevisions: [],
+                    showFailedModels: true,
                 })
             );
 
@@ -210,6 +218,7 @@ describe('useGroupedModels', () => {
                     pinActive: false,
                     searchBy: '',
                     datasetRevisions: [],
+                    showFailedModels: true,
                 })
             );
 
@@ -231,6 +240,7 @@ describe('useGroupedModels', () => {
                     pinActive: false,
                     searchBy: 'resnet',
                     datasetRevisions: [],
+                    showFailedModels: true,
                 })
             );
 
@@ -252,6 +262,7 @@ describe('useGroupedModels', () => {
                     pinActive: false,
                     searchBy: 'nonexistent',
                     datasetRevisions: [],
+                    showFailedModels: true,
                 })
             );
 
@@ -272,6 +283,7 @@ describe('useGroupedModels', () => {
                     pinActive: false,
                     searchBy: 'YOLOX',
                     datasetRevisions: [],
+                    showFailedModels: true,
                 })
             );
 
@@ -294,6 +306,7 @@ describe('useGroupedModels', () => {
                     pinActive: false,
                     searchBy: 'ResNet',
                     datasetRevisions: [],
+                    showFailedModels: true,
                 })
             );
 
@@ -320,6 +333,7 @@ describe('useGroupedModels', () => {
                     pinActive: true,
                     searchBy: 'ResNet',
                     datasetRevisions: [],
+                    showFailedModels: true,
                 })
             );
 
@@ -342,6 +356,7 @@ describe('useGroupedModels', () => {
                     pinActive: false,
                     searchBy: 'Custom',
                     datasetRevisions: [],
+                    showFailedModels: true,
                 })
             );
 
@@ -349,6 +364,33 @@ describe('useGroupedModels', () => {
             expect(allModels).toHaveLength(2);
             expect(allModels.map((m) => m.name)).toEqual(
                 expect.arrayContaining(['My-Custom-Model-v1', 'Custom-Detection'])
+            );
+        });
+
+        it('filters out failed models', () => {
+            const models = [
+                getMockedModel({ id: 'model-1', name: 'My-Custom-Model-v1' }),
+                getMockedModel({ id: 'model-2', name: 'Another-Model' }),
+                getMockedModel({ id: 'model-3', name: 'Custom-Detection', training_info: { status: 'failed' } }),
+            ];
+
+            const { result } = renderHook(() =>
+                useGroupedModels(models, {
+                    groupBy: 'architecture',
+                    sortBy: 'name',
+                    pinActive: false,
+                    searchBy: '',
+                    datasetRevisions: [],
+                    showFailedModels: false,
+                })
+            );
+
+            const allModels = result.current.flatMap((group) => group.models);
+            const notFailedModels = allModels.filter((model) => !isFailedModel(model));
+
+            expect(allModels).toHaveLength(notFailedModels.length);
+            expect(notFailedModels.map((m) => m.name)).toEqual(
+                expect.arrayContaining(['My-Custom-Model-v1', 'Another-Model'])
             );
         });
     });
