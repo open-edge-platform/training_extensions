@@ -4,10 +4,10 @@
 import { Flex, Text } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 
-import { useGetActiveModelArchitectureId } from '../../models/hooks/api/use-get-active-model-architecture-id.hook';
+import { useGetActiveModel } from '../../models/hooks/api/use-get-active-model.hook';
 
 export const ActiveModel = () => {
-    const activeModelArchitectureId = useGetActiveModelArchitectureId();
+    const activeModel = useGetActiveModel();
 
     return (
         <Flex gap='size-50' alignItems='center'>
@@ -23,7 +23,7 @@ export const ActiveModel = () => {
                     color: 'var(--spectrum-global-color-gray-700)',
                 }}
             >
-                {isEmpty(activeModelArchitectureId) ? 'Unknown' : activeModelArchitectureId}
+                {isEmpty(activeModel) ? 'Unknown' : activeModel.name}
             </Text>
         </Flex>
     );

@@ -46,9 +46,11 @@ const ModelListingContent = () => {
 
             <Divider size={'S'} marginY={'size-300'} />
 
-            <CurrentModelTraining groupBy={groupBy} datasetRevisions={datasetRevisions} />
+            <Flex direction={'column'} flex={1} UNSAFE_style={{ overflowY: 'auto', scrollbarGutter: 'stable' }}>
+                <CurrentModelTraining groupBy={groupBy} datasetRevisions={datasetRevisions} />
 
-            <ModelListing hasNoResults={hasNoResults} groupedModels={groupedModels} />
+                <ModelListing hasNoResults={hasNoResults} groupedModels={groupedModels} />
+            </Flex>
         </Flex>
     );
 };

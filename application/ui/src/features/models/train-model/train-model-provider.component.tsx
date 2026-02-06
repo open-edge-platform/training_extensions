@@ -12,7 +12,7 @@ import {
     TrainingDevice,
 } from '../../../constants/shared-types';
 import { useGetDatasetRevisions } from '../../../hooks/use-get-dataset-revisions.hook';
-import { useGetActiveModelArchitectureId } from '../hooks/api/use-get-active-model-architecture-id.hook';
+import { useGetActiveModel } from '../hooks/api/use-get-active-model.hook';
 import { useGetTaskModelArchitectures } from '../hooks/api/use-get-model-architectures.hook';
 import { useGetTrainingDevices } from '../hooks/api/use-get-training-devices';
 
@@ -82,7 +82,7 @@ export const TrainModelProvider = ({ children, preSelectedDatasetRevisionId }: T
     const { data } = useGetTaskModelArchitectures();
     const { data: trainingDevices } = useGetTrainingDevices();
     const { datasetRevisions } = useDatasetRevisions();
-    const activeModelArchitectureId = useGetActiveModelArchitectureId();
+    const activeModel = useGetActiveModel();
 
     const modelArchitectures: ModelArchitectureWithPerformanceCategory[] = getModelArchitectures(
         data.model_architectures,
@@ -90,7 +90,7 @@ export const TrainModelProvider = ({ children, preSelectedDatasetRevisionId }: T
     );
 
     const activeModelArchitecture = data.model_architectures.find(
-        (modelArchitecture) => modelArchitecture.id === activeModelArchitectureId
+        (modelArchitecture) => modelArchitecture.id === activeModel?.architecture
     );
 
     const [selectedModelArchitectureId, setSelectedModelArchitectureId] = useState<string | null>(
@@ -109,7 +109,7 @@ export const TrainModelProvider = ({ children, preSelectedDatasetRevisionId }: T
             value={{
                 modelArchitectures,
 
-                activeModelArchitectureId,
+                activeModelArchitectureId: activeModel?.architecture,
 
                 selectedModelArchitectureId,
                 onSelectModelArchitectureId: setSelectedModelArchitectureId,

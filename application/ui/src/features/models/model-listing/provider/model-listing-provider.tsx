@@ -6,7 +6,7 @@ import { createContext, ReactNode, useContext, useState } from 'react';
 import { useGetDatasetRevisions } from 'hooks/use-get-dataset-revisions.hook';
 
 import { type DatasetRevision } from '../../../../constants/shared-types';
-import { useGetActiveModelArchitectureId } from '../../hooks/api/use-get-active-model-architecture-id.hook';
+import { useGetActiveModel } from '../../hooks/api/use-get-active-model.hook';
 import { useGetModels } from '../../hooks/api/use-get-models.hook';
 import { useGroupedModels } from '../hooks/use-grouped-models.hook';
 import type { GroupByMode, GroupedModels, SortBy } from '../types';
@@ -17,7 +17,7 @@ interface ModelListingContextValue {
     sortBy: SortBy;
     pinActive: boolean;
     expandedModelIds: Set<string>;
-    activeModelArchitectureId: string | undefined;
+    activeModelId: string | undefined;
     groupedModels: GroupedModels[];
     searchBy: string;
     datasetRevisions: DatasetRevision[];
@@ -43,7 +43,7 @@ export const ModelListingProvider = ({ children }: ModelListingProviderProps) =>
     const [expandedModelIds, setExpandedModelIds] = useState<Set<string>>(new Set());
     const [searchBy, setSearchBy] = useState<string>('');
 
-    const activeModelArchitectureId = useGetActiveModelArchitectureId();
+    const model = useGetActiveModel();
     const { data: models } = useGetModels();
     const { data: datasetRevisions = [] } = useGetDatasetRevisions();
     const groupedModels = useGroupedModels(models, { groupBy, sortBy, pinActive, searchBy, datasetRevisions });
@@ -83,7 +83,7 @@ export const ModelListingProvider = ({ children }: ModelListingProviderProps) =>
         sortBy,
         pinActive,
         expandedModelIds,
-        activeModelArchitectureId,
+        activeModelId: model?.id,
         groupedModels,
         searchBy,
         datasetRevisions,
