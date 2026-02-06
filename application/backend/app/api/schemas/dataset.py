@@ -68,7 +68,7 @@ class StagedDatasetView(BaseRequiredIDModel):
                 "size": data.size,
                 "format": data.format,
                 "ready_for_export": data.compressed,
-                "ready_for_import": data.format == DatasetFormat.DATUMARO_V2 and not data.compressed,
+                "ready_for_import": data.format == DatasetFormat.GETI and not data.compressed,
                 "metadata": data.metadata,
             }
         return data

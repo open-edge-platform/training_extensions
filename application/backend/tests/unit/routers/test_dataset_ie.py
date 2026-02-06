@@ -22,7 +22,7 @@ def fxt_staged_dataset(tmp_path: Path) -> StagedDataset:
         id=uuid4(),
         filename=str(tmp_path / "dataset.zip"),
         compressed=True,
-        format=DatasetFormat.DATUMARO_V2,
+        format=DatasetFormat.GETI,
         size=2048,
     )
 
