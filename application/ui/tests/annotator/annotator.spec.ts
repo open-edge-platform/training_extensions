@@ -254,8 +254,6 @@ test.describe('Annotator', () => {
 
             const annotation = { x: 100, y: 100, width: 150, height: 150 };
 
-            await expect(annotatorPage.getPrimaryToolbar()).toBeVisible();
-
             await boundingBoxTool.selectTool();
             await boundingBoxTool.drawBoundingBox(annotation);
 
@@ -272,8 +270,8 @@ test.describe('Annotator', () => {
             await expect(annotatorPage.getAnnotationMode('Prediction')).toHaveAttribute('aria-pressed', 'true');
             await expect(annotatorPage.getAnnotationMode('Annotation')).toHaveAttribute('aria-pressed', 'false');
 
-            await expect(annotatorPage.getPrimaryToolbar()).toHaveAttribute('aria-disabled', 'true');
-            await expect(page.getByLabel('Labels')).toHaveAttribute('aria-disabled', 'true');
+            await expect(annotatorPage.getPrimaryToolbar()).toBeHidden();
+            await expect(page.getByLabel('Labels')).toBeHidden();
 
             await expect(page.getByLabel(`label ${blueLabel.name} background`)).toHaveCount(predictions.length);
             expect(await annotatorPage.getAnnotationsListItems('prediction rect')).toHaveLength(predictions.length);

@@ -25,7 +25,6 @@ const ModelListingContent = () => {
                 direction={'column'}
                 height={'100%'}
                 alignItems={'center'}
-                justifyContent={'center'}
                 UNSAFE_style={{ padding: dimensionValue('size-300') }}
             >
                 <CurrentModelTraining />
