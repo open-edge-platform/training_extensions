@@ -3,16 +3,17 @@
 
 import multiprocessing as mp
 import os
-import queue
 import threading
 from multiprocessing.shared_memory import SharedMemory
 
+import numpy as np
 import psutil
 from loguru import logger
 
 from app.services.data_collect import DataCollector
 from app.services.event.event_bus import EventBus
 from app.services.metrics_service import SIZE
+from app.webrtc.broadcaster import FrameBroadcaster
 from app.workers import DispatchingWorker, InferenceWorker, InferenceWorkerConfig, StreamLoader
 
 
@@ -31,8 +32,8 @@ class Scheduler:
         self.frame_queue: mp.Queue = mp.Queue(maxsize=self.FRAME_QUEUE_SIZE)
         # Queue for the inference results (predictions)
         self.pred_queue: mp.Queue = mp.Queue(maxsize=self.PREDICTION_QUEUE_SIZE)
-        # Queue for pushing predictions to the visualization stream (WebRTC)
-        self.rtc_stream_broadcaster: queue.Queue = queue.Queue(maxsize=1)
+        # Broadcaster for pushing predictions to the visualization stream (WebRTC)
+        self.rtc_stream_broadcaster: FrameBroadcaster[np.ndarray] = FrameBroadcaster[np.ndarray]()
         # Event to sync all processes on application shutdown
         self.mp_stop_event = mp.Event()
 
@@ -70,7 +71,7 @@ class Scheduler:
         dispatching_thread = DispatchingWorker(
             event_bus=self._event_bus,
             pred_queue=self.pred_queue,
-            rtc_stream_queue=self.rtc_stream_broadcaster,
+            rtc_stream_broadcaster=self.rtc_stream_broadcaster,
             stop_event=self.mp_stop_event,
             data_collector=self._data_collector,
         )

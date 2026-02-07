@@ -5,6 +5,7 @@ import multiprocessing as mp
 import queue
 from multiprocessing.synchronize import Event as EventClass
 
+import numpy as np
 from loguru import logger
 
 from app.db import get_db_session
@@ -13,7 +14,7 @@ from app.services import DispatchService, SinkService
 from app.services.data_collect import DataCollector
 from app.services.dispatchers import Dispatcher
 from app.services.event.event_bus import EventBus, EventType
-from app.stream.stream_data import InferenceData, StreamData
+from app.stream.stream_data import StreamData
 from app.webrtc import FrameBroadcaster
 from app.workers.base import BaseThreadWorker
 
@@ -30,7 +31,7 @@ class DispatchingWorker(BaseThreadWorker):
         self,
         event_bus: EventBus,
         pred_queue: mp.Queue,
-        rtc_stream_broadcaster: FrameBroadcaster[InferenceData],
+        rtc_stream_broadcaster: FrameBroadcaster[np.ndarray],
         stop_event: EventClass,
         data_collector: DataCollector,
     ) -> None:
@@ -96,10 +97,7 @@ class DispatchingWorker(BaseThreadWorker):
                 )
 
             # Dispatch to WebRTC stream
-            try:
-                self._rtc_stream_broadcaster.broadcast(image_with_visualization)
-            except queue.Full:
-                logger.debug("Visualization queue is full; skipping")
+            self._rtc_stream_broadcaster.broadcast(image_with_visualization)
 
             # Collect the image to project dataset if needed
             self._data_collector.collect(
