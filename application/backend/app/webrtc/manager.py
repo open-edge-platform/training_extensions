@@ -37,7 +37,7 @@ class WebRTCManager:
         self._pcs[offer.webrtc_id] = pc
 
         # Add video track
-        stream_queue = self._frame_broadcaster.register()
+        stream_queue = self._frame_broadcaster.register(webrtc_id=offer.webrtc_id)
         track = InferenceVideoStreamTrack(stream_queue=stream_queue)
         pc.addTrack(track)
 
@@ -45,7 +45,6 @@ class WebRTCManager:
         async def connection_state_change() -> None:
             if pc.connectionState in ["failed", "closed"]:
                 await self.cleanup_connection(offer.webrtc_id)
-                self._frame_broadcaster.unregister(stream_queue)
 
         # Set remote description from client's offer
         await pc.setRemoteDescription(RTCSessionDescription(sdp=offer.sdp, type=offer.type))
@@ -76,6 +75,7 @@ class WebRTCManager:
             await pc.close()
             logger.debug("Connection {} successfully closed.", webrtc_id)
             self._input_data.pop(webrtc_id, None)
+        self._frame_broadcaster.unregister(webrtc_id=webrtc_id)
 
     async def cleanup(self) -> None:
         """Clean up all connections"""
@@ -83,3 +83,4 @@ class WebRTCManager:
             await pc.close()
         self._pcs.clear()
         self._input_data.clear()
+        self._frame_broadcaster.queues.clear()
