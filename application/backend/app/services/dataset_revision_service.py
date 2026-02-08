@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import shutil
-from functools import lru_cache
 from pathlib import Path
 from typing import Any
 from uuid import UUID, uuid4
@@ -44,6 +43,12 @@ class DatasetRevisionService(BaseSessionManagedService):
         Returns:
             UUID: The UUID of the newly created dataset revision.
         """
+        item_counts = self._count_dataset_revision_items(dataset=dataset)
+        if not (item_counts.training and item_counts.validation and item_counts.testing):
+            raise ValueError(
+                f"Trying the save a dataset revision for project {project_id}, however, one of the subsets 'training', "
+                f"'validation' or 'testing' does not contain any dataset item. Item counts: {item_counts}"
+            )
         revision_repo = DatasetRevisionRepository(project_id=str(project_id), db=self.db_session)
         dataset_revision_id = str(uuid4())
         short_id = dataset_revision_id.split("-")[0]
@@ -53,6 +58,10 @@ class DatasetRevisionService(BaseSessionManagedService):
                 id=dataset_revision_id,
                 project_id=str(project_id),
                 name=dataset_name,
+                total_count=item_counts.total,
+                training_count=item_counts.training,
+                validation_count=item_counts.validation,
+                testing_count=item_counts.testing,
             )
         )
         revision_path = self.projects_dir / str(project_id) / "dataset_revisions" / revision_db.id
@@ -200,50 +209,29 @@ class DatasetRevisionService(BaseSessionManagedService):
 
         return parquet_path
 
-    @lru_cache(maxsize=64)
-    def __count_dataset_revision_items(self, project_id: UUID, dataset_revision_id: UUID) -> DatasetRevisionCounts:
-        """Refer to DatasetRevisionService.count_dataset_revision_items"""
-        parquet_path = self._get_revision_parquet_path(project_id, dataset_revision_id)
-        lf = pl.scan_parquet(parquet_path)
-        subset_counts_raw = lf.group_by("subset").len().collect().to_dicts()  # [{"subset": "TRAINING", "len": 12}, ...]
-        counts_by_subset = {row["subset"].lower(): row["len"] for row in subset_counts_raw}  # {"training": 12, ...}
-        try:
-            dataset_revision_counts = DatasetRevisionCounts(
-                training=counts_by_subset["training"],
-                validation=counts_by_subset["validation"],
-                testing=counts_by_subset["testing"],
-                total=sum(counts_by_subset.values()),
-            )
-        except KeyError as exc:
-            logger.error(
-                "Failed to count dataset revision items for project_id='{}', dataset_revision_id='{}'. Error: {}",
-                project_id,
-                dataset_revision_id,
-                exc,
-            )
-            raise
-        return dataset_revision_counts
-
-    def count_dataset_revision_items(
-        self, project_id: UUID, dataset_revision: DatasetRevision
-    ) -> DatasetRevisionCounts | None:
+    def _count_dataset_revision_items(self, dataset: dm.Dataset) -> DatasetRevisionCounts:
         """
         Count the number of dataset items in a dataset revision, grouped by subset.
 
-        This method scans the dataset revision Parquet file and efficiently computes:
         - The total number of items ("total")
         - The number of items in each subset (e.g., "training", "validation", "testing")
 
         Args:
-            project_id: The UUID of the project.
-            dataset_revision: The dataset revision.
+            dataset: A Datumaro dataset.
 
         Returns:
-            DatasetRevisionCounts | None: The counts of dataset items, or None if files are deleted
+            DatasetRevisionCounts: The counts of dataset items.
         """
-        if dataset_revision.files_deleted:
-            return None
-        return self.__count_dataset_revision_items(project_id, dataset_revision.id)
+        subset_counts_raw = (
+            dataset.df.lazy().group_by("subset").len().collect().to_dicts()
+        )  # [{"subset": "TRAINING", "len": 12}, ...]
+        counts_by_subset = {row["subset"].lower(): row["len"] for row in subset_counts_raw}  # {"training": 12, ...}
+        return DatasetRevisionCounts(
+            training=counts_by_subset.get("training", 0),
+            validation=counts_by_subset.get("validation", 0),
+            testing=counts_by_subset.get("testing", 0),
+            total=sum(counts_by_subset.values()),
+        )
 
     def _parse_revision_item_from_df_row_dict(
         self, project_id: UUID, dataset_revision_id: UUID, df_revision_item: dict[str, Any]

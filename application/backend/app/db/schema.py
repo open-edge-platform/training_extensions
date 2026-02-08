@@ -96,6 +96,10 @@ class DatasetRevisionDB(BaseID):
     project_id: Mapped[str] = mapped_column(Text, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     files_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
+    training_count: Mapped[int] = mapped_column(Integer, default=0)
+    validation_count: Mapped[int] = mapped_column(Integer, default=0)
+    testing_count: Mapped[int] = mapped_column(Integer, default=0)
+    total_count: Mapped[int] = mapped_column(Integer, default=0)
 
 
 class DatasetItemDB(Base):
