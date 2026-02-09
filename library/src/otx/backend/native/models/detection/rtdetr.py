@@ -168,7 +168,8 @@ class RTDETR(OTXDetectionModel):
 
         if self.explain_mode:
             return {"entity": entity}
-
+        for tr in targets:
+            print(len(tr["boxes"]))
         return {
             "images": entity.images,
             "targets": targets,

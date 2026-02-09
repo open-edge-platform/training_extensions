@@ -18,12 +18,15 @@ from rfdetr.main import populate_args
 from rfdetr.models.lwdetr import build_criterion_and_postprocessors
 from rfdetr.util.get_param_dicts import get_param_dict
 from torch.export import Dim
+from torchvision.ops import box_convert
+from torchvision.tv_tensors import BoundingBoxFormat
 
 from otx.backend.native.exporter.base import OTXModelExporter
 from otx.backend.native.exporter.native import OTXNativeModelExporter
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.backend.native.models.detection.d_fine import DFine
 from otx.backend.native.models.detection.detectors.rfdetr import RFDETRDetector
+from otx.backend.native.models.detection.utils import limit_batch_objects
 from otx.backend.native.models.utils.utils import load_checkpoint
 from otx.config.data import TileConfig
 from otx.data.entity.base import OTXBatchLossEntity
@@ -92,7 +95,12 @@ class RFDETR(DFine):
         multi_scale: bool = False,
         torch_compile: bool = False,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
+        max_total_objects_per_batch: int | None = 600,
+        gradient_checkpointing: bool = False,
     ) -> None:
+        self.multi_scale = multi_scale
+        self.max_total_objects_per_batch = max_total_objects_per_batch
+        self.gradient_checkpointing = gradient_checkpointing
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
@@ -131,7 +139,7 @@ class RFDETR(DFine):
             "rfdetr_small": RFDETRSmall,
         }
         rfdetr = model_class_mapping[self.model_name](
-            num_classes=num_classes, pretrained_weights=None, gradient_checkpointing=True
+            num_classes=num_classes, pretrained_weights=None, gradient_checkpointing=self.gradient_checkpointing
         )
         rfdetr.model.reinitialize_detection_head(num_classes)
 
@@ -173,6 +181,58 @@ class RFDETR(DFine):
             input_size=self.data_input_params.input_size[0],
             multi_scale=self.multi_scale,
         )
+
+    def _customize_inputs(
+        self,
+        entity: OTXSampleBatch,
+        pad_size_divisor: int = 32,
+        pad_value: int = 0,
+    ) -> dict[str, Any]:
+        """Customize inputs for RF-DETR with optional batch-level object limiting.
+
+        Args:
+            entity: Input batch data.
+            pad_size_divisor: Divisor for padding.
+            pad_value: Padding value.
+
+        Returns:
+            Dict with 'images' and 'targets' for the model.
+        """
+        targets: list[dict[str, Any]] = []
+
+        # Prepare bboxes for the model
+        if entity.bboxes is not None and entity.labels is not None:
+            for bb, ll in zip(entity.bboxes, entity.labels):
+                if len(scaled_bboxes := bb):
+                    converted_bboxes = (
+                        box_convert(bb, in_fmt="xyxy", out_fmt="cxcywh") if bb.format == BoundingBoxFormat.XYXY else bb
+                    )
+                    # Normalize the bboxes
+                    scaled_bboxes = converted_bboxes / torch.tensor(bb.canvas_size[::-1]).tile(2)[None].to(
+                        converted_bboxes.device,
+                    )
+                h, w = bb.canvas_size
+                device = scaled_bboxes.device
+                targets.append(
+                    {
+                        "boxes": scaled_bboxes,
+                        "labels": ll,
+                        "size": torch.tensor([h, w], device=device),
+                        "orig_size": torch.tensor([h, w], device=device),
+                    }
+                )
+
+        # Apply batch-level object limiting if configured (only during training)
+        if self.training and self.max_total_objects_per_batch is not None:
+            targets = limit_batch_objects(targets, self.max_total_objects_per_batch)
+
+        if self.explain_mode:
+            return {"entity": entity}
+
+        return {
+            "images": entity.images,
+            "targets": targets,
+        }
 
     def _customize_outputs(
         self,
@@ -268,7 +328,7 @@ class RFDETR(DFine):
                 "autograd_inlining": False,
                 "opset_version": 18,
             },
-            output_names=["bboxes", "labels", "scores"],
+            output_names=["bboxes", "labels"],
         )
 
     @property

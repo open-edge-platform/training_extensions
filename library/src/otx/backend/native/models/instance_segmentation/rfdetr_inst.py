@@ -26,6 +26,7 @@ from otx.backend.native.exporter.base import OTXModelExporter
 from otx.backend.native.exporter.native import OTXNativeModelExporter
 from otx.backend.native.models.base import DataInputParams, DefaultOptimizerCallable, DefaultSchedulerCallable
 from otx.backend.native.models.detection.detectors.rfdetr import RFDETRDetector
+from otx.backend.native.models.detection.utils import limit_batch_objects
 from otx.backend.native.models.instance_segmentation.base import OTXInstanceSegModel
 from otx.backend.native.models.utils.utils import load_checkpoint
 from otx.config.data import TileConfig
@@ -103,8 +104,10 @@ class RFDETRInst(OTXInstanceSegModel):
         multi_scale: bool = False,
         torch_compile: bool = False,
         tile_config: TileConfig = TileConfig(enable_tiler=False),
+        max_total_objects_per_batch: int | None = 600,
     ) -> None:
         self.multi_scale = multi_scale
+        self.max_total_objects_per_batch = max_total_objects_per_batch
         super().__init__(
             label_info=label_info,
             data_input_params=data_input_params,
@@ -135,7 +138,9 @@ class RFDETRInst(OTXInstanceSegModel):
 
         # Create RF-DETR Segmentation model with segmentation_head=True
         model_class = self._model_class_mapping[self.model_name]
-        detector = model_class(num_classes=num_classes, pretrain_weights=None)
+        detector = model_class(pretrain_weights=None, gradient_checkpointing=True)
+        lwdetr_model = detector.model.model
+        load_checkpoint(lwdetr_model, self._pretrained_weights[self.model_name], map_location="cpu")
 
         # Reinitialize detection head for our num_classes
         detector.model.reinitialize_detection_head(num_classes)
@@ -168,7 +173,6 @@ class RFDETRInst(OTXInstanceSegModel):
 
         # Store rfdetr_args for optimizer configuration
         self.rfdetr_args = rfdetr_args
-        load_checkpoint(lwdetr_model, self._pretrained_weights[self.model_name], map_location="cpu")
 
         return RFDETRDetector(
             lwdetr_model=lwdetr_model,
@@ -227,6 +231,10 @@ class RFDETRInst(OTXInstanceSegModel):
                 }
 
                 targets.append(target_dict)
+
+        # Apply batch-level object limiting if configured (only during training)
+        if self.training and self.max_total_objects_per_batch is not None:
+            targets = limit_batch_objects(targets, self.max_total_objects_per_batch)
 
         return {
             "images": images,

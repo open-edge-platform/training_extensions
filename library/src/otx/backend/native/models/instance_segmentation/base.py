@@ -294,7 +294,6 @@ class OTXInstanceSegModel(OTXModel):
         if isinstance(preds, OTXBatchLossEntity):
             raise TypeError(preds)
 
-        # 1. Filter outputs by threshold
         metric_inputs = self._convert_pred_entity_to_compute_metric(preds, batch)
 
         # 2. Update metric

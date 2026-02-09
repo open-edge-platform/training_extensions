@@ -28,6 +28,7 @@ model:
 
 engine:
   device: auto
+  accumulate_grad_batches: 4
 
 data: ../_base_/data/instance_segmentation.yaml
 
@@ -70,11 +71,12 @@ overrides:
   data:
     task: INSTANCE_SEGMENTATION
     data_format: coco_instances
+    include_polygons: false
     input_size:
       - 312
       - 312
     train_subset:
-      batch_size: 8
+      batch_size: 4
       num_workers: 4
       subset_name: train
       to_tv_image: true
@@ -110,7 +112,7 @@ overrides:
         class_path: otx.data.samplers.balanced_sampler.BalancedSampler
 
     val_subset:
-      batch_size: 8
+      batch_size: 4
       num_workers: 4
       to_tv_image: true
       transforms:
@@ -127,7 +129,7 @@ overrides:
             std: [58.395, 57.12, 57.375]
 
     test_subset:
-      batch_size: 8
+      batch_size: 4
       num_workers: 4
       to_tv_image: true
       transforms:

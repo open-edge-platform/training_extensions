@@ -28,6 +28,7 @@ model:
 
 engine:
   device: auto
+  accumulate_grad_batches: 4
 
 data: ../_base_/data/instance_segmentation.yaml
 
@@ -70,6 +71,7 @@ overrides:
   data:
     task: INSTANCE_SEGMENTATION
     data_format: coco_instances
+    include_polygons: false
     input_size:
       - 624
       - 624
