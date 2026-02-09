@@ -8,11 +8,7 @@ from fastapi.openapi.models import Example
 from starlette.responses import FileResponse, StreamingResponse
 
 from app.api.dependencies import get_dataset_revision, get_dataset_revision_service, get_project
-from app.api.schemas.dataset_item import (
-    DatasetItemsWithPagination,
-    DatasetRevisionItemsWithPagination,
-    DatasetRevisionItemView,
-)
+from app.api.schemas.dataset_item import DatasetRevisionItemsWithPagination, DatasetRevisionItemView
 from app.api.schemas.dataset_revision import DatasetRevisionView
 from app.api.validators import DatasetItemID, DatasetRevisionID
 from app.core.models import Pagination
@@ -126,7 +122,7 @@ def rename_dataset_revision(
     responses={
         status.HTTP_200_OK: {
             "description": "List of dataset items in the revision",
-            "model": DatasetItemsWithPagination,
+            "model": DatasetRevisionItemsWithPagination,
         },
         status.HTTP_404_NOT_FOUND: {"description": "Dataset revision or project not found"},
     },
