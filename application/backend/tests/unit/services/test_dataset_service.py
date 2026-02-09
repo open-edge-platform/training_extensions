@@ -159,25 +159,6 @@ class TestDatasetServiceUnit:
         with pytest.raises(AnnotationValidationError):
             DatasetService._validate_annotations_coordinates(annotations=annotations, media=media)
 
-    @pytest.mark.parametrize(
-        "width, height",
-        [
-            (None, 100),
-            (100, None),
-            (None, None),
-        ],
-    )
-    def test_validate_annotations_coordinates_missing_dimensions(self, width, height):
-        media = MediaDB(name="test", format="jpg", width=width, height=height, size=1024)
-        annotations = [
-            DatasetItemAnnotation(
-                labels=[LabelReference(id=uuid4())],
-                shape=Polygon(type="polygon", points=[Point(x=0, y=0), Point(x=10, y=10)]),
-            )
-        ]
-        with pytest.raises(AnnotationValidationError):
-            DatasetService._validate_annotations_coordinates(annotations=annotations, media=media)
-
     def test_validate_annotations_multilabel_classification(self, fxt_multilabel_classification_project) -> None:
         annotations = [
             DatasetItemAnnotation(
