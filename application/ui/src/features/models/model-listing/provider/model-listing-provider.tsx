@@ -3,7 +3,10 @@
 
 import { createContext, ReactNode, useContext, useState } from 'react';
 
-import { useGetActiveModelArchitectureId } from '../../hooks/api/use-get-active-model-architecture-id.hook';
+import { useGetDatasetRevisions } from 'hooks/use-get-dataset-revisions.hook';
+
+import { type DatasetRevision } from '../../../../constants/shared-types';
+import { useGetActiveModel } from '../../hooks/api/use-get-active-model.hook';
 import { useGetModels } from '../../hooks/api/use-get-models.hook';
 import { useGroupedModels } from '../hooks/use-grouped-models.hook';
 import type { GroupByMode, GroupedModels, SortBy } from '../types';
@@ -14,9 +17,11 @@ interface ModelListingContextValue {
     sortBy: SortBy;
     pinActive: boolean;
     expandedModelIds: Set<string>;
-    activeModelArchitectureId: string | undefined;
+    activeModelId: string | undefined;
     groupedModels: GroupedModels[];
     searchBy: string;
+    datasetRevisions: DatasetRevision[];
+    showFailedModels: boolean;
 
     // Actions
     onGroupByChange: (mode: GroupByMode) => void;
@@ -24,6 +29,7 @@ interface ModelListingContextValue {
     onPinActiveToggle: () => void;
     onExpandModel: (modelId: string) => void;
     onSearchChange: (query: string) => void;
+    onToggleShowFailedModels: () => void;
 }
 
 const ModelListingContext = createContext<ModelListingContextValue | null>(null);
@@ -36,12 +42,21 @@ export const ModelListingProvider = ({ children }: ModelListingProviderProps) =>
     const [groupBy, setGroupBy] = useState<GroupByMode>('dataset');
     const [sortBy, setSortBy] = useState<SortBy>('score');
     const [pinActive, setPinActive] = useState<boolean>(false);
+    const [showFailedModels, setShowFailedModels] = useState<boolean>(true);
     const [expandedModelIds, setExpandedModelIds] = useState<Set<string>>(new Set());
     const [searchBy, setSearchBy] = useState<string>('');
 
-    const activeModelArchitectureId = useGetActiveModelArchitectureId();
+    const activeModel = useGetActiveModel();
     const { data: models } = useGetModels();
-    const groupedModels = useGroupedModels(models, { groupBy, sortBy, pinActive, searchBy });
+    const { data: datasetRevisions = [] } = useGetDatasetRevisions();
+    const groupedModels = useGroupedModels(models, {
+        groupBy,
+        sortBy,
+        pinActive,
+        searchBy,
+        datasetRevisions,
+        showFailedModels,
+    });
 
     const onGroupByChange = (mode: GroupByMode) => {
         setGroupBy(mode);
@@ -53,6 +68,10 @@ export const ModelListingProvider = ({ children }: ModelListingProviderProps) =>
 
     const onPinActiveToggle = () => {
         setPinActive((prev) => !prev);
+    };
+
+    const toggleShowFailedModels = () => {
+        setShowFailedModels((prev) => !prev);
     };
 
     const onSearchChange = (query: string) => {
@@ -78,14 +97,18 @@ export const ModelListingProvider = ({ children }: ModelListingProviderProps) =>
         sortBy,
         pinActive,
         expandedModelIds,
-        activeModelArchitectureId,
+        activeModelId: activeModel?.id,
         groupedModels,
         searchBy,
+        datasetRevisions,
+        showFailedModels,
+
         onGroupByChange,
         onSortChange,
         onPinActiveToggle,
         onExpandModel,
         onSearchChange,
+        onToggleShowFailedModels: toggleShowFailedModels,
     };
 
     return <ModelListingContext.Provider value={value}>{children}</ModelListingContext.Provider>;

@@ -9,6 +9,7 @@ from typing import Annotated
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from fastapi.openapi.models import Example
 from fastapi.responses import StreamingResponse
+from starlette.responses import FileResponse
 
 from app.api.dependencies import get_model_service, get_project
 from app.api.schemas import ModelView, ProjectView
@@ -45,8 +46,8 @@ def list_models(
             model_size = model_service.get_model_size_in_bytes(project_id=project.id, model_id=model_revision.id)
             model_views.append(model_revision.model_dump() | {"variants": model_variants} | {"size": model_size})
         return [ModelView.model_validate(model_view, from_attributes=True) for model_view in model_views]
-    except ResourceNotFoundError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.get(
@@ -185,7 +186,15 @@ def delete_model(
     model_service: Annotated[ModelService, Depends(get_model_service)],
     files_only: Annotated[bool, Query()] = False,
 ) -> None:
-    """Delete a model from a project."""
+    """
+    Delete a given model, or the files associated with it.
+
+    If `files_only` is false, the entire model revision is deleted.
+    If `files_only` is true, only the model files are deleted (weights, training logs, ...), while model metadata
+    such as name and creation date are preserved; the model continues to exist as a lightweight record in the system,
+    although operations that depend on the presence of model files (e.g., fine-tuning, inference) will no longer be
+    possible; the only purpose of this option is to free up storage space while preserving model metadata.
+    """
     try:
         if files_only:
             model_service.delete_model_files(project_id=project.id, model_id=model_id)
@@ -194,4 +203,36 @@ def delete_model(
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ResourceInUseError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+
+
+@router.get(
+    "/{model_id}/logs",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "Model configuration successfully deleted",
+        },
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project or model ID"},
+        status.HTTP_404_NOT_FOUND: {"description": "Project, model or log file not found"},
+        status.HTTP_409_CONFLICT: {
+            "description": "Logs cannot be retrieved for models in not started or in-progress state"
+        },
+    },
+)
+async def get_training_logs(
+    project: Annotated[ProjectView, Depends(get_project)],
+    model_id: ModelID,
+    model_service: Annotated[ModelService, Depends(get_model_service)],
+) -> FileResponse:
+    """
+    Download the training log file for a given model.
+    """
+    try:
+        log_file = model_service.get_logs(project_id=project.id, model_id=model_id)
+        if not log_file:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Log file not found")
+        return FileResponse(log_file, media_type="text/plain", filename=os.path.basename(log_file))
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except ValueError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))

@@ -1,18 +1,16 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { QueryClient } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { getMockedPipeline } from 'mocks/mock-pipeline';
 import { HttpResponse } from 'msw';
-import { TestProviders } from 'test-utils/render';
+import { render } from 'test-utils/render';
 
 import { http } from '../../../api/utils';
 import { server } from '../../../msw-node-setup';
+import { queryClient } from '../../../query-client/query-client';
 import { InferenceDevices } from './inference-devices.component';
-
-vi.mock('hooks/use-project-identifier.hook', () => ({ useProjectIdentifier: () => '123' }));
 
 const mockPipeline = getMockedPipeline({
     device: 'cpu',
@@ -36,17 +34,14 @@ describe('InferenceDevices', () => {
             })
         );
 
-        render(
-            <TestProviders client={new QueryClient()}>
-                <InferenceDevices />
-            </TestProviders>
-        );
+        render(<InferenceDevices />);
 
         return pipelinePatchSpy;
     };
 
     beforeEach(() => {
         vi.resetAllMocks();
+        queryClient.removeQueries();
     });
 
     it('displays current device selection', async () => {
@@ -58,12 +53,17 @@ describe('InferenceDevices', () => {
     it('updates device on selection change', async () => {
         const pipelinePatchSpy = renderApp();
 
-        await screen.findByLabelText('inference compute');
+        const picker = await screen.findByLabelText('inference compute');
+        expect(picker).toHaveTextContent('CPU');
 
-        await userEvent.click(screen.getByRole('button', { name: /inference compute/i }));
-        await userEvent.click(screen.getByRole('option', { name: /GPU/i }));
+        const button = screen.getByRole('button', { name: /inference compute/i });
+        await userEvent.click(button);
+
+        const option = await screen.findByRole('option', { name: /GPU/i });
+        await userEvent.click(option);
 
         await waitFor(() => {
+            expect(screen.getByLabelText('inference compute')).toHaveTextContent('GPU');
             expect(pipelinePatchSpy).toHaveBeenCalled();
         });
     });
@@ -76,7 +76,7 @@ describe('InferenceDevices', () => {
         await userEvent.click(screen.getByRole('button', { name: /inference compute/i }));
         await userEvent.click(screen.getByRole('option', { name: /GPU/i }));
 
-        await expect(await screen.findByLabelText('toast')).toBeVisible();
+        expect(await screen.findByLabelText('toast')).toBeVisible();
     });
 
     it('reverts selection on error', async () => {

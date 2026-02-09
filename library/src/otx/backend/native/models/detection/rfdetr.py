@@ -32,6 +32,7 @@ from otx.config.data import TileConfig
 from otx.data.entity.base import OTXBatchLossEntity
 from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
 from otx.metrics.fmeasure import MeanAveragePrecisionFMeasureCallable
+from otx.types.precision import OTXPrecisionType
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -304,13 +305,9 @@ class RFDETR(DFine):
 
         return [optimizer], lr_scheduler_configs
 
-    def forward_for_tracing(self, inputs: torch.Tensor) -> tuple[torch.Tensor, ...] | dict[str, Any]:
-        """Forward function for export."""
+    def export(self, output_dir, base_name, export_format, precision=OTXPrecisionType.FP32):
         self.model.lwdetr.export()
-        if self.explain_mode:
-            msg = "Explain mode is not supported for RF-DETR export."
-            raise ValueError(msg)
-        return self.model.export(inputs)[:3]  # bboxes, labels, scores
+        return super().export(output_dir, base_name, export_format, precision)
 
     @property
     def _exporter(self) -> OTXModelExporter:
@@ -328,7 +325,7 @@ class RFDETR(DFine):
                 "autograd_inlining": False,
                 "opset_version": 18,
             },
-            output_names=["bboxes", "labels"],
+            output_names=["bboxes", "labels", "scores"],
         )
 
     @property

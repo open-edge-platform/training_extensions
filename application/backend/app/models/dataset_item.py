@@ -61,8 +61,10 @@ class DatasetItem(BaseEntity):
         id: Unique identifier for the dataset item, is equal to the corresponding media.
         project_id: Identifier of the project to which the dataset item belongs.
         annotation_data: List of annotations associated with the dataset item.
-        user_reviewed: Indicates whether the dataset item has been reviewed by a user,
-            namely if its annotation has been created/accepted by a human or if it is just a raw model prediction.
+        user_reviewed: Flag indicating whether the dataset item requires the user's attention before it can be used
+            for training. Typically, it is false for unannotated media (since they need to be annotated) and model
+            predictions (since they need to be reviewed). It is true for items with user-submitted annotations, or
+            model predictions that have been accepted (with or without modification) by a user.
         prediction_model_id: Identifier of the model that generated predictions for this dataset item, if applicable.
         subset: Subset to which the dataset item belongs (e.g., training, validation, testing).
         subset_assigned_at: Timestamp indicating when the dataset item was assigned to its subset.

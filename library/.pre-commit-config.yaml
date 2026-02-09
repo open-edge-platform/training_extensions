@@ -10,12 +10,10 @@ repos:
         always_run: true
         pass_filenames: false
 
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: "v1.6.1"
+  - repo: local
     hooks:
-      - id: mypy
-        alias: mypy_lib
-        name: mypy (library)
-        files: '^src/otx/.*\.py'
-        additional_dependencies: [types-PyYAML]
-        args: [--disallow-untyped-calls, --config-file, pyproject.toml]
+      - id: pyrefly-check
+        name: pyrefly-check
+        entry: uv run pyrefly check --baseline=pyrefly-baseline.json
+        pass_filenames: false
+        language: system

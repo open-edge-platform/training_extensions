@@ -57,15 +57,12 @@ lint = [
     "types-aiofiles~=25.1.0",  # should match aiofiles version
     "types-requests~=2.32.4",
     "types-pyyaml~=6.0.12",  # should match pyyaml version
-    "pyrefly~=0.47.0",
+    "pyrefly~=0.51.0",
 ]
 
 [tool.uv]
 default-groups = ["dev", "lint"]
 required-version = "~=0.9.27"
-override-dependencies = [
-    "torch==2.10.0",
-] # remove when rfdetr package is fixed
 conflicts = [
     [
         { extra = "cpu" },

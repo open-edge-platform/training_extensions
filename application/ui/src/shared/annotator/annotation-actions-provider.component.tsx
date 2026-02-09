@@ -1,9 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { createContext, ReactNode, useContext, useEffect } from 'react';
+import { createContext, ReactNode, useContext, useMemo } from 'react';
 
-import { useProject } from 'hooks/api/project.hook';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 import { v4 as uuid } from 'uuid';
 
@@ -11,7 +10,9 @@ import { $api } from '../../api/client';
 import type { AnnotationDTO, Label, Media } from '../../constants/shared-types';
 import { UndoRedoProvider } from '../../features/dataset/media-preview/primary-toolbar/undo-redo/undo-redo-provider.component';
 import useUndoRedoState from '../../features/dataset/media-preview/primary-toolbar/undo-redo/use-undo-redo-state';
+import { AnnotatorMode } from '../../features/dataset/media-preview/secondary-toolbar/annotator-modes/mode';
 import type { Annotation, Shape } from '../types';
+import { EMPTY_LABEL_ID, useProjectLabelsWithEmptyLabel } from './labels';
 
 const mapServerAnnotationsToLocal = (serverAnnotations: AnnotationDTO[], projectLabels: Label[]): Annotation[] => {
     const labelMap = new Map(projectLabels.map((label) => [label.id, label]));
@@ -42,11 +43,11 @@ const mapLocalAnnotationsToServer = (localAnnotations: Annotation[]): Annotation
 
 interface AnnotationsContextValue {
     annotations: Annotation[];
-    addAnnotations: (shapes: Shape[], labels: Label[]) => void;
+    addAnnotations: (shapes: Shape[], labels: Label[]) => string[];
+    addAnnotationWithEmptyLabel: (label: Label) => void;
     deleteAnnotations: (annotationIds: string[]) => void;
-    updateAnnotations: (updatedAnnotations: Annotation[]) => void;
+    updateAnnotations: (updatedAnnotations: Annotation[], labels?: Label[]) => void;
     submitAnnotations: () => Promise<void>;
-    submitPredictions: () => Promise<void>;
     isUserReviewed: boolean;
     isSaving: boolean;
 }
@@ -55,53 +56,92 @@ const AnnotationsContext = createContext<AnnotationsContextValue | null>(null);
 
 type AnnotationActionsProviderProps = {
     children: ReactNode;
-    initialAnnotationsDTO?: AnnotationDTO[];
+    initialAnnotationsDTO: AnnotationDTO[];
+    initialPredictionsDTO: AnnotationDTO[];
     isUserReviewed?: boolean;
     mediaItem: Media;
+    mode: AnnotatorMode;
+};
+
+const filterOutAnnotationWithEmptyLabel = (annotations: Annotation[]): Annotation[] => {
+    return annotations.filter((annotation) => annotation.labels.some((label) => label.id !== EMPTY_LABEL_ID));
 };
 
 export const AnnotationActionsProvider = ({
     children,
-    initialAnnotationsDTO = [],
+    initialAnnotationsDTO,
+    initialPredictionsDTO,
     isUserReviewed = false,
     mediaItem,
+    mode,
 }: AnnotationActionsProviderProps) => {
     const projectId = useProjectIdentifier();
     const saveMutation = $api.useMutation(
         'post',
-        '/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations'
+        '/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations',
+        {
+            meta: {
+                invalidateQueries: [
+                    [
+                        'get',
+                        '/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations',
+                        { params: { path: { project_id: projectId, dataset_item_id: mediaItem.id } } },
+                    ],
+                    [
+                        'get',
+                        '/api/projects/{project_id}/dataset/items',
+                        { params: { path: { project_id: projectId } } },
+                    ],
+                ],
+            },
+        }
     );
 
-    const { data: project } = useProject();
+    const projectLabels = useProjectLabelsWithEmptyLabel();
 
-    const [annotations, setAnnotations, undoRedoActions] = useUndoRedoState<Annotation[]>([]);
+    const predictions = useMemo(() => {
+        return mapServerAnnotationsToLocal(initialPredictionsDTO, projectLabels);
+    }, [initialPredictionsDTO, projectLabels]);
 
-    useEffect(() => {
-        const projectLabels = project?.task?.labels || [];
+    const [annotations, setAnnotations, undoRedoActions] = useUndoRedoState<Annotation[]>(() => {
+        return mapServerAnnotationsToLocal(initialAnnotationsDTO, projectLabels);
+    });
 
-        const localAnnotations = mapServerAnnotationsToLocal(initialAnnotationsDTO, projectLabels);
-
-        undoRedoActions.reset(localAnnotations);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [initialAnnotationsDTO, project?.task?.labels]);
-
-    const updateAnnotations = (updatedAnnotations: Annotation[]) => {
-        const updatedMap = new Map(updatedAnnotations.map((annotation) => [annotation.id, annotation]));
-
-        setAnnotations((prevAnnotations) =>
-            prevAnnotations.map((annotation) => updatedMap.get(annotation.id) ?? annotation)
-        );
+    const updateAnnotations = (updatedAnnotations: Annotation[], labels?: Label[]) => {
+        if (labels !== undefined) {
+            const idsToUpdate = new Set(updatedAnnotations.map((a) => a.id));
+            setAnnotations((prevAnnotations) =>
+                prevAnnotations.map((annotation) =>
+                    idsToUpdate.has(annotation.id) ? { ...annotation, labels } : annotation
+                )
+            );
+        } else {
+            const updatedMap = new Map(updatedAnnotations.map((annotation) => [annotation.id, annotation]));
+            setAnnotations((prevAnnotations) =>
+                prevAnnotations.map((annotation) => updatedMap.get(annotation.id) ?? annotation)
+            );
+        }
     };
 
-    const addAnnotations = (shapes: Shape[], labels: Label[]) => {
-        setAnnotations((prevAnnotations) => [
-            ...prevAnnotations,
-            ...shapes.map((shape) => ({
-                shape,
-                id: uuid(),
-                labels,
-            })),
-        ]);
+    const addAnnotations = (shapes: Shape[], labels: Label[]): string[] => {
+        const newAnnotations = shapes.map((shape) => ({
+            shape,
+            id: uuid(),
+            labels,
+        }));
+
+        setAnnotations((prevAnnotations) => [...prevAnnotations, ...newAnnotations]);
+
+        return newAnnotations.map((annotation) => annotation.id);
+    };
+
+    const deleteAllAnnotations = () => {
+        setAnnotations([]);
+    };
+
+    const addAnnotationWithEmptyLabel = (emptyLabel: Label) => {
+        deleteAllAnnotations();
+        addAnnotations([{ type: 'full_image' }], [emptyLabel]);
     };
 
     const deleteAnnotations = (annotationIds: string[]) => {
@@ -117,34 +157,41 @@ export const AnnotationActionsProvider = ({
         });
     };
 
-    const submitAnnotations = async () => {
-        const serverFormattedAnnotations = mapLocalAnnotationsToServer(annotations);
-
-        await saveAnnotations(serverFormattedAnnotations);
-    };
-
     const submitPredictions = async () => {
         const serverFormattedAnnotationsWithoutConfidences: AnnotationDTO[] = mapLocalAnnotationsToServer(
-            annotations
+            predictions
         ).map(({ confidences, ...restOfAnnotation }) => restOfAnnotation);
 
         await saveAnnotations(serverFormattedAnnotationsWithoutConfidences);
     };
 
+    const submitAnnotations = async () => {
+        if (mode === 'prediction') {
+            await submitPredictions();
+        } else {
+            const filteredAnnotations = filterOutAnnotationWithEmptyLabel(annotations);
+            const serverAnnotations = mapLocalAnnotationsToServer(filteredAnnotations);
+
+            await saveAnnotations(serverAnnotations);
+        }
+    };
+
+    const annotationsToRender = mode === 'annotation' ? annotations : predictions;
+
     return (
         <AnnotationsContext.Provider
             value={{
                 isUserReviewed,
-                annotations,
+                annotations: annotationsToRender,
 
                 // Local
                 addAnnotations,
                 updateAnnotations,
                 deleteAnnotations,
+                addAnnotationWithEmptyLabel,
 
                 // Remote
                 submitAnnotations,
-                submitPredictions,
 
                 isSaving: saveMutation.isPending,
             }}

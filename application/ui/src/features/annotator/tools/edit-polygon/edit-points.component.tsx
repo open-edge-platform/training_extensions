@@ -3,6 +3,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 
+import { ActionButton } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 
 import { useEventListener } from '../../../../hooks/event-listener.hook';
@@ -30,8 +31,8 @@ export const EditPoints = ({ zoom, shape, addPoint, onComplete, moveAnchorTo, re
         setSelectedAnchorIndexes([]);
     }, [shape.points.length]);
 
-    const handleRemovePoints = () => {
-        removePoints(selectedAnchorIndexes);
+    const handleRemovePoints = (indexes = selectedAnchorIndexes) => {
+        removePoints(indexes);
         setSelectedAnchorIndexes([]);
     };
 
@@ -96,8 +97,20 @@ export const EditPoints = ({ zoom, shape, addPoint, onComplete, moveAnchorTo, re
                             zoom={zoom}
                             onComplete={onComplete}
                             fill={isSelected ? 'var(--energy-blue)' : undefined}
-                            label={`Resize polygon ${idx} anchor`}
+                            label={`Resize polygon (${point.x}, ${point.y}) anchor`}
                             moveAnchorTo={(x: number, y: number) => moveAnchorTo(idx, x, y)}
+                            contextMenu={(onCloseMenu) => (
+                                <ActionButton
+                                    isQuiet
+                                    onPress={() => {
+                                        onCloseMenu();
+                                        handleRemovePoints([idx]);
+                                    }}
+                                    aria-label={`delete point`}
+                                >
+                                    Delete
+                                </ActionButton>
+                            )}
                         />
                     </g>
                 );

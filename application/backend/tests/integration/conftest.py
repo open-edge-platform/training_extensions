@@ -48,17 +48,17 @@ def fxt_db_models() -> list[ModelRevisionDB]:
     return [
         ModelRevisionDB(
             id=str(uuid4()),
-            name="Object_Detection_YOLOv5",
+            name="YOLOX-S (abc123)",
             training_status=TrainingStatus.NOT_STARTED,
-            architecture="Object_Detection_YOLOv5",
+            architecture="object-detection-yolox-s",
             training_configuration={},
             label_schema_revision={},
         ),
         ModelRevisionDB(
             id=str(uuid4()),
-            name="Object_Detection_YOLOX",
+            name="YOLOX-X (def456)",
             training_status=TrainingStatus.NOT_STARTED,
-            architecture="Object_Detection_YOLOX",
+            architecture="object-detection-yolox-x",
             training_configuration={},
             label_schema_revision={},
         ),

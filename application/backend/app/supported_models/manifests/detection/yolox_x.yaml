@@ -1,4 +1,4 @@
-id: Object_Detection_YOLOX_X
+id: object-detection-yolox-x
 name: YOLOX-X
 
 pretrained_weights:

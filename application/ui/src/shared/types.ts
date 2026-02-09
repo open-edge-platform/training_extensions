@@ -13,8 +13,9 @@ export interface RegionOfInterest {
 export type Point = components['schemas']['Point'];
 export type Rect = components['schemas']['Rectangle'];
 export type Polygon = components['schemas']['Polygon'];
+export type FullImage = components['schemas']['FullImage'];
 
-export type Shape = Rect | Polygon;
+export type Shape = Rect | Polygon | FullImage;
 
 export type AnnotationLabel = components['schemas']['LabelView'] & { probability?: number };
 

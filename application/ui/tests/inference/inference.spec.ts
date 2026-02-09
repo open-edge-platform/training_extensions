@@ -236,9 +236,10 @@ test('Inference', async ({ streamPage, page, network }) => {
 
         await page.getByRole('button', { name: 'Pipeline configuration' }).click();
         await page.getByRole('button', { name: 'Add new source' }).click();
-        await page.getByRole('button', { name: 'Webcam' }).click();
+        await page.getByRole('button', { name: 'USB Camera' }).click();
 
-        await page.getByRole('textbox', { name: 'Name' }).fill('New Webcam');
+        const usbCamera = 'new camera';
+        await page.getByRole('textbox', { name: 'Name' }).fill(usbCamera);
         await page.getByRole('button', { name: 'Camera list' }).click();
         await page.getByLabel('FaceTime HD Camera', { exact: true }).click();
 
@@ -247,7 +248,7 @@ test('Inference', async ({ streamPage, page, network }) => {
                 return HttpResponse.json([
                     {
                         id: '1',
-                        name: 'New Webcam',
+                        name: usbCamera,
                         source_type: 'usb_camera',
                         device_id: 1,
                     },
@@ -262,7 +263,7 @@ test('Inference', async ({ streamPage, page, network }) => {
 
         await page.getByRole('button', { name: 'Pipeline configuration' }).click();
 
-        await expect(page.getByText('New Webcam')).toBeVisible();
+        await expect(page.getByText(usbCamera)).toBeVisible();
         await expect(page.getByText('Device: FaceTime HD Camera')).toBeVisible();
 
         // Go to output tab

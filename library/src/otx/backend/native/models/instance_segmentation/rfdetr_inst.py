@@ -33,6 +33,7 @@ from otx.config.data import TileConfig
 from otx.data.entity.base import OTXBatchLossEntity
 from otx.data.entity.sample import OTXPredictionBatch, OTXSampleBatch
 from otx.metrics.fmeasure import MaskRLEMeanAPFMeasureCallable
+from otx.types.precision import OTXPrecisionType
 
 if TYPE_CHECKING:
     from lightning.pytorch.cli import LRSchedulerCallable, OptimizerCallable
@@ -344,10 +345,9 @@ class RFDETRInst(OTXInstanceSegModel):
 
         return [optimizer], lr_scheduler_configs
 
-    def forward_for_tracing(self, inputs: torch.Tensor) -> tuple[torch.Tensor, ...] | dict[str, Any]:
-        """Forward function for export."""
+    def export(self, output_dir, base_name, export_format, precision=OTXPrecisionType.FP32):
         self.model.lwdetr.export()
-        return self.model.export(inputs)
+        return super().export(output_dir, base_name, export_format, precision)
 
     @property
     def _exporter(self) -> OTXModelExporter:
@@ -359,19 +359,10 @@ class RFDETRInst(OTXInstanceSegModel):
             swap_rgb=False,
             via_onnx=True,
             onnx_export_configuration={
-                "input_names": ["input"],
+                "input_names": ["images"],
                 "output_names": ["bboxes", "labels", "scores", "masks"],
-                "dynamic_axes": {
-                    "images": {0: "batch"},
-                    "bboxes": {0: "batch", 1: "num_dets"},
-                    "labels": {0: "batch", 1: "num_dets"},
-                    "scores": {0: "batch", 1: "num_dets"},
-                    "masks": {0: "batch", 1: "num_dets", 2: "height", 3: "width"},
-                },
-                "dynamo": False,  # RF-DETR does not support dynamo
-                "do_constant_folding": True,
-                "opset_version": 17,
                 "autograd_inlining": False,
+                "opset_version": 18,
             },
             output_names=["bboxes", "labels", "scores", "masks"],
         )

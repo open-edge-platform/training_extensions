@@ -1,7 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { getMockedExtendedModel, getMockedModel } from 'mocks/mock-model';
+import { getMockedDatasetRevision } from 'mocks/mock-dataset-revision';
+import { getMockedExtendedModel, getMockedModel, getMockedModelArchitecture } from 'mocks/mock-model';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 
@@ -47,6 +48,12 @@ const mockedModels = [
     }),
 ];
 
+const mockedModelArchitectures = [
+    getMockedModelArchitecture({ id: 'Object_Detection_SSD', name: 'Object_Detection_SSD' }),
+    getMockedModelArchitecture({ id: 'Object_Detection_YOLOX_X', name: 'Object_Detection_YOLOX_X' }),
+    getMockedModelArchitecture({ id: 'Object_Detection_YOLOX_XS', name: 'Object_Detection_YOLOX_XS' }),
+];
+
 test.describe('Models', () => {
     test.beforeEach(({ network }) => {
         network.use(
@@ -55,6 +62,12 @@ test.describe('Models', () => {
             }),
             http.get('/api/projects/{project_id}/models', () => {
                 return HttpResponse.json(mockedModels);
+            }),
+            http.get('/api/projects/{project_id}/dataset_revisions', () => {
+                return HttpResponse.json([
+                    getMockedDatasetRevision({ id: 'dataset-1', name: 'Dataset Revision 1' }),
+                    getMockedDatasetRevision({ id: 'dataset-2', name: 'Dataset Revision 2' }),
+                ]);
             }),
             http.get('/api/projects/{project_id}/models/{model_id}', ({ params }) => {
                 const foundModel = mockedModels.find((model) => model.id === params.model_id);
@@ -77,6 +90,16 @@ test.describe('Models', () => {
             }),
             http.delete('/api/projects/{project_id}/models/{model_id}', () => {
                 return HttpResponse.json(null, { status: 204 });
+            }),
+            http.get('/api/model_architectures', () => {
+                return HttpResponse.json({
+                    model_architectures: mockedModelArchitectures,
+                    top_picks: {
+                        balance: mockedModelArchitectures[0].id,
+                        speed: mockedModelArchitectures[1].id,
+                        accuracy: mockedModelArchitectures[2].id,
+                    },
+                });
             })
         );
     });
@@ -172,6 +195,28 @@ test.describe('Models', () => {
         expect(modelNames[0]).toContain('YOLOX Model v1');
     });
 
+    test('can toggle to show and hide failed models', async ({ modelsPage, network }) => {
+        const failedModel = getMockedModel({
+            id: 'model-3',
+            name: 'Failed model',
+            training_info: { status: 'failed' },
+        });
+
+        network.use(
+            http.get('/api/projects/{project_id}/models', () => {
+                return HttpResponse.json([...mockedModels, failedModel]);
+            })
+        );
+
+        await modelsPage.goto();
+
+        await expect(modelsPage.getModelByName('Failed model')).toBeVisible();
+
+        await modelsPage.toggleShowHideFailedModels();
+
+        await expect(modelsPage.getModelByName('Failed model')).toBeHidden();
+    });
+
     test('can rename a model', async ({ modelsPage, network }) => {
         network.use(
             http.patch('/api/projects/{project_id}/models/{model_id}', async ({ request }) => {
@@ -248,5 +293,63 @@ test.describe('Models', () => {
         await modelsPage.clickSetActiveAction();
 
         expect(activatedModelId).toBe('model-1');
+    });
+
+    test('can rename a dataset revision', async ({ modelsPage, network }) => {
+        network.use(
+            http.patch('/api/projects/{project_id}/dataset_revisions/{dataset_revision_id}', async ({ request }) => {
+                const body = (await request.json()) as { name: string };
+
+                return HttpResponse.json(getMockedDatasetRevision({ id: 'dataset-1', name: body.name }));
+            }),
+            http.get('/api/projects/{project_id}/dataset_revisions', () => {
+                return HttpResponse.json([
+                    getMockedDatasetRevision({ id: 'dataset-1', name: 'Renamed Dataset' }),
+                    getMockedDatasetRevision({ id: 'dataset-2', name: 'Dataset Revision 2' }),
+                ]);
+            })
+        );
+
+        await modelsPage.goto();
+
+        await modelsPage.openDatasetMenu();
+        await modelsPage.clickRenameDatasetAction();
+        await modelsPage.renameDatasetRevision('Renamed Dataset');
+
+        await expect(modelsPage.getDatasetHeaderByName('Renamed Dataset')).toBeVisible();
+    });
+
+    test('handles dataset revision deletion correctly', async ({ modelsPage, network, page }) => {
+        await modelsPage.goto();
+
+        await expect(modelsPage.getThreeSectionRange('dataset-1')).toBeVisible();
+        await expect(modelsPage.getThreeSectionRange('dataset-2')).toBeVisible();
+
+        network.use(
+            http.delete('/api/projects/{project_id}/dataset_revisions/{dataset_revision_id}', () => {
+                return HttpResponse.json(null, { status: 204 });
+            }),
+            http.get('/api/projects/{project_id}/dataset_revisions', () => {
+                return HttpResponse.json([
+                    getMockedDatasetRevision({ id: 'dataset-1', name: 'Dataset Revision 1', files_deleted: true }),
+                    getMockedDatasetRevision({ id: 'dataset-2', name: 'Dataset Revision 2' }),
+                ]);
+            })
+        );
+
+        await modelsPage.openDatasetMenu();
+        await modelsPage.clickDeleteDatasetAction();
+        await modelsPage.confirmDelete();
+
+        await expect(modelsPage.getThreeSectionRange('dataset-1')).toBeHidden();
+        await expect(modelsPage.getThreeSectionRange('dataset-2')).toBeVisible();
+
+        await modelsPage.expandModel('YOLOX Model v1');
+        await modelsPage.clickTrainingDatasetsTab();
+
+        await expect(page.getByText('The files for this dataset revision have been deleted.')).toBeVisible();
+        await expect(page.getByRole('heading', { name: /Training/ })).toBeHidden();
+        await expect(page.getByRole('heading', { name: /Validation/ })).toBeHidden();
+        await expect(page.getByRole('heading', { name: /Testing/ })).toBeHidden();
     });
 });

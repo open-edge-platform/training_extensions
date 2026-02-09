@@ -18,11 +18,11 @@ export type DatasetGroup = {
         validation: number;
         testing: number;
     };
+    filesDeleted: boolean;
 };
 
 export type ArchitectureGroup = {
-    name: string;
-    recommendedFor: string;
+    id: string;
 };
 
 export type GroupedModels = {

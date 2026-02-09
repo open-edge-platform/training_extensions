@@ -3,16 +3,25 @@
 
 import { useMemo } from 'react';
 
-import type { Model } from '../../../../constants/shared-types';
-import { useGetActiveModelArchitectureId } from '../../hooks/api/use-get-active-model-architecture-id.hook';
+import type { DatasetRevision, Model } from '../../../../constants/shared-types';
+import { useGetActiveModel } from '../../hooks/api/use-get-active-model.hook';
 import { GroupByMode, GroupedModels, SortBy } from '../types';
-import { filterBySearch, groupModels, pinModel, removeEmpty, sortGroupedModels } from '../utils/model-transforms';
+import {
+    filterBySearch,
+    filterOutFailedModels,
+    groupModels,
+    pinModel,
+    removeEmpty,
+    sortGroupedModels,
+} from '../utils/model-transforms';
 
 type UseGroupedModelsOptions = {
     groupBy: GroupByMode;
     sortBy: SortBy;
     pinActive: boolean;
     searchBy: string;
+    datasetRevisions: DatasetRevision[];
+    showFailedModels: boolean;
 };
 
 // Responsible for:
@@ -21,17 +30,18 @@ type UseGroupedModelsOptions = {
 // - Sorting models within each group based on the selected sorting criteria
 // - Pinning the active model to the top of its group if the pinActive option is enabled
 export const useGroupedModels = (models: Model[] | undefined, options: UseGroupedModelsOptions): GroupedModels[] => {
-    const { groupBy, sortBy, pinActive, searchBy } = options;
-    const activeModelArchitectureId = useGetActiveModelArchitectureId();
+    const { groupBy, sortBy, pinActive, searchBy, datasetRevisions, showFailedModels } = options;
+    const activeModel = useGetActiveModel();
 
     return useMemo(() => {
         if (!models) return [];
 
-        const filtered = filterBySearch(models, searchBy);
-        const grouped = groupModels(filtered, groupBy);
+        const filteredByFailedModels = showFailedModels ? models : filterOutFailedModels(models);
+        const filteredBySearch = filterBySearch(filteredByFailedModels, searchBy);
+        const grouped = groupModels(filteredBySearch, groupBy, datasetRevisions);
         const sorted = sortGroupedModels(grouped, sortBy);
-        const pinned = pinModel(sorted, pinActive ? activeModelArchitectureId : undefined);
+        const pinned = pinModel(sorted, pinActive ? activeModel?.id : undefined);
 
         return removeEmpty(pinned);
-    }, [models, groupBy, sortBy, pinActive, activeModelArchitectureId, searchBy]);
+    }, [models, groupBy, sortBy, pinActive, activeModel?.id, searchBy, datasetRevisions, showFailedModels]);
 };

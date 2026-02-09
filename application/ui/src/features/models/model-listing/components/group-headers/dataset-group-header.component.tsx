@@ -3,29 +3,33 @@
 
 import { dimensionValue, Flex, Grid, Heading, Text } from '@geti/ui';
 import { Image, Tag } from '@geti/ui/icons';
+import { useNumberFormatter } from 'react-aria';
 
 import { TrainModel } from '../../../train-model/train-model.component';
 import type { DatasetGroup } from '../../types';
+import { DatasetActions } from '../dataset-actions/dataset-actions.component';
+import { ModelBadge } from '../model-row/model-badge.component';
 import { ThreeSectionRange } from '../three-section-range/three-section-range.component';
-
-import classes from './group-headers.module.scss';
 
 type DatasetGroupHeaderProps = {
     dataset: DatasetGroup;
 };
 
 export const DatasetGroupHeader = ({ dataset }: DatasetGroupHeaderProps) => {
+    const hasDatasetRevisionData = dataset.imageCount > 0 && !dataset.filesDeleted;
+    const gridColumns = hasDatasetRevisionData
+        ? ['auto', '1fr', 'auto', '1fr', 'auto']
+        : ['auto', '1fr', 'auto', 'auto'];
+    const formatter = useNumberFormatter();
+
     return (
-        <Grid
-            columns={['auto', '1fr', 'auto', '1fr', 'auto']}
-            alignItems={'center'}
-            marginBottom={'size-225'}
-            gap={'size-200'}
-        >
+        <Grid columns={gridColumns} alignItems={'center'} marginBottom={'size-225'} gap={'size-200'}>
             <Flex alignItems={'center'} gap={'size-50'}>
                 <Heading level={2} UNSAFE_style={{ fontSize: dimensionValue('size-300') }}>
                     {dataset.name}
                 </Heading>
+
+                <DatasetActions dataset={dataset} />
             </Flex>
             <Text
                 UNSAFE_style={{
@@ -36,22 +40,25 @@ export const DatasetGroupHeader = ({ dataset }: DatasetGroupHeaderProps) => {
             </Text>
 
             <Flex gap={'size-50'} justifyContent={'center'}>
-                <Flex UNSAFE_className={classes.tag}>
+                <ModelBadge>
                     <Tag /> {dataset.labelCount}
-                </Flex>
-                <Flex UNSAFE_className={classes.tag}>
-                    <Image /> {dataset.imageCount.toLocaleString()}
-                </Flex>
+                </ModelBadge>
+                <ModelBadge>
+                    <Image /> {formatter.format(dataset.imageCount)}
+                </ModelBadge>
             </Flex>
 
-            <ThreeSectionRange
-                trainingValue={dataset.trainingSubsets.training}
-                validationValue={dataset.trainingSubsets.validation}
-                testingValue={dataset.trainingSubsets.testing}
-            />
+            {hasDatasetRevisionData && (
+                <ThreeSectionRange
+                    id={`dataset-range-${dataset.id}`}
+                    trainingValue={dataset.trainingSubsets.training}
+                    validationValue={dataset.trainingSubsets.validation}
+                    testingValue={dataset.trainingSubsets.testing}
+                />
+            )}
 
             <Flex>
-                <TrainModel />
+                <TrainModel preSelectedDatasetRevisionId={dataset.id} />
             </Flex>
         </Grid>
     );

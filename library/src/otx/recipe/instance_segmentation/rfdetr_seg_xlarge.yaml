@@ -71,7 +71,6 @@ overrides:
   data:
     task: INSTANCE_SEGMENTATION
     data_format: coco_instances
-    include_polygons: false
     input_size:
       - 624
       - 624

@@ -54,7 +54,7 @@ dependencies = [
     "pyyaml==6.0.3",
     "tensorboard==2.20.0",
     "tensorboardx==2.6.4",
-    "rfdetr==1.4.0.post0",
+    "rfdetr @ git+https://github.com/kprokofi/rf-detr.git@develop",
     "aiohttp==3.13.3",
     "certifi>=2024.7.4",
     "filelock>=3.20.3",
@@ -80,7 +80,6 @@ dev = [
 
 lint = [
     "ruff==0.11.13",
-    "mypy~=1.6.1",
     "attrs",
     "types-PyYAML~=6.0.12",
     "types-aiofiles",
@@ -90,7 +89,8 @@ lint = [
     "types_futures",
     "types-setuptools",
     "types-python-dateutil",
-    "tokenize-rt==3.2.0"
+    "tokenize-rt==3.2.0",
+    "pyrefly~=0.51.0",
 ]
 
 [project.optional-dependencies]
@@ -216,14 +216,6 @@ omit = [
     "config.py",
     "config-3.py",
 ]
-
-
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# MYPY CONFIGURATION.                                                         #
-[tool.mypy]
-python_version = "3.13"
-ignore_missing_imports = true
-show_error_codes = true
 
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -436,3 +428,7 @@ markers = [
     "xpu",  # mark tests which require Intel dGPU,
 ]
 python_files = "tests/**/*.py"
+
+[tool.pyrefly]
+python-version = "3.10.0"
+ignore-missing-imports = ["*"]

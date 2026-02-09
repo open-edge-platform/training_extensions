@@ -1,8 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+import { fireEvent, screen } from '@testing-library/react';
 import { getMockedProject } from 'mocks/mock-project';
-import { fireEvent, render, screen } from 'test-utils/render';
+import { render } from 'test-utils/render';
 
 import { ProjectCard } from './project-card.component';
 
@@ -20,7 +21,7 @@ describe('ProjectCard', () => {
         },
     });
 
-    it('should render all elements correctly', async () => {
+    it('renders all elements correctly', async () => {
         render(<ProjectCard item={mockProject} />);
 
         expect(await screen.findByRole('heading', { name: 'Test Project' })).toBeInTheDocument();
@@ -29,31 +30,31 @@ describe('ProjectCard', () => {
         expect(thumbnail).toBeInTheDocument();
         expect(thumbnail).toHaveAttribute('alt', 'Test Project');
 
-        expect(await screen.findByText('detection')).toBeInTheDocument();
+        expect(await screen.findByText('Detection')).toBeInTheDocument();
         expect(await screen.findByText('• Labels: Cat, Dog')).toBeInTheDocument();
         expect(await screen.findByRole('button', { name: /open project options/i })).toBeInTheDocument();
     });
 
-    it('should show active tag when pipeline is running', async () => {
+    it('shows active tag when pipeline is running', async () => {
         render(<ProjectCard item={{ ...mockProject, active_pipeline: true }} />);
 
-        expect(await screen.findByLabelText('Active')).toBeInTheDocument();
+        expect(await screen.findByText('Active')).toBeInTheDocument();
     });
 
-    it('should not show active tag when pipeline is idle', async () => {
+    it('does not show active tag when pipeline is idle', async () => {
         render(<ProjectCard item={mockProject} />);
 
         expect(screen.queryByText('Active')).not.toBeInTheDocument();
     });
 
-    it('should render as a link to project inference page', async () => {
+    it('renders as a link to project dataset page', async () => {
         render(<ProjectCard item={mockProject} />);
 
         const cardLink = await screen.findByRole('link');
-        expect(cardLink).toHaveAttribute('href', '/projects/test-project-id/inference');
+        expect(cardLink).toHaveAttribute('href', '/projects/test-project-id/dataset');
     });
 
-    it('should display single label correctly', async () => {
+    it('displays single label correctly', async () => {
         const singleLabelProject = getMockedProject({
             task: {
                 task_type: 'classification',
@@ -67,7 +68,7 @@ describe('ProjectCard', () => {
         expect(await screen.findByText('• Labels: Person')).toBeInTheDocument();
     });
 
-    it('should display multiple labels separated by commas', async () => {
+    it('displays multiple labels separated by commas', async () => {
         const multiLabelProject = getMockedProject({
             task: {
                 task_type: 'detection',
@@ -99,14 +100,24 @@ describe('ProjectCard', () => {
         expect(await screen.findByText('• Labels:')).toBeInTheDocument();
     });
 
-    it('should display classification task type', async () => {
+    it('displays classification task type', async () => {
         const classificationProject = getMockedProject({
-            task: { ...mockProject.task, task_type: 'classification' },
+            task: { ...mockProject.task, task_type: 'classification', exclusive_labels: true },
         });
 
         render(<ProjectCard item={classificationProject} />);
 
-        expect(await screen.findByText('classification')).toBeInTheDocument();
+        expect(await screen.findByText('Classification')).toBeInTheDocument();
+    });
+
+    it('displays multi-label classification task type', async () => {
+        const classificationProject = getMockedProject({
+            task: { ...mockProject.task, task_type: 'classification', exclusive_labels: false },
+        });
+
+        render(<ProjectCard item={classificationProject} />);
+
+        expect(await screen.findByText('Multi-label classification')).toBeInTheDocument();
     });
 
     it('should pass correct project id to menu actions', async () => {

@@ -1,0 +1,28 @@
+.labelRow {
+    padding: var(--spectrum-global-dimension-size-50) var(--spectrum-global-dimension-size-100);
+    border-radius: var(--spectrum-alias-border-radius-regular);
+    transition: background-color 0.15s ease;
+
+    &:hover {
+        background-color: var(--spectrum-global-color-gray-100);
+    }
+
+    &:hover .deleteButton,
+    &:hover .pinButton {
+        opacity: 1;
+    }
+}
+
+.deleteButton {
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.pinButton {
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.pinButtonPinned {
+    opacity: 1;
+}

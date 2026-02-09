@@ -3,22 +3,14 @@
 
 import { startTransition } from 'react';
 
-import { act, renderHook, waitFor } from '@testing-library/react';
+import { act, screen, waitFor } from '@testing-library/react';
 import { HttpResponse } from 'msw';
-import { screen, TestProviders } from 'test-utils/render';
+import { renderHook } from 'test-utils/render';
 
 import { http } from '../../../../api/utils';
 import type { ImagesFolderSourceConfig } from '../../../../constants/shared-types';
 import { server } from '../../../../msw-node-setup';
 import { useSourceAction } from './use-source-action.hook';
-
-vi.mock('react-router', async (importOriginal) => {
-    const actual = await importOriginal<typeof import('react-router')>();
-    return {
-        ...actual,
-        useParams: vi.fn(() => ({ projectId: '123' })),
-    };
-});
 
 const mockedConfig: ImagesFolderSourceConfig = {
     id: 'images_folder-id',
@@ -48,9 +40,7 @@ const renderApp = async ({
         http.patch('/api/projects/{project_id}/pipeline', () => HttpResponse.json({}))
     );
 
-    const { result } = renderHook(() => useSourceAction({ config: mockedConfig, isNewSource, bodyFormatter }), {
-        wrapper: TestProviders,
-    });
+    const { result } = renderHook(() => useSourceAction({ config: mockedConfig, isNewSource, bodyFormatter }));
     const [_state, submitAction] = result.current;
 
     const formData = new FormData();
@@ -69,9 +59,8 @@ const renderApp = async ({
 
 describe('useSourceAction', () => {
     it('return initial config', () => {
-        const { result } = renderHook(
-            () => useSourceAction({ config: mockedConfig, isNewSource: true, bodyFormatter }),
-            { wrapper: TestProviders }
+        const { result } = renderHook(() =>
+            useSourceAction({ config: mockedConfig, isNewSource: true, bodyFormatter })
         );
 
         expect(result.current[0]).toEqual(mockedConfig);

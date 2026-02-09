@@ -160,9 +160,11 @@ class RFDETRDetector(BaseModule):
         """
         outputs = self.lwdetr(batch_inputs)
         # outputs is (pred_boxes, pred_logits, pred_masks) in export mode
-        pred_boxes, pred_logits = outputs
-        pred_masks = None
-
+        if len(outputs) == 3:
+            pred_boxes, pred_logits, pred_masks = outputs
+        else:
+            pred_boxes, pred_logits = outputs
+            pred_masks = None
         # Process outputs similar to PostProcess
         scores = torch.sigmoid(pred_logits)
         scores, index = torch.topk(scores.flatten(1), num_select, dim=-1)
@@ -185,9 +187,6 @@ class RFDETRDetector(BaseModule):
             )
             # Apply sigmoid to get mask probabilities
             masks = torch.sigmoid(masks)
-        else:
-            # Create dummy masks if not available
-            batch_size = pred_boxes.shape[0]
-            masks = torch.zeros((batch_size, num_select, 1, 1), device=pred_boxes.device)
+            return boxes, labels, scores, masks
 
-        return boxes, labels, scores, masks
+        return boxes, labels, scores

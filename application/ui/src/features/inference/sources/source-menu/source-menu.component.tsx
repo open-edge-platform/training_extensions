@@ -35,7 +35,7 @@ export const SourceMenu = ({ id, name, isConnected, onEdit }: SourceMenuProps) =
         meta: {
             invalidateQueries: [
                 ['get', '/api/sources'],
-                ['get', '/api/projects/{project_id}/pipeline'],
+                ['get', '/api/projects/{project_id}/pipeline', { params: { path: { project_id } } }],
             ],
         },
     });

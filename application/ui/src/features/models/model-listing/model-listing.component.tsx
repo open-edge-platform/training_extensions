@@ -5,13 +5,14 @@ import { Flex } from '@geti/ui';
 
 import { EmptySearchResults } from './components/expandable-search/empty-search-results.component';
 import { GroupModelsContainer } from './components/group-models-container/group-models-container.component';
-import { useModelListing } from './provider/model-listing-provider';
+import { GroupedModels } from './types';
 
-export const ModelListing = () => {
-    const { groupedModels, searchBy } = useModelListing();
+type ModelListingProps = {
+    hasNoResults: boolean;
+    groupedModels: GroupedModels[];
+};
 
-    const hasNoResults = groupedModels.length === 0 && searchBy.length > 0;
-
+export const ModelListing = ({ groupedModels, hasNoResults }: ModelListingProps) => {
     return (
         <>
             {hasNoResults ? (
@@ -19,13 +20,13 @@ export const ModelListing = () => {
                     <EmptySearchResults />
                 </Flex>
             ) : (
-                <Flex direction={'column'} gap={'size-300'} flex={1}>
-                    {groupedModels.map(({ group, models }, index) => (
-                        <GroupModelsContainer
-                            key={'id' in group ? group.id : `${group.name}-${index}`}
-                            group={group}
-                            models={models}
-                        />
+                <Flex
+                    direction={'column'}
+                    flex={1}
+                    UNSAFE_style={{ backgroundColor: 'var(--spectrum-global-color-gray-50)' }}
+                >
+                    {groupedModels.map(({ group, models }) => (
+                        <GroupModelsContainer key={group.id} group={group} models={models} />
                     ))}
                 </Flex>
             )}

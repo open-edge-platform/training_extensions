@@ -5,6 +5,7 @@ import { Divider } from '@geti/ui';
 import { partition } from 'lodash-es';
 
 import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
+import { isNonEmptyArray } from '../../../../shared/util';
 import { Tools } from '../tools.component';
 import { useAvailableTools } from './use-available-tools';
 
@@ -16,13 +17,13 @@ export const AnnotatorTools = () => {
 
     return (
         <>
-            {selectionTool.length > 0 && (
+            {isNonEmptyArray(selectionTool) && (
                 <>
                     <Tools tools={selectionTool} activeTool={activeTool} setActiveTool={setActiveTool} />
-                    {otherTools.length > 0 && <Divider size='S' />}
+                    {isNonEmptyArray(otherTools) && <Divider size='S' />}
                 </>
             )}
-            {otherTools.length > 0 && (
+            {isNonEmptyArray(otherTools) && (
                 <>
                     <Tools tools={otherTools} activeTool={activeTool} setActiveTool={setActiveTool} />
                     <Divider size='S' />
