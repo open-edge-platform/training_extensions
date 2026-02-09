@@ -45,8 +45,8 @@ def list_models(
             model_size = model_service.get_model_size_in_bytes(project_id=project.id, model_id=model_revision.id)
             model_views.append(model_revision.model_dump() | {"variants": model_variants} | {"size": model_size})
         return [ModelView.model_validate(model_view, from_attributes=True) for model_view in model_views]
-    except ResourceNotFoundError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.get(
@@ -185,7 +185,15 @@ def delete_model(
     model_service: Annotated[ModelService, Depends(get_model_service)],
     files_only: Annotated[bool, Query()] = False,
 ) -> None:
-    """Delete a model from a project."""
+    """
+    Delete a given model, or the files associated with it.
+
+    If `files_only` is false, the entire model revision is deleted.
+    If `files_only` is true, only the model files are deleted (weights, training logs, ...), while model metadata
+    such as name and creation date are preserved; the model continues to exist as a lightweight record in the system,
+    although operations that depend on the presence of model files (e.g., fine-tuning, inference) will no longer be
+    possible; the only purpose of this option is to free up storage space while preserving model metadata.
+    """
     try:
         if files_only:
             model_service.delete_model_files(project_id=project.id, model_id=model_id)

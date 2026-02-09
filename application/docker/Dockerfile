@@ -158,14 +158,14 @@ USER root
 
 RUN apt-get update  \
     && apt-get install -y --no-install-recommends wget=1.25.0-2 \
-    && wget -q https://developer.download.nvidia.com/compute/cuda/repos/debian12/x86_64/cuda-keyring_1.1-1_all.deb \
+    && wget -q https://developer.download.nvidia.com/compute/cuda/repos/debian13/x86_64/cuda-keyring_1.1-1_all.deb \
     && dpkg -i cuda-keyring_1.1-1_all.deb \
     && rm -rf cuda-keyring_1.1-1_all.deb \
     && apt-get remove -y wget
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-      nvidia-open=580.105.08-1 \
+      nvidia-open=590.48.01-1 \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 

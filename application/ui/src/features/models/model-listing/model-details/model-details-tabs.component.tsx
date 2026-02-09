@@ -3,6 +3,7 @@
 
 import { Flex, Item, Loading, TabList, TabPanels, Tabs, Text } from '@geti/ui';
 
+import { useGetDatasetRevisions } from '../../../../hooks/use-get-dataset-revisions.hook';
 import { useGetModel } from '../../hooks/api/use-get-model.hook';
 import { ModelMetrics } from '../model-metrics/model-metrics.component';
 import { ModelTrainingDatasets } from '../model-training-datasets/model-training-datasets.component';
@@ -15,6 +16,7 @@ interface ModelDetailsTabsProps {
 
 export const ModelDetailsTabs = ({ modelId }: ModelDetailsTabsProps) => {
     const { isPending, isError, data: model } = useGetModel(modelId);
+    const { data: datasetRevisions = [] } = useGetDatasetRevisions();
 
     if (isPending) {
         return (
@@ -32,6 +34,14 @@ export const ModelDetailsTabs = ({ modelId }: ModelDetailsTabsProps) => {
         );
     }
 
+    const currentDatasetRevisionId = model.training_info.dataset_revision_id;
+
+    // Note: currentDatasetRevision might be 'undefined' if the dataset revision was deleted after the model
+    // was trained.
+    const currentDatasetRevision = datasetRevisions.find(
+        (datasetRevision) => datasetRevision.id === currentDatasetRevisionId
+    );
+
     return (
         <Tabs
             aria-label={'Model details'}
@@ -40,6 +50,7 @@ export const ModelDetailsTabs = ({ modelId }: ModelDetailsTabsProps) => {
                 padding: 'var(--spectrum-global-dimension-size-400)',
                 borderRadius: 'var(--spectrum-global-dimension-size-50)',
                 border: 'var(--spectrum-global-dimension-size-10) solid var(--spectrum-global-color-gray-200)',
+                '--spectrum-tabs-selection-indicator-color': 'var(--energy-blue)',
             }}
         >
             <TabList marginBottom={'size-300'}>
@@ -67,7 +78,7 @@ export const ModelDetailsTabs = ({ modelId }: ModelDetailsTabsProps) => {
                     <ModelTrainingParameters />
                 </Item>
                 <Item key='datasets'>
-                    <ModelTrainingDatasets datasetRevisionId={model.training_info.dataset_revision_id} />
+                    <ModelTrainingDatasets datasetRevision={currentDatasetRevision} />
                 </Item>
             </TabPanels>
         </Tabs>

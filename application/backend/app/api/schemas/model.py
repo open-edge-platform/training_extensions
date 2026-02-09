@@ -32,8 +32,8 @@ class ModelView(BaseRequiredIDModel):
         "json_schema_extra": {
             "example": {
                 "id": "76e07d18-196e-4e33-bf98-ac1d35dca4cb",
-                "name": "Object_Detection_YOLOX_X (76e07d18)",
-                "architecture": "Object_Detection_YOLOX_X",
+                "name": "YOLOX-X (76e07d18)",
+                "architecture": "object-detection-yolox-x",
                 "parent_revision": "06091f82-5506-41b9-b97f-c761380df870",
                 "training_info": {
                     "status": "in_progress",
@@ -104,8 +104,8 @@ class ExtendedModelView(ModelView):
         "json_schema_extra": {
             "example": {
                 "id": "76e07d18-196e-4e33-bf98-ac1d35dca4cb",
-                "name": "Object_Detection_YOLOX_X (76e07d18)",
-                "architecture": "Object_Detection_YOLOX_X",
+                "name": "YOLOX-X (76e07d18)",
+                "architecture": "object-detection-yolox-x",
                 "parent_revision": "06091f82-5506-41b9-b97f-c761380df870",
                 "training_info": {
                     "status": "in_progress",

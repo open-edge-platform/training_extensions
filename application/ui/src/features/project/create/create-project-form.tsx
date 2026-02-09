@@ -69,7 +69,7 @@ export const CreateProjectForm = ({ projects }: CreateProjectFormProps) => {
             },
             {
                 onSuccess: () => {
-                    navigate(paths.project.inference({ projectId }));
+                    navigate(paths.project.dataset({ projectId }));
                 },
             }
         );

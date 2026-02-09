@@ -4,11 +4,14 @@ from datetime import datetime
 from pathlib import Path
 from uuid import UUID, uuid4
 
+import datumaro.experimental as dm
+import polars as pl
 import pytest
+from PIL import Image
 from sqlalchemy.orm import Session
 
 from app.db.schema import DatasetItemDB, DatasetRevisionDB, MediaDB, PipelineDB
-from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Pipeline, Project
+from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, DatasetRevision, Pipeline, Project
 from app.services import (
     DatasetRevisionService,
     DatasetService,
@@ -248,6 +251,57 @@ def fxt_project_with_subset_items_on_disk(
     return project, media_and_dataset_items
 
 
+@pytest.fixture
+def fxt_dataset_revision_with_parquet(
+    fxt_projects_dir: Path,
+    fxt_project_with_pipeline: tuple[Project, Pipeline],
+    db_session: Session,
+) -> tuple[Project, UUID]:
+    """Fixture that creates a dataset revision with a Parquet file and image."""
+    project, _ = fxt_project_with_pipeline
+    revision_id = uuid4()
+
+    # Create revision in database
+    db_revision = DatasetRevisionDB(
+        id=str(revision_id),
+        project_id=str(project.id),
+        name=f"Dataset ({str(revision_id).split('-')[0]})",
+        files_deleted=False,
+    )
+    db_session.add(db_revision)
+    db_session.flush()
+
+    # Create revision directory structure
+    revision_path = fxt_projects_dir / str(project.id) / "dataset_revisions" / str(revision_id)
+    images_path = revision_path / "images"
+    images_path.mkdir(parents=True, exist_ok=True)
+
+    # Create a real image file
+    item_id = uuid4()
+    image_filename = "img_000001.jpg"
+    image_path = images_path / image_filename
+
+    # Create a simple test image (64x64 red square)
+    test_image = Image.new("RGB", (1024, 768), color="red")
+    test_image.save(image_path, "JPEG")
+
+    # Create Polars dataframe with expected schema
+    df = pl.DataFrame(
+        {
+            "id": [str(item_id)],
+            "image": [f"images/{image_filename}"],
+            "image_info": [{"width": 1024, "height": 768}],
+            "subset": ["TRAINING"],
+        }
+    )
+
+    # Save as Parquet
+    parquet_path = revision_path / "data.parquet"
+    df.write_parquet(parquet_path)
+
+    return project, revision_id
+
+
 class TestDatasetRevisionServiceIntegration:
     """Integration tests for DatasetRevisionService."""
 
@@ -274,11 +328,9 @@ class TestDatasetRevisionServiceIntegration:
 
     def test_get_dataset_revision(
         self,
-        fxt_projects_dir: Path,
         fxt_dataset_service: DatasetService,
         fxt_dataset_revision_service: DatasetRevisionService,
         fxt_project_with_subset_items: tuple[Project, list[DatasetItemDB]],
-        db_session: Session,
     ) -> None:
         """Test getting a dataset revision."""
         project, _ = fxt_project_with_subset_items
@@ -295,7 +347,6 @@ class TestDatasetRevisionServiceIntegration:
 
         assert revision is not None
         assert revision.id == revision_id
-        assert revision.project_id == project.id
         assert revision.name == f"Dataset ({str(revision.id).split('-')[0]})"
         assert revision.files_deleted is False
 
@@ -338,7 +389,41 @@ class TestDatasetRevisionServiceIntegration:
         assert excinfo.value.resource_type == ResourceType.DATASET_REVISION
         assert excinfo.value.resource_id == str(revision_id)
 
-    def test_count_items_by_subset(
+    def test_rename_dataset_revision(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_dataset_revision_service: DatasetRevisionService,
+        fxt_project_with_subset_items: tuple[Project, list[DatasetItemDB]],
+    ) -> None:
+        """Test updating name of a dataset revision"""
+        project, _ = fxt_project_with_subset_items
+        dataset = fxt_dataset_service.get_dm_dataset(project.id, project.task, DatasetItemAnnotationStatus.REVIEWED)
+
+        # Save a revision
+        revision_id = fxt_dataset_revision_service.save_revision(
+            project_id=project.id,
+            dataset=dataset,
+        )
+
+        new_dr_name = "This is a new dataset revision name"
+
+        # Get the dataset revision before renaming, rename it and get it after
+        dr_before_renaming = fxt_dataset_revision_service.get_dataset_revision(
+            project_id=project.id, revision_id=revision_id
+        )
+        name_before_renaming = dr_before_renaming.name
+        dr_from_renaming = fxt_dataset_revision_service.rename_dataset_revision(
+            project_id=project.id, dataset_revision=dr_before_renaming, new_name=new_dr_name
+        )
+        dr_after_renaming = fxt_dataset_revision_service.get_dataset_revision(
+            project_id=project.id, revision_id=revision_id
+        )
+
+        assert dr_from_renaming.name == new_dr_name
+        assert name_before_renaming != new_dr_name
+        assert dr_after_renaming.name == new_dr_name
+
+    def test_count_dataset_revision_items(
         self,
         fxt_projects_dir: Path,
         fxt_dataset_service: DatasetService,
@@ -361,9 +446,12 @@ class TestDatasetRevisionServiceIntegration:
         revision_path = fxt_projects_dir / str(project.id) / "dataset_revisions" / str(revision_id)
         assert revision_path.exists()
         assert (revision_path / "data.parquet").exists()
+        revision = fxt_dataset_revision_service.get_dataset_revision(project_id=project.id, revision_id=revision_id)
 
         # Count items in each subset
-        counts = fxt_dataset_revision_service.count_items_by_subset(project.id, revision_id)
+        counts = fxt_dataset_revision_service.count_dataset_revision_items(
+            project_id=project.id, dataset_revision=revision
+        )
 
         # Calculate expected counts from fixture data
         expected_counts: dict[str, int] = {}
@@ -373,9 +461,28 @@ class TestDatasetRevisionServiceIntegration:
         expected_total = sum(expected_counts.values())
 
         # Verify counts match expected values from fixture
-        for subset_name, expected_count in expected_counts.items():
-            assert counts[subset_name] == expected_count
-        assert counts["total"] == expected_total
+        assert counts is not None
+        assert counts.training == expected_counts["training"]
+        assert counts.validation == expected_counts["validation"]
+        assert counts.testing == expected_counts["testing"]
+        assert counts.total == expected_total
+
+    def test_count_dataset_revision_items_in_deleted_revision(
+        self,
+        fxt_dataset_revision_service: DatasetRevisionService,
+    ) -> None:
+        revision = DatasetRevision(
+            id=uuid4(),
+            name="Deleted Revision",
+            created_at=datetime.utcnow(),
+            files_deleted=True,
+        )
+
+        counts = fxt_dataset_revision_service.count_dataset_revision_items(
+            project_id=uuid4(), dataset_revision=revision
+        )
+
+        assert counts is None
 
     def test_delete_dataset_revision_files(
         self,
@@ -488,3 +595,156 @@ class TestDatasetRevisionServiceIntegration:
         # Verify it's marked as deleted
         revision = fxt_dataset_revision_service.get_dataset_revision(project_id=project.id, revision_id=revision_id)
         assert revision.files_deleted is True
+
+    def test_load_revision(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_dataset_revision_service: DatasetRevisionService,
+        fxt_project_with_subset_items: tuple[Project, list[DatasetItemDB]],
+    ) -> None:
+        """Test loading a dataset revision as a Datumaro dataset."""
+        project, _ = fxt_project_with_subset_items
+        dataset = fxt_dataset_service.get_dm_dataset(project.id, project.task, DatasetItemAnnotationStatus.REVIEWED)
+
+        # Save a revision
+        revision_id = fxt_dataset_revision_service.save_revision(
+            project_id=project.id,
+            dataset=dataset,
+        )
+
+        # Load the revision
+        loaded_dataset = fxt_dataset_revision_service.load_revision(
+            project_id=project.id, dataset_revision_id=revision_id
+        )
+
+        # Verify it returns a Datumaro dataset
+        assert isinstance(loaded_dataset, dm.Dataset)
+
+    def test_load_revision_files_deleted(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_dataset_revision_service: DatasetRevisionService,
+        fxt_project_with_subset_items: tuple[Project, list[DatasetItemDB]],
+    ) -> None:
+        """Test loading a revision with deleted files raises error."""
+        project, _ = fxt_project_with_subset_items
+        dataset = fxt_dataset_service.get_dm_dataset(project.id, project.task, DatasetItemAnnotationStatus.REVIEWED)
+
+        # Save a revision
+        revision_id = fxt_dataset_revision_service.save_revision(
+            project_id=project.id,
+            dataset=dataset,
+        )
+
+        # Delete the revision files
+        fxt_dataset_revision_service.delete_dataset_revision_files(project_id=project.id, revision_id=revision_id)
+
+        # Try to load the revision - should raise error
+        with pytest.raises(ResourceNotFoundError) as excinfo:
+            fxt_dataset_revision_service.load_revision(project_id=project.id, dataset_revision_id=revision_id)
+
+        assert excinfo.value.resource_type == ResourceType.DATASET_REVISION
+        assert excinfo.value.resource_id == str(revision_id)
+
+    def test_get_dataset_revision_item(
+        self,
+        fxt_dataset_revision_service: DatasetRevisionService,
+        fxt_dataset_revision_with_parquet: tuple[Project, UUID],
+    ) -> None:
+        """Test getting a specific dataset revision item."""
+        project, revision_id = fxt_dataset_revision_with_parquet
+
+        # Get the revision
+        revision = fxt_dataset_revision_service.get_dataset_revision(project_id=project.id, revision_id=revision_id)
+
+        # Read the parquet to get the item_id
+        revision_path = (
+            fxt_dataset_revision_service.projects_dir / str(project.id) / "dataset_revisions" / str(revision_id)
+        )
+        df = pl.read_parquet(revision_path / "data.parquet")
+        item_id = df["id"][0]
+
+        # Get the item
+        item = fxt_dataset_revision_service.get_dataset_revision_item(
+            project_id=project.id,
+            dataset_revision=revision,
+            item_id=item_id,
+        )
+
+        assert item.id == UUID(item_id)
+        assert item.format == "jpg"
+        assert item.width == 1024
+        assert item.height == 768
+        assert item.subset == DatasetItemSubset.TRAINING
+        assert item.image_path.exists()
+
+    def test_get_dataset_revision_item_not_found(
+        self,
+        fxt_dataset_revision_service: DatasetRevisionService,
+        fxt_dataset_revision_with_parquet: tuple[Project, UUID],
+    ) -> None:
+        """Test getting a non-existent dataset revision item raises error."""
+        project, revision_id = fxt_dataset_revision_with_parquet
+
+        revision = fxt_dataset_revision_service.get_dataset_revision(project_id=project.id, revision_id=revision_id)
+
+        non_existent_id = str(uuid4())
+
+        with pytest.raises(ResourceNotFoundError) as excinfo:
+            fxt_dataset_revision_service.get_dataset_revision_item(
+                project_id=project.id,
+                dataset_revision=revision,
+                item_id=non_existent_id,
+            )
+
+        assert excinfo.value.resource_type == ResourceType.DATASET_ITEM
+        assert excinfo.value.resource_id == non_existent_id
+
+    def test_get_dataset_revision_item_thumbnail(
+        self,
+        fxt_dataset_revision_service: DatasetRevisionService,
+        fxt_dataset_revision_with_parquet: tuple[Project, UUID],
+    ) -> None:
+        """Test generating a thumbnail for a dataset revision item."""
+        project, revision_id = fxt_dataset_revision_with_parquet
+
+        revision = fxt_dataset_revision_service.get_dataset_revision(project_id=project.id, revision_id=revision_id)
+
+        # Read the parquet to get the item_id
+        revision_path = (
+            fxt_dataset_revision_service.projects_dir / str(project.id) / "dataset_revisions" / str(revision_id)
+        )
+        df = pl.read_parquet(revision_path / "data.parquet")
+        item_id = df["id"][0]
+
+        # Get the thumbnail
+        thumbnail = fxt_dataset_revision_service.get_dataset_revision_item_thumbnail(
+            project_id=project.id,
+            dataset_revision=revision,
+            item_id=item_id,
+        )
+
+        assert isinstance(thumbnail, Image.Image)
+        assert thumbnail.width == thumbnail.height == 64
+
+    def test_get_dataset_revision_item_thumbnail_not_found(
+        self,
+        fxt_dataset_revision_service: DatasetRevisionService,
+        fxt_dataset_revision_with_parquet: tuple[Project, UUID],
+    ) -> None:
+        """Test getting thumbnail for non-existent item raises error."""
+        project, revision_id = fxt_dataset_revision_with_parquet
+
+        revision = fxt_dataset_revision_service.get_dataset_revision(project_id=project.id, revision_id=revision_id)
+
+        non_existent_id = str(uuid4())
+
+        with pytest.raises(ResourceNotFoundError) as excinfo:
+            fxt_dataset_revision_service.get_dataset_revision_item_thumbnail(
+                project_id=project.id,
+                dataset_revision=revision,
+                item_id=non_existent_id,
+            )
+
+        assert excinfo.value.resource_type == ResourceType.DATASET_ITEM
+        assert excinfo.value.resource_id == non_existent_id

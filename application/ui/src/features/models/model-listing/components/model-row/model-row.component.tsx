@@ -1,37 +1,56 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { ActionButton, Flex, Grid, Item, Key, Menu, MenuTrigger, Tag, Text } from '@geti/ui';
-import { MoreMenu } from '@geti/ui/icons';
+import { Badge, Flex, Grid, Text } from '@geti/ui';
 
-import { ReactComponent as ThumbsUp } from '../../../../../assets/icons/thumbs-up.svg';
-import type { Model } from '../../../../../constants/shared-types';
+import type {
+    DatasetRevision,
+    Model,
+    ModelArchitectureWithPerformanceCategory,
+} from '../../../../../constants/shared-types';
 import { GRID_COLUMNS } from '../../constants';
 import { AccuracyIndicator } from '../../model-variants/accuracy-indicator.component';
+import { type GroupByMode } from '../../types';
 import { formatTrainingDateTime } from '../../utils/date-formatting';
 import { formatModelSize } from '../../utils/format-model-size';
+import { isFailedModel } from '../../utils/utils';
 import { ActiveModelTag } from '../active-model-tag.component';
 import { ParentRevisionModel } from '../parent-revision-model.component';
+import { ArchitectureColumn } from './architecture-column.component';
+import { DatasetColumn } from './dataset-revision-column.component';
 
 import styles from './model-row.module.scss';
 
 type ModelRowProps = {
     model: Model;
-    activeModelArchitectureId?: string;
+    activeModelId?: string;
     parentRevisionModel?: Model;
     onExpandModel?: (modelId: string) => void;
-    onModelAction?: (key: Key) => void;
+    groupBy: GroupByMode;
+    datasetRevision: DatasetRevision | undefined;
+    modelArchitecture: ModelArchitectureWithPerformanceCategory | undefined;
+};
+
+const FailedModel = () => {
+    return <Badge variant={'negative'}>Failed</Badge>;
 };
 
 export const ModelRow = ({
     model,
-    activeModelArchitectureId,
+    activeModelId,
     parentRevisionModel,
     onExpandModel,
-    onModelAction,
+    groupBy,
+    datasetRevision,
+    modelArchitecture,
 }: ModelRowProps) => {
     const trainingEndTime = model.training_info.end_time;
     const totalSize = model.size;
+    const labelSchemaRevision = model.training_info.label_schema_revision ?? {};
+    const labelsCount =
+        'labels' in labelSchemaRevision && Array.isArray(labelSchemaRevision.labels)
+            ? labelSchemaRevision.labels.length
+            : undefined;
 
     return (
         <Grid columns={GRID_COLUMNS} alignItems={'center'} width={'100%'} columnGap={'size-200'}>
@@ -39,8 +58,14 @@ export const ModelRow = ({
                 <Flex alignItems={'center'} gap={'size-100'}>
                     <Text UNSAFE_className={styles.modelName} data-testid={'model-name'}>
                         {model.name ?? 'Unnamed Model'}
+                        {isFailedModel(model) && (
+                            <>
+                                {' '}
+                                <FailedModel />
+                            </>
+                        )}
                     </Text>
-                    {model.id === activeModelArchitectureId && <ActiveModelTag />}
+                    {model.id === activeModelId && <ActiveModelTag />}
                 </Flex>
                 <Text UNSAFE_className={styles.secondaryText}>
                     {parentRevisionModel ? (
@@ -57,28 +82,15 @@ export const ModelRow = ({
 
             <Text UNSAFE_className={styles.dateText}>{formatTrainingDateTime(trainingEndTime)}</Text>
 
-            <Flex alignItems={'start'} direction={'column'} gap={'size-100'}>
-                <Text UNSAFE_className={styles.smallText}>{model.architecture} (Apache 2.0)</Text>
-                {/* TODO: Speed is hardcoded for now, once the backend is update we need to update this */}
-                <Tag prefix={<ThumbsUp />} text={'Speed'} className={styles.recommendedForTag} />
-            </Flex>
+            {groupBy === 'architecture' ? (
+                <DatasetColumn datasetRevision={datasetRevision} labelsCount={labelsCount} />
+            ) : (
+                <ArchitectureColumn architecture={modelArchitecture} />
+            )}
 
             <Text UNSAFE_className={styles.smallText}>{totalSize > 0 ? formatModelSize(totalSize) : '-'}</Text>
 
             <AccuracyIndicator accuracy={72} />
-
-            {onModelAction ? (
-                <MenuTrigger>
-                    <ActionButton isQuiet aria-label={'Model actions'}>
-                        <MoreMenu />
-                    </ActionButton>
-                    <Menu onAction={onModelAction} aria-label={'Model actions menu'}>
-                        <Item key={'active'}>Set as active</Item>
-                        <Item key={'rename'}>Rename</Item>
-                        <Item key={'delete'}>Delete</Item>
-                    </Menu>
-                </MenuTrigger>
-            ) : null}
         </Grid>
     );
 };

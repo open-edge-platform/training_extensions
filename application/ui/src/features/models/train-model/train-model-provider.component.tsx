@@ -6,15 +6,15 @@ import { createContext, ReactNode, use, useState } from 'react';
 import {
     DatasetRevision,
     DeviceType,
-    ModelArchitecture,
     ModelArchitectureWithPerformanceCategory,
-    RecommendedModelArchitectures,
     TrainingDevice,
 } from '../../../constants/shared-types';
-import { useGetActiveModelArchitectureId } from '../hooks/api/use-get-active-model-architecture-id.hook';
-import { useGetDatasetRevisions } from '../hooks/api/use-get-dataset-revisions';
+import { useGetDatasetRevisions } from '../../../hooks/use-get-dataset-revisions.hook';
+import { useGetActiveModel } from '../hooks/api/use-get-active-model.hook';
 import { useGetTaskModelArchitectures } from '../hooks/api/use-get-model-architectures.hook';
 import { useGetTrainingDevices } from '../hooks/api/use-get-training-devices';
+
+type DatasetRevisionWithValue = Pick<DatasetRevision, 'id' | 'name'> & { value: string | null };
 
 type TrainModelContextProps = {
     modelArchitectures: ModelArchitectureWithPerformanceCategory[];
@@ -28,56 +28,36 @@ type TrainModelContextProps = {
     selectedTrainingDevice: DeviceType | null;
     onSelectTrainingDevice: (deviceType: DeviceType | null) => void;
 
-    datasetRevisions: DatasetRevision[];
-    selectedDatasetRevision: string | null;
-    onSelectDatasetRevision: (datasetRevision: string | null) => void;
+    datasetRevisions: DatasetRevisionWithValue[];
+    selectedDatasetRevisionId: string | null;
+    onSelectDatasetRevisionId: (datasetRevision: string | null) => void;
 };
 
 const TrainModelContext = createContext<TrainModelContextProps | null>(null);
 
 type TrainModelProviderProps = {
     children: ReactNode;
+    preSelectedDatasetRevisionId?: string;
 };
 
-const getModelArchitectures = (
-    modelArchitectures: ModelArchitecture[],
-    recommendedModelArchitectures: RecommendedModelArchitectures | null
-): ModelArchitectureWithPerformanceCategory[] => {
-    if (recommendedModelArchitectures === null) {
-        return modelArchitectures;
-    }
-
-    // Recommended architectures have the shape like { balance: "id-1", speed: "id-2", accuracy: "id-3" }
-    // Here we need to convert it to { "id-1": "balance", "id-2": "speed", "id-3": "accuracy" }
-    const recommendedArchitectureIdToCategory = Object.fromEntries(
-        Object.entries(recommendedModelArchitectures).map(([key, value]) => [value, key])
-    );
-
-    return modelArchitectures.map((modelArchitecture) => {
-        if (recommendedArchitectureIdToCategory[modelArchitecture.id] === undefined) {
-            return modelArchitecture;
-        }
-
-        return {
-            ...modelArchitecture,
-            performanceCategory: recommendedArchitectureIdToCategory[modelArchitecture.id],
-        };
-    });
-};
-
-export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
-    const { data } = useGetTaskModelArchitectures();
-    const { data: trainingDevices } = useGetTrainingDevices();
+const useDatasetRevisions = () => {
     const { data: datasetRevisions } = useGetDatasetRevisions();
-    const activeModelArchitectureId = useGetActiveModelArchitectureId();
+    return {
+        datasetRevisions: [
+            { id: 'use-current-dataset-revision', name: 'Use current revision', value: null },
+            ...(datasetRevisions?.map(({ id, name }) => ({ id, name, value: String(id) })) ?? []),
+        ],
+    };
+};
 
-    const modelArchitectures: ModelArchitectureWithPerformanceCategory[] = getModelArchitectures(
-        data.model_architectures,
-        data.top_picks
-    );
+export const TrainModelProvider = ({ children, preSelectedDatasetRevisionId }: TrainModelProviderProps) => {
+    const { modelArchitectures } = useGetTaskModelArchitectures();
+    const { data: trainingDevices } = useGetTrainingDevices();
+    const { datasetRevisions } = useDatasetRevisions();
+    const activeModel = useGetActiveModel();
 
-    const activeModelArchitecture = data.model_architectures.find(
-        (modelArchitecture) => modelArchitecture.id === activeModelArchitectureId
+    const activeModelArchitecture = modelArchitectures.find(
+        (modelArchitecture) => modelArchitecture.id === activeModel?.architecture
     );
 
     const [selectedModelArchitectureId, setSelectedModelArchitectureId] = useState<string | null>(
@@ -87,8 +67,8 @@ export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
     const [selectedTrainingDevice, setSelectedTrainingDevice] = useState<DeviceType | null>(
         trainingDevices?.at(0)?.type ?? null
     );
-    const [selectedDatasetRevision, setSelectedDatasetRevision] = useState<string | null>(
-        datasetRevisions?.at(0)?.id ?? null
+    const [selectedDatasetRevisionId, setSelectedDatasetRevisionId] = useState<string | null>(
+        preSelectedDatasetRevisionId ?? datasetRevisions?.at(0)?.id ?? null
     );
 
     return (
@@ -96,7 +76,7 @@ export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
             value={{
                 modelArchitectures,
 
-                activeModelArchitectureId,
+                activeModelArchitectureId: activeModel?.architecture,
 
                 selectedModelArchitectureId,
                 onSelectModelArchitectureId: setSelectedModelArchitectureId,
@@ -106,8 +86,8 @@ export const TrainModelProvider = ({ children }: TrainModelProviderProps) => {
                 onSelectTrainingDevice: setSelectedTrainingDevice,
 
                 datasetRevisions,
-                selectedDatasetRevision,
-                onSelectDatasetRevision: setSelectedDatasetRevision,
+                selectedDatasetRevisionId,
+                onSelectDatasetRevisionId: setSelectedDatasetRevisionId,
             }}
         >
             {children}

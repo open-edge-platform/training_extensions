@@ -45,9 +45,9 @@ class DatasetItemRepository:
         if annotation_status == DatasetItemAnnotationStatus.UNANNOTATED:
             stmt = stmt.where(DatasetItemDB.annotation_data.is_(None))
         elif annotation_status == DatasetItemAnnotationStatus.REVIEWED:
-            stmt = stmt.where(DatasetItemDB.annotation_data.is_not(None), DatasetItemDB.user_reviewed.is_(True))
+            stmt = stmt.where(DatasetItemDB.user_reviewed.is_(True))
         elif annotation_status == DatasetItemAnnotationStatus.TO_REVIEW:
-            stmt = stmt.where(DatasetItemDB.annotation_data.is_not(None), DatasetItemDB.user_reviewed.is_(False))
+            stmt = stmt.where(DatasetItemDB.user_reviewed.is_(False))
         return stmt
 
     @staticmethod

@@ -19,13 +19,19 @@ class TrainingRequestParams(BaseModel):
     parent_model_revision_id: UUID | None = Field(
         None, description="Parent model revision ID for fine-tuning, null for training from scratch"
     )
+    dataset_revision_id: UUID | None = Field(
+        None,
+        description="Dataset revision ID if reusing an existing dataset revision, "
+        "null if training on the latest dataset",
+    )
 
     model_config = {
         "json_schema_extra": {
             "example": {
                 "device": "xpu-0",
-                "model_architecture_id": "Custom_Object_Detection_Gen3_ATSS",
+                "model_architecture_id": "object-detection-atss-mobilenet-v2",
                 "parent_model_revision_id": "ef3983f1-cef0-4ebe-91db-7330f1dd6e27",
+                "dataset_revision_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
             }
         }
     }
@@ -43,9 +49,10 @@ class TrainingRequest(BaseJobRequest):
                 "job_type": "train",
                 "project_id": "7b073838-99d3-42ff-9018-4e901eb047fc",
                 "parameters": {
-                    "model_architecture_id": "Custom_Object_Detection_Gen3_ATSS",
+                    "model_architecture_id": "object-detection-atss-mobilenet-v2",
                     "parent_model_revision_id": "ef3983f1-cef0-4ebe-91db-7330f1dd6e27",
                     "device": "xpu-0",
+                    "dataset_revision_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
                 },
             }
         }
@@ -66,7 +73,11 @@ class ModelMetadata(BaseModel):
     parent_revision_id: UUID | None = Field(
         None, description="Parent model revision ID for fine-tuning, null if trained from scratch"
     )
-    dataset_revision_id: UUID = Field(..., description="Dataset revision ID used for training")
+    dataset_revision_id: UUID | None = Field(
+        None,
+        description="Dataset revision ID if reusing an existing dataset revision, "
+        "null if training on the latest dataset",
+    )
 
 
 class TrainingMetadata(BaseModel):
@@ -85,7 +96,7 @@ class TrainingMetadata(BaseModel):
                     id=data.params.model_id,
                     architecture=data.params.model_architecture_id,
                     parent_revision_id=data.params.parent_model_revision_id,
-                    dataset_revision_id=UUID("00000000-0000-0000-0000-000000000000"),  # TODO set correct value
+                    dataset_revision_id=data.params.dataset_revision_id,
                 ),
             }
         return data

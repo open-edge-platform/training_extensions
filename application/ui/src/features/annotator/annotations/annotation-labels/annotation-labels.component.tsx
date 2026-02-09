@@ -3,160 +3,98 @@
 
 import { PointerEvent, useCallback } from 'react';
 
-import { isEmpty } from 'lodash-es';
 import { v4 as uuid } from 'uuid';
 
 import { useZoom } from '../../../../components/zoom/zoom.provider';
 import { AnnotationLabel } from '../../../../shared/types';
 import { isPrediction } from '../utils';
 
-const labelStyles = (scale: number) => {
-    // We need the actual values for calculations:
-    // spectrum-global-dimension-size-50 = 4px
-    // spectrum-global-dimension-size-100 = 8px
-    // spectrum-global-dimension-size-175 = 14px
-    // spectrum-global-dimension-size-250 = 20px
-    // spectrum-global-dimension-size-300 = 24px
-
-    const height = 24 / scale;
-    const padding = 8 / scale;
-    const closeButtonWidth = 20 / scale;
-    const fontSize = 14 / scale;
-    const yOffset = -height;
-    const charWidth = fontSize * 0.6;
-    const borderRadius = 4 / scale;
-    const textYOffset = 16 / scale; // Vertical centering offset for text
-    const closeButtonXOffset = 12 / scale; // X offset for close button text
-
-    return {
-        height,
-        padding,
-        closeButtonWidth,
-        fontSize,
-        yOffset,
-        charWidth,
-        borderRadius,
-        textYOffset,
-        closeButtonXOffset,
-    };
-};
+import classes from './annotation-labels.module.scss';
 
 const placeholderLabel = { id: uuid(), name: 'No label', color: 'var(--annotation-fill)', isPrediction: false };
+
+// Screen-space dimensions for the foreignObject hit area
+const LABEL_HEIGHT_PX = 24;
+const LABEL_MAX_WIDTH_PX = 1000;
 
 interface AnnotationLabelsProps {
     labels: AnnotationLabel[];
     onRemove: (labelId: string) => void;
+    useBottomCorners?: boolean;
 }
 
 const formatPredictionScore = (score: number) => {
     return new Intl.NumberFormat('en-US', { style: 'percent' }).format(score);
 };
 
-export const AnnotationLabels = ({ labels, onRemove }: AnnotationLabelsProps) => {
+const getLabelText = (label: AnnotationLabel) => {
+    return `${label.name} ${isPrediction(label) ? formatPredictionScore(label.probability) : ''}`.trim();
+};
+
+export const AnnotationLabels = ({ labels, onRemove, useBottomCorners = false }: AnnotationLabelsProps) => {
     const { scale } = useZoom();
-
-    const styles = labelStyles(scale);
-    const { height, padding, closeButtonWidth, fontSize, yOffset, charWidth } = styles;
-
-    const calculateLabelWidth = (text: string) => {
-        const textWidth = text.length * charWidth;
-        return textWidth + padding * 2;
-    };
 
     const onDeleteLabel = useCallback(
         (labelId: string) => (event: PointerEvent) => {
-            // To avoid triggering onPointerDown of the parent svg
             event.preventDefault();
             event.stopPropagation();
-
             onRemove(labelId);
         },
         [onRemove]
     );
 
-    let fullLengthOfAllLabels = 0;
+    const displayLabels = labels.length ? labels : [placeholderLabel];
 
-    if (!labels.length) {
-        const placeholderLabelWidth = calculateLabelWidth(placeholderLabel.name);
+    // Need to round up to preveent sub-pixel render issues when zoomed in
+    const foreignObjectHeight = Math.ceil(LABEL_HEIGHT_PX / scale) + 1;
+    const foreignObjectWidth = Math.ceil(LABEL_MAX_WIDTH_PX / scale) + 1;
 
-        return (
-            <g key={placeholderLabel.id} fill='none' stroke='none' fillOpacity={1}>
-                {/* Label name */}
-                <rect
-                    x={0}
-                    y={yOffset}
-                    width={placeholderLabelWidth}
-                    height={height}
-                    fill={placeholderLabel.color}
-                    stroke='none'
-                    rx={styles.borderRadius}
-                    aria-label={`label ${placeholderLabel.name} background`}
-                />
-                <text
-                    x={padding}
-                    y={yOffset + styles.textYOffset}
-                    fontSize={fontSize}
-                    fill='#fff'
-                    aria-label={`label ${placeholderLabel.name}`}
-                >
-                    {placeholderLabel.name}
-                </text>
-            </g>
-        );
-    }
+    return (
+        <foreignObject
+            x={0}
+            y={useBottomCorners ? 0 : -foreignObjectHeight}
+            width={foreignObjectWidth}
+            height={foreignObjectHeight}
+            overflow='visible'
+        >
+            <div
+                className={useBottomCorners ? classes.labelsContainerPolygon : classes.labelsContainerRect}
+                style={{ height: '100%', alignItems: 'flex-end' }}
+            >
+                {displayLabels.map((label, index) => {
+                    const isFirst = index === 0;
+                    const isLast = index === displayLabels.length - 1;
+                    const isPlaceholder = !labels.length;
 
-    return labels.map((label) => {
-        const predictionWidth = isPrediction(label) ? 30 : 0;
-        const labelWidth = !isEmpty(label.name)
-            ? calculateLabelWidth(label.name) + predictionWidth + closeButtonWidth
-            : 0;
-        const xOffset = fullLengthOfAllLabels;
-
-        fullLengthOfAllLabels += labelWidth;
-
-        return (
-            <g key={label.id} fill='none' stroke='none' fillOpacity={1}>
-                {/* Label name */}
-                <rect
-                    x={xOffset}
-                    y={yOffset}
-                    width={labelWidth}
-                    height={height}
-                    fill={label.color}
-                    stroke='none'
-                    rx={styles.borderRadius}
-                    aria-label={`label ${label.name} background`}
-                />
-                <text
-                    x={xOffset + padding}
-                    y={yOffset + styles.textYOffset}
-                    fontSize={fontSize}
-                    fill='#fff'
-                    aria-label={`label ${label.name}`}
-                >
-                    {`${label.name} ${isPrediction(label) ? formatPredictionScore(label.probability) : ''}`.trim()}
-                </text>
-
-                {/* Remove button */}
-                <g style={{ cursor: 'pointer', pointerEvents: 'auto' }} onPointerDown={onDeleteLabel(label.id)}>
-                    <rect
-                        x={xOffset + labelWidth - closeButtonWidth}
-                        y={yOffset}
-                        width={closeButtonWidth}
-                        height={height}
-                        fill='transparent'
-                    />
-                    <text
-                        x={xOffset + labelWidth - styles.closeButtonXOffset}
-                        y={yOffset + styles.textYOffset}
-                        fontSize={fontSize}
-                        fill='#fff'
-                        aria-label={`Remove ${label.name}`}
-                    >
-                        x
-                    </text>
-                </g>
-            </g>
-        );
-    });
+                    return (
+                        <div
+                            key={label.id}
+                            className={classes.label}
+                            style={{
+                                '--label-color': label.color,
+                                '--border-top-left': isFirst ? 'var(--spectrum-global-dimension-size-50)' : '0',
+                                '--border-top-right': isLast ? 'var(--spectrum-global-dimension-size-50)' : '0',
+                                '--border-bottom-left':
+                                    useBottomCorners && isFirst ? 'var(--spectrum-global-dimension-size-50)' : '0',
+                                '--border-bottom-right':
+                                    useBottomCorners && isLast ? 'var(--spectrum-global-dimension-size-50)' : '0',
+                            }}
+                            aria-label={`label ${label.name} background`}
+                        >
+                            <span aria-label={`label ${label.name}`}>{getLabelText(label)}</span>
+                            {!isPlaceholder && (
+                                <button
+                                    className={classes.removeButton}
+                                    onPointerDown={onDeleteLabel(label.id)}
+                                    aria-label={`Remove ${label.name}`}
+                                >
+                                    ×
+                                </button>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+        </foreignObject>
+    );
 };

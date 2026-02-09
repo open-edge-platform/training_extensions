@@ -64,6 +64,7 @@ async def submit_job(
                         task=project.task,
                         project_id=job_request.project_id,
                         job_id=job_id,
+                        dataset_revision_id=job_request.parameters.dataset_revision_id,
                     ),
                 )
             case JobType.PREPARE_DATASET_FOR_IMPORT:

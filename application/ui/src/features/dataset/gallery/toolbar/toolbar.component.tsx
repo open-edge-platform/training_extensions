@@ -1,17 +1,18 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, ButtonGroup, Divider, Flex, Heading, Text, toast } from '@geti/ui';
+import { Button, ButtonGroup, Checkbox, Divider, Flex, Heading, Text, toast } from '@geti/ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { $api } from '../../../../api/client';
 import { AddMediaButton } from '../../../../components/add-media-button/add-media-button.component';
-import { CheckboxInput } from '../../../../components/checkbox-input/checkbox-input.component';
 import type { Media } from '../../../../constants/shared-types';
+import { getQueryKey } from '../../../../query-client/query-client';
 import { TrainModel } from '../../../models/train-model/train-model.component';
 import { DeleteMediaItem } from '../../gallery/delete-media-item/delete-media-item.component';
 import { useSelectedData } from '../../selected-data-provider.component';
+import { useSelectDatasetItem } from '../hooks/use-select-dataset-item.hook';
 import { toggleMultipleSelection, updateSelectedKeysTo } from './util';
 
 type ToolbarProps = {
@@ -34,8 +35,8 @@ const AnnotateButton = ({ isDisabled, onClick }: AnnotateButtonProps) => {
 export const Toolbar = ({ items }: ToolbarProps) => {
     const projectId = useProjectIdentifier();
     const queryClient = useQueryClient();
-    const { selectedKeys, setSelectedKeys, setMediaState, toggleSelectedKeys, onSelectedMediaItemChange } =
-        useSelectedData();
+    const { onSelectedMediaItemChange } = useSelectDatasetItem();
+    const { selectedKeys, setSelectedKeys, setMediaState, toggleSelectedKeys } = useSelectedData();
 
     const addItemMutation = $api.useMutation('post', '/api/projects/{project_id}/dataset/media');
 
@@ -76,7 +77,17 @@ export const Toolbar = ({ items }: ToolbarProps) => {
         const failed = promises.filter((result) => result.status === 'rejected').length;
 
         await queryClient.invalidateQueries({
-            queryKey: ['get', '/api/projects/{project_id}/dataset/media'],
+            queryKey: getQueryKey([
+                'get',
+                '/api/projects/{project_id}/dataset/media',
+                {
+                    params: {
+                        path: {
+                            project_id: projectId,
+                        },
+                    },
+                },
+            ]),
         });
 
         if (failed === 0) {
@@ -115,10 +126,10 @@ export const Toolbar = ({ items }: ToolbarProps) => {
                     alignItems={'center'}
                     justifyContent={'space-between'}
                 >
-                    <CheckboxInput
-                        name={'select all'}
+                    <Checkbox
+                        aria-label={'select all'}
                         onChange={handleToggleManyItemSelection}
-                        isChecked={totalSelectedElements === items.length}
+                        isSelected={totalSelectedElements === items.length}
                     />
 
                     <Divider orientation={'vertical'} size={'S'} />

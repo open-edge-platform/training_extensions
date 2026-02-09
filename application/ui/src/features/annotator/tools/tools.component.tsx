@@ -18,7 +18,12 @@ const Tool = ({ tool, activeTool, setActiveTool }: ToolProps) => {
     useHotkeys(tool.hotkey, () => setActiveTool(tool.type), [setActiveTool]);
 
     return (
-        <ActionButton isQuiet onPress={() => setActiveTool(tool.type)} aria-label={`${tool.type} tool`}>
+        <ActionButton
+            isQuiet
+            width={'size-400'}
+            onPress={() => setActiveTool(tool.type)}
+            aria-label={`${tool.type} tool`}
+        >
             <IconWrapper isSelected={activeTool === tool.type}>
                 <tool.icon data-tool={tool.type} />
             </IconWrapper>

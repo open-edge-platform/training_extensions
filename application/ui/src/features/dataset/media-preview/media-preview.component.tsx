@@ -4,37 +4,35 @@
 import { Suspense, useState } from 'react';
 
 import { Content, Dialog, Flex, Grid, Loading, View } from '@geti/ui';
-import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
-import { isObject } from 'lodash-es';
+import { QueryClient, useQueryClient } from '@tanstack/react-query';
+import { useGetDatasetMediaItems } from 'hooks/use-get-dataset-media-items.hook';
 
-import { $api } from '../../../api/client';
-import { ZoomProvider } from '../../../components/zoom/zoom.provider';
 import type { Media } from '../../../constants/shared-types';
-import { useGetDatasetItems } from '../../../hooks/use-get-dataset-items.hook';
-import { AnnotationActionsProvider } from '../../../shared/annotator/annotation-actions-provider.component';
-import { AnnotationVisibilityProvider } from '../../../shared/annotator/annotation-visibility-provider.component';
-import { AnnotatorProvider } from '../../../shared/annotator/annotator-provider.component';
-import { SelectAnnotationProvider } from '../../../shared/annotator/select-annotation-provider.component';
 import { AnnotatorCanvas } from '../../annotator/annotator-canvas/annotator-canvas';
+import { useSelectedData } from '../selected-data-provider.component';
+import { AnnotatorProviders } from './annotator-providers.component';
+import { useAnnotationsQuery } from './api/use-annotations-query';
 import { BottomToolbar } from './bottom-toolbar/bottom-toolbar.component';
 import { SIDEBAR_WIDTH } from './constants';
 import { PrimaryToolbar } from './primary-toolbar/primary-toolbar.component';
 import { AnnotatorCanvasSettings } from './primary-toolbar/settings/annotator-canvas-settings.component';
-import { CanvasSettingsProvider } from './primary-toolbar/settings/canvas-settings-provider.component';
+import { ReadOnlyAnnotator } from './read-only-annotator.component';
 import { AnnotatorMode } from './secondary-toolbar/annotator-modes/mode';
 import { SecondaryToolbar } from './secondary-toolbar/secondary-toolbar.component';
+import { getNextItem } from './secondary-toolbar/util';
 import { SidebarItems } from './sidebar-items/sidebar-items.component';
 import { getInitialAnnotations, getInitialPredictions } from './utils';
-
-const isUnannotatedError = (error: unknown): boolean => {
-    return (
-        isObject(error) && 'detail' in error && /Dataset item has not been annotated yet/i.test(String(error.detail))
-    );
-};
 
 type MediaPreviewProps = {
     mediaItem: Media;
     close: () => void;
+    onSelectedMediaItem: (item: Media) => void;
+};
+
+type MediaPreviewContentProps = {
+    items: Media[];
+    mediaItem: Media;
+    onClose: () => void;
     onSelectedMediaItem: (item: Media) => void;
 };
 
@@ -44,33 +42,42 @@ const CanvasAreaLoading = () => (
     </Flex>
 );
 
-type MediaPreviewContentProps = {
-    items: Media[];
-    mediaItem: Media;
-    onClose: () => void;
-    onSelectedMediaItem: (item: Media) => void;
+const invalidateMediaItemAnnotations = (queryClient: QueryClient) => {
+    queryClient.invalidateQueries({
+        queryKey: ['get', '/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations'],
+    });
 };
 
 const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }: MediaPreviewContentProps) => {
-    const projectId = useProjectIdentifier();
     const [mode, setMode] = useState<AnnotatorMode>('annotation');
 
-    const { data: annotationsData } = $api.useSuspenseQuery(
-        'get',
-        '/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations',
-        {
-            params: { path: { project_id: projectId, dataset_item_id: mediaItem.id } },
-        },
-        {
-            retry: (_failureCount, error: unknown) => !isUnannotatedError(error),
-        }
-    );
+    const { data: annotationsData } = useAnnotationsQuery(mediaItem.id);
 
     const isUserReviewed = annotationsData?.user_reviewed ?? false;
     const annotationsDTO = annotationsData?.annotations ?? [];
+    const queryClient = useQueryClient();
+    const { setMediaState } = useSelectedData();
+
+    const selectedIndex = items.findIndex((item) => item.id === mediaItem.id);
+
+    const handleSubmitAnnotations = async () => {
+        setMediaState((prev) => {
+            const newState = new Map(prev);
+
+            newState.set(String(mediaItem.id), 'accepted');
+
+            return newState;
+        });
+
+        const nextItem = getNextItem(items.length - 1, selectedIndex);
+        onSelectedMediaItem(items[nextItem]);
+
+        const isLastItem = selectedIndex === items.length - 1;
+        isLastItem && invalidateMediaItemAnnotations(queryClient);
+    };
 
     return (
-        <AnnotationActionsProvider
+        <AnnotatorProviders
             key={mediaItem.id}
             mediaItem={mediaItem}
             initialAnnotationsDTO={getInitialAnnotations(mode, isUserReviewed, annotationsDTO)}
@@ -78,42 +85,49 @@ const MediaPreviewContent = ({ items, mediaItem, onSelectedMediaItem, onClose }:
             isUserReviewed={isUserReviewed}
             mode={mode}
         >
-            <SelectAnnotationProvider>
-                <AnnotationVisibilityProvider>
-                    <AnnotatorProvider mediaItem={mediaItem}>
-                        <CanvasSettingsProvider>
-                            <View gridArea={'header'}>
-                                <SecondaryToolbar
-                                    items={items}
-                                    onClose={onClose}
-                                    mediaItem={mediaItem}
-                                    onSelectedMediaItem={onSelectedMediaItem}
-                                    mode={mode}
-                                    onModeChange={setMode}
-                                />
-                            </View>
+            {mode === 'prediction' ? (
+                <ReadOnlyAnnotator
+                    mediaItem={mediaItem}
+                    isUserReviewed={isUserReviewed}
+                    onModeChange={setMode}
+                    onClose={onClose}
+                    onAcceptPrediction={handleSubmitAnnotations}
+                />
+            ) : (
+                <>
+                    <View gridArea={'header'}>
+                        <SecondaryToolbar
+                            mode={mode}
+                            items={items}
+                            onClose={onClose}
+                            mediaItem={mediaItem}
+                            onSelectedMediaItem={onSelectedMediaItem}
+                            onModeChange={setMode}
+                            onAcceptPrediction={handleSubmitAnnotations}
+                        />
+                    </View>
 
-                            <View gridArea={'toolbar'}>{mode === 'annotation' && <PrimaryToolbar />}</View>
+                    <View gridArea={'toolbar'} aria-label={'primary toolbar'}>
+                        <PrimaryToolbar />
+                    </View>
 
-                            <View gridArea={'bottom'}>
-                                <BottomToolbar isUserReviewed={isUserReviewed} mediaItem={mediaItem} />
-                            </View>
+                    <View gridArea={'bottom'}>
+                        <BottomToolbar isUserReviewed={isUserReviewed} mediaItem={mediaItem} />
+                    </View>
 
-                            <View gridArea={'canvas'} overflow={'hidden'}>
-                                <AnnotatorCanvasSettings>
-                                    <AnnotatorCanvas mediaItem={mediaItem} />
-                                </AnnotatorCanvasSettings>
-                            </View>
-                        </CanvasSettingsProvider>
-                    </AnnotatorProvider>
-                </AnnotationVisibilityProvider>
-            </SelectAnnotationProvider>
-        </AnnotationActionsProvider>
+                    <View gridArea={'canvas'} overflow={'hidden'}>
+                        <AnnotatorCanvasSettings>
+                            <AnnotatorCanvas mediaItem={mediaItem} />
+                        </AnnotatorCanvasSettings>
+                    </View>
+                </>
+            )}
+        </AnnotatorProviders>
     );
 };
 
 export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPreviewProps) => {
-    const { items, hasNextPage, isFetchingNextPage, fetchNextPage } = useGetDatasetItems();
+    const { items, hasNextPage, isFetchingNextPage, fetchNextPage } = useGetDatasetMediaItems();
 
     return (
         <Dialog
@@ -129,19 +143,17 @@ export const MediaPreview = ({ mediaItem, close, onSelectedMediaItem }: MediaPre
                     width='100%'
                     height='100%'
                     rows='auto 1fr auto'
-                    columns={['size-800', '1fr', SIDEBAR_WIDTH]}
+                    columns={['size-700', '1fr', SIDEBAR_WIDTH]}
                     areas={['header header aside', 'toolbar canvas aside', 'toolbar bottom aside']}
                 >
-                    <ZoomProvider>
-                        <Suspense fallback={<CanvasAreaLoading />}>
-                            <MediaPreviewContent
-                                items={items}
-                                mediaItem={mediaItem}
-                                onClose={close}
-                                onSelectedMediaItem={onSelectedMediaItem}
-                            />
-                        </Suspense>
-                    </ZoomProvider>
+                    <Suspense fallback={<CanvasAreaLoading />}>
+                        <MediaPreviewContent
+                            items={items}
+                            mediaItem={mediaItem}
+                            onClose={close}
+                            onSelectedMediaItem={onSelectedMediaItem}
+                        />
+                    </Suspense>
 
                     <View gridArea={'aside'}>
                         <SidebarItems

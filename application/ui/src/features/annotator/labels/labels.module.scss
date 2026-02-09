@@ -1,0 +1,49 @@
+.labelsContainer {
+    padding: var(--spectrum-global-dimension-size-50);
+    margin-top: calc(-1 * var(--spectrum-global-dimension-size-25));
+    margin-bottom: calc(-1 * var(--spectrum-global-dimension-size-50));
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spectrum-global-dimension-size-100);
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+}
+
+.badge {
+    --foregroundColor: lch(from var(--labelBgColor) calc((50 - l) * infinity) 0 0);
+
+    background-color: var(--labelBgColor);
+    border-radius: var(--spectrum-alias-border-radius-regular);
+    padding: var(--spectrum-global-dimension-size-50) var(--spectrum-global-dimension-size-100);
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    border: none;
+    flex-shrink: 0;
+    height: var(--spectrum-global-dimension-size-350);
+    outline: var(--spectrum-global-dimension-size-25) solid transparent;
+    outline-offset: 0;
+    transition:
+        outline-color 0.15s ease,
+        outline-offset 0.15s ease;
+}
+
+.badge:hover {
+    opacity: 0.9;
+}
+
+.selected,
+.selected:focus {
+    outline-offset: var(--spectrum-global-dimension-size-25);
+    outline-color: var(--labelBgColor);
+}
+
+.badgeText {
+    color: var(--foregroundColor);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    max-width: var(--spectrum-global-dimension-size-1600);
+    font-size: var(--spectrum-global-dimension-font-size-75);
+}

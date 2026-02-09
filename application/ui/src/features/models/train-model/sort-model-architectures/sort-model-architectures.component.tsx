@@ -1,8 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Icon, Item, Picker, Section, Text } from '@geti/ui';
-import { SortDown, SortUp } from '@geti/ui/icons';
+import { Item, Picker, Section, Text } from '@geti/ui';
 
 import { SortingOptions } from './utils';
 
@@ -28,14 +27,7 @@ type SortItemProps = {
 };
 
 const SortModelArchitectureItem = ({ item }: SortItemProps) => {
-    return (
-        <>
-            <Text>{item.name}</Text>
-            <Icon UNSAFE_className={styles.sortModelArchitectureIcon}>
-                {item.key.toLocaleLowerCase().endsWith('asc') ? <SortUp /> : <SortDown />}
-            </Icon>
-        </>
-    );
+    return <Text>{item.name}</Text>;
 };
 
 export const SortModelArchitectures = ({ sortBy, onSort, items, ariaLabel }: SortWidgetProps) => {
@@ -50,6 +42,7 @@ export const SortModelArchitectures = ({ sortBy, onSort, items, ariaLabel }: Sor
             labelAlign={'start'}
             labelPosition={'side'}
             label={'Sort Models by:'}
+            menuWidth={'size-3000'}
         >
             {(item) => {
                 return (

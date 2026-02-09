@@ -4,21 +4,25 @@
 import shutil
 from functools import lru_cache
 from pathlib import Path
+from typing import Any
 from uuid import UUID, uuid4
 
 import datumaro.experimental as dm
 import polars as pl
-from datumaro.experimental.export_import import export_dataset
+from datumaro.experimental.export_import import export_dataset, import_dataset
 from loguru import logger
+from PIL import Image, UnidentifiedImageError
 from sqlalchemy.orm import Session
 
 from app.db.schema import DatasetRevisionDB
 from app.models import DatasetItemSubset
 from app.models.dataset_item_revision import DatasetRevisionItem
-from app.models.dataset_revision import DatasetRevision
+from app.models.dataset_revision import DatasetRevision, DatasetRevisionCounts
 from app.repositories import DatasetRevisionRepository
+from app.utils.images import crop_to_thumbnail
 
 from .base import BaseSessionManagedService, ResourceNotFoundError, ResourceType
+from .media_service import InvalidImageError
 
 
 class DatasetRevisionService(BaseSessionManagedService):
@@ -61,6 +65,22 @@ class DatasetRevisionService(BaseSessionManagedService):
         )
         return UUID(revision_db.id)
 
+    def load_revision(self, project_id: UUID, dataset_revision_id: UUID) -> dm.Dataset:
+        """
+        Loads the Datumaro dataset belonging to the dataset revision.
+
+        Args:
+            project_id: The UUID of the project.
+            dataset_revision_id: The UUID of the dataset revision.
+        Returns:
+            dm.Dataset: The dataset revision as a Datumaro dataset.
+        """
+        dataset_revision = self.get_dataset_revision(project_id, dataset_revision_id)
+        if dataset_revision.files_deleted:
+            raise ResourceNotFoundError(ResourceType.DATASET_REVISION, str(dataset_revision_id))
+        parquet_path = self._get_revision_parquet_path(project_id, dataset_revision_id)
+        return import_dataset(input_path=parquet_path.parent)
+
     def list_dataset_revisions(self, project_id: UUID) -> list[DatasetRevision]:
         """
         Get information about all available dataset revisions in a project.
@@ -97,18 +117,38 @@ class DatasetRevisionService(BaseSessionManagedService):
             raise ResourceNotFoundError(ResourceType.DATASET_REVISION, str(revision_id))
         return self._to_dataset_revision(dataset_db=revision)
 
-    def update_dataset_revision(self, dataset_revision: DatasetRevision) -> None:
+    def rename_dataset_revision(
+        self, project_id: UUID, dataset_revision: DatasetRevision, new_name: str
+    ) -> DatasetRevision:
+        """
+        Rename a dataset revision.
+
+        Args:
+            project_id: The UUID of the project.
+            dataset_revision: The dataset revision to rename.
+            new_name: The new name to assign to the dataset revision.
+
+        Returns:
+            DatasetRevision: The dataset revision object containing the dataset revision's updated information.
+        """
+        if new_name is not None:
+            dataset_revision.name = new_name
+            self.update_dataset_revision(project_id=project_id, dataset_revision=dataset_revision)
+        return dataset_revision
+
+    def update_dataset_revision(self, project_id: UUID, dataset_revision: DatasetRevision) -> None:
         """
         Updates a dataset revision.
 
         Args:
+            project_id: The UUID of the project.
             dataset_revision: The dataset revision to update.
         """
-        revision_repo = DatasetRevisionRepository(project_id=str(dataset_revision.project_id), db=self.db_session)
+        revision_repo = DatasetRevisionRepository(project_id=str(project_id), db=self.db_session)
         _ = revision_repo.update(
             DatasetRevisionDB(
                 id=str(dataset_revision.id),
-                project_id=str(dataset_revision.project_id),
+                project_id=str(project_id),
                 name=dataset_revision.name,
                 files_deleted=dataset_revision.files_deleted,
             )
@@ -132,7 +172,7 @@ class DatasetRevisionService(BaseSessionManagedService):
 
         # Mark as deleted in the database
         revision.files_deleted = True
-        self.update_dataset_revision(dataset_revision=revision)
+        self.update_dataset_revision(project_id=project_id, dataset_revision=revision)
 
         # Delete files from filesystem
         revision_path = self.projects_dir / str(project_id) / "dataset_revisions" / str(revision_id)
@@ -161,31 +201,115 @@ class DatasetRevisionService(BaseSessionManagedService):
         return parquet_path
 
     @lru_cache(maxsize=64)
-    def count_items_by_subset(self, project_id: UUID, dataset_revision_id: UUID) -> dict[str, int]:
+    def __count_dataset_revision_items(self, project_id: UUID, dataset_revision_id: UUID) -> DatasetRevisionCounts:
+        """Refer to DatasetRevisionService.count_dataset_revision_items"""
+        parquet_path = self._get_revision_parquet_path(project_id, dataset_revision_id)
+        lf = pl.scan_parquet(parquet_path)
+        subset_counts_raw = lf.group_by("subset").len().collect().to_dicts()  # [{"subset": "TRAINING", "len": 12}, ...]
+        counts_by_subset = {row["subset"].lower(): row["len"] for row in subset_counts_raw}  # {"training": 12, ...}
+        try:
+            dataset_revision_counts = DatasetRevisionCounts(
+                training=counts_by_subset["training"],
+                validation=counts_by_subset["validation"],
+                testing=counts_by_subset["testing"],
+                total=sum(counts_by_subset.values()),
+            )
+        except KeyError as exc:
+            logger.error(
+                "Failed to count dataset revision items for project_id='{}', dataset_revision_id='{}'. Error: {}",
+                project_id,
+                dataset_revision_id,
+                exc,
+            )
+            raise
+        return dataset_revision_counts
+
+    def count_dataset_revision_items(
+        self, project_id: UUID, dataset_revision: DatasetRevision
+    ) -> DatasetRevisionCounts | None:
         """
         Count the number of dataset items in a dataset revision, grouped by subset.
 
-        Efficiently reads only the necessary metadata from the Parquet file to compute:
+        This method scans the dataset revision Parquet file and efficiently computes:
         - The total number of items ("total")
-        - The number of items in each subset (e.g., "train", "val", "test")
+        - The number of items in each subset (e.g., "training", "validation", "testing")
 
         Args:
-            project_id (UUID): The UUID of the project.
-            dataset_revision_id (UUID): The UUID of the dataset revision.
+            project_id: The UUID of the project.
+            dataset_revision: The dataset revision.
 
         Returns:
-            dict[str, int]: A dictionary mapping subset names to counts. Includes a "total" key for the total count.
-
-        Raises:
-            ResourceNotFoundError: If the Parquet file does not exist.
+            DatasetRevisionCounts | None: The counts of dataset items, or None if files are deleted
         """
-        parquet_path = self._get_revision_parquet_path(project_id, dataset_revision_id)
-        lf = pl.scan_parquet(parquet_path)
-        subset_counts = lf.group_by("subset").len().collect()
-        counts = {row["subset"].lower(): row["len"] for row in subset_counts.to_dicts()}
-        total = sum(counts.values())
-        counts["total"] = total
-        return counts
+        if dataset_revision.files_deleted:
+            return None
+        return self.__count_dataset_revision_items(project_id, dataset_revision.id)
+
+    def _parse_revision_item_from_df_row_dict(
+        self, project_id: UUID, dataset_revision_id: UUID, df_revision_item: dict[str, Any]
+    ) -> DatasetRevisionItem:
+        """
+        Utility method to convert a dataset revision item from a dict representation
+        (a row of the Polars dataframe, serialized with to_dicts()) to a DatasetRevisionItem.
+
+        The dict is expected to have the following structure:
+        {
+            "id": "9bedc1ec-edf1-4eec-8549-82239c585c48",
+            "image": "relative/path/to/image.jpg",
+            "image_info": {
+                "width": 1024,
+                "height": 768
+            },
+            "subset": "TRAINING",
+            ... other fields ...
+        }
+
+        Args:
+            project_id: The UUID of the project.
+            dataset_revision_id: The UUID of the dataset revision.
+            df_revision_item: The dataset revision item as a dict.
+
+        Returns:
+            DatasetRevisionItem
+        """
+        dataset_revision_path = self.projects_dir / str(project_id) / "dataset_revisions" / str(dataset_revision_id)
+        try:
+            # The path stored in the 'image' column is relative to the dataset revision base folder
+            image_rel_path = Path(df_revision_item["image"])
+
+            if "data/projects" in str(image_rel_path):
+                # TODO due to a bug in Datumaro, the above assumption doesn't always hold true, and the image path
+                #  may be relative to the app data folder instead. This workaround can be removed after the bug is fixed
+                #  in Datumaro: https://github.com/open-edge-platform/datumaro/issues/2019
+                image_path = image_rel_path
+            else:
+                image_path = dataset_revision_path / image_rel_path
+
+            if "id" not in df_revision_item:
+                # Fallback: if the 'id' field is missing, try to extract it from the image filename
+                # TODO remove this fallback logic after ensuring the 'id' is always saved in the parquet file
+                #  https://github.com/open-edge-platform/training_extensions/issues/5350
+                logger.warning(
+                    "Dataset revision item is missing 'id' field, attempting to extract from image filename: {}",
+                    image_rel_path,
+                )
+                df_revision_item["id"] = image_rel_path.stem  # Filename without extension
+
+            return DatasetRevisionItem(
+                id=UUID(df_revision_item["id"]),
+                format=image_rel_path.suffix.lstrip("."),
+                image_path=image_path,
+                width=df_revision_item["image_info"]["width"],
+                height=df_revision_item["image_info"]["height"],
+                subset=DatasetItemSubset(df_revision_item["subset"].lower()),
+            )
+        except Exception as e:
+            logger.error(
+                "Failed to parse dataset revision item from dataframe row dict: {}. Error: {}",
+                df_revision_item,
+                e,
+            )
+            raise
 
     def list_dataset_revision_items(
         self,
@@ -210,25 +334,19 @@ class DatasetRevisionService(BaseSessionManagedService):
         """
         parquet_path = self._get_revision_parquet_path(project_id, dataset_revision.id)
 
-        df = pl.read_parquet(parquet_path)
+        df = pl.scan_parquet(parquet_path)
 
         if subset is not None:
             df = df.filter(pl.col("subset") == subset.name)
 
-        total_count = len(df)
-        df = df.slice(offset, limit)
+        total_count = df.select(pl.len()).collect().item()
+        df = df.slice(offset, limit).collect()
 
         dataset_revision_items = []
         for item in df.to_dicts():
             dataset_revision_items.append(
-                DatasetRevisionItem.model_validate(
-                    {
-                        "id": UUID(Path(item["image"]).stem),
-                        "format": Path(item["image"]).suffix.lstrip("."),
-                        "width": item["image_info"]["width"],
-                        "height": item["image_info"]["height"],
-                        "subset": DatasetItemSubset[item["subset"]],
-                    }
+                self._parse_revision_item_from_df_row_dict(
+                    project_id=project_id, dataset_revision_id=dataset_revision.id, df_revision_item=item
                 )
             )
         return dataset_revision_items, total_count
@@ -238,7 +356,7 @@ class DatasetRevisionService(BaseSessionManagedService):
         project_id: UUID,
         dataset_revision: DatasetRevision,
         item_id: str,
-    ) -> dict:
+    ) -> DatasetRevisionItem:
         """
         Get a specific item from a dataset revision by ID.
 
@@ -248,34 +366,38 @@ class DatasetRevisionService(BaseSessionManagedService):
             item_id: The ID of the item within the dataset.
 
         Returns:
-            Dictionary containing the item data.
+            DatasetRevisionItem: The requested dataset revision item.
 
         Raises:
             ResourceNotFoundError: If the item is not found.
         """
         parquet_path = self._get_revision_parquet_path(project_id, dataset_revision.id)
 
-        df = pl.read_parquet(parquet_path)
+        df = pl.scan_parquet(parquet_path)
 
         if "id" in df.columns:
-            filtered = df.filter(pl.col("id") == item_id)
-        else:
-            # Fallback: try to use image column
-            filtered = df.filter(pl.col("image").str.contains(item_id))
-
-        if len(filtered) == 0:
+            df = df.filter(pl.col("id") == item_id).collect()
+        else:  # Fallback: locate the item through the 'image' column, if it contains the item ID
+            logger.warning("Dataset revision parquet does not contain 'id' column, falling back to search via 'image'")
+            df = df.filter(pl.col("image").str.contains(item_id)).collect()
+        if len(df) == 0:
             raise ResourceNotFoundError(ResourceType.DATASET_ITEM, item_id)
 
-        return filtered.to_dicts()[0]
+        item = df.to_dicts()[0]
+        item["id"] = item_id  # Ensure the ID is set correctly
 
-    def get_dataset_revision_item_binary_path(
+        return self._parse_revision_item_from_df_row_dict(
+            project_id=project_id, dataset_revision_id=dataset_revision.id, df_revision_item=item
+        )
+
+    def get_dataset_revision_item_thumbnail(
         self,
         project_id: UUID,
         dataset_revision: DatasetRevision,
         item_id: str,
-    ) -> Path:
+    ) -> Image.Image:
         """
-        Get the path to the binary file for a dataset revision item.
+        Generate and return a thumbnail for a specific dataset revision item.
 
         Args:
             project_id: The UUID of the project.
@@ -283,21 +405,20 @@ class DatasetRevisionService(BaseSessionManagedService):
             item_id: The ID of the item within the dataset.
 
         Returns:
-            Path to the image file.
+            Image.Image: The generated thumbnail image.
         """
-        item = self.get_dataset_revision_item(project_id, dataset_revision, item_id)
-        revision_path = self.projects_dir / str(project_id) / "dataset_revisions" / str(dataset_revision.id)
-
-        if isinstance(item.get("image"), str):
-            image_path = revision_path / "images" / Path(item["image"]).name
-        else:
-            # Fallback: try to find by item_id
-            images_dir = revision_path / "images"
-            for file in images_dir.glob(f"*{item_id}*"):
-                return file
-            raise ResourceNotFoundError(ResourceType.DATASET_ITEM, item_id)
-
-        return image_path
+        binary_path = self.get_dataset_revision_item(
+            project_id=project_id,
+            dataset_revision=dataset_revision,
+            item_id=item_id,
+        ).image_path
+        try:
+            with Image.open(binary_path) as image:
+                thumbnail = crop_to_thumbnail(image=image, target_width=64, target_height=64)
+        except UnidentifiedImageError:
+            logger.error("Failed to open image {} for thumbnail generation", binary_path)
+            raise InvalidImageError("Failed to open image for thumbnail generation.")
+        return thumbnail
 
     @staticmethod
     def _to_dataset_revision(dataset_db: DatasetRevisionDB) -> DatasetRevision:
