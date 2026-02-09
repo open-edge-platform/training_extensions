@@ -74,7 +74,7 @@ const SubsetBox = ({ title, subset, datasetRevisionId, totalItems }: SubsetBoxPr
                     fetchNextPage={fetchNextPage}
                     hasNextPage={hasNextPage}
                     isFetchingNextPage={isFetchingNextPage}
-                    isLoading={isPending}
+                    isPending={isPending}
                 />
             </Content>
         </Flex>

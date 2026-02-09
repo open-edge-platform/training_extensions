@@ -24,7 +24,7 @@ export const ProjectCard = ({ item }: ProjectCardProps) => {
 
     return (
         <div style={{ position: 'relative' }}>
-            <NavLink to={paths.project.inference({ projectId: item.id })}>
+            <NavLink to={paths.project.dataset({ projectId: item.id })}>
                 <Flex UNSAFE_className={clsx({ [classes.card]: true, [classes.activeCard]: isActive })}>
                     <View aria-label={'project thumbnail'}>
                         <img src={thumbnailUrl} alt={item.name} />

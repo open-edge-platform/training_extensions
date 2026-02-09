@@ -47,11 +47,11 @@ describe('ProjectCard', () => {
         expect(screen.queryByText('Active')).not.toBeInTheDocument();
     });
 
-    it('should render as a link to project inference page', async () => {
+    it('should render as a link to project dataset page', async () => {
         render(<ProjectCard item={mockProject} />);
 
         const cardLink = await screen.findByRole('link');
-        expect(cardLink).toHaveAttribute('href', '/projects/test-project-id/inference');
+        expect(cardLink).toHaveAttribute('href', '/projects/test-project-id/dataset');
     });
 
     it('should display single label correctly', async () => {
