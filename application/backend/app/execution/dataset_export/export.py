@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 
 from app.core.run import ExecutionContext
 from app.datumaro_converter.utils import SubsetConverter
-from app.executors.base import Executor, step
+from app.execution.base import Execution, step
 from app.models import DatasetFormat, DatasetItemAnnotationStatus, ExportDatasetJobParams
 from app.services import DatasetRevisionService, DatasetService
 
@@ -39,7 +39,7 @@ def get_dm_format(dataset_format: DatasetFormat) -> DataFormat:
     return format_mapping[dataset_format]
 
 
-class DatasetExporter(Executor):
+class DatasetExport(Execution):
     def __init__(
         self,
         staged_datasets_dir: Path,

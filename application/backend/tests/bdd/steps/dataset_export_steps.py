@@ -18,7 +18,7 @@ from datumaro.experimental.export_import import import_dataset
 from app.api.schemas import ProjectView
 from app.api.schemas.jobs import JobView
 from app.core.jobs.models import JobStatus, JobType
-from app.executors.dataset_export.exporter import get_dm_format
+from app.execution.dataset_export import get_dm_format
 from app.models import DatasetFormat, TaskType
 from tests.bdd.images import generate_random_image
 from tests.bdd.parsers import parse_sse_events

@@ -36,7 +36,7 @@ from otx.types.task import OTXTaskType
 from sqlalchemy.orm import Session
 
 from app.core.run import ExecutionContext
-from app.executors.base import Executor, step
+from app.execution.base import Execution, step
 from app.models import (
     DatasetItemAnnotationStatus,
     DatasetItemSubset,
@@ -100,7 +100,7 @@ class ExportedModels:
     onnx_model_path: Path
 
 
-class OTXTrainer(Executor):
+class OTXTrainer(Execution):
     """OTX-specific trainer implementation."""
 
     def __init__(

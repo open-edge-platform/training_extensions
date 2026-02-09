@@ -15,13 +15,13 @@ T = TypeVar("T")
 
 def step(name: str, complete: float | None = None) -> Callable[[Callable[..., T]], Callable[..., T]]:
     """
-    Decorator to mark a method as a step of the Executor implementation.
+    Decorator to mark a method as a step of the Execution implementation.
 
-    It expects the decorated method to be part of an Executor subclass. The decorator adds progress reporting around
+    It expects the decorated method to be part of an Execution subclass. The decorator adds progress reporting around
     the execution of the step.
 
     Usage:
-        class MyTrainer(Executor):
+        class MyTraining(Execution):
             @step("Prepare Weights")
             def prepare_weights(self, ...) -> None:
                 # implementation
@@ -49,7 +49,7 @@ def step(name: str, complete: float | None = None) -> Callable[[Callable[..., T]
     return decorator
 
 
-class Executor(Runnable, ABC):
+class Execution(Runnable, ABC):
     """
     Abstract base class for Runnable implementations.
 

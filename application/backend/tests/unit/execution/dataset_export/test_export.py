@@ -11,7 +11,7 @@ from datumaro.experimental import Dataset
 from datumaro.experimental.data_formats.base import DataFormat
 
 from app.datumaro_converter.utils import SubsetConverter
-from app.executors import DatasetExporter
+from app.execution import DatasetExport
 from app.models import (
     DatasetFormat,
     DatasetItemAnnotationStatus,
@@ -35,8 +35,8 @@ def fxt_exporter(
     fxt_dataset_service: Mock,
     fxt_dataset_revision_service: Mock,
     fxt_db_session_factory: Callable,
-) -> DatasetExporter:
-    return DatasetExporter(
+) -> DatasetExport:
+    return DatasetExport(
         staged_datasets_dir=fxt_staged_datasets_dir,
         dataset_service=fxt_dataset_service,
         dataset_revision_service=fxt_dataset_revision_service,
@@ -63,7 +63,7 @@ class TestDatasetExporter:
     def test_prepare_dataset_project(
         self,
         subsets: list[DatasetItemSubset],
-        fxt_exporter: DatasetExporter,
+        fxt_exporter: DatasetExport,
         fxt_dataset_service: Mock,
         fxt_export_params: ExportDatasetJobParams,
     ):
@@ -89,7 +89,7 @@ class TestDatasetExporter:
     def test_prepare_dataset_revision(
         self,
         subsets: list[DatasetItemSubset],
-        fxt_exporter: DatasetExporter,
+        fxt_exporter: DatasetExport,
         fxt_dataset_revision_service: Mock,
         fxt_export_params: ExportDatasetJobParams,
     ):
@@ -120,13 +120,13 @@ class TestDatasetExporter:
         self,
         export_format: DatasetFormat,
         data_format: DataFormat,
-        fxt_exporter: DatasetExporter,
+        fxt_exporter: DatasetExport,
         fxt_staged_datasets_dir: Path,
     ):
         dataset = Mock(spec=Dataset)
         dataset_id = uuid4()
 
-        with patch("app.executors.dataset_export.exporter.save_dataset") as mock_save_dataset:
+        with patch("app.execution.dataset_export.exporter.save_dataset") as mock_save_dataset:
             target_dir = fxt_exporter.export_dataset(dataset_id, dataset, export_format)
 
             assert target_dir
@@ -145,13 +145,13 @@ class TestDatasetExporter:
                     root_dir=str(target_dir),
                 )
 
-    def test_export_dataset_geti(self, fxt_exporter: DatasetExporter, fxt_staged_datasets_dir: Path):
+    def test_export_dataset_geti(self, fxt_exporter: DatasetExport, fxt_staged_datasets_dir: Path):
         dataset = Mock(spec=Dataset)
         dataset_id = uuid4()
 
         with (
-            patch("app.executors.dataset_export.exporter.export_dataset") as mock_export_dataset,
-            patch("app.executors.dataset_export.exporter.Path.rename") as rename_mock,
+            patch("app.execution.dataset_export.exporter.export_dataset") as mock_export_dataset,
+            patch("app.execution.dataset_export.exporter.Path.rename") as rename_mock,
         ):
             target_dir = fxt_exporter.export_dataset(dataset_id, dataset, DatasetFormat.GETI)
 
@@ -160,7 +160,7 @@ class TestDatasetExporter:
             mock_export_dataset.assert_called_once_with(dataset=dataset, output_path=target_dir, as_zip=True)
             rename_mock.assert_called_once_with(target_dir / "dataset-geti.zip")
 
-    def test_zip_dataset_contents(self, fxt_exporter: DatasetExporter, fxt_staged_datasets_dir: Path):
+    def test_zip_dataset_contents(self, fxt_exporter: DatasetExport, fxt_staged_datasets_dir: Path):
         target_dir = fxt_staged_datasets_dir / str(uuid4())
         target_dir.mkdir(parents=True, exist_ok=True)
         (target_dir / "file1.txt").write_text("content1")
@@ -171,7 +171,7 @@ class TestDatasetExporter:
         assert zipped_path == target_dir / "dataset-coco.zip"
         assert zipped_path.exists()
 
-    def test_cleanup(self, fxt_exporter: DatasetExporter, fxt_staged_datasets_dir: Path):
+    def test_cleanup(self, fxt_exporter: DatasetExport, fxt_staged_datasets_dir: Path):
         target_dir = fxt_staged_datasets_dir / str(uuid4())
         target_dir.mkdir(parents=True, exist_ok=True)
         (target_dir / "file1.txt").write_text("content1")

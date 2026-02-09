@@ -16,7 +16,7 @@ from otx.types.export import OTXExportFormatType
 from otx.types.precision import OTXPrecisionType
 
 from app.core.run import ExecutionContext
-from app.executors.training.otx_trainer import ExportedModels, OTXTrainer, TrainingDependencies
+from app.execution.training.otx_trainer import ExportedModels, OTXTrainer, TrainingDependencies
 from app.models import DatasetItemAnnotationStatus, DatasetItemSubset, Task, TaskType, TrainingJobParams, TrainingStatus
 from app.models.system import DeviceInfo, DeviceType
 from app.models.training_configuration.configuration import (
@@ -383,7 +383,7 @@ class TestOTXTrainerCreateTrainingDataset:
         mock_val_transforms = [Mock()]
         mock_test_transforms = [Mock()]
 
-        with patch("app.executors.training.otx_trainer.TorchVisionTransformLib.generate") as mock_generate:
+        with patch("app.execution.training.otx_trainer.TorchVisionTransformLib.generate") as mock_generate:
             mock_generate.side_effect = [mock_train_transforms, mock_val_transforms, mock_test_transforms]
 
             # Mock the __get_otx_dataset_class_by_task_type method to return a proper mock class
@@ -608,10 +608,10 @@ class TestOTXTrainerTrainModel:
         expected_checkpoint_path = Path(mock_otx_engine.work_dir) / "best_checkpoint.ckpt"
         expected_checkpoint_path.touch()
 
-        with patch("app.executors.training.otx_trainer.OTXDataModule.from_otx_datasets") as mock_datamodule_factory:
+        with patch("app.execution.training.otx_trainer.OTXDataModule.from_otx_datasets") as mock_datamodule_factory:
             mock_datamodule_factory.return_value = mock_datamodule
 
-            with patch("app.executors.training.otx_trainer.ArgumentParser") as mock_parser_class:
+            with patch("app.execution.training.otx_trainer.ArgumentParser") as mock_parser_class:
                 mock_parser = Mock()
                 mock_parser_class.return_value = mock_parser
 
@@ -620,7 +620,7 @@ class TestOTXTrainerTrainModel:
                 mock_model_namespace.get.return_value = mock_otx_model
                 mock_parser.instantiate_classes.return_value = mock_model_namespace
 
-                with patch("app.executors.training.otx_trainer.OTXEngine") as mock_engine_class:
+                with patch("app.execution.training.otx_trainer.OTXEngine") as mock_engine_class:
                     mock_engine_class.return_value = mock_otx_engine
 
                     # Act
