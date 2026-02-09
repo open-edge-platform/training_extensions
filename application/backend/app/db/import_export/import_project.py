@@ -117,8 +117,14 @@ def _cleanup_project_files(project_files_path: Path) -> None:
             logger.error("Failed to clean up project files at {}: {}", project_files_path, str(e))
 
 
-def import_project(input_archive: str) -> None:  # noqa: C901, PLR0912, PLR0915
-    """Import project data from a zip archive into the database."""
+def import_project(input_archive: str, allow_mismatching_db_schema: bool = False) -> None:  # noqa: C901, PLR0912, PLR0915
+    """Import project data from a zip archive into the database.
+
+    Args:
+        input_archive: Path to the zip archive containing project data.
+        allow_mismatching_db_schema: If True, bypasses database schema version check.
+            Use with caution as this may cause import errors or data corruption.
+    """
     # Validate archive file
     _validate_archive_file(input_archive)
 
@@ -176,14 +182,24 @@ def import_project(input_archive: str) -> None:  # noqa: C901, PLR0912, PLR0915
             )
         archive_db_version = manifest["database_version"]
         if archive_db_version != target_db_schema_version:
-            export_date = manifest.get("export_date", "unknown date")
-            raise DatabaseVersionMismatchError(
-                f"Database version mismatch: archive has version '{archive_db_version}' (exported on '{export_date}'), "
-                f"but target database has version '{target_db_schema_version}'. "
-                f"Please ensure the target database is at the same version as the archive "
-                f"or migrate it accordingly before importing."
-            )
-        logger.info("Database version verified: {}", archive_db_version)
+            if allow_mismatching_db_schema:
+                logger.warning(
+                    "Database version mismatch: archive has version '{}', but target database has version '{}'. "
+                    "Proceeding anyway due to --force flag. This may cause errors or data corruption.",
+                    archive_db_version,
+                    target_db_schema_version,
+                )
+            else:
+                export_date = manifest.get("export_date", "unknown date")
+                raise DatabaseVersionMismatchError(
+                    f"The archive data follows the schema with version '{archive_db_version}' (archive exported on "
+                    f"'{export_date}'), however the target database has schema version '{target_db_schema_version}'. "
+                    f"Usually, this means that the archive was exported from a different version of the application "
+                    f"than the one you are currently running, and it may not be fully compatible. "
+                    f"If you want to attempt the import anyway, run again with the '--force-import' flag."
+                )
+        else:
+            logger.info("Database version verified: {}", archive_db_version)
 
         logger.info("Importing project: {}", project_id)
 
@@ -271,10 +287,16 @@ def main() -> None:
     """Command-line interface for importing project data from a zip archive into the SQLite database."""
     parser = argparse.ArgumentParser(description="Import project data into SQLite database")
     parser.add_argument("--input", required=True, help="Path to zip archive containing project data")
+    parser.add_argument(
+        "-f",
+        "--force-import",
+        action="store_true",
+        help="Bypass database schema version check and attempt import anyway (use at your own risk)",
+    )
 
     args = parser.parse_args()
 
-    import_project(input_archive=args.input)
+    import_project(input_archive=args.input, allow_mismatching_db_schema=args.force_import)
 
 
 if __name__ == "__main__":
