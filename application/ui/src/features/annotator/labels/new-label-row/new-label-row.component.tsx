@@ -63,7 +63,7 @@ export const NewLabelRow = ({ onSave, onCancel, validateName }: NewLabelRowProps
     return (
         <Grid
             ref={rowRef}
-            columns={['size-350', 'size-400', '1fr', 'size-400']}
+            columns={['size-350', 'size-400', '1fr', 'size-400', 'size-400']}
             gap={'size-100'}
             alignItems={'start'}
             UNSAFE_className={classes.labelRow}
@@ -87,6 +87,8 @@ export const NewLabelRow = ({ onSave, onCancel, validateName }: NewLabelRowProps
                     validationState={validationError ? 'invalid' : undefined}
                 />
             </View>
+
+            <View />
 
             <ActionButton
                 aria-label='Cancel new label'
