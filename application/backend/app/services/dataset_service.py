@@ -222,8 +222,6 @@ class DatasetService(BaseSessionManagedService):
 
     @staticmethod
     def _validate_annotations_coordinates(annotations: list[DatasetItemAnnotation], media: Media | MediaDB) -> None:
-        if media.width is None or media.height is None:
-            raise AnnotationValidationError(f"Media {media.id} doesn't have width or height defined.")
         for annotation in annotations:
             if isinstance(annotation.shape, Rectangle):
                 rect = annotation.shape

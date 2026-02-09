@@ -36,7 +36,7 @@ export const AnnotatorCanvas = ({ mediaItem }: AnnotatorCanvasProps) => {
         ...annotations.filter((a) => selectedAnnotations.has(a.id)),
     ];
 
-    const size = { width: mediaItem.width ?? 0, height: mediaItem.height ?? 0 };
+    const size = { width: mediaItem.width, height: mediaItem.height };
 
     return (
         <ZoomTransform target={size}>

@@ -21,7 +21,7 @@ export const EditBoundingBox = ({ annotation, zoom }: EditBoundingBoxProps) => {
     const { mediaItem } = useAnnotator();
     const { updateAnnotations } = useAnnotationActions();
 
-    const roi = { x: 0, y: 0, width: mediaItem.width ?? 0, height: mediaItem.height ?? 0 };
+    const roi = { x: 0, y: 0, width: mediaItem.width, height: mediaItem.height };
 
     const onComplete = () => {
         updateAnnotations([{ ...annotation, shape }]);

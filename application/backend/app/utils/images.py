@@ -26,9 +26,7 @@ def crop_to_thumbnail(image: Image.Image, target_height: int, target_width: int)
     scale_width = target_width / image.width
     scale_height = target_height / image.height
     scaling_factor = max(scale_width, scale_height)
-    resized_image = image.resize(
-        (int(image.width * scaling_factor), int(image.height * scaling_factor)), resample=Image.Resampling.BILINEAR
-    )
+    resized_image = image.resize((int(image.width * scaling_factor), int(image.height * scaling_factor)))
     # cropping
     x1 = (resized_image.width - target_width) / 2
     x2 = x1 + target_width
