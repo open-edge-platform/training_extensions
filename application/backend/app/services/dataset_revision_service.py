@@ -46,8 +46,7 @@ class DatasetRevisionService(BaseSessionManagedService):
         item_counts = self._count_dataset_revision_items(dataset=dataset)
         if not (item_counts.training and item_counts.validation and item_counts.testing):
             raise ValueError(
-                f"Trying the save a dataset revision for project {project_id}, however, one of the subsets 'training', "
-                f"'validation' or 'testing' does not contain any dataset item. Item counts: {item_counts}"
+                f"Cannot save dataset revision for {project_id} with an empty subset. Item counts: {item_counts}"
             )
         revision_repo = DatasetRevisionRepository(project_id=str(project_id), db=self.db_session)
         dataset_revision_id = str(uuid4())
