@@ -25,6 +25,7 @@ def fxt_model_activation_state() -> ModelActivationState:
         project_id=project_id,
         active_model_id=active_model_id,
         available_models=available_models,
+        device="CPU",
     )
 
 
@@ -81,3 +82,4 @@ class TestActiveModelServiceUnit:
             assert isinstance(loaded, LoadedModel)
             assert loaded.id == fxt_model_activation_state.active_model_id
             assert loaded.model is dummy_model
+            assert loaded.device == fxt_model_activation_state.device

@@ -24,6 +24,7 @@ MODELAPI_NSTREAMS = os.getenv("MODELAPI_NSTREAMS", "2")
 class LoadedModel:
     id: UUID
     model: Model
+    device: str
 
 
 class ActiveModelService:
@@ -49,13 +50,16 @@ class ActiveModelService:
                     project_id=None,
                     active_model_id=None,
                     available_models=[],
+                    device=MODELAPI_DEVICE,
                 )
             model_rev_repo = ModelRevisionRepository(project_id=str(active_model.project_id), db=db)
             available_models = model_rev_repo.list_all()
+            pipeline_device = active_model_repo.get_active_pipeline_device()
             return ModelActivationState(
                 project_id=UUID(active_model.project_id),
                 active_model_id=UUID(active_model.id),
                 available_models=[UUID(m.id) for m in available_models],
+                device=pipeline_device.upper() if pipeline_device else MODELAPI_DEVICE,
             )
 
     def _get_model_file_path(self, project_id: UUID, model_id: UUID, extension: str = "xml") -> Path:
@@ -83,15 +87,21 @@ class ActiveModelService:
 
         project_id = self._model_activation_state.project_id
         active_model_id = self._model_activation_state.active_model_id
-        if self._loaded_model is None or self._loaded_model.id != active_model_id:
-            logger.info("Loading model with ID '{}'", active_model_id)
+        device = self._model_activation_state.device
+        needs_reload = (
+            self._loaded_model is None
+            or self._loaded_model.id != active_model_id
+            or self._loaded_model.device != device
+        )
+        if needs_reload:
+            logger.info("Loading model with ID '{}' on device '{}'", active_model_id, device)
             try:
                 # Ensure all necessary model files exist before loading the model
                 model_xml_path = self._get_model_file_path(project_id, active_model_id, "xml")
                 _ = self._get_model_file_path(project_id, active_model_id, "bin")
                 mapi_model = Model.create_model(
                     model=str(model_xml_path),
-                    device=MODELAPI_DEVICE,
+                    device=device,
                     nstreams=MODELAPI_NSTREAMS,
                 )
             except FileNotFoundError:
@@ -101,5 +111,6 @@ class ActiveModelService:
             self._loaded_model = LoadedModel(
                 id=self._model_activation_state.active_model_id,
                 model=mapi_model,
+                device=device,
             )
         return self._loaded_model
