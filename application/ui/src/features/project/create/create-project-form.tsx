@@ -132,7 +132,7 @@ export const CreateProjectForm = ({ projects }: CreateProjectFormProps) => {
             <Flex direction={'column'} alignItems={'center'} UNSAFE_className={classes.buttonGroup} gap={'size-300'}>
                 <Divider size={'S'} width={'100%'} />
                 <ButtonGroup>
-                    <Button>
+                    <Button variant={'secondary'}>
                         <Link className={classes.link} to={paths.project.index({})}>
                             Go back
                         </Link>
