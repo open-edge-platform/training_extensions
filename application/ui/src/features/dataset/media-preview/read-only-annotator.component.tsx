@@ -46,25 +46,27 @@ export const ReadOnlyAnnotator = ({
         <>
             <View gridArea={'header'} UNSAFE_className={classes.toolbarContainer}>
                 <Flex alignItems={'center'} justifyContent={'space-between'} width={'100%'}>
-                    {onModeChange ? (
+                    {onModeChange && (
                         <Toolbar.Container>
                             <Toolbar.Section>
                                 <AnnotatorModes mode={'prediction'} onModeChange={onModeChange} />
                             </Toolbar.Section>
                         </Toolbar.Container>
-                    ) : null}
-                    <Toolbar.Container>
+                    )}
+                    <Toolbar.Container marginStart={!onModeChange ? 'auto' : undefined}>
                         <Toolbar.Section>
-                            <Button
-                                variant='accent'
-                                onPress={submit}
-                                isPending={isSaving}
-                                marginStart={'size-200'}
-                                isDisabled={!canSubmit || isSaving}
-                            >
-                                <Checkmark />
-                                <Text>Confirm prediction</Text>
-                            </Button>
+                            {onModeChange && (
+                                <Button
+                                    variant='accent'
+                                    onPress={submit}
+                                    isPending={isSaving}
+                                    marginStart={'size-200'}
+                                    isDisabled={!canSubmit || isSaving}
+                                >
+                                    <Checkmark />
+                                    <Text>Confirm prediction</Text>
+                                </Button>
+                            )}
 
                             <ActionButton isQuiet onPress={onClose} UNSAFE_className={classes.closeButton}>
                                 <CloseSemiBold width={14} height={14} />
