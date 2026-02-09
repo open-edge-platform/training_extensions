@@ -1,6 +1,6 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from uuid import UUID, uuid4
 
@@ -289,7 +289,7 @@ def fxt_dataset_revision_with_parquet(
     df = pl.DataFrame(
         {
             "id": [str(item_id)],
-            "image": [f"images/{image_filename}"],
+            "image": [str(image_filename)],
             "image_info": [{"width": 1024, "height": 768}],
             "subset": ["TRAINING"],
         }
@@ -474,7 +474,7 @@ class TestDatasetRevisionServiceIntegration:
         revision = DatasetRevision(
             id=uuid4(),
             name="Deleted Revision",
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
             files_deleted=True,
         )
 

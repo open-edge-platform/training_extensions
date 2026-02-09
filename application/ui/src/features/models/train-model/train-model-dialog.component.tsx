@@ -3,6 +3,7 @@
 
 import { Button, ButtonGroup, Content, Dialog, Divider, Flex, Heading, Link, Text, toast } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import { useMatch } from 'react-router';
 
 import { paths } from '../../../constants/paths';
 import { useTrainModelMutation } from '../hooks/api/use-train-model-mutation';
@@ -14,26 +15,32 @@ type TrainModelDialogProps = {
 };
 
 export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
-    const { selectedTrainingDevice, selectedModelArchitectureId, selectedDatasetRevision } = useTrainModel();
+    const { selectedTrainingDevice, selectedModelArchitectureId, selectedDatasetRevisionId, datasetRevisions } =
+        useTrainModel();
     const trainModelMutation = useTrainModelMutation();
     const projectId = useProjectIdentifier();
+    const isModelsPage = useMatch(paths.project.models.pattern);
 
     const isStartButtonDisabled = selectedModelArchitectureId === null || selectedTrainingDevice === null;
 
     const trainModel = () => {
         if (isStartButtonDisabled) return;
 
+        const datasetRevisionId = datasetRevisions.find((revision) => revision.id === selectedDatasetRevisionId)?.value;
+
         trainModelMutation.mutate(
             {
+                datasetRevisionId: datasetRevisionId === undefined ? null : datasetRevisionId,
                 device: selectedTrainingDevice,
-                datasetRevisionId: selectedDatasetRevision ?? null,
                 modelArchitectureId: selectedModelArchitectureId,
             },
             () => {
                 onClose();
 
                 toast({
-                    message: (
+                    message: isModelsPage ? (
+                        <Text>Model training started successfully.</Text>
+                    ) : (
                         <Flex alignItems={'center'} gap={'size-50'} wrap={'wrap'}>
                             <Text>
                                 Model training started successfully.{' '}

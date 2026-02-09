@@ -63,7 +63,7 @@ class ModelRevision(BaseEntity):
     Attributes:
         id: Unique identifier for the model revision.
         name: User friendly name to identify a model
-        architecture: Name of the model architecture (e.g., 'Object_Detection_RTDetr_50').
+        architecture: Identifier of the model architecture (e.g., 'object-detection-rt-detr-r50').
         parent_revision: UUID of the parent revision if this is derived from another revision,
             None if this is the initial revision.
         training_info: Details about the training process, including status, configuration, and associated dataset.
@@ -82,7 +82,7 @@ class ModelRevision(BaseEntity):
 
     @model_validator(mode="before")
     @classmethod
-    def populate_training_info(cls, data: object) -> object:
+    def populate_model_revision(cls, data: object) -> object:
         if isinstance(data, ModelRevisionDB):
             return {
                 "id": data.id,

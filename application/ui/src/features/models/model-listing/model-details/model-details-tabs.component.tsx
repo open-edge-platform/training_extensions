@@ -50,6 +50,7 @@ export const ModelDetailsTabs = ({ modelId }: ModelDetailsTabsProps) => {
                 padding: 'var(--spectrum-global-dimension-size-400)',
                 borderRadius: 'var(--spectrum-global-dimension-size-50)',
                 border: 'var(--spectrum-global-dimension-size-10) solid var(--spectrum-global-color-gray-200)',
+                '--spectrum-tabs-selection-indicator-color': 'var(--energy-blue)',
             }}
         >
             <TabList marginBottom={'size-300'}>

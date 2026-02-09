@@ -31,23 +31,18 @@ const mockedClassificationProject = getMockedProject({
     },
 });
 
-test.beforeEach(async ({ network }) => {
-    network.use(
-        http.get('/api/projects/{project_id}', () => {
-            return HttpResponse.json(mockedClassificationProject);
-        }),
-        http.get('/api/projects/{project_id}/dataset/media/{media_id}/binary', async () => {
-            return HttpResponse.arrayBuffer(candyPngBuffer.buffer, {
-                headers: { 'Content-Type': 'image/png' },
-            });
-        })
-    );
-});
-
 test.describe('Annotator Classification', () => {
-    test.beforeEach(async ({ page }) => {
-        await page.goto(`/projects/${mockedClassificationProject.id}/dataset`);
-        await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
+    test.beforeEach(async ({ network }) => {
+        network.use(
+            http.get('/api/projects/{project_id}', () => {
+                return HttpResponse.json(mockedClassificationProject);
+            }),
+            http.get('/api/projects/{project_id}/dataset/media/{media_id}/binary', async () => {
+                return HttpResponse.arrayBuffer(candyPngBuffer.buffer, {
+                    headers: { 'Content-Type': 'image/png' },
+                });
+            })
+        );
     });
 
     const getAnnotationShape = (page: Page) => {
@@ -57,6 +52,9 @@ test.describe('Annotator Classification', () => {
 
     test.describe('Single label', () => {
         test('select multiple labels update the current annotation', async ({ page }) => {
+            await page.goto(`/projects/${mockedClassificationProject.id}/dataset`);
+            await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
+
             await test.step('selecting a label adds a new labeled annotation', async () => {
                 await page.getByRole('button', { name: `Label ${redLabel.name}` }).click();
 
@@ -83,6 +81,9 @@ test.describe('Annotator Classification', () => {
         });
 
         test('remove the annotations when label is removed', async ({ page }) => {
+            await page.goto(`/projects/${mockedClassificationProject.id}/dataset`);
+            await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
+
             await test.step('add initial labeled annotation', async () => {
                 await page.getByRole('button', { name: `Label ${redLabel.name}` }).click();
 
@@ -96,10 +97,21 @@ test.describe('Annotator Classification', () => {
                 expect(await page.getByLabel('annotation full image').count()).toBe(0);
             });
         });
+
+        test('does not support empty label', async ({ page }) => {
+            await page.goto(`/projects/${mockedClassificationProject.id}/dataset`);
+            await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
+
+            await expect(page.getByRole('button', { name: 'Label No label' })).toBeHidden();
+            await expect(page.getByRole('button', { name: `Label ${redLabel.name}` })).toBeVisible();
+            await expect(page.getByRole('button', { name: `Label ${blueLabel.name}` })).toBeVisible();
+            await expect(page.getByRole('button', { name: `Label ${greenLabel.name}` })).toBeVisible();
+            await expect(page.getByRole('button', { name: `Label ${yellowLabel.name}` })).toBeVisible();
+        });
     });
 
     test.describe('Multiple labels', () => {
-        test.beforeEach(async ({ network, page }) => {
+        test.beforeEach(async ({ network }) => {
             network.use(
                 http.get('/api/projects/{project_id}', () => {
                     return HttpResponse.json({
@@ -108,12 +120,12 @@ test.describe('Annotator Classification', () => {
                     });
                 })
             );
-
-            await page.goto(`/projects/${mockedClassificationProject.id}/dataset`);
-            await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
         });
 
         test('add multiple labels', async ({ page }) => {
+            await page.goto(`/projects/${mockedClassificationProject.id}/dataset`);
+            await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
+
             await test.step('add initial labeled annotation', async () => {
                 await page.getByRole('button', { name: `Label ${redLabel.name}` }).click();
 
@@ -122,7 +134,7 @@ test.describe('Annotator Classification', () => {
                 await expect(annotation).toHaveAttribute('stroke', redLabel.color);
             });
 
-            await test.step('add more labels and keep the initial stroke color', async () => {
+            await test.step('add more labels and use white stroke color for multiple labels', async () => {
                 await page.getByRole('button', { name: `Label ${greenLabel.name}` }).click();
                 await page.getByRole('button', { name: `Label ${yellowLabel.name}` }).click();
 
@@ -132,11 +144,14 @@ test.describe('Annotator Classification', () => {
 
                 const annotation = getAnnotationShape(page);
                 await expect(annotation).toBeVisible();
-                await expect(annotation).toHaveAttribute('stroke', redLabel.color);
+                await expect(annotation).toHaveAttribute('stroke', 'white');
             });
         });
 
         test('remove the annotations when all labels are removed', async ({ page }) => {
+            await page.goto(`/projects/${mockedClassificationProject.id}/dataset`);
+            await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
+
             await test.step('add annotation with multiple labels', async () => {
                 await page.getByRole('button', { name: `Label ${redLabel.name}` }).click();
                 await page.getByRole('button', { name: `Label ${greenLabel.name}` }).click();
@@ -153,6 +168,9 @@ test.describe('Annotator Classification', () => {
         });
 
         test(`hide/show annotation's label using setting`, async ({ page }) => {
+            await page.goto(`/projects/${mockedClassificationProject.id}/dataset`);
+            await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
+
             await test.step('add multi-label annotation', async () => {
                 await page.getByRole('button', { name: `Label ${redLabel.name}` }).click();
                 await page.getByRole('button', { name: `Label ${greenLabel.name}` }).click();
@@ -186,6 +204,9 @@ test.describe('Annotator Classification', () => {
         });
 
         test('hide/show annotation', async ({ page }) => {
+            await page.goto(`/projects/${mockedClassificationProject.id}/dataset`);
+            await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
+
             await test.step('add multi-label annotation', async () => {
                 await page.getByRole('button', { name: `Label ${redLabel.name}` }).click();
                 await page.getByRole('button', { name: `Label ${greenLabel.name}` }).click();
@@ -210,6 +231,52 @@ test.describe('Annotator Classification', () => {
                 await expect(page.getByLabel(`label ${greenLabel.name} background`)).toBeVisible();
 
                 await expect(getAnnotationShape(page)).toBeVisible();
+            });
+        });
+
+        test.describe('Handles empty label', () => {
+            test('label assignment', async ({ page }) => {
+                await page.goto(`/projects/${mockedClassificationProject.id}/dataset`);
+                await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
+
+                await test.step('add multi-label annotation', async () => {
+                    await page.getByRole('button', { name: `Label ${redLabel.name}` }).click();
+                    await page.getByRole('button', { name: `Label ${greenLabel.name}` }).click();
+
+                    await expect(page.getByLabel(`label ${redLabel.name} background`)).toBeVisible();
+                    await expect(page.getByLabel(`label ${greenLabel.name} background`)).toBeVisible();
+                });
+
+                await test.step('assigning "no label" removes other labels', async () => {
+                    await page.getByRole('button', { name: `Label No label` }).click();
+
+                    await expect(page.getByLabel(`label No label background`)).toBeVisible();
+                    await expect(page.getByLabel(`label ${redLabel.name} background`)).toBeHidden();
+                    await expect(page.getByLabel(`label ${greenLabel.name} background`)).toBeHidden();
+                });
+
+                await test.step('assigning other label than "no label" removes "no label"', async () => {
+                    await page.getByRole('button', { name: `Label ${redLabel.name}` }).click();
+
+                    await expect(page.getByLabel(`label No label background`)).toBeHidden();
+                    await expect(page.getByLabel(`label ${redLabel.name} background`)).toBeVisible();
+                });
+            });
+
+            test('renders "No label" when server returns empty annotations list', async ({ page, network }) => {
+                network.use(
+                    http.get('/api/projects/{project_id}/dataset/items/{dataset_item_id}/annotations', () => {
+                        return HttpResponse.json({
+                            annotations: [],
+                            user_reviewed: true,
+                        });
+                    })
+                );
+
+                await page.goto(`/projects/${mockedClassificationProject.id}/dataset`);
+                await page.getByRole('img', { name: 'item-1.jpg' }).dblclick();
+
+                await expect(page.getByLabel(`label No label background`)).toBeVisible();
             });
         });
     });

@@ -185,7 +185,12 @@ class TestDatasetServiceUnit:
                 shape=FullImage(type="full_image"),
             )
         ]
-        DatasetService._validate_annotations(annotations=annotations, project=fxt_multilabel_classification_project)
+        # Should not raise any exception since multilabel classification allows multiple labels
+        DatasetService._validate_annotations(annotations=annotations, task=fxt_multilabel_classification_project.task)
+
+    def test_validate_annotations_multilabel_classification_empty(self, fxt_multilabel_classification_project) -> None:
+        # Should not raise any exception since multilabel classification allows the empty label
+        DatasetService._validate_annotations(annotations=[], task=fxt_multilabel_classification_project.task)
 
     def test_validate_annotations_multilabel_classification_multi_annotations(
         self, fxt_multilabel_classification_project
@@ -200,8 +205,12 @@ class TestDatasetServiceUnit:
                 shape=FullImage(type="full_image"),
             ),
         ]
+        # Should raise an exception since multilabel classification does not allow multiple annotations
+        # (only one 'full_image' shape, possibly with multiple labels, is allowed)
         with pytest.raises(AnnotationValidationError):
-            DatasetService._validate_annotations(annotations=annotations, project=fxt_multilabel_classification_project)
+            DatasetService._validate_annotations(
+                annotations=annotations, task=fxt_multilabel_classification_project.task
+            )
 
     @pytest.mark.parametrize(
         "shape",
@@ -219,8 +228,26 @@ class TestDatasetServiceUnit:
                 shape=shape,
             )
         ]
+        # Should raise an exception since classification only allows 'full_image' shape
         with pytest.raises(AnnotationValidationError):
-            DatasetService._validate_annotations(annotations=annotations, project=fxt_multilabel_classification_project)
+            DatasetService._validate_annotations(
+                annotations=annotations, task=fxt_multilabel_classification_project.task
+            )
+
+    def test_validate_annotations_multiclass_classification(self, fxt_multiclass_classification_project) -> None:
+        annotations = [
+            DatasetItemAnnotation(
+                labels=[LabelReference(id=uuid4())],
+                shape=FullImage(type="full_image"),
+            )
+        ]
+        # Should not raise any exception since the annotation is valid for multiclass classification
+        DatasetService._validate_annotations(annotations=annotations, task=fxt_multiclass_classification_project.task)
+
+    def test_validate_annotations_multiclass_classification_empty(self, fxt_multiclass_classification_project) -> None:
+        # Should raise an exception since multiclass classification requires exactly one label (empty label not allowed)
+        with pytest.raises(AnnotationValidationError):
+            DatasetService._validate_annotations(annotations=[], task=fxt_multiclass_classification_project.task)
 
     def test_validate_annotations_multiclass_classification_multiple_labels(
         self, fxt_multiclass_classification_project
@@ -231,8 +258,11 @@ class TestDatasetServiceUnit:
                 shape=FullImage(type="full_image"),
             )
         ]
+        # Should raise an exception since multiclass classification does not allow multiple labels
         with pytest.raises(AnnotationValidationError):
-            DatasetService._validate_annotations(annotations=annotations, project=fxt_multiclass_classification_project)
+            DatasetService._validate_annotations(
+                annotations=annotations, task=fxt_multiclass_classification_project.task
+            )
 
     def test_validate_annotations_detection(self, fxt_detection_project) -> None:
         annotations = [
@@ -245,7 +275,12 @@ class TestDatasetServiceUnit:
                 shape=Rectangle(type="rectangle", x=10, y=10, width=10, height=10),
             ),
         ]
-        DatasetService._validate_annotations(annotations=annotations, project=fxt_detection_project)
+        # Should not raise any exception since the annotations are valid for detection task
+        DatasetService._validate_annotations(annotations=annotations, task=fxt_detection_project.task)
+
+    def test_validate_annotations_detection_empty(self, fxt_detection_project) -> None:
+        # Should not raise any exception since detection task allows the empty label
+        DatasetService._validate_annotations(annotations=[], task=fxt_detection_project.task)
 
     @pytest.mark.parametrize(
         "shape",
@@ -265,8 +300,9 @@ class TestDatasetServiceUnit:
                 shape=shape,
             ),
         ]
+        # Should raise an exception since detection task only allows 'rectangle' shape
         with pytest.raises(AnnotationValidationError):
-            DatasetService._validate_annotations(annotations=annotations, project=fxt_detection_project)
+            DatasetService._validate_annotations(annotations=annotations, task=fxt_detection_project.task)
 
     def test_validate_annotations_detection_wrong_shape_multiple_labels(self, fxt_detection_project) -> None:
         annotations = [
@@ -279,8 +315,9 @@ class TestDatasetServiceUnit:
                 shape=Rectangle(type="rectangle", x=10, y=10, width=10, height=10),
             ),
         ]
+        # Should raise an exception since detection task does not allow multiple labels on the same shape
         with pytest.raises(AnnotationValidationError):
-            DatasetService._validate_annotations(annotations=annotations, project=fxt_detection_project)
+            DatasetService._validate_annotations(annotations=annotations, task=fxt_detection_project.task)
 
     def test_validate_annotations_segmentation(self, fxt_segmentation_project) -> None:
         annotations = [
@@ -293,7 +330,12 @@ class TestDatasetServiceUnit:
                 shape=Polygon(type="polygon", points=[Point(x=10, y=10), Point(x=20, y=20)]),
             ),
         ]
-        DatasetService._validate_annotations(annotations=annotations, project=fxt_segmentation_project)
+        # Should not raise any exception since the annotations are valid for segmentation task
+        DatasetService._validate_annotations(annotations=annotations, task=fxt_segmentation_project.task)
+
+    def test_validate_annotations_segmentation_empty(self, fxt_segmentation_project) -> None:
+        # Should not raise any exception since segmentation task allows the empty label
+        DatasetService._validate_annotations(annotations=[], task=fxt_segmentation_project.task)
 
     @pytest.mark.parametrize(
         "shape",
@@ -313,8 +355,9 @@ class TestDatasetServiceUnit:
                 shape=shape,
             ),
         ]
+        # Should raise an exception since segmentation task only allows 'polygon' shape
         with pytest.raises(AnnotationValidationError):
-            DatasetService._validate_annotations(annotations=annotations, project=fxt_segmentation_project)
+            DatasetService._validate_annotations(annotations=annotations, task=fxt_segmentation_project.task)
 
     def test_validate_annotations_segmentation_wrong_shape_multiple_labels(self, fxt_segmentation_project) -> None:
         annotations = [
@@ -327,8 +370,9 @@ class TestDatasetServiceUnit:
                 shape=Polygon(type="polygon", points=[Point(x=10, y=10), Point(x=20, y=20)]),
             ),
         ]
+        # Should raise an exception since segmentation task does not allow multiple labels on the same shape
         with pytest.raises(AnnotationValidationError):
-            DatasetService._validate_annotations(annotations=annotations, project=fxt_segmentation_project)
+            DatasetService._validate_annotations(annotations=annotations, task=fxt_segmentation_project.task)
 
     def test_set_dataset_item_annotations(self, fxt_dataset_service, fxt_detection_project) -> None:
         dataset_service = fxt_dataset_service

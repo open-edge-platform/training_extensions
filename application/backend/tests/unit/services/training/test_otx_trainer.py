@@ -135,7 +135,7 @@ class TestOTXTrainerPrepareWeights:
         # Arrange
         training_params = TrainingJobParams(
             device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
-            model_architecture_id="Object_Detection_YOLOX_S",
+            model_architecture_id="object-detection-yolox-s",
             task=Task(task_type=TaskType.DETECTION),
             parent_model_revision_id=None,
             job_id=uuid4(),
@@ -152,7 +152,7 @@ class TestOTXTrainerPrepareWeights:
         # Assert
         assert weights_path == expected_weights_path
         fxt_weights_service.get_local_weights_path.assert_called_once_with(
-            task=TaskType.DETECTION, model_manifest_id="Object_Detection_YOLOX_S"
+            task=TaskType.DETECTION, model_manifest_id="object-detection-yolox-s"
         )
 
     def test_prepare_weights_with_parent_model(
@@ -167,7 +167,7 @@ class TestOTXTrainerPrepareWeights:
         training_params = TrainingJobParams(
             device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
             project_id=project_id,
-            model_architecture_id="Object_Detection_YOLOX_S",
+            model_architecture_id="object-detection-yolox-s",
             task=Task(task_type=TaskType.DETECTION),
             parent_model_revision_id=parent_model_revision_id,
             job_id=uuid4(),
@@ -197,7 +197,7 @@ class TestOTXTrainerPrepareWeights:
         training_params = TrainingJobParams(
             device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
             project_id=project_id,
-            model_architecture_id="Object_Detection_YOLOX_S",
+            model_architecture_id="object-detection-yolox-s",
             task=Task(task_type=TaskType.DETECTION),
             parent_model_revision_id=parent_model_revision_id,
             job_id=uuid4(),
@@ -223,7 +223,7 @@ class TestOTXTrainerPrepareTrainingConfiguration:
         training_params = TrainingJobParams(
             device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
             project_id=project_id,
-            model_architecture_id="Object_Detection_YOLOX_S",
+            model_architecture_id="object-detection-yolox-s",
             task=Task(task_type=TaskType.DETECTION),
             parent_model_revision_id=parent_model_revision_id,
             job_id=uuid4(),
@@ -510,7 +510,7 @@ class TestOTXTrainerPrepareModel:
         # Arrange
         project_id = uuid4()
         model_id = uuid4()
-        model_architecture_id = "Custom_Image_Classification_EfficientNet-B0"
+        model_architecture_id = "image-classification-efficientnet-b0"
         training_params = TrainingJobParams(
             device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
             model_id=model_id,
@@ -728,7 +728,7 @@ class TestOTXTrainerEvaluateModel:
             device=DeviceInfo(type=DeviceType.XPU, name="Intel Arc B580", memory=12884901888, index=0),
             model_id=model_id,
             project_id=project_id,
-            model_architecture_id="Object_Detection_YOLOX_S",
+            model_architecture_id="object-detection-yolox-s",
             task=Task(task_type=task_type, exclusive_labels=exclusive_labels),
             job_id=uuid4(),
         )

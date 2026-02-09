@@ -10,10 +10,6 @@
     min-width: 0;
 }
 
-.readOnlyLabels {
-    pointer-events: none;
-}
-
 .badge {
     --foregroundColor: lch(from var(--labelBgColor) calc((50 - l) * infinity) 0 0);
 
@@ -43,15 +39,6 @@
     outline-color: var(--labelBgColor);
 }
 
-.disabled {
-    cursor: default !important;
-    opacity: 0.6;
-}
-
-.disabled:hover {
-    opacity: 0.7;
-}
-
 .badgeText {
     color: var(--foregroundColor);
     white-space: nowrap;
@@ -59,4 +46,12 @@
     overflow: hidden;
     max-width: var(--spectrum-global-dimension-size-1600);
     font-size: var(--spectrum-global-dimension-font-size-75);
+}
+
+.overflowCount {
+    white-space: nowrap;
+    font-size: var(--spectrum-global-dimension-font-size-75);
+    color: var(--spectrum-global-color-gray-600);
+    flex-shrink: 0;
+    align-self: center;
 }

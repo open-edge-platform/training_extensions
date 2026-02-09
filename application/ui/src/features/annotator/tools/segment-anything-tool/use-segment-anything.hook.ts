@@ -6,9 +6,11 @@ import { useEffect, useRef, useState } from 'react';
 import { EncodingOutput, SegmentAnythingModel } from '@geti/smart-tools/segment-anything';
 import { useQuery } from '@tanstack/react-query';
 import { Remote, wrap } from 'comlink';
+import { useProject } from 'hooks/api/project.hook';
 
 import type { Media } from '../../../../constants/shared-types';
 import { useAnnotator } from '../../../../shared/annotator/annotator-provider.component';
+import { isDetectionTask } from '../../../project/task-type-guards';
 import { convertToolShapeToGetiShape } from '../utils';
 import { InteractiveAnnotationPoint } from './segment-anything.interface';
 
@@ -73,7 +75,19 @@ const useEncodingQuery = (model: Remote<SegmentAnythingModel> | undefined, media
     });
 };
 
+const useDecoderOutputType = () => {
+    const { data } = useProject();
+
+    if (isDetectionTask(data.task.task_type)) {
+        return 'rect';
+    }
+
+    return 'polygon';
+};
+
 const useDecodingFn = (model: Remote<SegmentAnythingModel> | undefined, encoding: EncodingOutput | undefined) => {
+    const decoderOutput = useDecoderOutputType();
+
     // TODO: look into returning a new "decoder model" instance that already has the encoding data
     // stored in memory, to reduce  memory usage
     return async (points: InteractiveAnnotationPoint[]) => {
@@ -93,7 +107,7 @@ const useDecodingFn = (model: Remote<SegmentAnythingModel> | undefined, encoding
             points,
             boxes: [],
             ouputConfig: {
-                type: 'polygon',
+                type: decoderOutput,
             },
             image: undefined,
         });

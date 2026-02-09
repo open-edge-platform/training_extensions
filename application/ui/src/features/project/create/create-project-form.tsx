@@ -4,7 +4,7 @@
 import { FormEvent, useState } from 'react';
 
 import { Button, ButtonGroup, Divider, Flex, Form, Text, TextField } from '@geti/ui';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router-dom';
 import { v4 as uuid } from 'uuid';
 
 import { paths } from '../../../constants/paths';
@@ -19,7 +19,7 @@ import {
 } from './classification-label-selection/classification-task-type-selection.component';
 import { validateProjectName } from './validator';
 
-import styles from './create-project-form.module.scss';
+import classes from './create-project-form.module.scss';
 
 type CreateProjectFormProps = {
     projects: Project[];
@@ -69,7 +69,7 @@ export const CreateProjectForm = ({ projects }: CreateProjectFormProps) => {
             },
             {
                 onSuccess: () => {
-                    navigate(paths.project.inference({ projectId }));
+                    navigate(paths.project.dataset({ projectId }));
                 },
             }
         );
@@ -103,7 +103,7 @@ export const CreateProjectForm = ({ projects }: CreateProjectFormProps) => {
                     UNSAFE_style={{ overflow: 'auto', margin: '0 auto' }}
                     width={'100%'}
                 >
-                    <Text UNSAFE_className={styles.taskTypeSelectionTitle}>
+                    <Text UNSAFE_className={classes.taskTypeSelectionTitle}>
                         What type of task would you like the model to perform?
                     </Text>
 
@@ -119,7 +119,7 @@ export const CreateProjectForm = ({ projects }: CreateProjectFormProps) => {
                     {selectedTask !== null && (
                         <Flex direction={'column'} alignItems={'center'} gap={'size-350'}>
                             <Flex>
-                                <Text UNSAFE_className={styles.objectsToLearnTitle}>
+                                <Text UNSAFE_className={classes.objectsToLearnTitle}>
                                     {`What objects should the model learn to ${selectedTaskOption?.verb}?`}
                                 </Text>
                             </Flex>
@@ -129,9 +129,14 @@ export const CreateProjectForm = ({ projects }: CreateProjectFormProps) => {
                 </Flex>
             </Flex>
 
-            <Flex direction={'column'} alignItems={'center'} UNSAFE_className={styles.buttonGroup} gap={'size-300'}>
+            <Flex direction={'column'} alignItems={'center'} UNSAFE_className={classes.buttonGroup} gap={'size-300'}>
                 <Divider size={'S'} width={'100%'} />
                 <ButtonGroup>
+                    <Button variant={'secondary'}>
+                        <Link className={classes.link} to={paths.project.index({})}>
+                            Go back
+                        </Link>
+                    </Button>
                     <Button type={'submit'} variant='accent' isDisabled={isCreateProjectDisabled}>
                         Create project
                     </Button>

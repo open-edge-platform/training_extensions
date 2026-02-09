@@ -1,4 +1,4 @@
-id: Custom_Object_Detection_YOLOX
+id: object-detection-yolox-tiny
 name: YOLOX-Tiny
 
 pretrained_weights:

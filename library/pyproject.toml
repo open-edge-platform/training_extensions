@@ -73,7 +73,6 @@ dev = [
 
 lint = [
     "ruff==0.11.13",
-    "mypy~=1.6.1",
     "attrs",
     "types-PyYAML~=6.0.12",
     "types-aiofiles",
@@ -83,7 +82,8 @@ lint = [
     "types_futures",
     "types-setuptools",
     "types-python-dateutil",
-    "tokenize-rt==3.2.0"
+    "tokenize-rt==3.2.0",
+    "pyrefly~=0.51.0",
 ]
 
 [project.optional-dependencies]
@@ -207,14 +207,6 @@ omit = [
     "config.py",
     "config-3.py",
 ]
-
-
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# MYPY CONFIGURATION.                                                         #
-[tool.mypy]
-python_version = "3.13"
-ignore_missing_imports = true
-show_error_codes = true
 
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -427,3 +419,7 @@ markers = [
     "xpu",  # mark tests which require Intel dGPU,
 ]
 python_files = "tests/**/*.py"
+
+[tool.pyrefly]
+python-version = "3.10.0"
+ignore-missing-imports = ["*"]

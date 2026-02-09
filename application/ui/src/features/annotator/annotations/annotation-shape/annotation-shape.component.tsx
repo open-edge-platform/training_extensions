@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Annotation } from '../../../../shared/types';
-import { useSelectedData } from '../../../dataset/selected-data-provider.component';
+import { useSelectDatasetItem } from '../../../dataset/gallery/hooks/use-select-dataset-item.hook';
 import { getFormattedPoints, isPrediction } from '../utils';
 
 type AnnotationShapeProps = {
@@ -10,9 +10,11 @@ type AnnotationShapeProps = {
 };
 
 export const AnnotationShape = ({ annotation }: AnnotationShapeProps) => {
+    const { selectedMediaItem } = useSelectDatasetItem();
+
     const { shape, labels } = annotation;
-    const { selectedMediaItem } = useSelectedData();
-    const color = labels.length ? labels[0].color : '--annotation-fill';
+    const hasMultipleLabels = labels.length > 1;
+    const color = hasMultipleLabels ? 'white' : labels.length ? labels[0].color : '--annotation-fill';
     const hasPredictionLabel = labels.some(isPrediction);
     const strokeDasharray = hasPredictionLabel ? 'calc(10 / var(--zoom-scale)) calc(6 / var(--zoom-scale))' : undefined;
 

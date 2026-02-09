@@ -1,4 +1,4 @@
-id: Custom_Instance_Segmentation_RTMDet_tiny
+id: instance-segmentation-rtmdet-tiny
 name: RTMDet-Tiny
 
 pretrained_weights:
