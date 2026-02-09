@@ -5,8 +5,10 @@ import { useState } from 'react';
 
 import { ActionButton, Flex, View } from '@geti/ui';
 import { Add } from '@geti/ui/icons';
+import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import type { Label } from '../../../../constants/shared-types';
+import { usePinnedLabels } from '../hooks/use-pinned-labels.hook';
 import { LabelRow } from '../label-row/label-row.component';
 import { NewLabelRow } from '../new-label-row/new-label-row.component';
 import { useLabels } from '../use-labels.hook';
@@ -31,6 +33,9 @@ export const LabelsEditor = ({
         isMultiLabel,
     });
 
+    const projectId = useProjectIdentifier();
+    const { isPinned, togglePin } = usePinnedLabels(projectId);
+
     const [isCreatingLabel, setIsCreatingLabel] = useState(autoCreateNewLabel);
 
     const handleAddNewLabel = () => {
@@ -46,6 +51,10 @@ export const LabelsEditor = ({
         setIsCreatingLabel(false);
     };
 
+    const handleTogglePin = (label: Label) => {
+        togglePin(label.id);
+    };
+
     return (
         <View UNSAFE_className={classes.editorContent}>
             <Flex direction={'column'} gap={'size-50'} UNSAFE_className={classes.labelsList}>
@@ -54,8 +63,10 @@ export const LabelsEditor = ({
                         key={label.id}
                         label={label}
                         isSelected={isLabelActive(label)}
+                        isPinned={isPinned(label.id)}
                         onSelect={() => toggleLabelOnAnnotations(label)}
                         onDelete={onRequestDeleteLabel}
+                        onTogglePin={handleTogglePin}
                         onUpdate={updateLabel}
                         validateName={validateName}
                     />
