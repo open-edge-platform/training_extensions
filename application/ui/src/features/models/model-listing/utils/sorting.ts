@@ -5,6 +5,7 @@ import dayjs from 'dayjs';
 import { orderBy } from 'lodash-es';
 
 import type { Model } from '../../../../constants/shared-types';
+import { getTestingMetric } from '../components/model-row/utils';
 import type { SortBy } from '../types';
 
 export const sortModels = (models: Model[], sortBy: SortBy): Model[] => {
@@ -24,11 +25,9 @@ export const sortModels = (models: Model[], sortBy: SortBy): Model[] => {
                 'desc'
             );
         case 'size':
-        // TODO: uncomment once backend returns size
-        // return orderBy(models, (model) => model.size ?? 0, 'asc');
+            return orderBy(models, (model) => model.size ?? 0, 'asc');
         case 'score':
-        // TODO: uncomment once backend returns score
-        // return orderBy(models, (model) => model.score ?? 0, 'desc');
+            return orderBy(models, (model) => getTestingMetric(model)?.value ?? 0, 'asc');
         default:
             return models;
     }
