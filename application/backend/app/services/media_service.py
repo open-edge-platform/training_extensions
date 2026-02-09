@@ -142,12 +142,17 @@ class MediaService(BaseSessionManagedService):
                 f.write(chunk)
 
         try:
+            video_metadata = get_video_metadata(video_path=binary_path)
             media = MediaDB(
                 id=str(media_id),
                 project_id=str(project.id),
                 type=MediaType.VIDEO,
                 name=name,
                 format=str(format),
+                width=video_metadata.width,
+                height=video_metadata.height,
+                frame_count=video_metadata.frame_count,
+                fps=video_metadata.fps,
                 size=os.path.getsize(binary_path),
                 source_id=str(source_id) if source_id is not None else None,
             )
@@ -224,23 +229,6 @@ class MediaService(BaseSessionManagedService):
         media = self.get_media_by_id(project_id=project.id, media_id=media_id)
         return self.projects_dir / f"{project.id}/dataset/{media.id}-thumb.jpg"
 
-    def _update_video_metadata(self, project: Project, media_id: UUID) -> Media:
-        repo = MediaRepository(project_id=str(project.id), db=self.db_session)
-        db_media = repo.get_by_id(str(media_id))
-        if not db_media:
-            raise ResourceNotFoundError(ResourceType.MEDIA, str(media_id))
-
-        dataset_dir = self.projects_dir / f"{project.id}/dataset"
-        binary_path = dataset_dir / f"{db_media.id}.{db_media.format}"
-
-        video_metadata = get_video_metadata(video_path=binary_path)
-        db_media.width = video_metadata.width
-        db_media.height = video_metadata.height
-        db_media.frame_count = video_metadata.frame_count
-        db_media.fps = video_metadata.fps
-
-        return Media.model_validate(repo.save(db_media))
-
     def generate_media_thumbnail(self, project: Project, media_id: UUID) -> Image.Image:
         """Regenerate a media thumbnail by its ID"""
         media = self.get_media_by_id(project_id=project.id, media_id=media_id)
@@ -250,8 +238,6 @@ class MediaService(BaseSessionManagedService):
         if media.type == MediaType.IMAGE:
             return MediaService.generate_image_thumbnail(binary_path)
         if media.type == MediaType.VIDEO:
-            if media.frame_count is None or media.fps is None:
-                media = self._update_video_metadata(project=project, media_id=media_id)
             return MediaService.generate_video_thumbnail(
                 binary_path=binary_path,
                 time=(media.frame_count / media.fps) // 2,  # pyrefly: ignore

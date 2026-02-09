@@ -45,11 +45,11 @@ def fxt_video_media():
         project_id=uuid4(),
         name="test_video",
         format=VideoFormat.MP4,
-        width=None,
-        height=None,
+        width=1024,
+        height=768,
         size=2048,
-        fps=None,
-        frame_count=None,
+        fps=25,
+        frame_count=1000,
         source_id=uuid4(),
     )
 
@@ -146,14 +146,14 @@ class TestMediaEndpoints:
         assert response.json() == {
             "type": "video",
             "format": "mp4",
-            "height": None,
+            "height": 768,
             "id": str(fxt_video_media.id),
             "name": "test_video",
             "size": 2048,
             "source_id": str(fxt_video_media.source_id),
-            "width": None,
-            "fps": None,
-            "frame_count": None,
+            "width": 1024,
+            "fps": 25.0,
+            "frame_count": 1000,
         }
         fxt_media_service.create_video.assert_called_once_with(
             project=fxt_get_project,
@@ -161,11 +161,7 @@ class TestMediaEndpoints:
             name="test_file",
             format="mp4",
         )
-        fxt_dataset_service.create_dataset_item.assert_called_once_with(
-            project=fxt_get_project,
-            media=fxt_video_media,
-            user_reviewed=False,
-        )
+        fxt_dataset_service.create_dataset_item.assert_not_called()
 
     def test_list_media(self, fxt_get_project, fxt_image_media, fxt_video_media, fxt_media_service, fxt_client):
         fxt_media_service.count_media.return_value = 2

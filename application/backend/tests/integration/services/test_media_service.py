@@ -1,9 +1,9 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-import io
 import os.path
 import shutil
 import subprocess
+import tempfile
 from collections.abc import Callable
 from datetime import datetime
 from io import BytesIO
@@ -116,7 +116,16 @@ def fxt_project_with_media(fxt_project_with_pipeline, db_session) -> tuple[Proje
         {"type": "image", "name": "test1", "format": "jpg", "size": 1024, "width": 1024, "height": 768},
         {"type": "image", "name": "test2", "format": "jpg", "size": 1024, "width": 1024, "height": 768},
         {"type": "image", "name": "test3", "format": "jpg", "size": 1024, "width": 1024, "height": 768},
-        {"type": "video", "name": "test4", "format": "avi", "size": 1024},
+        {
+            "type": "video",
+            "name": "test4",
+            "format": "avi",
+            "size": 1024,
+            "width": 1024,
+            "height": 768,
+            "fps": 25.0,
+            "frame_count": 100,
+        },
     ]
 
     db_media_list = []
@@ -515,6 +524,8 @@ class TestMediaServiceIntegration:
     def test_create_video(
         self,
         tmp_path: Path,
+        fxt_projects_dir: Path,
+        fxt_video_data: Callable[[Path], None],
         fxt_media_service: MediaService,
         fxt_project_with_pipeline: tuple[Project, Pipeline],
         db_session: Session,
@@ -522,18 +533,19 @@ class TestMediaServiceIntegration:
         use_pipeline_source: bool,
     ) -> None:
         """Test creating a video."""
-
-        data = io.BytesIO(b"213412341234")
-
         project, pipeline = fxt_project_with_pipeline
 
-        created_media = fxt_media_service.create_video(
-            project=project,
-            name="test",
-            format=format,
-            data=data,
-            source_id=pipeline.source_id if use_pipeline_source else None,
-        )
+        # Generate video
+        with tempfile.NamedTemporaryFile(suffix=".mp4", delete=True) as tmp_file:
+            fxt_video_data(Path(tmp_file.name))
+            with open(tmp_file.name, mode="rb") as data:
+                created_media = fxt_media_service.create_video(
+                    project=project,
+                    name="test",
+                    format=format,
+                    data=data,
+                    source_id=pipeline.source_id if use_pipeline_source else None,
+                )
 
         media = db_session.get(MediaDB, str(created_media.id))
         assert media is not None
@@ -543,8 +555,8 @@ class TestMediaServiceIntegration:
             and media.type == "video"
             and media.name == "test"
             and media.format == format
-            and media.width is None  # Do not calculate width on video upload
-            and media.height is None  # Do not calculate height on video upload
+            and media.width == 640
+            and media.height == 480
         )
         if use_pipeline_source:
             assert media.source_id == str(pipeline.source_id)

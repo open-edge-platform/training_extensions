@@ -58,8 +58,8 @@ class Media(BaseEntity):
     project_id: UUID
     name: str
     format: MediaFormat
-    width: int | None
-    height: int | None
+    width: int
+    height: int
     size: int
     fps: float | None
     frame_count: int | None

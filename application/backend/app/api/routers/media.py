@@ -65,6 +65,11 @@ def add_media(
                 name=name,
                 format=format,
             )
+            dataset_service.create_dataset_item(
+                project=project,
+                media=media,
+                user_reviewed=False,
+            )
         else:
             media = media_service.create_video(
                 project=project,
@@ -72,11 +77,6 @@ def add_media(
                 name=name,
                 format=format,
             )
-        dataset_service.create_dataset_item(
-            project=project,
-            media=media,
-            user_reviewed=False,
-        )
         return MediaView.model_validate(media, from_attributes=True)
     except InvalidImageError:
         raise HTTPException(

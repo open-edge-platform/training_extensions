@@ -218,13 +218,13 @@ def convert_classification_dataset(
     def _convert_sample(
         dataset_item: DatasetItem, media: Media, image_path: str, project_labels_ids: list[UUID]
     ) -> ClassificationSample | None:
-        if dataset_item.annotation_data is None or media.width is None or media.height is None:
+        if dataset_item.annotation_data is None:
             return None
         try:
             annotation = dataset_item.annotation_data[0]  # classification -> only one shape (annotation)
             return ClassificationSample(
                 image=image_path,
-                image_info=ImageInfo(width=media.width, height=media.height),
+                image_info=ImageInfo(width=media.width, height=media.height),  # pyrefly: ignore[bad-argument-type]
                 label=project_labels_ids.index(annotation.labels[0].id),  # multiclass -> only one label
                 confidence=annotation.confidences[0] if annotation.confidences else None,
                 subset=convert_to_dm_subset(dataset_item.subset),
@@ -262,7 +262,7 @@ def convert_multilabel_classification_dataset(
     def _convert_sample(
         dataset_item: DatasetItem, media: Media, image_path: str, project_labels_ids: list[UUID]
     ) -> MultilabelClassificationSample | None:
-        if dataset_item.annotation_data is None or media.width is None or media.height is None:
+        if dataset_item.annotation_data is None:
             return None
         try:
             annotation = dataset_item.annotation_data[0]  # classification -> only one shape (annotation)
@@ -272,7 +272,7 @@ def convert_multilabel_classification_dataset(
             return None
         return MultilabelClassificationSample(
             image=image_path,
-            image_info=ImageInfo(width=media.width, height=media.height),
+            image_info=ImageInfo(width=media.width, height=media.height),  # pyrefly: ignore[bad-argument-type]
             label=np.array(labels_indexes),
             confidence=np.array(annotation.confidences) if annotation.confidences else None,
             subset=convert_to_dm_subset(dataset_item.subset),
@@ -307,7 +307,7 @@ def convert_detection_dataset(
     def _convert_sample(
         dataset_item: DatasetItem, media: Media, image_path: str, project_labels_ids: list[UUID]
     ) -> DetectionSample | None:
-        if dataset_item.annotation_data is None or media.width is None or media.height is None:
+        if dataset_item.annotation_data is None:
             return None
         coords = [
             convert_rectangle(annotation.shape)
@@ -343,7 +343,7 @@ def convert_detection_dataset(
         )
         return DetectionSample(
             image=image_path,
-            image_info=ImageInfo(width=media.width, height=media.height),
+            image_info=ImageInfo(width=media.width, height=media.height),  # pyrefly: ignore[bad-argument-type]
             bboxes=np.array(coords),
             label=np.array(labels_indexes),
             confidence=np.array(confidences) if confidences else None,
@@ -379,7 +379,7 @@ def convert_instance_segmentation_dataset(
     def _convert_sample(
         dataset_item: DatasetItem, media: Media, image_path: str, project_labels_ids: list[UUID]
     ) -> InstanceSegmentationSample | None:
-        if dataset_item.annotation_data is None or media.width is None or media.height is None:
+        if dataset_item.annotation_data is None:
             return None
         polygons = [
             convert_polygon(annotation.shape)
@@ -422,7 +422,7 @@ def convert_instance_segmentation_dataset(
         polygons_np[:] = [np.asarray(p, dtype=np.float32) for p in polygons]
         return InstanceSegmentationSample(
             image=image_path,
-            image_info=ImageInfo(width=media.width, height=media.height),
+            image_info=ImageInfo(width=media.width, height=media.height),  # pyrefly: ignore[bad-argument-type]
             polygons=polygons_np,
             label=np.array(labels_indexes),
             confidence=np.array(confidences) if confidences else None,

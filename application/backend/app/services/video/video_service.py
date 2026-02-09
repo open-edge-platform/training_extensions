@@ -4,14 +4,14 @@ from pathlib import Path
 
 import cv2
 from loguru import logger
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class VideoMetadata(BaseModel):
-    width: int
-    height: int
-    frame_count: int
-    fps: float
+    width: int = Field(..., description="Video width", ge=0)
+    height: int = Field(..., description="Video height", ge=0)
+    frame_count: int = Field(..., description="Video frames number", ge=0)
+    fps: float = Field(..., description="Video frames per second", ge=0)
 
 
 def get_video_metadata(video_path: Path) -> VideoMetadata:
