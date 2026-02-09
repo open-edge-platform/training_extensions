@@ -57,9 +57,9 @@ export const Labels = ({ isClassification = false, isMultiLabel = false }: Label
         }
 
         const emptyLabel = labels.find((label) => label.id === EMPTY_LABEL_ID);
-        const limited = editableLabels.slice(0, MAX_VISIBLE_LABELS);
+        const visible = editableLabels.slice(0, MAX_VISIBLE_LABELS);
 
-        return emptyLabel ? [...limited, emptyLabel] : limited;
+        return emptyLabel ? [...visible, emptyLabel] : visible;
     }, [labels, editableLabels, hasPinnedLabels, isPinned]);
 
     const hiddenLabelsCount = useMemo(() => {
