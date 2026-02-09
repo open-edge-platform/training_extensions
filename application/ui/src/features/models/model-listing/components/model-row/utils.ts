@@ -12,19 +12,21 @@ export const getTestingMetric = (model: Model): { name: string; value: number } 
     }
 };
 
-export const getFirstAvailableTestingMetric = (models: Model[] | undefined): { name: string; value: number } | null => {
+export const getFirstAvailableTestingMetric = (
+    models: Model[] | undefined
+): { name: string; value: number } | undefined => {
     // Should never happen, but just in case
     if (models === undefined) {
-        return null;
+        return undefined;
     }
 
     for (const model of models) {
-        const modelPerformanceEntity = getTestingMetric(model);
+        const testingMetric = getTestingMetric(model);
 
-        if (modelPerformanceEntity !== undefined) {
-            return modelPerformanceEntity;
+        if (testingMetric !== undefined) {
+            return testingMetric;
         }
     }
 
-    return null;
+    return undefined;
 };
