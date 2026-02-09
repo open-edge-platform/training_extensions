@@ -3,7 +3,6 @@
 
 import { getMockedDatasetRevision } from 'mocks/mock-dataset-revision';
 import { getMockedExtendedModel, getMockedModel } from 'mocks/mock-model';
-import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 
 import { expect, http, test } from '../fixtures';
@@ -56,126 +55,9 @@ const mockedDatasetRevision = getMockedDatasetRevision({
 
 const mockedExtendedModel = getMockedExtendedModel(mockedModel);
 
-test.describe('Model Details - Model Variants', () => {
+test.describe('Model Details', () => {
     test.beforeEach(({ network }) => {
         network.use(
-            http.get('/api/projects/{project_id}', () => {
-                return HttpResponse.json(getMockedProject({ id: 'id-1' }));
-            }),
-            http.get('/api/projects/{project_id}/models', () => {
-                return HttpResponse.json([mockedModel]);
-            }),
-            http.get('/api/projects/{project_id}/models/{model_id}', ({ params }) => {
-                if (params.model_id === 'model-1') {
-                    return HttpResponse.json(mockedExtendedModel);
-                }
-
-                return new HttpResponse(null, { status: 404 });
-            }),
-            http.get('/api/projects/{project_id}/dataset_revisions', () => {
-                return HttpResponse.json([mockedDatasetRevision]);
-            }),
-            http.get('/api/projects/{project_id}/dataset_revisions/{dataset_revision_id}/items', () => {
-                return HttpResponse.json({
-                    items: [],
-                    pagination: { offset: 0, limit: 20, count: 0, total: 100 },
-                });
-            }),
-            http.get('/api/projects/{project_id}/models/{model_id}/binary', () => {
-                return HttpResponse.arrayBuffer(new ArrayBuffer(1024), {
-                    headers: {
-                        'content-type': 'application/zip',
-                        'content-disposition': 'attachment; filename="model.zip"',
-                    },
-                });
-            })
-        );
-    });
-
-    test.beforeEach(async ({ modelsPage }) => {
-        await modelsPage.goto();
-        await modelsPage.expandModel('YOLOX Model v1');
-    });
-
-    test('shows no variants message when model has no variants', async ({ network, page, modelsPage }) => {
-        const modelWithoutVariants = getMockedModel({
-            id: 'model-1',
-            name: 'YOLOX Model v1',
-            variants: [],
-        });
-
-        network.use(
-            http.get('/api/projects/{project_id}/models', () => {
-                return HttpResponse.json([modelWithoutVariants]);
-            }),
-            http.get('/api/projects/{project_id}/models/{model_id}', ({ params }) => {
-                if (params.model_id === 'model-1') {
-                    return HttpResponse.json(getMockedExtendedModel(modelWithoutVariants));
-                }
-
-                return new HttpResponse(null, { status: 404 });
-            })
-        );
-
-        await modelsPage.goto();
-        await modelsPage.expandModel('YOLOX Model v1');
-        await page.getByRole('tab', { name: 'Model variants' }).click();
-
-        await expect(page.getByText('There are no model variants available.')).toBeVisible();
-    });
-
-    test('displays model variants in separate tabs for each format', async ({ page }) => {
-        await page.getByRole('tab', { name: 'Model variants' }).click();
-
-        const variantsTabList = page.getByRole('tablist', { name: 'Model variants' });
-        await expect(variantsTabList).toBeVisible();
-
-        const formats = ['openvino', 'pytorch', 'onnx'];
-
-        for (const format of formats) {
-            await page.getByLabel(`${format} tab`).click();
-
-            const table = page.getByLabel(`Model variants for ${mockedModel.id}`);
-            await expect(table).toBeVisible();
-        }
-    });
-
-    test('can download model variant', async ({ page, network }) => {
-        let downloadFormat: string | undefined;
-
-        network.use(
-            http.get('/api/projects/{project_id}/models/{model_id}/binary', ({ request }) => {
-                const url = new URL(request.url);
-                downloadFormat = url.searchParams.get('format') ?? undefined;
-
-                return HttpResponse.arrayBuffer(new ArrayBuffer(1024), {
-                    headers: {
-                        'content-type': 'application/zip',
-                        'content-disposition': `attachment; filename="model-model-1-${downloadFormat}.zip"`,
-                    },
-                });
-            })
-        );
-
-        await page.getByRole('tab', { name: 'Model variants' }).click();
-
-        const downloadButton = page.getByLabel(/Download.*model/i).first();
-        await expect(downloadButton).toBeEnabled();
-
-        await downloadButton.click();
-
-        await page.waitForTimeout(500);
-
-        expect(['openvino', 'pytorch', 'onnx']).toContain(downloadFormat);
-    });
-});
-
-test.describe('Model Details - Training Datasets', () => {
-    test.beforeEach(({ network }) => {
-        network.use(
-            http.get('/api/projects/{project_id}', () => {
-                return HttpResponse.json(getMockedProject({ id: 'id-1' }));
-            }),
             http.get('/api/projects/{project_id}/models', () => {
                 return HttpResponse.json([mockedModel]);
             }),
@@ -199,75 +81,165 @@ test.describe('Model Details - Training Datasets', () => {
                     testing: 10,
                 };
                 const count = subset && subset in countsBySubset ? countsBySubset[subset] : 0;
-                const total = count; // Total for this subset is the count itself
+                const total = count;
 
                 return HttpResponse.json({
                     items: [],
                     pagination: { offset: 0, limit: 20, count, total },
                 });
+            }),
+            http.get('/api/projects/{project_id}/models/{model_id}/binary', () => {
+                return HttpResponse.arrayBuffer(new ArrayBuffer(1024), {
+                    headers: {
+                        'content-type': 'application/zip',
+                        'content-disposition': 'attachment; filename="model.zip"',
+                    },
+                });
             })
         );
     });
 
-    test.beforeEach(async ({ modelsPage }) => {
-        await modelsPage.goto();
-        await modelsPage.expandModel('YOLOX Model v1');
-        await modelsPage.clickTrainingDatasetsTab();
-    });
+    test.describe('Model Variants', () => {
+        test('shows no variants message when model has no variants', async ({ network, page, modelsPage }) => {
+            const modelWithoutVariants = getMockedModel({
+                id: 'model-1',
+                name: 'YOLOX Model v1',
+                variants: [],
+            });
 
-    test('shows dataset not found message when dataset revision is missing', async ({ network, page, modelsPage }) => {
-        network.use(
-            http.get('/api/projects/{project_id}/dataset_revisions', () => {
-                return HttpResponse.json([]);
-            })
-        );
+            network.use(
+                http.get('/api/projects/{project_id}/models', () => {
+                    return HttpResponse.json([modelWithoutVariants]);
+                }),
+                http.get('/api/projects/{project_id}/models/{model_id}', ({ params }) => {
+                    if (params.model_id === 'model-1') {
+                        return HttpResponse.json(getMockedExtendedModel(modelWithoutVariants));
+                    }
 
-        await page.reload();
-        await modelsPage.expandModel('YOLOX Model v1');
-        await modelsPage.clickTrainingDatasetsTab();
+                    return new HttpResponse(null, { status: 404 });
+                })
+            );
 
-        await expect(page.getByText('No dataset revision found for this model')).toBeVisible();
-    });
+            await modelsPage.goto();
+            await modelsPage.expandModel('YOLOX Model v1');
+            await page.getByRole('tab', { name: 'Model variants' }).click();
 
-    test('shows deleted dataset files message when dataset files are deleted', async ({
-        network,
-        page,
-        modelsPage,
-    }) => {
-        const deletedDatasetRevision = getMockedDatasetRevision({
-            id: 'dataset-1',
-            name: 'Dataset Revision 1',
-            files_deleted: true,
+            await expect(page.getByText('There are no model variants available.')).toBeVisible();
         });
 
-        network.use(
-            http.get('/api/projects/{project_id}/dataset_revisions', () => {
-                return HttpResponse.json([deletedDatasetRevision]);
-            })
-        );
+        test('displays model variants in separate tabs for each format', async ({ page, modelsPage }) => {
+            await modelsPage.goto();
+            await modelsPage.expandModel('YOLOX Model v1');
+            await page.getByRole('tab', { name: 'Model variants' }).click();
 
-        await page.reload();
-        await modelsPage.expandModel('YOLOX Model v1');
-        await modelsPage.clickTrainingDatasetsTab();
+            const variantsTabList = page.getByRole('tablist', { name: 'Model variants' });
+            await expect(variantsTabList).toBeVisible();
 
-        await expect(page.getByText('The files for this dataset revision have been deleted.')).toBeVisible();
+            const formats = ['openvino', 'pytorch', 'onnx'];
+
+            for (const format of formats) {
+                await page.getByLabel(`${format} tab`).click();
+
+                const table = page.getByLabel(`Model variants for ${mockedModel.id}`);
+                await expect(table).toBeVisible();
+            }
+        });
+
+        test('can download model variant', async ({ page, network, modelsPage }) => {
+            let downloadFormat: string | undefined;
+
+            network.use(
+                http.get('/api/projects/{project_id}/models/{model_id}/binary', ({ request }) => {
+                    const url = new URL(request.url);
+                    downloadFormat = url.searchParams.get('format') ?? undefined;
+
+                    if (!downloadFormat) {
+                        return new HttpResponse(null, { status: 400 });
+                    }
+
+                    return HttpResponse.arrayBuffer(new ArrayBuffer(1024), {
+                        headers: {
+                            'content-type': 'application/zip',
+                            'content-disposition': `attachment; filename="model-model-1-${downloadFormat}.zip"`,
+                        },
+                    });
+                })
+            );
+
+            await modelsPage.goto();
+            await modelsPage.expandModel('YOLOX Model v1');
+            await page.getByRole('tab', { name: 'Model variants' }).click();
+
+            const downloadButton = page.getByLabel(/Download.*model/i).first();
+            await expect(downloadButton).toBeEnabled();
+
+            await downloadButton.click();
+
+            await expect.poll(() => downloadFormat).not.toBeUndefined();
+
+            expect(['openvino', 'pytorch', 'onnx']).toContain(downloadFormat);
+        });
     });
 
-    test('shows correct subset counts and percentages', async ({ page }) => {
-        // Training: 70/100 (70%)
-        // Validation: 20/100 (20%)
-        // Testing: 10/100 (10%)
+    test.describe('Training Datasets', () => {
+        test('shows dataset not found message when dataset revision is missing', async ({
+            network,
+            page,
+            modelsPage,
+        }) => {
+            network.use(
+                http.get('/api/projects/{project_id}/dataset_revisions', () => {
+                    return HttpResponse.json([]);
+                })
+            );
 
-        const trainingHeading = page.getByRole('heading', { name: /Training/ });
-        const validationHeading = page.getByRole('heading', { name: /Validation/ });
-        const testingHeading = page.getByRole('heading', { name: /Testing/ });
+            await modelsPage.goto();
+            await modelsPage.expandModel('YOLOX Model v1');
+            await modelsPage.clickTrainingDatasetsTab();
 
-        await expect(trainingHeading).toBeVisible();
-        await expect(validationHeading).toBeVisible();
-        await expect(testingHeading).toBeVisible();
+            await expect(page.getByText('No dataset revision found for this model')).toBeVisible();
+        });
 
-        await expect(page.getByText('(70)')).toBeVisible();
-        await expect(page.getByText('(20)')).toBeVisible();
-        await expect(page.getByText('(10)')).toBeVisible();
+        test('shows deleted dataset files message when dataset files are deleted', async ({
+            network,
+            page,
+            modelsPage,
+        }) => {
+            const deletedDatasetRevision = getMockedDatasetRevision({
+                id: 'dataset-1',
+                name: 'Dataset Revision 1',
+                files_deleted: true,
+            });
+
+            network.use(
+                http.get('/api/projects/{project_id}/dataset_revisions', () => {
+                    return HttpResponse.json([deletedDatasetRevision]);
+                })
+            );
+
+            await modelsPage.goto();
+            await modelsPage.expandModel('YOLOX Model v1');
+            await modelsPage.clickTrainingDatasetsTab();
+
+            await expect(page.getByText('The files for this dataset revision have been deleted.')).toBeVisible();
+        });
+
+        test('shows correct subset counts and percentages', async ({ page, modelsPage }) => {
+            await modelsPage.goto();
+            await modelsPage.expandModel('YOLOX Model v1');
+            await modelsPage.clickTrainingDatasetsTab();
+
+            const trainingHeading = page.getByRole('heading', { name: /Training/ });
+            const validationHeading = page.getByRole('heading', { name: /Validation/ });
+            const testingHeading = page.getByRole('heading', { name: /Testing/ });
+
+            await expect(trainingHeading).toBeVisible();
+            await expect(validationHeading).toBeVisible();
+            await expect(testingHeading).toBeVisible();
+
+            await expect(page.getByText('(70)')).toBeVisible();
+            await expect(page.getByText('(20)')).toBeVisible();
+            await expect(page.getByText('(10)')).toBeVisible();
+        });
     });
 });
