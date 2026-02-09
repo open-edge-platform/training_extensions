@@ -10,6 +10,8 @@ export const getTestingMetric = (model: Model): { name: string; value: number } 
     if (primaryMetric !== undefined) {
         return { name: primaryMetric.name, value: Math.round(primaryMetric.value * 100) };
     }
+
+    return undefined;
 };
 
 export const getFirstAvailableTestingMetric = (
