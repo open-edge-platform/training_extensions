@@ -4,7 +4,7 @@
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
 
 import { $api } from '../api/client';
-import { DatasetSubset } from '../constants/shared-types';
+import { DatasetRevisionItem, DatasetSubset } from '../constants/shared-types';
 
 const DATASET_ITEMS_LIMIT = 20;
 
@@ -47,7 +47,8 @@ export const useGetDatasetRevisionItems = ({ datasetRevisionId, subset }: UseGet
         }
     );
 
-    const items = data?.pages.flatMap((page) => page.items) ?? [];
+    // Note: OpenAPI spec incorrectly types this as DatasetItem[], but the API actually returns DatasetRevisionItem[]
+    const items: DatasetRevisionItem[] = (data?.pages.flatMap((page) => page.items) ?? []) as DatasetRevisionItem[];
     const totalCount = data?.pages[0]?.pagination?.total ?? 0;
 
     return { items, fetchNextPage, hasNextPage, isFetchingNextPage, isPending, totalCount };

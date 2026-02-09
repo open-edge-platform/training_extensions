@@ -16,7 +16,7 @@ import type { DatasetRevisionItem, Media } from '../constants/shared-types';
  * NOTE: In the future the whole media/datasetItem/datasetRevisionItem will hopefully be
  * merged and we wont need multiple endpoints to get the full dataset of the item.
  */
-export const datasetRevisionItemToMedia = (item: Partial<DatasetRevisionItem> & { id: string }): Media => {
+export const datasetRevisionItemToMedia = (item: DatasetRevisionItem): Media => {
     return {
         id: item.id,
         name: item.id, // Use ID as name since revision items don't have names

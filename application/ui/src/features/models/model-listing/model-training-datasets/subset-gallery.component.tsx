@@ -13,7 +13,7 @@ import type { DatasetRevisionItem } from '../../../../constants/shared-types';
 import { AnnotatorProviders } from '../../../../features/dataset/media-preview/annotator-providers.component';
 import { useAnnotationsQuery } from '../../../../features/dataset/media-preview/api/use-annotations-query';
 import { ReadOnlyAnnotator } from '../../../../features/dataset/media-preview/read-only-annotator.component';
-import { getInitialPredictions } from '../../../../features/dataset/media-preview/utils';
+import { getInitialAnnotations } from '../../../../features/dataset/media-preview/utils';
 import { datasetRevisionItemToMedia } from '../../../../shared/dataset-revision-utils';
 import { getDatasetRevisionThumbnailUrl } from '../../../../shared/media-url.utils';
 
@@ -25,7 +25,7 @@ const layoutOptions = {
 };
 
 type SubsetGalleryProps = {
-    items: (Partial<DatasetRevisionItem> & { id: string })[];
+    items: DatasetRevisionItem[];
     datasetRevisionId: string;
     fetchNextPage: () => void;
     hasNextPage: boolean;
@@ -34,7 +34,7 @@ type SubsetGalleryProps = {
 };
 
 type SubsetMediaDialogProps = {
-    item: Partial<DatasetRevisionItem> & { id: string };
+    item: DatasetRevisionItem;
     onClose: () => void;
 };
 
@@ -44,6 +44,7 @@ const SubsetMediaDialog = ({ item, onClose }: SubsetMediaDialogProps) => {
     const annotationsDTO = annotationsData?.annotations ?? [];
     const isUserReviewed = annotationsData?.user_reviewed ?? false;
     const mediaItem = datasetRevisionItemToMedia(item);
+    const mode = 'annotation';
 
     return (
         <Dialog>
@@ -59,10 +60,10 @@ const SubsetMediaDialog = ({ item, onClose }: SubsetMediaDialogProps) => {
                     <AnnotatorProviders
                         key={mediaItem.id}
                         mediaItem={mediaItem}
-                        initialAnnotationsDTO={[]}
-                        initialPredictionsDTO={getInitialPredictions('prediction', isUserReviewed, annotationsDTO)}
+                        initialAnnotationsDTO={getInitialAnnotations(mode, isUserReviewed, annotationsDTO)}
+                        initialPredictionsDTO={[]}
                         isUserReviewed={isUserReviewed}
-                        mode={'prediction'}
+                        mode={mode}
                     >
                         <ReadOnlyAnnotator mediaItem={mediaItem} isUserReviewed={isUserReviewed} onClose={onClose} />
                     </AnnotatorProviders>
@@ -81,7 +82,7 @@ export const SubsetGallery = ({
     fetchNextPage,
 }: SubsetGalleryProps) => {
     const projectId = useProjectIdentifier();
-    const [selectedItem, setSelectedItem] = useState<(Partial<DatasetRevisionItem> & { id: string }) | null>(null);
+    const [selectedItem, setSelectedItem] = useState<DatasetRevisionItem | null>(null);
 
     if (isPending) {
         return (
