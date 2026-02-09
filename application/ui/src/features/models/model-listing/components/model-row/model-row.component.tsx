@@ -91,7 +91,9 @@ export const ModelRow = ({
                 <ArchitectureColumn architecture={modelArchitecture} />
             )}
 
-            <Text UNSAFE_className={styles.smallText}>{totalSize > 0 ? formatModelSize(totalSize) : '-'}</Text>
+            <Text UNSAFE_className={styles.smallText} data-testid={'model size'}>
+                {totalSize > 0 ? formatModelSize(totalSize) : '-'}
+            </Text>
 
             {metricValue === undefined ? <Text>-</Text> : <AccuracyIndicator accuracy={metricValue} />}
         </Grid>
