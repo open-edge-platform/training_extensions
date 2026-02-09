@@ -14,8 +14,8 @@ import { AnnotatorProviders } from '../../../../features/dataset/media-preview/a
 import { useAnnotationsQuery } from '../../../../features/dataset/media-preview/api/use-annotations-query';
 import { ReadOnlyAnnotator } from '../../../../features/dataset/media-preview/read-only-annotator.component';
 import { getInitialAnnotations } from '../../../../features/dataset/media-preview/utils';
-import { datasetRevisionItemToMedia } from '../../../../shared/dataset-revision-utils';
 import { getDatasetRevisionThumbnailUrl } from '../../../../shared/media-url.utils';
+import { datasetRevisionItemToMedia } from './utils';
 
 const layoutOptions = {
     minSpace: new Size(4, 4),
