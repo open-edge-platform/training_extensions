@@ -289,7 +289,7 @@ def fxt_dataset_revision_with_parquet(
     df = pl.DataFrame(
         {
             "id": [str(item_id)],
-            "image": [f"images/{image_filename}"],
+            "image": [str(image_filename)],
             "image_info": [{"width": 1024, "height": 768}],
             "subset": ["TRAINING"],
         }
