@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { getMockedDatasetRevision } from 'mocks/mock-dataset-revision';
-import { getMockedExtendedModel, getMockedModel, getMockedModelArchitecture } from 'mocks/mock-model';
+import { getMockedExtendedModel, getMockedModel } from 'mocks/mock-model';
 import { getMockedProject } from 'mocks/mock-project';
 import { HttpResponse } from 'msw';
 
@@ -48,12 +48,6 @@ const mockedModels = [
     }),
 ];
 
-const mockedModelArchitectures = [
-    getMockedModelArchitecture({ id: 'Object_Detection_SSD', name: 'Object_Detection_SSD' }),
-    getMockedModelArchitecture({ id: 'Object_Detection_YOLOX_X', name: 'Object_Detection_YOLOX_X' }),
-    getMockedModelArchitecture({ id: 'Object_Detection_YOLOX_XS', name: 'Object_Detection_YOLOX_XS' }),
-];
-
 test.describe('Models', () => {
     test.beforeEach(({ network }) => {
         network.use(
@@ -90,16 +84,6 @@ test.describe('Models', () => {
             }),
             http.delete('/api/projects/{project_id}/models/{model_id}', () => {
                 return HttpResponse.json(null, { status: 204 });
-            }),
-            http.get('/api/model_architectures', () => {
-                return HttpResponse.json({
-                    model_architectures: mockedModelArchitectures,
-                    top_picks: {
-                        balance: mockedModelArchitectures[0].id,
-                        speed: mockedModelArchitectures[1].id,
-                        accuracy: mockedModelArchitectures[2].id,
-                    },
-                });
             })
         );
     });
@@ -319,7 +303,7 @@ test.describe('Models', () => {
         await expect(modelsPage.getDatasetHeaderByName('Renamed Dataset')).toBeVisible();
     });
 
-    test('handles dataset revision deletion correctly', async ({ modelsPage, network, page }) => {
+    test('can delete a dataset revision', async ({ modelsPage, network, page }) => {
         await modelsPage.goto();
 
         await expect(modelsPage.getThreeSectionRange('dataset-1')).toBeVisible();
