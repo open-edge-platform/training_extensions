@@ -30,7 +30,7 @@ class TestStagedDatasetServiceIntegration:
     async def test_upload_integration_writes_file_and_returns_metadata(
         self, tmp_path: Path, fxt_staged_dataset_service: StagedDatasetService
     ):
-        filename = "my_dataset_coco.zip"
+        filename = "dataset.zip"
         chunks = [b"hello ", b"world", b"!", b""]
         chunks_iter = iter(chunks)
 
@@ -42,10 +42,11 @@ class TestStagedDatasetServiceIntegration:
 
         assert staged_dataset.id is not None
         assert staged_dataset.compressed is True
-        assert staged_dataset.format == DatasetFormat.COCO
+        assert staged_dataset.format == DatasetFormat.UNKNOWN
         assert staged_dataset.size == sum(len(c) for c in chunks[:-1])
 
         stored_path = Path(staged_dataset.filename)
+        assert stored_path.name == "dataset.zip"
         assert stored_path.is_file()
         assert stored_path.parent.parent == tmp_path
         assert stored_path.read_bytes() == b"hello world!"

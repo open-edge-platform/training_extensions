@@ -67,7 +67,7 @@ class StagedDatasetService:
         return StagedDataset(
             compressed=True,
             filename=str(target_path),
-            format=_infer_format_from_filename(filename),
+            format=DatasetFormat.UNKNOWN,
             id=dataset_id,
             size=size,
         )

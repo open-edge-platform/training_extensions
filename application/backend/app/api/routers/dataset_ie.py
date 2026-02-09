@@ -29,7 +29,7 @@ async def upload_archive(
     """Upload dataset archive to the staging area"""
     try:
         staged_dataset = await staged_datasets_service.upload(
-            filename=file.filename or "dataset.zip",
+            filename="dataset.zip",
             chunk_reader=lambda: file.read(1024 * 1024),
         )
         return StagedDatasetView.model_validate(staged_dataset, from_attributes=True)

@@ -43,7 +43,7 @@ class StagedDatasetView(BaseRequiredIDModel):
         "json_schema_extra": {
             "example": {
                 "id": "63f983fe-f2c7-4054-a0b1-6aab8a355a12",
-                "format": "datumaro_v2",
+                "format": "geti",
                 "compressed": False,
                 "ready_for_export": False,
                 "ready_for_import": True,
