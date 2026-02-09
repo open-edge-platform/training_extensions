@@ -8,6 +8,7 @@ from unittest.mock import Mock
 from uuid import UUID, uuid4
 
 import pytest
+from httpx import AsyncClient
 from starlette import status
 
 from app.api.dependencies import get_data_dir, get_job_dir, get_job_queue
@@ -18,6 +19,15 @@ from app.core.jobs.models import Job, JobStatus, JobType, TrainingJob, TrainingJ
 from app.main import app
 from app.models import Project, Task, TaskType
 from app.models.system import DeviceInfo, DeviceType
+
+
+async def stream_test(client: AsyncClient, job_id: UUID, path: str = "logs") -> list[str]:
+    events = []
+    async with client.stream("GET", f"/api/jobs/{job_id}/{path}") as response:
+        async for line in response.aiter_lines():
+            if line.startswith("data: "):
+                events.append(line)
+    return events
 
 
 @pytest.fixture
@@ -177,15 +187,7 @@ class TestJobEndpoints:
         # Return same job twice (no change), then changed job, then done
         fxt_jobs_queue.get.side_effect = [job_v1, job_v1, job_v2, job_done, None]
 
-        async def stream_test():
-            events = []
-            async with fxt_async_client.stream("GET", f"/api/jobs/{job_id}/status") as response:
-                async for line in response.aiter_lines():
-                    if line.startswith("data: "):
-                        events.append(line)
-            return events
-
-        events = await asyncio.wait_for(stream_test(), 3)
+        events = await asyncio.wait_for(stream_test(fxt_async_client, job_id, "status"), 3)
         # Should get at least 2 events (initial and one change)
         assert len(events) == 3
         assert '"progress":25.0' in events[0]
@@ -208,16 +210,7 @@ class TestJobEndpoints:
 
         app.dependency_overrides[get_job_dir] = lambda: job_dir
 
-        async def stream_test():
-            events = []
-            async with fxt_async_client.stream("GET", f"/api/jobs/{job_id}/logs") as response:
-                assert response.status_code == 200
-                async for line in response.aiter_lines():
-                    if line.startswith("data: "):
-                        events.append(line)
-            return events
-
-        events = await asyncio.wait_for(stream_test(), 2)
+        events = await asyncio.wait_for(stream_test(fxt_async_client, job_id), 2)
         assert len(events) == 3
         assert "Line 1" in events[0]
         assert "Line 2" in events[1]
@@ -247,12 +240,20 @@ class TestJobEndpoints:
         job = fxt_job(job_id, JobStatus.DONE)
         fxt_jobs_queue.get.return_value = job
 
+        log_file = job_dir / job.log_file
+        log_file.write_text("Line 1\nLine 2\nLine 3\n")
+
         app.dependency_overrides[get_job_dir] = lambda: job_dir
 
         response = await fxt_async_client.get(f"/api/jobs/{job_id}/logs")
 
-        assert response.status_code == status.HTTP_409_CONFLICT
-        assert "completed" in response.json()["detail"].lower()
+        assert response.status_code == status.HTTP_200_OK
+
+        events = await asyncio.wait_for(stream_test(fxt_async_client, job_id), 0.1)
+        assert len(events) == 3
+        assert "Line 1" in events[0]
+        assert "Line 2" in events[1]
+        assert "Line 3" in events[2]
 
     @pytest.mark.asyncio
     async def test_stream_job_logs_file_not_found(self, tmp_path, fxt_async_client, fxt_jobs_queue, fxt_job):

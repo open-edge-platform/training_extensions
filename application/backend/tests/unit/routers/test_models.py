@@ -316,3 +316,51 @@ class TestModelEndpoints:
         fxt_model_service.rename_model.assert_called_once_with(
             project_id=fxt_get_project.id, model_id=model_id, model_metadata={"name": "New name"}
         )
+
+    def test_get_training_logs_success(self, fxt_get_project, fxt_model, fxt_model_service, fxt_client, tmp_path):
+        log_file = tmp_path / "training.log"
+        log_content = "Training started\nEpoch 1/10\nLoss: 0.5\n"
+        log_file.write_text(log_content)
+
+        fxt_model_service.get_logs.return_value = log_file
+
+        response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models/{fxt_model.id}/logs")
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.headers["content-type"] == "text/plain; charset=utf-8"
+        assert response.text == log_content
+        fxt_model_service.get_logs.assert_called_once_with(project_id=fxt_get_project.id, model_id=fxt_model.id)
+
+    def test_get_training_logs_not_found(self, fxt_get_project, fxt_model_service, fxt_client):
+        model_id = uuid4()
+        fxt_model_service.get_logs.side_effect = ResourceNotFoundError(ResourceType.MODEL, str(model_id))
+
+        response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models/{model_id}/logs")
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        fxt_model_service.get_logs.assert_called_once_with(project_id=fxt_get_project.id, model_id=model_id)
+
+    def test_get_training_logs_invalid_id(self, fxt_get_project, fxt_model_service, fxt_client):
+        response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models/invalid-id/logs")
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        fxt_model_service.get_logs.assert_not_called()
+
+    def test_get_training_logs_not_available(self, fxt_get_project, fxt_model, fxt_model_service, fxt_client):
+        fxt_model_service.get_logs.side_effect = ValueError(
+            "Logs are not available for models that have not started or are currently in progress of training"
+        )
+
+        response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models/{fxt_model.id}/logs")
+
+        assert response.status_code == status.HTTP_409_CONFLICT
+        fxt_model_service.get_logs.assert_called_once_with(project_id=fxt_get_project.id, model_id=fxt_model.id)
+
+    def test_get_training_logs_file_not_exists(self, fxt_get_project, fxt_model, fxt_model_service, fxt_client):
+        fxt_model_service.get_logs.return_value = None
+
+        response = fxt_client.get(f"/api/projects/{fxt_get_project.id}/models/{fxt_model.id}/logs")
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert response.json() == {"detail": "Log file not found"}
+        fxt_model_service.get_logs.assert_called_once_with(project_id=fxt_get_project.id, model_id=fxt_model.id)
