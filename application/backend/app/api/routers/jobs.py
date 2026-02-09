@@ -224,13 +224,26 @@ async def __gen_log_stream(job_id: UUID, log_path: Path, job_queue: JobQueue) ->
 
             while True:
                 j = job_queue.get(job_id)
-                if not j or j.status >= JobStatus.DONE:
+                if not j:
                     break
+
                 line = await f.readline()
-                if not line:
-                    await asyncio.sleep(0.3)
+                if line:
+                    yield ServerSentEvent(data=line.rstrip("\n"))
                     continue
-                yield ServerSentEvent(data=line.rstrip("\n"))
+
+                # No more lines available
+                if j.status >= JobStatus.DONE:
+                    # Job is done and no new lines - wait briefly to catch any final writes
+                    await asyncio.sleep(0.5)
+                    final_line = await f.readline()
+                    if final_line:
+                        yield ServerSentEvent(data=final_line.rstrip("\n"))
+                        continue
+                    break  # Job is done and no more lines, exit the loop
+
+                # Job still running, wait for more logs
+                await asyncio.sleep(0.3)
     except asyncio.CancelledError:
         raise
     except Exception as e:

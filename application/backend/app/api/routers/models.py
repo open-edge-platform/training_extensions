@@ -209,12 +209,14 @@ def delete_model(
 @router.get(
     "/{model_id}/logs",
     responses={
-        status.HTTP_204_NO_CONTENT: {
+        status.HTTP_200_OK: {
             "description": "Model configuration successfully deleted",
         },
         status.HTTP_400_BAD_REQUEST: {"description": "Invalid project or model ID"},
-        status.HTTP_404_NOT_FOUND: {"description": "Project or model not found"},
-        status.HTTP_409_CONFLICT: {"description": "Model is used by at least one pipeline"},
+        status.HTTP_404_NOT_FOUND: {"description": "Project, model or log file not found"},
+        status.HTTP_409_CONFLICT: {
+            "description": "Logs cannot be retrieved for models in not started or in-progress state"
+        },
     },
 )
 async def get_training_logs(

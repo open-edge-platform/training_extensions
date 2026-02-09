@@ -24,6 +24,7 @@ from app.models.system import DeviceInfo, DeviceType
 async def stream_test(client: AsyncClient, job_id: UUID, path: str = "logs") -> list[str]:
     events = []
     async with client.stream("GET", f"/api/jobs/{job_id}/{path}") as response:
+        assert response.status_code == 200
         async for line in response.aiter_lines():
             if line.startswith("data: "):
                 events.append(line)
@@ -162,16 +163,7 @@ class TestJobEndpoints:
         # First call returns running job, subsequent calls return done job
         fxt_jobs_queue.get.side_effect = [job_running, job_running, job_done, None]
 
-        async def stream_test():
-            events = []
-            async with fxt_async_client.stream("GET", f"/api/jobs/{job_id}/status") as response:
-                assert response.status_code == 200
-                async for line in response.aiter_lines():
-                    if line.startswith("data: "):
-                        events.append(line)
-            return events
-
-        events = await asyncio.wait_for(stream_test(), 3)
+        events = await asyncio.wait_for(stream_test(fxt_async_client, job_id, "status"), 3)
         assert len(events) == 2
         # Verify the stream contains job status updates
         assert '"status":"RUNNING"' in events[0]
@@ -249,7 +241,7 @@ class TestJobEndpoints:
 
         assert response.status_code == status.HTTP_200_OK
 
-        events = await asyncio.wait_for(stream_test(fxt_async_client, job_id), 0.1)
+        events = await asyncio.wait_for(stream_test(fxt_async_client, job_id), 1)
         assert len(events) == 3
         assert "Line 1" in events[0]
         assert "Line 2" in events[1]
