@@ -164,7 +164,7 @@ class TestMqttDispatcher:
     def test_connection_failure(self):
         """Test connection failure to invalid broker."""
         config = MqttSinkConfig(
-            sink_type="mqtt",
+            sink_type=SinkType.MQTT,
             id=uuid4(),
             name="Test MQTT Sink",
             config_data=MqttConfig(
