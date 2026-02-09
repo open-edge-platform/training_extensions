@@ -23,7 +23,7 @@ class DatasetRevisionView(BaseIDModel):
     name: str = Field(..., description="Name of the dataset revision")
     created_at: datetime = Field(..., description="Timestamp when the dataset revision was created")
     files_deleted: bool = Field(..., description="Indicates if the dataset revision files have been deleted")
-    item_counts: ItemCount = Field(..., description="Number of items in the dataset (null for deleted datasets)")
+    item_counts: ItemCount = Field(..., description="Number of items in the dataset")
 
     model_config = {
         "json_schema_extra": {
