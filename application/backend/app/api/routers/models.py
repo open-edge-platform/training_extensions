@@ -9,6 +9,7 @@ from typing import Annotated
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from fastapi.openapi.models import Example
 from fastapi.responses import StreamingResponse
+from starlette.responses import FileResponse
 
 from app.api.dependencies import get_model_service, get_project
 from app.api.schemas import ModelView, ProjectView
@@ -202,4 +203,36 @@ def delete_model(
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except ResourceInUseError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+
+
+@router.get(
+    "/{model_id}/logs",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "Model configuration successfully deleted",
+        },
+        status.HTTP_400_BAD_REQUEST: {"description": "Invalid project or model ID"},
+        status.HTTP_404_NOT_FOUND: {"description": "Project, model or log file not found"},
+        status.HTTP_409_CONFLICT: {
+            "description": "Logs cannot be retrieved for models in not started or in-progress state"
+        },
+    },
+)
+async def get_training_logs(
+    project: Annotated[ProjectView, Depends(get_project)],
+    model_id: ModelID,
+    model_service: Annotated[ModelService, Depends(get_model_service)],
+) -> FileResponse:
+    """
+    Download the training log file for a given model.
+    """
+    try:
+        log_file = model_service.get_logs(project_id=project.id, model_id=model_id)
+        if not log_file:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Log file not found")
+        return FileResponse(log_file, media_type="text/plain", filename=os.path.basename(log_file))
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except ValueError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
