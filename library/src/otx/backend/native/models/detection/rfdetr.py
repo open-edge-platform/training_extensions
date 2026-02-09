@@ -305,8 +305,14 @@ class RFDETR(DFine):
 
         return [optimizer], lr_scheduler_configs
 
+    def forward_for_tracing(self, inputs):
+        return self.model.export(inputs)
+
     def export(self, output_dir, base_name, export_format, precision=OTXPrecisionType.FP32):
         self.model.lwdetr.export()
+        if self.explain_mode:
+            msg = "Explain mode is not supported for RF-DETR model."
+            raise ValueError(msg)
         return super().export(output_dir, base_name, export_format, precision)
 
     @property
@@ -317,7 +323,7 @@ class RFDETR(DFine):
             data_input_params=self.data_input_params,
             resize_mode="standard",
             swap_rgb=False,
-            via_onnx=True,
+            via_onnx=False,
             onnx_export_configuration={
                 "input_names": ["images"],
                 "output_names": ["bboxes", "labels", "scores"],
