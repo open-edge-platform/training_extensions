@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 
 import { useLocalStorage } from 'usehooks-ts';
 
@@ -28,19 +28,16 @@ export const usePinnedLabels = (projectId: string): UsePinnedLabelsReturn => {
         [pinnedLabelIds]
     );
 
-    const togglePin = useCallback(
-        (labelId: string) => {
-            setPinnedLabelIds((prev) => {
-                if (prev.includes(labelId)) {
-                    return prev.filter((id) => id !== labelId);
-                }
-                return [...prev, labelId];
-            });
-        },
-        [setPinnedLabelIds]
-    );
+    const togglePin = (labelId: string) => {
+        setPinnedLabelIds((prev) => {
+            if (prev.includes(labelId)) {
+                return prev.filter((id) => id !== labelId);
+            }
+            return [...prev, labelId];
+        });
+    };
 
-    const hasPinnedLabels = useMemo(() => pinnedLabelIds.length > 0, [pinnedLabelIds]);
+    const hasPinnedLabels = pinnedLabelIds.length > 0;
 
     return { pinnedLabelIds, isPinned, togglePin, hasPinnedLabels };
 };
