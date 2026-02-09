@@ -17,7 +17,7 @@ import {
 } from '@geti/ui';
 import { isEmpty } from 'lodash-es';
 
-import { usePatchProject } from '../../../../hooks/api/project.hook';
+import { usePatchProject } from '../../../../../hooks/api/project.hook';
 
 interface EditProjectNameDialogProps {
     onClose: () => void;
