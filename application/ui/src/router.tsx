@@ -14,7 +14,6 @@ import { ErrorPage } from './routes/error-page/error-page';
 import { Inference } from './routes/inference/inference';
 import { Models } from './routes/models/models';
 import { CreateProject } from './routes/project/create-project';
-import { ViewProject } from './routes/project/view-project';
 import { RootLayout } from './routes/root/root';
 
 const Redirect = () => {
@@ -78,9 +77,6 @@ export const router = createBrowserRouter([
                 children: [
                     {
                         index: true,
-                        element: <ViewProject />,
-                    },
-                    {
                         path: paths.project.inference.pattern,
                         element: <Inference />,
                     },
