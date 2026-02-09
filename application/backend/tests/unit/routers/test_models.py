@@ -320,7 +320,7 @@ class TestModelEndpoints:
     def test_get_training_logs_success(self, fxt_get_project, fxt_model, fxt_model_service, fxt_client, tmp_path):
         log_file = tmp_path / "training.log"
         log_content = "Training started\nEpoch 1/10\nLoss: 0.5\n"
-        log_file.write_text(log_content)
+        log_file.write_text(log_content, newline="\n")
 
         fxt_model_service.get_logs.return_value = log_file
 
