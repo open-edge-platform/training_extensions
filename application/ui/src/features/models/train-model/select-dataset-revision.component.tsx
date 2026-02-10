@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Content, ContextualHelp, Flex, Heading, Item, Picker } from '@geti/ui';
+import { Content, ContextualHelp, Heading, Item, Picker } from '@geti/ui';
 
 import { useTrainModel } from './train-model-provider.component';
 
@@ -9,7 +9,7 @@ export const SelectDatasetRevision = () => {
     const { datasetRevisions, selectedDatasetRevisionId, onSelectDatasetRevisionId } = useTrainModel();
 
     return (
-        <Flex alignItems={'center'} gap={'size-100'}>
+        <>
             <Picker
                 flex={1}
                 items={datasetRevisions}
@@ -17,7 +17,7 @@ export const SelectDatasetRevision = () => {
                 selectedKey={selectedDatasetRevisionId}
                 onSelectionChange={(key) => onSelectDatasetRevisionId(String(key))}
                 contextualHelp={
-                    <ContextualHelp variant={'info'}>
+                    <ContextualHelp variant={'info'} placement={'top'}>
                         <Heading>Selecting a dataset</Heading>
                         <Content>
                             Choose the version of the dataset to use for training. If you want to train the new model on
@@ -31,6 +31,6 @@ export const SelectDatasetRevision = () => {
             >
                 {(item) => <Item key={item.id}>{item.name}</Item>}
             </Picker>
-        </Flex>
+        </>
     );
 };
