@@ -6,6 +6,7 @@ from unittest.mock import ANY, MagicMock, patch
 from uuid import uuid4
 
 import numpy as np
+import pydantic_core
 import pytest
 import time_machine
 
@@ -28,6 +29,20 @@ from app.services.data_collect.data_collector import (
 
 class TestFixedRatePolicyCheckerUnit:
     """Unit tests for FixedRatePolicyChecker."""
+
+    def test_zero_rate_raises_error_in_policy(self):
+        # Arrange, Act and Assert
+        with pytest.raises(pydantic_core.ValidationError):
+            FixedRateDataCollectionPolicy(rate=0)  # type: ignore[bad_argument_type]
+
+    def test_zero_rate_raises_error_in_checker(self):
+        # Arrange
+        policy = FixedRateDataCollectionPolicy(rate=0.1)
+        policy.rate = 0
+
+        # Act and Assert
+        with pytest.raises(ValueError):
+            FixedRatePolicyChecker(policy)
 
     def test_should_collect_true(self):
         # Arrange
