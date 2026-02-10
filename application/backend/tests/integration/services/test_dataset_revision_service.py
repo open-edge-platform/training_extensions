@@ -289,7 +289,7 @@ def fxt_dataset_revision_with_parquet(
     df = pl.DataFrame(
         {
             "id": [str(item_id)],
-            "image": [f"images/{image_filename}"],
+            "image": [str(image_filename)],
             "image_info": [{"width": 1024, "height": 768}],
             "subset": ["TRAINING"],
         }
@@ -325,6 +325,22 @@ class TestDatasetRevisionServiceIntegration:
         # Verify that a revision entry was created
         assert db_session.get(DatasetRevisionDB, str(revision_id)) is not None
         assert (fxt_projects_dir / str(project.id) / "dataset_revisions" / str(revision_id) / "data.parquet").exists()
+
+    def test_save_revision_zero_count(
+        self,
+        fxt_dataset_service: DatasetService,
+        fxt_dataset_revision_service: DatasetRevisionService,
+        fxt_project_with_subset_items: tuple[Project, list[DatasetItemDB]],
+    ) -> None:
+        """Test saving a dataset revision."""
+        project, _ = fxt_project_with_subset_items
+        dataset = fxt_dataset_service.get_dm_dataset(project.id, project.task, DatasetItemAnnotationStatus.REVIEWED)
+
+        with pytest.raises(ValueError):
+            fxt_dataset_revision_service.save_revision(
+                project_id=project.id,
+                dataset=dataset,
+            )
 
     def test_get_dataset_revision(
         self,

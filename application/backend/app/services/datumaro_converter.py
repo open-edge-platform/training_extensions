@@ -17,6 +17,7 @@ from datumaro.experimental.fields import (
     label_field,
     numeric_field,
     polygon_field,
+    string_field,
     subset_field,
 )
 from loguru import logger
@@ -32,12 +33,14 @@ class ClassificationSample(Sample):
     Sample for multiclass classification datasets.
 
     Attributes:
+        id: Unique identifier of the sample
         image: Path to the image
         image_info: Image information (width, height)
         label: Class label index (0-based)
         confidence: Confidence score for the label. Only for model predictions.
     """
 
+    id: str = string_field()
     image: str = image_path_field()
     image_info: ImageInfo = image_info_field()
     label: int = label_field(dtype=pl.UInt8(), is_list=False)
@@ -50,12 +53,14 @@ class MultilabelClassificationSample(Sample):
     Sample for multilabel classification datasets.
 
     Attributes:
+        id: Unique identifier of the sample
         image: Path to the image
         image_info: Image information (width, height)
         label: Array of class label indices (0-based)
         confidence: Array of confidence scores for each label. Only for model predictions.
     """
 
+    id: str = string_field()
     image: str = image_path_field()
     image_info: ImageInfo = image_info_field()
     label: NDArrayInt = label_field(dtype=pl.UInt8(), multi_label=True)
@@ -68,6 +73,7 @@ class DetectionSample(Sample):
     Sample for object detection datasets.
 
     Attributes:
+        id: Unique identifier of the sample
         image: Path to the image
         image_info: Image information (width, height)
         bboxes: Array of bounding boxes in x1y1x2y2 format
@@ -75,6 +81,7 @@ class DetectionSample(Sample):
         confidence: Array of confidence scores for each bounding box. Only for model predictions.
     """
 
+    id: str = string_field()
     image: str = image_path_field()
     image_info: ImageInfo = image_info_field()
     bboxes: NDArrayInt = bbox_field(dtype=pl.Int32())
@@ -88,6 +95,7 @@ class InstanceSegmentationSample(Sample):
     Sample for instance segmentation datasets.
 
     Attributes:
+        id: Unique identifier of the sample
         image: Path to the image
         image_info: Image information (width, height)
         polygons: Array of polygons, each represented as a list of points in xy format
@@ -95,6 +103,7 @@ class InstanceSegmentationSample(Sample):
         confidence: Array of confidence scores for each polygon. Only for model predictions.
     """
 
+    id: str = string_field()
     image: str = image_path_field()
     image_info: ImageInfo = image_info_field()
     polygons: NDArrayFloat32 = polygon_field(dtype=pl.Float32())  # Ragged array (num_polygons, num_vertices, 2)
@@ -223,6 +232,7 @@ def convert_classification_dataset(
         try:
             annotation = dataset_item.annotation_data[0]  # classification -> only one shape (annotation)
             return ClassificationSample(
+                id=str(dataset_item.id),
                 image=image_path,
                 image_info=ImageInfo(width=media.width, height=media.height),
                 label=project_labels_ids.index(annotation.labels[0].id),  # multiclass -> only one label
@@ -271,6 +281,7 @@ def convert_multilabel_classification_dataset(
             logger.error("Unable to find one of dataset item {} labels in project", dataset_item.id)
             return None
         return MultilabelClassificationSample(
+            id=str(dataset_item.id),
             image=image_path,
             image_info=ImageInfo(width=media.width, height=media.height),
             label=np.array(labels_indexes),
@@ -342,6 +353,7 @@ def convert_detection_dataset(
             else []
         )
         return DetectionSample(
+            id=str(dataset_item.id),
             image=image_path,
             image_info=ImageInfo(width=media.width, height=media.height),
             bboxes=np.array(coords),
@@ -421,6 +433,7 @@ def convert_instance_segmentation_dataset(
         polygons_np = np.empty(len(polygons), dtype=object)
         polygons_np[:] = [np.asarray(p, dtype=np.float32) for p in polygons]
         return InstanceSegmentationSample(
+            id=str(dataset_item.id),
             image=image_path,
             image_info=ImageInfo(width=media.width, height=media.height),
             polygons=polygons_np,

@@ -105,7 +105,7 @@ export const Toolbar = ({ items }: ToolbarProps) => {
     return (
         <Flex direction={'column'} gridArea={'toolbar'} gap={'size-200'} marginBottom={'size-200'}>
             <Flex alignItems={'center'} justifyContent={'space-between'}>
-                <Heading level={1}>Data collection</Heading>
+                <Heading level={1}>Dataset</Heading>
                 <ButtonGroup>
                     <AddMediaButton onFilesSelected={handleAddMediaItem} />
                     <TrainModel />

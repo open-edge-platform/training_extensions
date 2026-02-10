@@ -40,7 +40,7 @@ describe('ModelRow', () => {
     const modelArchitecture = getMockedModelArchitecture({ performanceCategory: 'Speed' });
 
     describe('basic rendering', () => {
-        it('should render all model information correctly when grouped by architecture', () => {
+        it('renders all model information correctly when grouped by architecture', () => {
             render(
                 <ModelRow
                     model={defaultModel}
@@ -67,7 +67,7 @@ describe('ModelRow', () => {
             expect(screen.queryByText(modelArchitecture.performanceCategory ?? '')).not.toBeInTheDocument();
         });
 
-        it('should render all model information correctly when grouped by dataset', () => {
+        it('renders all model information correctly when grouped by dataset', () => {
             render(
                 <ModelRow
                     model={defaultModel}
@@ -86,7 +86,7 @@ describe('ModelRow', () => {
             expect(screen.queryByTestId('labels-count')).not.toBeInTheDocument();
         });
 
-        it('should render "Unnamed Model" when model name is null or undefined', () => {
+        it('renders "Unnamed Model" when model name is null or undefined', () => {
             const modelWithoutName = getMockedModel({ name: undefined });
 
             render(
@@ -101,7 +101,7 @@ describe('ModelRow', () => {
             expect(screen.getByTestId('model-name')).toHaveTextContent('Unnamed Model');
         });
 
-        it('should render "-" when model size is 0 or negative', () => {
+        it('renders "-" when model size is 0 or negative', () => {
             const modelWithZeroSize = getMockedModel({ size: 0 });
 
             render(
@@ -113,7 +113,7 @@ describe('ModelRow', () => {
                 />
             );
 
-            expect(screen.getByText('-')).toBeInTheDocument();
+            expect(screen.getByTestId('model size')).toHaveTextContent('-');
         });
 
         it('renders "Failed" badge when training status is failed', () => {
@@ -137,7 +137,7 @@ describe('ModelRow', () => {
     });
 
     describe('active model tag', () => {
-        it('should show active tag only when model id matches activeModelId', () => {
+        it('shows active tag only when model id matches activeModelId', () => {
             const { rerender } = render(
                 <ModelRow
                     model={defaultModel}
@@ -173,7 +173,7 @@ describe('ModelRow', () => {
     });
 
     describe('parent revision model', () => {
-        it('should render parent revision model when provided and call onExpandModel when clicked', async () => {
+        it('renders parent revision model when provided and call onExpandModel when clicked', async () => {
             const onExpandModel = vi.fn();
             const parentModel = getMockedModel({
                 id: 'parent-123',
@@ -199,7 +199,7 @@ describe('ModelRow', () => {
             expect(onExpandModel).toHaveBeenCalledWith('parent-123');
         });
 
-        it('should not render parent revision model when not provided', () => {
+        it('does not render parent revision model when not provided', () => {
             render(
                 <ModelRow
                     model={defaultModel}

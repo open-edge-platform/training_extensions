@@ -17,6 +17,7 @@ from app.db.schema import DatasetRevisionDB
 from app.models import DatasetItemSubset
 from app.models.dataset_item_revision import DatasetRevisionItem
 from app.models.dataset_revision import DatasetRevision, DatasetRevisionCounts
+from app.models.media import ImageFormat
 from app.repositories import DatasetRevisionRepository
 from app.utils.images import crop_to_thumbnail
 
@@ -261,30 +262,13 @@ class DatasetRevisionService(BaseSessionManagedService):
         """
         dataset_revision_path = self.projects_dir / str(project_id) / "dataset_revisions" / str(dataset_revision_id)
         try:
-            # The path stored in the 'image' column is relative to the dataset revision base folder
-            image_rel_path = Path(df_revision_item["image"])
-
-            if "data/projects" in str(image_rel_path):
-                # TODO due to a bug in Datumaro, the above assumption doesn't always hold true, and the image path
-                #  may be relative to the app data folder instead. This workaround can be removed after the bug is fixed
-                #  in Datumaro: https://github.com/open-edge-platform/datumaro/issues/2019
-                image_path = image_rel_path
-            else:
-                image_path = dataset_revision_path / image_rel_path
-
-            if "id" not in df_revision_item:
-                # Fallback: if the 'id' field is missing, try to extract it from the image filename
-                # TODO remove this fallback logic after ensuring the 'id' is always saved in the parquet file
-                #  https://github.com/open-edge-platform/training_extensions/issues/5350
-                logger.warning(
-                    "Dataset revision item is missing 'id' field, attempting to extract from image filename: {}",
-                    image_rel_path,
-                )
-                df_revision_item["id"] = image_rel_path.stem  # Filename without extension
+            # The value stored in the 'image' column is expected to be the name of the image file,
+            # relative to the dataset revision's images/ directory.
+            image_path = dataset_revision_path / "images" / Path(df_revision_item["image"])
 
             return DatasetRevisionItem(
                 id=UUID(df_revision_item["id"]),
-                format=image_rel_path.suffix.lstrip("."),
+                format=ImageFormat(image_path.suffix.lstrip(".").lower()),
                 image_path=image_path,
                 width=df_revision_item["image_info"]["width"],
                 height=df_revision_item["image_info"]["height"],
