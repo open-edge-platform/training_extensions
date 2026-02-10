@@ -30,7 +30,7 @@ VALID_SDP = (
 
 
 @pytest.fixture
-def fxt_stream_queue():
+def fxt_frame_broadcaster():
     return FrameBroadcaster[np.ndarray]()
 
 
