@@ -36,7 +36,8 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
     const isModelsPage = useMatch(paths.project.models.pattern);
     const isTrainingDisabled = useIsTrainingButtonDisabled();
 
-    const isStartButtonDisabled = selectedModelArchitectureId === null || selectedTrainingDevice === null;
+    const isStartButtonDisabled =
+        isTrainingDisabled || selectedModelArchitectureId === null || selectedTrainingDevice === null;
 
     const trainModel = () => {
         if (isStartButtonDisabled) return;
@@ -72,7 +73,7 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
     };
 
     return (
-        <Dialog width={'clamp(800px, 50vw, 1150px'}>
+        <Dialog width={'clamp(800px, 50vw, 1150px)'}>
             <Heading>Select a model to train</Heading>
 
             <Divider size={'S'} />
@@ -87,10 +88,10 @@ export const TrainModelDialog = ({ onClose }: TrainModelDialogProps) => {
                 <Flex alignItems={'center'} marginBottom={'size-200'}>
                     {isTrainingDisabled ? (
                         <InlineAlert variant={'notice'}>
-                            <Heading>Why can I not start training</Heading>
+                            <Heading>Why can I not start training?</Heading>
                             <Content>
                                 In order to train a model, you need to annotate at least 3 items in your dataset,
-                                although we do recommend to annotate at least 10 for better results.
+                                although we recommend annotating at least 10 for better results.
                             </Content>
                         </InlineAlert>
                     ) : null}
