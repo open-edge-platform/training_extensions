@@ -24,18 +24,21 @@
 }
 
 .card {
-    border: var(--spectrum-global-dimension-size-25) solid var(--spectrum-global-color-gray-200);
+    --thumbnail-size: var(--spectrum-global-dimension-size-2000);
+    --border-size: var(--spectrum-global-dimension-size-25);
+
+    border: var(--border-size) solid var(--spectrum-global-color-gray-200);
     border-radius: var(--spectrum-global-dimension-size-50);
     background-color: var(--spectrum-global-color-gray-50);
-    height: 100%;
     transition:
         background-color,
         border 0.2s ease-in-out;
 
     img {
-        height: 100%;
-        width: var(--spectrum-global-dimension-size-2000);
+        width: calc(var(--thumbnail-size) - calc(var(--border-size) * 2));
         object-fit: cover;
+        text-align: center;
+        line-height: calc(var(--thumbnail-size) - calc(var(--border-size) * 2));
     }
 
     &:hover {
@@ -65,6 +68,5 @@
 
 .activeTag {
     color: var(--spectrum-gray-50);
-
     background-color: var(--energy-blue) !important;
 }
