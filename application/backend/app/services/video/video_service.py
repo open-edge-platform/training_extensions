@@ -18,7 +18,8 @@ def get_video_metadata(video_path: Path) -> VideoMetadata:
     """
     Extracts a video metadata
 
-    :param video_path: Video binary file path
+    Args:
+        video_path: Video binary file path
     """
     cap = cv2.VideoCapture(str(video_path))
     if not cap.isOpened():
@@ -51,9 +52,10 @@ def extract_video_frame(
     """
     Extracts a video frame and saves it to a local FS to specified file.
 
-    :param video_path: Video binary file path
-    :param video_frame_path: Path of the file to write generated video frame to
-    :param time: Frame time in seconds
+    Args:
+        video_path: Video binary file path
+        video_frame_path: Path of the file to write generated video frame to
+        time: Frame time in seconds
     """
     cap = cv2.VideoCapture(str(video_path))
     if not cap.isOpened():

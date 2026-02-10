@@ -234,7 +234,7 @@ def convert_classification_dataset(
             return ClassificationSample(
                 id=str(dataset_item.id),
                 image=image_path,
-                image_info=ImageInfo(width=media.width, height=media.height),  # pyrefly: ignore[bad-argument-type]
+                image_info=ImageInfo(width=media.width, height=media.height),
                 label=project_labels_ids.index(annotation.labels[0].id),  # multiclass -> only one label
                 confidence=annotation.confidences[0] if annotation.confidences else None,
                 subset=convert_to_dm_subset(dataset_item.subset),

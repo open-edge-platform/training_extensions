@@ -1,8 +1,6 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import os.path
-import shutil
-import subprocess
 import tempfile
 from collections.abc import Callable
 from datetime import datetime
@@ -11,6 +9,8 @@ from pathlib import Path
 from typing import Any
 from uuid import UUID, uuid4
 
+import cv2
+import numpy as np
 import pytest
 from PIL import Image
 from sqlalchemy.orm import Session
@@ -429,42 +429,22 @@ def fxt_project_with_subset_items(fxt_project_with_pipeline, db_session) -> tupl
     return project, db_dataset_items
 
 
-def _ensure_ffmpeg():
-    """Ensure ffmpeg is available on PATH; skip test if not."""
-    exe = shutil.which("ffmpeg")
-    if exe is None:
-        pytest.skip("ffmpeg not found in PATH; skipping video related tests")
-    return exe
-
-
 @pytest.fixture
 def fxt_video_data() -> Callable[[Path], None]:
-    ffmpeg = _ensure_ffmpeg()
-
     def _generate_video_file(path: Path) -> None:
-        # Build color source: black frames with size & fps
-        lavfi = f"color=c=black:s={640}x{480}:r={25}"
+        duration_sec = 4
+        fps = 25
+        width = 640
+        height = 480
 
-        cmd = [
-            ffmpeg,
-            "-y",
-            "-hide_banner",
-            "-loglevel",
-            "error",  # keep CI logs clean; change to 'info' for debugging
-            "-f",
-            "lavfi",
-            "-i",
-            lavfi,
-            "-t",
-            "4",
-            "-c:v",
-            "mpeg4",
-            str(path),
-        ]
-        # Run ffmpeg
-        proc = subprocess.run(cmd, capture_output=True, text=True, check=False)
-        if proc.returncode != 0:
-            raise RuntimeError(f"ffmpeg failed:\nCMD: {' '.join(cmd)}\nSTDERR:\n{proc.stderr}")
+        fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # pyrefly: ignore[missing-attribute]
+        writer = cv2.VideoWriter(str(path), fourcc, fps, (width, height), isColor=True)
+        assert writer.isOpened()
+
+        black_frame = np.zeros((height, width, 3), dtype=np.uint8)
+        for _ in range(duration_sec * fps):
+            writer.write(black_frame)
+        writer.release()
 
     return _generate_video_file
 

@@ -71,6 +71,7 @@ def add_media(
                 user_reviewed=False,
             )
         else:
+            # Dataset items for videos are created separately after video upload for each frame being annotated
             media = media_service.create_video(
                 project=project,
                 data=file.file,
