@@ -24,20 +24,23 @@
 }
 
 .card {
-    border: var(--spectrum-global-dimension-size-25) solid var(--spectrum-global-color-gray-200);
+    --thumbnail-size: var(--spectrum-global-dimension-size-2000);
+    --border-size: var(--spectrum-global-dimension-size-25);
+
+    border: var(--border-size) solid var(--spectrum-global-color-gray-200);
     border-radius: var(--spectrum-global-dimension-size-50);
     background-color: var(--spectrum-global-color-gray-50);
-    height: var(--spectrum-global-dimension-size-2000);
+    height: var(--thumbnail-size);
     transition:
         background-color,
         border 0.2s ease-in-out;
 
     img {
-        height: calc(var(--spectrum-global-dimension-size-2000) - var(--spectrum-global-dimension-size-50));
-        width: var(--spectrum-global-dimension-size-2000);
+        height: calc(var(--thumbnail-size) - calc(var(--border-size) * 2));
+        width: calc(var(--thumbnail-size) - calc(var(--border-size) * 2));
         object-fit: cover;
         text-align: center;
-        line-height: calc(var(--spectrum-global-dimension-size-2000) - var(--spectrum-global-dimension-size-50));
+        line-height: calc(var(--thumbnail-size) - calc(var(--border-size) * 2));
     }
 
     &:hover {
