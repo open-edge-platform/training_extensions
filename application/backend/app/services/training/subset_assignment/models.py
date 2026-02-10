@@ -24,9 +24,10 @@ class SplitRatios:
         """
         Convert split ratios to absolute fold sizes based on total items
 
-        Each fold is guaranteed to receive at least 1 item. If the sum of rounded sizes exceeds total_items (due to
-        the minimum of 1 per fold), the excess is reduced from the fold with the largest ratio first. When ratios are
-        equal, reduction priority is: val > train > test.
+        Each fold is guaranteed to receive at least 1 item. Fold sizes are calculated by rounding proportional
+        allocations. If the sum differs from total_items due to rounding, the difference is adjusted by adding/removing
+        items from folds in order of their ratio size (largest first).
+        When ratios are equal, priority is: val > train > test.
 
         Args:
             total_items: Total number of items to distribute across folds
@@ -47,18 +48,25 @@ class SplitRatios:
 
         # Adjust to match exact total by reducing from the largest fold
         diff = (train_size + val_size + test_size) - total_items
-        if diff > 0:
-            # Sort by ratio to reduce from the largest first, prioritizing val over the train if equal
+        if diff != 0:
+            # Sort by ratio to adjust the largest first, prioritizing val over the train if equal
             folds = [(self.val, "val"), (self.train, "train"), (self.test, "test")]
             folds.sort(reverse=True, key=lambda x: x[0])
 
             sizes = {"train": train_size, "val": val_size, "test": test_size}
 
             for _, fold_name in folds:
-                if sizes[fold_name] > 1 and diff > 0:
-                    reduction = min(sizes[fold_name] - 1, diff)
-                    sizes[fold_name] -= reduction
-                    diff -= reduction
+                if diff > 0:  # Over-allocated: reduce
+                    if sizes[fold_name] > 1:
+                        reduction = min(sizes[fold_name] - 1, diff)
+                        sizes[fold_name] -= reduction
+                        diff -= reduction
+                elif diff < 0:  # Under-allocated: increase
+                    addition = abs(diff)
+                    sizes[fold_name] += addition
+                    diff += addition
+                if diff == 0:
+                    break
 
             train_size, val_size, test_size = sizes["train"], sizes["val"], sizes["test"]
 

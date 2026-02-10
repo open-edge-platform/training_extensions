@@ -44,13 +44,14 @@ class TestSplitRatios:
             (100, 70, 20, 10, (0.7, 0.2, 0.1)),  # basic
             (97, 68, 19, 10, (0.7, 0.2, 0.1)),  # rounding case
             (300, 99, 99, 102, (0.33, 0.33, 0.34)),  # equal ratios with rounding
+            (10, 4, 3, 3, (0.34, 0.33, 0.33)),  # equal ratios with rounding
             (4, 2, 1, 1, (0.5, 0.5, 0)),  # reduction priority when val and train are equal
             (11, 7, 3, 1, (0.6, 0.3, 0.1)),  # reduction from the largest
             (3, 1, 1, 1, (0.8, 0.15, 0.05)),  # each fold gets at least 1 item, even if ratios are skewed
             (3, 1, 1, 1, (1.0, 0.0, 0.0)),  # all train, but still need to assign 1 to val and test
         ],
     )
-    def test_to_fold_sizes(self, target: int, train: int, val: int, test: int, ratios: tuple[int, ...]):
+    def test_to_fold_sizes(self, target: int, train: int, val: int, test: int, ratios: tuple[float, ...]):
         """Test conversion of split ratios to absolute fold sizes"""
         split = SplitRatios(*ratios)
         fold_sizes = split.to_fold_sizes(target)
