@@ -3,12 +3,12 @@
 
 import type { CSSProperties } from 'react';
 
-import { ActionButton, Item, Key, Menu, MenuTrigger, toast } from '@geti/ui';
+import { ActionButton, Item, Key, Menu, MenuTrigger } from '@geti/ui';
 import { MoreMenu } from '@geti/ui/icons';
 import { useOverlayTriggerState } from 'react-stately';
 
-import { useDeleteProject } from '../../../../hooks/api/project.hook';
-import { EditProjectNameDialog } from './edit-project-name-dialog.component';
+import { DeleteProjectDialog } from './delete-project-dialog/delete-project-dialog.component';
+import { EditProjectNameDialog } from './edit-project-name-dialog/edit-project-name-dialog.component';
 
 type MenuActionsProps = {
     projectId: string;
@@ -17,7 +17,7 @@ type MenuActionsProps = {
 };
 
 export const MenuActions = ({ projectId, projectName, actionButtonStyle }: MenuActionsProps) => {
-    const deleteMutation = useDeleteProject();
+    const deleteProjectDialogState = useOverlayTriggerState({});
     const editProjectNameDialogState = useOverlayTriggerState({});
 
     const handleMenuAction = (key: Key) => {
@@ -26,17 +26,7 @@ export const MenuActions = ({ projectId, projectName, actionButtonStyle }: MenuA
                 editProjectNameDialogState.open();
                 break;
             case 'delete':
-                deleteMutation.mutate(
-                    { params: { path: { project_id: projectId } } },
-                    {
-                        onSuccess: () => {
-                            toast({ type: 'success', message: 'Project deleted successfully' });
-                        },
-                        onError: () => {
-                            toast({ type: 'error', message: 'Failed to delete project' });
-                        },
-                    }
-                );
+                deleteProjectDialogState.open();
                 break;
             default:
                 break;
@@ -66,8 +56,15 @@ export const MenuActions = ({ projectId, projectName, actionButtonStyle }: MenuA
             <EditProjectNameDialog
                 projectId={projectId}
                 projectName={projectName}
-                onClose={editProjectNameDialogState.close}
                 isOpen={editProjectNameDialogState.isOpen}
+                onClose={editProjectNameDialogState.close}
+            />
+
+            <DeleteProjectDialog
+                projectId={projectId}
+                projectName={projectName}
+                isOpen={deleteProjectDialogState.isOpen}
+                onClose={deleteProjectDialogState.close}
             />
         </>
     );
