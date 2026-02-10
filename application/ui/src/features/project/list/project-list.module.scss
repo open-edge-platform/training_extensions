@@ -30,13 +30,11 @@
     border: var(--border-size) solid var(--spectrum-global-color-gray-200);
     border-radius: var(--spectrum-global-dimension-size-50);
     background-color: var(--spectrum-global-color-gray-50);
-    height: var(--thumbnail-size);
     transition:
         background-color,
         border 0.2s ease-in-out;
 
     img {
-        height: calc(var(--thumbnail-size) - calc(var(--border-size) * 2));
         width: calc(var(--thumbnail-size) - calc(var(--border-size) * 2));
         object-fit: cover;
         text-align: center;

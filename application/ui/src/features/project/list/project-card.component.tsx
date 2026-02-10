@@ -56,7 +56,7 @@ export const ProjectCard = ({ item }: ProjectCardProps) => {
             <NavLink to={paths.project.dataset({ projectId: item.id })}>
                 <Flex UNSAFE_className={clsx({ [classes.card]: true, [classes.activeCard]: isActive })}>
                     <Flex>
-                        <img src={getProjectThumbnailUrl(item.id)} alt={'N/A'} />
+                        <img src={getProjectThumbnailUrl(item.id)} alt={item.name} />
                     </Flex>
 
                     <View width={'100%'} padding={cardPadding}>
