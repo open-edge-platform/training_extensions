@@ -72,8 +72,7 @@ class EventBus(BaseEventBus[EventType]):
         if self._should_notify_sink(event_type):
             self._notify_all(self._sink_changed_condition)
 
-        if self._should_notify_device(event_type) and self._model_reload_event:
-            self._model_reload_event.set()
-
-        if self._should_notify_model(event_type) and self._model_reload_event:
+        if (
+            self._should_notify_model(event_type) or self._should_notify_device(event_type)
+        ) and self._model_reload_event:
             self._model_reload_event.set()
