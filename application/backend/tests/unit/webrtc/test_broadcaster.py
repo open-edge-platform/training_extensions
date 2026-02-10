@@ -103,7 +103,7 @@ class TestFrameBroadcaster:
         
         # Clear initial state
         while not queue.empty():
-            queue.empty()
+            queue.get_nowait()
         
         # Fill the queue to capacity (maxsize=5)
         for i in range(5):
