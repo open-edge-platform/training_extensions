@@ -1,11 +1,10 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
 from queue import Empty, Full, Queue
 from threading import Lock
 
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 class FrameBroadcaster[T]:
@@ -45,9 +44,9 @@ class FrameBroadcaster[T]:
                 try:
                     queue.put_nowait(self._latest_frame)
                 except Full:
-                    logging.warning("Could not send latest frame to new consumer - queue full")
+                    logger.warning("Could not send latest frame to new consumer - queue full")
 
-            logging.info("FrameBroadcaster registered a new consumer. Total consumers: %d", len(self.queues))
+            logger.info("FrameBroadcaster registered a new consumer. Total consumers: %d", len(self.queues))
             return queue
 
     def unregister(self, webrtc_id: str) -> None:
@@ -55,7 +54,7 @@ class FrameBroadcaster[T]:
         with self._lock:
             try:
                 del self.queues[webrtc_id]
-                logging.info("FrameBroadcaster unregistered a consumer. Total consumers:%d", len(self.queues))
+                logger.info("FrameBroadcaster unregistered a consumer. Total consumers:%d", len(self.queues))
             except KeyError:
                 # if a client unregisters twice.
                 pass
