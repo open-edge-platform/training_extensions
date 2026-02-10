@@ -4,12 +4,12 @@
 import { AlertDialog, DialogContainer, toast } from '@geti/ui';
 import { useDeleteProject } from 'hooks/api/project.hook';
 
-interface DeleteProjectDialogProps {
+type DeleteProjectDialogProps = {
     isOpen: boolean;
     projectId: string;
     projectName: string;
     onClose: () => void;
-}
+};
 
 export const DeleteProjectDialog = ({ isOpen, projectId, projectName, onClose }: DeleteProjectDialogProps) => {
     const deleteMutation = useDeleteProject();
@@ -20,9 +20,6 @@ export const DeleteProjectDialog = ({ isOpen, projectId, projectName, onClose }:
             {
                 onSuccess: () => {
                     toast({ type: 'success', message: 'Project deleted successfully' });
-                },
-                onError: () => {
-                    toast({ type: 'error', message: 'Failed to delete project' });
                 },
                 onSettled: () => {
                     onClose();

@@ -30,11 +30,12 @@ describe('DeleteProjectDialog', () => {
     });
 
     it('shows error toast when delete project fails', async () => {
+        const errorMessage = 'Cannot delete project';
         server.use(
             http.delete('/api/projects/{project_id}', () => {
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-expect-error
-                return HttpResponse.json({ detail: 'Cannot delete project' }, { status: 500 });
+                return HttpResponse.json({ detail: errorMessage }, { status: 500 });
             })
         );
 
@@ -44,6 +45,6 @@ describe('DeleteProjectDialog', () => {
 
         fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
 
-        expect(await screen.findByText('Failed to delete project')).toBeVisible();
+        expect(await screen.findByText(errorMessage)).toBeVisible();
     });
 });
