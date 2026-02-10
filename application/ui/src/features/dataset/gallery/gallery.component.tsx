@@ -1,8 +1,9 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import { Checkbox, DialogContainer, Flex, Size } from '@geti/ui';
+import { Checkbox, DialogContainer, Flex, Size, ViewModes } from '@geti/ui';
 import { useProjectIdentifier } from 'hooks/use-project-identifier.hook';
+import { GridLayoutOptions } from 'react-aria-components';
 
 import { MediaItem } from '../../../components/media-item/media-item.component';
 import { MediaThumbnail } from '../../../components/media-thumbnail/media-thumbnail.component';
@@ -16,18 +17,20 @@ import { useSelectDatasetItem } from './hooks/use-select-dataset-item.hook';
 
 type GalleryProps = {
     items: Media[];
-    fetchNextPage: () => void;
+    viewMode: ViewModes;
     hasNextPage: boolean;
     isFetchingNextPage: boolean;
+    fetchNextPage: () => void;
 };
 
-const layoutOptions = {
-    minSpace: new Size(8, 8),
-    maxColumns: 8,
-    preserveAspectRatio: true,
-};
+// DetailsView isn’t needed, so we’re forcing the cast to prevent TS from complaining about missing properties
+export const VIEW_MODE_SETTINGS = {
+    [ViewModes.LARGE]: { minItemSize: new Size(300, 300), minSpace: new Size(10, 10), preserveAspectRatio: true },
+    [ViewModes.MEDIUM]: { minItemSize: new Size(200, 200), minSpace: new Size(6, 6), preserveAspectRatio: true },
+    [ViewModes.SMALL]: { minItemSize: new Size(120, 120), minSpace: new Size(4, 4), preserveAspectRatio: true },
+} as Record<ViewModes, GridLayoutOptions>;
 
-export const Gallery = ({ items, hasNextPage, isFetchingNextPage, fetchNextPage }: GalleryProps) => {
+export const Gallery = ({ items, viewMode, hasNextPage, isFetchingNextPage, fetchNextPage }: GalleryProps) => {
     const projectId = useProjectIdentifier();
     const { selectedMediaItem, onSelectedMediaItemChange } = useSelectDatasetItem();
     const { selectedKeys, mediaState, setSelectedKeys, toggleSelectedKeys } = useSelectedData();
@@ -42,7 +45,7 @@ export const Gallery = ({ items, hasNextPage, isFetchingNextPage, fetchNextPage 
                 selectionMode='multiple'
                 mediaState={mediaState}
                 selectedKeys={selectedKeys}
-                layoutOptions={layoutOptions}
+                layoutOptions={VIEW_MODE_SETTINGS[viewMode]}
                 isLoadingMore={isFetchingNextPage}
                 onLoadMore={() => hasNextPage && fetchNextPage()}
                 onSelectionChange={setSelectedKeys}
